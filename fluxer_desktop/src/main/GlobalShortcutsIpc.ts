@@ -4,6 +4,8 @@ import {watch} from 'node:fs';
 import {userInfo} from 'node:os';
 import {getGlobalShortcutsSettings, setGlobalShortcutsSettings} from '@electron/common/DesktopConfig';
 import {LINUX_DESKTOP_ENTRY_ID, LINUX_PORTAL_SESSION_TOKEN} from '@electron/common/DesktopIdentity';
+import {errorMessage} from '@electron/common/ErrorMessage';
+import {globalShortcutEventRevealsWindow} from '@electron/common/GlobalShortcutActions';
 import {createChildLogger} from '@electron/common/Logger';
 import type {GlobalShortcutsStatus} from '@electron/common/Types';
 import {
@@ -28,7 +30,7 @@ import {LinuxPortalShortcutsManager} from '@electron/main/LinuxGlobalShortcutsPo
 import {getFlatpakAppId, isFlatpakRuntime} from '@electron/main/LinuxSandbox';
 import {getLinuxDesktop, getLinuxSessionType, isKdePlasma5Session} from '@electron/main/LinuxSession';
 import {requirePrivilegedRendererDocumentSender} from '@electron/main/PrivilegedRendererDocuments';
-import {getMainWindow} from '@electron/main/Window';
+import {getMainWindow, showWindow} from '@electron/main/Window';
 import {app, ipcMain, powerMonitor} from 'electron';
 
 const logger = createChildLogger('GlobalShortcuts');
@@ -37,6 +39,7 @@ let engine: GlobalShortcutsEngine | null = null;
 let legacyAdapter: LegacyGlobalKeyHookAdapter | null = null;
 const senderWatchers = new Map<number, Set<() => void>>();
 let detachPowerListeners: (() => void) | null = null;
+let detachPermissionRetry: (() => void) | null = null;
 
 function log(message: string, details?: Record<string, unknown>): void {
 	logger.info(message, details ?? {});
@@ -114,7 +117,7 @@ function watchLinuxInputDevices(onChange: () => void): InputDeviceWatch | null {
 		});
 		return {close: () => watcher.close()};
 	} catch (error) {
-		log('Input device watch unavailable', {message: error instanceof Error ? error.message : String(error)});
+		log('Input device watch unavailable', {message: errorMessage(error)});
 		return null;
 	}
 }
@@ -166,6 +169,23 @@ function attachPowerListeners(target: GlobalShortcutsEngine): () => void {
 	};
 }
 
+export function retryBlockedGlobalShortcutHooks(): void {
+	void engine?.retryBlockedHooks();
+}
+
+function attachMacPermissionRetry(target: GlobalShortcutsEngine): () => void {
+	const retryOnceGranted = (): void => {
+		if (target.getStatus().hookError !== 'permission' || !hasMacInputMonitoringAccess()) return;
+		void target.retryBlockedHooks();
+	};
+	app.on('browser-window-focus', retryOnceGranted);
+	app.on('activate', retryOnceGranted);
+	return () => {
+		app.off('browser-window-focus', retryOnceGranted);
+		app.off('activate', retryOnceGranted);
+	};
+}
+
 function logDesktopIdMismatch(linux: GlobalShortcutsLinuxEnvironment): void {
 	if (linux.sandboxed) return;
 	const expected = `${LINUX_DESKTOP_ENTRY_ID}.desktop`;
@@ -195,7 +215,9 @@ function ensureClient(event: Electron.IpcMainInvokeEvent, channel: string): numb
 	const senderId = sender.id;
 	if (!current.hasClient(senderId)) {
 		current.attachClient(senderId, (eventChannel, payload) => {
-			if (!sender.isDestroyed()) sender.send(eventChannel, payload);
+			if (sender.isDestroyed()) return;
+			if (globalShortcutEventRevealsWindow(eventChannel, payload)) showWindow();
+			sender.send(eventChannel, payload);
 		});
 		watchSender(sender, () => engine?.detachClient(senderId));
 	}
@@ -292,6 +314,7 @@ export function initializeGlobalShortcuts(): void {
 		watchSender,
 	});
 	detachPowerListeners = attachPowerListeners(created);
+	if (platform === 'macos') detachPermissionRetry = attachMacPermissionRetry(created);
 	log('Global shortcuts initialised', {platform, linux, backend: created.getBackendSelection()});
 	created.start();
 }
@@ -299,6 +322,8 @@ export function initializeGlobalShortcuts(): void {
 export function cleanupGlobalShortcuts(): void {
 	detachPowerListeners?.();
 	detachPowerListeners = null;
+	detachPermissionRetry?.();
+	detachPermissionRetry = null;
 	legacyAdapter?.clear();
 	legacyAdapter = null;
 	engine?.dispose();

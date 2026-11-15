@@ -2,16 +2,22 @@
 
 use crate::{
     acl,
-    api::client::AdminApiClient,
+    api::{
+        client::AdminApiClient,
+        generated::types::{BulkModerationBasis, MessageDeletionBasis},
+    },
     middleware::{
         auth::AuthContext,
         flash::{self, FlashData},
     },
     state::AppState,
+    templates::{
+        components::enforcement_fields::{bulk_decision_from_form, can_take_action},
+        pages::messages_page::MessageActions,
+    },
     utils::forms::MultiValueForm,
 };
 use axum::{
-    Json,
     extract::{Query, Request, State},
     http::StatusCode,
     response::{Html, IntoResponse, Redirect, Response},
@@ -45,11 +51,7 @@ pub(crate) async fn messages_post(
     let form = match MultiValueForm::from_request(request).await {
         Some(form) => form,
         None => {
-            return flash::redirect_with_flash(
-                &format!("{base}/messages"),
-                FlashData::error("Invalid form data"),
-                config.secure_cookies(),
-            );
+            return flash::redirect_error(config, &format!("{base}/messages"), "Invalid form data");
         }
     };
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
@@ -93,56 +95,31 @@ pub(crate) async fn messages_post(
             .into_response()
         }
         "delete" => {
-            let (Some(cid), Some(mid)) = (&channel_id, &message_id) else {
-                return json_error(StatusCode::BAD_REQUEST, "Missing channel_id or message_id");
+            let back = format!("{base}/messages?channel_id={}", encode_opt(&channel_id));
+            let basis = form
+                .first("basis")
+                .and_then(|value| MessageDeletionBasis::try_from(value).ok());
+            let flash = match (&channel_id, &message_id, basis) {
+                (Some(cid), Some(mid), Some(basis)) => {
+                    let internal_note = form.clean("internal_note");
+                    match client
+                        .delete_message(cid, mid, basis, internal_note.as_deref())
+                        .await
+                    {
+                        Ok(()) => FlashData::success("Message deleted"),
+                        Err(error) => {
+                            tracing::warn!(%error, "admin API request failed: delete message");
+                            FlashData::error(error.detail_message().map_or_else(
+                                || "Failed to delete the message".to_owned(),
+                                |message| format!("Failed to delete the message: {message}"),
+                            ))
+                        }
+                    }
+                }
+                (Some(_), Some(_), None) => FlashData::error("Choose a basis"),
+                _ => FlashData::error("Enter the channel ID and message ID"),
             };
-            let audit_log_reason = form.clean("audit_log_reason");
-            match client
-                .delete_message(cid, mid, audit_log_reason.as_deref())
-                .await
-            {
-                Ok(()) => Json(serde_json::json!({"success": true})).into_response(),
-                Err(e) => json_error(StatusCode::BAD_REQUEST, &format!("{e}")),
-            }
-        }
-        "report-to-ncmec" => {
-            let attachment_id = form.clean("attachment_id");
-            let filename = form.clean("filename");
-            let reporter_full_name = form.clean("reporter_full_name");
-            let source_report_id = form.clean("source_report_id");
-            let confirmed_viewed = form.bool_value("confirmed_viewed");
-            let (Some(cid), Some(mid), Some(aid), Some(name), Some(reporter)) = (
-                &channel_id,
-                &message_id,
-                &attachment_id,
-                &filename,
-                &reporter_full_name,
-            ) else {
-                return json_error(
-                    StatusCode::BAD_REQUEST,
-                    "Missing required NCMEC report fields",
-                );
-            };
-            if !confirmed_viewed {
-                return json_error(
-                    StatusCode::BAD_REQUEST,
-                    "Missing required NCMEC report fields",
-                );
-            }
-            match client
-                .report_attachment_to_ncmec(
-                    cid,
-                    mid,
-                    aid,
-                    name,
-                    reporter,
-                    source_report_id.as_deref(),
-                )
-                .await
-            {
-                Ok(resp) => Json(resp.data).into_response(),
-                Err(e) => json_error(StatusCode::BAD_REQUEST, &format!("{e}")),
-            }
+            flash::redirect_with_flash(&back, flash, config.secure_cookies())
         }
         _ => Redirect::to(&format!("{base}/messages")).into_response(),
     }
@@ -158,10 +135,10 @@ pub(crate) async fn system_dms_post(
     let form = match MultiValueForm::from_request(request).await {
         Some(form) => form,
         None => {
-            return flash::redirect_with_flash(
+            return flash::redirect_error(
+                config,
                 &format!("{base}/system-dms"),
-                FlashData::error("Invalid form data"),
-                config.secure_cookies(),
+                "Invalid form data",
             );
         }
     };
@@ -176,7 +153,10 @@ pub(crate) async fn system_dms_post(
             Ok(_) => FlashData::success("System DM sent"),
             Err(error) => {
                 tracing::warn!(%error, "admin API request failed: send system DM");
-                FlashData::error("Failed to send system DM")
+                FlashData::error(error.detail_message().map_or_else(
+                    || "Failed to send system DM".to_owned(),
+                    |message| format!("Failed to send system DM: {message}"),
+                ))
             }
         }
     } else {
@@ -189,6 +169,15 @@ pub(crate) async fn system_dms_post(
     )
 }
 
+fn bulk_basis(form: &MultiValueForm) -> Result<BulkModerationBasis, String> {
+    match form.first("basis") {
+        Some("enforcement") => bulk_decision_from_form(form).map(BulkModerationBasis::Enforcement),
+        Some("holder_request") => Ok(BulkModerationBasis::HolderRequest),
+        Some("housekeeping") => Ok(BulkModerationBasis::Housekeeping),
+        _ => Err("Choose a basis".to_owned()),
+    }
+}
+
 pub(crate) async fn bulk_actions_post(
     State(state): State<AppState>,
     auth: axum::Extension<AuthContext>,
@@ -197,14 +186,11 @@ pub(crate) async fn bulk_actions_post(
 ) -> Response {
     let config = state.config();
     let base = &config.base_path;
+    let back = format!("{base}/bulk-actions");
     let form = match MultiValueForm::from_request(request).await {
         Some(form) => form,
         None => {
-            return flash::redirect_with_flash(
-                &format!("{base}/bulk-actions"),
-                FlashData::error("Invalid form data"),
-                config.secure_cookies(),
-            );
+            return flash::redirect_error(config, &back, "Invalid form data");
         }
     };
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
@@ -236,43 +222,36 @@ pub(crate) async fn bulk_actions_post(
                 .bulk_add_guild_members(&guild_id, &user_ids, audit_log_reason.as_deref())
                 .await
         }
-        "bulk-schedule-user-deletion" | "bulk_delete_users" => {
+        "bulk-schedule-user-deletion" => {
             let user_ids = form.list_values_any(&["user_ids[]", "user_ids"]);
-            let (Ok(reason_code), Ok(days)) = (
-                form.parse_value::<u32>("reason_code"),
-                form.parse_value::<u32>("days_until_deletion"),
-            ) else {
-                return flash::redirect_with_flash(
-                    &format!("{base}/bulk-actions"),
-                    FlashData::error("Invalid deletion reason code or delay"),
-                    config.secure_cookies(),
-                );
+            let basis = match bulk_basis(&form) {
+                Ok(basis) => basis,
+                Err(message) => return flash::redirect_error(config, &back, message),
             };
-            let public_reason = form.clean("public_reason");
-            let notify_user = form.opt_out_value("notify_user");
+            let Ok(Some(days)) = form.parse_value::<u32>("days_until_deletion") else {
+                return flash::redirect_error(config, &back, "Enter the days until deletion");
+            };
             client
                 .bulk_schedule_user_deletion(
                     &user_ids,
-                    reason_code.unwrap_or(2),
-                    days.unwrap_or(14),
-                    public_reason.as_deref(),
-                    notify_user,
-                    audit_log_reason.as_deref(),
+                    days,
+                    basis,
+                    form.clean("internal_note").as_deref(),
                 )
                 .await
         }
         "bulk-delete-user-messages" => {
             let user_ids = form.list_values_any(&["user_ids[]", "user_ids"]);
+            let basis = match bulk_basis(&form) {
+                Ok(basis) => basis,
+                Err(message) => return flash::redirect_error(config, &back, message),
+            };
             client
-                .bulk_delete_user_messages(&user_ids, audit_log_reason.as_deref())
+                .bulk_delete_user_messages(&user_ids, basis, form.clean("internal_note").as_deref())
                 .await
         }
         _ => {
-            return flash::redirect_with_flash(
-                &format!("{base}/bulk-actions"),
-                FlashData::error("Unknown bulk action"),
-                config.secure_cookies(),
-            );
+            return flash::redirect_error(config, &back, "Unknown bulk action");
         }
     };
     match result {
@@ -281,7 +260,7 @@ pub(crate) async fn bulk_actions_post(
                 Redirect::to(&format!("{base}/jobs/{job_id}")).into_response()
             } else {
                 flash::redirect_with_flash(
-                    &format!("{base}/bulk-actions"),
+                    &back,
                     FlashData::success("Bulk action submitted"),
                     config.secure_cookies(),
                 )
@@ -289,10 +268,10 @@ pub(crate) async fn bulk_actions_post(
         }
         Err(error) => {
             tracing::warn!(%error, action, "admin API request failed: submit bulk action");
-            flash::redirect_with_flash(
-                &format!("{base}/bulk-actions"),
-                FlashData::error(format!("Failed to submit bulk action: {error}")),
-                config.secure_cookies(),
+            flash::redirect_error(
+                config,
+                &back,
+                format!("Failed to submit bulk action: {error}"),
             )
         }
     }
@@ -315,12 +294,7 @@ pub(crate) async fn messages_browse_fragment(
         None => return empty_fragment(),
     };
     let config = state.config();
-    let admin_acls = auth
-        .0
-        .admin_user
-        .as_ref()
-        .map(|user| user.acls.as_slice())
-        .unwrap_or(&[]);
+    let admin_acls = auth.0.acls();
     let can_delete = acl::has_permission(admin_acls, acl::MESSAGE_DELETE);
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
     let result = client
@@ -334,7 +308,13 @@ pub(crate) async fn messages_browse_fragment(
     match result {
         Ok(resp) => {
             let markup = crate::templates::pages::messages_page::browse_messages_fragment(
-                config, &resp.data, can_delete, None,
+                config,
+                &resp.data,
+                MessageActions {
+                    delete: can_delete,
+                    take_action: can_take_action(admin_acls),
+                },
+                None,
             );
             Html(markup.into_string()).into_response()
         }
@@ -364,14 +344,6 @@ fn encode_opt(value: &Option<String>) -> String {
     urlencoding::encode(value.as_deref().unwrap_or("")).into_owned()
 }
 
-fn json_error(status: StatusCode, message: &str) -> Response {
-    (
-        status,
-        Json(serde_json::json!({"success": false, "error": message})),
-    )
-        .into_response()
-}
-
 pub(crate) async fn archives_download(
     State(state): State<AppState>,
     auth: axum::Extension<AuthContext>,
@@ -395,38 +367,18 @@ pub(crate) async fn archives_download(
         Ok(resp) if !resp.download_url.is_empty() => {
             Redirect::temporary(&resp.download_url).into_response()
         }
-        Ok(_) => flash::redirect_with_flash(
+        Ok(_) => flash::redirect_error(
+            config,
             &format!("{base}/archives"),
-            FlashData::error("Archive download URL was empty"),
-            config.secure_cookies(),
+            "Archive download URL was empty",
         ),
         Err(error) => {
             tracing::warn!(%error, "admin API request failed: get archive download URL");
-            flash::redirect_with_flash(
+            flash::redirect_error(
+                config,
                 &format!("{base}/archives"),
-                FlashData::error("Failed to create archive download URL"),
-                config.secure_cookies(),
+                "Failed to create archive download URL",
             )
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn form_list_values_accepts_repeated_comma_and_newline_values() {
-        let form = MultiValueForm::parse(b"user_ids%5B%5D=1&user_ids%5B%5D=2%2C3&user_ids=4%0A5");
-        assert_eq!(
-            form.list_values_any(&["user_ids[]", "user_ids"]),
-            vec![
-                "1".to_owned(),
-                "2".to_owned(),
-                "3".to_owned(),
-                "4".to_owned(),
-                "5".to_owned()
-            ]
-        );
     }
 }

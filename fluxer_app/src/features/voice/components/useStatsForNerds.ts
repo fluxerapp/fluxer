@@ -1,26 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import Config from '@app/features/app/config/Config';
 import {getCachedDesktopTroubleshootingSettings} from '@app/features/devtools/utils/DesktopTroubleshootingUtils';
-import type {AppMetricsSnapshot, DesktopInfo, GpuInfo} from '@app/features/platform/types/Electron';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
-import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
-import ScreenShareCodecNegotiation, {
-	getScreenShareCodecPreferenceOrder,
-} from '@app/features/voice/engine/ScreenShareCodecNegotiation';
-import {getPublishedScreenShareMaxBitrateBps} from '@app/features/voice/engine/voice_screen_share_manager/shared';
-import VoiceSettings from '@app/features/voice/state/VoiceSettings';
-import {getNativeAudioCaptureDiagnosticState} from '@app/features/voice/utils/NativeAudioCaptureBridge';
-import {readVoiceInputDiagnostics} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionRuntime';
-import {getScreenShareBitrateBps, resolveStreamingModeSettings} from '@app/features/voice/utils/ScreenShareOptions';
-import {hasHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
-import {
-	buildVoiceStatsForNerdsPresentation,
-	collectScreenShareAudioPublicationDiagnostics,
-	type StatsForNerdsData,
-} from '@app/features/voice/utils/VoiceStatsForNerdsPresenter';
-import type {VoiceEngineV2PerTrackStats, VoiceEngineV2TransportInfo} from '@fluxer/voice_engine_v2';
+import {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
+import {collectStatsForNerdsSnapshot, getSystemInfo} from '@app/features/voice/utils/StatsForNerdsCopy';
+import type {StatsForNerdsData} from '@app/features/voice/utils/VoiceStatsForNerdsPresenter';
+import type {AppMetricsSnapshot, DesktopInfo, GpuInfo} from '@app/types/electron.d';
 import {useEffect, useRef, useState} from 'react';
 
 export type {StatsForNerdsData} from '@app/features/voice/utils/VoiceStatsForNerdsPresenter';
@@ -62,46 +48,6 @@ class BoundedNumberHistory {
 		}
 		return out;
 	}
-}
-
-function formatTransportSummary(transport: VoiceEngineV2TransportInfo | null): string {
-	if (!transport) return 'n/a';
-	const parts: Array<string> = [];
-	if (transport.localProtocol) parts.push(transport.localProtocol.toUpperCase());
-	if (transport.localCandidateType) parts.push(transport.localCandidateType);
-	if (transport.iceState) parts.push(`ICE:${transport.iceState}`);
-	if (transport.dtlsState) parts.push(`DTLS:${transport.dtlsState}`);
-	return parts.join(' / ') || 'n/a';
-}
-
-export function formatResolution(track: VoiceEngineV2PerTrackStats | null): string {
-	if (!track?.frameWidth || !track.frameHeight) return 'n/a';
-	return `${track.frameWidth}x${track.frameHeight}`;
-}
-
-export function formatCodec(track: VoiceEngineV2PerTrackStats | null): string {
-	if (!track?.codec) return 'n/a';
-	return track.codec.replace(/^(audio|video)\//, '');
-}
-
-export function formatTransport(transport: VoiceEngineV2TransportInfo | null): string {
-	return formatTransportSummary(transport);
-}
-
-function getSystemInfo(): StatsForNerdsData['system'] {
-	const nav = navigator as Navigator & {deviceMemory?: number};
-	const mem = (
-		performance as Performance & {memory?: {usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number}}
-	).memory;
-	return {
-		platform: navigator.platform,
-		userAgent: navigator.userAgent.replace(/^Mozilla\/5\.0\s*/, ''),
-		hardwareConcurrency: navigator.hardwareConcurrency,
-		deviceMemoryGB: nav.deviceMemory ?? null,
-		jsHeapUsedMB: mem ? Math.round((mem.usedJSHeapSize / 1048576) * 10) / 10 : null,
-		jsHeapTotalMB: mem ? Math.round((mem.totalJSHeapSize / 1048576) * 10) / 10 : null,
-		jsHeapLimitMB: mem ? Math.round((mem.jsHeapSizeLimit / 1048576) * 10) / 10 : null,
-	};
 }
 
 export function useStatsForNerds({enabled = true}: UseStatsForNerdsOptions = {}): StatsForNerdsData {
@@ -157,61 +103,11 @@ export function useStatsForNerds({enabled = true}: UseStatsForNerdsOptions = {})
 			clearInterval(id);
 		};
 	}, [enabled]);
-	const effectiveScreenShareSettings = resolveStreamingModeSettings(
-		VoiceSettings.getStreamingMode(),
-		VoiceSettings.getScreenshareResolution(),
-		VoiceSettings.getVideoFrameRate(),
-		hasHigherVideoQuality(),
-	);
-	const localParticipant = MediaEngine.room?.localParticipant ?? null;
-	const voicePresentation = buildVoiceStatsForNerdsPresentation({
-		connectionId: MediaEngine.connectionId,
-		connectionQuality: MediaEngine.localConnectionQuality,
-		currentLatency: MediaEngine.currentLatency,
-		averageLatency: MediaEngine.averageLatency,
-		stats: MediaEngine.voiceStats,
-		perTrackStats: MediaEngine.perTrackStats,
-		statsTimeSeries: MediaEngine.statsTimeSeries,
-		nativeStats: null,
-		publisherTransport: MediaEngine.publisherTransport,
-		subscriberTransport: MediaEngine.subscriberTransport,
-		localParticipant,
-		remoteParticipants: MediaEngine.room?.remoteParticipants.values() ?? null,
-	});
+	const snapshot = collectStatsForNerdsSnapshot();
 	return {
-		...voicePresentation,
-		connection: {
-			voiceServerEndpoint: MediaEngine.voiceServerEndpoint ?? 'n/a',
-			reconnectionCount: MediaEngine.reconnectionCount,
-		},
-		audio: readVoiceInputDiagnostics(),
-		screenShareSettings: {
-			resolution: effectiveScreenShareSettings.resolution,
-			frameRate: effectiveScreenShareSettings.frameRate,
-			streamingMode: VoiceSettings.getStreamingMode(),
-			preferredCodec: VoiceSettings.getPreferredScreenShareCodec(),
-			selectedCodec: ScreenShareCodecNegotiation.getSelectedCodec(),
-			codecPreferenceOrder: [...getScreenShareCodecPreferenceOrder()],
-			contentHint: VoiceSettings.getScreenShareContentHint(),
-			encoderMode: VoiceSettings.getScreenShareEncoderMode(),
-			scalabilityMode: VoiceSettings.getScreenShareScalabilityMode(),
-			maxBitrateMbps:
-				(getPublishedScreenShareMaxBitrateBps(localParticipant) ??
-					getScreenShareBitrateBps(effectiveScreenShareSettings.resolution, effectiveScreenShareSettings.frameRate)) /
-				1000000,
-			audioSourceMode: VoiceSettings.getScreenShareAudioSourceMode(),
-			audioIncludeSources: VoiceSettings.getScreenShareAudioIncludeSources(),
-			audioExcludeSources: VoiceSettings.getScreenShareAudioExcludeSources(),
-			shareDesktopAudio: VoiceSettings.getShareDesktopAudio(),
-			shareAppAudio: VoiceSettings.getShareAppAudio(),
-			muteStreamAudio: VoiceSettings.getMuteStreamAudio(),
-		},
-		screenShareAudioCapture: {
-			nativeCapture: getNativeAudioCaptureDiagnosticState(),
-			publications: collectScreenShareAudioPublicationDiagnostics(localParticipant),
-		},
+		...snapshot,
 		appInfo: {
-			appVersion: Config.PUBLIC_BUILD_VERSION ?? 'dev',
+			appVersion: snapshot.appInfo.appVersion,
 			electronVersion: desktopInfo?.electronVersion ?? null,
 			chromiumVersion: desktopInfo?.chromeVersion ?? null,
 			hardwareAccelerationEnabled:

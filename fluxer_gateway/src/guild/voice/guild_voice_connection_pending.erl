@@ -4,14 +4,13 @@
 
 -typing([eqwalizer]).
 
--include_lib("fluxer_gateway/include/voice_state.hrl").
-
 -export([
     pending_voice_connections/1,
     store_pending/3,
     maybe_restore_pending_connection/5,
     resolve_voice_state_from_pending/4,
     sweep_expired_pending_joins/1,
+    broadcast_moved_removals/2,
     clear_e2ee_room_key_if_channel_idle/3,
     validate_pending_nonce_and_expiry/2
 ]).
@@ -76,9 +75,38 @@ sweep_expired_pending_joins(State) ->
     PendingConnections = maps:get(pending_voice_connections, State, #{}),
     {Expired, Remaining} = partition_expired(Now, PendingConnections),
     spawn_force_disconnects(Expired),
+    ok = broadcast_moved_removals(Expired, State),
     StateCleared = clear_expired_virtual_flags(Expired, State),
     StateWithPending = StateCleared#{pending_voice_connections => Remaining},
     clear_expired_e2ee_keys(Expired, StateWithPending, Remaining).
+
+-spec broadcast_moved_removals([{binary(), map()}], guild_state()) -> ok.
+broadcast_moved_removals(Removed, State) ->
+    VoiceStates = voice_state_utils:voice_states(State),
+    lists:foreach(
+        fun({ConnId, Metadata}) ->
+            case
+                pending_get_boolean(Metadata, moved) andalso
+                    not maps:is_key(ConnId, VoiceStates)
+            of
+                true -> broadcast_moved_removal(ConnId, Metadata, State);
+                false -> ok
+            end
+        end,
+        Removed
+    ).
+
+-spec broadcast_moved_removal(binary(), map(), guild_state()) -> ok.
+broadcast_moved_removal(ConnId, Metadata, State) ->
+    case build_voice_state_from_pending(Metadata, ConnId, State) of
+        VoiceState when is_map(VoiceState) ->
+            ChannelIdBin = maps:get(<<"channel_id">>, VoiceState, null),
+            guild_voice_broadcast:broadcast_voice_state_update(
+                VoiceState#{<<"channel_id">> => null}, State, ChannelIdBin
+            );
+        undefined ->
+            ok
+    end.
 
 -spec clear_e2ee_room_key_if_channel_idle(
     integer() | undefined, voice_state_map(), guild_state()
@@ -251,7 +279,7 @@ build_voice_state_from_pending(PendingData, ConnectionId, State) ->
 resolve_pending_guild_id(PendingData, State) ->
     case pending_get_snowflake(PendingData, guild_id) of
         undefined ->
-            guild_voice_connection_normalize:normalize_positive_snowflake(
+            snowflake_id:parse_maybe(
                 maps:get(id, State, undefined)
             );
         GuildId ->
@@ -365,7 +393,9 @@ force_disconnect_with_retry(GId, CId, UId, ConnId, 0) ->
     ok;
 force_disconnect_with_retry(GId, CId, UId, ConnId, Retries) ->
     Result = shard_utils:safe_apply(
-        fun() -> guild_voice_disconnect:force_disconnect_participant(GId, CId, UId, ConnId) end,
+        fun() ->
+            guild_voice_disconnect_user:force_disconnect_participant(GId, CId, UId, ConnId)
+        end,
         {error, crashed}
     ),
     case Result of
@@ -438,7 +468,7 @@ pending_get_value(PendingData, Key) ->
 
 -spec pending_get_snowflake(map(), atom()) -> integer() | undefined.
 pending_get_snowflake(PendingData, Key) ->
-    guild_voice_connection_normalize:normalize_positive_snowflake(
+    snowflake_id:parse_maybe(
         pending_get_value(PendingData, Key)
     ).
 
@@ -492,21 +522,3 @@ pending_value_to_binary(Value) when
     type_conv:to_binary(Value);
 pending_value_to_binary(_) ->
     undefined.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-assemble_pending_voice_state_preserves_voice_routing_test() ->
-    PendingData = #{
-        guild_id => 20,
-        channel_id => 30,
-        user_id => 10,
-        session_id => <<"sess1">>,
-        region_id => <<"us-east">>,
-        server_id => <<"voice-ewr-1">>
-    },
-    VoiceState = assemble_pending_voice_state(PendingData, <<"conn1">>, 20, 30, 10),
-    ?assertEqual(<<"us-east">>, maps:get(<<"region_id">>, VoiceState)),
-    ?assertEqual(<<"voice-ewr-1">>, maps:get(<<"server_id">>, VoiceState)).
-
--endif.

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {IS_DEV} from '@app/features/platform/types/Env';
-import LocalPresence from '@app/features/presence/state/LocalPresence';
+import {isElectron} from '@app/features/ui/utils/ElectronRuntime';
 import {makeAutoObservable} from 'mobx';
 
 const IDLE_DURATION_MS = 1000 * (IS_DEV ? 10 : 60 * 10);
@@ -13,6 +13,7 @@ interface DesktopIdleApi {
 }
 
 function getDesktopIdleApi(): Required<DesktopIdleApi> | null {
+	if (!isElectron()) return null;
 	const electronApi = (
 		window as {
 			electron?: DesktopIdleApi | null;
@@ -30,8 +31,11 @@ function normalizeIdleTimeMs(value: number): number | null {
 
 class Idle {
 	idle = false;
+	afk = false;
+	private afkThresholdMs = IDLE_DURATION_MS;
 	private lastLocalActivityTime = Date.now();
 	private lastSystemActivityTime = 0;
+	private lastNonZeroSystemIdleTime = Date.now();
 	private checkInterval: NodeJS.Timeout | null = null;
 	private systemIdleCheckInFlight = false;
 	private lastSystemIdleFailureAt = 0;
@@ -57,19 +61,21 @@ class Idle {
 
 	recordActivity(): void {
 		this.lastLocalActivityTime = Date.now();
-		if (this.idle) {
-			this.applyIdleState(false);
-		}
-	}
-
-	markBackground(): void {
-		this.lastLocalActivityTime = 0;
-		this.lastSystemActivityTime = 0;
-		this.applyIdleState(true);
+		this.applyInactiveDuration(0);
 	}
 
 	isIdle(): boolean {
 		return this.idle;
+	}
+
+	isAfk(): boolean {
+		return this.afk;
+	}
+
+	setAfkTimeoutMs(afkThresholdMs: number): void {
+		if (afkThresholdMs === this.afkThresholdMs) return;
+		this.afkThresholdMs = afkThresholdMs;
+		this.updateIdleStateFromLocalActivity();
 	}
 
 	getIdleSince(): number {
@@ -98,18 +104,21 @@ class Idle {
 	}
 
 	private updateIdleStateFromLocalActivity(): void {
-		const now = Date.now();
-		this.applyIdleState(this.getInactiveDurationMs(now) >= IDLE_DURATION_MS);
+		this.applyInactiveDuration(this.getInactiveDurationMs());
 	}
 
 	private async updateIdleStateFromSystem(desktopIdleApi: Required<DesktopIdleApi>): Promise<void> {
 		this.systemIdleCheckInFlight = true;
 		try {
 			const idleTimeMs = normalizeIdleTimeMs(await desktopIdleApi.getSystemIdleTimeMs());
+			const now = Date.now();
 			if (idleTimeMs === null) {
-				this.lastSystemIdleFailureAt = Date.now();
-			} else {
-				this.lastSystemActivityTime = Math.max(this.lastSystemActivityTime, Date.now() - idleTimeMs);
+				this.lastSystemIdleFailureAt = now;
+			} else if (idleTimeMs > 0) {
+				this.lastNonZeroSystemIdleTime = now;
+				this.lastSystemActivityTime = Math.max(this.lastSystemActivityTime, now - idleTimeMs);
+			} else if (now - this.lastNonZeroSystemIdleTime < Math.min(IDLE_DURATION_MS, this.afkThresholdMs)) {
+				this.lastSystemActivityTime = now;
 			}
 		} catch {
 			this.lastSystemIdleFailureAt = Date.now();
@@ -119,11 +128,9 @@ class Idle {
 		this.updateIdleStateFromLocalActivity();
 	}
 
-	private applyIdleState(idle: boolean): void {
-		if (idle !== this.idle) {
-			this.idle = idle;
-			LocalPresence.updatePresence();
-		}
+	private applyInactiveDuration(inactiveDurationMs: number): void {
+		this.idle = inactiveDurationMs >= IDLE_DURATION_MS;
+		this.afk = inactiveDurationMs >= this.afkThresholdMs;
 	}
 }
 

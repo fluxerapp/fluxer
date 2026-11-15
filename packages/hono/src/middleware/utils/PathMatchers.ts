@@ -15,16 +15,3 @@ export function matchesAnyPathPattern(path: string, patterns: Array<string>): bo
 	}
 	return false;
 }
-
-function matchesExactOrNestedPath(path: string, prefix: string): boolean {
-	return path === prefix || path.startsWith(`${prefix}/`);
-}
-
-export function matchesAnyExactOrNestedPath(path: string, prefixes: Array<string>): boolean {
-	for (const prefix of prefixes) {
-		if (matchesExactOrNestedPath(path, prefix)) {
-			return true;
-		}
-	}
-	return false;
-}

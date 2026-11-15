@@ -15,7 +15,6 @@ export interface IGuildSearchService extends SchemaISearchAdapter<GuildSearchFil
 	indexGuilds(guilds: Array<Guild>): Promise<void>;
 	updateGuild(guild: Guild, discovery?: GuildDiscoveryContext): Promise<void>;
 	deleteGuild(guildId: GuildID): Promise<void>;
-	deleteGuilds(guildIds: Array<GuildID>): Promise<void>;
 	searchGuilds(
 		query: string,
 		filters: GuildSearchFilters,

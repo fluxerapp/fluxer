@@ -50,6 +50,7 @@ handle_cast(_Msg, State) ->
 -spec handle_info(term(), state()) -> {noreply, state()}.
 handle_info(sweep_orphan_tables, State) ->
     _ = sweep_orphan_tables(),
+    _ = proc_lib:spawn(fun guild_client_circuit_breaker:prune_dead/0),
     {noreply, State#{sweep_timer => schedule_orphan_sweep()}};
 handle_info(_Info, State) ->
     {noreply, State}.
@@ -99,6 +100,13 @@ ensure_core_tables() ->
         {voice_state_count_servers, RW},
         {guild_unavailability_cache, RO},
         {guild_circuit_breaker, RW},
+        {guild_circuit_breaker_slots, [
+            named_table,
+            public,
+            ordered_set,
+            {read_concurrency, true},
+            {write_concurrency, true}
+        ]},
         {guild_permission_cache, RO},
         {guild_read_model, RO},
         {guild_health_status, RO},
@@ -177,101 +185,3 @@ safe_table_name(Tab) ->
     catch
         error:badarg -> unknown
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-safe_delete_test_table(TableName) ->
-    try ets:delete(TableName) of
-        _ -> ok
-    catch
-        error:badarg -> ok
-    end.
-
-ensure_table_creates_table_owned_by_owner_test() ->
-    TableName = guild_ets_owner_test_table,
-    safe_delete_test_table(TableName),
-    {ok, Pid} = start_link(),
-    try
-        ok = ensure_table(TableName, [named_table, public, set]),
-        ?assertEqual(Pid, ets:info(TableName, owner))
-    after
-        gen_server:stop(?MODULE),
-        safe_delete_test_table(TableName)
-    end.
-
-core_voice_tables_are_owned_by_owner_on_start_test() ->
-    lists:foreach(
-        fun safe_delete_test_table/1,
-        [
-            guild_voice_registry,
-            voice_state_count_connections,
-            voice_state_count_regions,
-            voice_state_count_servers,
-            guild_unavailability_cache,
-            guild_circuit_breaker,
-            guild_permission_cache,
-            voice_update_queue,
-            voice_update_rate_limit
-        ]
-    ),
-    {ok, Pid} = start_link(),
-    try
-        ?assertEqual(Pid, ets:info(guild_voice_registry, owner)),
-        ?assertEqual(Pid, ets:info(voice_state_count_connections, owner)),
-        ?assertEqual(Pid, ets:info(voice_state_count_regions, owner)),
-        ?assertEqual(Pid, ets:info(voice_state_count_servers, owner)),
-        ?assertEqual(Pid, ets:info(guild_unavailability_cache, owner)),
-        ?assertEqual(Pid, ets:info(guild_circuit_breaker, owner)),
-        ?assertEqual(Pid, ets:info(guild_permission_cache, owner)),
-        ?assertEqual(Pid, ets:info(voice_update_queue, owner)),
-        ?assertEqual(Pid, ets:info(voice_update_rate_limit, owner))
-    after
-        gen_server:stop(?MODULE)
-    end.
-
-sweep_orphan_tables_detects_dead_owner_test() ->
-    Self = self(),
-    Pid = spawn(fun() -> orphan_test_table_owner(Self) end),
-    Tab =
-        receive
-            {tab, T} -> T
-        after 1000 -> error(timeout)
-        end,
-    exit(Pid, kill),
-    receive
-        {'ETS-TRANSFER', Tab, Pid, orphan_test} -> ok
-    after 1000 -> error(timeout)
-    end,
-    {ok, Count} = sweep_orphan_tables(),
-    ?assert(Count >= 0),
-    ets:delete(Tab).
-
-orphan_sweep_is_scheduled_and_rearmed_test() ->
-    {ok, Pid} = start_link(),
-    try
-        #{sweep_timer := Ref} = sys:get_state(Pid),
-        ?assert(is_reference(Ref)),
-        Pid ! sweep_orphan_tables,
-        #{sweep_timer := NextRef} = sys:get_state(Pid),
-        ?assert(is_reference(NextRef)),
-        ?assertNotEqual(Ref, NextRef),
-        ?assertEqual(Pid, ets:info(guild_voice_registry, owner))
-    after
-        gen_server:stop(?MODULE)
-    end.
-
-sweep_orphan_tables_returns_zero_when_clean_test() ->
-    {ok, Count} = sweep_orphan_tables(),
-    ?assert(is_integer(Count)),
-    ?assert(Count >= 0).
-
-orphan_test_table_owner(Parent) ->
-    Tab = ets:new(orphan_test_table, [set, public, {heir, Parent, orphan_test}]),
-    Parent ! {tab, Tab},
-    receive
-        stop -> ok
-    after 30000 -> ok
-    end.
-
--endif.

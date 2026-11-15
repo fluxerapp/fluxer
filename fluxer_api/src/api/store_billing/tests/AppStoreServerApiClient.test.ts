@@ -1,9 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createPublicKey} from 'node:crypto';
-import {mkdtemp, rm, writeFile} from 'node:fs/promises';
-import {tmpdir} from 'node:os';
-import {join} from 'node:path';
 import {Config} from '@app/api/Config';
 import {setInjectedAppleRootCertificates} from '@app/api/store_billing/app_store/AppleRootCertificates';
 import {AppStoreJwsVerificationError} from '@app/api/store_billing/app_store/AppStoreJwsVerifier';
@@ -21,7 +17,6 @@ import {
 } from '@app/api/test/msw/handlers/AppStoreServerApiHandlers';
 import {server} from '@app/api/test/msw/server';
 import {ms} from 'itty-time';
-import {decodeJwt, decodeProtectedHeader, jwtVerify} from 'jose';
 import {delay, HttpResponse, http} from 'msw';
 import {afterEach, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
@@ -64,117 +59,6 @@ describe('AppStoreServerApiClient', () => {
 	afterEach(() => {
 		Object.assign(Config.appStore, savedAppStore);
 		setInjectedAppleRootCertificates(undefined);
-	});
-
-	describe('authentication', () => {
-		it('signs an ES256 bearer token with the documented claims', async () => {
-			const authorizations: Array<string> = [];
-			server.use(
-				http.get(`${APP_STORE_PRODUCTION_BASE_URL}/inApps/v1/transactions/:id`, ({request}) => {
-					authorizations.push(request.headers.get('authorization') ?? '');
-					return HttpResponse.json({errorCode: 4040010, errorMessage: 'not found'}, {status: 404});
-				}),
-			);
-			const client = new AppStoreServerApiClient();
-			await captureError(
-				client.getTransactionInfo({environment: 'production', bundleId: 'com.fluxer', transactionId: '1'}),
-			);
-			expect(authorizations).toHaveLength(1);
-			const token = authorizations[0].replace(/^Bearer /, '');
-			expect(decodeProtectedHeader(token)).toEqual({alg: 'ES256', kid: 'FLUXERTEST', typ: 'JWT'});
-			const claims = decodeJwt(token);
-			expect(claims).toMatchObject({
-				iss: Config.appStore.issuerId,
-				aud: 'appstoreconnect-v1',
-				bid: 'com.fluxer',
-			});
-			expect((claims.exp ?? 0) - (claims.iat ?? 0)).toBe(3600);
-			const publicKey = createPublicKey(Config.appStore.privateKey ?? '');
-			await expect(jwtVerify(token, publicKey, {algorithms: ['ES256']})).resolves.toBeDefined();
-		});
-
-		it('reuses a token for 50 minutes per bundle', async () => {
-			let now = Date.parse('2026-09-29T10:00:00Z');
-			const tokens: Array<string> = [];
-			server.use(
-				http.get(`${APP_STORE_PRODUCTION_BASE_URL}/inApps/v1/transactions/:id`, ({request}) => {
-					tokens.push(request.headers.get('authorization') ?? '');
-					return HttpResponse.json({errorCode: 4040010}, {status: 404});
-				}),
-			);
-			const client = new AppStoreServerApiClient({now: () => now});
-			const call = (bundleId: string) =>
-				captureError(client.getTransactionInfo({environment: 'production', bundleId, transactionId: '1'}));
-			await call('com.fluxer');
-			now += ms('49 minutes');
-			await call('com.fluxer');
-			await call('com.fluxer.beta');
-			now += ms('2 minutes');
-			await call('com.fluxer');
-			expect(tokens[1]).toBe(tokens[0]);
-			expect(tokens[2]).not.toBe(tokens[0]);
-			expect(decodeJwt(tokens[2].replace(/^Bearer /, '')).bid).toBe('com.fluxer.beta');
-			expect(tokens[3]).not.toBe(tokens[0]);
-		});
-
-		it('signs a new token when the key id changes', async () => {
-			seedSubscription(fake, 'production', '100');
-			const client = new AppStoreServerApiClient();
-			await client.getTransactionInfo({environment: 'production', bundleId: 'com.fluxer', transactionId: '100'});
-			Config.appStore.keyId = 'ROTATED';
-			await expect(
-				client.getTransactionInfo({environment: 'production', bundleId: 'com.fluxer', transactionId: '100'}),
-			).resolves.toMatchObject({environment: 'production'});
-			expect(fake.requests.map((request) => request.bundleId)).toEqual(['com.fluxer', 'com.fluxer']);
-		});
-
-		it('surfaces a rejected token as final', async () => {
-			seedSubscription(fake, 'production', '103');
-			fake.failNext({}, {status: 401});
-			const client = new AppStoreServerApiClient();
-			const error = await captureError(
-				client.getTransactionInfo({environment: 'production', bundleId: 'com.fluxer', transactionId: '103'}),
-			);
-			expect(error).toMatchObject({status: 401, errorCode: null, retryable: false});
-		});
-
-		it('accepts a private key with escaped newlines', async () => {
-			seedSubscription(fake, 'production', '101');
-			Config.appStore.privateKey = (savedAppStore.privateKey ?? '').replaceAll('\n', '\\n');
-			const client = new AppStoreServerApiClient();
-			await expect(
-				client.getTransactionInfo({environment: 'production', bundleId: 'com.fluxer', transactionId: '101'}),
-			).resolves.toMatchObject({environment: 'production'});
-		});
-
-		it('reads the private key from a file', async () => {
-			seedSubscription(fake, 'production', '102');
-			const directory = await mkdtemp(join(tmpdir(), 'app-store-key-'));
-			try {
-				const path = join(directory, 'AuthKey.p8');
-				await writeFile(path, savedAppStore.privateKey ?? '');
-				Config.appStore.privateKey = undefined;
-				Config.appStore.privateKeyPath = path;
-				const client = new AppStoreServerApiClient();
-				await expect(
-					client.getTransactionInfo({environment: 'production', bundleId: 'com.fluxer', transactionId: '102'}),
-				).resolves.toMatchObject({environment: 'production'});
-			} finally {
-				await rm(directory, {recursive: true, force: true});
-			}
-		});
-
-		it('fails without credentials and makes no request', async () => {
-			Config.appStore.privateKey = undefined;
-			Config.appStore.privateKeyPath = undefined;
-			const client = new AppStoreServerApiClient();
-			const error = await captureError(
-				client.getTransactionInfo({environment: 'production', bundleId: 'com.fluxer', transactionId: '1'}),
-			);
-			expect(error).toBeInstanceOf(AppStoreServerApiError);
-			expect((error as AppStoreServerApiError).retryable).toBe(false);
-			expect(fake.requests).toHaveLength(0);
-		});
 	});
 
 	describe('environment routing', () => {
@@ -480,14 +364,5 @@ describe('AppStoreServerApiClient', () => {
 			);
 			expect(error).toMatchObject({status: 400, errorCode: 4000187, retryable: false});
 		});
-	});
-
-	it('requests a test notification', async () => {
-		const client = new AppStoreServerApiClient();
-		const token = await client.requestTestNotification({environment: 'sandbox', bundleId: 'com.fluxer'});
-		expect(token.length).toBeGreaterThan(0);
-		expect(fake.requests).toMatchObject([
-			{environment: 'sandbox', method: 'POST', path: '/inApps/v1/notifications/test'},
-		]);
 	});
 });

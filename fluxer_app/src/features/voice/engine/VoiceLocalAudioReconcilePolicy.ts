@@ -2,8 +2,8 @@
 
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
-export const VOICE_LOCAL_AUDIO_RECONCILE_REASON_LIMIT = 8;
-export const VOICE_LOCAL_AUDIO_RECONCILE_FOLLOW_UP_WARN_LIMIT = 16;
+const VOICE_LOCAL_AUDIO_RECONCILE_REASON_LIMIT = 8;
+const VOICE_LOCAL_AUDIO_RECONCILE_FOLLOW_UP_WARN_LIMIT = 16;
 
 export type VoiceLocalAudioReconcileCoalescerEvent = {type: 'run.requested'; reason: string} | {type: 'run.settled'};
 
@@ -129,10 +129,6 @@ export function selectVoiceLocalAudioReconcileCoalescedCount(
 	snapshot: VoiceLocalAudioReconcileCoalescerSnapshot,
 ): number {
 	return snapshot.context.coalescedCount;
-}
-
-export function selectVoiceLocalAudioReconcileStartedRuns(snapshot: VoiceLocalAudioReconcileCoalescerSnapshot): number {
-	return snapshot.context.generation;
 }
 
 export function shouldWarnAboutVoiceLocalAudioReconcileFollowUpRuns(

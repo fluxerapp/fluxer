@@ -9,9 +9,16 @@ import {shouldDisableAutofocusOnMobile} from '@app/features/platform/utils/Autof
 import {isTextInputKeyEvent} from '@app/features/platform/utils/IsTextInputKeyEvent';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import * as QuickSwitcherCommands from '@app/features/search/commands/QuickSwitcherCommands';
+import {
+	OtherAccountAvatar,
+	OtherAccountChannelIcon,
+} from '@app/features/search/components/quick_switcher/OtherAccountAvatar';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
+import {accountChannelAccessibleName} from '@app/features/search/state/QuickSwitcherAccountResults';
 import {type EscapeIntent, trackEscapeIntentUntilNextTask} from '@app/features/search/state/QuickSwitcherEscapeIntent';
 import type {
+	AccountChannelResult,
+	AccountResult,
 	GroupDMResult,
 	GuildResult,
 	HeaderResult,
@@ -30,6 +37,7 @@ import {GuildContextMenu} from '@app/features/ui/action_menu/GuildContextMenu';
 import {UserContextMenu} from '@app/features/ui/action_menu/UserContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import {StatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
+import {ArrowRightIcon} from '@app/features/ui/icons/DirectionalIcons';
 import type {SegmentedTab} from '@app/features/ui/segmented_tabs/SegmentedTabs';
 import LayerManager from '@app/features/ui/state/LayerManager';
 import Modal from '@app/features/ui/state/Modal';
@@ -38,7 +46,7 @@ import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {QuickSwitcherResultTypes} from '@fluxer/constants/src/QuickSwitcherConstants';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
-import {ArrowRightIcon, HouseIcon, StarIcon, UsersIcon} from '@phosphor-icons/react';
+import {HouseIcon, StarIcon, UsersIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import type React from 'react';
 import {useEffect, useLayoutEffect, useRef} from 'react';
@@ -67,6 +75,11 @@ const MESSAGE_1_MENTION_DESCRIPTOR = msg({
 	message: '1 mention',
 	comment: 'Badge text on a quick switcher row when the channel has exactly one mention.',
 });
+const HAS_UNREAD_MESSAGES_DESCRIPTOR = msg({
+	message: 'Unread messages',
+	comment:
+		'Accessible label suffix on a quick switcher row for another account that has unread messages but no mentions.',
+});
 const UNREAD_DESCRIPTOR = msg({
 	message: '{unreadCount, plural, one {# unread} other {# unread}}',
 	comment: 'Badge text on a quick switcher row when the channel has unread messages. unreadCount is the integer count.',
@@ -88,24 +101,6 @@ export interface QuickSwitcherResultAccessibilityMetadata {
 	unreadCount: number;
 }
 
-export interface QuickSwitcherSharedProps {
-	isOpen: boolean;
-	query: string;
-	results: Array<QuickSwitcherResult>;
-	selectedIndex: number;
-	onClose: () => void;
-	onSearch: (value: string) => void;
-	onMoveSelection: (direction: 'up' | 'down') => void;
-	onConfirmSelection: () => Promise<void>;
-}
-
-export interface QuickSwitcherMobileTabProps {
-	activeTab: 'search' | 'friends';
-	onTabChange: (tab: 'search' | 'friends') => void;
-	friendsSearchQuery: string;
-	onFriendsSearchChange: (value: string) => void;
-}
-
 export function getQuickSwitcherTabs(i18n: I18n): Array<SegmentedTab<'search' | 'friends'>> {
 	return [
 		{id: 'search', label: i18n._(SEARCH_DESCRIPTOR)},
@@ -119,18 +114,6 @@ export const PREFIX_HINTS = [
 	{symbol: '!', label: VOICE_CHANNELS_DESCRIPTOR},
 	{symbol: '*', label: COMMUNITIES_DESCRIPTOR},
 ];
-
-export function getViewContext(result: QuickSwitcherExecutableResult): string | undefined {
-	if (
-		result.type === QuickSwitcherResultTypes.TEXT_CHANNEL ||
-		result.type === QuickSwitcherResultTypes.VOICE_CHANNEL ||
-		result.type === QuickSwitcherResultTypes.USER ||
-		result.type === QuickSwitcherResultTypes.GROUP_DM
-	) {
-		return result.viewContext;
-	}
-	return undefined;
-}
 
 const QUICK_SWITCHER_ICON_SIZE = 24;
 
@@ -236,6 +219,29 @@ export function renderIcon(
 				),
 			};
 		}
+		case QuickSwitcherResultTypes.ACCOUNT:
+			return {
+				type: 'avatar' as const,
+				content: (
+					<OtherAccountAvatar
+						accountKey={result.accountKey}
+						size={QUICK_SWITCHER_ICON_SIZE}
+						data-flx="search.quick-switcher-modal-utils.render-icon.other-account-avatar"
+					/>
+				),
+			};
+		case QuickSwitcherResultTypes.ACCOUNT_CHANNEL:
+			return {
+				type: 'avatar' as const,
+				content: (
+					<OtherAccountChannelIcon
+						accountKey={result.accountKey}
+						channelType={result.channelType}
+						highlighted={isHighlight}
+						data-flx="search.quick-switcher-modal-utils.render-icon.other-account-channel-icon"
+					/>
+				),
+			};
 		case QuickSwitcherResultTypes.LINK:
 			return {
 				type: 'icon' as const,
@@ -261,10 +267,40 @@ export function renderIcon(
 	}
 }
 
+function getOtherAccountResultAccessibilityMetadata(
+	result: AccountResult | AccountChannelResult,
+	i18n: I18n,
+): QuickSwitcherResultAccessibilityMetadata {
+	const isChannel = result.type === QuickSwitcherResultTypes.ACCOUNT_CHANNEL;
+	const unread = isChannel ? result.unread : result.hasUnread;
+	const labelParts = [isChannel ? accountChannelAccessibleName(result, i18n) : result.title];
+	if (result.mentionCount > 0) {
+		labelParts.push(
+			result.mentionCount === 1
+				? i18n._(MESSAGE_1_MENTION_DESCRIPTOR)
+				: i18n._(MENTION_COUNT_ARIA_DESCRIPTOR, {mentionCount: result.mentionCount}),
+		);
+	} else if (unread) {
+		labelParts.push(i18n._(HAS_UNREAD_MESSAGES_DESCRIPTOR));
+	}
+	return {
+		guildName: isChannel ? (result.subtitle ?? null) : null,
+		isChannel: false,
+		isUser: false,
+		label: labelParts.join(', '),
+		mentionCount: result.mentionCount,
+		subtext: isChannel ? null : (result.subtitle ?? null),
+		unreadCount: unread ? 1 : 0,
+	};
+}
+
 export function getQuickSwitcherResultAccessibilityMetadata(
 	result: QuickSwitcherExecutableResult,
 	i18n: I18n,
 ): QuickSwitcherResultAccessibilityMetadata {
+	if (result.type === QuickSwitcherResultTypes.ACCOUNT || result.type === QuickSwitcherResultTypes.ACCOUNT_CHANNEL) {
+		return getOtherAccountResultAccessibilityMetadata(result, i18n);
+	}
 	const channelId = getChannelId(result);
 	const unreadCount = channelId ? ReadStates.getUnreadCount(channelId) : 0;
 	const mentionCount = channelId ? ReadStates.getMentionCount(channelId) : 0;
@@ -376,7 +412,7 @@ export function handleContextMenu(event: React.MouseEvent, result: QuickSwitcher
 	}
 }
 
-export function getChannelId(result: QuickSwitcherExecutableResult): string | null {
+function getChannelId(result: QuickSwitcherExecutableResult): string | null {
 	switch (result.type) {
 		case QuickSwitcherResultTypes.USER: {
 			const userResult = result as UserResult;
@@ -399,9 +435,28 @@ export function getChannelId(result: QuickSwitcherExecutableResult): string | nu
 	}
 }
 
+export function renderSectionHeaderContent(header: HeaderResult, nameClassName: string): React.ReactNode {
+	if (header.accountKey == null) return header.title;
+	return (
+		<>
+			<OtherAccountAvatar
+				accountKey={header.accountKey}
+				size={16}
+				data-flx="search.quick-switcher-modal-utils.section-header.other-account-avatar"
+			/>
+			<span className={nameClassName} dir="auto" data-flx="search.quick-switcher-modal-utils.section-header.name">
+				{header.title}
+			</span>
+		</>
+	);
+}
+
+export function isOtherAccountResult(result: QuickSwitcherExecutableResult): boolean {
+	return result.type === QuickSwitcherResultTypes.ACCOUNT || result.type === QuickSwitcherResultTypes.ACCOUNT_CHANNEL;
+}
+
 export function getResultKey(result: QuickSwitcherResult): string {
-	const viewContext = getViewContext(result as QuickSwitcherExecutableResult);
-	return viewContext ? `${result.type}-${viewContext}-${result.id}` : `${result.type}-${result.id}`;
+	return `${result.type}-${result.id}`;
 }
 
 export function createSections(results: Array<QuickSwitcherResult>): Array<QuickSwitcherSection> {

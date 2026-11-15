@@ -52,8 +52,6 @@
 	color: var(--text-primary);
 	cursor: pointer;
 	font-weight: 600;
-	text-transform: uppercase;
-	letter-spacing: 0.03em;
 	z-index: 2;
 	transition:
 		background-color var(--transition-fast),

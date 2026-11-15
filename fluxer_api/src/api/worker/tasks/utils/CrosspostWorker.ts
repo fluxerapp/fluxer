@@ -21,28 +21,3 @@ export function createCrosspostDeliveryService(): CrosspostDeliveryService {
 		searchService: deps.channelService.messages.search,
 	});
 }
-
-export async function mapWithConcurrency<T, R>(
-	items: ReadonlyArray<T>,
-	concurrency: number,
-	fn: (item: T) => Promise<R>,
-): Promise<Array<R>> {
-	const results: Array<R> = new Array(items.length);
-	let nextIndex = 0;
-	const workers = Array.from({length: Math.min(concurrency, items.length)}, async () => {
-		while (nextIndex < items.length) {
-			const index = nextIndex++;
-			results[index] = await fn(items[index]!);
-		}
-	});
-	await Promise.all(workers);
-	return results;
-}
-
-export function chunkArray<T>(items: ReadonlyArray<T>, size: number): Array<Array<T>> {
-	const chunks: Array<Array<T>> = [];
-	for (let index = 0; index < items.length; index += size) {
-		chunks.push(items.slice(index, index + size));
-	}
-	return chunks;
-}

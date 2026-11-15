@@ -11,27 +11,27 @@ import {observer} from 'mobx-react-lite';
 
 const NO_COMMUNITIES_MATCH_DESCRIPTOR = msg({
 	message: 'No communities match.',
-	comment: 'Empty-state text in the discovery page.',
+	comment: 'Empty-state text in the Explore page.',
 });
 const NO_MATCHING_COMMUNITIES_HINT_DESCRIPTOR = msg({
 	message: 'Try another search term, or pick a different category or language.',
-	comment: 'Empty-state hint in Discovery shown under the heading when a search returns no communities.',
+	comment: 'Empty-state hint in Explore shown under the heading when a search returns no communities.',
 });
 const NOTHING_TO_EXPLORE_DESCRIPTOR = msg({
 	message: 'Nothing to explore yet',
-	comment: 'Empty-state heading in Discovery shown when no communities are listed at all.',
+	comment: 'Empty-state heading in Explore shown when no communities are listed at all.',
 });
 const NOTHING_TO_EXPLORE_HINT_DESCRIPTOR = msg({
 	message: 'No communities are listed right now. Check back a little later.',
-	comment: 'Empty-state hint in Discovery shown under the heading when no communities are listed at all.',
+	comment: 'Empty-state hint in Explore shown under the heading when no communities are listed at all.',
 });
 const COULD_NOT_LOAD_COMMUNITIES_DESCRIPTOR = msg({
 	message: "Couldn't load communities",
-	comment: 'Empty-state heading in Discovery shown when the request for communities failed.',
+	comment: 'Empty-state heading in Explore shown when the request for communities failed.',
 });
 const COULD_NOT_LOAD_COMMUNITIES_HINT_DESCRIPTOR = msg({
 	message: 'Check your connection, then try again.',
-	comment: 'Empty-state hint in Discovery shown under the heading when the request for communities failed.',
+	comment: 'Empty-state hint in Explore shown under the heading when the request for communities failed.',
 });
 
 interface DiscoveryEmptyStateContent {

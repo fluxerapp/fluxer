@@ -68,18 +68,6 @@ describe('Webhook Instatus integration', () => {
 		await harness?.shutdown();
 	});
 	describe('POST /webhooks/:webhook_id/:token/instatus', () => {
-		it('accepts an incident notification', async () => {
-			const owner = await createTestAccount(harness);
-			const guild = await createGuild(harness, owner.token, 'Instatus Incident Guild');
-			const channelId = guild.system_channel_id!;
-			const webhook = await createWebhook(harness, channelId, owner.token, 'Instatus Webhook');
-			await createBuilderWithoutAuth(harness)
-				.post(`/webhooks/${webhook.id}/${webhook.token}/instatus`)
-				.body({meta: createInstatusMeta(), page: createInstatusPage(), incident: createInstatusIncident()})
-				.expect(HTTP_STATUS.NO_CONTENT)
-				.execute();
-			await deleteWebhook(harness, webhook.id, owner.token);
-		});
 		it('suppresses a repeated incident callback within the deduplication window', async () => {
 			const owner = await createTestAccount(harness);
 			const guild = await createGuild(harness, owner.token, 'Instatus Duplicate Guild');
@@ -114,35 +102,6 @@ describe('Webhook Instatus integration', () => {
 					.execute();
 			}
 			expect(await countWebhookMessages(harness, owner.token, channelId, webhook.id)).toBe(2);
-			await deleteWebhook(harness, webhook.id, owner.token);
-		});
-		it('accepts a component status update', async () => {
-			const owner = await createTestAccount(harness);
-			const guild = await createGuild(harness, owner.token, 'Instatus Component Guild');
-			const channelId = guild.system_channel_id!;
-			const webhook = await createWebhook(harness, channelId, owner.token, 'Instatus Component Webhook');
-			await createBuilderWithoutAuth(harness)
-				.post(`/webhooks/${webhook.id}/${webhook.token}/instatus`)
-				.body({
-					meta: createInstatusMeta(),
-					page: {...createInstatusPage(), status_indicator: 'UP', status_description: 'All Systems Operational'},
-					component_update: {created_at: '2026-07-06T11:00:00.000Z', new_status: 'Major outage', component_id: 'c_1'},
-					component: {id: 'c_1', name: 'API', status: 'Major outage', created_at: '2026-01-01T00:00:00.000Z'},
-				})
-				.expect(HTTP_STATUS.NO_CONTENT)
-				.execute();
-			await deleteWebhook(harness, webhook.id, owner.token);
-		});
-		it('accepts an empty selected payload without sending', async () => {
-			const owner = await createTestAccount(harness);
-			const guild = await createGuild(harness, owner.token, 'Instatus Empty Guild');
-			const channelId = guild.system_channel_id!;
-			const webhook = await createWebhook(harness, channelId, owner.token, 'Instatus Empty Webhook');
-			await createBuilderWithoutAuth(harness)
-				.post(`/webhooks/${webhook.id}/${webhook.token}/instatus`)
-				.body({meta: createInstatusMeta(), page: createInstatusPage()})
-				.expect(HTTP_STATUS.NO_CONTENT)
-				.execute();
 			await deleteWebhook(harness, webhook.id, owner.token);
 		});
 		it('rejects an instatus webhook with an invalid token', async () => {

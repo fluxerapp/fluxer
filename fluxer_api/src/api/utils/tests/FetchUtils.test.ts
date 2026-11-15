@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as FetchUtils from '@app/api/utils/FetchUtils';
-import {describe, expect, it, vi} from 'vitest';
+import {describe, expect, it} from 'vitest';
 
 function createStream(chunks: Array<string>): ReadableStream<Uint8Array> {
 	const encoder = new TextEncoder();
@@ -65,29 +65,17 @@ describe('streamToBufferWithLimit', () => {
 	});
 
 	it('rejects an oversized response without waiting for cancellation to finish', async () => {
-		vi.useFakeTimers();
-		const cancelled = Promise.withResolvers<void>();
-		const cleanup = Promise.withResolvers<void>();
 		const stream = new ReadableStream<Uint8Array>({
 			start(controller) {
 				controller.enqueue(new Uint8Array(5));
 			},
 			cancel() {
-				cancelled.resolve();
-				return cleanup.promise;
+				return new Promise<void>(() => {});
 			},
 		});
-		const settled = vi.fn();
-		const result = FetchUtils.streamToBufferWithLimit(stream, {maxBytes: 4}).then(settled, settled);
-		try {
-			await cancelled.promise;
-			await vi.advanceTimersByTimeAsync(0);
-			expect(settled).toHaveBeenCalledExactlyOnceWith(expect.any(FetchUtils.ResponseBodyTooLargeError));
-			expect(stream.locked).toBe(false);
-		} finally {
-			cleanup.resolve();
-			await result;
-			vi.useRealTimers();
-		}
+		await expect(FetchUtils.streamToBufferWithLimit(stream, {maxBytes: 4})).rejects.toBeInstanceOf(
+			FetchUtils.ResponseBodyTooLargeError,
+		);
+		expect(stream.locked).toBe(false);
 	});
 });

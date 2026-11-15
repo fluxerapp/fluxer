@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ApiContext} from '@app/api/ApiContext';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
-import type {IConnectionRepository} from '@app/api/connection/IConnectionRepository';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {ConnectionRepository} from '@app/api/connection/ConnectionRepository';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildService} from '@app/api/guild/services/GuildService';
-import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
+import type {DiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {EntityAssetService} from '@app/api/infrastructure/EntityAssetService';
 import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
 import type {KVBulkMessageDeletionQueueService} from '@app/api/infrastructure/KVBulkMessageDeletionQueueService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import type {OperatorPassServices} from '@app/api/middleware/OperatorPassServiceFactory';
 import {UserAccountService} from '@app/api/user/services/UserAccountService';
 import {UserChannelService} from '@app/api/user/services/UserChannelService';
 import type {UserContactChangeLogService} from '@app/api/user/services/UserContactChangeLogService';
@@ -29,17 +30,18 @@ export class UserService {
 		apiContext: ApiContext,
 		userCacheService: UserCacheService,
 		channelService: ChannelService,
-		channelRepository: IChannelRepository,
+		channelRepository: ChannelRepository,
 		guildService: GuildService,
 		entityAssetService: EntityAssetService,
-		discriminatorService: IDiscriminatorService,
-		guildRepository: IGuildRepositoryAggregate,
+		discriminatorService: DiscriminatorService,
+		guildRepository: GuildRepository,
 		userPermissionUtils: UserPermissionUtils,
 		kvDeletionQueue: KVAccountDeletionQueueService,
 		bulkMessageDeletionQueue: KVBulkMessageDeletionQueueService,
 		contactChangeLogService: UserContactChangeLogService,
-		connectionRepository: IConnectionRepository,
+		connectionRepository: ConnectionRepository,
 		limitConfigService: LimitConfigService,
+		operatorPassServices: Pick<OperatorPassServices, 'holdingService' | 'roleService'> | null,
 	) {
 		this.accountService = new UserAccountService(
 			apiContext,
@@ -52,8 +54,14 @@ export class UserService {
 			contactChangeLogService,
 			connectionRepository,
 			limitConfigService,
+			operatorPassServices?.roleService ?? null,
 		);
-		this.relationshipService = new UserRelationshipService(apiContext, userPermissionUtils, limitConfigService);
+		this.relationshipService = new UserRelationshipService(
+			apiContext,
+			userPermissionUtils,
+			limitConfigService,
+			operatorPassServices,
+		);
 		this.channelService = new UserChannelService(
 			apiContext,
 			channelService,
@@ -63,7 +71,6 @@ export class UserService {
 		);
 		this.contentService = new UserContentService(
 			apiContext,
-			userCacheService,
 			channelService,
 			channelRepository,
 			bulkMessageDeletionQueue,

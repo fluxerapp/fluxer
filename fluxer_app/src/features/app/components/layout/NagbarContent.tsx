@@ -18,7 +18,7 @@ export const NagbarContent = ({message, actions, isMobile, onDismiss}: NagbarCon
 	const showMobileDismiss = isMobile && onDismiss;
 	return (
 		<div className={clsx(styles.container, isMobile && styles.containerMobile)} data-flx="app.nagbar-content.container">
-			<p className={styles.message} data-flx="app.nagbar-content.message">
+			<p className={styles.message} dir="auto" data-flx="app.nagbar-content.message">
 				{message}
 			</p>
 			{(actions || showMobileDismiss) && (

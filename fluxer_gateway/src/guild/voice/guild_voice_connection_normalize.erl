@@ -12,7 +12,6 @@
 -export([normalize_session_id/1]).
 -export([normalize_optional_binary/1]).
 -export([normalize_guild_id/1]).
--export([normalize_positive_snowflake/1]).
 
 -spec normalize_connection_id(term()) -> binary() | undefined.
 normalize_connection_id(undefined) -> undefined;
@@ -21,11 +20,11 @@ normalize_connection_id(ConnectionId) -> normalize_optional_binary(ConnectionId)
 
 -spec normalize_user_id(term()) -> integer() | undefined.
 normalize_user_id(Value) ->
-    normalize_positive_snowflake(Value).
+    snowflake_id:parse_maybe(Value).
 
 -spec normalize_channel_id_value(term()) -> integer() | null | undefined.
 normalize_channel_id_value(null) -> null;
-normalize_channel_id_value(Value) -> normalize_positive_snowflake(Value).
+normalize_channel_id_value(Value) -> snowflake_id:parse_maybe(Value).
 
 -spec normalize_boolean(term()) -> boolean().
 normalize_boolean(true) -> true;
@@ -62,7 +61,7 @@ normalize_optional_binary(_Value) -> undefined.
 
 -spec normalize_guild_id(term()) -> {ok, integer(), binary()} | {error, atom()}.
 normalize_guild_id(Value) ->
-    case normalize_positive_snowflake(Value) of
+    case snowflake_id:parse_maybe(Value) of
         undefined -> {error, voice_invalid_guild_id};
         Int -> {ok, Int, guild_id_binary(Value, Int)}
     end.
@@ -74,42 +73,10 @@ guild_id_binary(Value, Int) ->
         Bin -> Bin
     end.
 
--spec normalize_positive_snowflake(term()) -> integer() | undefined.
-normalize_positive_snowflake(Value) ->
-    snowflake_id:parse_maybe(Value).
-
--spec safe_iolist_to_binary(term()) -> binary() | undefined.
+-spec safe_iolist_to_binary(list()) -> binary() | undefined.
 safe_iolist_to_binary(Value) ->
-    case safe_iolist_to_binary_parts(Value) of
-        {ok, Binary} -> Binary;
-        error -> undefined
+    try iolist_to_binary(eqwalizer:dynamic_cast(Value)) of
+        Binary -> Binary
+    catch
+        error:badarg -> undefined
     end.
-
--spec safe_iolist_to_binary_parts(term()) -> {ok, binary()} | error.
-safe_iolist_to_binary_parts(Value) when is_binary(Value) ->
-    {ok, Value};
-safe_iolist_to_binary_parts(Value) when is_integer(Value), Value >= 0, Value =< 255 ->
-    {ok, <<Value>>};
-safe_iolist_to_binary_parts(Value) when is_list(Value) ->
-    safe_iolist_list_to_binary(Value);
-safe_iolist_to_binary_parts(_) ->
-    error.
-
--spec safe_iolist_list_to_binary(term()) -> {ok, binary()} | error.
-safe_iolist_list_to_binary([]) ->
-    {ok, <<>>};
-safe_iolist_list_to_binary([Head | Tail]) ->
-    case {safe_iolist_to_binary_parts(Head), safe_iolist_tail_to_binary(Tail)} of
-        {{ok, HeadBinary}, {ok, TailBinary}} -> {ok, <<HeadBinary/binary, TailBinary/binary>>};
-        _ -> error
-    end;
-safe_iolist_list_to_binary(_) ->
-    error.
-
--spec safe_iolist_tail_to_binary(term()) -> {ok, binary()} | error.
-safe_iolist_tail_to_binary(Value) when is_binary(Value) ->
-    {ok, Value};
-safe_iolist_tail_to_binary(Value) when is_list(Value) ->
-    safe_iolist_list_to_binary(Value);
-safe_iolist_tail_to_binary(_) ->
-    error.

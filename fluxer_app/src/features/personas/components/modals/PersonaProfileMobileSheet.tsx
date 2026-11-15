@@ -71,7 +71,6 @@ import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import * as ProfileDisplayUtils from '@app/features/user/utils/ProfileDisplayUtils';
 import {
 	getProfileMembershipDisplayName,
-	GLOBAL_PROFILE_MEMBERSHIP,
 	resolveProfileGuildMembership,
 	toProfileDisplayContext,
 } from '@app/features/user/utils/ProfileGuildMembership';
@@ -111,7 +110,7 @@ import * as ColorUtils from '@app/features/theme/utils/ColorUtils';
 import { Avatar } from '@app/features/ui/components/Avatar';
 import { isKeyboardActivationKey } from '@app/features/input/utils/KeyboardUtils';
 import { clsx } from 'clsx';
-import { getDefaultAvatarPrimaryColor } from '@app/features/user/utils/AvatarSourceUtils';
+import { getDefaultAvatarPrimaryColor } from '@app/features/user/utils/AvatarUtils';
 
 const UNBLOCK_USER_DESCRIPTOR = msg({
 	message: 'Unblock user',
@@ -296,7 +295,7 @@ const PersonaProfileMobileSheetContent: React.FC<PersonaProfileMobileSheetConten
 				toProfileDisplayContext({
 					user,
 					profile,
-					membership: GLOBAL_PROFILE_MEMBERSHIP,
+					membership: resolveProfileGuildMembership(profile),
 					guildMemberProfile: undefined,
 				}),
 			[user, profile],

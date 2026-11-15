@@ -10,6 +10,8 @@ pub const QUEUE_GROUP: &str = "fluxer-push";
 
 const SUPPORTED_VERSION: u8 = 1;
 const DIRECT_MESSAGE_GUILD_ID: &str = "0";
+const THREAD_KIND: &str = "thread";
+const FORUM_THREAD_CREATED_KIND: &str = "forum_thread_created";
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
 pub struct MessageJob {
@@ -19,6 +21,16 @@ pub struct MessageJob {
     pub message_id: String,
     pub notification: NotificationFields,
     pub user_ids: Vec<String>,
+    #[serde(default)]
+    pub kind: Option<String>,
+    #[serde(default)]
+    pub parent_id: Option<String>,
+    #[serde(default)]
+    pub parent_name: Option<String>,
+    #[serde(default)]
+    pub channel_name: Option<String>,
+    #[serde(default)]
+    pub age_restricted: bool,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
@@ -26,12 +38,25 @@ pub struct NotificationFields {
     pub title: String,
     pub body: String,
     pub icon: String,
-    pub badge: String,
+    #[serde(default)]
+    pub badge: Option<String>,
     pub tag: String,
     pub notification_tag: String,
     pub url: String,
     #[serde(default)]
     pub image_url: Option<String>,
+    #[serde(default)]
+    pub author_name: Option<String>,
+    #[serde(default)]
+    pub guild_name: Option<String>,
+    #[serde(default)]
+    pub conversation_name: Option<String>,
+    #[serde(default)]
+    pub conversation_kind: Option<String>,
+    #[serde(default)]
+    pub preview_kind: Option<String>,
+    #[serde(default)]
+    pub preview_arg: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
@@ -71,6 +96,17 @@ pub enum JobError {
 impl MessageJob {
     pub fn is_direct_message(&self) -> bool {
         self.guild_id == DIRECT_MESSAGE_GUILD_ID
+    }
+
+    pub fn is_thread(&self) -> bool {
+        matches!(
+            self.kind.as_deref(),
+            Some(THREAD_KIND | FORUM_THREAD_CREATED_KIND)
+        )
+    }
+
+    pub fn is_forum_thread_created(&self) -> bool {
+        self.kind.as_deref() == Some(FORUM_THREAD_CREATED_KIND)
     }
 }
 
@@ -131,5 +167,37 @@ mod tests {
             decode_clear(&clear_job(None)).expect("decodes").user_id,
             "1"
         );
+    }
+
+    const BASE: &str = r#"{"v":1,"config_version":3,"guild_id":"5","channel_id":"6","message_id":"7","notification":{"title":"t","body":"b","icon":"i","badge":"g","tag":"x","notification_tag":"y","url":"/u"},"user_ids":["8"]"#;
+
+    #[test]
+    fn a_job_without_thread_fields_decodes_as_before() {
+        let job = decode_message(format!("{BASE}}}").as_bytes()).expect("the job decodes");
+        assert!(!job.is_thread());
+        assert_eq!(job.parent_id, None);
+        assert_eq!(job.parent_name, None);
+        assert_eq!(job.channel_name, None);
+    }
+
+    #[test]
+    fn a_job_without_a_badge_decodes() {
+        let job = decode_message(
+            br#"{"v":1,"guild_id":"5","channel_id":"6","message_id":"7","notification":{"title":"t","body":"b","icon":"i","tag":"x","notification_tag":"y","url":"/u"},"user_ids":["8"]}"#,
+        )
+        .expect("the job decodes");
+        assert_eq!(job.notification.badge, None);
+    }
+
+    #[test]
+    fn a_gateway_thread_job_decodes_as_a_thread() {
+        let job = decode_message(
+            br#"{"v":1,"config_version":3,"guild_id":"5","channel_id":"6","message_id":"7","notification":{"title":"ada (#ideas, #general, Guild)","body":"hi","icon":"icon","badge":"badge","tag":"channel:6:7","notification_tag":"channel:6","url":"/channels/5/6/7","image_url":null},"user_ids":["8"],"kind":"thread","parent_id":"200","parent_name":"general","channel_name":"ideas"}"#,
+        )
+        .expect("the job decodes");
+        assert!(job.is_thread());
+        assert_eq!(job.parent_id.as_deref(), Some("200"));
+        assert_eq!(job.parent_name.as_deref(), Some("general"));
+        assert_eq!(job.channel_name.as_deref(), Some("ideas"));
     }
 }

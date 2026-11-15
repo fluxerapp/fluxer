@@ -44,7 +44,7 @@
 	font-variant-numeric: tabular-nums;
 	white-space: nowrap;
 	min-width: 5.5rem;
-	text-align: right;
+	text-align: end;
 }
 
 .controls {
@@ -80,6 +80,7 @@
 
 .playButton:hover {
 	background-color: var(--brand-primary-light);
+	color: var(--text-on-brand-primary-light);
 }
 
 .playButton:active {
@@ -141,17 +142,4 @@
 .mobile .seekButton {
 	width: 2.75rem;
 	height: 2.75rem;
-}
-
-.spinner {
-	animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-	from {
-		transform: rotate(0deg);
-	}
-	to {
-		transform: rotate(360deg);
-	}
 }

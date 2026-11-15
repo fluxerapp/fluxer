@@ -29,5 +29,11 @@
 		Cache-Control "no-store"
 	}
 
+	@hashedBadges path_regexp ^/badges/[0-9a-f]{16}\.(webp|png)$
+	header @hashedBadges {
+		defer
+		Cache-Control "public, max-age=31536000, immutable"
+	}
+
 	file_server
 }

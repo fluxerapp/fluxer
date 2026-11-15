@@ -4,6 +4,7 @@ import {Config} from '@app/api/Config';
 import {expireLegacyDefaultTtlRows} from '@app/api/database/PostgresKvDefaultTtlExpiry';
 import {pruneExpiredPostgresKvRows} from '@app/api/database/PostgresKvQueryExecutor';
 import {expireLegacyJobLedgerRows} from '@app/api/jobs/PostgresJobLedgerExpiry';
+import {getPostgresKVProvider} from '@app/api/middleware/ServiceRegistry';
 import {getDefaultPostgresClient} from '@pkgs/postgres/src/Client';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {ms} from 'itty-time';
@@ -15,6 +16,15 @@ const LEGACY_EXPIRY_BUDGET_MS = ms('2 minutes');
 const prunePostgresKvTtl: WorkerTaskHandler = async (_payload, helpers) => {
 	if (Config.database.backend !== 'postgres') {
 		return;
+	}
+	const kvProvider = getPostgresKVProvider();
+	if (kvProvider !== null) {
+		const kv = await kvProvider.pruneExpired(PRUNE_BATCH_SIZE, MAX_PRUNE_BATCHES_PER_RUN);
+		if (kv.overCap) {
+			helpers.logger.warn({...kv}, 'Key-value tables are over FLUXER_KV_POSTGRES_MAX_BYTES, key-value writes fail');
+		} else if (kv.deletedKeys > 0 || kv.deletedBuckets > 0) {
+			helpers.logger.info({...kv}, 'Pruned expired key-value rows');
+		}
 	}
 	const client = getDefaultPostgresClient();
 	const deadlineMs = Date.now() + LEGACY_EXPIRY_BUDGET_MS;

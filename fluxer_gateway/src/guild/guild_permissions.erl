@@ -7,20 +7,7 @@
     get_member_permissions/3,
     compute_member_permissions/4,
     member_base_permissions/3,
-    channel_permissions/4,
-    can_view_channel/4,
-    viewable_channel_ids/4,
-    can_view_channel_by_permissions/4,
-    can_view_channel_members/4,
-    can_manage_channel/3,
-    can_access_message_by_permissions/3,
-    apply_channel_overwrites/5,
-    get_max_role_position/2,
-    find_member_by_user_id/2,
-    find_role_by_id/2,
-    find_channel_by_id/2,
-    view_inputs/2,
-    aggregate_role_permissions_cached/4
+    channel_permissions/4
 ]).
 
 -export_type([
@@ -55,9 +42,14 @@ get_member_permissions(UserId, ChannelId, State) ->
 -spec compute_member_permissions(user_id(), maybe_channel_id(), maybe_member(), guild_state()) ->
     permission().
 compute_member_permissions(UserId, ChannelId, ProvidedMember, State) ->
-    channel_permissions(
-        member_base_permissions(UserId, ProvidedMember, State), UserId, ChannelId, State
-    ).
+    case thread_for_channel(ChannelId, State) of
+        undefined ->
+            overwrite_permissions(
+                member_base_permissions(UserId, ProvidedMember, State), UserId, ChannelId, State
+            );
+        Thread ->
+            guild_thread_permissions:resolve(UserId, Thread, ProvidedMember, State)
+    end.
 
 -spec member_base_permissions(user_id(), maybe_member(), guild_state()) -> base_permissions().
 member_base_permissions(UserId, ProvidedMember, State) when is_integer(UserId) ->
@@ -72,12 +64,46 @@ member_base_permissions(_, _, _) ->
 
 -spec channel_permissions(base_permissions(), user_id(), maybe_channel_id(), guild_state()) ->
     permission().
-channel_permissions({Permissions, MemberRoles, GuildId}, UserId, ChannelId, State) ->
+channel_permissions(Base, UserId, ChannelId, State) ->
+    case thread_for_channel(ChannelId, State) of
+        undefined ->
+            overwrite_permissions(Base, UserId, ChannelId, State);
+        Thread ->
+            guild_thread_permissions:resolve(
+                UserId,
+                Thread,
+                guild_permissions_check:find_member_by_user_id(UserId, State),
+                State
+            )
+    end.
+
+-spec overwrite_permissions(base_permissions(), user_id(), maybe_channel_id(), guild_state()) ->
+    permission().
+overwrite_permissions({Permissions, MemberRoles, GuildId}, UserId, ChannelId, State) ->
     guild_permissions_overwrites:maybe_apply_channel_overwrites(
         Permissions, UserId, MemberRoles, ChannelId, GuildId, State
     );
-channel_permissions(Permissions, _UserId, _ChannelId, _State) ->
+overwrite_permissions(Permissions, _UserId, _ChannelId, _State) ->
     Permissions.
+
+-spec thread_for_channel(maybe_channel_id(), guild_state()) -> map() | undefined.
+thread_for_channel(ChannelId, State) when is_integer(ChannelId) ->
+    case guild_thread_gate:store(State) of
+        undefined ->
+            undefined;
+        Tab ->
+            stored_thread(Tab, ChannelId)
+    end;
+thread_for_channel(_ChannelId, _State) ->
+    undefined.
+
+-spec stored_thread(guild_thread_store:tab(), integer()) -> map() | undefined.
+stored_thread(Tab, ChannelId) ->
+    try
+        guild_thread_store:get_thread(Tab, ChannelId)
+    catch
+        error:badarg -> undefined
+    end.
 
 -spec base_permissions_for_data(user_id(), maybe_member(), guild_state(), guild_data()) ->
     base_permissions().
@@ -87,61 +113,6 @@ base_permissions_for_data(UserId, ProvidedMember, State, Data) ->
         true -> ?ALL_PERMISSIONS;
         false -> non_owner_base_permissions(UserId, ProvidedMember, State, Data)
     end.
-
--spec can_view_channel(user_id(), integer(), maybe_member(), guild_state()) -> boolean().
-can_view_channel(UserId, ChannelId, Member, State) ->
-    guild_permissions_check:can_view_channel(UserId, ChannelId, Member, State).
-
--spec viewable_channel_ids(user_id(), base_permissions(), [map()], guild_state()) ->
-    #{integer() => true}.
-viewable_channel_ids(UserId, Base, Channels, State) ->
-    guild_permissions_check:viewable_channel_ids(UserId, Base, Channels, State).
-
--spec can_view_channel_by_permissions(user_id(), integer(), maybe_member(), guild_state()) ->
-    boolean().
-can_view_channel_by_permissions(UserId, ChannelId, Member, State) ->
-    guild_permissions_check:can_view_channel_by_permissions(UserId, ChannelId, Member, State).
-
--spec can_view_channel_members(user_id(), integer(), maybe_member(), guild_state()) ->
-    boolean().
-can_view_channel_members(UserId, ChannelId, Member, State) ->
-    guild_permissions_check:can_view_channel_members(UserId, ChannelId, Member, State).
-
--spec can_manage_channel(user_id(), maybe_channel_id(), guild_state()) -> boolean().
-can_manage_channel(UserId, ChannelId, State) ->
-    guild_permissions_check:can_manage_channel(UserId, ChannelId, State).
-
--spec can_access_message_by_permissions(permission(), binary(), guild_state()) -> boolean().
-can_access_message_by_permissions(Permissions, MessageId, State) ->
-    guild_permissions_check:can_access_message_by_permissions(Permissions, MessageId, State).
-
--spec apply_channel_overwrites(
-    permission(), user_id() | undefined, member_roles(), map(), role_id()
-) -> permission().
-apply_channel_overwrites(BasePerms, UserId, MemberRoles, Channel, EveryoneRoleId) ->
-    guild_permissions_overwrites:apply_channel_overwrites(
-        BasePerms, UserId, MemberRoles, Channel, EveryoneRoleId
-    ).
-
--spec get_max_role_position(user_id(), guild_state()) -> integer().
-get_max_role_position(UserId, State) ->
-    guild_permissions_check:get_max_role_position(UserId, State).
-
--spec find_member_by_user_id(user_id(), guild_state()) -> member() | undefined.
-find_member_by_user_id(UserId, State) ->
-    guild_permissions_check:find_member_by_user_id(UserId, State).
-
--spec find_role_by_id(role_id(), [map()] | map()) -> map() | undefined.
-find_role_by_id(RoleId, Roles) ->
-    guild_permissions_check:find_role_by_id(RoleId, Roles).
-
--spec find_channel_by_id(integer(), guild_state()) -> map() | undefined.
-find_channel_by_id(ChannelId, State) ->
-    guild_permissions_check:find_channel_by_id(ChannelId, State).
-
--spec view_inputs(integer(), guild_state()) -> term().
-view_inputs(ChannelId, State) ->
-    guild_permissions_check:view_inputs(ChannelId, State).
 
 -spec non_owner_base_permissions(user_id(), maybe_member(), guild_state(), guild_data()) ->
     base_permissions().
@@ -159,17 +130,21 @@ member_role_base_permissions(Member, State, Data) ->
         undefined ->
             0;
         GuildId ->
-            Roles = guild_data_index:role_index(Data),
+            Roles = guild_data_index_roles:role_index(Data),
             RolePermsCache = maps:get(role_perms_cache, Data, #{}),
             BasePermissions = cached_role_permissions(GuildId, RolePermsCache, Roles),
             MemberRoles = guild_permissions_common:member_role_ids(Member),
             Permissions = aggregate_role_permissions_cached(
                 MemberRoles, RolePermsCache, Roles, BasePermissions
             ),
-            case permission_bits:has(Permissions, constants:administrator_permission()) of
-                true -> ?ALL_PERMISSIONS;
-                false -> {Permissions, MemberRoles, GuildId}
-            end
+            admin_or_role_permissions(Permissions, MemberRoles, GuildId)
+    end.
+
+-spec admin_or_role_permissions(permission(), member_roles(), role_id()) -> base_permissions().
+admin_or_role_permissions(Permissions, MemberRoles, GuildId) ->
+    case bitset:has(Permissions, constants:administrator_permission()) of
+        true -> ?ALL_PERMISSIONS;
+        false -> {Permissions, MemberRoles, GuildId}
     end.
 
 -spec resolve_member(user_id(), maybe_member(), guild_state()) -> maybe_member().
@@ -222,7 +197,7 @@ aggregate_role_permissions_cached(MemberRoles, Cache, Roles, BasePermissions) ->
 add_cached_role_permissions(RoleId, Cache, Roles, Acc) ->
     case maps:get(RoleId, Cache, undefined) of
         V when is_integer(V) ->
-            permission_bits:add(Acc, V);
+            bitset:add(Acc, V);
         _ ->
             add_role_permissions(RoleId, Roles, Acc)
     end.
@@ -231,5 +206,5 @@ add_cached_role_permissions(RoleId, Cache, Roles, Acc) ->
 add_role_permissions(RoleId, Roles, Acc) ->
     case guild_permissions_check:find_role_by_id(RoleId, Roles) of
         undefined -> Acc;
-        Role -> permission_bits:add(Acc, guild_permissions_common:role_permissions(Role))
+        Role -> bitset:add(Acc, guild_permissions_common:role_permissions(Role))
     end.

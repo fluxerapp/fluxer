@@ -193,7 +193,7 @@ int fluxer_read_gif_frame_delays(const uint8_t *bytes, size_t len,
         block_count++;
         uint8_t introducer = bytes[offset++];
         if (introducer == 0x3b) {
-            if (offset != len || has_pending_delay || frame_count != expected_frames) {
+            if (has_pending_delay || frame_count != expected_frames) {
                 return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
             }
             if (out_loop_count != NULL) *out_loop_count = loop_count;
@@ -273,16 +273,4 @@ int fluxer_gif_animation_frame_budget(const int *delays_cs, int n_frames,
     if (frames <= 0) return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
     *out_frames = frames;
     return FLUXER_NATIVE_STATUS_OK;
-}
-
-int fluxer_validate_gif_animation(const void *gif_data, size_t gif_len,
-                                  int max_frames, int max_duration_ms,
-                                  size_t max_total_pixels) {
-    if (max_duration_ms <= 0) return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
-    int expected_frames = 0;
-    int status = fluxer_validate_complete_gif(
-        gif_data, gif_len, max_frames, max_total_pixels, &expected_frames);
-    if (status != FLUXER_NATIVE_STATUS_OK) return status;
-    return fluxer_read_gif_frame_delays(
-        gif_data, gif_len, NULL, expected_frames, max_duration_ms, NULL);
 }

@@ -6,10 +6,8 @@
 -export([
     set_session_active_guild/3,
     set_session_passive_guild/3,
-    is_session_active/2,
     handle_set_typing_override/3,
-    handle_send_guild_sync/2,
-    handle_send_members_chunk/3
+    handle_send_guild_sync/2
 ]).
 
 -type guild_state() :: map().
@@ -45,17 +43,10 @@ set_session_passive_guild(SessionId, GuildId, State) ->
 set_passive_for_session(SessionId, ValidGuildId, State) ->
     update_session(SessionId, State, fun(SD) ->
         NewSD = session_passive:set_passive(ValidGuildId, SD),
-        session_passive:clear_guild_synced(ValidGuildId, NewSD)
+        guild_thread_subscriptions:clear_on_passive(
+            session_passive:clear_guild_synced(ValidGuildId, NewSD)
+        )
     end).
-
--spec is_session_active(session_id(), guild_state()) -> boolean().
-is_session_active(SessionId, State) ->
-    case guild_session(SessionId, State) of
-        {GuildId, _Sessions, SessionData} ->
-            not session_passive:is_passive(GuildId, SessionData);
-        undefined ->
-            false
-    end.
 
 -spec handle_set_typing_override(session_id(), boolean(), guild_state()) -> guild_state().
 handle_set_typing_override(SessionId, TypingFlag, State) ->
@@ -85,17 +76,6 @@ maybe_dispatch_guild_sync(SessionId, SessionData, GuildId, Sessions, State) ->
             State;
         false ->
             dispatch_guild_sync(SessionId, SessionData, GuildId, Sessions, State)
-    end.
-
--spec handle_send_members_chunk(session_id(), map(), guild_state()) -> ok.
-handle_send_members_chunk(SessionId, ChunkData, State) ->
-    case guild_session(SessionId, State) of
-        {GuildId, _Sessions, SessionData} ->
-            SessionPid = maps:get(pid, SessionData, undefined),
-            ChunkWithGuildId = ChunkData#{<<"guild_id">> => integer_to_binary(GuildId)},
-            dispatch_members_chunk(SessionPid, ChunkWithGuildId, GuildId);
-        undefined ->
-            ok
     end.
 
 -spec update_session(session_id(), guild_state(), fun((map()) -> map())) -> guild_state().
@@ -133,7 +113,9 @@ guild_id(State) ->
 dispatch_guild_sync(SessionId, SessionData, GuildId, Sessions, State) ->
     case {session_user_id(SessionData), maps:get(pid, SessionData, undefined)} of
         {UserId, SessionPid} when is_integer(UserId), UserId > 0, is_pid(SessionPid) ->
-            GuildData = guild_data:get_guild_state(UserId, State),
+            GuildData = guild_data:get_guild_state(
+                UserId, State, guild_thread_gate:state_opts(SessionData)
+            ),
             Encoded =
                 {pre_encoded,
                     iolist_to_binary(
@@ -149,28 +131,3 @@ dispatch_guild_sync(SessionId, SessionData, GuildId, Sessions, State) ->
 -spec session_user_id(map()) -> integer() | undefined.
 session_user_id(SessionData) ->
     snowflake_id:parse_optional(maps:get(user_id, SessionData, undefined)).
-
--spec dispatch_members_chunk(term(), map(), guild_id()) -> ok.
-dispatch_members_chunk(SessionPid, ChunkWithGuildId, GuildId) when is_pid(SessionPid) ->
-    gateway_dispatch_relay:dispatch(SessionPid, guild_members_chunk, ChunkWithGuildId, GuildId);
-dispatch_members_chunk(_SessionPid, _ChunkWithGuildId, _GuildId) ->
-    ok.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-set_session_active_guild_missing_session_test() ->
-    State = #{sessions => #{}},
-    Result = set_session_active_guild(<<"nonexistent">>, 42, State),
-    ?assertEqual(State, Result).
-
-set_session_passive_guild_missing_session_test() ->
-    State = #{sessions => #{}},
-    Result = set_session_passive_guild(<<"nonexistent">>, 42, State),
-    ?assertEqual(State, Result).
-
-is_session_active_missing_session_test() ->
-    State = #{id => 42, sessions => #{}},
-    ?assertEqual(false, is_session_active(<<"nonexistent">>, State)).
-
--endif.

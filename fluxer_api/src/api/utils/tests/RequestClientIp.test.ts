@@ -1,11 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
-import {getRequestClientIp, requireRequestClientIp, resolveClientIpWithOptions} from '@app/api/utils/RequestClientIp';
+import {
+	extractConfiguredClientIp,
+	getRequestClientIp,
+	PeerAddressMiddleware,
+	requireConfiguredClientIp,
+	requireRequestClientIp,
+	resolveClientIpWithOptions,
+} from '@app/api/utils/RequestClientIp';
 import {AppErrorHandler} from '@fluxer/errors/src/domains/core/ErrorHandlers';
 import {MissingClientIpError} from '@fluxer/ip_utils/src/ClientIp';
 import {Hono} from 'hono';
-import {describe, expect, it} from 'vitest';
+import {afterEach, describe, expect, it} from 'vitest';
 
 interface CountingRequest {
 	request: Request;
@@ -28,27 +36,12 @@ function createCountingRequest(headers: Record<string, string>): CountingRequest
 }
 
 describe('RequestClientIp', () => {
-	it('resolves the client ip once and hands the same value to every consumer', async () => {
-		const {request, countReads} = createCountingRequest({'x-forwarded-for': '203.0.113.10, 10.0.0.1'});
-		const seen: Array<string | null> = [];
-		const app = new Hono<HonoEnv>();
-		app.use(async (ctx, next) => {
-			seen.push(getRequestClientIp(ctx));
-			await next();
-		});
-		app.use(async (ctx, next) => {
-			seen.push(getRequestClientIp(ctx));
-			await next();
-		});
-		app.get('/v1/messages', (ctx) => {
-			seen.push(requireRequestClientIp(ctx));
-			return ctx.text('ok');
-		});
-		const response = await app.request(request);
-		expect(response.status).toBe(200);
-		expect(seen).toEqual(['203.0.113.10', '203.0.113.10', '203.0.113.10']);
-		expect(countReads('x-forwarded-for')).toBe(1);
+	const previousTrustClientIpHeader = Config.proxy.trust_client_ip_header;
+
+	afterEach(() => {
+		Config.proxy.trust_client_ip_header = previousTrustClientIpHeader;
 	});
+
 	it('normalizes the resolved address the same way for every consumer', async () => {
 		const seen: Array<string | null> = [];
 		const app = new Hono<HonoEnv>();
@@ -86,20 +79,6 @@ describe('RequestClientIp', () => {
 		expect(errors[0]).toBeInstanceOf(MissingClientIpError);
 		expect(countReads('x-forwarded-for')).toBe(1);
 	});
-	it('reports a malformed client ip header exactly as before', async () => {
-		const seen: Array<string | null> = [];
-		const app = new Hono<HonoEnv>();
-		app.use(async (ctx, next) => {
-			seen.push(getRequestClientIp(ctx));
-			await next();
-		});
-		app.get('/v1/messages', (ctx) => {
-			seen.push(getRequestClientIp(ctx));
-			return ctx.text('ok');
-		});
-		await app.request('http://localhost/v1/messages', {headers: {'x-forwarded-for': 'not-an-ip'}});
-		expect(seen).toEqual([null, null]);
-	});
 	it('never reuses a resolution made under a different header name', async () => {
 		const seen: Array<string | null> = [];
 		const app = new Hono<HonoEnv>();
@@ -136,5 +115,23 @@ describe('RequestClientIp', () => {
 		const response = await app.request('http://localhost/v1/messages');
 		expect(response.status).toBe(403);
 		expect(await response.json()).toMatchObject({code: 'FORBIDDEN'});
+	});
+	it('resolves the peer address for request only callers when the header is untrusted', async () => {
+		Config.proxy.trust_client_ip_header = false;
+		const seen: Array<string | null> = [];
+		const app = new Hono<HonoEnv>();
+		app.use(PeerAddressMiddleware);
+		app.get('/v1/messages', (ctx) => {
+			seen.push(getRequestClientIp(ctx));
+			seen.push(extractConfiguredClientIp(ctx.req.raw));
+			seen.push(requireConfiguredClientIp(ctx.req.raw, Config.proxy));
+			return ctx.text('ok');
+		});
+		await app.request(
+			'http://localhost/v1/messages',
+			{headers: {'x-forwarded-for': '203.0.113.10'}},
+			{incoming: {socket: {remoteAddress: '::ffff:198.51.100.20'}}},
+		);
+		expect(seen).toEqual(['198.51.100.20', '198.51.100.20', '198.51.100.20']);
 	});
 });

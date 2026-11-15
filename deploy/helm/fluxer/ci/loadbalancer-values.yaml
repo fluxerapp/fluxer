@@ -1,0 +1,10 @@
+domain: chat.example.test
+email: admin@example.test
+edge:
+  expose: loadBalancer
+  loadBalancer:
+    http3: true
+livekit:
+  expose: loadBalancer
+  nodeIP: 203.0.113.10
+  loadBalancerIP: 203.0.113.10

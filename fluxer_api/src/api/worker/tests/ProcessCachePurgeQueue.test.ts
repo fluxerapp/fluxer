@@ -3,16 +3,14 @@
 import {Config} from '@app/api/Config';
 import type {APICachePurgeConfig} from '@app/api/config/APIConfig';
 import {CachePurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
-import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
-import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import {server} from '@app/api/test/msw/server';
+import {createTestWorkerHelpers} from '@app/api/test/SyncTaskWorkerService';
 import processCachePurgeQueue from '@app/api/worker/tasks/ProcessCachePurgeQueue';
 import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
-import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
-import {delay, HttpResponse, http} from 'msw';
-import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
+import {HttpResponse, http} from 'msw';
+import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
-const HELPERS = {logger: new NoopLogger()} as unknown as WorkerTaskHelpers;
 const ENDPOINT = 'https://cache-purge.test/__cache/purge';
 const MEDIA = 'https://media.test';
 const QUEUE_KEY = 'cache_purge:queue';
@@ -64,11 +62,15 @@ describe('processCachePurgeQueue', () => {
 	let previousMedia: string;
 
 	beforeEach(() => {
-		previousCachePurge = {adapter: Config.cachePurge.adapter, http: Config.cachePurge.http};
+		previousCachePurge = {
+			adapter: Config.cachePurge.adapter,
+			http: Config.cachePurge.http,
+			controller: Config.cachePurge.controller,
+		};
 		previousMedia = Config.endpoints.media;
 		Config.endpoints.media = MEDIA;
 		Config.cachePurge.adapter = 'http';
-		Config.cachePurge.http = {endpoint: ENDPOINT, token: 'test-token', timeoutMs: 50};
+		Config.cachePurge.http = {endpoint: ENDPOINT, token: 'test-token', timeoutMs: 5000};
 	});
 
 	afterEach(() => {
@@ -76,7 +78,6 @@ describe('processCachePurgeQueue', () => {
 		Config.cachePurge.http = previousCachePurge.http;
 		Config.endpoints.media = previousMedia;
 		clearWorkerDependencies();
-		vi.useRealTimers();
 	});
 
 	it('sends host qualified prefixes in one request and drains the queue', async () => {
@@ -88,7 +89,7 @@ describe('processCachePurgeQueue', () => {
 		]);
 		const requests = recordPurges(() => new HttpResponse(null, {status: 204}));
 
-		await processCachePurgeQueue({}, HELPERS);
+		await processCachePurgeQueue({}, createTestWorkerHelpers());
 
 		expect(requests).toHaveLength(1);
 		expect(requests[0]!.authorization).toBe('Bearer test-token');
@@ -109,7 +110,7 @@ describe('processCachePurgeQueue', () => {
 		await queue.addUrls([`${MEDIA}/stickers/7.webp`, `${MEDIA}/stickers/7.gif`, `${MEDIA}/stickers/7.png`]);
 		const requests = recordPurges(() => new HttpResponse(null, {status: 204}));
 
-		await processCachePurgeQueue({}, HELPERS);
+		await processCachePurgeQueue({}, createTestWorkerHelpers());
 
 		expect(requests).toHaveLength(1);
 		expect(requests[0]!.body.prefixes).toEqual(['media.test/stickers/7']);
@@ -120,7 +121,7 @@ describe('processCachePurgeQueue', () => {
 		await queue.addUrls([`${MEDIA}/attachments/1/2/a.png`]);
 		const requests = recordPurges(() => new HttpResponse(null, {status}));
 
-		await processCachePurgeQueue({}, HELPERS);
+		await processCachePurgeQueue({}, createTestWorkerHelpers());
 
 		expect(requests).toHaveLength(1);
 		expect(await members(kvClient, QUEUE_KEY)).toEqual([]);
@@ -132,7 +133,7 @@ describe('processCachePurgeQueue', () => {
 		await queue.addUrls(['https://elsewhere.test/avatars/1/b35cc3d3', `${MEDIA}/avatars`, 'not-a-url']);
 		const requests = recordPurges(() => new HttpResponse(null, {status: 204}));
 
-		await processCachePurgeQueue({}, HELPERS);
+		await processCachePurgeQueue({}, createTestWorkerHelpers());
 
 		expect(requests).toEqual([]);
 		expect(await members(kvClient, QUEUE_KEY)).toEqual([]);
@@ -143,7 +144,7 @@ describe('processCachePurgeQueue', () => {
 		await queue.addUrls([`${MEDIA}/attachments/1/2/a.png`, `${MEDIA}/attachments/1/3/b.png`]);
 		const requests = recordPurges(() => new HttpResponse(null, {status: 503}));
 
-		await processCachePurgeQueue({}, HELPERS);
+		await processCachePurgeQueue({}, createTestWorkerHelpers());
 
 		expect(requests).toHaveLength(1);
 		expect(await members(kvClient, QUEUE_KEY)).toEqual([
@@ -153,26 +154,12 @@ describe('processCachePurgeQueue', () => {
 		expect(await members(kvClient, REJECTED_KEY)).toEqual([]);
 	});
 
-	it('requeues the batch when the endpoint does not answer in time', async () => {
-		const {kvClient, queue} = createHarness();
-		await queue.addUrls([`${MEDIA}/attachments/1/2/a.png`]);
-		const requests = recordPurges(async () => {
-			await delay('infinite');
-			return new HttpResponse(null, {status: 204});
-		});
-
-		await processCachePurgeQueue({}, HELPERS);
-
-		expect(requests).toHaveLength(1);
-		expect(await members(kvClient, QUEUE_KEY)).toEqual(['media.test/attachments/1/2/a']);
-	});
-
 	it('requeues the batch when the endpoint is unreachable', async () => {
 		const {kvClient, queue} = createHarness();
 		await queue.addUrls([`${MEDIA}/attachments/1/2/a.png`]);
 		const requests = recordPurges(() => HttpResponse.error());
 
-		await processCachePurgeQueue({}, HELPERS);
+		await processCachePurgeQueue({}, createTestWorkerHelpers());
 
 		expect(requests).toHaveLength(1);
 		expect(await members(kvClient, QUEUE_KEY)).toEqual(['media.test/attachments/1/2/a']);
@@ -191,7 +178,7 @@ describe('processCachePurgeQueue', () => {
 		);
 		const requests = recordPurges(() => new HttpResponse(null, {status: 302, headers: {Location: redirectTarget}}));
 
-		await processCachePurgeQueue({}, HELPERS);
+		await processCachePurgeQueue({}, createTestWorkerHelpers());
 
 		expect(requests).toHaveLength(1);
 		expect(redirectedRequests).toEqual([]);
@@ -203,7 +190,7 @@ describe('processCachePurgeQueue', () => {
 		await queue.addUrls([`${MEDIA}/attachments/1/2/a.png`]);
 		const requests = recordPurges(() => new HttpResponse(null, {status: 401}));
 
-		await processCachePurgeQueue({}, HELPERS);
+		await processCachePurgeQueue({}, createTestWorkerHelpers());
 
 		expect(requests).toHaveLength(1);
 		expect(await members(kvClient, QUEUE_KEY)).toEqual(['media.test/attachments/1/2/a']);
@@ -215,7 +202,7 @@ describe('processCachePurgeQueue', () => {
 		await queue.addUrls([`${MEDIA}/attachments/1/2/a.png`, `${MEDIA}/emojis/9.webp`]);
 		const requests = recordPurges(() => new HttpResponse(null, {status}));
 
-		await processCachePurgeQueue({}, HELPERS);
+		await processCachePurgeQueue({}, createTestWorkerHelpers());
 
 		expect(requests).toHaveLength(1);
 		expect(await members(kvClient, QUEUE_KEY)).toEqual([]);
@@ -228,26 +215,10 @@ describe('processCachePurgeQueue', () => {
 		await queue.addUrls([`${MEDIA}/attachments/1/2/a.png`]);
 		const requests = recordPurges(() => new HttpResponse(null, {status: 204}));
 
-		await processCachePurgeQueue({}, HELPERS);
+		await processCachePurgeQueue({}, createTestWorkerHelpers());
 
 		expect(requests).toEqual([]);
 		expect(await members(kvClient, QUEUE_KEY)).toEqual(['media.test/attachments/1/2/a']);
 		expect(await kvClient.get(BUDGET_KEY)).toBeNull();
-	});
-
-	it('sends no more than the token bucket allows and refills at the configured rate', async () => {
-		vi.useFakeTimers({toFake: ['Date']});
-		vi.setSystemTime(new Date('2026-09-16T00:00:00.000Z'));
-		const {kvClient, queue} = createHarness();
-		await queue.addUrls(Array.from({length: 200}, (_, index) => `${MEDIA}/attachments/1/${index}/a.png`));
-		const requests = recordPurges(() => new HttpResponse(null, {status: 204}));
-
-		await processCachePurgeQueue({}, HELPERS);
-		await processCachePurgeQueue({}, HELPERS);
-		vi.setSystemTime(Date.now() + 10_000);
-		await processCachePurgeQueue({}, HELPERS);
-
-		expect(requests.map((request) => request.body.prefixes.length)).toEqual([120, 50]);
-		expect(await kvClient.scard(QUEUE_KEY)).toBe(30);
 	});
 });

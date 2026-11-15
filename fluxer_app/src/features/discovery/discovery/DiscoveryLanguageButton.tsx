@@ -15,12 +15,12 @@ import {useCallback} from 'react';
 
 const FILTER_BY_LANGUAGE_DESCRIPTOR = msg({
 	message: 'Filter by language',
-	comment: 'Label for the discovery language filter button. Keep it concise.',
+	comment: 'Label for the Explore language filter button. Keep it concise.',
 });
 const FILTERING_BY_LANGUAGE_DESCRIPTOR = msg({
 	message: 'Filtering by {language}',
 	comment:
-		'Label for the discovery language filter button once a language is chosen. Preserve {language}; it is inserted by code.',
+		'Label for the Explore language filter button once a language is chosen. Preserve {language}; it is inserted by code.',
 });
 
 export const DiscoveryLanguageButton = observer(() => {

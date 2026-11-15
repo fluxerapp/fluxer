@@ -132,7 +132,7 @@
 }
 
 .searchIcon {
-	margin-right: var(--message-search-bar-icon-gap);
+	margin-inline-end: var(--message-search-bar-icon-gap);
 }
 
 .searchInput {

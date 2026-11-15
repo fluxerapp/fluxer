@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import styles from '@app/features/channel/components/direct_message/DMWelcomeSection.module.css';
 import type {Channel} from '@app/features/channel/models/Channel';
 import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
@@ -24,24 +25,20 @@ import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import * as UserProfileCommands from '@app/features/user/commands/UserProfileCommands';
 import {UserProfileBadges} from '@app/features/user/components/popouts/UserProfileBadges';
-import type {Profile} from '@app/features/user/models/Profile';
+import UserProfile from '@app/features/user/state/UserProfile';
 import Users from '@app/features/user/state/Users';
+import {accountGateReason} from '@app/features/user/utils/AccountGatePresentation';
+import {canPerform} from '@app/features/user/utils/AccountGates';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
+import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
+import {FLUXERBOT_ID} from '@fluxer/constants/src/AppConstants';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
-import {msg, ph, plural} from '@lingui/core/macro';
+import {ph, plural} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useEffect, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo} from 'react';
 
-const CLAIM_YOUR_ACCOUNT_TO_SEND_FRIEND_REQUESTS_DESCRIPTOR = msg({
-	message: 'Claim your account to send friend requests.',
-	comment: 'Description text in the channel and chat dm welcome section.',
-});
-const VERIFY_YOUR_EMAIL_ADDRESS_TO_SEND_FRIEND_REQUESTS_DESCRIPTOR = msg({
-	message: 'Verify your email address to send friend requests.',
-	comment: 'Description text in the channel and chat dm welcome section.',
-});
 const logger = new Logger('DMWelcomeSection');
 
 interface DMWelcomeSectionProps {
@@ -54,7 +51,8 @@ export const DMWelcomeSection: React.FC<DMWelcomeSectionProps> = observer(functi
 	const user = Users.getUser(userId);
 	const relationship = Relationships.getRelationship(user?.id ?? '');
 	const relationshipType = relationship?.type;
-	const [profile, setProfile] = useState<Profile | null>(null);
+	const profile = UserProfile.getProfile(userId);
+	useEffect(() => UserProfile.retainProfile(userId), [userId]);
 	const mobileLayout = MobileLayout;
 	const profileMutualGuilds = useMemo(() => profile?.mutualGuilds ?? [], [profile?.mutualGuilds]);
 	const mutualGuildRecords = useMemo(() => {
@@ -64,13 +62,9 @@ export const DMWelcomeSection: React.FC<DMWelcomeSectionProps> = observer(functi
 	}, [profileMutualGuilds]);
 	useEffect(() => {
 		if (!user) return;
-		UserProfileCommands.fetch(user.id)
-			.then((fetchedProfile) => {
-				setProfile(fetchedProfile);
-			})
-			.catch((error) => {
-				logger.error('Failed to fetch user profile:', error);
-			});
+		UserProfileCommands.fetch(user.id).catch((error) => {
+			logger.error('Failed to fetch user profile:', error);
+		});
 	}, [user]);
 	const openFullProfile = useCallback(() => {
 		if (!user) return;
@@ -96,7 +90,9 @@ export const DMWelcomeSection: React.FC<DMWelcomeSectionProps> = observer(functi
 		return null;
 	}
 	const displayName = NicknameUtils.getNickname(user, null, channel?.id);
-	const fluxerTag = NicknameUtils.formatTagForStreamerMode(user.tag);
+	const fluxerTag = NicknameUtils.formatTagForStreamerMode(
+		user.id === FLUXERBOT_ID ? `${displayName}#${user.discriminator}` : user.tag,
+	);
 	const handleSendFriendRequest = () => {
 		RelationshipActionUtils.sendFriendRequest(i18n, user.id);
 	};
@@ -119,37 +115,33 @@ export const DMWelcomeSection: React.FC<DMWelcomeSectionProps> = observer(functi
 		RelationshipActionUtils.ignoreFriendRequest(i18n, user.id);
 	};
 	const hasMutualGuilds = profileMutualGuilds.length > 0;
-	const currentUserUnclaimed = !(Users.currentUser?.isClaimed() ?? true);
+	const friendRequestGate = canPerform(Users.currentUser, TierGatedActions.FRIEND_REQUEST);
 	const shouldShowActionButton =
 		!user.bot &&
+		!RuntimeConfig.friendsDisabled &&
 		(relationshipType === undefined ||
 			relationshipType === RelationshipTypes.INCOMING_REQUEST ||
 			relationshipType === RelationshipTypes.OUTGOING_REQUEST ||
 			relationshipType === RelationshipTypes.FRIEND);
 	const mutualGuildCount = profileMutualGuilds.length;
-	const currentUserUnverified = Users.currentUser?.verified === false;
 	const renderActionButton = () => {
 		if (user.bot) return null;
 		switch (relationshipType) {
 			case undefined: {
-				const isDisabled = currentUserUnclaimed || currentUserUnverified;
-				const tooltipText = currentUserUnclaimed
-					? i18n._(CLAIM_YOUR_ACCOUNT_TO_SEND_FRIEND_REQUESTS_DESCRIPTOR)
-					: i18n._(VERIFY_YOUR_EMAIL_ADDRESS_TO_SEND_FRIEND_REQUESTS_DESCRIPTOR);
 				const button = (
 					<Button
 						small={true}
 						onClick={handleSendFriendRequest}
-						disabled={isDisabled}
+						disabled={!friendRequestGate.allowed}
 						data-flx="channel.direct-message.dm-welcome-section.render-action-button.button.send-friend-request"
 					>
 						<Trans>Send friend request</Trans>
 					</Button>
 				);
-				if (isDisabled) {
+				if (!friendRequestGate.allowed) {
 					return (
 						<Tooltip
-							text={tooltipText}
+							text={accountGateReason(i18n, friendRequestGate)}
 							maxWidth="xl"
 							data-flx="channel.direct-message.dm-welcome-section.render-action-button.tooltip"
 						>
@@ -287,8 +279,8 @@ export const DMWelcomeSection: React.FC<DMWelcomeSectionProps> = observer(functi
 					</button>
 				</FocusRing>
 				<UserProfileBadges
-					user={user}
-					profile={profile}
+					badges={profile?.profileBadges ?? []}
+					maxVisible={7}
 					isModal={true}
 					isMobile={mobileLayout.enabled}
 					data-flx="channel.direct-message.dm-welcome-section.user-profile-badges"

@@ -12,7 +12,7 @@ export const VOICE_NOISE_SUPPRESSION_BACKENDS = [
 
 export type VoiceNoiseSuppressionBackend = (typeof VOICE_NOISE_SUPPRESSION_BACKENDS)[number];
 
-export type NoiseSuppressionEngine = 'passthrough' | 'constraint' | 'worklet' | 'deep_filter';
+type NoiseSuppressionEngine = 'passthrough' | 'constraint' | 'worklet' | 'deep_filter';
 
 export interface NoiseSuppressionBackendDescriptor {
 	id: VoiceNoiseSuppressionBackend;
@@ -106,9 +106,9 @@ export interface NoiseSuppressionRuntimeCapabilities {
 	audioWorklet: boolean;
 }
 
-export type NoiseSuppressionUnsupportedReason = 'sample_rate' | 'wasm_simd' | 'audio_worklet';
+type NoiseSuppressionUnsupportedReason = 'sample_rate' | 'wasm_simd' | 'audio_worklet';
 
-export function getNoiseSuppressionUnsupportedReason(
+function getNoiseSuppressionUnsupportedReason(
 	backend: VoiceNoiseSuppressionBackend,
 	capabilities: NoiseSuppressionRuntimeCapabilities,
 ): NoiseSuppressionUnsupportedReason | null {
@@ -156,8 +156,4 @@ export function detectWasmSimdSupport(): boolean {
 		cachedWasmSimd = false;
 	}
 	return cachedWasmSimd;
-}
-
-export function resetWasmSimdSupportCacheForTests(): void {
-	cachedWasmSimd = null;
 }

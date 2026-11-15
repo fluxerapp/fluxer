@@ -1,3 +1,4 @@
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {execFile} from 'node:child_process';
@@ -8,6 +9,7 @@ import path from 'node:path';
 import {promisify} from 'node:util';
 import {MACOS_BUNDLE_ID} from '@electron/common/DesktopIdentity';
 import {createChildLogger} from '@electron/common/Logger';
+import {loadOptionalNativeAddon} from '@electron/main/NativeAddon';
 
 const logger = createChildLogger('NotificationState');
 const requireModule = createRequire(import.meta.url);
@@ -18,7 +20,7 @@ const COMMAND_TIMEOUT_MS = 1_000;
 const MACOS_FOCUS_DB_DIR = path.join(os.homedir(), 'Library', 'DoNotDisturb', 'DB');
 const WINDOWS_SUPPRESSING_STATES = new Set(['not-present', 'presentation-mode', 'quiet-time']);
 
-export interface NotificationSoundPolicy {
+interface NotificationSoundPolicy {
 	shouldPlaySound: boolean;
 	reason: string | null;
 }
@@ -29,12 +31,6 @@ interface WinShellModule {
 }
 
 let cachedPolicy: {expiresAt: number; promise: Promise<NotificationSoundPolicy>} | null = null;
-let cachedWinShellModule: WinShellModule | null | undefined;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
 function firstDataRecord(value: unknown): Record<string, unknown> | null {
 	if (!isRecord(value)) return null;
 	const data = value.data;
@@ -166,28 +162,6 @@ async function getMacosNotificationSoundPolicy(): Promise<NotificationSoundPolic
 	return {shouldPlaySound: true, reason: null};
 }
 
-function loadWinShellModule(): WinShellModule | null {
-	if (cachedWinShellModule !== undefined) return cachedWinShellModule;
-	if (process.platform !== 'win32') {
-		cachedWinShellModule = null;
-		return cachedWinShellModule;
-	}
-	try {
-		const mod = requireModule('@fluxer/win-shell') as WinShellModule;
-		if (mod.loadError) {
-			logger.warn('@fluxer/win-shell load error; Windows notification state unavailable', {error: mod.loadError});
-			cachedWinShellModule = null;
-			return cachedWinShellModule;
-		}
-		cachedWinShellModule = mod;
-		return cachedWinShellModule;
-	} catch (error) {
-		logger.warn('Failed to load @fluxer/win-shell; Windows notification state unavailable', {error});
-		cachedWinShellModule = null;
-		return cachedWinShellModule;
-	}
-}
-
 function getWindowsNotificationSoundPolicy(): NotificationSoundPolicy {
 	const mod = loadWinShellModule();
 	const state = mod?.getUserNotificationState?.();
@@ -282,7 +256,7 @@ async function computeNotificationSoundPolicy(): Promise<NotificationSoundPolicy
 	return {shouldPlaySound: true, reason: null};
 }
 
-export async function getNotificationSoundPolicy(): Promise<NotificationSoundPolicy> {
+async function getNotificationSoundPolicy(): Promise<NotificationSoundPolicy> {
 	const now = Date.now();
 	if (cachedPolicy && cachedPolicy.expiresAt > now) {
 		return cachedPolicy.promise;
@@ -298,3 +272,11 @@ export async function getNotificationSoundPolicy(): Promise<NotificationSoundPol
 export async function shouldPlayNotificationSound(): Promise<boolean> {
 	return (await getNotificationSoundPolicy()).shouldPlaySound;
 }
+
+const loadWinShellModule = loadOptionalNativeAddon<WinShellModule>({
+	platform: 'win32',
+	load: () => requireModule('@fluxer/win-shell'),
+	logger: logger,
+	level: 'warn',
+	unavailableMessage: 'Failed to load @fluxer/win-shell; Windows notification state unavailable',
+});

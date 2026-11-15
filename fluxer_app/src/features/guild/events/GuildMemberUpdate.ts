@@ -12,7 +12,7 @@ import Users from '@app/features/user/state/Users';
 import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {User} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 
-interface GuildMemberUpdatePayload extends GuildMemberData {
+export interface GuildMemberUpdatePayload extends GuildMemberData {
 	guild_id: string;
 }
 

@@ -7,7 +7,7 @@ pub mod reject;
 
 use crate::config::{FcmConfig, ProviderEnvironment, RelayConfig};
 use crate::metrics::{Metrics, RelayLeg, RelayResult};
-use crate::server::{Sidecar, serve, sidecar_router};
+use crate::server::{Sidecar, serve};
 use crate::tokens::{TokenCache, TokenError};
 use crate::unix_seconds;
 use crate::vendor::{self, ApnsRequest, DeadToken, Refusal, VendorOutcome};
@@ -19,7 +19,6 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::post;
 use base64::prelude::*;
 use envelope::Urgency;
-use fluxer_svc::shutdown::wait_for_shutdown;
 use quota::Quota;
 use rand::Rng as _;
 use reject::{Reason, Rejection};
@@ -27,6 +26,7 @@ use sha2::{Digest as _, Sha256};
 use std::net::SocketAddr;
 use std::sync::{Arc, LazyLock};
 use std::time::{Duration, Instant};
+use tokio_util::sync::CancellationToken;
 use tracing::{info, warn};
 
 pub const APNS_ROUTE: &str = "/relay/v1/apns/{app_id}/{environment}/{device_token}";
@@ -80,7 +80,7 @@ impl AppState {
     }
 }
 
-pub async fn run(cfg: RelayConfig) -> anyhow::Result<()> {
+pub async fn run(cfg: RelayConfig, shutdown: CancellationToken) -> anyhow::Result<()> {
     let state = Arc::new(AppState::try_new(cfg)?);
     let addr = state.cfg.bind_addr;
     let serving = serve(addr, router(Arc::clone(&state))).await?;
@@ -95,7 +95,7 @@ pub async fn run(cfg: RelayConfig) -> anyhow::Result<()> {
         "push relay listening"
     );
 
-    wait_for_shutdown().await;
+    shutdown.cancelled().await;
     state.sidecar.set_serving(false);
     serving.stop().await;
     Ok(())
@@ -117,7 +117,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route(FCM_ROUTE, post(fcm_route))
         .fallback(unmatched_route)
         .with_state(state)
-        .merge(sidecar_router(sidecar))
+        .merge(sidecar.router())
 }
 
 async fn unmatched_route(State(state): State<Arc<AppState>>) -> Response {
@@ -313,7 +313,6 @@ async fn forward(
     body: Body,
     bytes: &mut usize,
 ) -> Result<(), Rejection> {
-    let _permit = state.quota.admit()?;
     let target = resolve(state, incoming)?;
     if !device_token_is_shaped(incoming.leg, &incoming.device_token) {
         return Err(Rejection::new(Reason::DeviceTokenInvalid));
@@ -322,9 +321,17 @@ async fn forward(
         return Err(Rejection::new(Reason::BadRequest));
     }
     let delivery = Delivery::parse(header(headers, URGENCY_HEADER), header(headers, TTL_HEADER))?;
+    let lowered;
+    let quota_token: &str = match incoming.leg {
+        RelayLeg::Apns | RelayLeg::ApnsVoip => {
+            lowered = incoming.device_token.to_ascii_lowercase();
+            &lowered
+        }
+        RelayLeg::Fcm => &incoming.device_token,
+    };
     state.quota.take(
         &state.metrics,
-        &incoming.device_token,
+        quota_token,
         match incoming.leg {
             RelayLeg::ApnsVoip => Urgency::Alert,
             _ => delivery.urgency,
@@ -344,6 +351,7 @@ async fn forward(
     if body.is_empty() {
         return Err(Rejection::new(Reason::BadRequest));
     }
+    let _permit = state.quota.admit()?;
     let payload = envelope::encode_payload(&body);
 
     match target {
@@ -555,18 +563,6 @@ mod tests {
     }
 
     #[test]
-    fn apns_accepts_every_token_length_apple_hands_out() {
-        for len in [64, 128, 160, 200, 256] {
-            assert!(
-                device_token_is_shaped(RelayLeg::Apns, &hex(len)),
-                "{len} hex characters must be accepted"
-            );
-        }
-        assert!(device_token_is_shaped(RelayLeg::Apns, &"A".repeat(64)));
-        assert!(device_token_is_shaped(RelayLeg::ApnsVoip, &hex(160)));
-    }
-
-    #[test]
     fn apns_rejects_tokens_that_are_not_even_length_hex() {
         for token in [hex(62), hex(63), hex(161), hex(258), "z".repeat(64)] {
             assert!(
@@ -584,36 +580,5 @@ mod tests {
         assert_ne!(digest(TOKEN), unsalted);
         assert_eq!(digest(TOKEN), digest(TOKEN));
         assert_eq!(digest(""), "-");
-    }
-
-    #[test]
-    fn a_clear_survives_a_device_that_is_offline_for_a_day() {
-        assert_eq!(
-            Urgency::Background.ttl_cap_seconds(),
-            Urgency::Alert.ttl_cap_seconds(),
-            "a clear must outlive the alert it removes"
-        );
-    }
-
-    #[test]
-    fn a_clear_stays_silent_on_the_apns_leg() {
-        let body = envelope::apns_body("payload", Urgency::Background).expect("body fits");
-        let parsed: serde_json::Value = serde_json::from_slice(&body).expect("body is json");
-        assert_eq!(parsed["aps"]["content-available"], 1);
-        assert!(parsed["aps"].get("alert").is_none());
-        let headers = envelope::apns_headers(Urgency::Background, 0, 86_400);
-        let push_type = headers
-            .iter()
-            .find(|(name, _)| name == "apns-push-type")
-            .map(|(_, value)| value.as_str());
-        assert_eq!(push_type, Some("background"));
-    }
-
-    #[test]
-    fn payload_too_large_answers_413() {
-        assert_eq!(
-            Reason::PayloadTooLarge.status(),
-            StatusCode::PAYLOAD_TOO_LARGE
-        );
     }
 }

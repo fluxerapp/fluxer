@@ -6,6 +6,7 @@ import type {SidebarVoiceRow} from '@app/features/app/hooks/useSidebarVoiceSumma
 import {GuildBadge} from '@app/features/guild/components/GuildBadge';
 import type {Guild} from '@app/features/guild/models/Guild';
 import type {GuildCounts} from '@app/features/guild/state/GuildCount';
+import {formatNumber} from '@app/features/i18n/utils/IntlCache';
 import type {KeyCombo} from '@app/features/input/state/InputKeybind';
 import {AvatarStack} from '@app/features/ui/avatars/AvatarStack';
 import {KeybindHint} from '@app/features/ui/keybind_hint/KeybindHint';
@@ -14,7 +15,6 @@ import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {BellSlashIcon, MonitorPlayIcon, SpeakerHighIcon} from '@phosphor-icons/react';
-import {formatNumber} from '@pkgs/number_utils/src/NumberFormatting';
 import type React from 'react';
 
 const INVITES_PAUSED_RAID_TOOLTIP_DESCRIPTOR = msg({
@@ -53,7 +53,7 @@ interface GuildListItemTooltipProps {
 	readonly isMuted: boolean;
 	readonly mutedText: string | null;
 	readonly guildCounts: GuildCounts | null;
-	readonly currentLocale: string;
+	readonly formattingLocale: string;
 	readonly voiceRows: ReadonlyArray<SidebarVoiceRow>;
 	readonly navigationKeybind: KeyCombo | null;
 }
@@ -102,7 +102,7 @@ export function GuildListItemTooltip({
 	isMuted,
 	mutedText,
 	guildCounts,
-	currentLocale,
+	formattingLocale,
 	voiceRows,
 	navigationKeybind,
 }: GuildListItemTooltipProps) {
@@ -132,7 +132,7 @@ export function GuildListItemTooltip({
 				data-flx="app.sidebar-nav.guild-list-item-tooltip.render-online-count.guild-tooltip-stat-text--2"
 			>
 				{i18n._(ONLINE_MEMBER_COUNT_DESCRIPTOR, {
-					onlineCount: formatNumber(guildCounts.onlineCount, currentLocale),
+					onlineCount: formatNumber(guildCounts.onlineCount, formattingLocale),
 				})}
 			</span>
 		);
@@ -162,7 +162,7 @@ export function GuildListItemTooltip({
 				data-flx="app.sidebar-nav.guild-list-item-tooltip.render-member-count.guild-tooltip-stat-text--2"
 			>
 				{i18n._(TOTAL_MEMBER_COUNT_DESCRIPTOR, {
-					memberCount: formatNumber(guildCounts.memberCount, currentLocale),
+					memberCount: formatNumber(guildCounts.memberCount, formattingLocale),
 					rawMemberCount: guildCounts.memberCount,
 				})}
 			</span>
@@ -187,6 +187,8 @@ export function GuildListItemTooltip({
 			>
 				<GuildBadge
 					features={guild.features}
+					badgeIds={guild.badgeIds}
+					visibleCustomBadges={2}
 					showTooltip={false}
 					onLightSurface
 					data-flx="app.sidebar-nav.guild-list-item-tooltip.guild-badge"

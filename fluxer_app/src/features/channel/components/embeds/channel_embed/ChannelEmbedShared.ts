@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {getEmbedMediaDimensions} from '@app/features/messaging/utils/MediaDimensionConfig';
 import {
 	buildAnimatedImageProxyURL,
@@ -16,13 +17,14 @@ import {MessageAttachmentFlags} from '@fluxer/constants/src/ChannelConstants';
 import type {EmbedMedia, MessageEmbed} from '@fluxer/schema/src/domains/message/EmbedSchemas';
 import type {MessageAttachment} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type React from 'react';
+import {useMemo} from 'react';
 
 export const logger = new Logger('Embed');
 export const THUMBNAIL_SIZE = 80;
-export const MAX_GALLERY_MEDIA = 10;
-export const EMBED_PADDING_X = 12;
-export const EMBED_LEFT_BORDER_WIDTH = 4;
-export const EMBED_RIGHT_BORDER_WIDTH = 1;
+const MAX_GALLERY_MEDIA = 10;
+const EMBED_PADDING_X = 12;
+const EMBED_LEFT_BORDER_WIDTH = 4;
+const EMBED_RIGHT_BORDER_WIDTH = 1;
 export const EMBED_MEDIA_CHROME_WIDTH = EMBED_PADDING_X * 2 + EMBED_LEFT_BORDER_WIDTH + EMBED_RIGHT_BORDER_WIDTH;
 export const EMBED_MEDIA_MAX_WIDTH = 432;
 
@@ -40,6 +42,8 @@ export interface LinkComponentProps {
 	url: string;
 	children: React.ReactNode;
 	className?: string;
+	messageId?: string;
+	channelId?: string;
 }
 
 export interface MediaDimensions {
@@ -112,12 +116,12 @@ export const getOptimizedMediaURL = (proxyURL: string, width: number, height: nu
 		height: target.height,
 	});
 };
-export const getOptimizedAnimatedMediaURL = (proxyURL: string, width: number, height: number): string => {
+const getOptimizedAnimatedMediaURL = (proxyURL: string, width: number, height: number): string => {
 	if (!proxyURL) return proxyURL;
 	const target = toEmbedMediaPixels(width, height);
 	return buildAnimatedImageProxyURL(stripMediaProxyParams(proxyURL), target.width, target.height);
 };
-export const isAnimatedEmbedMedia = (media: Pick<EmbedMedia, 'content_type' | 'flags'>): boolean => {
+const isAnimatedEmbedMedia = (media: Pick<EmbedMedia, 'content_type' | 'flags'>): boolean => {
 	if (media.content_type === 'image/gif') return true;
 	return ((media.flags ?? 0) & MessageAttachmentFlags.IS_ANIMATED) === MessageAttachmentFlags.IS_ANIMATED;
 };
@@ -134,7 +138,7 @@ export const resolveEmbedImageSource = (
 		animated,
 	};
 };
-export const mediaIdentityKey = (media?: EmbedMedia): string => {
+const mediaIdentityKey = (media?: EmbedMedia): string => {
 	if (!media) return '';
 	return [
 		media.url ?? '',
@@ -150,7 +154,7 @@ export const mediaIdentityKey = (media?: EmbedMedia): string => {
 		media.description ?? '',
 	].join('|');
 };
-export const embedMediaSignature = (embed: MessageEmbed): string => {
+const embedMediaSignature = (embed: MessageEmbed): string => {
 	return [
 		embed.url ?? '',
 		embed.provider?.url ?? '',
@@ -177,7 +181,7 @@ export const isMediaMatureContent = (media?: EmbedMedia): boolean => {
 	if (!media) return false;
 	return Boolean(media.nsfw || ((media.flags ?? 0) & MessageAttachmentFlags.CONTAINS_EXPLICIT_MEDIA) !== 0);
 };
-export const normalizeUrl = (url?: string): string | null => {
+const normalizeUrl = (url?: string): string | null => {
 	if (!url) return null;
 	if (normalizedUrlCache.has(url)) {
 		return normalizedUrlCache.get(url) ?? null;
@@ -242,6 +246,20 @@ export const buildGalleryAttachments = (
 	}));
 };
 
+export function withFreshEmbedMediaUrls<T extends EmbedMedia | undefined>(media: T): T {
+	if (!media) return media;
+	const url = AttachmentUrlRefresher.fresh(media.url);
+	const proxyUrl = media.proxy_url == null ? media.proxy_url : AttachmentUrlRefresher.fresh(media.proxy_url);
+	if (url === media.url && proxyUrl === media.proxy_url) return media;
+	return {...media, url, proxy_url: proxyUrl};
+}
+
+export function useFreshGalleryImages(images: Array<Required<EmbedMedia>>): Array<Required<EmbedMedia>> {
+	const freshImages = images.map(withFreshEmbedMediaUrls);
+	const freshUrls = freshImages.map((image) => `${image.url}\n${image.proxy_url}`).join('\n');
+	return useMemo(() => freshImages, [freshUrls, images]);
+}
+
 interface EmbedListRenderMetadata {
 	normalizedUrls: Array<string | null>;
 	firstIndexByNormalizedUrl: Map<string, number>;
@@ -287,12 +305,11 @@ const getEmbedListRenderMetadata = (embedList: ReadonlyArray<MessageEmbed>): Emb
 		const firstIndex = firstIndexByNormalizedUrl.get(normalizedUrl);
 		if (firstIndex === undefined) continue;
 		const candidate = embedList[index];
-		const candidateMedia = isValidMedia(candidate?.image)
-			? candidate.image
-			: isValidMedia(candidate?.thumbnail)
-				? candidate.thumbnail
-				: undefined;
-		tryAddGalleryMedia(firstIndex, candidateMedia);
+		if (isValidMedia(candidate?.image)) {
+			tryAddGalleryMedia(firstIndex, candidate.image);
+		} else if (isValidMedia(candidate?.thumbnail)) {
+			tryAddGalleryMedia(firstIndex, candidate.thumbnail);
+		}
 	}
 	const metadata = {normalizedUrls, firstIndexByNormalizedUrl, galleryImagesByFirstIndex};
 	embedListRenderMetadataCache.set(embedList, metadata);
@@ -322,7 +339,7 @@ export const collectGalleryImages = ({
 };
 export const getBorderColor = (color: number | undefined) => {
 	if (color === undefined || color === 0) {
-		return 'var(--brand-primary)';
+		return 'var(--brand-primary-foreground)';
 	}
 	return ColorUtils.int2rgb(color);
 };

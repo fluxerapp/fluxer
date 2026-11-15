@@ -2,11 +2,16 @@
 
 import {Routes} from '@app/app/Routes';
 import {SkeletonSimplePageRoute} from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
+import {
+	skeletonDirectMessagesDisabled,
+	skeletonFriendsDisabled,
+} from '@app/features/app/components/skeleton/SkeletonRuntimeConfig';
 
 export const SkeletonSidebarVariant = Object.freeze({
 	DM: 'dm',
 	GUILD: 'guild',
 	DISCOVERY: 'discovery',
+	NONE: 'none',
 } as const);
 
 export type SkeletonSidebarVariant = (typeof SkeletonSidebarVariant)[keyof typeof SkeletonSidebarVariant];
@@ -29,9 +34,17 @@ function isGuildRootPath(pathname: string): boolean {
 	return pathname.split('/').length === GUILD_ROOT_PATH_SEGMENT_COUNT;
 }
 
+function resolveHomeSidebar(): SkeletonSidebarVariant {
+	return skeletonDirectMessagesDisabled() ? SkeletonSidebarVariant.NONE : SkeletonSidebarVariant.DM;
+}
+
+function resolveHomeContent(): SkeletonContent {
+	return skeletonFriendsDisabled() ? {kind: 'empty'} : {kind: 'friends'};
+}
+
 function resolveDirectMessageContent(pathname: string): SkeletonContent {
 	if (pathname === Routes.ME) {
-		return {kind: 'friends'};
+		return resolveHomeContent();
 	}
 	return {kind: 'chat'};
 }
@@ -89,21 +102,21 @@ export function resolveSkeletonShell(pathname: string): SkeletonShell {
 	if (pathname === Routes.BOOKMARKS) {
 		return {
 			chrome: 'guilds',
-			sidebar: SkeletonSidebarVariant.DM,
+			sidebar: resolveHomeSidebar(),
 			content: {kind: 'page', route: SkeletonSimplePageRoute.BOOKMARKS},
 		};
 	}
 	if (pathname === Routes.MENTIONS) {
 		return {
 			chrome: 'guilds',
-			sidebar: SkeletonSidebarVariant.DM,
+			sidebar: resolveHomeSidebar(),
 			content: {kind: 'page', route: SkeletonSimplePageRoute.MENTIONS},
 		};
 	}
 	if (Routes.isDMRoute(pathname)) {
 		return {
 			chrome: 'guilds',
-			sidebar: SkeletonSidebarVariant.DM,
+			sidebar: resolveHomeSidebar(),
 			content: resolveDirectMessageContent(pathname),
 		};
 	}
@@ -121,5 +134,5 @@ export function resolveSkeletonShell(pathname: string): SkeletonShell {
 			content: resolveGuildContent(pathname),
 		};
 	}
-	return {chrome: 'guilds', sidebar: SkeletonSidebarVariant.DM, content: {kind: 'friends'}};
+	return {chrome: 'guilds', sidebar: resolveHomeSidebar(), content: resolveHomeContent()};
 }

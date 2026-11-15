@@ -10,16 +10,17 @@ import {Logger} from '@app/api/Logger';
 import type {User} from '@app/api/models/User';
 import {selectActiveStoreSubscription} from '@app/api/store_billing/StoreBillingMappers';
 import type {StoreBillingRepository} from '@app/api/store_billing/StoreBillingRepository';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {shiftGiftExtensionEnd} from '@app/api/user/GiftExtensionShift';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {clearPerksSanitizedFlag} from '@app/api/user/UserHelpers';
-import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {UserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 
 const USER_WRITE_ATTEMPTS = 3;
 
 interface StoreEntitlementWriterDeps {
 	repository: StoreBillingRepository;
-	userRepository: IUserRepository;
+	userRepository: UserRepository;
 	userCacheService: UserCacheService;
 	gatewayService: IGatewayService;
 }
@@ -77,9 +78,7 @@ function buildGrantPatch(user: User, row: StorePurchaseRow, now: Date): Partial<
 		user.premiumGraceEndsAt.getTime() > now.getTime();
 	const anchorMs = inStoreGrace ? oldUntil.getTime() : Math.max(now.getTime(), oldUntil?.getTime() ?? 0);
 	const giftEnd = user.premiumGiftExtensionEndsAt;
-	const shiftMs = expiresAt.getTime() - anchorMs;
-	const shiftedGiftEnd =
-		giftEnd && shiftMs > 0 && giftEnd.getTime() > anchorMs ? new Date(giftEnd.getTime() + shiftMs) : giftEnd;
+	const shiftedGiftEnd = shiftGiftExtensionEnd(giftEnd, anchorMs, expiresAt);
 	const startedAt = row.started_at ?? now;
 	const premiumSince = user.premiumSince && user.premiumSince <= startedAt ? user.premiumSince : startedAt;
 	setIfChanged(patch, 'premium_type', user.premiumType, UserPremiumTypes.SUBSCRIPTION);
@@ -158,11 +157,7 @@ export class StoreEntitlementWriter {
 	async patchUserAndDispatch(user: User, patch: Partial<UserRow>): Promise<User> {
 		const updatedUser = await this.deps.userRepository.patchUpsert(user.id, patch, user.toRow());
 		this.deps.userCacheService.setUserPartialResponseFromUserInBackground(updatedUser);
-		await this.deps.gatewayService.dispatchPresence({
-			userId: updatedUser.id,
-			event: 'USER_UPDATE',
-			data: mapUserToPrivateResponse(updatedUser),
-		});
+		await dispatchUserUpdate(this.deps.gatewayService, updatedUser);
 		return updatedUser;
 	}
 

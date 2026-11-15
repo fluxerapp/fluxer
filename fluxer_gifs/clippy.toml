@@ -1,0 +1,6 @@
+disallowed-methods = [
+    { path = "std::env::var", reason = "read settings from the EnvMap the service was started with" },
+    { path = "std::env::vars", reason = "read settings from the EnvMap the service was started with" },
+    { path = "std::env::var_os", reason = "read settings from the EnvMap the service was started with" },
+    { path = "std::env::vars_os", reason = "read settings from the EnvMap the service was started with" },
+]

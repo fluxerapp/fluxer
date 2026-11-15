@@ -18,7 +18,7 @@ const PROCESSORS: ReadonlyArray<{
 	{key: 'razer-synapse', name: 'Razer Synapse', pattern: /razer\s*virtual|synapse\s*virtual/i},
 ];
 
-export function detectExternalAudioProcessor(label: string | null | undefined): ExternalAudioProcessorMatch | null {
+function detectExternalAudioProcessor(label: string | null | undefined): ExternalAudioProcessorMatch | null {
 	if (!label) return null;
 	for (const entry of PROCESSORS) {
 		if (entry.pattern.test(label)) return {key: entry.key, name: entry.name};

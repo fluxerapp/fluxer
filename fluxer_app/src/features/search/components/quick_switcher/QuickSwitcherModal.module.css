@@ -7,7 +7,7 @@
 	align-items: center;
 	border: none;
 	background: transparent;
-	text-align: left;
+	text-align: start;
 	border-radius: var(--radius-sm);
 	padding: 0 0.5rem;
 	cursor: pointer;
@@ -87,8 +87,6 @@
 }
 
 .optionCategory {
-	text-transform: uppercase;
-	letter-spacing: 0.02em;
 	font-size: var(--qs-category-size, 0.5625rem);
 	font-weight: 600;
 	color: var(--qs-subtext-muted-colour, var(--text-tertiary));
@@ -100,11 +98,11 @@
 }
 
 .optionMeta {
-	margin-left: auto;
+	margin-inline-start: auto;
 	max-width: 10rem;
 	min-width: 0;
 	flex: 0 1 10rem;
-	text-align: right;
+	text-align: end;
 	font-size: var(--qs-meta-size, 0.8125rem);
 	line-height: 1rem;
 	font-weight: var(--qs-meta-weight, 400);
@@ -177,8 +175,31 @@
 	font-size: 0.6875rem;
 	font-weight: 600;
 	color: var(--text-tertiary);
-	letter-spacing: 0.05em;
-	text-transform: uppercase;
+}
+
+.sectionHeaderAccount {
+	justify-content: flex-start;
+	gap: 0.5rem;
+	padding-top: 0.5rem;
+	font-size: 0.75rem;
+	color: var(--text-secondary);
+	letter-spacing: normal;
+	text-transform: none;
+}
+
+.sectionHeaderAccountName {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.optionUnreadDot {
+	width: 0.5rem;
+	height: 0.5rem;
+	flex-shrink: 0;
+	border-radius: 50%;
+	background-color: var(--text-primary);
 }
 
 .modalRoot {
@@ -297,8 +318,8 @@
 	border-radius: 0.25rem;
 	border: 0.0625rem solid var(--background-modifier-accent);
 	background-color: var(--background-primary);
-	padding-left: 0.25rem;
-	padding-right: 0.25rem;
+	padding-inline-start: 0.25rem;
+	padding-inline-end: 0.25rem;
 	font-size: 0.6875rem;
 	line-height: 1.25rem;
 	color: var(--qs-text-primary, var(--text-primary));
@@ -326,102 +347,4 @@
 
 .optionIconHighlight {
 	color: var(--qs-icon-highlight-colour, var(--text-primary));
-}
-
-.mobileSheet {
-	display: flex;
-	flex-direction: column;
-	height: 100%;
-	background-color: var(--background-secondary);
-	padding: 0 1rem calc(env(safe-area-inset-bottom, 0px) + 1rem);
-}
-
-.mobileSearchContainer {
-	padding-top: 1.25rem;
-	padding-bottom: 1.25rem;
-}
-
-.mobilePanels {
-	flex: 1;
-	min-height: 0;
-	display: flex;
-	flex-direction: column;
-}
-
-.mobileSearchPanel,
-.mobileFriendsPanel {
-	flex: 1;
-	min-height: 0;
-	display: flex;
-	flex-direction: column;
-	gap: 0.75rem;
-}
-
-.mobilePanelHidden {
-	display: none;
-}
-
-.mobileScroller {
-	flex: 1;
-	min-height: 0;
-}
-
-.mobileSearchInput {
-	width: 100%;
-	min-height: 3.25rem;
-	padding-block: 0.6rem;
-}
-
-.mobileSearchClearButton {
-	background: transparent;
-	border: none;
-	padding: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	color: var(--text-tertiary);
-	cursor: pointer;
-	border-radius: 62.4375rem;
-}
-
-.mobileScrollContent {
-	display: flex;
-	flex-direction: column;
-	gap: 0.75rem;
-	padding-bottom: 0.5rem;
-}
-
-.mobileFriendsContent {
-	height: 100%;
-}
-
-.mobileSection {
-	display: flex;
-	flex-direction: column;
-}
-
-.mobileSectionHeader {
-	font-size: 0.75rem;
-	font-weight: 600;
-	color: var(--text-primary-muted);
-	text-transform: uppercase;
-	letter-spacing: 0.04em;
-	margin-bottom: 0.35rem;
-}
-
-.mobileSectionList {
-	display: flex;
-	flex-direction: column;
-	gap: 0.35rem;
-}
-
-.mobileOption {
-	display: flex;
-	align-items: center;
-	width: 100%;
-	border: none;
-	background: transparent;
-	color: var(--text-primary);
-	border-radius: var(--radius-md);
-	padding: 0.25rem 0.25rem;
 }

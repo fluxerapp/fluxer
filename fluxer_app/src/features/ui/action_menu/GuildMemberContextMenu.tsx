@@ -3,10 +3,8 @@
 import Authentication from '@app/features/auth/state/Authentication';
 import Channels from '@app/features/channel/state/Channels';
 import DeveloperMode from '@app/features/devtools/state/DeveloperMode';
-import {TransferOwnershipModal} from '@app/features/guild/components/modals/TransferOwnershipModal';
-import Guilds from '@app/features/guild/state/Guilds';
-import {resolveGuildModerationCapabilities} from '@app/features/guild/utils/GuildModerationCapabilityUtils';
-import {KICK_MEMBER_DESCRIPTOR, TRANSFER_OWNERSHIP_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {useGuildMemberModerationCapabilities} from '@app/features/guild/utils/GuildModerationCapabilityUtils';
+import {KICK_MEMBER_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
@@ -18,16 +16,10 @@ import {
 	REMOVE_TIMEOUT_DESCRIPTOR,
 	TIMEOUT_DESCRIPTOR,
 } from '@app/features/moderation/utils/ModerationMessageDescriptors';
-import {useRoleHierarchy} from '@app/features/permissions/hooks/useRoleHierarchy';
 import Permission from '@app/features/permissions/state/Permission';
-import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
 import Relationships from '@app/features/relationship/state/Relationships';
-import {
-	BanMemberIcon,
-	KickMemberIcon,
-	TimeoutIcon,
-	TransferOwnershipIcon,
-} from '@app/features/ui/action_menu/ContextMenuIcons';
+import {getRemovableThread, RemoveFromThreadMenuItem} from '@app/features/threads/components/RemoveFromThreadMenuItem';
+import {BanMemberIcon, KickMemberIcon, TimeoutIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import {StartVoiceCallMenuItem} from '@app/features/ui/action_menu/items/CallMenuItems';
 import {CopyUserIdMenuItem} from '@app/features/ui/action_menu/items/CopyMenuItems';
 import {DebugGuildMemberMenuItem, DebugUserMenuItem} from '@app/features/ui/action_menu/items/DebugMenuItems';
@@ -42,7 +34,7 @@ import {
 	UnblockUserMenuItem,
 } from '@app/features/ui/action_menu/items/RelationshipMenuItems';
 import {ReportMessageMenuItem} from '@app/features/ui/action_menu/items/ReportMessageMenuItem';
-import {ReportUserMenuItem} from '@app/features/ui/action_menu/items/ReportUserMenuItem';
+import {ReportUserProfileMenuItem} from '@app/features/ui/action_menu/items/ReportUserProfileMenuItem';
 import {shouldShowSpammerOverrideMenuItems} from '@app/features/ui/action_menu/items/SpammerOverrideMenuItems';
 import {StaffDeveloperUserControlsMenuItem} from '@app/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem';
 import {shouldShowStaffUserControlsMenuItems} from '@app/features/ui/action_menu/items/StaffUserControlsMenuItems';
@@ -86,27 +78,16 @@ export const GuildMemberContextMenu: React.FC<GuildMemberContextMenuProps> = obs
 		const isCurrentUser = user.id === Authentication.currentUserId;
 		const relationship = Relationships.getRelationship(user.id);
 		const relationshipType = relationship?.type;
-		const guild = Guilds.getGuild(guildId);
+
 		const member = providedMember ?? GuildMembers.getMember(guildId, user.id);
-		const currentUserId = Authentication.currentUserId;
 		const isBot = user.bot;
-		const canKickMembers = Permission.can(Permissions.KICK_MEMBERS, {guildId});
-		const canBanMembers = Permission.can(Permissions.BAN_MEMBERS, {guildId});
-		const canModerateMembers = Permission.can(Permissions.MODERATE_MEMBERS, {guildId});
-		const isOwner = guild?.ownerId === currentUserId;
-		const {canManageTarget} = useRoleHierarchy(guild);
-		const guildSnapshot = guild?.toJSON();
-		const targetHasAdministratorPermission =
-			guildSnapshot !== undefined && PermissionUtils.can(Permissions.ADMINISTRATOR, user.id, guildSnapshot);
-		const {canKick, canBan, canTimeout} = resolveGuildModerationCapabilities({
+
+		const {canKick, canBan, canTimeout, guild, canManageNicknames} = useGuildMemberModerationCapabilities(
+			guildId,
+			user,
 			isCurrentUser,
-			canManageTarget: canManageTarget(user.id),
-			canKickMembers,
-			canBanMembers,
-			canModerateMembers,
-			targetHasAdministratorPermission,
-		});
-		const canTransfer = Boolean(member) && !isCurrentUser && !isBot && isOwner;
+			member,
+		);
 		const developerMode = UserSettings.developerMode;
 		const isDeveloper = DeveloperMode.isDeveloper;
 		const currentUser = Users.currentUser;
@@ -120,18 +101,13 @@ export const GuildMemberContextMenu: React.FC<GuildMemberContextMenuProps> = obs
 		const canShowSpammerOverrideControls =
 			!isCurrentUser && shouldShowSpammerOverrideMenuItems({user, developerMode: isDeveloper});
 		const canShowStaffDeveloperControls = canShowStaffUserControls || canShowSpammerOverrideControls;
-		const hasChangeNicknamePermission = Permission.can(Permissions.CHANGE_NICKNAME, {guildId});
-		const hasManageNicknamesPermission = Permission.can(Permissions.MANAGE_NICKNAMES, {guildId});
-		const canManageNicknames = Boolean(
-			member &&
-				((isCurrentUser && hasChangeNicknamePermission && !member.isTimedOut()) ||
-					(hasManageNicknamesPermission && canManageTarget(user.id))),
-		);
+
 		const hasRoles = guild && Object.values(guild.roles).some((r) => !r.isEveryone);
 		const canManageRoles = Permission.can(Permissions.MANAGE_ROLES, {guildId});
 		const hasVisibleRoles = Boolean(member && hasRoles && (canManageRoles || member.roles.size > 0));
-		const hasModerationActions = canTransfer || Boolean(((canTimeout || canKick) && member) || canBan);
+		const hasModerationActions = Boolean(((canTimeout || canKick) && member) || canBan);
 		const isTimedOut = member?.isTimedOut() ?? false;
+		const removableThread = getRemovableThread(guildId, channelId, user.id);
 		const handleTimeout = useCallback(() => {
 			ModalCommands.pushAfterBottomSheetClose(
 				onClose,
@@ -180,19 +156,6 @@ export const GuildMemberContextMenu: React.FC<GuildMemberContextMenuProps> = obs
 				)),
 			);
 		}, [guildId, user, onClose]);
-		const handleTransferOwnership = useCallback(() => {
-			ModalCommands.pushAfterBottomSheetClose(
-				onClose,
-				modal(() => (
-					<TransferOwnershipModal
-						guildId={guildId}
-						targetUser={user}
-						targetMember={member!}
-						data-flx="ui.action-menu.guild-member-context-menu.handle-transfer-ownership.transfer-ownership-modal"
-					/>
-				)),
-			);
-		}, [guildId, user, member, onClose]);
 		return (
 			<>
 				<MenuGroup data-flx="ui.action-menu.guild-member-context-menu.menu-group">
@@ -270,12 +233,11 @@ export const GuildMemberContextMenu: React.FC<GuildMemberContextMenuProps> = obs
 								data-flx="ui.action-menu.guild-member-context-menu.report-message-menu-item"
 							/>
 						)}
-						<ReportUserMenuItem
+						<ReportUserProfileMenuItem
 							user={user}
 							guildId={guildId}
-							message={message}
 							onClose={onClose}
-							data-flx="ui.action-menu.guild-member-context-menu.report-user-menu-item"
+							data-flx="ui.action-menu.guild-member-context-menu.report-user-profile-menu-item"
 						/>
 						{relationshipType === RelationshipTypes.BLOCKED ? (
 							<UnblockUserMenuItem
@@ -303,23 +265,18 @@ export const GuildMemberContextMenu: React.FC<GuildMemberContextMenuProps> = obs
 						/>
 					</MenuGroup>
 				)}
+				{removableThread && (
+					<MenuGroup data-flx="ui.action-menu.guild-member-context-menu.menu-group--thread">
+						<RemoveFromThreadMenuItem
+							thread={removableThread}
+							user={user}
+							onClose={onClose}
+							data-flx="ui.action-menu.guild-member-context-menu.remove-from-thread-menu-item"
+						/>
+					</MenuGroup>
+				)}
 				{hasModerationActions && (
 					<MenuGroup data-flx="ui.action-menu.guild-member-context-menu.menu-group--5">
-						{canTransfer && member && (
-							<MenuItem
-								icon={
-									<TransferOwnershipIcon
-										size={16}
-										data-flx="ui.action-menu.guild-member-context-menu.transfer-ownership-icon"
-									/>
-								}
-								onClick={handleTransferOwnership}
-								danger
-								data-flx="ui.action-menu.guild-member-context-menu.menu-item.transfer-ownership"
-							>
-								{i18n._(TRANSFER_OWNERSHIP_DESCRIPTOR)}
-							</MenuItem>
-						)}
 						{canTimeout && member && (
 							<MenuItem
 								icon={<TimeoutIcon size={16} data-flx="ui.action-menu.guild-member-context-menu.timeout-icon" />}

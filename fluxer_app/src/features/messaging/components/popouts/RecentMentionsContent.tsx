@@ -64,6 +64,7 @@ const RECENT_MENTIONS_RETENTION_DESCRIPTOR = msg({
 });
 const readonlyBehaviorOverrides = {
 	disableContextMenu: true,
+	disableDoubleClick: true,
 };
 const FilterMenuContent = observer(() => {
 	const {i18n} = useLingui();
@@ -408,7 +409,7 @@ export const RecentMentionsContent = observer(
 									data-flx="messaging.recent-mentions-content.div--10"
 								>
 									<h3 className={previewStyles.endStateTitle} data-flx="messaging.recent-mentions-content.h3--2">
-										<Trans>You've reached the end</Trans>
+										<Trans>You're at the end</Trans>
 									</h3>
 									<p className={previewStyles.endStateDescription} data-flx="messaging.recent-mentions-content.p--2">
 										<Trans>You've seen all your recent mentions. More will appear here soon.</Trans>

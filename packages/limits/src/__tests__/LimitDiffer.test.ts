@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {DEFAULT_FREE_LIMITS, DEFAULT_PREMIUM_LIMITS} from '@fluxer/limits/src/LimitDefaults';
+import {DEFAULT_RESTRICTED_LIMITS, DEFAULT_STOCK_LIMITS} from '@fluxer/limits/src/LimitDefaults';
 import {computeOverrides, computeWireFormat, expandWireFormat} from '@fluxer/limits/src/LimitDiffer';
 import type {LimitConfigSnapshot} from '@fluxer/limits/src/LimitTypes';
 import {describe, expect, test} from 'vitest';
@@ -16,8 +16,8 @@ const WIRE_COMPATIBILITY_LIMIT_KEYS = [
 ] as const;
 
 function expectWireCompatibilityOverrides(
-	overrides: Partial<typeof DEFAULT_FREE_LIMITS>,
-	limits: typeof DEFAULT_FREE_LIMITS,
+	overrides: Partial<typeof DEFAULT_RESTRICTED_LIMITS>,
+	limits: typeof DEFAULT_RESTRICTED_LIMITS,
 ): void {
 	expect(Object.keys(overrides).sort()).toEqual([...WIRE_COMPATIBILITY_LIMIT_KEYS].sort());
 	for (const key of WIRE_COMPATIBILITY_LIMIT_KEYS) {
@@ -27,16 +27,16 @@ function expectWireCompatibilityOverrides(
 
 describe('LimitDiffer', () => {
 	test('computeOverrides returns empty object when limits match defaults', () => {
-		const overrides = computeOverrides(DEFAULT_FREE_LIMITS, DEFAULT_FREE_LIMITS);
+		const overrides = computeOverrides(DEFAULT_RESTRICTED_LIMITS, DEFAULT_RESTRICTED_LIMITS);
 		expect(overrides).toEqual({});
 	});
 	test('computeOverrides extracts differences from defaults', () => {
 		const customLimits = {
-			...DEFAULT_FREE_LIMITS,
+			...DEFAULT_RESTRICTED_LIMITS,
 			max_guilds: 150,
 			max_message_length: 3000,
 		};
-		const overrides = computeOverrides(customLimits, DEFAULT_FREE_LIMITS);
+		const overrides = computeOverrides(customLimits, DEFAULT_RESTRICTED_LIMITS);
 		expect(overrides).toEqual({
 			max_guilds: 150,
 			max_message_length: 3000,
@@ -48,12 +48,12 @@ describe('LimitDiffer', () => {
 			rules: [
 				{
 					id: 'default',
-					limits: {...DEFAULT_FREE_LIMITS},
+					limits: {...DEFAULT_RESTRICTED_LIMITS},
 				},
 				{
 					id: 'premium',
 					filters: {traits: ['premium']},
-					limits: {...DEFAULT_PREMIUM_LIMITS},
+					limits: {...DEFAULT_STOCK_LIMITS},
 				},
 			],
 		};
@@ -63,7 +63,7 @@ describe('LimitDiffer', () => {
 		expect(wireFormat.rules).toHaveLength(2);
 		expect(wireFormat.defaultsHash).toBeTruthy();
 		expect(wireFormat.rules[0].id).toBe('default');
-		expectWireCompatibilityOverrides(wireFormat.rules[0].overrides, DEFAULT_FREE_LIMITS);
+		expectWireCompatibilityOverrides(wireFormat.rules[0].overrides, DEFAULT_RESTRICTED_LIMITS);
 		expect(wireFormat.rules[1].id).toBe('premium');
 		expect(Object.keys(wireFormat.rules[1].overrides).length).toBeGreaterThan(0);
 		expect(wireFormat.rules[1].overrides.max_guilds).toBe(200);
@@ -74,12 +74,12 @@ describe('LimitDiffer', () => {
 			rules: [
 				{
 					id: 'default',
-					limits: {...DEFAULT_FREE_LIMITS},
+					limits: {...DEFAULT_RESTRICTED_LIMITS},
 				},
 				{
 					id: 'premium',
 					filters: {traits: ['premium']},
-					limits: {...DEFAULT_PREMIUM_LIMITS},
+					limits: {...DEFAULT_STOCK_LIMITS},
 				},
 			],
 		};
@@ -98,13 +98,13 @@ describe('LimitDiffer', () => {
 			rules: [
 				{
 					id: 'default',
-					limits: {...DEFAULT_FREE_LIMITS},
+					limits: {...DEFAULT_RESTRICTED_LIMITS},
 				},
 				{
 					id: 'premium',
 					filters: {traits: ['premium']},
 					limits: {
-						...DEFAULT_PREMIUM_LIMITS,
+						...DEFAULT_STOCK_LIMITS,
 						max_guilds: 250,
 					},
 				},

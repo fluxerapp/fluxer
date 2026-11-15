@@ -44,7 +44,7 @@
 }
 
 .backButton {
-	margin-right: var(--channel-header-back-button-gap);
+	margin-inline-end: var(--channel-header-back-button-gap);
 	flex-shrink: 0;
 }
 
@@ -242,7 +242,7 @@
 	width: var(--active-now-sidebar-width);
 	min-width: var(--active-now-sidebar-width);
 	height: 100%;
-	border-left: var(--skeleton-chrome-border);
+	border-inline-start: var(--skeleton-chrome-border);
 	background-color: var(--background-secondary-lighter);
 }
 

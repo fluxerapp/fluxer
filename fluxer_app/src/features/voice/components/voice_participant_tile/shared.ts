@@ -15,21 +15,9 @@ export const TILE_AVATAR_STYLE = {
 	width: 'var(--tile-avatar-size)',
 	height: 'var(--tile-avatar-size)',
 } satisfies React.CSSProperties;
-export const UNMUTE_STREAM_AUDIO_DESCRIPTOR = msg({
-	message: 'Unmute stream audio',
-	comment: 'Tooltip / button label on a voice participant tile that unmutes the remote screen-share or camera audio.',
-});
-export const MUTE_STREAM_AUDIO_DESCRIPTOR = msg({
-	message: 'Mute stream audio',
-	comment: 'Tooltip / button label on a voice participant tile that mutes the remote screen-share or camera audio.',
-});
 export const STREAM_ENDED_DESCRIPTOR = msg({
 	message: 'Stream ended',
 	comment: 'Status overlay on a voice participant tile when the remote screen share has ended.',
-});
-export const STREAM_HIDDEN_DESCRIPTOR = msg({
-	message: 'Stream hidden',
-	comment: 'Overlay text on a participant tile when the local user hid the remote screen share.',
 });
 export const STREAM_BUFFERING_DESCRIPTOR = msg({
 	message: 'Stream buffering',

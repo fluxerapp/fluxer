@@ -16,7 +16,8 @@
 .corner {
 	--dot-size: 0.25rem;
 	--orbit: 0.5rem;
-	inset: auto 0.75rem 0.75rem auto;
+	inset-block: auto 0.75rem;
+	inset-inline: auto 0.75rem;
 	width: 2.5rem;
 	height: 2.5rem;
 	background: rgb(0 0 0 / 45%);
@@ -26,7 +27,7 @@
 .spinner {
 	position: absolute;
 	top: 49.959346cqh;
-	left: 49.97424cqw;
+	inset-inline-start: 49.97424cqw;
 	z-index: 1;
 	width: 0;
 	height: 0;
@@ -81,7 +82,7 @@
 .dot {
 	position: absolute;
 	top: calc(var(--dot-size) / -2);
-	left: calc(var(--dot-size) / -2);
+	inset-inline-start: calc(var(--dot-size) / -2);
 	width: var(--dot-size);
 	height: var(--dot-size);
 	border-radius: 50%;

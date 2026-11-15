@@ -92,6 +92,14 @@
 	align-items: center;
 }
 
+.reportActions {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	margin-top: -0.5rem;
+	color: var(--text-tertiary);
+}
+
 .disabledText {
 	margin: 0;
 	text-align: center;

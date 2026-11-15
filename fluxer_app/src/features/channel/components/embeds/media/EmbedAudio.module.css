@@ -12,7 +12,7 @@
 	--right-position: -2rem;
 	position: absolute;
 	top: 0.25rem;
-	right: var(--right-position);
+	inset-inline-end: var(--right-position);
 	z-index: 10;
 	display: flex;
 	height: 1.5rem;

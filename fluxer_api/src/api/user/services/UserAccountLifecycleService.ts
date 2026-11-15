@@ -1,92 +1,93 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ApiContext} from '@app/api/ApiContext';
-import * as AuthSession from '@app/api/auth/AuthSession';
+import {revokeAllAuthSessions} from '@app/api/auth/AuthSessionRevocation';
 import type {UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
-import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
-import {reschedulePendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
-import type {UserAccountUpdatePropagator} from '@app/api/user/services/UserAccountUpdatePropagator';
-import {hasPartialUserFieldsChanged} from '@app/api/user/UserMappers';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {
+	type PartialUserChangePropagationDeps,
+	propagateUserUpdate,
+} from '@app/api/user/services/PartialUserChangePropagation';
+import {isPendingDeletionBlocked, reschedulePendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {UserOwnsGuildsError} from '@fluxer/errors/src/domains/guild/UserOwnsGuildsError';
-import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {IEmailService} from '@pkgs/email/src/IEmailService';
 import {ms} from 'itty-time';
 
 interface UserAccountLifecycleServiceDeps {
 	apiContext: ApiContext;
-	userAccountRepository: IUserAccountRepository;
-	guildRepository: IGuildRepositoryAggregate;
+	userAccountRepository: UserRepository;
+	guildRepository: GuildRepository;
 	emailService: IEmailService;
-	updatePropagator: UserAccountUpdatePropagator;
+	userUpdateDeps: PartialUserChangePropagationDeps;
 	kvDeletionQueue: KVAccountDeletionQueueService;
+}
+
+interface SelfDeleteOptions {
+	immediate: boolean;
+	deleteMessages: boolean;
 }
 
 export class UserAccountLifecycleService {
 	constructor(private readonly deps: UserAccountLifecycleServiceDeps) {}
 
 	async selfDisable(userId: UserID): Promise<void> {
-		const user = await this.deps.userAccountRepository.findUnique(userId);
-		if (!user) {
-			throw new UnknownUserError();
-		}
+		const user = await this.deps.userAccountRepository.findUniqueAssert(userId);
+		await revokeAllAuthSessions(this.deps.apiContext.services, userId);
 		const updatedUser = await this.deps.userAccountRepository.updateFlags(
 			userId,
 			(flags) => flags | UserFlags.DISABLED,
 		);
-		await AuthSession.terminateAllUserSessions(this.deps.apiContext, userId);
 		if (updatedUser) {
-			await this.deps.updatePropagator.dispatchUserUpdate(updatedUser);
-			if (hasPartialUserFieldsChanged(user, updatedUser)) {
-				await this.deps.updatePropagator.propagatePartialUserChange(updatedUser);
-			}
+			await propagateUserUpdate(this.deps.userUpdateDeps, user, updatedUser);
 		}
 	}
 
-	async selfDelete(userId: UserID): Promise<void> {
-		const user = await this.deps.userAccountRepository.findUnique(userId);
-		if (!user) {
-			throw new UnknownUserError();
-		}
+	async selfDelete(userId: UserID, options: SelfDeleteOptions): Promise<Date> {
+		const user = await this.deps.userAccountRepository.findUniqueAssert(userId);
 		const ownedGuildIds = await this.deps.guildRepository.listOwnedGuildIds(userId);
 		if (ownedGuildIds.length > 0) {
 			throw new UserOwnsGuildsError();
 		}
-		const gracePeriodMs = Config.deletionGracePeriodHours * ms('1 hour');
-		const pendingDeletionAt = new Date(Date.now() + gracePeriodMs);
+		const now = Date.now();
+		const pendingDeletionAt = new Date(options.immediate ? now : now + Config.deletionGracePeriodHours * ms('1 hour'));
 		const updatedUser = await this.deps.userAccountRepository.updateDeletionSchedule(user, {
 			flags: user.flags | UserFlags.SELF_DELETED,
 			pending_deletion_at: pendingDeletionAt,
 			deletion_reason_code: DeletionReasons.USER_REQUESTED,
 			deletion_scheduled_by: userId,
-			deletion_scheduled_at: new Date(),
+			deletion_scheduled_at: new Date(now),
+			...(options.deleteMessages && user.pendingBulkMessageDeletionAt === null && !isPendingDeletionBlocked(user)
+				? {
+						pending_bulk_message_deletion_at: pendingDeletionAt,
+						pending_bulk_message_deletion_channel_count: null,
+						pending_bulk_message_deletion_message_count: null,
+					}
+				: {}),
 		});
 		await reschedulePendingDeletion({
 			userId,
 			currentPendingDeletionAt: user.pendingDeletionAt,
 			nextPendingDeletionAt: pendingDeletionAt,
 			deletionReasonCode: DeletionReasons.USER_REQUESTED,
-			userRepository: this.deps.userAccountRepository,
 			deletionQueue: this.deps.kvDeletionQueue,
 		});
-		await AuthSession.terminateAllUserSessions(this.deps.apiContext, userId);
-		if (user.email) {
-			await this.deps.emailService.sendSelfDeletionScheduledEmail(
+		await revokeAllAuthSessions(this.deps.apiContext.services, userId);
+		if (user.email && !options.immediate) {
+			await this.deps.emailService.send(
+				'self_deletion_scheduled',
 				user.email,
-				user.username,
-				pendingDeletionAt,
+				{deletionDate: pendingDeletionAt},
 				user.locale,
 			);
 		}
 		if (updatedUser) {
-			await this.deps.updatePropagator.dispatchUserUpdate(updatedUser);
-			if (hasPartialUserFieldsChanged(user, updatedUser)) {
-				await this.deps.updatePropagator.propagatePartialUserChange(updatedUser);
-			}
+			await propagateUserUpdate(this.deps.userUpdateDeps, user, updatedUser);
 		}
+		return pendingDeletionAt;
 	}
 }

@@ -35,9 +35,10 @@ export const DEFAULT_KEYBIND_SECTIONS: ReadonlyArray<KeybindSection> = [
 	'drag_and_drop',
 	'chat',
 	'voice_and_video',
+	'accounts',
 	'misc',
 ];
-export const SECTION_DISPLAY_ORDER: Partial<Record<KeybindSection, ReadonlyArray<KeybindCommand>>> = {
+const SECTION_DISPLAY_ORDER: Partial<Record<KeybindSection, ReadonlyArray<KeybindCommand>>> = {
 	messages: [
 		'message_reply',
 		'message_reply_prev',
@@ -100,9 +101,17 @@ export const SECTION_DISPLAY_ORDER: Partial<Record<KeybindSection, ReadonlyArray
 		'voice_answer_call',
 		'voice_decline_call',
 	],
-	misc: ['misc_search', 'misc_open_context_menu', 'misc_help'],
+	accounts: [
+		'system_open_account_switcher',
+		'system_switch_account_recent',
+		'system_switch_account_prev',
+		'system_switch_account_next',
+		'system_jump_account_mention',
+		'nav_quick_switcher_accounts',
+	],
+	misc: ['misc_search', 'misc_open_context_menu', 'misc_help', 'system_toggle_downloads'],
 };
-export const SHORTCUT_MERGE_PAIRS: ReadonlyArray<readonly [KeybindCommand, KeybindCommand]> = [
+const SHORTCUT_MERGE_PAIRS: ReadonlyArray<readonly [KeybindCommand, KeybindCommand]> = [
 	['message_reply_prev', 'message_reply_next'],
 	['message_edit_prev', 'message_edit_next'],
 	['nav_guild_prev', 'nav_guild_next'],
@@ -112,33 +121,12 @@ export const SHORTCUT_MERGE_PAIRS: ReadonlyArray<readonly [KeybindCommand, Keybi
 	['nav_mention_prev', 'nav_mention_next'],
 	['chat_scroll_up', 'chat_scroll_down'],
 	['dnd_move_up', 'dnd_move_down'],
+	['system_switch_account_prev', 'system_switch_account_next'],
 ];
 
 export type ShortcutRowModel = KeybindConfig | [KeybindConfig, KeybindConfig];
 
 export const OVERRIDDEN_CHIP_STYLE: React.CSSProperties = {opacity: 0.5, textDecoration: 'line-through'};
-export const PRINTABLE_NAV_KEYS_TO_SWALLOW = new Set([
-	'Tab',
-	'Escape',
-	'F1',
-	'F2',
-	'F3',
-	'F4',
-	'F5',
-	'F6',
-	'F7',
-	'F8',
-	'F9',
-	'F10',
-	'F11',
-	'F12',
-	'PageUp',
-	'PageDown',
-	'Home',
-	'End',
-	'Insert',
-	'ContextMenu',
-]);
 
 export function isShortcutMergePair(row: ShortcutRowModel): row is [KeybindConfig, KeybindConfig] {
 	return Array.isArray(row);
@@ -206,27 +194,5 @@ export function comboMatchesQuery(i18n: I18n, combo: KeyCombo, normalized: strin
 	const formatted = formatKeyCombo(i18n, combo);
 	if (formatted?.toLowerCase().includes(normalized)) return true;
 	if (combo.key?.toLowerCase().includes(normalized)) return true;
-	return false;
-}
-
-export function combosLooseEqual(a: KeyCombo, b: KeyCombo): boolean {
-	if (!a || !b) return false;
-	if ((a.key ?? '') !== (b.key ?? '')) return false;
-	if ((a.code ?? '') !== (b.code ?? '')) return false;
-	if (!!a.ctrlOrMeta !== !!b.ctrlOrMeta) return false;
-	if (!!a.ctrl !== !!b.ctrl) return false;
-	if (!!a.alt !== !!b.alt) return false;
-	if (!!a.shift !== !!b.shift) return false;
-	if (!!a.meta !== !!b.meta) return false;
-	if (!!a.modifierOnly !== !!b.modifierOnly) return false;
-	if (!!a.bothSides !== !!b.bothSides) return false;
-	if ((a.mouseButton ?? null) !== (b.mouseButton ?? null)) return false;
-	if ((a.gamepadButton ?? null) !== (b.gamepadButton ?? null)) return false;
-	return true;
-}
-
-export function isShortcutLikeKeyEvent(event: KeyboardEvent): boolean {
-	if (event.ctrlKey || event.metaKey || event.altKey) return true;
-	if (event.key.length > 1 && PRINTABLE_NAV_KEYS_TO_SWALLOW.has(event.key)) return true;
 	return false;
 }

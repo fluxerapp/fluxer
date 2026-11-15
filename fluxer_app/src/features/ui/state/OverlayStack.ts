@@ -47,12 +47,6 @@ class OverlayStack {
 		}
 	}
 
-	reset(): void {
-		this.counter = 0;
-		this.sequence = 0;
-		this.aboveOverlayBaseDepth = 0;
-	}
-
 	private getBaseZIndex(): number {
 		return this.aboveOverlayBaseDepth > 0 ? ABOVE_OVERLAY_BASE_Z_INDEX : BASE_Z_INDEX;
 	}

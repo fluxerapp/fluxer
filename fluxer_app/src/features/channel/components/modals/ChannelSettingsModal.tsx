@@ -4,13 +4,14 @@ import {DesktopChannelSettingsView} from '@app/features/app/components/dialogs/c
 import {MobileChannelSettingsView} from '@app/features/app/components/dialogs/components/MobileChannelSettingsView';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {SettingsModalContainer} from '@app/features/app/components/dialogs/shared/SettingsModalLayout';
+import settingsModalStyles from '@app/features/app/components/dialogs/shared/SettingsModalLayout.module.css';
 import Channels from '@app/features/channel/state/Channels';
 import {
 	type ChannelSettingsModalProps,
 	getAvailableTabs,
 	getGroupedSettingsTabs,
 } from '@app/features/channel/utils/ChannelSettingsModalUtils';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as UnsavedChangesCommands from '@app/features/ui/commands/UnsavedChangesCommands';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
@@ -48,7 +49,7 @@ export const ChannelSettingsModal: React.FC<ChannelSettingsModalProps> = observe
 	const unsavedChangesState = UnsavedChanges;
 	useEffect(() => {
 		if (guildId) {
-			GatewayConnection.syncGuildIfNeeded(guildId, 'channel-settings-modal');
+			GatewaySessions.foregroundConnection.syncGuildIfNeeded(guildId, 'channel-settings-modal');
 		}
 	}, [guildId]);
 	useEffect(() => {
@@ -93,7 +94,12 @@ export const ChannelSettingsModal: React.FC<ChannelSettingsModalProps> = observe
 	}
 	const isCategory = channel.type === ChannelTypes.GUILD_CATEGORY;
 	return (
-		<Modal.Root size="fullscreen" onClose={handleClose} data-flx="channel.channel-settings-modal.modal-root">
+		<Modal.Root
+			size="fullscreen"
+			className={settingsModalStyles.modalRoot}
+			onClose={handleClose}
+			data-flx="channel.channel-settings-modal.modal-root"
+		>
 			<Modal.ScreenReaderLabel
 				text={i18n._(isCategory ? CATEGORY_SETTINGS_LABEL_DESCRIPTOR : CHANNEL_SETTINGS_LABEL_DESCRIPTOR)}
 				data-flx="channel.channel-settings-modal.modal-screen-reader-label"

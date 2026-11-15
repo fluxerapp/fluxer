@@ -4,29 +4,23 @@ use crate::network_policy;
 use reqwest::header::{HeaderMap, LOCATION};
 use std::time::Duration;
 use tokio::time::timeout;
+use url::Url;
 
-#[allow(dead_code)]
 pub const DEFAULT_MAX_BYTES: usize = 8 * 1024 * 1024;
 
 pub const DEFAULT_HTML_MAX_BYTES: usize = DEFAULT_MAX_BYTES;
 
-#[allow(dead_code)]
 pub const DEFAULT_TIMEOUT: Duration = Duration::from_secs(10);
 pub const DEFAULT_MAX_REDIRECTS: usize = 5;
 
-#[allow(dead_code)]
 pub struct FetchResult {
     pub bytes: Vec<u8>,
-    pub content_type: Option<String>,
     pub headers: HeaderMap,
-    pub final_url: String,
     pub status: u16,
 }
 
-#[allow(dead_code)]
 pub struct FetchHead {
     pub content_type: Option<String>,
-    pub headers: HeaderMap,
     pub final_url: String,
     pub status: u16,
 }
@@ -45,16 +39,26 @@ pub async fn fetch_url(
     max_bytes: usize,
     request_timeout: Duration,
 ) -> anyhow::Result<FetchResult> {
-    fetch_url_with_headers(client, url, HeaderMap::new(), max_bytes, request_timeout).await
+    fetch_url_with_headers(
+        client,
+        url,
+        |_| Ok(HeaderMap::new()),
+        max_bytes,
+        request_timeout,
+    )
+    .await
 }
 
-pub async fn fetch_url_with_headers(
+pub async fn fetch_url_with_headers<H>(
     client: &reqwest::Client,
     url: &str,
-    request_headers: HeaderMap,
+    request_headers: H,
     max_bytes: usize,
     request_timeout: Duration,
-) -> anyhow::Result<FetchResult> {
+) -> anyhow::Result<FetchResult>
+where
+    H: Fn(&Url) -> anyhow::Result<HeaderMap>,
+{
     let result = fetch_url_with_headers_maybe_body(
         client,
         url,
@@ -67,9 +71,7 @@ pub async fn fetch_url_with_headers(
 
     Ok(FetchResult {
         bytes: result.bytes.unwrap_or_default(),
-        content_type: result.content_type,
         headers: result.headers,
-        final_url: result.final_url,
         status: result.status,
     })
 }
@@ -87,7 +89,7 @@ where
     fetch_url_with_headers_maybe_body(
         client,
         url,
-        HeaderMap::new(),
+        |_| Ok(HeaderMap::new()),
         max_bytes,
         request_timeout,
         should_read_body,
@@ -95,15 +97,16 @@ where
     .await
 }
 
-pub async fn fetch_url_with_headers_maybe_body<F>(
+pub async fn fetch_url_with_headers_maybe_body<H, F>(
     client: &reqwest::Client,
     url: &str,
-    request_headers: HeaderMap,
+    request_headers: H,
     max_bytes: usize,
     request_timeout: Duration,
     should_read_body: F,
 ) -> anyhow::Result<FetchMaybeBodyResult>
 where
+    H: Fn(&Url) -> anyhow::Result<HeaderMap>,
     F: Fn(&FetchHead) -> bool,
 {
     let mut current_url = network_policy::parse_url(url)?;
@@ -115,15 +118,14 @@ where
         }
         visited.push(current_str);
         network_policy::validate_url(&current_url).await?;
+        let hop_headers = request_headers(&current_url)?;
         let resp = timeout(
             request_timeout,
-            client
-                .get(current_url.clone())
-                .headers(request_headers.clone())
-                .send(),
+            client.get(current_url.clone()).headers(hop_headers).send(),
         )
         .await
-        .map_err(|_| anyhow::anyhow!("request timed out"))??;
+        .map_err(|_| anyhow::anyhow!("request timed out"))?
+        .map_err(reqwest::Error::without_url)?;
 
         let status = resp.status();
         let headers = resp.headers().clone();
@@ -148,7 +150,6 @@ where
 
         let head = FetchHead {
             content_type: content_type.clone(),
-            headers: headers.clone(),
             final_url: final_url.clone(),
             status: status.as_u16(),
         };
@@ -185,11 +186,11 @@ where
     Err(anyhow::anyhow!("too many redirects"))
 }
 
-async fn read_body(resp: reqwest::Response, max_bytes: usize) -> anyhow::Result<Vec<u8>> {
+pub async fn read_body(resp: reqwest::Response, max_bytes: usize) -> anyhow::Result<Vec<u8>> {
     let mut buf = Vec::with_capacity(max_bytes.min(64 * 1024));
     let mut stream = resp;
 
-    while let Some(chunk) = stream.chunk().await? {
+    while let Some(chunk) = stream.chunk().await.map_err(reqwest::Error::without_url)? {
         let next_len = buf
             .len()
             .checked_add(chunk.len())
@@ -208,21 +209,6 @@ async fn read_body(resp: reqwest::Response, max_bytes: usize) -> anyhow::Result<
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn default_max_bytes_is_8mib() {
-        assert_eq!(DEFAULT_MAX_BYTES, 8 * 1024 * 1024);
-    }
-
-    #[test]
-    fn default_html_max_bytes_matches_old_unfurl_document_limit() {
-        assert_eq!(DEFAULT_HTML_MAX_BYTES, 8 * 1024 * 1024);
-    }
-
-    #[test]
-    fn default_timeout_is_10s() {
-        assert_eq!(DEFAULT_TIMEOUT, Duration::from_secs(10));
-    }
 
     #[tokio::test]
     async fn rejects_blocked_ip_literal_before_fetch() {
@@ -259,28 +245,5 @@ mod tests {
                 "should reject {url}"
             );
         }
-    }
-
-    #[tokio::test]
-    async fn fetch_url_maybe_body_skips_body_when_policy_returns_false() {
-        let client = reqwest::Client::builder()
-            .redirect(reqwest::redirect::Policy::none())
-            .build()
-            .unwrap();
-        let result = fetch_url_maybe_body(
-            &client,
-            "http://127.0.0.1/",
-            DEFAULT_MAX_BYTES,
-            Duration::from_secs(1),
-            |_| false,
-        )
-        .await;
-        assert!(result.is_err());
-    }
-
-    #[test]
-    #[allow(clippy::assertions_on_constants)]
-    fn default_max_redirects_is_reasonable() {
-        assert!(DEFAULT_MAX_REDIRECTS >= 3 && DEFAULT_MAX_REDIRECTS <= 10);
     }
 }

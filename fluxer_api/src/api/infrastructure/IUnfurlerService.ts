@@ -14,6 +14,19 @@ export interface UnfurlOptions {
 	cacheOnly?: boolean;
 }
 
+export interface ExternalFetchRequest {
+	method: string;
+	url: string;
+	headers: Array<[string, string]>;
+	body: string | null;
+}
+
+export interface ExternalFetchResponse {
+	status: number;
+	headers: Array<[string, string]>;
+	body: string;
+}
+
 export abstract class IUnfurlerService {
 	async unfurl(
 		url: string,
@@ -28,4 +41,12 @@ export abstract class IUnfurlerService {
 		nsfwMode?: MediaProxyNsfwMode,
 		options?: UnfurlOptions,
 	): Promise<UnfurlResult>;
+
+	abstract verifyDomain(domain: string, token: string): Promise<boolean>;
+
+	abstract fetchExternal(request: ExternalFetchRequest): Promise<ExternalFetchResponse>;
+
+	abstract resolveTxt(name: string): Promise<Array<string>>;
+
+	abstract activityPubPublicKey(): Promise<string | null>;
 }

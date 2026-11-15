@@ -1,48 +1,39 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Routes} from '@app/app/Routes';
 import {VOICE_CHANNEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Platform} from '@app/features/platform/types/Platform';
+import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import type {SearchableSettingDescriptor} from '@app/features/user/components/settings_utils/search_index/SearchIndexTypes';
 import {
 	CHAT_INPUT_DESCRIPTOR,
+	CONFIRM_VOICE_JOIN_DESCRIPTOR,
 	ENABLE_FAVORITES_DESCRIPTOR,
+	JOIN_VOICE_DESCRIPTOR,
 	KEEP_NEKO_STILL_DESCRIPTOR,
 	KEYBOARD_HINTS_DESCRIPTOR,
 	NEKO_DESCRIPTOR,
+	SHORTCUT_BADGES_DESCRIPTOR,
 	SHOW_DOWNLOAD_BUTTON_DESCRIPTOR,
 	SHOW_HELP_CENTER_BUTTON_DESCRIPTOR,
 	SHOW_NEKO_DESCRIPTOR,
+	SHOW_PLUTONIUM_BUTTON_DESCRIPTOR,
+	TWO_CLICKS_DESCRIPTOR,
+	VOICE_CHANNEL_CONFIRMATION_DESCRIPTOR,
 } from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {CONFIRM_BEFORE_JOINING_VOICE_CHANNELS_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 
-const CONFIRM_BEFORE_JOINING_VOICE_CHANNELS_DESCRIPTOR = msg({
-	message: 'Confirm before joining voice channels',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
 const VOICE_CHANNEL_JOIN_BEHAVIOR_DESCRIPTOR = msg({
 	message: 'Voice channel join behavior',
 	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
 });
-const VOICE_CHANNEL_CONFIRMATION_DESCRIPTOR = msg({
-	message: 'Voice channel confirmation',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const CONFIRM_VOICE_JOIN_DESCRIPTOR = msg({
-	message: 'Confirm voice join',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const JOIN_VOICE_DESCRIPTOR = msg({
-	message: 'Join voice',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const COMMUNITY_VOICE_DESCRIPTOR = msg({
 	message: 'Community voice',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const TWO_CLICKS_DESCRIPTOR = msg({
-	message: 'Two clicks',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const CHOOSE_WHETHER_JOINING_A_COMMUNITY_VOICE_CHANNEL_ASKS_DESCRIPTOR = msg({
 	message: 'Confirmation or double-click for community voice joins',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
@@ -52,15 +43,12 @@ const HIDE_KEYBOARD_HINTS_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const TOOLTIP_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Tooltip shortcuts',
+	message: 'Tooltip keybinds',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const SHORTCUT_BADGES_DESCRIPTOR = msg({
-	message: 'Shortcut badges',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const CHOOSE_WHETHER_TOOLTIPS_SHOW_KEYBOARD_SHORTCUT_HINTS_DESCRIPTOR = msg({
-	message: 'Keyboard shortcut hints in tooltips',
+	message: 'Keybind hints in tooltips',
 	comment: 'Settings search entry description. One-line summary of what the setting controls.',
 });
 const SHOW_OR_HIDE_NEKO_THAT_CHASES_THE_CURSOR_DESCRIPTOR = msg({
@@ -102,6 +90,11 @@ const DOWNLOAD_APP_DESCRIPTOR = msg({
 const HELP_CENTER_BUTTON_IN_THE_SIDEBAR_DESCRIPTOR = msg({
 	message: 'Help center button in the sidebar',
 	comment: 'Settings search entry description. One-line summary of what the setting controls.',
+});
+const PLUTONIUM_BUTTON_IN_THE_DM_LIST_DESCRIPTOR = msg({
+	message: 'Plutonium button in the direct messages list',
+	comment:
+		'Settings search entry description. One-line summary of what the setting controls. Plutonium is the product name.',
 });
 const DOWNLOAD_BUTTON_IN_THE_SIDEBAR_DESCRIPTOR = msg({
 	message: 'Download app button in the sidebar',
@@ -157,6 +150,18 @@ export const appearanceIndex: Array<SearchableSettingDescriptor> = [
 		description: HELP_CENTER_BUTTON_IN_THE_SIDEBAR_DESCRIPTOR,
 		audience: 'advanced',
 		tags: ['appearance'],
+		isVisible: () => Routes.help() != null,
+	},
+	{
+		id: 'appearance-show-plutonium-button',
+		tabType: 'appearance',
+		sectionId: 'interface',
+		label: SHOW_PLUTONIUM_BUTTON_DESCRIPTOR,
+		keywords: [],
+		description: PLUTONIUM_BUTTON_IN_THE_DM_LIST_DESCRIPTOR,
+		audience: 'advanced',
+		tags: ['appearance'],
+		isVisible: () => shouldShowPremiumFeatures(),
 	},
 	{
 		id: 'appearance-show-download-button',

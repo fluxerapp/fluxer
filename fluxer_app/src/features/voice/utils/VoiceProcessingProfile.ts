@@ -88,10 +88,6 @@ export function resolveVoiceProcessing(
 	return {...profile, stereoCapture: resolveStereoCapture(profile, stereoPreferred)};
 }
 
-export function resolveVoiceProcessingFromState(store: typeof VoiceSettings): ResolvedVoiceProcessing {
-	return resolveVoiceProcessingFromStateForMode(store, store.voiceProcessingMode);
-}
-
 export function resolveVoiceProcessingFromStateForDeviceLabel(
 	store: typeof VoiceSettings,
 	label: string | null | undefined,

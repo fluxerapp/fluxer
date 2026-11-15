@@ -192,7 +192,7 @@ export const ChannelFollowModal = observer(({channelId}: {channelId: string}) =>
 								name="guildId"
 								control={form.control}
 								render={({field}) => (
-									<Combobox<string, false, GuildComboboxOption>
+									<Combobox<string, GuildComboboxOption>
 										label={i18n._(SEND_TO_LABEL_DESCRIPTOR)}
 										value={field.value}
 										options={guildOptions}
@@ -213,7 +213,7 @@ export const ChannelFollowModal = observer(({channelId}: {channelId: string}) =>
 								name="channelId"
 								control={form.control}
 								render={({field, fieldState}) => (
-									<Combobox<string, false, ChannelFollowTargetOption>
+									<Combobox<string, ChannelFollowTargetOption>
 										label={i18n._(SELECT_CHANNEL_LABEL_DESCRIPTOR)}
 										value={field.value}
 										options={channelOptions}

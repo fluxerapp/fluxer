@@ -2,6 +2,7 @@
 
 import type {Channel} from '@app/features/channel/models/Channel';
 import {GUILD_TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
+import {THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 
 type MinimalChannel = Pick<Channel, 'id' | 'type' | 'position' | 'guildId'>;
 
@@ -20,15 +21,22 @@ export function pickDefaultGuildChannelId({
 	guildId,
 	channels,
 	selectedChannelId,
+	threadsActive = false,
 }: {
 	guildId: string;
 	channels: ReadonlyArray<MinimalChannel>;
 	selectedChannelId?: string | null;
+	threadsActive?: boolean;
 }): string | null {
-	const viewable = filterViewableChannels(channels.filter((channel) => channel.guildId === guildId));
-	if (!viewable.length) return null;
-	if (selectedChannelId && viewable.some((channel) => channel.id === selectedChannelId)) {
+	const guildChannels = channels.filter((channel) => channel.guildId === guildId);
+	const viewable = filterViewableChannels(guildChannels);
+	const threadOnly = threadsActive
+		? guildChannels.filter((channel) => THREAD_ONLY_CHANNEL_TYPES.has(channel.type))
+		: [];
+	if (selectedChannelId && [...viewable, ...threadOnly].some((channel) => channel.id === selectedChannelId)) {
 		return selectedChannelId;
 	}
-	return viewable.sort(compareChannelPosition)[0].id;
+	const candidates = viewable.length ? viewable : threadOnly;
+	if (!candidates.length) return null;
+	return candidates.sort(compareChannelPosition)[0].id;
 }

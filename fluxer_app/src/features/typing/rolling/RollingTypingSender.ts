@@ -2,9 +2,9 @@
 
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import Authentication from '@app/features/auth/state/Authentication';
-import { PersonaBar } from '@app/features/channel/components/ChannelPersonaBar';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {decideComposerTyping} from '@app/features/typing/rolling/RollingComposerTypingGate';
 import RollingTypingStore from '@app/features/typing/rolling/RollingTypingStore';
 import {
 	planTypingSend,
@@ -15,7 +15,29 @@ import Personas from '@app/features/user/state/Personas';
 
 const logger = new Logger('Typing');
 
+interface ComposerTypingInput {
+	channelId: string;
+	value: string;
+	previousValue: string | null;
+	enabled: boolean;
+	typingEnabled: boolean;
+	isEditingMessageInComposer: boolean;
+}
+
 class RollingTypingSender {
+	handleComposerChange(input: ComposerTypingInput): void {
+		const decision = decideComposerTyping({
+			previousValue: input.previousValue,
+			value: input.value,
+			isEditingMessageInComposer: input.isEditingMessageInComposer,
+			enabled: input.enabled && input.typingEnabled,
+		});
+		if (decision === 'start') {
+			this.startTyping(input.channelId);
+		} else if (decision === 'stop') {
+			this.stopTyping(input.channelId);
+		}
+	}
 	private slot: TypingSendSlot | null = null;
 	private personaId: string | null = null;
 

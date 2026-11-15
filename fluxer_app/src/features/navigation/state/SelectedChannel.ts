@@ -1,9 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import Channels from '@app/features/channel/state/Channels';
 import Favorites from '@app/features/messaging/state/Favorites';
 import Navigation from '@app/features/navigation/state/Navigation';
+import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
+import {
+	type AppStorageScopeChangeEvent,
+	UNAUTHENTICATED_APP_STORAGE_SCOPE,
+} from '@app/features/platform/state/PersistentStorage';
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {FAVORITES_GUILD_ID, ME} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {Channel} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
@@ -41,11 +48,13 @@ class SelectedChannel {
 			},
 			{autoBind: true},
 		);
-		void this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {
-		await makePersistent(this, 'SelectedChannel', ['selectedChannelIds', 'recentlyVisitedChannels']);
+		await makePersistent(this, 'SelectedChannel', ['selectedChannelIds', 'recentlyVisitedChannels'], {
+			onRehydrated: this.selectNavigatedChannel,
+		});
 		this.migrateRecentVisits();
 		this.setupNavigationReaction();
 	}
@@ -64,6 +73,17 @@ class SelectedChannel {
 				fireImmediately: true,
 			},
 		);
+	}
+
+	private selectNavigatedChannel(event: AppStorageScopeChangeEvent | null): void {
+		if (event !== null && event.previousScope !== UNAUTHENTICATED_APP_STORAGE_SCOPE) {
+			return;
+		}
+		const {guildId, channelId} = Navigation;
+		if (!guildId || !channelId) {
+			return;
+		}
+		this.selectChannel(guildId, channelId);
 	}
 
 	private normalizeGuildId(guildId: string | null | undefined): string | null {
@@ -85,6 +105,10 @@ class SelectedChannel {
 	get currentChannelId(): string | null {
 		const guildId = this.getCurrentGuildId();
 		if (guildId == null) return null;
+		const routeChannelId = Navigation.channelId;
+		if (routeChannelId != null) {
+			return this.isStoredChannelNavigable(routeChannelId) ? routeChannelId : null;
+		}
 		return this.selectedChannelIds.get(guildId) ?? null;
 	}
 
@@ -209,13 +233,6 @@ class SelectedChannel {
 		return true;
 	}
 
-	deselectChannel(): void {
-		const guildId = this.getCurrentGuildId();
-		if (guildId != null) {
-			this.removeGuildSelection(guildId);
-		}
-	}
-
 	clearGuildSelection(guildId: string): void {
 		const normalizedGuildId = this.normalizeGuildId(guildId);
 		if (!normalizedGuildId) return;
@@ -261,6 +278,16 @@ class SelectedChannel {
 		this.removeGuildSelection(FAVORITES_GUILD_ID);
 		return null;
 	}
+
+	reset(): void {
+		this.viewedChannelHistory = [];
+		this.viewedChannelHistoryIndex = -1;
+		RouterUtils.getHistory()?.markBoundary();
+	}
 }
 
-export default new SelectedChannel();
+const selectedChannel = new SelectedChannel();
+
+ResettableStates.register(selectedChannel, () => selectedChannel.reset());
+
+export default selectedChannel;

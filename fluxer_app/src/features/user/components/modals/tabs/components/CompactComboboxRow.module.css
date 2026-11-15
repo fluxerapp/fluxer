@@ -46,7 +46,7 @@
 
 .description {
 	margin: 0;
-	padding-right: 1rem;
+	padding-inline-end: 1rem;
 	font-size: 0.8125rem;
 	line-height: 1.25rem;
 	color: var(--text-primary-muted);
@@ -70,8 +70,8 @@
 	);
 	min-width: 0;
 	max-width: min(100%, var(--compact-combobox-max-width));
-	flex: 0 1 auto;
-	margin-left: auto;
+	flex: 0 0 auto;
+	margin-inline-start: auto;
 }
 
 .comboboxWrapSmall {
@@ -105,7 +105,7 @@
 	}
 
 	.description {
-		padding-right: 0;
+		padding-inline-end: 0;
 	}
 
 	.comboboxWrap,

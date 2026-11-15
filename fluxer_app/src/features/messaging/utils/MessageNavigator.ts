@@ -70,6 +70,10 @@ export function goToMessage(channelId: string, messageId: string, options?: Mess
 		returnGuildId,
 		jumpType: isSameChannel ? (options?.jumpType ?? JumpTypes.ANIMATED) : JumpTypes.INSTANT,
 	};
+	if (Navigation.threadId === channelId) {
+		MessageCommands.jumpToMessage({channelId, ...dispatch, jumpType: options?.jumpType ?? JumpTypes.ANIMATED});
+		return;
+	}
 	if (isSameChannel && Navigation.messageId === messageId) {
 		MessageCommands.jumpToMessage({channelId, ...dispatch});
 		return;

@@ -1,8 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::config::AdminConfig;
+use std::future::Future;
 
 const DEFAULT_AVATAR_COUNT: u128 = 6;
+
+tokio::task_local! {
+    static NEUTRAL_DEFAULT_AVATARS: bool;
+}
+
+pub async fn with_neutral_default_avatars<F: Future>(neutral: bool, future: F) -> F::Output {
+    NEUTRAL_DEFAULT_AVATARS.scope(neutral, future).await
+}
 
 pub fn user_avatar_url(
     config: &AdminConfig,
@@ -21,13 +30,22 @@ pub fn user_avatar_url(
             force_static,
         );
     }
+    default_avatar_url(&config.static_cdn_endpoint, user_id)
+}
+
+fn default_avatar_url(static_cdn_endpoint: &str, user_id: &str) -> String {
     let index = user_id
         .parse::<u128>()
         .map(|value| value % DEFAULT_AVATAR_COUNT)
         .unwrap_or(0);
+    let set = if NEUTRAL_DEFAULT_AVATARS.try_with(|neutral| *neutral) == Ok(true) {
+        "avatars/neutral"
+    } else {
+        "avatars"
+    };
     format!(
-        "{}/avatars/{index}.png",
-        config.static_cdn_endpoint.trim_end_matches('/')
+        "{}/{set}/{index}.png",
+        static_cdn_endpoint.trim_end_matches('/')
     )
 }
 

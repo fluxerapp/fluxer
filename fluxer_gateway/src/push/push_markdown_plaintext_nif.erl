@@ -4,7 +4,7 @@
 -typing([eqwalizer]).
 -on_load(init/0).
 
--export([available/0, render_push_preview_nif/2]).
+-export([render_push_preview_nif/2]).
 
 -define(NIF_NAME, "push_markdown_plaintext_nif").
 
@@ -17,10 +17,6 @@ init() ->
             persistent_term:put({?MODULE, load_error}, Reason),
             ok
     end.
-
--spec available() -> boolean().
-available() ->
-    erlang:nif_error(nif_not_loaded).
 
 -spec render_push_preview_nif(binary(), binary()) -> binary().
 render_push_preview_nif(_Content, _ContextJson) ->

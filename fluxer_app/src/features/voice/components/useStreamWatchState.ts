@@ -4,10 +4,10 @@ import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import Permission from '@app/features/permissions/state/Permission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
-import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
 import {useStoreVersion} from '@app/features/voice/engine/Store';
 import {selectVoiceMediaGraphViewerStreamKeys} from '@app/features/voice/engine/VoiceMediaGraph';
 import {voiceMediaGraphStore} from '@app/features/voice/engine/VoiceMediaGraphStore';
+import VoiceRuntime, {useVoiceRuntimeVersion} from '@app/features/voice/engine/VoiceRuntime';
 import {
 	addWatchedStreamKey,
 	replaceWatchedStreamKeys,
@@ -38,7 +38,7 @@ export function useStreamWatchState({
 	guildId: string | null | undefined;
 	channelId: string | null | undefined;
 }): StreamWatchState {
-	useMediaEngineVersion();
+	useVoiceRuntimeVersion();
 	useStoreVersion(voiceMediaGraphStore);
 	const {canJoin} = useVoiceJoinEligibility({
 		guildId: guildId ?? null,
@@ -46,8 +46,8 @@ export function useStreamWatchState({
 	});
 	const isConnectedToChannel = useMemo(() => {
 		if (!channelId) return false;
-		return MediaEngine.channelId === channelId && MediaEngine.guildId === (guildId ?? null);
-	}, [channelId, guildId, MediaEngine.channelId, MediaEngine.guildId]);
+		return VoiceRuntime.channelId === channelId && VoiceRuntime.guildId === (guildId ?? null);
+	}, [channelId, guildId, VoiceRuntime.channelId, VoiceRuntime.guildId]);
 	const replaceViewerStreamKeys = useCallback(
 		(keys: Array<string>) => {
 			const result = replaceWatchedStreamKeys(keys);

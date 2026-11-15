@@ -11,6 +11,7 @@ import {useRef} from 'react';
 export interface SegmentedTab<T extends string = string> {
 	id: T;
 	label: string;
+	icon?: React.ReactNode;
 }
 
 interface SegmentedTabsProps<T extends string = string> {
@@ -19,6 +20,7 @@ interface SegmentedTabsProps<T extends string = string> {
 	onTabChange: (tab: T) => void;
 	ariaLabel?: string;
 	className?: string;
+	semantics?: 'tabs' | 'radio';
 }
 
 export function SegmentedTabs<T extends string = string>({
@@ -27,7 +29,9 @@ export function SegmentedTabs<T extends string = string>({
 	onTabChange,
 	ariaLabel,
 	className,
+	semantics = 'tabs',
 }: SegmentedTabsProps<T>) {
+	const radio = semantics === 'radio';
 	const tabRefs = useRef(new Map<T, HTMLButtonElement>());
 	const selectedIndex = tabs.findIndex((tab) => tab.id === selectedTab);
 	const focusTab = (tabId: T) => {
@@ -51,9 +55,9 @@ export function SegmentedTabs<T extends string = string>({
 		<div className={clsx(styles.container, className)} data-flx="ui.segmented-tabs.segmented-tabs.container">
 			<div
 				className={styles.tabList}
-				role="tablist"
-				aria-label={ariaLabel}
-				aria-orientation="horizontal"
+				{...(radio
+					? {role: 'radiogroup', 'aria-label': ariaLabel}
+					: {role: 'tablist', 'aria-label': ariaLabel, 'aria-orientation': 'horizontal' as const})}
 				data-flx="ui.segmented-tabs.segmented-tabs.tab-list"
 			>
 				{tabs.map((tab) => {
@@ -69,15 +73,21 @@ export function SegmentedTabs<T extends string = string>({
 								}
 							}}
 							type="button"
-							role="tab"
-							aria-selected={isSelected}
+							{...(radio ? {role: 'radio', 'aria-checked': isSelected} : {role: 'tab', 'aria-selected': isSelected})}
 							tabIndex={isSelected ? 0 : -1}
 							onClick={() => onTabChange(tab.id)}
 							onKeyDown={(event) => handleKeyDown(event, tab.id)}
 							className={clsx(styles.tab, isSelected ? styles.tabActive : styles.tabInactive)}
 							data-flx="ui.segmented-tabs.segmented-tabs.tab.button"
 						>
-							{tab.label}
+							{tab.icon ? (
+								<span className={styles.tabContent} data-flx="ui.segmented-tabs.segmented-tabs.tab.content">
+									{tab.icon}
+									{tab.label}
+								</span>
+							) : (
+								tab.label
+							)}
 						</button>
 					);
 				})}
@@ -95,7 +105,7 @@ export function SegmentedTabs<T extends string = string>({
 					}
 					style={{
 						width: `calc((100% - 6px) / ${tabs.length})`,
-						left: `calc(3px + (100% - 6px) * ${selectedIndex} / ${tabs.length})`,
+						insetInlineStart: `calc(3px + (100% - 6px) * ${selectedIndex} / ${tabs.length})`,
 					}}
 					data-flx="ui.segmented-tabs.segmented-tabs.tab-background"
 				/>

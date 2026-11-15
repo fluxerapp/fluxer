@@ -35,7 +35,7 @@ interface MemberListIncomingOperation {
 	items?: ReadonlyArray<MemberListItem>;
 }
 
-interface GuildMemberListUpdatePayload {
+export interface GuildMemberListUpdatePayload {
 	guild_id: string;
 	id: string;
 	channel_id?: string;

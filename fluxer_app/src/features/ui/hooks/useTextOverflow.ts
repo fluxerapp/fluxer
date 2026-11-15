@@ -41,9 +41,62 @@ function shouldMeasureNaturalInlineSize(element: HTMLElement): boolean {
 	);
 }
 
-function measureNaturalInlineSize(element: HTMLElement): number | null {
+interface NaturalInlineMeasurement {
+	clone: HTMLElement;
+	read: () => void;
+}
+
+type OverflowCheck = () => NaturalInlineMeasurement | undefined;
+
+const pendingChecks = new WeakMap<Window, Set<OverflowCheck>>();
+
+function scheduleOverflowMeasurement(ownerWindow: Window, check: OverflowCheck): () => void {
+	let checks = pendingChecks.get(ownerWindow);
+	if (!checks) {
+		checks = new Set();
+		pendingChecks.set(ownerWindow, checks);
+		const batch = checks;
+		ownerWindow.requestAnimationFrame(() => {
+			pendingChecks.delete(ownerWindow);
+			const measurements: Array<NaturalInlineMeasurement> = [];
+			const run = (action: () => void) => {
+				try {
+					action();
+				} catch (error) {
+					ownerWindow.reportError(error);
+				}
+			};
+			for (const task of batch)
+				run(() => {
+					const measurement = task();
+					if (measurement) measurements.push(measurement);
+				});
+			try {
+				for (const {clone} of measurements)
+					run(() => {
+						clone.ownerDocument.body.appendChild(clone);
+					});
+				for (const {read} of measurements) run(read);
+			} finally {
+				for (const {clone} of measurements) clone.remove();
+			}
+		});
+	}
+	checks.add(check);
+	return () => {
+		checks.delete(check);
+	};
+}
+
+function prepareNaturalInlineMeasurement(
+	element: HTMLElement,
+	update: (size: number | null) => void,
+): NaturalInlineMeasurement | undefined {
 	const ownerDocument = element.ownerDocument;
-	if (!ownerDocument.body || !shouldMeasureNaturalInlineSize(element)) return null;
+	if (!ownerDocument.body || !shouldMeasureNaturalInlineSize(element)) {
+		update(null);
+		return;
+	}
 	const clone = element.cloneNode(true) as HTMLElement;
 	const computedStyle = ownerDocument.defaultView?.getComputedStyle(element);
 	if (computedStyle) {
@@ -73,12 +126,7 @@ function measureNaturalInlineSize(element: HTMLElement): number | null {
 		pointerEvents: 'none',
 		zIndex: '-1',
 	} satisfies Partial<CSSStyleDeclaration>);
-	ownerDocument.body.appendChild(clone);
-	try {
-		return Math.max(clone.scrollWidth, clone.getBoundingClientRect().width);
-	} finally {
-		clone.remove();
-	}
+	return {clone, read: () => update(Math.max(clone.scrollWidth, clone.getBoundingClientRect().width))};
 }
 
 export function useTextOverflow(
@@ -93,37 +141,40 @@ export function useTextOverflow(
 			setIsOverflowing(false);
 			return;
 		}
-		let frameId: number | null = null;
+		let cancelCheck: (() => void) | null = null;
 		let disposed = false;
 		const updateOverflowing = (next: boolean) => {
 			setIsOverflowing((previous) => (previous === next ? previous : next));
 		};
-		const checkOverflow = () => {
-			frameId = null;
+		const checkOverflow: OverflowCheck = () => {
+			cancelCheck = null;
+			if (disposed) return undefined;
 			if (
 				isMeaningfullyGreater(element.scrollWidth, element.clientWidth) ||
 				(checkVertical && isMeaningfullyGreater(element.scrollHeight, element.clientHeight))
 			) {
 				updateOverflowing(true);
-				return;
+				return undefined;
 			}
 			if (measureTextRange) {
 				const availableWidth = getAvailableInlineSize(element);
 				if (isMeaningfullyGreater(measureRangeInlineSize(element), availableWidth)) {
 					updateOverflowing(true);
-					return;
+					return undefined;
 				}
-				const naturalInlineSize = measureNaturalInlineSize(element);
-				updateOverflowing(naturalInlineSize != null && isMeaningfullyGreater(naturalInlineSize, availableWidth));
-				return;
+				return prepareNaturalInlineMeasurement(element, (naturalInlineSize) => {
+					if (!disposed)
+						updateOverflowing(naturalInlineSize != null && isMeaningfullyGreater(naturalInlineSize, availableWidth));
+				});
 			}
 			updateOverflowing(false);
+			return undefined;
 		};
 		const scheduleOverflowCheck = () => {
-			if (disposed || frameId != null) {
+			if (disposed || cancelCheck != null) {
 				return;
 			}
-			frameId = ownerWindow.requestAnimationFrame(checkOverflow);
+			cancelCheck = scheduleOverflowMeasurement(ownerWindow, checkOverflow);
 		};
 		scheduleOverflowCheck();
 		const unobserveResize =
@@ -145,9 +196,7 @@ export function useTextOverflow(
 		fontSet?.addEventListener?.('loadingdone', scheduleOverflowCheck);
 		return () => {
 			disposed = true;
-			if (frameId != null) {
-				ownerWindow.cancelAnimationFrame(frameId);
-			}
+			cancelCheck?.();
 			unobserveResize?.();
 			mutationObserver?.disconnect();
 			element.removeEventListener('load', scheduleOverflowCheck, true);

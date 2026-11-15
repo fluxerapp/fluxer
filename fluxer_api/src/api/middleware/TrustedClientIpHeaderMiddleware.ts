@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ILogger} from '@app/api/ILogger';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {resolveClientIpWithOptions} from '@app/api/utils/RequestClientIp';
 import {stripApiPrefix} from '@app/api/utils/RequestPathUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ForbiddenError} from '@fluxer/errors/src/domains/core/ForbiddenError';
+import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
 import {createMiddleware} from 'hono/factory';
 
 interface TrustedClientIpHeaderOptions {
 	enabled: boolean;
-	logger: ILogger;
+	logger: LoggerInterface;
 	trustClientIpHeader: boolean;
 	clientIpHeaderName: string;
 	exemptPaths?: Array<string>;

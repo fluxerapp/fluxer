@@ -15,11 +15,11 @@ import type React from 'react';
 import {useRef, useState} from 'react';
 
 const SEARCH_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Search shortcuts…',
+	message: 'Search keybinds…',
 	comment: 'Button or menu action label in the keybinds tab. Keep it concise.',
 });
 const SEARCH_SHORTCUTS_2_DESCRIPTOR = msg({
-	message: 'Search shortcuts',
+	message: 'Search keybinds',
 	comment: 'Button or menu action label in the keybinds tab. Keep it concise.',
 });
 const KeybindsTab: React.FC = observer(() => {

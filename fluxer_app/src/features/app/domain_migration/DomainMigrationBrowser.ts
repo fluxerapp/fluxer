@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
+	buildTargetUrl,
 	classifyDomainMigrationInstallKind,
 	type DomainMigrationDisplayMode,
 	type DomainMigrationEnvironment,
@@ -10,11 +11,16 @@ import {
 	domainMovedBrowserMigrationUrl,
 	domainMovedInstallUrl,
 	domainMovedManifestId,
+	environmentMayForward,
 	isDomainMigrationOneShotRoute,
+	isForwardableOneShotRoute,
 	markDomainMigrationFailed,
 	readDomainMigrationMarker,
+	resolveDomainMigrationSide,
 	writeDomainMigrationIntent,
 } from '@app/features/app/domain_migration/DomainMigrationCore';
+import InstanceSnapshotStore, {resolveDiscoveryApiEndpoint} from '@app/features/app/state/InstanceSnapshotStore';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {
 	AuthSessionStorageKey,
 	parseStoredSessionValue,
@@ -27,14 +33,46 @@ interface NavigatorWithStandalone extends Navigator {
 	standalone?: boolean;
 }
 
+const DOMAIN_MIGRATION_DISCOVERY_TIMEOUT_MS = 5000;
+
 const DISPLAY_MODES: ReadonlyArray<DomainMigrationDisplayMode> = [
 	'window-controls-overlay',
 	'standalone',
 	'minimal-ui',
 ];
 
+function domainMigrationDiscoveryApiEndpoint(): string | null {
+	if (typeof window === 'undefined' || resolveDomainMigrationSide(window.location.origin) === null) {
+		return null;
+	}
+	try {
+		return resolveDiscoveryApiEndpoint(window.location.origin);
+	} catch {
+		return null;
+	}
+}
+
+export async function loadDomainMigrationDiscovery(timeoutMs = DOMAIN_MIGRATION_DISCOVERY_TIMEOUT_MS): Promise<void> {
+	if (domainMigrationDiscoveryApiEndpoint() === null) {
+		return;
+	}
+	await InstanceSnapshotStore.resolve({
+		input: window.location.origin,
+		signal: AbortSignal.timeout(timeoutMs),
+	});
+}
+
 export function readDomainMigrationDiscovery(): DomainMigrationDiscoveryResponse | null {
-	return window.__FLUXER_BOOTSTRAP__?.instance.domain_migration ?? null;
+	const apiEndpoint = domainMigrationDiscoveryApiEndpoint();
+	if (apiEndpoint === null) {
+		return null;
+	}
+	const cached = InstanceSnapshotStore.getForApiEndpoint(apiEndpoint);
+	if (cached !== null) {
+		return cached.domainMigration;
+	}
+	const active = RuntimeConfig.getSnapshotOrNull();
+	return active?.apiEndpoint === apiEndpoint ? active.domainMigration : null;
 }
 
 function readDisplayMode(): DomainMigrationDisplayMode {
@@ -61,7 +99,6 @@ export function detectDomainMigrationInstallKind(): DomainMigrationInstallKind {
 		userAgent: navigator.userAgent,
 		userAgentData: navigator.userAgentData ?? null,
 		maxTouchPoints: navigator.maxTouchPoints ?? 0,
-		electron: isElectronEnvironment(),
 	});
 }
 
@@ -69,8 +106,6 @@ export function readDomainMigrationEnvironment(): DomainMigrationEnvironment {
 	return {
 		installKind: detectDomainMigrationInstallKind(),
 		electron: isElectronEnvironment(),
-		electronMigrationVersion: window.electron?.domainMigration?.version ?? null,
-		electronPasskeyRpIds: window.electron?.passkeyRpIds ?? [],
 	};
 }
 
@@ -97,15 +132,18 @@ export function startDomainMigrationFromSource(side: DomainMigrationSide): true 
 	return true;
 }
 
-export async function desktopPasskeysSupported(): Promise<boolean> {
-	if (!isElectronEnvironment()) {
-		return true;
-	}
-	try {
-		return (await window.electron?.passkeyIsSupported?.()) === true;
-	} catch {
+export function forwardOneShotRouteToTarget(): boolean {
+	const side = resolveDomainMigrationSide(window.location.origin);
+	const {pathname, search, hash} = window.location;
+	if (
+		side?.role !== 'source' ||
+		!isForwardableOneShotRoute(pathname) ||
+		!environmentMayForward(readDomainMigrationEnvironment(), readDomainMigrationDiscovery())
+	) {
 		return false;
 	}
+	window.location.assign(buildTargetUrl(side.target, pathname, search, hash));
+	return true;
 }
 
 export function readActiveSessionToken(): string | null {
@@ -121,8 +159,17 @@ export async function hasStoredAccount(): Promise<boolean> {
 		return true;
 	}
 	const {default: accountStorage} = await import('@app/features/auth/state/AccountStorage');
-	const accounts = await accountStorage.getAllAccounts();
+	const {records: accounts} = await accountStorage.getAllAccounts();
 	return accounts.some((account) => Boolean(account.token));
+}
+
+export async function hasUsableStoredAccount(): Promise<boolean> {
+	if (readActiveSessionToken() !== null) {
+		return true;
+	}
+	const {default: accountStorage} = await import('@app/features/auth/state/AccountStorage');
+	const {records: accounts} = await accountStorage.getAllAccounts();
+	return accounts.some((account) => Boolean(account.token) && account.isValid !== false);
 }
 
 function openInBrowser(url: string): void {

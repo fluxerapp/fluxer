@@ -4,7 +4,7 @@ import Emoji from '@app/features/emoji/state/Emoji';
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
 import type {GuildEmoji} from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 
-interface GuildEmojisUpdatePayload {
+export interface GuildEmojisUpdatePayload {
 	guild_id: string;
 	emojis: ReadonlyArray<GuildEmoji>;
 }

@@ -4,10 +4,6 @@
 	"private": true,
 	"type": "module",
 	"exports": {
-		"./WorkerContext": {
-			"import": "./src/context/WorkerContext.ts",
-			"types": "./src/context/WorkerContext.ts"
-		},
 		"./WorkerTask": {
 			"import": "./src/contracts/WorkerTask.ts",
 			"types": "./src/contracts/WorkerTask.ts"

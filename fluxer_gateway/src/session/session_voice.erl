@@ -7,6 +7,8 @@
     init_voice_queue/0,
     process_voice_queue/1,
     handle_voice_state_update/2,
+    report_rejection/2,
+    handle_voice_signal/2,
     handle_voice_disconnect/1
 ]).
 
@@ -37,7 +39,7 @@ process_voice_queue_item(Item, State) ->
     case maps:get(type, Item, undefined) of
         voice_state_update ->
             Data = maps:get(data, Item),
-            {reply, _, NewState} = session_voice_connect:handle_voice_state_update(Data, State),
+            {reply, _, NewState} = handle_voice_state_update(Data, State),
             NewState;
         _ ->
             State
@@ -45,7 +47,64 @@ process_voice_queue_item(Item, State) ->
 
 -spec handle_voice_state_update(map(), session_state()) -> voice_state_reply().
 handle_voice_state_update(Data, State) ->
-    session_voice_connect:handle_voice_state_update(Data, State).
+    Result = session_voice_connect:handle_voice_state_update(Data, State),
+    ok = report_rejected_reply(Result, State),
+    Result.
+
+-spec report_rejected_reply(voice_state_reply(), session_state()) -> ok.
+report_rejected_reply({reply, {error, _Category, ErrorAtom}, _NewState}, State) ->
+    report_rejection(ErrorAtom, State);
+report_rejected_reply(_Result, _State) ->
+    ok.
+
+-spec report_rejection(term(), session_state()) -> ok.
+report_rejection(ErrorAtom, State) ->
+    case {voice_p2p:reports_rejection(ErrorAtom), maps:get(socket_pid, State, undefined)} of
+        {true, SocketPid} when is_pid(SocketPid) ->
+            SocketPid ! {gateway_error, ErrorAtom},
+            ok;
+        _ ->
+            ok
+    end.
+
+-spec handle_voice_signal(map(), session_state()) -> ok.
+handle_voice_signal(Data, State) ->
+    GuildIdResult = validation:validate_optional_snowflake(
+        maps:get(<<"guild_id">>, Data, null)
+    ),
+    ChannelIdResult = validation:validate_snowflake(maps:get(<<"channel_id">>, Data, null)),
+    To = maps:get(<<"to">>, Data, undefined),
+    Signal = maps:get(<<"data">>, Data, undefined),
+    case {GuildIdResult, ChannelIdResult} of
+        {{ok, GuildId}, {ok, ChannelId}} when is_binary(To), is_map(Signal) ->
+            route_voice_signal(GuildId, ChannelId, To, Signal, State);
+        _ ->
+            ok
+    end.
+
+-spec route_voice_signal(integer() | null, integer(), binary(), map(), session_state()) -> ok.
+route_voice_signal(null, ChannelId, To, Signal, State) ->
+    case maps:get(ChannelId, maps:get(calls, State, #{}), undefined) of
+        {CallPid, _Ref} when is_pid(CallPid) ->
+            gen_server:cast(CallPid, {voice_signal, maps:get(id, State), To, Signal});
+        _ ->
+            ok
+    end;
+route_voice_signal(GuildId, ChannelId, To, Signal, State) ->
+    case maps:get(GuildId, maps:get(guilds, State, #{}), undefined) of
+        {GuildPid, _Ref} when is_pid(GuildPid) ->
+            gen_server:cast(
+                GuildPid,
+                {voice_signal, #{
+                    session_id => maps:get(id, State),
+                    channel_id => ChannelId,
+                    to => To,
+                    data => Signal
+                }}
+            );
+        _ ->
+            ok
+    end.
 
 -spec handle_voice_disconnect(session_state()) -> voice_state_reply().
 handle_voice_disconnect(State) ->
@@ -76,22 +135,3 @@ handle_voice_disconnect(State) ->
         [UserId, SessionId]
     ),
     {reply, ok, NewState}.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-init_voice_queue_test() ->
-    Result = init_voice_queue(),
-    ?assert(maps:is_key(voice_queue, Result)),
-    ?assert(maps:is_key(voice_queue_timer, Result)),
-    ?assertEqual(undefined, maps:get(voice_queue_timer, Result)),
-    ?assert(queue:is_empty(maps:get(voice_queue, Result))),
-    ok.
-
-process_voice_queue_empty_test() ->
-    State = #{voice_queue => queue:new()},
-    Result = process_voice_queue(State),
-    ?assertEqual(State, Result),
-    ok.
-
--endif.

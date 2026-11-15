@@ -13,9 +13,21 @@ const colors = {
 	green: '\x1b[32m',
 	magenta: '\x1b[35m',
 	blue: '\x1b[34m',
-	gray: '\x1b[90m',
 	white: '\x1b[37m',
 } as const;
+
+const MODERATE_QUERY_THRESHOLD_MS = 50;
+const SLOW_QUERY_THRESHOLD_MS = 100;
+
+function getDurationColor(durationMs: number): string {
+	if (durationMs > SLOW_QUERY_THRESHOLD_MS) {
+		return colors.yellow;
+	}
+	if (durationMs > MODERATE_QUERY_THRESHOLD_MS) {
+		return colors.dim;
+	}
+	return colors.green;
+}
 
 function formatValue(value: unknown): string {
 	if (value === null) return `${colors.dim}null${colors.reset}`;
@@ -92,7 +104,7 @@ export function logQuery(
 		QUERY: colors.white,
 	};
 	const typeColor = typeColors[queryType] || colors.white;
-	const durationColor = durationMs > 100 ? colors.yellow : durationMs > 50 ? colors.dim : colors.green;
+	const durationColor = getDurationColor(durationMs);
 	const lines = [
 		`${colors.dim}\u250c\u2500\u2500${colors.reset} ${typeColor}${colors.bold}${queryType}${colors.reset} ${colors.dim}\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500${colors.reset}`,
 		`${colors.dim}\u2502${colors.reset} ${formatCql(cql)}`,
@@ -138,7 +150,7 @@ export function logBatch(
 			lines.push(`${colors.dim}\u2502${colors.reset}     ${colors.dim}(${paramEntries.length} params)${colors.reset}`);
 		}
 	}
-	const durationColor = durationMs > 100 ? colors.yellow : durationMs > 50 ? colors.dim : colors.green;
+	const durationColor = getDurationColor(durationMs);
 	lines.push(
 		`${colors.dim}\u2514\u2500\u2500${colors.reset} ${durationColor}${durationMs.toFixed(2)}ms${colors.reset}`,
 	);

@@ -26,16 +26,12 @@
 	white-space: nowrap;
 }
 
-.badge {
-	display: inline-flex;
-	align-items: center;
-	padding: 0.0625rem 0.5rem;
-	border-radius: 999px;
-	background-color: color-mix(in srgb, var(--brand-primary) 18%, transparent);
-	color: var(--text-link);
+.saving {
+	color: var(--brand-primary-light);
 	font-size: 0.75rem;
 	font-weight: 700;
 	line-height: 1.125rem;
+	white-space: nowrap;
 }
 
 .note {

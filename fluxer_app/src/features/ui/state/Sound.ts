@@ -3,6 +3,7 @@
 import * as SoundUtils from '@app/features/notification/utils/SoundUtils';
 import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import {SoundSettingsSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/pickers_pb';
@@ -15,7 +16,7 @@ export interface SoundSettings {
 	soundOverrides: Partial<Record<SoundType, number>>;
 }
 
-export interface SoundPlayOptions {
+interface SoundPlayOptions {
 	bypassSelfDeafened?: boolean;
 	ignoreGroupCooldown?: boolean;
 }
@@ -47,8 +48,8 @@ interface PendingAutoplayBlockedOneShot {
 const DEFAULT_MASTER_VOLUME = 100;
 const MAX_VOLUME_PERCENT = 200;
 const GLOBAL_ONE_SHOT_MIN_INTERVAL_MS = 260;
-export const AUTOPLAY_BLOCKED_ONE_SHOT_TTL_MS = 3000;
-export const DEAFEN_SUPPRESSED_SOUND_TYPES: ReadonlySet<SoundType> = new Set([
+const AUTOPLAY_BLOCKED_ONE_SHOT_TTL_MS = 3000;
+const DEAFEN_SUPPRESSED_SOUND_TYPES: ReadonlySet<SoundType> = new Set([
 	SoundType.UserJoin,
 	SoundType.UserLeave,
 	SoundType.UserMove,
@@ -193,7 +194,7 @@ class Sound {
 			},
 			{autoBind: true},
 		);
-		this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 		reaction(
 			() => StreamerMode.shouldDisableSounds,
 			(disabled) => {
@@ -389,16 +390,6 @@ class Sound {
 		return isDefaultDisabledSound(soundType);
 	}
 
-	toggleEnabled(): void {
-		this.settings = {
-			...this.settings,
-			allSoundsDisabled: !this.settings.allSoundsDisabled,
-		};
-		if (this.settings.allSoundsDisabled) {
-			this.stopAllSounds();
-		}
-	}
-
 	updateSettings(settings: {allSoundsDisabled?: boolean; soundType?: SoundType; enabled?: boolean}): void {
 		const {soundType, enabled, allSoundsDisabled} = settings;
 		if (allSoundsDisabled !== undefined) {
@@ -431,18 +422,6 @@ class Sound {
 		}
 	}
 
-	setVolume(volume: number): void {
-		this.volume = Math.max(0, Math.min(1, volume));
-	}
-
-	getSyncAcrossDevices(): boolean {
-		return this.syncAcrossDevices;
-	}
-
-	setSyncAcrossDevices(value: boolean): void {
-		this.syncAcrossDevices = value;
-	}
-
 	getMasterVolume(): number {
 		return this.settings.masterVolume ?? DEFAULT_MASTER_VOLUME;
 	}
@@ -453,10 +432,6 @@ class Sound {
 			masterVolume: clampVolume(value),
 			soundOverrides: this.settings.soundOverrides ?? {},
 		};
-	}
-
-	getSoundOverride(soundType: SoundType): number | undefined {
-		return this.settings.soundOverrides?.[soundType];
 	}
 
 	setSoundOverride(soundType: SoundType, value: number): void {
@@ -491,10 +466,6 @@ class Sound {
 			masterVolume: this.settings.masterVolume ?? DEFAULT_MASTER_VOLUME,
 			soundOverrides: {},
 		};
-	}
-
-	hasAnyOverride(): boolean {
-		return Object.keys(this.settings.soundOverrides ?? {}).length > 0;
 	}
 
 	private getEffectiveMultiplier(soundType: SoundType): number {
@@ -682,16 +653,8 @@ class Sound {
 		return !this.settings.allSoundsDisabled;
 	}
 
-	getSoundSettings(): SoundSettings {
-		return this.settings;
-	}
-
 	isSoundTypeEnabled(soundType: SoundType): boolean {
 		return this.isSoundEnabled(soundType);
-	}
-
-	getVolume(): number {
-		return this.volume;
 	}
 
 	isIncomingCallActive(): boolean {

@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {UserID} from '@app/api/BrandedTypes';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {Channel} from '@app/api/models/Channel';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {
 	BulkDeleteSelfMessagesGuildFilterMode,
@@ -71,4 +73,28 @@ export function isTimestampInWindow(timestampMs: number, filter: SelfMessageFilt
 	const start = filter.startTimestamp ?? Number.NEGATIVE_INFINITY;
 	const end = filter.endTimestamp ?? Number.POSITIVE_INFINITY;
 	return timestampMs >= start && timestampMs < end;
+}
+
+export async function loadSelfMessageEligibilityContext(
+	userId: UserID,
+	{
+		userRepository,
+		guildRepository,
+	}: {
+		userRepository: Pick<UserRepository, 'listPrivateChannels'>;
+		guildRepository: Pick<GuildRepository, 'listUserGuilds'>;
+	},
+): Promise<SelfMessageEligibilityContext> {
+	const [privateChannels, userGuilds] = await Promise.all([
+		userRepository.listPrivateChannels(userId),
+		guildRepository.listUserGuilds(userId),
+	]);
+	return {
+		currentGuildIds: new Set(userGuilds.map((guild) => guild.id.toString())),
+		openDmChannelIds: new Set(
+			privateChannels
+				.filter((channel) => channel.type === ChannelTypes.DM || channel.type === ChannelTypes.GROUP_DM)
+				.map((channel) => channel.id.toString()),
+		),
+	};
 }

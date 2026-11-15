@@ -1,0 +1,285 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Run your instance
+description: Upgrade, back up, move and manage your Fluxer instance with rexctl.
+---
+
+Run these commands on the machine where you installed Fluxer. The [command reference](/operator/rexctl/) lists every flag for each one.
+
+## Upgrade
+
+```sh
+rexctl upgrade
+```
+
+This upgrades rexctl and Fluxer together. It backs up your instance before Fluxer switches to the new version, and if the new version doesn't start, it goes back to the version you had before.
+
+To see whether there's a new version without upgrading, run `rexctl upgrade --check`.
+
+If you installed Fluxer before rexctl existed, upgrade it with the current install script. It installs rexctl and hands your instance to it with your data and settings as they are.
+
+```sh
+curl -fsSL https://fluxer.dev/install.sh | sh -s -- --update --dir /path/to/your/instance
+```
+
+### Upgrade by itself
+
+```sh
+rexctl auto-upgrade on
+```
+
+This runs `rexctl upgrade --yes` every day at about 04:00 with a systemd timer, or with cron on machines without systemd. Each run backs up your instance first and goes back to the version you had if the new one doesn't start. Run `rexctl auto-upgrade` to see when it runs next and how the last run went, and `rexctl auto-upgrade off` to stop it.
+
+- `--at 03:30` picks the time of day, in this machine's time zone. A systemd timer starts within 30 minutes after it, and cron starts at a fixed minute in that window.
+- `--at 06:00,18:00` upgrades at each of those times, here once in the morning and once in the evening.
+- `--day sun` upgrades once a week on that day. A weekly run that is skipped or fails waits a week, and you can run `rexctl upgrade` yourself at any time.
+- `--notify https://ntfy.sh/your-topic` posts to that address when an upgrade installs a new release or fails. It works with Slack and Discord webhooks, ntfy, Gotify and the Apprise API, as [`rexctl auto-upgrade on`](/operator/rexctl/#rexctl-auto-upgrade-on) explains. Run `rexctl auto-upgrade test-notify` to send a test notice to it.
+- `--backup without-uploads` leaves uploads out of the backup before each upgrade.
+- `--full-backup monthly` also makes a full backup with uploads on the 1st of every month.
+
+Run `rexctl auto-upgrade on` again to change any of these. A flag you leave out goes back to its default.
+
+Uploads are often the largest part of an instance, and they stay on this machine while Fluxer upgrades. A backup without them is enough to go back to the version you had, and it takes less time and disk space. When a new version changes how uploads are stored, rexctl includes them in that backup anyway and says so.
+
+A backup without uploads doesn't help if you lose the machine. Keep a full backup on a schedule as well.
+
+```sh
+rexctl auto-upgrade on --day sun --backup without-uploads --full-backup monthly
+```
+
+This upgrades every Sunday with backups that leave out uploads, and makes a full backup with `rexctl backup` on the 1st of every month. The full backup has its own systemd timer or cron entry and starts 3 hours before the upgrade time. With systemd, an upgrade waits until a running full backup has finished, and a backup missed while the machine was off runs once the machine starts again. With cron, an upgrade that starts while the full backup is still running skips that run, and a missed backup waits for the next month. `rexctl auto-upgrade off` stops both.
+
+With `--backup without-uploads`, `rexctl auto-upgrade` warns when no backup from the last 5 weeks has your uploads.
+
+## Roll back
+
+```sh
+rexctl rollback
+```
+
+This goes back to the version you had before your last upgrade and keeps your database as it is. To also restore the backup rexctl made before the upgrade, add `--restore-database`.
+
+If that backup leaves out uploads, the uploads stay as they are. Files uploaded since the upgrade stay on disk, and attachments deleted since the upgrade don't come back. For backups before upgrades that also include uploads, run `rexctl auto-upgrade on` again with your other flags and `--backup full`, or pass `--backup full` to `rexctl upgrade`. This applies from the next upgrade.
+
+### Custom badges and rollbacks
+
+Custom badges are stored in their own tables. The first start of a version with these tables copies the badges from the instance settings into them, and it does nothing on later starts. If you roll back past that version, the older version shows the badges as they were before the upgrade, with their images. Badges you made, changed or moved after the upgrade come back when you upgrade again. Changes you make while the older version runs aren't copied when you upgrade again. A badge you make there is missing after the upgrade, and a badge you delete or give a new image there comes back without its image. Delete it or upload its image again.
+
+Set how many badges one user or one guild can have under Limits on the Badges page of the admin panel.
+
+## Run Fluxer with fewer services
+
+These changes are experimental. After an upgrade, `rexctl upgrade --experimental-native` offers four optional changes and asks about each one. You can make any of them, one at a time or several together. `rexctl upgrade` without the flag and `rexctl auto-upgrade` never offer them.
+
+- `docker` moves an instance that runs with Docker Compose to one systemd service with no containers. Root manages that service, so this change and every command for the new instance run with sudo. rexctl installs Fluxer in `/opt/fluxer`, or in the folder you pass with `--native-dir`. When root owns your instance folder, rexctl uses that folder with `-native` added if it can. Root must own the new folder and every folder above it, no other account may change them, and Fluxer's service account must be able to open them. It restores the backup there, and the Docker instance stays stopped with its volumes and images. rexctl doesn't start the Docker instance again while the new one is there. The new instance gets every setting you made with `rexctl config set`. Settings that only change Docker containers, such as image and memory limit settings, stay with the Docker instance. Calls keep running on the bundled LiveKit with the same voice settings. This change isn't possible when Fluxer uses your own Postgres server or your own object store, when rexctl runs voice servers on this machine, when you have a `custom.compose.yml`, when Docker or Podman runs without root, when automatic upgrades are on, or when you set a variable that Fluxer without Docker doesn't use. rexctl tells you which one it is before it changes anything.
+- `kv` moves the cache, rate limits and queues from Valkey into Fluxer's Postgres database, and the Valkey service goes away. Rate limits start over. It doesn't move a Redis-compatible cluster.
+- `rust` runs the eight Rust services (snowflakes, users, messages, gifs, unfurl, push, app-proxy and admin) in one process. When one of them fails, it restarts inside that process.
+- `storage` moves uploaded files from SeaweedFS to plain files on disk, and the SeaweedFS services go away. It doesn't move files from your own object store.
+
+To see what each change saves and what goes away without changing anything, run this.
+
+```sh
+rexctl migrate --experimental-native --dry-run
+```
+
+It shows memory, CPU, disk, processes and containers for your instance before and after each change, and for all of them together. The figures are typical values that we measured once for each setup in a test container limited to 4 CPU cores and 8 GiB of memory, with the instance idle and under load. Your instance uses different amounts. Add `--details` to see the machine, the versions, the date and how we measured.
+
+If you installed rexctl as a normal user, it's in `~/.local/bin`, and sudo doesn't look there. Run it with its full path, as in the command below. When a change needs root, rexctl prints the exact command to run. Under sudo, rexctl finds the instance of the account that ran sudo when root has none of its own, as long as only root and that account can change its folder. Anyone who can run rexctl with sudo can act as root, so give that access only to people you would give root.
+
+```sh
+sudo ~/.local/bin/rexctl migrate --experimental-native --migrate docker
+```
+
+To make changes without the questions, list them with `--migrate`, either on `rexctl upgrade --experimental-native` or on its own with `rexctl migrate --experimental-native`.
+
+```sh
+rexctl migrate --experimental-native --migrate kv,storage,rust
+```
+
+rexctl checks that each change can work, backs up your instance once, stops the services that write the data, copies the data and compares the copy, and starts Fluxer again. If any step fails, rexctl undoes the changes, starts the instance as it was and tells you where the backup from before the changes is.
+
+### New installs
+
+`rexctl install --experimental-native` installs a new instance as one systemd service on Debian 13, with all four changes made. Run it with sudo, as you do every command for that instance. If rexctl is in `~/.local/bin`, run it as `sudo ~/.local/bin/rexctl`. Automatic upgrades for a native instance need rexctl installed for root, with `curl -fsSL https://fluxer.dev/install.sh | sudo sh`. rexctl sizes Fluxer for the machine's CPUs and memory and runs the bundled LiveKit for calls. If people connect to the machine at another address than the one LiveKit finds through STUN, pass that address with `--voice-ip`.
+
+### Uploads after the move off SeaweedFS
+
+After `storage`, Fluxer shows every file but doesn't save new uploads or delete files. Open a few channels and check that images and files load. Then run `rexctl migrate --experimental-native --open-writes` to let people upload again.
+
+Until you open uploads, `rexctl migrate --experimental-native --undo storage` deletes the plain files and runs Fluxer on SeaweedFS again. Once uploads are open, new files exist only as plain files, and rexctl can't move the instance back to SeaweedFS. The only way back is to restore the backup from before the change, and that loses the files uploaded since then. `docker` isn't possible until uploads are open.
+
+### Going back and old data
+
+`rexctl migrate --experimental-native --undo kv` copies the data from Postgres back into Valkey and runs Fluxer on Valkey again. To go back from `docker` or `rust`, restore the backup from before the change with `rexctl restore`.
+
+The old Valkey and SeaweedFS data stays on disk after a change. `rexctl migrate --experimental-native --clean-up` deletes it once you've made a backup with uploads after the change. For `storage`, that backup must be from after you opened uploads. After the clean-up, `--undo kv` isn't possible.
+
+## Back up and restore
+
+```sh
+rexctl backup
+```
+
+This saves your settings, database and uploads in one file in the `backups` folder of your instance. Fluxer pauses while it copies uploads. Keep a copy of your backups on another machine.
+
+rexctl keeps the newest 3 backups and deletes older ones after each backup, but it always keeps the one `rexctl rollback` needs. To keep more, run `rexctl backup keep 10`, or `rexctl backup keep all` to keep every backup. To save backups on another drive, run `rexctl backup location /mnt/backups/fluxer`.
+
+To put your instance back the way it was when a backup was made, find the file with `rexctl backup list` and pass its path to `rexctl restore`. `rexctl backup list` marks the backups without uploads.
+
+A backup without uploads only restores on the instance it was made for, where it leaves the uploads as they are. If that restore stops partway, run the same `rexctl restore` again. Anywhere else rexctl refuses before it changes anything. In the folder of the instance the backup was made for, it also suggests that instance's newest backup with uploads. rexctl never deletes the newest backup with uploads to keep the number of backups down.
+
+```sh
+rexctl restore /opt/fluxer/backups/fluxer-chat.example.com-20261105-120000.tar.zst
+```
+
+## Move to a new machine
+
+Back up your instance on the old machine with `rexctl backup` and copy the backup file to the new one. A backup without uploads can't move an instance. On the new machine, install rexctl and restore the backup with one command, run from the folder you copied the backup to.
+
+```sh
+curl -fsSL https://fluxer.dev/install.sh | sh -s -- restore fluxer-chat.example.com-20261105-120000.tar.zst
+```
+
+Then change your domain's `A` record to the new machine's address.
+
+## Run more than one instance on a host
+
+You can run more than one instance on the same machine. Each one needs its own project name with `--project`, its own instance directory with `--dir` and an edge binding that doesn't clash with the others. Run the extra instances behind your own reverse proxy with `--behind-proxy` and a distinct `--bind`.
+
+```sh
+rexctl install --dir /path/to/second-instance --project blue --behind-proxy --bind 127.0.0.1:8081
+```
+
+rexctl chooses free voice and video ports for each instance and prints the ones it picked. `rexctl doctor` shows which instance uses which ports. To run more voice servers for one instance, on this machine or on others, see [Add voice servers](/operator/voice-servers/).
+
+rexctl remembers where it installed each instance. Outside an instance folder, commands use the default instance, which is the first one you installed. Run `rexctl use <folder>` to pick another default, or pass `--dir`. Each account has its own default. As root, rexctl uses a folder you pick with `--dir`, with `rexctl use` or by running it inside that folder, as long as only the folder's owner can write to it and to its `.rexctl` folder. When other accounts can change a folder above it, as with the shared folders on an Unraid, Synology or TrueNAS machine, rexctl still uses it and warns you each time it runs. That only matters if other people, or containers that run as other accounts, can write to that share. A folder that rexctl finds on its own, such as the instance of the account that ran sudo, must have no folder above it that other accounts can change.
+
+## Manage people
+
+Create an invite link that 10 people can use within a week.
+
+```sh
+rexctl invites create --uses 10 --expires 7d
+```
+
+Choose who can create an account with `open`, `approval`, `invite` or `closed`.
+
+```sh
+rexctl registration set approval
+```
+
+When registration needs approval, `rexctl registration pending` lists the people waiting and `rexctl registration approve <id>` approves one of them.
+
+Make someone an admin.
+
+```sh
+rexctl admins add alex
+```
+
+Ban an account and delete its messages.
+
+```sh
+rexctl users ban spammer42 --reason spam --delete-messages
+```
+
+When someone has lost their password and can't reset it themselves, [create a reset link](/operator/sign-in/#lost-passwords) for them.
+
+## Email and branding
+
+Set up email for your instance, then send yourself a test email.
+
+```sh
+rexctl email set
+rexctl email test you@example.com
+```
+
+If your email server's certificate comes from your own CA, put that CA's PEM file in the `ca` folder of your instance. The api and worker see that folder at `/etc/fluxer/ca`, and they can't see the edge's `certs` folder. The file needs only the CA certificate, never a private key. Tell them to trust the file, then test again.
+
+```sh
+rexctl config set FLUXER_NODE_EXTRA_CA_CERTS /etc/fluxer/ca/ca.pem
+rexctl email test you@example.com
+```
+
+Change your instance's name, color, logo or icon.
+
+```sh
+rexctl branding set --name "Example Chat" --logo logo.png
+```
+
+You can also change email and branding in the admin panel, at your instance's address followed by `/admin`.
+
+## Change a setting
+
+```sh
+rexctl config list
+```
+
+This lists every setting with its value and a line of help, and says which settings restart Fluxer when you change them. To change one, pass its name and the new value to `rexctl config set`.
+
+```sh
+rexctl config set <key> <value>
+```
+
+The list includes the `FLUXER_*` environment variables Fluxer reads, and you set them the same way. If a variable has a shorter name, such as `sso.allow_private_addresses` for `FLUXER_SSO_ALLOW_PRIVATE_ADDRESSES`, rexctl tells you to use that one. rexctl writes the change and restarts whatever needs it, and you never edit `.env` yourself.
+
+Each time rexctl starts Fluxer, it sizes memory limits, database connections and thread counts to the machine's memory and CPUs, and a resized machine needs no changes. The `memory.profile` setting pins a fixed size.
+
+On a machine with little memory, `rexctl config set FLUXER_API_EMBEDDED_WORKER true` runs background jobs inside the api service. rexctl then removes the separate worker service and adds half of its memory limit to the api.
+
+When the disk that holds Fluxer's images and data is smaller than 16 GB, the install sets `disk.profile` to `small`. That's the disk with Docker's data root on Linux. With Docker Desktop or an engine on another machine, rexctl measures the disk with the instance folder. The small profile sets `FLUXER_LOG_MAX_SIZE` to `5m`, `FLUXER_LOG_MAX_FILE` to `2`, `FLUXER_POSTGRES_MAX_WAL_SIZE` to `512MB` and `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES` to 512 MiB, or to `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES` if you set that higher. It leaves the values you set yourself as they are. To use the usual sizes, run `rexctl config unset disk.profile`.
+
+### Signed attachment links
+
+`media.signed_attachments` decides whether attachment downloads need a signed link. It's `off` unless you turn it on.
+
+```sh
+rexctl config set media.signed_attachments report
+```
+
+The first time you turn it on, rexctl makes a signing key, saves it with its other generated secrets and restarts the api, worker and media-proxy services. If `FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64` already has a key, rexctl keeps it and restarts only the media proxy. With `report`, Fluxer signs every attachment link it hands out, and the media proxy serves every download and logs the ones `enforce` would refuse. Wait a day so open apps pick up signed links, then refuse unsigned downloads.
+
+```sh
+rexctl config set media.signed_attachments enforce
+```
+
+Fluxer's apps get new links by themselves. A signed link stops working about a day after Fluxer hands it out, so links that bots save or that people copy out of Fluxer stop working too. Data packages made before you turned it on have unsigned links, and those stop working under `enforce`. To turn it off, set it to `off`. rexctl keeps the key, so links signed with it keep working when you turn it on again. To rotate the key, read the current one with `rexctl config get FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64 --reveal` and follow the steps for [`FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64`](/operator/environment/#fluxer_media_proxy_attachment_url_secrets_base64).
+
+## Change how Fluxer runs
+
+rexctl writes Fluxer's Compose files and Caddyfile to `.rexctl/generated` in your instance folder and writes them again each time it changes the instance. If you edit one of them, rexctl keeps a copy of your version in `.rexctl/edited` and puts its own version back.
+
+To change the Compose setup, such as labels, images, ports or volumes, run `rexctl config edit`. It opens `custom.compose.yml` in your instance folder, checks it, tells you which services restart and applies it. rexctl adds this file after its own Compose files, and upgrades keep it.
+
+```sh
+rexctl config edit
+```
+
+To add your own Caddy directives, such as extra routes or headers, put them in a `.caddy` file in the `caddy.d` folder of your instance. Fluxer's Caddyfile loads every file there inside your site, and upgrades keep them. `rexctl voice add` writes a `voice-` file there for each voice server it adds, and `rexctl voice remove` deletes it again. To serve a whole extra site, such as another domain on the same machine, put its `.caddy` file in `caddy.d/sites`. Fluxer loads those files next to its own site, and `rexctl upgrade` moves a file of whole sites from `caddy.d` to `caddy.d/sites` for you. To use your own Caddyfile instead, mount it over `/etc/caddy/Caddyfile` on the `edge` service in `custom.compose.yml`.
+
+### Start with the machine
+
+With Docker, Docker starts Fluxer again after the machine restarts. `rexctl install` asks whether to also add a systemd service, which starts Fluxer's services in order and stops them cleanly when the machine shuts down. Without a terminal it leaves it off, and `--boot-service on` or `--boot-service off` decides it for you. Podman has no daemon to start Fluxer, so a Podman install always adds the service.
+
+The service is in `/etc/systemd/system`, or in your user's systemd folder when you run rexctl without root. On a root install rexctl also copies itself to `/usr/local/libexec/rexctl/rexctl` for the service to run. rexctl lists these changes and asks before it makes them, unless you pass `--yes`. Run `rexctl boot` to see whether you have the service, `rexctl boot on` to add it and `rexctl boot off` to remove it.
+
+```sh
+rexctl boot off
+```
+
+## When something is wrong
+
+```sh
+rexctl doctor
+```
+
+This checks your instance and the machine, and tells you how to fix each problem it finds. `rexctl doctor --fix` fixes the problems rexctl can fix safely. To see what it changes first, run `rexctl doctor --fix --dry-run`.
+
+If `rexctl doctor` says memory overcommit is off, the machine has little free memory compared with Fluxer's cache. The cache saves its data in the background by briefly copying itself, and with `vm.overcommit_memory` set to 0 Linux can refuse that copy when memory runs low. `rexctl doctor --fix` sets it to 1, which is what Valkey recommends. With plenty of free memory and swap, rexctl doesn't warn about it.
+
+`rexctl status` shows whether each Fluxer service is running, and `rexctl logs` shows their logs.
+
+## Manage it without rexctl
+
+To run your instance yourself with docker compose, run `rexctl eject`. rexctl moves the Compose files and Caddyfile back into your instance folder and stops managing them. Fluxer keeps running, and `rexctl takeover` hands it back to rexctl.
+
+To upgrade Fluxer while you manage it yourself, run `rexctl takeover`, `rexctl upgrade` and `rexctl eject` one after the other. You can also [upgrade with the compose bundle](/operator/docker-compose/#upgrade) of the new version, the same way as an instance that never used rexctl.

@@ -6,6 +6,8 @@ import type {MessageAttachment} from '@fluxer/schema/src/domains/message/Message
 
 export type CsvRows = Array<Array<string>>;
 
+const MAX_CSV_TABLE_CELLS = 262144;
+
 function getAttachmentExtension(attachment: MessageAttachment): string {
 	return (attachment.filename ?? attachment.title ?? '').split('.').pop()?.toLowerCase() ?? '';
 }
@@ -77,7 +79,7 @@ export function parseCsvRows(content: string | null): CsvRows | null {
 }
 
 function getColumnCount(rows: CsvRows): number {
-	return Math.max(1, ...rows.map((row) => row.length));
+	return rows.reduce((max, row) => Math.max(max, row.length), 1);
 }
 
 function buildTableRow(row: Array<string>, columnCount: number): TableRowNode {
@@ -96,8 +98,9 @@ function buildTableRow(row: Array<string>, columnCount: number): TableRowNode {
 }
 
 export function buildCsvTableNode(rows: CsvRows): TableNode {
-	const columnCount = getColumnCount(rows);
-	const [header = [], ...bodyRows] = rows;
+	const columnCount = Math.min(getColumnCount(rows), MAX_CSV_TABLE_CELLS);
+	const rowLimit = Math.max(1, Math.floor(MAX_CSV_TABLE_CELLS / columnCount));
+	const [header = [], ...bodyRows] = rows.slice(0, rowLimit);
 	return {
 		type: 'Table',
 		header: buildTableRow(header, columnCount),

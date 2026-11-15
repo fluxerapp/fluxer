@@ -2,6 +2,7 @@
 
 import type {HandlerHost} from '@app/features/app/keybindings/keybind_manager/handlers/types';
 import {
+	getMessagePermissions,
 	requestAdjacentMessageReply,
 	requestCopyMessageId,
 	requestCopyMessageLink,
@@ -19,13 +20,15 @@ import {
 	triggerAddReaction,
 } from '@app/features/channel/components/MessageActionUtils';
 import MessageFocus from '@app/features/messaging/state/MessageFocus';
+import ActiveComposer from '@app/features/threads/state/ActiveComposer';
 import type {I18n} from '@lingui/core';
 
 export function registerMessageHandlers(host: HandlerHost, i18n: I18n): void {
 	host.register('message_edit', ({type, context}) => {
 		if (type !== 'press') return;
 		const message = context?.focusedMessage ?? MessageFocus.getFocusedMessage();
-		if (!message) return;
+		if (!message?.isUserMessage()) return;
+		if (!getMessagePermissions(message, context?.focusedChannel)?.canEditMessage) return;
 		startMessageEdit(message);
 	});
 	host.register('message_delete', ({type, context}) => {
@@ -54,19 +57,19 @@ export function registerMessageHandlers(host: HandlerHost, i18n: I18n): void {
 	});
 	host.register('message_reply_prev', ({type}) => {
 		if (type !== 'press' || !host.currentChannelId) return;
-		requestAdjacentMessageReply(host.currentChannelId, -1);
+		requestAdjacentMessageReply(ActiveComposer.resolve(host.currentChannelId), -1);
 	});
 	host.register('message_reply_next', ({type}) => {
 		if (type !== 'press' || !host.currentChannelId) return;
-		requestAdjacentMessageReply(host.currentChannelId, 1);
+		requestAdjacentMessageReply(ActiveComposer.resolve(host.currentChannelId), 1);
 	});
 	host.register('message_edit_prev', ({type}) => {
 		if (type !== 'press' || !host.currentChannelId) return;
-		startAdjacentMessageEdit(host.currentChannelId, -1);
+		startAdjacentMessageEdit(ActiveComposer.resolve(host.currentChannelId), -1);
 	});
 	host.register('message_edit_next', ({type}) => {
 		if (type !== 'press' || !host.currentChannelId) return;
-		startAdjacentMessageEdit(host.currentChannelId, 1);
+		startAdjacentMessageEdit(ActiveComposer.resolve(host.currentChannelId), 1);
 	});
 	host.register('message_forward', ({type, context}) => {
 		if (type !== 'press') return;
@@ -96,7 +99,7 @@ export function registerMessageHandlers(host: HandlerHost, i18n: I18n): void {
 		if (type !== 'press') return;
 		const message = context?.focusedMessage ?? MessageFocus.getFocusedMessage();
 		if (!message) return;
-		requestToggleBookmark(message, i18n);
+		void requestToggleBookmark(message, i18n);
 	});
 	host.register('message_toggle_embeds', ({type, context}) => {
 		if (type !== 'press') return;

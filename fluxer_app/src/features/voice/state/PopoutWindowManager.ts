@@ -6,8 +6,8 @@ import {makeAutoObservable, runInAction} from 'mobx';
 
 const logger = new Logger('PopoutWindowManager');
 
-export const VOICE_POPOUT_WINDOW_NAME_PREFIX = 'fluxer-voice-popout:';
-export const VOICE_POPOUTS_MAX = 8;
+const VOICE_POPOUT_WINDOW_NAME_PREFIX = 'fluxer-voice-popout:';
+const VOICE_POPOUTS_MAX = 8;
 export const VOICE_TILE_POPOUT_DEFAULT_WIDTH = 854;
 export const VOICE_TILE_POPOUT_DEFAULT_HEIGHT = 480;
 export const VOICE_CALL_POPOUT_DEFAULT_WIDTH = 960;
@@ -228,7 +228,7 @@ class PopoutWindowManagerStore {
 		if (!getElectronAPI()) {
 			const width = descriptor.kind === 'call' ? VOICE_CALL_POPOUT_DEFAULT_WIDTH : VOICE_TILE_POPOUT_DEFAULT_WIDTH;
 			const height = descriptor.kind === 'call' ? VOICE_CALL_POPOUT_DEFAULT_HEIGHT : VOICE_TILE_POPOUT_DEFAULT_HEIGHT;
-			const childWindow = window.open('about:blank', descriptor.key, `width=${width},height=${height}`);
+			const childWindow = window.open('', descriptor.key, `popup=yes,width=${width},height=${height}`);
 			if (!childWindow) {
 				logger.warn('Failed to open browser popout window', {key: descriptor.key});
 				return false;

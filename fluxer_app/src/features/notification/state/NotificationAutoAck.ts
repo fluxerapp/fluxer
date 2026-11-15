@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Channels from '@app/features/channel/state/Channels';
+import Navigation from '@app/features/navigation/state/Navigation';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import {
 	type AutoAckWindowSnapshot,
@@ -73,6 +74,23 @@ class AutoAck {
 					name: 'AutoAck.updateAutoAckState',
 					fireImmediately: true,
 				},
+			);
+			reaction(
+				() => {
+					const windowId = `${Window.windowId}:thread-panel`;
+					const channelId = Navigation.threadId;
+					if (!channelId) {
+						return {windowId, channelId: null, isAtBottom: false, canAutoAck: false};
+					}
+					const isAtBottom = Dimension.channelPinnedToEnd(channelId) ?? false;
+					const ackedManually = ReadStates.getIfExists(channelId)?.ackedManually ?? false;
+					const canAutoAck = !ackedManually && Window.focused && !MediaViewer.isOpen;
+					return {windowId, channelId, isAtBottom, canAutoAck};
+				},
+				(conditions) => {
+					this.updateAutoAckState(conditions);
+				},
+				{name: 'AutoAck.updateThreadPanelAutoAckState', fireImmediately: true},
 			);
 		});
 	}

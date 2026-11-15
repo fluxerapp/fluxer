@@ -32,7 +32,7 @@
 	padding: 0.25rem 0.5rem;
 	background-color: var(--brand-primary);
 	border-radius: 624.9375rem;
-	color: white;
+	color: var(--brand-primary-fill);
 	font-size: 0.875rem;
 	line-height: 1;
 }
@@ -112,10 +112,6 @@
 	flex-direction: column;
 	gap: 1rem;
 	padding-bottom: 1rem;
-}
-
-.groupContainer {
-	margin-bottom: 0.5rem;
 }
 
 .groupLetter {

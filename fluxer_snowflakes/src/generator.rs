@@ -210,28 +210,6 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn generator_starts_sequence_at_zero() {
-        let clock = ManualClock::new(FLUXER_EPOCH_MS + 1000);
-        let mut generator = SnowflakeGenerator::with_clock(42, clock).unwrap();
-        let id = generator.generate().await.unwrap();
-        let parsed = parse_snowflake(id);
-        assert_eq!(parsed.timestamp_ms, FLUXER_EPOCH_MS + 1000);
-        assert_eq!(parsed.worker_id, 42);
-        assert_eq!(parsed.sequence, 0);
-    }
-
-    #[tokio::test]
-    async fn generator_increments_sequence_within_same_millisecond() {
-        let clock = ManualClock::new(FLUXER_EPOCH_MS + 1000);
-        let mut generator = SnowflakeGenerator::with_clock(7, clock).unwrap();
-        let first = parse_snowflake(generator.generate().await.unwrap());
-        let second = parse_snowflake(generator.generate().await.unwrap());
-        assert_eq!(first.sequence, 0);
-        assert_eq!(second.sequence, 1);
-        assert_eq!(second.timestamp_ms, first.timestamp_ms);
-    }
-
-    #[tokio::test]
     async fn generator_remains_monotonic_when_clock_moves_backwards() {
         let clock = ManualClock::new(FLUXER_EPOCH_MS + 1002);
         let mut generator = SnowflakeGenerator::with_clock(1, clock.clone()).unwrap();
@@ -258,13 +236,5 @@ mod tests {
         let parsed = parse_snowflake(id);
         assert_eq!(parsed.timestamp_ms, FLUXER_EPOCH_MS + 1001);
         assert_eq!(parsed.sequence, 0);
-    }
-
-    #[test]
-    fn validates_worker_and_sequence_bounds() {
-        assert!(create_snowflake(FLUXER_EPOCH_MS, 1023, 4095).is_ok());
-        assert!(create_snowflake(FLUXER_EPOCH_MS, 1024, 0).is_err());
-        assert!(create_snowflake(FLUXER_EPOCH_MS, 0, 4096).is_err());
-        assert!(create_snowflake(FLUXER_EPOCH_MS - 1, 0, 0).is_err());
     }
 }

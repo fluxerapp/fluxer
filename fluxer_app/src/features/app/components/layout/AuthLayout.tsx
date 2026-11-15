@@ -1,47 +1,85 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import i18n, {initI18n} from '@app/app/I18n';
+import i18n, {initI18n, isI18nInitialized} from '@app/app/I18n';
 import styles from '@app/features/app/components/layout/AuthLayout.module.css';
-import {CorruptedInstallationNagbar} from '@app/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar';
-import {NativeDragRegion} from '@app/features/app/components/layout/NativeDragRegion';
-import {NativeTitlebar} from '@app/features/app/components/layout/NativeTitlebar';
-import {useNativePlatform} from '@app/features/app/hooks/useNativePlatform';
-import {useSetLayoutVariant} from '@app/features/app/state/LayoutVariantContext';
-import {AuthBackground} from '@app/features/auth/flow/AuthBackground';
+import {AuthShell, resolveLayoutAuthBrand, useAuthLayoutVariant} from '@app/features/app/components/layout/AuthShell';
+import {AuthShellHintKind, useAuthShellHintCapture} from '@app/features/app/components/skeleton/AuthShellHint';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import type {RuntimeConfigSnapshot} from '@app/features/app/state/RuntimeConfigSnapshot';
+import {AuthBrandLayout, AuthBrandPanel, useAuthBrandLogo} from '@app/features/auth/components/AuthBrandPanel';
+import {AccountRestrictionGate} from '@app/features/auth/flow/AccountRestrictionScreen';
 import {AuthCardContainer} from '@app/features/auth/flow/AuthCardContainer';
-import {useAuthBackground} from '@app/features/auth/hooks/useAuthBackground';
-import {type AuthCardVariant, AuthLayoutContext} from '@app/features/auth/state/AuthLayoutContext';
-import {AuthRegisterDraftContext, type AuthRegisterFormDraft} from '@app/features/auth/state/AuthRegisterDraftContext';
+import {AuthRuntimeTargetBoundary} from '@app/features/auth/flow/AuthRuntimeTargetBoundary';
+import {AuthSurfaceMotionKind, AuthSurfaceTransition} from '@app/features/auth/flow/AuthSurfaceTransition';
+import {useSplashImageLoader} from '@app/features/auth/hooks/useAuthBackground';
+import {
+	type AuthCardVariant,
+	AuthLayoutContentMode,
+	AuthLayoutContext,
+	type AuthLayoutContextType,
+} from '@app/features/auth/state/AuthLayoutContext';
+import {AuthRegisterDraftContext, useAuthRegisterDraft} from '@app/features/auth/state/AuthRegisterDraftContext';
 import {AppI18nProvider} from '@app/features/i18n/components/AppI18nProvider';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
-import {FluxerWordmark} from '@app/features/ui/components/icons/FluxerWordmark';
-import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
+import type {ScrollerHandle} from '@app/features/ui/components/Scroller';
 import {isMobileExperienceEnabled} from '@app/features/ui/utils/MobileExperience';
-import {hasUnavailableElectronNativeContext} from '@app/features/ui/utils/NativeUtils';
-import {useNativeTitleBar} from '@app/features/window/hooks/useNativeTitleBar';
-import foodPatternUrl from '@app/media/images/i-like-food.svg';
 import type {GuildSplashCardAlignmentValue} from '@fluxer/constants/src/GuildConstants';
 import {GuildSplashCardAlignment} from '@fluxer/constants/src/GuildConstants';
 import clsx from 'clsx';
 import {observer} from 'mobx-react-lite';
-import {type ReactNode, useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {
+	type Dispatch,
+	type ReactNode,
+	type SetStateAction,
+	useCallback,
+	useEffect,
+	useLayoutEffect,
+	useMemo,
+	useRef,
+	useState,
+} from 'react';
+
+const SPLIT_CARD_MEDIA_QUERY = '(min-width: 55rem)';
+
+interface ResolveAuthLayoutContentModeRequest {
+	current: AuthLayoutContentMode | null;
+	value: SetStateAction<AuthLayoutContentMode>;
+}
+
+function authSurfaceMotionKind(contentMode: AuthLayoutContentMode): AuthSurfaceMotionKind {
+	if (contentMode === AuthLayoutContentMode.FULL) {
+		return AuthSurfaceMotionKind.FULLSCREEN;
+	}
+	return AuthSurfaceMotionKind.CARD;
+}
+
+function resolveAuthLayoutContentMode({current, value}: ResolveAuthLayoutContentModeRequest): AuthLayoutContentMode {
+	const currentMode = current ?? AuthLayoutContentMode.CARD;
+	if (typeof value === 'function') {
+		return value(currentMode);
+	}
+	return value;
+}
+
+function isWideAuthViewport(): boolean {
+	return typeof window.matchMedia === 'function' && window.matchMedia(SPLIT_CARD_MEDIA_QUERY).matches;
+}
 
 const AuthLayoutContent = observer(function AuthLayoutContent({children}: {children?: ReactNode}) {
-	const [viewportHeight, setViewportHeight] = useState(() => window.innerHeight);
-	const [viewportWidth, setViewportWidth] = useState(() => window.innerWidth);
 	const [splashUrl, setSplashUrl] = useState<string | null>(null);
-	const [showLogoSide, setShowLogoSide] = useState(true);
+	const [brandSnapshot, setBrandSnapshot] = useState<RuntimeConfigSnapshot | null>(() =>
+		RuntimeConfig.getSnapshotOrNull(),
+	);
 	const [cardVariant, setCardVariant] = useState<AuthCardVariant>('default');
+	const [contentMode, setContentMode] = useState<AuthLayoutContentMode | null>(null);
 	const [splashAlignment, setSplashAlignment] = useState<GuildSplashCardAlignmentValue>(
 		GuildSplashCardAlignment.CENTER,
 	);
-	const {isNative, platform} = useNativePlatform();
-	const useSystemTitleBar = useNativeTitleBar();
 	const splashUrlRef = useRef<string | null>(null);
-	const registerFormDraftsRef = useRef<Map<string, AuthRegisterFormDraft>>(new Map());
 	const scrollerRef = useRef<ScrollerHandle>(null);
+	const mainRef = useRef<HTMLElement>(null);
 	const location = useLocation();
-	const {patternReady, splashDimensions} = useAuthBackground(splashUrl, foodPatternUrl);
+	const {dimensions: splashDimensions} = useSplashImageLoader(splashUrl);
 	const handleSetSplashUrl = useCallback(
 		(url: string | null) => {
 			if (splashUrlRef.current === url) return;
@@ -54,212 +92,147 @@ const AuthLayoutContent = observer(function AuthLayoutContent({children}: {child
 		[setSplashAlignment],
 	);
 	useEffect(() => {
-		const handleResize = () => {
-			setViewportWidth(window.innerWidth);
-			setViewportHeight(window.innerHeight);
-		};
-		handleResize();
-		window.addEventListener('resize', handleResize);
-		return () => window.removeEventListener('resize', handleResize);
-	}, []);
-	useEffect(() => {
-		document.documentElement.classList.add('auth-page');
-		return () => {
-			document.documentElement.classList.remove('auth-page');
-		};
-	}, []);
-	useEffect(() => {
 		scrollerRef.current?.jumpToStartEdge();
 	}, [location.pathname]);
-	const splashScale = useMemo(() => {
-		if (!splashDimensions) return null;
-		const {width, height} = splashDimensions;
-		if (width <= 0 || height <= 0) return null;
-		const heightScale = viewportHeight / height;
-		const widthScale = viewportWidth / width;
-		return Math.max(heightScale, widthScale);
-	}, [splashDimensions, viewportHeight, viewportWidth]);
-	const getRegisterFormDraft = useCallback((draftKey: string): AuthRegisterFormDraft | undefined => {
-		const draft = registerFormDraftsRef.current.get(draftKey);
-		if (!draft) {
-			return undefined;
-		}
-		return {
-			...draft,
-			formValues: {...draft.formValues},
-		};
+	useLayoutEffect(() => {
+		setContentMode((current) => current ?? AuthLayoutContentMode.CARD);
 	}, []);
-	const setRegisterFormDraft = useCallback((draftKey: string, draft: AuthRegisterFormDraft) => {
-		registerFormDraftsRef.current.set(draftKey, {
-			...draft,
-			formValues: {...draft.formValues},
-		});
+	const handleSetContentMode = useCallback<Dispatch<SetStateAction<AuthLayoutContentMode>>>((value) => {
+		setContentMode((current) => resolveAuthLayoutContentMode({current, value}));
 	}, []);
-	const clearRegisterFormDraft = useCallback((draftKey: string) => {
-		registerFormDraftsRef.current.delete(draftKey);
-	}, []);
-	const authLayoutContextValue = useMemo(
+	const authLayoutContextValue = useMemo<AuthLayoutContextType>(
 		() => ({
 			setSplashUrl: handleSetSplashUrl,
-			setShowLogoSide,
+			setBrandSnapshot,
 			setCardVariant,
+			setContentMode: handleSetContentMode,
 			setSplashCardAlignment: setSplashAlignment,
 		}),
-		[handleSetSplashUrl],
+		[handleSetContentMode, handleSetSplashUrl],
 	);
-	const authRegisterDraftContextValue = useMemo(
-		() => ({
-			getRegisterFormDraft,
-			setRegisterFormDraft,
-			clearRegisterFormDraft,
-		}),
-		[clearRegisterFormDraft, getRegisterFormDraft, setRegisterFormDraft],
-	);
+	const authRegisterDraftContextValue = useAuthRegisterDraft();
 	const isMobileExperience = isMobileExperienceEnabled();
-	const showCorruptedInstallationNagbar = hasUnavailableElectronNativeContext();
-	if (isMobileExperience) {
-		return (
-			<AuthRegisterDraftContext.Provider value={authRegisterDraftContextValue}>
-				<AuthLayoutContext.Provider value={authLayoutContextValue}>
-					<NativeDragRegion
-						className={styles.topDragRegion}
-						data-flx="app.auth-layout.auth-layout-content.top-drag-region"
-					/>
-					{showCorruptedInstallationNagbar && (
-						<div className={styles.nagbarHost} data-flx="app.auth-layout.auth-layout-content.nagbar-host">
-							<CorruptedInstallationNagbar
-								isMobile={true}
-								data-flx="app.auth-layout.auth-layout-content.corrupted-installation-nagbar"
-							/>
-						</div>
-					)}
-					<div className={styles.scrollerWrapper} data-flx="app.auth-layout.auth-layout-content.scroller-wrapper">
-						<Scroller
-							ref={scrollerRef}
-							className={styles.mobileContainer}
-							fade={false}
-							key="auth-layout-mobile-scroller"
-							data-flx="app.auth-layout.auth-layout-content.mobile-container"
-						>
-							<div
-								id="main-content"
-								className={styles.mobileContent}
-								tabIndex={-1}
-								data-flx="app.auth-layout.auth-layout-content.main-content"
-							>
-								<div
-									className={styles.mobileLogoContainer}
-									data-flx="app.auth-layout.auth-layout-content.mobile-logo-container"
-								>
-									<FluxerWordmark
-										variant="monochrome"
-										className={styles.mobileWordmark}
-										data-flx="app.auth-layout.auth-layout-content.mobile-wordmark"
-									/>
-								</div>
-								{children}
-							</div>
-						</Scroller>
-					</div>
-				</AuthLayoutContext.Provider>
-			</AuthRegisterDraftContext.Provider>
-		);
-	}
+	const isProbing = contentMode == null;
+	const resolvedMode = contentMode ?? AuthLayoutContentMode.CARD;
+	const surfaceKey = `${resolvedMode}:${location.pathname}`;
+	const isFullscreen = resolvedMode === AuthLayoutContentMode.FULL;
+	const brand = useMemo(() => resolveLayoutAuthBrand(brandSnapshot), [brandSnapshot]);
+	const {logo: brandLogo, onLogoError: handleBrandLogoError} = useAuthBrandLogo(brand);
+	const resolveAuthShellHintTarget = useCallback((): HTMLElement | null => {
+		const main = mainRef.current;
+		if (main == null || isMobileExperience || isFullscreen) {
+			return main;
+		}
+		return main.querySelector<HTMLElement>('flx-auth-card-surface');
+	}, [isFullscreen, isMobileExperience]);
+	useAuthShellHintCapture({
+		enabled: !isProbing,
+		pathname: location.pathname,
+		mobile: isMobileExperience,
+		kind: isFullscreen ? AuthShellHintKind.FULL : AuthShellHintKind.CARD,
+		split: !isMobileExperience && !isFullscreen && brandLogo != null && isWideAuthViewport(),
+		resolveTarget: resolveAuthShellHintTarget,
+	});
 	return (
 		<AuthRegisterDraftContext.Provider value={authRegisterDraftContextValue}>
 			<AuthLayoutContext.Provider value={authLayoutContextValue}>
-				<NativeDragRegion
-					className={styles.topDragRegion}
-					data-flx="app.auth-layout.auth-layout-content.top-drag-region--2"
-				/>
-				{showCorruptedInstallationNagbar && (
-					<div className={styles.nagbarHost} data-flx="app.auth-layout.auth-layout-content.nagbar-host--2">
-						<CorruptedInstallationNagbar
-							isMobile={false}
-							data-flx="app.auth-layout.auth-layout-content.corrupted-installation-nagbar--2"
-						/>
-					</div>
-				)}
-				<div className={styles.scrollerWrapper} data-flx="app.auth-layout.auth-layout-content.scroller-wrapper--2">
-					<Scroller
-						ref={scrollerRef}
-						className={styles.container}
-						key="auth-layout-scroller"
-						data-flx="app.auth-layout.auth-layout-content.container"
-					>
-						{isNative && !useSystemTitleBar && (
-							<NativeTitlebar platform={platform} data-flx="app.auth-layout.auth-layout-content.native-titlebar" />
-						)}
-						<div
-							className={styles.characterBackground}
-							data-flx="app.auth-layout.auth-layout-content.character-background"
-						>
-							<AuthBackground
-								splashUrl={splashUrl}
-								splashDimensions={splashDimensions}
-								splashScale={splashScale}
-								patternReady={patternReady}
-								patternImageUrl={foodPatternUrl}
-								splashAlignment={splashAlignment}
-								useFullCover={false}
-								data-flx="app.auth-layout.auth-layout-content.auth-background"
-							/>
-							<div
+				<AuthShell
+					mobile={isMobileExperience}
+					backdropUrl={brand?.backdropUrl ?? null}
+					splashUrl={splashUrl}
+					splashDimensions={isMobileExperience ? null : splashDimensions}
+					splashAlignment={splashAlignment}
+					scrollerRef={scrollerRef}
+					mainRef={mainRef}
+					data-flx="app.auth-layout.auth-layout-content.auth-shell"
+				>
+					{isMobileExperience ? (
+						<>
+							{brand == null || isFullscreen ? null : (
+								<AuthBrandPanel
+									brand={brand}
+									logo={brandLogo}
+									onLogoError={handleBrandLogoError}
+									layout={AuthBrandLayout.MOBILE}
+									data-flx="app.auth-layout.auth-layout-content.mobile-brand"
+								/>
+							)}
+							<AuthSurfaceTransition
+								surfaceKey={surfaceKey}
+								motionKind={authSurfaceMotionKind(resolvedMode)}
+								suppressed={isProbing}
 								className={clsx(
-									styles.leftSplit,
-									splashAlignment === GuildSplashCardAlignment.LEFT && styles.alignLeft,
-									splashAlignment === GuildSplashCardAlignment.RIGHT && styles.alignRight,
+									isProbing && styles.presentationProbe,
+									!isProbing && isFullscreen && styles.mobileFullscreenContent,
 								)}
-								data-flx="app.auth-layout.auth-layout-content.left-split"
+								data-flx="app.auth-layout.auth-layout-content.auth-surface-transition"
 							>
-								<div
-									className={styles.leftSplitWrapper}
-									data-flx="app.auth-layout.auth-layout-content.left-split-wrapper"
-								>
-									<div
-										id="main-content"
-										className={styles.leftSplitAnimated}
-										tabIndex={-1}
-										data-flx="app.auth-layout.auth-layout-content.main-content--2"
-									>
-										<AuthCardContainer
-											showLogoSide={showLogoSide}
-											variant={cardVariant}
-											isInert={false}
-											data-flx="app.auth-layout.auth-layout-content.auth-card-container"
-										>
-											{children}
-										</AuthCardContainer>
-									</div>
-								</div>
-							</div>
-						</div>
-					</Scroller>
-				</div>
+								{children}
+							</AuthSurfaceTransition>
+						</>
+					) : (
+						<AuthSurfaceTransition
+							surfaceKey={surfaceKey}
+							motionKind={authSurfaceMotionKind(resolvedMode)}
+							suppressed={isProbing}
+							className={clsx(
+								isProbing && styles.presentationProbe,
+								!isProbing && isFullscreen && styles.fullscreenContent,
+								!isProbing && !isFullscreen && styles.cardMotionWrap,
+							)}
+							data-flx="app.auth-layout.auth-layout-content.auth-surface-transition--2"
+						>
+							<AuthCardContainer
+								variant={cardVariant}
+								presentation={resolvedMode}
+								isInert={false}
+								className={clsx(!isFullscreen && styles.cardContainerInMotion)}
+								isSplit={brandLogo != null}
+								brandPanel={
+									brand == null ? null : (
+										<AuthBrandPanel
+											brand={brand}
+											logo={brandLogo}
+											onLogoError={handleBrandLogoError}
+											layout={AuthBrandLayout.CARD}
+											data-flx="app.auth-layout.auth-layout-content.card-brand"
+										/>
+									)
+								}
+								data-flx="app.auth-layout.auth-layout-content.auth-card-container"
+							>
+								{children}
+							</AuthCardContainer>
+						</AuthSurfaceTransition>
+					)}
+				</AuthShell>
 			</AuthLayoutContext.Provider>
 		</AuthRegisterDraftContext.Provider>
 	);
 });
 export const AuthLayout = observer(function AuthLayout({children}: {children?: ReactNode}) {
-	const [isI18nInitialized, setIsI18nInitialized] = useState(false);
-	const setLayoutVariant = useSetLayoutVariant();
+	const [i18nReady, setI18nReady] = useState(isI18nInitialized);
+	useAuthLayoutVariant();
 	useEffect(() => {
-		setLayoutVariant('auth');
-		return () => {
-			setLayoutVariant('app');
-		};
-	}, [setLayoutVariant]);
-	useEffect(() => {
+		if (i18nReady) {
+			return;
+		}
 		initI18n().then(() => {
-			setIsI18nInitialized(true);
+			setI18nReady(true);
 		});
-	}, []);
-	if (!isI18nInitialized) {
+	}, [i18nReady]);
+	if (!i18nReady) {
 		return null;
 	}
 	return (
 		<AppI18nProvider i18n={i18n}>
-			<AuthLayoutContent data-flx="app.auth-layout.auth-layout-content">{children}</AuthLayoutContent>
+			<AuthLayoutContent data-flx="app.auth-layout.auth-layout-content">
+				<AuthRuntimeTargetBoundary data-flx="app.auth-layout.auth-runtime-target-boundary">
+					<AccountRestrictionGate data-flx="app.auth-layout.account-restriction-gate">
+						{children}
+					</AccountRestrictionGate>
+				</AuthRuntimeTargetBoundary>
+			</AuthLayoutContent>
 		</AppI18nProvider>
 	);
 });

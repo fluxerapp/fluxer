@@ -10,8 +10,6 @@ export type ResizeEdge =
 	| 'top-right'
 	| 'bottom-left'
 	| 'bottom-right';
-
-export const ALL_CORNERS: ReadonlyArray<Corner> = ['top-left', 'top-right', 'bottom-right', 'bottom-left'];
 export const ALL_RESIZE_EDGES: ReadonlyArray<ResizeEdge> = [
 	'top',
 	'bottom',
@@ -23,7 +21,7 @@ export const ALL_RESIZE_EDGES: ReadonlyArray<ResizeEdge> = [
 	'bottom-right',
 ];
 
-export interface Size {
+interface Size {
 	width: number;
 	height: number;
 }
@@ -58,17 +56,11 @@ export interface ResizeStart {
 	paneStartY: number;
 }
 
-export interface FlingOptions {
+interface FlingOptions {
 	lookaheadSeconds: number;
 	strongVelocity: number;
 	axisVelocityFloor: number;
 }
-
-export const DEFAULT_FLING_OPTIONS: FlingOptions = {
-	lookaheadSeconds: 0.2,
-	strongVelocity: 550,
-	axisVelocityFloor: 180,
-};
 
 function isFiniteNumber(value: number): boolean {
 	return typeof value === 'number' && Number.isFinite(value);
@@ -85,12 +77,12 @@ export function getPaneHeight(width: number, aspectRatio: number): number {
 	return Math.round(width / aspectRatio);
 }
 
-export interface WidthRange {
+interface WidthRange {
 	min: number;
 	max: number;
 }
 
-export function getEffectiveWidthRange(geometry: FloatingPaneGeometry): WidthRange {
+function getEffectiveWidthRange(geometry: FloatingPaneGeometry): WidthRange {
 	const {viewport, edgePadding, topInset, aspectRatio, minWidth, maxWidth} = geometry;
 	const availableWidth = Math.max(0, viewport.width - edgePadding * 2);
 	const availableHeight = Math.max(0, viewport.height - edgePadding * 2 - topInset);
@@ -117,7 +109,7 @@ export function getDragBounds(geometry: FloatingPaneGeometry, width: number): Dr
 	return {minX, maxX, minY, maxY};
 }
 
-export function clampPoint(point: Point, bounds: DragBounds): Point {
+function clampPoint(point: Point, bounds: DragBounds): Point {
 	return {
 		x: clamp(point.x, bounds.minX, bounds.maxX),
 		y: clamp(point.y, bounds.minY, bounds.maxY),
@@ -137,62 +129,41 @@ export function getCornerPoint(corner: Corner, bounds: DragBounds): Point {
 	}
 }
 
-export function snapPointToCorner(point: Point, bounds: DragBounds): Corner {
+function snapPointToCorner(point: Point, bounds: DragBounds): Corner {
 	const midX = (bounds.minX + bounds.maxX) / 2;
 	const midY = (bounds.minY + bounds.maxY) / 2;
 	const isRight = point.x >= midX;
 	const isBottom = point.y >= midY;
-	return `${isBottom ? 'bottom' : 'top'}-${isRight ? 'right' : 'left'}` as Corner;
+	return `${isBottom ? 'bottom' : 'top'}-${isRight ? 'right' : 'left'}`;
 }
 
-export function pickCornerForFling(
-	point: Point,
-	velocity: Point,
-	bounds: DragBounds,
-	options: FlingOptions = DEFAULT_FLING_OPTIONS,
-): Corner {
+export function pickCornerForFling(point: Point, velocity: Point, bounds: DragBounds, options: FlingOptions): Corner {
 	const projectedX = clamp(point.x + velocity.x * options.lookaheadSeconds, bounds.minX, bounds.maxX);
 	const projectedY = clamp(point.y + velocity.y * options.lookaheadSeconds, bounds.minY, bounds.maxY);
 	const speed = Math.hypot(velocity.x, velocity.y);
 	const midX = (bounds.minX + bounds.maxX) / 2;
 	const midY = (bounds.minY + bounds.maxY) / 2;
 	if (speed >= options.strongVelocity) {
-		const horizontal =
-			Math.abs(velocity.x) >= options.axisVelocityFloor
-				? velocity.x >= 0
-					? 'right'
-					: 'left'
-				: projectedX >= midX
-					? 'right'
-					: 'left';
-		const vertical =
-			Math.abs(velocity.y) >= options.axisVelocityFloor
-				? velocity.y >= 0
-					? 'bottom'
-					: 'top'
-				: projectedY >= midY
-					? 'bottom'
-					: 'top';
-		return `${vertical}-${horizontal}` as Corner;
+		let horizontal: 'left' | 'right';
+		if (Math.abs(velocity.x) >= options.axisVelocityFloor) {
+			horizontal = velocity.x >= 0 ? 'right' : 'left';
+		} else {
+			horizontal = projectedX >= midX ? 'right' : 'left';
+		}
+		let vertical: 'top' | 'bottom';
+		if (Math.abs(velocity.y) >= options.axisVelocityFloor) {
+			vertical = velocity.y >= 0 ? 'bottom' : 'top';
+		} else {
+			vertical = projectedY >= midY ? 'bottom' : 'top';
+		}
+		return `${vertical}-${horizontal}`;
 	}
 	return snapPointToCorner({x: projectedX, y: projectedY}, bounds);
 }
 
-export interface ResizeResult {
+interface ResizeResult {
 	width: number;
 	offset: Point;
-}
-
-function computeRawWidthDelta(edge: ResizeEdge, deltaX: number, deltaY: number, aspectRatio: number): number {
-	const fromHorizontal = edge.includes('right') ? deltaX : edge.includes('left') ? -deltaX : 0;
-	const fromVertical = edge.includes('bottom')
-		? deltaY * aspectRatio
-		: edge.includes('top')
-			? -deltaY * aspectRatio
-			: 0;
-	if (edge === 'top' || edge === 'bottom') return fromVertical;
-	if (edge === 'left' || edge === 'right') return fromHorizontal;
-	return fromHorizontal + fromVertical;
 }
 
 export function computeResize(
@@ -205,7 +176,26 @@ export function computeResize(
 	const {aspectRatio} = geometry;
 	const deltaX = pointerX - pointerStartX;
 	const deltaY = pointerY - pointerStartY;
-	const rawWidthDelta = computeRawWidthDelta(edge, deltaX, deltaY, aspectRatio);
+	let fromHorizontal = 0;
+	if (edge.includes('right')) {
+		fromHorizontal = deltaX;
+	} else if (edge.includes('left')) {
+		fromHorizontal = -deltaX;
+	}
+	let fromVertical = 0;
+	if (edge.includes('bottom')) {
+		fromVertical = deltaY * aspectRatio;
+	} else if (edge.includes('top')) {
+		fromVertical = -deltaY * aspectRatio;
+	}
+	let rawWidthDelta: number;
+	if (edge === 'top' || edge === 'bottom') {
+		rawWidthDelta = fromVertical;
+	} else if (edge === 'left' || edge === 'right') {
+		rawWidthDelta = fromHorizontal;
+	} else {
+		rawWidthDelta = fromHorizontal + fromVertical;
+	}
 	const nextWidth = clampWidth(startWidth + rawWidthDelta, geometry);
 	const appliedWidthDelta = nextWidth - startWidth;
 	const appliedHeightDelta = appliedWidthDelta / aspectRatio;
@@ -216,21 +206,76 @@ export function computeResize(
 	return {width: nextWidth, offset};
 }
 
-export interface GeometryReconcileInput {
-	corner: Corner;
+interface FreeResizeRect {
+	x: number;
+	y: number;
 	width: number;
-	geometry: FloatingPaneGeometry;
+	height: number;
 }
 
-export interface GeometryReconcileOutput {
-	corner: Corner;
-	width: number;
-	offset: Point;
+interface FreeResizeBounds {
+	left: number;
+	top: number;
+	right: number;
+	bottom: number;
 }
 
-export function reconcileToGeometry({corner, width, geometry}: GeometryReconcileInput): GeometryReconcileOutput {
-	const nextWidth = clampWidth(width, geometry);
-	const bounds = getDragBounds(geometry, nextWidth);
-	const offset = getCornerPoint(corner, bounds);
-	return {corner, width: nextWidth, offset};
+interface FreeResizeStart {
+	edge: ResizeEdge;
+	pointerStartX: number;
+	pointerStartY: number;
+	rect: FreeResizeRect;
+}
+
+function resizeAxis(
+	start: number,
+	size: number,
+	delta: number,
+	growsAtStart: boolean,
+	boundsMin: number,
+	boundsMax: number,
+	minSize: number,
+): {start: number; size: number} {
+	const end = start + size;
+	if (growsAtStart) {
+		const nextStart = clamp(start + delta, boundsMin, Math.max(boundsMin, end - minSize));
+		return {start: nextStart, size: end - nextStart};
+	}
+	const nextEnd = clamp(end + delta, Math.min(boundsMax, start + minSize), boundsMax);
+	return {start, size: nextEnd - start};
+}
+
+export function computeFreeResize(
+	start: FreeResizeStart,
+	pointerX: number,
+	pointerY: number,
+	bounds: FreeResizeBounds,
+	minSize: Size,
+): FreeResizeRect {
+	const {edge, rect} = start;
+	let horizontal = {start: rect.x, size: rect.width};
+	if (edge.includes('left') || edge.includes('right')) {
+		horizontal = resizeAxis(
+			rect.x,
+			rect.width,
+			pointerX - start.pointerStartX,
+			edge.includes('left'),
+			bounds.left,
+			bounds.right,
+			minSize.width,
+		);
+	}
+	let vertical = {start: rect.y, size: rect.height};
+	if (edge.includes('top') || edge.includes('bottom')) {
+		vertical = resizeAxis(
+			rect.y,
+			rect.height,
+			pointerY - start.pointerStartY,
+			edge.includes('top'),
+			bounds.top,
+			bounds.bottom,
+			minSize.height,
+		);
+	}
+	return {x: horizontal.start, y: vertical.start, width: horizontal.size, height: vertical.size};
 }

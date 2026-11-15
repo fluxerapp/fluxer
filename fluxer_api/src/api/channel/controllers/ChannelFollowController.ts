@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createChannelID} from '@app/api/BrandedTypes';
+import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
+import {assertTierAllows, NO_TIER_CONTEXT} from '@app/api/user/AccountTier';
 import {Validator} from '@app/api/Validator';
+import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
 import {
 	ChannelFollowerStatsResponse,
 	ChannelFollowRequest,
@@ -35,11 +38,12 @@ export function ChannelFollowController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			assertAccountNotLimited(ctx.get('user'));
+			assertTierAllows(ctx.get('user'), TierGatedActions.CHANNEL_FOLLOW, NO_TIER_CONTEXT);
 			const followed = await ctx.get('channelFollowService').followChannel({
 				userId: ctx.get('user').id,
+				viewer: viewerFromCtx(ctx),
 				channelId: createChannelID(ctx.req.valid('param').channel_id),
 				webhookChannelId: createChannelID(ctx.req.valid('json').webhook_channel_id),
-				requestCache: ctx.get('requestCache'),
 				auditLogReason: ctx.get('auditLogReason') ?? null,
 			});
 			return ctx.json({
@@ -66,6 +70,7 @@ export function ChannelFollowController(app: HonoApp) {
 		async (ctx) => {
 			const stats = await ctx.get('channelFollowService').getFollowerStats({
 				userId: ctx.get('user').id,
+				viewer: viewerFromCtx(ctx),
 				channelId: createChannelID(ctx.req.valid('param').channel_id),
 			});
 			return ctx.json(stats);

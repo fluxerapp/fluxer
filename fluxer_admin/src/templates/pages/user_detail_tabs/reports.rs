@@ -1,14 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::templates::components::pagination::pager_with_missing;
+
+use crate::templates::components::report_category::{report_status, report_type};
+
 use crate::{
     api::types::{ReportEntry, SearchReportsResponse},
     config::AdminConfig,
     templates::components::{
         media::{guild_icon_url, initials, user_avatar_url},
         page_container::card_with_header,
-        table::data_table,
+        report_category::{reason_repeats_category, report_category},
+        report_webhook::{reported_webhook, webhook_identity},
+        table::{table, table_body, table_container, table_head},
     },
-    utils::user_tag::user_tag,
+    utils::{timestamps::format_admin_timestamp, user_tag::user_tag},
 };
 use maud::{Markup, html};
 
@@ -102,13 +108,11 @@ fn report_section(
                     p class="text-sm text-neutral-500" { (empty_msg) }
                 } @else {
                     @let headers = if kind == "sent" {
-                        vec!["Reported At", "Report ID", "Type", "Category",
-                             "Reported Entity", "Status", "Actions"]
+                        vec!["Reported At", "Type / Category", "Reported Entity", "Status"]
                     } else {
-                        vec!["Reported At", "Report ID", "Type", "Category",
-                             "Reporter", "Status", "Actions"]
+                        vec!["Reported At", "Type / Category", "Reporter", "Status"]
                     };
-                    (data_table(
+                    (report_tab_table(
                         &headers,
                         html! {
                             @for report in reports {
@@ -119,77 +123,124 @@ fn report_section(
                 }
 
                 @if has_previous || next_page.is_some() {
-                    div class="flex justify-center gap-2" {
-                        @if has_previous {
-                            a href={(base) "/users/" (user_id) "?tab=reports&reports_limit=" (limit) "&reports_sent_page=" (if kind == "sent" { current_page - 1 } else { sent_page }) "&reports_received_page=" (if kind == "received" { current_page - 1 } else { received_page })}
-                                class="inline-flex items-center rounded-md border \
-                                       border-neutral-300 bg-white px-3 py-2 text-sm \
-                                       font-medium text-neutral-700 hover:bg-neutral-50" {
-                                "Previous"
-                            }
-                        }
-                        @if let Some(next_page) = next_page {
-                            a href={(base) "/users/" (user_id) "?tab=reports&reports_limit=" (limit) "&reports_sent_page=" (if kind == "sent" { next_page } else { sent_page }) "&reports_received_page=" (if kind == "received" { next_page } else { received_page })}
-                                class="inline-flex items-center rounded-md border \
-                                       border-neutral-300 bg-white px-3 py-2 text-sm \
-                                       font-medium text-neutral-700 hover:bg-neutral-50" {
-                                "Next"
-                            }
-                        }
-                    }
+                    (pager_with_missing(has_previous.then(|| format!("{base}/users/{user_id}?tab=reports&reports_limit={limit}&reports_sent_page={}&reports_received_page={}", if kind == "sent" {current_page - 1} else {sent_page}, if kind == "received" {current_page - 1} else {received_page})), None, next_page.map(|page| format!("{base}/users/{user_id}?tab=reports&reports_limit={limit}&reports_sent_page={}&reports_received_page={}", if kind == "sent" {page} else {sent_page}, if kind == "received" {page} else {received_page})), true))
                 }
             }
         }))
     }
 }
 
-fn format_report_type(report_type: i32) -> &'static str {
-    match report_type {
-        0 => "Message",
-        1 => "User",
-        2 => "Guild",
-        _ => "Unknown",
-    }
-}
-
-fn format_status(status: i32) -> &'static str {
-    match status {
-        0 => "Pending",
-        1 => "Resolved",
-        _ => "Unknown",
-    }
-}
-
-fn format_reporter(report: &ReportEntry) -> String {
-    if let Some(ref username) = report.reporter_username {
-        let disc = report.reporter_discriminator.as_deref().unwrap_or("0000");
-        let tag = user_tag(username, disc, false);
-        if let Some(ref gn) = report.reporter_global_name {
-            let trimmed = gn.trim();
-            if !trimmed.is_empty() {
-                return format!("{trimmed} ({tag})");
-            }
+pub(crate) fn tagged_user(
+    global_name: Option<&str>,
+    username: &str,
+    discriminator: Option<&str>,
+) -> Markup {
+    let tag = user_tag(username, discriminator.unwrap_or("0000"), false);
+    html! {
+        @if let Some(name) = global_name.map(str::trim).filter(|name| !name.is_empty()) {
+            (name) " "
+            span class="whitespace-nowrap text-neutral-500 text-xs" { "(" (tag) ")" }
+        } @else {
+            span class="whitespace-nowrap" { (tag) }
         }
-        return tag;
+    }
+}
+
+pub(crate) fn reporter_label(report: &ReportEntry) -> Markup {
+    if let Some(ref username) = report.reporter_username {
+        return tagged_user(
+            report.reporter_global_name.as_deref(),
+            username,
+            report.reporter_discriminator.as_deref(),
+        );
     }
     if let Some(ref tag) = report.reporter_tag {
-        return tag.clone();
+        return html! { span class="whitespace-nowrap" { (tag) } };
     }
-    if let Some(ref email) = report.reporter_email {
-        return email.clone();
+    html! {
+        (report
+            .reporter_email
+            .as_deref()
+            .or(report.reporter_id.as_deref())
+            .unwrap_or("Unknown reporter"))
     }
-    report
-        .reporter_id
+}
+
+pub(crate) fn report_tab_table(headers: &[&str], rows: Markup) -> Markup {
+    let has_actions = headers.last() == Some(&"Actions");
+    html! {
+        (table_container(table(html! {
+            (table_head(html! {
+                tr {
+                    @for (index, header) in headers.iter().enumerate() {
+                        @let folded = index == 1 || (has_actions && *header == "Status");
+                        th class={"px-2 py-3 text-left text-neutral-600 text-xs uppercase tracking-wider xl:px-4" (if folded { " hidden whitespace-nowrap xl:table-cell" } else { " whitespace-nowrap" })} {
+                            @if has_actions && index + 1 == headers.len() {
+                                span class="xl:hidden" { "Status / " }
+                            }
+                            (header)
+                        }
+                    }
+                }
+            }))
+            (table_body(rows))
+        })))
+    }
+}
+
+pub(crate) fn reported_at_cell(base: &str, report: &ReportEntry) -> Markup {
+    html! {
+        td class="px-2 py-3 text-sm text-neutral-900 xl:px-3" {
+            div { (format_admin_timestamp(&report.reported_at)) }
+            a href={(base) "/reports/" (report.report_id)}
+                class="whitespace-nowrap font-mono text-blue-600 text-xs tracking-tight hover:underline" {
+                (report.report_id)
+            }
+            div class="mt-1 xl:hidden" data-report-type-compact=(report.report_id) {
+                (type_and_category_lines(report))
+            }
+        }
+    }
+}
+
+pub(crate) fn type_and_category_cell(report: &ReportEntry) -> Markup {
+    html! {
+        td class="hidden px-4 py-3 text-sm text-neutral-900 xl:table-cell" {
+            (type_and_category_lines(report))
+        }
+    }
+}
+
+fn type_and_category_lines(report: &ReportEntry) -> Markup {
+    let reason_label = report
+        .reason
         .as_deref()
-        .unwrap_or("Unknown reporter")
-        .to_string()
+        .map(|reason| report.reason_label.as_deref().unwrap_or(reason));
+    let repeats = report
+        .category
+        .as_deref()
+        .zip(reason_label)
+        .is_some_and(|(category, label)| reason_repeats_category(category, label));
+    html! {
+        div class="text-neutral-500 text-xs" { (report_type(report.report_type).0) }
+        @if let Some(category) = &report.category {
+            div class="break-words" data-report-reason=[report.reason.as_deref().filter(|_| repeats)] {
+                (report_category(category))
+            }
+        }
+        @if !repeats && let (Some(reason), Some(label)) = (&report.reason, reason_label) {
+            div class="break-words text-neutral-500 text-xs" data-report-reason=(reason) {
+                (label)
+            }
+        }
+    }
 }
 
 fn report_row(config: &AdminConfig, base: &str, kind: &str, report: &ReportEntry) -> Markup {
-    let entity_display = if kind == "sent" {
-        format_reported_entity(report)
+    let webhook = if kind == "sent" {
+        reported_webhook(config, report)
     } else {
-        format_reporter(report)
+        None
     };
 
     let entity_href = if kind == "sent" {
@@ -210,81 +261,62 @@ fn report_row(config: &AdminConfig, base: &str, kind: &str, report: &ReportEntry
             .map(|id| format!("{base}/users/{id}"))
     };
 
+    let entity_display = if kind == "sent" {
+        format_reported_entity(report)
+    } else {
+        reporter_label(report)
+    };
+
     html! {
         tr class="hover:bg-neutral-50 transition-colors" {
-            td class="whitespace-nowrap px-4 py-3 text-sm text-neutral-900" {
-                (report.reported_at)
-            }
-            td class="whitespace-nowrap px-4 py-3 text-sm" {
-                a href={(base) "/reports/" (report.report_id)}
-                    class="hover:underline" {
-                    (report.report_id)
-                }
-            }
-            td class="whitespace-nowrap px-4 py-3 text-sm text-neutral-900" {
-                (format_report_type(report.report_type))
-            }
-            td class="whitespace-nowrap px-4 py-3 text-sm text-neutral-900" {
-                (report.category.as_deref().unwrap_or(""))
-            }
-            td class="whitespace-nowrap px-4 py-3 text-sm" {
-                @if let Some(href) = entity_href {
+            (reported_at_cell(base, report))
+            (type_and_category_cell(report))
+            td class="px-2 py-3 text-sm [overflow-wrap:anywhere] [&_.whitespace-nowrap]:whitespace-normal xl:px-4 xl:[&_.whitespace-nowrap]:whitespace-nowrap" {
+                @if let Some(webhook) = &webhook {
+                    a href=(webhook.reports_href) class="hover:underline" {
+                        (webhook_identity(webhook))
+                    }
+                } @else if let Some(href) = entity_href {
                     a href=(href)
                         class="inline-flex items-center gap-2 hover:underline" {
                         @if kind == "sent" {
-                            (reported_entity_icon(config, report, &entity_display))
+                            (reported_entity_icon(config, report))
                         }
-                        span { (entity_display) }
+                        span class="min-w-0" { (entity_display) }
                     }
                 } @else {
                     span { (entity_display) }
                 }
             }
-            td class="whitespace-nowrap px-4 py-3 text-sm text-neutral-900" {
-                (format_status(report.status))
-            }
-            td class="whitespace-nowrap px-4 py-3 text-sm" {
-                a href={(base) "/reports/" (report.report_id)}
-                    class="inline-flex items-center rounded-md border \
-                           border-neutral-300 bg-white px-3 py-1.5 text-sm \
-                           font-medium text-neutral-700 hover:bg-neutral-50" {
-                    "View"
-                }
+            td class="whitespace-nowrap px-2 py-3 text-sm text-neutral-900 xl:px-4" {
+                (report_status(report.status).0)
             }
         }
     }
 }
 
-fn format_reported_entity(report: &ReportEntry) -> String {
+fn format_reported_entity(report: &ReportEntry) -> Markup {
     if let Some(ref username) = report.reported_user_username {
-        let disc = report
-            .reported_user_discriminator
-            .as_deref()
-            .unwrap_or("0000");
-        let tag = user_tag(username, disc, false);
-        if let Some(ref gn) = report.reported_user_global_name {
-            let trimmed = gn.trim();
-            if !trimmed.is_empty() {
-                return format!("{trimmed} ({tag})");
-            }
-        }
-        return tag;
+        return tagged_user(
+            report.reported_user_global_name.as_deref(),
+            username,
+            report.reported_user_discriminator.as_deref(),
+        );
     }
     if let Some(ref tag) = report.reported_user_tag {
-        return tag.clone();
+        return html! { span class="whitespace-nowrap" { (tag) } };
     }
-    if let Some(ref id) = report.reported_user_id {
-        return id.clone();
+    html! {
+        (report
+            .reported_user_id
+            .as_ref()
+            .or(report.reported_guild_name.as_ref())
+            .or(report.reported_guild_id.as_ref())
+            .map_or("Unknown", String::as_str))
     }
-    report
-        .reported_guild_name
-        .as_ref()
-        .or(report.reported_guild_id.as_ref())
-        .cloned()
-        .unwrap_or_else(|| "Unknown".to_owned())
 }
 
-fn reported_entity_icon(config: &AdminConfig, report: &ReportEntry, label: &str) -> Markup {
+fn reported_entity_icon(config: &AdminConfig, report: &ReportEntry) -> Markup {
     if let Some(ref user_id) = report.reported_user_id {
         return html! {
             img
@@ -307,7 +339,7 @@ fn reported_entity_icon(config: &AdminConfig, report: &ReportEntry, label: &str)
         }
         return html! {
             span class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-neutral-200 text-neutral-600 text-xs" {
-                (initials(label))
+                (initials(report.reported_guild_name.as_deref().unwrap_or(guild_id)))
             }
         };
     }

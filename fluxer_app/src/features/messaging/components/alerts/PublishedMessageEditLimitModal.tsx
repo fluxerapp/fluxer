@@ -6,7 +6,7 @@ import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 
 const EDITING_LIMIT_REACHED_DESCRIPTOR = msg({
-	message: 'Editing limit reached',
+	message: 'This message is at its editing limit',
 	comment: 'Title of the alert shown when edits to a published announcement message are rate limited.',
 });
 const EDIT_LIMIT_WITH_DURATION_DESCRIPTOR = msg({

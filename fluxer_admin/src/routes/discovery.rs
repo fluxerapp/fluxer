@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
-    api::client::{AdminApiClient, ApiResultExt},
+    api::client::{AdminApiClient, ApiResult, ApiResultExt},
+    config::AdminConfig,
     middleware::{
         auth::AuthContext,
         csrf::CsrfToken,
@@ -54,7 +55,9 @@ async fn discovery_page(
         _ => "pending",
     };
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
-    let (pending, listed, load_error) = if tab == "pending" {
+    let (pending, listed, load_error) = if !auth.0.discovery_enabled() {
+        (None, None, None)
+    } else if tab == "pending" {
         match client.list_pending_discovery_applications().await {
             Ok(pending) => (Some(pending), None, None),
             Err(error) => {
@@ -62,7 +65,7 @@ async fn discovery_page(
                 (
                     None,
                     None,
-                    Some("Failed to load pending discovery applications.".to_owned()),
+                    Some("Failed to load pending applications to Explore.".to_owned()),
                 )
             }
         }
@@ -74,7 +77,7 @@ async fn discovery_page(
                 (
                     None,
                     None,
-                    Some("Failed to load listed discovery guilds.".to_owned()),
+                    Some("Failed to load guilds listed in Explore.".to_owned()),
                 )
             }
         }
@@ -97,41 +100,23 @@ async fn discovery_approve(
     request: Request,
 ) -> Response {
     let config = state.config();
-    let base = &config.base_path;
-    let form: DiscoveryActionForm = match Form::from_request(request, &state).await {
-        Ok(Form(f)) => f,
-        Err(error) => {
-            tracing::warn!(%error, "failed to parse discovery approve form");
-            return flash::redirect_with_flash(
-                &format!("{base}/discovery"),
-                FlashData::error("Invalid form data"),
-                config.secure_cookies(),
-            );
-        }
-    };
-    let guild_id = match clean_string(form.guild_id.as_deref().unwrap_or("")) {
-        Some(id) => id,
-        None => {
-            return flash::redirect_with_flash(
-                &format!("{base}/discovery"),
-                FlashData::error("Guild ID is required"),
-                config.secure_cookies(),
-            );
-        }
-    };
+    let (form, guild_id) =
+        match discovery_form(&state, request, "failed to parse discovery approve form").await {
+            Ok(value) => value,
+            Err(response) => return *response,
+        };
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
     let reason = clean_string(form.reason.as_deref().unwrap_or(""));
     let result = client
         .approve_discovery_application(&guild_id, reason.as_deref())
         .await;
-    let flash = match result.log_error("approve discovery application") {
-        Some(_) => FlashData::success("Discovery application approved"),
-        None => FlashData::error("Failed to approve discovery application"),
-    };
-    flash::redirect_with_flash(
-        &format!("{base}/discovery?tab=pending"),
-        flash,
-        config.secure_cookies(),
+    finish_discovery(
+        config,
+        result,
+        "approve discovery application",
+        "Application to Explore approved",
+        "Failed to approve application to Explore",
+        "pending",
     )
 }
 
@@ -141,39 +126,21 @@ async fn discovery_reject(
     request: Request,
 ) -> Response {
     let config = state.config();
-    let base = &config.base_path;
-    let form: DiscoveryActionForm = match Form::from_request(request, &state).await {
-        Ok(Form(f)) => f,
-        Err(error) => {
-            tracing::warn!(%error, "failed to parse discovery reject form");
-            return flash::redirect_with_flash(
-                &format!("{base}/discovery"),
-                FlashData::error("Invalid form data"),
-                config.secure_cookies(),
-            );
-        }
-    };
-    let guild_id = match clean_string(form.guild_id.as_deref().unwrap_or("")) {
-        Some(id) => id,
-        None => {
-            return flash::redirect_with_flash(
-                &format!("{base}/discovery"),
-                FlashData::error("Guild ID is required"),
-                config.secure_cookies(),
-            );
-        }
-    };
+    let (form, guild_id) =
+        match discovery_form(&state, request, "failed to parse discovery reject form").await {
+            Ok(value) => value,
+            Err(response) => return *response,
+        };
     let reason = form.reason.as_deref().unwrap_or("").trim();
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
     let result = client.reject_discovery_application(&guild_id, reason).await;
-    let flash = match result.log_error("reject discovery application") {
-        Some(_) => FlashData::success("Discovery application rejected"),
-        None => FlashData::error("Failed to reject discovery application"),
-    };
-    flash::redirect_with_flash(
-        &format!("{base}/discovery?tab=pending"),
-        flash,
-        config.secure_cookies(),
+    finish_discovery(
+        config,
+        result,
+        "reject discovery application",
+        "Application to Explore rejected",
+        "Failed to reject application to Explore",
+        "pending",
     )
 }
 
@@ -183,38 +150,68 @@ async fn discovery_remove(
     request: Request,
 ) -> Response {
     let config = state.config();
-    let base = &config.base_path;
-    let form: DiscoveryActionForm = match Form::from_request(request, &state).await {
-        Ok(Form(f)) => f,
-        Err(error) => {
-            tracing::warn!(%error, "failed to parse discovery remove form");
-            return flash::redirect_with_flash(
-                &format!("{base}/discovery"),
-                FlashData::error("Invalid form data"),
-                config.secure_cookies(),
-            );
-        }
-    };
-    let guild_id = match clean_string(form.guild_id.as_deref().unwrap_or("")) {
-        Some(id) => id,
-        None => {
-            return flash::redirect_with_flash(
-                &format!("{base}/discovery"),
-                FlashData::error("Guild ID is required"),
-                config.secure_cookies(),
-            );
-        }
-    };
+    let (form, guild_id) =
+        match discovery_form(&state, request, "failed to parse discovery remove form").await {
+            Ok(value) => value,
+            Err(response) => return *response,
+        };
     let reason = form.reason.as_deref().unwrap_or("").trim();
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
     let result = client.remove_from_discovery(&guild_id, reason).await;
-    let flash = match result.log_error("remove discovery guild") {
-        Some(_) => FlashData::success("Guild removed from discovery"),
-        None => FlashData::error("Failed to remove guild from discovery"),
+    finish_discovery(
+        config,
+        result,
+        "remove discovery guild",
+        "Guild removed from Explore",
+        "Failed to remove guild from Explore",
+        "listed",
+    )
+}
+
+async fn discovery_form(
+    state: &AppState,
+    request: Request,
+    log_label: &str,
+) -> Result<(DiscoveryActionForm, String), Box<Response>> {
+    let config = state.config();
+    let target = format!("{}/discovery", config.base_path);
+    let form = match Form::<DiscoveryActionForm>::from_request(request, state).await {
+        Ok(Form(form)) => form,
+        Err(error) => {
+            tracing::warn!(%error, "{log_label}");
+            return Err(Box::new(flash::redirect_error(
+                config,
+                &target,
+                "Invalid form data",
+            )));
+        }
+    };
+    let Some(guild_id) = clean_string(form.guild_id.as_deref().unwrap_or("")) else {
+        return Err(Box::new(flash::redirect_error(
+            config,
+            &target,
+            "Guild ID is required",
+        )));
+    };
+    Ok((form, guild_id))
+}
+
+fn finish_discovery<T>(
+    config: &AdminConfig,
+    result: ApiResult<T>,
+    log_label: &str,
+    ok_msg: &str,
+    err_msg: &str,
+    tab: &str,
+) -> Response {
+    let data = if result.log_error(log_label).is_some() {
+        FlashData::success(ok_msg)
+    } else {
+        FlashData::error(err_msg)
     };
     flash::redirect_with_flash(
-        &format!("{base}/discovery?tab=listed"),
-        flash,
+        &format!("{}/discovery?tab={tab}", config.base_path),
+        data,
         config.secure_cookies(),
     )
 }

@@ -17,7 +17,7 @@ export interface VoiceEngineV2EventLogSpillSink {
 	write(entry: VoiceEngineV2EventLogEntry): Promise<void>;
 }
 
-export const VOICE_ENGINE_V2_MEMORY_EVENT_LOG_SPILL_SINK_CAP = 8192;
+const VOICE_ENGINE_V2_MEMORY_EVENT_LOG_SPILL_SINK_CAP = 8192;
 
 export interface VoiceEngineV2MemoryEventLogSpillSink extends VoiceEngineV2EventLogSpillSink {
 	readonly entries: ReadonlyArray<VoiceEngineV2EventLogEntry>;

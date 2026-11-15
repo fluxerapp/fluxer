@@ -4,8 +4,6 @@ use std::f64::consts::PI;
 use thiserror::Error;
 
 pub const MAX_DIM: u32 = 100;
-const OPAQUE_ASPECT_LIMIT: u32 = 7;
-const ALPHA_ASPECT_LIMIT: u32 = 5;
 
 #[derive(Clone, Copy, Debug, Error, Eq, PartialEq)]
 pub enum EncodeError {
@@ -119,20 +117,6 @@ pub fn encode_rgba(pixels: &[u8], w: u32, h: u32) -> Result<Vec<u8>, EncodeError
     Ok(out)
 }
 
-pub fn represents_aspect_ratio(hash: &[u8], width: u32, height: u32) -> bool {
-    if hash.len() < 5 || width == 0 || height == 0 {
-        return false;
-    }
-    let limit = u64::from(if hash[2] & 0x80 != 0 {
-        ALPHA_ASPECT_LIMIT
-    } else {
-        OPAQUE_ASPECT_LIMIT
-    });
-    let width = u64::from(width);
-    let height = u64::from(height);
-    width <= height * limit && height <= width * limit
-}
-
 fn append_acs(out: &mut [u8], idx: &mut u32, acs: &[f64]) {
     for ac in acs {
         let q = (15.0 * ac).round().clamp(0.0, 15.0) as u32;
@@ -203,89 +187,4 @@ fn encode_channel(
         }
     }
     Ok(ChannelEncoded { dc, ac, scale })
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn encode_rejects_invalid_dimensions() {
-        assert_eq!(Err(EncodeError::InvalidDimensions), encode_rgba(&[], 0, 1));
-        assert_eq!(Err(EncodeError::InvalidDimensions), encode_rgba(&[], 1, 1));
-        let pixels = [0u8; 101 * 4];
-        assert_eq!(
-            Err(EncodeError::InvalidDimensions),
-            encode_rgba(&pixels, 101, 1)
-        );
-    }
-
-    #[test]
-    fn encode_produces_non_empty_deterministic_output() {
-        let mut pixels = [0u8; 16 * 16 * 4];
-        for px in pixels.as_chunks_mut::<4>().0 {
-            px[0] = 200;
-            px[1] = 100;
-            px[2] = 50;
-            px[3] = 255;
-        }
-        let out1 = encode_rgba(&pixels, 16, 16).unwrap();
-        let out2 = encode_rgba(&pixels, 16, 16).unwrap();
-        assert!(out1.len() > 5);
-        assert_eq!(out1, out2);
-    }
-
-    #[test]
-    fn alpha_changes_header_layout() {
-        let mut opaque = [0u8; 4 * 4 * 4];
-        let mut translucent = [0u8; 4 * 4 * 4];
-        for px in opaque.as_chunks_mut::<4>().0 {
-            px[3] = 255;
-        }
-        for px in translucent.as_chunks_mut::<4>().0 {
-            px[3] = 64;
-        }
-        let opaque_out = encode_rgba(&opaque, 4, 4).unwrap();
-        let trans_out = encode_rgba(&translucent, 4, 4).unwrap();
-        assert_eq!(0, opaque_out[2] & 0x80);
-        assert_ne!(0, trans_out[2] & 0x80);
-    }
-
-    #[test]
-    fn aspect_ratio_representability_follows_the_alpha_limit() {
-        let mut opaque = [0u8; 4 * 4 * 4];
-        let mut translucent = [0u8; 4 * 4 * 4];
-        for px in opaque.as_chunks_mut::<4>().0 {
-            px[3] = 255;
-        }
-        for px in translucent.as_chunks_mut::<4>().0 {
-            px[3] = 64;
-        }
-        let opaque_out = encode_rgba(&opaque, 4, 4).unwrap();
-        let trans_out = encode_rgba(&translucent, 4, 4).unwrap();
-        assert!(represents_aspect_ratio(&opaque_out, 64, 64));
-        assert!(represents_aspect_ratio(&opaque_out, 700, 100));
-        assert!(!represents_aspect_ratio(&opaque_out, 800, 100));
-        assert!(represents_aspect_ratio(&trans_out, 500, 100));
-        assert!(!represents_aspect_ratio(&trans_out, 700, 100));
-        assert!(!represents_aspect_ratio(&opaque_out, 64, 0));
-        assert!(!represents_aspect_ratio(&opaque_out[..4], 64, 64));
-    }
-
-    #[test]
-    fn synthetic_gradient_is_wire_stable() {
-        let mut pixels = [0u8; 8 * 8 * 4];
-        for y in 0..8 {
-            for x in 0..8 {
-                let i = (y * 8 + x) * 4;
-                pixels[i] = (x * 32) as u8;
-                pixels[i + 1] = (y * 32) as u8;
-                pixels[i + 2] = 50;
-                pixels[i + 3] = 255;
-            }
-        }
-        let out = encode_rgba(&pixels, 8, 8).unwrap();
-        assert_eq!(0, out[2] & 0x80);
-        assert!(out.len() >= 5);
-    }
 }

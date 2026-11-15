@@ -1,14 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::ptr;
+mod audio_contract;
+#[cfg(target_os = "windows")]
+mod process_tree;
+#[cfg(target_os = "windows")]
+mod session_mixer;
+mod windows_version;
+
 use std::sync::Arc;
 
-use fluxer_desktop_native::win_process_loopback::audio_contract;
-use fluxer_screen_frame_bus::{NativeScreenFrameSinkHandle, NativeScreenFrameSinkHandleRef};
 use napi::{
-    Env, JsValue,
+    Env, Task,
     bindgen_prelude::{
-        Error, Float32Array, Function, Result, Status, ToNapiValue, Unknown, ValueType,
+        AsyncTask, Error, Float32Array, Function, Result, Status, ToNapiValue, Unknown,
     },
     sys,
     threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode, UnknownReturnValue},
@@ -18,35 +22,6 @@ use napi_derive::napi;
 pub mod pcm_pool;
 
 use crate::pcm_pool::{PCM_SLOT_SAMPLES_MAX, PooledPcmFrame};
-
-fn retain_screen_audio_sink_handle(
-    value: Unknown<'_>,
-) -> Result<Arc<NativeScreenFrameSinkHandleRef>> {
-    if value.get_type()? != ValueType::External {
-        return Err(Error::new(
-            Status::InvalidArg,
-            "ProcessLoopback.setScreenAudioSink expects a native external sink handle",
-        ));
-    }
-    let raw_value = value.value();
-    let mut data: *mut std::ffi::c_void = ptr::null_mut();
-    let status = unsafe { sys::napi_get_value_external(raw_value.env, raw_value.value, &mut data) };
-    if status != sys::Status::napi_ok || data.is_null() {
-        return Err(Error::new(
-            Status::InvalidArg,
-            "ProcessLoopback.setScreenAudioSink received an empty native external sink handle",
-        ));
-    }
-    let handle = unsafe { data.cast::<NativeScreenFrameSinkHandle>().as_ref() }
-        .and_then(NativeScreenFrameSinkHandle::retain_ref)
-        .ok_or_else(|| {
-            Error::new(
-                Status::InvalidArg,
-                "ProcessLoopback.setScreenAudioSink received an invalid native sink handle",
-            )
-        })?;
-    Ok(Arc::new(handle))
-}
 
 pub struct ErrorMessage(pub String);
 
@@ -73,11 +48,50 @@ enum CaptureScope {
     SessionMixer,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(not(target_os = "windows"), allow(dead_code))]
+enum EndpointSelector {
+    All,
+    Devices { default: bool, ids: Vec<String> },
+}
+
+const DEFAULT_ENDPOINT: &str = "default";
+const MAX_ENDPOINT_ENTRIES: usize = 16;
+const MAX_ENDPOINT_ID_CHARS: usize = 512;
+
+fn parse_endpoints(raw: Option<Vec<String>>) -> Result<EndpointSelector> {
+    let Some(entries) = raw else {
+        return Ok(EndpointSelector::All);
+    };
+    if entries.is_empty() || entries.len() > MAX_ENDPOINT_ENTRIES {
+        return Err(Error::new(Status::InvalidArg, "invalid endpoints"));
+    }
+    let mut default = false;
+    let mut ids: Vec<String> = Vec::new();
+    for entry in entries {
+        if entry == DEFAULT_ENDPOINT {
+            default = true;
+            continue;
+        }
+        if entry.chars().count() > MAX_ENDPOINT_ID_CHARS
+            || entry.contains('\0')
+            || !entry.starts_with('{')
+        {
+            return Err(Error::new(Status::InvalidArg, "invalid endpoints"));
+        }
+        if !ids.contains(&entry) {
+            ids.push(entry);
+        }
+    }
+    Ok(EndpointSelector::Devices { default, ids })
+}
+
+#[derive(Debug, Clone)]
 #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
 struct LoopbackOptions {
     include_tree: bool,
     capture_scope: CaptureScope,
+    endpoints: EndpointSelector,
 }
 
 #[derive(Debug, Clone)]
@@ -93,6 +107,7 @@ impl Default for LoopbackOptions {
         Self {
             include_tree: true,
             capture_scope: CaptureScope::Process,
+            endpoints: EndpointSelector::All,
         }
     }
 }
@@ -129,9 +144,17 @@ fn validate_options(raw: RawOptions) -> Result<LoopbackOptions> {
         CaptureScope::System | CaptureScope::SessionMixer => false,
         CaptureScope::Process => raw.include_process_tree.unwrap_or(true),
     };
+    let endpoints = parse_endpoints(raw.endpoints)?;
+    if endpoints != EndpointSelector::All && capture_scope != CaptureScope::SessionMixer {
+        return Err(Error::new(
+            Status::InvalidArg,
+            "endpoints require session-mixer scope",
+        ));
+    }
     Ok(LoopbackOptions {
         include_tree,
         capture_scope,
+        endpoints,
     })
 }
 
@@ -141,6 +164,7 @@ struct RawOptions {
     capture_scope: Option<String>,
     sample_rate: Option<u32>,
     channels: Option<u32>,
+    endpoints: Option<Vec<String>>,
 }
 
 fn read_raw_options(env: &Env, value: Unknown) -> Result<RawOptions> {
@@ -155,6 +179,7 @@ fn read_raw_options(env: &Env, value: Unknown) -> Result<RawOptions> {
         capture_scope: object.get("captureScope").ok().flatten(),
         sample_rate: object.get("sampleRate").ok().flatten(),
         channels: object.get("channels").ok().flatten(),
+        endpoints: object.get("endpoints")?,
     })
     .map(|mut opts| {
         let _ = env;
@@ -311,53 +336,11 @@ struct Callbacks {
     on_error: ErrorTsfn,
     on_closed: VoidTsfn,
     on_started: Option<VoidTsfn>,
-    screen_audio_sink: std::sync::RwLock<Option<Arc<NativeScreenFrameSinkHandleRef>>>,
 }
 
 #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
 impl Callbacks {
-    fn set_screen_audio_sink(&self, sink: Arc<NativeScreenFrameSinkHandleRef>) {
-        if let Ok(mut guard) = self.screen_audio_sink.write() {
-            *guard = Some(sink);
-        }
-    }
-
-    fn clear_screen_audio_sink(&self) {
-        if let Ok(mut guard) = self.screen_audio_sink.write() {
-            *guard = None;
-        }
-    }
-
-    fn try_emit_frame_to_sink(&self, frame: &FramePayload) -> bool {
-        let Ok(guard) = self.screen_audio_sink.read() else {
-            return false;
-        };
-        let Some(sink) = guard.as_ref() else {
-            return false;
-        };
-        let samples: &[f32] = match &frame.samples {
-            FrameSamples::Pooled(slot) => slot.data_slice(),
-            FrameSamples::Owned(owned) => owned.as_slice(),
-        };
-        let channels = u32::from(audio_contract::TARGET_CHANNELS);
-        if channels == 0 || samples.is_empty() || !samples.len().is_multiple_of(channels as usize) {
-            return true;
-        }
-        let frames = samples.len() as u32 / channels;
-        sink.enqueue_screen_audio_f32(
-            samples,
-            frames,
-            channels,
-            audio_contract::TARGET_SAMPLE_RATE,
-            frame.timestamp_us,
-        );
-        true
-    }
-
     fn emit_frame(&self, frame: FramePayload) {
-        if self.try_emit_frame_to_sink(&frame) {
-            return;
-        }
         let _ = self
             .on_frame
             .call(frame, ThreadsafeFunctionCallMode::NonBlocking);
@@ -454,29 +437,10 @@ impl ProcessLoopback {
             on_error: build_error_tsfn(&env, on_error)?,
             on_closed: build_void_tsfn(&env, on_closed)?,
             on_started: on_started.map(|cb| build_void_tsfn(&env, cb)).transpose()?,
-            screen_audio_sink: std::sync::RwLock::new(None),
         };
         Ok(Self {
             inner: platform::Inner::new(pid, options, callbacks)?,
         })
-    }
-
-    #[napi(js_name = "setScreenAudioSink")]
-    pub fn set_screen_audio_sink(&self, sink_handle: Unknown<'_>) -> Result<()> {
-        let sink = retain_screen_audio_sink_handle(sink_handle)?;
-        if !sink.supports_screen_audio() {
-            return Err(Error::new(
-                Status::InvalidArg,
-                "ProcessLoopback.setScreenAudioSink handle does not support screen audio",
-            ));
-        }
-        self.inner.set_screen_audio_sink(sink);
-        Ok(())
-    }
-
-    #[napi(js_name = "clearScreenAudioSink")]
-    pub fn clear_screen_audio_sink(&self) {
-        self.inner.clear_screen_audio_sink();
     }
 
     #[napi]
@@ -492,6 +456,11 @@ impl ProcessLoopback {
     #[napi]
     pub fn dispose(&self) {
         self.inner.dispose();
+    }
+
+    #[napi(js_name = "setEndpoints")]
+    pub fn set_endpoints(&self, endpoints: Vec<String>) -> Result<bool> {
+        self.inner.set_endpoints(endpoints)
     }
 }
 
@@ -652,8 +621,7 @@ fn classify_windows_capabilities(
 pub fn get_backend_info() -> WinProcessLoopbackBackendInfo {
     let detected = platform::detected_build();
     let runtime_probe = platform::process_loopback_probe();
-    let min_build =
-        fluxer_desktop_native::win_process_loopback::windows_version::PROCESS_LOOPBACK_MIN_BUILD;
+    let min_build = crate::windows_version::PROCESS_LOOPBACK_MIN_BUILD;
     let (
         supported,
         process_supported,
@@ -700,288 +668,55 @@ pub fn resolve_audio_root_pid(pid: u32) -> u32 {
     platform::resolve_audio_root_pid(pid)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+#[napi(object)]
+pub struct PlaybackDeviceSession {
+    pub pid: u32,
+    pub root_pid: u32,
+    pub exe: String,
+    pub state: String,
+    pub excluded: bool,
+}
 
-    fn raw_with_scope(scope: Option<&str>) -> RawOptions {
-        RawOptions {
-            include_process_tree: None,
-            capture_scope: scope.map(|s| s.to_string()),
-            sample_rate: None,
-            channels: None,
-        }
+#[napi(object)]
+pub struct PlaybackDevice {
+    pub id: String,
+    pub name: String,
+    pub is_default: bool,
+    pub sessions: Vec<PlaybackDeviceSession>,
+}
+
+pub struct ListPlaybackDevicesTask;
+
+impl Task for ListPlaybackDevicesTask {
+    type Output = Vec<PlaybackDevice>;
+    type JsValue = Vec<PlaybackDevice>;
+
+    fn compute(&mut self) -> Result<Self::Output> {
+        platform::list_playback_devices()
     }
 
-    #[test]
-    fn defaults_include_tree_under_process_scope() {
-        let opts = validate_options(RawOptions::default()).expect("defaults validate");
-        assert!(opts.include_tree);
-        assert_eq!(opts.capture_scope, CaptureScope::Process);
+    fn resolve(&mut self, _env: Env, output: Self::Output) -> Result<Self::JsValue> {
+        Ok(output)
     }
+}
 
-    #[test]
-    fn system_scope_forces_exclude_target_tree() {
-        let opts =
-            validate_options(raw_with_scope(Some("system"))).expect("system scope validates");
-        assert!(!opts.include_tree);
-        assert_eq!(opts.capture_scope, CaptureScope::System);
-    }
-
-    #[test]
-    fn session_mixer_scope_ignores_target_tree_flag() {
-        let mut raw = raw_with_scope(Some("session-mixer"));
-        raw.include_process_tree = Some(true);
-        let opts = validate_options(raw).expect("session mixer scope validates");
-        assert!(!opts.include_tree);
-        assert_eq!(opts.capture_scope, CaptureScope::SessionMixer);
-    }
-
-    #[test]
-    fn process_scope_respects_include_tree_override() {
-        let mut raw = raw_with_scope(Some("process"));
-        raw.include_process_tree = Some(false);
-        let opts = validate_options(raw).expect("process scope validates");
-        assert!(!opts.include_tree);
-    }
-
-    #[test]
-    fn unknown_capture_scope_is_rejected() {
-        let err = validate_options(raw_with_scope(Some("global")))
-            .expect_err("unknown scope should fail validation");
-        assert_eq!(err.status, Status::InvalidArg);
-    }
-
-    #[test]
-    fn unsupported_sample_rate_is_rejected() {
-        let raw = RawOptions {
-            sample_rate: Some(44_100),
-            ..Default::default()
-        };
-        let err = validate_options(raw).expect_err("44.1k should be rejected");
-        assert_eq!(err.status, Status::InvalidArg);
-        assert_eq!(err.reason, "unsupported sampleRate; expected 48000");
-    }
-
-    #[test]
-    fn unsupported_channel_count_is_rejected() {
-        let raw = RawOptions {
-            channels: Some(1),
-            ..Default::default()
-        };
-        let err = validate_options(raw).expect_err("mono should be rejected");
-        assert_eq!(err.status, Status::InvalidArg);
-        assert_eq!(err.reason, "unsupported channels; expected 2");
-    }
-
-    #[test]
-    fn backend_info_classifier_rejects_unknown_host() {
-        let (supported, reason) =
-            classify_windows_process_loopback(None, 20_348, false, Some("probe unavailable"));
-        assert!(!supported);
-        assert!(reason.contains("only supports Windows"));
-        assert!(reason.contains("build 20348"));
-        assert!(reason.contains("probe unavailable"));
-    }
-
-    #[test]
-    fn backend_info_classifier_rejects_old_build_when_probe_fails() {
-        let (supported, reason) =
-            classify_windows_process_loopback(Some(19_045), 20_348, false, Some("E_NOTIMPL"));
-        assert!(!supported);
-        assert!(reason.contains("build 19045"));
-        assert!(reason.contains("Windows build 20348"));
-        assert!(reason.contains("E_NOTIMPL"));
-    }
-
-    #[test]
-    fn backend_info_classifier_accepts_old_build_when_probe_succeeds() {
-        let (supported, reason) =
-            classify_windows_process_loopback(Some(19_045), 20_348, true, None);
-        assert!(supported);
-        assert!(reason.contains("build 19045"));
-        assert!(reason.contains("runtime API probe passed"));
-    }
-
-    #[test]
-    fn backend_info_classifier_accepts_exact_floor_when_probe_succeeds() {
-        let (supported, reason) =
-            classify_windows_process_loopback(Some(20_348), 20_348, true, None);
-        assert!(supported);
-        assert!(reason.contains("build 20348"));
-    }
-
-    #[test]
-    fn backend_info_classifier_rejects_newer_build_when_probe_fails() {
-        let (supported, reason) =
-            classify_windows_process_loopback(Some(26_100), 20_348, false, Some("timeout"));
-        assert!(!supported);
-        assert!(reason.contains("runtime process-loopback probe failed"));
-        assert!(reason.contains("timeout"));
-    }
-
-    #[test]
-    fn backend_info_classifier_accepts_newer_build_when_probe_succeeds() {
-        let (supported, _) = classify_windows_process_loopback(Some(26_100), 20_348, true, None);
-        assert!(supported);
-    }
-
-    #[test]
-    fn backend_capabilities_reject_windows_10_for_isolated_audio() {
-        let (
-            supported,
-            process_supported,
-            system_supported,
-            system_excludes_self,
-            process_include_supported,
-            process_exclude_supported,
-            session_mixer_supported,
-            system_loopback_mode,
-            reason,
-        ) = classify_windows_capabilities(
-            Some(19_045),
-            20_348,
-            false,
-            Some("include E_NOTIMPL"),
-            false,
-            Some("exclude E_NOTIMPL"),
-        );
-        assert!(!supported);
-        assert!(!process_supported);
-        assert!(!system_supported);
-        assert!(!system_excludes_self);
-        assert!(!process_include_supported);
-        assert!(!process_exclude_supported);
-        assert!(!session_mixer_supported);
-        assert_eq!(system_loopback_mode, "unavailable");
-        assert!(reason.contains("build 19045"));
-        assert!(reason.contains("runtime process-loopback probe failed"));
-    }
-
-    #[test]
-    fn backend_capabilities_use_session_mixer_when_only_include_mode_works() {
-        let (
-            supported,
-            process_supported,
-            system_supported,
-            system_excludes_self,
-            process_include_supported,
-            process_exclude_supported,
-            session_mixer_supported,
-            system_loopback_mode,
-            _,
-        ) = classify_windows_capabilities(
-            Some(19_045),
-            20_348,
-            true,
-            Some("include ok"),
-            false,
-            Some("exclude E_NOTIMPL"),
-        );
-        assert!(supported);
-        assert!(process_supported);
-        assert!(system_supported);
-        assert!(system_excludes_self);
-        assert!(process_include_supported);
-        assert!(!process_exclude_supported);
-        assert!(session_mixer_supported);
-        assert_eq!(system_loopback_mode, "session-mixer");
-    }
-
-    #[test]
-    fn backend_capabilities_keep_runtime_supported_windows_process_exclude_system_mode() {
-        let (
-            supported,
-            process_supported,
-            system_supported,
-            system_excludes_self,
-            process_include_supported,
-            process_exclude_supported,
-            session_mixer_supported,
-            system_loopback_mode,
-            _,
-        ) = classify_windows_capabilities(Some(22_000), 20_348, true, None, true, None);
-        assert!(supported);
-        assert!(process_supported);
-        assert!(system_supported);
-        assert!(system_excludes_self);
-        assert!(process_include_supported);
-        assert!(process_exclude_supported);
-        assert!(session_mixer_supported);
-        assert_eq!(system_loopback_mode, "process-exclude");
-    }
-
-    #[test]
-    fn accepts_canonical_48k_stereo() {
-        let raw = RawOptions {
-            include_process_tree: Some(true),
-            capture_scope: Some("process".to_string()),
-            sample_rate: Some(48_000),
-            channels: Some(2),
-        };
-        validate_options(raw).expect("canonical 48k stereo should validate");
-    }
-
-    #[test]
-    fn truncation_keeps_only_whole_stereo_frames() {
-        assert_eq!(loopback_frame_sample_truncation(0), 0);
-        assert_eq!(loopback_frame_sample_truncation(1), 0);
-        assert_eq!(loopback_frame_sample_truncation(2), 2);
-        assert_eq!(loopback_frame_sample_truncation(3), 2);
-        assert_eq!(loopback_frame_sample_truncation(5), 4);
-        assert_eq!(loopback_frame_sample_truncation(10), 10);
-    }
-
-    #[test]
-    fn owned_odd_length_samples_truncate_without_panic() {
-        let odd = vec![0.1_f32, 0.2, 0.3];
-        let array = owned_samples_into_whole_frame_array(odd);
-        assert_eq!(array.len(), 2);
-    }
-
-    #[test]
-    fn owned_even_length_samples_are_preserved() {
-        let even = vec![0.1_f32, 0.2, 0.3, 0.4];
-        let array = owned_samples_into_whole_frame_array(even);
-        assert_eq!(array.len(), 4);
-    }
-
-    #[test]
-    fn frame_callback_truncates_owned_payload_without_panic() {
-        let payload = FramePayload {
-            samples: FrameSamples::Owned(vec![0.5_f32, 0.6, 0.7]),
-            timestamp_us: 1_234,
-        };
-        let frame = frame_callback_into_loopback_frame(payload);
-        assert_eq!(frame.samples.len(), 2);
-        assert_eq!(frame.channels, u32::from(audio_contract::TARGET_CHANNELS));
-        assert_eq!(frame.timestamp_us, 1_234);
-    }
-
-    #[test]
-    fn frame_callback_swallows_a_panicking_conversion() {
-        let frame = guard_frame_callback(99, || panic!("forced frame conversion panic"));
-        assert_eq!(frame.samples.len(), 0);
-        assert_eq!(frame.timestamp_us, 99);
-        assert_eq!(frame.sample_rate, audio_contract::TARGET_SAMPLE_RATE);
-        assert_eq!(frame.channels, u32::from(audio_contract::TARGET_CHANNELS));
-    }
+#[napi(js_name = "listPlaybackDevices")]
+pub fn list_playback_devices() -> AsyncTask<ListPlaybackDevicesTask> {
+    AsyncTask::new(ListPlaybackDevicesTask)
 }
 
 #[cfg(target_os = "windows")]
 mod platform {
     use super::{
-        Callbacks, CaptureScope, FRAME_QUEUE_LIMIT, FramePayload, FrameSamples, LoopbackOptions,
-        ProcessLoopbackRuntimeProbe,
+        Callbacks, CaptureScope, EndpointSelector, FRAME_QUEUE_LIMIT, FramePayload, FrameSamples,
+        LoopbackOptions, PlaybackDevice, PlaybackDeviceSession, ProcessLoopbackRuntimeProbe,
+        parse_endpoints,
     };
     use crate::pcm_pool::{PCM_SLOT_SAMPLES_MAX, PcmFramePool, PcmPoolError, PooledPcmFrame};
-    use fluxer_desktop_native::win_process_loopback::{
-        audio_contract, process_tree, session_mixer,
-    };
+    use crate::{audio_contract, process_tree, session_mixer};
     use fluxer_rt_thread::{PriorityProfile, RealtimePriorityGuard};
     use napi::bindgen_prelude::{Error, Result, Status};
     use std::{
-        collections::BTreeSet,
         ffi::c_void,
         mem::{ManuallyDrop, size_of, zeroed},
         sync::{
@@ -991,8 +726,9 @@ mod platform {
         thread::{self, JoinHandle},
         time::{Duration, Instant},
     };
+    use windows::Win32::Devices::FunctionDiscovery::PKEY_Device_FriendlyName;
     use windows::Win32::Foundation::{
-        CloseHandle, GetLastError, HANDLE, HWND, INVALID_HANDLE_VALUE, WAIT_TIMEOUT,
+        CloseHandle, HANDLE, HWND, INVALID_HANDLE_VALUE, WAIT_TIMEOUT,
     };
     use windows::Win32::Media::Audio::{
         AUDCLNT_BUFFERFLAGS_SILENT, AUDCLNT_BUFFERFLAGS_TIMESTAMP_ERROR, AUDCLNT_SHAREMODE_SHARED,
@@ -1000,13 +736,14 @@ mod platform {
         AUDCLNT_STREAMFLAGS_LOOPBACK, AUDCLNT_STREAMFLAGS_SRC_DEFAULT_QUALITY,
         AUDIOCLIENT_ACTIVATION_PARAMS, AUDIOCLIENT_ACTIVATION_PARAMS_0,
         AUDIOCLIENT_ACTIVATION_TYPE_PROCESS_LOOPBACK, AUDIOCLIENT_PROCESS_LOOPBACK_PARAMS,
-        ActivateAudioInterfaceAsync, AudioSessionStateExpired, DEVICE_STATE_ACTIVE,
-        IActivateAudioInterfaceAsyncOperation, IActivateAudioInterfaceCompletionHandler,
-        IActivateAudioInterfaceCompletionHandler_Impl, IAudioCaptureClient, IAudioClient,
-        IAudioSessionControl, IAudioSessionControl2, IAudioSessionManager2, IMMDeviceEnumerator,
-        MMDeviceEnumerator, PROCESS_LOOPBACK_MODE_EXCLUDE_TARGET_PROCESS_TREE,
+        ActivateAudioInterfaceAsync, AudioSessionStateActive, AudioSessionStateExpired,
+        AudioSessionStateInactive, DEVICE_STATE_ACTIVE, IActivateAudioInterfaceAsyncOperation,
+        IActivateAudioInterfaceCompletionHandler, IActivateAudioInterfaceCompletionHandler_Impl,
+        IAudioCaptureClient, IAudioClient, IAudioSessionControl, IAudioSessionControl2,
+        IAudioSessionManager2, IMMDevice, IMMDeviceEnumerator, IMMEndpoint, MMDeviceEnumerator,
+        PROCESS_LOOPBACK_MODE_EXCLUDE_TARGET_PROCESS_TREE,
         PROCESS_LOOPBACK_MODE_INCLUDE_TARGET_PROCESS_TREE, WAVE_FORMAT_PCM, WAVEFORMATEX,
-        WAVEFORMATEXTENSIBLE, WAVEFORMATEXTENSIBLE_0, eRender,
+        WAVEFORMATEXTENSIBLE, WAVEFORMATEXTENSIBLE_0, eConsole, eRender,
     };
     use windows::Win32::Media::KernelStreaming::WAVE_FORMAT_EXTENSIBLE;
     use windows::Win32::Media::Multimedia::KSDATAFORMAT_SUBTYPE_IEEE_FLOAT;
@@ -1014,11 +751,12 @@ mod platform {
         GetFileVersionInfoSizeW, GetFileVersionInfoW, VS_FIXEDFILEINFO, VerQueryValueW,
     };
     use windows::Win32::System::Com::StructuredStorage::{
-        PROPVARIANT, PROPVARIANT_0, PROPVARIANT_0_0, PROPVARIANT_0_0_0,
+        PROPVARIANT, PROPVARIANT_0, PROPVARIANT_0_0, PROPVARIANT_0_0_0, PropVariantClear,
+        PropVariantToStringAlloc,
     };
     use windows::Win32::System::Com::{
-        BLOB, CLSCTX_ALL, COINIT_MULTITHREADED, CoCreateInstance, CoInitializeEx, CoUninitialize,
-        IAgileObject, IAgileObject_Impl,
+        BLOB, CLSCTX_ALL, COINIT_MULTITHREADED, CoCreateInstance, CoInitializeEx, CoTaskMemFree,
+        CoUninitialize, IAgileObject, IAgileObject_Impl, STGM_READ,
     };
     use windows::Win32::System::Diagnostics::ToolHelp::{
         CreateToolhelp32Snapshot, PROCESSENTRY32W, Process32FirstW, Process32NextW,
@@ -1029,7 +767,7 @@ mod platform {
     };
     use windows::Win32::System::Variant::VT_BLOB;
     use windows::Win32::UI::WindowsAndMessaging::GetWindowThreadProcessId;
-    use windows::core::{Interface, PCWSTR, implement};
+    use windows::core::{Interface, PCWSTR, PWSTR, implement};
 
     const PROCESS_LOOPBACK_DEVICE: &[u16] = &[
         b'V' as u16,
@@ -1071,10 +809,11 @@ mod platform {
     const BACKSLASH_UTF16: &[u16] = &[b'\\' as u16, 0];
     const PROCESS_LOOPBACK_PROBE_TIMEOUT_MS: u32 = 1_500;
     const PROCESS_LOOPBACK_PROBE_COUNT: u64 = 2;
-    const SESSION_MIXER_REFRESH_INTERVAL: Duration = Duration::from_millis(1_000);
-    const SESSION_MIXER_WAIT_TIMEOUT_MS: u32 = 250;
+    const SESSION_MIXER_REFRESH_INTERVAL: Duration = Duration::from_millis(500);
+    const SESSION_MIXER_WAIT_TIMEOUT_MS: u32 = 10;
+    const SESSION_MIXER_HOLD_US: i64 = 40_000;
     const MAX_SESSION_MIXER_CAPTURES: usize = 48;
-    const MAX_SESSION_MIXER_EMIT_FRAMES: usize = audio_contract::TARGET_SAMPLE_RATE as usize / 2;
+    const PLAYBACK_DEVICE_LISTING_TIMEOUT: Duration = Duration::from_secs(3);
     const PROCESS_LOOPBACK_ACTIVATION_ATTEMPTS: usize = 3;
 
     struct OwnedHandle(HANDLE);
@@ -1139,6 +878,14 @@ mod platform {
         worker: Mutex<WorkerState>,
         stop_signal: Arc<AtomicBool>,
         disposed: AtomicBool,
+        endpoints: Arc<Mutex<EndpointSelector>>,
+        endpoints_dirty: Arc<AtomicBool>,
+    }
+
+    fn lock_endpoints(endpoints: &Mutex<EndpointSelector>) -> MutexGuard<'_, EndpointSelector> {
+        endpoints
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
     }
 
     impl Inner {
@@ -1157,9 +904,12 @@ mod platform {
                     "ProcessLoopback refuses to capture Fluxer's own process tree",
                 ));
             }
+            let endpoints = Arc::new(Mutex::new(options.endpoints.clone()));
             Ok(Self {
                 pid,
                 options,
+                endpoints,
+                endpoints_dirty: Arc::new(AtomicBool::new(false)),
                 callbacks: Arc::new(callbacks),
                 worker: Mutex::new(WorkerState {
                     worker: None,
@@ -1168,17 +918,6 @@ mod platform {
                 stop_signal: Arc::new(AtomicBool::new(false)),
                 disposed: AtomicBool::new(false),
             })
-        }
-
-        pub(crate) fn set_screen_audio_sink(
-            &self,
-            sink: std::sync::Arc<super::NativeScreenFrameSinkHandleRef>,
-        ) {
-            self.callbacks.set_screen_audio_sink(sink);
-        }
-
-        pub(crate) fn clear_screen_audio_sink(&self) {
-            self.callbacks.clear_screen_audio_sink();
         }
 
         pub(crate) fn start(&self) -> Result<()> {
@@ -1211,6 +950,8 @@ mod platform {
             let stop_signal = self.stop_signal.clone();
             let stop_event_for_thread = stop_event.clone();
             let callbacks = self.callbacks.clone();
+            let endpoints = self.endpoints.clone();
+            let endpoints_dirty = self.endpoints_dirty.clone();
 
             let join = match thread::Builder::new()
                 .name("fluxer-win-process-loopback".to_string())
@@ -1222,6 +963,10 @@ mod platform {
                         &callbacks,
                         stop_event_for_thread.raw(),
                         stop_signal.as_ref(),
+                        SessionMixerEndpoints {
+                            selector: endpoints.as_ref(),
+                            dirty: endpoints_dirty.as_ref(),
+                        },
                     );
                     if let Err(message) = result {
                         callbacks.emit_error(message);
@@ -1264,6 +1009,22 @@ mod platform {
             }
             self.stop();
         }
+
+        pub(crate) fn set_endpoints(&self, endpoints: Vec<String>) -> Result<bool> {
+            if self.options.capture_scope != CaptureScope::SessionMixer {
+                return Ok(false);
+            }
+            let selector = parse_endpoints(Some(endpoints))?;
+            *lock_endpoints(&self.endpoints) = selector;
+            self.endpoints_dirty.store(true, Ordering::SeqCst);
+            Ok(true)
+        }
+    }
+
+    #[derive(Clone, Copy)]
+    struct SessionMixerEndpoints<'a> {
+        selector: &'a Mutex<EndpointSelector>,
+        dirty: &'a AtomicBool,
     }
 
     fn generic(message: impl Into<String>) -> Error {
@@ -1490,16 +1251,17 @@ mod platform {
         callbacks: &Callbacks,
         stop_event: HANDLE,
         stop_signal: &AtomicBool,
+        endpoints: SessionMixerEndpoints<'_>,
     ) -> std::result::Result<(), String> {
         let _com = ComApartment::initialize().map_err(|err| err.reason.to_string())?;
         let _rt_guard = RealtimePriorityGuard::acquire(PriorityProfile::Audio).ok();
         if capture_scope == CaptureScope::SessionMixer {
-            return session_mixer_capture_thread(callbacks, stop_event, stop_signal);
+            return session_mixer_capture_thread(callbacks, stop_event, stop_signal, endpoints);
         }
 
         let client = match activate_loopback_client(pid, include_tree, capture_scope, stop_event) {
             Ok(client) => client,
-            Err(err) if stop_signal.load(Ordering::SeqCst) => return Ok(()),
+            Err(_) if stop_signal.load(Ordering::SeqCst) => return Ok(()),
             Err(err) => return Err(err.reason.to_string()),
         };
 
@@ -1728,25 +1490,49 @@ mod platform {
         callbacks: &Callbacks,
         stop_event: HANDLE,
         stop_signal: &AtomicBool,
+        endpoints: SessionMixerEndpoints<'_>,
     ) -> std::result::Result<(), String> {
+        let enumerator = create_device_enumerator().map_err(|err| err.reason.to_string())?;
+        let sample_rate = audio_contract::TARGET_SAMPLE_RATE;
+        let channels = usize::from(audio_contract::TARGET_CHANNELS);
         let mut captures: Vec<SessionCapture> = Vec::new();
-        refresh_session_mixer_captures(&mut captures, stop_event)?;
+        let mut activity = session_mixer::SessionActivity::default();
+        endpoints.dirty.store(false, Ordering::SeqCst);
+        let selector = lock_endpoints(endpoints.selector).clone();
+        refresh_session_mixer_captures(
+            &mut captures,
+            &mut activity,
+            &enumerator,
+            &selector,
+            stop_event,
+        )
+        .map_err(|err| err.reason.to_string())?;
         callbacks.emit_started();
         let mut handles: Vec<HANDLE> = Vec::with_capacity(MAX_SESSION_MIXER_CAPTURES + 1);
         rebuild_session_mixer_handles(&mut handles, &captures, stop_event);
         let mut packets: Vec<CapturedPacket> = Vec::new();
+        let mut timeline = session_mixer::MixTimeline::default();
         let mut last_refresh = Instant::now();
         while !stop_signal.load(Ordering::SeqCst) {
-            if last_refresh.elapsed() >= SESSION_MIXER_REFRESH_INTERVAL {
-                refresh_session_mixer_captures(&mut captures, stop_event)?;
+            let endpoints_changed = endpoints.dirty.swap(false, Ordering::SeqCst);
+            if endpoints_changed || last_refresh.elapsed() >= SESSION_MIXER_REFRESH_INTERVAL {
+                if endpoints_changed {
+                    activity.clear();
+                }
+                let selector = lock_endpoints(endpoints.selector).clone();
+                refresh_session_mixer_captures(
+                    &mut captures,
+                    &mut activity,
+                    &enumerator,
+                    &selector,
+                    stop_event,
+                )
+                .map_err(|err| err.reason.to_string())?;
                 rebuild_session_mixer_handles(&mut handles, &captures, stop_event);
                 last_refresh = Instant::now();
             }
             let wait =
                 unsafe { WaitForMultipleObjects(&handles, false, SESSION_MIXER_WAIT_TIMEOUT_MS) };
-            if wait == WAIT_TIMEOUT {
-                continue;
-            }
             if wait.0 == u32::MAX {
                 return Err("WaitForMultipleObjects failed in session mixer".to_string());
             }
@@ -1757,7 +1543,20 @@ mod platform {
             for capture in &captures {
                 drain_packets_into(&capture.capture, capture.sample_format, &mut packets)?;
             }
-            packets = emit_mixed_packets(std::mem::take(&mut packets), callbacks);
+            for packet in packets.drain(..) {
+                timeline.push(packet, sample_rate, channels);
+            }
+            if let Some(mixed) = timeline.drain_ready(
+                current_performance_timestamp_us(),
+                SESSION_MIXER_HOLD_US,
+                sample_rate,
+                channels,
+            ) {
+                callbacks.emit_frame(FramePayload {
+                    samples: FrameSamples::Owned(mixed.samples),
+                    timestamp_us: mixed.timestamp_us,
+                });
+            }
         }
         for capture in &captures {
             capture.stop();
@@ -1781,10 +1580,14 @@ mod platform {
 
     fn refresh_session_mixer_captures(
         captures: &mut Vec<SessionCapture>,
+        activity: &mut session_mixer::SessionActivity,
+        enumerator: &IMMDeviceEnumerator,
+        selector: &EndpointSelector,
         stop_event: HANDLE,
-    ) -> std::result::Result<(), String> {
-        let desired =
-            enumerate_shareable_audio_session_pids().map_err(|err| err.reason.to_string())?;
+    ) -> Result<()> {
+        let Some(desired) = session_mixer_capture_pids(enumerator, selector, activity)? else {
+            return Ok(());
+        };
         captures.retain(|capture| {
             let keep = desired.contains(&capture.pid);
             if !keep {
@@ -1807,27 +1610,158 @@ mod platform {
         Ok(())
     }
 
-    fn enumerate_shareable_audio_session_pids() -> std::result::Result<Vec<u32>, Error> {
-        let enumerator: IMMDeviceEnumerator = unsafe {
+    fn session_mixer_capture_pids(
+        enumerator: &IMMDeviceEnumerator,
+        selector: &EndpointSelector,
+        activity: &mut session_mixer::SessionActivity,
+    ) -> Result<Option<Vec<u32>>> {
+        let devices = resolve_render_endpoints(enumerator, selector)?;
+        let Some(processes) = snapshot_processes_with_exe() else {
+            return Ok(None);
+        };
+        let process_entries = process_entries_from(&processes);
+        let self_pid = unsafe { GetCurrentProcessId() };
+        let sessions = collect_render_sessions(&devices, &processes, &process_entries, self_pid);
+        let candidates: Vec<session_mixer::SessionCandidate> = sessions
+            .iter()
+            .filter(|session| !session.excluded)
+            .map(|session| session_mixer::SessionCandidate {
+                root_pid: session.root_pid,
+                active: session.active,
+            })
+            .collect();
+        let mut excluded: Vec<u32> = sessions
+            .iter()
+            .filter(|session| session.excluded)
+            .map(|session| session.root_pid)
+            .collect();
+        excluded.sort_unstable();
+        excluded.dedup();
+        let selected = activity.select(&candidates, current_performance_timestamp_us());
+        Ok(Some(
+            process_tree::deduplicate_capture_roots(&process_entries, &selected, &excluded)
+                .into_iter()
+                .take(MAX_SESSION_MIXER_CAPTURES)
+                .collect(),
+        ))
+    }
+
+    fn create_device_enumerator() -> Result<IMMDeviceEnumerator> {
+        unsafe {
             CoCreateInstance(
                 &MMDeviceEnumerator,
                 None::<&windows::core::IUnknown>,
                 CLSCTX_ALL,
             )
         }
-        .map_err(|err| hresult_error("CoCreateInstance(MMDeviceEnumerator)", err.code().0))?;
-        let devices = unsafe { enumerator.EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE) }
+        .map_err(|err| hresult_error("CoCreateInstance(MMDeviceEnumerator)", err.code().0))
+    }
+
+    fn active_render_devices(enumerator: &IMMDeviceEnumerator) -> Result<Vec<IMMDevice>> {
+        let collection = unsafe { enumerator.EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE) }
             .map_err(|err| hresult_error("EnumAudioEndpoints", err.code().0))?;
-        let device_count = unsafe { devices.GetCount() }
+        let count = unsafe { collection.GetCount() }
             .map_err(|err| hresult_error("IMMDeviceCollection::GetCount", err.code().0))?;
-        let process_entries = snapshot_process_entries().unwrap_or_default();
-        let self_pid = unsafe { GetCurrentProcessId() };
-        let mut pids = BTreeSet::new();
-        let mut excluded_pids = BTreeSet::new();
-        for device_index in 0..device_count {
-            let Ok(device) = (unsafe { devices.Item(device_index) }) else {
+        Ok((0..count)
+            .filter_map(|index| unsafe { collection.Item(index) }.ok())
+            .collect())
+    }
+
+    fn default_render_device(enumerator: &IMMDeviceEnumerator) -> Option<IMMDevice> {
+        unsafe { enumerator.GetDefaultAudioEndpoint(eRender, eConsole) }.ok()
+    }
+
+    fn take_co_task_string(value: PWSTR) -> Option<String> {
+        if value.is_null() {
+            return None;
+        }
+        let text = unsafe { value.to_string() }.ok();
+        unsafe {
+            CoTaskMemFree(Some(value.0 as *const c_void));
+        }
+        text
+    }
+
+    fn device_id(device: &IMMDevice) -> Option<String> {
+        take_co_task_string(unsafe { device.GetId() }.ok()?)
+    }
+
+    fn device_friendly_name(device: &IMMDevice) -> Option<String> {
+        let store = unsafe { device.OpenPropertyStore(STGM_READ) }.ok()?;
+        let mut value = unsafe { store.GetValue(&PKEY_Device_FriendlyName) }.ok()?;
+        let text = unsafe { PropVariantToStringAlloc(&value) };
+        unsafe {
+            let _ = PropVariantClear(&mut value);
+        }
+        take_co_task_string(text.ok()?)
+    }
+
+    fn push_unique_device(devices: &mut Vec<IMMDevice>, seen: &mut Vec<String>, device: IMMDevice) {
+        let Some(id) = device_id(&device) else {
+            return;
+        };
+        if seen.contains(&id) {
+            return;
+        }
+        seen.push(id);
+        devices.push(device);
+    }
+
+    fn is_render_device(device: &IMMDevice) -> bool {
+        device
+            .cast::<IMMEndpoint>()
+            .and_then(|endpoint| unsafe { endpoint.GetDataFlow() })
+            .is_ok_and(|flow| flow == eRender)
+    }
+
+    fn resolve_render_endpoints(
+        enumerator: &IMMDeviceEnumerator,
+        selector: &EndpointSelector,
+    ) -> Result<Vec<IMMDevice>> {
+        let (include_default, ids) = match selector {
+            EndpointSelector::All => return active_render_devices(enumerator),
+            EndpointSelector::Devices { default, ids } => (*default, ids),
+        };
+        let mut devices = Vec::new();
+        let mut seen = Vec::new();
+        if include_default && let Some(device) = default_render_device(enumerator) {
+            push_unique_device(&mut devices, &mut seen, device);
+        }
+        for id in ids {
+            let wide: Vec<u16> = id.encode_utf16().chain(std::iter::once(0)).collect();
+            let Ok(device) = (unsafe { enumerator.GetDevice(PCWSTR(wide.as_ptr())) }) else {
                 continue;
             };
+            if !matches!(unsafe { device.GetState() }, Ok(state) if state == DEVICE_STATE_ACTIVE)
+                || !is_render_device(&device)
+            {
+                continue;
+            }
+            push_unique_device(&mut devices, &mut seen, device);
+        }
+        if devices.is_empty()
+            && let Some(device) = default_render_device(enumerator)
+        {
+            devices.push(device);
+        }
+        Ok(devices)
+    }
+
+    struct RenderSession {
+        pid: u32,
+        root_pid: u32,
+        active: bool,
+        excluded: bool,
+    }
+
+    fn collect_render_sessions(
+        devices: &[IMMDevice],
+        processes: &[ResolveEntry],
+        process_entries: &[process_tree::ProcessEntry],
+        self_pid: u32,
+    ) -> Vec<RenderSession> {
+        let mut out = Vec::new();
+        for device in devices {
             let Ok(manager) =
                 (unsafe { device.Activate::<IAudioSessionManager2>(CLSCTX_ALL, None) })
             else {
@@ -1845,10 +1779,11 @@ mod platform {
                 else {
                     continue;
                 };
-                if matches!(unsafe { session.GetState() }, Ok(state) if state == AudioSessionStateExpired)
-                {
+                let state = unsafe { session.GetState() }.unwrap_or(AudioSessionStateInactive);
+                if state == AudioSessionStateExpired {
                     continue;
                 }
+                let active = state == AudioSessionStateActive;
                 let Ok(session2) = session.cast::<IAudioSessionControl2>() else {
                     continue;
                 };
@@ -1858,33 +1793,89 @@ mod platform {
                 let Ok(pid) = (unsafe { session2.GetProcessId() }) else {
                     continue;
                 };
-                if pid == 0 {
+                if pid == 0 || !processes.iter().any(|entry| entry.pid == pid) {
                     continue;
                 }
-                if process_tree::pid_overlaps_our_process_tree(&process_entries, pid, self_pid) {
-                    excluded_pids.insert(pid);
+                if process_tree::pid_overlaps_our_process_tree(process_entries, pid, self_pid) {
+                    out.push(RenderSession {
+                        pid,
+                        root_pid: pid,
+                        active,
+                        excluded: true,
+                    });
                     continue;
                 }
-                let root_pid = resolve_audio_root_pid(pid);
+                let root_pid = resolve_audio_root_pid_in(processes, pid, self_pid);
                 if root_pid == 0 {
                     continue;
                 }
-                if process_tree::pid_overlaps_our_process_tree(&process_entries, root_pid, self_pid)
-                {
-                    excluded_pids.insert(root_pid);
-                    continue;
-                }
-                pids.insert(root_pid);
+                out.push(RenderSession {
+                    pid,
+                    root_pid,
+                    active,
+                    excluded: process_tree::pid_overlaps_our_process_tree(
+                        process_entries,
+                        root_pid,
+                        self_pid,
+                    ),
+                });
             }
         }
-        let capture_pids = pids.into_iter().collect::<Vec<_>>();
-        let exclude_pids = excluded_pids.into_iter().collect::<Vec<_>>();
-        Ok(
-            process_tree::deduplicate_capture_roots(&process_entries, &capture_pids, &exclude_pids)
-                .into_iter()
-                .take(MAX_SESSION_MIXER_CAPTURES)
-                .collect(),
-        )
+        out
+    }
+
+    pub(crate) fn list_playback_devices() -> Result<Vec<PlaybackDevice>> {
+        let (tx, rx) = std::sync::mpsc::channel();
+        thread::Builder::new()
+            .name("fluxer-win-loopback-devices".to_owned())
+            .spawn(move || {
+                let _ = tx.send(list_playback_devices_on_thread());
+            })
+            .map_err(|err| generic(format!("failed to spawn playback device listing: {err}")))?;
+        rx.recv_timeout(PLAYBACK_DEVICE_LISTING_TIMEOUT)
+            .map_err(|_| generic("playback device listing timed out"))?
+    }
+
+    fn list_playback_devices_on_thread() -> Result<Vec<PlaybackDevice>> {
+        let _com = ComApartment::initialize()?;
+        let enumerator = create_device_enumerator()?;
+        let default_id = default_render_device(&enumerator).and_then(|device| device_id(&device));
+        let processes =
+            snapshot_processes_with_exe().ok_or_else(|| generic("process snapshot failed"))?;
+        let process_entries = process_entries_from(&processes);
+        let self_pid = unsafe { GetCurrentProcessId() };
+        let mut out = Vec::new();
+        for device in active_render_devices(&enumerator)? {
+            let Some(id) = device_id(&device) else {
+                continue;
+            };
+            let sessions = collect_render_sessions(
+                std::slice::from_ref(&device),
+                &processes,
+                &process_entries,
+                self_pid,
+            )
+            .into_iter()
+            .map(|session| PlaybackDeviceSession {
+                pid: session.pid,
+                root_pid: session.root_pid,
+                exe: processes
+                    .iter()
+                    .find(|entry| entry.pid == session.pid)
+                    .map(|entry| entry.exe.clone())
+                    .unwrap_or_default(),
+                state: if session.active { "active" } else { "inactive" }.to_owned(),
+                excluded: session.excluded,
+            })
+            .collect();
+            out.push(PlaybackDevice {
+                is_default: default_id.as_deref() == Some(id.as_str()),
+                name: device_friendly_name(&device).unwrap_or_default(),
+                id,
+                sessions,
+            });
+        }
+        Ok(out)
     }
 
     fn drain_packets_into(
@@ -1945,25 +1936,6 @@ mod platform {
             }
             release_result?;
         }
-    }
-
-    fn emit_mixed_packets(
-        packets: Vec<CapturedPacket>,
-        callbacks: &Callbacks,
-    ) -> Vec<CapturedPacket> {
-        let mut mixed = session_mixer::mix_packets(
-            packets,
-            audio_contract::TARGET_CHANNELS,
-            audio_contract::TARGET_SAMPLE_RATE,
-            MAX_SESSION_MIXER_EMIT_FRAMES,
-        );
-        for packet in mixed.drain(..) {
-            callbacks.emit_frame(FramePayload {
-                samples: FrameSamples::Owned(packet.samples),
-                timestamp_us: packet.timestamp_us,
-            });
-        }
-        mixed
     }
 
     fn pump_capture_loop(
@@ -2290,7 +2262,12 @@ mod platform {
     }
 
     pub(crate) fn resolve_audio_root_pid(pid: u32) -> u32 {
-        resolve_audio_root_pid_impl(pid).unwrap_or(pid)
+        match snapshot_processes_with_exe() {
+            Some(entries) => {
+                resolve_audio_root_pid_in(&entries, pid, unsafe { GetCurrentProcessId() })
+            }
+            None => pid,
+        }
     }
 
     struct ResolveEntry {
@@ -2299,9 +2276,7 @@ mod platform {
         exe: String,
     }
 
-    fn resolve_audio_root_pid_impl(start_pid: u32) -> Option<u32> {
-        let entries = snapshot_processes_with_exe()?;
-        let self_pid = unsafe { GetCurrentProcessId() };
+    fn resolve_audio_root_pid_in(entries: &[ResolveEntry], start_pid: u32, self_pid: u32) -> u32 {
         let mut current = start_pid;
         let mut last_browserlike: u32 = if start_pid == self_pid { 0 } else { start_pid };
         for _ in 0..16 {
@@ -2317,7 +2292,7 @@ mod platform {
             current = entry.parent;
         }
         if last_browserlike == 0 || last_browserlike == self_pid {
-            return Some(start_pid);
+            return start_pid;
         }
 
         let mut self_walk = self_pid;
@@ -2326,14 +2301,14 @@ mod platform {
                 break;
             };
             if self_walk == last_browserlike {
-                return Some(start_pid);
+                return start_pid;
             }
             if entry.parent == 0 || entry.parent == self_walk {
                 break;
             }
             self_walk = entry.parent;
         }
-        Some(last_browserlike)
+        last_browserlike
     }
 
     fn is_browser_like(exe: &str) -> bool {
@@ -2368,6 +2343,16 @@ mod platform {
             }
         }
         Some(entries)
+    }
+
+    fn process_entries_from(processes: &[ResolveEntry]) -> Vec<process_tree::ProcessEntry> {
+        processes
+            .iter()
+            .map(|entry| process_tree::ProcessEntry {
+                pid: entry.pid,
+                parent: entry.parent,
+            })
+            .collect()
     }
 
     fn snapshot_process_entries() -> Option<Vec<process_tree::ProcessEntry>> {
@@ -2410,50 +2395,11 @@ mod platform {
             .map(|entries| process_tree::pid_is_our_descendant(&entries, target, self_pid))
             .unwrap_or(false)
     }
-
-    #[allow(dead_code)]
-    fn _touch_lasterror() -> u32 {
-        unsafe { GetLastError().0 }
-    }
-
-    #[cfg(test)]
-    mod blob_propvariant_tests {
-        use super::*;
-
-        #[test]
-        fn blob_propvariant_round_trips_vt_size_and_pointer() {
-            let mut buffer = [0u8; 32];
-            let ptr = buffer.as_mut_ptr();
-            let size = buffer.len() as u32;
-
-            let prop = ManuallyDrop::new(make_blob_propvariant(ptr, size));
-            unsafe {
-                let inner = &prop.Anonymous.Anonymous;
-                assert_eq!(inner.vt, VT_BLOB, "vt tag must be VT_BLOB");
-                assert_eq!(inner.wReserved1, 0);
-                assert_eq!(inner.wReserved2, 0);
-                assert_eq!(inner.wReserved3, 0);
-                let blob = inner.Anonymous.blob;
-                assert_eq!(blob.cbSize, size, "BLOB cbSize must match input");
-                assert_eq!(blob.pBlobData, ptr, "BLOB pBlobData must match input");
-            }
-        }
-
-        #[test]
-        fn propvariant_size_matches_sdk() {
-            let expected = if cfg!(target_pointer_width = "64") {
-                24
-            } else {
-                16
-            };
-            assert_eq!(size_of::<PROPVARIANT>(), expected);
-        }
-    }
 }
 
 #[cfg(not(target_os = "windows"))]
 mod platform {
-    use super::{Callbacks, LoopbackOptions, ProcessLoopbackRuntimeProbe};
+    use super::{Callbacks, LoopbackOptions, PlaybackDevice, ProcessLoopbackRuntimeProbe};
     use napi::bindgen_prelude::{Error, Result, Status};
 
     pub(crate) struct Inner;
@@ -2470,14 +2416,6 @@ mod platform {
             ))
         }
 
-        pub(crate) fn set_screen_audio_sink(
-            &self,
-            _sink: std::sync::Arc<super::NativeScreenFrameSinkHandleRef>,
-        ) {
-        }
-
-        pub(crate) fn clear_screen_audio_sink(&self) {}
-
         pub(crate) fn start(&self) -> Result<()> {
             Err(Error::new(
                 Status::GenericFailure,
@@ -2488,6 +2426,14 @@ mod platform {
         pub(crate) fn stop(&self) {}
 
         pub(crate) fn dispose(&self) {}
+
+        pub(crate) fn set_endpoints(&self, _endpoints: Vec<String>) -> Result<bool> {
+            Ok(false)
+        }
+    }
+
+    pub(crate) fn list_playback_devices() -> Result<Vec<PlaybackDevice>> {
+        Ok(Vec::new())
     }
 
     pub(crate) fn is_supported() -> bool {

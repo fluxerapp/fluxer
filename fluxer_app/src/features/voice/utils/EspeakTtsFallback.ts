@@ -95,7 +95,7 @@ export async function synthesize(
 ): Promise<ArrayBuffer | null> {
 	ensureConfig();
 	const voiceId = await ensureVoice(options.voiceKey);
-	const result = meSpeak.speak(text, {rawdata: true, voice: voiceId, speed: options.speed});
+	const result = meSpeak.speak(` ${text}`, {rawdata: true, voice: voiceId, speed: options.speed});
 	return result instanceof ArrayBuffer ? result : null;
 }
 
@@ -167,13 +167,4 @@ export function cancel(): void {
 	try {
 		source.disconnect();
 	} catch {}
-}
-
-export async function warmUp(voiceKey: string): Promise<void> {
-	ensureConfig();
-	try {
-		await ensureVoice(voiceKey);
-	} catch (error) {
-		logger.debug('Failed to warm up TTS fallback voice', error);
-	}
 }

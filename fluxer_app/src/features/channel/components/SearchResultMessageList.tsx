@@ -20,12 +20,9 @@ interface SearchResultMessageListProps {
 	revealedGroupKeys: ReadonlySet<string>;
 	onGroupRevealChange: (groupKey: string, revealed: boolean) => void;
 	renderMessage: (message: Message) => React.ReactNode;
-	compact?: boolean;
-	messageGroupSpacing?: number;
 	collapsedGroupClassName?: string;
 	messagePreviewContext?: keyof typeof MessagePreviewContext;
 	messageBehaviorOverrides?: MessageBehaviorOverrides;
-	messageRowClassName?: string;
 	messageActionsClassName?: string;
 	renderMessageActions?: (message: Message) => React.ReactNode;
 	renderMessageWrapper?: (props: MessageGroupRenderWrapperProps) => React.ReactNode;
@@ -96,12 +93,9 @@ export function SearchResultMessageList({
 	revealedGroupKeys,
 	onGroupRevealChange,
 	renderMessage,
-	compact = false,
-	messageGroupSpacing = 8,
 	collapsedGroupClassName,
 	messagePreviewContext = MessagePreviewContext.LIST_POPOUT,
 	messageBehaviorOverrides,
-	messageRowClassName,
 	messageActionsClassName,
 	renderMessageActions,
 	renderMessageWrapper,
@@ -121,16 +115,15 @@ export function SearchResultMessageList({
 				channel={channel}
 				messageGroups={item.items}
 				revealed={revealedGroupKeys.has(item.key)}
+				compact={false}
+				messageGroupSpacing={8}
 				onReveal={(messageId) => {
 					onGroupRevealChange(item.key, messageId != null);
 				}}
-				compact={compact}
-				messageGroupSpacing={messageGroupSpacing}
 				variant={item.variant}
 				className={collapsedGroupClassName}
 				messagePreviewContext={messagePreviewContext}
 				messageBehaviorOverrides={messageBehaviorOverrides}
-				messageRowClassName={messageRowClassName}
 				messageActionsClassName={messageActionsClassName}
 				renderMessageActions={renderMessageActions}
 				renderMessageWrapper={renderMessageWrapper}

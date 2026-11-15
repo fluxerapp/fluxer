@@ -7,9 +7,9 @@ import {
 	type EntranceSoundExtension,
 } from '@fluxer/constants/src/EntranceSoundConstants';
 
-export const ENTRANCE_SOUND_FILE_EXTENSIONS: ReadonlyArray<string> = ENTRANCE_SOUND_EXTENSIONS.map((ext) => `.${ext}`);
+const ENTRANCE_SOUND_FILE_EXTENSIONS: ReadonlyArray<string> = ENTRANCE_SOUND_EXTENSIONS.map((ext) => `.${ext}`);
 
-export const ENTRANCE_SOUND_MIME_TYPES: ReadonlyArray<string> = ENTRANCE_SOUND_EXTENSIONS.map(
+const ENTRANCE_SOUND_MIME_TYPES: ReadonlyArray<string> = ENTRANCE_SOUND_EXTENSIONS.map(
 	(ext) => ENTRANCE_SOUND_EXT_TO_MIME[ext as EntranceSoundExtension],
 );
 
@@ -17,7 +17,7 @@ export const ENTRANCE_SOUND_FILE_PICKER_ACCEPT = [...ENTRANCE_SOUND_MIME_TYPES, 
 	',',
 );
 
-export type EntranceSoundFileValidationFailure = 'too_large' | 'invalid_type';
+type EntranceSoundFileValidationFailure = 'too_large' | 'invalid_type';
 
 export type EntranceSoundFileValidationResult =
 	| {valid: true}

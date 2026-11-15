@@ -104,14 +104,20 @@ async function createDsaTicket(harness: ApiTestHarness): Promise<string> {
 	return ticket;
 }
 
-function dsaMessageReport(harness: ApiTestHarness, ticket: string, channelId: string, messageId: string) {
+function dsaMessageReport(
+	harness: ApiTestHarness,
+	ticket: string,
+	guildId: string,
+	channelId: string,
+	messageId: string,
+) {
 	return createBuilderWithoutAuth<ReportResponse>(harness)
 		.post('/reports/dsa')
 		.body({
 			ticket,
 			report_type: 'message',
 			category: 'harassment',
-			message_link: `https://fluxer.test/channels/0/${channelId}/${messageId}`,
+			message_link: `https://fluxer.test/channels/${guildId}/${channelId}/${messageId}`,
 			reporter_full_legal_name: 'Jane Doe',
 			reporter_country_of_residence: 'DE',
 		});
@@ -139,7 +145,7 @@ describe('Reporting published copies', () => {
 		expect(report.reportedChannelId?.toString()).toBe(world.b.t1.id);
 		expect(report.reportedGuildId?.toString()).toBe(world.b.guild.id);
 		const reportedContext = report.messageContext?.find((entry) => entry.messageId.toString() === copyId);
-		expect(reportedContext?.authorId.toString()).toBe(world.a.member.userId);
+		expect(reportedContext?.authorId?.toString()).toBe(world.a.member.userId);
 		expect(reportedContext?.content).toBe('published update');
 	});
 
@@ -163,14 +169,16 @@ describe('Reporting published copies', () => {
 	test('the message-link report on a copy reports the source author', async () => {
 		const {world, copyId} = await createCopyOfMemberMessage(harness);
 		const ticket = await createDsaTicket(harness);
-		const result = await dsaMessageReport(harness, ticket, world.b.t1.id, copyId).expect(HTTP_STATUS.OK).execute();
+		const result = await dsaMessageReport(harness, ticket, world.b.guild.id, world.b.t1.id, copyId)
+			.expect(HTTP_STATUS.OK)
+			.execute();
 		const report = await readReport(result.report_id);
 		expect(report.reportedUserId?.toString()).toBe(world.a.member.userId);
 		expect(report.reportedMessageId?.toString()).toBe(copyId);
 		expect(report.reportedChannelId?.toString()).toBe(world.b.t1.id);
 	});
 
-	test('a copy of a webhook-authored source keeps the existing errors', async () => {
+	test('a copy of a webhook-authored source reports the source webhook', async () => {
 		const world = await announcementWorld(harness);
 		const sourceWebhook = await createWebhook(harness, world.a.ann.id, world.a.owner.token, 'Source hook');
 		const {json: source} = await executeWebhook(
@@ -189,23 +197,33 @@ describe('Reporting published copies', () => {
 			sourceMessageId: source!.id,
 			content: 'from a webhook',
 		});
-		await reportMessage(harness, world.b.webhookManager.token, world.b.t1.id, copyId)
-			.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.UNKNOWN_MESSAGE)
+		const inApp = await reportMessage(harness, world.b.webhookManager.token, world.b.t1.id, copyId)
+			.expect(HTTP_STATUS.OK)
 			.execute();
 		const ticket = await createDsaTicket(harness);
-		await dsaMessageReport(harness, ticket, world.b.t1.id, copyId)
-			.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.UNKNOWN_USER)
+		const dsa = await dsaMessageReport(harness, ticket, world.b.guild.id, world.b.t1.id, copyId)
+			.expect(HTTP_STATUS.OK)
 			.execute();
+		for (const result of [inApp, dsa]) {
+			const report = await readReport(result.report_id);
+			expect(report.reportedUserId).toBeNull();
+			expect(report.reportedWebhookId?.toString()).toBe(sourceWebhook.id);
+			expect(report.reportedWebhookName).toBe('Source hook');
+			expect(report.reportedMessageId?.toString()).toBe(copyId);
+			const reportedContext = report.messageContext?.find((entry) => entry.messageId.toString() === copyId);
+			expect(reportedContext?.webhookId?.toString()).toBe(sourceWebhook.id);
+			expect(reportedContext?.authorId).toBeNull();
+		}
 	});
 
-	test('a source-deleted copy keeps the existing errors', async () => {
+	test('a source-deleted copy is reported as an unknown message', async () => {
 		const {world, copyId} = await createCopyOfMemberMessage(harness, MessageFlags.SOURCE_MESSAGE_DELETED);
 		await reportMessage(harness, world.b.webhookManager.token, world.b.t1.id, copyId)
 			.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.UNKNOWN_MESSAGE)
 			.execute();
 		const ticket = await createDsaTicket(harness);
-		await dsaMessageReport(harness, ticket, world.b.t1.id, copyId)
-			.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.UNKNOWN_USER)
+		await dsaMessageReport(harness, ticket, world.b.guild.id, world.b.t1.id, copyId)
+			.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.UNKNOWN_MESSAGE)
 			.execute();
 	});
 
@@ -220,12 +238,15 @@ describe('Reporting published copies', () => {
 			.execute();
 	});
 
-	test('reports on ordinary webhook messages are unchanged', async () => {
+	test('reports on ordinary webhook messages report the webhook', async () => {
 		const world = await announcementWorld(harness);
 		const webhook = await createWebhook(harness, world.b.t1.id, world.b.owner.token, 'Plain hook');
 		const {json} = await executeWebhook(harness, webhook.id, webhook.token, {content: 'plain', wait: true}, 200);
-		await reportMessage(harness, world.b.webhookManager.token, world.b.t1.id, json!.id)
-			.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.UNKNOWN_MESSAGE)
+		const result = await reportMessage(harness, world.b.webhookManager.token, world.b.t1.id, json!.id)
+			.expect(HTTP_STATUS.OK)
 			.execute();
+		const report = await readReport(result.report_id);
+		expect(report.reportedUserId).toBeNull();
+		expect(report.reportedWebhookId?.toString()).toBe(webhook.id);
 	});
 });

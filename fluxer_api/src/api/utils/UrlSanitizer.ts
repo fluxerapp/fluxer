@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export function sanitizeOptionalAbsoluteUrl(url: string | null | undefined): string | undefined {
+function sanitizeOptionalAbsoluteUrl(url: string | null | undefined): string | undefined {
 	if (typeof url !== 'string') {
 		return;
 	}
@@ -9,7 +9,11 @@ export function sanitizeOptionalAbsoluteUrl(url: string | null | undefined): str
 		return;
 	}
 	try {
-		return new URL(trimmedUrl).toString();
+		const parsedUrl = new URL(trimmedUrl);
+		if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+			return;
+		}
+		return parsedUrl.toString();
 	} catch {
 		return;
 	}

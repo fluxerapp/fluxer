@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import * as ExpressionMetadataCommands from '@app/features/expressions/commands/ExpressionMetadataCommands';
 import {action, makeAutoObservable, runInAction} from 'mobx';
 
@@ -11,7 +12,7 @@ export interface ExpressionMetadata {
 	allowCloning: boolean;
 }
 
-export interface ExpressionMetadataRequestState {
+interface ExpressionMetadataRequestState {
 	loading: boolean;
 	error: Error | null;
 	data: ExpressionMetadata | null;
@@ -115,6 +116,17 @@ class ExpressionMetadataState {
 			throw error;
 		}
 	});
+
+	reset(): void {
+		this.emojiMetadata = new Map();
+		this.stickerMetadata = new Map();
+		this.pendingEmojiRequests.clear();
+		this.pendingStickerRequests.clear();
+	}
 }
 
-export default new ExpressionMetadataState();
+const expressionMetadata = new ExpressionMetadataState();
+
+ResettableStates.register(expressionMetadata, () => expressionMetadata.reset());
+
+export default expressionMetadata;

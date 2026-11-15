@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {calculateDistance, parseCoordinate} from '@app/api/utils/GeoUtils';
+import {compareText} from '@app/api/utils/StringComparison';
 import type {VoiceRegionAvailability, VoiceServerRecord} from '@app/api/voice/VoiceModel';
 
 interface VoiceRegionPreference {
@@ -13,12 +14,10 @@ const DISTANCE_TIE_EPSILON_KM = 0.000001;
 export function resolveVoiceRegionPreference({
 	preferredRegionId,
 	accessibleRegions,
-	availableRegions,
 	defaultRegionId,
 }: {
 	preferredRegionId: string | null;
 	accessibleRegions: Array<VoiceRegionAvailability>;
-	availableRegions: Array<VoiceRegionAvailability>;
 	defaultRegionId: string | null;
 }): VoiceRegionPreference {
 	const accessibleRegionIds = new Set(accessibleRegions.map((region) => region.id));
@@ -31,12 +30,7 @@ export function resolveVoiceRegionPreference({
 	if (defaultRegionId && accessibleRegionIds.has(defaultRegionId)) {
 		return {regionId: defaultRegionId, mode: 'automatic'};
 	}
-	const defaultRegion =
-		accessibleRegions.find((region) => region.isDefault) ?? availableRegions.find((region) => region.isDefault) ?? null;
-	if (defaultRegion) {
-		return {regionId: defaultRegion.id, mode: 'automatic'};
-	}
-	const fallbackRegion = accessibleRegions[0] ?? availableRegions[0] ?? null;
+	const fallbackRegion = accessibleRegions.find((region) => region.isDefault) ?? accessibleRegions[0] ?? null;
 	return {regionId: fallbackRegion ? fallbackRegion.id : null, mode: 'automatic'};
 }
 
@@ -44,7 +38,6 @@ export function selectVoiceRegionId({
 	preferredRegionId,
 	mode,
 	accessibleRegions,
-	availableRegions,
 	latitude,
 	longitude,
 	selectionKey,
@@ -52,7 +45,6 @@ export function selectVoiceRegionId({
 	preferredRegionId: string | null;
 	mode: VoiceRegionPreference['mode'];
 	accessibleRegions: Array<VoiceRegionAvailability>;
-	availableRegions: Array<VoiceRegionAvailability>;
 	latitude?: string;
 	longitude?: string;
 	selectionKey: string;
@@ -67,11 +59,7 @@ export function selectVoiceRegionId({
 	if (preferredRegionId) {
 		return preferredRegionId;
 	}
-	const accessibleFallback = accessibleRegions[0];
-	if (accessibleFallback) {
-		return accessibleFallback.id;
-	}
-	return availableRegions[0]?.id ?? null;
+	return accessibleRegions[0]?.id ?? null;
 }
 
 export function selectClosestPseudoRegionServer({
@@ -201,16 +189,6 @@ function hashSelectionKey(selectionKey: string): number {
 		hash = Math.imul(hash, 0x01000193);
 	}
 	return hash >>> 0;
-}
-
-function compareText(left: string, right: string): number {
-	if (left < right) {
-		return -1;
-	}
-	if (left > right) {
-		return 1;
-	}
-	return 0;
 }
 
 function compareVoiceServers(left: VoiceServerRecord, right: VoiceServerRecord): number {

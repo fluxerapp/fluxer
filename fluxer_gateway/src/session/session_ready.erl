@@ -8,8 +8,7 @@
     mark_guild_unavailable/2,
     mark_guild_unavailable/3,
     check_readiness/1,
-    dispatch_ready_data/1,
-    update_ready_guilds/2
+    dispatch_ready_data/1
 ]).
 
 -export_type([session_state/0, guild_id/0]).
@@ -28,7 +27,7 @@ process_guild_state(GuildState, State) ->
     NewState = State#{
         collected_guild_states => [DetachedGuildState | CollectedGuilds]
     },
-    check_readiness(update_ready_guilds(DetachedGuildState, NewState)).
+    check_readiness(NewState).
 
 -spec detach_guild_state(map()) -> map().
 detach_guild_state(GuildState) when is_map(GuildState) ->
@@ -59,7 +58,7 @@ mark_guild_unavailable(GuildId, UnavailableHidden, State) ->
         guilds => Guilds#{GuildId => GuildMarker},
         collected_guild_states => [UnavailableState | CollectedGuilds]
     },
-    {noreply, update_ready_guilds(UnavailableState, NewState)}.
+    {noreply, NewState}.
 
 -spec unavailable_guild_marker(guild_id(), map()) -> cached_unavailable | unavailable.
 unavailable_guild_marker(GuildId, Guilds) ->
@@ -108,36 +107,3 @@ dispatch_ready_data(#{socket_pid := undefined} = State) ->
     {stop, normal, State};
 dispatch_ready_data(State) ->
     session_ready_dispatch:dispatch_ready_to_socket(State).
-
--spec update_ready_guilds(map(), session_state()) -> session_state().
-update_ready_guilds(_GuildState, State) ->
-    State.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-mark_guild_unavailable_sets_terminal_guild_marker_test() ->
-    GuildId = 1427764882469228556,
-    State0 = #{
-        guilds => #{GuildId => undefined},
-        collected_guild_states => [],
-        ready => #{<<"guilds">> => []}
-    },
-    {noreply, State1} = mark_guild_unavailable(GuildId, State0),
-    ?assertEqual(unavailable, maps:get(GuildId, maps:get(guilds, State1))),
-    [UnavailableState] = maps:get(collected_guild_states, State1),
-    ?assertEqual(true, maps:get(<<"unavailable">>, UnavailableState)).
-
-check_readiness_treats_unavailable_marker_as_connected_test() ->
-    GuildId = 1427764882469228556,
-    State0 = #{
-        guilds => #{GuildId => undefined},
-        collected_guild_states => [],
-        ready => #{<<"guilds">> => []},
-        presence_pid => self(),
-        socket_pid => undefined
-    },
-    {noreply, State1} = mark_guild_unavailable(GuildId, State0),
-    ?assertMatch({stop, normal, _}, check_readiness(State1)).
-
--endif.

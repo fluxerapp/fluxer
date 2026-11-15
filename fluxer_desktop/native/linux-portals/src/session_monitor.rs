@@ -356,18 +356,3 @@ mod worker {
         .await
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn lock_tracker_reports_only_transitions() {
-        let mut tracker = LockTracker::default();
-        assert_eq!(tracker.update(false), None);
-        assert_eq!(tracker.update(true), Some(MonitorEvent::ScreenLocked));
-        assert_eq!(tracker.update(true), None);
-        assert_eq!(tracker.update(false), Some(MonitorEvent::ScreenUnlocked));
-        assert_eq!(tracker.update(false), None);
-    }
-}

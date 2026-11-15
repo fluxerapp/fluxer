@@ -13,12 +13,12 @@ function supportsSystemTitleBar(): boolean {
 	return isDesktop() && !isNativeMacOS(getNativePlatformSync());
 }
 
-function getInitialUseSystemTitleBar(): boolean {
+export function isSystemTitleBarActive(): boolean {
 	return supportsSystemTitleBar() && document.documentElement.classList.contains(NATIVE_SYSTEM_TITLEBAR_CLASS);
 }
 
 export function useNativeTitleBar(): boolean {
-	const [useSystemTitleBar, setUseSystemTitleBar] = useState(getInitialUseSystemTitleBar);
+	const [useSystemTitleBar, setUseSystemTitleBar] = useState(isSystemTitleBarActive);
 	useEffect(() => {
 		if (!isDesktop()) {
 			return;

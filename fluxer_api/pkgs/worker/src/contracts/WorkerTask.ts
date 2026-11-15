@@ -28,6 +28,13 @@ export type WorkerTaskHandler<Payload = Record<string, unknown>> = (
 	helpers: WorkerTaskHelpers,
 ) => Promise<WorkerTaskResult> | Promise<void>;
 
+export class JobFailedError extends Error {
+	constructor(message: string) {
+		super(message);
+		this.name = 'JobFailedError';
+	}
+}
+
 export class JobCancelledError extends Error {
 	constructor(message = 'Job cancelled by admin') {
 		super(message);

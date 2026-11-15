@@ -8,6 +8,7 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
+import type React from 'react';
 
 const CAN_T_PASTE_IMAGE_HERE_DESCRIPTOR = msg({
 	message: "Can't paste image here",
@@ -33,18 +34,19 @@ export const AttachmentPermissionDeniedModal = observer(
 		const title = hasOnlyImages
 			? i18n._(CAN_T_PASTE_IMAGE_HERE_DESCRIPTOR)
 			: i18n._(CAN_T_UPLOAD_FILES_HERE_DESCRIPTOR);
-		const description = canSendMessages ? (
-			hasOnlyImages ? (
+		let description: React.ReactNode;
+		if (!canSendMessages) {
+			description = i18n._(CANNOT_SEND_MESSAGES_IN_CHANNEL_DESCRIPTOR);
+		} else if (hasOnlyImages) {
+			description = (
 				<Trans>
 					Images pasted from your clipboard are sent as attachments, and you don't have permission to attach files in
 					this channel.
 				</Trans>
-			) : (
-				i18n._(YOU_DON_T_HAVE_PERMISSION_TO_ATTACH_FILES_DESCRIPTOR)
-			)
-		) : (
-			i18n._(CANNOT_SEND_MESSAGES_IN_CHANNEL_DESCRIPTOR)
-		);
+			);
+		} else {
+			description = i18n._(YOU_DON_T_HAVE_PERMISSION_TO_ATTACH_FILES_DESCRIPTOR);
+		}
 		return (
 			<GenericErrorModal
 				title={title}

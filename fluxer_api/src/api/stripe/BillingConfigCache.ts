@@ -21,6 +21,7 @@ export interface EffectiveBillingConfig {
 	automaticTax: boolean;
 	taxIdCollection: boolean;
 	termsConsentRequired: boolean;
+	billingEmails: boolean;
 	catalogMode: BillingCatalogMode;
 	defaultCurrency: string | null;
 	prices: Record<string, BillingPriceSet>;
@@ -75,6 +76,13 @@ const ENV_CATALOG: ReadonlyArray<{
 		gift_1_year: 'gift1YearInr',
 	},
 	{
+		currency: 'ISK',
+		monthly: 'monthlyIsk',
+		yearly: 'yearlyIsk',
+		gift_1_month: 'gift1MonthIsk',
+		gift_1_year: 'gift1YearIsk',
+	},
+	{
 		currency: 'NOK',
 		monthly: 'monthlyNok',
 		yearly: 'yearlyNok',
@@ -119,10 +127,6 @@ export function setStoredBillingConfig(stored: StoredBillingConfig | null): void
 
 export function getStoredBillingConfig(): StoredBillingConfig | null {
 	return storedBillingConfig;
-}
-
-export function getActiveStoredBillingConfig(): StoredBillingConfig | null {
-	return Config.instance.selfHosted ? storedBillingConfig : null;
 }
 
 function trackWebhookSecret(): void {
@@ -213,6 +217,7 @@ function computeEffectiveBillingConfig(): Omit<EffectiveBillingConfig, 'version'
 		automaticTax: selfHosted ? (stored?.automatic_tax ?? false) : true,
 		taxIdCollection: selfHosted ? (stored?.tax_id_collection ?? false) : true,
 		termsConsentRequired: selfHosted ? (stored?.terms_consent_required ?? false) : true,
+		billingEmails: selfHosted ? (stored?.billing_emails ?? false) : true,
 		catalogMode,
 		defaultCurrency: catalogMode === 'operator' ? (stored?.default_currency ?? null) : null,
 		prices: operatorPrices === null ? buildEnvPrices() : buildOperatorPrices(operatorPrices),
@@ -239,7 +244,7 @@ export function getEffectiveBillingConfig(): EffectiveBillingConfig {
 	return config;
 }
 
-export function hasRecurringPricePair(config: EffectiveBillingConfig = getEffectiveBillingConfig()): boolean {
+function hasRecurringPricePair(config: EffectiveBillingConfig = getEffectiveBillingConfig()): boolean {
 	return Object.values(config.prices).some((set) => set.monthly !== null && set.yearly !== null);
 }
 

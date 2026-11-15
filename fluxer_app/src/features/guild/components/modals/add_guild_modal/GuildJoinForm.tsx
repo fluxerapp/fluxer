@@ -13,6 +13,7 @@ import {
 import {JOIN_COMMUNITY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as InviteCommands from '@app/features/invite/commands/InviteCommands';
 import * as InviteUtils from '@app/features/invite/utils/InviteUtils';
+import {currentInstanceTarget} from '@app/features/platform/transport/InstanceHTTP';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {Form} from '@app/features/ui/components/form/Form';
@@ -39,8 +40,9 @@ export const GuildJoinForm = observer(() => {
 	const onSubmit = useCallback(
 		async (data: GuildJoinFormInputs) => {
 			const parsedCode = InviteUtils.findInvite(data.code) ?? data.code;
-			const invite = await InviteCommands.fetch(parsedCode);
-			await InviteCommands.acceptAndTransitionToChannel(invite.code, i18n);
+			const target = currentInstanceTarget();
+			const invite = await InviteCommands.fetch(parsedCode, target);
+			await InviteCommands.acceptAndTransitionToChannel(invite.code, i18n, target);
 			ModalCommands.pop();
 		},
 		[i18n],

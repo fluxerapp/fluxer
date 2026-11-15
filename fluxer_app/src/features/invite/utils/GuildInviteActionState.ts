@@ -2,6 +2,7 @@
 
 import Authentication from '@app/features/auth/state/Authentication';
 import type {Guild} from '@app/features/guild/models/Guild';
+import Guilds from '@app/features/guild/state/Guilds';
 import {isGuildInvite} from '@app/features/invite/types/InviteTypes';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
@@ -21,11 +22,13 @@ export interface GuildInviteActionState {
 	memberCount: number;
 	isInvitesDisabled: boolean;
 	isRaidDetected: boolean;
+	visitsEnabled: boolean;
 	features: Array<string>;
 }
 
 export enum GuildInvitePrimaryAction {
 	JoinCommunity = 'join',
+	OpenVisit = 'visit',
 	GoToCommunity = 'go',
 	InvitesDisabled = 'disabled',
 }
@@ -51,6 +54,8 @@ export function getGuildInviteActionState(params: {
 		features,
 		isInvitesDisabled: features.includes(GuildFeatures.INVITES_DISABLED),
 		isRaidDetected: features.includes(GuildFeatures.RAID_DETECTED),
+		visitsEnabled:
+			inviteGuild?.visits_enabled === true || (guildId !== null && Guilds.getGuild(guildId)?.visiting === true),
 	};
 }
 
@@ -60,6 +65,9 @@ export function getGuildInvitePrimaryAction(state: GuildInviteActionState): Guil
 	}
 	if (state.isMember) {
 		return GuildInvitePrimaryAction.GoToCommunity;
+	}
+	if (state.visitsEnabled) {
+		return GuildInvitePrimaryAction.OpenVisit;
 	}
 	return GuildInvitePrimaryAction.JoinCommunity;
 }

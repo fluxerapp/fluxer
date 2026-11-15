@@ -44,7 +44,7 @@
 	border: none;
 	background: transparent;
 	padding: 0;
-	text-align: left;
+	text-align: start;
 	font-weight: 600;
 	font-size: 0.875rem;
 	line-height: 1.125rem;
@@ -385,7 +385,7 @@
 	background: transparent;
 	color: var(--text-tertiary);
 	cursor: pointer;
-	text-align: left;
+	text-align: start;
 }
 
 :global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
@@ -452,9 +452,9 @@
 	font-weight: 600;
 	font-size: 0.75rem;
 	color: var(--text-primary);
-	margin-left: auto;
+	margin-inline-start: auto;
 	flex: 1 1 auto;
-	text-align: right;
+	text-align: end;
 }
 
 .popoutStatTextValue {
@@ -505,7 +505,7 @@
 	color: var(--status-online);
 	min-width: 0;
 	max-width: 100%;
-	text-align: right;
+	text-align: end;
 }
 
 .chartContainer {
@@ -527,10 +527,6 @@
 
 .gridLineHorizontal {
 	opacity: 0.3;
-}
-
-.gridLineVertical {
-	stroke-width: 0.0625rem;
 }
 
 .gridText {
@@ -560,14 +556,6 @@
 	color: var(--background-modifier-hover);
 }
 
-.textTextTertiary {
-	fill: var(--text-tertiary);
-}
-
-.flexShrink0 {
-	flex-shrink: 0;
-}
-
 .iconSmall {
 	height: 1rem;
 	width: 1rem;
@@ -586,146 +574,10 @@
 	color: var(--status-online);
 }
 
-.regionSelectorContainer {
-	position: relative;
-	margin-left: auto;
-	display: flex;
-	flex-direction: column;
-	align-items: flex-end;
-}
-
-.regionButton {
-	display: flex;
-	align-items: center;
-	gap: var(--spacing-1);
-	padding: 0.25rem 0.5rem;
-	background-color: var(--background-secondary);
-	border: 0.0625rem solid var(--background-modifier-hover);
-	border-radius: var(--radius-sm);
-	cursor: pointer;
-	transition:
-		background-color var(--transition-fast),
-		border-color var(--transition-fast);
-	font-size: 0.75rem;
-	color: var(--text-primary);
-}
-
-:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-	.regionButton:hover:not(:disabled) {
-	background-color: var(--background-modifier-hover);
-	border-color: var(--background-modifier-selected);
-}
-
-.regionButton:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
-
-.regionIcon {
-	height: 0.875rem;
-	width: 0.875rem;
-	color: var(--text-secondary);
-	flex-shrink: 0;
-}
-
-.regionButtonText {
-	font-weight: 600;
-	color: var(--text-primary);
-	white-space: nowrap;
-}
-
-.regionCaret {
-	height: 0.75rem;
-	width: 0.75rem;
-	color: var(--text-secondary);
-	flex-shrink: 0;
-	transition: transform var(--transition-fast);
-}
-
-.regionCaretOpen {
-	transform: rotate(180deg);
-}
-
-.regionDropdown {
-	position: absolute;
-	top: 100%;
-	right: 0;
-	margin-top: 0.25rem;
-	min-width: 10rem;
-	max-height: 12.5rem;
-	overflow-y: auto;
-	background-color: var(--background-tertiary);
-	border: 0.0625rem solid var(--background-modifier-hover);
-	border-radius: var(--radius-md);
-	box-shadow: var(--shadow-lg);
-	z-index: 100;
-	display: flex;
-	flex-direction: column;
-	padding: 0.25rem;
-}
-
-.regionOption {
-	display: flex;
-	align-items: center;
-	gap: var(--spacing-2);
-	padding: 0.5rem 0.75rem;
-	background-color: transparent;
-	border: none;
-	border-radius: var(--radius-sm);
-	cursor: pointer;
-	transition: background-color var(--transition-fast);
-	font-size: 0.875rem;
-	color: var(--text-primary);
-	text-align: left;
-	width: 100%;
-}
-
-:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-	.regionOption:hover:not(:disabled) {
-	background-color: var(--background-modifier-hover);
-}
-
-.regionOption:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
-
-.regionOptionSelected {
-	background-color: var(--background-modifier-selected);
-}
-
-:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-	.regionOptionSelected:hover:not(:disabled) {
-	background-color: color-mix(in srgb, var(--background-modifier-selected) 80%, var(--background-modifier-hover));
-}
-
-.regionEmoji {
-	font-size: 1rem;
-	flex-shrink: 0;
-}
-
-.regionName {
-	font-weight: 500;
-	white-space: nowrap;
-}
-
 .nsModalContent {
 	display: flex;
 	flex-direction: column;
 	gap: var(--spacing-4);
-}
-
-.nsMainToggle {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: var(--spacing-3);
-}
-
-.nsToggleLabel {
-	font-weight: 600;
-	font-size: 0.875rem;
-	color: var(--text-primary);
 }
 
 .nsOptions {

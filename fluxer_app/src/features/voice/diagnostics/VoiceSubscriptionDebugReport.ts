@@ -175,7 +175,7 @@ export function collectVoiceSubscriptionDebugReport(): VoiceSubscriptionDebugRep
 	const pendingSubscriptionCommands = Array.from(snapshot.subscriptionCommands);
 	return {
 		capturedAt: new Date().toISOString(),
-		buildVersion: Config.PUBLIC_BUILD_VERSION ?? 'dev',
+		buildVersion: Config.BUILD_VERSION ?? 'dev',
 		graphNowMs: voiceMediaGraphStore.nowMs(),
 		connection: {
 			connected: MediaEngine.connected,

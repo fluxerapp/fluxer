@@ -9,17 +9,11 @@ pub const ADMIN_OAUTH_SCOPE: &str = "identify email";
 #[derive(Debug, Deserialize)]
 pub struct TokenResponse {
     pub access_token: String,
-    pub token_type: String,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct UserInfo {
     pub id: String,
-    pub username: String,
-    pub discriminator: String,
-    pub avatar: Option<String>,
-    pub email: Option<String>,
-    pub global_name: Option<String>,
 }
 
 pub fn authorize_url(config: &AdminConfig, state: &str) -> String {
@@ -101,19 +95,22 @@ pub async fn fetch_user_info(
     Ok(user)
 }
 
+pub(crate) fn admin_client_basic_auth(config: &AdminConfig) -> String {
+    let credentials = format!("{}:{}", config.oauth_client_id, config.oauth_client_secret);
+    format!("Basic {}", STANDARD.encode(credentials.as_bytes()))
+}
+
 pub async fn revoke_token(
     http_client: &reqwest::Client,
     config: &AdminConfig,
     token: &str,
 ) -> anyhow::Result<()> {
-    let credentials = format!("{}:{}", config.oauth_client_id, config.oauth_client_secret);
-    let basic = format!("Basic {}", STANDARD.encode(credentials.as_bytes()));
     let response = with_proxy_client_ip_header(
         http_client.post(format!("{}/oauth2/token/revoke", config.api_endpoint)),
         config,
     )
     .header("Content-Type", "application/x-www-form-urlencoded")
-    .header("Authorization", basic)
+    .header("Authorization", admin_client_basic_auth(config))
     .body(format!(
         "token={}&token_type_hint=access_token",
         urlencoding::encode(token)

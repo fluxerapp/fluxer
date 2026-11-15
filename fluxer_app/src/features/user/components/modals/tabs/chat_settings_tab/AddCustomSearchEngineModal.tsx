@@ -3,12 +3,11 @@
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {EXAMPLE_URL} from '@app/features/app/config/I18nDisplayConstants';
 import {CANCEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import Translation from '@app/features/messaging/state/Translation';
-import ReverseImageSearch from '@app/features/search/state/ReverseImageSearch';
-import SearchEngine from '@app/features/search/state/SearchEngine';
+import {getSearchProviderStore} from '@app/features/search/utils/SearchProviderUtils';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {Input} from '@app/features/ui/components/form/FormInput';
+import {ADD_SEARCH_ENGINE_DESCRIPTOR, NAME_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -23,10 +22,7 @@ const ADD_TRANSLATION_PROVIDER_DESCRIPTOR = msg({
 	message: 'Add translation provider',
 	comment: 'Button or menu action label in the add custom search engine modal. Keep it concise.',
 });
-const ADD_SEARCH_ENGINE_DESCRIPTOR = msg({
-	message: 'Add search engine',
-	comment: 'Button or menu action label in the add custom search engine modal. Keep it concise.',
-});
+
 const EDIT_REVERSE_IMAGE_SEARCH_ENGINE_DESCRIPTOR = msg({
 	message: 'Edit reverse image search engine',
 	comment: 'Button or menu action label in the add custom search engine modal. Keep it concise.',
@@ -73,10 +69,7 @@ const URL_PATTERN_MUST_BE_A_VALID_URL_DESCRIPTOR = msg({
 	message: 'URL pattern must be a valid URL.',
 	comment: 'Description text in the add custom search engine modal.',
 });
-const NAME_DESCRIPTOR = msg({
-	message: 'Name',
-	comment: 'Short label in the add custom search engine modal. Keep it concise.',
-});
+
 const MY_REVERSE_IMAGE_SEARCH_DESCRIPTOR = msg({
 	message: 'My reverse image search',
 	comment: 'Label in the add custom search engine modal.',
@@ -104,6 +97,30 @@ const ADD_DESCRIPTOR = msg({
 
 export type SearchEngineMode = 'text' | 'image' | 'translate';
 
+const SEARCH_ENGINE_MESSAGES = {
+	text: {
+		addTitle: ADD_SEARCH_ENGINE_DESCRIPTOR,
+		editTitle: EDIT_SEARCH_ENGINE_DESCRIPTOR,
+		examplePath: '/search?q=',
+		hint: USE_WHERE_THE_SEARCH_TEXT_SHOULD_BE_INSERTED_DESCRIPTOR,
+		namePlaceholder: MY_SEARCH_ENGINE_DESCRIPTOR,
+	},
+	image: {
+		addTitle: ADD_REVERSE_IMAGE_SEARCH_ENGINE_DESCRIPTOR,
+		editTitle: EDIT_REVERSE_IMAGE_SEARCH_ENGINE_DESCRIPTOR,
+		examplePath: '/searchbyimage?url=',
+		hint: USE_WHERE_THE_IMAGE_URL_SHOULD_BE_INSERTED_DESCRIPTOR,
+		namePlaceholder: MY_REVERSE_IMAGE_SEARCH_DESCRIPTOR,
+	},
+	translate: {
+		addTitle: ADD_TRANSLATION_PROVIDER_DESCRIPTOR,
+		editTitle: EDIT_TRANSLATION_PROVIDER_DESCRIPTOR,
+		examplePath: '/translate?text=',
+		hint: USE_WHERE_THE_TEXT_TO_TRANSLATE_SHOULD_BE_DESCRIPTOR,
+		namePlaceholder: MY_TRANSLATOR_DESCRIPTOR,
+	},
+};
+
 interface AddCustomSearchEngineModalProps {
 	mode?: SearchEngineMode;
 	editingEngineId?: string;
@@ -121,27 +138,17 @@ export const AddCustomSearchEngineModal: React.FC<AddCustomSearchEngineModalProp
 		const isImageMode = mode === 'image';
 		const isTranslateMode = mode === 'translate';
 		const placeholder = isImageMode ? '{url}' : '{query}';
-		const store = isImageMode ? ReverseImageSearch : isTranslateMode ? Translation : SearchEngine;
-		const titleAdd = isImageMode
-			? i18n._(ADD_REVERSE_IMAGE_SEARCH_ENGINE_DESCRIPTOR)
-			: isTranslateMode
-				? i18n._(ADD_TRANSLATION_PROVIDER_DESCRIPTOR)
-				: i18n._(ADD_SEARCH_ENGINE_DESCRIPTOR);
-		const titleEdit = isImageMode
-			? i18n._(EDIT_REVERSE_IMAGE_SEARCH_ENGINE_DESCRIPTOR)
-			: isTranslateMode
-				? i18n._(EDIT_TRANSLATION_PROVIDER_DESCRIPTOR)
-				: i18n._(EDIT_SEARCH_ENGINE_DESCRIPTOR);
-		const exampleUrl = isImageMode
-			? `${EXAMPLE_URL}/searchbyimage?url=${placeholder}`
-			: isTranslateMode
-				? `${EXAMPLE_URL}/translate?text=${placeholder}`
-				: `${EXAMPLE_URL}/search?q=${placeholder}`;
-		const hint = isImageMode
-			? i18n._(USE_WHERE_THE_IMAGE_URL_SHOULD_BE_INSERTED_DESCRIPTOR, {url: '{url}'})
-			: isTranslateMode
-				? i18n._(USE_WHERE_THE_TEXT_TO_TRANSLATE_SHOULD_BE_DESCRIPTOR, {query: '{query}'})
-				: i18n._(USE_WHERE_THE_SEARCH_TEXT_SHOULD_BE_INSERTED_DESCRIPTOR, {query: '{query}'});
+		const store = getSearchProviderStore(mode);
+		let messages = SEARCH_ENGINE_MESSAGES.text;
+		if (isImageMode) {
+			messages = SEARCH_ENGINE_MESSAGES.image;
+		} else if (isTranslateMode) {
+			messages = SEARCH_ENGINE_MESSAGES.translate;
+		}
+		const titleAdd = i18n._(messages.addTitle);
+		const titleEdit = i18n._(messages.editTitle);
+		const exampleUrl = `${EXAMPLE_URL}${messages.examplePath}${placeholder}`;
+		const hint = i18n._(messages.hint, isImageMode ? {url: '{url}'} : {query: '{query}'});
 		const placeholderRequiredError = isImageMode
 			? i18n._(URL_PATTERN_MUST_CONTAIN_PLACEHOLDER_DESCRIPTOR, {url: '{url}'})
 			: i18n._(URL_PATTERN_MUST_CONTAIN_PLACEHOLDER_2_DESCRIPTOR, {query: '{query}'});
@@ -197,13 +204,7 @@ export const AddCustomSearchEngineModal: React.FC<AddCustomSearchEngineModalProp
 								setName(event.target.value);
 								setError('');
 							}}
-							placeholder={
-								isImageMode
-									? i18n._(MY_REVERSE_IMAGE_SEARCH_DESCRIPTOR)
-									: isTranslateMode
-										? i18n._(MY_TRANSLATOR_DESCRIPTOR)
-										: i18n._(MY_SEARCH_ENGINE_DESCRIPTOR)
-							}
+							placeholder={i18n._(messages.namePlaceholder)}
 							autoFocus
 							data-flx="user.chat-settings-tab.add-custom-search-engine-modal.input.set-name"
 						/>

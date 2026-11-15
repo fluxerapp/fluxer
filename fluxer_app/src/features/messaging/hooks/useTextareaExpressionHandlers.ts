@@ -5,37 +5,23 @@ import type {FavoriteMeme} from '@app/features/expressions/models/FavoriteMeme';
 import type {GuildSticker} from '@app/features/expressions/models/GuildSticker';
 import * as GifSlugUtils from '@app/features/expressions/utils/GifSlugUtils';
 import {UploadingAttachment} from '@app/features/messaging/models/UploadingAttachment';
-import {
-	applyTextareaTextChange,
-	type PrepareTextareaTextChange,
-} from '@app/features/messaging/utils/TextareaNativeEditUtils';
-import {type MentionSegment, TextareaSegmentManager} from '@app/features/messaging/utils/TextareaSegmentManager';
-import type { Persona } from '@app/features/personas/models/Persona';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
+import {isApiAttachmentUrl} from '@app/features/messaging/utils/ApiAttachmentUrl';
+import {attachmentUrlMayNeedRefresh} from '@app/features/messaging/utils/AttachmentCdnUrl';
+import {TextareaSegmentManager} from '@app/features/messaging/utils/TextareaSegmentManager';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
-import Personas from '@app/features/user/state/Personas';
+import ActiveComposer from '@app/features/threads/state/ActiveComposer';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import type {MessageAttachment, MessageStickerItem} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import Personas from '@app/features/user/state/Personas';
 import type { PersonaSnapshot } from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
 import {useCallback, useEffect} from 'react';
+import type { Persona } from '@app/features/personas/models/Persona';
 
 interface UseTextareaExpressionHandlersOptions {
 	setValue: React.Dispatch<React.SetStateAction<string>>;
-	textareaRef: React.RefObject<HTMLTextAreaElement | null>;
-	canSendFavoriteMemeId: boolean;
-	insertSegment: (
-		text: string,
-		position: number,
-		displayText: string,
-		actualText: string,
-		type: MentionSegment['type'],
-		id: string,
-	) => {
-		newText: string;
-		newSegments: Array<MentionSegment>;
-	};
 	previousValueRef: React.RefObject<string>;
-	prepareTextChange: PrepareTextareaTextChange;
 	segmentManagerRef: React.RefObject<TextareaSegmentManager>;
 	sendOptimisticMessage: (
 		messageData: {
@@ -51,60 +37,57 @@ interface UseTextareaExpressionHandlersOptions {
 	) => void;
 	enabled?: boolean;
 	selectedPersona?: Persona;
+	channelId?: string;
 }
 
 export const useTextareaExpressionHandlers = ({
 	setValue,
-	textareaRef,
-	canSendFavoriteMemeId,
-	insertSegment,
 	previousValueRef,
-	prepareTextChange,
 	segmentManagerRef,
 	sendOptimisticMessage,
 	enabled = true,
 	selectedPersona,
+	channelId,
 }: UseTextareaExpressionHandlersOptions) => {
 	const persona = selectedPersona?.toSnapshot() || Personas.getGlobalActivePersona()?.toSnapshot();
 	const appendText = useCallback(
 		(text: string) => {
-			if (!enabled) return;
-			const prevValue = textareaRef.current?.value ?? previousValueRef.current;
+			if (!enabled || (channelId != null && !ActiveComposer.accepts(channelId))) return;
+			const prevValue = previousValueRef.current;
 			const prefix = prevValue.length === 0 ? '' : ' ';
 			const nextValue = `${prevValue}${prefix}${text} `;
-			applyTextareaTextChange({
-				textareaRef,
-				setValue,
-				segmentManagerRef,
-				previousValueRef,
-				prepareTextChange,
-				nextValue,
-				nextSegments: segmentManagerRef.current.getSegmentsCopy(),
-				selectionStart: nextValue.length,
-			});
+			segmentManagerRef.current.setSegments(segmentManagerRef.current.getSegmentsCopy());
+			previousValueRef.current = nextValue;
+			setValue(nextValue);
 		},
-		[persona, enabled, prepareTextChange, previousValueRef, segmentManagerRef, setValue, textareaRef],
+		[persona, enabled, channelId, previousValueRef, segmentManagerRef, setValue],
 	);
 	useEffect(() => {
-		const handleGifSelect = (payload?: unknown) => {
-			if (!enabled) return;
+		const handleGifSelect = async (payload?: unknown) => {
+			if (!enabled || (channelId != null && !ActiveComposer.accepts(channelId))) return;
 			const {gif, autoSend} = (payload ?? {}) as {
 				gif?: Gif;
 				autoSend?: boolean;
 			};
 			if (!gif) return;
-			const gifUrl = GifSlugUtils.resolveShareUrl(gif.provider, {url: gif.url, slug: gif.slug});
+			const shareUrl = GifSlugUtils.resolveShareUrl(gif.provider, {url: gif.url, slug: gif.slug});
+			const gifUrl = attachmentUrlMayNeedRefresh(shareUrl, Date.now())
+				? await AttachmentUrlRefresher.refresh(shareUrl)
+				: shareUrl;
+			if (channelId != null && !ActiveComposer.accepts(channelId)) return;
 			if (autoSend) {
 				sendOptimisticMessage({content: gifUrl, persona}, {hasAttachments: false});
 			} else {
 				appendText(gifUrl);
 			}
 		};
-		return ComponentBus.subscribe('GIF_SELECT', handleGifSelect);
-	}, [persona, appendText, sendOptimisticMessage, enabled]);
+		return ComponentBus.subscribe('GIF_SELECT', (payload) => {
+			void handleGifSelect(payload);
+		});
+	}, [persona, appendText, sendOptimisticMessage, enabled, channelId]);
 	useEffect(() => {
 		const handleStickerSelect = (payload?: unknown) => {
-			if (!enabled) return;
+			if (!enabled || (channelId != null && !ActiveComposer.accepts(channelId))) return;
 			const {sticker} = (payload ?? {}) as {
 				sticker?: GuildSticker;
 			};
@@ -112,50 +95,46 @@ export const useTextareaExpressionHandlers = ({
 			sendOptimisticMessage({content: '', persona, stickers: [sticker.toJSON()]}, {hasAttachments: false});
 		};
 		return ComponentBus.subscribe('STICKER_SELECT', handleStickerSelect);
-	}, [persona, sendOptimisticMessage, enabled]);
+	}, [persona, sendOptimisticMessage, enabled, channelId]);
 	useEffect(() => {
 		const handleFavoriteMemeSelect = (payload?: unknown) => {
-			if (!enabled) return;
+			if (!enabled || (channelId != null && !ActiveComposer.accepts(channelId))) return;
 			const {meme, autoSend} = (payload ?? {}) as {
 				meme?: FavoriteMeme;
 				autoSend?: boolean;
 			};
 			if (!meme) return;
-			const insertMemeUrl = () => {
-				appendText(meme.url);
+			const insertMemeUrl = async () => {
+				appendText(await AttachmentUrlRefresher.refresh(meme.url));
 			};
 			const providerShareUrl =
 				meme.gifProvider && meme.gifSlug ? GifSlugUtils.buildShareUrl(meme.gifProvider, meme.gifSlug) : null;
-			if (autoSend) {
-				if (providerShareUrl) {
+			if (providerShareUrl) {
+				if (autoSend) {
 					sendOptimisticMessage({content: providerShareUrl, persona}, {hasAttachments: false});
-				} else if (canSendFavoriteMemeId) {
-					const uploadingAttachment = UploadingAttachment.fromDescriptor({
-						filename: meme.filename,
-						title: meme.name,
-						size: meme.size,
-						contentType: meme.contentType,
-					}).toJSON();
-					sendOptimisticMessage(
-						{content: '', persona, attachments: [uploadingAttachment]},
-						{hasAttachments: false, favoriteMemeId: meme.id},
-					);
 				} else {
-					insertMemeUrl();
-				}
-			} else {
-				if (providerShareUrl) {
 					appendText(providerShareUrl);
-				} else {
-					insertMemeUrl();
 				}
+			} else if (autoSend || isApiAttachmentUrl(meme.url)) {
+				const uploadingAttachment = UploadingAttachment.fromDescriptor({
+					filename: meme.filename,
+					title: meme.name,
+					size: meme.size,
+					contentType: meme.contentType,
+				}).toJSON();
+				sendOptimisticMessage(
+					{content: '', attachments: [uploadingAttachment]},
+					{hasAttachments: false, favoriteMemeId: meme.id},
+				);
+			} else {
+				void insertMemeUrl();
 			}
 		};
 		return ComponentBus.subscribe('FAVORITE_MEME_SELECT', handleFavoriteMemeSelect);
-	}, [persona, appendText, canSendFavoriteMemeId, sendOptimisticMessage, enabled]);
+	}, [persona, appendText, sendOptimisticMessage, enabled, channelId]);
 	useEffect(() => {
 		const handleInsertMention = (payload?: unknown) => {
-			if (!enabled) return;
+			if (!enabled || (channelId != null && !ActiveComposer.accepts(channelId))) return;
 			const {userId} = (payload ?? {}) as {
 				userId?: string;
 			};
@@ -164,11 +143,11 @@ export const useTextareaExpressionHandlers = ({
 			if (!user) {
 				return;
 			}
-			const prevValue = textareaRef.current?.value ?? previousValueRef.current;
+			const prevValue = previousValueRef.current;
 			const actualText = `<@${userId}>`;
 			const displayText = `@${NicknameUtils.formatUserTagForStreamerMode(user)}`;
 			const needsSpace = prevValue.length > 0 && !prevValue.endsWith(' ');
-			const prefix = prevValue.length === 0 ? '' : needsSpace ? ' ' : '';
+			const prefix = needsSpace ? ' ' : '';
 			const insertPosition = prevValue.length + prefix.length;
 			const segmentManager = new TextareaSegmentManager();
 			segmentManager.setSegments(segmentManagerRef.current.getSegmentsCopy());
@@ -180,17 +159,10 @@ export const useTextareaExpressionHandlers = ({
 				'user',
 				userId,
 			);
-			applyTextareaTextChange({
-				textareaRef,
-				setValue,
-				segmentManagerRef,
-				previousValueRef,
-				prepareTextChange,
-				nextValue: newText,
-				nextSegments: segmentManager.getSegmentsCopy(),
-				selectionStart: newText.length,
-			});
+			segmentManagerRef.current.setSegments(segmentManager.getSegmentsCopy());
+			previousValueRef.current = newText;
+			setValue(newText);
 		};
 		return ComponentBus.subscribe('INSERT_MENTION', handleInsertMention);
-	}, [insertSegment, previousValueRef, setValue, textareaRef, segmentManagerRef, prepareTextChange, enabled, persona]);
+	}, [previousValueRef, setValue, segmentManagerRef, enabled, channelId, persona]);
 };

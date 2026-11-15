@@ -24,9 +24,10 @@ import {getStreamKey} from '@app/features/voice/components/StreamKeys';
 import {StreamWatchHoverPopout} from '@app/features/voice/components/StreamWatchHoverPopout';
 import {useStreamWatchState} from '@app/features/voice/components/useStreamWatchState';
 import {resolveVoiceParticipantDisplayState} from '@app/features/voice/components/VoiceParticipantDisplayState';
-import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime, {useVoiceRuntimeVersion} from '@app/features/voice/engine/VoiceRuntime';
 import {useStreamWatchDoubleClick} from '@app/features/voice/hooks/useStreamWatchDoubleClick';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
+import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {buildVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
 import {isParticipantVoicePermissionMuted} from '@app/features/voice/utils/VoicePermissionUtils';
 import {ME} from '@fluxer/constants/src/AppConstants';
@@ -44,6 +45,16 @@ import {useDrag} from 'react-dnd';
 const UNKNOWN_DEVICE_DESCRIPTOR = msg({
 	message: 'Unknown device',
 	comment: 'Short label in the app layout voice participant item.',
+});
+const MOBILE_DEVICE_DESCRIPTOR = msg({
+	message: 'Mobile device',
+	comment:
+		'Name of one of several voice connections of the same person, shown in place of the connection ID when the user hides connection IDs.',
+});
+const DESKTOP_DEVICE_DESCRIPTOR = msg({
+	message: 'Desktop device',
+	comment:
+		'Name of one of several voice connections of the same person, shown in place of the connection ID when the user hides connection IDs.',
 });
 const OPEN_PROFILE_FOR_DESCRIPTOR = msg({
 	message: 'Open profile for {displayName}',
@@ -65,10 +76,10 @@ export const VoiceParticipantItem = observer(function VoiceParticipantItem({
 	isCurrentUser?: boolean;
 }) {
 	const {i18n} = useLingui();
-	useMediaEngineVersion();
+	useVoiceRuntimeVersion();
 	const connectionId = voiceState?.connection_id ?? '';
-	const participant = MediaEngine.getParticipantByUserIdAndConnectionId(user.id, connectionId);
-	const connectedChannelId = MediaEngine.channelId;
+	const participant = VoiceRuntime.getParticipantByUserIdAndConnectionId(user.id, connectionId);
+	const connectedChannelId = VoiceRuntime.channelId;
 	const currentChannelId = voiceState?.channel_id ?? connectedChannelId ?? null;
 	const canMoveMembers = Permission.can(Permissions.MOVE_MEMBERS, {guildId});
 	const canDragParticipant = canMoveMembers && currentChannelId !== null;
@@ -188,9 +199,14 @@ export const VoiceParticipantItem = observer(function VoiceParticipantItem({
 		setIsProfilePopoutOpen(false);
 	}, []);
 	const DeviceIcon = voiceState?.is_mobile ? DeviceMobileIcon : DesktopIcon;
-	const unknownDeviceFallback = useMemo(() => i18n._(UNKNOWN_DEVICE_DESCRIPTOR), [i18n.locale]);
+	const showConnectionId = VoiceSettings.showVoiceConnectionId;
+	const deviceName = useMemo(() => {
+		if (showConnectionId && voiceState?.connection_id) return voiceState.connection_id;
+		if (!voiceState) return i18n._(UNKNOWN_DEVICE_DESCRIPTOR);
+		return i18n._(voiceState.is_mobile ? MOBILE_DEVICE_DESCRIPTOR : DESKTOP_DEVICE_DESCRIPTOR);
+	}, [i18n.locale, showConnectionId, voiceState?.connection_id, voiceState?.is_mobile]);
 	const displayName = isGroupedItem
-		? voiceState?.connection_id || unknownDeviceFallback
+		? deviceName
 		: NicknameUtils.getNickname(user, guildId, currentChannelId ?? undefined);
 	const openProfileAriaLabel = !isGroupedItem ? i18n._(OPEN_PROFILE_FOR_DESCRIPTOR, {displayName}) : undefined;
 	const row = (

@@ -2,20 +2,16 @@
 
 import * as ColorUtils from '@app/features/theme/utils/ColorUtils';
 import type {User} from '@app/features/user/models/User';
-import {getDefaultAvatarPrimaryColor} from '@app/features/user/utils/AvatarUtils';
+import {getDefaultAvatarPrimaryColor, getSystemUserBrandingColor} from '@app/features/user/utils/AvatarUtils';
 import {DEFAULT_ACCENT_COLOR} from '@fluxer/constants/src/AppConstants';
 
 type RawAccentColor = number | null | undefined;
 
-export function getAccentColorHex(rawAccentColor?: RawAccentColor): string | null {
+function getAccentColorHex(rawAccentColor?: RawAccentColor): string | null {
 	if (rawAccentColor == null) {
 		return null;
 	}
 	return ColorUtils.int2hex(rawAccentColor);
-}
-
-export function getAccentColor(rawAccentColor?: RawAccentColor, fallback = DEFAULT_ACCENT_COLOR): string {
-	return getAccentColorHex(rawAccentColor) ?? fallback;
 }
 
 export function getUserAccentColor(
@@ -23,6 +19,10 @@ export function getUserAccentColor(
 	profileAccentColor?: RawAccentColor,
 	fallback = DEFAULT_ACCENT_COLOR,
 ): string {
+	const systemColor = user ? getSystemUserBrandingColor(user.id) : null;
+	if (systemColor) {
+		return systemColor;
+	}
 	const profileColor = getAccentColorHex(profileAccentColor);
 	if (profileColor) {
 		return profileColor;

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {IARSubmission} from '@app/api/report/IReportRepository';
+import type {IARSubmission} from '@app/api/report/ReportModels';
 import type {SearchableReport} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 
@@ -15,8 +15,10 @@ export function convertToSearchableReport(report: IARSubmission): SearchableRepo
 		status: report.status,
 		reportType: report.reportType,
 		category: report.category,
+		reason: report.reason,
 		additionalInfo: report.additionalInfo,
 		reportedUserId: report.reportedUserId?.toString() || null,
+		reportedWebhookId: report.reportedWebhookId?.toString() || null,
 		reportedGuildId: report.reportedGuildId?.toString() || null,
 		reportedGuildName: report.reportedGuildName,
 		reportedMessageId: report.reportedMessageId?.toString() || null,

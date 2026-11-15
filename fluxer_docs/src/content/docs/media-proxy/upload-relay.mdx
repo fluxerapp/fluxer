@@ -1,122 +1,57 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Upload relay
-description: Capability-authorised uploads and the relay streaming limits.
+description: How to send a file to an upload relay URL and what the relay returns.
 ---
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-The upload relay is where a client sends the bytes of a file. Each upload URL has a signed capability, and the relay stores the one object it authorises. [Request attachment upload URLs](/http-api/messages/#request-attachment-upload-urls) and [Create stream preview upload URL](/http-api/streams/#create-stream-preview-upload-url) issue them. [Attachment uploads](/topics/uploads/) states the flow the relay takes part in.
+The upload relay stores the bytes of one file at a signed upload URL. [Request attachment upload URLs](/http-api/messages/#request-attachment-upload-urls) and [Create stream preview upload URL](/http-api/streams/#create-stream-preview-upload-url) issue these URLs. See [Attachment uploads](/topics/uploads/) for the whole flow.
 
-## Base URL and authorisation
+## Authorization
 
-Paths here are relative to the relay base in the issued upload URL. That base is a deployment setting.
-
-The capability is the complete authorisation. The relay reads no HTTP API `Authorization` header and has no request-count rate limit. The `PUT` has a [deployment mode](/media-proxy/overview/#deployment-modes) gate and returns 404 outside `upload` and `relay` mode.
-
-:::note[Some upload URLs address object storage directly]
-An upload URL points directly to object storage when the caller's IP address geolocates to a country the deployment lists in `keep_direct_countries`. Use the URL returned by the HTTP API. This page describes relay URLs only.
-:::
-
-:::caution[The complete URL is authenticated]
-The path key and the `t` capability are bound together by the signature. A client MUST use the URL exactly as issued and MUST NOT rebuild, decode, reorder, or re-encode it. The URL is a bearer capability.
-:::
-
-## Relay capability object
-
-The `t` query parameter is an opaque bearer token. Keep it private and use it only with the issued URL. Upload URLs expire after 900 seconds by default. A missing, invalid or expired token returns 401.
+The `t` query parameter is a signed token for one object or multipart part, and the relay ignores the `Authorization` header. Send the request to the URL exactly as the HTTP API returned it and keep the URL private. The URL expires after 900 seconds unless the instance sets another lifetime.
 
 ## Put relay object
 
 <RouteHeader method="PUT" path="/v1/relay/{key}" />
 
-Uploads the object or part authorised by the [relay capability](#relay-capability-object). Returns 200 with an empty body and an optional `ETag` header.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| key<sup>1</sup> | string | The object key of the issued URL |
-
-<sup>1</sup> Use the key exactly as it appears in the issued URL. Changing it returns 403
+Stores the object or multipart part the upload URL authorizes, and returns the `ETag` from storage when storage sends one.
 
 ### Query parameters
 
 | Field | Type | Description |
 | --- | --- | --- |
-| t<sup>1</sup> | string | The opaque upload token |
-| uploadId?<sup>2</sup> | string | The multipart upload identifier, present only when the capability has one |
-| partNumber?<sup>3</sup> | integer | The multipart part number, present only when the capability has one |
-
-<sup>1</sup> A missing `t` returns 401
-
-<sup>2</sup> Use the value from the issued URL. A missing or mismatched multipart upload identifier returns 403
-
-<sup>3</sup> An empty or unparsable value returns 400. A part number that does not match the issued URL returns 403
+| t | string | The upload token |
+| uploadId? | string | The multipart upload ID, when the issued URL has one |
+| partNumber? | integer | The multipart part number, when the issued URL has one |
 
 ### Request headers
 
 | Field | Type | Description |
 | --- | --- | --- |
-| Content-Length?<sup>1</sup> | integer | The declared length of the request body |
-| Content-Type?<sup>2</sup> | string | The media type to store, read only when the capability declares none |
-
-<sup>1</sup> A declared length above the authorised upload size or the endpoint body limit returns 413
-
-<sup>2</sup> The media type authorised by the upload URL takes precedence
-
-The relay ignores every other request header.
-
-### Request body
-
-The body is arbitrary bytes.
-
-When `Content-Length` is supplied, send exactly that many bytes. A longer body returns 413 and a shorter body returns 400. Without this header, a body above the authorised upload size or the endpoint body limit still returns 413. Interrupted uploads return 400, and insufficient relay capacity returns 503.
+| Content-Length? | integer | The length of the body, which must match the bytes you send |
+| Content-Type? | string | The media type to store, used when the upload URL sets none |
 
 ### Response
-
-The relay forwards no object storage response body and no arbitrary response headers.
 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | empty | The object or part was stored |
-| 400 | `Bad Request` | The `partNumber` value is unparsable or the client body ended early |
-| 401 | `Unauthorized` | The capability is missing, malformed, incorrectly signed, or expired |
-| 403 | `Forbidden` | The bucket, key, `uploadId`, or `partNumber` disagrees with the capability |
-| 404 | `Not Found` | The endpoint does not serve the upload relay |
-| 405<sup>1</sup> | empty | The method is not `PUT` |
-| 413 | `Payload Too Large` | The body exceeds the authorised upload size or the endpoint body limit |
+| 400 | `Bad Request` | `partNumber` is not a number, or the body ended before `Content-Length` or arrived too slowly |
+| 401 | `Unauthorized` | `t` is missing, invalid or expired |
+| 403 | `Forbidden` | The key, `uploadId` or `partNumber` does not match the token |
+| 404 | `Not Found` | The Media Proxy is not running in `upload` or `relay` [mode](/media-proxy/overview/#deployment-modes) |
+| 405 | empty | The method is not `PUT` or `OPTIONS` |
+| 413 | `Payload Too Large` | The body is longer than `Content-Length`, the authorized size or the body limit |
 | 500 | `Internal Server Error` | The relay could not store the upload locally |
-| 502 | `Bad Gateway` | The object store refused the write or could not be written to |
-| 503 | `Service Unavailable` | The relay has insufficient upload capacity |
+| 502 | `Bad Gateway` | Object storage refused the write |
+| 503 | `Service Unavailable` | The request has no `Content-Length` and the relay's temporary upload space is full |
 
-<sup>1</sup> It has no relay CORS headers and no cache policy
+You can retry a 502 or 503 until the URL expires. Responses allow requests from any origin, and a preflight `OPTIONS` request gets a 204.
 
-:::caution[A message naming the key creates the attachment]
-A successful relay request stores the bytes and creates no attachment. [Create message](/http-api/messages/#create-message), [Modify message](/http-api/messages/#modify-message), and [Execute webhook](/http-api/webhooks/#execute-webhook) are the requests that can name the key.
-:::
+## Limits
 
-[Complete attachment upload](/http-api/messages/#complete-attachment-upload) assembles a multipart upload once every part is stored, and a singlepart upload needs no completion step. A stream preview becomes readable as soon as the stored object is in place, and the [Streams resource](/http-api/streams/) defines that flow.
+`FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES` sets the body limit, which defaults to 500 MiB. `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_S3_TIMEOUT_MS` sets the write deadline, which defaults to 900,000 ms.
 
-Repeating an upload replaces the object or part, and the last successful write wins. A multipart part can be retried after a 502 or 503 while its URL remains valid.
-
-### Response headers
-
-The 200, 400, 401, 403, 413, 500, 502, and 503 have the relay CORS headers. The 404 and the 405 have none of them.
-
-Relay CORS means `Access-Control-Allow-Origin: *`, `Access-Control-Allow-Headers: Content-Type, Content-Length, Authorization, X-Fluxer-Features, X-Client-Context`, and `Access-Control-Expose-Headers: ETag, X-Fluxer-Version`.
-
-### Side effects
-
-A successful request writes the object the capability selects to the uploads bucket. It creates no attachment record and no message.
-
-## Streaming limits
-
-| Setting | Default | Configurable range |
-| --- | --- | --- |
-| Endpoint body limit | 500 MiB | 1 byte through 5 GiB |
-| Object storage write deadline | 900,000 ms | 1,000 through 3,600,000 ms |
-
-The largest body the relay accepts is the smaller of the endpoint body limit and the authorised upload size.
-
-When the request declares `Content-Length`, the relay extends the object storage write deadline by one second for every 16 KiB of declared length.
+The largest body the relay accepts is the smaller of the body limit and the authorized upload size. When the request has `Content-Length`, the relay adds one second to the write deadline for every 16 KiB of declared length, and it returns 400 if the body takes longer.

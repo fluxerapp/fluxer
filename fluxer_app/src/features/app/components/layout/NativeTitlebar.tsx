@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import styles from '@app/features/app/components/layout/NativeTitlebar.module.css';
+import {NativeDownloads} from '@app/features/app/components/layout/NativeDownloads';
 import {NativeWindowControls} from '@app/features/app/components/layout/NativeWindowControls';
 import {FluxerWordmark} from '@app/features/ui/components/icons/FluxerWordmark';
 import {getElectronAPI, type NativePlatform} from '@app/features/ui/utils/NativeUtils';
+import {NATIVE_TITLEBAR_CLASS} from '@fluxer/desktop_ipc/src/NativeTitlebarShell';
 import type React from 'react';
 import {useLayoutEffect} from 'react';
 
@@ -27,14 +28,14 @@ export const NativeTitlebar: React.FC<NativeTitlebarProps> = ({platform}) => {
 		electronApi.windowMaximize();
 	};
 	const brand = (
-		<div className={styles.left} data-flx="app.native-titlebar.left">
-			<FluxerWordmark className={styles.wordmark} data-flx="app.native-titlebar.wordmark" />
+		<div className={NATIVE_TITLEBAR_CLASS.left} data-flx="app.native-titlebar.left">
+			<FluxerWordmark className={NATIVE_TITLEBAR_CLASS.wordmark} data-flx="app.native-titlebar.wordmark" />
 		</div>
 	);
 	return (
 		<div
 			role="group"
-			className={styles.titlebar}
+			className={NATIVE_TITLEBAR_CLASS.root}
 			onDoubleClick={isMacOS ? undefined : handleDoubleClick}
 			data-platform={platform}
 			data-native-titlebar=""
@@ -42,13 +43,15 @@ export const NativeTitlebar: React.FC<NativeTitlebarProps> = ({platform}) => {
 		>
 			{isMacOS ? (
 				<>
-					<div className={styles.spacer} data-flx="app.native-titlebar.spacer" />
+					<div className={NATIVE_TITLEBAR_CLASS.spacer} data-flx="app.native-titlebar.spacer" />
 					{brand}
+					<NativeDownloads data-flx="app.native-titlebar.native-downloads" />
 				</>
 			) : (
 				<>
 					{brand}
-					<div className={styles.spacer} data-flx="app.native-titlebar.spacer" />
+					<div className={NATIVE_TITLEBAR_CLASS.spacer} data-flx="app.native-titlebar.spacer" />
+					<NativeDownloads data-flx="app.native-titlebar.native-downloads" />
 					<NativeWindowControls data-flx="app.native-titlebar.controls" />
 				</>
 			)}

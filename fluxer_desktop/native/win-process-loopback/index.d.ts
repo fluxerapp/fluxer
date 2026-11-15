@@ -9,6 +9,7 @@ export interface ProcessLoopbackOptions {
 	scope?: 'process' | 'system' | 'session-mixer';
 	sampleRate?: 48000;
 	channels?: 2;
+	endpoints?: Array<string>;
 }
 
 export interface AudioFrame {
@@ -40,6 +41,8 @@ export declare class ProcessLoopback extends EventEmitter {
 
 	start(): Promise<void>;
 
+	setEndpoints(endpoints: Array<string>): boolean;
+
 	stop(): void;
 }
 
@@ -66,3 +69,20 @@ export declare function getBackendInfo(): WinProcessLoopbackBackendInfo;
 export declare function pidFromHwnd(hwnd: bigint): number;
 
 export declare function resolveAudioRootPid(pid: number): number;
+
+export interface PlaybackDeviceSession {
+	pid: number;
+	rootPid: number;
+	exe: string;
+	state: 'active' | 'inactive';
+	excluded: boolean;
+}
+
+export interface PlaybackDevice {
+	id: string;
+	name: string;
+	isDefault: boolean;
+	sessions: Array<PlaybackDeviceSession>;
+}
+
+export declare function listPlaybackDevices(): Promise<Array<PlaybackDevice>>;

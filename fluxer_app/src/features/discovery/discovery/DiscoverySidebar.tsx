@@ -13,24 +13,24 @@ import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 
 const DISCOVERY_NAVIGATION_DESCRIPTOR = msg({
-	message: 'Discovery navigation',
-	comment: 'Accessible label for the section navigation in the Discovery page sidebar.',
+	message: 'Explore navigation',
+	comment: 'Accessible label for the section navigation in the Explore page sidebar.',
 });
 const APPS_DESCRIPTOR = msg({
 	message: 'Apps',
-	comment: 'Short label in the Discovery page sidebar. Keep it concise.',
+	comment: 'Short label in the Explore page sidebar. Keep it concise.',
 });
 const THEMES_DESCRIPTOR = msg({
 	message: 'Themes',
-	comment: 'Short label in the Discovery page sidebar. Keep it concise.',
+	comment: 'Short label in the Explore page sidebar. Keep it concise.',
 });
 const COMING_SOON_DESCRIPTOR = msg({
 	message: 'Coming soon',
-	comment: 'Small badge on disabled Discovery sidebar navigation items for sections not available yet.',
+	comment: 'Small badge on disabled Explore sidebar navigation items for sections not available yet.',
 });
 const COMING_SOON_NAV_ITEM_DESCRIPTOR = msg({
 	message: '{itemLabel}, coming soon',
-	comment: 'Accessible label for a disabled Discovery sidebar navigation item. {itemLabel} is the section name.',
+	comment: 'Accessible label for a disabled Explore sidebar navigation item. {itemLabel} is the section name.',
 });
 
 interface DiscoveryNavigationItem {

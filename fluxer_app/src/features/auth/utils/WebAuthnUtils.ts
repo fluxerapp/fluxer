@@ -2,6 +2,7 @@
 
 import {promptForSecurityKeyPin} from '@app/features/auth/components/modals/PasskeyPinModal';
 import {writePasskeyLoginRoute} from '@app/features/auth/passkey_migration/PasskeyLoginRoute';
+import {PasskeysUnsupportedError} from '@app/features/auth/utils/PasskeyErrorMessages';
 import {parsePasskeyPinFailure} from '@app/features/auth/utils/PasskeyPinErrors';
 import {Platform} from '@app/features/platform/types/Platform';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
@@ -16,15 +17,38 @@ import {
 	startRegistration,
 } from '@simplewebauthn/browser';
 
-async function runNativeCeremonyWithPinSupport<T>(run: (requestContext?: {pin?: string}) => Promise<T>): Promise<T> {
+interface NativeCeremonyRequestContext {
+	pin?: string;
+	instanceKey?: string;
+}
+
+const NATIVE_CEREMONY_ERROR_NAME = /\b(NotAllowedError|InvalidStateError|NoAuthenticatorError): /u;
+
+function withNativeCeremonyErrorName(error: unknown): unknown {
+	const name = error instanceof Error ? NATIVE_CEREMONY_ERROR_NAME.exec(error.message)?.[1] : undefined;
+	if (name !== undefined) {
+		(error as Error).name = name;
+	}
+	return error;
+}
+
+async function runNativeCeremonyWithPinSupport<T>(
+	instanceKey: string | null,
+	ceremony: (requestContext?: NativeCeremonyRequestContext) => Promise<T>,
+): Promise<T> {
+	const run = (requestContext?: NativeCeremonyRequestContext) =>
+		ceremony(requestContext).catch((error: unknown) => {
+			throw withNativeCeremonyErrorName(error);
+		});
+	const baseContext = instanceKey == null ? undefined : {instanceKey};
 	try {
-		return await run();
+		return await run(baseContext);
 	} catch (error) {
 		if (parsePasskeyPinFailure(error)?.kind !== 'required') {
 			throw error;
 		}
 	}
-	return promptForSecurityKeyPin((pin) => run({pin}));
+	return promptForSecurityKeyPin((pin) => run({...baseContext, pin}));
 }
 
 async function rememberMigratedPasskeyUse<T>(rpId: string | undefined, ceremony: Promise<T>): Promise<T> {
@@ -35,20 +59,17 @@ async function rememberMigratedPasskeyUse<T>(rpId: string | undefined, ceremony:
 	return result;
 }
 
-export async function assertWebAuthnSupported(): Promise<void> {
+export async function isWebAuthnSupported(): Promise<boolean> {
 	if (Platform.isElectron) {
 		const electronApi = getElectronAPI();
-		const nativeSupported = electronApi && (await electronApi.passkeyIsSupported?.());
-		if (nativeSupported) {
-			return;
-		}
-		if (browserSupportsWebAuthn()) {
-			return;
-		}
-		throw new Error('WebAuthn is not supported in this environment.');
+		return electronApi != null && (await electronApi.passkeyIsSupported?.()) === true;
 	}
-	if (!browserSupportsWebAuthn()) {
-		throw new Error('WebAuthn is not supported in this environment.');
+	return browserSupportsWebAuthn();
+}
+
+export async function assertWebAuthnSupported(): Promise<void> {
+	if (!(await isWebAuthnSupported())) {
+		throw new PasskeysUnsupportedError();
 	}
 }
 
@@ -63,7 +84,7 @@ export async function performRegistration(
 		if (nativeSupported && passkeyRegister) {
 			return rememberMigratedPasskeyUse(
 				options.rp.id,
-				runNativeCeremonyWithPinSupport((requestContext) => passkeyRegister(options, requestContext)),
+				runNativeCeremonyWithPinSupport(null, (requestContext) => passkeyRegister(options, requestContext)),
 			);
 		}
 	}
@@ -72,6 +93,7 @@ export async function performRegistration(
 
 export async function performAuthentication(
 	options: PublicKeyCredentialRequestOptionsJSON,
+	instanceKey: string | null = null,
 ): Promise<AuthenticationResponseJSON> {
 	await assertWebAuthnSupported();
 	if (Platform.isElectron) {
@@ -81,7 +103,7 @@ export async function performAuthentication(
 		if (nativeSupported && passkeyAuthenticate) {
 			return rememberMigratedPasskeyUse(
 				options.rpId,
-				runNativeCeremonyWithPinSupport((requestContext) => passkeyAuthenticate(options, requestContext)),
+				runNativeCeremonyWithPinSupport(instanceKey, (requestContext) => passkeyAuthenticate(options, requestContext)),
 			);
 		}
 	}

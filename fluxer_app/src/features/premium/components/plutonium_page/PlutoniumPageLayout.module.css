@@ -8,5 +8,5 @@
 	min-width: 0;
 	min-height: 0;
 	overflow: hidden;
-	background-color: #0a0822;
+	background-color: var(--pl-layout-face, #0a0822);
 }

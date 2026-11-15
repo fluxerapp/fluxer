@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {EXAMPLE_DOMAIN} from '@app/features/app/config/I18nDisplayConstants';
-import {Channel} from '@app/features/channel/models/Channel';
+import {Channel, type ChannelWire} from '@app/features/channel/models/Channel';
 import {Message} from '@app/features/messaging/models/MessagingMessage';
 import {http} from '@app/features/platform/transport/RestTransport';
 import SearchHistory from '@app/features/search/state/SearchHistory';
 import {addUniqueSearchParam as addUnique, parseQuery} from '@app/features/search/utils/SearchQueryParser';
 import type {SearchSegment} from '@app/features/search/utils/SearchSegmentManager';
+import {ingestSearchThreads} from '@app/features/threads/commands/ThreadCommands';
+import {resolveFormattingLocale} from '@fluxer/constants/src/Locales';
 import type {Channel as WireChannel} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
+import type {ThreadMemberResponse} from '@fluxer/schema/src/domains/channel/ThreadSchemas';
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -18,7 +21,7 @@ const NO_RESPONSE_BODY_RECEIVED_DESCRIPTOR = msg({
 		'Error thrown when a message search returns an empty HTTP body. Reaches the user as a toast or inline error.',
 });
 const STILL_INDEXING_DESCRIPTOR = msg({
-	message: 'Still indexing — check back in a moment',
+	message: 'Still indexing. Check back in a moment',
 	comment:
 		'Status message returned by search when results are unavailable because the server is still building the index.',
 });
@@ -107,13 +110,6 @@ const HINT_EXCLUDE_EXT_DESCRIPTOR = msg({
 	comment: 'Hint shown beside -ext: (negation). Sentence case, no trailing punctuation.',
 });
 
-export interface SearchOption {
-	value: string;
-	label: string;
-	description?: string;
-	isDefault?: boolean;
-}
-
 export interface SearchValueOption {
 	value: string;
 	label: string;
@@ -162,6 +158,8 @@ export interface MessageSearchParams {
 interface ApiMessageSearchResponse {
 	messages: Array<WireMessage>;
 	channels?: Array<WireChannel>;
+	threads?: Array<ChannelWire>;
+	members?: Array<ThreadMemberResponse>;
 	total: number;
 	hits_per_page?: number;
 	page?: number;
@@ -226,6 +224,9 @@ export async function searchMessages(
 		return {indexing: true, message: i18n._(STILL_INDEXING_DESCRIPTOR)};
 	}
 	const searchResponse = body as ApiMessageSearchResponse;
+	if (searchResponse.threads) {
+		ingestSearchThreads(searchResponse.threads, searchResponse.members ?? []);
+	}
 	return {
 		messages: searchResponse.messages?.map((msg) => new Message(msg)) ?? [],
 		channels: searchResponse.channels?.map((channel) => new Channel(channel)) ?? [],
@@ -247,7 +248,7 @@ export interface SearchFilterOption {
 }
 
 export function getSearchFilterOptions(i18n: I18n): Array<SearchFilterOption> {
-	const valuesListFormatter = new Intl.ListFormat(i18n.locale, {type: 'disjunction'});
+	const valuesListFormatter = new Intl.ListFormat(resolveFormattingLocale(i18n.locale), {type: 'disjunction'});
 	const hasContentValues: Array<SearchValueOption> = [
 		{
 			value: 'image',
@@ -471,7 +472,7 @@ export function getSearchFilterOptions(i18n: I18n): Array<SearchFilterOption> {
 	];
 }
 
-export function toApiParams(params: MessageSearchParams, extraParams?: MessageSearchApiParams): MessageSearchApiParams {
+function toApiParams(params: MessageSearchParams, extraParams?: MessageSearchApiParams): MessageSearchApiParams {
 	const hitsPerPage = params.hitsPerPage ?? 25;
 	const page = params.page ?? 1;
 	const apiParams: MessageSearchApiParams = {

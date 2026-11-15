@@ -163,9 +163,7 @@ function normalizeGetOptions(options) {
 
 module.exports = {
 	base64Url,
-	clientDataJSON,
 	nativeFileName,
 	normalizeCreateOptions,
 	normalizeGetOptions,
-	transportBits,
 };

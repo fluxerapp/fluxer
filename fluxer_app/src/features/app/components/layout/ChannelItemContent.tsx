@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/app/components/layout/ChannelItem.module.css';
-import {useTextOverflow} from '@app/features/app/hooks/useTextOverflow';
+import {useTextOverflow} from '@app/features/ui/hooks/useTextOverflow';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
@@ -19,7 +19,7 @@ interface ChannelItemContentProps {
 export const ChannelItemContent: React.FC<ChannelItemContentProps> = observer(
 	({icon, name, actions, isCategory = false, nameClassName}) => {
 		const nameRef = useRef<HTMLSpanElement>(null);
-		const isNameOverflowing = useTextOverflow(nameRef);
+		const isNameOverflowing = useTextOverflow(nameRef, {content: name});
 		if (isCategory) {
 			return (
 				<>

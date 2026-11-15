@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {Gif} from '@app/features/expressions/commands/GifCommands';
+import {wrapDesktopLocalResourceURL} from '@app/features/messaging/utils/DesktopResourceUrl';
 
 const GIF_IMAGE_FORMAT_KEYS = ['gif', 'tinygif', 'nanogif'] as const;
 const GIF_VIDEO_FORMAT_KEYS = ['mp4', 'tinymp4'] as const;
@@ -60,7 +61,7 @@ async function downloadFirstAvailableTarget(targets: Array<GifDownloadTarget>, b
 		seenUrls.add(target.url);
 		attempts += 1;
 		try {
-			const response = await fetch(target.url);
+			const response = await fetch(wrapDesktopLocalResourceURL(target.url));
 			if (!response.ok) continue;
 			const blob = await response.blob();
 			if (blob.size === 0) continue;

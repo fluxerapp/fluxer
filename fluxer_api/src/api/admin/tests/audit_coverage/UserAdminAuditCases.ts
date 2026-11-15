@@ -160,6 +160,29 @@ export const UserAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 	{
 		method: 'GET',
 		route: '/admin/users',
+		name: 'acl',
+		async prepare() {
+			return {
+				request: {path: `/admin/users?acl=${encodeURIComponent(AdminACLs.WILDCARD)}&limit=10&offset=0`},
+				expected: {
+					action: 'search_users',
+					targetType: 'user',
+					targetId: '0',
+					metadata: {
+						selector: 'acl',
+						acl: AdminACLs.WILDCARD,
+						limit: '10',
+						offset: '0',
+						result_count: '1',
+						total: '1',
+					},
+				},
+			};
+		},
+	},
+	{
+		method: 'GET',
+		route: '/admin/users',
 		name: 'search',
 		search: 'enabled',
 		async prepare() {
@@ -353,6 +376,21 @@ export const UserAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 					targetType: 'user',
 					targetId: target.userId,
 					metadata: {session_count: '1'},
+				},
+			};
+		},
+	},
+	{
+		method: 'GET',
+		route: '/admin/app-sessions',
+		async prepare() {
+			return {
+				request: {path: '/admin/app-sessions?platform=ios&release_channel=beta'},
+				expected: {
+					action: 'list_app_sessions',
+					targetType: 'user',
+					targetId: '0',
+					metadata: {platform: 'ios', release_channel: 'beta', has_cursor: 'false', result_count: '0'},
 				},
 			};
 		},

@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AccountPresenceIntent} from '@app/features/auth/state/AccountStorage';
+import Initialization from '@app/features/app/state/Initialization';
+import type {AccountPresenceIntent} from '@app/features/auth/state/AccountStorageContract';
 import {deferUntilModulesLoaded} from '@app/features/platform/utils/DeferUntilModulesLoaded';
+import {registerLocalPresenceIntentHandler} from '@app/features/presence/state/LocalPresenceIntent';
 import Idle from '@app/features/ui/state/Idle';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import type {CustomStatus, GatewayCustomStatusPayload} from '@app/features/user/state/CustomStatus';
@@ -18,7 +20,7 @@ type Presence = Readonly<{
 	custom_status: GatewayCustomStatusPayload | null;
 }>;
 
-export const ACCOUNT_PRESENCE_INTENT_MAX_AGE_MS = 60 * 1000;
+const ACCOUNT_PRESENCE_INTENT_MAX_AGE_MS = 60 * 1000;
 
 interface LocalPresenceUserSettings {
 	status: StatusType;
@@ -51,28 +53,48 @@ class LocalPresence {
 				() => MobileLayout.isMobileLayout(),
 				() => this.updatePresence(),
 			);
+			reaction(
+				() => Idle.isIdle(),
+				() => this.updatePresence(),
+			);
+			reaction(
+				() => Idle.isAfk(),
+				() => this.updatePresence(),
+			);
+			reaction(
+				() => Initialization.isStale,
+				() => this.updatePresence(),
+			);
 		});
 	}
 
 	updatePresence(): void {
 		const isMobile = MobileLayout.isMobileLayout();
 		const settings = userSettings;
-		if (!settings?.isHydrated()) {
-			if (this.restoredIntent) {
-				this.applyRestoredIntent(isMobile, settings);
-				return;
-			}
-			this.status = StatusTypes.INVISIBLE;
-			this.since = 0;
-			this.afk = false;
-			this.mobile = isMobile;
-			this.customStatus = null;
+		if (settings?.isHydrated()) {
+			this.restoredIntent = null;
+			this.applySettings(isMobile, settings);
 			return;
 		}
-		this.restoredIntent = null;
+		if (this.restoredIntent) {
+			this.applyRestoredIntent(isMobile, settings);
+			return;
+		}
+		if (settings !== null && Initialization.isStale) {
+			this.applySettings(isMobile, settings);
+			return;
+		}
+		this.status = StatusTypes.INVISIBLE;
+		this.since = 0;
+		this.afk = false;
+		this.mobile = isMobile;
+		this.customStatus = null;
+	}
+
+	private applySettings(isMobile: boolean, settings: LocalPresenceUserSettings): void {
 		const userStatus = settings.status;
 		const idleSince = Idle.getIdleSince();
-		const afk = this.computeAfk(idleSince, isMobile, settings);
+		const afk = this.syncAfk(isMobile, settings);
 		const effectiveStatus = userStatus === StatusTypes.ONLINE && idleSince > 0 ? StatusTypes.IDLE : userStatus;
 		const normalizedCustomStatus = normalizeCustomStatus(settings.getCustomStatus());
 		this.customStatus = normalizedCustomStatus ? {...normalizedCustomStatus} : null;
@@ -138,10 +160,9 @@ class LocalPresence {
 		return `hydrated:${hydrated}|${this.status}|${customStatusToKey(this.customStatus)}|afk:${afk}|mobile:${mobile}`;
 	}
 
-	private computeAfk(idleSince: number, isMobile: boolean, settings: LocalPresenceUserSettings | null): boolean {
-		if (isMobile || idleSince <= 0) return false;
-		const afkTimeout = settings?.getAfkTimeout() ?? 600;
-		return Date.now() - idleSince > afkTimeout * 1000;
+	private syncAfk(isMobile: boolean, settings: LocalPresenceUserSettings | null): boolean {
+		Idle.setAfkTimeoutMs((settings?.getAfkTimeout() ?? 600) * 1000);
+		return !isMobile && Idle.isAfk();
 	}
 
 	private applyRestoredIntent(isMobile: boolean, settings: LocalPresenceUserSettings | null): void {
@@ -154,7 +175,7 @@ class LocalPresence {
 		this.customStatus = this.restoredIntent.customStatus ? {...this.restoredIntent.customStatus} : null;
 		this.status = effectiveStatus;
 		this.since = idleSince;
-		this.afk = this.computeAfk(idleSince, isMobile, settings);
+		this.afk = this.syncAfk(isMobile, settings);
 		this.mobile = isMobile;
 	}
 
@@ -186,4 +207,6 @@ class LocalPresence {
 	}
 }
 
-export default new LocalPresence();
+const localPresence = new LocalPresence();
+registerLocalPresenceIntentHandler(localPresence);
+export default localPresence;

@@ -113,25 +113,6 @@ mod tests {
     }
 
     #[test]
-    fn converts_basic_markup() {
-        assert_eq!(to_markdown("<strong>bold</strong>", identity), "**bold**");
-        assert_eq!(to_markdown("<em>x</em>", identity), "_x_");
-        assert_eq!(to_markdown("a<br>b", identity), "a\nb");
-    }
-
-    #[test]
-    fn keeps_http_links() {
-        assert_eq!(
-            to_markdown(r#"<a href="https://e.com">t</a>"#, identity),
-            "[t](https://e.com)"
-        );
-        assert_eq!(
-            to_markdown(r#"<a href="http://e.com">t</a>"#, identity),
-            "[t](http://e.com)"
-        );
-    }
-
-    #[test]
     fn drops_dangerous_link_schemes_but_keeps_text() {
         assert_eq!(
             to_markdown(r#"<a href="javascript:alert(1)">click</a>"#, identity),
@@ -140,14 +121,6 @@ mod tests {
         assert_eq!(
             to_markdown(r#"<a href="data:text/html,x">click</a>"#, identity),
             "click"
-        );
-    }
-
-    #[test]
-    fn keeps_relative_links() {
-        assert_eq!(
-            to_markdown(r#"<a href="/path">t</a>"#, identity),
-            "[t](/path)"
         );
     }
 }

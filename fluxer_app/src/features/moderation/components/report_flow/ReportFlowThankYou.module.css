@@ -1,0 +1,63 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.body {
+	margin: 0;
+	color: var(--text-secondary);
+	font-size: 0.9375rem;
+	line-height: 1.375rem;
+}
+
+.section {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.heading {
+	margin: 0;
+	color: var(--text-primary);
+	font-size: 0.875rem;
+	font-weight: 600;
+	line-height: 1.25rem;
+}
+
+.box {
+	border: 0.0625rem solid var(--background-header-secondary);
+	border-radius: var(--radius-xl);
+	background-color: var(--background-secondary-alt);
+}
+
+.row {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	padding: 0.875rem 1rem;
+}
+
+.rowText {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: 0.125rem;
+	min-width: 0;
+}
+
+.rowTitle {
+	color: var(--text-primary);
+	font-size: 0.9375rem;
+	font-weight: 600;
+	line-height: 1.25rem;
+	overflow-wrap: anywhere;
+}
+
+.rowDescription {
+	color: var(--text-primary-muted);
+	font-size: 0.8125rem;
+	line-height: 1.125rem;
+}

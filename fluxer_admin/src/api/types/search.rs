@@ -17,6 +17,7 @@ pub enum IndexRefreshStatusResponse {
     Progress {
         status: String,
         index_type: Option<String>,
+        phase: Option<String>,
         total: Option<u64>,
         indexed: Option<u64>,
         started_at: Option<String>,

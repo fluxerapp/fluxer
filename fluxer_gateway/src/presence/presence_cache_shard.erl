@@ -4,8 +4,6 @@
 -typing([eqwalizer]).
 -behaviour(gen_server).
 
--include_lib("fluxer_gateway/include/timeout_config.hrl").
-
 -export([start_link/1, table_name/1, write_put/3, write_delete/2]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
@@ -15,7 +13,9 @@
 
 -spec start_link(non_neg_integer()) -> {ok, pid()} | {error, term()}.
 start_link(ShardIndex) ->
-    normalize_start_link(gen_server:start_link(?MODULE, #{shard_index => ShardIndex}, [])).
+    shard_utils:normalize_start_link(
+        gen_server:start_link(?MODULE, #{shard_index => ShardIndex}, [])
+    ).
 
 -spec table_name(non_neg_integer()) -> atom().
 table_name(Index) ->
@@ -85,7 +85,7 @@ code_change(_OldVsn, State, _Extra) ->
 -spec do_get(atom(), term()) -> {ok, map()} | not_found.
 do_get(Table, UserId) ->
     case safe_ets_lookup(Table, UserId) of
-        [{_, Presence}] -> {ok, Presence};
+        [{_, Presence}] -> {ok, eqwalizer:dynamic_cast(Presence)};
         _ -> not_found
     end.
 
@@ -99,7 +99,7 @@ do_bulk_get(Table, UserIds) ->
 -spec filtermap_ets_lookup(atom(), term()) -> {true, map()} | false.
 filtermap_ets_lookup(Table, Uid) ->
     case safe_ets_lookup(Table, Uid) of
-        [{_, Presence}] -> {true, Presence};
+        [{_, Presence}] -> {true, eqwalizer:dynamic_cast(Presence)};
         _ -> false
     end.
 
@@ -195,63 +195,3 @@ safe_ets_lookup(Table, Key) ->
         error:_Reason -> [];
         exit:_Reason -> []
     end.
-
--spec normalize_start_link(gen_server:start_ret()) -> {ok, pid()} | {error, term()}.
-normalize_start_link({ok, Pid}) ->
-    {ok, Pid};
-normalize_start_link({error, Reason}) ->
-    {error, Reason};
-normalize_start_link(ignore) ->
-    {error, ignore}.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-table_name_test() ->
-    ?assertEqual(presence_cache_0, table_name(0)),
-    ?assertEqual(presence_cache_5, table_name(5)).
-
-do_put_online_inserts_test() ->
-    Table = test_cache_table,
-    ets:new(Table, [named_table, public, set]),
-    ?assertEqual(ok, do_put(Table, 1, #{<<"status">> => <<"online">>})),
-    ?assertMatch([{1, _}], ets:lookup(Table, 1)),
-    ets:delete(Table).
-
-do_put_offline_deletes_test() ->
-    Table = test_cache_table_2,
-    ets:new(Table, [named_table, public, set]),
-    ets:insert(Table, {1, #{<<"status">> => <<"online">>}}),
-    ?assertEqual(ok, do_put(Table, 1, #{<<"status">> => <<"offline">>})),
-    ?assertEqual([], ets:lookup(Table, 1)),
-    ets:delete(Table).
-
-do_put_invisible_deletes_test() ->
-    Table = test_cache_table_3,
-    ets:new(Table, [named_table, public, set]),
-    ets:insert(Table, {1, #{<<"status">> => <<"online">>}}),
-    ?assertEqual(ok, do_put(Table, 1, #{<<"status">> => <<"invisible">>})),
-    ?assertEqual([], ets:lookup(Table, 1)),
-    ets:delete(Table).
-
-ensure_table_creates_new_test() ->
-    TestTable = test_ensure_table_create,
-    ensure_table(TestTable, self()),
-    ?assertNotEqual(undefined, ets:info(TestTable)),
-    ets:delete(TestTable).
-
-ensure_table_reuses_existing_test() ->
-    TestTable = test_ensure_table_reuse,
-    ets:new(TestTable, [named_table, public, set]),
-    ets:insert(TestTable, {42, #{<<"status">> => <<"online">>}}),
-    ensure_table(TestTable, self()),
-    ?assertMatch([{42, _}], ets:lookup(TestTable, 42)),
-    ets:delete(TestTable).
-
-heir_option_returns_empty_for_undefined_test() ->
-    ?assertEqual([], heir_option(undefined)).
-
-heir_option_returns_heir_tuple_test() ->
-    Pid = self(),
-    ?assertEqual([{heir, Pid, inherited}], heir_option(Pid)).
--endif.

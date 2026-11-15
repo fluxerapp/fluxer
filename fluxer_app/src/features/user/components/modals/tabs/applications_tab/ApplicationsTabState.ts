@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Endpoints} from '@app/features/app/constants/Endpoints';
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import type {DeveloperApplicationWire} from '@app/features/devtools/models/DeveloperApplication';
 import {DeveloperApplication} from '@app/features/devtools/models/DeveloperApplication';
 import {http} from '@app/features/platform/transport/RestTransport';
@@ -196,19 +197,6 @@ class ApplicationsTabState {
 		}
 	}
 
-	clearError(): void {
-		this.error = null;
-		if (this.navigationState === NavigationState.ERROR) {
-			if (this.isDetailView) {
-				this.navigationState = NavigationState.LOADING_DETAIL;
-			} else if (this.hasApplications) {
-				this.navigationState = NavigationState.LIST;
-			} else {
-				this.navigationState = NavigationState.LOADING_LIST;
-			}
-		}
-	}
-
 	private mergeApplications(applications: Array<DeveloperApplicationWire | DeveloperApplication>): void {
 		const nextById: Record<string, DeveloperApplication> = {...this.applicationsById};
 		const nextOrder: Array<string> = [];
@@ -232,6 +220,23 @@ class ApplicationsTabState {
 		this.applicationOrder = nextOrder;
 		return record;
 	}
+
+	reset(): void {
+		this.listAbortController?.abort();
+		this.detailAbortController?.abort();
+		this.listAbortController = null;
+		this.detailAbortController = null;
+		this.navigationState = NavigationState.LOADING_LIST;
+		this.applicationOrder = [];
+		this.applicationsById = {};
+		this.selectedAppId = null;
+		this.error = null;
+		this.isLoading = false;
+	}
 }
 
-export default new ApplicationsTabState();
+const applicationsTabState = new ApplicationsTabState();
+
+ResettableStates.register(applicationsTabState, () => applicationsTabState.reset());
+
+export default applicationsTabState;

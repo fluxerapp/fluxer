@@ -3,7 +3,7 @@
 import {createHash, randomUUID} from 'node:crypto';
 import {ArchiveAttemptSupersededError} from '@app/api/archive/ArchiveAttemptSupersededError';
 import {ArchiveTaskDeferredError, ArchiveTerminalFailureError, isArchiveTask} from '@app/api/archive/ArchiveTask';
-import type {IJobLedgerRepository} from '@app/api/jobs/IJobLedgerRepository';
+import type {JobLedgerRepository} from '@app/api/jobs/JobLedgerRepository';
 import {Logger} from '@app/api/Logger';
 import {getWorkerService} from '@app/api/middleware/ServiceRegistry';
 import {isJsonRecord, parseJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
@@ -16,7 +16,7 @@ import {
 } from '@app/api/worker/WorkerHeartbeat';
 import type {ConsumerMessages, FetchOptions, JsMsg} from '@nats-io/jetstream';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
-import {JobCancelledError, type WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
+import {JobCancelledError, JobFailedError, type WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 
 const MAX_DLQ_PUBLISH_ATTEMPTS = 3;
 const DLQ_RETRY_DELAY_MS = 250;
@@ -55,7 +55,7 @@ interface WorkerRunnerOptions {
 	queue: WorkerRunnerQueue;
 	consumerName: string;
 	laneName: string;
-	ledger: IJobLedgerRepository;
+	ledger: JobLedgerRepository;
 	workerId?: string;
 	concurrency?: number;
 	maxDeliver?: number;
@@ -74,7 +74,7 @@ export class WorkerRunner {
 	private readonly maxDeliver: number;
 	private readonly ackWaitMs: number;
 	private readonly workerService: IWorkerService;
-	private readonly ledger: IJobLedgerRepository;
+	private readonly ledger: JobLedgerRepository;
 	private readonly heartbeat: WorkerHeartbeat | null;
 	private heartbeatSignal: WorkerHeartbeatSignal | null = null;
 	private heartbeatTimer: NodeJS.Timeout | null = null;
@@ -250,10 +250,7 @@ export class WorkerRunner {
 				if (!this.running) {
 					break;
 				}
-				const messages = await consumer.fetch({
-					max_messages: this.concurrency - this.inFlightJobs.size,
-					idle_heartbeat: 5000,
-				});
+				const messages = await consumer.fetch({max_messages: this.concurrency - this.inFlightJobs.size});
 				this.consumerMessages = messages;
 				if (!this.running) {
 					messages.stop();
@@ -473,7 +470,7 @@ export class WorkerRunner {
 				return false;
 			}
 			const deliveryCount = msg.info.deliveryCount;
-			const isLastDelivery = deliveryCount >= this.maxDeliver;
+			const isLastDelivery = deliveryCount >= this.maxDeliver || error instanceof JobFailedError;
 			const errorMessage = error instanceof Error ? error.message : String(error);
 			if (archiveTask || isLastDelivery) {
 				Logger.error(

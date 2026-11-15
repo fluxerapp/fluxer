@@ -61,14 +61,6 @@
 	border-radius: 0.0625rem;
 }
 
-.handleStart {
-	--audio-waveform-handle-edge: start;
-}
-
-.handleEnd {
-	--audio-waveform-handle-edge: end;
-}
-
 .playhead {
 	position: absolute;
 	top: 0;

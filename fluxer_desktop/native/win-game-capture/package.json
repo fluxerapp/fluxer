@@ -1,7 +1,7 @@
 {
 	"name": "@fluxer/win-game-capture",
 	"version": "0.0.0",
-	"description": "Native Windows game capture fallback for fullscreen games that display capture cannot capture",
+	"description": "Native Windows GPU scheduling priority and window capture item helpers",
 	"private": true,
 	"license": "AGPL-3.0-or-later",
 	"os": [
@@ -19,10 +19,5 @@
 		"loader-diagnostics.cjs",
 		"win-game-capture.win32-x64-msvc.node",
 		"win-game-capture.win32-arm64-msvc.node"
-	],
-	"scripts": {
-		"build": "cargo run --locked --quiet --manifest-path ../../../tools/ci/Cargo.toml -- build-desktop-native-addon",
-		"test": "cargo test --manifest-path Cargo.toml && node --test index.test.mjs",
-		"test:loader": "node --test index.test.mjs"
-	}
+	]
 }

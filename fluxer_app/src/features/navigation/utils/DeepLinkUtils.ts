@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
 import * as GiftCommands from '@app/features/gift/commands/GiftCommands';
@@ -8,21 +9,22 @@ import * as InviteCommands from '@app/features/invite/commands/InviteCommands';
 import {setPathQueryParams} from '@app/features/messaging/utils/MessagingUrlUtils';
 import {type AppPageId, navigateToAppPage, parseAppPagePath} from '@app/features/navigation/utils/AppPageLinks';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
+import {isDesktopLocalAppDocument} from '@app/features/platform/DesktopLocalAppRuntime';
+import {currentInstanceTarget} from '@app/features/platform/transport/InstanceHTTP';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as PlutoniumPageCommands from '@app/features/premium/commands/PlutoniumPageCommands';
-import PlutoniumPageRollout from '@app/features/premium/state/PlutoniumPageRollout';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {APP_PROTOCOL_SCHEME, isAppProtocolUrl} from '@app/features/ui/utils/AppProtocol';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import * as UserProfileCommands from '@app/features/user/commands/UserProfileCommands';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import {
 	parseUserSettingsDeepLinkPath,
 	type UserSettingsDeepLinkTarget,
 } from '@app/features/user/components/settings_utils/UserSettingsDeepLinks';
 import {ME} from '@fluxer/constants/src/AppConstants';
+import {OFFICIAL_WEB_APP_HOSTS} from '@fluxer/instance_bootstrap/src/OfficialWebAppHosts';
 import {isProbablyAValidSnowflake} from '@fluxer/snowflake/src/SnowflakeUtils';
 import {createElement} from 'react';
 
@@ -90,7 +92,7 @@ export function parseUserSettingsDeepLink(rawUrl: string): UserSettingsDeepLinkT
 	return parseUserSettingsDeepLinkPath(normalized);
 }
 
-export const parseDeepLink = (rawUrl: string): DeepLinkTarget | null => {
+const parseDeepLink = (rawUrl: string): DeepLinkTarget | null => {
 	const directUserId = parseUserProfileUrl(rawUrl);
 	if (directUserId) {
 		return {type: 'user', userId: directUserId};
@@ -130,16 +132,18 @@ export const parseDeepLink = (rawUrl: string): DeepLinkTarget | null => {
 };
 
 function openUserSettingsDeepLink(target: UserSettingsDeepLinkTarget): void {
-	if (target.tab === 'plutonium' && PlutoniumPageRollout.enabled) {
+	if (target.tab === 'plutonium') {
 		PlutoniumPageCommands.openPlutoniumPage();
 		return;
 	}
 	ModalCommands.push(
-		ModalCommands.modal(() =>
-			createElement(UserSettingsModal, {
-				initialTab: target.tab,
-				initialSubtab: target.section,
-			}),
+		ModalCommands.modal(
+			() =>
+				createElement(UserSettingsModal, {
+					initialTab: target.tab,
+					initialSubtab: target.section,
+				}),
+			'user-settings',
 		),
 	);
 	ComponentBus.dispatchOrBuffer('USER_SETTINGS_TAB_SELECT', {tab: target.tab, section: target.section});
@@ -147,15 +151,16 @@ function openUserSettingsDeepLink(target: UserSettingsDeepLinkTarget): void {
 
 const navigateForTarget = (target: DeepLinkTarget) => {
 	const isAuthenticated = Authentication.isAuthenticated;
-	if (target.type === 'gift' && !shouldShowPremiumFeatures()) {
+	if (target.type === 'gift' && RuntimeConfig.getSnapshotOrNull() !== null && !shouldShowPremiumFeatures()) {
 		return;
 	}
 	if (isAuthenticated) {
+		const instanceTarget = currentInstanceTarget();
 		if (target.type === 'invite') {
-			void InviteCommands.openAcceptModal(target.code);
+			void InviteCommands.openAcceptModal(target.code, instanceTarget);
 			RouterUtils.transitionTo(Routes.ME);
 		} else if (target.type === 'gift') {
-			void GiftCommands.openAcceptModal(target.code);
+			void GiftCommands.openAcceptModal(target.code, instanceTarget);
 			RouterUtils.transitionTo(Routes.ME);
 		} else if (target.type === 'user') {
 			navigateToLinkedUserProfile(target.userId);
@@ -188,6 +193,10 @@ const navigateForTarget = (target: DeepLinkTarget) => {
 	const dest = target.preferLogin ? Routes.giftLogin(target.code) : Routes.giftRegister(target.code);
 	RouterUtils.transitionTo(dest);
 };
+
+export function isAppDeepLink(rawUrl: string): boolean {
+	return isAppProtocolUrl(rawUrl) && parseDeepLink(rawUrl) !== null;
+}
 
 export function handleDeepLinkUrl(rawUrl: string): boolean {
 	const target = parseDeepLink(rawUrl);
@@ -222,14 +231,7 @@ export async function startDeepLinkHandling(): Promise<void> {
 	}
 }
 
-const OFFICIAL_INTERNAL_APP_HOSTS = [
-	'fluxer.app',
-	'canary.fluxer.app',
-	'web.fluxer.app',
-	'web.canary.fluxer.app',
-	'fluxer.com',
-	'canary.fluxer.com',
-];
+const OFFICIAL_INTERNAL_APP_HOSTS = [...OFFICIAL_WEB_APP_HOSTS, 'fluxer.app', 'canary.fluxer.app'];
 const getNormalizedWebAppHost = (): string => {
 	try {
 		return new URL(RuntimeConfig.webAppBaseUrl).host.toLowerCase();
@@ -241,7 +243,11 @@ const getNormalizedWebAppHost = (): string => {
 export function isInternalChannelHost(host: string): boolean {
 	if (!host) return false;
 	const normalizedHost = host.toLowerCase();
-	if (typeof location !== 'undefined' && normalizedHost === location.host.toLowerCase()) {
+	if (
+		typeof location !== 'undefined' &&
+		!isDesktopLocalAppDocument() &&
+		normalizedHost === location.host.toLowerCase()
+	) {
 		return true;
 	}
 	if (RuntimeConfig.marketingHost && normalizedHost === RuntimeConfig.marketingHost.toLowerCase()) {
@@ -251,7 +257,7 @@ export function isInternalChannelHost(host: string): boolean {
 	if (webAppHost && normalizedHost === webAppHost) {
 		return true;
 	}
-	return OFFICIAL_INTERNAL_APP_HOSTS.includes(normalizedHost);
+	return !RuntimeConfig.isSelfHosted() && OFFICIAL_INTERNAL_APP_HOSTS.includes(normalizedHost);
 }
 
 export function parseChannelUrl(url: string): string | null {
@@ -291,21 +297,23 @@ export function parseChannelUrl(url: string): string | null {
 	return null;
 }
 
-export function parseUserProfileUrl(url: string): string | null {
+function userProfilePath(url: string): string | null {
+	if (isAppProtocolUrl(url)) return normalizeAppRoutePath(url)?.split(/[?#]/, 1)[0] ?? null;
 	try {
 		const parsed = new URL(url);
-		if (!isInternalChannelHost(parsed.host) || !parsed.pathname.startsWith('/users/')) {
-			return null;
-		}
-		const segments = parsed.pathname.split('/').filter(Boolean);
-		if (segments.length !== 2 || segments[0] !== 'users') {
-			return null;
-		}
-		const userId = segments[1];
-		return isProbablyAValidSnowflake(userId) ? userId : null;
+		return isInternalChannelHost(parsed.host) ? parsed.pathname : null;
 	} catch {
 		return null;
 	}
+}
+
+export function parseUserProfileUrl(url: string): string | null {
+	const path = userProfilePath(url);
+	if (!path?.startsWith('/users/')) return null;
+	const segments = path.split('/').filter(Boolean);
+	if (segments.length !== 2) return null;
+	const userId = segments[1];
+	return isProbablyAValidSnowflake(userId) ? userId : null;
 }
 
 export function navigateToLinkedUserProfile(

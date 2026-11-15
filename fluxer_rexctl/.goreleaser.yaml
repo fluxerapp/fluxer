@@ -1,0 +1,91 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+version: 2
+
+project_name: rexctl
+
+before:
+  hooks:
+    - go mod download
+
+builds:
+  - id: rexctl
+    main: .
+    binary: rexctl
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{ .Version }} -X main.commit={{ .ShortCommit }}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+
+  - id: rexctl-windows
+    main: .
+    binary: rexctl
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{ .Version }} -X main.commit={{ .ShortCommit }}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    goos:
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    hooks:
+      post:
+        - cmd: sh -c 'if [ -n "$REXCTL_WINDOWS_SIGNER" ]; then exec "$REXCTL_WINDOWS_SIGNER" "$1"; fi' sign "{{ .Path }}"
+
+archives:
+  - id: rexctl
+    ids:
+      - rexctl
+      - rexctl-windows
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    files:
+      - src: ../LICENSE
+        strip_parent: true
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+
+sboms:
+  - id: archives
+    artifacts: archive
+    documents:
+      - "{{ .ArtifactName }}.spdx.json"
+
+signs:
+  - id: cosign
+    cmd: cosign
+    artifacts: checksum
+    signature: "${artifact}.sigstore.json"
+    args:
+      - sign-blob
+      - --bundle=${signature}
+      - ${artifact}
+      - --yes
+
+snapshot:
+  version_template: "0.0.0-snapshot.{{ .ShortCommit }}"
+
+changelog:
+  disable: true
+
+release:
+  disable: true

@@ -19,6 +19,7 @@ import {
 	getUserActivityBuffer,
 	getUserRepository,
 } from '@app/api/middleware/ServiceSingletons';
+import {Locales} from '@fluxer/constants/src/Locales';
 
 let cachedServices: ApiServices | null = null;
 let cachedConfigRef: typeof Config | null = null;
@@ -56,6 +57,8 @@ const ANONYMOUS_REQUEST_SCOPE: RequestScope = {
 	requestId: 'anonymous',
 	clientIp: null,
 	userAgent: null,
+	locale: Locales.EN_US,
+	blockedNetworkSignIn: null,
 };
 
 export function createApiContext(scope: RequestScope = ANONYMOUS_REQUEST_SCOPE): ApiContext {

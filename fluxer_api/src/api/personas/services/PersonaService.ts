@@ -14,7 +14,6 @@ import type { IMediaService } from "@app/api/infrastructure/IMediaService";
 import { PersonaTrigger } from "@app/api/models/PersonaTrigger";
 import { deriveDominantAvatarColor } from "@app/api/utils/AvatarColorUtils";
 import type { UserCacheService } from "@app/api/infrastructure/UserCacheService";
-import { getCachedUserPartialResponse } from "@app/api/user/UserCacheHelpers";
 import type { RequestCache } from "@app/api/middleware/RequestCacheMiddleware";
 import type { StorageService } from "@app/api/infrastructure/StorageService";
 
@@ -72,11 +71,7 @@ export class PersonaService {
 
 	async getPersona(userId: UserID, personaId: PersonaID): Promise<PersonaResponse | null> {
 		const v = await this.personaRepository.getPersona(userId, personaId);
-		const user = await getCachedUserPartialResponse({
-			userId,
-			userCacheService: this.userCacheService,
-			requestCache: this.requestCache
-		});
+		const user = await this.userCacheService.getUserPartialResponse(userId, this.requestCache);
 		if (v === null) return null;
 		//const triggers = await this.personaRepository.getPersonaTriggers(userId, v.id)
 		return {

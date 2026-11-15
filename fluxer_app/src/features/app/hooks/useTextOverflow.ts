@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {observeResize} from '@app/features/platform/utils/SharedResizeObserver';
-import {type RefObject, useEffect, useState} from 'react';
+import {useEffect, useState} from 'react';
 
 type OverflowAxis = 'horizontal' | 'vertical' | 'both';
 
@@ -12,10 +12,9 @@ function getElementOverflowState(el: HTMLElement, axis: OverflowAxis): boolean {
 	);
 }
 
-function useOverflow(target: HTMLElement | RefObject<HTMLElement | null> | null, axis: OverflowAxis): boolean {
+export function useElementOverflow(element: HTMLElement | null, axis: OverflowAxis = 'horizontal'): boolean {
 	const [isOverflowing, setIsOverflowing] = useState(false);
 	useEffect(() => {
-		const element = target && 'current' in target ? target.current : target;
 		const ownerWindow = element?.ownerDocument.defaultView;
 		if (!element || !ownerWindow) {
 			setIsOverflowing(false);
@@ -41,14 +40,6 @@ function useOverflow(target: HTMLElement | RefObject<HTMLElement | null> | null,
 			}
 			unobserve?.();
 		};
-	}, [target, axis]);
+	}, [element, axis]);
 	return isOverflowing;
-}
-
-export function useElementOverflow(element: HTMLElement | null, axis: OverflowAxis = 'horizontal'): boolean {
-	return useOverflow(element, axis);
-}
-
-export function useTextOverflow(ref: RefObject<HTMLElement | null>, axis: OverflowAxis = 'horizontal'): boolean {
-	return useOverflow(ref, axis);
 }

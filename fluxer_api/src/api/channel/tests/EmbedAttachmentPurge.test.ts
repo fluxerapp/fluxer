@@ -1,15 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
-import {
-	type ChannelID,
-	createChannelID,
-	createMessageID,
-	createReportID,
-	createUserID,
-	type MessageID,
-	type UserID,
-} from '@app/api/BrandedTypes';
+import {createReportID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {
 	createChannel,
@@ -17,14 +9,21 @@ import {
 	loadFixture,
 	sendMessageWithAttachments,
 } from '@app/api/channel/tests/AttachmentTestUtils';
-import {acceptInvite, createChannelInvite} from '@app/api/channel/tests/ChannelTestUtils';
-import {getNcmecSubmissionService} from '@app/api/middleware/ServiceSingletons';
+import {
+	acceptInvite,
+	createChannelInvite,
+	createPermissionOverwrite,
+	sendChannelMessage,
+	updateChannel,
+} from '@app/api/channel/tests/ChannelTestUtils';
+import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
 import {ReportRepository} from '@app/api/report/ReportRepository';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
-import {MessageReferenceTypes} from '@fluxer/constants/src/ChannelConstants';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {MessageReferenceTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
@@ -210,13 +209,7 @@ describe('Embed attachment purge', () => {
 	}
 
 	async function createAdmin(): Promise<TestAccount> {
-		return setUserACLs(harness, await createTestAccount(harness), [
-			AdminACLs.AUTHENTICATE,
-			AdminACLs.MESSAGE_DELETE,
-			AdminACLs.CSAM_SUBMIT_NCMEC,
-			AdminACLs.USER_DELETE,
-			AdminACLs.ARCHIVE_TRIGGER_USER,
-		]);
+		return setUserACLs(harness, await createTestAccount(harness), [AdminACLs.AUTHENTICATE, AdminACLs.MESSAGE_DELETE]);
 	}
 
 	function embedKeys(message: MessageResponse): Array<string> {
@@ -269,29 +262,15 @@ describe('Embed attachment purge', () => {
 		const admin = await createAdmin();
 		await createBuilder(harness, admin.token)
 			.delete(`/admin/channels/${channelId}/messages/${message.id}`)
+			.body({basis: {type: 'housekeeping'}})
 			.expect(HTTP_STATUS.OK)
 			.execute();
-		expect(deletedKeys()).toEqual(expect.arrayContaining(keys));
-	});
-
-	it('removes files shown only through an embed on a silent NCMEC delete', async () => {
-		const message = await sendEmbedOnly();
-		const keys = embedKeys(message);
-		const service = getNcmecSubmissionService() as unknown as {
-			deleteMessageSilently(channelId: ChannelID, messageId: MessageID, fallbackUserId: UserID): Promise<void>;
-		};
-		await service.deleteMessageSilently(
-			createChannelID(BigInt(channelId)),
-			createMessageID(BigInt(message.id)),
-			createUserID(BigInt(account.userId)),
-		);
 		expect(deletedKeys()).toEqual(expect.arrayContaining(keys));
 	});
 
 	it('keeps reported embed files as report evidence after the author deletes the message', async () => {
 		const message = await sendEmbedOnly();
 		const [imageKey] = embedKeys(message);
-		const [, , attachmentId, filename] = imageKey!.split('/');
 		const reporter = await createTestAccount(harness);
 		const invite = await createChannelInvite(harness, account.token, channelId);
 		await acceptInvite(harness, reporter.token, invite.code);
@@ -306,20 +285,70 @@ describe('Embed attachment purge', () => {
 		const row = await new ReportRepository().getReport(createReportID(BigInt(report.report_id)));
 		const context = row!.messageContext!.find((entry) => entry.messageId.toString() === message.id);
 		expect(context?.attachments.map((attachment) => attachment.filename).sort()).toEqual(['image.png', 'thumb.png']);
-		const admin = await createAdmin();
-		await createBuilder(harness, admin.token)
-			.post('/admin/messages/ncmec-reports')
+	});
+
+	async function joinAsMember(): Promise<TestAccount> {
+		const member = await createTestAccount(harness);
+		const invite = await createChannelInvite(harness, account.token, channelId);
+		await acceptInvite(harness, member.token, invite.code);
+		await ensureSessionStarted(harness, member.token);
+		return member;
+	}
+
+	function forwardAs(member: TestAccount, sourceId: string, destinationChannelId: string) {
+		return createBuilder(harness, member.token)
+			.post(`/channels/${destinationChannelId}/messages`)
 			.body({
-				channel_id: channelId,
-				message_id: message.id,
-				attachment_id: attachmentId,
-				filename,
-				reporter_full_name: 'Embed Reporter',
-				confirmed_viewed: true,
-				source_report_id: report.report_id,
-			})
-			.expect(HTTP_STATUS.OK)
-			.execute();
+				message_reference: {
+					message_id: sourceId,
+					channel_id: channelId,
+					guild_id: guildId,
+					type: MessageReferenceTypes.FORWARD,
+				},
+			});
+	}
+
+	async function destinationKeys(destinationChannelId: string): Promise<Array<string>> {
+		const objects = await harness.storageService.listObjects({
+			bucket: Config.s3.buckets.cdn,
+			prefix: `attachments/${destinationChannelId}/`,
+		});
+		return objects.map((object) => object.key);
+	}
+
+	it('deletes the copies of a forward that fails after copying', async () => {
+		const visible = await sendVisible();
+		const embedOnly = await sendEmbedOnly();
+		const sourceKeys = [storageKey(visible.attachments![0]!.url), ...embedKeys(embedOnly)];
+		const member = await joinAsMember();
+		const destination = await createChannel(harness, account.token, guildId, 'embed-purge-slowmode');
+		await updateChannel(harness, account.token, destination.id, {rate_limit_per_user: 60});
+		await sendChannelMessage(harness, member.token, destination.id, 'first');
+		for (const source of [visible, embedOnly]) {
+			await forwardAs(member, source.id, destination.id).expect(400, APIErrorCodes.SLOWMODE_RATE_LIMITED).execute();
+		}
+		const copies = harness.storageService
+			.getCopiedObjects()
+			.filter((copy) => copy.destinationKey.startsWith(`attachments/${destination.id}/`));
+		expect(copies).toHaveLength(3);
+		expect(await destinationKeys(destination.id)).toEqual([]);
+		for (const key of sourceKeys) {
+			expect(stored(key)).toBe(true);
+		}
+	});
+
+	it('copies nothing for a forward the sender may not attach files to', async () => {
+		const visible = await sendVisible();
+		const member = await joinAsMember();
+		const destination = await createChannel(harness, account.token, guildId, 'embed-purge-no-files');
+		await createPermissionOverwrite(harness, account.token, destination.id, member.userId, {
+			type: 1,
+			allow: '0',
+			deny: Permissions.ATTACH_FILES.toString(),
+		});
+		await forwardAs(member, visible.id, destination.id).expect(403, APIErrorCodes.MISSING_PERMISSIONS).execute();
+		expect(harness.storageService.getCopiedObjects()).toEqual([]);
+		expect(stored(storageKey(visible.attachments![0]!.url))).toBe(true);
 	});
 
 	it('does not expose the ownership marker on embed media flags', async () => {

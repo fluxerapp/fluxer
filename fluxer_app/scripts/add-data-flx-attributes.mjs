@@ -650,7 +650,12 @@ function main() {
 			changedFiles.push({file, added: result.added});
 		}
 	}
-	const mode = options.write ? 'write' : options.check ? 'check' : 'dry-run';
+	let mode = 'dry-run';
+	if (options.write) {
+		mode = 'write';
+	} else if (options.check) {
+		mode = 'check';
+	}
 	console.log(
 		`data-flx ${mode}: filesScanned=${totals.filesScanned} filesChanged=${totals.filesChanged} added=${totals.added} existing=${totals.existing} skipped=${totals.skipped} target=${options.target}`,
 	);

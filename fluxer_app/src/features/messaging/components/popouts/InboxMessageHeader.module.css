@@ -18,92 +18,11 @@
 	flex: 1 1 auto;
 }
 
-.textContainer {
-	display: flex;
-	flex-direction: column;
-	min-width: 0;
-	gap: 0;
-}
-
-.nameRow {
-	display: flex;
-	align-items: center;
-	gap: 0.375rem;
-	min-width: 0;
-}
-
-.channelIcon {
-	width: 1rem;
-	height: 1rem;
-	color: var(--text-primary-muted);
-	flex-shrink: 0;
-	margin-right: -0.25rem;
-}
-
-.nameButton {
-	background: none;
-	border: none;
-	padding: 0;
-	margin: 0;
-	text-align: left;
-	cursor: pointer;
-	min-width: 0;
-}
-
-.nameText {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	font-size: 0.95rem;
-	font-weight: 700;
-	color: var(--text-primary);
-}
-
-:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-	.nameButton:hover
-	.nameText {
-	text-decoration: underline;
-}
-
-.subtext {
-	font-size: 0.75rem;
-	line-height: 1rem;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-.subtextMuted {
-	color: var(--text-primary-muted);
-	font-weight: 400;
-}
-
-.subtextPrimary {
-	color: var(--text-primary);
-	font-weight: 400;
-}
-
-.subtextBreadcrumb {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.25rem;
-}
-
-.subtextChevron {
-	width: 0.75rem;
-	height: 0.75rem;
-	color: var(--text-primary-muted);
-}
-
 .headerActions {
 	display: flex;
 	align-items: center;
 	gap: 0.375rem;
 	flex: 0 0 auto;
-}
-
-.focusRingTight {
-	border-radius: 0.25rem;
 }
 
 .headerIconButton {

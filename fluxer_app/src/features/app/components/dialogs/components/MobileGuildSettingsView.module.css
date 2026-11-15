@@ -6,12 +6,12 @@
 }
 
 .contentContainer {
-	margin-left: auto;
-	margin-right: auto;
+	margin-inline-start: auto;
+	margin-inline-end: auto;
 	width: 100%;
 	max-width: 43.5rem;
-	padding-left: 1rem;
-	padding-right: 1rem;
+	padding-inline-start: 1rem;
+	padding-inline-end: 1rem;
 	padding-top: 1rem;
 	padding-bottom: calc(1rem + env(safe-area-inset-bottom, 1.25rem));
 }

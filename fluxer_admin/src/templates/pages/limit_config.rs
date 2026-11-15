@@ -8,7 +8,11 @@ use crate::{
     middleware::auth::AuthContext,
     templates::{
         components::{
-            form::{FORM_INPUT_CLASS, csrf_input, danger_button, form_actions, submit_button},
+            data_field::DATA_FIELD_LINK_CLASS,
+            form::{
+                FORM_INPUT_CLASS, csrf_input, danger_button, form_actions, secondary_button,
+                submit_button,
+            },
             page_container::{card_with_header, page_header},
             tooltip,
         },
@@ -25,6 +29,7 @@ const CATEGORY_ORDER: &[&str] = &[
     "expressions",
     "files",
     "social",
+    "media",
 ];
 
 pub fn limit_config_page(
@@ -34,10 +39,7 @@ pub fn limit_config_page(
     selected_rule: Option<&str>,
     response: Option<&LimitConfigResponse>,
 ) -> Markup {
-    let can_update = auth
-        .admin_user
-        .as_ref()
-        .is_some_and(|user| acl::has_permission(&user.acls, INSTANCE_LIMIT_CONFIG_UPDATE));
+    let can_update = acl::has_permission(auth.acls(), INSTANCE_LIMIT_CONFIG_UPDATE);
     let content = html! {
         @if let Some(response) = response {
             (render_limit_page(config, csrf_token, selected_rule, response, can_update))
@@ -72,16 +74,23 @@ fn render_limit_page(
         .unwrap_or("default");
     let active_rule = rules.iter().find(|rule| rule.id == active_rule_id);
     let description = if response.self_hosted.unwrap_or(false) {
-        "Self-hosted instance with all premium features enabled by default. Configure limits to customize user and guild restrictions."
+        "Add rules that raise limits above the default for specific users or communities. The default rule applies to everyone and sets the baseline."
     } else {
-        "Configure limit rules that control user and guild restrictions. Different rules apply based on user traits or guild features."
+        "Configure limit rules that raise limits above the default for users or communities, based on user traits or community features."
     };
     html! {
         (page_header("Limit Configuration", Some(description)))
-        div class="space-y-6" {
+        div id="limit-config-rules" class="space-y-6" {
             (rule_tabs(config, &rules, active_rule_id, can_update))
             @if let Some(rule) = active_rule {
-                (rule_header(config, csrf_token, rule, can_update))
+                (rule_header(
+                    &config.base_path,
+                    csrf_token,
+                    rule,
+                    can_update,
+                    response.defaults.contains_key(&rule.id),
+                    unused_value_count(response, rule),
+                ))
                 (rule_editor(config, csrf_token, response, rule, can_update))
             } @else {
                 div class="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm" {
@@ -151,11 +160,19 @@ fn rule_tabs(
 }
 
 fn rule_header(
-    config: &AdminConfig,
+    base: &str,
     csrf_token: &str,
     rule: &LimitRule,
     can_update: bool,
+    has_defaults: bool,
+    unused_count: usize,
 ) -> Markup {
+    let can_reset = can_update
+        && has_defaults
+        && rule
+            .modified_fields
+            .as_ref()
+            .is_some_and(|fields| !fields.is_empty());
     card_with_header(
         "",
         html! {
@@ -171,16 +188,40 @@ fn rule_header(
                                 p { "Traits: " (filters.traits.join(", ")) }
                             }
                             @if !filters.guild_features.is_empty() {
-                                p { "Guild Features: " (filters.guild_features.join(", ")) }
+                                p { "Community features: " (filters.guild_features.join(", ")) }
+                            }
+                        }
+                    }
+                    @if has_filters(rule) {
+                        p class="max-w-2xl text-sm text-neutral-600" {
+                            "Rules with filters can only raise limits. A value here is used only when it's higher than the default rule's value. "
+                            "To lower a limit, change it in the default rule."
+                        }
+                    }
+                    @if unused_count > 0 {
+                        p class="max-w-2xl rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800" {
+                            @if unused_count == 1 {
+                                "1 value in this rule never applies. It's marked below."
+                            } @else {
+                                (unused_count) " values in this rule never apply. They're marked below."
                             }
                         }
                     }
                 }
-                @if can_update && rule.id != "default" {
-                    form method="post"
-                        action={(config.base_path) "/limit-config?action=delete&rule=" (rule.id)} {
-                        (csrf_input(csrf_token))
-                        (danger_button("Delete Rule"))
+                div class="flex flex-wrap gap-2" {
+                    @if can_reset {
+                        form method="post"
+                            action={(base) "/limit-config?action=reset&rule=" (rule.id)} {
+                            (csrf_input(csrf_token))
+                            (secondary_button("Reset to Defaults"))
+                        }
+                    }
+                    @if can_update && rule.id != "default" {
+                        form method="post"
+                            action={(base) "/limit-config?action=delete&rule=" (rule.id)} {
+                            (csrf_input(csrf_token))
+                            (danger_button("Delete Rule"))
+                        }
                     }
                 }
             }
@@ -204,8 +245,8 @@ fn rule_editor(
             (csrf_input(csrf_token))
             input type="hidden" name="rule_id" value=(rule.id);
             div class="space-y-6" {
-                @if can_update {
-                    (filter_inputs(rule))
+                @if can_update && rule.id != "default" {
+                    (filter_inputs(&config.base_path, rule))
                 }
                 @for category in CATEGORY_ORDER {
                     @let keys = keys_for_category(response, category);
@@ -225,7 +266,7 @@ fn rule_editor(
     }
 }
 
-fn filter_inputs(rule: &LimitRule) -> Markup {
+fn filter_inputs(base: &str, rule: &LimitRule) -> Markup {
     let traits = rule
         .filters
         .as_ref()
@@ -239,22 +280,39 @@ fn filter_inputs(rule: &LimitRule) -> Markup {
     card_with_header(
         "Filters",
         html! {
+            p class="mb-4 text-sm text-neutral-500" {
+                "Add traits or features to apply this rule only to some users or communities. Give a trait to a "
+                a href={(base) "/users"} hx-boost="false" class=(DATA_FIELD_LINK_CLASS) { "user" }
+                " or a feature to a "
+                a href={(base) "/guilds"} hx-boost="false" class=(DATA_FIELD_LINK_CLASS) { "community" }
+                " on their admin page."
+            }
             div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
                 div class="space-y-2" {
                     label for="traits" class="font-semibold text-neutral-500 text-xs uppercase tracking-wide" {
-                        "User Traits (Optional)"
+                        "User traits (optional)"
                     }
                     input type="text" id="traits" name="traits" value=(traits)
                         placeholder="e.g., premium, supporter" class=(FORM_INPUT_CLASS);
-                    p class="text-xs text-neutral-500" { "Separate values with commas; leave blank to disable this filter." }
+                    p class="text-xs text-neutral-500" { "Separate values with commas. Leave this blank to turn the filter off." }
                 }
                 div class="space-y-2" {
                     label for="guild_features" class="font-semibold text-neutral-500 text-xs uppercase tracking-wide" {
-                        "Guild Features (Optional)"
+                        "Community features (optional)"
                     }
                     input type="text" id="guild_features" name="guild_features" value=(guild_features)
-                        placeholder="e.g., VIP_SERVERS, BOOSTER_LEVEL_2" class=(FORM_INPUT_CLASS);
-                    p class="text-xs text-neutral-500" { "Separate values with commas; leave blank to disable this filter." }
+                        placeholder="e.g., VIP_COMMUNITY, BOOSTER_LEVEL_2" class=(FORM_INPUT_CLASS);
+                    p class="text-xs text-neutral-500" { "Separate values with commas. Leave this blank to turn the filter off. Feature names must match the community feature exactly, including case." }
+                }
+            }
+            div class="mt-4 space-y-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-xs text-neutral-600" {
+                @if rule.id == "premium" {
+                    p class="text-blue-800" {
+                        "The premium trait is given to users automatically when they get premium. Don't rename it."
+                    }
+                }
+                p {
+                    "A rule with filters applies only when every listed trait and every listed feature matches. A rule with only traits changes user limits and message limits for those users. A rule with only features changes community limits and message limits inside those communities. A rule with both only changes message limits, such as message length and attachments, for those users inside those communities."
                 }
             }
         },
@@ -322,7 +380,7 @@ fn limit_field(
         .modified_fields
         .as_ref()
         .is_some_and(|fields| fields.iter().any(|field| field == key));
-    if metadata.is_toggle {
+    let field = if metadata.is_toggle {
         toggle_field(base, key, metadata, current_value, modified, can_update)
     } else {
         numeric_field(
@@ -334,6 +392,105 @@ fn limit_field(
             modified,
             can_update,
         )
+    };
+    match unused_value_reason(response, rule, key, metadata) {
+        Some(reason) => html! {
+            div class="space-y-2" {
+                (field)
+                p class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800" {
+                    (unused_value_message(reason, metadata))
+                }
+            }
+        },
+        None => field,
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum UnusedValueReason {
+    BelowDefault(u64),
+    UserLimitWithGuildFeatures,
+    GuildLimitWithOnlyTraits,
+}
+
+fn has_filters(rule: &LimitRule) -> bool {
+    rule.filters
+        .as_ref()
+        .is_some_and(|filters| !filters.traits.is_empty() || !filters.guild_features.is_empty())
+}
+
+fn default_rule_value(response: &LimitConfigResponse, key: &str) -> Option<u64> {
+    response
+        .limit_config
+        .rules
+        .iter()
+        .find(|rule| rule.id == "default")
+        .and_then(|rule| rule.limits.get(key))
+        .or_else(|| {
+            response
+                .defaults
+                .get("default")
+                .and_then(|defaults| defaults.get(key))
+        })
+        .copied()
+}
+
+fn unused_value_reason(
+    response: &LimitConfigResponse,
+    rule: &LimitRule,
+    key: &str,
+    metadata: &LimitKeyMetadata,
+) -> Option<UnusedValueReason> {
+    let filters = rule.filters.as_ref()?;
+    let has_traits = !filters.traits.is_empty();
+    let has_guild_features = !filters.guild_features.is_empty();
+    if !has_traits && !has_guild_features {
+        return None;
+    }
+    let value = *rule.limits.get(key)?;
+    let baseline = default_rule_value(response, key)?;
+    if value == baseline {
+        return None;
+    }
+    if has_guild_features && metadata.scope == "user" {
+        return Some(UnusedValueReason::UserLimitWithGuildFeatures);
+    }
+    if !has_guild_features && metadata.scope == "guild" {
+        return Some(UnusedValueReason::GuildLimitWithOnlyTraits);
+    }
+    if value < baseline {
+        return Some(UnusedValueReason::BelowDefault(baseline));
+    }
+    None
+}
+
+fn unused_value_count(response: &LimitConfigResponse, rule: &LimitRule) -> usize {
+    response
+        .limit_keys
+        .iter()
+        .filter(|key| {
+            response.metadata.get(*key).is_some_and(|metadata| {
+                unused_value_reason(response, rule, key, metadata).is_some()
+            })
+        })
+        .count()
+}
+
+fn unused_value_message(reason: UnusedValueReason, metadata: &LimitKeyMetadata) -> String {
+    match reason {
+        UnusedValueReason::BelowDefault(_) if metadata.is_toggle => {
+            "This never applies. It's on in the default rule, and rules with filters can only raise limits, so it stays on. To turn it off, change it in the default rule.".to_owned()
+        }
+        UnusedValueReason::BelowDefault(baseline) => format!(
+            "This never applies. It's lower than the default rule's {}, and rules with filters can only raise limits. To lower it, change it in the default rule.",
+            format_value_with_unit(baseline, metadata.unit.as_deref())
+        ),
+        UnusedValueReason::UserLimitWithGuildFeatures => {
+            "This never applies. It's a user limit, which is checked without a community, so a rule with community features never matches it. Remove the community features from this rule, or set this limit in a rule with only user traits.".to_owned()
+        }
+        UnusedValueReason::GuildLimitWithOnlyTraits => {
+            "This never applies. It's a community limit, which only uses rules with community features or no filters. Add a community feature to this rule, or set this limit in the default rule.".to_owned()
+        }
     }
 }
 
@@ -464,7 +621,7 @@ fn scope_class(scope: &str) -> &'static str {
 fn scope_label(scope: &str) -> String {
     match scope {
         "user" => "User".to_owned(),
-        "guild" => "Guild".to_owned(),
+        "guild" => "Community".to_owned(),
         "both" => "Both".to_owned(),
         other => format_rule_name_str(other),
     }
@@ -483,7 +640,8 @@ fn create_rule_section(
     card_with_header(
         "Create New Limit Rule",
         html! {
-            form id="create-rule" method="post" action={(config.base_path) "/limit-config?action=create"} {
+            form id="create-rule" method="post" action={(config.base_path) "/limit-config?action=create"}
+                data-admin-refresh-on-success="#limit-config-rules" {
                 (csrf_input(csrf_token))
                 div class="space-y-4" {
                     div class="space-y-2" {
@@ -497,17 +655,17 @@ fn create_rule_section(
                     div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
                         div class="space-y-2" {
                             label for="new-rule-traits" class="font-semibold text-neutral-500 text-xs uppercase tracking-wide" {
-                                "User Traits (Optional)"
+                                "User traits (optional)"
                             }
                             input type="text" id="new-rule-traits" name="traits"
                                 placeholder="e.g., premium, supporter" class=(FORM_INPUT_CLASS);
                         }
                         div class="space-y-2" {
                             label for="new-rule-features" class="font-semibold text-neutral-500 text-xs uppercase tracking-wide" {
-                                "Guild Features (Optional)"
+                                "Community features (optional)"
                             }
                             input type="text" id="new-rule-features" name="guild_features"
-                                placeholder="e.g., VIP_SERVERS, BOOSTER_LEVEL_2" class=(FORM_INPUT_CLASS);
+                                placeholder="e.g., VIP_COMMUNITY, BOOSTER_LEVEL_2" class=(FORM_INPUT_CLASS);
                         }
                     }
                     div class="rounded bg-neutral-50 p-3" {
@@ -539,5 +697,97 @@ fn format_value_with_unit(value: u64, unit: Option<&str>) -> String {
         Some("bytes") => format!("{value} bytes"),
         Some("count") | None => value.to_string(),
         Some(other) => format!("{value} {other}"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn response() -> LimitConfigResponse {
+        let metadata = |key: &str, scope: &str| {
+            serde_json::json!({
+                "key": key, "label": key, "description": "", "category": "files",
+                "scope": scope, "isToggle": false, "unit": null, "min": 0, "max": null
+            })
+        };
+        serde_json::from_value(serde_json::json!({
+            "limit_config": {"traitDefinitions": [], "rules": [
+                {"id": "default", "limits": {"max_attachments_per_message": 10, "max_screen_share_bitrate": 9000000, "emoji_max_size": 524288}},
+                {"id": "no_uploads", "filters": {"traits": ["no_uploads"], "guildFeatures": ["no_uploads"]},
+                    "limits": {"max_attachments_per_message": 0, "max_screen_share_bitrate": 9000000, "emoji_max_size": 524288}},
+                {"id": "streaming", "filters": {"traits": ["fast"], "guildFeatures": ["fast"]},
+                    "limits": {"max_attachments_per_message": 20, "max_screen_share_bitrate": 50000000, "emoji_max_size": 524288}},
+                {"id": "traits_only", "filters": {"traits": ["fast"]},
+                    "limits": {"max_attachments_per_message": 10, "max_screen_share_bitrate": 50000000, "emoji_max_size": 1048576}}
+            ]},
+            "limit_config_json": "", "self_hosted": true, "defaults": {}, "categories": null, "bounds": null,
+            "limit_keys": ["max_attachments_per_message", "max_screen_share_bitrate", "emoji_max_size"],
+            "metadata": {
+                "max_attachments_per_message": metadata("max_attachments_per_message", "both"),
+                "max_screen_share_bitrate": metadata("max_screen_share_bitrate", "user"),
+                "emoji_max_size": metadata("emoji_max_size", "guild")
+            }
+        }))
+        .unwrap()
+    }
+
+    fn reasons(rule_id: &str) -> Vec<(String, Option<UnusedValueReason>)> {
+        let response = response();
+        let rule = response
+            .limit_config
+            .rules
+            .iter()
+            .find(|rule| rule.id == rule_id)
+            .unwrap();
+        response
+            .limit_keys
+            .iter()
+            .map(|key| {
+                let metadata = response.metadata.get(key).unwrap();
+                (
+                    key.clone(),
+                    unused_value_reason(&response, rule, key, metadata),
+                )
+            })
+            .collect()
+    }
+
+    #[test]
+    fn flags_values_that_can_never_apply() {
+        assert!(
+            reasons("default")
+                .iter()
+                .all(|(_, reason)| reason.is_none())
+        );
+        assert_eq!(
+            reasons("no_uploads")[0],
+            (
+                "max_attachments_per_message".to_owned(),
+                Some(UnusedValueReason::BelowDefault(10))
+            )
+        );
+        assert_eq!(
+            reasons("streaming"),
+            vec![
+                ("max_attachments_per_message".to_owned(), None),
+                (
+                    "max_screen_share_bitrate".to_owned(),
+                    Some(UnusedValueReason::UserLimitWithGuildFeatures)
+                ),
+                ("emoji_max_size".to_owned(), None),
+            ]
+        );
+        assert_eq!(
+            reasons("traits_only"),
+            vec![
+                ("max_attachments_per_message".to_owned(), None),
+                ("max_screen_share_bitrate".to_owned(), None),
+                (
+                    "emoji_max_size".to_owned(),
+                    Some(UnusedValueReason::GuildLimitWithOnlyTraits)
+                ),
+            ]
+        );
     }
 }

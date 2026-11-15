@@ -1,0 +1,10 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.providerIcon {
+	border-radius: 0.25rem;
+	object-fit: contain;
+}
+
+.glyph {
+	color: #000;
+}

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {
 	ADD_FRIENDS_TO_GROUP_DESCRIPTOR,
 	DEBUG_USER_DESCRIPTOR,
@@ -127,6 +128,7 @@ export const MoreOptionsSheet: React.FC<MoreOptionsSheetProps> = ({
 	onCopyChannelId,
 }) => {
 	const {i18n} = useLingui();
+	const dmPickerAvailable = RuntimeConfig.dmPickerAvailable;
 	const groups = useMemo(() => {
 		const out: Array<MenuGroupType> = [];
 		const hasUnread = ReadStates.hasUnread(channel.id);
@@ -214,7 +216,7 @@ export const MoreOptionsSheet: React.FC<MoreOptionsSheetProps> = ({
 					onClick: onEditGroup,
 				},
 			];
-			if (!isGroupDmFull(channel)) {
+			if (dmPickerAvailable && !isGroupDmFull(channel)) {
 				groupItems.push({
 					id: 'add-friends',
 					icon: <InviteIcon size={20} data-flx="channel.channel-details-bottom-sheet.invite-icon--2" />,
@@ -352,6 +354,7 @@ export const MoreOptionsSheet: React.FC<MoreOptionsSheetProps> = ({
 		isGuildChannel,
 		isGroupDMOwner,
 		developerMode,
+		dmPickerAvailable,
 		onToggleFavorite,
 		onMarkAsRead,
 		onPinDM,

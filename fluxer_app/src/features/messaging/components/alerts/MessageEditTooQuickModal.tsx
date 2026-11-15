@@ -12,16 +12,14 @@ const YOU_RE_EDITING_MESSAGES_TOO_QUICKLY_DESCRIPTOR = msg({
 
 interface MessageEditTooQuickModalProps {
 	retryAfter?: number;
-	onRetry?: () => void;
 }
 
-export const MessageEditTooQuickModal = observer(({retryAfter, onRetry}: MessageEditTooQuickModalProps) => {
+export const MessageEditTooQuickModal = observer(({retryAfter}: MessageEditTooQuickModalProps) => {
 	const {i18n} = useLingui();
 	return (
 		<RateLimitedConfirmModal
 			title={i18n._(YOU_RE_EDITING_MESSAGES_TOO_QUICKLY_DESCRIPTOR)}
 			retryAfter={retryAfter}
-			onRetry={onRetry}
 			data-flx="messaging.message-edit-too-quick-modal.rate-limited-confirm-modal"
 		/>
 	);

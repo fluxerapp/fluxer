@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::utils::timestamps::format_admin_timestamp;
 use crate::{
     api::types::Archive,
-    templates::components::form::{checkbox, csrf_input, submit_button},
+    templates::components::form::{Checkbox, csrf_input, submit_button},
 };
 use maud::{Markup, html};
 
@@ -24,7 +25,13 @@ pub fn archives_tab(
                     action=(action)
                     class="flex flex-wrap items-center gap-3" {
                     (csrf_input(csrf_token))
-                    (checkbox("include_attachments", "true", "Include attachments", false, true))
+                    (Checkbox {
+                        name: "include_attachments",
+                        value: "true",
+                        label: "Include attachments",
+                        checked: false,
+                        enabled: true,
+                    }.render())
                     (submit_button("Trigger Archive"))
                 }
             }
@@ -72,7 +79,7 @@ fn archives_table(base: &str, archives: &[Archive]) -> Markup {
                     @for archive in archives {
                         tr {
                             td class="whitespace-nowrap px-4 py-3 text-sm text-neutral-900" {
-                                (archive.requested_at)
+                                (format_admin_timestamp(&archive.requested_at))
                             }
                             td class="px-4 py-3 text-sm text-neutral-900" {
                                 (status_text(archive))

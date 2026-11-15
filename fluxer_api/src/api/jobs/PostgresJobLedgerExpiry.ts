@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {postgresKvPassIsFresh, recordPostgresKvCleanPass} from '@app/api/database/PostgresKvQueryExecutor';
+import {postgresKvPassRecorded, recordPostgresKvCleanPass} from '@app/api/database/PostgresKvQueryExecutor';
 import {EXPIRED_JOB_ERROR, JOB_LEDGER_TTL_SECONDS, JOB_STALE_AFTER_MS} from '@app/api/jobs/JobLedgerRepository';
 import {FLUXER_EPOCH} from '@fluxer/constants/src/Core';
 import {TIMESTAMP_SHIFT} from '@fluxer/snowflake/src/Snowflake';
 import {type IPostgresClient, quoteIdentifier} from '@pkgs/postgres/src/Client';
-import {ms} from 'itty-time';
 
 const LEGACY_JOB_LEDGER_MARKER = 'job_ledger_expiry_v1';
 const PAGE_SIZE = 2000;
-const CLEAN_PASS_INTERVAL_MS = ms('1 day');
 const BIGINT_KEY_PREFIX = '{"__fluxer_type":"bigint","value":"';
 const BIGINT_KEY_SUFFIX = '"}';
 
@@ -98,7 +96,7 @@ export async function expireLegacyJobLedgerRows(
 	deadlineMs: number,
 ): Promise<LegacyJobLedgerExpiryResult | null> {
 	const table = quoteIdentifier(client.kvTable());
-	if (await postgresKvPassIsFresh(client, LEGACY_JOB_LEDGER_MARKER, CLEAN_PASS_INTERVAL_MS)) {
+	if (await postgresKvPassRecorded(client, LEGACY_JOB_LEDGER_MARKER)) {
 		return null;
 	}
 	const now = Date.now();

@@ -6,8 +6,8 @@
 	justify-content: center;
 	border-radius: 624.9375rem;
 	background-color: rgb(220 38 38);
-	padding-left: 0.375rem;
-	padding-right: 0.375rem;
+	padding-inline-start: 0.375rem;
+	padding-inline-end: 0.375rem;
 	padding-top: 0.125rem;
 	padding-bottom: 0.125rem;
 	font-weight: 600;

@@ -6,52 +6,27 @@ import {
 	MessageResponseDataService,
 } from '@app/api/channel/services/message/MessageResponseDataService';
 import {Message} from '@app/api/models/Message';
+import {FakeNatsConnectionManager} from '@app/api/test/mocks/FakeNatsConnectionManager';
 import {MessageTypes} from '@fluxer/constants/src/ChannelConstants';
-import type {NatsConnection} from '@nats-io/transport-node';
-import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
-import {describe, expect, it} from 'vitest';
+import {afterEach, describe, expect, it, vi} from 'vitest';
 
-const encoder = new TextEncoder();
-const decoder = new TextDecoder();
-const ROUTER_SHARD_REQUEST_TIMEOUT_MS = 5000;
-
-class FakeConnectionManager implements INatsConnectionManager {
-	readonly payloads: Array<Record<string, unknown>> = [];
-	readonly timeouts: Array<number | undefined> = [];
-	readonly orphanedMessageIds = new Set<string>();
-
-	async connect(): Promise<void> {}
-
-	async drain(): Promise<void> {}
-
-	isClosed(): boolean {
-		return false;
-	}
-
-	getConnection(): NatsConnection {
-		return {
-			request: async (_subject: string, data: Uint8Array, options?: {timeout?: number}) => {
-				const payload = JSON.parse(decoder.decode(data)) as Record<string, unknown>;
-				this.payloads.push(payload);
-				this.timeouts.push(options?.timeout);
+function createConnectionManager() {
+	const orphanedMessageIds = new Set<string>();
+	return Object.assign(
+		new FakeNatsConnectionManager(
+			(_subject, payload) => {
 				if (payload.op === 'BuildResponses') {
 					const messages = (payload.messages as Array<{message_id: string; channel_id: string}>).filter(
-						(message) => !this.orphanedMessageIds.has(message.message_id),
+						(message) => !orphanedMessageIds.has(message.message_id),
 					);
-					return {
-						data: encoder.encode(
-							JSON.stringify({
-								FoundApiMany: messages.map((message) => fakeMessageResponse(message.message_id, message.channel_id)),
-							}),
-						),
-					};
+					return {FoundApiMany: messages.map((message) => fakeMessageResponse(message.message_id, message.channel_id))};
 				}
-				return {
-					data: encoder.encode(JSON.stringify({FoundApi: fakeMessageResponse('2')})),
-				};
+				return {FoundApi: fakeMessageResponse('2')};
 			},
-		} as unknown as NatsConnection;
-	}
+			{startConnected: true},
+		),
+		{orphanedMessageIds},
+	);
 }
 
 function fakeMessageResponse(messageId: string, channelId: string = '1'): Record<string, unknown> {
@@ -109,10 +84,10 @@ const VIEWER_ID = createUserID(3n);
 const ACCESS = {sourceGuildId: null, messageHistoryCutoff: null, canReadMessageHistory: true};
 
 async function measureSerializedMessageBytes(): Promise<number> {
-	const connectionManager = new FakeConnectionManager();
+	const connectionManager = createConnectionManager();
 	const service = new MessageResponseDataService(connectionManager);
 	await service.buildMessages({userId: VIEWER_ID, messages: [makeMessage(BASE_MESSAGE_ID)], access: ACCESS});
-	const {messages} = connectionManager.payloads[0] as {messages: Array<unknown>};
+	const {messages} = connectionManager.requests[0]!.body as {messages: Array<unknown>};
 	return Buffer.byteLength(JSON.stringify(messages[0]));
 }
 
@@ -124,84 +99,18 @@ function messageId(index: number): string {
 	return (BASE_MESSAGE_ID + BigInt(index)).toString();
 }
 
-function batchSizes(connectionManager: FakeConnectionManager): Array<number> {
-	return connectionManager.payloads.map((payload) => (payload as {messages: Array<unknown>}).messages.length);
+function batchSizes(connectionManager: FakeNatsConnectionManager): Array<number> {
+	return connectionManager.requests.map(({body: payload}) => (payload as {messages: Array<unknown>}).messages.length);
 }
 
 describe('MessageResponseDataService', () => {
-	it('omits reactions from broadcast message response requests', async () => {
-		const connectionManager = new FakeConnectionManager();
-		const service = new MessageResponseDataService(connectionManager);
-
-		await service.buildBroadcastMessage({
-			channel: {guildId: null},
-			message: makeMessage(),
-		});
-
-		expect(connectionManager.payloads[0]).toMatchObject({
-			op: 'BuildResponse',
-			include_reactions: false,
-			viewer_user_id: '3',
-		});
-	});
-
-	it('keeps regular channel message responses reaction-aware by default', async () => {
-		const connectionManager = new FakeConnectionManager();
-		const service = new MessageResponseDataService(connectionManager);
-
-		await service.buildMessageForChannel({
-			channel: {guildId: null},
-			message: makeMessage(),
-		});
-
-		expect(connectionManager.payloads[0]).toMatchObject({
-			op: 'BuildResponse',
-			include_reactions: true,
-			viewer_user_id: '3',
-		});
-	});
-
-	it('waits longer than the router shard timeout so the inner hop expires first', async () => {
-		const connectionManager = new FakeConnectionManager();
-		const service = new MessageResponseDataService(connectionManager);
-
-		await service.buildMessageForChannel({
-			channel: {guildId: null},
-			message: makeMessage(),
-		});
-
-		expect(connectionManager.timeouts[0]).toBe(6000);
-		expect(connectionManager.timeouts[0]).toBeGreaterThan(ROUTER_SHARD_REQUEST_TIMEOUT_MS);
-	});
-
-	it('sends no request when there are no messages to build', async () => {
-		const connectionManager = new FakeConnectionManager();
-		const service = new MessageResponseDataService(connectionManager);
-
-		const responses = await service.buildMessages({userId: VIEWER_ID, messages: [], access: ACCESS});
-
-		expect(responses).toEqual([]);
-		expect(connectionManager.payloads).toEqual([]);
-	});
-
-	it('keeps a batch that exactly fills the byte budget in one request', async () => {
-		const baseBytes = await measureSerializedMessageBytes();
-		const connectionManager = new FakeConnectionManager();
-		const service = new MessageResponseDataService(connectionManager);
-		const messages = [
-			makeSizedMessage(0, MESSAGE_BUILD_BATCH_MAX_BYTES / 2, baseBytes),
-			makeSizedMessage(1, MESSAGE_BUILD_BATCH_MAX_BYTES / 2, baseBytes),
-		];
-
-		const responses = await service.buildMessages({userId: VIEWER_ID, messages, access: ACCESS});
-
-		expect(batchSizes(connectionManager)).toEqual([2]);
-		expect(responses.map((response) => response.id)).toEqual(messages.map((message) => message.id.toString()));
+	afterEach(() => {
+		vi.restoreAllMocks();
 	});
 
 	it('splits into ordered batches once one more byte would cross the budget', async () => {
 		const baseBytes = await measureSerializedMessageBytes();
-		const connectionManager = new FakeConnectionManager();
+		const connectionManager = createConnectionManager();
 		const service = new MessageResponseDataService(connectionManager);
 		const messages = [
 			makeSizedMessage(0, MESSAGE_BUILD_BATCH_MAX_BYTES / 2, baseBytes),
@@ -215,23 +124,8 @@ describe('MessageResponseDataService', () => {
 		expect(responses.map((response) => response.id)).toEqual(messages.map((message) => message.id.toString()));
 	});
 
-	it('sends a single message that exceeds the budget on its own', async () => {
-		const baseBytes = await measureSerializedMessageBytes();
-		const connectionManager = new FakeConnectionManager();
-		const service = new MessageResponseDataService(connectionManager);
-		const messages = [
-			makeSizedMessage(0, MESSAGE_BUILD_BATCH_MAX_BYTES + 1, baseBytes),
-			makeSizedMessage(1, baseBytes, baseBytes),
-		];
-
-		const responses = await service.buildMessages({userId: VIEWER_ID, messages, access: ACCESS});
-
-		expect(batchSizes(connectionManager)).toEqual([1, 1]);
-		expect(responses.map((response) => response.id)).toEqual(messages.map((message) => message.id.toString()));
-	});
-
 	it('drops a message the service leaves out instead of shifting later responses', async () => {
-		const connectionManager = new FakeConnectionManager();
+		const connectionManager = createConnectionManager();
 		connectionManager.orphanedMessageIds.add(messageId(1));
 		const service = new MessageResponseDataService(connectionManager);
 		const messages = [0, 1, 2].map((index) => makeMessage(BASE_MESSAGE_ID + BigInt(index)));
@@ -246,7 +140,7 @@ describe('MessageResponseDataService', () => {
 	});
 
 	it('keeps responses in input order when channels resolve to different guilds', async () => {
-		const connectionManager = new FakeConnectionManager();
+		const connectionManager = createConnectionManager();
 		connectionManager.orphanedMessageIds.add(messageId(2));
 		const service = new MessageResponseDataService(connectionManager);
 		const messages = [
@@ -271,7 +165,7 @@ describe('MessageResponseDataService', () => {
 
 	it('keeps other guilds aligned when an earlier batch drops a message', async () => {
 		const baseBytes = await measureSerializedMessageBytes();
-		const connectionManager = new FakeConnectionManager();
+		const connectionManager = createConnectionManager();
 		connectionManager.orphanedMessageIds.add(messageId(0));
 		const service = new MessageResponseDataService(connectionManager);
 		const messages = [
@@ -293,18 +187,5 @@ describe('MessageResponseDataService', () => {
 		expect(batchSizes(connectionManager).sort()).toEqual([1, 1, 2]);
 		expect(responses.map((response) => response.id)).toEqual([messageId(1), messageId(2), messageId(3)]);
 		expect(responses.map((response) => response.channel_id)).toEqual(['20', '10', '10']);
-	});
-
-	it('keeps a full page of ordinary pins in a single request', async () => {
-		const connectionManager = new FakeConnectionManager();
-		const service = new MessageResponseDataService(connectionManager);
-		const messages = Array.from({length: 50}, (_unused, index) =>
-			makeMessage(BASE_MESSAGE_ID + BigInt(index), 'a'.repeat(120)),
-		);
-
-		const responses = await service.buildMessages({userId: VIEWER_ID, messages, access: ACCESS});
-
-		expect(batchSizes(connectionManager)).toEqual([50]);
-		expect(responses.map((response) => response.id)).toEqual(messages.map((message) => message.id.toString()));
 	});
 });

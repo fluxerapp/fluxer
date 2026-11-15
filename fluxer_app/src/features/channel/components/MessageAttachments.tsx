@@ -40,11 +40,14 @@ import {canonicalizeMediaUrl, useSpoilerState} from '@app/features/messaging/uti
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import messageStyles from '@app/features/theme/styles/Message.module.css';
 import * as ThemeUtils from '@app/features/theme/utils/ThemeUtils';
+import {MessageThreadChip} from '@app/features/threads/components/MessageThreadChip';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import {StickerInlineMenuItems} from '@app/features/ui/action_menu/items/StickerContextMenuItems';
 import {MessageContextMenu} from '@app/features/ui/action_menu/MessageContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import {Avatar} from '@app/features/ui/components/Avatar';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {ArrowBendUpRightIcon, CaretRightIcon} from '@app/features/ui/icons/DirectionalIcons';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import UserSettings from '@app/features/user/state/UserSettings';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
@@ -56,7 +59,7 @@ import type {
 	MessageStickerItem,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {Trans, useLingui} from '@lingui/react/macro';
-import {ArrowBendUpRightIcon, CaretRightIcon, NotePencilIcon} from '@phosphor-icons/react';
+import {NotePencilIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -287,7 +290,7 @@ interface ForwardedMessageContentProps {
 	onDelete?: (bypassConfirm?: boolean) => void;
 }
 
-export const ForwardedMessageContent = observer(({message, snapshot, onDelete}: ForwardedMessageContentProps) => {
+const ForwardedMessageContent = observer(({message, snapshot, onDelete}: ForwardedMessageContentProps) => {
 	const {i18n} = useLingui();
 	const snapshotIndex = 0;
 	const snapshotEditedTimestamp = snapshot.edited_timestamp ? new Date(snapshot.edited_timestamp) : null;
@@ -400,7 +403,7 @@ export const ForwardedMessageContent = observer(({message, snapshot, onDelete}: 
 						})()}
 					</div>
 				)}
-				{snapshot.embeds && snapshot.embeds.length > 0 && UserSettings.getRenderEmbeds() && (
+				{snapshot.embeds && snapshot.embeds.length > 0 && UserSettings.renderEmbeds && (
 					<div
 						className={styles.attachmentsContainer}
 						data-flx="channel.message-attachments.forwarded-message-content.attachments-container--2"
@@ -696,7 +699,7 @@ export const MessageAttachments = observer(() => {
 					</>
 				);
 			})()}
-			{UserSettings.getRenderEmbeds() &&
+			{UserSettings.renderEmbeds &&
 				!message.suppressEmbeds &&
 				message.embeds.map((embed, index) => {
 					const embedKey = `${embed.id}-${index}`;
@@ -712,13 +715,16 @@ export const MessageAttachments = observer(() => {
 						/>
 					);
 				})}
-			{UserSettings.getRenderReactions() && reactions.length > 0 && (
+			{UserSettings.renderReactions && reactions.length > 0 && (
 				<MessageReactions
 					message={message}
 					isPreview={reactionsIsPreview}
 					onPopoutToggle={onPopoutToggle}
 					data-flx="channel.message-attachments.message-reactions"
 				/>
+			)}
+			{!isPreview && ThreadGuilds.anyActive && (
+				<MessageThreadChip message={message} data-flx="channel.message-attachments.message-thread-chip" />
 			)}
 		</>
 	);

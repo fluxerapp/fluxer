@@ -7,7 +7,7 @@ use crate::{
     templates::{
         components::{
             badge::{BadgeVariant, badge},
-            form::{checkbox, csrf_input},
+            form::{Checkbox, csrf_input},
             page_container::page_header,
             table::{data_table, empty_state, table_cell, table_row},
         },
@@ -16,6 +16,7 @@ use crate::{
             BlocklistActionVariant, blocklist_action_card, blocklist_text_field,
         },
     },
+    utils::timestamps::format_admin_timestamp,
 };
 use maud::{Markup, html};
 
@@ -63,7 +64,13 @@ fn ban_card(base: &str, csrf_token: &str) -> Markup {
         csrf_token,
         html! {
             (blocklist_text_field("domain", "Domain or pattern", "example.com or *shop*.example.com", true))
-            (checkbox("match_subdomains", "true", "Match subdomains (e.g. sub.example.com)", true, true))
+            (Checkbox {
+                name: "match_subdomains",
+                value: "true",
+                label: "Match subdomains (e.g. sub.example.com)",
+                checked: true,
+                enabled: true,
+            }.render())
             (blocklist_text_field("audit_log_reason", "Private reason (audit log, optional)", "Why is this ban being applied?", false))
         },
         "Ban",
@@ -160,7 +167,7 @@ fn entry_row(base: &str, csrf_token: &str, entry: &BlocklistEntry) -> Markup {
             @if entry.match_subdomains.unwrap_or(true) { "Yes" } @else { "No" }
         }))
         (table_cell(true, html! { (entry.category.as_deref().unwrap_or("")) }))
-        (table_cell(true, html! { (entry.created_at.as_deref().unwrap_or("")) }))
+        (table_cell(true, html! { (entry.created_at.as_deref().map(format_admin_timestamp).unwrap_or_default()) }))
         (table_cell(false, html! {
             form method="post" action=(action_url) {
                 (csrf_input(csrf_token))
@@ -171,48 +178,4 @@ fn entry_row(base: &str, csrf_token: &str, entry: &BlocklistEntry) -> Markup {
             }
         }))
     })
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn entry(value: &str, match_subdomains: bool) -> BlocklistEntry {
-        BlocklistEntry {
-            value: value.to_owned(),
-            match_subdomains: Some(match_subdomains),
-            category: Some("manual".to_owned()),
-            created_at: None,
-        }
-    }
-
-    #[test]
-    fn entries_table_lists_patterns_with_remove_forms() {
-        let page = BlocklistEntryPage {
-            items: vec![
-                entry("*shop*.example.com", false),
-                entry("store.example.com", true),
-            ],
-            has_more: true,
-            next_after: Some("store.example.com".to_owned()),
-        };
-        let markup = entries_table("/admin", "token", &page).into_string();
-        assert!(markup.contains("*shop*.example.com"));
-        assert!(markup.contains(">Pattern</span>"));
-        assert!(markup.contains(">Domain</span>"));
-        assert!(markup.contains(r#"name="domain" value="*shop*.example.com""#));
-        assert!(markup.contains("/admin/url-domain-bans?action=unban&amp;_csrf=token"));
-        assert!(markup.contains("/admin/url-domain-bans?after=store.example.com"));
-    }
-
-    #[test]
-    fn entries_table_reports_an_empty_list() {
-        let page = BlocklistEntryPage {
-            items: Vec::new(),
-            has_more: false,
-            next_after: None,
-        };
-        let markup = entries_table("/admin", "token", &page).into_string();
-        assert!(markup.contains("No domains or patterns are blocked"));
-    }
 }

@@ -25,7 +25,12 @@ import {
 import {z} from 'zod';
 
 const HTTP_METHODS: ReadonlySet<string> = new Set(['get', 'post', 'put', 'patch', 'delete']);
-const SCHEMA_METADATA_FIELDS: ReadonlySet<string> = new Set(['responseSchema', 'requestSchema', 'requestFormSchema']);
+const SCHEMA_METADATA_FIELDS: ReadonlySet<string> = new Set([
+	'responseSchema',
+	'acceptedResponseSchema',
+	'requestSchema',
+	'requestFormSchema',
+]);
 const MetadataStringList = z
 	.union([z.string(), z.array(z.string())])
 	.transform((value) => (typeof value === 'string' ? [value] : value));
@@ -36,6 +41,7 @@ const RouteMetadata = z.strictObject({
 	summary: z.string().min(1),
 	description: z.string(),
 	responseSchema: z.string().min(1).nullable(),
+	acceptedResponseSchema: z.string().min(1).optional(),
 	responseContentType: z.string().optional(),
 	requestSchema: z.string().min(1).optional(),
 	requestFormSchema: z.string().min(1).optional(),
@@ -45,6 +51,7 @@ const RouteMetadata = z.strictObject({
 		.transform((value) => (typeof value === 'number' ? [value] : value))
 		.optional(),
 	bodylessStatusCodes: z.array(MetadataStatusCode).optional(),
+	errorStatusCodes: z.array(MetadataStatusCode).optional(),
 	security: z
 		.union([MetadataSecurityScheme, z.array(MetadataSecurityScheme)])
 		.transform((value) => (typeof value === 'string' ? [value] : value))
@@ -52,9 +59,10 @@ const RouteMetadata = z.strictObject({
 	tags: MetadataStringList,
 	deprecated: z.boolean().optional(),
 	externalDocs: z.strictObject({url: z.string(), description: z.string().optional()}).optional(),
-});
-const RouteOptionsMetadata = RouteMetadata.pick({description: true, responseContentType: true}).extend({
-	description: z.string().min(1),
+	experiment: z
+		.string()
+		.regex(/^[a-z][a-z0-9_]*$/)
+		.optional(),
 });
 function isHttpMethod(method: string): method is HttpMethod {
 	return HTTP_METHODS.has(method);
@@ -130,6 +138,13 @@ function parseObjectLiteralMetadata(
 }
 function extractValidatorInfo(callExpr: CallExpression): ExtractedValidator | null {
 	const expression = callExpr.getExpression();
+	if (Node.isIdentifier(expression) && expression.getText() === 'GatedJsonValidator') {
+		const [controlArg] = callExpr.getArguments();
+		if (!controlArg || !Node.isIdentifier(controlArg)) {
+			throw new Error(`GatedJsonValidator must use a named control schema export: ${callExpr.getText()}`);
+		}
+		return {target: 'json', schemaName: controlArg.getText()};
+	}
 	if (!Node.isIdentifier(expression) || expression.getText() !== 'Validator') return null;
 	const [targetArg, schemaArg] = callExpr.getArguments();
 	if (!targetArg || !schemaArg) throw new Error(`Validator requires a target and named schema: ${callExpr.getText()}`);
@@ -144,6 +159,7 @@ interface MiddlewareInfo {
 	middlewareName: string;
 	rateLimitConfig?: string;
 	responseSchemaName?: string;
+	acceptedResponseSchemaName?: string;
 	responseContentType?: string;
 	hasNoContent?: boolean;
 	bodylessStatusCodes?: Array<number> | null;
@@ -154,6 +170,7 @@ interface MiddlewareInfo {
 	explicitOperationId?: string;
 	explicitDescription?: string;
 	explicitStatusCodes?: Array<number> | null;
+	errorStatusCodes?: Array<number> | null;
 	explicitSecurity?: Array<string> | null;
 	oauth2RequiredScopes?: Array<string> | null;
 	oauth2ScopeMode?: 'all' | 'any';
@@ -161,22 +178,15 @@ interface MiddlewareInfo {
 	explicitTags?: Array<string> | null;
 	explicitDeprecated?: boolean;
 	explicitExternalDocs?: OpenAPIExternalDocs;
+	explicitExperiment?: string;
 }
 function extractOpenAPIMetadata(args: ReadonlyArray<Node>, context: MetadataContext): MiddlewareInfo {
-	const [first, summary, responseSchema, options] = args;
+	const [first] = args;
 	if (!first) throw new Error('OpenAPI requires route metadata');
-	if (options !== undefined && !Node.isObjectLiteralExpression(options)) {
-		throw new Error(`OpenAPI options must be an object literal: ${options.getText()}`);
+	if (!Node.isObjectLiteralExpression(first)) {
+		throw new Error(`OpenAPI metadata must be an object literal: ${first.getText()}`);
 	}
-	const value = Node.isObjectLiteralExpression(first)
-		? parseObjectLiteralMetadata(first, context)
-		: {
-				...(options ? RouteOptionsMetadata.parse(parseObjectLiteralMetadata(options, context)) : {}),
-				operationId: resolveMetadataValue(first, context),
-				summary: summary ? resolveMetadataValue(summary, context) : undefined,
-				responseSchema: responseSchema ? extractSchemaName(responseSchema, context) : undefined,
-				tags: [],
-			};
+	const value = parseObjectLiteralMetadata(first, context);
 	const parsed = RouteMetadata.safeParse(value);
 	if (!parsed.success) {
 		throw new Error(`Invalid OpenAPI metadata at line ${first.getStartLineNumber()}`, {cause: parsed.error});
@@ -185,6 +195,7 @@ function extractOpenAPIMetadata(args: ReadonlyArray<Node>, context: MetadataCont
 	return {
 		middlewareName: 'OpenAPI',
 		responseSchemaName: metadata.responseSchema ?? undefined,
+		acceptedResponseSchemaName: metadata.acceptedResponseSchema,
 		hasNoContent: metadata.responseSchema === null,
 		bodylessStatusCodes: metadata.bodylessStatusCodes,
 		responseContentType: metadata.responseContentType,
@@ -195,10 +206,12 @@ function extractOpenAPIMetadata(args: ReadonlyArray<Node>, context: MetadataCont
 		explicitOperationId: metadata.operationId,
 		explicitDescription: metadata.description,
 		explicitStatusCodes: metadata.statusCode,
+		errorStatusCodes: metadata.errorStatusCodes,
 		explicitSecurity: metadata.security,
 		explicitTags: metadata.tags,
 		explicitDeprecated: metadata.deprecated,
 		explicitExternalDocs: metadata.externalDocs,
+		explicitExperiment: metadata.experiment,
 	};
 }
 function extractMiddlewareInfo(callExpr: CallExpression, context: MetadataContext): MiddlewareInfo | null {
@@ -209,10 +222,6 @@ function extractMiddlewareInfo(callExpr: CallExpression, context: MetadataContex
 	switch (name) {
 		case 'RateLimitMiddleware':
 			return {middlewareName: name, rateLimitConfig: args[0]?.getText()};
-		case 'ResponseType':
-			return {middlewareName: name, responseSchemaName: args[0]?.getText()};
-		case 'NoContent':
-			return {middlewareName: name, hasNoContent: true};
 		case 'OpenAPI':
 			return extractOpenAPIMetadata(args, context);
 		case 'requireOAuth2Scope':
@@ -375,6 +384,7 @@ function buildRoute(
 		middlewares: [],
 		hasLoginRequired: false,
 		hasDefaultUserOnly: false,
+		hasBotOnly: false,
 		rateLimitConfig: null,
 		responseSchemaName: null,
 		responseContentType: 'application/json',
@@ -388,6 +398,7 @@ function buildRoute(
 		explicitOperationId: null,
 		explicitDescription: null,
 		explicitStatusCodes: null,
+		errorStatusCodes: [],
 		explicitSecurity: null,
 		oauth2RequiredScopes: null,
 		oauth2ScopeMode: null,
@@ -395,6 +406,7 @@ function buildRoute(
 		explicitTags: null,
 		explicitDeprecated: false,
 		explicitExternalDocs: null,
+		explicitExperiment: null,
 	};
 	const context = {resolver, scope};
 	for (const arg of registration.middlewareArguments) {
@@ -403,6 +415,7 @@ function buildRoute(
 			route.middlewares.push(name);
 			if (name === 'LoginRequired') route.hasLoginRequired = true;
 			if (name === 'DefaultUserOnly') route.hasDefaultUserOnly = true;
+			if (name === 'BotOnly') route.hasBotOnly = true;
 			continue;
 		}
 		if (Node.isArrowFunction(arg) || Node.isFunctionExpression(arg)) {
@@ -420,6 +433,9 @@ function buildRoute(
 		route.middlewares.push(middleware.middlewareName);
 		if (middleware.rateLimitConfig) route.rateLimitConfig = middleware.rateLimitConfig;
 		if (middleware.responseSchemaName) route.responseSchemaName = middleware.responseSchemaName;
+		if (middleware.acceptedResponseSchemaName) {
+			route.acceptedResponseSchemaName = middleware.acceptedResponseSchemaName;
+		}
 		if (middleware.responseContentType) route.responseContentType = middleware.responseContentType;
 		if (middleware.hasNoContent) route.hasNoContent = true;
 		if (middleware.bodylessStatusCodes) route.bodylessStatusCodes = middleware.bodylessStatusCodes;
@@ -434,6 +450,7 @@ function buildRoute(
 		if (middleware.explicitOperationId) route.explicitOperationId = middleware.explicitOperationId;
 		if (middleware.explicitDescription) route.explicitDescription = middleware.explicitDescription;
 		if (middleware.explicitStatusCodes) route.explicitStatusCodes = middleware.explicitStatusCodes;
+		if (middleware.errorStatusCodes) route.errorStatusCodes = middleware.errorStatusCodes;
 		if (middleware.explicitSecurity) route.explicitSecurity = middleware.explicitSecurity;
 		if (middleware.oauth2RequiredScopes && middleware.oauth2ScopeMode) {
 			if (route.oauth2ScopeMode && route.oauth2ScopeMode !== middleware.oauth2ScopeMode) {
@@ -450,6 +467,7 @@ function buildRoute(
 		if (middleware.explicitTags) route.explicitTags = middleware.explicitTags;
 		if (middleware.explicitDeprecated) route.explicitDeprecated = true;
 		if (middleware.explicitExternalDocs) route.explicitExternalDocs = middleware.explicitExternalDocs;
+		if (middleware.explicitExperiment) route.explicitExperiment = middleware.explicitExperiment;
 	}
 	return route;
 }

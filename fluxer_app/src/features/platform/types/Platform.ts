@@ -19,50 +19,12 @@ const isPWA =
 	).standalone === true;
 const isMobileBrowser = isIOSDevice || isAndroidDevice;
 
-type PlatformSelector<T> = {
-	web?: T;
-	ios?: T;
-	android?: T;
-	electron?: T;
-	default?: T;
-};
-
-function selectValue<T>(options: PlatformSelector<T>): T | undefined {
-	if (isElectron && options.electron !== undefined) {
-		return options.electron;
-	}
-	if (isIOSDevice && options.ios !== undefined) {
-		return options.ios;
-	}
-	if (isAndroidDevice && options.android !== undefined) {
-		return options.android;
-	}
-	if (options.web !== undefined) {
-		return options.web;
-	}
-	return options.default;
-}
-
 export const Platform = {
-	OS: 'web' as const,
-	isWeb: true,
-	isIOS: isIOSDevice,
-	isAndroid: isAndroidDevice,
 	isElectron,
 	isIOSWeb,
 	isPWA,
-	isAppleDevice: isIOSDevice,
 	isMobileBrowser,
-	select: selectValue,
 };
-
-export function isWebPlatform(): boolean {
-	return Platform.isWeb;
-}
-
-export function isElectronPlatform(): boolean {
-	return Platform.isElectron;
-}
 
 export function getNativeLocaleIdentifier(): string | null {
 	const languages = navigator.languages;

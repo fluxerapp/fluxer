@@ -2,7 +2,7 @@
 
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
-export interface AutoAckWindowConditions {
+interface AutoAckWindowConditions {
 	channelId: string | null;
 	isAtBottom: boolean;
 	canAutoAck: boolean;
@@ -65,7 +65,7 @@ function getCommands(previous: AutoAckWindowContext, next: AutoAckWindowConditio
 	return commands;
 }
 
-export const autoAckWindowStateMachine = setup({
+const autoAckWindowStateMachine = setup({
 	types: {} as {
 		context: AutoAckWindowContext;
 		events: AutoAckWindowEvent;

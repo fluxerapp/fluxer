@@ -16,8 +16,8 @@ import {resetAllDeveloperOptions} from '@app/features/channel/components/channel
 import {getNagbarControls} from '@app/features/devtools/components/NagbarControls';
 import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import {SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import * as NagbarCommands from '@app/features/ui/commands/NagbarCommands';
 import Nagbar from '@app/features/ui/state/Nagbar';
 import * as UserCommands from '@app/features/user/commands/UserCommands';

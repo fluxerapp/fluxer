@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {CustomKeybindEntry, KeybindCommand, KeybindConfig, KeyCombo} from '@app/features/input/state/InputKeybind';
+import {resolveKeybindCommand} from '@app/features/input/state/input_keybind/KeybindCommands';
 import {isActiveCustomKeybind, keyComboHasTriggerInput} from '@app/features/input/state/KeybindResolution';
 
 export {
-	comboModifierSignature,
 	hookShortcutIdForAction,
 	hookShortcutIdForKeybind,
 } from '@app/features/app/keybindings/utils/HookShortcutIds';
@@ -45,16 +45,8 @@ export function gamepadSourceIdForKeybind(keybind: {id: string | null; action: K
 	return `gamepad:${keybind.id}`;
 }
 
-export function hasTriggerKey(combo: KeyCombo): boolean {
-	return (combo.key ?? '') !== '' || (combo.code ?? '') !== '';
-}
-
-export function hasTriggerInput(combo: KeyCombo): boolean {
-	return keyComboHasTriggerInput(combo);
-}
-
-export function isEnabledDefaultCombo(combo: KeyCombo): boolean {
-	return (combo.enabled ?? true) !== false && hasTriggerInput(combo);
+function isEnabledDefaultCombo(combo: KeyCombo): boolean {
+	return (combo.enabled ?? true) !== false && keyComboHasTriggerInput(combo);
 }
 
 export function buildDefaultRuntimeKeybinds(
@@ -77,8 +69,9 @@ export function buildCustomRuntimeKeybinds(
 ): Array<RuntimeKeybind> {
 	const result: Array<RuntimeKeybind> = [];
 	for (const custom of customs) {
-		if (!custom.action || !isActiveCustomKeybind(custom)) continue;
-		const base = getBaseByAction(custom.action);
+		const action = resolveKeybindCommand(custom.action);
+		if (action === null || !isActiveCustomKeybind(custom)) continue;
+		const base = getBaseByAction(action);
 		if (!base) continue;
 		result.push({...base, id: custom.id, combo: custom.combo});
 	}

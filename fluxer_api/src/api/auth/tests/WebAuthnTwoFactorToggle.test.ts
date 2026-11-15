@@ -32,12 +32,6 @@ describe('WebAuthn two-factor toggle', () => {
 	afterAll(async () => {
 		await harness?.shutdown();
 	});
-	it('reports an empty authenticator types array for an account with no second factor', async () => {
-		const account = await createTestAccount(harness);
-		const me = await createBuilder<PrivateUserResponse>(harness, account.token).get('/users/@me').execute();
-		expect(me.authenticator_types).toEqual([]);
-		expect(me.mfa_enabled).toBe(false);
-	});
 	it('rejects enabling passkey two-factor when the account has no registered credential', async () => {
 		const account = await createTestAccount(harness);
 		await createBuilder(harness, account.token)

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {getActiveInstanceProductName} from '@app/features/app/state/ActiveInstanceProductName';
 import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
 import Guilds from '@app/features/guild/state/Guilds';
 import {CANCEL_DESCRIPTOR, PAUSE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
@@ -92,7 +92,7 @@ export const DisableInvitesButton = observer(({guildId}: {guildId: string}) => {
 			{invitesDisabled && (
 				<p className={styles.message} data-flx="invite.disable-invites-button.message">
 					{isRaidDetected
-						? i18n._(INVITES_PAUSED_BECAUSE_RAID_DESCRIPTOR, {productName: PRODUCT_NAME})
+						? i18n._(INVITES_PAUSED_BECAUSE_RAID_DESCRIPTOR, {productName: getActiveInstanceProductName()})
 						: i18n._(INVITES_PAUSED_FOR_COMMUNITY_DESCRIPTOR)}
 				</p>
 			)}

@@ -8,8 +8,8 @@ import {useSystemMessageData} from '@app/features/messaging/hooks/useSystemMessa
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import styles from '@app/features/theme/styles/Message.module.css';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {ArrowRightIcon} from '@app/features/ui/icons/DirectionalIcons';
 import {Trans} from '@lingui/react/macro';
-import {ArrowRightIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 
 interface ChannelFollowAddMessageProps {

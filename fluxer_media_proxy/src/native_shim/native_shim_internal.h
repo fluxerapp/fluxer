@@ -19,6 +19,7 @@
 #include <libavformat/avformat.h>
 #include <libavutil/display.h>
 #include <libavutil/imgutils.h>
+#include <libavutil/avstring.h>
 #include <libavutil/log.h>
 #include <libavutil/mem.h>
 #include <libavutil/opt.h>
@@ -58,6 +59,12 @@
     "gif,apng,h264,hevc,vp8,vp9,libvpx-vp9,av1,libaom-av1,libdav1d," \
     "mpeg1video,mpeg2video,mpeg4,h263,theora,flv,vp6,vp6f,vp6a," \
     "wmv1,wmv2,wmv3,vc1,mjpeg,bmp"
+#define FLUXER_ALLOWED_AUDIO_DECODERS \
+    "aac,aac_fixed,aac_latm,mp1,mp1float,mp2,mp2float,mp3,mp3float,mp3adu," \
+    "mp3adufloat,vorbis,opus,flac,alac,ac3,ac3_fixed,eac3,wmav1,wmav2,amrnb," \
+    "amrwb,adpcm_ima_wav,adpcm_ms,pcm_alaw,pcm_mulaw,pcm_s8,pcm_u8,pcm_s16le," \
+    "pcm_s16be,pcm_s24le,pcm_s24be,pcm_s32le,pcm_s32be,pcm_f32le,pcm_f32be," \
+    "pcm_f64le,pcm_f64be"
 #define FLUXER_AV_INPUT_FORMATS \
     "mov,matroska,webm,avi,flv,ogg,mpegts,mpeg,mpegvideo,asf,mp3,wav,flac,aac,aiff"
 #define FLUXER_AV_BMP_INPUT_FORMAT "bmp_pipe"

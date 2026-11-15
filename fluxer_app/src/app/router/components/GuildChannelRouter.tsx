@@ -7,6 +7,8 @@ import {pickDefaultGuildChannelId} from '@app/features/messaging/utils/ChannelSh
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
+import ChannelThreads from '@app/features/threads/state/ChannelThreads';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {observer} from 'mobx-react-lite';
@@ -24,16 +26,28 @@ function isGuildRootPath(pathname: string, guildId: string): boolean {
 	return segments.length === 3 && segments[2] === guildId;
 }
 
+function resolveDefaultChannelId(guildId: string): string | null {
+	let selectedChannelId = SelectedChannel.selectedChannelIds.get(guildId);
+	const threadsActive = ThreadGuilds.isActive(guildId);
+	if (threadsActive && selectedChannelId) {
+		const selectedThread = Channels.getChannel(selectedChannelId);
+		if (selectedThread?.isThread()) {
+			if (ChannelThreads.getThread(selectedThread.id)) return selectedThread.id;
+			selectedChannelId = selectedThread.parentId ?? undefined;
+		}
+	}
+	return pickDefaultGuildChannelId({
+		guildId,
+		channels: Channels.getGuildChannels(guildId),
+		selectedChannelId,
+		threadsActive,
+	});
+}
+
 export const GuildChannelRouter = observer<{guildId: string; children: React.ReactNode}>(({guildId, children}) => {
 	const location = useLocation();
 	const needsDefaultChannel = !MobileLayout.enabled && isGuildRootPath(location.pathname, guildId);
-	const defaultChannelId = needsDefaultChannel
-		? pickDefaultGuildChannelId({
-				guildId,
-				channels: Channels.getGuildChannels(guildId),
-				selectedChannelId: SelectedChannel.selectedChannelIds.get(guildId),
-			})
-		: null;
+	const defaultChannelId = needsDefaultChannel ? resolveDefaultChannelId(guildId) : null;
 	useEffect(() => {
 		if (!defaultChannelId) {
 			return;

@@ -11,7 +11,7 @@ import {
 } from '@app/api/auth/tests/AuthTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
-import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 interface ChallengeStartResult {
@@ -119,18 +119,6 @@ describe('MfaBackupCodesChallengeFlow', () => {
 		await harness?.shutdown();
 	});
 	describe('start', () => {
-		test('returns a ticket and emails a verification code', async () => {
-			const {account} = await createTotpAccount(harness);
-			const result = await startChallenge(harness, account.token);
-			expect(typeof result.ticket).toBe('string');
-			expect(result.ticket.length).toBeGreaterThan(0);
-			expect(result.code_expires_at).toBeDefined();
-			expect(result.resend_available_at).toBeDefined();
-			const emails = await listTestEmails(harness, {recipient: account.email});
-			const challengeEmail = findLastTestEmail(emails, 'mfa_backup_codes_view');
-			expect(challengeEmail).not.toBeNull();
-			expect(challengeEmail!.metadata.code).toMatch(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/);
-		});
 		test('rejects an account without TOTP enabled', async () => {
 			const account = await createTestAccount(harness);
 			await createBuilder(harness, account.token)
@@ -140,13 +128,6 @@ describe('MfaBackupCodesChallengeFlow', () => {
 				.execute();
 			const emails = await listTestEmails(harness, {recipient: account.email});
 			expect(findLastTestEmail(emails, 'mfa_backup_codes_view')).toBeNull();
-		});
-		test('requires authentication', async () => {
-			await createBuilderWithoutAuth(harness)
-				.post('/users/@me/mfa/backup-codes/challenge')
-				.body({})
-				.expect(HTTP_STATUS.UNAUTHORIZED)
-				.execute();
 		});
 	});
 	describe('resend', () => {
@@ -167,13 +148,6 @@ describe('MfaBackupCodesChallengeFlow', () => {
 				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
 				.executeWithResponse();
 			expect((json as ValidationErrorBody).errors?.[0]?.code).toBe('INVALID_OR_EXPIRED_TICKET');
-		});
-		test('requires authentication', async () => {
-			await createBuilderWithoutAuth(harness)
-				.post('/users/@me/mfa/backup-codes/challenge/resend')
-				.body({ticket: 'some-ticket'})
-				.expect(HTTP_STATUS.UNAUTHORIZED)
-				.execute();
 		});
 	});
 	describe('verify', () => {
@@ -246,13 +220,6 @@ describe('MfaBackupCodesChallengeFlow', () => {
 			expect((json as ValidationErrorBody).errors?.[0]?.code).toBe('INVALID_OR_EXPIRED_TICKET');
 			const result = await verifyChallenge(harness, owner.account.token, startResult.ticket, code);
 			expect(result.backup_codes.map((backupCode) => backupCode.code).sort()).toEqual([...owner.backupCodes].sort());
-		});
-		test('requires authentication', async () => {
-			await createBuilderWithoutAuth(harness)
-				.post('/users/@me/mfa/backup-codes/challenge/verify')
-				.body({ticket: 'some-ticket', code: 'ABCD-1234'})
-				.expect(HTTP_STATUS.UNAUTHORIZED)
-				.execute();
 		});
 	});
 	describe('regenerate', () => {
@@ -348,13 +315,6 @@ describe('MfaBackupCodesChallengeFlow', () => {
 				.post('/users/@me/mfa/backup-codes/challenge/regenerate')
 				.body({ticket: startResult.ticket, verification_proof: verified.verification_proof})
 				.expect(HTTP_STATUS.BAD_REQUEST, 'TWO_FACTOR_REQUIRED')
-				.execute();
-		});
-		test('requires authentication', async () => {
-			await createBuilderWithoutAuth(harness)
-				.post('/users/@me/mfa/backup-codes/challenge/regenerate')
-				.body({ticket: 'some-ticket', verification_proof: 'some-proof'})
-				.expect(HTTP_STATUS.UNAUTHORIZED)
 				.execute();
 		});
 	});

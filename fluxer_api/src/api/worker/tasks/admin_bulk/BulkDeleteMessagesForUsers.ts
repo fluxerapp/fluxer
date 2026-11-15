@@ -1,34 +1,33 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {AdminMessageDeletionService} from '@app/api/admin/services/AdminMessageDeletionService';
 import {createUserID} from '@app/api/BrandedTypes';
-import {UserMessageDeletionService} from '@app/api/channel/services/message/UserMessageDeletionService';
 import {runAdminBulkJob} from '@app/api/worker/tasks/admin_bulk/AdminBulkJob';
+import {createWorkerEnforcementServices} from '@app/api/worker/tasks/admin_bulk/AdminBulkServices';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
+import {BulkModerationBasis} from '@fluxer/schema/src/domains/admin/EnforcementSchemas';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
+import {z} from 'zod';
 
-interface Payload {
-	user_ids: Array<string>;
-	admin_user_id: string;
-	audit_log_reason: string | null;
-}
+const BulkDeleteMessagesForUsersPayload = z.object({
+	user_ids: z.array(z.string()),
+	basis: BulkModerationBasis,
+	admin_user_id: z.string(),
+	audit_log_reason: z.string().nullable(),
+});
 
 const handler: WorkerTaskHandler = async (rawPayload, helpers) => {
-	const payload: Payload = {
-		user_ids: rawPayload.user_ids as Array<string>,
-		admin_user_id: rawPayload.admin_user_id as string,
-		audit_log_reason: (rawPayload.audit_log_reason as string | null) ?? null,
-	};
+	const payload = BulkDeleteMessagesForUsersPayload.parse(rawPayload);
 	const deps = getWorkerDependencies();
-	const auditService = new AdminAuditService(deps.adminRepository, deps.snowflakeService);
-	const deletionService = new UserMessageDeletionService({
+	const {apiContext, auditService, enforcementService} = createWorkerEnforcementServices(deps);
+	const deletionService = new AdminMessageDeletionService({
+		apiContext,
 		channelRepository: deps.channelRepository,
-		gatewayService: deps.gatewayService,
-		storageService: deps.storageService,
-		purgeQueue: deps.purgeQueue,
-		workerService: deps.workerService,
+		auditService,
+		enforcement: enforcementService,
 	});
 	const adminUserId = createUserID(BigInt(payload.admin_user_id));
+	const actor = {adminUserId, acls: new Set<string>(), internalNote: payload.audit_log_reason};
 	const total = payload.user_ids.length;
 	let deletedMessages = 0;
 	await helpers.setContextLink(`/users?ids=${payload.user_ids.slice(0, 50).join(',')}`);
@@ -38,20 +37,12 @@ const handler: WorkerTaskHandler = async (rawPayload, helpers) => {
 		ids: payload.user_ids,
 		progressEvery: 1,
 		apply: async (rawUserId) => {
-			const userId = createUserID(BigInt(rawUserId));
-			const deleted = await deletionService.deleteUserMessagesBulk(userId);
-			deletedMessages += deleted;
-			await auditService.createAuditLog({
-				adminUserId,
-				targetType: 'message_deletion',
-				targetId: BigInt(userId),
-				action: 'delete_all_user_messages',
-				auditLogReason: payload.audit_log_reason,
-				metadata: new Map([
-					['user_id', userId.toString()],
-					['message_count', deleted.toString()],
-				]),
-			});
+			const {message_count} = await deletionService.deleteAllUserMessages(
+				createUserID(BigInt(rawUserId)),
+				{dryRun: false, basis: payload.basis},
+				actor,
+			);
+			deletedMessages += message_count;
 		},
 		afterItems: async () => [['message_count', deletedMessages.toString()]] as Array<[string, string]>,
 		summary: {
@@ -59,7 +50,13 @@ const handler: WorkerTaskHandler = async (rawPayload, helpers) => {
 			adminUserId,
 			action: 'bulk_delete_user_messages',
 			auditLogReason: payload.audit_log_reason,
-			metadata: [['user_count', total.toString()]],
+			metadata: [
+				['user_count', total.toString()],
+				['basis', payload.basis.type],
+				...(payload.basis.type === 'enforcement'
+					? ([['reason_code', payload.basis.decision.reason_code.toString()]] as Array<[string, string]>)
+					: []),
+			],
 		},
 	});
 };

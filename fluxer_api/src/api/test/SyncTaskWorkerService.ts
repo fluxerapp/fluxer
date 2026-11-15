@@ -7,6 +7,18 @@ import type {WorkerJobOptions, WorkerJobPayload} from '@pkgs/worker/src/contract
 
 type TaskHandlerMap = Record<string, WorkerTaskHandler>;
 
+export function createTestWorkerHelpers(overrides: Partial<WorkerTaskHelpers> = {}): WorkerTaskHelpers {
+	return {
+		logger: new NoopLogger(),
+		jobId: 1n,
+		addJob: async () => 0n,
+		reportProgress: async () => {},
+		shouldCancel: async () => false,
+		setContextLink: async () => {},
+		...overrides,
+	};
+}
+
 let nextSyntheticJobId = 1n;
 
 export interface SyncTaskWorkerServiceOptions {
@@ -77,23 +89,12 @@ export class SyncTaskWorkerService implements IWorkerService {
 		}
 		const handler = this.handlers[taskType];
 		if (handler) {
-			await handler(payload, {
-				logger: new NoopLogger(),
-				jobId,
-				addJob: async () => 0n,
-				reportProgress: async () => {},
-				shouldCancel: async () => false,
-				setContextLink: async () => {},
-			});
+			await handler(payload, createTestWorkerHelpers({jobId}));
 		}
 		return jobId;
 	}
 
 	async cancelJob(_jobId: bigint): Promise<boolean> {
-		return false;
-	}
-
-	async retryDeadLetterJob(_jobId: bigint): Promise<boolean> {
 		return false;
 	}
 
@@ -158,8 +159,7 @@ export class SyncTaskWorkerService implements IWorkerService {
 		if (!handler) {
 			return;
 		}
-		const helpers: WorkerTaskHelpers = {
-			logger: new NoopLogger(),
+		const helpers: WorkerTaskHelpers = createTestWorkerHelpers({
 			jobId: entry.job.jobId,
 			attempt: {isLastAttempt: entry.attempts >= maxAttempts},
 			addJob: async (taskType, payload, options) => {
@@ -167,10 +167,7 @@ export class SyncTaskWorkerService implements IWorkerService {
 				this.enqueue({jobId, taskType, payload, jobKey: options?.jobKey, runAt: options?.runAt, options});
 				return jobId;
 			},
-			reportProgress: async () => {},
-			shouldCancel: async () => false,
-			setContextLink: async () => {},
-		};
+		});
 		await handler(entry.job.payload, helpers);
 	}
 }

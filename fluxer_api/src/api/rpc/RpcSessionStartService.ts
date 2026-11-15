@@ -1,41 +1,35 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {UserRow} from '@app/api/database/types/UserTypes';
-import {mapGuildMemberToResponse} from '@app/api/guild/GuildModel';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import {sanitizeExpiredPremiumMemberPerks} from '@app/api/guild/services/member/PremiumMemberSanitization';
 import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
-import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
+import type {DiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {getCachedTagStyle} from '@app/api/instance/AccountIdentityModeCache';
 import {Logger} from '@app/api/Logger';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {User} from '@app/api/models/User';
-import {
-	RpcTimingRecorder,
-	type RpcTimingSteps,
-	startRpcTiming,
-	timeRpcStep,
-	timeRpcStepSync,
-} from '@app/api/rpc/RpcTimings';
+import {RpcTimingRecorder, type RpcTimingSteps, startRpcTiming, timeRpcStep} from '@app/api/rpc/RpcTimings';
 import type {UserData} from '@app/api/rpc/RpcTypes';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {createPremiumClearPatch, shouldStripExpiredPremium} from '@app/api/user/UserHelpers';
-import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {TagStyles} from '@fluxer/constants/src/AccountIdentityConstants';
 import {PremiumFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
 import type {RpcSessionTimings} from '@fluxer/schema/src/domains/rpc/RpcSchemas';
 
-interface SessionStartUserRepository extends Pick<IUserRepository, 'patchUpsert' | 'updateFlags'> {}
+interface SessionStartUserRepository extends Pick<UserRepository, 'patchUpsert' | 'updateFlags'> {}
 
-interface SessionStartGuildRepository extends Pick<IGuildRepositoryAggregate, 'getMember' | 'upsertMember'> {}
+interface SessionStartGuildRepository extends Pick<GuildRepository, 'getMember' | 'upsertMember'> {}
 
 interface SessionStartUserCacheService
 	extends Pick<UserCacheService, 'getUserPartialResponse' | 'setUserPartialResponseFromUserInBackground'> {}
 
 interface SessionStartGatewayService extends Pick<IGatewayService, 'dispatchGuild' | 'dispatchPresence'> {}
 
-interface SessionStartDiscriminatorService extends Pick<IDiscriminatorService, 'generateDiscriminator'> {}
+interface SessionStartDiscriminatorService extends Pick<DiscriminatorService, 'generateDiscriminator'> {}
 
 interface SessionStartDeps {
 	userRepository: SessionStartUserRepository;
@@ -167,62 +161,16 @@ export class RpcSessionStartService {
 			const sanitizePremiumStartedAtNs = startRpcTiming();
 			const guildIdsToProcess = userData.guildIds;
 			try {
-				const members = await timeRpcStep(sanitizePremiumSteps, 'fetch_guild_members', async () =>
-					Promise.all(
-						guildIdsToProcess.map(async (guildId) => {
-							try {
-								const member = await this.deps.guildRepository.getMember(guildId, user.id);
-								return {guildId, member, error: null};
-							} catch (error) {
-								Logger.error(
-									{userId: user.id.toString(), guildId: guildId.toString(), error},
-									'Failed to fetch guild member for premium sanitization',
-								);
-								return {guildId, member: null, error};
-							}
-						}),
-					),
+				await timeRpcStep(sanitizePremiumSteps, 'sanitize_expired_premium_member_perks', () =>
+					sanitizeExpiredPremiumMemberPerks({
+						userId: user.id,
+						guildIds: guildIdsToProcess,
+						guildRepository: this.deps.guildRepository,
+						gatewayService: this.deps.gatewayService,
+						userCacheService: this.deps.userCacheService,
+						requestCache,
+					}),
 				);
-				const membersToSanitize = timeRpcStepSync(sanitizePremiumSteps, 'select_members_to_sanitize', () =>
-					members.filter(
-						({member, error}) =>
-							!error &&
-							member &&
-							!member.isPremiumSanitized &&
-							(member.avatarHash || member.bannerHash || member.bio || member.accentColor !== null),
-					),
-				);
-				if (membersToSanitize.length > 0) {
-					const updatePromises = membersToSanitize.map(({guildId, member}) =>
-						this.deps.guildRepository
-							.upsertMember({
-								...member!.toRow(),
-								is_premium_sanitized: true,
-							})
-							.then((updatedMember) => ({guildId, updatedMember, error: null})),
-					);
-					const updatedResults = await timeRpcStep(sanitizePremiumSteps, 'upsert_sanitized_guild_members', async () =>
-						Promise.all(updatePromises),
-					);
-					const dispatchPromises = updatedResults.map(async ({guildId, updatedMember, error}) => {
-						if (error) return;
-						try {
-							await this.deps.gatewayService.dispatchGuild({
-								guildId,
-								event: 'GUILD_MEMBER_UPDATE',
-								data: await mapGuildMemberToResponse(updatedMember!, this.deps.userCacheService, requestCache),
-							});
-						} catch (error) {
-							Logger.error(
-								{userId: user.id.toString(), guildId: guildId.toString(), error},
-								'Failed to dispatch guild member update after premium sanitization',
-							);
-						}
-					});
-					await timeRpcStep(sanitizePremiumSteps, 'dispatch_sanitized_member_updates', async () =>
-						Promise.all(dispatchPromises),
-					);
-				}
 			} catch (error) {
 				Logger.error(
 					{userId: user.id.toString(), guildIds: guildIdsToProcess.map(String), error},
@@ -232,11 +180,7 @@ export class RpcSessionStartService {
 			premiumFlagsToUpdate = (premiumFlagsToUpdate ?? user.premiumFlags) | PremiumFlags.PERKS_SANITIZED;
 			await timeRpcStep(sanitizePremiumSteps, 'dispatch_user_update_after_premium_sanitization', async () => {
 				try {
-					await this.deps.gatewayService.dispatchPresence({
-						userId: user.id,
-						event: 'USER_UPDATE',
-						data: mapUserToPrivateResponse(user),
-					});
+					await dispatchUserUpdate(this.deps.gatewayService, user);
 				} catch (error) {
 					Logger.warn(
 						{userId: user.id.toString(), error},

@@ -59,18 +59,6 @@ describe('GooglePlayPushVerifier', () => {
 		expect(fake.spies.jwksFetches).toBe(1);
 	});
 
-	it('uses an injected key set URL', async () => {
-		const customFake = createGooglePlayDeveloperApiHandlers({jwksUrl: 'https://oidc.fluxer.test/certs'});
-		server.use(...customFake.handlers);
-		const customVerifier = new GooglePlayPushVerifier({jwksUrl: 'https://oidc.fluxer.test/certs'});
-		const token = await customFake.signPushToken();
-		await expect(customVerifier.verifyAuthorizationHeader(`Bearer ${token}`)).resolves.toMatchObject({
-			email: 'rtdn@fluxer-test.iam.gserviceaccount.com',
-		});
-		expect(customFake.spies.jwksFetches).toBe(1);
-		expect(fake.spies.jwksFetches).toBe(0);
-	});
-
 	it('rejects a missing or malformed authorization header', async () => {
 		await expectRejected(undefined);
 		await expectRejected(null);
@@ -272,6 +260,44 @@ describe('decodeGooglePlayDeveloperNotification', () => {
 			event: {type: 'test'},
 		});
 		expect(decode({packageName: 'com.fluxer', somethingNewNotification: {}})?.event).toEqual({type: 'unknown'});
+	});
+
+	it.each([
+		{
+			name: 'numeric strings',
+			notification: {purchaseToken: 'strings', productType: '2', refundType: '1'},
+			expected: {
+				type: 'voided_purchase',
+				purchaseToken: 'strings',
+				orderId: null,
+				productType: 'one_time',
+				refundType: 'full',
+			},
+		},
+		{
+			name: 'absent types',
+			notification: {purchaseToken: 'absent'},
+			expected: {
+				type: 'voided_purchase',
+				purchaseToken: 'absent',
+				orderId: null,
+				productType: null,
+				refundType: null,
+			},
+		},
+		{
+			name: 'unknown types',
+			notification: {purchaseToken: 'unknown', productType: 0, refundType: -1},
+			expected: {
+				type: 'voided_purchase',
+				purchaseToken: 'unknown',
+				orderId: null,
+				productType: null,
+				refundType: null,
+			},
+		},
+	])('decodes voided purchases with $name', ({notification, expected}) => {
+		expect(decode({packageName: 'com.fluxer', voidedPurchaseNotification: notification})?.event).toEqual(expected);
 	});
 
 	it('returns null for undecodable data', () => {

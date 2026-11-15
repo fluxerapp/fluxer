@@ -68,6 +68,14 @@ const COMMON_RESPONSES: Record<string, OpenAPIResponse> = {
 			},
 		},
 	},
+	'409': {
+		description: 'Conflict - The request conflicts with the current state of the resource',
+		content: {
+			'application/json': {
+				schema: {$ref: '#/components/schemas/Error'},
+			},
+		},
+	},
 	'429': {
 		description: 'Too Many Requests - You are being rate limited',
 		content: {
@@ -90,8 +98,19 @@ const COMMON_RESPONSES: Record<string, OpenAPIResponse> = {
 			},
 		},
 	},
+	'503': {
+		description: 'Service Unavailable - The request could not be completed right now',
+		content: {
+			'application/json': {
+				schema: {$ref: '#/components/schemas/Error'},
+			},
+		},
+	},
 };
-export function getErrorResponses(requiresAuth: boolean): Record<string, OpenAPIResponse> {
+export function getErrorResponses(
+	requiresAuth: boolean,
+	errorStatusCodes: ReadonlyArray<number> = [],
+): Record<string, OpenAPIResponse> {
 	const responses: Record<string, OpenAPIResponse> = {
 		'400': COMMON_RESPONSES['400'],
 		'429': COMMON_RESPONSES['429'],
@@ -100,6 +119,13 @@ export function getErrorResponses(requiresAuth: boolean): Record<string, OpenAPI
 	if (requiresAuth) {
 		responses['401'] = COMMON_RESPONSES['401'];
 		responses['403'] = COMMON_RESPONSES['403'];
+	}
+	for (const code of errorStatusCodes) {
+		const response = COMMON_RESPONSES[String(code)];
+		if (!response) {
+			throw new Error(`No documented error response for status ${code}`);
+		}
+		responses[String(code)] = response;
 	}
 	return responses;
 }

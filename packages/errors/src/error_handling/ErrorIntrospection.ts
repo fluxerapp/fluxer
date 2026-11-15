@@ -1,3 +1,4 @@
+import {isObjectLike as isRecord} from '@fluxer/record_utils/src/RecordGuards';
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
@@ -22,10 +23,6 @@ const HTTP_STATUS_TO_ERROR_CODE: Partial<Record<number, string>> = {
 
 export function getApiErrorCodeForStatus(status: number): string {
 	return HTTP_STATUS_TO_ERROR_CODE[status] ?? APIErrorCodes.GENERAL_ERROR;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null;
 }
 
 function isApiErrorCode(value: unknown): value is string {

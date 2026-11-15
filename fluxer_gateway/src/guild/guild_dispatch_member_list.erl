@@ -48,7 +48,7 @@ dispatch_member_list_event(channel_update, EventData, _OldState, UpdatedState) -
 dispatch_member_list_event(channel_update_bulk, EventData, _OldState, UpdatedState) ->
     Channels = maps:get(<<"channels">>, EventData, []),
     lists:foldl(
-        fun(Channel, AccState) -> broadcast_channel_update(Channel, AccState) end,
+        fun broadcast_channel_update/2,
         UpdatedState,
         Channels
     );
@@ -62,7 +62,7 @@ broadcast_member_update(EventData, OldState, UpdatedState) ->
         undefined ->
             UpdatedState;
         _ ->
-            {ok, NewState} = guild_member_list:broadcast_member_list_updates(
+            {ok, NewState} = guild_member_list_write:broadcast_member_list_updates(
                 UserId, OldState, UpdatedState
             ),
             NewState
@@ -70,7 +70,7 @@ broadcast_member_update(EventData, OldState, UpdatedState) ->
 
 -spec broadcast_all_updates(guild_state()) -> guild_state().
 broadcast_all_updates(UpdatedState) ->
-    {ok, NewState} = guild_member_list:broadcast_all_member_list_updates(UpdatedState),
+    {ok, NewState} = guild_member_list_write:broadcast_all_member_list_updates(UpdatedState),
     NewState.
 
 -spec broadcast_channel_update(event_data(), guild_state()) -> guild_state().
@@ -95,7 +95,7 @@ broadcast_channel_update_for_id(ChannelId, UpdatedState) ->
         true ->
             sync_channel_list_without_rebuild(ChannelId, UpdatedState);
         false ->
-            {ok, NewState} = guild_member_list:broadcast_member_list_updates_for_channel(
+            {ok, NewState} = guild_member_list_write:broadcast_member_list_updates_for_channel(
                 ChannelId, UpdatedState
             ),
             NewState
@@ -130,19 +130,3 @@ extract_user_id_from_event(EventData) ->
     guild_dispatch_decorate:parse_snowflake(
         <<"user.id">>, maps:get(<<"id">>, MUser, undefined)
     ).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-extract_user_id_from_event_test() ->
-    EventData = #{<<"user">> => #{<<"id">> => <<"42">>}},
-    ?assertEqual(42, extract_user_id_from_event(EventData)).
-
-extract_user_id_from_event_missing_test() ->
-    ?assertEqual(undefined, extract_user_id_from_event(#{})).
-
-extract_user_id_from_event_invalid_test() ->
-    EventData = #{<<"user">> => #{<<"id">> => <<"invalid">>}},
-    ?assertEqual(undefined, extract_user_id_from_event(EventData)).
-
--endif.

@@ -8,7 +8,8 @@
 	box-sizing: border-box;
 	min-width: 0;
 	width: 100%;
-	padding: 0.625rem 3.25rem 0.625rem 0.75rem;
+	padding-block: 0.625rem;
+	padding-inline: 0.75rem 3.25rem;
 }
 
 .richInput [contenteditable] {
@@ -19,14 +20,6 @@
 	overflow-y: auto;
 	color: var(--text-chat);
 	caret-color: var(--text-chat);
-}
-
-.destinationList {
-	display: flex;
-	flex-direction: column;
-	height: clamp(20rem, 48vh, 23.75rem);
-	min-height: 0;
-	max-height: clamp(20rem, 48vh, 23.75rem);
 }
 
 .footerSection {
@@ -76,14 +69,14 @@
 }
 
 .messageInputContainerWithCounter.messageInputContainerWithNotice .slowmodeNotice {
-	padding-right: 4.75rem;
+	padding-inline-end: 4.75rem;
 }
 
 .messageInputActions {
 	position: absolute;
 	z-index: 1;
 	top: 0.0625rem;
-	right: 0.0625rem;
+	inset-inline-end: 0.0625rem;
 }
 
 .emojiPickerButton {

@@ -154,7 +154,7 @@ normalize_optional_snowflake_field(Data, Key) ->
     case get_field(Data, Key) of
         undefined -> undefined;
         null -> undefined;
-        Value -> guild_voice_connection_normalize:normalize_positive_snowflake(Value)
+        Value -> snowflake_id:parse_maybe(Value)
     end.
 
 -spec normalize_binary_field(map(), binary()) -> binary() | undefined.
@@ -360,9 +360,9 @@ add_unique_user_by_id(UserMap, Id, List) ->
     end.
 
 -spec update_relationships_map(event(), map() | list(), session_state()) -> session_state().
-update_relationships_map(relationship_add, Data, State) ->
+update_relationships_map(relationship_add, Data, State) when is_map(Data) ->
     upsert_relationship(Data, State);
-update_relationships_map(relationship_update, Data, State) ->
+update_relationships_map(relationship_update, Data, State) when is_map(Data) ->
     upsert_relationship(Data, State);
 update_relationships_map(relationship_remove, Data, State) ->
     case type_conv:extract_id(Data, <<"id">>) of
@@ -389,151 +389,3 @@ upsert_relationship(Data, State) ->
         _ ->
             State
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-add_unique_id_test() ->
-    ?assertEqual([1, 2, 3], add_unique_id(1, [2, 3])),
-    ?assertEqual([1, 2, 3], add_unique_id(1, [1, 2, 3])),
-    ?assertEqual([<<"1">>, 2, 3], add_unique_id(1, [<<"1">>, 2, 3])),
-    ok.
-
-channel_create_inserts_test() ->
-    State = #{channels => #{}},
-    Data = #{<<"id">> => <<"100">>, <<"type">> => 1},
-    State1 = update_channels_map(channel_create, Data, State),
-    ?assertEqual(1, map_size(maps:get(channels, State1))).
-
-channel_create_updates_existing_test() ->
-    State = #{channels => #{100 => #{<<"type">> => 0}}},
-    Data = #{<<"id">> => <<"100">>, <<"type">> => 1},
-    State1 = update_channels_map(channel_create, Data, State),
-    ?assertEqual(1, map_size(maps:get(channels, State1))).
-
-channel_update_preserves_dm_recipients_when_payload_is_partial_test() ->
-    Existing = #{
-        <<"id">> => <<"100">>,
-        <<"type">> => 3,
-        <<"name">> => <<"old">>,
-        <<"recipients">> => [#{<<"id">> => <<"2">>, <<"username">> => <<"two">>}],
-        <<"recipient_ids">> => [<<"2">>]
-    },
-    State = #{channels => #{100 => Existing}},
-    Data = #{<<"id">> => <<"100">>, <<"type">> => 3, <<"name">> => <<"new">>},
-    State1 = update_channels_map(channel_update, Data, State),
-    Channel = maps:get(100, maps:get(channels, State1)),
-    ?assertEqual(<<"new">>, maps:get(<<"name">>, Channel)),
-    ?assertEqual(maps:get(<<"recipients">>, Existing), maps:get(<<"recipients">>, Channel)),
-    ?assertEqual(
-        maps:get(<<"recipient_ids">>, Existing), maps:get(<<"recipient_ids">>, Channel)
-    ).
-
-channel_update_empty_recipient_payload_keeps_existing_targets_test() ->
-    Existing = #{
-        <<"id">> => <<"100">>,
-        <<"type">> => 1,
-        <<"recipients">> => [#{<<"id">> => <<"2">>, <<"username">> => <<"two">>}]
-    },
-    State = #{channels => #{100 => Existing}},
-    Data = #{<<"id">> => <<"100">>, <<"type">> => 1, <<"recipients">> => []},
-    State1 = update_channels_map(channel_update, Data, State),
-    Channel = maps:get(100, maps:get(channels, State1)),
-    ?assertEqual(maps:get(<<"recipients">>, Existing), maps:get(<<"recipients">>, Channel)).
-
-channel_update_recipient_ids_replace_stale_recipient_maps_test() ->
-    Existing = #{
-        <<"id">> => <<"100">>,
-        <<"type">> => 3,
-        <<"recipients">> => [#{<<"id">> => <<"2">>, <<"username">> => <<"two">>}]
-    },
-    State = #{channels => #{100 => Existing}},
-    Data = #{<<"id">> => <<"100">>, <<"type">> => 3, <<"recipient_ids">> => [<<"3">>]},
-    State1 = update_channels_map(channel_update, Data, State),
-    Channel = maps:get(100, maps:get(channels, State1)),
-    ?assertNot(maps:is_key(<<"recipients">>, Channel)),
-    ?assertEqual([<<"3">>], maps:get(<<"recipient_ids">>, Channel)).
-
-relationship_add_inserts_test() ->
-    State = #{relationships => #{}},
-    Data = #{<<"id">> => <<"100">>, <<"type">> => 1},
-    State1 = update_relationships_map(relationship_add, Data, State),
-    ?assertEqual(1, map_size(maps:get(relationships, State1))).
-
-relationship_add_updates_type_test() ->
-    State = #{relationships => #{100 => 1}},
-    Data = #{<<"id">> => <<"100">>, <<"type">> => 2},
-    State1 = update_relationships_map(relationship_add, Data, State),
-    ?assertEqual(2, maps:get(100, maps:get(relationships, State1))).
-
-relationship_add_uses_top_level_relationship_id_test() ->
-    State = #{relationships => #{}},
-    Data = #{<<"id">> => <<"200">>, <<"user">> => #{<<"id">> => <<"200">>}, <<"type">> => 1},
-    State1 = update_relationships_map(relationship_add, Data, State),
-    ?assertEqual(1, maps:get(200, maps:get(relationships, State1))).
-
-relationship_remove_uses_top_level_relationship_id_test() ->
-    State = #{relationships => #{200 => 1}},
-    Data = #{<<"id">> => <<"200">>, <<"user">> => #{<<"id">> => <<"200">>}},
-    State1 = update_relationships_map(relationship_remove, Data, State),
-    ?assertEqual(false, maps:is_key(200, maps:get(relationships, State1))).
-
-voice_state_update_tracks_dm_voice_state_test() ->
-    VoiceState = #{
-        <<"guild_id">> => null,
-        <<"channel_id">> => <<"100">>,
-        <<"connection_id">> => <<"conn-a">>,
-        <<"user_id">> => <<"10">>
-    },
-    State1 = update_dm_voice_states_map(voice_state_update, VoiceState, #{
-        dm_voice_states => #{}
-    }),
-    ?assertEqual(VoiceState, maps:get(<<"conn-a">>, typed_dm_voice_states(State1))).
-
-voice_state_update_removes_dm_voice_state_on_disconnect_test() ->
-    Existing = #{
-        <<"guild_id">> => null,
-        <<"channel_id">> => <<"100">>,
-        <<"connection_id">> => <<"conn-a">>,
-        <<"user_id">> => <<"10">>
-    },
-    Disconnect = Existing#{<<"channel_id">> => null},
-    State = #{dm_voice_states => #{<<"conn-a">> => Existing}},
-    State1 = update_dm_voice_states_map(voice_state_update, Disconnect, State),
-    ?assertEqual(#{}, maps:get(dm_voice_states, State1)).
-
-call_update_replaces_dm_voice_states_for_channel_test() ->
-    Stale = #{
-        <<"guild_id">> => null,
-        <<"channel_id">> => <<"100">>,
-        <<"connection_id">> => <<"conn-stale">>,
-        <<"user_id">> => <<"10">>
-    },
-    OtherChannel = #{
-        <<"guild_id">> => null,
-        <<"channel_id">> => <<"200">>,
-        <<"connection_id">> => <<"conn-other">>,
-        <<"user_id">> => <<"20">>
-    },
-    Current = #{
-        <<"guild_id">> => null,
-        <<"channel_id">> => <<"100">>,
-        <<"connection_id">> => <<"conn-current">>,
-        <<"user_id">> => <<"30">>,
-        <<"viewer_stream_keys">> => [<<"dm:100:conn-stale">>]
-    },
-    State = #{
-        dm_voice_states => #{<<"conn-stale">> => Stale, <<"conn-other">> => OtherChannel}
-    },
-    Data = #{channel_id => <<"100">>, voice_states => [Current]},
-    State1 = update_dm_voice_states_map(call_update, Data, State),
-    VoiceStates = typed_dm_voice_states(State1),
-    ?assertNot(maps:is_key(<<"conn-stale">>, VoiceStates)),
-    ?assertEqual(OtherChannel, maps:get(<<"conn-other">>, VoiceStates)),
-    ?assertEqual(Current, maps:get(<<"conn-current">>, VoiceStates)).
-
--spec typed_dm_voice_states(map()) -> #{binary() => map()}.
-typed_dm_voice_states(State) ->
-    eqwalizer:dynamic_cast(maps:get(dm_voice_states, State, #{})).
-
--endif.

@@ -7,6 +7,7 @@ import type {RestResponse} from '@app/features/platform/types/TransportTypes';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {replyCode} from '@app/features/platform/utils/ResponseInspection';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
+import {Headers} from '@fluxer/constants/src/Headers';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
@@ -61,7 +62,7 @@ class CaptchaInterceptor {
 			const token = await this.solveWithHint(challenge);
 			if (!token) return failed();
 			try {
-				const next = await retry({'X-Captcha-Token': token, 'X-Captcha-Type': 'altcha'});
+				const next = await retry({[Headers.X_CAPTCHA_TOKEN]: token});
 				const again = solves < MAX_SOLVES ? readCaptchaChallenge(next.status, next.body) : null;
 				if (!again) return next;
 				challenge = again;

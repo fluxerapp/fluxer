@@ -1,23 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
-	hookKeyNameForLayoutKey,
 	hookKeyNameToDomCode,
 	MODIFIER_KEY_CODES,
 	type ModifierKind,
 	modifierKindForCode,
-	shouldPreferLayoutKey,
 	usLayoutKeyToDomCode,
 } from '@electron/main/GlobalShortcutKeys';
+import {hookKeyNameForLayoutKey, shouldPreferLayoutKey} from '@fluxer/desktop_ipc/src/GlobalShortcutKeyNames';
 
-export interface ShortcutModifiers {
+interface ShortcutModifiers {
 	ctrl: boolean;
 	alt: boolean;
 	shift: boolean;
 	meta: boolean;
 }
 
-export type ShortcutTrigger =
+type ShortcutTrigger =
 	| {kind: 'key'; layoutKey: string | null; code: string | null}
 	| {kind: 'mouse'; button: number}
 	| {kind: 'modifier-only'; modifiers: Array<ModifierKind>; bothSides: boolean};
@@ -68,6 +67,13 @@ export interface ShortcutTransition {
 	action: string;
 	phase: 'press' | 'release';
 }
+
+export const ShortcutPressPolicy = Object.freeze({
+	PRESS_AND_RELEASE: 'press-and-release',
+	RELEASE_ONLY: 'release-only',
+} as const);
+
+type ShortcutPressPolicy = (typeof ShortcutPressPolicy)[keyof typeof ShortcutPressPolicy];
 
 type PressRecord = {kind: 'key'; rawKeycode: number} | {kind: 'mouse'; button: number} | {kind: 'modifier-only'};
 
@@ -165,59 +171,87 @@ export class GlobalShortcutMatcher {
 		return released;
 	}
 
-	handleKey(event: HookKeyEvent, allowPress: boolean): Array<ShortcutTransition> {
+	handleKey(event: HookKeyEvent, pressPolicy: ShortcutPressPolicy): Array<ShortcutTransition> {
 		const heldCode = heldModifierCode(event);
 		this.reconcileModifierFlags(event, event.type === 'keydown' ? heldCode : null);
-		if (event.type === 'keydown') {
-			const transitions = this.releaseUnsatisfiedModifierOnly();
-			const modifierOnlyBefore = this.satisfiedModifierOnlyBindings();
-			if (heldCode !== null) this.heldModifierCodes.add(heldCode);
-			if (!allowPress) return transitions;
-			for (const binding of this.bindings.values()) {
-				if (this.pressed.has(binding.sourceId)) continue;
-				const {trigger} = binding;
-				if (trigger.kind === 'modifier-only') {
-					if (modifierOnlyBefore.has(binding.sourceId) || !this.isModifierOnlySatisfied(trigger)) continue;
-					this.pressed.set(binding.sourceId, {kind: 'modifier-only'});
-				} else if (trigger.kind === 'key') {
-					if (!keyTriggerMatches(trigger, event) || !modifiersMatch(binding.modifiers, event)) continue;
-					this.pressed.set(binding.sourceId, {kind: 'key', rawKeycode: event.rawKeycode});
-				} else {
+		if (event.type !== 'keydown') {
+			if (heldCode !== null) {
+				this.heldModifierCodes.delete(heldCode);
+			}
+			const transitions: Array<ShortcutTransition> = [];
+			for (const [sourceId, record] of [...this.pressed]) {
+				if (record.kind !== 'key' || record.rawKeycode !== event.rawKeycode) {
 					continue;
 				}
-				transitions.push({sourceId: binding.sourceId, action: binding.action, phase: 'press'});
+				const binding = this.bindings.get(sourceId);
+				this.pressed.delete(sourceId);
+				if (binding) {
+					transitions.push({sourceId, action: binding.action, phase: 'release'});
+				}
 			}
+			transitions.push(...this.releaseUnsatisfiedModifierOnly());
 			return transitions;
 		}
-		if (heldCode !== null) this.heldModifierCodes.delete(heldCode);
-		const transitions: Array<ShortcutTransition> = [];
-		for (const [sourceId, record] of [...this.pressed]) {
-			if (record.kind !== 'key' || record.rawKeycode !== event.rawKeycode) continue;
-			const binding = this.bindings.get(sourceId);
-			this.pressed.delete(sourceId);
-			if (binding) transitions.push({sourceId, action: binding.action, phase: 'release'});
+		const transitions = this.releaseUnsatisfiedModifierOnly();
+		const modifierOnlyBefore = this.satisfiedModifierOnlyBindings();
+		if (heldCode !== null) {
+			this.heldModifierCodes.add(heldCode);
 		}
-		transitions.push(...this.releaseUnsatisfiedModifierOnly());
+		if (pressPolicy === ShortcutPressPolicy.RELEASE_ONLY) {
+			return transitions;
+		}
+		for (const binding of this.bindings.values()) {
+			if (this.pressed.has(binding.sourceId)) {
+				continue;
+			}
+			const {trigger} = binding;
+			if (trigger.kind === 'modifier-only') {
+				if (modifierOnlyBefore.has(binding.sourceId) || !this.isModifierOnlySatisfied(trigger)) {
+					continue;
+				}
+				this.pressed.set(binding.sourceId, {kind: 'modifier-only'});
+				transitions.push({sourceId: binding.sourceId, action: binding.action, phase: 'press'});
+				continue;
+			}
+			if (trigger.kind !== 'key') {
+				continue;
+			}
+			if (!keyTriggerMatches(trigger, event) || !modifiersMatch(binding.modifiers, event)) {
+				continue;
+			}
+			this.pressed.set(binding.sourceId, {kind: 'key', rawKeycode: event.rawKeycode});
+			transitions.push({sourceId: binding.sourceId, action: binding.action, phase: 'press'});
+		}
 		return transitions;
 	}
 
-	handleMouse(event: HookMouseEvent, allowPress: boolean): Array<ShortcutTransition> {
+	handleMouse(event: HookMouseEvent, pressPolicy: ShortcutPressPolicy): Array<ShortcutTransition> {
 		this.reconcileModifierFlags(event, null);
 		const transitions = this.releaseUnsatisfiedModifierOnly();
 		if (event.type === 'mouseup') {
 			for (const [sourceId, record] of [...this.pressed]) {
-				if (record.kind !== 'mouse' || record.button !== event.button) continue;
+				if (record.kind !== 'mouse' || record.button !== event.button) {
+					continue;
+				}
 				const binding = this.bindings.get(sourceId);
 				this.pressed.delete(sourceId);
-				if (binding) transitions.push({sourceId, action: binding.action, phase: 'release'});
+				if (binding) {
+					transitions.push({sourceId, action: binding.action, phase: 'release'});
+				}
 			}
 			return transitions;
 		}
-		if (!allowPress) return transitions;
+		if (pressPolicy === ShortcutPressPolicy.RELEASE_ONLY) {
+			return transitions;
+		}
 		for (const binding of this.bindings.values()) {
 			const {trigger} = binding;
-			if (trigger.kind !== 'mouse' || trigger.button !== event.button) continue;
-			if (this.pressed.has(binding.sourceId) || !modifiersMatch(binding.modifiers, event)) continue;
+			if (trigger.kind !== 'mouse' || trigger.button !== event.button) {
+				continue;
+			}
+			if (this.pressed.has(binding.sourceId) || !modifiersMatch(binding.modifiers, event)) {
+				continue;
+			}
 			this.pressed.set(binding.sourceId, {kind: 'mouse', button: event.button});
 			transitions.push({sourceId: binding.sourceId, action: binding.action, phase: 'press'});
 		}

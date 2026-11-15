@@ -28,6 +28,14 @@ export const ConnectionRateLimitConfigs = {
 		bucket: 'connection:bluesky:client_document',
 		config: {limit: 60, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
+	OAUTH_AUTHORIZE: {
+		bucket: 'connection:oauth:authorize',
+		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	OAUTH_CALLBACK: {
+		bucket: 'connection:oauth:callback',
+		config: {limit: 30, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
 	BLUESKY_CALLBACK: {
 		bucket: 'connection:bluesky:callback',
 		config: {limit: 10, windowMs: ms('1 minute')},

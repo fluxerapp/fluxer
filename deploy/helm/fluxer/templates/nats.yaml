@@ -1,0 +1,169 @@
+{{- include "fluxer.validate" . }}
+{{- with .Values.nats }}
+{{- if .enabled }}
+{{- $ctx := dict "root" $ "name" "nats" "component" "messaging" "w" . }}
+{{- $replicas := .replicas | int }}
+{{- $conf := include "fluxer.natsConf" (dict "root" $ "replicas" $replicas) }}
+{{- $secrets := include "fluxer.secretData" $ | fromJson }}
+{{- $healthz := dict "exec" (dict "command" (list "wget" "-q" "-O" "/dev/null" "http://127.0.0.1:8222/healthz")) }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nats-config
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" $ctx | nindent 4 }}
+data:
+  nats.conf: {{ $conf | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nats
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" $ctx | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "fluxer.selectorLabels" $ctx | nindent 4 }}
+  ports:
+    - name: client
+      port: 4222
+      targetPort: client
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nats-headless
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" $ctx | nindent 4 }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector:
+    {{- include "fluxer.selectorLabels" $ctx | nindent 4 }}
+  ports:
+    - name: client
+      port: 4222
+      targetPort: client
+      protocol: TCP
+    - name: cluster
+      port: 6222
+      targetPort: cluster
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: nats
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" $ctx | nindent 4 }}
+spec:
+  replicas: {{ $replicas }}
+  serviceName: nats-headless
+  podManagementPolicy: Parallel
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+  selector:
+    matchLabels:
+      {{- include "fluxer.selectorLabels" $ctx | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "fluxer.podLabels" $ctx | nindent 8 }}
+      annotations:
+        checksum/config: {{ printf "%s\n%s" $conf (get $secrets "FLUXER_NATS_AUTH_TOKEN" | default "") | sha256sum }}
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      {{- include "fluxer.pullSecrets" $ | nindent 6 }}
+      securityContext:
+        {{- include "fluxer.podSecurityContext" (dict "uid" 65534) | nindent 8 }}
+      {{- include "fluxer.scheduling" $ctx | nindent 6 }}
+      containers:
+        - name: nats
+          image: {{ include "fluxer.thirdPartyImage" .image }}
+          imagePullPolicy: {{ .image.pullPolicy }}
+          command:
+            - sh
+            - -c
+            - sed "s/__FLUXER_NATS_AUTH_TOKEN__/$FLUXER_NATS_AUTH_TOKEN/g" /etc/nats/nats.conf > /run/nats/nats.conf && exec nats-server --config /run/nats/nats.conf
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+            {{- include "fluxer.secretEnv" (dict "root" $ "name" "FLUXER_NATS_AUTH_TOKEN" "key" "FLUXER_NATS_AUTH_TOKEN") | nindent 12 }}
+          ports:
+            - name: client
+              containerPort: 4222
+              protocol: TCP
+            - name: cluster
+              containerPort: 6222
+              protocol: TCP
+          startupProbe:
+            {{- toYaml (merge (dict "periodSeconds" 5 "timeoutSeconds" 5 "failureThreshold" 60) $healthz) | nindent 12 }}
+          livenessProbe:
+            {{- toYaml (merge (dict "periodSeconds" 10 "timeoutSeconds" 5 "failureThreshold" 6) $healthz) | nindent 12 }}
+          readinessProbe:
+            {{- toYaml (merge (dict "periodSeconds" 10 "timeoutSeconds" 5) $healthz) | nindent 12 }}
+          {{- with .resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            {{- include "fluxer.containerSecurityContext" . | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/nats
+              readOnly: true
+            - name: rendered
+              mountPath: /run/nats
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: config
+          configMap:
+            name: nats-config
+        - name: rendered
+          emptyDir:
+            medium: Memory
+  volumeClaimTemplates:
+    {{- include "fluxer.pvc" .persistence | nindent 4 }}
+{{- end }}
+{{- end }}
+
+{{- define "fluxer.natsConf" -}}
+server_name: $POD_NAME
+listen: 0.0.0.0:4222
+http: 127.0.0.1:8222
+authorization {
+  token: "__FLUXER_NATS_AUTH_TOKEN__"
+}
+jetstream {
+  store_dir: /data
+}
+{{- if gt .replicas 1 }}
+cluster {
+  name: fluxer
+  listen: 0.0.0.0:6222
+  authorization {
+    user: fluxer
+    password: "__FLUXER_NATS_AUTH_TOKEN__"
+  }
+  routes: [
+    {{- range $i := until .replicas }}
+    nats://fluxer:__FLUXER_NATS_AUTH_TOKEN__@nats-{{ $i }}.nats-headless.{{ $.root.Release.Namespace }}.svc.{{ $.root.Values.clusterDomain }}:6222
+    {{- end }}
+  ]
+}
+{{- end }}
+{{- end }}

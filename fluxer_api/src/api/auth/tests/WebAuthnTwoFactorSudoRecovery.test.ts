@@ -26,6 +26,8 @@ interface SudoMfaMethodsResponse {
 	webauthn: boolean;
 	backup_codes: boolean;
 	has_mfa: boolean;
+	email_code?: boolean;
+	password?: boolean;
 }
 
 interface SudoModeRequiredResponse {
@@ -112,7 +114,14 @@ describe('Sudo mode recovery for passkey two-factor accounts without TOTP', () =
 		const methods = await createBuilder<SudoMfaMethodsResponse>(harness, account.token)
 			.get('/users/@me/sudo/mfa-methods')
 			.execute();
-		expect(methods).toEqual({totp: false, webauthn: true, backup_codes: true, has_mfa: true});
+		expect(methods).toEqual({
+			totp: false,
+			webauthn: true,
+			backup_codes: true,
+			has_mfa: true,
+			email_code: false,
+			password: false,
+		});
 		const challenge = await createBuilder<SudoModeRequiredResponse>(harness, account.token)
 			.put('/users/@me/mfa/webauthn/two-factor')
 			.body({enabled: false})
@@ -123,6 +132,9 @@ describe('Sudo mode recovery for passkey two-factor accounts without TOTP', () =
 			totp: methods.totp,
 			webauthn: methods.webauthn,
 			backup_codes: methods.backup_codes,
+			email_code: methods.email_code,
+			password: methods.password,
+			sso_reauth: false,
 		});
 	});
 	it('spends a backup code accepted as a sudo proof and refuses the same code afterwards', async () => {
@@ -167,7 +179,14 @@ describe('Sudo mode recovery for passkey two-factor accounts without TOTP', () =
 		const methods = await createBuilder<SudoMfaMethodsResponse>(harness, account.token)
 			.get('/users/@me/sudo/mfa-methods')
 			.execute();
-		expect(methods).toEqual({totp: false, webauthn: true, backup_codes: false, has_mfa: true});
+		expect(methods).toEqual({
+			totp: false,
+			webauthn: true,
+			backup_codes: false,
+			has_mfa: true,
+			email_code: false,
+			password: true,
+		});
 		await withTotpReplayProtection(async () => {
 			const error = await createBuilder<ValidationErrorBody>(harness, account.token)
 				.post('/users/@me/disable')

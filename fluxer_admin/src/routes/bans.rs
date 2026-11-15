@@ -2,6 +2,7 @@
 
 use crate::{
     api::{
+        bans::PROFILE_SUBSTRING_LIST,
         client::{AdminApiClient, ApiError},
         types::FlashMessage,
     },
@@ -264,7 +265,12 @@ async fn url_domain_bans_post(
             }
         }
         "unban" => match client
-            .unban_url_domain(&domain, form.audit_log_reason.as_deref())
+            .delete_blocklist_entry(
+                "url-domain",
+                &domain,
+                None,
+                form.audit_log_reason.as_deref(),
+            )
             .await
         {
             Ok(()) => ("success", format!("{domain} unbanned")),
@@ -273,7 +279,10 @@ async fn url_domain_bans_post(
                 ("error", format!("Failed to unban {domain}"))
             }
         },
-        "check" => match client.check_url_domain_ban(&domain).await {
+        "check" => match client
+            .check_blocklist_entry("url-domain", &domain, None)
+            .await
+        {
             Ok(r) if r.banned => ("info", format!("{domain} is blocked")),
             Ok(_) => ("info", format!("{domain} is NOT blocked")),
             Err(error) => {
@@ -340,7 +349,12 @@ async fn profile_substring_bans_post(
             }
         },
         "unban" => match client
-            .unban_profile_substring(&scope, &substring, form.audit_log_reason.as_deref())
+            .delete_blocklist_entry(
+                PROFILE_SUBSTRING_LIST,
+                &substring,
+                Some(&scope),
+                form.audit_log_reason.as_deref(),
+            )
             .await
         {
             Ok(()) => ("success", format!("\"{substring}\" unbanned for {scope}")),
@@ -349,7 +363,10 @@ async fn profile_substring_bans_post(
                 ("error", format!("Failed to unban substring for {scope}"))
             }
         },
-        "check" => match client.check_profile_substring_ban(&scope, &substring).await {
+        "check" => match client
+            .check_blocklist_entry(PROFILE_SUBSTRING_LIST, &substring, Some(&scope))
+            .await
+        {
             Ok(r) if r.banned => ("info", format!("\"{substring}\" IS banned for {scope}")),
             Ok(_) => ("info", format!("\"{substring}\" is NOT banned for {scope}")),
             Err(error) => {

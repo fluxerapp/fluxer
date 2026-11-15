@@ -1,10 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::api::generated::snowflake;
+use reqwest::Method;
+
+use crate::api::generated::{
+    snowflake,
+    types::{
+        ReportNoteRequest, ReportNoteResponse, UpdateReportRequest, UpdateReportRequestOutcome,
+        UpdateReportRequestResolution, UpdateReportRequestStatus,
+    },
+};
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
 use super::types::{
-    ListReportsResponse, ReportEntry, ResolveReportResponse, SearchReportsResponse,
+    ReportEntry, ReportLegalHoldResponse, ReportReasonListResponse, ResolveReportResponse,
+    SearchReportsResponse,
 };
 
 #[derive(Default)]
@@ -13,8 +22,10 @@ pub struct SearchReportsParams<'a> {
     pub status: Option<i32>,
     pub report_type: Option<i32>,
     pub category: Option<&'a str>,
+    pub reason: Option<&'a str>,
     pub reporter_id: Option<&'a str>,
     pub reported_user_id: Option<&'a str>,
+    pub reported_webhook_id: Option<&'a str>,
     pub reported_guild_id: Option<&'a str>,
     pub reported_channel_id: Option<&'a str>,
     pub guild_context_id: Option<&'a str>,
@@ -26,23 +37,6 @@ pub struct SearchReportsParams<'a> {
 }
 
 impl AdminApiClient {
-    pub async fn list_reports(
-        &self,
-        status: Option<i32>,
-        limit: u32,
-        offset: Option<u32>,
-    ) -> ApiResult<ListReportsResponse> {
-        let status = status.map(report_status).transpose()?.unwrap_or_default();
-        let limit = limit.to_string();
-        let offset = offset.map(|value| value.to_string()).unwrap_or_default();
-        let query_params = [
-            ("status", status),
-            ("limit", limit.as_str()),
-            ("offset", offset.as_str()),
-        ];
-        self.get("/admin/reports", Some(&query_params)).await
-    }
-
     pub async fn get_report(&self, report_id: &str) -> ApiResult<ReportEntry> {
         let response = self
             .generated()
@@ -55,18 +49,74 @@ impl AdminApiClient {
     pub async fn resolve_report(
         &self,
         report_id: &str,
+        resolution: UpdateReportRequestResolution,
+        outcome: Option<UpdateReportRequestOutcome>,
+        duplicate_of: Option<&str>,
         public_comment: Option<&str>,
         notify_reporter: bool,
-        audit_log_reason: Option<&str>,
     ) -> ApiResult<ResolveReportResponse> {
-        let mut body = serde_json::json!({"status": "resolved"});
-        if let Some(public_comment) = public_comment {
-            body["public_comment"] = serde_json::Value::from(public_comment);
-        }
-        body["notify_reporter"] = serde_json::Value::from(notify_reporter);
-        self.patch_with_reason(
+        let body = UpdateReportRequest {
+            duplicate_of: duplicate_of.map(snowflake),
+            notify_reporter,
+            outcome,
+            public_comment: public_comment.map(str::to_owned),
+            resolution,
+            status: UpdateReportRequestStatus::Resolved,
+        };
+        self.send(
+            Method::PATCH,
             &format!("/admin/reports/{}", urlencoding::encode(report_id)),
             Some(&body),
+            None,
+        )
+        .await
+    }
+
+    pub async fn set_report_legal_hold(
+        &self,
+        report_id: &str,
+        legal_hold_until: Option<&str>,
+        legal_hold_reason: Option<&str>,
+    ) -> ApiResult<ReportLegalHoldResponse> {
+        let body = serde_json::json!({
+            "legal_hold_until": legal_hold_until,
+            "legal_hold_reason": legal_hold_until.and(legal_hold_reason),
+        });
+        self.send(
+            Method::POST,
+            &format!(
+                "/admin/reports/{}/legal-hold",
+                urlencoding::encode(report_id)
+            ),
+            Some(&body),
+            None,
+        )
+        .await
+    }
+
+    pub async fn annotate_report(
+        &self,
+        report_id: &str,
+        body: String,
+    ) -> ApiResult<ReportNoteResponse> {
+        self.send(
+            Method::POST,
+            &format!("/admin/reports/{}/notes", urlencoding::encode(report_id)),
+            Some(&ReportNoteRequest { body }),
+            None,
+        )
+        .await
+    }
+
+    pub async fn delete_report(
+        &self,
+        report_id: &str,
+        audit_log_reason: Option<&str>,
+    ) -> ApiResult<()> {
+        self.send_void(
+            Method::DELETE,
+            &format!("/admin/reports/{}", urlencoding::encode(report_id)),
+            None::<&serde_json::Value>,
             audit_log_reason,
         )
         .await
@@ -98,10 +148,15 @@ impl AdminApiClient {
             ("status", status),
             ("report_type", report_type),
             ("category", params.category.unwrap_or_default()),
+            ("reason", params.reason.unwrap_or_default()),
             ("reporter_id", params.reporter_id.unwrap_or_default()),
             (
                 "reported_user_id",
                 params.reported_user_id.unwrap_or_default(),
+            ),
+            (
+                "reported_webhook_id",
+                params.reported_webhook_id.unwrap_or_default(),
             ),
             (
                 "reported_guild_id",
@@ -125,6 +180,10 @@ impl AdminApiClient {
             ("offset", offset.as_str()),
         ];
         self.get("/admin/reports", Some(&query_params)).await
+    }
+
+    pub async fn list_report_reasons(&self) -> ApiResult<ReportReasonListResponse> {
+        self.get("/admin/report-reasons", None).await
     }
 
     pub async fn search_reports_by_reporter(
@@ -183,63 +242,5 @@ fn report_sort_by(value: &str) -> ApiResult<&'static str> {
         other => Err(ApiError::Parse(format!(
             "unknown report sort field: {other}"
         ))),
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn report_statuses_preserve_the_closed_wire_mapping() {
-        for (value, expected) in [(0, "pending"), (1, "resolved")] {
-            assert_eq!(report_status(value).expect("supported status"), expected);
-        }
-        for value in [-1, 2] {
-            assert_eq!(
-                report_status(value)
-                    .expect_err("unknown status")
-                    .to_string(),
-                format!("parse error: unknown report status: {value}")
-            );
-        }
-    }
-
-    #[test]
-    fn report_types_preserve_the_closed_wire_mapping() {
-        for (value, expected) in [(0, "message"), (1, "user"), (2, "guild")] {
-            assert_eq!(report_type_name(value).expect("supported type"), expected);
-        }
-        for value in [-1, 3] {
-            assert_eq!(
-                report_type_name(value)
-                    .expect_err("unknown type")
-                    .to_string(),
-                format!("parse error: unknown report type: {value}")
-            );
-        }
-    }
-
-    #[test]
-    fn report_sort_fields_accept_only_the_existing_aliases() {
-        for (field, expected) in [
-            ("createdAt", "created_at"),
-            ("created_at", "created_at"),
-            ("reportedAt", "reported_at"),
-            ("reported_at", "reported_at"),
-            ("resolvedAt", "resolved_at"),
-            ("resolved_at", "resolved_at"),
-        ] {
-            assert_eq!(
-                report_sort_by(field).expect("supported sort field"),
-                expected
-            );
-        }
-        assert_eq!(
-            report_sort_by("unknown")
-                .expect_err("unknown sort field")
-                .to_string(),
-            "parse error: unknown report sort field: unknown"
-        );
     }
 }

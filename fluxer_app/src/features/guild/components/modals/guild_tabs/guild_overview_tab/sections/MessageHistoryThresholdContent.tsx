@@ -52,7 +52,7 @@ export interface MessageHistoryThresholdFormValues {
 	message_history_cutoff: string | null;
 }
 
-export const MessageHistoryThresholdDescription: React.FC = () => {
+const MessageHistoryThresholdDescription: React.FC = () => {
 	const {i18n} = useLingui();
 	const rolesSettingsPath = formatGuildSettingsPath(i18n, 'roles');
 	const administratorPermissionLabel = formatPermissionLabel(i18n, Permissions.ADMINISTRATOR);
@@ -176,7 +176,7 @@ export const MessageHistoryThresholdAccordion: React.FC = () => {
 	);
 };
 
-export function buildMessageHistoryThresholdValidator(
+function buildMessageHistoryThresholdValidator(
 	i18n: I18n,
 	guildCreatedAt: Date,
 ): (value: string | null) => true | string {

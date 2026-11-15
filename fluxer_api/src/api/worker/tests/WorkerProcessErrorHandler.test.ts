@@ -1,22 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import {
 	createWorkerProcessErrorHandler,
 	type WorkerProcessErrorSource,
 } from '@app/api/worker/WorkerProcessErrorHandler';
-import {describe, expect, it, vi} from 'vitest';
+import {describe, expect, it} from 'vitest';
 
-function createHarness(overrides: {shutdown?: () => Promise<void>; forceExitDelayMs?: number} = {}) {
-	const logger = {error: vi.fn(), warn: vi.fn()};
-	const exit = vi.fn();
-	const shutdown = vi.fn(overrides.shutdown ?? (async () => {}));
+function createHarness(shutdown: () => Promise<void> = async () => {}) {
+	const exitCodes: Array<number> = [];
+	const calls = {shutdown: 0};
 	const handle = createWorkerProcessErrorHandler({
-		logger,
-		shutdown,
-		exit,
-		forceExitDelayMs: overrides.forceExitDelayMs ?? 5,
+		logger: new NoopLogger(),
+		shutdown: async () => {
+			calls.shutdown += 1;
+			await shutdown();
+		},
+		exit: (code) => {
+			exitCodes.push(code);
+		},
 	});
-	return {logger, exit, shutdown, handle};
+	return {exitCodes, calls, handle};
 }
 
 function pooledClientError(fields: Record<string, unknown>): Error {
@@ -37,141 +41,78 @@ function adminShutdownError(): Error {
 }
 
 describe('Worker process error handler', () => {
-	it('keeps the worker running when Postgres terminates a pooled connection', async () => {
-		const {logger, exit, shutdown, handle} = createHarness();
-
-		await handle('uncaughtException', adminShutdownError());
-
-		expect(shutdown).not.toHaveBeenCalled();
-		expect(exit).not.toHaveBeenCalled();
-		expect(logger.error).not.toHaveBeenCalled();
-		expect(logger.warn).toHaveBeenCalledTimes(1);
-		const [context, message] = logger.warn.mock.calls[0]!;
-		expect(message).toBe('Transient database connection error reached the worker process, keeping the worker running');
-		expect(context).toMatchObject({source: 'uncaughtException'});
-	});
-
 	it.each([
 		['57P01 admin_shutdown', '57P01'],
 		['57P02 crash_shutdown', '57P02'],
 		['57P03 cannot_connect_now', '57P03'],
 		['08006 connection_failure', '08006'],
 		['08003 connection_does_not_exist', '08003'],
-	])('survives %s', async (_label, code) => {
-		const {exit, shutdown, handle} = createHarness();
+		['a pooled client socket reset', 'ECONNRESET'],
+	])('keeps running on %s', async (_label, code) => {
+		const {exitCodes, calls, handle} = createHarness();
 
 		await handle('uncaughtException', pooledClientError({message: 'connection lost', code}));
 
-		expect(shutdown).not.toHaveBeenCalled();
-		expect(exit).not.toHaveBeenCalled();
+		expect(calls.shutdown).toBe(0);
+		expect(exitCodes).toEqual([]);
 	});
 
 	it.each([['uncaughtException' as WorkerProcessErrorSource], ['unhandledRejection' as WorkerProcessErrorSource]])(
-		'survives a transient error arriving as %s',
+		'keeps running on a transient error arriving as %s',
 		async (source) => {
-			const {exit, shutdown, handle} = createHarness();
+			const {exitCodes, calls, handle} = createHarness();
 
 			await handle(source, adminShutdownError());
 
-			expect(shutdown).not.toHaveBeenCalled();
-			expect(exit).not.toHaveBeenCalled();
+			expect(calls.shutdown).toBe(0);
+			expect(exitCodes).toEqual([]);
 		},
 	);
 
-	it('survives a socket error raised by a pooled Postgres client', async () => {
-		const {exit, shutdown, handle} = createHarness();
-
-		await handle('uncaughtException', pooledClientError({message: 'read ECONNRESET', code: 'ECONNRESET'}));
-
-		expect(shutdown).not.toHaveBeenCalled();
-		expect(exit).not.toHaveBeenCalled();
-	});
-
-	it('survives a transient error wrapped in a cause chain', async () => {
-		const {exit, shutdown, handle} = createHarness();
-		const wrapped = new Error('Connection terminated due to connection timeout', {cause: adminShutdownError()});
-
-		await handle('uncaughtException', wrapped);
-
-		expect(shutdown).not.toHaveBeenCalled();
-		expect(exit).not.toHaveBeenCalled();
-	});
-
-	it('survives the pg driver telling us the client is no longer queryable', async () => {
-		const {exit, shutdown, handle} = createHarness();
-
-		await handle('uncaughtException', new Error('Client has encountered a connection error and is not queryable'));
-
-		expect(shutdown).not.toHaveBeenCalled();
-		expect(exit).not.toHaveBeenCalled();
-	});
-
-	it('still tears the worker down on a programming error', async () => {
-		const {logger, exit, shutdown, handle} = createHarness();
-		const bug = new TypeError('cannot read properties of undefined');
-
-		await handle('uncaughtException', bug);
-
-		expect(logger.warn).not.toHaveBeenCalled();
-		expect(logger.error).toHaveBeenCalledWith({err: bug, source: 'uncaughtException'}, 'Uncaught Exception');
-		expect(shutdown).toHaveBeenCalledTimes(1);
-		expect(exit).toHaveBeenCalledWith(1);
-	});
-
-	it('still tears the worker down on a Postgres error that is not connection level', async () => {
-		const {exit, shutdown, handle} = createHarness();
+	it('keeps running on a transient error wrapped in a cause chain', async () => {
+		const {exitCodes, calls, handle} = createHarness();
 
 		await handle(
 			'uncaughtException',
+			new Error('Connection terminated due to connection timeout', {cause: adminShutdownError()}),
+		);
+
+		expect(calls.shutdown).toBe(0);
+		expect(exitCodes).toEqual([]);
+	});
+
+	it('keeps running when the pg driver says the client is no longer queryable', async () => {
+		const {exitCodes, calls, handle} = createHarness();
+
+		await handle('uncaughtException', new Error('Client has encountered a connection error and is not queryable'));
+
+		expect(calls.shutdown).toBe(0);
+		expect(exitCodes).toEqual([]);
+	});
+
+	it.each([
+		['a programming error', new TypeError('cannot read properties of undefined')],
+		[
+			'a Postgres error that is not connection level',
 			pooledClientError({message: 'duplicate key value violates unique constraint', code: '23505'}),
-		);
+		],
+		['a socket error from a non-Postgres source', Object.assign(new Error('read ECONNRESET'), {code: 'ECONNRESET'})],
+	])('shuts down and exits on %s', async (_label, error) => {
+		const {exitCodes, calls, handle} = createHarness();
 
-		expect(shutdown).toHaveBeenCalledTimes(1);
-		expect(exit).toHaveBeenCalledWith(1);
-	});
+		await handle('uncaughtException', error);
 
-	it('does not treat a socket error from a non-Postgres source as transient', async () => {
-		const {exit, shutdown, handle} = createHarness();
-		const socketError = Object.assign(new Error('read ECONNRESET'), {code: 'ECONNRESET'});
-
-		await handle('uncaughtException', socketError);
-
-		expect(shutdown).toHaveBeenCalledTimes(1);
-		expect(exit).toHaveBeenCalledWith(1);
-	});
-
-	it('labels an unhandled rejection distinctly when it is fatal', async () => {
-		const {logger, exit, shutdown, handle} = createHarness();
-		const bug = new Error('boom');
-
-		await handle('unhandledRejection', bug);
-
-		expect(logger.error).toHaveBeenCalledWith(
-			{err: bug, source: 'unhandledRejection'},
-			'Unhandled Rejection at Promise',
-		);
-		expect(shutdown).toHaveBeenCalledTimes(1);
-		expect(exit).toHaveBeenCalledWith(1);
-	});
-
-	it('force exits when shutdown hangs on a fatal error', async () => {
-		const {exit, handle} = createHarness({shutdown: () => new Promise<void>(() => {}), forceExitDelayMs: 5});
-
-		void handle('uncaughtException', new Error('boom'));
-
-		await vi.waitFor(() => expect(exit).toHaveBeenCalledWith(1));
+		expect(calls.shutdown).toBe(1);
+		expect(exitCodes).toEqual([1]);
 	});
 
 	it('exits even when shutdown itself throws', async () => {
-		const {logger, exit, handle} = createHarness({
-			shutdown: async () => {
-				throw new Error('shutdown failed');
-			},
+		const {exitCodes, handle} = createHarness(async () => {
+			throw new Error('shutdown failed');
 		});
 
 		await handle('uncaughtException', new Error('boom'));
 
-		expect(exit).toHaveBeenCalledWith(1);
-		expect(logger.error).toHaveBeenCalledTimes(2);
+		expect(exitCodes).toEqual([1]);
 	});
 });

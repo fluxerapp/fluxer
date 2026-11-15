@@ -62,6 +62,35 @@ describe('Guild unavailable feature access checks', () => {
 			.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.MISSING_ACCESS)
 			.execute();
 	});
+	it('blocks whitespace-padded ids and bulk message fetches when UNAVAILABLE_FOR_EVERYONE is enabled', async () => {
+		const owner = await createTestAccount(harness);
+		const member = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Unavailable padded ids');
+		if (!guild.system_channel_id) {
+			throw new Error('Guild system channel is missing');
+		}
+		const invite = await createChannelInvite(harness, owner.token, guild.system_channel_id);
+		await acceptInvite(harness, member.token, invite.code);
+		await createBuilder(harness, member.token)
+			.post('/channels/messages/bulk')
+			.body({requests: [{channel_id: guild.system_channel_id, limit: 10}]})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		await addGuildFeaturesForTesting(harness, guild.id, [GuildFeatures.UNAVAILABLE_FOR_EVERYONE]);
+		await createBuilder(harness, member.token)
+			.get(`/guilds/%20${guild.id}`)
+			.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.MISSING_ACCESS)
+			.execute();
+		await createBuilder(harness, member.token)
+			.get(`/channels/${guild.system_channel_id}%20`)
+			.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.MISSING_ACCESS)
+			.execute();
+		await createBuilder(harness, member.token)
+			.post('/channels/messages/bulk')
+			.body({requests: [{channel_id: guild.system_channel_id, limit: 10}]})
+			.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.MISSING_ACCESS)
+			.execute();
+	});
 	it('blocks non-staff and allows staff for UNAVAILABLE_FOR_EVERYONE_BUT_STAFF', async () => {
 		const owner = await createTestAccount(harness);
 		const member = await createTestAccount(harness);

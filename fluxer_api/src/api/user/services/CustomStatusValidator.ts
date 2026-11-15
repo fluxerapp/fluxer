@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createEmojiID, type EmojiID, type UserID} from '@app/api/BrandedTypes';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
 import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
-import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {CustomStatusPayload} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
@@ -22,8 +22,8 @@ interface ValidatedCustomStatus {
 
 export class CustomStatusValidator {
 	constructor(
-		private readonly userAccountRepository: IUserAccountRepository,
-		private readonly guildRepository: IGuildRepositoryAggregate,
+		private readonly userAccountRepository: UserRepository,
+		private readonly guildRepository: GuildRepository,
 		private readonly limitConfigService: LimitConfigService,
 	) {}
 

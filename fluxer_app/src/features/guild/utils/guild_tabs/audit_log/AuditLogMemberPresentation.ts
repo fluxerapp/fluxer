@@ -93,10 +93,13 @@ import type {
 } from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogPresentationTypes';
 import {
 	actorPlaceholder,
+	channelPlaceholder,
 	decodeAuditReason,
 	entryTime,
+	namePlaceholder,
 	readBoolean,
 	readChange,
+	readColor,
 	readNumber,
 	readOption,
 	readSnowflake,
@@ -104,12 +107,11 @@ import {
 	readStringArray,
 	readTimestamp,
 	roleIdDiff,
+	summaryOnly,
 } from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogValues';
 import {MS_PER_SECOND, SECONDS_PER_DAY} from '@fluxer/date_utils/src/DateConstants';
 import type {GuildAuditLogEntryResponse} from '@fluxer/schema/src/domains/guild/GuildAuditLogSchemas';
 import type {MessageDescriptor} from '@lingui/core';
-
-const MAX_COLOR_VALUE = 0xffffff;
 
 type SentenceValues = AuditLogSentence['values'];
 
@@ -253,16 +255,8 @@ function detailRow(
 	return {id, tone, sentence: {descriptor, values}};
 }
 
-function summaryOnly(summary: AuditLogSentence): AuditLogDomainResult {
-	return {summary, rows: [], blocks: []};
-}
-
 function userPlaceholder(id: string): AuditLogPlaceholder {
 	return {kind: 'user', id};
-}
-
-function channelPlaceholder(id: string): AuditLogPlaceholder {
-	return {kind: 'channel', id, recordedName: null, fallback: 'channel'};
 }
 
 function rolePlaceholder(id: string, recordedName: string | null): AuditLogPlaceholder {
@@ -271,15 +265,6 @@ function rolePlaceholder(id: string, recordedName: string | null): AuditLogPlace
 
 function datePlaceholder(timestamp: number): AuditLogPlaceholder {
 	return {kind: 'date', timestamp};
-}
-
-function namePlaceholder(value: string): AuditLogPlaceholder {
-	return {kind: 'name', value};
-}
-
-function readColor(value: unknown): number | null {
-	const color = readNumber(value);
-	return color !== null && Number.isInteger(color) && color >= 0 && color <= MAX_COLOR_VALUE ? color : null;
 }
 
 function readMemberSubject(entry: GuildAuditLogEntryResponse): MemberSubject {
@@ -634,13 +619,12 @@ export function presentMemberRoleUpdate(entry: GuildAuditLogEntryResponse): Audi
 	}
 	const role = rolePlaceholder(single.roleId, readString(readOption(entry, 'role_name')));
 	const {target} = subject;
-	const summary =
-		subject.actor.kind !== 'system'
-			? roleChangeSummary(subject, single, role)
-			: single.kind === 'added'
-				? sentence(MEMBER_ROLE_ADDED_BY_SYSTEM_SUMMARY, {target, role})
-				: sentence(MEMBER_ROLE_REMOVED_BY_SYSTEM_SUMMARY, {target, role});
-	return {summary, rows: temporary, blocks: []};
+	if (subject.actor.kind !== 'system') {
+		return {summary: roleChangeSummary(subject, single, role), rows: temporary, blocks: []};
+	}
+	const systemSummary =
+		single.kind === 'added' ? MEMBER_ROLE_ADDED_BY_SYSTEM_SUMMARY : MEMBER_ROLE_REMOVED_BY_SYSTEM_SUMMARY;
+	return {summary: sentence(systemSummary, {target, role}), rows: temporary, blocks: []};
 }
 
 export function presentMemberMove(entry: GuildAuditLogEntryResponse): AuditLogDomainResult {

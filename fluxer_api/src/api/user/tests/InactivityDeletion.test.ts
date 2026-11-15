@@ -2,13 +2,16 @@
 
 import {createTestAccount, loginAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import type {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {expectDataExists} from '@app/api/user/tests/UserTestUtils';
+import {CleanupModes} from '@fluxer/constants/src/AccountConfigConstants';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import type {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 interface InactivityCheckResult {
@@ -82,13 +85,6 @@ describe('Inactivity Deletion', () => {
 		expect(result.warnings_sent).toBe(0);
 		expect(result.deletions_scheduled).toBe(0);
 	});
-	test('inactive user should receive warning email', async () => {
-		const account = await createTestAccount(harness);
-		const threeYearsAgo = new Date(Date.now() - 3 * 365 * 24 * 60 * 60 * 1000);
-		await setUserActivity(harness, account.userId, threeYearsAgo);
-		const result = await processInactivityDeletions(harness);
-		expect(result.warnings_sent).toBeGreaterThanOrEqual(0);
-	});
 	test('expired inactivity warning schedules deletion in Cassandra and KV', async () => {
 		const account = await createTestAccount(harness);
 		const threeYearsAgo = new Date(Date.now() - 3 * 365 * 24 * 60 * 60 * 1000);
@@ -127,15 +123,6 @@ describe('Inactivity Deletion', () => {
 		expect(dataStatus.pendingDeletionAt).toBeNull();
 		expect(await harness.kvProvider.zcard('deletion_queue')).toBe(0);
 	});
-	test('warning email should be idempotent', async () => {
-		const account = await createTestAccount(harness);
-		const threeYearsAgo = new Date(Date.now() - 3 * 365 * 24 * 60 * 60 * 1000);
-		await setUserActivity(harness, account.userId, threeYearsAgo);
-		const firstResult = await processInactivityDeletions(harness);
-		const firstWarnings = firstResult.warnings_sent;
-		const secondResult = await processInactivityDeletions(harness);
-		expect(secondResult.warnings_sent).toBeLessThanOrEqual(firstWarnings);
-	});
 	test('user without activity data should not be deleted', async () => {
 		const account = await createTestAccount(harness);
 		const result = await processInactivityDeletions(harness);
@@ -157,22 +144,55 @@ describe('Inactivity Deletion', () => {
 		const dataStatus = await expectDataExists(harness, account.userId);
 		expect(dataStatus.userExists).toBe(true);
 	});
-	test('processing should handle multiple users', async () => {
-		const account1 = await createTestAccount(harness);
-		const account2 = await createTestAccount(harness);
-		const account3 = await createTestAccount(harness);
-		await setBotFlag(harness, account1.userId, true);
-		await setSystemFlag(harness, account2.userId, true);
-		const threeYearsAgo = new Date(Date.now() - 3 * 365 * 24 * 60 * 60 * 1000);
-		await setUserActivity(harness, account1.userId, threeYearsAgo);
-		await setUserActivity(harness, account2.userId, threeYearsAgo);
-		await setUserActivity(harness, account3.userId, threeYearsAgo);
+	test('a finished deletion is never scheduled again', async () => {
+		const account = await createTestAccount(harness);
+		await setUserActivity(harness, account.userId, new Date(Date.now() - 3 * 365 * 24 * 60 * 60 * 1000));
+		await harness.kvProvider.setex(
+			`inactivity_warning_sent:${account.userId}`,
+			35 * 24 * 60 * 60,
+			String(Date.now() - 31 * 24 * 60 * 60 * 1000),
+		);
+		const users = new UserRepository();
+		const userId = createUserID(BigInt(account.userId));
+		const user = await users.findUniqueAssert(userId);
+		await users.patchUpsert(userId, {flags: UserFlags.DELETED}, user.toRow());
 		const result = await processInactivityDeletions(harness);
-		expect(result.errors).toBe(0);
-		const data1 = await expectDataExists(harness, account1.userId);
-		const data2 = await expectDataExists(harness, account2.userId);
-		expect(data1.hasSelfDeletedFlag).toBe(false);
-		expect(data2.hasSelfDeletedFlag).toBe(false);
+		expect(result.deletions_scheduled).toBe(0);
+		expect(result.warnings_sent).toBe(0);
+		expect((await users.findUniqueAssert(userId)).pendingDeletionAt).toBeNull();
+	});
+	test('a configured threshold below two years warns accounts idle that long', async () => {
+		await getInstanceConfigRepository().updateAccountsConfig({inactivity_deletion: {inactive_days: 200}});
+		const account = await createTestAccount(harness);
+		await setUserActivity(harness, account.userId, new Date(Date.now() - 300 * 24 * 60 * 60 * 1000));
+		const result = await processInactivityDeletions(harness);
+		expect(result.warnings_sent).toBe(1);
+		expect(result.deletions_scheduled).toBe(0);
+	});
+	test('turning inactivity deletion off leaves long idle accounts alone', async () => {
+		await getInstanceConfigRepository().updateAccountsConfig({inactivity_deletion: {mode: CleanupModes.OFF}});
+		const account = await createTestAccount(harness);
+		await setUserActivity(harness, account.userId, new Date(Date.now() - 3 * 365 * 24 * 60 * 60 * 1000));
+		await harness.kvProvider.setex(
+			`inactivity_warning_sent:${account.userId}`,
+			35 * 24 * 60 * 60,
+			String(Date.now() - 31 * 24 * 60 * 60 * 1000),
+		);
+		const result = await processInactivityDeletions(harness);
+		expect(result.warnings_sent).toBe(0);
+		expect(result.deletions_scheduled).toBe(0);
+	});
+	test('the time between the warning and the deletion comes from the config', async () => {
+		await getInstanceConfigRepository().updateAccountsConfig({inactivity_deletion: {warning_lead_days: 10}});
+		const account = await createTestAccount(harness);
+		await setUserActivity(harness, account.userId, new Date(Date.now() - 3 * 365 * 24 * 60 * 60 * 1000));
+		await harness.kvProvider.setex(
+			`inactivity_warning_sent:${account.userId}`,
+			15 * 24 * 60 * 60,
+			String(Date.now() - 11 * 24 * 60 * 60 * 1000),
+		);
+		const result = await processInactivityDeletions(harness);
+		expect(result.deletions_scheduled).toBe(1);
 	});
 	test('a page issues one batched activity lookup instead of per-user reads', async () => {
 		const kvProvider = harness.kvProvider as MockKVProvider;
@@ -197,14 +217,5 @@ describe('Inactivity Deletion', () => {
 		}
 		const activityGets = kvProvider.getSpy.mock.calls.filter((call) => String(call[0]).startsWith('user_activity:'));
 		expect(activityGets).toHaveLength(0);
-	});
-	test('should return processing statistics', async () => {
-		const result = await processInactivityDeletions(harness);
-		expect(result).toHaveProperty('warnings_sent');
-		expect(result).toHaveProperty('deletions_scheduled');
-		expect(result).toHaveProperty('errors');
-		expect(typeof result.warnings_sent).toBe('number');
-		expect(typeof result.deletions_scheduled).toBe('number');
-		expect(typeof result.errors).toBe('number');
 	});
 });

@@ -10,6 +10,7 @@ export class GuildChannelOverride {
 	readonly muted: boolean;
 	readonly muteConfig: MuteConfiguration | null;
 	readonly unreadBadges: ChannelMessageNotifications | null;
+	readonly flags: number | null;
 
 	constructor(override: ChannelOverride) {
 		this.collapsed = override.collapsed ?? false;
@@ -17,6 +18,7 @@ export class GuildChannelOverride {
 		this.muted = override.muted ?? false;
 		this.muteConfig = override.mute_config ? new MuteConfiguration(override.mute_config) : null;
 		this.unreadBadges = (override.unread_badges ?? null) as ChannelMessageNotifications | null;
+		this.flags = override.flags ?? null;
 	}
 
 	toChannelOverride(): ChannelOverride {
@@ -26,6 +28,7 @@ export class GuildChannelOverride {
 			muted: this.muted,
 			mute_config: this.muteConfig?.toMuteConfig() ?? null,
 			unread_badges: this.unreadBadges,
+			...(this.flags !== null ? {flags: this.flags} : {}),
 		};
 	}
 }

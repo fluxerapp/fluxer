@@ -35,7 +35,7 @@ export function getComposerAutocompleteReplacementStart(
 	return Math.max(0, (match.index == null ? 0 : match.index) + (matchedPrefix == null ? 0 : matchedPrefix.length));
 }
 
-export function getComposerCommandInsertionText(command: Command): string {
+function getComposerCommandInsertionText(command: Command): string {
 	return command.type === 'simple' ? `${command.content} ` : getCommandInsertionText(command);
 }
 

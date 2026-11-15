@@ -5,21 +5,26 @@ import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {
 	PAYMENT_PROVIDER_NAME,
 	PIX_PAYMENT_METHOD,
-	PREMIUM_PRODUCT_FULL_NAME,
-	PRODUCT_NAME,
 	SUPPORT_EMAIL,
 	UPI_PAYMENT_METHOD,
 } from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {promptForAccountTier} from '@app/features/auth/utils/AccountTierPrompt';
 import {CANCEL_DESCRIPTOR, CLOSE_DESCRIPTOR, OKAY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import type {CheckoutPaymentMethod, PriceIds} from '@app/features/premium/commands/PremiumCommands';
 import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
 import PremiumState from '@app/features/premium/state/PremiumState';
+import {forgetPurchaseIntent} from '@app/features/premium/state/PurchaseIntent';
 import {recordPremiumCheckoutReturnIntent} from '@app/features/premium/utils/PremiumCheckoutReturnIntent';
-import {MANAGE_SUBSCRIPTION_DESCRIPTOR} from '@app/features/premium/utils/PremiumMessageDescriptors';
-import {getStoreName} from '@app/features/premium/utils/PremiumUtils';
+import {
+	MANAGE_SUBSCRIPTION_DESCRIPTOR,
+	PAYMENT_DISPUTE_OPEN_DESCRIPTOR,
+	PURCHASES_PAUSED_TITLE_DESCRIPTOR,
+} from '@app/features/premium/utils/PremiumMessageDescriptors';
+import {getPremiumPurchaseBlockedReason} from '@app/features/premium/utils/PremiumPurchaseBlock';
+import {getPremiumProductFullName, getStoreName} from '@app/features/premium/utils/PremiumUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
@@ -28,14 +33,6 @@ import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {useCallback, useState} from 'react';
 
-const CUSTOMER_PORTAL_OPEN_FAILED_TITLE_DESCRIPTOR = msg({
-	message: "Couldn't open the billing portal",
-	comment: 'Title of the error modal shown when opening the billing customer portal fails.',
-});
-const CUSTOMER_PORTAL_OPEN_FAILED_BODY_DESCRIPTOR = msg({
-	message: 'Something went wrong while opening the billing portal. Please try again in a moment.',
-	comment: 'Body of the error modal shown when opening the billing customer portal fails.',
-});
 const PIX_PAYMENT_PROMPT_DESCRIPTION_DESCRIPTOR = msg({
 	message:
 		'Pay with {pixPaymentMethod} Automático to authorize recurring charges directly from your Brazilian bank. Or choose "Use card" to enter a credit card on {paymentProviderName}\'s next screen.',
@@ -66,11 +63,11 @@ const USE_ALTERNATIVE_METHOD_BUTTON_DESCRIPTOR = msg({
 	comment: 'Plutonium subscription payment method picker button. Selects the alternative (non-card) method.',
 });
 const EMAIL_VERIFICATION_REQUIRED_TITLE_DESCRIPTOR = msg({
-	message: 'Verify your email first',
+	message: 'Confirm your email first',
 	comment: 'Title of the error modal shown when an unverified account tries to purchase Plutonium.',
 });
 const EMAIL_VERIFICATION_REQUIRED_BODY_DESCRIPTOR = msg({
-	message: 'You need to verify your email before you can purchase {premiumProductFullName}.',
+	message: 'You need to confirm your email before you can purchase {premiumProductFullName}.',
 	comment:
 		'Body of the error modal shown when the account email is unverified and the user tries to purchase Plutonium. Product name is interpolated.',
 });
@@ -133,11 +130,19 @@ const CHECKOUT_START_FAILED_BODY_DESCRIPTOR = msg({
 	message: 'Something went wrong while starting checkout. Please try again in a moment.',
 	comment: 'Body of the generic fallback error modal shown when creating a checkout session fails unexpectedly.',
 });
-const GIFT_SUBSCRIPTION_BLOCKS_RECURRING_TOAST_DESCRIPTOR = msg({
-	message:
-		"You're currently on a gift subscription. It won't renew. You can redeem more gift codes to extend it. Recurring subscriptions can be started after your gift time ends.",
+const GIFT_TIME_KEPT_TITLE_DESCRIPTOR = msg({
+	message: 'Your gift time is kept',
 	comment:
-		'Error modal body shown when a gift-subscription user tries to start a recurring subscription. Explains the extension/redemption path.',
+		'Title of the confirmation shown before checkout when a user with gifted premium time starts a recurring subscription.',
+});
+const GIFT_TIME_KEPT_BODY_DESCRIPTOR = msg({
+	message: "You'll be charged now. Your remaining gift time is added after your paid period, so none of it is lost.",
+	comment:
+		'Body of the confirmation shown before checkout when a user with gifted premium time starts a recurring subscription. The subscription is charged immediately and the unused gift time is appended after the paid period.',
+});
+const CONTINUE_TO_CHECKOUT_DESCRIPTOR = msg({
+	message: 'Continue to checkout',
+	comment: 'Button in the gift time confirmation that proceeds to subscription checkout.',
 });
 const PRICING_NOT_LOADED_TOAST_DESCRIPTOR = msg({
 	message: 'Pricing is still loading.',
@@ -146,6 +151,11 @@ const PRICING_NOT_LOADED_TOAST_DESCRIPTOR = msg({
 const PLAN_UNAVAILABLE_TOAST_DESCRIPTOR = msg({
 	message: "This plan isn't available. Contact support.",
 	comment: 'Error modal body shown when the selected Plutonium plan has no price ID configured.',
+});
+const PLAN_UNAVAILABLE_SELF_HOSTED_TOAST_DESCRIPTOR = msg({
+	message: "This plan isn't available. Contact the administrators of this instance.",
+	comment:
+		'Error modal body shown on a self-hosted instance when the selected Plutonium plan has no price ID configured.',
 });
 const COMPLETE_PAYMENT_MODAL_TITLE_DESCRIPTOR = msg({
 	message: 'Complete payment',
@@ -167,7 +177,6 @@ const USE_CARD_BUTTON_DESCRIPTOR = msg({
 const logger = new Logger('useCheckoutActions');
 
 type Plan = 'monthly' | 'yearly' | 'gift_1_month' | 'gift_1_year';
-type PremiumPurchaseBlockedReason = 'lifetime' | 'existing_subscription' | 'purchase_disabled';
 
 function getPremiumPurchaseBlockedStoreProvider(body: unknown): 'app_store' | 'google_play' | null {
 	if (!body || typeof body !== 'object' || !('provider' in body)) {
@@ -176,17 +185,6 @@ function getPremiumPurchaseBlockedStoreProvider(body: unknown): 'app_store' | 'g
 	const provider = body.provider;
 	if (provider === 'app_store' || provider === 'google_play') {
 		return provider;
-	}
-	return null;
-}
-
-function getPremiumPurchaseBlockedReason(body: unknown): PremiumPurchaseBlockedReason | null {
-	if (!body || typeof body !== 'object' || !('reason' in body)) {
-		return null;
-	}
-	const reason = body.reason;
-	if (reason === 'lifetime' || reason === 'existing_subscription' || reason === 'purchase_disabled') {
-		return reason;
 	}
 	return null;
 }
@@ -209,28 +207,18 @@ function alternativePaymentMethodForCurrency(
 export const useCheckoutActions = (
 	priceIds: PriceIds | null,
 	countryCode: string | null,
-	isGiftSubscription: boolean,
 	mobileEnabled: boolean,
+	{hasGiftTime = false}: {hasGiftTime?: boolean} = {},
 ) => {
 	const {i18n} = useLingui();
 	const [loadingCheckout, setLoadingCheckout] = useState(false);
-	const openCustomerPortalFromCheckoutBlock = useCallback(async () => {
-		try {
-			const url = await PremiumCommands.createCustomerPortalSession();
-			await openExternalUrl(url);
-		} catch (error) {
-			logger.error('Failed to open customer portal from checkout block', error);
-			ModalCommands.push(
-				modal(() => (
-					<GenericErrorModal
-						title={i18n._(CUSTOMER_PORTAL_OPEN_FAILED_TITLE_DESCRIPTOR)}
-						message={i18n._(CUSTOMER_PORTAL_OPEN_FAILED_BODY_DESCRIPTOR)}
-						data-flx="app.plutonium.use-checkout-actions.open-customer-portal.generic-error-modal"
-					/>
-				)),
-			);
-		}
-	}, [i18n]);
+	const openCustomerPortalFromCheckoutBlock = useCallback(
+		() =>
+			PremiumCommands.openCustomerPortalWithErrorModal(
+				'app.plutonium.use-checkout-actions.open-customer-portal.generic-error-modal',
+			),
+		[],
+	);
 	const getAlternativePaymentMethodPrompt = useCallback(
 		(
 			currency: string | null | undefined,
@@ -276,7 +264,7 @@ export const useCheckoutActions = (
 								<GenericErrorModal
 									title={i18n._(EMAIL_VERIFICATION_REQUIRED_TITLE_DESCRIPTOR)}
 									message={i18n._(EMAIL_VERIFICATION_REQUIRED_BODY_DESCRIPTOR, {
-										premiumProductFullName: PREMIUM_PRODUCT_FULL_NAME,
+										premiumProductFullName: getPremiumProductFullName(),
 									})}
 									data-flx="app.plutonium.use-checkout-actions.email-verification-required.generic-error-modal"
 								/>
@@ -292,7 +280,6 @@ export const useCheckoutActions = (
 									<ConfirmModal
 										title={i18n._(ALREADY_VISIONARY_TITLE_DESCRIPTOR)}
 										description={i18n._(ALREADY_VISIONARY_BODY_DESCRIPTOR)}
-										secondaryText={i18n._(CLOSE_DESCRIPTOR)}
 										data-flx="app.plutonium.use-checkout-actions.handle-checkout-error.confirm-modal"
 									/>
 								)),
@@ -304,7 +291,7 @@ export const useCheckoutActions = (
 							const store = PremiumState.state?.store;
 							const manageUrl = store?.provider === storeProvider ? store.manage_url : null;
 							const description = i18n._(EXISTING_STORE_SUBSCRIPTION_BODY_DESCRIPTOR, {
-								premiumProductFullName: PREMIUM_PRODUCT_FULL_NAME,
+								premiumProductFullName: getPremiumProductFullName(),
 								storeName: getStoreName(storeProvider),
 							});
 							ModalCommands.push(
@@ -323,7 +310,6 @@ export const useCheckoutActions = (
 										<ConfirmModal
 											title={i18n._(EXISTING_SUBSCRIPTION_TITLE_DESCRIPTOR)}
 											description={description}
-											secondaryText={i18n._(CLOSE_DESCRIPTOR)}
 											data-flx="app.plutonium.use-checkout-actions.handle-checkout-error.confirm-modal--5"
 										/>
 									),
@@ -337,13 +323,25 @@ export const useCheckoutActions = (
 									<ConfirmModal
 										title={i18n._(EXISTING_SUBSCRIPTION_TITLE_DESCRIPTOR)}
 										description={i18n._(EXISTING_SUBSCRIPTION_BODY_DESCRIPTOR, {
-											premiumProductFullName: PREMIUM_PRODUCT_FULL_NAME,
+											premiumProductFullName: getPremiumProductFullName(),
 										})}
 										primaryText={i18n._(MANAGE_SUBSCRIPTION_DESCRIPTOR)}
 										primaryVariant="primary"
 										secondaryText={i18n._(CLOSE_DESCRIPTOR)}
 										onPrimary={openCustomerPortalFromCheckoutBlock}
 										data-flx="app.plutonium.use-checkout-actions.handle-checkout-error.confirm-modal--2"
+									/>
+								)),
+							);
+							return;
+						}
+						if (reason === 'payment_dispute_open') {
+							ModalCommands.push(
+								modal(() => (
+									<ConfirmModal
+										title={i18n._(PURCHASES_PAUSED_TITLE_DESCRIPTOR)}
+										description={i18n._(PAYMENT_DISPUTE_OPEN_DESCRIPTOR)}
+										data-flx="app.plutonium.use-checkout-actions.handle-checkout-error.payment-dispute-open"
 									/>
 								)),
 							);
@@ -359,7 +357,6 @@ export const useCheckoutActions = (
 												? i18n._(PURCHASES_DISABLED_SELF_HOSTED_BODY_DESCRIPTOR)
 												: i18n._(PURCHASES_DISABLED_BODY_DESCRIPTOR, {supportEmail: SUPPORT_EMAIL})
 										}
-										secondaryText={i18n._(CLOSE_DESCRIPTOR)}
 										data-flx="app.plutonium.use-checkout-actions.handle-checkout-error.confirm-modal--3"
 									/>
 								)),
@@ -375,7 +372,6 @@ export const useCheckoutActions = (
 											? i18n._(CHECKOUT_BLOCKED_SELF_HOSTED_BODY_DESCRIPTOR)
 											: i18n._(CHECKOUT_BLOCKED_BODY_DESCRIPTOR, {supportEmail: SUPPORT_EMAIL})
 									}
-									secondaryText={i18n._(CLOSE_DESCRIPTOR)}
 									data-flx="app.plutonium.use-checkout-actions.handle-checkout-error.confirm-modal--4"
 								/>
 							)),
@@ -397,9 +393,9 @@ export const useCheckoutActions = (
 		[openCustomerPortalFromCheckoutBlock, i18n],
 	);
 	const handleSelectPlan = useCallback(
-		async (plan: Plan) => {
+		async (plan: Plan, {isBusiness = false, cnpj}: {isBusiness?: boolean; cnpj?: string} = {}) => {
 			if (loadingCheckout) return;
-			logger.info('Plan selected', {plan, isGiftSubscription});
+			logger.debug('Plan selected', {plan, hasGiftTime});
 			const showCheckoutPlanErrorModal = (message: string, flxKey: string) => {
 				ModalCommands.push(
 					modal(() => (
@@ -411,13 +407,6 @@ export const useCheckoutActions = (
 					)),
 				);
 			};
-			if (isGiftSubscription && (plan === 'monthly' || plan === 'yearly')) {
-				showCheckoutPlanErrorModal(
-					i18n._(GIFT_SUBSCRIPTION_BLOCKS_RECURRING_TOAST_DESCRIPTOR),
-					'app.plutonium.use-checkout-actions.gift-subscription-blocked.generic-error-modal',
-				);
-				return;
-			}
 			if (!priceIds) {
 				logger.error('Price IDs not loaded yet');
 				showCheckoutPlanErrorModal(
@@ -438,14 +427,19 @@ export const useCheckoutActions = (
 			if (!priceId) {
 				logger.error('Price ID not available for plan', {plan});
 				showCheckoutPlanErrorModal(
-					i18n._(PLAN_UNAVAILABLE_TOAST_DESCRIPTOR),
+					i18n._(
+						RuntimeConfig.isSelfHosted()
+							? PLAN_UNAVAILABLE_SELF_HOSTED_TOAST_DESCRIPTOR
+							: PLAN_UNAVAILABLE_TOAST_DESCRIPTOR,
+					),
 					'app.plutonium.use-checkout-actions.plan-unavailable.generic-error-modal',
 				);
 				return;
 			}
 			const markCheckoutLaunched = () => {
+				forgetPurchaseIntent();
 				if (!isGift) {
-					recordPremiumCheckoutReturnIntent('plutonium');
+					recordPremiumCheckoutReturnIntent();
 				}
 			};
 			const openCheckoutUrl = async (
@@ -459,7 +453,7 @@ export const useCheckoutActions = (
 								title={i18n._(COMPLETE_PAYMENT_MODAL_TITLE_DESCRIPTOR)}
 								description={i18n._(COMPLETE_PAYMENT_MODAL_BODY_DESCRIPTOR, {
 									paymentProviderName: PAYMENT_PROVIDER_NAME,
-									productName: PRODUCT_NAME,
+									productName: RuntimeConfig.productName,
 								})}
 								primaryText={i18n._(OKAY_DESCRIPTOR)}
 								primaryVariant="primary"
@@ -491,42 +485,67 @@ export const useCheckoutActions = (
 						countryCode ?? undefined,
 						isGift,
 						paymentMethod,
+						isBusiness,
+						cnpj,
 					);
 					await openCheckoutUrl(checkoutUrl, {skipMobilePrompt});
 				} catch (error) {
-					handleCheckoutError(error);
+					if (!promptForAccountTier(error, () => void startCheckout({skipMobilePrompt, paymentMethod}))) {
+						handleCheckoutError(error);
+					}
 				} finally {
 					setLoadingCheckout(false);
 				}
 			};
-			const altPaymentMethod = alternativePaymentMethodForCurrency(priceIds.currency, isGift, plan);
-			if (altPaymentMethod && MANDATORY_LOCAL_PAYMENT_CURRENCIES.has(priceIds.currency ?? '')) {
-				await startCheckout({paymentMethod: altPaymentMethod});
-				return;
-			}
-			if (altPaymentMethod) {
-				const altPrompt = getAlternativePaymentMethodPrompt(priceIds.currency, altPaymentMethod);
+			const proceedToCheckout = async ({afterConfirm = false}: {afterConfirm?: boolean} = {}) => {
+				const altPaymentMethod = alternativePaymentMethodForCurrency(priceIds.currency, isGift, plan);
+				if (altPaymentMethod && MANDATORY_LOCAL_PAYMENT_CURRENCIES.has(priceIds.currency ?? '')) {
+					await startCheckout({skipMobilePrompt: afterConfirm, paymentMethod: altPaymentMethod});
+					return;
+				}
+				if (altPaymentMethod) {
+					const altPrompt = getAlternativePaymentMethodPrompt(priceIds.currency, altPaymentMethod);
+					ModalCommands.push(
+						modal(() => (
+							<ConfirmModal
+								title={i18n._(CHOOSE_PAYMENT_METHOD_MODAL_TITLE_DESCRIPTOR)}
+								description={altPrompt.description}
+								primaryText={altPrompt.primaryText}
+								primaryVariant="primary"
+								secondaryText={i18n._(USE_CARD_BUTTON_DESCRIPTOR)}
+								onPrimary={() => {
+									void startCheckout({skipMobilePrompt: true, paymentMethod: altPaymentMethod});
+								}}
+								onSecondary={() => {
+									void startCheckout({skipMobilePrompt: true});
+								}}
+								data-flx="app.plutonium.use-checkout-actions.handle-select-plan.confirm-modal--2"
+							/>
+						)),
+					);
+					return;
+				}
+				await startCheckout({skipMobilePrompt: afterConfirm});
+			};
+			if (hasGiftTime && !isGift) {
 				ModalCommands.push(
 					modal(() => (
 						<ConfirmModal
-							title={i18n._(CHOOSE_PAYMENT_METHOD_MODAL_TITLE_DESCRIPTOR)}
-							description={altPrompt.description}
-							primaryText={altPrompt.primaryText}
+							title={i18n._(GIFT_TIME_KEPT_TITLE_DESCRIPTOR)}
+							description={i18n._(GIFT_TIME_KEPT_BODY_DESCRIPTOR)}
+							primaryText={i18n._(CONTINUE_TO_CHECKOUT_DESCRIPTOR)}
 							primaryVariant="primary"
-							secondaryText={i18n._(USE_CARD_BUTTON_DESCRIPTOR)}
+							secondaryText={i18n._(CANCEL_DESCRIPTOR)}
 							onPrimary={() => {
-								void startCheckout({skipMobilePrompt: true, paymentMethod: altPaymentMethod});
+								void proceedToCheckout({afterConfirm: true});
 							}}
-							onSecondary={() => {
-								void startCheckout({skipMobilePrompt: true});
-							}}
-							data-flx="app.plutonium.use-checkout-actions.handle-select-plan.confirm-modal--2"
+							data-flx="app.plutonium.use-checkout-actions.handle-select-plan.gift-time-confirm-modal"
 						/>
 					)),
 				);
 				return;
 			}
-			await startCheckout();
+			await proceedToCheckout();
 		},
 		[
 			handleCheckoutError,
@@ -534,7 +553,7 @@ export const useCheckoutActions = (
 			priceIds,
 			countryCode,
 			getAlternativePaymentMethodPrompt,
-			isGiftSubscription,
+			hasGiftTime,
 			mobileEnabled,
 			i18n,
 		],

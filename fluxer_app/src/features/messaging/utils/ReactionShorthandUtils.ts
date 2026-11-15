@@ -6,7 +6,7 @@ import {getSkinTonedSurrogate} from '@app/features/expressions/utils/SkinToneUti
 import UnicodeEmojis from '@app/features/expressions/utils/UnicodeEmojis';
 import MessageReply from '@app/features/messaging/state/MessageReply';
 import Messages from '@app/features/messaging/state/MessagingMessages';
-import type {ReactionEmoji} from '@app/features/messaging/utils/MessageReactionUtils';
+import type {ReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
 import {resolveTypedEmojiToken} from '@app/features/messaging/utils/TypedEmojiShortcodeUtils';
 import type {I18n} from '@lingui/core';
 

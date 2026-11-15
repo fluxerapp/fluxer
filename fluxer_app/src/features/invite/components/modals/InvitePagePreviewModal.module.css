@@ -3,9 +3,9 @@
 .previewModal {
 	position: fixed;
 	top: 0;
-	right: 0;
+	inset-inline-end: 0;
 	bottom: 0;
-	left: 0;
+	inset-inline-start: 0;
 	width: 100% !important;
 	height: 100% !important;
 	max-width: 100% !important;
@@ -15,7 +15,7 @@
 	border: none !important;
 	border-radius: 0 !important;
 	box-shadow: none !important;
-	background: var(--brand-primary);
+	background: #080616;
 	display: flex;
 	flex-direction: column;
 	overflow: hidden;
@@ -60,11 +60,10 @@
 }
 
 .previewContent {
-	position: relative;
+	composes: spaceBackground from '@app/features/ui/space_background/SpaceBackground.module.css';
 	flex: 1 1 auto;
 	display: flex;
 	overflow: hidden;
-	background-color: var(--brand-primary);
 	min-height: 0;
 }
 

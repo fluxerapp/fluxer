@@ -4,11 +4,13 @@ import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import styles from '@app/features/user/components/profile/UserProfileLoadingSkeleton.module.css';
 import {
+	getBannerCutoutCx,
 	PROFILE_MODAL_BANNER_AVATAR_CUTOUT,
 	PROFILE_MODAL_GEOMETRY_STYLE,
 	PROFILE_POPOUT_BANNER_AVATAR_CUTOUT,
 	PROFILE_POPOUT_GEOMETRY_STYLE,
 } from '@app/features/user/constants/UserProfileSurfaceGeometry';
+import {useDirection} from '@base-ui/react/direction-provider';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
@@ -27,93 +29,99 @@ type UserProfileLoadingSkeletonVariant = 'popout' | 'modal';
 interface UserProfileLoadingSkeletonProps {
 	variant: UserProfileLoadingSkeletonVariant;
 	borderColor?: string;
-	className?: string;
+
 	[themeAttr: `data-flx${string}`]: string | undefined;
 }
 
-const PopoutBannerMask: React.FC<{maskId: string}> = ({maskId}) => (
-	<svg
-		className={styles.bannerMask}
-		viewBox={`0 0 ${PROFILE_POPOUT_BANNER_AVATAR_CUTOUT.viewBoxWidthPx} ${PROFILE_POPOUT_BANNER_AVATAR_CUTOUT.viewBoxHeightPx}`}
-		preserveAspectRatio="none"
-		aria-hidden
-		data-flx="user.profile.user-profile-loading-skeleton.popout-banner-mask.banner-mask"
-	>
-		<mask id={maskId} data-flx="user.profile.user-profile-loading-skeleton.popout-banner-mask.mask">
-			<rect
-				fill="white"
+const PopoutBannerMask: React.FC<{maskId: string}> = ({maskId}) => {
+	const direction = useDirection();
+	return (
+		<svg
+			className={styles.bannerMask}
+			viewBox={`0 0 ${PROFILE_POPOUT_BANNER_AVATAR_CUTOUT.viewBoxWidthPx} ${PROFILE_POPOUT_BANNER_AVATAR_CUTOUT.viewBoxHeightPx}`}
+			preserveAspectRatio="none"
+			aria-hidden
+			data-flx="user.profile.user-profile-loading-skeleton.popout-banner-mask.banner-mask"
+		>
+			<mask id={maskId} data-flx="user.profile.user-profile-loading-skeleton.popout-banner-mask.mask">
+				<rect
+					fill="white"
+					x="0"
+					y="0"
+					width={PROFILE_POPOUT_BANNER_AVATAR_CUTOUT.viewBoxWidthPx}
+					height={PROFILE_POPOUT_BANNER_AVATAR_CUTOUT.viewBoxHeightPx}
+					data-flx="user.profile.user-profile-loading-skeleton.popout-banner-mask.rect"
+				/>
+				<circle
+					fill="black"
+					cx={getBannerCutoutCx(PROFILE_POPOUT_BANNER_AVATAR_CUTOUT, direction)}
+					cy={PROFILE_POPOUT_BANNER_AVATAR_CUTOUT.cy}
+					r={PROFILE_POPOUT_BANNER_AVATAR_CUTOUT.r}
+					data-flx="user.profile.user-profile-loading-skeleton.popout-banner-mask.circle"
+				/>
+			</mask>
+			<foreignObject
 				x="0"
 				y="0"
 				width={PROFILE_POPOUT_BANNER_AVATAR_CUTOUT.viewBoxWidthPx}
 				height={PROFILE_POPOUT_BANNER_AVATAR_CUTOUT.viewBoxHeightPx}
-				data-flx="user.profile.user-profile-loading-skeleton.popout-banner-mask.rect"
-			/>
-			<circle
-				fill="black"
-				cx={PROFILE_POPOUT_BANNER_AVATAR_CUTOUT.cx}
-				cy={PROFILE_POPOUT_BANNER_AVATAR_CUTOUT.cy}
-				r={PROFILE_POPOUT_BANNER_AVATAR_CUTOUT.r}
-				data-flx="user.profile.user-profile-loading-skeleton.popout-banner-mask.circle"
-			/>
-		</mask>
-		<foreignObject
-			x="0"
-			y="0"
-			width={PROFILE_POPOUT_BANNER_AVATAR_CUTOUT.viewBoxWidthPx}
-			height={PROFILE_POPOUT_BANNER_AVATAR_CUTOUT.viewBoxHeightPx}
-			overflow="visible"
-			mask={`url(#${maskId})`}
-			data-flx="user.profile.user-profile-loading-skeleton.popout-banner-mask.foreign-object"
-		>
-			<div
-				className={styles.bannerFill}
-				data-flx="user.profile.user-profile-loading-skeleton.popout-banner-mask.banner-fill"
-			/>
-		</foreignObject>
-	</svg>
-);
+				overflow="visible"
+				mask={`url(#${maskId})`}
+				data-flx="user.profile.user-profile-loading-skeleton.popout-banner-mask.foreign-object"
+			>
+				<div
+					className={styles.bannerFill}
+					data-flx="user.profile.user-profile-loading-skeleton.popout-banner-mask.banner-fill"
+				/>
+			</foreignObject>
+		</svg>
+	);
+};
 
-const ModalBannerMask: React.FC<{maskId: string}> = ({maskId}) => (
-	<svg
-		className={styles.bannerMask}
-		viewBox={`0 0 ${PROFILE_MODAL_BANNER_AVATAR_CUTOUT.viewBoxWidthPx} ${PROFILE_MODAL_BANNER_AVATAR_CUTOUT.viewBoxHeightPx}`}
-		preserveAspectRatio="none"
-		aria-hidden
-		data-flx="user.profile.user-profile-loading-skeleton.modal-banner-mask.banner-mask"
-	>
-		<mask id={maskId} data-flx="user.profile.user-profile-loading-skeleton.modal-banner-mask.mask">
-			<rect
-				fill="white"
+const ModalBannerMask: React.FC<{maskId: string}> = ({maskId}) => {
+	const direction = useDirection();
+	return (
+		<svg
+			className={styles.bannerMask}
+			viewBox={`0 0 ${PROFILE_MODAL_BANNER_AVATAR_CUTOUT.viewBoxWidthPx} ${PROFILE_MODAL_BANNER_AVATAR_CUTOUT.viewBoxHeightPx}`}
+			preserveAspectRatio="none"
+			aria-hidden
+			data-flx="user.profile.user-profile-loading-skeleton.modal-banner-mask.banner-mask"
+		>
+			<mask id={maskId} data-flx="user.profile.user-profile-loading-skeleton.modal-banner-mask.mask">
+				<rect
+					fill="white"
+					x="0"
+					y="0"
+					width={PROFILE_MODAL_BANNER_AVATAR_CUTOUT.viewBoxWidthPx}
+					height={PROFILE_MODAL_BANNER_AVATAR_CUTOUT.viewBoxHeightPx}
+					data-flx="user.profile.user-profile-loading-skeleton.modal-banner-mask.rect"
+				/>
+				<circle
+					fill="black"
+					cx={getBannerCutoutCx(PROFILE_MODAL_BANNER_AVATAR_CUTOUT, direction)}
+					cy={PROFILE_MODAL_BANNER_AVATAR_CUTOUT.cy}
+					r={PROFILE_MODAL_BANNER_AVATAR_CUTOUT.r}
+					data-flx="user.profile.user-profile-loading-skeleton.modal-banner-mask.circle"
+				/>
+			</mask>
+			<foreignObject
 				x="0"
 				y="0"
 				width={PROFILE_MODAL_BANNER_AVATAR_CUTOUT.viewBoxWidthPx}
 				height={PROFILE_MODAL_BANNER_AVATAR_CUTOUT.viewBoxHeightPx}
-				data-flx="user.profile.user-profile-loading-skeleton.modal-banner-mask.rect"
-			/>
-			<circle
-				fill="black"
-				cx={PROFILE_MODAL_BANNER_AVATAR_CUTOUT.cx}
-				cy={PROFILE_MODAL_BANNER_AVATAR_CUTOUT.cy}
-				r={PROFILE_MODAL_BANNER_AVATAR_CUTOUT.r}
-				data-flx="user.profile.user-profile-loading-skeleton.modal-banner-mask.circle"
-			/>
-		</mask>
-		<foreignObject
-			x="0"
-			y="0"
-			width={PROFILE_MODAL_BANNER_AVATAR_CUTOUT.viewBoxWidthPx}
-			height={PROFILE_MODAL_BANNER_AVATAR_CUTOUT.viewBoxHeightPx}
-			overflow="visible"
-			mask={`url(#${maskId})`}
-			data-flx="user.profile.user-profile-loading-skeleton.modal-banner-mask.foreign-object"
-		>
-			<div
-				className={styles.bannerFill}
-				data-flx="user.profile.user-profile-loading-skeleton.modal-banner-mask.banner-fill"
-			/>
-		</foreignObject>
-	</svg>
-);
+				overflow="visible"
+				mask={`url(#${maskId})`}
+				data-flx="user.profile.user-profile-loading-skeleton.modal-banner-mask.foreign-object"
+			>
+				<div
+					className={styles.bannerFill}
+					data-flx="user.profile.user-profile-loading-skeleton.modal-banner-mask.banner-fill"
+				/>
+			</foreignObject>
+		</svg>
+	);
+};
 
 const SkeletonLine: React.FC<{className?: string}> = ({className}) => (
 	<div
@@ -339,7 +347,7 @@ const ModalSkeletonContent = () => (
 );
 
 export const UserProfileLoadingSkeleton: React.FC<UserProfileLoadingSkeletonProps> = observer(
-	({variant, borderColor, className, ...props}) => {
+	({variant, borderColor, ...props}) => {
 		const {i18n} = useLingui();
 		const reactId = useId();
 		const maskId = `profile_skeleton_${reactId.replace(/[^a-zA-Z0-9_-]/g, '')}`;
@@ -361,7 +369,7 @@ export const UserProfileLoadingSkeleton: React.FC<UserProfileLoadingSkeletonProp
 			: {};
 		return (
 			<div
-				className={clsx(styles.surface, variant === 'modal' ? styles.modal : styles.popout, className)}
+				className={clsx(styles.surface, variant === 'modal' ? styles.modal : styles.popout)}
 				style={style}
 				role="status"
 				aria-label={i18n._(LOADING_PROFILE_DESCRIPTOR)}

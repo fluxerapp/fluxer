@@ -58,6 +58,10 @@ export class ReliableDataChannel extends FlowControlledDataChannel {
 		this.refreshBufferStatus();
 	}
 
+	hasUnsent(): boolean {
+		return this.messageBuffer.getUnsent().length > 0;
+	}
+
 	async replay(lastMessageSeq: number) {
 		const dc = this.getChannel();
 		if (!dc) {
@@ -66,7 +70,9 @@ export class ReliableDataChannel extends FlowControlledDataChannel {
 		this.messageBuffer.popToSequence(lastMessageSeq);
 		const unlock = await this.lockHeadroom();
 		try {
-			this.messageBuffer.markAllUnsent();
+			if (lastMessageSeq > 0) {
+				this.messageBuffer.markAllUnsent();
+			}
 			for (let batch = this.messageBuffer.getUnsent(); batch.length > 0; batch = this.messageBuffer.getUnsent()) {
 				for (const item of batch) {
 					await this.waitForHeadroomWithoutLock();

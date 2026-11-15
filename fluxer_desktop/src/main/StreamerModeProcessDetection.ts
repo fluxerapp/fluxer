@@ -8,6 +8,7 @@ import type {StreamerModeCaptureAppStatus, StreamerModeCaptureProcess} from '@el
 const execFileAsync = promisify(execFile);
 const PROCESS_QUERY_MAX_BUFFER_BYTES = 64 * 1024;
 const MAX_DETECTED_CAPTURE_PROCESSES = 16;
+const CAPTURE_APP_STATUS_REUSE_MS = 2_000;
 const WINDOWS_CAPTURE_PROCESS_NAMES = [
 	'obs.exe',
 	'obs32.exe',
@@ -210,7 +211,19 @@ async function getPosixProcesses(): Promise<Array<StreamerModeCaptureProcess>> {
 	return getPosixProcessesWithPs();
 }
 
-export async function getStreamerModeCaptureAppStatus(): Promise<StreamerModeCaptureAppStatus> {
+let recentStatus: {readonly startedAt: number; readonly status: Promise<StreamerModeCaptureAppStatus>} | null = null;
+
+export function getStreamerModeCaptureAppStatus(): Promise<StreamerModeCaptureAppStatus> {
+	const now = Date.now();
+	if (recentStatus !== null && now - recentStatus.startedAt < CAPTURE_APP_STATUS_REUSE_MS) {
+		return recentStatus.status;
+	}
+	const status = detectCaptureAppStatus();
+	recentStatus = {startedAt: now, status};
+	return status;
+}
+
+async function detectCaptureAppStatus(): Promise<StreamerModeCaptureAppStatus> {
 	let processes: Array<StreamerModeCaptureProcess> = [];
 	try {
 		processes = process.platform === 'win32' ? await getWindowsProcesses() : await getPosixProcesses();

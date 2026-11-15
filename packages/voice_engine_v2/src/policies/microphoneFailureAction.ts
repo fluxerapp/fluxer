@@ -2,7 +2,7 @@
 
 export type VoiceEngineV2MicrophoneOperationFailureAction = 'none' | 'defer' | 'mute' | 'crash';
 
-export interface VoiceEngineV2OperationFailureLike {
+interface VoiceEngineV2OperationFailureLike {
 	ok: false;
 	error: {
 		code: string;

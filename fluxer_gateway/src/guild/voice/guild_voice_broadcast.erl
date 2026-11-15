@@ -4,11 +4,8 @@
 -typing([eqwalizer]).
 
 -export([broadcast_voice_state_update/3]).
+-export([broadcast_voice_state_move/3]).
 -export([broadcast_voice_server_update_to_session/7]).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -export_type([
     guild_state/0,
@@ -34,10 +31,31 @@ do_broadcast_voice_state_update(VoiceState, State, OldChannelIdBin) ->
     FilterChannelId = utils:binary_to_integer_safe(FilterChannelIdBin),
     FilteredSessions = filter_sessions_for_voice_channel(Sessions, FilterChannelId, State),
     Pids = [maps:get(pid, S) || {_Sid, S} <- FilteredSessions],
-    maybe_dispatch_voice_state_update(Pids, sanitize_voice_state(VoiceState), State),
+    maybe_dispatch_voice_state_update(
+        Pids, voice_state_utils:sanitize_voice_state_for_broadcast(VoiceState), State
+    ),
     maybe_persist_voice_state_update(VoiceState, State),
     maybe_sync_guild_voice_state(VoiceState, OldChannelIdBin, State),
     ok.
+
+-spec broadcast_voice_state_move(voice_state(), guild_state(), binary() | null) -> ok.
+broadcast_voice_state_move(MovedVoiceState, State, OldChannelIdBin) ->
+    Sessions = maps:get(sessions, State, #{}),
+    NewChannelIdBin = maps:get(<<"channel_id">>, MovedVoiceState, null),
+    NewPids = channel_session_pids(Sessions, NewChannelIdBin, State),
+    OldPids = channel_session_pids(Sessions, OldChannelIdBin, State) -- NewPids,
+    Sanitized = voice_state_utils:sanitize_voice_state_for_broadcast(MovedVoiceState),
+    maybe_dispatch_voice_state_update(NewPids, Sanitized, State),
+    maybe_dispatch_voice_state_update(OldPids, Sanitized#{<<"channel_id">> => null}, State),
+    maybe_persist_voice_state_update(MovedVoiceState, State).
+
+-spec channel_session_pids(map(), binary() | null, guild_state()) -> [term()].
+channel_session_pids(Sessions, ChannelIdBin, State) ->
+    ChannelId = utils:binary_to_integer_safe(ChannelIdBin),
+    [
+        maps:get(pid, S)
+     || {_Sid, S} <- filter_sessions_for_voice_channel(Sessions, ChannelId, State)
+    ].
 
 -spec filter_channel_id_bin(voice_state(), binary() | null) -> binary() | null.
 filter_channel_id_bin(VoiceState, OldChannelIdBin) ->
@@ -45,10 +63,6 @@ filter_channel_id_bin(VoiceState, OldChannelIdBin) ->
         null -> OldChannelIdBin;
         ChannelIdBin -> ChannelIdBin
     end.
-
--spec sanitize_voice_state(voice_state()) -> voice_state().
-sanitize_voice_state(VoiceState) ->
-    voice_state_utils:sanitize_voice_state_for_broadcast(VoiceState).
 
 -spec filter_sessions_for_voice_channel(map(), integer() | undefined, guild_state()) ->
     [{term(), map()}].
@@ -157,12 +171,3 @@ maybe_sync_guild_voice_state(VoiceState, OldChannelIdBin, State) ->
         _ ->
             ok
     end.
-
--ifdef(TEST).
-
-broadcast_voice_state_update_missing_connection_id_test() ->
-    VoiceState = #{<<"user_id">> => <<"1">>},
-    State = #{sessions => #{}},
-    ?assertEqual(ok, broadcast_voice_state_update(VoiceState, State, null)).
-
--endif.

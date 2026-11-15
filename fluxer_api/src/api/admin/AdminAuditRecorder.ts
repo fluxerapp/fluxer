@@ -30,8 +30,8 @@ function toAdminAuditMetadata(input: AdminAuditMetadataInput = {}): Map<string, 
 	return metadata;
 }
 
-async function recordAdminAuditEntry(ctx: Context<HonoEnv>, entry: AdminAuditEntryInput<string>): Promise<void> {
-	await ctx.get('adminService').auditService.createAuditLog({
+async function recordAdminAuditEntry(ctx: Context<HonoEnv>, entry: AdminAuditEntryInput<string>): Promise<bigint> {
+	return await ctx.get('adminService').auditService.createAuditLog({
 		adminUserId: ctx.get('adminUserId'),
 		targetType: entry.targetType,
 		targetId: entry.targetId,
@@ -44,10 +44,8 @@ async function recordAdminAuditEntry(ctx: Context<HonoEnv>, entry: AdminAuditEnt
 export async function recordAdminRead(
 	ctx: Context<HonoEnv>,
 	entry: AdminAuditEntryInput<AdminAuditReadAction>,
-): Promise<void> {
-	await recordAdminAuditEntry(ctx, entry);
+): Promise<bigint> {
+	return await recordAdminAuditEntry(ctx, entry);
 }
 
-export async function recordAdminWrite(ctx: Context<HonoEnv>, entry: AdminAuditEntryInput<string>): Promise<void> {
-	await recordAdminAuditEntry(ctx, entry);
-}
+export {recordAdminAuditEntry as recordAdminWrite};

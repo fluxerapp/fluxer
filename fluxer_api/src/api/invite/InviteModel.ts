@@ -6,7 +6,7 @@ import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
 import type {Invite} from '@app/api/models/Invite';
-import {getCachedUserPartialResponse, getCachedUserPartialResponses} from '@app/api/user/UserCacheHelpers';
+
 import {InviteTypes} from '@fluxer/constants/src/ChannelConstants';
 import {UnknownInviteError} from '@fluxer/errors/src/domains/invite/UnknownInviteError';
 import type {ChannelPartialResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
@@ -63,13 +63,7 @@ export async function mapInviteToGuildInviteResponse({
 	const [channel, guild, inviter, counts] = await Promise.all([
 		getChannelResponse(channelId),
 		getGuildResponse(invite.guildId),
-		invite.inviterId
-			? getCachedUserPartialResponse({
-					userId: invite.inviterId,
-					userCacheService,
-					requestCache,
-				})
-			: null,
+		invite.inviterId ? userCacheService.getUserPartialResponse(invite.inviterId, requestCache) : null,
 		getGuildCounts(invite.guildId),
 	]);
 	const expiresAt = invite.maxAge > 0 ? new Date(invite.createdAt.getTime() + invite.maxAge * 1000) : null;
@@ -126,13 +120,7 @@ export async function mapInviteToGroupDmInviteResponse({
 	}
 	const [channel, inviter, memberCount, channelSystem] = await Promise.all([
 		getChannelResponse(invite.channelId),
-		invite.inviterId
-			? getCachedUserPartialResponse({
-					userId: invite.inviterId,
-					userCacheService,
-					requestCache,
-				})
-			: null,
+		invite.inviterId ? userCacheService.getUserPartialResponse(invite.inviterId, requestCache) : null,
 		getChannelMemberCount(invite.channelId),
 		getChannelSystem(invite.channelId),
 	]);
@@ -140,11 +128,7 @@ export async function mapInviteToGroupDmInviteResponse({
 		throw new UnknownInviteError();
 	}
 	const recipientIds = Array.from(channelSystem.recipientIds);
-	const recipientPartials = await getCachedUserPartialResponses({
-		userIds: recipientIds,
-		userCacheService,
-		requestCache,
-	});
+	const recipientPartials = await userCacheService.getUserPartialResponses(recipientIds, requestCache);
 	const recipients = recipientIds.map((recipientId) => {
 		const recipientPartial = recipientPartials.get(recipientId);
 		if (!recipientPartial) {

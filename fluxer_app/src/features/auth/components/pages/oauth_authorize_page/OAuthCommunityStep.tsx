@@ -2,9 +2,10 @@
 
 import {createGuildComboboxRenderers} from '@app/features/app/components/dialogs/shared/GuildComboboxRenderers';
 import styles from '@app/features/auth/components/pages/OAuthAuthorizePage.module.css';
-import type {BotInviteDestinationOption} from '@app/features/auth/components/pages/oauth_authorize_page/hooks/useBotGuilds';
+import type {BotInviteDestinationOption} from '@app/features/auth/components/pages/oauth_authorize_page/hooks/useBotInviteDestinations';
 import {OAuthAuthorizeActionSection} from '@app/features/auth/components/pages/oauth_authorize_page/OAuthAuthorizeActions';
 import type {AuthorizeParams} from '@app/features/auth/components/pages/oauth_authorize_page/OAuthAuthorizePageShared';
+import {COMMUNITY_DESCRIPTOR, GROUP_DM_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {formatPermissionLabel} from '@app/features/permissions/utils/PermissionUtils';
 import {Combobox} from '@app/features/ui/components/form/FormCombobox';
 import {Spinner} from '@app/features/ui/components/Spinner';
@@ -44,14 +45,6 @@ const LOADING_COMMUNITIES_DESCRIPTOR = msg({
 const CHOOSE_A_COMMUNITY_DESCRIPTOR = msg({
 	message: 'Choose a destination',
 	comment: 'OAuth bot invite destination selector placeholder.',
-});
-const COMMUNITY_DESCRIPTOR = msg({
-	message: 'Community',
-	comment: 'Short option type label in the OAuth bot invite destination selector.',
-});
-const GROUP_DM_DESCRIPTOR = msg({
-	message: 'Group DM',
-	comment: 'Short option type label in the OAuth bot invite destination selector.',
 });
 
 interface OAuthCommunityStepProps {
@@ -157,7 +150,7 @@ export const OAuthCommunityStep: React.FC<OAuthCommunityStepProps> = ({
 						{destinationsError}
 					</div>
 				)}
-				{!destinationsLoading && destinationOptions.length === 0 && (
+				{!destinationsLoading && !destinationsError && destinationOptions.length === 0 && (
 					<div className={styles.emptyState} data-flx="auth.o-auth-authorize-page.community-step.empty-state">
 						{guildSelectorEmptyState}
 					</div>

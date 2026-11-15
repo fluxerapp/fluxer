@@ -4,7 +4,7 @@ const MAX_PASTED_URL_LENGTH = 2048;
 const MAX_WRAPPED_SELECTION_LENGTH = 1024;
 const ALLOWED_PROTOCOLS = new Set(['http:', 'https:']);
 
-export function parsePastedUrl(clipboardText: string | null | undefined): string | null {
+function parsePastedUrl(clipboardText: string | null | undefined): string | null {
 	if (clipboardText == null) {
 		return null;
 	}
@@ -27,7 +27,7 @@ export function parsePastedUrl(clipboardText: string | null | undefined): string
 	return candidate;
 }
 
-export function canWrapSelectionAsLink(selectedText: string): boolean {
+function canWrapSelectionAsLink(selectedText: string): boolean {
 	if (selectedText.trim().length === 0 || selectedText.length > MAX_WRAPPED_SELECTION_LENGTH) {
 		return false;
 	}
@@ -40,7 +40,7 @@ export function canWrapSelectionAsLink(selectedText: string): boolean {
 	return parsePastedUrl(selectedText) === null;
 }
 
-export function buildMaskedLink(selectedText: string, url: string): string {
+function buildMaskedLink(selectedText: string, url: string): string {
 	return `[${selectedText}](<${url}>)`;
 }
 

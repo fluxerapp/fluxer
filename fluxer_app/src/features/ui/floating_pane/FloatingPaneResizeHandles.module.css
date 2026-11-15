@@ -5,7 +5,7 @@
 	border: none;
 	background: transparent;
 	padding: 0;
-	z-index: 4;
+	z-index: 31;
 	pointer-events: auto;
 	touch-action: none;
 }
@@ -14,90 +14,106 @@
 	top: 0;
 	left: 0;
 	right: 0;
-	height: 0.75rem;
-	cursor: n-resize;
+	height: 0.5rem;
+	cursor: ns-resize;
 }
 
 .edgeBottom {
 	bottom: 0;
 	left: 0;
 	right: 0;
-	height: 0.75rem;
-	cursor: s-resize;
+	height: 0.5rem;
+	cursor: ns-resize;
 }
 
 .edgeLeft {
 	top: 0;
 	left: 0;
 	bottom: 0;
-	width: 0.75rem;
-	cursor: w-resize;
+	width: 0.5rem;
+	cursor: ew-resize;
 }
 
 .edgeRight {
 	top: 0;
 	right: 0;
 	bottom: 0;
-	width: 0.75rem;
-	cursor: e-resize;
+	width: 0.5rem;
+	cursor: ew-resize;
 }
 
 .cornerTopLeft,
 .cornerTopRight,
 .cornerBottomLeft,
 .cornerBottomRight {
-	width: 1.125rem;
-	height: 1.125rem;
-	z-index: 5;
+	width: 1.25rem;
+	height: 1.25rem;
+	z-index: 32;
 }
 
 .cornerTopLeft {
 	top: 0;
 	left: 0;
-	cursor: nw-resize;
+	cursor: nwse-resize;
 }
 
 .cornerTopRight {
 	top: 0;
 	right: 0;
-	cursor: ne-resize;
+	cursor: nesw-resize;
 }
 
 .cornerBottomLeft {
 	bottom: 0;
 	left: 0;
-	cursor: sw-resize;
+	cursor: nesw-resize;
 }
 
 .cornerBottomRight {
 	right: 0;
 	bottom: 0;
-	cursor: se-resize;
+	cursor: nwse-resize;
 }
 
-.cornerVisualHint {
-	position: absolute;
-	right: 0.25rem;
-	bottom: 0.25rem;
-	width: 0.625rem;
-	height: 0.625rem;
+.grip {
+	z-index: 33;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.gripMark {
+	width: 0.5rem;
+	height: 0.5rem;
+	border-color: var(--voice-text-strong, #fff);
+	border-style: solid;
+	border-width: 0;
+	opacity: var(--floating-pane-grip-opacity, 0);
+	transition: opacity 0.2s ease;
+	filter: drop-shadow(0 0 0.125rem rgb(0 0 0 / 0.6));
 	pointer-events: none;
-	opacity: 0;
-	transition: opacity 150ms ease;
-	background: linear-gradient(
-		135deg,
-		transparent 0%,
-		transparent 50%,
-		var(--floating-pane-resize-hint-color, rgba(255, 255, 255, 0.75)) 50%,
-		var(--floating-pane-resize-hint-color, rgba(255, 255, 255, 0.75)) 60%,
-		transparent 60%,
-		transparent 70%,
-		var(--floating-pane-resize-hint-color, rgba(255, 255, 255, 0.55)) 70%,
-		var(--floating-pane-resize-hint-color, rgba(255, 255, 255, 0.55)) 80%,
-		transparent 80%
-	);
 }
 
-.cornerVisualHintVisible {
+.grip:focus-visible .gripMark {
 	opacity: 1;
+}
+
+.cornerTopLeft .gripMark {
+	border-top-width: 0.125rem;
+	border-left-width: 0.125rem;
+}
+
+.cornerTopRight .gripMark {
+	border-top-width: 0.125rem;
+	border-right-width: 0.125rem;
+}
+
+.cornerBottomLeft .gripMark {
+	border-bottom-width: 0.125rem;
+	border-left-width: 0.125rem;
+}
+
+.cornerBottomRight .gripMark {
+	border-bottom-width: 0.125rem;
+	border-right-width: 0.125rem;
 }

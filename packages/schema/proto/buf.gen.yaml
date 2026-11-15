@@ -4,7 +4,7 @@ version: v2
 inputs:
   - directory: .
 plugins:
-  - local: ../node_modules/.bin/protoc-gen-es
+  - local: [node, --no-experimental-webstorage, ../node_modules/@bufbuild/protoc-gen-es/bin/protoc-gen-es]
     out: ../src/gen
     opt:
       - target=ts

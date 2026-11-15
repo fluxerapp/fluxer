@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup} from 'xstate';
 
 export interface ReadStateMentionInput {
 	authorBlocked: boolean;
@@ -11,9 +11,9 @@ export interface ReadStateMentionInput {
 	isMuted: boolean;
 }
 
-export type ReadStateMentionReason = 'blocked' | 'user' | 'everyone' | 'role' | 'private' | 'none';
+type ReadStateMentionReason = 'blocked' | 'user' | 'everyone' | 'role' | 'private' | 'none';
 
-export type ReadStateMentionEvent = {
+type ReadStateMentionEvent = {
 	type: 'readStateMention.updated';
 	input: ReadStateMentionInput;
 };
@@ -40,7 +40,7 @@ function getMentionReason(snapshot: ReadStateMentionSnapshot): ReadStateMentionR
 	}
 }
 
-export const readStateMentionMachine = setup({
+const readStateMentionMachine = setup({
 	types: {} as {
 		context: ReadStateMentionInput;
 		events: ReadStateMentionEvent;
@@ -95,20 +95,13 @@ export const readStateMentionMachine = setup({
 	},
 });
 
-export type ReadStateMentionSnapshot = SnapshotFrom<typeof readStateMentionMachine>;
+type ReadStateMentionSnapshot = SnapshotFrom<typeof readStateMentionMachine>;
 
-export function createReadStateMentionSnapshot(input: ReadStateMentionInput): ReadStateMentionSnapshot {
+function createReadStateMentionSnapshot(input: ReadStateMentionInput): ReadStateMentionSnapshot {
 	return initialTransition(readStateMentionMachine, input)[0];
 }
 
-export function transitionReadStateMentionSnapshot(
-	snapshot: ReadStateMentionSnapshot,
-	event: ReadStateMentionEvent,
-): ReadStateMentionSnapshot {
-	return transition(readStateMentionMachine, snapshot, event)[0] as ReadStateMentionSnapshot;
-}
-
-export function selectReadStateMentionModel(snapshot: ReadStateMentionSnapshot): ReadStateMentionModel {
+function selectReadStateMentionModel(snapshot: ReadStateMentionSnapshot): ReadStateMentionModel {
 	const reason = getMentionReason(snapshot);
 	return {
 		reason,

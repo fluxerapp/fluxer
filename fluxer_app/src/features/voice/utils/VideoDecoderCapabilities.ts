@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isDesktopLocalAppDocument} from '@app/features/platform/DesktopLocalAppRuntime';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import type {VideoCodec} from 'livekit-client';
 
@@ -61,13 +62,13 @@ function getVideoDecoderApi(): VideoDecoderLike | null {
 	return null;
 }
 
-function hasRtcReceiverCapability(mimeType: string): boolean {
+export function getRtcReceiverCodecSupport(codec: VideoCodec): boolean | null {
 	const receiver = (globalThis as Record<string, unknown>).RTCRtpReceiver as
 		| {getCapabilities?: (kind: 'video') => RTCRtpCapabilities | null}
 		| undefined;
 	const caps = receiver?.getCapabilities?.('video');
-	if (!caps) return false;
-	const lower = mimeType.toLowerCase();
+	if (!caps) return null;
+	const lower = `video/${codec}`.toLowerCase();
 	return caps.codecs.some((c) => {
 		const candidate = c.mimeType.toLowerCase();
 		return candidate === lower || (lower === 'video/av1' && candidate === 'video/av1x');
@@ -79,7 +80,7 @@ function isBaselineWebRtcDecodeCodec(codec: VideoCodec): boolean {
 }
 
 async function probeCodecDecode(probe: CodecProbe): Promise<boolean> {
-	if (!hasRtcReceiverCapability(`video/${probe.codec}`)) {
+	if (getRtcReceiverCodecSupport(probe.codec) !== true) {
 		return true;
 	}
 	if (isBaselineWebRtcDecodeCodec(probe.codec)) {
@@ -114,7 +115,7 @@ async function probeAllCodecs(): Promise<Array<VideoCodec>> {
 		}
 	}
 	if (excluded.length > 0) {
-		logger.info('Excluding codecs from subscriber decode', {excluded});
+		logger.debug('Excluding codecs from subscriber decode', {excluded});
 	}
 	return excluded;
 }
@@ -168,12 +169,6 @@ export function clearScreenShareDecodeFailures(): void {
 	screenShareDecodeFailures.clear();
 }
 
-export function resetVideoDecoderExclusions(): void {
-	cachedExclusions = null;
-	pendingProbe = null;
-	screenShareDecodeFailures.clear();
-}
-
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && !isDesktopLocalAppDocument()) {
 	void loadVideoDecoderExclusions();
 }

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {setKeyboardDragActive} from '@app/features/app/components/layout/dnd/KeyboardDragMode';
 import type React from 'react';
 import {DndProvider} from 'react-dnd';
 import KeyboardBackend, {isKeyboardDragTrigger} from 'react-dnd-accessible-backend';
@@ -22,6 +23,7 @@ const DND_OPTIONS = {
 			id: 'keyboard',
 			backend: KeyboardBackend,
 			context: {window, document},
+			options: {onDndModeChanged: setKeyboardDragActive},
 			preview: true,
 			transition: KeyboardTransition,
 		},

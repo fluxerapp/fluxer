@@ -18,7 +18,7 @@ function hasOnlyLatin1WithHighBytes(value: string): boolean {
 	return high;
 }
 
-export function decodeHeaderUtf8(value: string): string {
+function decodeHeaderUtf8(value: string): string {
 	if (!hasOnlyLatin1WithHighBytes(value)) {
 		return value;
 	}

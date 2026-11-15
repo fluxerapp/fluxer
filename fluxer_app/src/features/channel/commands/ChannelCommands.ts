@@ -3,6 +3,7 @@
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import Channels from '@app/features/channel/state/Channels';
 import Invites from '@app/features/invite/state/Invites';
+import {currentInstanceTarget} from '@app/features/platform/transport/InstanceHTTP';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import Slowmode from '@app/features/slowmode/state/Slowmode';
@@ -45,6 +46,7 @@ type ChannelUpdateParams = Partial<
 		| 'icon'
 		| 'owner_id'
 		| 'rtc_region'
+		| 'rtc_p2p'
 	>
 >;
 
@@ -236,7 +238,7 @@ export async function fetchChannelInvites(channelId: string): Promise<Array<Invi
 		Invites.handleChannelInvitesFetchPending(channelId);
 		const response = await http.get<Array<Invite>>(Endpoints.CHANNEL_INVITES(channelId));
 		const data = response.body ?? [];
-		Invites.handleChannelInvitesFetchSuccess(channelId, data);
+		Invites.handleChannelInvitesFetchSuccess(channelId, data, currentInstanceTarget());
 		return data;
 	} catch (error) {
 		logger.error(`Failed to fetch invites for channel ${channelId}:`, error);

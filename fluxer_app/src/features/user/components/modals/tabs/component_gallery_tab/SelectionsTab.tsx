@@ -13,6 +13,7 @@ import {Slider} from '@app/features/ui/components/Slider';
 import {RadioGroup, type RadioOption} from '@app/features/ui/radio_group/RadioGroup';
 import {SubsectionTitle} from '@app/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabSubsectionTitle';
 import styles from '@app/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.module.css';
+import {DARK_MODE_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -70,10 +71,7 @@ const RECEIVE_NOTIFICATIONS_WHEN_SOMEONE_MENTIONS_YOU_DESCRIPTOR = msg({
 	message: 'Receive notifications when someone mentions you',
 	comment: 'Label in the selections tab.',
 });
-const DARK_MODE_DESCRIPTOR = msg({
-	message: 'Dark mode',
-	comment: 'Short label in the selections tab. Keep it concise.',
-});
+
 const USE_DARK_THEME_ACROSS_THE_APPLICATION_DESCRIPTOR = msg({
 	message: 'Use dark theme across the application',
 	comment: 'Label in the selections tab.',
@@ -124,7 +122,6 @@ interface SelectionsTabProps {
 	sliderValue4: number;
 	setSliderValue4: (value: number) => void;
 	sliderValue5: number;
-	setSliderValue5: (value: number) => void;
 }
 
 export const SelectionsTab: React.FC<SelectionsTabProps> = observer(

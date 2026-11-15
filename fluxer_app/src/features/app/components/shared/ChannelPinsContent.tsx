@@ -61,7 +61,7 @@ const WHENEVER_SOMEONE_PINS_A_MESSAGE_IT_LL_APPEAR_DESCRIPTOR = msg({
 	comment: 'Channel pins empty-state secondary line explaining where pinned messages appear.',
 });
 const YOU_VE_REACHED_THE_END_DESCRIPTOR = msg({
-	message: "You've reached the end",
+	message: "You're at the end",
 	comment: 'Short label in the shared app channel pins content.',
 });
 
@@ -77,7 +77,7 @@ export const ChannelPinsContent = observer(({channel, onJump}: ChannelPinsConten
 	const hasMore = ChannelPins.getHasMore(channel.id);
 	const isLoading = ChannelPins.getIsLoading(channel.id);
 	const isDMChannel = channel.type === ChannelTypes.DM || channel.type === ChannelTypes.GROUP_DM;
-	const canUnpin = isDMChannel || Permission.can(Permissions.MANAGE_MESSAGES, channel);
+	const canUnpin = isDMChannel || Permission.can(Permissions.PIN_MESSAGES, channel);
 	const mobileLayout = MobileLayout;
 	const scrollerRef = useRef<ScrollerHandle | null>(null);
 	const resolvePinnedScrollSurface = useMemo(() => () => scrollerRef.current?.getViewportElement() ?? null, []);

@@ -2,11 +2,12 @@
 
 import type {ChannelID, UserID} from '@app/api/BrandedTypes';
 import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
+import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
 import type {UserChannelService} from '@app/api/user/services/UserChannelService';
-import {getCachedUserPartialResponses} from '@app/api/user/UserCacheHelpers';
+
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {CreatePrivateChannelRequest} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
@@ -24,6 +25,7 @@ interface UserChannelCreateParams {
 
 interface UserChannelPinParams {
 	userId: UserID;
+	viewer: ThreadViewer;
 	channelId: ChannelID;
 }
 
@@ -50,11 +52,10 @@ export class UserChannelRequestService {
 
 	async listPrivateChannels(params: UserChannelListParams): Promise<Array<ChannelResponse>> {
 		const channels = await this.userChannelService.getPrivateChannels(params.userId);
-		await getCachedUserPartialResponses({
-			userIds: collectDMRecipientIds(channels, params.userId),
-			userCacheService: this.userCacheService,
-			requestCache: params.requestCache,
-		});
+		await this.userCacheService.getUserPartialResponses(
+			collectDMRecipientIds(channels, params.userId),
+			params.requestCache,
+		);
 		return Promise.all(
 			channels.map((channel) =>
 				mapChannelToResponse({
@@ -83,10 +84,20 @@ export class UserChannelRequestService {
 	}
 
 	async pinChannel(params: UserChannelPinParams): Promise<void> {
-		await this.userChannelService.pinDmChannel({userId: params.userId, channelId: params.channelId});
+		await this.userChannelService.setDmChannelPinned({
+			userId: params.userId,
+			viewer: params.viewer,
+			channelId: params.channelId,
+			pinned: true,
+		});
 	}
 
 	async unpinChannel(params: UserChannelPinParams): Promise<void> {
-		await this.userChannelService.unpinDmChannel({userId: params.userId, channelId: params.channelId});
+		await this.userChannelService.setDmChannelPinned({
+			userId: params.userId,
+			viewer: params.viewer,
+			channelId: params.channelId,
+			pinned: false,
+		});
 	}
 }

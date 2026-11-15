@@ -3,8 +3,8 @@
 import type React from 'react';
 
 export type SliderResetButtonPlacement = 'inline' | 'below';
-export type SliderMarkerPosition = 'above' | 'below';
-export type SliderOrientation = 'horizontal' | 'vertical';
+type SliderMarkerPosition = 'above' | 'below';
+type SliderOrientation = 'horizontal' | 'vertical';
 
 export interface SliderProps {
 	defaultValue: number;

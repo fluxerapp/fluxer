@@ -4,8 +4,8 @@
 	display: flex;
 	align-items: center;
 	gap: 0.75rem;
-	padding-left: 1rem;
-	padding-right: 1rem;
+	padding-inline-start: 1rem;
+	padding-inline-end: 1rem;
 	padding-top: 0.75rem;
 	padding-bottom: 0.75rem;
 }

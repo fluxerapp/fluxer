@@ -2,6 +2,8 @@
 
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
 
+export {TimestampStyle} from '@fluxer/date_utils/src/DateTimestampStyle';
+
 export const ParserFlags = {
 	ALLOW_SPOILERS: 1 << 0,
 	ALLOW_HEADINGS: 1 << 1,
@@ -68,20 +70,6 @@ export const TableAlignment = {
 } as const;
 
 export type TableAlignment = ValueOf<typeof TableAlignment>;
-
-export const TimestampStyle = {
-	ShortTime: 'ShortTime',
-	LongTime: 'LongTime',
-	ShortDate: 'ShortDate',
-	LongDate: 'LongDate',
-	ShortDateTime: 'ShortDateTime',
-	LongDateTime: 'LongDateTime',
-	ShortDateShortTime: 'ShortDateShortTime',
-	ShortDateMediumTime: 'ShortDateMediumTime',
-	RelativeTime: 'RelativeTime',
-} as const;
-
-export type TimestampStyle = ValueOf<typeof TimestampStyle>;
 
 export const GuildNavKind = {
 	Customize: 'Customize',

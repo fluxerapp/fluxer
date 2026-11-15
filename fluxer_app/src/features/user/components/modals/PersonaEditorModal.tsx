@@ -8,7 +8,7 @@ import { Form } from '@app/features/ui/components/form/Form';
 import {useForm, useWatch} from 'react-hook-form';
 import { Input } from '@app/features/ui/components/form/FormInput';
 import { Trans, useLingui } from '@lingui/react/macro';
-import { DISPLAY_NAME_DESCRIPTOR, DOC_I_M_FROM_THE_FUTURE_I_CAME_DESCRIPTOR, PRONOUNS_DESCRIPTOR, WARNING_YOU_HAVE_UNSAVED_CHANGES_PLEASE_SAVE_YOUR_DESCRIPTOR } from './tabs/MyProfileTab';
+import { WARNING_YOU_HAVE_UNSAVED_CHANGES_PLEASE_SAVE_YOUR_DESCRIPTOR } from './tabs/MyProfileTab';
 import { SettingsSection } from '@app/features/app/components/dialogs/shared/SettingsSection';
 import styles from '@app/features/user/components/modals/PersonaEditorModal.module.css';
 import previewStyles from '@app/features/user/components/profile/ProfilePreview.module.css';
@@ -46,6 +46,8 @@ import { body } from 'framer-motion/client';
 import { useUnsavedChangesFlash } from '../../hooks/useUnsavedChangesFlash';
 import { useModalBackHandler } from '@app/features/app/hooks/useModalBackHandler';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
+import { DISPLAY_NAME_DESCRIPTOR, DOC_I_M_FROM_THE_FUTURE_I_CAME_DESCRIPTOR } from '../../utils/UserMessageDescriptors';
+import { PRONOUNS_DESCRIPTOR } from '../settings_utils/section_registry/SharedDescriptors';
 
 const EDIT_PERSONA_DESCRIPTOR = msg({
 	message: 'Edit Persona',

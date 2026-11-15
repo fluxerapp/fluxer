@@ -137,32 +137,3 @@ safe_lookup(Table, GuildId) ->
     catch
         error:badarg -> []
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
--spec safe_delete(atom()) -> ok.
-safe_delete(Table) ->
-    try ets:delete(Table) of
-        _ -> ok
-    catch
-        error:badarg -> ok
-    end.
-
-table_name_test() ->
-    ?assertEqual(guild_counts_cache_0, table_name(0)),
-    ?assertEqual(guild_counts_cache_5, table_name(5)).
-
-update_get_delete_test() ->
-    ShardIndex = 99999,
-    Table = table_name(ShardIndex),
-    safe_delete(Table),
-    {ok, Pid} = start_link(ShardIndex),
-    ?assertEqual(ok, gen_server:call(Pid, {update, 1, 10, 5})),
-    ?assertEqual({ok, 10, 5}, gen_server:call(Pid, {get, 1})),
-    ?assertEqual(#{1 => {10, 5}}, gen_server:call(Pid, {bulk_get, [1, 1, 2]})),
-    ?assertEqual(ok, gen_server:call(Pid, {delete, 1})),
-    ?assertEqual(miss, gen_server:call(Pid, {get, 1})),
-    ?assertEqual(ok, gen_server:stop(Pid)),
-    safe_delete(Table).
--endif.

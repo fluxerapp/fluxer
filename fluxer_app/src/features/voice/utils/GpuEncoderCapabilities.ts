@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
+import {getElectronAPI, guessPlatform, isDesktop, type NativePlatform} from '@app/features/ui/utils/NativeUtils';
 import type {GpuDeviceInfo, GpuInfo} from '@app/types/electron.d';
 import type {VideoCodec} from 'livekit-client';
 
@@ -20,49 +20,49 @@ export interface HardwareEncodeReport {
 	raw?: GpuInfo;
 }
 
-export const PCI_VENDOR_NVIDIA = 0x10de;
-export const PCI_VENDOR_AMD = 0x1002;
-export const PCI_VENDOR_INTEL = 0x8086;
-export const PCI_VENDOR_APPLE = 0x106b;
+const PCI_VENDOR_NVIDIA = 0x10de;
+const PCI_VENDOR_AMD = 0x1002;
+const PCI_VENDOR_INTEL = 0x8086;
+const PCI_VENDOR_APPLE = 0x106b;
 
-export interface GpuFamilyRule {
+interface GpuFamilyRule {
 	family: string;
 	caps: Pick<HardwareEncodeReport, 'av1' | 'h265' | 'h264' | 'vp9' | 'vp8'>;
 }
 
-export const NVIDIA_AV1_FAMILIES: GpuFamilyRule = {
+const NVIDIA_AV1_FAMILIES: GpuFamilyRule = {
 	family: 'nvidia-ada-or-blackwell',
 	caps: {av1: 'hardware', h265: 'hardware', h264: 'hardware', vp9: 'software', vp8: 'software'},
 };
-export const NVIDIA_PRE_ADA: GpuFamilyRule = {
+const NVIDIA_PRE_ADA: GpuFamilyRule = {
 	family: 'nvidia-pre-ada',
 	caps: {av1: 'software', h265: 'hardware', h264: 'hardware', vp9: 'software', vp8: 'software'},
 };
-export const NVIDIA_PRE_MAXWELL2: GpuFamilyRule = {
+const NVIDIA_PRE_MAXWELL2: GpuFamilyRule = {
 	family: 'nvidia-pre-maxwell2',
 	caps: {av1: 'software', h265: 'software', h264: 'hardware', vp9: 'software', vp8: 'software'},
 };
-export const AMD_RDNA3_PLUS: GpuFamilyRule = {
+const AMD_RDNA3_PLUS: GpuFamilyRule = {
 	family: 'amd-rdna3-plus',
 	caps: {av1: 'hardware', h265: 'hardware', h264: 'hardware', vp9: 'software', vp8: 'software'},
 };
-export const AMD_VCN_NO_AV1: GpuFamilyRule = {
+const AMD_VCN_NO_AV1: GpuFamilyRule = {
 	family: 'amd-vcn-pre-rdna3',
 	caps: {av1: 'software', h265: 'hardware', h264: 'hardware', vp9: 'software', vp8: 'software'},
 };
-export const INTEL_AV1_FAMILY: GpuFamilyRule = {
+const INTEL_AV1_FAMILY: GpuFamilyRule = {
 	family: 'intel-arc-or-xe-lpg-plus',
 	caps: {av1: 'hardware', h265: 'hardware', h264: 'hardware', vp9: 'hardware', vp8: 'software'},
 };
-export const INTEL_GEN9_PLUS: GpuFamilyRule = {
+const INTEL_GEN9_PLUS: GpuFamilyRule = {
 	family: 'intel-gen9-plus-no-av1',
 	caps: {av1: 'software', h265: 'hardware', h264: 'hardware', vp9: 'hardware', vp8: 'software'},
 };
-export const APPLE_SILICON: GpuFamilyRule = {
+const APPLE_SILICON: GpuFamilyRule = {
 	family: 'apple-silicon',
 	caps: {av1: 'software', h265: 'hardware', h264: 'hardware', vp9: 'software', vp8: 'software'},
 };
-export const APPLE_AV1_ENCODE: GpuFamilyRule = {
+const APPLE_AV1_ENCODE: GpuFamilyRule = {
 	family: 'apple-m4-pro-max-or-newer',
 	caps: {av1: 'hardware', h265: 'hardware', h264: 'hardware', vp9: 'software', vp8: 'software'},
 };
@@ -120,7 +120,7 @@ function classifyAmdByPciId(deviceId: number): GpuFamilyRule | null {
 	return null;
 }
 
-export function classifyByPciId(vendorId: number, deviceId: number): GpuFamilyRule | null {
+function classifyByPciId(vendorId: number, deviceId: number): GpuFamilyRule | null {
 	if (!deviceId) return null;
 	if (vendorId === PCI_VENDOR_INTEL) return classifyIntelByPciId(deviceId);
 	if (vendorId === PCI_VENDOR_NVIDIA) return classifyNvidiaByPciId(deviceId);
@@ -128,7 +128,7 @@ export function classifyByPciId(vendorId: number, deviceId: number): GpuFamilyRu
 	return null;
 }
 
-export function classifyByRenderer(renderer: string, vendorId: number): GpuFamilyRule | null {
+function classifyByRenderer(renderer: string, vendorId: number): GpuFamilyRule | null {
 	const r = renderer;
 	if (vendorId === PCI_VENDOR_NVIDIA || /\bNVIDIA\b/i.test(r)) {
 		if (/\bRTX\s*(50|60|70|80|90)\d{2}\b/i.test(r)) return NVIDIA_AV1_FAMILIES;
@@ -164,7 +164,7 @@ export function classifyByRenderer(renderer: string, vendorId: number): GpuFamil
 	return null;
 }
 
-export function classifyDevice(vendorId: number, deviceId: number, renderer: string): GpuFamilyRule | null {
+function classifyDevice(vendorId: number, deviceId: number, renderer: string): GpuFamilyRule | null {
 	return classifyByPciId(vendorId, deviceId) ?? classifyByRenderer(renderer, vendorId);
 }
 
@@ -192,7 +192,7 @@ function buildLabel(info: GpuInfo, device: GpuDeviceInfo | undefined): string | 
 	return renderer || deviceString || device?.vendorName || info.machineModelName;
 }
 
-export function reportFromGpuInfo(info: GpuInfo): HardwareEncodeReport {
+function reportFromGpuInfo(info: GpuInfo): HardwareEncodeReport {
 	const device = pickPrimaryDevice(info.devices);
 	const renderer = [
 		info.glRenderer,
@@ -207,7 +207,7 @@ export function reportFromGpuInfo(info: GpuInfo): HardwareEncodeReport {
 	const deviceId = device?.deviceId ?? 0;
 	const rule = classifyDevice(vendorId, deviceId, renderer);
 	if (!rule) {
-		logger.info('GPU did not match any known family — leaving hardware-encode answers as unknown', {
+		logger.debug('GPU did not match any known family — leaving hardware-encode answers as unknown', {
 			renderer,
 			vendorId: vendorId ? `0x${vendorId.toString(16)}` : undefined,
 			deviceId: deviceId ? `0x${deviceId.toString(16)}` : undefined,
@@ -222,7 +222,7 @@ export function reportFromGpuInfo(info: GpuInfo): HardwareEncodeReport {
 			raw: info,
 		};
 	}
-	logger.info('Classified GPU for hardware-encode capability', {family: rule.family, renderer});
+	logger.debug('Classified GPU for hardware-encode capability', {family: rule.family, renderer});
 	return {
 		...rule.caps,
 		gpuLabel: buildLabel(info, device),
@@ -231,13 +231,13 @@ export function reportFromGpuInfo(info: GpuInfo): HardwareEncodeReport {
 	};
 }
 
-export const H264_PROBE_PROFILE_LEVEL_IDS: ReadonlyArray<string> = ['640028', '640c28', '4d0028', '420028', '42e028'];
+const H264_PROBE_PROFILE_LEVEL_IDS: ReadonlyArray<string> = ['640028', '640c28', '4d0028', '420028', '42e028'];
 
-export const H264_ENCODE_PROBE_CONTENT_TYPES: ReadonlyArray<string> = H264_PROBE_PROFILE_LEVEL_IDS.map(
+const H264_ENCODE_PROBE_CONTENT_TYPES: ReadonlyArray<string> = H264_PROBE_PROFILE_LEVEL_IDS.map(
 	(profileLevelId) => `video/H264;level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=${profileLevelId}`,
 );
 
-export const WEBRTC_ENCODE_PROBE_CONTENT_TYPES: Record<VideoCodec, ReadonlyArray<string>> = {
+const WEBRTC_ENCODE_PROBE_CONTENT_TYPES: Record<VideoCodec, ReadonlyArray<string>> = {
 	av1: ['video/AV1'],
 	h265: ['video/H265'],
 	h264: H264_ENCODE_PROBE_CONTENT_TYPES,
@@ -252,7 +252,7 @@ export interface EncodeProbeVideoConfig {
 	framerate: number;
 }
 
-export const ENCODE_PROBE_VIDEO_CONFIG: EncodeProbeVideoConfig = {
+const ENCODE_PROBE_VIDEO_CONFIG: EncodeProbeVideoConfig = {
 	width: 1920,
 	height: 1080,
 	bitrate: 4_500_000,
@@ -366,7 +366,7 @@ function recordH264HardwareProfileProbe(
 	const key = encodeProbeCacheKey(video);
 	h264HardwareProfileProbes.set(key, probe);
 	latestH264HardwareProfileProbeKey = key;
-	logger.info('Probed which H.264 profiles this host encodes in hardware', {
+	logger.debug('Probed which H.264 profiles this host encodes in hardware', {
 		profiles: [...profiles],
 		width: video.width,
 		height: video.height,
@@ -380,7 +380,7 @@ export function getH264HardwareProfilesSync(): H264HardwareProfileProbe | null {
 	return h264HardwareProfileProbes.get(latestH264HardwareProfileProbeKey) ?? null;
 }
 
-export async function probeH264HardwareProfiles(
+async function probeH264HardwareProfiles(
 	config?: Partial<EncodeProbeVideoConfig>,
 ): Promise<H264HardwareProfileProbe | null> {
 	const video = resolveEncodeProbeVideoConfig(config);
@@ -403,7 +403,7 @@ export async function probeH264HardwareProfiles(
 	return promise;
 }
 
-export async function probeWebRtcEncodeEfficiency(
+async function probeWebRtcEncodeEfficiency(
 	config?: Partial<EncodeProbeVideoConfig>,
 ): Promise<Record<VideoCodec, HardwareEncodeAnswer> | null> {
 	const mediaCapabilities = getMediaCapabilities();
@@ -424,7 +424,7 @@ export async function probeWebRtcEncodeEfficiency(
 	return result;
 }
 
-export function reconcileHardwareEncodeReport(
+function reconcileHardwareEncodeReport(
 	report: HardwareEncodeReport,
 	efficiency: Record<VideoCodec, HardwareEncodeAnswer> | null,
 ): HardwareEncodeReport {
@@ -441,16 +441,176 @@ export function reconcileHardwareEncodeReport(
 	};
 }
 
+interface HardwareVideoEncodeProfile {
+	codec: VideoCodec;
+	profile: string;
+	maxWidth: number;
+	maxHeight: number;
+	maxFrameRate: number | null;
+}
+
+interface HardwareVideoEncodeProfileCandidate {
+	codec: VideoCodec;
+	profile: string;
+	codecString: string;
+}
+
+interface VideoEncoderSupportLike {
+	supported?: boolean;
+}
+
+interface VideoEncoderLike {
+	isConfigSupported?: (config: unknown) => Promise<VideoEncoderSupportLike | undefined>;
+}
+
+const HARDWARE_VIDEO_ENCODE_PROFILE_CANDIDATES: ReadonlyArray<HardwareVideoEncodeProfileCandidate> = [
+	{codec: 'h264', profile: 'constrained-baseline', codecString: 'avc1.42e033'},
+	{codec: 'h264', profile: 'main', codecString: 'avc1.4d0033'},
+	{codec: 'h264', profile: 'high', codecString: 'avc1.640033'},
+	{codec: 'vp8', profile: 'any', codecString: 'vp8'},
+	{codec: 'vp9', profile: 'profile-0', codecString: 'vp09.00.51.08'},
+	{codec: 'h265', profile: 'main', codecString: 'hvc1.1.6.L153.B0'},
+	{codec: 'av1', profile: 'main', codecString: 'av01.0.13M.08'},
+];
+
+const HARDWARE_VIDEO_ENCODE_PROBE_SIZES: ReadonlyArray<{width: number; height: number}> = [
+	{width: 1280, height: 720},
+	{width: 1920, height: 1080},
+	{width: 2560, height: 1440},
+	{width: 3840, height: 2160},
+];
+
+const HARDWARE_VIDEO_ENCODE_PROBE_FRAME_RATES: ReadonlyArray<number> = [30, 60, 120];
+
+function getVideoEncoder(): VideoEncoderLike | null {
+	const encoder = (globalThis as {VideoEncoder?: VideoEncoderLike}).VideoEncoder;
+	return encoder?.isConfigSupported ? encoder : null;
+}
+
+async function isHardwareEncodeConfigSupported(
+	encoder: VideoEncoderLike,
+	codecString: string,
+	size: {width: number; height: number},
+	framerate?: number,
+): Promise<boolean> {
+	try {
+		const support = await encoder.isConfigSupported?.({
+			codec: codecString,
+			width: size.width,
+			height: size.height,
+			...(framerate === undefined ? {} : {framerate}),
+			hardwareAcceleration: 'prefer-hardware',
+		});
+		return support?.supported === true;
+	} catch {
+		return false;
+	}
+}
+
+async function probeHardwareVideoEncodeProfile(
+	encoder: VideoEncoderLike,
+	candidate: HardwareVideoEncodeProfileCandidate,
+): Promise<HardwareVideoEncodeProfile | null> {
+	let maxSize: {width: number; height: number} | null = null;
+	for (const size of HARDWARE_VIDEO_ENCODE_PROBE_SIZES) {
+		if (!(await isHardwareEncodeConfigSupported(encoder, candidate.codecString, size))) break;
+		maxSize = size;
+	}
+	if (maxSize === null) return null;
+	let maxFrameRate: number | null = null;
+	for (const framerate of HARDWARE_VIDEO_ENCODE_PROBE_FRAME_RATES) {
+		const supported = await isHardwareEncodeConfigSupported(
+			encoder,
+			candidate.codecString,
+			HARDWARE_VIDEO_ENCODE_PROBE_SIZES[0],
+			framerate,
+		);
+		if (!supported) break;
+		maxFrameRate = framerate;
+	}
+	return {
+		codec: candidate.codec,
+		profile: candidate.profile,
+		maxWidth: maxSize.width,
+		maxHeight: maxSize.height,
+		maxFrameRate,
+	};
+}
+
+async function probeHardwareVideoEncodeProfiles(
+	encoder: VideoEncoderLike | null,
+): Promise<ReadonlyArray<HardwareVideoEncodeProfile> | null> {
+	if (!encoder) return null;
+	const probed = await Promise.all(
+		HARDWARE_VIDEO_ENCODE_PROFILE_CANDIDATES.map((candidate) => probeHardwareVideoEncodeProfile(encoder, candidate)),
+	);
+	return probed.filter((profile): profile is HardwareVideoEncodeProfile => profile !== null);
+}
+
+export function describeHardwareVideoEncodeProfiles(
+	profiles: ReadonlyArray<HardwareVideoEncodeProfile> | null,
+): string | Array<string> {
+	if (profiles === null) return 'unknown: WebCodecs hardware encode probe unavailable';
+	if (profiles.length === 0) return 'none: Chromium has no hardware video encoder for any probed profile';
+	return profiles.map((profile) => {
+		const frameRate = profile.maxFrameRate === null ? 'unknown fps' : `${profile.maxFrameRate} fps`;
+		return `${profile.codec} ${profile.profile} up to ${profile.maxWidth}x${profile.maxHeight} at ${frameRate}`;
+	});
+}
+
+let hardwareVideoEncodeProfiles: ReadonlyArray<HardwareVideoEncodeProfile> | null = null;
+let pendingHardwareVideoEncodeProfiles: Promise<ReadonlyArray<HardwareVideoEncodeProfile> | null> | null = null;
+
+export function loadHardwareVideoEncodeProfiles(): Promise<ReadonlyArray<HardwareVideoEncodeProfile> | null> {
+	if (hardwareVideoEncodeProfiles) return Promise.resolve(hardwareVideoEncodeProfiles);
+	if (pendingHardwareVideoEncodeProfiles) return pendingHardwareVideoEncodeProfiles;
+	pendingHardwareVideoEncodeProfiles = probeHardwareVideoEncodeProfiles(getVideoEncoder())
+		.then((profiles) => {
+			hardwareVideoEncodeProfiles = profiles;
+			logger.debug('Probed hardware video encode profiles', {profiles: describeHardwareVideoEncodeProfiles(profiles)});
+			return profiles;
+		})
+		.finally(() => {
+			pendingHardwareVideoEncodeProfiles = null;
+		});
+	return pendingHardwareVideoEncodeProfiles;
+}
+
+export interface SoftwareVideoEncodeExpectationInput {
+	platform: NativePlatform;
+	h264HardwareProfileCount: number | null;
+	hardwareEncodeProfiles: ReadonlyArray<HardwareVideoEncodeProfile> | null;
+}
+
+function isSoftwareVideoEncodeExpected(input: SoftwareVideoEncodeExpectationInput): boolean {
+	if (input.platform !== 'linux') return false;
+	if ((input.h264HardwareProfileCount ?? 0) > 0) return false;
+	if (input.hardwareEncodeProfiles !== null) return input.hardwareEncodeProfiles.length === 0;
+	return input.h264HardwareProfileCount === 0;
+}
+
+export function isSoftwareVideoEncodeExpectedSync(): boolean {
+	return isSoftwareVideoEncodeExpected({
+		platform: guessPlatform(),
+		h264HardwareProfileCount: getH264HardwareProfilesSync()?.profiles.size ?? null,
+		hardwareEncodeProfiles: hardwareVideoEncodeProfiles,
+	});
+}
+
 let cachedReport: HardwareEncodeReport | null = null;
 let pendingPromise: Promise<HardwareEncodeReport | null> | null = null;
 
 function fetchReport(): Promise<HardwareEncodeReport | null> {
 	if (!isDesktop()) {
-		return probeH264HardwareProfiles().then(() => null);
+		return Promise.all([probeH264HardwareProfiles(), loadHardwareVideoEncodeProfiles()]).then(() => null);
 	}
 	const electron = getElectronAPI();
-	if (!electron?.getGpuInfo) return Promise.resolve(null);
-	return Promise.allSettled([electron.getGpuInfo(), probeWebRtcEncodeEfficiency()]).then(([gpuResult, probeResult]) => {
+	if (!electron?.getGpuInfo) return loadHardwareVideoEncodeProfiles().then(() => null);
+	return Promise.allSettled([
+		electron.getGpuInfo(),
+		probeWebRtcEncodeEfficiency(),
+		loadHardwareVideoEncodeProfiles(),
+	]).then(([gpuResult, probeResult]) => {
 		if (gpuResult.status !== 'fulfilled') {
 			logger.warn('Failed to fetch GPU info from Electron main', {error: gpuResult.reason});
 			return null;
@@ -459,7 +619,7 @@ function fetchReport(): Promise<HardwareEncodeReport | null> {
 		const baseReport = reportFromGpuInfo(info);
 		const efficiency = probeResult.status === 'fulfilled' ? probeResult.value : null;
 		const report = reconcileHardwareEncodeReport(baseReport, efficiency);
-		logger.info('Reconciled hardware-encode answers against the WebRTC encode probe', {
+		logger.debug('Reconciled hardware-encode answers against the WebRTC encode probe', {
 			probe: efficiency,
 			av1: report.av1,
 			h265: report.h265,
@@ -485,20 +645,8 @@ export function getGpuEncoderReportSync(): HardwareEncodeReport | null {
 	return cachedReport;
 }
 
-export function resetGpuEncoderReport(): void {
-	cachedReport = null;
-	pendingPromise = null;
-	h264HardwareProfileProbes.clear();
-	pendingH264HardwareProfileProbes.clear();
-	latestH264HardwareProfileProbeKey = null;
-}
-
-export function hasHardwareEncodeFor(codec: VideoCodec): HardwareEncodeAnswer {
-	const report = cachedReport;
-	if (!report) return 'unknown';
-	return report[codec];
-}
-
-if (typeof window !== 'undefined' && isDesktop()) {
-	void loadGpuEncoderReport();
+export function prewarmGpuEncoderReport(): void {
+	requestIdleCallback(() => {
+		void loadGpuEncoderReport();
+	});
 }

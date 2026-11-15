@@ -2,9 +2,9 @@
 
 import {randomBytes} from 'node:crypto';
 import {Config} from '@app/api/Config';
-import type {IDonationRepository} from '@app/api/donation/IDonationRepository';
+import type {DonationRepository} from '@app/api/donation/DonationRepository';
 import {DonorMagicLinkToken} from '@app/api/donation/models/DonorMagicLinkToken';
-import type {IEmailDnsValidationService} from '@app/api/infrastructure/IEmailDnsValidationService';
+import type {EmailDnsValidationService} from '@app/api/infrastructure/EmailDnsValidationService';
 import {Logger} from '@app/api/Logger';
 import {DONATION_MAGIC_LINK_EXPIRY_MS} from '@fluxer/constants/src/DonationConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -16,9 +16,9 @@ import type {IEmailService} from '@pkgs/email/src/IEmailService';
 
 export class DonationMagicLinkService {
 	constructor(
-		private donationRepository: IDonationRepository,
+		private donationRepository: DonationRepository,
 		private emailService: IEmailService,
-		private emailDnsValidationService: IEmailDnsValidationService,
+		private emailDnsValidationService: EmailDnsValidationService,
 	) {}
 
 	async sendMagicLink(email: string, locale: string | null = null): Promise<void> {
@@ -42,7 +42,7 @@ export class DonationMagicLinkService {
 		});
 		await this.donationRepository.createMagicLinkToken(tokenModel);
 		const manageUrl = `${Config.endpoints.apiPublic}/donations/manage?token=${token}`;
-		await this.emailService.sendDonationMagicLink(email, token, manageUrl, expiresAt, locale);
+		await this.emailService.send('donation_magic_link', email, {manageUrl, expiresAt}, locale);
 		Logger.debug({email}, 'Donation magic link sent');
 	}
 

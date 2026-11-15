@@ -8,7 +8,9 @@
     normalize_connect_queue/1,
     should_auto_stop_on_empty/1,
     maybe_mark_auto_stop_pending/1,
-    clear_auto_stop_pending/1
+    clear_auto_stop_pending/1,
+    filter_session_from_queue/2,
+    queued_session_id/1
 ]).
 
 -type guild_state() :: map().

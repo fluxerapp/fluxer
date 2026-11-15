@@ -25,10 +25,6 @@
 	background-color: var(--scrollbar-thumb-bg-hover);
 }
 
-.scrollerWithBottomGutter::-webkit-scrollbar-track {
-	margin-bottom: 0.5rem;
-}
-
 .scrollerTextarea {
 	--scrollbar-track-bg: var(--form-surface-background);
 	overscroll-behavior: auto;

@@ -1,20 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {randomInt} from 'node:crypto';
-import type {IAdminApiKeyRepository} from '@app/api/admin/repositories/IAdminApiKeyRepository';
+import {createHash, randomInt, timingSafeEqual} from 'node:crypto';
+import type {AdminApiKeyRepository} from '@app/api/admin/repositories/AdminApiKeyRepository';
 import type {UserID} from '@app/api/BrandedTypes';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import {requireGrantedAdminACLs} from '@app/api/middleware/AdminMiddleware';
 import type {AdminApiKey} from '@app/api/models/AdminApiKey';
-import {verifyPassword} from '@app/api/utils/PasswordUtils';
-import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
+import type {StoredSecretVerifier} from '@app/api/utils/StoredSecret';
 import {AdminApiKeyNotFoundError} from '@fluxer/errors/src/domains/admin/AdminApiKeyNotFoundError';
-import {MissingACLError} from '@fluxer/errors/src/domains/core/MissingACLError';
 import type {CreateAdminApiKeyRequest, UpdateAdminApiKeyRequest} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {ms} from 'itty-time';
 
 const ADMIN_KEY_PREFIX = 'fa_';
 const RANDOM_KEY_LENGTH = 32;
 const CHARSET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+const VERIFIED_KEY_CACHE_TTL_MS = ms('1 minute');
+const VERIFIED_KEY_CACHE_MAX_ENTRIES = 1024;
+
+interface VerifiedKeyEntry {
+	keyHash: string;
+	digest: Buffer;
+	expiresAtMs: number;
+}
 
 interface CreateApiKeyResult {
 	key: string;
@@ -38,9 +45,12 @@ export interface AdminApiKeyView {
 }
 
 export class AdminApiKeyService {
+	private readonly verifiedKeys = new Map<bigint, VerifiedKeyEntry>();
+
 	constructor(
-		private readonly adminApiKeyRepository: IAdminApiKeyRepository,
+		private readonly adminApiKeyRepository: AdminApiKeyRepository,
 		private readonly snowflakeService: ISnowflakeService,
+		private readonly storedSecrets: StoredSecretVerifier,
 	) {}
 
 	private generateRawKey(keyId: bigint): string {
@@ -114,16 +124,47 @@ export class AdminApiKeyService {
 		if (apiKey.isExpired()) {
 			return null;
 		}
-		const valid = await verifyPassword({password: rawKey, passwordHash: apiKey.keyHash});
-		if (!valid) {
+		const verification = await this.verifyRawKey(apiKey, rawKey);
+		if (verification === 'invalid') {
 			return null;
 		}
-		await this.adminApiKeyRepository.updateLastUsed(apiKey.keyId, apiKey.expiresAt);
+		if (verification === 'verified') {
+			await this.adminApiKeyRepository.updateLastUsed(apiKey.keyId, apiKey.expiresAt);
+		}
 		return {
 			keyId: apiKey.keyId,
 			createdById: apiKey.createdById,
 			acls: apiKey.acls,
 		};
+	}
+
+	private async verifyRawKey(apiKey: AdminApiKey, rawKey: string): Promise<'cached' | 'verified' | 'invalid'> {
+		const digest = createHash('sha256').update(rawKey).digest();
+		const now = Date.now();
+		const cached = this.verifiedKeys.get(apiKey.keyId);
+		if (
+			cached &&
+			cached.expiresAtMs > now &&
+			cached.keyHash === apiKey.keyHash &&
+			timingSafeEqual(cached.digest, digest)
+		) {
+			return 'cached';
+		}
+		const valid = await this.storedSecrets.matches(`admin_api_key:${apiKey.keyId}`, rawKey, apiKey.keyHash);
+		if (!valid) {
+			return 'invalid';
+		}
+		this.verifiedKeys.delete(apiKey.keyId);
+		if (this.verifiedKeys.size >= VERIFIED_KEY_CACHE_MAX_ENTRIES) {
+			const oldestKeyId = this.verifiedKeys.keys().next().value;
+			if (oldestKeyId !== undefined) this.verifiedKeys.delete(oldestKeyId);
+		}
+		this.verifiedKeys.set(apiKey.keyId, {
+			keyHash: apiKey.keyHash,
+			digest,
+			expiresAtMs: now + VERIFIED_KEY_CACHE_TTL_MS,
+		});
+		return 'verified';
 	}
 
 	async listKeys(createdBy: UserID): Promise<Array<AdminApiKeyView>> {
@@ -170,13 +211,7 @@ export class AdminApiKeyService {
 	}
 
 	private assertGrantableAcls(acls: ReadonlyArray<string>, creatorAcls?: Set<string>): void {
-		if (!creatorAcls) {
-			return;
-		}
-		const invalidACLs = acls.filter((acl) => !creatorAcls.has(acl) && !creatorAcls.has(AdminACLs.WILDCARD));
-		if (invalidACLs.length > 0) {
-			throw new MissingACLError(invalidACLs[0]);
-		}
+		if (creatorAcls) requireGrantedAdminACLs(creatorAcls, acls);
 	}
 
 	private toView(apiKey: AdminApiKey): AdminApiKeyView {

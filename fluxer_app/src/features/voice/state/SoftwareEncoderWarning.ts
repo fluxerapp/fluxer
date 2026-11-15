@@ -30,7 +30,7 @@ class SoftwareEncoderWarning {
 		}
 		this.encoderInfo = {codec, implementation, source: 'encoder'};
 		this.showWarning = true;
-		logger.info('Software encoder warning triggered', {codec, implementation});
+		logger.debug('Software encoder warning triggered', {codec, implementation});
 	}
 
 	triggerDecoderWarning(codec: string | null, implementation: string): void {
@@ -40,7 +40,7 @@ class SoftwareEncoderWarning {
 		}
 		this.encoderInfo = {codec, implementation, source: 'decoder'};
 		this.showWarning = true;
-		logger.info('Software decoder warning triggered', {codec, implementation});
+		logger.debug('Software decoder warning triggered', {codec, implementation});
 	}
 
 	dismiss(): void {

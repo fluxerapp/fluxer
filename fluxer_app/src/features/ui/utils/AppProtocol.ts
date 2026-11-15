@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export const APP_PROTOCOL = 'fluxer';
+const APP_PROTOCOL = 'fluxer';
 export const APP_PROTOCOL_SCHEME = `${APP_PROTOCOL}:`;
 export const APP_PROTOCOL_PREFIX = `${APP_PROTOCOL}://`;
 

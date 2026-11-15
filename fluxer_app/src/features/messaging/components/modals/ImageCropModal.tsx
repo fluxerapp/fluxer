@@ -1,18 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {AVIF_FORMAT_LABEL} from '@app/features/app/config/I18nDisplayConstants';
 import {inspectImageBytes} from '@app/features/expressions/utils/AnimatedImageUtils';
 import type {AnimatedCropSourceFormat, CropParams} from '@app/features/expressions/workers/AnimatedImageCropMessages';
 import {CropPipelineError, cropAnimatedImage} from '@app/features/expressions/workers/AnimatedImageCropWorkerManager';
-import {showMessagingErrorModal} from '@app/features/messaging/components/alerts/MessagingErrorModalUtils';
 import styles from '@app/features/messaging/components/modals/ImageCropModal.module.css';
+import {resolveDesktopCrossOriginMediaURL} from '@app/features/messaging/utils/DesktopResourceUrl';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {Button} from '@app/features/ui/button/Button';
 import {Slider} from '@app/features/ui/components/Slider';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {usePopOwningModal} from '@app/features/ui/utils/ModalUtils';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -424,7 +426,7 @@ function getCropErrorMessage(
 ): string | null {
 	if (error instanceof CropSizeLimitError) {
 		return i18n._(CROPPED_IMAGE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
-			maxSizeLabel: formatFileSize(i18n.locale, error.maxBytes),
+			maxSizeLabel: formatFileSize(getFormattingLocale(), error.maxBytes),
 		});
 	}
 	if (!(error instanceof CropPipelineError)) {
@@ -435,7 +437,7 @@ function getCropErrorMessage(
 			return null;
 		case 'too_large':
 			return i18n._(CROPPED_IMAGE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
-				maxSizeLabel: formatFileSize(i18n.locale, sizeLimitBytes),
+				maxSizeLabel: formatFileSize(getFormattingLocale(), sizeLimitBytes),
 			});
 		case 'budget_exceeded':
 			return i18n._(ANIMATION_TOO_LONG_OR_TOO_LARGE_DESCRIPTOR);
@@ -720,7 +722,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = observer(
 					width: displayDimensions.width * zoomRatio,
 					height: displayDimensions.height * zoomRatio,
 				};
-				const response = await fetch(imageUrl);
+				const response = await fetch(resolveDesktopCrossOriginMediaURL(imageUrl) ?? imageUrl);
 				if (controller.signal.aborted) return;
 				if (!response.ok) {
 					throw new Error('Failed to fetch image data');
@@ -763,7 +765,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = observer(
 				const message = getCropErrorMessage(i18n, error, errorMessage, sizeLimitBytes);
 				if (message == null) return;
 				logger.error('Error cropping image:', error);
-				showMessagingErrorModal({
+				showGenericErrorModal({
 					title: i18n._(COULDN_T_CROP_IMAGE_DESCRIPTOR),
 					message,
 					dataFlx: 'messaging.image-crop-modal.crop-failed.generic-error-modal',
@@ -869,7 +871,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = observer(
 					>
 						<img
 							ref={imageRef}
-							src={imageUrl}
+							src={resolveDesktopCrossOriginMediaURL(imageUrl)}
 							alt={i18n._(CROP_PREVIEW_DESCRIPTOR)}
 							className={styles.image}
 							style={{

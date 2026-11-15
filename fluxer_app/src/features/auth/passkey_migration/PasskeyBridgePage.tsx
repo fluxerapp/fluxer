@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/app/components/ErrorFallback.module.css';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import type {DomainMigrationSide} from '@app/features/app/domain_migration/DomainMigrationCore';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {
 	readPasskeyBridgePageLoginReturnPath,
 	readPasskeyBridgeReturn,
@@ -163,6 +163,59 @@ const LegacyPasskeyBridgePage: React.FC<PasskeyBridgePageProps> = ({side, hash, 
 	}, [side.target]);
 	const expired = state.status === 'expired';
 	const failed = state.status === 'failed';
+	let description = PRESS_CONTINUE_DESCRIPTOR;
+	let actions: React.ReactNode;
+	if (expired) {
+		description = REQUEST_EXPIRED_DESCRIPTOR;
+		actions = (
+			<Button onClick={handleBack} autoFocus data-flx="auth.passkey-bridge-page.button.back">
+				{i18n._(BACK_TO_PRODUCT_DESCRIPTOR, {productName: RuntimeConfig.productName})}
+			</Button>
+		);
+	} else if (failed) {
+		description = THAT_DIDN_T_WORK_DESCRIPTOR;
+		actions = (
+			<>
+				<Button
+					variant={opensInOwnTab ? 'secondary' : 'primary'}
+					onClick={loadOptions}
+					autoFocus={!opensInOwnTab}
+					data-flx="auth.passkey-bridge-page.button.try-again"
+				>
+					{i18n._(TRY_AGAIN_DESCRIPTOR)}
+				</Button>
+				<Button
+					variant={opensInOwnTab ? 'primary' : 'ghost'}
+					onClick={cancel}
+					autoFocus={opensInOwnTab}
+					data-flx="auth.passkey-bridge-page.button.cancel"
+				>
+					{i18n._(CANCEL_DESCRIPTOR)}
+				</Button>
+			</>
+		);
+	} else {
+		actions = (
+			<>
+				<Button
+					onClick={handleContinue}
+					submitting={state.status !== 'ready'}
+					autoFocus
+					data-flx="auth.passkey-bridge-page.button.continue"
+				>
+					{i18n._(CONTINUE_DESCRIPTOR)}
+				</Button>
+				<Button
+					variant="ghost"
+					onClick={cancel}
+					disabled={state.status === 'running'}
+					data-flx="auth.passkey-bridge-page.button.cancel"
+				>
+					{i18n._(CANCEL_DESCRIPTOR)}
+				</Button>
+			</>
+		);
+	}
 	return (
 		<main className={styles.errorFallbackContainer} data-flx="auth.passkey-bridge-page.container">
 			<FluxerIcon className={styles.errorFallbackIcon} data-flx="auth.passkey-bridge-page.icon" />
@@ -175,55 +228,11 @@ const LegacyPasskeyBridgePage: React.FC<PasskeyBridgePageProps> = ({side, hash, 
 					role={expired || failed ? 'alert' : undefined}
 					data-flx="auth.passkey-bridge-page.description"
 				>
-					{i18n._(
-						expired ? REQUEST_EXPIRED_DESCRIPTOR : failed ? THAT_DIDN_T_WORK_DESCRIPTOR : PRESS_CONTINUE_DESCRIPTOR,
-					)}
+					{i18n._(description)}
 				</p>
 			</div>
 			<div className={styles.errorFallbackActions} data-flx="auth.passkey-bridge-page.actions">
-				{expired ? (
-					<Button onClick={handleBack} autoFocus data-flx="auth.passkey-bridge-page.button.back">
-						{i18n._(BACK_TO_PRODUCT_DESCRIPTOR, {productName: PRODUCT_NAME})}
-					</Button>
-				) : failed ? (
-					<>
-						<Button
-							variant={opensInOwnTab ? 'secondary' : 'primary'}
-							onClick={loadOptions}
-							autoFocus={!opensInOwnTab}
-							data-flx="auth.passkey-bridge-page.button.try-again"
-						>
-							{i18n._(TRY_AGAIN_DESCRIPTOR)}
-						</Button>
-						<Button
-							variant={opensInOwnTab ? 'primary' : 'ghost'}
-							onClick={cancel}
-							autoFocus={opensInOwnTab}
-							data-flx="auth.passkey-bridge-page.button.cancel"
-						>
-							{i18n._(CANCEL_DESCRIPTOR)}
-						</Button>
-					</>
-				) : (
-					<>
-						<Button
-							onClick={handleContinue}
-							submitting={state.status !== 'ready'}
-							autoFocus
-							data-flx="auth.passkey-bridge-page.button.continue"
-						>
-							{i18n._(CONTINUE_DESCRIPTOR)}
-						</Button>
-						<Button
-							variant="ghost"
-							onClick={cancel}
-							disabled={state.status === 'running'}
-							data-flx="auth.passkey-bridge-page.button.cancel"
-						>
-							{i18n._(CANCEL_DESCRIPTOR)}
-						</Button>
-					</>
-				)}
+				{actions}
 			</div>
 		</main>
 	);
@@ -258,7 +267,7 @@ const TargetPasskeyBridgePage: React.FC<{hash: string}> = ({hash}) => {
 					{i18n._(YOU_CAN_CLOSE_THIS_TAB_DESCRIPTOR)}
 				</h1>
 				<p className={styles.errorFallbackDescription} data-flx="auth.passkey-bridge-page.description">
-					{i18n._(GO_BACK_TO_CONTINUE_DESCRIPTOR, {productName: PRODUCT_NAME})}
+					{i18n._(GO_BACK_TO_CONTINUE_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 				</p>
 			</div>
 		</main>

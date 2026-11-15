@@ -16,7 +16,7 @@
 	height: 1rem;
 	justify-content: center;
 	line-height: 0.875rem;
-	margin-right: -0.25rem;
+	margin-inline-end: -0.25rem;
 	overflow: hidden;
 }
 
@@ -36,7 +36,8 @@
 	box-sizing: border-box;
 	display: block;
 	font-variant-numeric: tabular-nums;
-	padding: 0 0.25rem 0 0.125rem;
+	padding-block: 0;
+	padding-inline: 0.125rem 0.25rem;
 	position: relative;
 	text-align: center;
 	width: 1.25rem;
@@ -44,12 +45,12 @@
 
 .total::after {
 	border-bottom: 0 solid transparent;
-	border-right: 0.3125rem solid transparent;
-	border-right-color: var(--background-modifier-selected);
+	border-inline-end: 0.3125rem solid transparent;
+	border-inline-end-color: var(--background-modifier-selected);
 	border-top: 1rem solid transparent;
 	content: '';
 	height: 0;
-	left: -0.3125rem;
+	inset-inline-start: -0.3125rem;
 	position: absolute;
 	top: 0;
 	width: 0;

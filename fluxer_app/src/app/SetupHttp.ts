@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import Sudo from '@app/features/auth/state/AuthSudo';
 import SudoPrompt from '@app/features/auth/state/SudoPrompt';
+import {startApiAttachmentDesktopAuthorization} from '@app/features/messaging/state/ApiAttachmentDesktopAuthorization';
 import SessionManager from '@app/features/platform/state/AuthSession';
 import {http} from '@app/features/platform/transport/RestTransport';
 
 export function setupHttp(): void {
 	http.installAuth(() => SessionManager.token);
-	Sudo.init();
 	SudoPrompt.init();
+	startApiAttachmentDesktopAuthorization();
 }

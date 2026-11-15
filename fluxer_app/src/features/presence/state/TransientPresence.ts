@@ -39,14 +39,6 @@ class TransientPresenceRegistryClass {
 		this.stopCleanupIfIdle();
 	}
 
-	updatePresence(userId: string, status: StatusType): void {
-		this.presences.set(userId, {
-			status,
-			timestamp: Date.now(),
-		});
-		this.startCleanup();
-	}
-
 	updatePresences(
 		presences: Array<{
 			userId: string;
@@ -80,11 +72,6 @@ class TransientPresenceRegistryClass {
 		return null;
 	}
 
-	hasTransientPresence(userId: string): boolean {
-		const transient = this.presences.get(userId);
-		return transient != null && Date.now() - transient.timestamp <= PRESENCE_TTL_MS;
-	}
-
 	clearPresence(userId: string): void {
 		this.presences.delete(userId);
 		this.stopCleanupIfIdle();
@@ -93,14 +80,6 @@ class TransientPresenceRegistryClass {
 	clear(): void {
 		this.presences.clear();
 		this.stopCleanupIfIdle();
-	}
-
-	cleanup(): void {
-		if (this.cleanupInterval) {
-			clearInterval(this.cleanupInterval);
-			this.cleanupInterval = null;
-		}
-		this.presences.clear();
 	}
 
 	private stopCleanupIfIdle(): void {

@@ -54,9 +54,8 @@ const PLATFORM_ADMIN_DESCRIPTOR = msg({
 	comment: 'Join source label on the community members page. Shown when a platform admin force-added the member.',
 });
 const DISCOVERY_DESCRIPTOR = msg({
-	message: 'Discovery',
-	comment:
-		'Join source label on the community members page. Shown when the member found the community via the Discovery surface.',
+	message: 'Explore',
+	comment: 'Join source label on the community members page. Shown when the member found the community in Explore.',
 });
 const UNKNOWN_USER_DESCRIPTOR = msg({
 	message: 'Unknown user',

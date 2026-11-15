@@ -1,8 +1,7 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 .role > :first-child {
-	margin-right: 0.25rem;
-	margin-left: 0.0625rem;
+	margin-inline-start: 0.0625rem;
 }
 
 :global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
@@ -14,22 +13,6 @@
 .iconSmall {
 	height: 1rem;
 	width: 1rem;
-}
-
-.iconMedium {
-	height: 1.25rem;
-	width: 1.25rem;
-}
-
-.loadingContainer {
-	display: flex;
-	height: 6.25rem;
-	width: 18.75rem;
-	align-items: center;
-	justify-content: center;
-	border-radius: 0.375rem;
-	border: 0.125rem solid var(--brand-primary);
-	background-color: var(--background-primary);
 }
 
 .profileCustomStatus {

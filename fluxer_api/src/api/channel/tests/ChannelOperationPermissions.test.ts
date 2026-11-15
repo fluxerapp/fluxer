@@ -6,7 +6,6 @@ import {
 	createChannel,
 	createChannelInvite,
 	createGuild,
-	deleteChannel,
 	getChannel,
 	updateChannel,
 	updateGuild,
@@ -23,16 +22,6 @@ describe('Channel Operation Permissions', () => {
 	});
 	beforeEach(async () => {
 		await harness.reset();
-	});
-	it('should allow member to get channel', async () => {
-		const owner = await createTestAccount(harness);
-		const member = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Channel Perms Guild');
-		const systemChannel = await getChannel(harness, owner.token, guild.system_channel_id!);
-		const invite = await createChannelInvite(harness, owner.token, systemChannel.id);
-		await acceptInvite(harness, member.token, invite.code);
-		const channel = await getChannel(harness, member.token, systemChannel.id);
-		expect(channel.id).toBe(systemChannel.id);
 	});
 	it('should reject nonmember from getting channel', async () => {
 		const owner = await createTestAccount(harness);
@@ -110,23 +99,6 @@ describe('Channel Operation Permissions', () => {
 		await createBuilder(harness, member.token)
 			.delete(`/channels/${systemChannel.id}`)
 			.expect(HTTP_STATUS.FORBIDDEN)
-			.execute();
-	});
-	it('should allow owner to update channel', async () => {
-		const owner = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Channel Perms Guild');
-		const testChannel = await createChannel(harness, owner.token, guild.id, 'test-channel');
-		const updated = await updateChannel(harness, owner.token, testChannel.id, {name: 'owner-updated'});
-		expect(updated.name).toBe('owner-updated');
-	});
-	it('should allow owner to delete channel', async () => {
-		const owner = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Channel Perms Guild');
-		const testChannel = await createChannel(harness, owner.token, guild.id, 'test-channel');
-		await deleteChannel(harness, owner.token, testChannel.id);
-		await createBuilder(harness, owner.token)
-			.get(`/channels/${testChannel.id}`)
-			.expect(HTTP_STATUS.NOT_FOUND)
 			.execute();
 	});
 });

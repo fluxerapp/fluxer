@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export type AstroServerShutdown = () => Promise<void>;
-
 interface AstroServerTerminationDependencies {
 	readonly closeListener: () => Promise<void>;
 	readonly serverName: string;
-	readonly shutdown: AstroServerShutdown | null;
 	readonly timeoutMs: number;
 }
 
@@ -61,15 +58,6 @@ export class AstroServerTermination {
 		const failures: Array<unknown> = [];
 		try {
 			await this.dependencies.closeListener();
-		} catch (cleanupFailure) {
-			failures.push(cleanupFailure);
-		}
-		const shutdown = this.dependencies.shutdown;
-		if (shutdown == null) {
-			return failures;
-		}
-		try {
-			await shutdown();
 		} catch (cleanupFailure) {
 			failures.push(cleanupFailure);
 		}

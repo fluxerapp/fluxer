@@ -9,20 +9,27 @@ import {
 import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
 import {
 	RequireEmailAccountIdentity,
+	RequireEmailCodesAvailable,
 	RequireUsernameAccountIdentity,
 } from '@app/api/middleware/AccountIdentityMiddleware';
 import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {LocalAuthMiddleware} from '@app/api/middleware/LocalAuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import {SsoManagedCredentialsMiddleware} from '@app/api/middleware/SsoManagedCredentialsMiddleware';
 import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
+import {getLocalCredential} from '@app/api/user/AccountTier';
 import {assertValidTotpSetupCode} from '@app/api/user/services/UserAuth';
 import {isSsoUserWithoutPassword} from '@app/api/user/UserHelpers';
 import {Validator} from '@app/api/Validator';
+import {LocalCredentialKinds} from '@fluxer/constants/src/AccountTierConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {LocalSignInMethodRequiredError} from '@fluxer/errors/src/domains/auth/LocalSignInMethodRequiredError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
+import {UnauthorizedError} from '@fluxer/errors/src/domains/core/UnauthorizedError';
 import {
 	DisableTotpRequest,
 	EnableMfaTotpRequest,
@@ -33,6 +40,7 @@ import {
 	MfaBackupCodesChallengeVerifyResponse,
 	MfaBackupCodesRequest,
 	MfaBackupCodesResponse,
+	SsoStartResponse,
 	SudoMfaMethodsResponse,
 	SudoVerificationSchema,
 	WebAuthnChallengeResponse,
@@ -46,6 +54,7 @@ import {
 	PasskeyMigrationCompleteRequest,
 	PasskeyMigrationResponse,
 } from '@fluxer/schema/src/domains/auth/PasskeyMigrationSchemas';
+import {WebAuthnRpIdQuery} from '@fluxer/schema/src/domains/auth/WebAuthnSchemas';
 import {CredentialIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {EmptyBodyRequest} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 import {
@@ -187,11 +196,72 @@ export function UserAuthController(app: HonoApp) {
 		},
 	);
 	app.post(
+		'/users/@me/sso/link/start',
+		RateLimitMiddleware(RateLimitConfigs.AUTH_SSO_START),
+		LoginRequired,
+		DefaultUserOnly,
+		SudoModeMiddleware,
+		Validator('json', SudoVerificationSchema),
+		OpenAPI({
+			operationId: 'start_sso_link',
+			summary: 'Start connecting SSO',
+			responseSchema: SsoStartResponse,
+			statusCode: 200,
+			security: ['sessionToken'],
+			tags: ['Users'],
+			description:
+				'Start connecting the instance SSO provider to the current account. Send the user to authorization_url, then finish with complete_sso, which returns linked and creates no new session. Works while SSO is required. Requires sudo mode verification.',
+		}),
+		async (ctx) => {
+			const user = ctx.get('user');
+			const authSession = ctx.get('authSession');
+			if (!authSession) {
+				throw new UnauthorizedError();
+			}
+			await requireSudoMode(ctx, user, ctx.req.valid('json'));
+			return ctx.json(await ctx.get('ssoService').startLink(user, authSession.sessionIdHash));
+		},
+	);
+	app.delete(
+		'/users/@me/sso',
+		RateLimitMiddleware(RateLimitConfigs.USER_SSO_UNLINK),
+		LoginRequired,
+		DefaultUserOnly,
+		SsoManagedCredentialsMiddleware,
+		SudoModeMiddleware,
+		Validator('json', SudoVerificationSchema),
+		OpenAPI({
+			operationId: 'unlink_sso',
+			summary: 'Disconnect single sign-on',
+			responseSchema: null,
+			statusCode: 204,
+			security: ['sessionToken'],
+			tags: ['Users'],
+			description:
+				"Disconnects the instance's single sign-on provider from the current account. Needs sudo mode and a password, a passkey or email code sign-in, otherwise the route returns LOCAL_SIGN_IN_METHOD_REQUIRED.",
+		}),
+		async (ctx) => {
+			const user = ctx.get('user');
+			const body = ctx.req.valid('json');
+			const {emailCodes} = await getInstanceConfigRepository().getSignInFeatures();
+			const canSignInLocally =
+				getLocalCredential(user) !== LocalCredentialKinds.NONE ||
+				(emailCodes && user.email !== null && user.emailVerified && !user.emailBounced);
+			if (!canSignInLocally) {
+				throw new LocalSignInMethodRequiredError();
+			}
+			await requireSudoMode(ctx, user, body);
+			await ctx.get('ssoService').unlinkSignedInUser(user);
+			return ctx.body(null, 204);
+		},
+	);
+	app.post(
 		'/users/@me/mfa/backup-codes/challenge',
 		RateLimitMiddleware(RateLimitConfigs.USER_MFA_BACKUP_CODES_CHALLENGE_START),
 		LoginRequired,
 		DefaultUserOnly,
 		RequireEmailAccountIdentity,
+		RequireEmailCodesAvailable,
 		Validator('json', EmptyBodyRequest),
 		OpenAPI({
 			operationId: 'start_backup_codes_challenge',
@@ -214,6 +284,7 @@ export function UserAuthController(app: HonoApp) {
 		LoginRequired,
 		DefaultUserOnly,
 		RequireEmailAccountIdentity,
+		RequireEmailCodesAvailable,
 		Validator('json', MfaBackupCodesChallengeResendRequest),
 		OpenAPI({
 			operationId: 'resend_backup_codes_challenge',
@@ -238,6 +309,7 @@ export function UserAuthController(app: HonoApp) {
 		LoginRequired,
 		DefaultUserOnly,
 		RequireEmailAccountIdentity,
+		RequireEmailCodesAvailable,
 		Validator('json', MfaBackupCodesChallengeVerifyRequest),
 		OpenAPI({
 			operationId: 'verify_backup_codes_challenge',
@@ -261,6 +333,7 @@ export function UserAuthController(app: HonoApp) {
 		LoginRequired,
 		DefaultUserOnly,
 		RequireEmailAccountIdentity,
+		RequireEmailCodesAvailable,
 		Validator('json', MfaBackupCodesChallengeRegenerateRequest),
 		OpenAPI({
 			operationId: 'regenerate_backup_codes_challenge',
@@ -331,6 +404,7 @@ export function UserAuthController(app: HonoApp) {
 		DefaultUserOnly,
 		SudoModeMiddleware,
 		Validator('json', SudoVerificationSchema),
+		Validator('query', WebAuthnRpIdQuery),
 		OpenAPI({
 			operationId: 'get_webauthn_registration_options',
 			summary: 'Get WebAuthn registration options',
@@ -348,7 +422,9 @@ export function UserAuthController(app: HonoApp) {
 				issueSudoToken: false,
 			});
 			return ctx.json(
-				await ctx.get('userAuthRequestService').generateWebAuthnRegistrationOptions(user, ctx.req.header('origin')),
+				await ctx
+					.get('userAuthRequestService')
+					.generateWebAuthnRegistrationOptions(user, ctx.req.header('origin'), ctx.req.valid('query').rp_id),
 			);
 		},
 	);
@@ -555,6 +631,7 @@ export function UserAuthController(app: HonoApp) {
 		RateLimitMiddleware(RateLimitConfigs.SUDO_WEBAUTHN_OPTIONS),
 		LoginRequired,
 		DefaultUserOnly,
+		Validator('query', WebAuthnRpIdQuery),
 		OpenAPI({
 			operationId: 'get_sudo_webauthn_authentication_options',
 			summary: 'Get sudo WebAuthn authentication options',
@@ -567,7 +644,9 @@ export function UserAuthController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			return ctx.json(
-				await ctx.get('userAuthRequestService').getSudoWebAuthnOptions(ctx.get('user'), ctx.req.header('origin')),
+				await ctx
+					.get('userAuthRequestService')
+					.getSudoWebAuthnOptions(ctx.get('user'), ctx.req.header('origin'), ctx.req.valid('query').rp_id),
 			);
 		},
 	);

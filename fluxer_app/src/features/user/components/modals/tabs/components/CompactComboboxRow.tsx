@@ -22,8 +22,8 @@ interface CompactComboboxRowProps<V extends CompactComboboxValue, O extends Comb
 	isLoading?: boolean;
 	isClearable?: boolean;
 	autoSelectExactMatch?: boolean;
-	autoSelectValueFromInput?: ComboboxProps<V, false, O>['autoSelectValueFromInput'];
-	filterOption?: ComboboxProps<V, false, O>['filterOption'];
+	autoSelectValueFromInput?: ComboboxProps<V, O>['autoSelectValueFromInput'];
+	filterOption?: ComboboxProps<V, O>['filterOption'];
 	menuMinWidth?: number;
 	controlWidth?: CompactComboboxWidth;
 	renderOption?: (option: O, isSelected: boolean) => React.ReactNode;
@@ -93,7 +93,7 @@ export function CompactComboboxRow<V extends CompactComboboxValue, O extends Com
 				style={comboboxWrapStyle}
 				data-flx={`${dataFlx}.select-wrap`}
 			>
-				<Combobox<V, false, O>
+				<Combobox<V, O>
 					id={id}
 					value={value}
 					options={options}

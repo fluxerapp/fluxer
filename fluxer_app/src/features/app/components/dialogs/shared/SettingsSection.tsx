@@ -15,7 +15,9 @@ import {
 } from '@app/features/user/components/settings_utils/UserSettingsDeepLinks';
 import {clsx} from 'clsx';
 import type React from 'react';
-import {useEffect} from 'react';
+import {createContext, useContext, useEffect} from 'react';
+
+export const SettingsPageContext = createContext(true);
 
 export interface SettingsSectionProps {
 	id: string;
@@ -43,6 +45,7 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
 	className,
 }) => {
 	const contextTabType = useSettingsCurrentTab();
+	const linksShown = useContext(SettingsPageContext);
 	const resolvedTabType = tabType ?? contextTabType ?? undefined;
 	useEffect(() => {
 		if (import.meta.env.DEV && linkable && !isSectionIdValid(id, resolvedTabType)) {
@@ -51,7 +54,7 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
 			);
 		}
 	}, [id, linkable, resolvedTabType]);
-	const linkTarget = linkable ? getUserSettingsSectionDeepLinkTarget(id, resolvedTabType) : null;
+	const linkTarget = linkable && linksShown ? getUserSettingsSectionDeepLinkTarget(id, resolvedTabType) : null;
 	const linkHref =
 		linkTarget && tabHasMultipleLinkableSections(linkTarget.tab)
 			? buildUserSettingsDeepLink(linkTarget.tab, linkTarget.section)
@@ -76,22 +79,27 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
 	}
 	return (
 		<section id={id} className={clsx(styles.section, className)} data-flx="app.settings-section.section">
-			<div className={styles.sectionHeader} data-flx="app.settings-section.section-header">
-				<div className={styles.sectionTitleRow} data-flx="app.settings-section.section-title-row">
-					<h3 className={styles.sectionTitle} data-flx="app.settings-section.section-title">
-						{title}
-					</h3>
-					{linkButton}
-					{actions ? (
-						<div className={styles.sectionActions} data-flx="app.settings-section.section-actions">
-							{actions}
-						</div>
+			<div
+				className={clsx(styles.sectionHeader, actions && styles.sectionHeaderWithActions)}
+				data-flx="app.settings-section.section-header"
+			>
+				<div className={styles.sectionHeaderText} data-flx="app.settings-section.section-header-text">
+					<div className={styles.sectionTitleRow} data-flx="app.settings-section.section-title-row">
+						<h3 className={styles.sectionTitle} data-flx="app.settings-section.section-title">
+							{title}
+						</h3>
+						{linkButton}
+					</div>
+					{description ? (
+						<p className={styles.sectionDescription} data-flx="app.settings-section.section-description">
+							{description}
+						</p>
 					) : null}
 				</div>
-				{description ? (
-					<p className={styles.sectionDescription} data-flx="app.settings-section.section-description">
-						{description}
-					</p>
+				{actions ? (
+					<div className={styles.sectionActions} data-flx="app.settings-section.section-actions">
+						{actions}
+					</div>
 				) : null}
 			</div>
 			<div className={styles.sectionContent} data-flx="app.settings-section.section-content">

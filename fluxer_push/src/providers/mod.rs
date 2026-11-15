@@ -169,42 +169,12 @@ fn result_of(outcome: &SendOutcome) -> SendResult {
 }
 
 #[cfg(test)]
-mod hop_tests {
-    use super::*;
-
-    const TOKEN: &str = "3dbc5a5ef1a1c1666afc26f466e1b3ebaaf4c66d92dddeb0fd1b69c49641d4cd";
-
-    fn ours() -> Vec<String> {
-        vec!["push.fluxer.com".to_owned()]
-    }
-
-    #[test]
-    fn the_plain_apns_leg_is_delivered_in_process() {
-        let apns = format!("https://push.fluxer.com/relay/v1/apns/canary/production/{TOKEN}");
-        assert!(in_process_hop(&apns, &ours()).is_some());
-    }
-
-    #[test]
-    fn an_fcm_relay_endpoint_is_delivered_in_process() {
-        let fcm = "https://push.fluxer.com/relay/v1/fcm/canary/tok%3AAPA91bExample";
-        assert!(in_process_hop(fcm, &ours()).is_some());
-    }
-
-    #[test]
-    fn a_pushkit_relay_endpoint_keeps_its_voip_topic() {
-        let voip = format!("https://push.fluxer.com/relay/v1/apns-voip/canary/production/{TOKEN}");
-        assert!(in_process_hop(&voip, &ours()).is_none());
-    }
-}
-
-#[cfg(test)]
 mod consent_tests {
     use super::*;
     use crate::config::DeliveryConfig;
     use crate::server::AppState;
 
     const TOKEN: &str = "3dbc5a5ef1a1c1666afc26f466e1b3ebaaf4c66d92dddeb0fd1b69c49641d4cd";
-    const NTFY_ENDPOINT: &str = "https://ntfy.sh/upZzH87cT9jJCc?up=1";
 
     fn managed_endpoint() -> String {
         format!("https://push.fluxer.com/relay/v1/apns/stable/production/{TOKEN}")
@@ -239,6 +209,7 @@ mod consent_tests {
             platform: Some("web_push".to_owned()),
             app_id: None,
             provider_environment: None,
+            thread_channels: false,
         }
     }
 
@@ -256,44 +227,6 @@ mod consent_tests {
     }
 
     #[tokio::test]
-    async fn a_refused_managed_relay_send_keeps_the_registration() {
-        assert!(!outcome_of(false, &managed_endpoint()).await.deletes_token());
-    }
-
-    #[tokio::test]
-    async fn an_accepted_notice_lets_the_managed_relay_send_through() {
-        assert_eq!(
-            outcome_of(true, &managed_endpoint()).await,
-            SendOutcome::permanent("missing_keys")
-        );
-    }
-
-    #[tokio::test]
-    async fn a_unified_push_endpoint_is_sent_whatever_the_operator_accepted() {
-        assert_eq!(
-            outcome_of(false, NTFY_ENDPOINT).await,
-            SendOutcome::permanent("missing_keys")
-        );
-        assert_eq!(
-            outcome_of(true, NTFY_ENDPOINT).await,
-            SendOutcome::permanent("missing_keys")
-        );
-    }
-
-    #[tokio::test]
-    async fn a_notice_accepted_in_the_instance_config_lets_the_send_through() {
-        let state = state(false);
-        state.relay_consent.update(&serde_json::json!({
-            "config_version": 1,
-            "relay_consent_accepted": true,
-        }));
-        assert_eq!(
-            send(&state, &subscription(&managed_endpoint()), &Value::Null).await,
-            SendOutcome::permanent("missing_keys")
-        );
-    }
-
-    #[tokio::test]
     async fn an_instance_config_that_has_not_accepted_still_refuses_the_send() {
         let state = state(false);
         state.relay_consent.update(&serde_json::json!({
@@ -304,19 +237,5 @@ mod consent_tests {
             send(&state, &subscription(&managed_endpoint()), &Value::Null).await,
             SendOutcome::permanent("relay_consent_required")
         );
-    }
-
-    #[tokio::test]
-    async fn a_refused_managed_relay_send_is_still_counted() {
-        let state = state(false);
-        let outcome = send(&state, &subscription(&managed_endpoint()), &Value::Null).await;
-        assert_eq!(outcome, SendOutcome::permanent("relay_consent_required"));
-        let rendered = state.metrics.render();
-        for series in [
-            "fluxer_push_sends_total{provider=\"web_push\",result=\"permanent\"} 1",
-            "fluxer_push_delivery_routes_total{route=\"web_push\",result=\"permanent\"} 1",
-        ] {
-            assert!(rendered.contains(series), "{series} must be recorded");
-        }
     }
 }

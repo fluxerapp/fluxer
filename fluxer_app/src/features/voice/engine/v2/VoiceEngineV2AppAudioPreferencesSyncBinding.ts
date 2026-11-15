@@ -5,6 +5,7 @@ import Keybind from '@app/features/input/state/InputKeybind';
 import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePermissionState';
 import {
 	createVoiceEngineV2AppAudioSettingsSnapshot,
+	hasVoiceEngineV2DefaultInputEndpointChanged,
 	hasVoiceEngineV2InputProcessorSettingsChanged,
 	hasVoiceEngineV2MicrophoneCaptureSettingsChanged,
 	hasVoiceEngineV2MicrophonePublishSettingsChanged,
@@ -17,20 +18,19 @@ import NoiseSuppressionAvailability from '@app/features/voice/utils/noise_suppre
 import type {Room} from 'livekit-client';
 import {reaction} from 'mobx';
 
-export interface VoiceEngineV2AppAudioPreferencesSnapshot {
+interface VoiceEngineV2AppAudioPreferencesSnapshot {
 	readonly audioSettings: VoiceEngineV2AppAudioSettingsSnapshot;
 	readonly participantVolumes: Readonly<Record<string, number>>;
 	readonly participantMutes: Readonly<Record<string, boolean>>;
 	readonly connectionVolumes: Readonly<Record<string, Readonly<Record<string, number>>>>;
 	readonly streamAudioRevision: number;
-	readonly transmitMode: typeof Keybind.transmitMode;
 	readonly pushToMuteActive: boolean;
 }
 
 export interface VoiceEngineV2AppAudioPreferencesMediaAdapter {
 	requestMicrophoneRefresh(room: Room, request: {republish: boolean}): Promise<void>;
 	configureVoiceInput(room: Room): void;
-	handleInputKeybindChange(room: Room, options: {preserveSelfMute: boolean}): void;
+	handleInputKeybindChange(room: Room): void;
 	applyAllLocalAudioPreferences(room: Room): void;
 }
 
@@ -43,19 +43,18 @@ export interface VoiceEngineV2AppAudioPreferencesSyncSources {
 	getSnapshot(): VoiceEngineV2AppAudioPreferencesSnapshot;
 }
 
-export function createVoiceEngineV2AppAudioPreferencesSnapshot(): VoiceEngineV2AppAudioPreferencesSnapshot {
+function createVoiceEngineV2AppAudioPreferencesSnapshot(): VoiceEngineV2AppAudioPreferencesSnapshot {
 	return {
 		audioSettings: createVoiceEngineV2AppAudioSettingsSnapshot(),
 		participantVolumes: ParticipantVolume.volumes,
 		participantMutes: ParticipantVolume.localMutes,
 		connectionVolumes: ParticipantVolume.connectionVolumesByLocalConnectionId,
 		streamAudioRevision: StreamAudioPrefs.audioPrefsRevision,
-		transmitMode: Keybind.transmitMode,
 		pushToMuteActive: Keybind.isPushToMuteEffective(),
 	};
 }
 
-export function createVoiceEngineV2AppAudioPreferencesSyncSources(): VoiceEngineV2AppAudioPreferencesSyncSources {
+function createVoiceEngineV2AppAudioPreferencesSyncSources(): VoiceEngineV2AppAudioPreferencesSyncSources {
 	return {
 		stores: [
 			VoiceSettings,
@@ -82,7 +81,7 @@ function refreshMicrophone(
 	});
 }
 
-export function syncVoiceEngineV2AppAudioPreferences(
+function syncVoiceEngineV2AppAudioPreferences(
 	room: Room,
 	adapter: VoiceEngineV2AppAudioPreferencesMediaAdapter,
 	logger: VoiceEngineV2AppAudioPreferencesLogger,
@@ -97,9 +96,11 @@ export function syncVoiceEngineV2AppAudioPreferences(
 	);
 	assert.equal(typeof logger.warn, 'function', 'audio preferences sync logger missing warn');
 	if (previous.pushToMuteActive !== current.pushToMuteActive) {
-		adapter.handleInputKeybindChange(room, {preserveSelfMute: previous.transmitMode === current.transmitMode});
+		adapter.handleInputKeybindChange(room);
 	}
-	const republish = hasVoiceEngineV2MicrophonePublishSettingsChanged(previous.audioSettings, current.audioSettings);
+	const republish =
+		hasVoiceEngineV2MicrophonePublishSettingsChanged(previous.audioSettings, current.audioSettings) ||
+		hasVoiceEngineV2DefaultInputEndpointChanged(previous.audioSettings, current.audioSettings);
 	if (republish || hasVoiceEngineV2MicrophoneCaptureSettingsChanged(previous.audioSettings, current.audioSettings)) {
 		refreshMicrophone(room, adapter, logger, republish);
 	} else if (hasVoiceEngineV2InputProcessorSettingsChanged(previous.audioSettings, current.audioSettings)) {

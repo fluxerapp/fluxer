@@ -9,6 +9,6 @@ publish = false
 crate-type = ["cdylib"]
 
 [dependencies]
-rustler = "0.38.0"
+rustler = "0.39.0"
 
 [workspace]

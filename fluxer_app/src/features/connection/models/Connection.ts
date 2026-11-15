@@ -10,6 +10,8 @@ export class Connection {
 	readonly verified: boolean;
 	readonly visibilityFlags: number;
 	readonly sortOrder: number;
+	readonly providerId: string | null;
+	readonly url: string | null;
 
 	constructor(connection: ConnectionResponse) {
 		this.id = connection.id;
@@ -18,17 +20,8 @@ export class Connection {
 		this.verified = connection.verified;
 		this.visibilityFlags = connection.visibility_flags;
 		this.sortOrder = connection.sort_order;
-	}
-
-	equals(other: Connection): boolean {
-		return (
-			this.id === other.id &&
-			this.type === other.type &&
-			this.name === other.name &&
-			this.verified === other.verified &&
-			this.visibilityFlags === other.visibilityFlags &&
-			this.sortOrder === other.sortOrder
-		);
+		this.providerId = connection.provider_id ?? null;
+		this.url = connection.url ?? null;
 	}
 
 	toJSON(): ConnectionResponse {
@@ -39,6 +32,8 @@ export class Connection {
 			verified: this.verified,
 			visibility_flags: this.visibilityFlags,
 			sort_order: this.sortOrder,
+			provider_id: this.providerId,
+			url: this.url,
 		};
 	}
 }

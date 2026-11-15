@@ -1,20 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AdminAuditLog} from '@app/api/admin/IAdminRepository';
+import type {AdminAuditLog} from '@app/api/admin/AdminRepository';
 import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
 import {BANNED_FILE_SHAS_REFRESH_CHANNEL} from '@app/api/constants/ContentModeration';
 import {getSnowflakeService, setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
 import {getAdminRepository} from '@app/api/middleware/ServiceSingletons';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import type {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
-import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
-import {SyncTaskWorkerService} from '@app/api/test/SyncTaskWorkerService';
+import {createTestWorkerHelpers, SyncTaskWorkerService} from '@app/api/test/SyncTaskWorkerService';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import bulkBanFileShas from '@app/api/worker/tasks/admin_bulk/BulkBanFileShas';
 import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
-import {JobCancelledError, type WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
+import type {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
+import {JobCancelledError} from '@pkgs/worker/src/contracts/WorkerTask';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 interface BulkJobResult {
@@ -29,18 +28,6 @@ interface BulkJobResult {
 const FIRST_SHA = 'a1'.repeat(32);
 const SECOND_SHA = 'b2'.repeat(32);
 const NON_HEX_SHA = 'zz'.repeat(32);
-
-function createHelpers(overrides: Partial<WorkerTaskHelpers> = {}): WorkerTaskHelpers {
-	return {
-		logger: new NoopLogger(),
-		jobId: 4242n,
-		addJob: async () => 0n,
-		reportProgress: async () => {},
-		shouldCancel: async () => false,
-		setContextLink: async () => {},
-		...overrides,
-	};
-}
 
 describe('Bulk ban file SHAs', () => {
 	let harness: ApiTestHarness;
@@ -74,7 +61,10 @@ describe('Bulk ban file SHAs', () => {
 		return getAdminRepository().listAllAuditLogsPaginated(100);
 	}
 
-	async function runTask(payload: Record<string, unknown>, helpers = createHelpers()): Promise<BulkJobResult> {
+	async function runTask(
+		payload: Record<string, unknown>,
+		helpers = createTestWorkerHelpers({jobId: 4242n, ...{}}),
+	): Promise<BulkJobResult> {
 		return (await bulkBanFileShas(payload, helpers)) as unknown as BulkJobResult;
 	}
 
@@ -134,10 +124,13 @@ describe('Bulk ban file SHAs', () => {
 
 	it('publishes the cache refresh for the hashes already banned when the job is cancelled', async () => {
 		let checks = 0;
-		const helpers = createHelpers({
-			shouldCancel: async () => {
-				checks += 1;
-				return checks > 1;
+		const helpers = createTestWorkerHelpers({
+			jobId: 4242n,
+			...{
+				shouldCancel: async () => {
+					checks += 1;
+					return checks > 1;
+				},
 			},
 		});
 

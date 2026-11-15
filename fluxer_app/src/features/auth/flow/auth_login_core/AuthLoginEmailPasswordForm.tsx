@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import FormField from '@app/features/auth/flow/AuthFormField';
+import styles from '@app/features/auth/flow/auth_login_core/AuthLoginEmailPasswordForm.module.css';
 import {
 	EMAIL_DESCRIPTOR,
 	PASSWORD_DESCRIPTOR,
 	USERNAME_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Button} from '@app/features/ui/button/Button';
+import {flxElementClassName} from '@app/lib/react';
 import {useLingui} from '@lingui/react/macro';
 import type React from 'react';
 import {useId} from 'react';
@@ -21,7 +23,7 @@ export interface AuthFormControllerLike {
 	isSubmitting?: boolean;
 }
 
-export interface AuthEmailPasswordFormClasses {
+interface AuthEmailPasswordFormClasses {
 	form: string;
 }
 
@@ -31,10 +33,11 @@ interface Props {
 	fieldErrors?: FieldErrors;
 	submitLabel: React.ReactNode;
 	classes: AuthEmailPasswordFormClasses;
-	extraFields?: React.ReactNode;
 	links?: React.ReactNode;
 	linksWrapperClassName?: string;
 	disableSubmit?: boolean;
+	footerStart?: React.ReactNode;
+	statusMessage?: string | null;
 	identifierField?: 'email' | 'login';
 }
 
@@ -44,17 +47,18 @@ export default function AuthLoginEmailPasswordForm({
 	fieldErrors,
 	submitLabel,
 	classes,
-	extraFields,
 	links,
 	linksWrapperClassName,
 	disableSubmit,
+	footerStart,
+	statusMessage,
 	identifierField = 'email',
 }: Props) {
 	const {i18n} = useLingui();
 	const emailId = useId();
 	const passwordId = useId();
-	const isSubmitting = Boolean(form.isSubmitting);
-	const submitDisabled = isLoading || isSubmitting || Boolean(disableSubmit);
+	const isPending = isLoading || Boolean(form.isSubmitting);
+	const hasStatus = statusMessage != null && statusMessage.length > 0;
 	return (
 		<form
 			className={classes.form}
@@ -93,20 +97,35 @@ export default function AuthLoginEmailPasswordForm({
 				error={form.getError('password') || fieldErrors?.get('password')}
 				data-flx="auth.flow.auth-login-core.auth-login-email-password-form.form-field.set-value.password"
 			/>
-			{extraFields}
 			{links ? (
 				<div className={linksWrapperClassName} data-flx="auth.flow.auth-login-core.auth-login-email-password-form.div">
 					{links}
 				</div>
 			) : null}
-			<Button
-				type="submit"
-				fitContainer
-				disabled={submitDisabled}
-				data-flx="auth.flow.auth-login-core.auth-login-email-password-form.button.submit"
+			<flx-auth-login-email-password-form-footer
+				className={flxElementClassName(styles.footer)}
+				data-flx="auth.flow.auth-login-core.auth-login-email-password-form.footer"
 			>
-				{submitLabel}
-			</Button>
+				{hasStatus ? (
+					<span
+						className={styles.status}
+						role="status"
+						data-flx="auth.flow.auth-login-core.auth-login-email-password-form.status"
+					>
+						{statusMessage}
+					</span>
+				) : (
+					footerStart
+				)}
+				<Button
+					type="submit"
+					submitting={isPending}
+					disabled={Boolean(disableSubmit)}
+					data-flx="auth.flow.auth-login-core.auth-login-email-password-form.button.submit"
+				>
+					{submitLabel}
+				</Button>
+			</flx-auth-login-email-password-form-footer>
 		</form>
 	);
 }

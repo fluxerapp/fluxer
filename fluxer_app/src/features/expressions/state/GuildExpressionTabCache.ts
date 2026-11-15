@@ -6,6 +6,7 @@ import type {
 	GuildSticker,
 	GuildStickerWithUser,
 } from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
+import type {UserPartial} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {sortBySnowflakeDesc} from '@fluxer/snowflake/src/SnowflakeUtils';
 
 type EmojiUpdateListener = (emojis: ReadonlyArray<GuildEmojiWithUser>) => void;
@@ -82,68 +83,50 @@ export function seedGuildStickerCache(guildId: string, stickers: ReadonlyArray<G
 	setCache(stickerCache, stickerAccessSequence, stickerListeners, guildId, stickers, false);
 }
 
+function subscribe<T>(
+	listeners: Map<string, Set<(items: ReadonlyArray<T>) => void>>,
+	guildId: string,
+	listener: (items: ReadonlyArray<T>) => void,
+): () => void {
+	let listenersForGuild = listeners.get(guildId);
+	if (!listenersForGuild) {
+		listenersForGuild = new Set();
+		listeners.set(guildId, listenersForGuild);
+	}
+	listenersForGuild.add(listener);
+	return () => {
+		listenersForGuild.delete(listener);
+		if (listenersForGuild.size === 0) listeners.delete(guildId);
+	};
+}
+
+function patchFromGateway<T extends {id: string; user?: UserPartial}>(
+	cache: Map<string, ReadonlyArray<T & {user: UserPartial}>>,
+	accessSequence: Set<string>,
+	listeners: Map<string, Set<(items: ReadonlyArray<T & {user: UserPartial}>) => void>>,
+	guildId: string,
+	updates: ReadonlyArray<T>,
+): void {
+	const previous = cache.get(guildId) ?? [];
+	const previousUserById = new Map(previous.map((item) => [item.id, item.user]));
+	const next = updates
+		.map((item) => {
+			const user = item.user ?? previousUserById.get(item.id);
+			return user ? {...item, user} : null;
+		})
+		.filter((entry): entry is T & {user: UserPartial} => Boolean(entry));
+	setCache(cache, accessSequence, listeners, guildId, next, true);
+}
+
 export function subscribeToGuildEmojiUpdates(guildId: string, listener: EmojiUpdateListener): () => void {
-	let listenersForGuild = emojiListeners.get(guildId);
-	if (!listenersForGuild) {
-		listenersForGuild = new Set();
-		emojiListeners.set(guildId, listenersForGuild);
-	}
-	listenersForGuild.add(listener);
-	return () => {
-		listenersForGuild?.delete(listener);
-		if (listenersForGuild && listenersForGuild.size === 0) {
-			emojiListeners.delete(guildId);
-		}
-	};
+	return subscribe(emojiListeners, guildId, listener);
 }
-
 export function subscribeToGuildStickerUpdates(guildId: string, listener: StickerUpdateListener): () => void {
-	let listenersForGuild = stickerListeners.get(guildId);
-	if (!listenersForGuild) {
-		listenersForGuild = new Set();
-		stickerListeners.set(guildId, listenersForGuild);
-	}
-	listenersForGuild.add(listener);
-	return () => {
-		listenersForGuild?.delete(listener);
-		if (listenersForGuild && listenersForGuild.size === 0) {
-			stickerListeners.delete(guildId);
-		}
-	};
+	return subscribe(stickerListeners, guildId, listener);
 }
-
-export function patchGuildEmojiCacheFromGateway(guildId: string, updates: ReadonlyArray<GuildEmoji>) {
-	const previous = emojiCache.get(guildId) ?? [];
-	const previousUserById = new Map(previous.map((emoji) => [emoji.id, emoji.user]));
-	const next = updates
-		.map((emoji) => {
-			const user = emoji.user ?? previousUserById.get(emoji.id);
-			if (!user) {
-				return null;
-			}
-			return {
-				...emoji,
-				user,
-			};
-		})
-		.filter((entry): entry is GuildEmojiWithUser => Boolean(entry));
-	setCache(emojiCache, emojiAccessSequence, emojiListeners, guildId, next, true);
+export function patchGuildEmojiCacheFromGateway(guildId: string, updates: ReadonlyArray<GuildEmoji>): void {
+	patchFromGateway(emojiCache, emojiAccessSequence, emojiListeners, guildId, updates);
 }
-
-export function patchGuildStickerCacheFromGateway(guildId: string, updates: ReadonlyArray<GuildSticker>) {
-	const previous = stickerCache.get(guildId) ?? [];
-	const previousUserById = new Map(previous.map((sticker) => [sticker.id, sticker.user]));
-	const next = updates
-		.map((sticker) => {
-			const user = sticker.user ?? previousUserById.get(sticker.id);
-			if (!user) {
-				return null;
-			}
-			return {
-				...sticker,
-				user,
-			};
-		})
-		.filter((entry): entry is GuildStickerWithUser => Boolean(entry));
-	setCache(stickerCache, stickerAccessSequence, stickerListeners, guildId, next, true);
+export function patchGuildStickerCacheFromGateway(guildId: string, updates: ReadonlyArray<GuildSticker>): void {
+	patchFromGateway(stickerCache, stickerAccessSequence, stickerListeners, guildId, updates);
 }

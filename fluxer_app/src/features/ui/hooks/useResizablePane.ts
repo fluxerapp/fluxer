@@ -12,12 +12,12 @@ import {getAppRemScale} from '@app/features/ui/utils/AppZoomUtils';
 import type React from 'react';
 import {useCallback, useEffect, useRef, useState} from 'react';
 
-export interface ResizablePaneSize {
+interface ResizablePaneSize {
 	width: number;
 	height: number;
 }
 
-export interface ResizablePaneWidthSnap {
+interface ResizablePaneWidthSnap {
 	readonly step: number;
 	readonly offset: number;
 }
@@ -86,7 +86,7 @@ const RESIZABLE_PANE_SIZE_JSON_MAX_LENGTH =
 const TITLEBAR_SELECTOR = '[data-native-titlebar]';
 const logger = new Logger('useResizablePane');
 
-export function clampResizablePaneDimension(
+function clampResizablePaneDimension(
 	value: number,
 	configuredMin: number,
 	availableMax: number,
@@ -564,19 +564,12 @@ export function useResizablePane(
 			let requestedSize = measuredSize;
 			if (event.key === 'Home' || event.key === 'End') {
 				const setMaximum = event.key === 'End';
+				const limitSize = setMaximum
+					? {width: Number.MAX_SAFE_INTEGER, height: Number.MAX_SAFE_INTEGER}
+					: optionsRef.current.minSize;
 				requestedSize = {
-					width:
-						edge.includes('left') || edge.includes('right')
-							? setMaximum
-								? Number.MAX_SAFE_INTEGER
-								: optionsRef.current.minSize.width
-							: measuredSize.width,
-					height:
-						edge.includes('top') || edge.includes('bottom')
-							? setMaximum
-								? Number.MAX_SAFE_INTEGER
-								: optionsRef.current.minSize.height
-							: measuredSize.height,
+					width: edge.includes('left') || edge.includes('right') ? limitSize.width : measuredSize.width,
+					height: edge.includes('top') || edge.includes('bottom') ? limitSize.height : measuredSize.height,
 				};
 			} else {
 				const step = event.shiftKey ? RESIZABLE_PANE_KEYBOARD_LARGE_STEP : RESIZABLE_PANE_KEYBOARD_STEP;

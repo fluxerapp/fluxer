@@ -39,7 +39,7 @@ function isStandardPort(scheme: string, port: number): boolean {
 	);
 }
 
-export function canonicalizeDomain(value: string): string {
+function canonicalizeDomain(value: string): string {
 	const trimmed = value.trim().toLowerCase();
 	return trimmed.endsWith('.') ? trimmed.slice(0, -1) : trimmed;
 }
@@ -115,7 +115,7 @@ export function normalizePublicEndpoint(url: string, baseDomain: string, publicP
 	return `${url.slice(0, authorityEnd)}:${publicPort}${url.slice(authorityEnd)}`;
 }
 
-export function deriveDomain(
+function deriveDomain(
 	endpointType:
 		| 'api'
 		| 'api_client'

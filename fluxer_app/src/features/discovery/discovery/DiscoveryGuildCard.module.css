@@ -68,7 +68,7 @@
 .icon {
 	position: absolute;
 	top: calc(7.5rem - 1.75rem);
-	left: var(--spacing-4);
+	inset-inline-start: var(--spacing-4);
 	z-index: 1;
 	box-shadow: 0 0 0 0.1875rem var(--discovery-card-surface);
 	pointer-events: none;

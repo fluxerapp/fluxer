@@ -13,7 +13,6 @@
     forget_room_key_if_channel_idle_guild/4,
     forget_room_key_if_channel_empty_dm/3,
     channel_is_e2ee_active/2,
-    channel_is_e2ee_active_dm/2,
     join_downgrades_e2ee/4,
     voice_state_e2ee_capable/1,
     is_e2ee_enabled_for_guild/1,
@@ -126,10 +125,6 @@ pending_e2ee_capable(PendingData) ->
         _ -> false
     end.
 
--spec channel_is_e2ee_active_dm(integer(), map()) -> boolean().
-channel_is_e2ee_active_dm(ChannelId, VoiceStates) ->
-    channel_is_e2ee_active(ChannelId, VoiceStates).
-
 -spec join_downgrades_e2ee(integer(), boolean(), boolean(), map()) -> boolean().
 join_downgrades_e2ee(ChannelId, E2EECapable, Bot, VoiceStates) ->
     (Bot orelse not E2EECapable) andalso
@@ -207,119 +202,3 @@ forget_room_key_if_channel_empty_dm(ChannelId, VoiceStates, DmState) ->
 generate_key() ->
     Bytes = crypto:strong_rand_bytes(32),
     base64:encode(Bytes, #{mode => urlsafe, padding => false}).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-voice_state_e2ee_capable_test() ->
-    ?assert(voice_state_e2ee_capable(#{<<"e2ee_capable">> => true})),
-    ?assertNot(voice_state_e2ee_capable(#{<<"e2ee_capable">> => false})),
-    ?assertNot(voice_state_e2ee_capable(#{})),
-    ?assertNot(voice_state_e2ee_capable(not_a_map)).
-
-channel_is_e2ee_active_empty_test() ->
-    ?assertNot(channel_is_e2ee_active(100, #{})).
-
-channel_is_e2ee_active_all_capable_test() ->
-    VoiceStates = #{
-        <<"c1">> => #{<<"channel_id">> => <<"100">>, <<"e2ee_capable">> => true},
-        <<"c2">> => #{<<"channel_id">> => <<"100">>, <<"e2ee_capable">> => true}
-    },
-    ?assert(channel_is_e2ee_active(100, VoiceStates)).
-
-channel_is_e2ee_active_mixed_test() ->
-    VoiceStates = #{
-        <<"c1">> => #{<<"channel_id">> => <<"100">>, <<"e2ee_capable">> => true},
-        <<"c2">> => #{<<"channel_id">> => <<"100">>, <<"e2ee_capable">> => false}
-    },
-    ?assertNot(channel_is_e2ee_active(100, VoiceStates)).
-
-channel_is_e2ee_active_ignores_other_channels_test() ->
-    VoiceStates = #{
-        <<"c1">> => #{<<"channel_id">> => <<"100">>, <<"e2ee_capable">> => true},
-        <<"c2">> => #{<<"channel_id">> => <<"200">>, <<"e2ee_capable">> => false}
-    },
-    ?assert(channel_is_e2ee_active(100, VoiceStates)).
-
-check_join_allowed_guild_empty_test() ->
-    ?assertEqual(ok, check_join_allowed_guild(100, false, false, #{})).
-
-check_join_allowed_guild_blocked_test() ->
-    VoiceStates = #{
-        <<"c1">> => #{<<"channel_id">> => <<"100">>, <<"e2ee_capable">> => true}
-    },
-    ?assertEqual(
-        {error, voice_e2ee_required},
-        check_join_allowed_guild(100, false, false, VoiceStates)
-    ).
-
-check_join_allowed_guild_bot_breaks_test() ->
-    VoiceStates = #{
-        <<"c1">> => #{<<"channel_id">> => <<"100">>, <<"e2ee_capable">> => true}
-    },
-    ?assertEqual(ok, check_join_allowed_guild(100, false, true, VoiceStates)).
-
-check_join_allowed_guild_e2ee_join_test() ->
-    VoiceStates = #{
-        <<"c1">> => #{<<"channel_id">> => <<"100">>, <<"e2ee_capable">> => true}
-    },
-    ?assertEqual(ok, check_join_allowed_guild(100, true, false, VoiceStates)).
-
-join_downgrades_e2ee_bot_breaks_active_channel_test() ->
-    VoiceStates = #{
-        <<"c1">> => #{<<"channel_id">> => <<"100">>, <<"e2ee_capable">> => true}
-    },
-    ?assert(join_downgrades_e2ee(100, true, true, VoiceStates)).
-
-join_downgrades_e2ee_non_capable_breaks_active_channel_test() ->
-    VoiceStates = #{
-        <<"c1">> => #{<<"channel_id">> => <<"100">>, <<"e2ee_capable">> => true}
-    },
-    ?assert(join_downgrades_e2ee(100, false, false, VoiceStates)).
-
-join_downgrades_e2ee_capable_join_does_not_downgrade_test() ->
-    VoiceStates = #{
-        <<"c1">> => #{<<"channel_id">> => <<"100">>, <<"e2ee_capable">> => true}
-    },
-    ?assertNot(join_downgrades_e2ee(100, true, false, VoiceStates)).
-
-join_downgrades_e2ee_inactive_channel_does_not_downgrade_test() ->
-    ?assertNot(join_downgrades_e2ee(100, false, true, #{})).
-
-get_or_create_room_key_returns_same_key_test() ->
-    {Key1, State1} = get_or_create_room_key_guild(100, #{}),
-    {Key2, _State2} = get_or_create_room_key_guild(100, State1),
-    ?assertEqual(Key1, Key2),
-    ?assert(is_binary(Key1)),
-    ?assert(byte_size(Key1) > 0).
-
-forget_room_key_clears_key_test() ->
-    {_Key, State1} = get_or_create_room_key_guild(100, #{}),
-    State2 = forget_room_key_guild(100, State1),
-    {NewKey, _State3} = get_or_create_room_key_guild(100, State2),
-    {OldKey, _} = get_or_create_room_key_guild(100, State1),
-    ?assertNotEqual(NewKey, OldKey).
-
-forget_room_key_if_channel_idle_keeps_key_for_active_voice_state_test() ->
-    {Key, State1} = get_or_create_room_key_guild(100, #{}),
-    VoiceStates = #{
-        <<"c1">> => #{<<"channel_id">> => <<"100">>, <<"e2ee_capable">> => true}
-    },
-    State2 = forget_room_key_if_channel_idle_guild(100, VoiceStates, #{}, State1),
-    {Key2, _} = get_or_create_room_key_guild(100, State2),
-    ?assertEqual(Key, Key2).
-
-forget_room_key_if_channel_idle_keeps_key_for_pending_join_test() ->
-    {Key, State1} = get_or_create_room_key_guild(100, #{}),
-    Pending = #{<<"c1">> => #{channel_id => 100, e2ee_capable => true}},
-    State2 = forget_room_key_if_channel_idle_guild(100, #{}, Pending, State1),
-    {Key2, _} = get_or_create_room_key_guild(100, State2),
-    ?assertEqual(Key, Key2).
-
-forget_room_key_if_channel_idle_clears_key_test() ->
-    {Key, State1} = get_or_create_room_key_guild(100, #{}),
-    State2 = forget_room_key_if_channel_idle_guild(100, #{}, #{}, State1),
-    {Key2, _} = get_or_create_room_key_guild(100, State2),
-    ?assertNotEqual(Key, Key2).
-
--endif.

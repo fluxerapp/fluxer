@@ -1,0 +1,42 @@
+<mj-head>
+	<mj-title>%%subject%%</mj-title>
+	<mj-preview>%%preheader%%&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;</mj-preview>
+	<mj-breakpoint width="480px" />
+	<mj-attributes>
+		<mj-all font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif" />
+		<mj-section padding="0" text-align="[[start]]" />
+		<mj-column padding="0" />
+	</mj-attributes>
+	<mj-raw>
+		<meta name="color-scheme" content="light dark" />
+		<meta name="supported-color-schemes" content="light dark" />
+		<meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no" />
+		<meta name="x-apple-disable-message-reformatting" />
+	</mj-raw>
+	<mj-style>
+		:root { color-scheme: light dark; supported-color-schemes: light dark; }
+		body { margin: 0; padding: 0; word-spacing: normal; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+		a { text-decoration: underline; }
+		.x-btn { text-decoration: none !important; }
+		@media only screen and (max-width: 480px) {
+			.x-pad > table > tbody > tr > td { padding-left: 16px !important; padding-right: 16px !important; }
+		}
+		@media (prefers-color-scheme: dark) {
+			.x-page, .x-page > [role="article"] { background-color: #121218 !important; }
+			.x-ink { color: #ececf3 !important; }
+			.x-muted { color: #a9a8bd !important; }
+			.x-link { color: #b8b5ff !important; }
+			.x-rule { border-color: #34334a !important; }
+			.x-box { background-color: #1f1e33 !important; border-color: #4a47a8 !important; }
+			.x-light { display: none !important; }
+			.x-dark { display: block !important; max-height: none !important; overflow: visible !important; }
+		}
+		[data-ogsb] .x-page, [data-ogsb] .x-page > [role="article"] { background-color: #121218 !important; }
+		[data-ogsc] .x-ink { color: #ececf3 !important; }
+		[data-ogsc] .x-muted { color: #a9a8bd !important; }
+		[data-ogsc] .x-link { color: #b8b5ff !important; }
+		[data-ogsb] .x-box { background-color: #1f1e33 !important; border-color: #4a47a8 !important; }
+		[data-ogsc] .x-light { display: none !important; }
+		[data-ogsc] .x-dark { display: block !important; max-height: none !important; overflow: visible !important; }
+	</mj-style>
+</mj-head>

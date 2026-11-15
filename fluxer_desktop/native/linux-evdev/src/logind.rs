@@ -132,14 +132,18 @@ async fn supervise(gate: &SessionGate) {
         }
         match &end {
             WatchEnd::Unreachable(err) if !ever_subscribed => {
-                eprintln!("[linux-evdev] logind unreachable, session gating disabled: {err}");
+                if failures == 0 {
+                    eprintln!("[linux-evdev] logind unreachable, session gating disabled: {err}");
+                }
                 gate.set_active(true);
-                return;
             }
             WatchEnd::NoSession(err) if !ever_subscribed => {
-                eprintln!("[linux-evdev] no logind session found, session gating disabled: {err}");
+                if failures == 0 {
+                    eprintln!(
+                        "[linux-evdev] no logind session found, session gating disabled: {err}"
+                    );
+                }
                 gate.set_active(true);
-                return;
             }
             WatchEnd::Unreachable(err) | WatchEnd::NoSession(err) | WatchEnd::Lost(Some(err))
                 if failures == 0 =>

@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-.toolbar {
+:where(.toolbar) {
 	--action-toolbar-surface: var(--form-surface-background);
 	--action-toolbar-border: var(--background-modifier-accent);
 	--action-toolbar-radius: 0.5rem;
@@ -8,6 +8,9 @@
 	--action-toolbar-padding: 0.1875rem;
 	--action-toolbar-shadow: 0 0.375rem 0.875rem rgb(0 0 0 / 0.18);
 	--action-toolbar-shadow-light: 0 0.375rem 0.875rem rgb(0 0 0 / 0.1);
+}
+
+.toolbar {
 	display: grid;
 	box-sizing: border-box;
 	align-items: center;
@@ -27,7 +30,7 @@
 	box-shadow: var(--action-toolbar-shadow-light);
 }
 
-.item {
+:where(.item) {
 	--action-toolbar-item-size: 1.75rem;
 	--action-toolbar-item-radius: 0.375rem;
 	--action-toolbar-item-background: transparent;
@@ -36,6 +39,9 @@
 	--action-toolbar-item-color: var(--text-tertiary);
 	--action-toolbar-item-hover-scale: 1.035;
 	--action-toolbar-item-scale: 1;
+}
+
+.item {
 	display: inline-grid;
 	position: relative;
 	box-sizing: border-box;
@@ -78,9 +84,12 @@
 	height: auto;
 }
 
-.textItem {
+:where(.textItem) {
 	--action-toolbar-text-item-height: 1.5rem;
 	--action-toolbar-text-item-padding: 0 0.5rem;
+}
+
+.textItem {
 	width: auto;
 	min-width: 0;
 	height: var(--action-toolbar-text-item-height);

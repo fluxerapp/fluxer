@@ -12,12 +12,6 @@
 	line-height: 1.5;
 }
 
-.helper {
-	margin: 0;
-	color: var(--text-primary-muted);
-	line-height: 1.45;
-}
-
 .tips {
 	list-style: none;
 	margin: 0;
@@ -76,10 +70,4 @@
 	margin: 0;
 	color: var(--text-primary);
 	line-height: 1.4;
-}
-
-.footer {
-	display: flex;
-	gap: 0.5rem;
-	padding: 0.5rem 1rem;
 }

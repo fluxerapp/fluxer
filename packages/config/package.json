@@ -7,13 +7,14 @@
 		"./*": "./*"
 	},
 	"scripts": {
+		"self-host-env:check": "tsx scripts/CheckSelfHostEnv.ts",
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"typecheck": "tsc --noEmit"
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",
-		"@vitest/coverage-v8": "catalog:",
+		"tsx": "catalog:",
 		"typescript": "catalog:ts7",
 		"vitest": "catalog:",
 		"yaml": "catalog:"

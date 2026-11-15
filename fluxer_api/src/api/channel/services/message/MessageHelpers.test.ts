@@ -8,8 +8,8 @@ import {
 } from '@app/api/channel/services/message/MessageHelpers';
 import type {MessageEmbed} from '@app/api/database/types/MessageTypes';
 import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
-import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import {Message} from '@app/api/models/Message';
+import {MockStorageService} from '@app/api/test/mocks/MockStorageService';
 import {MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import {describe, expect, it} from 'vitest';
 
@@ -96,13 +96,8 @@ function makeMessageWithMedia(
 
 describe('purgeMessageAttachments', () => {
 	it('queues each stored media URL of a deleted message once and leaves media of other messages alone', async () => {
-		const deletedObjects: Array<string> = [];
 		const queuedUrls: Array<string> = [];
-		const storageService = {
-			deleteObject: async (bucket: string, key: string) => {
-				deletedObjects.push(`${bucket}/${key}`);
-			},
-		} as unknown as IStorageService;
+		const storageService = new MockStorageService();
 		const purgeQueue: IPurgeQueue = {
 			addUrls: async (urls) => {
 				queuedUrls.push(...urls);
@@ -111,17 +106,12 @@ describe('purgeMessageAttachments', () => {
 
 		await purgeMessageAttachments(makeMessageWithMedia(), storageService, purgeQueue);
 
-		expect(deletedObjects).toEqual([`${Config.s3.buckets.cdn}/${ATTACHMENT_KEY}`]);
+		expect(storageService.getDeletedObjects()).toEqual([{bucket: Config.s3.buckets.cdn, key: ATTACHMENT_KEY}]);
 		expect(queuedUrls).toEqual([`${Config.endpoints.media}/${ATTACHMENT_KEY}`]);
 	});
 
 	it('purges embed files the message owns and leaves marked files under other channels alone', async () => {
-		const deletedObjects: Array<string> = [];
-		const storageService = {
-			deleteObject: async (_bucket: string, key: string) => {
-				deletedObjects.push(key);
-			},
-		} as unknown as IStorageService;
+		const storageService = new MockStorageService();
 		const purgeQueue: IPurgeQueue = {addUrls: async () => {}};
 		const ownedEmbedKey = 'attachments/10/201/embed.png';
 
@@ -135,6 +125,6 @@ describe('purgeMessageAttachments', () => {
 			purgeQueue,
 		);
 
-		expect(deletedObjects).toEqual([ATTACHMENT_KEY, ownedEmbedKey]);
+		expect(storageService.getDeletedObjects().map((object) => object.key)).toEqual([ATTACHMENT_KEY, ownedEmbedKey]);
 	});
 });

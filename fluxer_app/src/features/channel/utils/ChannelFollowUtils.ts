@@ -51,7 +51,7 @@ export function getChannelFollowSourceRestriction(source: Channel): ChannelFollo
 	return null;
 }
 
-export function isAllowedFollowTarget(restriction: ChannelFollowSourceRestriction, target: Channel): boolean {
+function isAllowedFollowTarget(restriction: ChannelFollowSourceRestriction, target: Channel): boolean {
 	if (restriction === 'age_restricted') return isAgeRestricted(target);
 	if (restriction === 'content_warning') return isAgeRestricted(target) || hasContentWarning(target);
 	return true;

@@ -5,11 +5,13 @@ import {ExpiryFootnote} from '@app/features/app/components/shared/ExpiryFootnote
 import {AttachmentLayoutGrid} from '@app/features/channel/components/embeds/attachments/AttachmentLayoutGrid';
 import {AttachmentSingleMedia} from '@app/features/channel/components/embeds/attachments/AttachmentSingleMedia';
 import {isMediaAttachment} from '@app/features/channel/components/MessageAttachmentUtils';
+import {isSensitiveMediaBlocked} from '@app/features/messaging/hooks/useMatureMedia';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {formatAttachmentDate, getEarliestAttachmentExpiry} from '@app/features/messaging/utils/AttachmentExpiryUtils';
 import {getMosaicMediaDimensions} from '@app/features/messaging/utils/MediaDimensionConfig';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import styles from '@app/features/theme/styles/AttachmentMosaic.module.css';
+import {MessageAttachmentFlags} from '@fluxer/constants/src/ChannelConstants';
 import type {MessageAttachment} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -53,7 +55,17 @@ interface AttachmentMosaicStyle extends CSSProperties {
 const AttachmentMosaicComponent: FC<AttachmentMosaicProps> = observer(
 	({attachments, message, hideExpiryFootnote, isPreview, snapshotIndex, onDelete}) => {
 		const {i18n} = useLingui();
-		const mediaAttachments = useMemo(() => attachments.filter(isMediaAttachment), [attachments]);
+		const blocksAllMedia = isSensitiveMediaBlocked(false, message?.channelId);
+		const blocksFlaggedMedia = isSensitiveMediaBlocked(true, message?.channelId);
+		const mediaAttachments = useMemo(
+			() =>
+				attachments.filter((attachment) => {
+					if (!isMediaAttachment(attachment)) return false;
+					const flagged = attachment.nsfw || (attachment.flags & MessageAttachmentFlags.CONTAINS_EXPLICIT_MEDIA) !== 0;
+					return !(flagged ? blocksFlaggedMedia : blocksAllMedia);
+				}),
+			[attachments, blocksAllMedia, blocksFlaggedMedia],
+		);
 		const mosaicDimensions = getMosaicMediaDimensions();
 		const mosaicStyle: AttachmentMosaicStyle = {
 			'--attachment-media-max-height': remFromPx(mosaicDimensions.maxHeight),

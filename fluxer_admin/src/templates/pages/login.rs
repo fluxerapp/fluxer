@@ -1,9 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::config::AdminConfig;
-use maud::{DOCTYPE, Markup, html};
+use crate::{
+    api::types::PremiumBranding,
+    config::AdminConfig,
+    templates::{
+        layout::{admin_title, favicon_links, product_name},
+        layout_scripts::{HISTORY_CACHE_CLEAR_SCRIPT, THEME_INIT_SCRIPT},
+    },
+};
+use maud::{DOCTYPE, Markup, PreEscaped, html};
 
-pub fn login_page(config: &AdminConfig, error_message: Option<&str>) -> Markup {
+pub fn login_page(
+    config: &AdminConfig,
+    branding: Option<&PremiumBranding>,
+    error_message: Option<&str>,
+) -> Markup {
     let base = &config.base_path;
     html! {
         (DOCTYPE)
@@ -11,19 +22,21 @@ pub fn login_page(config: &AdminConfig, error_message: Option<&str>) -> Markup {
             head {
                 meta charset="UTF-8";
                 meta name="viewport" content="width=device-width, initial-scale=1.0";
-                title { "Login ~ Fluxer Admin" }
+                title { "Login ~ " (admin_title(branding)) }
+                script { (PreEscaped(THEME_INIT_SCRIPT)) }
                 link rel="stylesheet" href={(base) "/static/fonts/" (crate::fonts::STYLESHEET_FILE_NAME)};
                 link rel="stylesheet" href={(base) "/static/app.css"};
-                link rel="icon" type="image/x-icon" href={(config.static_cdn_endpoint) "/web/favicon.ico"};
+                (favicon_links(config, branding))
             }
             body class="flex min-h-[100dvh] items-center justify-center bg-neutral-50 p-4" {
+                script { (PreEscaped(HISTORY_CACHE_CLEAR_SCRIPT)) }
                 main class="w-full max-w-sm" {
                     div class="flex flex-col gap-4 items-stretch" {
                         div class="rounded-lg bg-white transition-all border border-neutral-200 p-8" {
                             div class="flex flex-col gap-8 items-center" {
                                 div class="flex flex-col gap-2 items-center" {
                                     h1 class="text-gray-900 tracking-tight text-xl" {
-                                        "Fluxer Admin"
+                                        (admin_title(branding))
                                     }
                                 }
                                 @if let Some(error) = error_message {
@@ -31,20 +44,47 @@ pub fn login_page(config: &AdminConfig, error_message: Option<&str>) -> Markup {
                                         div { (error) }
                                     }
                                 }
-                                a href={(base) "/auth/start"} role="button"
-                                    class="inline-flex items-center justify-center gap-2 \
-                                           font-medium rounded-lg transition-all duration-150 \
-                                           focus:outline-none focus:ring-2 focus:ring-offset-2 \
-                                           bg-neutral-900 text-white hover:bg-neutral-800 \
-                                           px-4 py-2 text-base w-full sm:w-fit \
-                                           focus:ring-offset-white" {
-                                    span { "Sign in with Fluxer" }
+                                @if let Some(sso) = &config.sso {
+                                    div class="flex flex-col gap-3 items-center w-full" {
+                                        @if !sso.only {
+                                            (fluxer_sign_in_button(base, branding))
+                                        }
+                                        a href={(base) "/sso/start"} role="button"
+                                            class="inline-flex items-center justify-center gap-2 \
+                                                   font-medium rounded-lg transition-all duration-150 \
+                                                   focus:outline-none focus:ring-2 focus:ring-offset-2 \
+                                                   bg-neutral-50 text-neutral-700 hover:text-neutral-900 \
+                                                   border border-neutral-300 hover:border-neutral-400 \
+                                                   px-4 py-2 text-base w-full sm:w-fit \
+                                                   focus:ring-offset-white" {
+                                            span {
+                                                "Sign in with "
+                                                (sso.display_name.as_deref().unwrap_or("single sign-on"))
+                                            }
+                                        }
+                                    }
+                                } @else {
+                                    (fluxer_sign_in_button(base, branding))
                                 }
                             }
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+fn fluxer_sign_in_button(base: &str, branding: Option<&PremiumBranding>) -> Markup {
+    html! {
+        a href={(base) "/auth/start"} role="button"
+            class="inline-flex items-center justify-center gap-2 \
+                   font-medium rounded-lg transition-all duration-150 \
+                   focus:outline-none focus:ring-2 focus:ring-offset-2 \
+                   bg-neutral-900 text-white hover:bg-neutral-800 \
+                   px-4 py-2 text-base w-full sm:w-fit \
+                   focus:ring-offset-white" {
+            span { "Sign in with " (product_name(branding)) }
         }
     }
 }

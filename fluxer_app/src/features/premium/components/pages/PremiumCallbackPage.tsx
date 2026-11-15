@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Routes} from '@app/app/Routes';
+import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import styles from '@app/features/premium/components/pages/PremiumCallbackPage.module.css';
+import {isOperatorPassAvailable} from '@app/features/premium/utils/OperatorPassUtils';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {Trans} from '@lingui/react/macro';
 import {CheckCircleIcon, XCircleIcon} from '@phosphor-icons/react';
@@ -12,12 +15,18 @@ const PremiumCallbackPage = observer(() => {
 	const location = useLocation();
 	const queryParams = new URLSearchParams(location.search);
 	const status = queryParams.get('status');
+	const isOperatorPass = isOperatorPassAvailable() && queryParams.get('product') === 'operator_pass';
+	const operatorPassSessionId = isOperatorPass && status === 'success' ? queryParams.get('session_id') : null;
 	useEffect(() => {
 		if (!shouldShowPremiumFeatures()) {
 			window.location.replace('/');
+			return;
 		}
-	}, []);
-	if (!shouldShowPremiumFeatures()) {
+		if (operatorPassSessionId) {
+			RouterUtils.replaceWith(`${Routes.OPERATOR_PASS}?session_id=${encodeURIComponent(operatorPassSessionId)}`);
+		}
+	}, [operatorPassSessionId]);
+	if (!shouldShowPremiumFeatures() || operatorPassSessionId) {
 		return null;
 	}
 	const isSuccess = status === 'success';

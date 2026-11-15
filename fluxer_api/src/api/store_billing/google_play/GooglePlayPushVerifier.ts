@@ -6,31 +6,19 @@ import {StoreNotificationUnauthorizedError} from '@fluxer/errors/src/domains/pay
 import {createRemoteJWKSet, type JWTPayload, jwtVerify} from 'jose';
 import {z} from 'zod';
 
-export const GOOGLE_OIDC_JWKS_URL = 'https://www.googleapis.com/oauth2/v3/certs';
+const GOOGLE_OIDC_JWKS_URL = 'https://www.googleapis.com/oauth2/v3/certs';
 const GOOGLE_OIDC_ISSUERS: Array<string> = ['https://accounts.google.com', 'accounts.google.com'];
 const CLOCK_TOLERANCE_SECONDS = 30;
 
 type RemoteJwks = ReturnType<typeof createRemoteJWKSet>;
 
-export interface GooglePlayPushIdentity {
+interface GooglePlayPushIdentity {
 	email: string;
 	subject: string | null;
 }
 
-interface GooglePlayPushVerifierOptions {
-	jwksUrl?: string;
-	now?: () => Date;
-}
-
 export class GooglePlayPushVerifier {
-	private readonly jwksUrl: string;
-	private readonly now: () => Date;
 	private jwks: RemoteJwks | null = null;
-
-	constructor(options: GooglePlayPushVerifierOptions = {}) {
-		this.jwksUrl = options.jwksUrl ?? GOOGLE_OIDC_JWKS_URL;
-		this.now = options.now ?? (() => new Date());
-	}
 
 	async verifyAuthorizationHeader(header: string | null | undefined): Promise<GooglePlayPushIdentity> {
 		const match = /^Bearer\s+(\S+)$/iu.exec(header?.trim() ?? '');
@@ -51,7 +39,7 @@ export class GooglePlayPushVerifier {
 				audience,
 				requiredClaims: ['exp', 'iat'],
 				clockTolerance: CLOCK_TOLERANCE_SECONDS,
-				currentDate: this.now(),
+				currentDate: new Date(),
 			});
 			payload = result.payload;
 		} catch (error) {
@@ -69,7 +57,7 @@ export class GooglePlayPushVerifier {
 
 	private getJwks(): RemoteJwks {
 		if (!this.jwks) {
-			this.jwks = createRemoteJWKSet(new URL(this.jwksUrl));
+			this.jwks = createRemoteJWKSet(new URL(GOOGLE_OIDC_JWKS_URL));
 		}
 		return this.jwks;
 	}
@@ -93,7 +81,7 @@ const PushEnvelopeSchema = z.object({
 	subscription: z.string().optional(),
 });
 
-export interface GooglePlayPushMessage {
+interface GooglePlayPushMessage {
 	messageId: string;
 	data: string;
 	subscription: string | null;
@@ -162,7 +150,7 @@ const DeveloperNotificationSchema = z.object({
 	testNotification: z.object({version: z.string().optional()}).optional(),
 });
 
-export type GooglePlayNotificationEvent =
+type GooglePlayNotificationEvent =
 	| {type: 'subscription'; notificationType: number; purchaseToken: string}
 	| {type: 'one_time_product'; notificationType: number; purchaseToken: string; productId: string | null}
 	| {
@@ -200,13 +188,24 @@ function toEvent(notification: z.infer<typeof DeveloperNotificationSchema>): Goo
 	}
 	if (notification.voidedPurchaseNotification) {
 		const voided = notification.voidedPurchaseNotification;
-		return {
+		const event: Extract<GooglePlayNotificationEvent, {type: 'voided_purchase'}> = {
 			type: 'voided_purchase',
 			purchaseToken: voided.purchaseToken,
 			orderId: voided.orderId ?? null,
-			productType: voided.productType === 1 ? 'subscription' : voided.productType === 2 ? 'one_time' : null,
-			refundType: voided.refundType === 1 ? 'full' : voided.refundType === 2 ? 'quantity_based_partial' : null,
+			productType: null,
+			refundType: null,
 		};
+		if (voided.productType === 1) {
+			event.productType = 'subscription';
+		} else if (voided.productType === 2) {
+			event.productType = 'one_time';
+		}
+		if (voided.refundType === 1) {
+			event.refundType = 'full';
+		} else if (voided.refundType === 2) {
+			event.refundType = 'quantity_based_partial';
+		}
+		return event;
 	}
 	if (notification.pendingRefundReviewNotification) {
 		return {type: 'pending_refund_review', orderId: notification.pendingRefundReviewNotification.orderId ?? null};
@@ -221,7 +220,10 @@ export function decodeGooglePlayDeveloperNotification(data: string): GooglePlayD
 	let json: unknown;
 	try {
 		json = JSON.parse(Buffer.from(data, 'base64').toString('utf8'));
-	} catch {
+	} catch (error) {
+		if (!(error instanceof SyntaxError)) {
+			Logger.warn({error}, 'Failed to decode Google Play developer notification');
+		}
 		return null;
 	}
 	const parsed = DeveloperNotificationSchema.safeParse(json);

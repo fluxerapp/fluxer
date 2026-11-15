@@ -12,7 +12,7 @@ const LIST_ITEM_RE = /^( *)(?:[-*]|\d+\.) /;
 const INVISIBLE_RE =
 	/[\p{White_Space}\0\u00ad\u061c\u115f\u1160\u180e\u200b-\u200f\u202a-\u202e\u2060-\u2069\u2800\u3164\ufeff\uffa0]|\u034f|\u17b4|\u17b5|[\ufe00-\ufe0f]|[\u{e0100}-\u{e01ef}]/gu;
 
-export interface CodeIndentEdit {
+interface CodeIndentEdit {
 	start: number;
 	end: number;
 	text: string;
@@ -59,6 +59,11 @@ interface ScanScope {
 	rendered: boolean;
 }
 
+interface ClosingLines {
+	validFrom: number;
+	nextByFence: Map<number, Int32Array>;
+}
+
 interface PhysicalLine {
 	start: number;
 	end: number;
@@ -79,7 +84,7 @@ export function hasVisibleContent(text: string): boolean {
 	return text.replace(INVISIBLE_RE, '') !== '';
 }
 
-function hasOpenInlineCode(text: string): boolean {
+export function hasOpenInlineCode(text: string): boolean {
 	let open = 0;
 	for (const [run] of text.matchAll(/`+/g)) {
 		if (open === 0) {
@@ -170,12 +175,48 @@ function opensUnclosedBlock(line: SourceLine, column: number, info: string): boo
 	);
 }
 
+const closingLinesByLines = new WeakMap<Array<SourceLine>, ClosingLines>();
+
+function findClosingLine(lines: Array<SourceLine>, from: number, fence: string): number {
+	let memo = closingLinesByLines.get(lines);
+	if (memo == null || from < memo.validFrom) {
+		memo = {validFrom: 0, nextByFence: new Map()};
+		closingLinesByLines.set(lines, memo);
+	}
+	let next = memo.nextByFence.get(fence.length);
+	if (next == null) {
+		next = new Int32Array(lines.length + 1);
+		memo.nextByFence.set(fence.length, next);
+	}
+	let position = from;
+	let found = lines.length;
+	while (position < lines.length) {
+		const known = next[position]!;
+		if (known !== 0) {
+			found = known - 1;
+			break;
+		}
+		if (findCodeBlockClosing(lines[position]!.text, fence, fence.length) != null) {
+			found = position;
+			next[position] = found + 1;
+			break;
+		}
+		position += 1;
+	}
+	next.fill(found + 1, from, position);
+	return found;
+}
+
 function resumeAt(lines: Array<SourceLine>, {index, column}: LinePoint): number {
 	const line = lines[index]!;
 	if (column >= line.text.length) {
 		return index + 1;
 	}
 	lines[index] = {text: line.text.slice(column), offset: line.offset + column};
+	const memo = closingLinesByLines.get(lines);
+	if (memo != null) {
+		memo.validFrom = Math.max(memo.validFrom, index + 1);
+	}
 	return index;
 }
 
@@ -200,19 +241,19 @@ function parseCodeBlock(lines: Array<SourceLine>, index: number, column: number,
 			resume: visible ? {index, column: infoStart + inlineEnd + fence.length} : null,
 		};
 	}
-	let content = FENCE_LANGUAGE_RE.test(info) ? '' : info;
-	for (let next = index + 1; next < lines.length; next += 1) {
-		const text = lines[next]!.text;
-		const closing = findCodeBlockClosing(text, fence, fence.length);
-		if (closing == null) {
-			content += text;
-			continue;
+	const closingLine = findClosingLine(lines, index + 1, fence);
+	if (closingLine < lines.length) {
+		let content = FENCE_LANGUAGE_RE.test(info) ? '' : info;
+		for (let between = index + 1; between < closingLine; between += 1) {
+			content += lines[between]!.text;
 		}
+		const {text, offset} = lines[closingLine]!;
+		const closing = findCodeBlockClosing(text, fence, fence.length)!;
 		const visible = hasVisibleContent(content + text.slice(0, closing.fenceIndex));
 		const trailingStart = closing.fenceIndex + (closing.trailing.length > 0 ? closing.runLength : fence.length);
 		return {
-			body: {start, end: lines[next]!.offset + closing.fenceIndex, rendered: visible && scope.rendered},
-			resume: visible ? {index: next, column: trailingStart} : null,
+			body: {start, end: offset + closing.fenceIndex, rendered: visible && scope.rendered},
+			resume: visible ? {index: closingLine, column: trailingStart} : null,
 		};
 	}
 	if (!opensUnclosedBlock(line, column, info)) {

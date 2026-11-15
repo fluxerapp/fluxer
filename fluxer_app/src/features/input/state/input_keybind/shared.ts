@@ -3,7 +3,7 @@
 import {msg} from '@lingui/core/macro';
 
 export const SHOW_KEYBOARD_SHORTCUTS_LIST_DESCRIPTOR = msg({
-	message: 'Show keyboard shortcuts list',
+	message: 'Show keybind list',
 	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
 });
 export const EDIT_MESSAGE_DESCRIPTOR = msg({
@@ -178,6 +178,10 @@ export const TOGGLE_THE_MEMBER_LIST_OR_VOICE_CHAT_DESCRIPTOR = msg({
 	message: 'Toggle the member list or voice chat',
 	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
 });
+export const TOGGLE_THE_DOWNLOADS_PANEL_DESCRIPTOR = msg({
+	message: 'Toggle the downloads panel',
+	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
+});
 export const TOGGLE_THE_EMOJI_PICKER_DESCRIPTOR = msg({
 	message: 'Toggle the emoji picker',
 	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
@@ -254,9 +258,34 @@ export const OPEN_YOUR_SETTINGS_DESCRIPTOR = msg({
 	message: 'Open your settings',
 	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
 });
-export const OPEN_THEME_STUDIO_POPOUT_DESCRIPTOR = msg({
-	message: 'Open theme studio popout',
+export const OPEN_ACCOUNT_SWITCHER_DESCRIPTOR = msg({
+	message: 'Open the account switcher',
 	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
+});
+export const SWITCH_TO_NEXT_ACCOUNT_DESCRIPTOR = msg({
+	message: 'Switch to the next account',
+	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
+});
+export const SWITCH_TO_PREVIOUS_ACCOUNT_DESCRIPTOR = msg({
+	message: 'Switch to the previous account',
+	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
+});
+export const SWITCH_BACK_TO_LAST_ACCOUNT_DESCRIPTOR = msg({
+	message: 'Switch back to the last account',
+	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
+});
+export const JUMP_TO_NEWEST_OTHER_ACCOUNT_MENTION_DESCRIPTOR = msg({
+	message: 'Jump to the newest mention on another account',
+	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
+});
+export const SEARCH_OTHER_ACCOUNTS_DESCRIPTOR = msg({
+	message: 'Search other accounts',
+	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
+});
+export const SWITCH_TO_ACCOUNT_SLOT_DESCRIPTOR = msg({
+	message: 'Switch to account {slot}',
+	comment:
+		'Keyboard shortcut action label shown in the keybind editor. {slot} is a numeric account position, such as 1.',
 });
 export const ZOOM_IN_DESCRIPTOR = msg({
 	message: 'Zoom in',

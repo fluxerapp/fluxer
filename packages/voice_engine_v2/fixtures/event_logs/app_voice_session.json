@@ -75,18 +75,6 @@
 			"commands": []
 		},
 		{
-			"name": "gateway voice server arrives",
-			"event": {
-				"type": "gateway.voiceServerUpdated",
-				"voiceServer": {
-					"guildId": "guild-1",
-					"endpoint": "voice-gateway.example.test",
-					"token": "gateway-token-1"
-				}
-			},
-			"commands": []
-		},
-		{
 			"name": "enumerate devices",
 			"event": {
 				"type": "devices.enumerateRequested"
@@ -241,19 +229,6 @@
 			]
 		},
 		{
-			"name": "livekit enters connecting",
-			"event": {
-				"type": "livekit.roomStateChanged",
-				"room": {
-					"connectionState": "connecting",
-					"roomSid": null,
-					"roomName": "guild-1/channel-1",
-					"serverRegion": null
-				}
-			},
-			"commands": []
-		},
-		{
 			"name": "voice connection succeeds and queued media publishes",
 			"event": {
 				"type": "connection.connectSucceeded",
@@ -303,19 +278,6 @@
 					}
 				}
 			]
-		},
-		{
-			"name": "livekit room connects",
-			"event": {
-				"type": "livekit.roomStateChanged",
-				"room": {
-					"connectionState": "connected",
-					"roomSid": "room-1",
-					"roomName": "guild-1/channel-1",
-					"serverRegion": "us-east"
-				}
-			},
-			"commands": []
 		},
 		{
 			"name": "microphone publish succeeds",
@@ -643,19 +605,14 @@
 					"suppress": false,
 					"requestToSpeakTimestamp": null
 				},
-				"voiceServer": {
-					"guildId": "guild-1",
-					"endpoint": "voice-gateway.example.test",
-					"token": "gateway-token-1"
-				},
 				"operationId": null,
 				"failure": null
 			},
 			"liveKit": {
-				"connectionState": "connected",
-				"roomSid": "room-1",
-				"roomName": "guild-1/channel-1",
-				"serverRegion": "us-east",
+				"connectionState": "disconnected",
+				"roomSid": null,
+				"roomName": null,
+				"serverRegion": null,
 				"failure": null
 			},
 			"microphone": {
@@ -810,11 +767,6 @@
 			},
 			"statsOperationId": null,
 			"statsFailure": null,
-			"hardwareEncoder": {
-				"capabilities": null,
-				"operationId": null,
-				"failure": null
-			},
 			"permissions": {
 				"results": {
 					"microphone": {
@@ -943,18 +895,13 @@
 						"selfStream": true,
 						"suppress": false,
 						"requestToSpeakTimestamp": null
-					},
-					"voiceServer": {
-						"guildId": "guild-1",
-						"endpoint": "voice-gateway.example.test",
-						"token": "gateway-token-1"
 					}
 				},
 				"liveKit": {
-					"connectionState": "connected",
-					"roomSid": "room-1",
-					"roomName": "guild-1/channel-1",
-					"serverRegion": "us-east"
+					"connectionState": "disconnected",
+					"roomSid": null,
+					"roomName": null,
+					"serverRegion": null
 				}
 			},
 			"media": {

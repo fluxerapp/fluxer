@@ -1,12 +1,34 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {MemeID, UserID} from '@app/api/BrandedTypes';
+import type {AttachmentID, MemeID, UserID} from '@app/api/BrandedTypes';
 import {BatchBuilder, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import {Db} from '@app/api/database/CassandraTypes';
 import type {FavoriteMemeRow} from '@app/api/database/types/UserTypes';
-import {type CreateFavoriteMemeParams, IFavoriteMemeRepository} from '@app/api/favorite_meme/IFavoriteMemeRepository';
 import {FavoriteMeme} from '@app/api/models/FavoriteMeme';
 import {FavoriteMemes, FavoriteMemesByMemeId} from '@app/api/Tables';
+import type {GifMediaFormat} from '@fluxer/schema/src/domains/gif/GifSchemas';
+
+export interface CreateFavoriteMemeParams {
+	user_id: UserID;
+	meme_id: MemeID;
+	name: string;
+	alt_text?: string | null;
+	tags?: Array<string>;
+	attachment_id: AttachmentID;
+	filename: string;
+	content_type: string;
+	content_hash?: string | null;
+	size: bigint;
+	width?: number | null;
+	height?: number | null;
+	duration?: number | null;
+	is_gifv?: boolean;
+	gif_slug?: string | null;
+	gif_provider?: string | null;
+	media_formats?: Record<string, GifMediaFormat> | null;
+	placeholder?: string | null;
+	nsfw?: boolean | null;
+}
 
 const FETCH_FAVORITE_MEME_CQL = FavoriteMemes.selectCql({
 	where: [FavoriteMemes.where.eq('user_id'), FavoriteMemes.where.eq('meme_id')],
@@ -19,7 +41,7 @@ const COUNT_FAVORITE_MEMES_CQL = FavoriteMemes.selectCountCql({
 	where: FavoriteMemes.where.eq('user_id'),
 });
 
-export class FavoriteMemeRepository extends IFavoriteMemeRepository {
+export class FavoriteMemeRepository {
 	async findById(userId: UserID, memeId: MemeID): Promise<FavoriteMeme | null> {
 		const meme = await fetchOne<FavoriteMemeRow>(FETCH_FAVORITE_MEME_CQL, {
 			user_id: userId,
@@ -60,6 +82,7 @@ export class FavoriteMemeRepository extends IFavoriteMemeRepository {
 			tenor_id_str: data.gif_provider === 'tenor' ? (data.gif_slug ?? null) : null,
 			media_formats: data.media_formats ? JSON.stringify(data.media_formats) : null,
 			placeholder: data.placeholder ?? null,
+			nsfw: data.nsfw ?? null,
 			version: 1,
 		};
 		const batch = new BatchBuilder();
@@ -94,6 +117,7 @@ export class FavoriteMemeRepository extends IFavoriteMemeRepository {
 			tenor_id_str: data.gif_provider === 'tenor' ? (data.gif_slug ?? null) : null,
 			media_formats: data.media_formats ? JSON.stringify(data.media_formats) : null,
 			placeholder: data.placeholder ?? null,
+			nsfw: data.nsfw ?? null,
 			version: 1,
 		};
 		await upsertOne(FavoriteMemes.upsertAll(memeRow));
@@ -102,6 +126,10 @@ export class FavoriteMemeRepository extends IFavoriteMemeRepository {
 
 	async updatePlaceholder(userId: UserID, memeId: MemeID, placeholder: string): Promise<void> {
 		await fetchOne(FavoriteMemes.patchByPk({user_id: userId, meme_id: memeId}, {placeholder: Db.set(placeholder)}));
+	}
+
+	async updateNsfw(userId: UserID, memeId: MemeID, nsfw: boolean): Promise<void> {
+		await fetchOne(FavoriteMemes.patchByPk({user_id: userId, meme_id: memeId}, {nsfw: Db.set(nsfw)}));
 	}
 
 	async delete(userId: UserID, memeId: MemeID): Promise<void> {

@@ -59,17 +59,6 @@ pub fn category(mime_type: &str) -> Option<Category> {
     }
 }
 
-pub fn passthrough_mime(raw: Option<&str>) -> Option<&'static str> {
-    let normalized = normalize(raw)?;
-    if normalized.eq_ignore_ascii_case("application/pdf") {
-        return Some("application/pdf");
-    }
-    if normalized.eq_ignore_ascii_case("text/css") {
-        return Some("text/css; charset=utf-8");
-    }
-    MediaType::from_mime(normalized).map(MediaType::mime)
-}
-
 pub fn extension_mime(filename: &str) -> Option<&'static str> {
     let ext = filename.rsplit_once('.')?.1;
     if ext.eq_ignore_ascii_case("css") {

@@ -1,0 +1,4 @@
+domain: chat.example.test
+livekit:
+  enabled: false
+  joined: true

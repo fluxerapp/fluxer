@@ -1,0 +1,90 @@
+{{- include "fluxer.validate" . }}
+{{- $v := .Values }}
+{{- $o := include "fluxer.origin" . }}
+{{- $http := dict "port" "http" }}
+{{- $start := dict "periodSeconds" 10 "timeoutSeconds" 5 "failureThreshold" 30 }}
+{{- $check := dict "periodSeconds" 10 "timeoutSeconds" 5 "failureThreshold" 3 }}
+{{- $health := merge (dict "path" "/_health") $http }}
+{{- $healthProbes := dict "startup" (merge (dict "httpGet" $health) $start) "liveness" (merge (dict "httpGet" $health) $check) "readiness" (merge (dict "httpGet" $health) $check) }}
+{{- $nodeEnv := list (dict "name" "NODE_ENV" "value" "production") (dict "name" "NODE_OPTIONS" "value" "--enable-source-maps") (dict "name" "NODE_EXTRA_CA_CERTS" "value" "/etc/ssl/certs/ca-certificates.crt") (dict "name" "FLUXER_POSTGRES_MAX_CONNECTIONS" "value" "25") }}
+
+{{- include "fluxer.app" (dict "root" . "name" "api" "component" "api" "w" $v.api "image" "fluxer-api" "port" 8080
+  "env" (concat (list (dict "name" "FLUXER_API_PORT" "value" "8080") (dict "name" "FLUXER_API_PRESIGNED_ATTACHMENT_UPLOADS_ENABLED" "value" "true")) $nodeEnv)
+  "probes" $healthProbes
+  "waitFor" (include "fluxer.appWaitFor" (dict "root" . "usesNats" true "usesPostgres" true "usesS3" true "usesKv" true "usesSvc" true) | fromJsonArray)) }}
+
+{{- $heartbeat := dict "exec" (dict "command" (list "node" "-e" "const age=Date.now()-require('node:fs').statSync('/tmp/fluxer-worker-heartbeat').mtimeMs;if(age>30000){console.error('worker heartbeat is '+Math.round(age)+'ms old');process.exit(1)}")) "initialDelaySeconds" 90 "periodSeconds" 10 "timeoutSeconds" 5 "failureThreshold" 3 }}
+{{- include "fluxer.app" (dict "root" . "name" "worker" "component" "worker" "w" $v.worker "image" "fluxer-api" "port" 8080 "noService" true
+  "command" (list "node" "dist/WorkerEntrypoint.js")
+  "env" (concat (list (dict "name" "FLUXER_API_WORKER_MODE" "value" "all_lanes") (dict "name" "FLUXER_API_WORKER_ENABLE_CRON_SCHEDULER" "value" "true")) $nodeEnv)
+  "probes" (dict "liveness" $heartbeat)
+  "strategy" (dict "type" "Recreate")
+  "waitFor" (include "fluxer.appWaitFor" (dict "root" . "usesNats" true "usesPostgres" true "usesS3" true "usesKv" true "usesSvc" true) | fromJsonArray)) }}
+
+{{- $gatewayEnv := list
+  (dict "name" "FLUXER_GATEWAY_PORT" "value" "8080")
+  (dict "name" "FLUXER_GATEWAY_ROLE" "value" "all")
+  (dict "name" "POD_IP" "valueFrom" (dict "fieldRef" (dict "apiVersion" "v1" "fieldPath" "status.podIP")))
+  (dict "name" "FLUXER_ERLANG_NODE_NAME" "value" "fluxer_gateway@$(POD_IP)")
+  (dict "name" "FLUXER_ERLANG_DIST_PORT" "value" "8081")
+  (dict "name" "FLUXER_GATEWAY_CLUSTER_ENABLED" "value" "true")
+  (dict "name" "FLUXER_GATEWAY_CLUSTER_DISCOVERY_DNS_NAME" "value" (printf "gateway-headless.%s.svc.%s" .Release.Namespace $v.clusterDomain))
+  (dict "name" "FLUXER_GATEWAY_CLUSTER_DISCOVERY_NODE_BASENAME" "value" "fluxer_gateway") }}
+{{- $gatewayReady := dict "exec" (dict "command" (list "curl" "-fsS" "-o" "/dev/null" "--max-time" "4" "http://127.0.0.1:8080/_health/ready")) "periodSeconds" 10 "timeoutSeconds" 5 "failureThreshold" 3 }}
+{{- $gatewayCtx := dict "root" . "name" "gateway" "component" "gateway" "w" $v.gateway "image" "fluxer-gateway" "port" 8080
+  "extraPorts" (list (dict "name" "epmd" "port" 4369) (dict "name" "erl-dist" "port" 8081))
+  "env" $gatewayEnv
+  "probes" (dict "startup" (merge (dict "httpGet" $health) $start) "liveness" (merge (dict "httpGet" $health) $check) "readiness" $gatewayReady)
+  "waitFor" (include "fluxer.appWaitFor" (dict "root" . "usesNats" true) | fromJsonArray)
+  "lifecycle" (dict "preStop" (dict "exec" (dict "command" (list "/bin/sh" "-c" "curl -fsS -o /dev/null --max-time 2 http://127.0.0.1:8080/_health/drain; sleep 5")))) }}
+{{- include "fluxer.app" $gatewayCtx }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway-headless
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" $gatewayCtx | nindent 4 }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector:
+    {{- include "fluxer.selectorLabels" $gatewayCtx | nindent 4 }}
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+    - name: epmd
+      port: 4369
+      targetPort: epmd
+      protocol: TCP
+    - name: erl-dist
+      port: 8081
+      targetPort: erl-dist
+      protocol: TCP
+
+{{- include "fluxer.app" (dict "root" . "name" "media-proxy" "component" "media" "w" $v.mediaProxy "image" "fluxer-media-proxy" "port" 8080
+  "env" (list (dict "name" "FLUXER_MEDIA_PROXY_PORT" "value" "8080") (dict "name" "FLUXER_MEDIA_PROXY_MODE" "value" "upload") (dict "name" "FLUXER_MEDIA_PROXY_STORAGE_BACKEND" "value" "s3") (dict "name" "FLUXER_S3_READ_SIGNED" "value" "true"))
+  "probes" $healthProbes
+  "waitFor" (include "fluxer.appWaitFor" (dict "root" . "usesNats" true "usesS3" true) | fromJsonArray)) }}
+
+{{- $pushCheck := dict "exec" (dict "command" (list "/usr/local/bin/fluxer-push" "healthcheck")) }}
+{{- include "fluxer.app" (dict "root" . "name" "push" "component" "push" "w" $v.push "image" "fluxer-push" "port" 8126
+  "env" (list (dict "name" "FLUXER_PUSH_SERVICE_PORT" "value" "8126"))
+  "waitFor" (include "fluxer.appWaitFor" (dict "root" . "usesNats" true) | fromJsonArray)
+  "probes" (dict "startup" (merge (deepCopy $pushCheck) (dict "periodSeconds" 10 "timeoutSeconds" 5 "failureThreshold" 12)) "liveness" (merge (deepCopy $pushCheck) $check) "readiness" (merge (deepCopy $pushCheck) $check))) }}
+
+{{- include "fluxer.app" (dict "root" . "name" "admin" "component" "admin" "w" $v.admin "image" "fluxer-admin" "port" 8080
+  "env" (list (dict "name" "FLUXER_ADMIN_PORT" "value" "8080") (dict "name" "FLUXER_ADMIN_BASE_PATH" "value" $v.adminBasePath) (dict "name" "FLUXER_API_ENDPOINT" "value" "http://api:8080") (dict "name" "FLUXER_API_PUBLIC_ENDPOINT" "value" (include "fluxer.string" (index ($v.env | default dict) "FLUXER_API_ENDPOINT" | default ""))) (dict "name" "FLUXER_STATIC_CDN_ENDPOINT" "value" $o))
+  "probes" $healthProbes) }}
+
+{{- $ready := merge (dict "path" "/_ready") $http }}
+{{- include "fluxer.app" (dict "root" . "name" "app-proxy" "component" "web" "w" $v.appProxy "image" "fluxer-app-proxy-self-hosted" "port" 8080 "configMapOnly" "fluxer-app-proxy"
+  "probes" (dict "startup" (merge (dict "httpGet" $health) $start) "liveness" (merge (dict "httpGet" $health) $check) "readiness" (merge (dict "httpGet" $ready) $check))) }}
+
+{{- $avatar := merge (dict "path" "/avatars/0.png") $http }}
+{{- include "fluxer.app" (dict "root" . "name" "static-proxy" "component" "web" "w" $v.staticProxy "image" "fluxer-static" "port" 8080 "noEnvFrom" true
+  "probes" (dict "startup" (merge (dict "httpGet" $avatar) $start) "liveness" (merge (dict "httpGet" $avatar) $check) "readiness" (merge (dict "httpGet" $avatar) $check))) }}

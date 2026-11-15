@@ -4,8 +4,6 @@
 
 -typing([eqwalizer]).
 
--include_lib("fluxer_gateway/include/voice_state.hrl").
-
 -export([handle_client_channel_move/6]).
 
 -export_type([
@@ -68,10 +66,7 @@ do_request_move_token(Context, ChannelIdValue, Member, SessionId, MoveState, Gui
     TokenNonce = voice_utils:generate_token_nonce(),
     Lat = maps:get(latitude, Context, undefined),
     Lng = maps:get(longitude, Context, undefined),
-    TokenResult = guild_voice_connection_token:request_voice_token(
-        GuildId, ChannelIdValue, UserId, ConnId, VoicePerms, TokenNonce, Lat, Lng
-    ),
-    handle_move_token_result(TokenResult, #{
+    Build = #{
         context => Context,
         channel_id => ChannelIdValue,
         member => Member,
@@ -85,18 +80,60 @@ do_request_move_token(Context, ChannelIdValue, Member, SessionId, MoveState, Gui
         token_nonce => TokenNonce,
         latitude => Lat,
         longitude => Lng
-    }).
+    },
+    case
+        voice_p2p:guild_join_decision(
+            guild_voice_connection_util:p2p_agreed(Context), ChannelIdValue, State
+        )
+    of
+        {reject, ErrorAtom} ->
+            move_error_reply(ErrorAtom, Build);
+        Decision ->
+            TokenResult = guild_voice_connection_token:request_voice_token(
+                GuildId,
+                ChannelIdValue,
+                UserId,
+                ConnId,
+                VoicePerms,
+                TokenNonce,
+                Lat,
+                Lng,
+                Decision,
+                maps:get(country_code, Context, undefined)
+            ),
+            handle_move_token_result(Decision, TokenResult, Build)
+    end.
 
 -spec handle_move_token_result(
-    {ok, map()} | {error, term()}, map()
+    voice_p2p:join_decision(), {ok, term()} | {error, term()}, map()
 ) -> {reply, map(), guild_state()} | {reply, {error, atom(), atom()}, guild_state()}.
-handle_move_token_result({ok, TokenData}, Build) ->
-    build_move_result(Build#{token_data => TokenData});
-handle_move_token_result({error, _Reason}, Build) ->
-    #{state := State, context := Context, channel_id := ChannelIdValue} = Build,
+handle_move_token_result(_Decision, {error, Reason}, Build) ->
+    move_error_reply(guild_voice_connection_token:voice_error_for(Reason), Build);
+handle_move_token_result(Decision, {ok, TokenData}, Build) ->
+    case voice_p2p:admit(Decision, TokenData) of
+        {reject, ErrorAtom} ->
+            move_error_reply(ErrorAtom, Build);
+        {p2p, ConnectionId, IceServers, _MaxParticipants} ->
+            build_p2p_move_result(ConnectionId, IceServers, Build#{token_data => #{}});
+        sfu ->
+            build_move_result(Build#{token_data => TokenData})
+    end.
+
+-spec move_error_reply(atom(), map()) -> {reply, {error, atom(), atom()}, guild_state()}.
+move_error_reply(ErrorAtom, #{state := State, context := Context, channel_id := ChannelIdValue}) ->
     UserId = maps:get(user_id, Context),
-    {reply, gateway_errors:error(voice_token_failed),
-        clear_move_flags(UserId, ChannelIdValue, State)}.
+    {reply, gateway_errors:error(ErrorAtom), clear_move_flags(UserId, ChannelIdValue, State)}.
+
+-spec build_p2p_move_result(binary(), [map()], map()) -> {reply, map(), guild_state()}.
+build_p2p_move_result(ConnectionId, IceServers, Build) ->
+    State1 = disconnect_old_connection(Build),
+    State1Cleaned = cleanup_stale_virtual_access(Build, State1),
+    MoveBuild = move_build_fields(Build),
+    guild_voice_connection_join:activate_p2p_voice_state(
+        build_move_voice_state(MoveBuild#{connection_id => ConnectionId}),
+        IceServers,
+        State1Cleaned
+    ).
 
 -spec build_move_result(
     map()
@@ -170,7 +207,7 @@ move_build_fields(Build) ->
         channel_id => ChannelIdValue,
         channel_id_bin => integer_to_binary(ChannelIdValue),
         user_id_bin => integer_to_binary(UserId),
-        session_id => guild_voice_connection_util:normalize_session_id(
+        session_id => guild_voice_connection_normalize:normalize_session_id(
             maps:get(session_id, Build)
         ),
         flags => guild_voice_connection_util:voice_flags_for_permissions(

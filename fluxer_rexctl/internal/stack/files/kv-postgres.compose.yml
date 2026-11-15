@@ -1,0 +1,16 @@
+services:
+  valkey:
+    profiles: [bundled-kv]
+  api:
+    environment:
+      FLUXER_KV_MODE: postgres
+    depends_on:
+      valkey: !reset null
+  worker:
+    environment:
+      FLUXER_KV_MODE: postgres
+    depends_on:
+      valkey: !reset null
+  gateway:
+    depends_on:
+      valkey: !reset null

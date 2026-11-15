@@ -19,8 +19,8 @@
 	color: var(--text-primary-muted);
 	background: none;
 	border-top: none;
-	border-left: none;
-	border-right: none;
+	border-inline-start: none;
+	border-inline-end: none;
 	cursor: pointer;
 	border-radius: 0.25rem 0.25rem 0 0;
 	outline: none;
@@ -34,6 +34,6 @@
 }
 
 :global(.theme-light) .tab.selected {
-	color: var(--brand-primary);
-	border-bottom-color: var(--brand-primary);
+	color: var(--brand-primary-foreground);
+	border-bottom-color: var(--brand-primary-foreground);
 }

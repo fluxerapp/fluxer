@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import {NagbarDismissalsSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
 import {makeAutoObservable} from 'mobx';
 
-export interface NagbarSettings {
+interface NagbarSettings {
 	iosInstallDismissed: boolean;
 	pwaInstallDismissed: boolean;
 	pushNotificationDismissed: boolean;
@@ -14,6 +16,7 @@ export interface NagbarSettings {
 	premiumOnboardingDismissed: boolean;
 	giftInventoryDismissed: boolean;
 	desktopDownloadDismissed: boolean;
+	androidAppDismissed: boolean;
 	pendingBulkDeletionDismissed: Record<string, boolean>;
 	invitesDisabledDismissed: Record<string, boolean>;
 	guildMfaRequirementDismissed: Record<string, boolean>;
@@ -21,13 +24,9 @@ export interface NagbarSettings {
 	legacyPriceOptInDismissed: Record<string, boolean>;
 	guildMembershipCtaDismissed: boolean;
 	visionaryMfaDismissed: boolean;
-	claimAccountModalShownThisSession: boolean;
 	forceConnectionNotice: boolean;
 	forceEmailVerification: boolean;
 	forceAccountLimited: boolean;
-	forceIOSInstall: boolean;
-	forcePWAInstall: boolean;
-	forcePushNotification: boolean;
 	forceUnclaimedAccount: boolean;
 	forceDesktopNotification: boolean;
 	forceInvitesDisabled: boolean;
@@ -36,6 +35,7 @@ export interface NagbarSettings {
 	forcePremiumOnboarding: boolean;
 	forceGiftInventory: boolean;
 	forceDesktopDownload: boolean;
+	forceAndroidApp: boolean;
 	forceGuildMembershipCta: boolean;
 	forceVisionaryMfa: boolean;
 	forceTermsAcceptance: boolean;
@@ -47,9 +47,6 @@ export interface NagbarSettings {
 	forceHideConnectionNotice: boolean;
 	forceHideEmailVerification: boolean;
 	forceHideAccountLimited: boolean;
-	forceHideIOSInstall: boolean;
-	forceHidePWAInstall: boolean;
-	forceHidePushNotification: boolean;
 	forceHideUnclaimedAccount: boolean;
 	forceHideDesktopNotification: boolean;
 	forceHideInvitesDisabled: boolean;
@@ -58,6 +55,7 @@ export interface NagbarSettings {
 	forceHidePremiumOnboarding: boolean;
 	forceHideGiftInventory: boolean;
 	forceHideDesktopDownload: boolean;
+	forceHideAndroidApp: boolean;
 	forceHideGuildMembershipCta: boolean;
 	forceHideVisionaryMfa: boolean;
 	forceHideTermsAcceptance: boolean;
@@ -72,7 +70,6 @@ export type NagbarToggleKey = Exclude<
 	keyof NagbarSettings,
 	| 'guildMfaRequirementDismissed'
 	| 'invitesDisabledDismissed'
-	| 'claimAccountModalShownThisSession'
 	| 'pendingBulkDeletionDismissed'
 	| 'priceAnnouncementDismissed'
 	| 'legacyPriceOptInDismissed'
@@ -88,6 +85,7 @@ export class Nagbar implements NagbarSettings {
 	premiumOnboardingDismissed = false;
 	giftInventoryDismissed = false;
 	desktopDownloadDismissed = false;
+	androidAppDismissed = false;
 	pendingBulkDeletionDismissed: Record<string, boolean> = {};
 	invitesDisabledDismissed: Record<string, boolean> = {};
 	guildMfaRequirementDismissed: Record<string, boolean> = {};
@@ -97,13 +95,9 @@ export class Nagbar implements NagbarSettings {
 	visionaryMfaDismissed = false;
 	buildEnvironmentDismissedThisSession = false;
 	scheduledMaintenanceDismissalVersion = 0;
-	claimAccountModalShownThisSession = false;
-	forceOffline = false;
+	unclaimedAccountDismissedThisSession = false;
 	forceEmailVerification = false;
 	forceAccountLimited = false;
-	forceIOSInstall = false;
-	forcePWAInstall = false;
-	forcePushNotification = false;
 	forceUnclaimedAccount = false;
 	forceDesktopNotification = false;
 	forceInvitesDisabled = false;
@@ -112,6 +106,7 @@ export class Nagbar implements NagbarSettings {
 	forcePremiumOnboarding = false;
 	forceGiftInventory = false;
 	forceDesktopDownload = false;
+	forceAndroidApp = false;
 	forceGuildMembershipCta = false;
 	forceVisionaryMfa = false;
 	forceTermsAcceptance = false;
@@ -121,12 +116,8 @@ export class Nagbar implements NagbarSettings {
 	forceGuildMfaRequirement = false;
 	forceDomainMoved = false;
 	forceConnectionNotice = false;
-	forceHideOffline = false;
 	forceHideEmailVerification = false;
 	forceHideAccountLimited = false;
-	forceHideIOSInstall = false;
-	forceHidePWAInstall = false;
-	forceHidePushNotification = false;
 	forceHideUnclaimedAccount = false;
 	forceHideDesktopNotification = false;
 	forceHideInvitesDisabled = false;
@@ -135,6 +126,7 @@ export class Nagbar implements NagbarSettings {
 	forceHidePremiumOnboarding = false;
 	forceHideGiftInventory = false;
 	forceHideDesktopDownload = false;
+	forceHideAndroidApp = false;
 	forceHideGuildMembershipCta = false;
 	forceHideVisionaryMfa = false;
 	forceHideTermsAcceptance = false;
@@ -147,7 +139,7 @@ export class Nagbar implements NagbarSettings {
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {
@@ -164,6 +156,7 @@ export class Nagbar implements NagbarSettings {
 				'premiumOnboardingDismissed',
 				'giftInventoryDismissed',
 				'desktopDownloadDismissed',
+				'androidAppDismissed',
 				'pendingBulkDeletionDismissed',
 				'invitesDisabledDismissed',
 				'guildMfaRequirementDismissed',
@@ -182,6 +175,7 @@ export class Nagbar implements NagbarSettings {
 				premiumOnboarding: s.premiumOnboardingDismissed,
 				giftInventory: s.giftInventoryDismissed,
 				desktopDownload: s.desktopDownloadDismissed,
+				androidApp: s.androidAppDismissed,
 				guildMembershipCta: s.guildMembershipCtaDismissed,
 				visionaryMfa: s.visionaryMfaDismissed,
 				pendingBulkDeletion: {...s.pendingBulkDeletionDismissed},
@@ -200,6 +194,7 @@ export class Nagbar implements NagbarSettings {
 				s.premiumOnboardingDismissed = m.premiumOnboarding;
 				s.giftInventoryDismissed = m.giftInventory;
 				s.desktopDownloadDismissed = m.desktopDownload;
+				s.androidAppDismissed = m.androidApp;
 				s.guildMembershipCtaDismissed = m.guildMembershipCta;
 				s.visionaryMfaDismissed = m.visionaryMfa;
 				s.pendingBulkDeletionDismissed = {...m.pendingBulkDeletion};
@@ -209,42 +204,6 @@ export class Nagbar implements NagbarSettings {
 				s.legacyPriceOptInDismissed = {...m.legacyPriceOptIn};
 			},
 		});
-	}
-
-	getIosInstallDismissed(): boolean {
-		return this.iosInstallDismissed;
-	}
-
-	getPwaInstallDismissed(): boolean {
-		return this.pwaInstallDismissed;
-	}
-
-	getPushNotificationDismissed(): boolean {
-		return this.pushNotificationDismissed;
-	}
-
-	getForceConnectionNotice(): boolean {
-		return this.forceConnectionNotice;
-	}
-
-	getForceEmailVerification(): boolean {
-		return this.forceEmailVerification;
-	}
-
-	getForceIOSInstall(): boolean {
-		return this.forceIOSInstall;
-	}
-
-	getForcePWAInstall(): boolean {
-		return this.forcePWAInstall;
-	}
-
-	getForcePushNotification(): boolean {
-		return this.forcePushNotification;
-	}
-
-	getForceUnclaimedAccount(): boolean {
-		return this.forceUnclaimedAccount;
 	}
 
 	getInvitesDisabledDismissed(guildId: string): boolean {
@@ -263,66 +222,6 @@ export class Nagbar implements NagbarSettings {
 		return this.legacyPriceOptInDismissed[campaignId] ?? false;
 	}
 
-	getForceInvitesDisabled(): boolean {
-		return this.forceInvitesDisabled;
-	}
-
-	getForceHideConnectionNotice(): boolean {
-		return this.forceHideConnectionNotice;
-	}
-
-	getForceHideEmailVerification(): boolean {
-		return this.forceHideEmailVerification;
-	}
-
-	getForceHideIOSInstall(): boolean {
-		return this.forceHideIOSInstall;
-	}
-
-	getForceHidePWAInstall(): boolean {
-		return this.forceHidePWAInstall;
-	}
-
-	getForceHidePushNotification(): boolean {
-		return this.forceHidePushNotification;
-	}
-
-	getForceHideUnclaimedAccount(): boolean {
-		return this.forceHideUnclaimedAccount;
-	}
-
-	getForceHideDesktopNotification(): boolean {
-		return this.forceHideDesktopNotification;
-	}
-
-	getForceHideInvitesDisabled(): boolean {
-		return this.forceHideInvitesDisabled;
-	}
-
-	getForceHidePremiumGracePeriod(): boolean {
-		return this.forceHidePremiumGracePeriod;
-	}
-
-	getForceHidePremiumExpired(): boolean {
-		return this.forceHidePremiumExpired;
-	}
-
-	getForceHidePremiumOnboarding(): boolean {
-		return this.forceHidePremiumOnboarding;
-	}
-
-	getForceHideGiftInventory(): boolean {
-		return this.forceHideGiftInventory;
-	}
-
-	getForceGuildMembershipCta(): boolean {
-		return this.forceGuildMembershipCta;
-	}
-
-	getForceHideGuildMembershipCta(): boolean {
-		return this.forceHideGuildMembershipCta;
-	}
-
 	bumpScheduledMaintenanceDismissed(): void {
 		this.scheduledMaintenanceDismissalVersion++;
 	}
@@ -331,12 +230,8 @@ export class Nagbar implements NagbarSettings {
 		this.buildEnvironmentDismissedThisSession = true;
 	}
 
-	markClaimAccountModalShown(): void {
-		this.claimAccountModalShownThisSession = true;
-	}
-
-	resetClaimAccountModalShown(): void {
-		this.claimAccountModalShownThisSession = false;
+	dismissUnclaimedAccountForSession(): void {
+		this.unclaimedAccountDismissedThisSession = true;
 	}
 
 	dismiss(nagbarType: NagbarToggleKey): void {
@@ -379,24 +274,8 @@ export class Nagbar implements NagbarSettings {
 		this[key] = value;
 	}
 
-	resetInvitesDisabled(guildId: string): void {
-		const {[guildId]: _, ...rest} = this.invitesDisabledDismissed;
-		this.invitesDisabledDismissed = rest;
-	}
-
-	resetGuildMfaRequirement(guildId: string): void {
-		const {[guildId]: _, ...rest} = this.guildMfaRequirementDismissed;
-		this.guildMfaRequirementDismissed = rest;
-	}
-
-	resetPriceAnnouncement(campaignId: string): void {
-		const {[campaignId]: _, ...rest} = this.priceAnnouncementDismissed;
-		this.priceAnnouncementDismissed = rest;
-	}
-
-	resetLegacyPriceOptIn(campaignId: string): void {
-		const {[campaignId]: _, ...rest} = this.legacyPriceOptInDismissed;
-		this.legacyPriceOptInDismissed = rest;
+	resetSessionDismissals(): void {
+		this.unclaimedAccountDismissedThisSession = false;
 	}
 
 	resetAll(): void {
@@ -409,6 +288,7 @@ export class Nagbar implements NagbarSettings {
 		this.premiumOnboardingDismissed = false;
 		this.giftInventoryDismissed = false;
 		this.desktopDownloadDismissed = false;
+		this.androidAppDismissed = false;
 		this.pendingBulkDeletionDismissed = {};
 		this.invitesDisabledDismissed = {};
 		this.guildMfaRequirementDismissed = {};
@@ -417,13 +297,9 @@ export class Nagbar implements NagbarSettings {
 		this.guildMembershipCtaDismissed = false;
 		this.visionaryMfaDismissed = false;
 		this.buildEnvironmentDismissedThisSession = false;
-		this.claimAccountModalShownThisSession = false;
-		this.forceOffline = false;
+		this.unclaimedAccountDismissedThisSession = false;
 		this.forceEmailVerification = false;
 		this.forceAccountLimited = false;
-		this.forceIOSInstall = false;
-		this.forcePWAInstall = false;
-		this.forcePushNotification = false;
 		this.forceUnclaimedAccount = false;
 		this.forceDesktopNotification = false;
 		this.forceInvitesDisabled = false;
@@ -432,6 +308,7 @@ export class Nagbar implements NagbarSettings {
 		this.forcePremiumOnboarding = false;
 		this.forceGiftInventory = false;
 		this.forceDesktopDownload = false;
+		this.forceAndroidApp = false;
 		this.forceGuildMembershipCta = false;
 		this.forceVisionaryMfa = false;
 		this.forceTermsAcceptance = false;
@@ -441,12 +318,8 @@ export class Nagbar implements NagbarSettings {
 		this.forceGuildMfaRequirement = false;
 		this.forceDomainMoved = false;
 		this.forceConnectionNotice = false;
-		this.forceHideOffline = false;
 		this.forceHideEmailVerification = false;
 		this.forceHideAccountLimited = false;
-		this.forceHideIOSInstall = false;
-		this.forceHidePWAInstall = false;
-		this.forceHidePushNotification = false;
 		this.forceHideUnclaimedAccount = false;
 		this.forceHideDesktopNotification = false;
 		this.forceHideInvitesDisabled = false;
@@ -455,6 +328,7 @@ export class Nagbar implements NagbarSettings {
 		this.forceHidePremiumOnboarding = false;
 		this.forceHideGiftInventory = false;
 		this.forceHideDesktopDownload = false;
+		this.forceHideAndroidApp = false;
 		this.forceHideGuildMembershipCta = false;
 		this.forceHideVisionaryMfa = false;
 		this.forceHideTermsAcceptance = false;
@@ -491,4 +365,8 @@ export class Nagbar implements NagbarSettings {
 	}
 }
 
-export default new Nagbar();
+const nagbar = new Nagbar();
+
+ResettableStates.register(nagbar, () => nagbar.resetSessionDismissals());
+
+export default nagbar;

@@ -379,6 +379,61 @@ static int fluxer_nsfw_uses_byte_seek(const AVFormatContext *format) {
            strcmp(name, "mpegvideo") == 0;
 }
 
+static int fluxer_nsfw_positions_are_fractions(const AVFormatContext *format) {
+    return format != NULL && format->duration <= 0;
+}
+
+static int fluxer_nsfw_allows_byte_seek(const AVFormatContext *format) {
+    if (format == NULL || format->iformat == NULL) return 0;
+    return (format->iformat->flags & AVFMT_NO_BYTE_SEEK) == 0;
+}
+
+static int fluxer_nsfw_stream_end_seconds(AVStream *stream, double *out_seconds) {
+    assert(stream != NULL);
+    assert(out_seconds != NULL);
+    if (stream->time_base.num <= 0 || stream->time_base.den <= 0) return 0;
+    int64_t end = 0;
+    if (stream->duration > 0 && stream->duration != AV_NOPTS_VALUE) {
+        end = stream->duration;
+    } else {
+        int entries = avformat_index_get_entries_count(stream);
+        if (entries <= 0) return 0;
+        const AVIndexEntry *last = avformat_index_get_entry(stream, entries - 1);
+        if (last == NULL || last->timestamp == AV_NOPTS_VALUE) return 0;
+        int64_t start = stream->start_time == AV_NOPTS_VALUE ? 0 : stream->start_time;
+        if (start > 0 && last->timestamp < INT64_MIN + start) return 0;
+        if (start < 0 && last->timestamp > INT64_MAX + start) return 0;
+        end = last->timestamp - start;
+    }
+    if (end <= 0) return 0;
+    double seconds = (double)end * av_q2d(stream->time_base);
+    if (!isfinite(seconds) || seconds <= 0.0) return 0;
+    *out_seconds = seconds;
+    return 1;
+}
+
+static int fluxer_nsfw_seek_file_fraction(
+    AVFormatContext *format,
+    double fraction,
+    size_t media_len,
+    long long deadline_monotonic_ms
+) {
+    int deadline_status = fluxer_native_deadline_status(
+        deadline_monotonic_ms);
+    if (deadline_status != FLUXER_NATIVE_STATUS_OK) return deadline_status;
+    double ratio = fmax(0.0, fmin(1.0, fraction));
+    long double projected_offset =
+        floorl((long double)media_len * (long double)ratio);
+    size_t offset = media_len > 0 ? media_len - 1 : 0;
+    if (projected_offset < (long double)offset) {
+        offset = (size_t)projected_offset;
+    }
+    int rc = av_seek_frame(format, -1, (int64_t)offset, AVSEEK_FLAG_BYTE);
+    if (rc >= 0) return fluxer_native_deadline_status(deadline_monotonic_ms);
+    return fluxer_native_status_from_av_error_with_deadline(
+        rc, deadline_monotonic_ms);
+}
+
 static int fluxer_nsfw_seek(
     AVFormatContext *format,
     int stream_index,
@@ -435,6 +490,7 @@ struct fluxer_nsfw_target {
     int64_t keyframe_position;
     int64_t keyframe_pts;
     int has_indexed_keyframe;
+    int file_fraction;
 };
 
 static int fluxer_nsfw_target_pts(
@@ -472,7 +528,12 @@ static int fluxer_nsfw_targets_init(
     assert(timestamps != NULL);
     assert(targets != NULL);
     assert(count <= FLUXER_MAX_NSFW_SAMPLES);
-    int indexed_seek = !fluxer_nsfw_uses_byte_seek(format);
+    int fractions = fluxer_nsfw_positions_are_fractions(format);
+    int file_fraction = fractions && fluxer_nsfw_allows_byte_seek(format);
+    double end_seconds = 0.0;
+    int scale_to_end = fractions && !file_fraction &&
+        fluxer_nsfw_stream_end_seconds(stream, &end_seconds);
+    int indexed_seek = !file_fraction && !fluxer_nsfw_uses_byte_seek(format);
     for (size_t i = 0; i < count; i++) {
         int deadline_status = fluxer_native_deadline_status(
             deadline_monotonic_ms);
@@ -482,13 +543,19 @@ static int fluxer_nsfw_targets_init(
         double seconds = timestamps[i];
         assert(isfinite(seconds));
         assert(seconds >= 0.0);
+        if (scale_to_end) seconds = fmin(1.0, seconds) * end_seconds;
         targets[i].seconds = seconds;
-        if (fluxer_nsfw_target_pts(stream, seconds, &targets[i].pts) != 0) {
-            return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
-        }
         targets[i].keyframe_position = -1;
         targets[i].keyframe_pts = AV_NOPTS_VALUE;
         targets[i].has_indexed_keyframe = 0;
+        targets[i].file_fraction = file_fraction;
+        if (file_fraction) {
+            targets[i].pts = INT64_MIN;
+            continue;
+        }
+        if (fluxer_nsfw_target_pts(stream, seconds, &targets[i].pts) != 0) {
+            return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
+        }
         if (!indexed_seek) continue;
         const AVIndexEntry *entry = avformat_index_get_entry_from_timestamp(
             stream, targets[i].pts, AVSEEK_FLAG_BACKWARD);
@@ -865,13 +932,19 @@ static int fluxer_nsfw_decode_targets(
             .limit = limit,
             .max_frame_output_size = max_frame_output_size,
         };
-        int status = fluxer_nsfw_seek(
-            context->format,
-            context->stream_index,
-            targets[next].pts,
-            targets[next].seconds,
-            media_len,
-            deadline_monotonic_ms);
+        int status = targets[next].file_fraction
+            ? fluxer_nsfw_seek_file_fraction(
+                context->format,
+                targets[next].seconds,
+                media_len,
+                deadline_monotonic_ms)
+            : fluxer_nsfw_seek(
+                context->format,
+                context->stream_index,
+                targets[next].pts,
+                targets[next].seconds,
+                media_len,
+                deadline_monotonic_ms);
         if (status == FLUXER_NATIVE_STATUS_OK) {
             avcodec_flush_buffers(context->decoder);
             status = fluxer_native_deadline_status(deadline_monotonic_ms);

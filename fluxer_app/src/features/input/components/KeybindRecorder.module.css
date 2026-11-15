@@ -47,7 +47,7 @@
 	cursor: pointer;
 	background-color: var(--form-surface-background);
 	font-family: var(--font-sans);
-	text-align: left;
+	text-align: start;
 	transition:
 		border-color 0.15s ease,
 		box-shadow 0.15s ease;
@@ -101,7 +101,8 @@
 	width: auto;
 	max-width: 14rem;
 	box-sizing: border-box;
-	padding: 0.375rem 0.75rem 0.375rem 0;
+	padding-block: 0.375rem;
+	padding-inline: 0 0.75rem;
 	font-family: inherit;
 	font-weight: inherit;
 	font-size: inherit;
@@ -128,10 +129,6 @@
 
 .disabled * {
 	cursor: not-allowed;
-}
-
-.disabled .button {
-	opacity: 1;
 }
 
 .popout {

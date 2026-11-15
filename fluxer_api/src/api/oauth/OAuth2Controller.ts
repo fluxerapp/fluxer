@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Config} from '@app/api/Config';
+import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {requireOAuth2BearerToken, requireOAuth2Scope} from '@app/api/middleware/OAuth2ScopeMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
+import {parseOAuth2Scope} from '@app/api/oauth/OAuth2ScopeUtils';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
@@ -51,7 +53,7 @@ export function OAuth2Controller(app: HonoApp) {
 					errorUrl.searchParams.set('error', 'login_required');
 					return ctx.redirect(errorUrl.toString(), 302);
 				}
-				const requestedScopes = new Set(q.scope.split(/[\s+]+/).filter(Boolean));
+				const requestedScopes = new Set(parseOAuth2Scope(q.scope));
 				const nonBotScopes = [...requestedScopes].filter((s) => s !== 'bot');
 				if (nonBotScopes.length > 0) {
 					const refreshTokens = await ctx.get('oauth2TokenRepository').listRefreshTokensForUser(user.id);
@@ -76,7 +78,6 @@ export function OAuth2Controller(app: HonoApp) {
 						state: q.state ?? undefined,
 						codeChallenge: q.code_challenge,
 						codeChallengeMethod: q.code_challenge_method as 'S256' | 'plain' | undefined,
-						responseType: (q.response_type ?? 'code') as 'code',
 						userId: user.id,
 					});
 					return ctx.redirect(redirectTo, 302);
@@ -124,6 +125,8 @@ export function OAuth2Controller(app: HonoApp) {
 				await ctx.get('oauth2RequestService').authorizeConsent({
 					body,
 					userId: user.id,
+					clientFeatures: ctx.get('clientFeatures'),
+					viewer: viewerFromCtx(ctx),
 					requestCache: ctx.get('requestCache'),
 				}),
 			);
@@ -148,7 +151,6 @@ export function OAuth2Controller(app: HonoApp) {
 			const result = await ctx.get('oauth2RequestService').tokenExchange({
 				form,
 				authorizationHeader: ctx.req.header('authorization') ?? undefined,
-				logPrefix: 'OAuth2',
 			});
 			return ctx.json(result);
 		},

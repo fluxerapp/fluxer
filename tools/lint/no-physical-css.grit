@@ -1,0 +1,12 @@
+language css
+
+`$prop: $value` where {
+	or {
+		$prop <: r"(?i)^(?:(?:scroll-)?(?:margin|padding)|border)-(?:left|right)(?:-[a-z]+)?$",
+		$prop <: r"(?i)^border-(?:top|bottom)-(?:left|right)-radius$",
+		and { $prop <: r"(?i)^(?:left|right)$", $value <: not r"^50%$" },
+		and { $prop <: r"(?i)^(?:float|clear|text-align)$", $value <: r"(?i)^(?:left|right)$" }
+	},
+	$value <: not r"(?s).*safe-area-inset.*",
+	register_diagnostic(span=$prop, message="Physical left and right CSS breaks right-to-left languages. Use the logical property instead, such as margin-inline-start, padding-inline-end, inset-inline-start, border-start-start-radius or text-align: start. Physical values stay allowed for centering with 50% and for safe area insets. A file that is physical by design, such as a media timeline or a tooltip arrow, goes on the allowlist in biome.json.", severity="error")
+}

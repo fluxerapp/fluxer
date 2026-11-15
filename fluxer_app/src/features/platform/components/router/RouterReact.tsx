@@ -3,7 +3,6 @@
 import {tryInterceptChannelNavigationPath} from '@app/features/navigation/utils/ChannelNavigationGuard';
 import type {
 	Match,
-	NavigateOptions,
 	RouteComponentProps,
 	RouteParams,
 	Router,
@@ -11,15 +10,14 @@ import type {
 	RouterState,
 	ScrollBehavior,
 	SearchParamsInput,
-	To,
 } from '@app/features/platform/components/router/RouterTypes';
 import * as React from 'react';
 import {useCallback, useContext, useEffect, useMemo, useSyncExternalStore} from 'react';
 
 const RouterContext = React.createContext<Router | null>(null);
-export const RouterProvider: React.FC<RouterProviderProps> = ({router, children, linkContainerRef}) => {
+export const RouterProvider: React.FC<RouterProviderProps> = ({router, children}) => {
 	useEffect(() => {
-		const container = linkContainerRef?.current ?? document.body;
+		const container = document.body;
 		const onClick = (event: MouseEvent) => {
 			if (event.defaultPrevented) return;
 			if (event.button !== 0) return;
@@ -46,7 +44,7 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({router, children,
 		};
 		container.addEventListener('click', onClick);
 		return () => container.removeEventListener('click', onClick);
-	}, [router, linkContainerRef]);
+	}, [router]);
 	useEffect(
 		() => () => {
 			router.destroy();
@@ -56,13 +54,13 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({router, children,
 	return <RouterContext.Provider value={router}>{children ?? <Outlet />}</RouterContext.Provider>;
 };
 
-export function useRouter(): Router {
+function useRouter(): Router {
 	const ctx = useContext(RouterContext);
 	if (!ctx) throw new Error('useRouter must be used within a RouterProvider');
 	return ctx;
 }
 
-export function useRouterState<T>(selector: (state: RouterState) => T): T {
+function useRouterState<T>(selector: (state: RouterState) => T): T {
 	const router = useRouter();
 	return useSyncExternalStore(
 		useCallback((onChange) => router.subscribe(onChange), [router]),
@@ -75,11 +73,11 @@ export function useLocation(): URL {
 	return useRouterState((s) => s.location);
 }
 
-export function useMatches(): Array<Match> {
+function useMatches(): Array<Match> {
 	return useRouterState((s) => s.matches);
 }
 
-export function useMatch(): Match | undefined {
+function useMatch(): Match | undefined {
 	const matches = useMatches();
 	return matches[matches.length - 1];
 }
@@ -87,16 +85,6 @@ export function useMatch(): Match | undefined {
 export function useParams(): RouteParams {
 	const match = useMatch();
 	return match?.params ?? {};
-}
-
-export function useSearch(): URLSearchParams {
-	const match = useMatch();
-	return match?.search ?? new URLSearchParams();
-}
-
-export function useNavigate(): (to: To, opts?: NavigateOptions) => Promise<void> {
-	const router = useRouter();
-	return useCallback((to: To, opts?: NavigateOptions) => router.navigate(to, opts), [router]);
 }
 
 export interface LinkProps extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> {
@@ -169,11 +157,12 @@ export const Outlet: React.FC = () => {
 			url: location,
 		};
 		const isLeaf = index === matches.length - 1;
-		const child = isLeaf
-			? match.route.component
-				? React.createElement(match.route.component, props)
-				: null
-			: renderAt(index + 1);
+		let child: React.ReactNode = null;
+		if (!isLeaf) {
+			child = renderAt(index + 1);
+		} else if (match.route.component) {
+			child = React.createElement(match.route.component, props);
+		}
 		const Layout = match.route.layout;
 		if (Layout) {
 			return (

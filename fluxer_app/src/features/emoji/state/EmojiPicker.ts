@@ -17,6 +17,7 @@ import {
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import {EmojiPickerStateSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/pickers_pb';
 import {makeAutoObservable, untracked} from 'mobx';
@@ -88,7 +89,7 @@ class EmojiPicker {
 			},
 			{autoBind: true},
 		);
-		void this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {

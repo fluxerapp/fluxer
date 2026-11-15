@@ -1,0 +1,84 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.directionScope {
+	display: contents;
+}
+
+.subtitle {
+	margin: -0.5rem 0 0;
+	color: var(--text-secondary);
+	font-size: 0.9375rem;
+	line-height: 1.375rem;
+}
+
+.content {
+	padding-top: 0.25rem;
+}
+
+.body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-4);
+}
+
+.loading {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 8rem;
+}
+
+.loadError {
+	margin: 0;
+	padding: 1rem 0;
+	color: var(--text-secondary);
+	font-size: 0.9375rem;
+	line-height: 1.375rem;
+	text-align: center;
+}
+
+.accountNotice {
+	display: flex;
+	flex-direction: column;
+	gap: 0.375rem;
+	padding: 0.75rem 0.875rem;
+	border: 0.0625rem solid var(--background-header-secondary);
+	border-radius: var(--radius-lg);
+	background-color: var(--background-secondary-alt);
+}
+
+.accountNoticeTitle {
+	color: var(--text-primary);
+	font-size: 0.875rem;
+	font-weight: 600;
+}
+
+.accountNoticeText {
+	color: var(--text-secondary);
+	font-size: 0.8125rem;
+	line-height: 1.25rem;
+}
+
+.accountNoticeActions {
+	display: flex;
+	margin-top: 0.25rem;
+}
+
+.submitNote {
+	margin: 0;
+	padding: 0.625rem 0.875rem;
+	border-radius: var(--radius-lg);
+	background-color: color-mix(in srgb, var(--status-danger) 12%, transparent);
+	color: var(--text-primary);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.splitFooter > * {
+	flex: 1 1 0 !important;
+	min-width: 0 !important;
+}
+
+.splitFooter button {
+	width: 100% !important;
+}

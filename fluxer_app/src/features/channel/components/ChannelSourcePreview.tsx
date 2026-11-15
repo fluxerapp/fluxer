@@ -9,17 +9,17 @@ import {getGroupDMAccentColor} from '@app/features/channel/utils/GroupDMColorUti
 import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
 import Guilds from '@app/features/guild/state/Guilds';
 import {DIRECT_MESSAGE_DESCRIPTOR, PERSONAL_NOTES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {Link} from '@app/features/platform/components/router/RouterReact';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {MentionBadge} from '@app/features/ui/components/MentionBadge';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {CaretRightIcon} from '@app/features/ui/icons/DirectionalIcons';
 import Users from '@app/features/user/state/Users';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {MEDIA_PROXY_ICON_SIZE_DEFAULT} from '@fluxer/constants/src/MediaProxyAssetSizes';
 import type {MediaProxyImageSize} from '@fluxer/constants/src/MediaProxyImageSizes';
 import {msg, plural} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {CaretRightIcon, HashIcon, NotePencilIcon, UserIcon, UsersIcon} from '@phosphor-icons/react';
+import {HashIcon, NotePencilIcon, UserIcon, UsersIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -51,13 +51,8 @@ interface ChannelAvatarFallbackLabels {
 interface ChannelSourcePreviewProps {
 	channel: Channel;
 	onClick?: () => void;
-	linkTo?: string;
-	onContextMenu?: (event: React.MouseEvent<HTMLElement>) => void;
 	mentionCount?: number;
 	avatarSize?: MediaProxyImageSize;
-	variant?: 'default' | 'inline';
-	showChannelIcon?: boolean;
-	className?: string;
 }
 
 function getChannelDisplayName(channel: Channel): string {
@@ -214,13 +209,8 @@ function renderChannelAvatar(
 export const ChannelSourcePreview = observer(function ChannelSourcePreview({
 	channel,
 	onClick,
-	linkTo,
-	onContextMenu,
 	mentionCount,
 	avatarSize,
-	variant = 'default',
-	showChannelIcon = true,
-	className,
 }: ChannelSourcePreviewProps) {
 	const {i18n} = useLingui();
 	const guild = channel.guildId ? (Guilds.getGuild(channel.guildId) ?? null) : null;
@@ -229,7 +219,7 @@ export const ChannelSourcePreview = observer(function ChannelSourcePreview({
 	const isUserDm = channel.isDM();
 	const channelDisplayName = getChannelDisplayName(channel);
 	const displayName = isUserDm ? `@${channelDisplayName}` : channelDisplayName;
-	const resolvedAvatarSize: MediaProxyImageSize = avatarSize ?? (variant === 'inline' ? 24 : 32);
+	const resolvedAvatarSize: MediaProxyImageSize = avatarSize ?? 32;
 	const avatarFallbackLabels = useMemo(
 		() => ({
 			channel: i18n._(CHANNEL_DESCRIPTOR),
@@ -279,24 +269,6 @@ export const ChannelSourcePreview = observer(function ChannelSourcePreview({
 	);
 	const nameAriaLabel = i18n._(JUMP_TO_DESCRIPTOR, {displayName});
 	const renderNameAction = () => {
-		if (linkTo) {
-			return (
-				<FocusRing
-					offset={-2}
-					ringClassName={styles.focusRingTight}
-					data-flx="channel.channel-source-preview.render-name-action.focus-ring"
-				>
-					<Link
-						to={linkTo}
-						className={styles.nameLink}
-						aria-label={nameAriaLabel}
-						data-flx="channel.channel-source-preview.render-name-action.name-link"
-					>
-						{nameContent}
-					</Link>
-				</FocusRing>
-			);
-		}
 		if (onClick) {
 			return (
 				<FocusRing
@@ -318,19 +290,12 @@ export const ChannelSourcePreview = observer(function ChannelSourcePreview({
 		}
 		return nameContent;
 	};
-	const containerInteractionProps = onContextMenu ? {onContextMenu} : {};
 	return (
-		<div
-			className={clsx(styles.container, variant === 'inline' && styles.inline, className)}
-			data-flx="channel.channel-source-preview.container"
-			{...containerInteractionProps}
-		>
+		<div className={styles.container} data-flx="channel.channel-source-preview.container">
 			{renderChannelAvatar(channel, resolvedAvatarSize, avatarFallbackLabels)}
 			<div className={styles.textContainer} data-flx="channel.channel-source-preview.text-container">
 				<div className={styles.nameRow} data-flx="channel.channel-source-preview.name-row">
-					{showChannelIcon && channel.guildId
-						? ChannelUtils.getIcon(channel, {className: styles.channelIcon, weight: 'bold'})
-						: null}
+					{channel.guildId ? ChannelUtils.getIcon(channel, {className: styles.channelIcon, weight: 'bold'}) : null}
 					{renderNameAction()}
 					{mentionCount != null && mentionCount > 0 ? (
 						<MentionBadge

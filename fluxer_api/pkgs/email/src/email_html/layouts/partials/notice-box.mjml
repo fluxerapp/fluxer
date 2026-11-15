@@ -1,0 +1,9 @@
+%%?box%%<tr>
+	<td style="padding:20px 0 0">
+		<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" dir="[[dir]]" style="width:100%;border-collapse:separate;direction:[[dir]]">
+			<tr>
+				<td dir="[[dir]]" bgcolor="#f4f3ff" class="x-ink x-box" style="padding:14px 16px;border:1px solid #c9c7f5;border-radius:6px;background-color:#f4f3ff;font-family:[[font]];font-size:16px;line-height:24px;font-weight:600;color:#1b1a2e;text-align:[[start]];direction:[[dir]];overflow-wrap:anywhere;word-break:break-word">%%box%%</td>
+			</tr>
+		</table>
+	</td>
+</tr>%%/box%%

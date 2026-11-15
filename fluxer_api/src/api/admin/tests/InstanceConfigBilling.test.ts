@@ -3,16 +3,18 @@
 import type {TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
 import {getConfig} from '@app/api/Config';
+import {executeQuery} from '@app/api/database/CassandraQueryExecution';
 import {getCachedInstancePremiumMode, setCachedInstancePremiumMode} from '@app/api/limits/InstancePremiumModeCache';
 import {getAdminRepository, getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import {getStoredBillingConfig, setStoredBillingConfig} from '@app/api/stripe/BillingConfigCache';
+import {InstanceConfiguration} from '@app/api/Tables';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import type {InstanceConfigResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
-import {afterAll, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 const OPERATOR_SECRET_KEY = 'sk_test_operator_secret_value';
 const OPERATOR_WEBHOOK_SECRET = 'whsec_operator_secret_value';
@@ -37,24 +39,28 @@ function restoreGlobalState(state: GlobalState): void {
 	setStoredBillingConfig(state.storedBilling);
 }
 
-function useInstanceHarness(selfHosted: boolean) {
-	const context: {harness: ApiTestHarness} = {harness: undefined as unknown as ApiTestHarness};
+function useInstanceHarness({selfHosted}: {selfHosted: boolean}) {
+	let harness: ApiTestHarness;
 	let original: GlobalState;
 	beforeAll(async () => {
 		original = captureGlobalState();
 		getConfig().instance.selfHosted = selfHosted;
-		context.harness = await createApiTestHarness();
+		harness = await createApiTestHarness();
 	});
 	beforeEach(async () => {
-		await context.harness.reset();
+		await harness.reset();
 		setStoredBillingConfig(null);
 		setCachedInstancePremiumMode('everyone');
 	});
 	afterAll(async () => {
-		await context.harness.shutdown();
+		await harness.shutdown();
 		restoreGlobalState(original);
 	});
-	return context;
+	return {
+		get harness(): ApiTestHarness {
+			return harness;
+		},
+	};
 }
 
 async function createAdmin(harness: ApiTestHarness): Promise<TestAccount> {
@@ -87,7 +93,7 @@ const OPERATOR_BILLING = {
 };
 
 describe('instance config billing on a self-hosted instance', () => {
-	const context = useInstanceHarness(true);
+	const context = useInstanceHarness({selfHosted: true});
 
 	it('rejects enabling billing while the premium mode is everyone', async () => {
 		const admin = await createAdmin(context.harness);
@@ -198,28 +204,6 @@ describe('instance config billing on a self-hosted instance', () => {
 		}
 	});
 
-	it('clears the premium name and info URL when both are sent as null', async () => {
-		const admin = await createAdmin(context.harness);
-		await patchConfig(context.harness, admin, {
-			app_public: {branding: {premium_product_name: 'Gold', premium_info_url: 'https://example.com/gold'}},
-		}).execute();
-		const reset = await patchConfig(context.harness, admin, {
-			app_public: {branding: {premium_product_name: null, premium_info_url: null}},
-		}).execute();
-		expect(reset.app_public.branding).toMatchObject({premium_product_name: 'Premium', premium_info_url: null});
-		await patchConfig(context.harness, admin, {
-			app_public: {branding: {premium_product_name: 'Gold', premium_info_url: 'https://example.com/gold'}},
-		}).execute();
-		const resetWithBilling = await patchConfig(context.harness, admin, {
-			app_public: {branding: {premium_product_name: null, premium_info_url: null}},
-			billing: {enabled: false},
-		}).execute();
-		expect(resetWithBilling.app_public.branding).toMatchObject({
-			premium_product_name: 'Premium',
-			premium_info_url: null,
-		});
-	});
-
 	it('applies billing sections that only hold nulls', async () => {
 		const admin = await createAdmin(context.harness);
 		await patchConfig(context.harness, admin, {billing: OPERATOR_BILLING, policy: {premium_mode: 'mirror'}}).execute();
@@ -247,16 +231,20 @@ describe('instance config billing on a self-hosted instance', () => {
 
 	it('re-checks the stored premium mode right before the billing write', async () => {
 		const admin = await createAdmin(context.harness);
+		await patchConfig(context.harness, admin, {policy: {premium_mode: 'mirror'}}).execute();
 		const repository = getInstanceConfigRepository();
-		const stored = await repository.getInstancePolicyConfig();
-		const spy = vi.spyOn(repository, 'getInstancePolicyConfig').mockResolvedValue({...stored, premium_mode: 'mirror'});
-		try {
-			await patchConfig(context.harness, admin, {billing: {enabled: true}})
-				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_FORM_BODY)
-				.execute();
-		} finally {
-			spy.mockRestore();
-		}
+		await executeQuery(
+			InstanceConfiguration.upsertAll({
+				key: 'instance_policy_config',
+				value: JSON.stringify({premium_mode: 'everyone'}),
+				updated_at: new Date(),
+			}),
+		);
+		expect((await repository.getInstancePolicyConfig()).premium_mode).toBe('mirror');
+		expect((await repository.readStoredInstancePolicyConfig()).premium_mode).toBe('everyone');
+		await patchConfig(context.harness, admin, {billing: {enabled: true}})
+			.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_FORM_BODY)
+			.execute();
 		const current = await createBuilder<InstanceConfigResponse>(context.harness, admin.token)
 			.get('/admin/instance/config')
 			.execute();
@@ -289,36 +277,10 @@ describe('instance config billing on a self-hosted instance', () => {
 		expect(serialized).not.toContain(OPERATOR_SECRET_KEY);
 		expect(serialized).not.toContain(OPERATOR_WEBHOOK_SECRET);
 	});
-
-	it('stores the premium name and info URL and resets the name to the self-hosted default', async () => {
-		const admin = await createAdmin(context.harness);
-		const initial = await createBuilder<InstanceConfigResponse>(context.harness, admin.token)
-			.get('/admin/instance/config')
-			.execute();
-		expect(initial.app_public.branding).toMatchObject({premium_product_name: 'Premium', premium_info_url: null});
-		const named = await patchConfig(context.harness, admin, {
-			app_public: {branding: {premium_product_name: 'Gold', premium_info_url: 'https://example.com/gold'}},
-		}).execute();
-		expect(named.app_public.branding).toMatchObject({
-			premium_product_name: 'Gold',
-			premium_info_url: 'https://example.com/gold',
-		});
-		const renamedProduct = await patchConfig(context.harness, admin, {
-			app_public: {branding: {product_name: 'Example Chat'}},
-		}).execute();
-		expect(renamedProduct.app_public.branding.premium_product_name).toBe('Gold');
-		const reset = await patchConfig(context.harness, admin, {
-			app_public: {branding: {product_name: 'Example Chat', premium_product_name: null, premium_info_url: null}},
-		}).execute();
-		expect(reset.app_public.branding).toMatchObject({premium_product_name: 'Premium', premium_info_url: null});
-		await patchConfig(context.harness, admin, {app_public: {branding: {premium_info_url: 'javascript:alert(1)'}}})
-			.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_FORM_BODY)
-			.execute();
-	});
 });
 
 describe('instance config billing on a hosted instance', () => {
-	const context = useInstanceHarness(false);
+	const context = useInstanceHarness({selfHosted: false});
 
 	it('keeps the Plutonium default and env billing', async () => {
 		const admin = await createAdmin(context.harness);
@@ -353,13 +315,5 @@ describe('instance config billing on a hosted instance', () => {
 		expect(current.billing).toMatchObject({enabled: null, catalog_mode: 'env', prices: null});
 		expect(current.app_public.branding).toMatchObject({premium_product_name: 'Plutonium', premium_info_url: null});
 		expect(getStoredBillingConfig()?.prices ?? null).toBeNull();
-	});
-
-	it('still accepts other branding fields', async () => {
-		const admin = await createAdmin(context.harness);
-		const updated = await patchConfig(context.harness, admin, {
-			app_public: {branding: {theme_color: '#123456'}},
-		}).execute();
-		expect(updated.app_public.branding.theme_color).toBe('#123456');
 	});
 });

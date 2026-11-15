@@ -7,8 +7,13 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getFluxerDebugObject} from '@app/features/platform/utils/FluxerDebugGlobal';
 import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import type {DesktopInfo} from '@app/types/electron.d';
+import {
+	ARCHITECTURE_PATTERNS,
+	formatDesktopOsName,
+	formatReleaseChannelLabel,
+	normalizeArchitectureValue,
+} from '@fluxer/desktop_ipc/src/DesktopLabels';
 import Bowser from 'bowser';
-import {isE2EESupported} from 'livekit-client';
 
 const logger = new Logger('ClientInfoUtils');
 
@@ -41,35 +46,6 @@ type NavigatorUADataLike = NavigatorHighEntropyHints & {
 
 function normalize<T>(value: T | null | undefined): T | undefined {
 	return value ?? undefined;
-}
-
-export function formatReleaseChannelLabel(value: string): string {
-	const normalized = value.trim().toLowerCase();
-	return normalized.charAt(0).toUpperCase() + normalized.slice(1);
-}
-
-const ARCHITECTURE_PATTERNS: ReadonlyArray<{
-	pattern: RegExp;
-	label: string;
-}> = [
-	{pattern: /\barm64\b|\baarch64\b|\barmv8\b|\barm64e\b/i, label: 'arm64'},
-	{pattern: /\barm\b|\barmv7\b|\barmv6\b/i, label: 'arm'},
-	{pattern: /MacIntel/i, label: 'x64'},
-	{pattern: /\bx86_64\b|\bx64\b|\bamd64\b|\bwin64\b|\bwow64\b/i, label: 'x64'},
-	{pattern: /\bx86\b|\bi[3-6]86\b/i, label: 'x86'},
-];
-
-export function normalizeArchitectureValue(value: string | null | undefined): string | undefined {
-	if (!value) {
-		return undefined;
-	}
-	const trimmed = value.trim();
-	for (const entry of ARCHITECTURE_PATTERNS) {
-		if (entry.pattern.test(trimmed)) {
-			return entry.label;
-		}
-	}
-	return trimmed || undefined;
 }
 
 const detectAppleSiliconViaWebGL = (): string | undefined => {
@@ -140,20 +116,21 @@ const detectArchitectureFromNavigator = (): string | undefined => {
 let cachedClientInfo: ClientInfo | null = null;
 let preloadPromise: Promise<ClientInfo> | null = null;
 
-const parseUserAgent = (): ClientInfo => {
-	const userAgent = navigator.userAgent;
-	const parser = Bowser.getParser(userAgent);
-	const result = parser.getResult();
-	const isMac = isNavigatorPlatformMac(navigator);
-	const fallbackArch = !isMac ? normalizeArchitectureValue(navigator.platform) : undefined;
-	const arch = detectArchitectureFromNavigator() ?? fallbackArch;
+const parseBrowserFromUserAgent = (): ClientInfo => {
+	const result = Bowser.getParser(navigator.userAgent).getResult();
 	return {
 		browserName: normalize(result.browser.name),
 		browserVersion: normalize(result.browser.version),
 		osName: normalize(result.os.name),
 		osVersion: normalize(result.os.version),
-		arch: arch,
 	};
+};
+
+const parseUserAgent = (): ClientInfo => {
+	const browser = parseBrowserFromUserAgent();
+	const isMac = isNavigatorPlatformMac(navigator);
+	const fallbackArch = !isMac ? normalizeArchitectureValue(navigator.platform) : undefined;
+	return {...browser, arch: detectArchitectureFromNavigator() ?? fallbackArch};
 };
 
 export function getClientInfoSync(): ClientInfo {
@@ -194,19 +171,6 @@ function getDesktopContextFromInfo(desktopInfo: DesktopInfo): Partial<ClientInfo
 	};
 }
 
-function getWindowsVersionName(osVersion: string): string {
-	const parts = osVersion.split('.');
-	const majorVersion = parseInt(parts[0], 10);
-	const buildNumber = parseInt(parts[2], 10);
-	if (majorVersion === 10) {
-		if (buildNumber >= 22000) {
-			return 'Windows 11';
-		}
-		return 'Windows 10';
-	}
-	return 'Windows';
-}
-
 const detectArchitectureFromClientHints = async (): Promise<string | undefined> => {
 	const userAgentData = (
 		navigator as Navigator & {
@@ -243,20 +207,7 @@ const detectArchitectureFromClientHints = async (): Promise<string | undefined> 
 };
 
 function getOsContextFromInfo(desktopInfo: DesktopInfo): Partial<ClientInfo> {
-	let osName: string | undefined;
-	switch (desktopInfo.os) {
-		case 'darwin':
-			osName = 'macOS';
-			break;
-		case 'win32':
-			osName = desktopInfo.osVersion ? getWindowsVersionName(desktopInfo.osVersion) : 'Windows';
-			break;
-		case 'linux':
-			osName = 'Linux';
-			break;
-		default:
-			osName = desktopInfo.os;
-	}
+	const osName = formatDesktopOsName(desktopInfo);
 	const osVersion = normalize(desktopInfo.systemVersion ?? desktopInfo.osVersion);
 	return {
 		osName,
@@ -278,17 +229,25 @@ async function getDesktopInfo(): Promise<DesktopInfo | null> {
 	}
 }
 
+function parseBrowserSafely(): ClientInfo {
+	try {
+		return parseBrowserFromUserAgent();
+	} catch {
+		return {};
+	}
+}
+
 export async function getClientInfo(): Promise<ClientInfo> {
-	const base = getClientInfoSync();
 	if (!isDesktop()) {
 		const hintsArch = await detectArchitectureFromClientHints();
+		const base = hintsArch ? (cachedClientInfo ?? parseBrowserSafely()) : getClientInfoSync();
 		return {...base, arch: hintsArch ?? base.arch};
 	}
 	const desktopInfo = await getDesktopInfo();
 	if (!desktopInfo) {
-		return base;
+		return getClientInfoSync();
 	}
-	return {...base, ...getOsContextFromInfo(desktopInfo), ...getDesktopContextFromInfo(desktopInfo)};
+	return {...parseBrowserSafely(), ...getOsContextFromInfo(desktopInfo), ...getDesktopContextFromInfo(desktopInfo)};
 }
 
 function formatTranslationDomGuardFires(): string {
@@ -301,8 +260,8 @@ function formatTranslationDomGuardFires(): string {
 }
 
 export function formatClientBuildInfo(info: ClientInfo, options: {unknownLabel?: string} = {}): string {
-	const releaseChannel = formatReleaseChannelLabel(Config.PUBLIC_RELEASE_CHANNEL);
-	const buildVersion = Config.PUBLIC_BUILD_VERSION || 'dev';
+	const releaseChannel = formatReleaseChannelLabel(Config.RELEASE_CHANNEL);
+	const buildVersion = Config.BUILD_VERSION || 'dev';
 	const browserName = info.browserName || options.unknownLabel || '';
 	const browserVersion = info.browserVersion || '';
 	const browserInfo = `${browserName} ${browserVersion}`.trim();
@@ -359,16 +318,14 @@ function isLiveKitE2EECapable(): boolean {
 	if (!globalThis.crypto?.subtle) {
 		return false;
 	}
-	try {
-		return isE2EESupported();
-	} catch (error) {
-		logger.warn('Failed to detect LiveKit E2EE support', error);
-		return false;
+	if (typeof window.RTCRtpScriptTransform !== 'undefined') {
+		return true;
 	}
+	return typeof window.RTCRtpSender !== 'undefined' && 'createEncodedStreams' in window.RTCRtpSender.prototype;
 }
 
 export async function getGatewayClientProperties(geo?: {latitude?: string | null; longitude?: string | null}) {
-	const info = await getClientInfo();
+	const info = await preloadClientInfo();
 	return {
 		os: info.osName ?? 'unknown',
 		os_version: info.osVersion ?? '',
@@ -378,7 +335,7 @@ export async function getGatewayClientProperties(geo?: {latitude?: string | null
 		system_locale: navigator.language,
 		locale: navigator.language,
 		user_agent: navigator.userAgent,
-		build_version: Config.PUBLIC_BUILD_VERSION ?? 'dev',
+		build_version: Config.BUILD_VERSION ?? 'dev',
 		desktop_app_version: info.desktopVersion ?? null,
 		desktop_app_channel: info.desktopChannel ?? null,
 		desktop_arch: info.desktopArch ?? info.arch ?? null,

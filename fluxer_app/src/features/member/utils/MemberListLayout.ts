@@ -14,8 +14,6 @@ export interface MemberListGroupLayout {
 	rowEndIndex: number;
 }
 
-type RowSeekDirection = 'backward' | 'forward';
-
 export function buildMemberListLayout(groups: ReadonlyArray<MemberListGroupSnapshot>): Array<MemberListGroupLayout> {
 	const layouts: Array<MemberListGroupLayout> = [];
 	let rowIndex = 0;
@@ -97,30 +95,6 @@ export function buildMemberListRowOffsets(
 	return offsets;
 }
 
-export function findMemberListRowForOffset(offsets: ReadonlyArray<number>, pixel: number): number {
-	const lastRow = offsets.length - 2;
-	if (lastRow < 0) {
-		return 0;
-	}
-	if (pixel <= 0) {
-		return 0;
-	}
-	if (pixel >= offsets[lastRow + 1]!) {
-		return lastRow;
-	}
-	let low = 0;
-	let high = lastRow;
-	while (low < high) {
-		const mid = (low + high + 1) >> 1;
-		if (offsets[mid]! <= pixel) {
-			low = mid;
-		} else {
-			high = mid - 1;
-		}
-	}
-	return low;
-}
-
 export function getTotalMemberCount(groups: ReadonlyArray<MemberListGroupSnapshot>): number {
 	let count = 0;
 	for (const group of groups) {
@@ -150,80 +124,6 @@ export function getGroupLayoutForRow(
 		return null;
 	}
 	return candidate;
-}
-
-export function getMemberIndexForRow(
-	layouts: ReadonlyArray<MemberListGroupLayout>,
-	rowIndex: number,
-	direction: RowSeekDirection,
-): number | null {
-	const layout = getGroupLayoutForRow(layouts, rowIndex);
-	if (!layout) {
-		return null;
-	}
-	if (rowIndex === layout.headerRowIndex) {
-		if (direction === 'forward') {
-			return layout.count > 0 ? layout.memberStartIndex : null;
-		}
-		const previousIndex = layout.memberStartIndex - 1;
-		return previousIndex >= 0 ? previousIndex : null;
-	}
-	return layout.memberStartIndex + (rowIndex - layout.headerRowIndex - 1);
-}
-
-export function getMemberIndexRangeForRowRange(
-	layouts: ReadonlyArray<MemberListGroupLayout>,
-	startRowIndex: number,
-	endRowIndex: number,
-): [number, number] | null {
-	const start = getMemberIndexForRow(layouts, startRowIndex, 'forward');
-	const end = getMemberIndexForRow(layouts, endRowIndex, 'backward');
-	if (start == null || end == null || start > end) {
-		return null;
-	}
-	return [start, end];
-}
-
-export function getRowIndexForMemberIndex(
-	layouts: ReadonlyArray<MemberListGroupLayout>,
-	memberIndex: number,
-): number | null {
-	if (memberIndex < 0) {
-		return null;
-	}
-	if (layouts.length === 0) {
-		return memberIndex;
-	}
-	let low = 0;
-	let high = layouts.length - 1;
-	let candidate: MemberListGroupLayout | null = null;
-	while (low <= high) {
-		const mid = (low + high) >> 1;
-		const layout = layouts[mid]!;
-		if (layout.memberStartIndex <= memberIndex) {
-			candidate = layout;
-			low = mid + 1;
-		} else {
-			high = mid - 1;
-		}
-	}
-	if (candidate == null || memberIndex > candidate.memberEndIndex) {
-		return null;
-	}
-	return candidate.headerRowIndex + 1 + (memberIndex - candidate.memberStartIndex);
-}
-
-export function getRowIndexRangeForMemberIndexRange(
-	layouts: ReadonlyArray<MemberListGroupLayout>,
-	startMemberIndex: number,
-	endMemberIndex: number,
-): [number, number] | null {
-	const start = getRowIndexForMemberIndex(layouts, startMemberIndex);
-	const end = getRowIndexForMemberIndex(layouts, endMemberIndex);
-	if (start == null || end == null || start > end) {
-		return null;
-	}
-	return [start, end];
 }
 
 export interface MemberListScrollSpan {

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PRODUCT_NAME} from '@app/features/app/config/ProductConstants';
 import {
 	getNotificationAlertOptions,
 	isMobileOrTabletUserAgent,
@@ -8,7 +7,6 @@ import {
 import {
 	type AppShellRuntime,
 	fetchAppShellNavigation,
-	isCacheableResponse,
 	type PrecacheEntry,
 	precacheAssets,
 	seedAppShell,
@@ -18,10 +16,15 @@ import {
 	WORKER_CACHE_PREFIX,
 	WORKER_NAVIGATION_CACHE_PREFIX,
 } from '@app/features/platform/service_worker/WorkerCacheCleanup';
-import {getWorkerFetchRoute} from '@app/features/platform/service_worker/WorkerFetchRouting';
+import {
+	getWorkerFetchRoute,
+	getWorkerStaticRoutes,
+	type WorkerStaticRoute,
+} from '@app/features/platform/service_worker/WorkerFetchRouting';
 import {
 	getBadgeCount,
 	getPushNotificationClientState,
+	type InstanceManifestSources,
 	isNotificationClearPayload,
 	isPushNotificationReadThrough,
 	matchesPushChannelNotification,
@@ -29,16 +32,17 @@ import {
 	resolvePushChannelId,
 	resolvePushMessageId,
 	resolvePushNotificationTag,
+	resolvePushTitle,
 	shouldRenotifyPushNotification,
 	shouldSilenceNonMobilePushNotification,
 } from '@app/features/platform/service_worker/WorkerPushPayload';
+import {isObjectLike as isRecord} from '@fluxer/record_utils/src/RecordGuards';
 
 type SwLogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 declare const self: ServiceWorkerGlobalScope &
 	typeof globalThis & {
 		skipWaiting(): void;
-		__WB_MANIFEST: unknown;
 		console: Console;
 	};
 
@@ -48,6 +52,11 @@ const workerNavigator = self.navigator as {readonly userAgent: string; readonly 
 const ensureServiceWorkerReady: Promise<void> = Promise.resolve();
 const SERVICE_WORKER_VERSION = typeof __FLUXER_SW_VERSION__ === 'string' ? __FLUXER_SW_VERSION__ : 'dev';
 const PRECACHE_MANIFEST = typeof __FLUXER_PRECACHE_MANIFEST__ === 'undefined' ? [] : __FLUXER_PRECACHE_MANIFEST__;
+const CRITICAL_ASSET_URLS = new Set(
+	PRECACHE_MANIFEST.filter((entry) => entry.integrity !== null).map(
+		(entry) => new URL(entry.url, self.location.origin).href,
+	),
+);
 const PRECACHE_CACHE = `${WORKER_CACHE_PREFIX}-precache-${SERVICE_WORKER_VERSION}`;
 const NAVIGATION_CACHE = `${WORKER_NAVIGATION_CACHE_PREFIX}${SERVICE_WORKER_VERSION}`;
 const EXPECTED_CACHES = new Set([PRECACHE_CACHE, NAVIGATION_CACHE]);
@@ -62,14 +71,16 @@ try {
 const log = async (level: SwLogLevel, message: string, data?: unknown): Promise<void> => {
 	try {
 		if (typeof console !== 'undefined') {
-			const fn =
-				level === 'error'
-					? console.error
-					: level === 'warn'
-						? console.warn
-						: level === 'info'
-							? console.info
-							: console.debug;
+			let fn: typeof console.debug;
+			if (level === 'error') {
+				fn = console.error;
+			} else if (level === 'warn') {
+				fn = console.warn;
+			} else if (level === 'info') {
+				fn = console.info;
+			} else {
+				fn = console.debug;
+			}
 			if (data !== undefined) fn?.call(console, '[SW]', message, data);
 			else fn?.call(console, '[SW]', message);
 		}
@@ -79,31 +90,16 @@ const appShellRuntime: AppShellRuntime = {
 	caches: serviceWorkerCaches,
 	fetch: (request) => fetch(request),
 	origin: self.location.origin,
+	version: SERVICE_WORKER_VERSION,
 	precacheName: PRECACHE_CACHE,
 	navigationCacheName: NAVIGATION_CACHE,
 	networkTimeoutMs: NAVIGATION_NETWORK_TIMEOUT_MS,
+	onBuildMismatch: () => self.registration.update(),
 	onCacheWriteError: (error) => {
 		void log('warn', 'app shell cache put failed', {error: describeError(error)});
 	},
 };
-const cacheRequest = async (cacheName: string, request: Request | string, response: Response): Promise<void> => {
-	if (!isCacheableResponse(response)) {
-		return;
-	}
-	try {
-		if (!serviceWorkerCaches) {
-			return;
-		}
-		const cache = await serviceWorkerCaches.open(cacheName);
-		await cache.put(request, response.clone());
-	} catch (error) {
-		await log('warn', 'cache put failed', {cacheName, error: describeError(error)});
-	}
-};
 const cleanupOldCaches = async (): Promise<void> => {
-	if (!serviceWorkerCaches) {
-		return;
-	}
 	const names = await serviceWorkerCaches.keys();
 	await Promise.all(
 		names.map((name) => {
@@ -116,11 +112,9 @@ const cleanupOldCaches = async (): Promise<void> => {
 };
 const fetchNetworkFirst = async (request: Request): Promise<Response> => {
 	try {
-		const response = await fetch(request);
-		await cacheRequest(PRECACHE_CACHE, request, response);
-		return response;
+		return await fetch(request);
 	} catch (error) {
-		const cached = await serviceWorkerCaches?.match(request);
+		const cached = await serviceWorkerCaches.match(request, {cacheName: PRECACHE_CACHE});
 		if (cached) {
 			return cached;
 		}
@@ -128,11 +122,27 @@ const fetchNetworkFirst = async (request: Request): Promise<Response> => {
 	}
 };
 
+const instanceManifestUrl = (): string => new URL('/manifest.json', self.location.origin).href;
+const instanceManifestSources: InstanceManifestSources = {
+	fetchManifest: (signal) => fetch(instanceManifestUrl(), {signal}),
+	readCachedManifest: async () =>
+		(await serviceWorkerCaches.match(instanceManifestUrl(), {cacheName: PRECACHE_CACHE})) ?? undefined,
+};
+
+interface StaticRoutingInstallEvent extends ExtendableEvent {
+	addRoutes?: (rules: ReadonlyArray<WorkerStaticRoute>) => Promise<void>;
+}
+
 self.addEventListener('install', (event: ExtendableEvent) => {
+	const installEvent = event as StaticRoutingInstallEvent;
 	event.waitUntil(
 		(async () => {
+			await installEvent
+				.addRoutes?.(getWorkerStaticRoutes(CRITICAL_ASSET_URLS, self.location.origin, PRECACHE_CACHE))
+				.catch((error: unknown) => log('warn', 'static routes were refused', error));
 			await ensureServiceWorkerReady;
-			await Promise.allSettled([precacheAssets(appShellRuntime, PRECACHE_MANIFEST), seedAppShell(appShellRuntime)]);
+			await precacheAssets(appShellRuntime, PRECACHE_MANIFEST);
+			await seedAppShell(appShellRuntime);
 			await log('info', 'install');
 			self.skipWaiting();
 		})(),
@@ -153,9 +163,15 @@ self.addEventListener('activate', (event: ExtendableEvent) => {
 
 self.addEventListener('fetch', (event: FetchEvent) => {
 	const request = event.request;
-	const route = getWorkerFetchRoute(request, self.location.origin);
+	const route = getWorkerFetchRoute(request, self.location.origin, CRITICAL_ASSET_URLS);
+	if (route === 'asset') {
+		event.respondWith(
+			serviceWorkerCaches.match(request, {cacheName: PRECACHE_CACHE}).then((cached) => cached ?? fetch(request)),
+		);
+		return;
+	}
 	if (route === 'navigation') {
-		event.respondWith(fetchAppShellNavigation(appShellRuntime, request));
+		event.respondWith(fetchAppShellNavigation(appShellRuntime, request, (work) => event.waitUntil(work)));
 		return;
 	}
 	if (route === 'metadata') {
@@ -186,11 +202,10 @@ self.addEventListener('message', (event: ExtendableMessageEvent) => {
 	event.waitUntil(log('debug', 'message: unknown', {type}));
 });
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null;
-}
-
 const updateAppBadge = async (count: number | null): Promise<void> => {
+	if (isNativeDesktopUserAgent(workerNavigator.userAgent)) {
+		return;
+	}
 	if (typeof navigator.setAppBadge !== 'function' && typeof navigator.clearAppBadge !== 'function') {
 		return;
 	}
@@ -344,8 +359,7 @@ self.addEventListener('push', (event: PushEvent) => {
 					rawPreview: rawText?.slice(0, 512) ?? null,
 				});
 			}
-			const payload = normalizePushPayload(raw ?? {title: PRODUCT_NAME});
-			const title = payload.title ?? PRODUCT_NAME;
+			const payload = normalizePushPayload(raw);
 			const tag = resolvePushNotificationTag(payload);
 			const badgeCount = getBadgeCount(payload);
 			if (isNotificationClearPayload(payload)) {
@@ -358,10 +372,10 @@ self.addEventListener('push', (event: PushEvent) => {
 				return;
 			}
 			if (isNativeDesktopUserAgent(workerNavigator.userAgent)) {
-				await updateAppBadge(badgeCount);
 				await log('warn', 'push ignored in native desktop service worker', {badgeCount});
 				return;
 			}
+			const title = await resolvePushTitle(payload, instanceManifestSources);
 			const body = payload.body ?? '';
 			let clientState = getPushNotificationClientState([]);
 			try {
@@ -404,7 +418,7 @@ self.addEventListener('push', (event: PushEvent) => {
 			} catch (error) {
 				await log('error', 'push: showNotification failed, showing fallback', {error: describeError(error)});
 				try {
-					await self.registration.showNotification(PRODUCT_NAME, {body: ''});
+					await self.registration.showNotification(title, {body: ''});
 				} catch (fallbackError) {
 					await log('error', 'push: fallback showNotification also failed', {
 						error: describeError(fallbackError),

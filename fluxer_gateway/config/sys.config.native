@@ -1,0 +1,23 @@
+% SPDX-License-Identifier: AGPL-3.0-or-later
+[
+    {kernel, [
+        {logger_level, warning},
+        {logger, [
+            {handler, default, logger_std_h, #{
+                formatter =>
+                    {logger_formatter, #{
+                        single_line => true,
+                        chars_limit => 16384,
+                        max_size => 16384,
+                        depth => 30
+                    }}
+            }}
+        ]}
+    ]},
+    {sasl, [
+        {errlog_type, error}
+    ]},
+    {inet, [
+        {lookup, [native, file, dns]}
+    ]}
+].

@@ -222,9 +222,120 @@ const DISCONNECT_FROM_VOICE_DESCRIPTOR = msg({
 	message: 'Disconnect from voice',
 	comment: 'Tray menu item. Leaves the current voice call when the channel name is unavailable.',
 });
+const TURN_OFF_CUSTOM_CSS_DESCRIPTOR = msg({
+	message: 'Turn off custom CSS',
+	comment:
+		'Tray menu item in the desktop app. Stops applying quick CSS and saved themes in the app, for example when CSS breaks it.',
+});
+const TURN_ON_CUSTOM_CSS_DESCRIPTOR = msg({
+	message: 'Turn on custom CSS',
+	comment: 'Tray menu item in the desktop app. Applies quick CSS and saved themes in the app again.',
+});
 const CHECK_FOR_UPDATES_DESCRIPTOR = msg({
 	message: 'Check for updates',
 	comment: 'Tray menu item. Triggers the auto-updater to look for a new desktop build.',
+});
+const UPDATE_APP_NOW_DESCRIPTOR = msg({
+	message: 'Update {appName} now',
+	comment:
+		'Tray menu item shown only while a desktop update is waiting. Clicking it installs the update. {appName} is the desktop app name (typically Fluxer).',
+});
+const RELOAD_TO_UPDATE_DESCRIPTOR = msg({
+	message: 'Reload {appName} to update',
+	comment:
+		'Tray menu item shown only while a downloaded update of the app files is waiting. Clicking it reloads the window to apply it. {appName} is the desktop app name (typically Fluxer).',
+});
+const RESTART_TO_UPDATE_DESCRIPTOR = msg({
+	message: 'Restart {appName} to update',
+	comment:
+		'Tray menu item shown only while a downloaded update of the desktop app itself is waiting. Clicking it restarts the app to apply it. {appName} is the desktop app name (typically Fluxer).',
+});
+const CHECK_FOR_UPDATES_MENU_DESCRIPTOR = msg({
+	message: 'Check for updates...',
+	comment:
+		'Desktop app menu item that looks for a new desktop version. The trailing ellipsis shows that a dialog follows.',
+});
+const UPDATE_AVAILABLE_MESSAGE_DESCRIPTOR = msg({
+	message: 'An update for {appName} is ready to install.',
+	comment: 'Native desktop dialog headline shown once an update has been downloaded and can be applied.',
+});
+const UPDATE_AVAILABLE_DETAIL_DESCRIPTOR = msg({
+	message: '{appName} will restart to finish updating.',
+	comment:
+		'Native desktop dialog body under the update available headline when the desktop app itself updates. Explains what Update now does.',
+});
+const UPDATE_RELOAD_DETAIL_DESCRIPTOR = msg({
+	message: '{appName} will reload to finish updating.',
+	comment:
+		'Native desktop dialog body under the update available headline when only the app files update. The window reloads and the app itself keeps running.',
+});
+const UPDATE_NOW_DESCRIPTOR = msg({
+	message: 'Update now',
+	comment: 'Native desktop dialog button that installs the waiting desktop update.',
+});
+const UPDATE_LATER_DESCRIPTOR = msg({
+	message: 'Later',
+	comment: 'Native desktop dialog button that closes an update dialog without updating.',
+});
+const UPDATE_OK_DESCRIPTOR = msg({
+	message: 'OK',
+	comment: 'Native desktop dialog button that closes the dialog saying the app is up to date.',
+});
+const UPDATE_DOWNLOAD_DESCRIPTOR = msg({
+	message: 'Download',
+	comment: 'Native desktop dialog button that opens the download page for a new desktop version in the browser.',
+});
+const UPDATE_MANUAL_MESSAGE_DESCRIPTOR = msg({
+	message: '{appName} {version} is available.',
+	comment:
+		'Native desktop dialog headline on installs that cannot update themselves. {version} is the new version number.',
+});
+const UPDATE_MANUAL_DETAIL_DESCRIPTOR = msg({
+	message: 'Download the new version to update {appName}.',
+	comment: 'Native desktop dialog body under the headline announcing a new version that must be downloaded by hand.',
+});
+const UPDATE_MANAGED_DETAIL_DESCRIPTOR = msg({
+	message: 'Update {appName} with your package manager, or download the new version.',
+	comment:
+		'Native desktop dialog body under the headline announcing a new version, shown on a Linux install managed by a package manager such as a deb, rpm or AUR package. {appName} is the desktop app name (typically Fluxer).',
+});
+const UPDATE_FLATPAK_DETAIL_DESCRIPTOR = msg({
+	message: 'Update {appName} from your software center.',
+	comment:
+		'Native desktop dialog body under the headline announcing a new version, shown on a Flatpak install. {appName} is the desktop app name (typically Fluxer).',
+});
+const UPDATE_OPEN_SOFTWARE_CENTER_DESCRIPTOR = msg({
+	message: 'Open software center',
+	comment: 'Native desktop dialog button on a Flatpak install that opens the software center page for the desktop app.',
+});
+const UPDATE_UP_TO_DATE_MESSAGE_DESCRIPTOR = msg({
+	message: '{appName} is up to date.',
+	comment: 'Native desktop dialog headline after a manual update check found nothing newer.',
+});
+const UPDATE_UP_TO_DATE_DETAIL_DESCRIPTOR = msg({
+	message: 'You have version {version}.',
+	comment: 'Native desktop dialog body under the up to date headline. {version} is the installed version number.',
+});
+const UPDATE_CHECK_FAILED_MESSAGE_DESCRIPTOR = msg({
+	message: "{appName} couldn't check for updates.",
+	comment: 'Native desktop dialog headline when a manual update check could not reach the update server.',
+});
+const UPDATE_CHECK_FAILED_DETAIL_DESCRIPTOR = msg({
+	message: 'Check your internet connection and try again.',
+	comment: 'Native desktop dialog body under the headline saying the update check failed.',
+});
+const UPDATE_FAILED_MESSAGE_DESCRIPTOR = msg({
+	message: "{appName} couldn't finish updating.",
+	comment: 'Native desktop dialog headline when a desktop update the user started did not complete.',
+});
+const UPDATE_FAILED_DETAIL_DESCRIPTOR = msg({
+	message: 'The update did not download or install. Try again or download it yourself.',
+	comment:
+		'Native desktop dialog body under the headline saying the update did not finish. The buttons are Try again, Download and Later.',
+});
+const UPDATE_STILL_DOWNLOADING_DETAIL_DESCRIPTOR = msg({
+	message: 'The update is still downloading. Try again in a few minutes.',
+	comment: 'Native desktop dialog body shown when the update download is slow and still running in the background.',
 });
 const COPY_BUILD_INFO_DESCRIPTOR = msg({
 	message: 'Copy build info',
@@ -239,10 +350,6 @@ const AUTOSTART_PORTAL_REASON_DESCRIPTOR = msg({
 	comment:
 		'Reason shown by the Linux Flatpak background permission portal when enabling launch-at-login. {appName} is the desktop app name.',
 });
-const TASKS_DESCRIPTOR = msg({
-	message: 'Tasks',
-	comment: 'Windows jump-list category title. Groups quick actions like open settings and new DM.',
-});
 const OPEN_SETTINGS_2_DESCRIPTOR = msg({
 	message: 'Open {appName} settings',
 	comment: 'Windows jump-list task description (tooltip text) for the Open settings action.',
@@ -255,9 +362,36 @@ const COMPOSE_A_NEW_DIRECT_MESSAGE_DESCRIPTOR = msg({
 	message: 'Compose a new direct message',
 	comment: 'Windows jump-list task description (tooltip text) for the New direct message action.',
 });
-const RECENT_DESCRIPTOR = msg({
-	message: 'Recent',
-	comment: 'Windows jump-list category title. Groups recently opened DMs / communities.',
+const TRAY_ACCOUNTS_DESCRIPTOR = msg({
+	message: 'Accounts',
+	comment: 'Tray and dock menu submenu title listing every signed-in account.',
+});
+const TRAY_CHOOSE_ACCOUNT_DESCRIPTOR = msg({
+	message: 'Choose an account…',
+	comment: 'Tray and dock menu item that opens the full-screen account picker.',
+});
+const TRAY_ACCOUNT_WITH_HOST_DESCRIPTOR = msg({
+	message: '{name} ({host})',
+	comment:
+		'Tray menu account item when the signed-in accounts are on more than one instance. {name} is the account name, {host} is the instance address.',
+});
+const TRAY_ACCOUNT_NUMBERED_DESCRIPTOR = msg({
+	message: 'Account {number}',
+	comment:
+		'Tray and dock menu account item while streamer mode hides personal information. {number} is the account position in the list, such as 2.',
+});
+const TRAY_ACCOUNT_WITH_MENTIONS_DESCRIPTOR = msg({
+	message: '{label} · {count}',
+	comment:
+		'Tray menu account item with unread mentions. {label} is the account name, {count} is the number of mentions.',
+});
+const JUMP_LIST_CHOOSE_ACCOUNT_DESCRIPTOR = msg({
+	message: 'Choose an account',
+	comment: 'Windows jump-list task title. Opens the full-screen account picker.',
+});
+const JUMP_LIST_CHOOSE_ACCOUNT_DESCRIPTION_DESCRIPTOR = msg({
+	message: 'Switch to another signed-in account',
+	comment: 'Windows jump-list task description (tooltip text) for the Choose an account action.',
 });
 const OPEN_NOTIFICATION_DESCRIPTOR = msg({
 	message: 'Open',
@@ -295,6 +429,54 @@ const UNREAD_MESSAGES_COUNT_DESCRIPTOR = msg({
 	comment:
 		'Accessibility description of the Windows taskbar overlay badge, read by screen readers. {count} is the number of unread messages, already formatted for the locale.',
 });
+const APP_STORE_UNREADABLE_TITLE_DESCRIPTOR = msg({
+	message: '{appName} cannot open its local data',
+	comment:
+		'Title of the native error dialog shown when the desktop app cannot open the local data store it used before. {appName} is the desktop app name (typically Fluxer).',
+});
+const APP_STORE_UNREADABLE_MESSAGE_DESCRIPTOR = msg({
+	message: '{appName} cannot open the local data it saved on this computer.',
+	comment:
+		'Main message of the native error dialog shown when the desktop app cannot open its local data store. {appName} is the desktop app name (typically Fluxer).',
+});
+const APP_STORE_UNREADABLE_UNCHANGED_DESCRIPTOR = msg({
+	message: 'Your accounts and settings have not been changed or deleted.',
+	comment: 'Detail line in the native dialog shown when the desktop app cannot open its local data store.',
+});
+const APP_STORE_UNREADABLE_ADVICE_DESCRIPTOR = msg({
+	message: 'Quit {appName}, make sure no other copy is running, and open it again.',
+	comment:
+		'Detail line in the native dialog shown when the desktop app cannot open its local data store. {appName} is the desktop app name (typically Fluxer).',
+});
+const APP_STORE_UNREADABLE_DETAILS_DESCRIPTOR = msg({
+	message: 'Details: {reason}',
+	comment:
+		'Detail line in the native dialog shown when the desktop app cannot open its local data store. {reason} is a technical error message.',
+});
+const LOCAL_APP_RENDERER_UNAVAILABLE_DESCRIPTOR = msg({
+	message: '{appName} could not load its app files. Quit and open it again.',
+	comment:
+		'Plain text page shown in the desktop window when the installed app files cannot be found. {appName} is the desktop app name.',
+});
+const LOCAL_APP_RENDERER_FILE_UNAVAILABLE_DESCRIPTOR = msg({
+	message: '{appName} could not read one of its app files. Quit and open it again.',
+	comment:
+		'Plain text page shown in the desktop window when one installed app file cannot be read. {appName} is the desktop app name.',
+});
+const LOCAL_APP_NOT_FOUND_DESCRIPTOR = msg({
+	message: 'Not found',
+	comment: 'Plain text page shown in the desktop window when a requested app file does not exist.',
+});
+const LOCAL_APP_API_UNAVAILABLE_DESCRIPTOR = msg({
+	message: 'No server is selected for this request.',
+	comment:
+		'Plain text body returned by the desktop app when a request has no active server to go to. Rarely seen by users.',
+});
+const SHOW_STORE_FOLDER_DESCRIPTOR = msg({
+	message: 'Show store folder',
+	comment:
+		'Button in the native dialog shown when the desktop app cannot open its local data store. Opens the folder that holds the data file.',
+});
 const FAILED_TO_START_DESCRIPTOR = msg({
 	message: '{appName} failed to start',
 	comment:
@@ -306,7 +488,7 @@ const APP_LOAD_FAILED_TITLE_DESCRIPTOR = msg({
 		'Title of the native dialog shown when the desktop app has repeatedly failed to load because it cannot reach the servers.',
 });
 const APP_LOAD_FAILED_MESSAGE_DESCRIPTOR = msg({
-	message: "{appName} can't reach its servers. It will keep trying in the background.",
+	message: "{appName} can't connect to its servers. It will keep trying in the background.",
 	comment:
 		'Body of the native dialog shown when the desktop app has repeatedly failed to load. {appName} is the desktop app name (typically Fluxer). The app keeps retrying on its own while the dialog is open.',
 });
@@ -384,16 +566,46 @@ const NATIVE_MESSAGES: Record<string, NativeMessage> = {
 	'desktop.tray.disconnectFrom': DISCONNECT_FROM_DESCRIPTOR,
 	'desktop.tray.disconnectVoice': DISCONNECT_FROM_VOICE_DESCRIPTOR,
 	'desktop.tray.checkForUpdates': CHECK_FOR_UPDATES_DESCRIPTOR,
+	'desktop.tray.updateNow': UPDATE_APP_NOW_DESCRIPTOR,
+	'desktop.tray.reloadToUpdate': RELOAD_TO_UPDATE_DESCRIPTOR,
+	'desktop.tray.restartToUpdate': RESTART_TO_UPDATE_DESCRIPTOR,
+	'desktop.appMenu.checkForUpdates': CHECK_FOR_UPDATES_MENU_DESCRIPTOR,
+	'desktop.update.availableMessage': UPDATE_AVAILABLE_MESSAGE_DESCRIPTOR,
+	'desktop.update.availableDetail': UPDATE_AVAILABLE_DETAIL_DESCRIPTOR,
+	'desktop.update.reloadDetail': UPDATE_RELOAD_DETAIL_DESCRIPTOR,
+	'desktop.update.install': UPDATE_NOW_DESCRIPTOR,
+	'desktop.update.later': UPDATE_LATER_DESCRIPTOR,
+	'desktop.update.ok': UPDATE_OK_DESCRIPTOR,
+	'desktop.update.download': UPDATE_DOWNLOAD_DESCRIPTOR,
+	'desktop.update.manualMessage': UPDATE_MANUAL_MESSAGE_DESCRIPTOR,
+	'desktop.update.manualDetail': UPDATE_MANUAL_DETAIL_DESCRIPTOR,
+	'desktop.update.managedDetail': UPDATE_MANAGED_DETAIL_DESCRIPTOR,
+	'desktop.update.flatpakDetail': UPDATE_FLATPAK_DETAIL_DESCRIPTOR,
+	'desktop.update.openSoftwareCenter': UPDATE_OPEN_SOFTWARE_CENTER_DESCRIPTOR,
+	'desktop.update.upToDateMessage': UPDATE_UP_TO_DATE_MESSAGE_DESCRIPTOR,
+	'desktop.update.upToDateDetail': UPDATE_UP_TO_DATE_DETAIL_DESCRIPTOR,
+	'desktop.update.checkFailedMessage': UPDATE_CHECK_FAILED_MESSAGE_DESCRIPTOR,
+	'desktop.update.checkFailedDetail': UPDATE_CHECK_FAILED_DETAIL_DESCRIPTOR,
+	'desktop.update.failedMessage': UPDATE_FAILED_MESSAGE_DESCRIPTOR,
+	'desktop.update.failedDetail': UPDATE_FAILED_DETAIL_DESCRIPTOR,
+	'desktop.update.stillDownloadingDetail': UPDATE_STILL_DOWNLOADING_DETAIL_DESCRIPTOR,
 	'desktop.tray.copyBuildInfo': COPY_BUILD_INFO_DESCRIPTOR,
+	'desktop.tray.turnOffCustomCss': TURN_OFF_CUSTOM_CSS_DESCRIPTOR,
+	'desktop.tray.turnOnCustomCss': TURN_ON_CUSTOM_CSS_DESCRIPTOR,
 	'desktop.tray.restart': RESTART_DESCRIPTOR,
 	'desktop.tray.quit': QUIT_DESCRIPTOR,
 	'desktop.autostart.portalReason': AUTOSTART_PORTAL_REASON_DESCRIPTOR,
-	'desktop.jumpList.tasks': TASKS_DESCRIPTOR,
 	'desktop.jumpList.openSettings': OPEN_SETTINGS_DESCRIPTOR,
 	'desktop.jumpList.openSettingsDescription': OPEN_SETTINGS_2_DESCRIPTOR,
 	'desktop.jumpList.newDirectMessage': NEW_DIRECT_MESSAGE_DESCRIPTOR,
 	'desktop.jumpList.newDirectMessageDescription': COMPOSE_A_NEW_DIRECT_MESSAGE_DESCRIPTOR,
-	'desktop.jumpList.recent': RECENT_DESCRIPTOR,
+	'desktop.jumpList.chooseAccount': JUMP_LIST_CHOOSE_ACCOUNT_DESCRIPTOR,
+	'desktop.jumpList.chooseAccountDescription': JUMP_LIST_CHOOSE_ACCOUNT_DESCRIPTION_DESCRIPTOR,
+	'desktop.tray.accounts': TRAY_ACCOUNTS_DESCRIPTOR,
+	'desktop.tray.chooseAccount': TRAY_CHOOSE_ACCOUNT_DESCRIPTOR,
+	'desktop.tray.accountWithHost': TRAY_ACCOUNT_WITH_HOST_DESCRIPTOR,
+	'desktop.tray.accountWithMentions': TRAY_ACCOUNT_WITH_MENTIONS_DESCRIPTOR,
+	'desktop.tray.accountNumbered': TRAY_ACCOUNT_NUMBERED_DESCRIPTOR,
 	'desktop.notifications.open': OPEN_NOTIFICATION_DESCRIPTOR,
 	'desktop.themes.addLocalFiles': ADD_LOCAL_FILES_DESCRIPTOR,
 	'desktop.themes.importFolder': IMPORT_FOLDER_DESCRIPTOR,
@@ -406,12 +618,22 @@ const NATIVE_MESSAGES: Record<string, NativeMessage> = {
 	'desktop.appLoad.failedTitle': APP_LOAD_FAILED_TITLE_DESCRIPTOR,
 	'desktop.appLoad.failedMessage': APP_LOAD_FAILED_MESSAGE_DESCRIPTOR,
 	'desktop.appLoad.retry': TRY_AGAIN_DESCRIPTOR,
+	'desktop.appStore.unreadableTitle': APP_STORE_UNREADABLE_TITLE_DESCRIPTOR,
+	'desktop.appStore.unreadableMessage': APP_STORE_UNREADABLE_MESSAGE_DESCRIPTOR,
+	'desktop.appStore.unreadableUnchanged': APP_STORE_UNREADABLE_UNCHANGED_DESCRIPTOR,
+	'desktop.appStore.unreadableAdvice': APP_STORE_UNREADABLE_ADVICE_DESCRIPTOR,
+	'desktop.appStore.unreadableDetails': APP_STORE_UNREADABLE_DETAILS_DESCRIPTOR,
+	'desktop.appStore.showStoreFolder': SHOW_STORE_FOLDER_DESCRIPTOR,
+	'desktop.localApp.rendererUnavailable': LOCAL_APP_RENDERER_UNAVAILABLE_DESCRIPTOR,
+	'desktop.localApp.rendererFileUnavailable': LOCAL_APP_RENDERER_FILE_UNAVAILABLE_DESCRIPTOR,
+	'desktop.localApp.notFound': LOCAL_APP_NOT_FOUND_DESCRIPTOR,
+	'desktop.localApp.apiUnavailable': LOCAL_APP_API_UNAVAILABLE_DESCRIPTOR,
 	'desktop.linuxEntry.genericName': LINUX_ENTRY_GENERIC_NAME_DESCRIPTOR,
 	'desktop.linuxEntry.comment': LINUX_ENTRY_COMMENT_DESCRIPTOR,
 };
 const PLACEHOLDER_PATTERN = /\{(\w+)\}/g;
 
-export function resolvePreservingPlaceholders(descriptor: NativeMessage): string {
+function resolvePreservingPlaceholders(descriptor: NativeMessage): string {
 	if (typeof descriptor === 'string') return descriptor;
 	const template = descriptor.message ?? descriptor.id ?? '';
 	const values: Record<string, string> = {};
@@ -436,7 +658,7 @@ function buildPayload(): Record<string, string> {
 
 let pushed = false;
 
-export function pushNativeLocale(): void {
+function pushNativeLocale(): void {
 	const electronApi = getElectronAPI();
 	if (!electronApi || typeof electronApi.setNativeLocale !== 'function') return;
 	try {

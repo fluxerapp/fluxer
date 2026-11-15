@@ -3,6 +3,7 @@
 import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
+import {isVoiceMeshRoom} from '@app/features/voice/engine/mesh/VoiceMeshRoom';
 import ScreenShareCodecNegotiation from '@app/features/voice/engine/ScreenShareCodecNegotiation';
 import ScreenSharePublicationMigration from '@app/features/voice/engine/ScreenSharePublicationMigration';
 import {getEffectiveAudioState} from '@app/features/voice/engine/VoiceEffectiveAudioState';
@@ -29,9 +30,15 @@ import type {
 	RemoteTrackPublication,
 	Room,
 } from 'livekit-client';
-import {ConnectionState, ParticipantEvent, RoomEvent, Track} from 'livekit-client';
+import {ConnectionState, DisconnectReason, ParticipantEvent, RoomEvent, Track} from 'livekit-client';
 
 const logger = new Logger('VoiceRoomEventBinder');
+
+function resolveRoomDisconnectReason(reason: DisconnectReason | undefined): 'error' | 'server' {
+	return reason === DisconnectReason.PARTICIPANT_REMOVED || reason === DisconnectReason.ROOM_DELETED
+		? 'server'
+		: 'error';
+}
 
 export interface RoomEventCallbacks {
 	onConnected: () => Promise<void>;
@@ -51,7 +58,7 @@ export interface RoomEventDependencies {
 		isDisconnecting: () => boolean;
 		isUserMovePending: () => boolean;
 		markConnected: () => void;
-		markDisconnected: (reason: 'error') => void;
+		markDisconnected: (reason: 'error' | 'server') => void;
 		markReconnecting: () => void;
 		markReconnected: () => void;
 	};
@@ -234,7 +241,7 @@ export function bindRoomEvents(
 		screenShareMigrationDisposer = null;
 	};
 	const bindScreenShareNegotiation = (): void => {
-		if (screenShareNegotiationBound) return;
+		if (screenShareNegotiationBound || isVoiceMeshRoom(room)) return;
 		screenShareNegotiationBound = true;
 		bindCodecNegotiation();
 		bindScreenShareMigration();
@@ -283,6 +290,20 @@ export function bindRoomEvents(
 		participantSpeakingDisposers.get(identity)?.dispose();
 		participantSpeakingDisposers.delete(identity);
 	};
+	const observeRemoteScreenSharePublication = (participant: Participant, pub: RemoteTrackPublication): void => {
+		reportScreenSharePublicationObserved(participant.identity, pub.trackSid ?? null);
+		const streamKey = getStreamKeyForParticipantIdentity(guildId, channelId, participant.identity);
+		if (streamKey) {
+			cancelDeferredStopWatchingStreamKey(streamKey);
+		}
+	};
+	const observeExistingRemoteScreenSharePublications = (): void => {
+		room.remoteParticipants.forEach((participant) => {
+			for (const pub of participant.trackPublications.values()) {
+				if (pub.source === Track.Source.ScreenShare) observeRemoteScreenSharePublication(participant, pub);
+			}
+		});
+	};
 	const endScreenShareIfPublicationDidNotReturn = (): void => {
 		const publication = screenSharePublicationAwaitingReconnect;
 		screenSharePublicationAwaitingReconnect = null;
@@ -304,6 +325,7 @@ export function bindRoomEvents(
 			bindParticipantSpeakingEvents(room.localParticipant);
 			room.remoteParticipants.forEach((participant) => bindParticipantSpeakingEvents(participant));
 			dependencies.remoteSpeaking.hydrateFromRoom(room);
+			observeExistingRemoteScreenSharePublications();
 			bindScreenShareNegotiation();
 			dependencies.permissions.applyDeafen(room, getEffectiveAudioState().effectiveDeaf);
 			dependencies.connection.markConnected();
@@ -328,7 +350,7 @@ export function bindRoomEvents(
 	);
 	room.on(
 		RoomEvent.Disconnected,
-		guard(attemptId, () => {
+		guard(attemptId, (reason?: DisconnectReason) => {
 			roomReconnecting = false;
 			screenSharePublicationAwaitingReconnect = null;
 			participantSpeakingDisposers.forEach(({dispose}) => dispose());
@@ -346,7 +368,7 @@ export function bindRoomEvents(
 			}
 			callbacks.onDisconnected();
 			dependencies.participants.clear();
-			dependencies.connection.markDisconnected('error');
+			dependencies.connection.markDisconnected(resolveRoomDisconnectReason(reason));
 		}),
 	);
 	room.on(
@@ -595,11 +617,7 @@ export function bindRoomEvents(
 					pub.setSubscribed(true);
 				}
 				if (pub.source === Track.Source.ScreenShare && !participant.isLocal) {
-					reportScreenSharePublicationObserved(participant.identity, pub.trackSid ?? null);
-					const streamKey = getStreamKeyForParticipantIdentity(guildId, channelId, participant.identity);
-					if (streamKey) {
-						cancelDeferredStopWatchingStreamKey(streamKey);
-					}
+					observeRemoteScreenSharePublication(participant, pub);
 					dependencies.subscriptions.reattachScreenShareAfterPublish(participant.identity, pub);
 					dependencies.subscriptions.reconcileSubscriptions();
 				}
@@ -614,6 +632,7 @@ export function bindRoomEvents(
 		}),
 	);
 	if (room.state === ConnectionState.Connected) {
+		guard(attemptId, observeExistingRemoteScreenSharePublications)();
 		guard(attemptId, bindScreenShareNegotiation)();
 	}
 }

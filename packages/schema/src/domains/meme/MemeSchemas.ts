@@ -14,6 +14,7 @@ const FavoriteMemeBase = z.object({
 	alt_text: createStringType(0, 500).nullish().describe('Alternative text description for accessibility'),
 	tags: z
 		.array(createStringType(1, 30))
+		.max(1000)
 		.nullish()
 		.default([])
 		.transform((tags) => (tags || []).filter((t) => t.trim().length > 0))
@@ -55,6 +56,7 @@ export const UpdateFavoriteMemeBodySchema = FavoriteMemeBase.partial()
 	.extend({
 		tags: z
 			.array(createStringType(1, 30))
+			.max(1000)
 			.nullish()
 			.transform((tags) => (tags ? tags.filter((t) => t.trim().length > 0) : undefined))
 			.describe('New tags for categorizing and searching the meme'),
@@ -96,6 +98,12 @@ export const FavoriteMemeResponse = z.object({
 		.nullish()
 		.describe(
 			'Compact thumbhash placeholder produced by the media proxy at favorite-time. Clients render it as a low-res preview while the full media loads. Null when the proxy did not emit one.',
+		),
+	nsfw: z
+		.boolean()
+		.default(false)
+		.describe(
+			'Whether the media is flagged as explicit. Clients apply the same sensitive media rules as for chat media.',
 		),
 });
 

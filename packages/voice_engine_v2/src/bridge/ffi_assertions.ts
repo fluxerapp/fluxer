@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export const VOICE_ENGINE_V2_AUDIO_FRAME_BYTES_MAX = 1 << 20;
-export const VOICE_ENGINE_V2_VIDEO_FRAME_BYTES_MAX = 64 << 20;
-export const VOICE_ENGINE_V2_VIDEO_DIMENSION_MAX = 16384;
+const VOICE_ENGINE_V2_AUDIO_FRAME_BYTES_MAX = 1 << 20;
+const VOICE_ENGINE_V2_VIDEO_FRAME_BYTES_MAX = 64 << 20;
+const VOICE_ENGINE_V2_VIDEO_DIMENSION_MAX = 16384;
 const VOICE_ENGINE_V2_AUDIO_SAMPLE_RATES_HZ = [16000, 32000, 48000] as const;
 const VOICE_ENGINE_V2_AUDIO_CHANNELS_VALID = [1, 2] as const;
 
@@ -20,7 +20,7 @@ interface VoiceEngineV2VideoFrameInvariants {
 	timestampNs: number;
 }
 
-export class VoiceEngineV2FfiAssertError extends Error {
+class VoiceEngineV2FfiAssertError extends Error {
 	readonly code:
 		| 'audioFrameBytesOutOfRange'
 		| 'audioSampleRateInvalid'

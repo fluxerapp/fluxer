@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import styles from '@app/features/channel/components/RecipientAddMessage.module.css';
+import styles from '@app/features/channel/components/GuildJoinMessage.module.css';
 import {SystemMessage} from '@app/features/channel/components/SystemMessage';
 import {SystemMessageUsername} from '@app/features/channel/components/SystemMessageUsername';
 import {useSystemMessageData} from '@app/features/messaging/hooks/useSystemMessageData';

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import {AuthSession as AuthSessionModel} from '@app/features/auth/models/AuthSession';
 import type {AuthSessionResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {makeAutoObservable} from 'mobx';
@@ -16,7 +17,7 @@ class AuthSessions {
 		makeAutoObservable(this, {}, {autoBind: true});
 	}
 
-	handleGatewayReady(authSessionIdHash: string): void {
+	handleGatewayReady(authSessionIdHash: string | null): void {
 		this.authSessionIdHash = authSessionIdHash;
 	}
 
@@ -48,6 +49,16 @@ class AuthSessions {
 	logoutError(): void {
 		this.isDeleteError = true;
 	}
+
+	reset(): void {
+		this.authSessions = [];
+		this.fetchStatus = 'idle';
+		this.isDeleteError = false;
+	}
 }
 
-export default new AuthSessions();
+const authSessions = new AuthSessions();
+
+ResettableStates.register(authSessions, () => authSessions.reset());
+
+export default authSessions;

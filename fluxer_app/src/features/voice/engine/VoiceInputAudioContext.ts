@@ -204,7 +204,7 @@ function acquireSource(track: MediaStreamTrack, shared: boolean): VoiceInputSour
 	if (!entry) return null;
 	const source = createSource(entry, track);
 	if (source) return {lease: leaseEntry(entry, true), source};
-	logger.info('Voice input cannot read the microphone at 48 kHz; using a context at the capture rate');
+	logger.debug('Voice input cannot read the microphone at 48 kHz; using a context at the capture rate');
 	rateKeyedMode = true;
 	entries.delete(entry);
 	if (entry.holders === 0) closeEntry(entry);

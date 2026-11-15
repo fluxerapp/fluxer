@@ -8,7 +8,7 @@ import {AuthCardContainer} from '@app/features/auth/flow/AuthCardContainer';
 import authPageStyles from '@app/features/auth/flow/AuthPageStyles.module.css';
 import {PreviewGuildInviteHeader} from '@app/features/auth/flow/InviteHeader';
 import {MockMinimalRegisterForm} from '@app/features/auth/flow/MockMinimalRegisterForm';
-import {useAuthBackground} from '@app/features/auth/hooks/useAuthBackground';
+import {useSplashImageLoader} from '@app/features/auth/hooks/useAuthBackground';
 import Guilds from '@app/features/guild/state/Guilds';
 import styles from '@app/features/invite/components/modals/InvitePagePreviewModal.module.css';
 import GuildMembers from '@app/features/member/state/GuildMembers';
@@ -18,7 +18,6 @@ import {CardAlignmentControls} from '@app/features/ui/card_alignment_controls/Ca
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import Window from '@app/features/window/state/Window';
-import foodPatternUrl from '@app/media/images/i-like-food.svg';
 import type {GuildSplashCardAlignmentValue} from '@fluxer/constants/src/GuildConstants';
 import {GuildSplashCardAlignment} from '@fluxer/constants/src/GuildConstants';
 import {msg} from '@lingui/core/macro';
@@ -61,8 +60,7 @@ export const InvitePagePreviewModal: React.FC<InvitePagePreviewModalProps> = obs
 			}
 			return null;
 		}, [previewSplashUrl, guild?.id, guild?.splash]);
-		const {patternReady, splashDimensions} = useAuthBackground(splashUrl, foodPatternUrl);
-		const shouldShowSplash = Boolean(splashUrl && splashDimensions);
+		const {dimensions: splashDimensions} = useSplashImageLoader(splashUrl);
 		const handleClose = useCallback(() => {
 			ModalCommands.pop();
 		}, []);
@@ -120,13 +118,10 @@ export const InvitePagePreviewModal: React.FC<InvitePagePreviewModalProps> = obs
 				</div>
 				<div className={styles.previewContent} data-flx="invite.invite-page-preview-modal.preview-content">
 					<AuthBackground
-						className={clsx(styles.background, !shouldShowSplash && authLayoutStyles.patternHost)}
+						className={styles.background}
 						splashUrl={splashUrl}
 						splashDimensions={splashDimensions}
-						patternReady={patternReady}
-						patternImageUrl={foodPatternUrl}
 						splashAlignment={splashAlignment}
-						useFullCover={true}
 						data-flx="invite.invite-page-preview-modal.background"
 					/>
 					<div className={styles.foreground} data-flx="invite.invite-page-preview-modal.foreground">
@@ -141,7 +136,6 @@ export const InvitePagePreviewModal: React.FC<InvitePagePreviewModalProps> = obs
 							<div className={authLayoutStyles.leftSplitWrapper} data-flx="invite.invite-page-preview-modal.div--2">
 								<div className={authLayoutStyles.leftSplitAnimated} data-flx="invite.invite-page-preview-modal.div--3">
 									<AuthCardContainer
-										showLogoSide={true}
 										isInert={true}
 										className={clsx(authLayoutStyles.cardContainer, styles.cardContainer)}
 										data-flx="invite.invite-page-preview-modal.card-container"
@@ -151,6 +145,7 @@ export const InvitePagePreviewModal: React.FC<InvitePagePreviewModalProps> = obs
 											guildName={guild.name}
 											guildIcon={guild.icon}
 											features={guildFeatures}
+											badgeIds={guild.badgeIds}
 											presenceCount={presenceCount}
 											memberCount={memberCount}
 											previewIconUrl={previewIconUrl}

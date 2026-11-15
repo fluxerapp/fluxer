@@ -1,0 +1,47 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	min-width: 0;
+	margin: auto 1rem 1.5rem;
+	padding-top: 4rem;
+	color: var(--text-primary);
+}
+
+.icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 3.5rem;
+	height: 3.5rem;
+	border-radius: var(--radius-full);
+	background-color: var(--guild-list-foreground);
+	color: var(--text-primary);
+	pointer-events: none;
+}
+
+:global(.theme-light) .icon {
+	background-color: color-mix(in srgb, var(--guild-list-foreground) 55%, var(--background-primary) 45%);
+}
+
+.iconGlyph {
+	width: 2rem;
+	height: 2rem;
+}
+
+.heading {
+	margin-top: 0.5rem;
+	font-size: 1.5rem;
+	font-weight: 600;
+	line-height: 2rem;
+	overflow-wrap: anywhere;
+}
+
+.description {
+	font-size: 0.9375rem;
+	line-height: 1.25rem;
+	color: var(--text-primary-muted);
+}

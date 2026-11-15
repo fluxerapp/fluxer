@@ -69,8 +69,8 @@
 .voiceActiveHeaderWrapperOverlay > [data-voice-call-channel-header='true'] {
 	position: absolute;
 	top: 0;
-	right: 0;
-	left: 0;
+	inset-inline-end: 0;
+	inset-inline-start: 0;
 	z-index: 20;
 	opacity: 0;
 	pointer-events: none;
@@ -239,7 +239,7 @@
 	position: absolute;
 	top: 0;
 	bottom: 0;
-	right: var(--layout-member-list-width);
+	inset-inline-end: var(--layout-member-list-width);
 	width: 0.0625rem;
 	background: var(--user-area-divider-color);
 	pointer-events: none;
@@ -252,7 +252,7 @@
 	min-height: 0;
 	width: 100%;
 	min-width: 0;
-	border-left: 0.0625rem solid var(--user-area-divider-color);
+	border-inline-start: 0.0625rem solid var(--user-area-divider-color);
 }
 
 .voiceJoinEmptyState {

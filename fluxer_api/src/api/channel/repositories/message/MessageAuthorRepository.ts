@@ -3,16 +3,10 @@
 import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {createChannelID, createMessageID} from '@app/api/BrandedTypes';
 import type {MessageDataRepository} from '@app/api/channel/repositories/message/MessageDataRepository';
-import type {MessageDeletionRepository} from '@app/api/channel/repositories/message/MessageDeletionRepository';
-import {deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {deleteOneOrMany, fetchMany, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import {Db} from '@app/api/database/CassandraTypes';
 import {Messages, MessagesByAuthorV2} from '@app/api/Tables';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
-
-const SELECT_MESSAGE_BY_AUTHOR = MessagesByAuthorV2.select({
-	where: [MessagesByAuthorV2.where.eq('author_id'), MessagesByAuthorV2.where.eq('message_id')],
-	limit: 1,
-});
 
 function listMessagesByAuthorQuery(limit: number, usePagination: boolean) {
 	return MessagesByAuthorV2.select({
@@ -26,10 +20,7 @@ function listMessagesByAuthorQuery(limit: number, usePagination: boolean) {
 }
 
 export class MessageAuthorRepository {
-	constructor(
-		private messageDataRepo: MessageDataRepository,
-		private messageDeletionRepo: MessageDeletionRepository,
-	) {}
+	constructor(private messageDataRepo: MessageDataRepository) {}
 
 	async listMessagesByAuthor(
 		authorId: UserID,
@@ -60,40 +51,6 @@ export class MessageAuthorRepository {
 			channelId: createChannelID(r.channel_id),
 			messageId: createMessageID(r.message_id),
 		}));
-	}
-
-	async deleteMessagesByAuthor(
-		authorId: UserID,
-		channelIds?: Array<ChannelID>,
-		messageIds?: Array<MessageID>,
-	): Promise<void> {
-		const messagesToDelete = await this.listMessagesByAuthor(authorId);
-		for (const {channelId, messageId} of messagesToDelete) {
-			if (channelIds && !channelIds.includes(channelId)) continue;
-			if (messageIds && !messageIds.includes(messageId)) continue;
-			const message = await this.messageDataRepo.getMessage(channelId, messageId);
-			if (message && message.authorId === authorId) {
-				await this.messageDeletionRepo.deleteMessage(
-					channelId,
-					messageId,
-					authorId,
-					message.pinnedTimestamp || undefined,
-				);
-			}
-		}
-	}
-
-	async hasMessageByAuthor(authorId: UserID, _channelId: ChannelID, messageId: MessageID): Promise<boolean> {
-		const result = await fetchOne<{
-			channel_id: bigint;
-			message_id: bigint;
-		}>(
-			SELECT_MESSAGE_BY_AUTHOR.bind({
-				author_id: authorId,
-				message_id: messageId,
-			}),
-		);
-		return result !== null;
 	}
 
 	async anonymizeMessage(channelId: ChannelID, messageId: MessageID, newAuthorId: UserID): Promise<void> {

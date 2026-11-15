@@ -6,6 +6,8 @@ import {
 	type NativePermissionResult,
 } from '@app/features/permissions/system/utils/NativePermissions';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {isInsecureBrowserContext} from '@app/features/platform/utils/SecureContext';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {MediaDeviceRefreshType, refreshMediaDeviceLists} from '@app/features/voice/utils/MediaDeviceRefresh';
 import {makeAutoObservable, reaction, runInAction} from 'mobx';
 
@@ -27,7 +29,7 @@ class MediaPermission {
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
 		this.bindMacPermissions();
-		void this.initializePermissionState();
+		initializeStore(this, () => this.initializePermissionState());
 	}
 
 	private bindMacPermissions(): void {
@@ -81,6 +83,18 @@ class MediaPermission {
 	}
 
 	private async initializePermissionState(): Promise<void> {
+		if (isInsecureBrowserContext()) {
+			runInAction(() => {
+				this.microphoneExplicitlyDenied = true;
+				this.cameraExplicitlyDenied = true;
+				this.screenRecordingExplicitlyDenied = true;
+				this.microphonePermissionState = 'denied';
+				this.cameraPermissionState = 'denied';
+				this.screenRecordingPermissionState = 'denied';
+				this.initialized = true;
+			});
+			return;
+		}
 		if (await this.tryInitializeNativePermissions()) {
 			return;
 		}
@@ -171,21 +185,6 @@ class MediaPermission {
 		logger.debug('Marked screen recording as explicitly denied');
 	}
 
-	clearMicrophoneDenial(): void {
-		this.microphoneExplicitlyDenied = false;
-		logger.debug('Cleared microphone denial');
-	}
-
-	clearCameraDenial(): void {
-		this.cameraExplicitlyDenied = false;
-		logger.debug('Cleared camera denial');
-	}
-
-	clearScreenRecordingDenial(): void {
-		this.screenRecordingExplicitlyDenied = false;
-		logger.debug('Cleared screen recording denial');
-	}
-
 	updateMicrophonePermissionGranted(options: MediaPermissionUpdateOptions = {}): void {
 		const shouldRefresh =
 			options.refreshDevices !== false &&
@@ -218,27 +217,12 @@ class MediaPermission {
 		logger.debug('Updated screen recording permission to granted');
 	}
 
-	reset(): void {
-		this.microphoneExplicitlyDenied = false;
-		this.cameraExplicitlyDenied = false;
-		this.screenRecordingExplicitlyDenied = false;
-		this.microphonePermissionState = null;
-		this.cameraPermissionState = null;
-		this.screenRecordingPermissionState = null;
-		this.initialized = false;
-		logger.debug('Reset all permissions');
-	}
-
 	isInitialized(): boolean {
 		return this.initialized;
 	}
 
 	isMicrophoneExplicitlyDenied(): boolean {
 		return this.microphoneExplicitlyDenied;
-	}
-
-	isCameraExplicitlyDenied(): boolean {
-		return this.cameraExplicitlyDenied;
 	}
 
 	isScreenRecordingExplicitlyDenied(): boolean {
@@ -253,20 +237,12 @@ class MediaPermission {
 		return this.cameraPermissionState === 'granted';
 	}
 
-	isScreenRecordingGranted(): boolean {
-		return this.screenRecordingPermissionState === 'granted';
-	}
-
 	getMicrophonePermissionState(): PermissionState | null {
 		return this.microphonePermissionState;
 	}
 
 	getCameraPermissionState(): PermissionState | null {
 		return this.cameraPermissionState;
-	}
-
-	getScreenRecordingPermissionState(): PermissionState | null {
-		return this.screenRecordingPermissionState;
 	}
 
 	addChangeListener(callback: () => void): () => void {

@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	LoginRequest,
-	RecoverAccountResponse,
-	UsernameInstanceLoginRequest,
-} from '@fluxer/schema/src/domains/auth/AuthSchemas';
+import {LoginRequest, UsernameInstanceLoginRequest} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {createStringType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {EmailType, PasswordType} from '@fluxer/schema/src/primitives/UserValidators';
 import {describe, expect, it} from 'vitest';
@@ -86,31 +82,5 @@ describe('UsernameInstanceLoginRequest', () => {
 	it('reads a null login as no identifier', () => {
 		const result = UsernameInstanceLoginRequest.safeParse({login: null, password});
 		expect(result.error?.issues.map(({path}) => path)).toEqual([['email']]);
-	});
-});
-
-describe('RecoverAccountResponse', () => {
-	const kit = {
-		recovery_key: 'ABCD-EFGH-JKMN-PQRS-TVWX-YZ01-2345-6789',
-		recovery_kit_created_at: '2026-10-01T12:00:00.000Z',
-	};
-
-	it('adds the new kit to every response variant', () => {
-		for (const option of RecoverAccountResponse.options) {
-			expect(Object.keys(option.shape)).toEqual(expect.arrayContaining(Object.keys(kit)));
-		}
-	});
-
-	it('carries the new kit next to an MFA ticket', () => {
-		const parsed = RecoverAccountResponse.safeParse({
-			mfa: true,
-			ticket: 'ticket',
-			allowed_methods: ['totp'],
-			totp: true,
-			webauthn: false,
-			backup_codes: false,
-			...kit,
-		});
-		expect(parsed.success ? parsed.data : parsed.error.issues).toMatchObject(kit);
 	});
 });

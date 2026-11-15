@@ -5,13 +5,15 @@ import localMediaFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/l
 import microphoneFailureRecoveryFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/microphone_failure_recovery.json';
 import permissionsRecoveryFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/permissions_recovery.json';
 import pttPtmFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/ptt_ptm.json';
+import pttSelfMuteFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/ptt_self_mute.json';
 import {transitionVoiceEngineV2} from '@fluxer/voice_engine_v2/src/core/reducer';
 import {
 	availableVoiceEngineV2Capabilities,
 	createVoiceEngineV2InitialSnapshot,
 	type VoiceEngineV2Snapshot,
 } from '@fluxer/voice_engine_v2/src/core/state';
-import type {VoiceEngineV2Command, VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol';
+import type {VoiceEngineV2Command} from '@fluxer/voice_engine_v2/src/protocol/commands';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
 import {describe, expect, it} from 'vitest';
 
 interface LocalMediaSnapshotExpectation {
@@ -48,6 +50,7 @@ interface LocalMediaFixture {
 const fixtures = [
 	localMediaFixtureJson,
 	pttPtmFixtureJson,
+	pttSelfMuteFixtureJson,
 	deviceHotswapFixtureJson,
 	permissionsRecoveryFixtureJson,
 	microphoneFailureRecoveryFixtureJson,

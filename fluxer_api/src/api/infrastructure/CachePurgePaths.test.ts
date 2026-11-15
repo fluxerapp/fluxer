@@ -60,11 +60,15 @@ describe('canonicalizePurgeUrl', () => {
 		expect(canonicalizePurgeUrl(`${MEDIA}/avatars/1/b35cc3d3`)).toEqual([]);
 	});
 
+	it('keeps the whole filename when it is only an extension', () => {
+		expect(canonicalizePurgeUrl(`${MEDIA}/attachments/1/2/.env`)).toEqual(['media.test/attachments/1/2/.env']);
+		expect(canonicalizePurgeUrl(`${MEDIA}/emojis/.webp`)).toEqual(['media.test/emojis/.webp']);
+	});
+
 	it('refuses anything that is not a media CDN object', () => {
 		expect(canonicalizePurgeUrl('https://elsewhere.test/avatars/1/b35cc3d3')).toEqual([]);
 		expect(canonicalizePurgeUrl(`${MEDIA}/avatars`)).toEqual([]);
 		expect(canonicalizePurgeUrl(`${MEDIA}/`)).toEqual([]);
-		expect(canonicalizePurgeUrl(`${MEDIA}/emojis/.webp`)).toEqual([]);
 		expect(canonicalizePurgeUrl('not-a-url')).toEqual([]);
 	});
 });

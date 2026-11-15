@@ -30,35 +30,27 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
+import {accountGateReason} from '@app/features/user/utils/AccountGatePresentation';
+import {canPerform} from '@app/features/user/utils/AccountGates';
+import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
 import {PublicUserFlags, RelationshipTypes} from '@fluxer/constants/src/UserConstants';
-import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useState} from 'react';
-
-const CLAIM_YOUR_ACCOUNT_TO_SEND_FRIEND_REQUESTS_DESCRIPTOR = msg({
-	message: 'Claim your account to send friend requests.',
-	comment: 'Tooltip shown when an unclaimed account tries to send a friend request.',
-});
-const VERIFY_YOUR_EMAIL_ADDRESS_TO_SEND_FRIEND_REQUESTS_DESCRIPTOR = msg({
-	message: 'Verify your email address to send friend requests.',
-	comment: 'Tooltip shown when an unverified account tries to send a friend request.',
-});
 
 interface SendFriendRequestMenuItemProps {
 	user: User;
 	onClose: () => void;
 }
 
-export const SendFriendRequestMenuItem: React.FC<SendFriendRequestMenuItemProps> = observer(({user, onClose}) => {
+const SendFriendRequestMenuItem: React.FC<SendFriendRequestMenuItemProps> = observer(({user, onClose}) => {
 	const {i18n} = useLingui();
 	const relationshipType = Relationships.getRelationship(user.id)?.type;
 	const [submitting, setSubmitting] = useState(false);
 	const showFriendRequestSent = relationshipType === RelationshipTypes.OUTGOING_REQUEST;
 	const isCurrentUserStaff = Users.currentUser?.isStaff() ?? false;
-	const isCurrentUserUnclaimed = !(Users.currentUser?.isClaimed() ?? true);
-	const isCurrentUserUnverified = Users.currentUser?.verified === false;
+	const friendRequestGate = canPerform(Users.currentUser, TierGatedActions.FRIEND_REQUEST);
 	const handleSendFriendRequest = useCallback(async () => {
 		if (submitting || showFriendRequestSent) return;
 		if (isCurrentUserStaff) {
@@ -74,16 +66,13 @@ export const SendFriendRequestMenuItem: React.FC<SendFriendRequestMenuItemProps>
 			setSubmitting(false);
 		}
 	}, [i18n, isCurrentUserStaff, onClose, showFriendRequestSent, submitting, user]);
-	if (RuntimeConfig.directMessagesDisabled) {
+	if (RuntimeConfig.friendsDisabled) {
 		return null;
 	}
-	if (isCurrentUserUnclaimed || isCurrentUserUnverified) {
-		const tooltip = isCurrentUserUnclaimed
-			? i18n._(CLAIM_YOUR_ACCOUNT_TO_SEND_FRIEND_REQUESTS_DESCRIPTOR)
-			: i18n._(VERIFY_YOUR_EMAIL_ADDRESS_TO_SEND_FRIEND_REQUESTS_DESCRIPTOR);
+	if (!friendRequestGate.allowed) {
 		return (
 			<Tooltip
-				text={tooltip}
+				text={accountGateReason(i18n, friendRequestGate)}
 				maxWidth="xl"
 				data-flx="ui.action-menu.items.relationship-menu-items.send-friend-request-menu-item.tooltip"
 			>
@@ -123,7 +112,7 @@ interface AcceptFriendRequestMenuItemProps {
 	onClose: () => void;
 }
 
-export const AcceptFriendRequestMenuItem: React.FC<AcceptFriendRequestMenuItemProps> = observer(({user, onClose}) => {
+const AcceptFriendRequestMenuItem: React.FC<AcceptFriendRequestMenuItemProps> = observer(({user, onClose}) => {
 	const {i18n} = useLingui();
 	const handleAcceptFriendRequest = useCallback(
 		(event?: {shiftKey?: boolean}) => {
@@ -136,7 +125,7 @@ export const AcceptFriendRequestMenuItem: React.FC<AcceptFriendRequestMenuItemPr
 		},
 		[i18n, onClose, user],
 	);
-	if (RuntimeConfig.directMessagesDisabled) {
+	if (RuntimeConfig.friendsDisabled) {
 		return null;
 	}
 	return (
@@ -171,7 +160,7 @@ export const RemoveFriendMenuItem: React.FC<RemoveFriendMenuItemProps> = observe
 		},
 		[i18n, user, onClose],
 	);
-	if (RuntimeConfig.directMessagesDisabled) {
+	if (RuntimeConfig.friendsDisabled) {
 		return null;
 	}
 	return (
@@ -207,7 +196,7 @@ export const ChangeFriendNicknameMenuItem: React.FC<ChangeFriendNicknameMenuItem
 			)),
 		);
 	}, [onClose, user]);
-	if (RuntimeConfig.directMessagesDisabled) {
+	if (RuntimeConfig.friendsDisabled) {
 		return null;
 	}
 	if (relationship?.type !== RelationshipTypes.FRIEND) {
@@ -231,13 +220,13 @@ interface IgnoreFriendRequestMenuItemProps {
 	onClose: () => void;
 }
 
-export const IgnoreFriendRequestMenuItem: React.FC<IgnoreFriendRequestMenuItemProps> = observer(({user, onClose}) => {
+const IgnoreFriendRequestMenuItem: React.FC<IgnoreFriendRequestMenuItemProps> = observer(({user, onClose}) => {
 	const {i18n} = useLingui();
 	const handleIgnoreFriendRequest = useCallback(() => {
 		onClose();
 		RelationshipActionUtils.ignoreFriendRequest(i18n, user.id);
 	}, [i18n, user.id, onClose]);
-	if (RuntimeConfig.directMessagesDisabled) {
+	if (RuntimeConfig.friendsDisabled) {
 		return null;
 	}
 	return (
@@ -258,13 +247,13 @@ interface CancelFriendRequestMenuItemProps {
 	onClose: () => void;
 }
 
-export const CancelFriendRequestMenuItem: React.FC<CancelFriendRequestMenuItemProps> = observer(({user, onClose}) => {
+const CancelFriendRequestMenuItem: React.FC<CancelFriendRequestMenuItemProps> = observer(({user, onClose}) => {
 	const {i18n} = useLingui();
 	const handleCancelFriendRequest = useCallback(() => {
 		onClose();
 		RelationshipActionUtils.cancelFriendRequest(i18n, user.id);
 	}, [i18n, user.id, onClose]);
-	if (RuntimeConfig.directMessagesDisabled) {
+	if (RuntimeConfig.friendsDisabled) {
 		return null;
 	}
 	return (
@@ -358,7 +347,7 @@ export const RelationshipActionMenuItem: React.FC<RelationshipActionMenuItemProp
 	const {i18n} = useLingui();
 	const relationship = Relationships.getRelationship(user.id);
 	const relationshipType = relationship?.type;
-	if (RuntimeConfig.directMessagesDisabled) {
+	if (RuntimeConfig.friendsDisabled) {
 		return null;
 	}
 	const isFriendlyBot = user.bot && (user.flags & PublicUserFlags.FRIENDLY_BOT) === PublicUserFlags.FRIENDLY_BOT;

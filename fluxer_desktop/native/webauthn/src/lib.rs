@@ -39,12 +39,13 @@ const BACKEND_REASON: &str = "macOS WebAuthn backend (AuthenticationServices). \
 #[cfg(target_os = "windows")]
 const BACKEND_REASON: &str = "Windows WebAuthn broker backend (webauthn.dll). \
      Requires Windows 10 build 18362 (May 2019 / version 1903) or newer; \
-     webauthn.dll is delay-loaded via /DELAYLOAD, so the addon still loads on \
-     older builds but `isSupported()` returns false there.";
+     webauthn.dll and its exports are resolved at runtime from System32, so the \
+     addon still loads on older builds and `isSupported()` returns false there.";
 #[cfg(target_os = "linux")]
 const BACKEND_REASON: &str = "Linux WebAuthn backend (bundled libfido2, HID transport, U2F \
-     fallback disabled). Requires a CTAP authenticator on USB-HID; \
-     `isSupported()` returns false when no authenticator is enumerated.";
+     fallback disabled). Ceremonies need a CTAP authenticator on USB-HID; \
+     `isSupported()` returns true whenever libfido2 can enumerate HID devices, \
+     even before a security key is plugged in.";
 #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
 const BACKEND_REASON: &str = "no WebAuthn backend is compiled in for this platform";
 
@@ -591,7 +592,7 @@ fn required_alg_array(object: &Object) -> Result<Vec<i32>> {
             "pubKeyCredParams must not be empty".to_owned(),
         ));
     }
-    let mut algs = Vec::with_capacity(len as usize);
+    let mut algs = Vec::new();
     for i in 0..len {
         let mut elem_raw: napi::sys::napi_value = std::ptr::null_mut();
         let status = unsafe { napi::sys::napi_get_element(raw_env, raw, i, &mut elem_raw) };
@@ -651,7 +652,7 @@ fn optional_descriptor_array(object: &Object, key: &str) -> Result<Vec<Descripto
     }
     let arr: Object = unsafe { value.cast::<Object>()? };
     let len = read_array_length(&arr)?;
-    let mut out = Vec::with_capacity(len as usize);
+    let mut out = Vec::new();
     for i in 0..len {
         let mut elem_raw: napi::sys::napi_value = std::ptr::null_mut();
         let status = unsafe { napi::sys::napi_get_element(raw_env, raw, i, &mut elem_raw) };

@@ -6,7 +6,12 @@ import {
 	MessageFlags,
 	MessageFlagsDescriptions,
 } from '@fluxer/constants/src/ChannelConstants';
-import {AVATAR_MAX_SIZE, MAX_MESSAGE_LENGTH_PREMIUM} from '@fluxer/constants/src/LimitConstants';
+import {MAX_MESSAGE_LENGTH_PREMIUM} from '@fluxer/constants/src/LimitConstants';
+import {
+	MAX_APPLIED_TAGS_PER_THREAD,
+	THREAD_NAME_MAX_LENGTH,
+	THREAD_NAME_MIN_LENGTH,
+} from '@fluxer/constants/src/ThreadConstants';
 import {ClientUploadedAttachmentRequest} from '@fluxer/schema/src/domains/message/AttachmentSchemas';
 import {
 	MessageContentRequest,
@@ -14,7 +19,8 @@ import {
 	RichEmbedRequest,
 } from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import {AllowedMentionsRequest, MessageReferenceRequest} from '@fluxer/schema/src/domains/message/SharedMessageSchemas';
-import {base64LengthForBytes, createBase64StringType} from '@fluxer/schema/src/primitives/FileValidators';
+import {withBase64Binary} from '@fluxer/schema/src/primitives/Base64BinaryFields';
+import {createBase64ImageType} from '@fluxer/schema/src/primitives/FileValidators';
 import {QueryBooleanType} from '@fluxer/schema/src/primitives/QueryValidators';
 import {
 	coerceNumberFromString,
@@ -27,13 +33,12 @@ import {
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {URLType} from '@fluxer/schema/src/primitives/UrlValidators';
 import {WebhookNameType} from '@fluxer/schema/src/primitives/UserValidators';
+import {withSchemaMetadata} from '@fluxer/schema/src/SchemaMetadata';
 import {z} from 'zod';
 
 export const WebhookCreateRequest = z.object({
 	name: WebhookNameType.describe('The name of the webhook'),
-	avatar: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
-		.nullish()
-		.describe('The avatar image as a base64-encoded data URI'),
+	avatar: createBase64ImageType().nullish().describe('The avatar image as a base64-encoded data URI'),
 });
 
 export type WebhookCreateRequest = z.infer<typeof WebhookCreateRequest>;
@@ -41,9 +46,7 @@ export type WebhookCreateRequest = z.infer<typeof WebhookCreateRequest>;
 export const WebhookUpdateRequest = z
 	.object({
 		name: WebhookNameType.describe('The new name of the webhook'),
-		avatar: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
-			.nullish()
-			.describe('The new avatar image as a base64-encoded data URI'),
+		avatar: createBase64ImageType().nullish().describe('The new avatar image as a base64-encoded data URI'),
 		channel_id: SnowflakeType.describe('The ID of the channel to move the webhook to'),
 	})
 	.partial();
@@ -53,9 +56,7 @@ export type WebhookUpdateRequest = z.infer<typeof WebhookUpdateRequest>;
 export const WebhookTokenUpdateRequest = z
 	.strictObject({
 		name: WebhookNameType.describe('The new name of the webhook'),
-		avatar: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
-			.nullish()
-			.describe('The new avatar image as a base64-encoded data URI'),
+		avatar: createBase64ImageType().nullish().describe('The new avatar image as a base64-encoded data URI'),
 	})
 	.partial();
 
@@ -76,7 +77,7 @@ const WebhookMultipartAttachmentRequest = z.object({
 	width: z.number().int().optional().describe('Width of the image/video in pixels'),
 	ephemeral: z.boolean().optional().describe('Whether this attachment is ephemeral'),
 	duration: z.number().optional().describe('Duration of audio file in seconds'),
-	waveform: createStringType().optional().describe('Base64-encoded bytearray of audio waveform'),
+	waveform: withBase64Binary(createStringType()).optional().describe('Base64-encoded bytearray of audio waveform'),
 	flags: createBitflagInt32Type(
 		MessageAttachmentFlags,
 		MessageAttachmentFlagsDescriptions,
@@ -88,7 +89,7 @@ const WebhookMultipartAttachmentRequest = z.object({
 const WebhookMessageRequestBase = z
 	.object({
 		content: MessageContentRequest.nullish(),
-		embeds: z.array(RichEmbedRequest).optional().describe('Array of embed objects to include in the message'),
+		embeds: z.array(RichEmbedRequest).max(100).optional().describe('Array of embed objects to include in the message'),
 		message_reference: MessageReferenceRequest.nullish().describe(
 			'Reference to another message (for replies or forwards)',
 		),
@@ -108,11 +109,36 @@ const WebhookMessageRequestBase = z
 	})
 	.partial();
 
+const CHANNEL_THREADS_EXPERIMENT = {experiment: 'channel_threads'} as const;
+
+export const WebhookForumPostRequestFields = {
+	thread_name: withSchemaMetadata(
+		createStringType(THREAD_NAME_MIN_LENGTH, THREAD_NAME_MAX_LENGTH).describe(
+			'Name of the post to create when the webhook belongs to a forum or media channel (1-100 characters)',
+		),
+		CHANNEL_THREADS_EXPERIMENT,
+	).optional(),
+	applied_tags: withSchemaMetadata(
+		z
+			.array(SnowflakeType)
+			.max(MAX_APPLIED_TAGS_PER_THREAD)
+			.describe('IDs of the tags to apply to the new post (max 5)'),
+		CHANNEL_THREADS_EXPERIMENT,
+	).optional(),
+};
+
+const WebhookThreadIdQuery = withSchemaMetadata(
+	z.string().describe('ID of a thread in the webhook channel to target instead of the channel itself'),
+	CHANNEL_THREADS_EXPERIMENT,
+).nullish();
+
 export const WebhookMessageRequest = WebhookMessageRequestBase.extend({
 	attachments: z
 		.array(ClientUploadedAttachmentRequest)
+		.max(100)
 		.optional()
 		.describe('Array of attachments uploaded through the presigned upload endpoint'),
+	...WebhookForumPostRequestFields,
 });
 
 export type WebhookMessageRequest = z.infer<typeof WebhookMessageRequest>;
@@ -120,8 +146,10 @@ export type WebhookMessageRequest = z.infer<typeof WebhookMessageRequest>;
 export const WebhookMultipartMessageRequest = WebhookMessageRequestBase.extend({
 	attachments: z
 		.array(WebhookMultipartAttachmentRequest)
+		.max(100)
 		.optional()
 		.describe('Array of multipart attachment metadata objects'),
+	...WebhookForumPostRequestFields,
 });
 
 export type WebhookMultipartMessageRequest = z.infer<typeof WebhookMultipartMessageRequest>;
@@ -131,7 +159,7 @@ export const WebhookMessageEditRequest = z
 		content: MessageContentRequest.nullish().describe(
 			`The new message content (up to ${MAX_MESSAGE_LENGTH_PREMIUM} characters)`,
 		),
-		embeds: z.array(RichEmbedRequest).optional().describe('Array of embed objects to include in the message'),
+		embeds: z.array(RichEmbedRequest).max(100).optional().describe('Array of embed objects to include in the message'),
 		flags: createBitflagInt32Type(
 			MessageFlags,
 			MessageFlagsDescriptions,
@@ -146,9 +174,16 @@ export type WebhookMessageEditRequest = z.infer<typeof WebhookMessageEditRequest
 
 export const WebhookExecuteQueryRequest = z.object({
 	wait: QueryBooleanType.optional().default(false).describe('Whether to wait for the webhook response'),
+	thread_id: WebhookThreadIdQuery,
 });
 
 export type WebhookExecuteQueryRequest = z.infer<typeof WebhookExecuteQueryRequest>;
+
+export const WebhookMessageQueryRequest = z.object({
+	thread_id: WebhookThreadIdQuery,
+});
+
+export type WebhookMessageQueryRequest = z.infer<typeof WebhookMessageQueryRequest>;
 
 const SlackAttachmentFieldSchema = z.object({
 	title: createUnboundedStringType().optional().describe('Title of the field'),
@@ -163,7 +198,7 @@ const SlackAttachmentSchema = z.object({
 	color: createUnboundedStringType().optional().describe('Colour of the attachment sidebar (hex code or preset)'),
 	title: createUnboundedStringType().optional().describe('Title of the attachment'),
 	title_link: createUnboundedStringType().optional().describe('URL to link from the title'),
-	fields: z.array(SlackAttachmentFieldSchema).optional().describe('Array of field objects'),
+	fields: z.array(SlackAttachmentFieldSchema).max(100).optional().describe('Array of field objects'),
 	footer: createUnboundedStringType().optional().describe('Footer text displayed at the bottom'),
 	ts: SlackUnixSecondsSchema.optional().describe('Unix timestamp for the attachment footer'),
 	author_name: createUnboundedStringType().optional().describe('Name of the author'),
@@ -176,7 +211,7 @@ export const SlackWebhookRequest = z.object({
 	text: createUnboundedStringType().optional().describe('Main text content of the message'),
 	username: WebhookNameType.optional().describe('Override the default username of the webhook'),
 	icon_url: createUnboundedStringType().optional().describe('Override the default icon of the webhook'),
-	attachments: z.array(SlackAttachmentSchema).optional().describe('Array of attachment objects'),
+	attachments: z.array(SlackAttachmentSchema).max(100).optional().describe('Array of attachment objects'),
 });
 
 export type SlackWebhookRequest = z.infer<typeof SlackWebhookRequest>;

@@ -17,14 +17,20 @@ import {
 	$selectComposerOffset,
 } from '@app/features/lexical/composer/composerOffsets';
 import {$isSlashSlotNode, type SlashSlotNode} from '@app/features/lexical/composer/nodes/SlashSlotNode';
-import {COMPOSER_SLASH_SLOT_STATE_MAX_ID_LENGTH} from '@app/features/lexical/composer/SlashSlotPersistence';
+import {
+	COMPOSER_SLASH_SLOT_STATE_MAX_ID_LENGTH,
+	hasExactKeys,
+} from '@app/features/lexical/composer/SlashSlotPersistence';
 import {ParserFlags} from '@app/features/messaging/utils/markdown/parser/Enums';
 import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
+import {randomUuid} from '@app/features/platform/utils/RandomUuid';
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 import {mergeRegister} from '@lexical/utils';
 import {
 	$addUpdateTag,
 	$createLineBreakNode,
 	$createTextNode,
+	$findMatchingParent,
 	$getRoot,
 	$getSelection,
 	$isElementNode,
@@ -45,11 +51,11 @@ import {
 } from 'lexical';
 
 export const FLUXER_COMPOSER_CLIPBOARD_MIME = 'application/x-fluxer-composer+json';
-export const COMPOSER_CLIPBOARD_VERSION = 1;
-export const COMPOSER_CLIPBOARD_MAX_PAYLOAD_LENGTH = 262_144;
+const COMPOSER_CLIPBOARD_VERSION = 1;
+const COMPOSER_CLIPBOARD_MAX_PAYLOAD_LENGTH = 262_144;
 export const COMPOSER_CLIPBOARD_MAX_DISPLAY_LENGTH = 65_536;
-export const COMPOSER_CLIPBOARD_MAX_SEGMENTS = 512;
-export const COMPOSER_CLIPBOARD_MAX_TRUSTED_PAYLOADS = 32;
+const COMPOSER_CLIPBOARD_MAX_SEGMENTS = 512;
+const COMPOSER_CLIPBOARD_MAX_TRUSTED_PAYLOADS = 32;
 
 const COMPOSER_CLIPBOARD_MAX_SEGMENT_ID_LENGTH = COMPOSER_SLASH_SLOT_STATE_MAX_ID_LENGTH;
 const COMPOSER_CLIPBOARD_MAX_SEGMENT_TEXT_LENGTH = 65_536;
@@ -67,7 +73,7 @@ export interface ComposerClipboardSlice {
 	segments: Array<MentionSegment>;
 }
 
-export interface ComposerClipboardSelection extends ComposerClipboardSlice {
+interface ComposerClipboardSelection extends ComposerClipboardSlice {
 	textPlain: string;
 }
 
@@ -82,15 +88,6 @@ interface SerializedComposerClipboardPayload {
 	token: string;
 	display: string;
 	segments: Array<MentionSegment>;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value != null && !Array.isArray(value);
-}
-
-function hasExactKeys<const T extends ReadonlyArray<string>>(value: Record<string, unknown>, keys: T): boolean {
-	const actualKeys = Object.keys(value);
-	return actualKeys.length === keys.length && keys.every((key) => Object.hasOwn(value, key));
 }
 
 function isBoundedString(value: unknown, minimumLength: number, maximumLength: number): value is string {
@@ -212,7 +209,7 @@ export function getComposerClipboardTextPlain(slice: ComposerClipboardSlice): st
 	return validated == null ? null : sliceToWire(validated);
 }
 
-export function $getComposerClipboardSelection(): ComposerClipboardSelection | null {
+function $getComposerClipboardSelection(): ComposerClipboardSelection | null {
 	const offsets = $getSelectionOffsets();
 	if (offsets == null) {
 		return null;
@@ -239,7 +236,7 @@ function mintTrustedPayload(slice: ComposerClipboardSlice): {token: string; seri
 	if (validated == null) {
 		return null;
 	}
-	const token = globalThis.crypto.randomUUID();
+	const token = randomUuid();
 	const payload: SerializedComposerClipboardPayload = {
 		version: COMPOSER_CLIPBOARD_VERSION,
 		token,
@@ -250,7 +247,7 @@ function mintTrustedPayload(slice: ComposerClipboardSlice): {token: string; seri
 	return serialized.length > COMPOSER_CLIPBOARD_MAX_PAYLOAD_LENGTH ? null : {token, serialized};
 }
 
-export function serializeComposerClipboardSlice(slice: ComposerClipboardSlice): string | null {
+function serializeComposerClipboardSlice(slice: ComposerClipboardSlice): string | null {
 	const minted = mintTrustedPayload(slice);
 	if (minted == null) {
 		return null;
@@ -333,17 +330,6 @@ function $createSliceNodes(slice: ComposerClipboardSlice, plainText: boolean): A
 	return nodes;
 }
 
-function $findEnclosingSlashSlot(node: LexicalNode): SlashSlotNode | null {
-	let current: LexicalNode | null = node;
-	while (current != null) {
-		if ($isSlashSlotNode(current)) {
-			return current;
-		}
-		current = current.getParent();
-	}
-	return null;
-}
-
 function $selectSlashSlotOffset(slot: SlashSlotNode, offset: number): void {
 	let consumed = 0;
 	const children = slot.getChildren();
@@ -413,7 +399,7 @@ export function $insertComposerClipboardSlice(
 			return false;
 		}
 		const selectedNode = selectedNodes[0]!;
-		const slot = $findEnclosingSlashSlot(selectedNode);
+		const slot = $findMatchingParent(selectedNode, $isSlashSlotNode);
 		if (slot != null) {
 			const selectedRange = $getNodeDisplayRange(selectedNode);
 			return (
@@ -433,8 +419,8 @@ export function $insertComposerClipboardSlice(
 	}
 	const start = Math.min(offsets.anchor, offsets.focus);
 	const end = Math.max(offsets.anchor, offsets.focus);
-	const anchorSlot = $findEnclosingSlashSlot(selection.anchor.getNode());
-	const focusSlot = $findEnclosingSlashSlot(selection.focus.getNode());
+	const anchorSlot = $findMatchingParent(selection.anchor.getNode(), $isSlashSlotNode);
+	const focusSlot = $findMatchingParent(selection.focus.getNode(), $isSlashSlotNode);
 	if (anchorSlot != null && focusSlot != null && anchorSlot.is(focusSlot)) {
 		return $replaceSlashSlotRange(anchorSlot, start, end, sliceToWire(validated));
 	}

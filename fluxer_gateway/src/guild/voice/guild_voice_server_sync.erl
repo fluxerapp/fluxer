@@ -6,7 +6,6 @@
 -export([
     sync_voice_state_count_diff/2,
     sync_voice_state_counts/1,
-    sync_replaced_voice_states/2,
     cleanup_voice_state_counts/1,
     ensure_registry/0
 ]).

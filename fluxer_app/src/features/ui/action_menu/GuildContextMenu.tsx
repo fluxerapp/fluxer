@@ -36,13 +36,15 @@ export const GuildContextMenu: React.FC<GuildContextMenuProps> = observer(({guil
 				excludeLabels={excludeLabels}
 				data-flx="ui.action-menu.guild-context-menu.data-menu-renderer"
 			/>
-			<MenuGroup data-flx="ui.action-menu.guild-context-menu.menu-group">
-				<MuteCommunityMenuItem
-					guild={guild}
-					onClose={onClose}
-					data-flx="ui.action-menu.guild-context-menu.mute-community-menu-item"
-				/>
-			</MenuGroup>
+			{guild.visiting ? null : (
+				<MenuGroup data-flx="ui.action-menu.guild-context-menu.menu-group">
+					<MuteCommunityMenuItem
+						guild={guild}
+						onClose={onClose}
+						data-flx="ui.action-menu.guild-context-menu.mute-community-menu-item"
+					/>
+				</MenuGroup>
+			)}
 		</>
 	);
 });

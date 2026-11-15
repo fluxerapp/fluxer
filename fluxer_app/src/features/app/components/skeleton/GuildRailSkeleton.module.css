@@ -205,7 +205,7 @@
 .item[data-selected='true'] .fluxerIcon {
 	border-radius: 30%;
 	background-color: var(--brand-primary);
-	color: white;
+	color: var(--brand-primary-fill);
 }
 
 .fluxerIconGlyph {
@@ -248,7 +248,7 @@
 .item[data-selected='true'] .actionIcon {
 	border-radius: 30%;
 	background-color: var(--brand-primary);
-	color: white;
+	color: var(--brand-primary-fill);
 }
 
 .actionIconGlyph {

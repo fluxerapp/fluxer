@@ -34,6 +34,22 @@ export const GuildMFALevel = {
 
 export type GuildMFALevelValue = ValueOf<typeof GuildMFALevel>;
 
+export function guildRequiresMfa(features: Iterable<string>): boolean {
+	for (const feature of features) {
+		if (feature === GuildFeatures.VERIFIED || feature === GuildFeatures.PARTNERED) return true;
+	}
+	return false;
+}
+
+export function getEffectiveGuildMfaLevel(
+	mfaLevel: number,
+	features: Iterable<string>,
+	selfHosted: boolean,
+): GuildMFALevelValue {
+	if (!selfHosted && guildRequiresMfa(features)) return GuildMFALevel.ELEVATED;
+	return mfaLevel === GuildMFALevel.ELEVATED ? GuildMFALevel.ELEVATED : GuildMFALevel.NONE;
+}
+
 export const GuildSplashCardAlignment = {
 	CENTER: 0,
 	LEFT: 1,
@@ -137,6 +153,9 @@ export const GuildFeatures = {
 	LARGE_GUILD_OVERRIDE: 'LARGE_GUILD_OVERRIDE',
 	VERY_LARGE_GUILD: 'VERY_LARGE_GUILD',
 	ANNOUNCEMENT_CHANNELS_DISABLED: 'ANNOUNCEMENT_CHANNELS_DISABLED',
+	VISITS_ENABLED: 'VISITS_ENABLED',
+	MEMBER_DMS_DISABLED: 'MEMBER_DMS_DISABLED',
+	PLANNED_JOIN_WAVES: 'PLANNED_JOIN_WAVES',
 } as const;
 
 export type GuildFeature = ValueOf<typeof GuildFeatures>;

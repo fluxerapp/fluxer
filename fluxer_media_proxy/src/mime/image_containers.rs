@@ -346,22 +346,3 @@ pub(super) fn webp_sniff(data: &[u8]) -> SniffInfo {
     }
     out
 }
-
-pub(super) fn webp_sniff_complete(data: &[u8]) -> bool {
-    if data.len() < WEBP_CHUNK_HEADER_BYTES {
-        return false;
-    }
-    match &data[12..16] {
-        b"VP8X" => {
-            let chunk_size = u32::from_le_bytes(
-                data[16..20]
-                    .try_into()
-                    .expect("validated WebP animation chunk size slice"),
-            );
-            chunk_size != 10 || data.len() >= WEBP_EXTENDED_HEADER_BYTES
-        }
-        b"VP8 " => data.len() >= WEBP_EXTENDED_HEADER_BYTES,
-        b"VP8L" => data.len() >= WEBP_LOSSLESS_HEADER_BYTES,
-        _ => true,
-    }
-}

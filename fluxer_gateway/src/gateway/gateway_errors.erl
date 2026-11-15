@@ -7,12 +7,10 @@
 
 -export([
     error/1,
-    error_code/1,
-    error_message/1,
     error_category/1,
-    is_recoverable/1
+    voice_error_info/1
 ]).
--export_type([error_atom/0, error_category/0]).
+-export_type([error_atom/0, error_category/0, voice_error_info/0]).
 
 -type error_atom() ::
     voice_connection_not_found
@@ -35,11 +33,14 @@
     | voice_invalid_guild_id
     | voice_moderator_missing_connect
     | voice_unclaimed_account
+    | voice_account_verification_required
     | voice_update_rate_limited
     | voice_nonce_mismatch
     | voice_pending_expired
     | voice_camera_user_limit
     | voice_e2ee_required
+    | voice_p2p_consent_required
+    | voice_p2p_unavailable
     | dm_channel_not_found
     | dm_not_recipient
     | dm_invalid_channel_type
@@ -71,80 +72,6 @@
 error(ErrorAtom) ->
     {error, error_category(ErrorAtom), ErrorAtom}.
 
--spec error_code(error_atom()) -> binary().
-error_code(ErrorAtom) ->
-    case voice_error_code(ErrorAtom) of
-        undefined -> common_error_code(ErrorAtom);
-        Code -> Code
-    end.
-
--spec voice_error_code(error_atom()) -> binary() | undefined.
-voice_error_code(ErrorAtom) ->
-    case voice_error_info(ErrorAtom) of
-        {Code, _Message, _Category} -> Code;
-        undefined -> undefined
-    end.
-
--spec common_error_code(error_atom()) -> binary().
-common_error_code(dm_channel_not_found) ->
-    <<"DM_CHANNEL_NOT_FOUND">>;
-common_error_code(dm_not_recipient) ->
-    <<"DM_NOT_RECIPIENT">>;
-common_error_code(dm_invalid_channel_type) ->
-    <<"DM_INVALID_CHANNEL_TYPE">>;
-common_error_code(validation_invalid_snowflake) ->
-    <<"VALIDATION_INVALID_SNOWFLAKE">>;
-common_error_code(validation_null_snowflake) ->
-    <<"VALIDATION_NULL_SNOWFLAKE">>;
-common_error_code(validation_invalid_snowflake_list) ->
-    <<"VALIDATION_INVALID_SNOWFLAKE_LIST">>;
-common_error_code(validation_expected_list) ->
-    <<"VALIDATION_EXPECTED_LIST">>;
-common_error_code(validation_expected_map) ->
-    <<"VALIDATION_EXPECTED_MAP">>;
-common_error_code(validation_missing_field) ->
-    <<"VALIDATION_MISSING_FIELD">>;
-common_error_code(validation_invalid_params) ->
-    <<"VALIDATION_INVALID_PARAMS">>;
-common_error_code(internal_error) ->
-    <<"INTERNAL_ERROR">>;
-common_error_code(timeout) ->
-    <<"TIMEOUT">>;
-common_error_code(unknown_error) ->
-    <<"UNKNOWN_ERROR">>;
-common_error_code(_) ->
-    <<"UNKNOWN_ERROR">>.
-
--spec error_message(error_atom()) -> binary().
-error_message(ErrorAtom) ->
-    case voice_error_message(ErrorAtom) of
-        undefined -> common_error_message(ErrorAtom);
-        Message -> Message
-    end.
-
--spec voice_error_message(error_atom()) -> binary() | undefined.
-voice_error_message(ErrorAtom) ->
-    case voice_error_info(ErrorAtom) of
-        {_Code, Message, _Category} -> Message;
-        undefined -> undefined
-    end.
-
--spec common_error_message(error_atom()) -> binary().
-common_error_message(dm_channel_not_found) -> <<"DM channel not found">>;
-common_error_message(dm_not_recipient) -> <<"Not a recipient of this channel">>;
-common_error_message(dm_invalid_channel_type) -> <<"Not a DM or Group DM channel">>;
-common_error_message(validation_invalid_snowflake) -> <<"Invalid snowflake ID format">>;
-common_error_message(validation_null_snowflake) -> <<"Snowflake ID cannot be null">>;
-common_error_message(validation_invalid_snowflake_list) -> <<"Invalid snowflake ID in list">>;
-common_error_message(validation_expected_list) -> <<"Expected a list">>;
-common_error_message(validation_expected_map) -> <<"Expected a map">>;
-common_error_message(validation_missing_field) -> <<"Missing required field">>;
-common_error_message(validation_invalid_params) -> <<"Invalid parameters">>;
-common_error_message(internal_error) -> <<"Internal server error">>;
-common_error_message(timeout) -> <<"Request timed out">>;
-common_error_message(unknown_error) -> <<"An unknown error occurred">>;
-common_error_message(_) -> <<"An unknown error occurred">>.
-
 -spec error_category(error_atom()) -> error_category().
 error_category(ErrorAtom) ->
     case voice_error_category(ErrorAtom) of
@@ -161,7 +88,8 @@ voice_error_category(ErrorAtom) ->
 
 -spec voice_error_info(error_atom()) -> voice_error_info() | undefined.
 voice_error_info(ErrorAtom) ->
-    maps:get(ErrorAtom, voice_error_infos(), undefined).
+    Infos = maps:merge(voice_error_infos(), voice_access_error_infos()),
+    maps:get(ErrorAtom, maps:merge(Infos, voice_p2p_error_infos()), undefined).
 
 -spec voice_error_infos() -> #{error_atom() => voice_error_info()}.
 voice_error_infos() ->
@@ -179,15 +107,6 @@ voice_error_infos() ->
             {<<"VOICE_USER_NOT_IN_VOICE">>, <<"User is not in a voice channel">>, not_found},
         voice_guild_not_found =>
             {<<"VOICE_GUILD_NOT_FOUND">>, <<"Guild not found">>, not_found},
-        voice_permission_denied =>
-            {<<"VOICE_PERMISSION_DENIED">>, <<"Missing voice permissions">>, permission_denied},
-        voice_member_timed_out =>
-            {<<"VOICE_MEMBER_TIMED_OUT">>, <<"Voice member is timed out">>, permission_denied},
-        voice_channel_full =>
-            {<<"VOICE_CHANNEL_FULL">>, <<"Voice channel is full">>, permission_denied},
-        voice_connection_limit_reached =>
-            {<<"VOICE_CONNECTION_LIMIT_REACHED">>, <<"Voice connection limit reached">>,
-                permission_denied},
         voice_missing_connection_id =>
             {<<"VOICE_MISSING_CONNECTION_ID">>, <<"Connection ID is required">>,
                 validation_error},
@@ -205,12 +124,6 @@ voice_error_infos() ->
             {<<"VOICE_GUILD_ID_MISSING">>, <<"Guild ID is required">>, validation_error},
         voice_invalid_guild_id =>
             {<<"VOICE_INVALID_GUILD_ID">>, <<"Invalid guild ID">>, validation_error},
-        voice_moderator_missing_connect =>
-            {<<"VOICE_PERMISSION_DENIED">>, <<"Moderator missing connect permission">>,
-                permission_denied},
-        voice_unclaimed_account =>
-            {<<"VOICE_UNCLAIMED_ACCOUNT">>, <<"Claim your account to join voice">>,
-                permission_denied},
         voice_update_rate_limited =>
             {<<"VOICE_UPDATE_RATE_LIMITED">>, <<"Voice updates are rate limited">>,
                 rate_limited},
@@ -218,12 +131,47 @@ voice_error_infos() ->
             {<<"VOICE_NONCE_MISMATCH">>, <<"Voice token nonce mismatch">>, validation_error},
         voice_pending_expired =>
             {<<"VOICE_PENDING_EXPIRED">>, <<"Voice pending connection expired">>,
-                validation_error},
+                validation_error}
+    }.
+
+-spec voice_access_error_infos() -> #{error_atom() => voice_error_info()}.
+voice_access_error_infos() ->
+    #{
+        voice_permission_denied =>
+            {<<"VOICE_PERMISSION_DENIED">>, <<"Missing voice permissions">>, permission_denied},
+        voice_member_timed_out =>
+            {<<"VOICE_MEMBER_TIMED_OUT">>, <<"Voice member is timed out">>, permission_denied},
+        voice_channel_full =>
+            {<<"VOICE_CHANNEL_FULL">>, <<"Voice channel is full">>, permission_denied},
+        voice_connection_limit_reached =>
+            {<<"VOICE_CONNECTION_LIMIT_REACHED">>, <<"Voice connection limit reached">>,
+                permission_denied},
+        voice_moderator_missing_connect =>
+            {<<"VOICE_PERMISSION_DENIED">>, <<"Moderator missing connect permission">>,
+                permission_denied},
+        voice_unclaimed_account =>
+            {<<"VOICE_UNCLAIMED_ACCOUNT">>, <<"Claim your account to join voice">>,
+                permission_denied},
+        voice_account_verification_required =>
+            {<<"VOICE_ACCOUNT_VERIFICATION_REQUIRED">>,
+                <<"Confirm an email address to join voice">>, permission_denied},
         voice_camera_user_limit =>
             {<<"VOICE_CAMERA_USER_LIMIT">>, <<"Too many users in channel to enable camera">>,
                 permission_denied},
         voice_e2ee_required =>
             {<<"VOICE_E2EE_REQUIRED">>, voice_e2ee_required_message(), permission_denied}
+    }.
+
+-spec voice_p2p_error_infos() -> #{error_atom() => voice_error_info()}.
+voice_p2p_error_infos() ->
+    #{
+        voice_p2p_consent_required =>
+            {<<"VOICE_P2P_CONSENT_REQUIRED">>,
+                <<"This call is peer-to-peer and requires agreement to join">>,
+                permission_denied},
+        voice_p2p_unavailable =>
+            {<<"VOICE_P2P_UNAVAILABLE">>, <<"Peer-to-peer voice is unavailable for this join">>,
+                voice_error}
     }.
 
 -spec voice_e2ee_required_message() -> binary().
@@ -248,14 +196,3 @@ common_error_category(internal_error) -> unknown;
 common_error_category(timeout) -> timeout;
 common_error_category(unknown_error) -> unknown;
 common_error_category(_) -> unknown.
-
--spec is_recoverable(error_category()) -> boolean().
-is_recoverable(not_found) -> true;
-is_recoverable(permission_denied) -> true;
-is_recoverable(voice_error) -> true;
-is_recoverable(validation_error) -> true;
-is_recoverable(timeout) -> true;
-is_recoverable(unknown) -> true;
-is_recoverable(rate_limited) -> false;
-is_recoverable(auth_failed) -> false;
-is_recoverable(_) -> true.

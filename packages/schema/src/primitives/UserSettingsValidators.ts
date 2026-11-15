@@ -16,6 +16,8 @@ import {
 	StickerAnimationOptionsDescriptions,
 	TimeFormatTypes,
 	TimeFormatTypesDescriptions,
+	TimestampFormatTypes,
+	TimestampFormatTypesDescriptions,
 	UserAuthenticatorTypes,
 	UserAuthenticatorTypesDescriptions,
 	UserNotificationSettings,
@@ -75,6 +77,16 @@ export const TimeFormatTypesSchema = createInt32EnumType(
 	],
 	'Time format preference',
 	'TimeFormatTypes',
+);
+export const TimestampFormatTypesSchema = createInt32EnumType(
+	[
+		[TimestampFormatTypes.AUTO, 'AUTO', TimestampFormatTypesDescriptions.AUTO],
+		[TimestampFormatTypes.ISO_8601, 'ISO_8601', TimestampFormatTypesDescriptions.ISO_8601],
+		[TimestampFormatTypes.DAY_MONTH_YEAR, 'DAY_MONTH_YEAR', TimestampFormatTypesDescriptions.DAY_MONTH_YEAR],
+		[TimestampFormatTypes.MONTH_DAY_YEAR, 'MONTH_DAY_YEAR', TimestampFormatTypesDescriptions.MONTH_DAY_YEAR],
+	],
+	'Timestamp format preference',
+	'TimestampFormatTypes',
 );
 export const UserNotificationSettingsSchema = createInt32EnumType(
 	[

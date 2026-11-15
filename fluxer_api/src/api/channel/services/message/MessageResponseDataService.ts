@@ -1,19 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {resolveDefaultAttachmentDecayConfig} from '@app/api/attachment/AttachmentDecayService';
 import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
-import {throwForSvcErrorReply} from '@app/api/infrastructure/SvcErrorReply';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
+import {requestSvcJson} from '@app/api/infrastructure/SvcErrorReply';
+import {isApiProxiedAttachments} from '@app/api/instance/AttachmentAccessMode';
+import {getInstanceProductName} from '@app/api/instance/ProductName';
 import {Logger} from '@app/api/Logger';
 import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
-import {isJsonRecord, parseJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
+import {isJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
+import {MessageTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
 import {NatsConnectionManager} from '@pkgs/nats/src/NatsConnectionManager';
-
-const textEncoder = new TextEncoder();
-const textDecoder = new TextDecoder();
 
 const MESSAGE_RESPONSE_SERVICE_SUBJECT = 'svc.messages';
 const MESSAGE_RESPONSE_SERVICE_TIMEOUT_MS = 6000;
@@ -47,6 +50,10 @@ type MessageServiceResponse =
 			FoundMentions: Array<ExtractedMentions>;
 	  }
 	| 'NotFound';
+
+async function attachmentDecayEnabled(): Promise<boolean> {
+	return (await resolveDefaultAttachmentDecayConfig()).enabled;
+}
 
 function isMessageResponse(value: unknown): value is MessageResponse {
 	return isJsonRecord(value) && typeof value.id === 'string';
@@ -82,6 +89,22 @@ function isMessageServiceResponse(value: unknown): value is MessageServiceRespon
 }
 
 export class MessageResponseDataService {
+	private async accessEnvelope(access: MessageResponseAccessContext) {
+		return {
+			source_guild_id: access.sourceGuildId?.toString(),
+			message_history_cutoff_ms: access.messageHistoryCutoff ? new Date(access.messageHistoryCutoff).getTime() : null,
+			can_read_message_history: access.canReadMessageHistory,
+			include_hidden: access.includeHidden ?? false,
+			media_endpoint: Config.endpoints.media,
+			media_proxy_secret_key: Config.mediaProxy.secretKey,
+			attachment_url_secret_base64: Config.mediaProxy.attachmentUrls.secretsBase64[0],
+			attachment_decay: await attachmentDecayEnabled(),
+			instance_name: getInstanceProductName(),
+			...(isApiProxiedAttachments() && access.includeHidden !== true
+				? {attachment_api_base: Config.endpoints.apiClient}
+				: {}),
+		};
+	}
 	constructor(private readonly connectionManager: INatsConnectionManager) {}
 
 	async listMessages(params: {
@@ -93,8 +116,10 @@ export class MessageResponseDataService {
 		around?: MessageID;
 		access: MessageResponseAccessContext;
 		personaFallbackBehavior?: boolean;
+		threadsMask?: boolean;
 	}): Promise<Array<MessageResponse>> {
 		const response = await this.request({
+			...(params.threadsMask ? {threads_mask: true, exclude_types: [MessageTypes.THREAD_CREATED]} : {}),
 			op: 'ListResponses',
 			channel_id: params.channelId.toString(),
 			viewer_user_id: params.userId.toString(),
@@ -102,15 +127,7 @@ export class MessageResponseDataService {
 			before_id: params.before?.toString(),
 			after_id: params.after?.toString(),
 			around_id: params.around?.toString(),
-			source_guild_id: params.access.sourceGuildId?.toString(),
-			message_history_cutoff_ms: params.access.messageHistoryCutoff
-				? new Date(params.access.messageHistoryCutoff).getTime()
-				: null,
-			can_read_message_history: params.access.canReadMessageHistory,
-			include_hidden: params.access.includeHidden ?? false,
-			media_endpoint: Config.endpoints.media,
-			media_proxy_secret_key: Config.mediaProxy.secretKey,
-			attachment_url_secret_base64: Config.mediaProxy.attachmentUrls.secretsBase64[0],
+			...(await this.accessEnvelope(params.access)),
 			include_reactions: true,
 			persona_fallback_behavior: params.personaFallbackBehavior ?? true,
 		});
@@ -137,27 +154,17 @@ export class MessageResponseDataService {
 		channelId: ChannelID;
 		messageId: MessageID;
 		access: MessageResponseAccessContext;
-		nonce?: string;
-		tts?: boolean;
 		personaFallbackBehavior?: boolean;
+		threadsMask?: boolean;
 	}): Promise<MessageResponse | null> {
 		const response = await this.request({
+			...(params.threadsMask ? {threads_mask: true} : {}),
 			op: 'GetResponseById',
 			channel_id: params.channelId.toString(),
 			message_id: params.messageId.toString(),
 			viewer_user_id: params.userId.toString(),
-			source_guild_id: params.access.sourceGuildId?.toString(),
-			message_history_cutoff_ms: params.access.messageHistoryCutoff
-				? new Date(params.access.messageHistoryCutoff).getTime()
-				: null,
-			can_read_message_history: params.access.canReadMessageHistory,
-			include_hidden: params.access.includeHidden ?? false,
-			media_endpoint: Config.endpoints.media,
-			media_proxy_secret_key: Config.mediaProxy.secretKey,
-			attachment_url_secret_base64: Config.mediaProxy.attachmentUrls.secretsBase64[0],
+			...(await this.accessEnvelope(params.access)),
 			include_reactions: true,
-			nonce: params.nonce,
-			tts: params.tts,
 			persona_fallback_behavior: params.personaFallbackBehavior ?? true,
 		});
 		if (response === 'NotFound') return null;
@@ -180,15 +187,7 @@ export class MessageResponseDataService {
 			op: 'BuildResponse',
 			message: serializeMessageForService(params.message),
 			viewer_user_id: params.userId.toString(),
-			source_guild_id: params.access.sourceGuildId?.toString(),
-			message_history_cutoff_ms: params.access.messageHistoryCutoff
-				? new Date(params.access.messageHistoryCutoff).getTime()
-				: null,
-			can_read_message_history: params.access.canReadMessageHistory,
-			include_hidden: params.access.includeHidden ?? false,
-			media_endpoint: Config.endpoints.media,
-			media_proxy_secret_key: Config.mediaProxy.secretKey,
-			attachment_url_secret_base64: Config.mediaProxy.attachmentUrls.secretsBase64[0],
+			...(await this.accessEnvelope(params.access)),
 			include_reactions: params.includeReactions ?? true,
 			nonce: params.nonce,
 			tts: params.tts,
@@ -198,22 +197,6 @@ export class MessageResponseDataService {
 			return response.FoundApi;
 		}
 		throw new Error(`[message-response-service] unexpected BuildResponse response: ${JSON.stringify(response)}`);
-	}
-
-	async buildMessageForChannel(params: {
-		channel: Pick<Channel, 'guildId'>;
-		message: Message;
-		userId?: UserID;
-		nonce?: string;
-		tts?: boolean;
-	}): Promise<MessageResponse> {
-		return this.buildMessage({
-			userId: params.userId ?? messageResponseViewerId(params.message),
-			message: params.message,
-			access: messageResponseAccessForChannel(params.channel),
-			nonce: params.nonce,
-			tts: params.tts,
-		});
 	}
 
 	async buildBroadcastMessage(params: {
@@ -243,7 +226,6 @@ export class MessageResponseDataService {
 		userId: UserID;
 		messages: Array<Message>;
 		access: MessageResponseAccessContext;
-		includeReactions?: boolean;
 		personaFallbackBehavior?: boolean;
 	}): Promise<Array<MessageResponse>> {
 		if (params.messages.length === 0) return [];
@@ -253,17 +235,9 @@ export class MessageResponseDataService {
 				op: 'BuildResponses',
 				messages: batch,
 				viewer_user_id: params.userId.toString(),
-				source_guild_id: params.access.sourceGuildId?.toString(),
-				message_history_cutoff_ms: params.access.messageHistoryCutoff
-					? new Date(params.access.messageHistoryCutoff).getTime()
-					: null,
-				can_read_message_history: params.access.canReadMessageHistory,
-				include_hidden: params.access.includeHidden ?? false,
-				media_endpoint: Config.endpoints.media,
-				media_proxy_secret_key: Config.mediaProxy.secretKey,
-				attachment_url_secret_base64: Config.mediaProxy.attachmentUrls.secretsBase64[0],
-				include_reactions: params.includeReactions ?? true,
 				persona_fallback_behavior: params.personaFallbackBehavior ?? true,
+				...(await this.accessEnvelope(params.access)),
+				include_reactions: true,
 			});
 			if (typeof response !== 'object' || !('FoundApiMany' in response)) {
 				throw new Error(`[message-response-service] unexpected BuildResponses response: ${JSON.stringify(response)}`);
@@ -277,7 +251,6 @@ export class MessageResponseDataService {
 		userId: UserID;
 		messages: Array<Message>;
 		channelById: ReadonlyMap<string, Pick<Channel, 'guildId'>>;
-		includeReactions?: boolean;
 		personaFallbackBehavior?: boolean;
 	}): Promise<Array<MessageResponse>> {
 		const responses = new Array<MessageResponse | undefined>(params.messages.length);
@@ -308,7 +281,6 @@ export class MessageResponseDataService {
 					userId: params.userId,
 					messages: group.entries.map((entry) => entry.message),
 					access: group.access,
-					includeReactions: params.includeReactions,
 					personaFallbackBehavior: params.personaFallbackBehavior ?? true,
 				});
 				const mappedByMessageId = new Map(mapped.map((response) => [response.id, response] as const));
@@ -322,22 +294,12 @@ export class MessageResponseDataService {
 
 	private async request(payload: Record<string, unknown>): Promise<MessageServiceResponse> {
 		try {
-			if (this.connectionManager.isClosed()) {
-				await this.connectionManager.connect();
-			}
-			const connection = this.connectionManager.getConnection();
-			const response = await connection.request(
-				MESSAGE_RESPONSE_SERVICE_SUBJECT,
-				textEncoder.encode(JSON.stringify(payload)),
-				{timeout: MESSAGE_RESPONSE_SERVICE_TIMEOUT_MS},
-			);
-			const decoded = textDecoder.decode(response.data);
-			const parsed = parseJsonWithGuard(decoded, isMessageServiceResponse);
-			if (!parsed) {
-				throwForSvcErrorReply('message-response-service', parseJsonRecord(decoded));
-				throw new Error('[message-response-service] invalid response payload');
-			}
-			return parsed;
+			return await requestSvcJson(this.connectionManager, MESSAGE_RESPONSE_SERVICE_SUBJECT, payload, {
+				timeoutMs: MESSAGE_RESPONSE_SERVICE_TIMEOUT_MS,
+				guard: isMessageServiceResponse,
+				service: 'message-response-service',
+				invalidPayloadError: () => new Error('[message-response-service] invalid response payload'),
+			});
 		} catch (error) {
 			Logger.error({error, op: payload.op}, '[message-response-service] request failed');
 			throw error;
@@ -349,7 +311,7 @@ function messageResponseViewerId(message: Message, currentUserId?: UserID): User
 	return currentUserId ?? message.authorId ?? createUserID(0n);
 }
 
-export function messageResponseAccessForChannel(channel: Pick<Channel, 'guildId'>): MessageResponseAccessContext {
+function messageResponseAccessForChannel(channel: Pick<Channel, 'guildId'>): MessageResponseAccessContext {
 	return messageResponseAccessForGuild(channel.guildId);
 }
 
@@ -358,6 +320,18 @@ export function messageResponseAccessForGuild(sourceGuildId: GuildID | null): Me
 		sourceGuildId,
 		messageHistoryCutoff: null,
 		canReadMessageHistory: true,
+	};
+}
+
+export async function messageResponseAccessForAuth(
+	authChannel: AuthenticatedChannel,
+): Promise<MessageResponseAccessContext> {
+	const canReadMessageHistory =
+		!authChannel.guild || (await authChannel.hasPermission(Permissions.READ_MESSAGE_HISTORY));
+	return {
+		sourceGuildId: authChannel.channel.guildId,
+		messageHistoryCutoff: canReadMessageHistory ? null : (authChannel.guild?.message_history_cutoff ?? null),
+		canReadMessageHistory,
 	};
 }
 
@@ -420,4 +394,12 @@ export function createMessageResponseDataService(): MessageResponseDataService {
 export function setInjectedMessageResponseDataService(service: MessageResponseDataService | undefined): void {
 	injectedMessageResponseDataService = service;
 	messageResponseDataService = undefined;
+}
+
+export async function adminMessageResponseAccess(
+	channelRepository: Pick<ChannelRepository, 'channelData'>,
+	channelId: ChannelID,
+): Promise<MessageResponseAccessContext> {
+	const channel = await channelRepository.channelData.findUnique(channelId);
+	return {...messageResponseAccessForGuild(channel?.guildId ?? null), includeHidden: true};
 }

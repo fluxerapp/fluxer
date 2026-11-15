@@ -14,12 +14,11 @@ const ScrollSpyContext = React.createContext<ScrollSpyContextValue | null>(null)
 export interface ScrollSpyProviderProps {
 	sectionIds: ReadonlyArray<string>;
 	container: HTMLElement | null;
-	offset?: number;
 	children: React.ReactNode;
 }
 
-export const ScrollSpyProvider: React.FC<ScrollSpyProviderProps> = ({sectionIds, container, offset, children}) => {
-	const {activeSectionId, scrollToSection} = useScrollSpy({sectionIds, container, offset});
+export const ScrollSpyProvider: React.FC<ScrollSpyProviderProps> = ({sectionIds, container, children}) => {
+	const {activeSectionId, scrollToSection} = useScrollSpy({sectionIds, container});
 	const contextValue = useMemo<ScrollSpyContextValue>(
 		() => ({
 			activeSectionId,

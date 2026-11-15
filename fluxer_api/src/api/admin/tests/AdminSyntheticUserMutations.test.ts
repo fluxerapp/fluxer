@@ -20,6 +20,8 @@ const MUTATIONS: Array<{verb: 'put' | 'patch' | 'delete'; path: string; acl: str
 	{verb: 'put', path: 'ban', acl: AdminACLs.USER_TEMP_BAN, body: {duration_hours: 1, reason: 'test'}},
 	{verb: 'put', path: 'deletion', acl: AdminACLs.USER_DELETE, body: {delay_days: 1}},
 	{verb: 'delete', path: 'profile-fields', acl: AdminACLs.USER_UPDATE_PROFILE, body: {fields: ['bio']}},
+	{verb: 'put', path: 'bot-status', acl: AdminACLs.USER_UPDATE_BOT_STATUS, body: {bot: true}},
+	{verb: 'put', path: 'system-status', acl: AdminACLs.USER_UPDATE_BOT_STATUS, body: {system: true}},
 ];
 
 const CASES = SYNTHETIC_USER_IDS.flatMap((userId) =>

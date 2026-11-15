@@ -6,10 +6,10 @@
 -export([
     allow_circuit_request/2,
     update_circuit_state_direct/3,
-    acquire_inflight_slot/2,
+    acquire_inflight_slot/1,
     release_inflight_slot/1,
-    prune_circuit_table/0,
-    is_stale_circuit/3
+    prune_inflight_slots/0,
+    prune_circuit_table/0
 ]).
 -export_type([response/0, circuit/0]).
 
@@ -41,31 +41,31 @@ update_circuit_state_direct(CircuitKey, Result, FailureThreshold) ->
     IsFailure = is_countable_circuit_failure(CircuitKey, Result),
     record_result(CircuitKey, IsFailure, Now, FailureThreshold).
 
--spec acquire_inflight_slot(atom(), pos_integer()) -> ok | {error, overloaded}.
-acquire_inflight_slot(Workload, MaxConcurrency) ->
-    case safe_update_counter(?INFLIGHT_TABLE, Workload, {2, 1}) of
-        {ok, Count} when Count =< MaxConcurrency ->
+-spec acquire_inflight_slot(pos_integer()) -> ok | {error, overloaded}.
+acquire_inflight_slot(MaxConcurrency) ->
+    try
+        true = ets:insert_new(?INFLIGHT_TABLE, {self()}),
+        ets:info(?INFLIGHT_TABLE, size)
+    of
+        Count when Count =< MaxConcurrency ->
             ok;
-        {ok, _Count} ->
-            _ = safe_update_counter(?INFLIGHT_TABLE, Workload, {2, -1}),
-            {error, overloaded};
-        {error, _Reason} ->
+        _Count ->
+            release_inflight_slot(self()),
             {error, overloaded}
+    catch
+        error:_ -> {error, overloaded}
     end.
 
--spec release_inflight_slot(atom()) -> ok.
-release_inflight_slot(Workload) ->
-    case safe_update_counter(?INFLIGHT_TABLE, Workload, {2, -1}) of
-        {ok, V} when V < 0 ->
-            reset_inflight_slot(Workload);
-        _ ->
-            ok
-    end.
+-spec release_inflight_slot(pid()) -> ok.
+release_inflight_slot(Worker) ->
+    safe_delete(?INFLIGHT_TABLE, Worker).
 
--spec reset_inflight_slot(atom()) -> ok.
-reset_inflight_slot(Workload) ->
-    try ets:insert(?INFLIGHT_TABLE, {Workload, 0}) of
-        _ -> ok
+-spec prune_inflight_slots() -> ok.
+prune_inflight_slots() ->
+    try ets:select(?INFLIGHT_TABLE, [{{'$1'}, [], ['$1']}]) of
+        Workers ->
+            Dead = [Worker || Worker <- Workers, not is_process_alive(Worker)],
+            lists:foreach(fun release_inflight_slot/1, Dead)
     catch
         error:badarg -> ok
     end.
@@ -74,8 +74,6 @@ reset_inflight_slot(Workload) ->
 prune_circuit_table() ->
     Now = erlang:system_time(millisecond),
     MaxAgeMs = gateway_http_client:cleanup_max_age_ms(),
-    ok = ensure_named_table(?CIRCUIT_TABLE),
-    ok = ensure_named_table(?CIRCUIT_WINDOW_TABLE),
     try
         _ = ets:foldl(
             fun(Record, Acc) ->
@@ -92,7 +90,8 @@ prune_circuit_table() ->
 
 -spec prune_circuit_record(tuple(), integer(), integer()) -> ok.
 prune_circuit_record({Key, State, OpenedAt, UpdatedAt}, Now, MaxAgeMs) ->
-    delete_stale_circuit(Key, {State, OpenedAt, UpdatedAt}, Now, MaxAgeMs);
+    Circuit = eqwalizer:dynamic_cast({State, OpenedAt, UpdatedAt}),
+    delete_stale_circuit(eqwalizer:dynamic_cast(Key), Circuit, Now, MaxAgeMs);
 prune_circuit_record(_Record, _Now, _MaxAgeMs) ->
     ok.
 
@@ -162,27 +161,6 @@ lookup_window(CircuitKey) ->
         _ -> []
     catch
         error:badarg -> []
-    end.
-
--spec safe_update_counter(atom(), term(), {pos_integer(), integer()}) ->
-    {ok, integer()} | {error, term()}.
-safe_update_counter(Table, Key, Op) ->
-    try
-        {ok, ets:update_counter(Table, Key, Op, {Key, 0})}
-    catch
-        error:badarg ->
-            ok = gateway_http_client:ensure_started(),
-            ok = ensure_named_table(Table),
-            retry_update_counter(Table, Key, Op)
-    end.
-
--spec retry_update_counter(atom(), term(), {pos_integer(), integer()}) ->
-    {ok, integer()} | {error, badarg}.
-retry_update_counter(Table, Key, Op) ->
-    try
-        {ok, ets:update_counter(Table, Key, Op, {Key, 0})}
-    catch
-        error:badarg -> {error, badarg}
     end.
 
 -spec is_countable_circuit_failure({atom(), binary()}, response()) -> boolean().
@@ -273,40 +251,6 @@ safe_insert(Table, Record) ->
         ets:insert(Table, Record),
         ok
     catch
-        error:badarg ->
-            ok = gateway_http_client:ensure_started(),
-            ok = ensure_named_table(Table),
-            retry_insert(Table, Record)
-    end.
-
--spec retry_insert(atom(), tuple()) -> ok.
-retry_insert(Table, Record) ->
-    try
-        ets:insert(Table, Record),
-        ok
-    catch
-        error:badarg -> ok
-    end.
-
--spec ensure_named_table(atom()) -> ok.
-ensure_named_table(Name) ->
-    case ets:whereis(Name) of
-        undefined -> create_named_table(Name);
-        _ -> ok
-    end.
-
--spec create_named_table(atom()) -> ok.
-create_named_table(Name) ->
-    try
-        _ = ets:new(Name, [
-            named_table,
-            public,
-            set,
-            {read_concurrency, true},
-            {write_concurrency, true}
-        ]),
-        ok
-    catch
         error:badarg -> ok
     end.
 
@@ -318,21 +262,3 @@ safe_delete(Table, Key) ->
     catch
         error:badarg -> ok
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-circuit_counts_transport_failures_for_rpc_test() ->
-    ?assertEqual(true, is_countable_circuit_failure({rpc, <<"h">>}, {error, nxdomain})),
-    ?assertEqual(
-        true, is_countable_circuit_failure({rpc, <<"h">>}, {error, {failed_connect, []}})
-    ),
-    ?assertEqual(true, is_countable_circuit_failure({rpc, <<"h">>}, {error, timeout})),
-    ?assertEqual(
-        true, is_countable_circuit_failure({rpc, <<"h">>}, {error, {timeout, connect}})
-    ),
-    ?assertEqual(true, is_countable_circuit_failure({rpc, <<"h">>}, {error, closed})),
-    ?assertEqual(true, is_countable_circuit_failure({rpc, <<"h">>}, {ok, 500, [], <<>>})),
-    ?assertEqual(false, is_countable_circuit_failure({rpc, <<"h">>}, {ok, 200, [], <<>>})).
-
--endif.

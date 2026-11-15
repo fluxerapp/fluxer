@@ -30,12 +30,12 @@ spawn_persist_voice_state_update(GuildId, VoiceState) ->
 -spec resolve_guild_id(voice_state(), guild_state()) -> integer() | undefined.
 resolve_guild_id(VoiceState, State) ->
     case
-        guild_voice_connection_normalize:normalize_positive_snowflake(
+        snowflake_id:parse_maybe(
             maps:get(<<"guild_id">>, VoiceState, undefined)
         )
     of
         undefined ->
-            guild_voice_connection_normalize:normalize_positive_snowflake(
+            snowflake_id:parse_maybe(
                 maps:get(id, State, undefined)
             );
         GuildId ->

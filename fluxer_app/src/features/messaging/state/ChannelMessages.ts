@@ -20,6 +20,8 @@ import {
 } from '@fluxer/constants/src/LimitConstants';
 import type {MessageId} from '@fluxer/schema/src/branded/WireIds';
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import {compare as compareMessageIds} from '@fluxer/snowflake/src/SnowflakeUtils';
+import {compareStructural} from 'mobx';
 
 const IS_MOBILE_CLIENT = /Mobi|Android/i.test(navigator.userAgent);
 
@@ -54,6 +56,14 @@ interface LoadCompleteOptions {
 	cached?: boolean;
 }
 
+interface SeededWindowReconcileOptions {
+	windowMessages: Array<WireMessage>;
+	hasMoreBefore: boolean;
+	hasMoreAfter: boolean;
+	around: boolean;
+	through?: string;
+}
+
 type MessageInput = Message | WireMessage;
 type MissingReactionsBehavior = 'empty' | 'preserve';
 
@@ -69,53 +79,9 @@ function unsentCorrelationKey(message: Message): string {
 	return `${message.author.id}\u0000${message.messageReference?.message_id ?? ''}\u0000${message.content}`;
 }
 
-function embedsEqualIgnoringId(a: unknown, b: unknown): boolean {
-	if (a === b) return true;
-	if (a == null || b == null) return a === b;
-	if (typeof a !== typeof b) return false;
-	if (typeof a !== 'object') return false;
-	if (Array.isArray(a)) {
-		if (!Array.isArray(b) || a.length !== b.length) return false;
-		for (let i = 0; i < a.length; i++) {
-			if (!embedsEqualIgnoringId(a[i], b[i])) return false;
-		}
-		return true;
-	}
-	if (Array.isArray(b)) return false;
-	const aObj = a as Record<string, unknown>;
-	const bObj = b as Record<string, unknown>;
-	const aKeys = Object.keys(aObj);
-	const bKeys = Object.keys(bObj);
-	let aRelevant = aKeys.length;
-	let bRelevant = bKeys.length;
-	if ('id' in aObj) aRelevant--;
-	if ('id' in bObj) bRelevant--;
-	if (aRelevant !== bRelevant) return false;
-	for (const key of aKeys) {
-		if (key === 'id') continue;
-		if (!(key in bObj)) return false;
-		if (!embedsEqualIgnoringId(aObj[key], bObj[key])) return false;
-	}
-	return true;
-}
-
-function shouldUseIncoming(existing: Message, incoming: MessageInput): boolean {
-	const previousEdit = existing.editedTimestamp != null ? +existing.editedTimestamp : 0;
-	const incomingWire = toWireMessage(incoming);
-	const nextEdit = incomingWire.edited_timestamp != null ? +new Date(incomingWire.edited_timestamp) : 0;
-	if (nextEdit > previousEdit) return true;
-	if (existing.content !== incomingWire.content) return true;
-	const existingEmbeds = existing.embeds;
-	const incomingEmbeds = incomingWire.embeds;
-	const existingHasEmbeds = existingEmbeds && existingEmbeds.length > 0;
-	const incomingHasEmbeds = incomingEmbeds && incomingEmbeds.length > 0;
-	if (!existingHasEmbeds && !incomingHasEmbeds) return false;
-	if (!existingHasEmbeds || !incomingHasEmbeds) return true;
-	if (existingEmbeds!.length !== incomingEmbeds!.length) return true;
-	for (let i = 0; i < existingEmbeds!.length; i++) {
-		if (!embedsEqualIgnoringId(existingEmbeds![i], incomingEmbeds![i])) return true;
-	}
-	return false;
+function comparableMessageWire(message: Message): Omit<WireMessage, 'reactions'> {
+	const {reactions: _, ...wire} = message.toBootStateJSON();
+	return wire;
 }
 
 function hydrateMessage(
@@ -130,10 +96,10 @@ function hydrateMessage(
 		MessageReactions.hydrateMessageReactions(wire.id, []);
 	}
 	const current = channelMessages.get(wire.id);
-	if (!current || channelMessages.cached || shouldUseIncoming(current, raw)) {
-		return new Message(wire, {missingReactions});
-	}
-	return current;
+	const incoming = raw instanceof Message ? raw : new Message(wire, {missingReactions});
+	return current !== undefined && compareStructural(comparableMessageWire(current), comparableMessageWire(incoming))
+		? current
+		: incoming;
 }
 
 class MessageBufferSegment {
@@ -177,15 +143,15 @@ class MessageBufferSegment {
 	}
 
 	has(id: string): boolean {
-		return this.keyedById[id] != null;
+		return this.get(id) != null;
 	}
 
 	get(id: string): Message | undefined {
-		return this.keyedById[id];
+		return Object.hasOwn(this.keyedById, id) ? this.keyedById[id] : undefined;
 	}
 
 	remove(id: string): void {
-		if (!this.keyedById[id]) return;
+		if (!this.get(id)) return;
 		delete this.keyedById[id];
 		this.items = this.items.filter((m) => m.id !== id);
 	}
@@ -201,7 +167,7 @@ class MessageBufferSegment {
 	}
 
 	replace(previousId: string, next: Message): void {
-		const existing = this.keyedById[previousId];
+		const existing = this.get(previousId);
 		if (!existing) return;
 		delete this.keyedById[previousId];
 		this.keyedById[next.id] = next;
@@ -210,7 +176,7 @@ class MessageBufferSegment {
 	}
 
 	update(id: string, updater: (m: Message) => Message): void {
-		const current = this.keyedById[id];
+		const current = this.get(id);
 		if (!current) return;
 		const updated = updater(current);
 		this.keyedById[id] = updated;
@@ -327,10 +293,6 @@ export class ChannelMessages {
 		return ChannelMessages.channelCache.get(channelId);
 	}
 
-	static hasNewestMessages(channelId: string): boolean {
-		return ChannelMessages.get(channelId)?.hasNewestMessages() ?? false;
-	}
-
 	static getOrCreate(channelId: string): ChannelMessages {
 		let instance = ChannelMessages.channelCache.get(channelId);
 		if (!instance) {
@@ -363,22 +325,10 @@ export class ChannelMessages {
 		return ChannelMessages.retainedChannelIds.has(channelId);
 	}
 
-	static dropBuffers(channelId: string): void {
-		const instance = ChannelMessages.channelCache.get(channelId);
-		if (!instance) return;
-		instance.beforeBuffer.clear();
-		instance.afterBuffer.clear();
-		ChannelMessages.save(instance);
-	}
-
 	static commit(instance: ChannelMessages): ChannelMessages {
 		ChannelMessages.channelCache.set(instance.channelId, instance);
 		ChannelMessages.markTouched(instance.channelId);
 		return instance;
-	}
-
-	static save(instance: ChannelMessages): void {
-		ChannelMessages.channelCache.set(instance.channelId, instance);
 	}
 
 	private static markTouched(channelId: string): void {
@@ -460,22 +410,10 @@ export class ChannelMessages {
 		this.messageList.forEach(callback, thisArg);
 	}
 
-	reduce<T>(reducer: (memo: T, message: Message, index: number, array: Array<Message>) => T, initial: T): T {
-		return this.messageList.reduce(reducer, initial);
-	}
-
 	forEachBuffered(callback: (m: Message, idx: number, arr: Array<Message>) => void, thisArg?: unknown): void {
 		this.beforeBuffer.forEach(callback, thisArg);
 		this.messageList.forEach(callback, thisArg);
 		this.afterBuffer.forEach(callback, thisArg);
-	}
-
-	searchFromOldest(predicate: (m: Message) => boolean): Message | undefined {
-		return (
-			this.beforeBuffer.messages.find(predicate) ??
-			this.messageList.find(predicate) ??
-			this.afterBuffer.messages.find(predicate)
-		);
 	}
 
 	searchFromNewest(predicate: (m: Message) => boolean): Message | undefined {
@@ -506,7 +444,7 @@ export class ChannelMessages {
 	}
 
 	get(id: string, checkBuffers = false): Message | undefined {
-		const local = this.messageIndex[id];
+		const local = Object.hasOwn(this.messageIndex, id) ? this.messageIndex[id] : undefined;
 		if (local || !checkBuffers) return local;
 		return this.beforeBuffer.get(id) ?? this.afterBuffer.get(id);
 	}
@@ -524,7 +462,7 @@ export class ChannelMessages {
 	}
 
 	has(id: string, checkBuffers = true): boolean {
-		if (this.messageIndex[id]) return true;
+		if (this.get(id)) return true;
 		if (!checkBuffers) return false;
 		return this.beforeBuffer.has(id) || this.afterBuffer.has(id);
 	}
@@ -554,7 +492,7 @@ export class ChannelMessages {
 	}
 
 	update(id: string, updater: (m: Message) => Message): ChannelMessages {
-		const current = this.messageIndex[id];
+		const current = this.get(id);
 		if (!current) {
 			if (this.beforeBuffer.has(id)) {
 				return this.cloneAnd((draft) => draft.beforeBuffer.update(id, updater), true);
@@ -573,7 +511,7 @@ export class ChannelMessages {
 	}
 
 	replace(previousId: string, next: Message): ChannelMessages {
-		const current = this.messageIndex[previousId];
+		const current = this.get(previousId);
 		if (!current) {
 			if (this.beforeBuffer.has(previousId)) {
 				return this.cloneAnd((draft) => draft.beforeBuffer.replace(previousId, next), true);
@@ -825,14 +763,6 @@ export class ChannelMessages {
 		return merged;
 	}
 
-	applyPushPreview(message: MessageInput): ChannelMessages {
-		const wire = toWireMessage(message);
-		const possibleNonce = wire.nonce ?? null;
-		const existing = possibleNonce ? this.get(possibleNonce, true) : null;
-		if (existing) return this;
-		return this.cloneAnd({ready: true, cached: true}).merge([hydrateMessage(this, wire, 'preserve')]);
-	}
-
 	beginLoad(jump?: JumpOptions): ChannelMessages {
 		return this.cloneAnd({
 			loadGeneration: ++nextLoadGeneration,
@@ -908,6 +838,83 @@ export class ChannelMessages {
 			error: false,
 		});
 		return next;
+	}
+
+	mergeSeededNewer(windowMessages: Array<WireMessage>, hasGap: boolean): ChannelMessages {
+		const records = [...windowMessages].reverse().map((message) => hydrateMessage(this, message, 'empty'));
+		return this.merge(records, false, false, true).cloneAnd({
+			ready: true,
+			loadingMore: false,
+			error: false,
+			cached: false,
+			hasMoreAfter: hasGap,
+		});
+	}
+
+	reconcileSeededWindow(options: SeededWindowReconcileOptions): ChannelMessages {
+		const records = [...options.windowMessages]
+			.filter((message) => options.through === undefined || compareMessageIds(message.id, options.through) <= 0)
+			.reverse()
+			.map((m) => hydrateMessage(this, m, 'empty'));
+		const settled = {ready: true, loadingMore: false, cached: false, error: false};
+		const oldest = records[0];
+		const newest = records[records.length - 1];
+		if (oldest == null || newest == null) {
+			if (options.through !== undefined) {
+				const through = options.through;
+				return this.reset(
+					this.messageList.filter(
+						(message) => message.hasFailed || message.isSending || compareMessageIds(message.id, through) > 0,
+					),
+				).cloneAnd({
+					...settled,
+					hasMoreBefore: options.hasMoreBefore,
+					hasMoreAfter: this.hasMoreAfter,
+				});
+			}
+			if (options.around || options.hasMoreBefore) {
+				return this.cloneAnd(settled);
+			}
+			return this.reset(this.messageList.filter((m) => m.hasFailed || m.isSending)).cloneAnd({
+				...settled,
+				hasMoreBefore: false,
+				hasMoreAfter: false,
+			});
+		}
+		const lowerBound = options.hasMoreBefore ? oldest.id : null;
+		let upperBound = options.hasMoreAfter ? newest.id : null;
+		if (options.through !== undefined) upperBound = options.through;
+		const first = this.first();
+		const last = this.last();
+		const covered =
+			first != null &&
+			last != null &&
+			(lowerBound == null || compareMessageIds(lowerBound, last.id) <= 0) &&
+			(upperBound == null || compareMessageIds(upperBound, first.id) >= 0);
+		const skipsPastCachedWindow = last != null && options.hasMoreBefore && compareMessageIds(oldest.id, last.id) > 0;
+		if (!covered && (this.hasMoreAfter || skipsPastCachedWindow)) {
+			return this.cloneAnd({ready: true, loadingMore: false, error: false, hasMoreAfter: true});
+		}
+		if (!covered) {
+			return this.reset(records).cloneAnd({
+				...settled,
+				hasMoreBefore: options.hasMoreBefore,
+				hasMoreAfter: options.hasMoreAfter,
+			});
+		}
+		const inPageRange = (id: string) =>
+			(lowerBound == null || compareMessageIds(id, lowerBound) >= 0) &&
+			(upperBound == null || compareMessageIds(id, upperBound) <= 0);
+		const kept = this.messageList.filter((m) => m.hasFailed || m.isSending || !inPageRange(m.id));
+		const keepsOlder = kept.some((m) => compareMessageIds(m.id, oldest.id) < 0);
+		const keepsNewer = kept.some((m) => !m.isSending && !m.hasFailed && compareMessageIds(m.id, newest.id) > 0);
+		return this.reset(kept)
+			.merge(records, false, false, true)
+			.cloneAnd({
+				...settled,
+				hasMoreBefore: keepsOlder ? this.hasMoreBefore : options.hasMoreBefore,
+				hasMoreAfter: options.through !== undefined || keepsNewer ? this.hasMoreAfter : options.hasMoreAfter,
+			});
 	}
 
 	private collectUnsentMessages(records: Array<Message>): Array<Message> {

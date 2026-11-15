@@ -1,0 +1,107 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+name: rexctl
+
+on:
+  pull_request:
+    paths:
+      - fluxer_rexctl/**
+      - fluxer_admin/openapi-admin.json
+      - fluxer_docs/src/content/docs/operator/rexctl.mdx
+      - fluxer_docs/src/content/docs/operator/environment.mdx
+      - .github/workflows/rexctl.yaml
+  push:
+    branches:
+      - main
+    paths:
+      - fluxer_rexctl/**
+      - fluxer_admin/openapi-admin.json
+      - fluxer_docs/src/content/docs/operator/rexctl.mdx
+      - fluxer_docs/src/content/docs/operator/environment.mdx
+      - .github/workflows/rexctl.yaml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
+    working-directory: fluxer_rexctl
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+        with:
+          go-version: "1.27.x"
+          check-latest: true
+          cache-dependency-path: fluxer_rexctl/go.sum
+
+      - name: gofmt
+        run: |
+          set -euo pipefail
+          unformatted="$(gofmt -l .)"
+          if [ -n "${unformatted}" ]; then
+            echo "${unformatted}" >&2
+            exit 1
+          fi
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: staticcheck
+        run: go run honnef.co/go/tools/cmd/staticcheck@2026.2.2 ./...
+
+      - name: govulncheck
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+
+      - name: comments
+        run: scripts/check-comments.sh
+
+      - name: admin API client is current
+        run: |
+          set -euo pipefail
+          scripts/gen-adminapi.sh
+          git diff --exit-code -- internal/adminapi
+
+      - name: shipped file hashes are current
+        run: |
+          set -euo pipefail
+          go run ./internal/instance/shipped
+          git diff --exit-code -- internal/instance/shipped.json
+
+      - name: tests
+        run: go test -count=1 ./...
+
+      - name: command and environment references are current
+        run: scripts/check-references.sh
+
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+        with:
+          go-version: "1.27.x"
+          check-latest: true
+          cache-dependency-path: fluxer_rexctl/go.sum
+
+      - uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94
+        with:
+          distribution: goreleaser
+          version: v2.18.3
+          workdir: fluxer_rexctl
+          args: release --snapshot --clean --skip=sign,sbom

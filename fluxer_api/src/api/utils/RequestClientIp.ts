@@ -1,9 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isOperatorRequest, OPERATOR_PEER_ADDRESS} from '@app/api/admin/operator/OperatorRequests';
 import {Config} from '@app/api/Config';
+import type {APIConfig} from '@app/api/config/APIConfig';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
-import {extractClientIp, MissingClientIpError, resolveClientIpHeaderName} from '@fluxer/ip_utils/src/ClientIp';
+import {
+	extractClientIp,
+	MissingClientIpError,
+	requireClientIp,
+	resolveClientIpHeaderName,
+} from '@fluxer/ip_utils/src/ClientIp';
+import type {HttpBindings} from '@hono/node-server';
 import type {Context} from 'hono';
+import {createMiddleware} from 'hono/factory';
 
 export interface ClientIpResolution {
 	trustClientIpHeader: boolean;
@@ -14,6 +23,23 @@ export interface ClientIpResolution {
 interface ClientIpResolutionOptions {
 	trustClientIpHeader: boolean;
 	clientIpHeaderName: string;
+}
+
+const peerAddresses = new WeakMap<Request, string>();
+
+export const PeerAddressMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
+	const remoteAddress = (ctx.env as Partial<HttpBindings> | undefined)?.incoming?.socket?.remoteAddress;
+	if (remoteAddress) {
+		peerAddresses.set(ctx.req.raw, remoteAddress);
+	}
+	await next();
+});
+
+function withPeerAddress(request: Request, options: ClientIpResolutionOptions) {
+	if (isOperatorRequest(request)) {
+		return {...options, trustClientIpHeader: false, peerAddress: OPERATOR_PEER_ADDRESS};
+	}
+	return {...options, peerAddress: peerAddresses.get(request) ?? null};
 }
 
 export function resolveClientIpWithOptions(ctx: Context<HonoEnv>, options: ClientIpResolutionOptions): string | null {
@@ -27,16 +53,25 @@ export function resolveClientIpWithOptions(ctx: Context<HonoEnv>, options: Clien
 	) {
 		return cached.ip;
 	}
-	const ip = extractClientIp(ctx.req.raw, {trustClientIpHeader, clientIpHeaderName});
+	const ip = extractClientIp(ctx.req.raw, withPeerAddress(ctx.req.raw, {trustClientIpHeader, clientIpHeaderName}));
 	ctx.set('clientIpResolution', {trustClientIpHeader, clientIpHeaderName, ip});
 	return ip;
 }
 
+function proxyClientIpOptions(proxy: APIConfig['proxy']): ClientIpResolutionOptions {
+	return {trustClientIpHeader: proxy.trust_client_ip_header, clientIpHeaderName: proxy.client_ip_header};
+}
+
+export function extractConfiguredClientIp(request: Request): string | null {
+	return extractClientIp(request, withPeerAddress(request, proxyClientIpOptions(Config.proxy)));
+}
+
+export function requireConfiguredClientIp(request: Request, proxy: APIConfig['proxy']): string {
+	return requireClientIp(request, withPeerAddress(request, proxyClientIpOptions(proxy)));
+}
+
 export function getRequestClientIp(ctx: Context<HonoEnv>): string | null {
-	return resolveClientIpWithOptions(ctx, {
-		trustClientIpHeader: Config.proxy.trust_client_ip_header,
-		clientIpHeaderName: Config.proxy.client_ip_header,
-	});
+	return resolveClientIpWithOptions(ctx, proxyClientIpOptions(Config.proxy));
 }
 
 export function requireRequestClientIp(ctx: Context<HonoEnv>): string {

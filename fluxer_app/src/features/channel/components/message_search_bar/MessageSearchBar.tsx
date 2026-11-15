@@ -385,16 +385,18 @@ export const MessageSearchBar = observer(
 									weight="bold"
 									data-flx="channel.message-search-bar.message-search-bar.search-icon"
 								/>
-								<span
-									className={styles.scopeBadge}
-									data-flx="channel.message-search-bar.message-search-bar.scope-badge"
-								>
-									<ScopeIconComponent
-										size={remFromPx(8)}
-										weight="bold"
-										data-flx="channel.message-search-bar.message-search-bar.scope-icon-component"
-									/>
-								</span>
+								{activeScope !== 'current' && (
+									<span
+										className={styles.scopeBadge}
+										data-flx="channel.message-search-bar.message-search-bar.scope-badge"
+									>
+										<ScopeIconComponent
+											size={remFromPx(8)}
+											weight="bold"
+											data-flx="channel.message-search-bar.message-search-bar.scope-icon-component"
+										/>
+									</span>
+								)}
 							</button>
 						</Tooltip>
 						<LexicalSearchInput

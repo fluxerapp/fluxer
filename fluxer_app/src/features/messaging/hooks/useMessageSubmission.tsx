@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {accountOwnsActiveView} from '@app/features/auth/state/AccountViewOwnership';
 import type {Channel} from '@app/features/channel/models/Channel';
 import * as DraftCommands from '@app/features/messaging/commands/DraftCommands';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
@@ -13,7 +14,7 @@ import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as SlowmodeCommands from '@app/features/slowmode/commands/SlowmodeCommands';
 import {SlowmodeRateLimitedModal} from '@app/features/slowmode/components/alerts/SlowmodeRateLimitedModal';
 import Slowmode from '@app/features/slowmode/state/Slowmode';
-import {TypingUtils} from '@app/features/typing/utils/TypingUtils';
+import RollingTypingSender from '@app/features/typing/rolling/RollingTypingSender';
 import {modal, push as pushModal} from '@app/features/ui/commands/ModalCommands';
 import Personas from '@app/features/user/state/Personas';
 import Users from '@app/features/user/state/Users';
@@ -30,6 +31,7 @@ import {useLingui} from '@lingui/react/macro';
 import {useCallback} from 'react';
 
 interface UseMessageSubmissionOptions {
+	accountKey: string | null;
 	channel: Channel | null;
 	referencedMessage: Message | null;
 	replyingMessage: {messageId: string; mentioning: boolean} | null;
@@ -72,7 +74,30 @@ function isBlockedBySlowmode(channel: Channel): boolean {
 	return true;
 }
 
-export const useMessageSubmission = ({channel, referencedMessage, replyingMessage}: UseMessageSubmissionOptions) => {
+function settlePendingSend(
+	channelId: string,
+	pendingSend: SlowmodeCommands.PendingMessageSend,
+	send: ReturnType<typeof MessageCommands.send>,
+): void {
+	void send
+		.then((sentMessage) => {
+			if (sentMessage) {
+				SlowmodeCommands.confirmMessageSend(channelId, sentMessage.timestamp, pendingSend);
+				return;
+			}
+			SlowmodeCommands.discardPendingMessageSend(channelId, pendingSend);
+		})
+		.catch(() => {
+			SlowmodeCommands.discardPendingMessageSend(channelId, pendingSend);
+		});
+}
+
+export const useMessageSubmission = ({
+	accountKey,
+	channel,
+	referencedMessage,
+	replyingMessage,
+}: UseMessageSubmissionOptions) => {
 	const {i18n} = useLingui();
 	const sendMessage = useCallback(
 		(
@@ -86,18 +111,17 @@ export const useMessageSubmission = ({channel, referencedMessage, replyingMessag
 			const personaSnapshot = persona || Personas.getGlobalActivePersona()?.toSnapshot();
 			const isTtsCall = typeof stickersOrTts === 'boolean';
 			const tts = isTtsCall ? stickersOrTts : undefined;
-			const stickers = isTtsCall
-				? Array.isArray(favoriteMemeIdOrStickers)
-					? favoriteMemeIdOrStickers
-					: []
-					: stickersOrTts;
-			const favoriteMemeId = isTtsCall
-				? maybeFavoriteMemeId
-				: typeof favoriteMemeIdOrStickers === 'string'
-					? favoriteMemeIdOrStickers
-					: undefined;
+			let stickers: Array<MessageStickerItem>;
+			let favoriteMemeId: string | undefined;
+			if (isTtsCall) {
+				stickers = Array.isArray(favoriteMemeIdOrStickers) ? favoriteMemeIdOrStickers : [];
+				favoriteMemeId = maybeFavoriteMemeId;
+			} else {
+				stickers = stickersOrTts;
+				favoriteMemeId = typeof favoriteMemeIdOrStickers === 'string' ? favoriteMemeIdOrStickers : undefined;
+			}
 			const currentUser = Users.getCurrentUser();
-			if (!channel || !currentUser) return false;
+			if (!channel || !currentUser || !accountOwnsActiveView(accountKey)) return false;
 			const hasNonTextContent =
 				hasAttachments ||
 				stickers.length > 0 ||
@@ -108,8 +132,8 @@ export const useMessageSubmission = ({channel, referencedMessage, replyingMessag
 			const nonce = SnowflakeUtils.fromTimestamp(Date.now());
 			if (!MessageCommands.reserveSend(channel.id, nonce)) return false;
 			const messageReference = MessageSubmitUtils.prepareMessageReference(channel.id, referencedMessage);
-			TypingUtils.handleOwnMessageSent(channel.id);
-			DraftCommands.deleteDraft(channel.id);
+			RollingTypingSender.handleOwnMessageSent(channel.id);
+			DraftCommands.deleteDraft(accountKey, channel.id);
 			MessageCommands.stopReply(channel.id);
 			const uploadingAttachments = MessageSubmitUtils.createUploadingAttachments(
 				MessageSubmitUtils.claimMessageAttachments(
@@ -145,33 +169,26 @@ export const useMessageSubmission = ({channel, referencedMessage, replyingMessag
 			});
 			SlowmodeCommands.prepareMessageSend(channel.id);
 			const pendingSend = SlowmodeCommands.recordPendingMessageSend(channel.id);
-			console.log("Fdsfasdfsa", persona, personaSnapshot);
-			void MessageCommands.send(channel.id, {
-				content: message.content,
-				nonce,
-				hasAttachments: hasAttachmentsFinal,
-				allowedMentions,
-				messageReference,
-				flags: message.flags,
-				stickers,
-				favoriteMemeId,
-				tts,
-				persona: personaSnapshot
-			})
-				.then((sentMessage) => {
-					if (sentMessage) {
-						SlowmodeCommands.confirmMessageSend(channel.id, sentMessage.timestamp, pendingSend);
-						return;
-					}
-					SlowmodeCommands.discardPendingMessageSend(channel.id, pendingSend);
-				})
-				.catch(() => {
-					SlowmodeCommands.discardPendingMessageSend(channel.id, pendingSend);
-				});
+			settlePendingSend(
+				channel.id,
+				pendingSend,
+				MessageCommands.send(channel.id, {
+					content: message.content,
+					nonce,
+					hasAttachments: hasAttachmentsFinal,
+					allowedMentions,
+					messageReference,
+					flags: message.flags,
+					stickers,
+					favoriteMemeId,
+					tts,
+					persona: personaSnapshot,
+				}),
+			);
 			ComponentBus.dispatch('MESSAGE_SENT', {channelId: channel.id});
 			return true;
 		},
-		[channel?.id, i18n, referencedMessage, replyingMessage],
+		[accountKey, channel?.id, i18n, referencedMessage, replyingMessage],
 	);
 	const sendOptimisticMessage = useCallback(
 		(
@@ -187,11 +204,11 @@ export const useMessageSubmission = ({channel, referencedMessage, replyingMessag
 			},
 		) => {
 			const currentUser = Users.getCurrentUser();
-			if (!channel || !currentUser) return;
+			if (!channel || !currentUser || !accountOwnsActiveView(accountKey)) return;
 			if (isBlockedBySlowmode(channel)) return;
 			const nonce = SnowflakeUtils.fromTimestamp(Date.now());
 			if (!MessageCommands.reserveSend(channel.id, nonce)) return;
-			TypingUtils.handleOwnMessageSent(channel.id);
+			RollingTypingSender.handleOwnMessageSent(channel.id);
 			MessageCommands.stopReply(channel.id);
 			const message = new Message({
 				id: nonce,
@@ -221,32 +238,26 @@ export const useMessageSubmission = ({channel, referencedMessage, replyingMessag
 			SlowmodeCommands.prepareMessageSend(channel.id);
 			const allowedMentions: AllowedMentions = {replied_user: replyingMessage?.mentioning ?? true};
 			const pendingSend = SlowmodeCommands.recordPendingMessageSend(channel.id);
-			void MessageCommands.send(channel.id, {
-				content: messageData.content,
-				nonce,
-				hasAttachments: sendOptions.hasAttachments,
-				allowedMentions,
-				messageReference: referencedMessage
-					? {channel_id: channel.id, message_id: referencedMessage.id, type: 0}
-					: undefined,
-				flags: 0,
-				stickers: messageData.stickers || [],
-				favoriteMemeId: sendOptions.favoriteMemeId,
-				persona: messageData.persona,
-			})
-				.then((sentMessage) => {
-					if (sentMessage) {
-						SlowmodeCommands.confirmMessageSend(channel.id, sentMessage.timestamp, pendingSend);
-						return;
-					}
-					SlowmodeCommands.discardPendingMessageSend(channel.id, pendingSend);
-				})
-				.catch(() => {
-					SlowmodeCommands.discardPendingMessageSend(channel.id, pendingSend);
-				});
+			settlePendingSend(
+				channel.id,
+				pendingSend,
+				MessageCommands.send(channel.id, {
+					content: messageData.content,
+					nonce,
+					hasAttachments: sendOptions.hasAttachments,
+					allowedMentions,
+					messageReference: referencedMessage
+						? {channel_id: channel.id, message_id: referencedMessage.id, type: 0}
+						: undefined,
+					flags: 0,
+					stickers: messageData.stickers || [],
+					favoriteMemeId: sendOptions.favoriteMemeId,
+					persona: messageData.persona,
+				}),
+			);
 			ComponentBus.dispatch('MESSAGE_SENT', {channelId: channel.id});
 		},
-		[channel?.id, referencedMessage, replyingMessage],
+		[accountKey, channel?.id, referencedMessage, replyingMessage],
 	);
 	return {sendMessage, sendOptimisticMessage};
 };

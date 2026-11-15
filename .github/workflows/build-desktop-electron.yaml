@@ -1,0 +1,48 @@
+name: build desktop Electron
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-electron-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build patched Electron (linux-${{ matrix.arch }})
+    runs-on: [self-hosted, Linux, X64, fluxer-electron-build]
+    timeout-minutes: 1440
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        arch: [x64, arm64]
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Build patched Electron distribution
+        env:
+          CONTAINER_ENGINE: podman
+          CONTAINER_CPUS: "8"
+          CONTAINER_MEMORY: 48g
+          BUILD_JOBS: "8"
+        run: >-
+          bash fluxer_desktop/electron/build-linux.sh
+          --arch "${{ matrix.arch }}"
+          --build-root /srv/fluxer-electron-build/work
+          --output-dir "${{ runner.temp }}/fluxer-electron-artifacts"
+
+      - name: Upload patched Electron distribution
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: desktop-electron-linux-${{ matrix.arch }}
+          path: |
+            ${{ runner.temp }}/fluxer-electron-artifacts/electron-v*-linux-${{ matrix.arch }}.zip
+            ${{ runner.temp }}/fluxer-electron-artifacts/electron-v*-linux-${{ matrix.arch }}.fluxer.json
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0

@@ -7,12 +7,11 @@ import type React from 'react';
 interface SectionCardProps {
 	title: React.ReactNode;
 	subtitle?: React.ReactNode;
-	actions?: React.ReactNode;
 	tone?: 'default' | 'danger';
 	children: React.ReactNode;
 }
 
-export const SectionCard: React.FC<SectionCardProps> = ({title, subtitle, actions, children, tone = 'default'}) => {
+export const SectionCard: React.FC<SectionCardProps> = ({title, subtitle, children, tone = 'default'}) => {
 	return (
 		<section
 			className={clsx(styles.card, tone === 'danger' && styles.cardDanger)}
@@ -32,14 +31,6 @@ export const SectionCard: React.FC<SectionCardProps> = ({title, subtitle, action
 						</p>
 					)}
 				</div>
-				{actions && (
-					<div
-						className={styles.cardActions}
-						data-flx="user.applications-tab.application-detail.section-card.card-actions"
-					>
-						{actions}
-					</div>
-				)}
 			</div>
 			<div className={styles.cardBody} data-flx="user.applications-tab.application-detail.section-card.card-body">
 				{children}

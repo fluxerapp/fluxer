@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {IDonationService} from '@app/api/donation/IDonationService';
 import type {DonationCheckoutService} from '@app/api/donation/services/DonationCheckoutService';
 import type {DonationMagicLinkService} from '@app/api/donation/services/DonationMagicLinkService';
 import type {DonationCurrency} from '@fluxer/schema/src/domains/donation/DonationSchemas';
 
-export class DonationService implements IDonationService {
+export class DonationService {
 	constructor(
 		private magicLinkService: DonationMagicLinkService,
 		private checkoutService: DonationCheckoutService,

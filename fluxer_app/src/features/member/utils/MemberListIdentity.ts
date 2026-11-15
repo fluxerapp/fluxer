@@ -2,7 +2,7 @@
 
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 
-export interface MemberListViewOverwrite {
+interface MemberListViewOverwrite {
 	readonly id: string;
 	readonly allow: bigint;
 	readonly deny: bigint;
@@ -17,7 +17,7 @@ export interface MemberListIdentityGuild {
 	getRole(roleId: string): {readonly permissions: bigint} | undefined;
 }
 
-export const OPEN_MEMBER_LIST_IDENTITY = 'everyone';
+const OPEN_MEMBER_LIST_IDENTITY = 'everyone';
 
 const IDENTITY_TOKEN_SEPARATOR = ',';
 const SCRAMBLE_A = 0xcc9e2d51;
@@ -35,7 +35,7 @@ function scramble(value: number): number {
 	return Math.imul(rotateLeft32(Math.imul(value, SCRAMBLE_A), 15), SCRAMBLE_B);
 }
 
-export function fingerprintIdentityTokens(tokens: string): number {
+function fingerprintIdentityTokens(tokens: string): number {
 	const bytes = identityTokenEncoder.encode(tokens);
 	const blockCount = bytes.length >>> 2;
 	let accumulator = 0;
@@ -90,7 +90,7 @@ function isViewableWithoutOverrides(
 	return true;
 }
 
-export function buildIdentityTokens(channel: MemberListIdentityChannel): string {
+function buildIdentityTokens(channel: MemberListIdentityChannel): string {
 	const tokens: Array<string> = [];
 	for (const overwrite of Object.values(channel.permissionOverwrites)) {
 		if ((overwrite.allow & Permissions.VIEW_CHANNEL) === Permissions.VIEW_CHANNEL) {

@@ -5,9 +5,6 @@ import type {Guild} from '@app/features/guild/models/Guild';
 import type {SettingsSubtab, SettingsTab} from '@app/features/user/components/settings_utils/SettingsConstants';
 import type {User} from '@app/features/user/models/User';
 import type {QuickSwitcherResultType, QuickSwitcherResultTypes} from '@fluxer/constants/src/QuickSwitcherConstants';
-import {DAYS_PER_WEEK, MS_PER_DAY} from '@fluxer/date_utils/src/DateConstants';
-
-export const UNREAD_SORT_WEIGHT_BOOST = DAYS_PER_WEEK * MS_PER_DAY;
 export const QUICK_SWITCHER_OVERLAY_ID = 'nav_quick_switcher';
 export const MEMBER_SEARCH_LIMIT = 25;
 
@@ -29,6 +26,7 @@ export interface HeaderResult {
 	type: typeof QuickSwitcherResultTypes.HEADER;
 	id: string;
 	title: string;
+	accountKey?: string;
 }
 
 export interface UserResult {
@@ -38,7 +36,6 @@ export interface UserResult {
 	subtitle?: string;
 	user: User;
 	dmChannelId: string | null;
-	viewContext?: string;
 }
 
 export interface GroupDMResult {
@@ -47,7 +44,6 @@ export interface GroupDMResult {
 	title: string;
 	subtitle?: string;
 	channel: Channel;
-	viewContext?: string;
 }
 
 export interface TextChannelResult {
@@ -57,7 +53,6 @@ export interface TextChannelResult {
 	subtitle?: string;
 	channel: Channel;
 	guild: Guild | null;
-	viewContext?: string;
 }
 
 export interface VoiceChannelResult {
@@ -67,7 +62,6 @@ export interface VoiceChannelResult {
 	subtitle?: string;
 	channel: Channel;
 	guild: Guild | null;
-	viewContext?: string;
 }
 
 export interface GuildResult {
@@ -103,6 +97,35 @@ export interface LinkResult {
 	path: string;
 }
 
+export interface AccountResult {
+	type: typeof QuickSwitcherResultTypes.ACCOUNT;
+	id: string;
+	title: string;
+	subtitle?: string;
+	accountKey: string;
+	accountName: string;
+	mentionCount: number;
+	hasUnread: boolean;
+	moreCount: number | null;
+}
+
+export interface AccountChannelResult {
+	type: typeof QuickSwitcherResultTypes.ACCOUNT_CHANNEL;
+	id: string;
+	title: string;
+	subtitle?: string;
+	accountKey: string;
+	accountName: string;
+	channelId: string;
+	guildId: string | null;
+	guildName: string | null;
+	channelType: number;
+	mentionCount: number;
+	unread: boolean;
+}
+
+export type QuickSwitcherScope = 'all' | 'other_accounts';
+
 export type QuickSwitcherResult =
 	| HeaderResult
 	| UserResult
@@ -112,7 +135,9 @@ export type QuickSwitcherResult =
 	| GuildResult
 	| VirtualGuildResult
 	| SettingsResult
-	| LinkResult;
+	| LinkResult
+	| AccountResult
+	| AccountChannelResult;
 export type QuickSwitcherExecutableResult = Exclude<QuickSwitcherResult, HeaderResult>;
 
 interface CandidateBase<T extends QuickSwitcherResultType> {

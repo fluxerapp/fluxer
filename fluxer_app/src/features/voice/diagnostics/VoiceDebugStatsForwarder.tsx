@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import {useStatsForNerds} from '@app/features/voice/components/useStatsForNerds';
 import {
@@ -14,6 +15,7 @@ import type {StatsForNerdsData} from '@app/features/voice/utils/VoiceStatsForNer
 import {useEffect, useRef} from 'react';
 
 const VOICE_DEBUG_STATS_FORWARD_INTERVAL_MS = 2000;
+const logger = new Logger('VoiceDebugStatsForwarder');
 
 let activeForwarderCount = 0;
 
@@ -21,21 +23,25 @@ function getGeneratedAtIso(): string {
 	return new Date().toISOString();
 }
 
+function publishHtml(render: Promise<string>): void {
+	void render
+		.then((html) => {
+			getElectronAPI()?.setVoiceDebugEventSinkStatsHtml?.(html);
+			setBrowserVoiceDebugEventSinkStatsHtml(html);
+		})
+		.catch((error) => {
+			logger.warn('Failed to render voice debug stats', error);
+		});
+}
+
 function publishStatsHtml(data: StatsForNerdsData): void {
-	const electron = getElectronAPI();
-	const html = renderVoiceDebugStatsHtml(data, getGeneratedAtIso());
-	electron?.setVoiceDebugEventSinkStatsHtml?.(html);
-	setBrowserVoiceDebugEventSinkStatsHtml(html);
+	publishHtml(renderVoiceDebugStatsHtml(data, getGeneratedAtIso()));
 }
 
 function publishUnavailableStatsHtml(): void {
-	const electron = getElectronAPI();
-	const html = renderVoiceDebugStatsUnavailableHtml(
-		'No active voice call stats snapshot is available.',
-		getGeneratedAtIso(),
+	publishHtml(
+		renderVoiceDebugStatsUnavailableHtml('No active voice call stats snapshot is available.', getGeneratedAtIso()),
 	);
-	electron?.setVoiceDebugEventSinkStatsHtml?.(html);
-	setBrowserVoiceDebugEventSinkStatsHtml(html);
 }
 
 export function VoiceDebugStatsForwarder(): null {

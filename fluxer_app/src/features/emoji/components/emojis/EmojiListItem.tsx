@@ -46,10 +46,6 @@ const EMOJI_NAME_MUST_BE_AT_MOST_32_CHARACTERS_DESCRIPTOR = msg({
 	message: 'Emoji name must be at most 32 characters long',
 	comment: 'Validation error for custom emoji names.',
 });
-const INVALID_EMOJI_NAME_TITLE_DESCRIPTOR = msg({
-	message: 'Invalid emoji name',
-	comment: 'Title of the error modal shown when a custom emoji name fails validation.',
-});
 const RENAME_FAILED_TITLE_DESCRIPTOR = msg({
 	message: "Couldn't rename this emoji",
 	comment: 'Title of the generic fallback error modal shown when renaming a custom emoji fails.',
@@ -288,7 +284,7 @@ const EmojiRenamePopoutContent: React.FC<EmojiRenamePopoutContentProps> = ({init
 					data-flx="emoji.emojis.emoji-list-item.emoji-rename-popout-content.rename-popout-hint"
 				>
 					<Trans comment="Help text for custom emoji names. Emoji names may use letters, numbers, and underscores only.">
-						2–32 characters: letters, numbers, and underscores.
+						2 to 32 characters, using only letters, numbers, and underscores.
 					</Trans>
 				</span>
 			</div>
@@ -355,27 +351,14 @@ export const EmojiListItem: React.FC<{
 	const {i18n} = useLingui();
 	const avatarUrl = emoji.user ? AvatarUtils.getUserAvatarURL(emoji.user, false) : null;
 	const gridNameButtonRef = useRef<HTMLButtonElement | null>(null);
-	const showEmojiNameValidationError = (message: string) => {
-		ModalCommands.push(
-			modal(() => (
-				<GenericErrorModal
-					title={i18n._(INVALID_EMOJI_NAME_TITLE_DESCRIPTOR)}
-					message={message}
-					data-flx="emoji.emojis.emoji-list-item.name-validation-error-modal"
-				/>
-			)),
-		);
+	const getEmojiNameError = (name: string): string | null => {
+		const sanitizedName = name.replace(/[^a-zA-Z0-9_]/g, '');
+		if (sanitizedName.length < 2) return i18n._(EMOJI_NAME_MUST_BE_AT_LEAST_2_CHARACTERS_DESCRIPTOR);
+		if (sanitizedName.length > 32) return i18n._(EMOJI_NAME_MUST_BE_AT_MOST_32_CHARACTERS_DESCRIPTOR);
+		return null;
 	};
 	const handleSave = async (newName: string) => {
 		const sanitizedName = newName.replace(/[^a-zA-Z0-9_]/g, '');
-		if (sanitizedName.length < 2) {
-			showEmojiNameValidationError(i18n._(EMOJI_NAME_MUST_BE_AT_LEAST_2_CHARACTERS_DESCRIPTOR));
-			throw new Error('Name too short');
-		}
-		if (sanitizedName.length > 32) {
-			showEmojiNameValidationError(i18n._(EMOJI_NAME_MUST_BE_AT_MOST_32_CHARACTERS_DESCRIPTOR));
-			throw new Error('Name too long');
-		}
 		if (sanitizedName === emoji.name) return;
 		const prevName = emoji.name;
 		onRename(emoji.id, sanitizedName);
@@ -556,6 +539,7 @@ export const EmojiListItem: React.FC<{
 						<InlineEdit
 							value={emoji.name}
 							onSave={handleSave}
+							getValidationError={getEmojiNameError}
 							prefix=":"
 							suffix=":"
 							maxLength={32}

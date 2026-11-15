@@ -16,7 +16,7 @@
 	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 	transition-duration: 150ms;
 	cursor: pointer;
-	text-align: left;
+	text-align: start;
 	color: var(--text-primary-muted);
 }
 
@@ -88,7 +88,7 @@
 }
 
 .iconsAndToggle {
-	margin-left: auto;
+	margin-inline-start: auto;
 	display: flex;
 	align-items: center;
 	gap: 0.25rem;
@@ -96,7 +96,7 @@
 
 .devicesContainer {
 	margin-top: 0.125rem;
-	margin-left: 1rem;
+	margin-inline-start: 1rem;
 	display: flex;
 	flex-direction: column;
 	gap: 0.125rem;

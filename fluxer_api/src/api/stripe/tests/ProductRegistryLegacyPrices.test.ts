@@ -2,12 +2,11 @@
 
 import {Config} from '@app/api/Config';
 import {ProductRegistry, ProductType} from '@app/api/stripe/ProductRegistry';
-import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {afterAll, beforeAll, describe, expect, test} from 'vitest';
 
 // Mirrors the live BRL/TRY configuration after the repricing: the BRL slots point at the new list
 // prices, TRY is not configured at all (production has no TRY prices), and every retired price id
-// lives only in the legacy map.
+// is only in the legacy map.
 const MOCK_PRICES = {
 	monthlyUsd: 'price_monthly_usd',
 	monthlyBrl: 'price_1TMbqsFPC94Os7FdfElrIIaZ',
@@ -59,7 +58,6 @@ describe('ProductRegistry - legacy prices', () => {
 			const registry = buildRegistry(MOCK_PRICES, MOCK_LEGACY_PRICES);
 			expect(registry.getProduct(LEGACY_MONTHLY_BRL)).toEqual({
 				type: ProductType.MONTHLY_SUBSCRIPTION,
-				premiumType: UserPremiumTypes.SUBSCRIPTION,
 				durationMonths: 1,
 				isGift: false,
 				currency: 'BRL',
@@ -71,7 +69,6 @@ describe('ProductRegistry - legacy prices', () => {
 			const registry = buildRegistry(MOCK_PRICES, MOCK_LEGACY_PRICES);
 			expect(registry.getProduct(LEGACY_YEARLY_BRL)).toEqual({
 				type: ProductType.YEARLY_SUBSCRIPTION,
-				premiumType: UserPremiumTypes.SUBSCRIPTION,
 				durationMonths: 12,
 				isGift: false,
 				currency: 'BRL',
@@ -84,7 +81,6 @@ describe('ProductRegistry - legacy prices', () => {
 			const info = registry.getProduct(LEGACY_GIFT_1_MONTH_BRL);
 			expect(info).toEqual({
 				type: ProductType.GIFT_1_MONTH,
-				premiumType: UserPremiumTypes.SUBSCRIPTION,
 				durationMonths: 1,
 				isGift: true,
 				currency: 'BRL',
@@ -97,7 +93,6 @@ describe('ProductRegistry - legacy prices', () => {
 			const info = registry.getProduct(LEGACY_GIFT_1_YEAR_BRL);
 			expect(info).toEqual({
 				type: ProductType.GIFT_1_YEAR,
-				premiumType: UserPremiumTypes.SUBSCRIPTION,
 				durationMonths: 12,
 				isGift: true,
 				currency: 'BRL',
@@ -121,6 +116,7 @@ describe('ProductRegistry - legacy prices', () => {
 					monthly_brl: ['legacy_brl'],
 					monthly_dkk: ['legacy_dkk'],
 					monthly_inr: ['legacy_inr'],
+					monthly_isk: ['legacy_isk'],
 					monthly_nok: ['legacy_nok'],
 					monthly_pln: ['legacy_pln'],
 					monthly_sek: ['legacy_sek'],
@@ -132,6 +128,7 @@ describe('ProductRegistry - legacy prices', () => {
 			expect(registry.getProduct('legacy_brl')?.currency).toBe('BRL');
 			expect(registry.getProduct('legacy_dkk')?.currency).toBe('DKK');
 			expect(registry.getProduct('legacy_inr')?.currency).toBe('INR');
+			expect(registry.getProduct('legacy_isk')?.currency).toBe('ISK');
 			expect(registry.getProduct('legacy_nok')?.currency).toBe('NOK');
 			expect(registry.getProduct('legacy_pln')?.currency).toBe('PLN');
 			expect(registry.getProduct('legacy_sek')?.currency).toBe('SEK');
@@ -196,7 +193,6 @@ describe('ProductRegistry - legacy prices', () => {
 
 			expect(registry.getProduct(LEGACY_MONTHLY_TRY)).toEqual({
 				type: ProductType.MONTHLY_SUBSCRIPTION,
-				premiumType: UserPremiumTypes.SUBSCRIPTION,
 				durationMonths: 1,
 				isGift: false,
 				currency: 'TRY',
@@ -211,7 +207,7 @@ describe('ProductRegistry - legacy prices', () => {
 		test('no legacy price id is ever returned by either price getter, for any cycle or currency', () => {
 			const registry = buildRegistry(MOCK_PRICES, MOCK_LEGACY_PRICES);
 			const legacyIds = new Set(Object.values(MOCK_LEGACY_PRICES).flatMap((ids) => ids ?? []));
-			const currencies = ['USD', 'EUR', 'BRL', 'DKK', 'INR', 'NOK', 'PLN', 'SEK', 'TRY'];
+			const currencies = ['USD', 'EUR', 'BRL', 'DKK', 'INR', 'ISK', 'NOK', 'PLN', 'SEK', 'TRY'];
 
 			const offered: Array<string> = [];
 			for (const currency of currencies) {
@@ -253,7 +249,6 @@ describe('ProductRegistry - legacy prices', () => {
 			});
 			expect(registry.getProduct(MOCK_PRICES.monthlyBrl)).toEqual({
 				type: ProductType.MONTHLY_SUBSCRIPTION,
-				premiumType: UserPremiumTypes.SUBSCRIPTION,
 				durationMonths: 1,
 				isGift: false,
 				currency: 'BRL',
@@ -267,7 +262,6 @@ describe('ProductRegistry - legacy prices', () => {
 			});
 			expect(registry.getProduct(MOCK_PRICES.gift1YearBrl)).toEqual({
 				type: ProductType.GIFT_1_YEAR,
-				premiumType: UserPremiumTypes.SUBSCRIPTION,
 				durationMonths: 12,
 				isGift: true,
 				currency: 'BRL',
@@ -284,93 +278,11 @@ describe('ProductRegistry - legacy prices', () => {
 			);
 			expect(registry.getProduct('legacy_shared')).toEqual({
 				type: ProductType.MONTHLY_SUBSCRIPTION,
-				premiumType: UserPremiumTypes.SUBSCRIPTION,
 				durationMonths: 1,
 				isGift: false,
 				currency: 'BRL',
 				billingCycle: 'monthly',
 			});
-		});
-	});
-
-	describe('malformed configuration', () => {
-		test('a slot whose value is a bare string is ignored and the rest still registers', () => {
-			const registry = buildRegistry(MOCK_PRICES, {
-				monthly_brl: 'price_legacy_bare_string' as unknown as Array<string>,
-				yearly_brl: [LEGACY_YEARLY_BRL],
-			});
-			expect(registry.getProduct('price_legacy_bare_string')).toBeNull();
-			// Not accidentally registered character by character either.
-			expect(registry.getProduct('p')).toBeNull();
-			expect(registry.getProduct(LEGACY_YEARLY_BRL)?.type).toBe(ProductType.YEARLY_SUBSCRIPTION);
-		});
-
-		test('a slot with an unrecognised name is ignored and the rest still registers', () => {
-			const registry = buildRegistry(MOCK_PRICES, {
-				weekly_brl: ['legacy_weekly'],
-				visionary_usd: ['legacy_visionary'],
-				brl: ['legacy_no_separator'],
-				_brl: ['legacy_leading_separator'],
-				yearly_brl: [LEGACY_YEARLY_BRL],
-			});
-			expect(registry.getProduct('legacy_weekly')).toBeNull();
-			expect(registry.getProduct('legacy_visionary')).toBeNull();
-			expect(registry.getProduct('legacy_no_separator')).toBeNull();
-			expect(registry.getProduct('legacy_leading_separator')).toBeNull();
-			expect(registry.getProduct(LEGACY_YEARLY_BRL)?.type).toBe(ProductType.YEARLY_SUBSCRIPTION);
-		});
-
-		test('a slot with an unknown currency is ignored and the rest still registers', () => {
-			const registry = buildRegistry(MOCK_PRICES, {
-				monthly_jpy: ['legacy_jpy'],
-				gift_1_year_gbp: ['legacy_gbp'],
-				monthly_brl: [LEGACY_MONTHLY_BRL],
-			});
-			expect(registry.getProduct('legacy_jpy')).toBeNull();
-			expect(registry.getProduct('legacy_gbp')).toBeNull();
-			expect(registry.getProduct(LEGACY_MONTHLY_BRL)?.currency).toBe('BRL');
-		});
-
-		test('empty, blank and undefined entries inside a slot are skipped', () => {
-			const registry = buildRegistry(MOCK_PRICES, {
-				monthly_brl: ['', undefined as unknown as string, LEGACY_MONTHLY_BRL],
-			});
-			expect(registry.getProduct('')).toBeNull();
-			expect(registry.getProduct(LEGACY_MONTHLY_BRL)?.currency).toBe('BRL');
-		});
-
-		test('an undefined slot value is ignored', () => {
-			const registry = buildRegistry(MOCK_PRICES, {
-				monthly_try: undefined,
-				monthly_brl: [LEGACY_MONTHLY_BRL],
-			});
-			expect(registry.getProduct(LEGACY_MONTHLY_BRL)?.currency).toBe('BRL');
-		});
-
-		test('an array-valued legacy map is ignored without throwing', () => {
-			const registry = buildRegistry(MOCK_PRICES, [
-				'price_legacy_array',
-			] as unknown as typeof Config.stripe.legacyPrices);
-			expect(registry.getProduct('price_legacy_array')).toBeNull();
-			// The authored prices are untouched.
-			expect(registry.getProduct(MOCK_PRICES.monthlyBrl)?.currency).toBe('BRL');
-			expect(registry.getRecurringSubscriptionPriceId('monthly', 'BRL')).toBe(MOCK_PRICES.monthlyBrl);
-		});
-
-		test('a string-valued legacy map is ignored without throwing', () => {
-			const registry = buildRegistry(MOCK_PRICES, 'nonsense' as unknown as typeof Config.stripe.legacyPrices);
-			expect(registry.getProduct('nonsense')).toBeNull();
-			expect(registry.getProduct(MOCK_PRICES.monthlyBrl)?.currency).toBe('BRL');
-		});
-
-		test('a number-valued legacy map is ignored without throwing', () => {
-			const registry = buildRegistry(MOCK_PRICES, 42 as unknown as typeof Config.stripe.legacyPrices);
-			expect(registry.getProduct(MOCK_PRICES.monthlyBrl)?.currency).toBe('BRL');
-		});
-
-		test('an absent or empty legacy map leaves the authored registry intact', () => {
-			expect(buildRegistry(MOCK_PRICES, undefined).getProduct(MOCK_PRICES.monthlyBrl)?.currency).toBe('BRL');
-			expect(buildRegistry(MOCK_PRICES, {}).getProduct(MOCK_PRICES.monthlyBrl)?.currency).toBe('BRL');
 		});
 	});
 });

@@ -19,20 +19,8 @@ type RelationshipCommand =
 	| {kind: 'block'; userId: string}
 	| {kind: 'nickname'; userId: string; nickname: string | null};
 
-interface BulkIgnoreResponse {
-	ignored_count: number;
-}
-
 function friendRequestBody(options: SendFriendRequestOptions): Record<string, boolean> {
 	return options.staffForceAccept ? {staff_force_accept: true} : {};
-}
-
-function bulkIgnoreBody(filter: 'all' | 'new_accounts', maxAccountAgeSeconds?: number): Record<string, unknown> {
-	const body: Record<string, unknown> = {filter};
-	if (filter === 'new_accounts' && maxAccountAgeSeconds != null) {
-		body.max_account_age_seconds = maxAccountAgeSeconds;
-	}
-	return body;
 }
 
 async function dispatchRelationshipCommand(command: RelationshipCommand): Promise<void> {
@@ -110,19 +98,5 @@ export async function updateFriendNickname(userId: string, nickname: string | nu
 		await dispatchRelationshipCommand({kind: 'nickname', userId, nickname});
 	} catch (error) {
 		rethrowRelationshipFailure('Failed to update friend nickname:', error);
-	}
-}
-
-export async function bulkIgnoreFriendRequests(
-	filter: 'all' | 'new_accounts' = 'all',
-	maxAccountAgeSeconds?: number,
-): Promise<BulkIgnoreResponse> {
-	try {
-		const response = await http.post<BulkIgnoreResponse>(Endpoints.USER_RELATIONSHIPS_BULK_IGNORE, {
-			body: bulkIgnoreBody(filter, maxAccountAgeSeconds),
-		});
-		return response.body;
-	} catch (error) {
-		rethrowRelationshipFailure('Failed to bulk ignore friend requests:', error);
 	}
 }

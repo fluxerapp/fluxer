@@ -297,14 +297,30 @@ export class UserEmailOwnershipRepository {
 		};
 	}
 
-	async finalizeEmailClaim(reservation: EmailClaimReservation | null): Promise<void> {
+	async finalizeEmailClaim(reservation: EmailClaimReservation | null): Promise<boolean> {
 		if (!reservation?.newlyClaimed) {
-			return;
+			return true;
 		}
-		const result = await this.finalizeValkeyOwner(reservation.emailLower, reservation.userId, reservation.token);
-		if (result.status !== 'finalized') {
-			throw new Error(`Failed to finalize email claim for ${reservation.emailLower}: ${result.status}`);
+		const {emailLower, userId} = reservation;
+		const result = await this.finalizeValkeyOwner(emailLower, userId, reservation.token);
+		if (result.status === 'finalized') {
+			return true;
 		}
+		if (await this.findConflictingOwnerId(emailLower, userId)) {
+			return false;
+		}
+		const claimResult = await this.claimValkeyOwner(emailLower, userId);
+		if (claimResult.status === 'conflict') {
+			return false;
+		}
+		if (claimResult.status === 'pending') {
+			const reclaimed = await this.finalizeValkeyOwner(emailLower, userId, claimResult.token ?? '');
+			if (reclaimed.status !== 'finalized') {
+				throw new Error(`Failed to finalize email claim for ${emailLower}: ${reclaimed.status}`);
+			}
+		}
+		await this.acquireOwnership(emailLower, userId);
+		return true;
 	}
 
 	async abortEmailClaim(reservation: EmailClaimReservation | null): Promise<void> {

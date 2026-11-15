@@ -5,7 +5,6 @@ import {ChannelDataRepository} from '@app/api/channel/repositories/ChannelDataRe
 import {MessageInteractionRepository} from '@app/api/channel/repositories/MessageInteractionRepository';
 import {MessageRepository} from '@app/api/channel/repositories/MessageRepository';
 import {fetchOne, setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
-import type {PreparedQuery} from '@app/api/database/CassandraTypes';
 import type {MessageRow} from '@app/api/database/types/MessageTypes';
 import {Messages} from '@app/api/Tables';
 import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
@@ -18,30 +17,7 @@ const FETCH_MESSAGE_HAS_REACTION = Messages.selectCql({
 	limit: 1,
 });
 
-class RecordingCassandraQueryExecutor extends InMemoryCassandraQueryExecutor {
-	executed: Array<PreparedQuery> = [];
-
-	override async executeQuery<T = Record<string, unknown>>(query: PreparedQuery): Promise<Array<T>> {
-		this.executed.push(query);
-		return super.executeQuery<T>(query);
-	}
-
-	override reset(): void {
-		this.executed = [];
-		super.reset();
-	}
-
-	countHasReactionWrites(): number {
-		return this.executed.filter(
-			(query) =>
-				query.kvMeta?.action === 'patch' &&
-				query.kvMeta.table.name === 'messages' &&
-				(query.kvMeta.patchKeys ?? []).includes('has_reaction'),
-		).length;
-	}
-}
-
-let executor: RecordingCassandraQueryExecutor;
+let executor: InMemoryCassandraQueryExecutor;
 
 function createRepository(): MessageInteractionRepository {
 	return new MessageInteractionRepository(new MessageRepository(new ChannelDataRepository()));
@@ -58,20 +34,12 @@ async function loadHasReaction(channelId: ChannelID, messageId: MessageID): Prom
 
 describe('MessageInteractionRepository has_reaction writes', () => {
 	beforeEach(() => {
-		executor = new RecordingCassandraQueryExecutor();
+		executor = new InMemoryCassandraQueryExecutor();
 		setCassandraQueryExecutorForTesting(executor);
 	});
 	afterEach(() => {
 		executor.reset();
 		setCassandraQueryExecutorForTesting(null);
-	});
-	it('flags the message when the first reaction is added', async () => {
-		const channelId = createChannelID(10n);
-		const messageId = createMessageID(100n);
-		const repository = createRepository();
-		await repository.addReaction(channelId, messageId, createUserID(1n), '🔥');
-		expect(executor.countHasReactionWrites()).toBe(1);
-		expect(await loadHasReaction(channelId, messageId)).toBe(true);
 	});
 	it('flags the message on every reaction add', async () => {
 		const channelId = createChannelID(10n);
@@ -79,7 +47,12 @@ describe('MessageInteractionRepository has_reaction writes', () => {
 		const repository = createRepository();
 		await repository.addReaction(channelId, messageId, createUserID(1n), '🔥');
 		await repository.addReaction(channelId, messageId, createUserID(2n), '🔥');
-		expect(executor.countHasReactionWrites()).toBe(2);
+		expect(
+			executor.executed.filter(
+				(meta) =>
+					meta.action === 'patch' && meta.table.name === 'messages' && (meta.patchKeys ?? []).includes('has_reaction'),
+			).length,
+		).toBe(2);
 		expect(await repository.listMessageReactions(channelId, messageId)).toHaveLength(2);
 		expect(await loadHasReaction(channelId, messageId)).toBe(true);
 	});

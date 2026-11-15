@@ -155,7 +155,7 @@ export type AppStoreTransactionPayload = WithEnvironment<z.infer<typeof AppStore
 
 export type AppStoreRenewalInfoPayload = WithEnvironment<z.infer<typeof AppStoreRenewalInfoPayloadSchema>>;
 
-export type AppStoreNotificationPayload = z.infer<typeof AppStoreNotificationPayloadSchema>;
+type AppStoreNotificationPayload = z.infer<typeof AppStoreNotificationPayloadSchema>;
 
 export interface AppStoreVerifiedNotification {
 	notificationType: string;
@@ -352,7 +352,7 @@ function decodeUnverifiedPayload(segment: string): Record<string, unknown> {
 	return decoded as Record<string, unknown>;
 }
 
-export async function verifyAppStoreSignedData(
+async function verifyAppStoreSignedData(
 	signedData: string,
 	roots: ReadonlyArray<X509Certificate> = getAppleRootCertificates(),
 ): Promise<unknown> {

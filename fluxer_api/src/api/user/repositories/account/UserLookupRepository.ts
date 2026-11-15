@@ -3,6 +3,7 @@
 import type {UserID} from '@app/api/BrandedTypes';
 import {fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
 import type {
+	UserByAclRow,
 	UserByLastActiveIpRow,
 	UserByLastActiveIpTrustKeyRow,
 	UserByStripeCustomerIdRow,
@@ -11,6 +12,7 @@ import type {
 } from '@app/api/database/types/UserTypes';
 import type {User} from '@app/api/models/User';
 import {
+	UserByAcl,
 	UserByLastActiveIp,
 	UserByLastActiveIpTrustKey,
 	UserByStripeCustomerId,
@@ -20,6 +22,10 @@ import {
 import type {UserEmailOwnershipRepository} from '@app/api/user/repositories/account/crud/UserEmailOwnershipRepository';
 import {getSameIpDecisionKey, normalizeIpString} from '@fluxer/ip_utils/src/IpAddress';
 
+const FETCH_USER_IDS_BY_ACL_QUERY = UserByAcl.select({
+	columns: ['user_id'],
+	where: UserByAcl.where.eq('acl'),
+});
 const FETCH_DISCRIMINATORS_BY_USERNAME_QUERY = UserByUsername.select({
 	columns: ['discriminator', 'user_id'],
 	where: UserByUsername.where.eq('username'),
@@ -100,6 +106,11 @@ export class UserLookupRepository {
 		);
 		const users = await Promise.all(rows.map((row) => this.findUniqueUser(row.user_id)));
 		return users.filter((user): user is User => user !== null);
+	}
+
+	async listUserIdsWithAcl(acl: string): Promise<Array<UserID>> {
+		const rows = await fetchMany<Pick<UserByAclRow, 'user_id'>>(FETCH_USER_IDS_BY_ACL_QUERY.bind({acl}));
+		return rows.map((row) => row.user_id);
 	}
 
 	async listUserIdsByLastActiveIp(

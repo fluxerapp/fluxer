@@ -1,9 +1,5 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-.switchWrapper {
-	margin-top: 0.5rem;
-}
-
 .previewContainer {
 	margin-bottom: 1.5rem;
 	display: flex;
@@ -33,7 +29,7 @@
 .typingAnimationWrapper {
 	width: 1.25rem;
 	height: 1.25rem;
-	margin-right: 0;
+	margin-inline-end: 0;
 	flex-shrink: 0;
 }
 

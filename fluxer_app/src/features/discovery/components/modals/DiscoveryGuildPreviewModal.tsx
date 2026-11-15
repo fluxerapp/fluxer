@@ -21,20 +21,20 @@ import {useCallback, useMemo, useState} from 'react';
 
 const COMMUNITY_PREVIEW_DESCRIPTOR = msg({
 	message: 'Community preview',
-	comment: 'Accessible title of the modal that previews a Discovery community before joining it.',
+	comment: 'Accessible title of the modal that previews a community from Explore before joining it.',
 });
 const OPEN_COMMUNITY_DESCRIPTOR = msg({
 	message: 'Open community',
-	comment: 'Button label in the Discovery community preview modal shown when the user is already a member.',
+	comment: 'Button label in the Explore community preview modal shown when the user is already a member.',
 });
 const NO_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'No description.',
-	comment: 'Empty-state text shown in the Discovery community preview modal when a community has no description.',
+	comment: 'Empty-state text shown in the Explore community preview modal when a community has no description.',
 });
 const PUBLIC_COMMUNITY_DESCRIPTOR = msg({
 	message: 'Public community',
 	comment:
-		'Line shown above the community name in the Discovery community preview modal. The user found this community in the public directory rather than being invited to it.',
+		'Line shown above the community name in the Explore community preview modal. The user found this community in the public directory rather than being invited to it.',
 });
 
 interface DiscoveryGuildPreviewModalProps {
@@ -69,7 +69,7 @@ export const DiscoveryGuildPreviewModal = observer(function DiscoveryGuildPrevie
 		}
 		setJoining(false);
 	}, [guild.id, isAlreadyMember, joining]);
-	const canJoin = !RuntimeConfig.singleCommunityEnabled;
+	const canJoin = RuntimeConfig.discoveryAvailable;
 	return (
 		<Modal.Root
 			size="large"
@@ -106,6 +106,7 @@ export const DiscoveryGuildPreviewModal = observer(function DiscoveryGuildPrevie
 							guildName={guild.name}
 							guildIcon={guild.icon}
 							features={badgeFeatures}
+							badgeIds={guild.badge_ids}
 							presenceCount={guild.online_count}
 							memberCount={guild.member_count}
 							eyebrowText={i18n._(PUBLIC_COMMUNITY_DESCRIPTOR)}

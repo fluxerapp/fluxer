@@ -6,7 +6,8 @@
 -export([
     handle_put/3,
     handle_delete/2,
-    get_local/2
+    get_local/2,
+    replicate_to_nodes/4
 ]).
 
 -export_type([state/0]).
@@ -20,9 +21,9 @@ handle_put(UserId, Presence, State) ->
     {Replicated, State1} = replicate_to_nodes(UserId, {put, Presence}, OwnerNodes, State),
     case Replicated of
         true ->
-            presence_cache_rebalance:clear_pending_operation(UserId, State1);
+            presence_cache_pending:clear_pending_operation(UserId, State1);
         false ->
-            presence_cache_rebalance:queue_pending_operation(UserId, {put, Presence}, State1)
+            presence_cache_pending:queue_pending_operation(UserId, {put, Presence}, State1)
     end.
 
 -spec handle_delete(integer(), state()) -> state().
@@ -30,8 +31,8 @@ handle_delete(UserId, State) ->
     OwnerNodes = presence_cache_bulk:resolve_owner_nodes(UserId),
     {Replicated, State1} = replicate_to_nodes(UserId, delete, OwnerNodes, State),
     case Replicated of
-        true -> presence_cache_rebalance:clear_pending_operation(UserId, State1);
-        false -> presence_cache_rebalance:queue_pending_operation(UserId, delete, State1)
+        true -> presence_cache_pending:clear_pending_operation(UserId, State1);
+        false -> presence_cache_pending:queue_pending_operation(UserId, delete, State1)
     end.
 
 -spec get_local(integer(), state()) -> {{ok, map()} | not_found, state()}.

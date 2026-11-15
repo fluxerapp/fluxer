@@ -1,0 +1,66 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+const {existsSync} = require('node:fs');
+const {join, sep} = require('node:path');
+const {createNativeLoadError, loadNativeBinding} = require('./loader-diagnostics.cjs');
+function nativeFileName(platform = process.platform, arch = process.arch) {
+	switch (platform) {
+		case 'darwin':
+			if (arch === 'x64' || arch === 'arm64') return `gateway-socket.darwin-${arch}.node`;
+			break;
+		case 'win32':
+			if (arch === 'x64' || arch === 'arm64') return `gateway-socket.win32-${arch}-msvc.node`;
+			break;
+		case 'linux':
+			if (arch === 'x64' || arch === 'arm64') return `gateway-socket.linux-${arch}-gnu.node`;
+			break;
+	}
+	throw new Error(`Unsupported gateway-socket target: ${platform}/${arch}`);
+}
+const MODULE_NAME = '@fluxer/gateway-socket';
+const SKIP_NATIVE_PROBE_ENV = 'FLUXER_GATEWAY_SOCKET_SKIP_NATIVE_PROBE';
+
+function resolveNativeRoot() {
+	const asarSegment = `${sep}app.asar${sep}`;
+	if (!__dirname.includes(asarSegment)) return __dirname;
+	const unpackedDir = __dirname.replace(asarSegment, `${sep}app.asar.unpacked${sep}`);
+	return existsSync(unpackedDir) ? unpackedDir : __dirname;
+}
+
+let binding = null;
+let loadError = null;
+
+try {
+	const nativeRoot = resolveNativeRoot();
+	const nativePath = join(nativeRoot, nativeFileName());
+	const loaded = loadNativeBinding({
+		moduleName: MODULE_NAME,
+		nativePath,
+		nativeRoot,
+		packageDir: __dirname,
+		skipNativeProbeEnv: SKIP_NATIVE_PROBE_ENV,
+	});
+	binding = loaded.binding;
+	loadError = loaded.loadError;
+	if (loadError) throw loadError;
+} catch (error) {
+	loadError = createNativeLoadError({
+		moduleName: MODULE_NAME,
+		nativeRoot: resolveNativeRoot(),
+		packageDir: __dirname,
+		reason: 'native loader threw before binding load completed',
+		cause: error,
+		skipNativeProbeEnv: SKIP_NATIVE_PROBE_ENV,
+	});
+	throw loadError;
+}
+
+module.exports = {
+	connect: binding ? binding.connect : null,
+	warmup: binding && typeof binding.warmup === 'function' ? binding.warmup : null,
+	windowsIntermediateStoreRoots:
+		binding && typeof binding.windowsIntermediateStoreRoots === 'function'
+			? binding.windowsIntermediateStoreRoots
+			: null,
+	loadError,
+};

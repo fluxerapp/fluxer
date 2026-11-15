@@ -10,17 +10,12 @@
     set_passive/2,
     should_receive_event/5,
     get_user_roles_for_guild/2,
-    should_receive_typing/2,
     set_typing_override/3,
     get_typing_override/2,
     is_user_mentioned/2,
     is_guild_synced/2,
     mark_guild_synced/2,
-    clear_guild_synced/2,
-    is_message_event/1,
-    is_lazy_guild_event/1,
-    extract_role_ids/1,
-    mention_role_set/1
+    clear_guild_synced/2
 ]).
 
 -export_type([guild_id/0, user_id/0, event/0, session_data/0, guild_state/0]).
@@ -117,17 +112,6 @@ is_small_guild(State) ->
 is_effectively_active(GuildId, SessionData, State) ->
     (not is_passive(GuildId, SessionData)) orelse is_small_guild(State).
 
--spec is_message_event(event()) -> boolean().
-is_message_event(message_create) -> true;
-is_message_event(message_update) -> true;
-is_message_event(message_delete) -> true;
-is_message_event(message_delete_bulk) -> true;
-is_message_event(_) -> false.
-
--spec is_lazy_guild_event(event()) -> boolean().
-is_lazy_guild_event(Event) ->
-    is_message_event(Event) orelse Event =:= voice_state_update.
-
 -spec should_passive_receive(event(), map(), session_data()) -> boolean().
 should_passive_receive(channel_create, _EventData, _SessionData) ->
     true;
@@ -138,13 +122,8 @@ should_passive_receive(channel_update_bulk, _EventData, _SessionData) ->
 should_passive_receive(channel_delete, _EventData, _SessionData) ->
     true;
 should_passive_receive(message_create, EventData, SessionData) ->
-    Mentioned = is_user_mentioned(EventData, SessionData),
-    case Mentioned of
-        true ->
-            true;
-        false ->
-            false
-    end;
+    is_user_mentioned(EventData, SessionData) orelse
+        is_session_author_event(EventData, SessionData);
 should_passive_receive(message_update, EventData, SessionData) ->
     is_user_mentioned(EventData, SessionData);
 should_passive_receive(guild_delete, _EventData, _SessionData) ->
@@ -164,6 +143,15 @@ should_passive_receive(_, _, _) ->
 is_session_user_event(EventData, SessionData) ->
     UserId = maps:get(user_id, SessionData),
     UserId =:= event_user_id(EventData).
+
+-spec is_session_author_event(map(), session_data()) -> boolean().
+is_session_author_event(EventData, SessionData) ->
+    UserId = maps:get(user_id, SessionData),
+    UserId =/= undefined andalso UserId =:= event_author_id(EventData).
+
+-spec event_author_id(map()) -> user_id() | undefined.
+event_author_id(EventData) ->
+    user_id(maps:get(<<"author">>, EventData, #{})).
 
 -spec event_user_id(map()) -> user_id() | undefined.
 event_user_id(EventData) ->
@@ -223,7 +211,7 @@ add_mention_role(_, Acc) ->
 
 -spec get_user_roles_for_guild(user_id(), guild_state()) -> [integer()].
 get_user_roles_for_guild(UserId, GuildState) ->
-    case guild_permissions:find_member_by_user_id(UserId, GuildState) of
+    case guild_permissions_check:find_member_by_user_id(UserId, GuildState) of
         undefined -> [];
         Member -> extract_role_ids(maps:get(<<"roles">>, Member, []))
     end.
@@ -242,15 +230,6 @@ parse_role_id(Role) when is_integer(Role) ->
     {true, Role};
 parse_role_id(_) ->
     false.
-
--spec should_receive_typing(guild_id(), session_data()) -> boolean().
-should_receive_typing(GuildId, SessionData) ->
-    case get_typing_override(GuildId, SessionData) of
-        undefined ->
-            not is_passive(GuildId, SessionData);
-        TypingFlag ->
-            TypingFlag
-    end.
 
 -spec should_receive_typing(guild_id(), session_data(), guild_state()) -> boolean().
 should_receive_typing(GuildId, SessionData, State) ->

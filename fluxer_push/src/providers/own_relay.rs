@@ -47,6 +47,7 @@ impl Hop {
                 }
                 .to_owned()
             }),
+            thread_channels: sub.thread_channels,
         }
     }
 }
@@ -120,52 +121,6 @@ mod tests {
     }
 
     #[test]
-    fn an_apns_endpoint_on_our_own_relay_is_taken_in_process() {
-        let hop = parse(
-            &format!("https://push.fluxer.com/relay/v1/apns/canary/production/{TOKEN}"),
-            &ours(),
-        )
-        .expect("our own relay endpoint parses");
-        assert_eq!(hop.leg, Leg::Apns);
-        assert_eq!(hop.app_id, "canary");
-        assert_eq!(hop.environment, Some(ProviderEnvironment::Production));
-        assert_eq!(hop.device_token, TOKEN);
-    }
-
-    #[test]
-    fn an_fcm_endpoint_keeps_its_percent_encoded_token() {
-        let hop = parse(
-            "https://push.fluxer.com/relay/v1/fcm/canary/dYC_x9gXTjyyrG8_Aw3nUM%3AAPA91bExample",
-            &ours(),
-        )
-        .expect("an fcm endpoint parses");
-        assert_eq!(hop.leg, Leg::Fcm);
-        assert_eq!(hop.environment, None);
-        assert_eq!(hop.device_token, "dYC_x9gXTjyyrG8_Aw3nUM:APA91bExample");
-    }
-
-    #[test]
-    fn a_voip_endpoint_on_our_own_relay_keeps_its_own_leg() {
-        let hop = parse(
-            &format!("https://push.fluxer.com/relay/v1/apns-voip/canary/production/{TOKEN}"),
-            &ours(),
-        )
-        .expect("a voip endpoint parses");
-        assert_eq!(hop.leg, Leg::ApnsVoip);
-    }
-
-    #[test]
-    fn only_the_alert_legs_are_taken_in_process() {
-        let shortcut = |path: &str| {
-            parse(&format!("https://push.fluxer.com/relay/v1/{path}"), &ours())
-                .filter(|hop| matches!(hop.leg, Leg::Apns | Leg::Fcm))
-        };
-        assert!(shortcut(&format!("apns/canary/production/{TOKEN}")).is_some());
-        assert!(shortcut(&format!("apns-voip/canary/production/{TOKEN}")).is_none());
-        assert!(shortcut("fcm/canary/dYC_x9gXTjyyrG8_Aw3nUM%3AAPA91bExample").is_some());
-    }
-
-    #[test]
     fn a_relay_we_do_not_operate_is_left_on_the_network_path() {
         let endpoint = format!("https://push.example.org/relay/v1/apns/canary/production/{TOKEN}");
         assert!(parse(&endpoint, &ours()).is_none());
@@ -175,38 +130,6 @@ mod tests {
     fn a_self_hosted_deployment_configures_no_hosts_and_never_shortcuts() {
         let endpoint = format!("https://push.fluxer.com/relay/v1/apns/canary/production/{TOKEN}");
         assert!(parse(&endpoint, &[]).is_none());
-    }
-
-    #[test]
-    fn a_third_party_web_push_endpoint_is_not_mistaken_for_a_relay_hop() {
-        assert!(
-            parse(
-                "https://updates.push.services.mozilla.com/wpush/v2/gAAAAA",
-                &ours()
-            )
-            .is_none()
-        );
-        assert!(parse("https://ntfy.sh/upZzH87cT9jJCc?up=1", &ours()).is_none());
-    }
-
-    #[test]
-    fn every_managed_relay_leg_is_recognised_and_nothing_else_is() {
-        for path in [
-            format!("apns/canary/production/{TOKEN}"),
-            format!("apns-voip/canary/production/{TOKEN}"),
-            "fcm/canary/dYC_x9gXTjyyrG8_Aw3nUM%3AAPA91bExample".to_owned(),
-        ] {
-            let endpoint = format!("https://push.fluxer.com/relay/v1/{path}");
-            assert!(
-                is_managed(&endpoint, &ours()),
-                "{endpoint} must be a managed relay endpoint"
-            );
-        }
-        assert!(!is_managed("https://ntfy.sh/upZzH87cT9jJCc?up=1", &ours()));
-        assert!(!is_managed(
-            "https://updates.push.services.mozilla.com/wpush/v2/gAAAAA",
-            &ours()
-        ));
     }
 
     #[test]

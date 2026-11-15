@@ -3,7 +3,7 @@
 import {StreamerModeGate} from '@app/features/streamer_mode/components/StreamerModeGate';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import {AccountSecuritySections} from '@app/features/user/components/modals/tabs/account_security_tab/AccountSecuritySections';
-import styles from '@app/features/user/components/modals/tabs/account_security_tab/AccountSecurityTabInline.module.css';
+import styles from '@app/features/user/components/modals/tabs/TabInline.module.css';
 import {
 	getAccountSectionForLegacySection,
 	getAccountSectionForNestedTab,

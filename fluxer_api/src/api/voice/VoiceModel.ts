@@ -16,6 +16,7 @@ export interface VoiceRegionRecord {
 	latitude: number;
 	longitude: number;
 	isDefault: boolean;
+	hidden: boolean;
 	restrictions: VoiceRestriction;
 	createdAt: Date | null;
 	updatedAt: Date | null;
@@ -31,7 +32,14 @@ export interface VoiceServerRecord {
 	longitude: number | null;
 	isActive: boolean;
 	softConnectionLimit: number | null;
+	notes: string | null;
 	restrictions: VoiceRestriction;
+	internalEndpoint: string | null;
+	draining: boolean;
+	pinnedHostname: string | null;
+	pinnedSoftLimit: boolean;
+	publicIpv4: string | null;
+	publicIpv6: string | null;
 	createdAt: Date | null;
 	updatedAt: Date | null;
 }
@@ -47,6 +55,7 @@ export interface VoiceRegionMetadata {
 	latitude: number;
 	longitude: number;
 	isDefault: boolean;
+	hidden: boolean;
 	vipOnly: boolean;
 	requiredGuildFeatures: Array<string>;
 }

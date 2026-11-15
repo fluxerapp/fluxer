@@ -167,6 +167,7 @@ export function PasskeyBridgeController(app: HonoApp) {
 					ctx.req.header('origin'),
 					ctx.req.valid('json'),
 					ctx.req.raw,
+					ctx.get('ssoService'),
 				),
 			);
 		},

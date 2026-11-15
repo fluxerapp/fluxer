@@ -102,6 +102,7 @@ export const InviteAcceptModalPreview = observer(function InviteAcceptModalPrevi
 							guildName={guild.name}
 							guildIcon={guild.icon}
 							features={guildFeatures}
+							badgeIds={guild.badgeIds}
 							presenceCount={presenceCount}
 							memberCount={memberCount}
 							previewIconUrl={hasClearedIcon ? null : previewIconUrl}

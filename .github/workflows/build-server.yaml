@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+name: build server
+
+on:
+  workflow_dispatch:
+    inputs:
+      build-version:
+        description: "Explicit Fluxer CalVer build version (YYYY.MDD.MICRO, UTC HHMMSS without leading zeroes) to use instead of automatic UTC clock allocation"
+        type: string
+        required: false
+        default: ""
+      app-assets-version:
+        description: "Build version of the fluxer-app-proxy-self-hosted release whose -assets image the server serves"
+        type: string
+        required: true
+
+permissions:
+  actions: read
+  contents: write
+  packages: write
+
+jobs:
+  approve:
+    name: approve build release
+    permissions: {}
+    runs-on: ubuntu-24.04
+    environment: builds
+    timeout-minutes: 5
+    steps:
+      - name: approved
+        run: echo "Build release approved."
+
+  image:
+    needs: approve
+    uses: ./.github/workflows/_build-image.yaml
+    secrets: inherit
+    with:
+      image: fluxer-server
+      dockerfile: fluxer_server/Dockerfile
+      build-version: ${{ inputs['build-version'] }}
+      build-args: |
+        APP_ASSETS_REF=ghcr.io/${{ github.repository_owner }}/fluxer-app-proxy-self-hosted:${{ inputs['app-assets-version'] }}-assets
+        APP_ASSETS_PLATFORM=linux/amd64

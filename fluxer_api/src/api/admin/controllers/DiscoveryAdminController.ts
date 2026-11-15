@@ -2,6 +2,7 @@
 
 import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
 import {recordAdminRead, recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
+import {formatOwnerFields} from '@app/api/admin/models/GuildTypes';
 import {createGuildID} from '@app/api/BrandedTypes';
 import type {GuildDiscoveryRow} from '@app/api/database/types/GuildDiscoveryTypes';
 import {mapGuildFeatures} from '@app/api/guild/GuildFeatureUtils';
@@ -13,7 +14,7 @@ import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import type {User} from '@app/api/models/User';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {DiscoveryApplicationStatus, DiscoveryCategoryLabels} from '@fluxer/constants/src/DiscoveryConstants';
@@ -59,19 +60,20 @@ interface GuildEnrichment {
 	owner_discriminator: string | null;
 	member_count: number;
 	nsfw_level: number | null;
+	nsfw: boolean;
 	features: Array<string>;
 }
 
 async function enrichGuilds(
 	rows: ReadonlyArray<GuildDiscoveryRow>,
 	guildService: GuildService,
-	userRepository: IUserRepository,
+	userRepository: UserRepository,
 ): Promise<Map<string, GuildEnrichment>> {
 	const map = new Map<string, GuildEnrichment>();
 	const guilds = await Promise.all(
 		rows.map(async (row) => {
 			try {
-				return await guildService.data.getGuildSystem(row.guild_id);
+				return await guildService.data.operations.getGuildSystem(row.guild_id);
 			} catch {
 				return null;
 			}
@@ -92,11 +94,10 @@ async function enrichGuilds(
 			name: guild.name,
 			icon: guild.iconHash,
 			owner_id: guild.ownerId.toString(),
-			owner_username: owner?.username ?? null,
-			owner_global_name: owner?.globalName ?? null,
-			owner_discriminator: owner ? String(owner.discriminator).padStart(4, '0') : null,
+			...formatOwnerFields(owner),
 			member_count: guild.memberCount,
 			nsfw_level: guild.nsfwLevel,
+			nsfw: guild.nsfw,
 			features: mapGuildFeatures(guild.features),
 		});
 	}
@@ -115,6 +116,7 @@ function mapPendingResponse(row: GuildDiscoveryRow, enrichment: GuildEnrichment 
 		guild_owner_discriminator: enrichment?.owner_discriminator ?? null,
 		guild_member_count: enrichment?.member_count ?? 0,
 		guild_nsfw_level: enrichment?.nsfw_level ?? null,
+		guild_nsfw: enrichment?.nsfw ?? false,
 		guild_features: enrichment?.features ?? [],
 		description: row.description,
 		category_type: row.category_type,
@@ -317,7 +319,6 @@ export function DiscoveryAdminController(app: HonoApp) {
 		async (ctx) => {
 			const data = ctx.req.valid('json');
 			const adminUserId = ctx.get('adminUserId');
-			const auditLogReason = ctx.get('auditLogReason');
 			const discoveryService = ctx.get('discoveryService');
 			const guildIds = [...new Set(data.guild_ids)];
 			const failed: Array<string> = [];
@@ -338,18 +339,16 @@ export function DiscoveryAdminController(app: HonoApp) {
 					failed.push(rawGuildId.toString());
 				}
 			}
-			await ctx.get('adminService').auditService.createAuditLog({
-				adminUserId,
+			await recordAdminWrite(ctx, {
 				targetType: 'guild',
 				targetId: BigInt(0),
 				action: 'update_discovery_categories',
-				auditLogReason,
-				metadata: new Map([
-					['category_type', data.category_type.toString()],
-					['guild_count', guildIds.length.toString()],
-					['updated', updated.toString()],
-					['failed', failed.length.toString()],
-				]),
+				metadata: {
+					category_type: data.category_type.toString(),
+					guild_count: guildIds.length.toString(),
+					updated: updated.toString(),
+					failed: failed.length.toString(),
+				},
 			});
 			return ctx.json({updated, failed_guild_ids: failed});
 		},

@@ -7,6 +7,7 @@ import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import {BaseAvatar} from '@app/features/ui/components/BaseAvatar';
+import {getAppRemScale} from '@app/features/ui/utils/AppZoomUtils';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
@@ -69,15 +70,18 @@ const AvatarComponent = React.forwardRef<HTMLDivElement, AvatarProps>(
 		const {i18n} = useLingui();
 		const userId = user.id;
 		const userAvatar = user.avatar;
+		const systemAvatarUrl = AvatarUtils.getSystemUserBrandingAvatarURL(userId);
 		const guildMember = GuildMembers.getMember(guildId || '', userId);
 		const hasGuildMemberAvatarSource = Boolean(guildId) && guildMember != null;
 		const memberAvatar = guildMember?.avatar ?? null;
 		const memberAvatarUnset = guildMember?.isAvatarUnset() ?? false;
+		const requestSize = mediaSize ?? size * getAppRemScale();
 		const avatarUrl = useMemo(() => {
 			if (customAvatarUrl !== undefined) return customAvatarUrl;
 			if (personaId || personaAvatar) {
 				return AvatarUtils.getUserAvatarURL({id: personaId ?? "0", avatar: personaAvatar || null}, false, mediaSize);
 			}
+			if (systemAvatarUrl !== null) return systemAvatarUrl;
 			if (guildId && hasGuildMemberAvatarSource) {
 				return AvatarUtils.getGuildMemberDisplayAvatarURL({
 					guildId,
@@ -85,17 +89,18 @@ const AvatarComponent = React.forwardRef<HTMLDivElement, AvatarProps>(
 					memberAvatar,
 					avatarUnset: memberAvatarUnset,
 					animated: false,
-					size: mediaSize,
+					size: requestSize,
 				});
 			}
-			return AvatarUtils.getUserAvatarURL({id: userId, avatar: userAvatar}, false, mediaSize);
+			return AvatarUtils.getUserAvatarURL({id: userId, avatar: userAvatar}, false, requestSize);
 		}, [
 			customAvatarUrl,
 			guildId,
 			hasGuildMemberAvatarSource,
 			memberAvatar,
 			memberAvatarUnset,
-			mediaSize,
+			requestSize,
+			systemAvatarUrl,
 			userAvatar,
 			userId,
 			personaId,
@@ -106,6 +111,7 @@ const AvatarComponent = React.forwardRef<HTMLDivElement, AvatarProps>(
 			if (personaId || personaAvatar) {
 				return AvatarUtils.getUserAvatarURL({id: personaId ?? "0", avatar: personaAvatar || null}, true, mediaSize);
 			}
+			if (systemAvatarUrl !== null) return systemAvatarUrl;
 			if (guildId && hasGuildMemberAvatarSource) {
 				return AvatarUtils.getGuildMemberDisplayAvatarURL({
 					guildId,
@@ -113,17 +119,18 @@ const AvatarComponent = React.forwardRef<HTMLDivElement, AvatarProps>(
 					memberAvatar,
 					avatarUnset: memberAvatarUnset,
 					animated: true,
-					size: mediaSize,
+					size: requestSize,
 				});
 			}
-			return AvatarUtils.getUserAvatarURL({id: userId, avatar: userAvatar}, true, mediaSize);
+			return AvatarUtils.getUserAvatarURL({id: userId, avatar: userAvatar}, true, requestSize);
 		}, [
 			customHoverAvatarUrl,
 			guildId,
 			hasGuildMemberAvatarSource,
 			memberAvatar,
 			memberAvatarUnset,
-			mediaSize,
+			requestSize,
+			systemAvatarUrl,
 			userAvatar,
 			userId,
 			personaId,

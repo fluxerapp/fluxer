@@ -26,6 +26,7 @@ import {encryptionEnabledMap, FrameCryptor} from './FrameCryptor.ts';
 import {ParticipantKeyHandler} from './ParticipantKeyHandler.ts';
 
 const participantCryptors: Array<FrameCryptor> = [];
+const scriptTransformCryptors = new WeakSet<FrameCryptor>();
 const participantKeys: Map<string, ParticipantKeyHandler> = new Map();
 let sharedKeyHandler: ParticipantKeyHandler | undefined;
 const messageQueue = new AsyncQueue();
@@ -306,6 +307,9 @@ function unsetCryptorParticipant(trackId: string, participantIdentity: string) {
 		workerLogger.warn('Could not unset participant on cryptor', {trackId, participantIdentity});
 	} else {
 		cryptor.unsetParticipant();
+		if (scriptTransformCryptors.has(cryptor) || !cryptor.hasActiveTransform()) {
+			participantCryptors.splice(participantCryptors.indexOf(cryptor), 1);
+		}
 	}
 }
 
@@ -359,6 +363,7 @@ if (self.RTCTransformEvent) {
 		const {kind, participantIdentity, trackId, codec, hasPacketTrailer} = options;
 		messageQueue.run(async () => {
 			const cryptor = getTrackCryptor(participantIdentity, trackId);
+			scriptTransformCryptors.add(cryptor);
 			cryptor.setHasFrameMetadata(hasPacketTrailer);
 			workerLogger.debug('onrtctransform setup', {participantIdentity, trackId, codec});
 			cryptor.setupTransform(

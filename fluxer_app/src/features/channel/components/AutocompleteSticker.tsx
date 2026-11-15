@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AutocompleteOption} from '@app/features/channel/components/Autocomplete';
-import {isSticker} from '@app/features/channel/components/Autocomplete';
 import styles from '@app/features/channel/components/AutocompleteEmoji.module.css';
 import {AutocompleteItem} from '@app/features/channel/components/AutocompleteItem';
+import type {AutocompleteListProps} from '@app/features/channel/components/AutocompleteTypes';
+import {isSticker} from '@app/features/channel/components/AutocompleteTypes';
 import {useStickerAnimation} from '@app/features/emoji/hooks/useStickerAnimation';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {observer} from 'mobx-react-lite';
-import type React from 'react';
 
 const AutocompleteStickerIcon = observer(
 	({id, name, animated, isInteracting}: {id: string; name: string; animated: boolean; isInteracting: boolean}) => {
@@ -36,16 +35,7 @@ export const AutocompleteSticker = observer(
 		onMouseLeave,
 		rowRefs,
 		getOptionId,
-	}: {
-		onSelect: (option: AutocompleteOption) => void;
-		keyboardFocusIndex: number;
-		hoverIndex: number;
-		options: Array<AutocompleteOption>;
-		onMouseEnter: (index: number) => void;
-		onMouseLeave: () => void;
-		rowRefs?: React.RefObject<Array<HTMLButtonElement | null>>;
-		getOptionId?: (index: number) => string;
-	}) => {
+	}: AutocompleteListProps) => {
 		const stickers = options.filter(isSticker);
 		return stickers.map((option, index) => (
 			<AutocompleteItem

@@ -8,13 +8,9 @@
     apply_guild_state/2,
     merge_guild_state/2,
     local_voice_states_for_channel/2,
-    local_pending_joins_for_channel/2,
     parse_voice_channel_id/1,
-    voice_state_rpc_entries/1,
-    pending_join_rpc_entries/1,
     fetch_guild_data/1,
-    guild_state_call/2,
-    guild_id_call/2
+    guild_state_call/2
 ]).
 
 -export_type([
@@ -79,34 +75,6 @@ local_voice_states_for_channel(ChannelIdBin, State) ->
     ),
     #{voice_states => Filtered}.
 
--spec local_pending_joins_for_channel(binary(), server_state()) -> map().
-local_pending_joins_for_channel(ChannelIdBin, State) ->
-    case parse_voice_channel_id(ChannelIdBin) of
-        {ok, ChannelIdInt, _NormalizedBin} ->
-            do_local_pending_joins(ChannelIdInt, State);
-        error ->
-            #{pending_joins => []}
-    end.
-
--spec do_local_pending_joins(integer(), server_state()) -> map().
-do_local_pending_joins(ChannelIdInt, State) ->
-    PendingConns = ensure_map(maps:get(pending_voice_connections, State, #{})),
-    Filtered = maps:fold(
-        fun(ConnId, Metadata, Acc) ->
-            prepend_pending_join_for_channel(ConnId, Metadata, ChannelIdInt, Acc)
-        end,
-        [],
-        PendingConns
-    ),
-    #{pending_joins => Filtered}.
-
--spec prepend_pending_join_for_channel(term(), term(), integer(), [map()]) -> [map()].
-prepend_pending_join_for_channel(ConnId, Metadata, ChannelIdInt, Acc) ->
-    case pending_join_channel_id(Metadata) of
-        ChannelIdInt -> prepend_defined(pending_join_rpc_entry(ConnId, Metadata), Acc);
-        _ -> Acc
-    end.
-
 -spec parse_voice_channel_id(term()) -> {ok, integer(), binary()} | error.
 parse_voice_channel_id(ChannelId) ->
     case validation:validate_snowflake(<<"channel_id">>, ChannelId) of
@@ -116,13 +84,7 @@ parse_voice_channel_id(ChannelId) ->
             error
     end.
 
--spec voice_state_rpc_entries(term()) -> [map()].
-voice_state_rpc_entries(VoiceStates) when is_list(VoiceStates) ->
-    lists:filtermap(fun voice_state_rpc_entry/1, VoiceStates);
-voice_state_rpc_entries(_) ->
-    [].
-
--spec voice_state_rpc_entry(term()) -> false | {true, map()}.
+-spec voice_state_rpc_entry(map()) -> false | {true, map()}.
 voice_state_rpc_entry(VS) when is_map(VS) ->
     Entry0 = #{
         connection_id => normalize_rpc_id(
@@ -136,9 +98,7 @@ voice_state_rpc_entry(VS) when is_map(VS) ->
     case lists:member(null, maps:values(Entry0)) of
         true -> false;
         false -> {true, maybe_attach_voice_routing_metadata(Entry0, VS)}
-    end;
-voice_state_rpc_entry(_) ->
-    false.
+    end.
 
 -spec maybe_attach_voice_routing_metadata(map(), map()) -> map().
 maybe_attach_voice_routing_metadata(Entry, VS) ->
@@ -176,58 +136,6 @@ voice_state_rpc_entry_or_undefined(VS) ->
         false -> undefined
     end.
 
--spec pending_join_rpc_entries(term()) -> [map()].
-pending_join_rpc_entries(Pending) when is_list(Pending) ->
-    lists:filtermap(fun pending_join_rpc_entry_from_map/1, Pending);
-pending_join_rpc_entries(_) ->
-    [].
-
--spec pending_join_rpc_entry_from_map(term()) -> false | {true, map()}.
-pending_join_rpc_entry_from_map(PendingJoin) when is_map(PendingJoin) ->
-    ConnId = maps:get(
-        connection_id, PendingJoin, maps:get(<<"connection_id">>, PendingJoin, null)
-    ),
-    case pending_join_rpc_entry(ConnId, PendingJoin) of
-        undefined -> false;
-        Entry -> {true, Entry}
-    end;
-pending_join_rpc_entry_from_map(_) ->
-    false.
-
--spec pending_join_rpc_entry(term(), term()) -> map() | undefined.
-pending_join_rpc_entry(ConnId, Metadata) when is_map(Metadata) ->
-    NormalizedConnId = normalize_rpc_id(ConnId),
-    UserId = normalize_rpc_id(
-        maps:get(user_id, Metadata, maps:get(<<"user_id">>, Metadata, null))
-    ),
-    case {NormalizedConnId, UserId} of
-        {null, _} ->
-            undefined;
-        {_, null} ->
-            undefined;
-        _ ->
-            #{
-                connection_id => NormalizedConnId,
-                user_id => UserId,
-                token_nonce => normalize_rpc_binary(
-                    maps:get(token_nonce, Metadata, maps:get(<<"token_nonce">>, Metadata, null))
-                ),
-                expires_at => normalize_rpc_millisecond(
-                    maps:get(expires_at, Metadata, maps:get(<<"expires_at">>, Metadata, 0))
-                )
-            }
-    end;
-pending_join_rpc_entry(_, _) ->
-    undefined.
-
--spec pending_join_channel_id(term()) -> integer() | undefined.
-pending_join_channel_id(Metadata) when is_map(Metadata) ->
-    normalize_rpc_integer(
-        maps:get(channel_id, Metadata, maps:get(<<"channel_id">>, Metadata, undefined))
-    );
-pending_join_channel_id(_) ->
-    undefined.
-
 -spec guild_state_call(pid(), timeout()) -> term().
 guild_state_call(GuildPid, Timeout) ->
     case gen_server:call(GuildPid, {get_voice_guild_state}, Timeout) of
@@ -238,22 +146,6 @@ guild_state_call(GuildPid, Timeout) ->
 -spec full_guild_state_call(pid(), timeout()) -> term().
 full_guild_state_call(GuildPid, Timeout) ->
     gen_server:call(GuildPid, {get_sessions}, Timeout).
-
--spec guild_id_call(pid(), timeout()) -> integer() | undefined.
-guild_id_call(GuildPid, Timeout) ->
-    case gen_server:call(GuildPid, {get_guild_id}, Timeout) of
-        GuildId when is_integer(GuildId) -> GuildId;
-        _ -> guild_state_id(full_guild_state_call(GuildPid, Timeout))
-    end.
-
--spec guild_state_id(term()) -> integer() | undefined.
-guild_state_id(GuildState) when is_map(GuildState) ->
-    case maps:get(id, GuildState, undefined) of
-        GuildId when is_integer(GuildId) -> GuildId;
-        _ -> undefined
-    end;
-guild_state_id(_) ->
-    undefined.
 
 -spec fetch_guild_data(pid()) -> map().
 fetch_guild_data(GuildPid) ->
@@ -269,10 +161,6 @@ fetch_guild_data(GuildPid) ->
         exit:{normal, _} ->
             #{}
     end.
-
--spec ensure_map(term()) -> map().
-ensure_map(Map) when is_map(Map) -> Map;
-ensure_map(_) -> #{}.
 
 -spec prepend_defined(undefined | map(), [map()]) -> [map()].
 prepend_defined(undefined, Acc) -> Acc;
@@ -313,103 +201,3 @@ normalize_rpc_binary(Value) when is_list(Value), Value =/= [] ->
     end;
 normalize_rpc_binary(_) ->
     null.
-
--spec normalize_rpc_millisecond(term()) -> integer().
-normalize_rpc_millisecond(Value) when is_integer(Value), Value >= 0 -> Value;
-normalize_rpc_millisecond(Value) when is_binary(Value), byte_size(Value) > 0 ->
-    try binary_to_integer(Value) of
-        Integer when Integer >= 0 -> Integer;
-        _ -> 0
-    catch
-        throw:_ -> 0;
-        error:_ -> 0;
-        exit:_ -> 0
-    end;
-normalize_rpc_millisecond(_) ->
-    0.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-guild_state_call_uses_projection_test() ->
-    with_fake_guild(fun new_guild_handler/1, fun(Pid) ->
-        ?assertEqual(projected_guild_state(), guild_state_call(Pid, 1000)),
-        ?assertEqual([{get_voice_guild_state}], drain_requests())
-    end).
-
-guild_state_call_retries_get_sessions_against_old_peer_test() ->
-    with_fake_guild(fun old_guild_handler/1, fun(Pid) ->
-        ?assertEqual(full_guild_state(), guild_state_call(Pid, 1000)),
-        ?assertEqual([{get_voice_guild_state}, {get_sessions}], drain_requests())
-    end).
-
-fetch_guild_data_retries_get_sessions_against_old_peer_test() ->
-    with_fake_guild(fun old_guild_handler/1, fun(Pid) ->
-        ?assertEqual(full_guild_state(), fetch_guild_data(Pid)),
-        ?assertEqual([{get_voice_guild_state}, {get_sessions}], drain_requests())
-    end).
-
-guild_id_call_uses_get_guild_id_test() ->
-    with_fake_guild(fun new_guild_handler/1, fun(Pid) ->
-        ?assertEqual(42, guild_id_call(Pid, 1000)),
-        ?assertEqual([{get_guild_id}], drain_requests())
-    end).
-
-guild_id_call_returns_real_id_against_old_peer_test() ->
-    with_fake_guild(fun old_guild_handler/1, fun(Pid) ->
-        ?assertEqual(42, guild_id_call(Pid, 1000)),
-        ?assertEqual([{get_guild_id}, {get_sessions}], drain_requests())
-    end).
-
-guild_id_call_returns_undefined_when_peer_has_no_id_test() ->
-    with_fake_guild(fun(_) -> ok end, fun(Pid) ->
-        ?assertEqual(undefined, guild_id_call(Pid, 1000)),
-        ?assertEqual([{get_guild_id}, {get_sessions}], drain_requests())
-    end).
-
-new_guild_handler({get_voice_guild_state}) -> projected_guild_state();
-new_guild_handler({get_guild_id}) -> 42;
-new_guild_handler({get_sessions}) -> full_guild_state();
-new_guild_handler(_) -> ok.
-
-old_guild_handler({get_sessions}) -> full_guild_state();
-old_guild_handler(_) -> ok.
-
-full_guild_state() ->
-    #{
-        id => 42,
-        sessions => #{},
-        voice_states => #{},
-        data => #{<<"id">> => <<"42">>, <<"members">> => #{}}
-    }.
-
-projected_guild_state() ->
-    #{id => 42, sessions => #{}, voice_states => #{}, data => #{<<"id">> => <<"42">>}}.
-
-with_fake_guild(Handler, Fun) ->
-    _ = drain_requests(),
-    Owner = self(),
-    Pid = spawn(fun() -> fake_guild_loop(Owner, Handler) end),
-    try
-        Fun(Pid)
-    after
-        Pid ! stop
-    end.
-
-fake_guild_loop(Owner, Handler) ->
-    receive
-        {'$gen_call', From, Request} ->
-            Owner ! {fake_guild_request, Request},
-            gen_server:reply(From, Handler(Request)),
-            fake_guild_loop(Owner, Handler);
-        stop ->
-            ok
-    end.
-
-drain_requests() ->
-    receive
-        {fake_guild_request, Request} -> [Request | drain_requests()]
-    after 0 -> []
-    end.
-
--endif.

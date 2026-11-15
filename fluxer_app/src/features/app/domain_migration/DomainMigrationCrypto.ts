@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {gcm} from '@noble/ciphers/aes.js';
+import {sha256} from '@noble/hashes/sha2.js';
+import {bytesToHex, utf8ToBytes} from '@noble/hashes/utils.js';
+
 const IV_BYTES = 12;
 const KEY_BYTES = 32;
 const GZIP_MAGIC_FIRST = 0x1f;
@@ -28,9 +32,8 @@ export function randomBase64Url(byteLength: number): string {
 	return bytesToBase64Url(crypto.getRandomValues(new Uint8Array(byteLength)));
 }
 
-export async function sha256Hex(value: string): Promise<string> {
-	const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)));
-	return Array.from(digest, (byte) => byte.toString(16).padStart(2, '0')).join('');
+export function sha256Hex(value: string): string {
+	return bytesToHex(sha256(utf8ToBytes(value)));
 }
 
 async function pipeBytes(
@@ -62,8 +65,7 @@ export async function encryptDomainMigrationPayload(value: unknown): Promise<{pa
 	const plaintext = await compress(new TextEncoder().encode(JSON.stringify(value)));
 	const rawKey = crypto.getRandomValues(new Uint8Array(KEY_BYTES));
 	const iv = crypto.getRandomValues(new Uint8Array(IV_BYTES));
-	const key = await crypto.subtle.importKey('raw', rawKey, 'AES-GCM', false, ['encrypt']);
-	const ciphertext = new Uint8Array(await crypto.subtle.encrypt({name: 'AES-GCM', iv}, key, plaintext));
+	const ciphertext = gcm(rawKey, iv).encrypt(plaintext);
 	const sealed = new Uint8Array(IV_BYTES + ciphertext.length);
 	sealed.set(iv, 0);
 	sealed.set(ciphertext, IV_BYTES);
@@ -76,9 +78,6 @@ export async function decryptDomainMigrationPayload(payload: string, encodedKey:
 	if (rawKey.length !== KEY_BYTES || sealed.length <= IV_BYTES) {
 		throw new Error('Malformed handoff payload');
 	}
-	const key = await crypto.subtle.importKey('raw', rawKey, 'AES-GCM', false, ['decrypt']);
-	const plaintext = new Uint8Array(
-		await crypto.subtle.decrypt({name: 'AES-GCM', iv: sealed.subarray(0, IV_BYTES)}, key, sealed.subarray(IV_BYTES)),
-	);
+	const plaintext = new Uint8Array(gcm(rawKey, sealed.subarray(0, IV_BYTES)).decrypt(sealed.subarray(IV_BYTES)));
 	return JSON.parse(new TextDecoder().decode(await decompress(plaintext)));
 }

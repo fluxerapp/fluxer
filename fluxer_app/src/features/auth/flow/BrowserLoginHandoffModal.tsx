@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import styles from '@app/features/auth/flow/BrowserLoginHandoffModal.module.css';
 import {HandoffCodeDisplay} from '@app/features/auth/flow/HandoffCodeDisplay';
 import type {LoginSuccessPayload} from '@app/features/auth/state/AuthFlow';
+import {currentInstanceTarget} from '@app/features/platform/transport/InstanceHTTP';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
 import * as FormUtils from '@app/lib/forms';
-import {msg} from '@lingui/core/macro';
+import {msg, ph} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {ArrowSquareOutIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
@@ -58,7 +58,7 @@ const BrowserLoginHandoffModal = observer(({onSuccess, prefillLogin, variant}: B
 		setHandoffCode(null);
 		setHandoffExpiresAt(null);
 		try {
-			const result = await AuthenticationCommands.initiateDesktopHandoff();
+			const result = await AuthenticationCommands.initiateDesktopHandoff(currentInstanceTarget());
 			handoffPollSecretRef.current = result.poll_secret ?? null;
 			setHandoffCode(result.code);
 			setHandoffExpiresAt(result.expires_at);
@@ -77,7 +77,11 @@ const BrowserLoginHandoffModal = observer(({onSuccess, prefillLogin, variant}: B
 		const timer = setInterval(async () => {
 			if (!pollingRef.current) return;
 			try {
-				const result = await AuthenticationCommands.pollDesktopHandoffStatus(handoffCode, handoffPollSecretRef.current);
+				const result = await AuthenticationCommands.pollDesktopHandoffStatus(
+					handoffCode,
+					handoffPollSecretRef.current,
+					currentInstanceTarget(),
+				);
 				if (result.status === 'completed' && result.token && result.user_id) {
 					pollingRef.current = false;
 					completedRef.current = true;
@@ -118,7 +122,7 @@ const BrowserLoginHandoffModal = observer(({onSuccess, prefillLogin, variant}: B
 			<Modal.Header
 				title={
 					isOldAppVariant
-						? i18n._(SIGN_IN_WITH_OLD_APP_DESCRIPTOR, {productName: PRODUCT_NAME})
+						? i18n._(SIGN_IN_WITH_OLD_APP_DESCRIPTOR, {productName: RuntimeConfig.productName})
 						: i18n._(ADD_ACCOUNT_DESCRIPTOR)
 				}
 				data-flx="auth.flow.browser-login-handoff-modal.modal-header"
@@ -127,7 +131,10 @@ const BrowserLoginHandoffModal = observer(({onSuccess, prefillLogin, variant}: B
 				<Modal.ContentLayout className={styles.content} data-flx="auth.flow.browser-login-handoff-modal.content">
 					<Modal.Description data-flx="auth.flow.browser-login-handoff-modal.description">
 						{isOldAppVariant ? (
-							<Trans>Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below.</Trans>
+							<Trans>
+								Open your old {ph({PRODUCT_NAME: RuntimeConfig.productName})} app and choose Link a new device, then
+								enter the code below.
+							</Trans>
 						) : (
 							<Trans>Open your browser, sign in, then enter the code below to link your account.</Trans>
 						)}
@@ -140,7 +147,9 @@ const BrowserLoginHandoffModal = observer(({onSuccess, prefillLogin, variant}: B
 						onRetry={generateCode}
 						description={
 							isOldAppVariant ? (
-								<Trans>Enter this code in your old {PRODUCT_NAME} app to complete sign-in.</Trans>
+								<Trans>
+									Enter this code in your old {ph({PRODUCT_NAME: RuntimeConfig.productName})} app to complete sign-in.
+								</Trans>
 							) : undefined
 						}
 						data-flx="auth.flow.browser-login-handoff-modal.handoff-code-display"
@@ -202,5 +211,3 @@ export function showBrowserLoginHandoffModal(
 		)),
 	);
 }
-
-export default BrowserLoginHandoffModal;

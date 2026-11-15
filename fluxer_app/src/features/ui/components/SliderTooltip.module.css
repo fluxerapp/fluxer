@@ -47,6 +47,7 @@
 	border-right: var(--slider-tooltip-border-width) solid var(--slider-tooltip-border);
 	border-bottom: var(--slider-tooltip-border-width) solid var(--slider-tooltip-border);
 	transform: rotate(45deg);
+	clip-path: polygon(100% 0, 100% 100%, 0 100%);
 }
 
 .tooltipContent {

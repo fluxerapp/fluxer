@@ -53,7 +53,7 @@ export async function readThemeCssFile(filePath: string): Promise<ThemeLinkedFil
 
 export function createThemeLinkedFileWatchSet(
 	emit: (change: ThemeLinkedFileChange) => void,
-	intervalMs = 250,
+	intervalMs = 1000,
 ): {replace: (paths: ReadonlyArray<string>) => void; dispose: () => void} {
 	const entries = new Map<string, ThemeLinkedFileWatchEntry>();
 	const read = (filePath: string): void => {

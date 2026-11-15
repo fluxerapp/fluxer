@@ -1,17 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use core::ffi::c_void;
-use core::ptr;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::thread;
 use std::time::Duration;
 
 use block2::RcBlock;
-use fluxer_screen_frame_bus::{NativeScreenFrameSinkHandle, NativeScreenFrameSinkHandleRef};
-use napi::JsValue;
 use napi::Status;
-use napi::bindgen_prelude::{Float32Array, Function, Result, Unknown, ValueType};
+use napi::bindgen_prelude::{Float32Array, Function, Result};
 use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
 use napi_derive::napi;
 
@@ -28,12 +25,8 @@ use objc2_screen_capture_kit::{
 };
 
 use crate::audio_source::{Source, SourceOptions};
-use crate::coreaudio_tap::{self, Capture, CaptureScope, CreateError};
 use crate::foundation;
-use crate::os_version::{
-    self, COREAUDIO_TAP_MIN_MACOS, SCK_MIN_MACOS, SupportClassification, classify_support,
-    format_version,
-};
+use crate::os_version::{self, SCK_AUDIO_MIN_MACOS, classify_support, format_version};
 use crate::pcm_pool::{PCM_POOL_CAP, PCM_SLOT_SAMPLES_MAX, PcmFramePool, PooledPcmFrame};
 use crate::process_tree;
 use crate::related_app::looks_related_by_strings;
@@ -50,11 +43,16 @@ const MAX_CALLBACK_OUTPUT_FRAMES: u32 = 192_000;
 const PCM_CALLBACK_CHANNELS: usize = 2;
 const SCK_LATE_SPAWN_REFRESH_INTERVAL: Duration = Duration::from_secs(2);
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum CaptureScope {
+    Process,
+    System,
+}
+
 struct LoopbackState {
     lifecycle_tsfn: Option<LifecycleTsfn>,
     source: Option<Box<Source>>,
     stream: Option<Retained<SCStream>>,
-    coreaudio_capture: Option<Box<Capture>>,
 
     sck_refresher: Option<SckRefresherHandle>,
 }
@@ -93,7 +91,6 @@ unsafe impl Sync for SckRefresherStream {}
 struct LoopbackInner {
     state: Mutex<LoopbackState>,
     frame_tsfn: parking_lot::RwLock<Option<FrameTsfn>>,
-    screen_audio_sink: parking_lot::RwLock<Option<Arc<NativeScreenFrameSinkHandleRef>>>,
     pcm_pool: PcmFramePool,
     pcm_frames_dropped: AtomicU64,
     running: std::sync::atomic::AtomicBool,
@@ -117,36 +114,6 @@ fn note_tsfn_status(inner: &LoopbackInner, status: Status) {
             .tsfn_aborted
             .store(true, std::sync::atomic::Ordering::Release);
     }
-}
-
-fn retain_screen_audio_sink_handle(
-    value: Unknown<'_>,
-) -> Result<Arc<NativeScreenFrameSinkHandleRef>> {
-    if value.get_type()? != ValueType::External {
-        return Err(napi::Error::new(
-            Status::InvalidArg,
-            "ProcessLoopback.setScreenAudioSink expects a native external sink handle",
-        ));
-    }
-    let raw_value = value.value();
-    let mut data: *mut c_void = ptr::null_mut();
-    let status =
-        unsafe { napi::sys::napi_get_value_external(raw_value.env, raw_value.value, &mut data) };
-    if status != napi::sys::Status::napi_ok || data.is_null() {
-        return Err(napi::Error::new(
-            Status::InvalidArg,
-            "ProcessLoopback.setScreenAudioSink received an empty native external sink handle",
-        ));
-    }
-    let handle = unsafe { data.cast::<NativeScreenFrameSinkHandle>().as_ref() }
-        .and_then(NativeScreenFrameSinkHandle::retain_ref)
-        .ok_or_else(|| {
-            napi::Error::new(
-                Status::InvalidArg,
-                "ProcessLoopback.setScreenAudioSink received an invalid native sink handle",
-            )
-        })?;
-    Ok(Arc::new(handle))
 }
 
 #[napi(js_name = "ProcessLoopback")]
@@ -196,20 +163,6 @@ unsafe extern "C" fn on_pcm_trampoline(
     }
     if !inner.running.load(std::sync::atomic::Ordering::Acquire) {
         inner.pcm_frames_dropped.fetch_add(1, Ordering::Relaxed);
-        return;
-    }
-    if let Some(sink) = inner.screen_audio_sink.read().as_ref().cloned() {
-        let Some(frame) = (unsafe { &mut *slot }).take() else {
-            return;
-        };
-        assert_eq!(frame.filled_len(), total);
-        sink.enqueue_screen_audio_f32(
-            frame.data_slice(),
-            frames,
-            PCM_CALLBACK_CHANNELS as u32,
-            48_000,
-            0,
-        );
         return;
     }
     if inner
@@ -302,7 +255,7 @@ fn build_stream_for_pid(
     let mut target_app: Option<Retained<SCRunningApplication>> = None;
     for i in 0..app_count {
         let app = apps.objectAtIndex(i);
-        if sck::sc_running_application_process_id(&app) == pid {
+        if unsafe { app.processID() } == pid {
             target_app = Some(app);
             break;
         }
@@ -331,22 +284,22 @@ fn build_stream_for_pid(
     };
 
     let cfg: Retained<SCStreamConfiguration> = unsafe { SCStreamConfiguration::new() };
-    sck::cfg_set_captures_audio(&cfg, true);
-    sck::cfg_set_excludes_current_process_audio(&cfg, true);
-    sck::cfg_set_sample_rate(&cfg, 48_000);
-    sck::cfg_set_channel_count(&cfg, 2);
-    sck::cfg_set_queue_depth(&cfg, 8);
-    sck::cfg_set_width(&cfg, 2);
-    sck::cfg_set_height(&cfg, 2);
-    sck::cfg_set_minimum_frame_interval(&cfg, sck::cmtime_seconds(1, 1));
-    sck::cfg_set_shows_cursor(&cfg, false);
+    unsafe { cfg.setCapturesAudio(true) };
+    unsafe { cfg.setExcludesCurrentProcessAudio(true) };
+    unsafe { cfg.setSampleRate(48_000) };
+    unsafe { cfg.setChannelCount(2) };
+    unsafe { cfg.setQueueDepth(8) };
+    unsafe { cfg.setWidth(2) };
+    unsafe { cfg.setHeight(2) };
+    unsafe { cfg.setMinimumFrameInterval(sck::cmtime_seconds(1, 1)) };
+    unsafe { cfg.setShowsCursor(false) };
     sck::cfg_set_capture_dynamic_range_sdr_if_available(&cfg);
 
     let stream_name = format!("Fluxer ProcessLoopback Audio (pid {pid})");
     let nsname = NSString::from_str(&stream_name);
     sck::cfg_set_stream_name_if_available(&cfg, &nsname);
 
-    let source = Source::create(SourceOptions::default()).map_err(|_| BuildStreamErr::Other)?;
+    let source = Source::create(SourceOptions::default());
 
     let stream_alloc = SCStream::alloc();
     let stream: Retained<SCStream> = unsafe {
@@ -358,22 +311,24 @@ fn build_stream_for_pid(
         )
     };
 
-    if sck::sc_stream_add_stream_output(
-        &stream,
-        source.delegate_as_output(),
-        SCStreamOutputType::Screen,
-        None,
-    )
+    if unsafe {
+        stream.addStreamOutput_type_sampleHandlerQueue_error(
+            source.delegate_as_output(),
+            SCStreamOutputType::Screen,
+            None,
+        )
+    }
     .is_err()
     {
         return Err(BuildStreamErr::Other);
     }
-    if sck::sc_stream_add_stream_output(
-        &stream,
-        source.delegate_as_output(),
-        SCStreamOutputType::Audio,
-        Some(source.output_queue()),
-    )
+    if unsafe {
+        stream.addStreamOutput_type_sampleHandlerQueue_error(
+            source.delegate_as_output(),
+            SCStreamOutputType::Audio,
+            Some(source.output_queue()),
+        )
+    }
     .is_err()
     {
         return Err(BuildStreamErr::Other);
@@ -399,7 +354,7 @@ fn build_system_stream() -> std::result::Result<BuiltStream, BuildStreamErr> {
     let mut excluded_apps: Vec<Retained<SCRunningApplication>> = Vec::new();
     for i in 0..apps.count() {
         let app = apps.objectAtIndex(i);
-        if is_self_or_related_process(sck::sc_running_application_process_id(&app)) {
+        if is_self_or_related_process(unsafe { app.processID() }) {
             excluded_apps.push(app);
         }
     }
@@ -418,21 +373,21 @@ fn build_system_stream() -> std::result::Result<BuiltStream, BuildStreamErr> {
     };
 
     let cfg: Retained<SCStreamConfiguration> = unsafe { SCStreamConfiguration::new() };
-    sck::cfg_set_captures_audio(&cfg, true);
-    sck::cfg_set_excludes_current_process_audio(&cfg, true);
-    sck::cfg_set_sample_rate(&cfg, 48_000);
-    sck::cfg_set_channel_count(&cfg, 2);
-    sck::cfg_set_queue_depth(&cfg, 8);
-    sck::cfg_set_width(&cfg, 2);
-    sck::cfg_set_height(&cfg, 2);
-    sck::cfg_set_minimum_frame_interval(&cfg, sck::cmtime_seconds(1, 1));
-    sck::cfg_set_shows_cursor(&cfg, false);
+    unsafe { cfg.setCapturesAudio(true) };
+    unsafe { cfg.setExcludesCurrentProcessAudio(true) };
+    unsafe { cfg.setSampleRate(48_000) };
+    unsafe { cfg.setChannelCount(2) };
+    unsafe { cfg.setQueueDepth(8) };
+    unsafe { cfg.setWidth(2) };
+    unsafe { cfg.setHeight(2) };
+    unsafe { cfg.setMinimumFrameInterval(sck::cmtime_seconds(1, 1)) };
+    unsafe { cfg.setShowsCursor(false) };
     sck::cfg_set_capture_dynamic_range_sdr_if_available(&cfg);
 
     let nsname = NSString::from_str("Fluxer System Audio");
     sck::cfg_set_stream_name_if_available(&cfg, &nsname);
 
-    let source = Source::create(SourceOptions::default()).map_err(|_| BuildStreamErr::Other)?;
+    let source = Source::create(SourceOptions::default());
 
     let stream_alloc = SCStream::alloc();
     let stream: Retained<SCStream> = unsafe {
@@ -444,22 +399,24 @@ fn build_system_stream() -> std::result::Result<BuiltStream, BuildStreamErr> {
         )
     };
 
-    if sck::sc_stream_add_stream_output(
-        &stream,
-        source.delegate_as_output(),
-        SCStreamOutputType::Screen,
-        None,
-    )
+    if unsafe {
+        stream.addStreamOutput_type_sampleHandlerQueue_error(
+            source.delegate_as_output(),
+            SCStreamOutputType::Screen,
+            None,
+        )
+    }
     .is_err()
     {
         return Err(BuildStreamErr::Other);
     }
-    if sck::sc_stream_add_stream_output(
-        &stream,
-        source.delegate_as_output(),
-        SCStreamOutputType::Audio,
-        Some(source.output_queue()),
-    )
+    if unsafe {
+        stream.addStreamOutput_type_sampleHandlerQueue_error(
+            source.delegate_as_output(),
+            SCStreamOutputType::Audio,
+            Some(source.output_queue()),
+        )
+    }
     .is_err()
     {
         return Err(BuildStreamErr::Other);
@@ -478,10 +435,10 @@ fn collect_capture_apps(
     let mut chosen: Vec<Retained<SCRunningApplication>> = Vec::with_capacity(capacity);
     let mut pids: Vec<i32> = Vec::with_capacity(capacity);
 
-    let target_pid = sck::sc_running_application_process_id(target_app);
+    let target_pid = unsafe { target_app.processID() };
     let target_info = process_tree::info_for_pid(target_pid);
-    let target_bundle = sck::sc_running_application_bundle_identifier(target_app).to_string();
-    let target_name = sck::sc_running_application_name(target_app).to_string();
+    let target_bundle = unsafe { target_app.bundleIdentifier() }.to_string();
+    let target_name = unsafe { target_app.applicationName() }.to_string();
 
     if include_tree {
         for i in 0..count {
@@ -489,10 +446,12 @@ fn collect_capture_apps(
                 break;
             }
             let candidate = apps.objectAtIndex(i);
-            let candidate_pid = sck::sc_running_application_process_id(&candidate);
-            let candidate_bundle =
-                sck::sc_running_application_bundle_identifier(&candidate).to_string();
-            let candidate_name = sck::sc_running_application_name(&candidate).to_string();
+            let candidate_pid = unsafe { candidate.processID() };
+            if is_self_or_related_process(candidate_pid) {
+                continue;
+            }
+            let candidate_bundle = unsafe { candidate.bundleIdentifier() }.to_string();
+            let candidate_name = unsafe { candidate.applicationName() }.to_string();
             let same_tree =
                 process_tree::is_same_launch_tree(candidate_pid, target_pid, target_info);
             let related = candidate_pid == target_pid
@@ -510,7 +469,7 @@ fn collect_capture_apps(
     }
 
     if pids.is_empty() {
-        let pid = sck::sc_running_application_process_id(target_app);
+        let pid = unsafe { target_app.processID() };
         chosen.push(target_app.retain());
         pids.push(pid);
     }
@@ -541,20 +500,20 @@ fn best_display_for_selection(
 
     for d in 0..display_count {
         let display = displays.objectAtIndex(d);
-        let display_frame = sck::sc_display_frame(&display);
+        let display_frame = unsafe { display.frame() };
         let mut area = 0.0;
         for w in 0..window_count {
             let window = windows.objectAtIndex(w);
-            let owner = match sck::sc_window_owning_application(&window) {
+            let owner = match unsafe { window.owningApplication() } {
                 Some(o) => o,
                 None => continue,
             };
-            let owner_pid = sck::sc_running_application_process_id(&owner);
+            let owner_pid = unsafe { owner.processID() };
             if !pids.contains(&owner_pid) {
                 continue;
             }
             saw_app_window = true;
-            area += sck::cgrect_intersection_area(display_frame, sck::sc_window_frame(&window));
+            area += sck::cgrect_intersection_area(display_frame, unsafe { window.frame() });
         }
         if area > best_area {
             best_area = area;
@@ -623,7 +582,7 @@ fn run_sck_late_spawn_refresher(
         let mut target_app: Option<Retained<SCRunningApplication>> = None;
         for i in 0..app_count {
             let app = apps.objectAtIndex(i);
-            if sck::sc_running_application_process_id(&app) == target_pid {
+            if unsafe { app.processID() } == target_pid {
                 target_app = Some(app);
                 break;
             }
@@ -678,24 +637,19 @@ fn stop_loopback(inner: &LoopbackInner) -> Result<()> {
     inner
         .running
         .store(false, std::sync::atomic::Ordering::Release);
-    let (stream_opt, mut source, coreaudio_capture, sck_refresher) = {
+    let (stream_opt, mut source, sck_refresher) = {
         let mut state = lock_loopback_state(inner)?;
         let stream = state.stream.take();
         let source = state.source.take();
-        let coreaudio_capture = state.coreaudio_capture.take();
         let refresher = state.sck_refresher.take();
-        (stream, source, coreaudio_capture, refresher)
+        (stream, source, refresher)
     };
 
     if let Some(mut r) = sck_refresher {
         r.shutdown();
     }
 
-    if stream_opt.is_none() && coreaudio_capture.is_none() {
-        return Ok(());
-    }
-
-    if let Some(_capture) = coreaudio_capture {
+    if stream_opt.is_none() {
         return Ok(());
     }
 
@@ -729,11 +683,9 @@ impl ProcessLoopback {
                     lifecycle_tsfn: None,
                     source: None,
                     stream: None,
-                    coreaudio_capture: None,
                     sck_refresher: None,
                 }),
                 frame_tsfn: parking_lot::RwLock::new(None),
-                screen_audio_sink: parking_lot::RwLock::new(None),
                 pcm_pool,
                 pcm_frames_dropped: AtomicU64::new(0),
                 running: std::sync::atomic::AtomicBool::new(false),
@@ -755,24 +707,6 @@ impl ProcessLoopback {
         Ok(())
     }
 
-    #[napi(js_name = "setScreenAudioSink")]
-    pub fn set_screen_audio_sink(&self, sink_handle: Unknown<'_>) -> Result<()> {
-        let sink = retain_screen_audio_sink_handle(sink_handle)?;
-        if !sink.supports_screen_audio() {
-            return Err(napi::Error::new(
-                Status::InvalidArg,
-                "ProcessLoopback.setScreenAudioSink handle does not support screen audio",
-            ));
-        }
-        *self.inner.screen_audio_sink.write() = Some(sink);
-        Ok(())
-    }
-
-    #[napi(js_name = "clearScreenAudioSink")]
-    pub fn clear_screen_audio_sink(&self) {
-        self.inner.screen_audio_sink.write().take();
-    }
-
     #[napi]
     pub fn set_lifecycle_callback(&self, callback: Function<(String, String), ()>) -> Result<()> {
         let tsfn: LifecycleTsfn = callback
@@ -791,16 +725,11 @@ impl ProcessLoopback {
     pub async fn start(
         &self,
         pid: i32,
-        _exclude_self: Option<bool>,
         include_process_tree: Option<bool>,
-        backend: Option<String>,
         capture_scope: Option<String>,
     ) -> Result<()> {
         let include_tree = include_process_tree.unwrap_or(true);
-        let backend_pref = backend.as_deref().unwrap_or("auto");
-        let scope_pref = capture_scope.as_deref().unwrap_or("process");
-
-        let scope = if scope_pref == "system" {
+        let scope = if capture_scope.as_deref() == Some("system") {
             CaptureScope::System
         } else {
             CaptureScope::Process
@@ -813,23 +742,9 @@ impl ProcessLoopback {
             ));
         }
 
-        {
-            let detected = os_version::current_macos_version();
-            let SupportClassification {
-                supported,
-                sck_available,
-                coreaudio_available,
-                reason,
-            } = classify_support(detected);
-
-            let backend_ok = match backend_pref {
-                "coreaudio" => coreaudio_available,
-                "sck" => sck_available,
-                _ => supported,
-            };
-            if !backend_ok {
-                return Err(napi::Error::new(Status::GenericFailure, reason));
-            }
+        let support = classify_support(os_version::current_macos_version());
+        if !support.supported {
+            return Err(napi::Error::new(Status::GenericFailure, support.reason));
         }
         if scope == CaptureScope::Process && is_self_or_related_process(pid) {
             return Err(napi::Error::new(
@@ -842,7 +757,6 @@ impl ProcessLoopback {
             let state = lock_loopback_state(&self.inner)?;
             if state.stream.is_some()
                 || state.source.is_some()
-                || state.coreaudio_capture.is_some()
                 || self
                     .inner
                     .running
@@ -855,55 +769,6 @@ impl ProcessLoopback {
             }
         }
 
-        let mut coreaudio_error: Option<CreateError> = None;
-        let should_try_coreaudio = backend_pref == "coreaudio"
-            || (backend_pref == "auto" && scope == CaptureScope::Process);
-        if should_try_coreaudio {
-            match Capture::create(pid, include_tree, scope) {
-                Ok(mut capture) => {
-                    let ctx = std::sync::Arc::as_ptr(&self.inner) as *mut c_void;
-                    capture.set_pcm_callback(on_pcm_trampoline, ctx);
-                    capture.set_pcm_pool(self.inner.pcm_pool.clone());
-                    {
-                        let mut state = lock_loopback_state(&self.inner)?;
-                        state.coreaudio_capture = Some(capture);
-                    }
-                    self.inner
-                        .running
-                        .store(true, std::sync::atomic::Ordering::Release);
-                    let start_res = {
-                        let mut state = lock_loopback_state(&self.inner)?;
-                        state
-                            .coreaudio_capture
-                            .as_mut()
-                            .map(|c| c.start())
-                            .unwrap_or(Err(CreateError::StartDeviceFailed))
-                    };
-                    if let Err(e) = start_res {
-                        self.inner
-                            .running
-                            .store(false, std::sync::atomic::Ordering::Release);
-                        let mut state = lock_loopback_state(&self.inner)?;
-                        state.coreaudio_capture = None;
-                        return Err(napi::Error::new(
-                            Status::GenericFailure,
-                            coreaudio_tap::coreaudio_error_message(&e),
-                        ));
-                    }
-                    return Ok(());
-                }
-                Err(e) => {
-                    if backend_pref == "coreaudio" || scope == CaptureScope::System {
-                        return Err(napi::Error::new(
-                            Status::GenericFailure,
-                            coreaudio_tap::coreaudio_error_message(&e),
-                        ));
-                    }
-                    coreaudio_error = Some(e);
-                }
-            }
-        }
-
         let mut built = match if scope == CaptureScope::System {
             build_system_stream()
         } else {
@@ -912,10 +777,7 @@ impl ProcessLoopback {
             Ok(b) => b,
             Err(e) => {
                 let msg = match e {
-                    BuildStreamErr::PidNotFound => match &coreaudio_error {
-                        Some(ce) => coreaudio_tap::coreaudio_error_message(ce),
-                        None => "No running application for pid",
-                    },
+                    BuildStreamErr::PidNotFound => "No running application for pid",
                     BuildStreamErr::NoApps | BuildStreamErr::NoDisplays => "No display available",
                     BuildStreamErr::Other => "ProcessLoopback.start failed",
                 };
@@ -943,9 +805,12 @@ impl ProcessLoopback {
             self.inner
                 .running
                 .store(false, std::sync::atomic::Ordering::Release);
-            let mut state = lock_loopback_state(&self.inner)?;
-            state.source = None;
-            state.stream = None;
+            let source = {
+                let mut state = lock_loopback_state(&self.inner)?;
+                state.stream = None;
+                state.source.take()
+            };
+            drop(source);
             return Err(napi::Error::new(
                 Status::GenericFailure,
                 "SCStream startCapture failed",
@@ -1033,9 +898,9 @@ pub async fn list_audible_applications() -> Result<Vec<AppDescriptor>> {
     let n = apps.count();
     for i in 0..n {
         let app = apps.objectAtIndex(i);
-        let pid = sck::sc_running_application_process_id(&app);
-        let bundle = sck::sc_running_application_bundle_identifier(&app).to_string();
-        let name = sck::sc_running_application_name(&app).to_string();
+        let pid = unsafe { app.processID() };
+        let bundle = unsafe { app.bundleIdentifier() }.to_string();
+        let name = unsafe { app.applicationName() }.to_string();
         out.push(AppDescriptor {
             pid,
             bundle_id: Some(bundle),
@@ -1051,17 +916,9 @@ pub struct SckAvailability {
     pub macos_version: Option<String>,
 }
 
-#[napi(object, js_name = "MacBackendCoreAudioAvailability")]
-pub struct CoreAudioAvailability {
-    pub supported: bool,
-}
-
 #[napi(object, js_name = "MacBackendAvailability")]
 pub struct BackendAvailability {
     pub sck: SckAvailability,
-    pub coreaudio: CoreAudioAvailability,
-    pub screen_permission: String,
-    pub audio_permission: String,
 }
 
 #[napi(object, js_name = "MacAppAudioBackendInfo")]
@@ -1071,51 +928,30 @@ pub struct MacAppAudioBackendInfo {
     pub reason: String,
     #[napi(js_name = "minMacosVersion")]
     pub min_macos_version: String,
-    #[napi(js_name = "minMacosVersionCoreaudio")]
-    pub min_macos_version_coreaudio: String,
     #[napi(js_name = "detectedMacosVersion")]
     pub detected_macos_version: Option<String>,
-    #[napi(js_name = "sckAvailable")]
-    pub sck_available: bool,
-    #[napi(js_name = "coreaudioAvailable")]
-    pub coreaudio_available: bool,
 }
 
 #[napi(js_name = "getBackendInfo")]
 pub fn get_backend_info() -> MacAppAudioBackendInfo {
     let detected = os_version::current_macos_version();
-    let SupportClassification {
-        supported,
-        sck_available,
-        coreaudio_available,
-        reason,
-    } = classify_support(detected);
+    let support = classify_support(detected);
     MacAppAudioBackendInfo {
         backend: "mac-app-audio".to_owned(),
-        supported,
-        reason,
-        min_macos_version: format_version(SCK_MIN_MACOS),
-        min_macos_version_coreaudio: format_version(COREAUDIO_TAP_MIN_MACOS),
+        supported: support.supported,
+        reason: support.reason,
+        min_macos_version: format_version(SCK_AUDIO_MIN_MACOS),
         detected_macos_version: detected.map(format_version),
-        sck_available,
-        coreaudio_available,
     }
 }
 
 #[napi(js_name = "getBackendAvailability")]
 pub async fn get_backend_availability() -> Result<BackendAvailability> {
-    use objc2::runtime::AnyClass;
-    let sck_supported = AnyClass::get(c"SCStream").is_some();
-    let version_str = Some(foundation::operating_system_version_string());
+    let support = classify_support(os_version::current_macos_version());
     Ok(BackendAvailability {
         sck: SckAvailability {
-            supported: sck_supported,
-            macos_version: version_str,
+            supported: support.supported,
+            macos_version: Some(foundation::operating_system_version_string()),
         },
-        coreaudio: CoreAudioAvailability {
-            supported: coreaudio_tap::is_supported(),
-        },
-        screen_permission: "not-determined".to_string(),
-        audio_permission: "not-determined".to_string(),
     })
 }

@@ -102,6 +102,17 @@ export function parseIpAddress(value: string): ParsedIpAddress | null {
 	};
 }
 
+export function canonicalizeIpAddress(value: string): string | null {
+	const parsed = parseIpAddress(value);
+	if (!parsed) {
+		return null;
+	}
+	if (parsed.family === 'ipv4') {
+		return parsed.normalized;
+	}
+	return getIpv4MappedIpv6(expandIpv6ToGroups(parsed.normalized)) ?? parsed.normalized;
+}
+
 export function isValidIp(value: string): boolean {
 	return parseIpAddress(value) !== null;
 }
@@ -330,4 +341,62 @@ export function getSubnet(ip: string): string | null {
 		ipv4PrefixLength: 24,
 		ipv6PrefixLength: 48,
 	});
+}
+
+export function ipToBytes(address: string): {family: IpAddressFamily; bytes: Uint8Array} | null {
+	const normalized = stripIpv6Brackets(address.trim().toLowerCase());
+	if (isIPv4(normalized)) return {family: 'ipv4', bytes: Uint8Array.from(normalized.split('.').map(Number))};
+	if (!isIPv6(normalized)) {
+		return null;
+	}
+	let head = normalized;
+	let embeddedIpv4Octets: Array<number> | null = null;
+	const lastColonIndex = head.lastIndexOf(':');
+	const trailing = head.slice(lastColonIndex + 1);
+	if (trailing.includes('.')) {
+		if (!isIPv4(trailing)) {
+			return null;
+		}
+		embeddedIpv4Octets = trailing.split('.').map((part) => Number.parseInt(part, 10));
+		head = `${head.slice(0, lastColonIndex + 1)}0:0`;
+	}
+	let groups: Array<string>;
+	if (head.indexOf('::') === -1) {
+		groups = head.split(':');
+		if (groups.length !== 8) {
+			return null;
+		}
+	} else {
+		const [beforePart, afterPart] = head.split('::');
+		const before = beforePart.length > 0 ? beforePart.split(':') : [];
+		const after = afterPart.length > 0 ? afterPart.split(':') : [];
+		const missing = 8 - before.length - after.length;
+		if (missing < 1) {
+			return null;
+		}
+		groups = [...before, ...new Array(missing).fill('0'), ...after];
+	}
+	const bytes = new Uint8Array(16);
+	for (let index = 0; index < 8; index += 1) {
+		const value = parseHexGroup(groups[index]);
+		if (value === null) {
+			return null;
+		}
+		bytes[index * 2] = (value >> 8) & 0xff;
+		bytes[index * 2 + 1] = value & 0xff;
+	}
+	if (embeddedIpv4Octets) {
+		bytes[12] = embeddedIpv4Octets[0];
+		bytes[13] = embeddedIpv4Octets[1];
+		bytes[14] = embeddedIpv4Octets[2];
+		bytes[15] = embeddedIpv4Octets[3];
+	}
+	return {family: 'ipv6', bytes};
+}
+
+function parseHexGroup(value: string | undefined): number | null {
+	if (!value || !/^[0-9a-f]{1,4}$/.test(value)) {
+		return null;
+	}
+	return Number.parseInt(value, 16);
 }

@@ -4,7 +4,7 @@ import type {Channel} from '@app/features/channel/models/Channel';
 import Guilds from '@app/features/guild/state/Guilds';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import {PASSWORD_MANAGER_IGNORE_ATTRIBUTES} from '@app/features/platform/utils/PasswordManagerAutocomplete';
-import styles from '@app/features/search/components/search/UserFilterSheet.module.css';
+import styles from '@app/features/search/components/search/FilterSheet.module.css';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {BottomSheet} from '@app/features/ui/bottom_sheet/BottomSheet';
 import {Button} from '@app/features/ui/button/Button';
@@ -147,7 +147,7 @@ export const UserFilterSheet: React.FC<UserFilterSheetProps> = observer(
 											key={user.id}
 											type="button"
 											aria-pressed={isSelected}
-											className={clsx(styles.userItem, isSelected && styles.userItemSelected)}
+											className={clsx(styles.item, isSelected && styles.itemSelected)}
 											onClick={() => toggleUser(user.id)}
 											data-flx="search.search.user-filter-sheet.user-item.toggle-user.button"
 										>
@@ -159,11 +159,11 @@ export const UserFilterSheet: React.FC<UserFilterSheetProps> = observer(
 												className={styles.avatar}
 												data-flx="search.search.user-filter-sheet.avatar"
 											/>
-											<div className={styles.userInfo} data-flx="search.search.user-filter-sheet.user-info">
-												<span className={styles.displayName} data-flx="search.search.user-filter-sheet.display-name">
+											<div className={styles.info} data-flx="search.search.user-filter-sheet.user-info">
+												<span className={styles.name} data-flx="search.search.user-filter-sheet.display-name">
 													{displayName}
 												</span>
-												<span className={styles.username} data-flx="search.search.user-filter-sheet.username">
+												<span className={styles.subtitle} data-flx="search.search.user-filter-sheet.username">
 													{NicknameUtils.formatUserTagForStreamerMode(user)}
 												</span>
 											</div>

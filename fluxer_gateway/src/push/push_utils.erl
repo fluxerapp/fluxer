@@ -10,7 +10,8 @@
     normalize_binary/1,
     normalize_binary/2,
     avatar_index/1,
-    wrap_avatar_index/1
+    wrap_avatar_index/1,
+    app_pos_integer/2
 ]).
 
 -spec construct_avatar_url(binary(), binary()) -> binary().
@@ -29,10 +30,17 @@ construct_avatar_url(UserId, Hash) ->
 get_default_avatar_url(UserId) ->
     Index = default_avatar_index(avatar_index(UserId)),
     construct_static_asset_url([
-        <<"avatars/">>,
+        default_avatar_directory(),
         integer_to_binary(Index),
         <<".png">>
     ]).
+
+-spec default_avatar_directory() -> binary().
+default_avatar_directory() ->
+    case fluxer_gateway_env:get(self_hosted) of
+        true -> <<"avatars/neutral/">>;
+        _ -> <<"avatars/">>
+    end.
 
 -spec construct_static_asset_url(iodata()) -> binary().
 construct_static_asset_url(Path) ->
@@ -116,3 +124,10 @@ normalize_binary(undefined, Default) ->
     Default;
 normalize_binary(_, Default) ->
     Default.
+
+-spec app_pos_integer(atom(), pos_integer()) -> pos_integer().
+app_pos_integer(Key, Default) ->
+    case application:get_env(fluxer_gateway, Key, undefined) of
+        Value when is_integer(Value), Value > 0 -> Value;
+        _ -> Default
+    end.

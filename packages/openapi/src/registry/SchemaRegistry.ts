@@ -12,8 +12,15 @@ export class SchemaRegistry {
 	private readonly emptyObjectAcceptance = new WeakMap<core.$ZodType, boolean>();
 	private readonly converter: ZodOpenAPIConverter;
 
-	constructor(target: OpenAPISchemaTarget = 'draft-2020-12', nameUnionBranches = false) {
+	constructor(
+		private readonly target: OpenAPISchemaTarget = 'draft-2020-12',
+		nameUnionBranches = false,
+	) {
 		this.converter = new ZodOpenAPIConverter(target, nameUnionBranches);
+	}
+
+	nullable(schema: OpenAPISchema): OpenAPISchema {
+		return this.target === 'openapi-3.0' ? {allOf: [schema], nullable: true} : {anyOf: [schema, {type: 'null'}]};
 	}
 
 	register(name: string, schema: OpenAPISchema): void {

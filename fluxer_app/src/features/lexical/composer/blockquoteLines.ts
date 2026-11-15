@@ -98,12 +98,18 @@ function scanMarkerEnds(
 			markerEndByStart.set(span.start, span.end);
 		}
 	}
-	const blocks = scanAllowedCodeBlocks(source, parserFlags);
+	const blocks = scanAllowedCodeBlocks(source, parserFlags).sort((left, right) => left.start - right.start);
 	const ends: Array<number> = [];
 	let lineStart = 0;
+	let nextBlock = 0;
+	let coveredUntil = -1;
 	for (const line of lines) {
+		while (nextBlock < blocks.length && blocks[nextBlock]!.start <= lineStart) {
+			coveredUntil = Math.max(coveredUntil, blocks[nextBlock]!.end);
+			nextBlock += 1;
+		}
 		const markerEnd = markerEndByStart.get(lineStart);
-		const suppressed = isInsideCodeBlock(blocks, lineStart) || MULTILINE_ALERT_RE.test(line);
+		const suppressed = coveredUntil >= lineStart || MULTILINE_ALERT_RE.test(line);
 		ends.push(markerEnd == null || suppressed ? 0 : Math.min(markerEnd, lineStart + line.length) - lineStart);
 		lineStart += line.length + 1;
 	}
@@ -331,6 +337,19 @@ export function planBlockquoteMove(
 		return null;
 	}
 	return line.start > 0 ? line.start - 1 : line.contentStart;
+}
+
+export function planBlockquoteLineDown(
+	lines: ReadonlyArray<BlockquoteLine>,
+	offset: number,
+	textLength: number,
+): number | null {
+	const line = lines.find((candidate) => candidate.contentStart === offset && isEmptyLine(candidate));
+	if (line == null || line.end >= textLength) {
+		return null;
+	}
+	const below = lines.find((candidate) => isDirectlyAbove(line, candidate));
+	return below == null ? line.end + 1 : below.contentStart;
 }
 
 export function dropTrailingEmptyBlockquoteLines(

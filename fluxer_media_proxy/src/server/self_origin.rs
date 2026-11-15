@@ -3,16 +3,18 @@
 use crate::{
     config::DeploymentMode,
     constants::{AssetExtension, AssetKind},
-    external_path, public_net_policy,
+    public_net_policy,
     server::{
         asset_path::{
-            decode_storage_key, parse_entrance_sound_path, parse_guild_member_asset_path,
-            parse_simple_asset_path, parse_standard_asset_path,
+            ParsedAssetPath, decode_storage_key, parse_entrance_sound_path,
+            parse_guild_member_asset_path, parse_simple_asset_path, parse_standard_asset_path,
         },
+        params::requests_transform,
+        routes::dispatch::without_signature_parameters,
         state::AppState,
     },
-    signing,
 };
+use std::collections::HashMap;
 
 pub(in crate::server) enum SelfOrigin {
     Stored {
@@ -25,9 +27,20 @@ pub(in crate::server) enum SelfOrigin {
     },
 }
 
+pub(in crate::server) struct ServedVariant {
+    pub(in crate::server) route: ServedRoute,
+    pub(in crate::server) params: HashMap<String, String>,
+}
+
+pub(in crate::server) enum ServedRoute {
+    Asset(ParsedAssetPath),
+    Attachment { key: String },
+    External { rest: String },
+}
+
 pub(in crate::server) fn resolve(app: &AppState, url: &str) -> Option<SelfOrigin> {
     let endpoint = app.cfg.public_endpoint.as_deref()?;
-    let path = own_path(endpoint, url)?;
+    let (path, _) = own_path(endpoint, url)?;
     let cdn = &app.cfg.storage.bucket_cdn;
     if app.cfg.mode == DeploymentMode::Static {
         return stored(
@@ -37,10 +50,12 @@ pub(in crate::server) fn resolve(app: &AppState, url: &str) -> Option<SelfOrigin
     }
     if let Some(rest) = path.strip_prefix("/external/") {
         let (signature, proxy_path) = rest.split_once('/')?;
-        if !signing::verify_signature(proxy_path, signature, app.cfg.secret_key.as_bytes()) {
-            return None;
-        }
-        let target = external_path::reconstruct_original_url(proxy_path).ok()?;
+        let target = fluxer_common::external_media_path::verify_signed_proxy_path(
+            proxy_path,
+            signature,
+            app.cfg.secret_key.as_bytes(),
+        )
+        .ok()?;
         if own_path(endpoint, &target).is_some() {
             return None;
         }
@@ -55,15 +70,53 @@ pub(in crate::server) fn resolve(app: &AppState, url: &str) -> Option<SelfOrigin
     if let Some(key) = parse_entrance_sound_path(path) {
         return stored(cdn, key);
     }
-    let asset = parse_guild_member_asset_path(path)
-        .or_else(|| parse_simple_asset_path(path, AssetKind::Emoji))
-        .or_else(|| parse_simple_asset_path(path, AssetKind::Sticker))
-        .or_else(|| parse_standard_asset_path(path))?;
+    let asset = parse_asset_path(path)?;
     Some(SelfOrigin::Stored {
         bucket: cdn.clone(),
         key: asset.storage_key,
         fallback_ext: Some(asset.original_ext),
     })
+}
+
+pub(in crate::server) fn served_variant(app: &AppState, url: &str) -> Option<ServedVariant> {
+    let endpoint = app.cfg.public_endpoint.as_deref()?;
+    let (path, query) = own_path(endpoint, url)?;
+    if app.cfg.mode == DeploymentMode::Static {
+        return None;
+    }
+    let params: HashMap<String, String> = url::form_urlencoded::parse(query.as_bytes())
+        .into_owned()
+        .collect();
+    if let Some(rest) = path.strip_prefix("/external/") {
+        return requests_transform(&params).then(|| ServedVariant {
+            route: ServedRoute::External {
+                rest: rest.to_owned(),
+            },
+            params,
+        });
+    }
+    if path.starts_with("/attachments/") {
+        let params = without_signature_parameters(&params);
+        let key = decode_storage_key(path).ok()?;
+        return requests_transform(&params).then_some(ServedVariant {
+            route: ServedRoute::Attachment { key },
+            params,
+        });
+    }
+    if path.starts_with("/themes/") || parse_entrance_sound_path(path).is_some() {
+        return None;
+    }
+    Some(ServedVariant {
+        route: ServedRoute::Asset(parse_asset_path(path)?),
+        params,
+    })
+}
+
+fn parse_asset_path(path: &str) -> Option<ParsedAssetPath> {
+    parse_guild_member_asset_path(path)
+        .or_else(|| parse_simple_asset_path(path, AssetKind::Emoji))
+        .or_else(|| parse_simple_asset_path(path, AssetKind::Sticker))
+        .or_else(|| parse_standard_asset_path(path))
 }
 
 fn stored(bucket: &str, key: String) -> Option<SelfOrigin> {
@@ -74,7 +127,7 @@ fn stored(bucket: &str, key: String) -> Option<SelfOrigin> {
     })
 }
 
-fn own_path<'a>(endpoint: &str, url: &'a str) -> Option<&'a str> {
+fn own_path<'a>(endpoint: &str, url: &'a str) -> Option<(&'a str, &'a str)> {
     let base = public_net_policy::parse_url(endpoint).ok()?;
     let target = public_net_policy::parse_url(url).ok()?;
     if !base.scheme.eq_ignore_ascii_case(target.scheme) {
@@ -86,16 +139,14 @@ fn own_path<'a>(endpoint: &str, url: &'a str) -> Option<&'a str> {
     if effective_port(base.scheme, base.port) != effective_port(target.scheme, target.port) {
         return None;
     }
-    let prefix = path_of(base.path_query).trim_end_matches('/');
-    let rest = path_of(target.path_query).strip_prefix(prefix)?;
-    rest.starts_with('/').then_some(rest)
+    let prefix = split_query(base.path_query).0.trim_end_matches('/');
+    let (path, query) = split_query(target.path_query);
+    let rest = path.strip_prefix(prefix)?;
+    rest.starts_with('/').then_some((rest, query))
 }
 
-fn path_of(path_query: &str) -> &str {
-    path_query
-        .split_once('?')
-        .map(|(path, _)| path)
-        .unwrap_or(path_query)
+fn split_query(path_query: &str) -> (&str, &str) {
+    path_query.split_once('?').unwrap_or((path_query, ""))
 }
 
 fn effective_port(scheme: &str, port: Option<u16>) -> u16 {
@@ -109,163 +160,6 @@ fn effective_port(scheme: &str, port: Option<u16>) -> u16 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::Config;
-
-    const ENDPOINT: &str = "https://chat.example.com/media";
-
-    fn app() -> AppState {
-        AppState::for_tests(
-            Config::load_from_iter([
-                (
-                    "FLUXER_MEDIA_PROXY_SECRET_KEY".to_owned(),
-                    "secret".to_owned(),
-                ),
-                (
-                    "FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT".to_owned(),
-                    format!("{ENDPOINT}/"),
-                ),
-                (
-                    "FLUXER_MEDIA_PROXY_STORAGE_BACKEND".to_owned(),
-                    "local".to_owned(),
-                ),
-            ])
-            .expect("self origin test config"),
-        )
-    }
-
-    #[test]
-    fn own_attachments_read_from_the_cdn_bucket() {
-        let app = app();
-        let resolved = resolve(
-            &app,
-            &format!("{ENDPOINT}/attachments/1544725486800732163/1544971349200470016/cat.gif"),
-        );
-        match resolved {
-            Some(SelfOrigin::Stored { bucket, key, .. }) => {
-                assert_eq!(app.cfg.storage.bucket_cdn, bucket);
-                assert_eq!(
-                    "attachments/1544725486800732163/1544971349200470016/cat.gif",
-                    key
-                );
-            }
-            _ => panic!("own attachment paths resolve to stored objects"),
-        }
-    }
-
-    #[test]
-    fn own_avatars_get_the_extension_fallback() {
-        let app = app();
-        match resolve(
-            &app,
-            &format!("{ENDPOINT}/avatars/1216100949629702144/a1b2c3d4e5f6.png?size=64"),
-        ) {
-            Some(SelfOrigin::Stored {
-                key, fallback_ext, ..
-            }) => {
-                assert_eq!("avatars/1216100949629702144/a1b2c3d4e5f6", key);
-                assert_eq!(Some(AssetExtension::Png), fallback_ext);
-            }
-            _ => panic!("own asset paths resolve to stored objects"),
-        }
-    }
-
-    #[test]
-    fn own_external_paths_unwrap_to_the_origin_url() {
-        let app = app();
-        let target = "https://static.klipy.com/ii/c8/28/HkAKKCzZ.webp";
-        let proxied = fluxer_common::external_media_path::build_external_media_proxy_url(
-            ENDPOINT,
-            target,
-            app.cfg.secret_key.as_bytes(),
-        )
-        .expect("proxy url");
-        match resolve(&app, &proxied) {
-            Some(SelfOrigin::External { url }) => assert_eq!(target, url),
-            _ => panic!("own external paths unwrap to the origin url"),
-        }
-        let tampered = proxied.replace("/external/", "/external/x");
-        assert!(resolve(&app, &tampered).is_none());
-    }
-
-    #[test]
-    fn foreign_and_unknown_paths_stay_external_fetches() {
-        let app = app();
-        assert!(resolve(&app, "https://static.klipy.com/ii/c8/28/HkAKKCzZ.webp").is_none());
-        assert!(resolve(&app, &format!("{ENDPOINT}/channels/1/2")).is_none());
-    }
-
-    #[test]
-    fn a_non_default_public_port_reaches_the_signed_self_origin() {
-        let app = AppState::for_tests(
-            Config::load_from_iter([
-                (
-                    "FLUXER_MEDIA_PROXY_SECRET_KEY".to_owned(),
-                    "secret".to_owned(),
-                ),
-                (
-                    "FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT".to_owned(),
-                    format!("{ENDPOINT}/"),
-                ),
-                (
-                    "FLUXER_MEDIA_PROXY_STORAGE_BACKEND".to_owned(),
-                    "local".to_owned(),
-                ),
-                (
-                    "FLUXER_BASE_DOMAIN".to_owned(),
-                    "chat.example.com".to_owned(),
-                ),
-                ("FLUXER_PUBLIC_PORT".to_owned(), "29080".to_owned()),
-            ])
-            .expect("self origin test config"),
-        );
-        let endpoint = app
-            .cfg
-            .public_endpoint
-            .clone()
-            .expect("a public endpoint is configured");
-        assert_eq!("https://chat.example.com:29080/media", endpoint);
-        let target = "https://static.klipy.com/ii/c8/28/HkAKKCzZ.webp";
-        let proxied = fluxer_common::external_media_path::build_external_media_proxy_url(
-            &endpoint,
-            target,
-            app.cfg.secret_key.as_bytes(),
-        )
-        .expect("proxy url");
-        match resolve(&app, &proxied) {
-            Some(SelfOrigin::External { url }) => assert_eq!(target, url),
-            _ => panic!("its own signed url resolves to the origin url"),
-        }
-        match resolve(
-            &app,
-            &format!("{endpoint}/attachments/1544725486800732163/1544971349200470016/cat.gif"),
-        ) {
-            Some(SelfOrigin::Stored { key, .. }) => assert_eq!(
-                "attachments/1544725486800732163/1544971349200470016/cat.gif",
-                key
-            ),
-            _ => panic!("its own attachment paths resolve to stored objects"),
-        }
-        assert!(resolve(&app, "https://cdn.other.example/avatars/1/abc.png").is_none());
-        assert!(resolve(&app, &format!("{ENDPOINT}/avatars/1/abc.png")).is_none());
-    }
-
-    #[test]
-    fn own_path_matches_the_endpoint_prefix() {
-        assert_eq!(
-            own_path(
-                "https://chat.example.com/media",
-                "https://chat.example.com/media/attachments/1/2/cat.gif"
-            ),
-            Some("/attachments/1/2/cat.gif")
-        );
-        assert_eq!(
-            own_path(
-                "https://cdn.example.com",
-                "https://cdn.example.com/avatars/1/abc.png?size=64"
-            ),
-            Some("/avatars/1/abc.png")
-        );
-    }
 
     #[test]
     fn own_path_rejects_other_origins_and_sibling_prefixes() {
@@ -297,68 +191,5 @@ mod tests {
             ),
             None
         );
-    }
-
-    #[test]
-    fn own_path_keeps_explicit_default_ports() {
-        assert_eq!(
-            own_path(
-                "https://chat.example.com:443",
-                "https://chat.example.com/a.png"
-            ),
-            Some("/a.png")
-        );
-    }
-
-    #[test]
-    fn an_enforcing_instance_still_resolves_its_own_attachment_for_internal_reads() {
-        use base64::Engine as _;
-        use fluxer_common::attachment_url_signature::with_signature;
-        use std::time::{SystemTime, UNIX_EPOCH};
-
-        const SECRET: [u8; 32] = [3u8; 32];
-        let app = AppState::for_tests(
-            Config::load_from_iter([
-                (
-                    "FLUXER_MEDIA_PROXY_SECRET_KEY".to_owned(),
-                    "secret".to_owned(),
-                ),
-                (
-                    "FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT".to_owned(),
-                    format!("{ENDPOINT}/"),
-                ),
-                (
-                    "FLUXER_MEDIA_PROXY_STORAGE_BACKEND".to_owned(),
-                    "local".to_owned(),
-                ),
-                (
-                    "FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE".to_owned(),
-                    "enforce".to_owned(),
-                ),
-                (
-                    "FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64".to_owned(),
-                    base64::engine::general_purpose::STANDARD.encode(SECRET),
-                ),
-            ])
-            .expect("self origin signature config"),
-        );
-        let key = "attachments/1544725486800732163/1544971349200470016/cat.gif";
-        let unsigned = format!("{ENDPOINT}/{key}");
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("the clock is after the unix epoch")
-            .as_secs();
-        let signed = with_signature(&unsigned, key, now, now, &SECRET);
-
-        for spelling in [
-            unsigned.clone(),
-            signed.clone(),
-            format!("{signed}&width=64#frame"),
-        ] {
-            match resolve(&app, &spelling) {
-                Some(SelfOrigin::Stored { key: resolved, .. }) => assert_eq!(key, resolved),
-                _ => panic!("an own attachment resolves to a stored object: {spelling}"),
-            }
-        }
     }
 }

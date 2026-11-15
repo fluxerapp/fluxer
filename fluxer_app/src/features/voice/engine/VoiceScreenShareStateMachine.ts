@@ -5,11 +5,11 @@ import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'x
 
 export type VoiceScreenShareSourceType = 'display' | 'native-display' | 'native-app' | 'device';
 
-export type VoiceScreenShareOperation = 'starting' | 'stopping' | 'replacing' | 'restoring';
+type VoiceScreenShareOperation = 'starting' | 'stopping' | 'replacing' | 'restoring';
 
-export type VoiceScreenShareCodecReadiness = 'idle' | 'loading' | 'ready' | 'timeout';
+type VoiceScreenShareCodecReadiness = 'idle' | 'loading' | 'ready' | 'timeout';
 
-export type VoiceScreenShareWatchCommand = {type: 'watch.add'; key: string} | {type: 'watch.remove'; key: string};
+type VoiceScreenShareWatchCommand = {type: 'watch.add'; key: string} | {type: 'watch.remove'; key: string};
 
 interface VoiceScreenShareContext {
 	active: boolean;
@@ -195,7 +195,7 @@ function syncLocalWatcher(
 	};
 }
 
-export const voiceScreenShareStateMachine = setup({
+const voiceScreenShareStateMachine = setup({
 	types: {} as {
 		context: VoiceScreenShareContext;
 		events: VoiceScreenShareEvent;
@@ -289,6 +289,23 @@ export const voiceScreenShareStateMachine = setup({
 	context: () => initialContext(),
 	initial: 'routing',
 	on: {
+		'share.start': {target: '.routing', actions: 'start'},
+		'share.restore': {target: '.routing', actions: 'restore'},
+		'share.stop': {target: '.routing', actions: 'stop'},
+		'share.replace': {target: '.routing', actions: 'replace'},
+		'share.resolve': {target: '.routing', actions: 'resolve'},
+		'share.reject': {target: '.routing', actions: 'reject'},
+		'share.cancel': {target: '.routing', actions: 'reject'},
+		'share.endedStop.start': {target: '.routing', actions: 'startEndedStop'},
+		'share.endedStop.finish': {target: '.routing', actions: 'finishEndedStop'},
+		'share.encoderVerification.scheduled': {target: '.routing', actions: 'scheduleEncoderVerification'},
+		'share.encoderVerification.cleared': {target: '.routing', actions: 'clearEncoderVerification'},
+		'share.streamingPriority.set': {target: '.routing', actions: 'setStreamingPriority'},
+		'share.publicationReplace.set': {target: '.routing', actions: 'setPublicationReplaceInFlight'},
+		'share.queuedStop.clear': {target: '.routing', actions: 'clearQueuedStop'},
+		'share.localWatcher.sync': {target: '.routing', actions: 'syncLocalWatcher'},
+		'share.clearWatchCommands': {actions: 'clearWatchCommands'},
+		'share.reset': {target: '.routing', actions: 'reset'},
 		'share.codecReadiness.loading': {actions: 'setCodecReadiness'},
 		'share.codecReadiness.ready': {actions: 'setCodecReadiness'},
 		'share.codecReadiness.timeout': {actions: 'setCodecReadiness'},
@@ -298,57 +315,14 @@ export const voiceScreenShareStateMachine = setup({
 		routing: {
 			always: [{guard: 'isPending', target: 'pending'}, {guard: 'isActive', target: 'active'}, {target: 'inactive'}],
 		},
-		inactive: {
-			on: {
-				'share.start': {target: 'routing', actions: 'start'},
-				'share.restore': {target: 'routing', actions: 'restore'},
-				'share.stop': {target: 'routing', actions: 'stop'},
-				'share.replace': {target: 'routing', actions: 'replace'},
-				'share.resolve': {target: 'routing', actions: 'resolve'},
-				'share.reject': {target: 'routing', actions: 'reject'},
-				'share.cancel': {target: 'routing', actions: 'reject'},
-				'share.endedStop.start': {target: 'routing', actions: 'startEndedStop'},
-				'share.endedStop.finish': {target: 'routing', actions: 'finishEndedStop'},
-				'share.encoderVerification.scheduled': {target: 'routing', actions: 'scheduleEncoderVerification'},
-				'share.encoderVerification.cleared': {target: 'routing', actions: 'clearEncoderVerification'},
-				'share.streamingPriority.set': {target: 'routing', actions: 'setStreamingPriority'},
-				'share.publicationReplace.set': {target: 'routing', actions: 'setPublicationReplaceInFlight'},
-				'share.queuedStop.clear': {target: 'routing', actions: 'clearQueuedStop'},
-				'share.localWatcher.sync': {target: 'routing', actions: 'syncLocalWatcher'},
-				'share.clearWatchCommands': {actions: 'clearWatchCommands'},
-				'share.reset': {target: 'routing', actions: 'reset'},
-			},
-		},
-		active: {
-			on: {
-				'share.start': {target: 'routing', actions: 'start'},
-				'share.restore': {target: 'routing', actions: 'restore'},
-				'share.stop': {target: 'routing', actions: 'stop'},
-				'share.replace': {target: 'routing', actions: 'replace'},
-				'share.resolve': {target: 'routing', actions: 'resolve'},
-				'share.reject': {target: 'routing', actions: 'reject'},
-				'share.cancel': {target: 'routing', actions: 'reject'},
-				'share.endedStop.start': {target: 'routing', actions: 'startEndedStop'},
-				'share.endedStop.finish': {target: 'routing', actions: 'finishEndedStop'},
-				'share.encoderVerification.scheduled': {target: 'routing', actions: 'scheduleEncoderVerification'},
-				'share.encoderVerification.cleared': {target: 'routing', actions: 'clearEncoderVerification'},
-				'share.streamingPriority.set': {target: 'routing', actions: 'setStreamingPriority'},
-				'share.publicationReplace.set': {target: 'routing', actions: 'setPublicationReplaceInFlight'},
-				'share.queuedStop.clear': {target: 'routing', actions: 'clearQueuedStop'},
-				'share.localWatcher.sync': {target: 'routing', actions: 'syncLocalWatcher'},
-				'share.clearWatchCommands': {actions: 'clearWatchCommands'},
-				'share.reset': {target: 'routing', actions: 'reset'},
-			},
-		},
+		inactive: {},
+		active: {},
 		pending: {
 			on: {
 				'share.start': {actions: 'start'},
 				'share.restore': {actions: 'restore'},
 				'share.stop': {actions: 'stop'},
 				'share.replace': {actions: 'replace'},
-				'share.resolve': {target: 'routing', actions: 'resolve'},
-				'share.reject': {target: 'routing', actions: 'reject'},
-				'share.cancel': {target: 'routing', actions: 'reject'},
 				'share.endedStop.start': {actions: 'startEndedStop'},
 				'share.endedStop.finish': {actions: 'finishEndedStop'},
 				'share.encoderVerification.scheduled': {actions: 'scheduleEncoderVerification'},
@@ -357,15 +331,12 @@ export const voiceScreenShareStateMachine = setup({
 				'share.publicationReplace.set': {actions: 'setPublicationReplaceInFlight'},
 				'share.queuedStop.clear': {actions: 'clearQueuedStop'},
 				'share.localWatcher.sync': {actions: 'syncLocalWatcher'},
-				'share.clearWatchCommands': {actions: 'clearWatchCommands'},
-				'share.reset': {target: 'routing', actions: 'reset'},
 			},
 		},
 	},
 });
 
 export type VoiceScreenShareSnapshot = SnapshotFrom<typeof voiceScreenShareStateMachine>;
-export type VoiceScreenShareStateValue = 'inactive' | 'active' | 'pending';
 
 export function createVoiceScreenShareSnapshot(): VoiceScreenShareSnapshot {
 	return initialTransition(voiceScreenShareStateMachine)[0];
@@ -376,10 +347,4 @@ export function transitionVoiceScreenShareSnapshot(
 	event: VoiceScreenShareEvent,
 ): VoiceScreenShareSnapshot {
 	return transition(voiceScreenShareStateMachine, snapshot, event)[0] as VoiceScreenShareSnapshot;
-}
-
-export function getVoiceScreenShareStateValue(snapshot: VoiceScreenShareSnapshot): VoiceScreenShareStateValue {
-	if (snapshot.value === 'pending') return 'pending';
-	if (snapshot.value === 'active') return 'active';
-	return 'inactive';
 }

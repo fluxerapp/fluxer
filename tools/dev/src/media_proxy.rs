@@ -9,7 +9,6 @@ use std::fs::{self, OpenOptions};
 use std::net::{SocketAddr, TcpStream, ToSocketAddrs};
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
-use tokio::time::sleep;
 
 const DEV_S3_BUCKETS: &str =
     "fluxer,fluxer-uploads,fluxer-downloads,fluxer-reports,fluxer-harvests,fluxer-static";
@@ -27,7 +26,7 @@ pub async fn run_dev_media_doctor(
 ) -> Result<()> {
     let media_health_url = format!("{}/media/_health", base_url.trim_end_matches('/'));
     ensure_dev_object_store(repair, 60).await?;
-    wait_for_success(&media_health_url, 30).await?;
+    crate::proc::wait_http_success("Media proxy", &media_health_url, 30).await?;
     println!("Media proxy health: ok ({media_health_url})");
     if let Some(path) = media_path {
         check_dev_media_path(base_url, path).await?;
@@ -62,63 +61,6 @@ pub async fn ensure_dev_object_store(repair: bool, repair_timeout_secs: u64) -> 
     }
     ensure_s3_buckets()?;
     Ok(())
-}
-
-pub fn run_rust_stress_smoke() -> Result<()> {
-    crate::proc::run(&["cargo", "test", "-p", "fluxer-media-proxy"])?;
-    crate::proc::run(&[
-        "cargo",
-        "bench",
-        "-p",
-        "fluxer-media-proxy",
-        "--bench",
-        "core",
-        "--",
-        "--sample-size",
-        "10",
-        "--warm-up-time",
-        "1",
-        "--measurement-time",
-        "1",
-    ])?;
-
-    if which("cargo-fuzz").is_none() {
-        eprintln!("cargo-fuzz not installed; skipping fuzz smoke");
-        return Ok(());
-    }
-    let use_nightly = rustup_has_nightly();
-    for target in ["parsers", "signing_external_path", "thumbhash"] {
-        run_fuzz_smoke(target, use_nightly)?;
-    }
-    Ok(())
-}
-
-fn rustup_has_nightly() -> bool {
-    let Ok(output) = Command::new("rustup").args(["toolchain", "list"]).output() else {
-        return false;
-    };
-    if !output.status.success() {
-        return false;
-    }
-    String::from_utf8_lossy(&output.stdout)
-        .lines()
-        .any(|line| line.starts_with("nightly"))
-}
-
-fn run_fuzz_smoke(target: &str, use_nightly: bool) -> Result<()> {
-    if use_nightly {
-        crate::proc::run(&[
-            "cargo",
-            "+nightly",
-            "fuzz",
-            "run",
-            target,
-            "--",
-            "-runs=1000",
-        ])
-    } else {
-        crate::proc::run(&["cargo", "fuzz", "run", target, "--", "-runs=1000"])
-    }
 }
 
 fn start_dev_seaweedfs() -> Result<()> {
@@ -175,6 +117,7 @@ fn start_dev_seaweedfs() -> Result<()> {
         .env("AWS_ACCESS_KEY_ID", DEV_S3_ACCESS_KEY_ID)
         .env("AWS_SECRET_ACCESS_KEY", DEV_S3_SECRET_ACCESS_KEY)
         .env("S3_BUCKET", DEV_S3_BUCKETS)
+        .env("WEED_FILER_OPTIONS_MAX_FILE_NAME_LENGTH", "1024")
         .stdin(Stdio::null())
         .stdout(Stdio::from(log))
         .stderr(Stdio::from(stderr))
@@ -282,23 +225,6 @@ async fn request_status(url: &str) -> Result<u16> {
         .timeout(Duration::from_secs(20))
         .build()?;
     Ok(client.get(url).send().await?.status().as_u16())
-}
-
-async fn wait_for_success(url: &str, timeout_secs: u64) -> Result<()> {
-    let deadline = Instant::now() + Duration::from_secs(timeout_secs);
-    let mut last_error = None;
-    while Instant::now() < deadline {
-        match request_status(url).await {
-            Ok(status) if (200..300).contains(&status) => return Ok(()),
-            Ok(status) => last_error = Some(format!("HTTP {status}")),
-            Err(error) => last_error = Some(error.to_string()),
-        }
-        sleep(Duration::from_millis(250)).await;
-    }
-    bail!(
-        "Timed out waiting for {url}: {}",
-        last_error.unwrap_or_else(|| "unknown error".to_owned())
-    );
 }
 
 fn tcp_reachable(host: &str, port: u16) -> bool {

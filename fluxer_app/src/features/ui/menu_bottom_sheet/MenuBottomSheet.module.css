@@ -6,7 +6,7 @@
 	align-items: center;
 	gap: 0.75rem;
 	padding: 1rem;
-	text-align: left;
+	text-align: start;
 	transition: none;
 	appearance: none;
 	outline: none;
@@ -84,14 +84,14 @@
 }
 
 .checkbox.checked {
-	border-color: var(--brand-primary);
+	border-color: var(--brand-primary-foreground);
 	background-color: var(--brand-primary);
 }
 
 .checkIcon {
 	height: 0.75rem;
 	width: 0.75rem;
-	color: white;
+	color: var(--brand-primary-fill);
 }
 
 .radioContainer {
@@ -115,14 +115,14 @@
 }
 
 .radio.radioSelected {
-	border-color: var(--brand-primary);
+	border-color: var(--brand-primary-foreground);
 }
 
 .radioInner {
 	height: 0.625rem;
 	width: 0.625rem;
 	border-radius: 50%;
-	background-color: var(--brand-primary);
+	background-color: var(--brand-primary-foreground);
 }
 
 .labelColumn {
@@ -138,8 +138,8 @@
 }
 
 .divider {
-	margin-left: 1rem;
-	margin-right: 1rem;
+	margin-inline-start: 1rem;
+	margin-inline-end: 1rem;
 	height: 0.0625rem;
 	background-color: var(--background-header-secondary);
 	opacity: 0.3;

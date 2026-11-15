@@ -4,7 +4,7 @@ import type {SettingsMetadata} from '@app/features/user/components/settings_util
 import type {UserSettingsTabType} from '@app/features/user/components/settings_utils/SettingsSectionRegistry';
 import type {MessageDescriptor} from '@lingui/core';
 
-export type SearchableSettingKeyword = MessageDescriptor | string;
+export type SearchableSettingKeyword = MessageDescriptor | string | (() => string);
 
 export interface SearchableSettingDescriptor extends SettingsMetadata {
 	id: string;

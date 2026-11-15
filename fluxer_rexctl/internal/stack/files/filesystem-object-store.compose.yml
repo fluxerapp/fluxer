@@ -1,0 +1,81 @@
+services:
+  seaweedfs:
+    profiles: [bundled-object-store]
+  seaweedfs-init:
+    profiles: [bundled-object-store]
+  objects-init:
+    image: ${FLUXER_REGISTRY:-ghcr.io/${FLUXER_REGISTRY_OWNER:-fluxerapp}}/fluxer-media-proxy:${FLUXER_IMAGE_TAG:-v1}
+    user: "0:0"
+    network_mode: none
+    logging:
+      driver: json-file
+      options:
+        max-size: ${FLUXER_LOG_MAX_SIZE:-10m}
+        max-file: "${FLUXER_LOG_MAX_FILE:-3}"
+    restart: "no"
+    deploy:
+      resources:
+        limits:
+          memory: 64mb
+    environment:
+      FLUXER_STORAGE_BACKEND: ${FLUXER_STORAGE_BACKEND:-}
+      FLUXER_STORAGE_ROOT: /var/lib/fluxer/objects
+    volumes:
+      - objects-data:/var/lib/fluxer/objects
+    entrypoint:
+      - /bin/sh
+      - -c
+      - >
+        set -e;
+        root="$$FLUXER_STORAGE_ROOT";
+        for dir in "$$root" "$$root/.staging" "$$root/.staging/tmp" "$$root/.staging/multipart" "$$root/.staging/trash" "$$root/.meta"; do
+          install -d -o 10001 -g 10001 -m 2770 "$$dir";
+        done;
+        if [ ! -e "$$root/.layout" ]; then
+          printf '{"v":1}' > "$$root/.layout.tmp";
+          chown 10001:10001 "$$root/.layout.tmp";
+          chmod 0660 "$$root/.layout.tmp";
+          mv "$$root/.layout.tmp" "$$root/.layout";
+        fi;
+        echo "objects ready"
+  api:
+    group_add: ["10001"]
+    environment:
+      FLUXER_STORAGE_BACKEND: filesystem
+      FLUXER_STORAGE_ROOT: /var/lib/fluxer/objects
+      FLUXER_STORAGE_UPLOADS_TTL: ${FLUXER_STORAGE_UPLOADS_TTL:-${FLUXER_SEAWEEDFS_UPLOADS_TTL:-1d}}
+      FLUXER_STORAGE_READ_ONLY: ${FLUXER_STORAGE_READ_ONLY:-}
+      UV_THREADPOOL_SIZE: "16"
+    volumes:
+      - objects-data:/var/lib/fluxer/objects
+    depends_on:
+      seaweedfs-init: !reset null
+      objects-init: {condition: service_completed_successfully}
+  worker:
+    group_add: ["10001"]
+    environment:
+      FLUXER_STORAGE_BACKEND: filesystem
+      FLUXER_STORAGE_ROOT: /var/lib/fluxer/objects
+      FLUXER_STORAGE_UPLOADS_TTL: ${FLUXER_STORAGE_UPLOADS_TTL:-${FLUXER_SEAWEEDFS_UPLOADS_TTL:-1d}}
+      FLUXER_STORAGE_READ_ONLY: ${FLUXER_STORAGE_READ_ONLY:-}
+      UV_THREADPOOL_SIZE: "16"
+    volumes:
+      - objects-data:/var/lib/fluxer/objects
+    depends_on:
+      seaweedfs-init: !reset null
+      objects-init: {condition: service_completed_successfully}
+  media-proxy:
+    environment:
+      FLUXER_MEDIA_PROXY_STORAGE_BACKEND: local
+      FLUXER_MEDIA_PROXY_STORAGE_ROOT: /var/lib/fluxer/objects
+    volumes:
+      - objects-data:/var/lib/fluxer/objects
+    depends_on:
+      seaweedfs-init: !reset null
+      objects-init: {condition: service_completed_successfully}
+  admin:
+    environment:
+      FLUXER_STORAGE_BACKEND: filesystem
+
+volumes:
+  objects-data:

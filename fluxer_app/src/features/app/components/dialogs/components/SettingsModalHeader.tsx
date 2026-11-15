@@ -8,12 +8,14 @@ import {UnsavedChangesBannerContent} from '@app/features/app/components/dialogs/
 import {NativeDragRegion} from '@app/features/app/components/layout/NativeDragRegion';
 import {CLOSE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {TabData} from '@app/features/ui/state/UnsavedChanges';
+import {useToastAnchor} from '@app/features/ui/toast/ToastAnchor';
 import {useLingui} from '@lingui/react/macro';
 import {XIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {AnimatePresence, motion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
+import {useRef} from 'react';
 
 interface SettingsModalHeaderProps {
 	title: React.ReactNode;
@@ -28,17 +30,19 @@ export const SettingsModalHeader: React.FC<SettingsModalHeaderProps> = observer(
 	({title, pageLinkHref, showUnsavedBanner, flashBanner, tabData, onClose}) => {
 		const {i18n} = useLingui();
 		const prefersReducedMotion = Accessibility.useReducedMotion;
+		const headerRef = useRef<HTMLElement>(null);
+		useToastAnchor(headerRef);
+		let backgroundColor: string | undefined;
+		if (showUnsavedBanner) {
+			backgroundColor = flashBanner ? 'var(--status-danger)' : 'var(--background-primary)';
+		}
 		return (
 			<NativeDragRegion
+				ref={headerRef}
 				className={`${settingsModalStyles.desktopHeader} ${styles.headerTransition}`}
 				style={{
 					transitionDuration: prefersReducedMotion ? '0ms' : '200ms',
-					backgroundColor:
-						showUnsavedBanner && flashBanner
-							? 'var(--status-danger)'
-							: showUnsavedBanner
-								? 'var(--background-primary)'
-								: undefined,
+					backgroundColor,
 				}}
 				data-flx="app.settings-modal-header.header-transition"
 			>
@@ -58,7 +62,6 @@ export const SettingsModalHeader: React.FC<SettingsModalHeaderProps> = observer(
 								textContainerClassName={styles.bannerTextContainer}
 								textClassName={clsx(styles.bannerText, flashBanner ? styles.bannerTextFlash : styles.bannerTextNormal)}
 								actionsClassName={styles.bannerActions}
-								smallActions={true}
 								dataFlx={{
 									textContainer: 'app.settings-modal-header.banner-text-container',
 									text: 'app.settings-modal-header.banner-text',

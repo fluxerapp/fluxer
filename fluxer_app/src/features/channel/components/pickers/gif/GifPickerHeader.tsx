@@ -8,10 +8,11 @@ import {GIFS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors
 import {isIMEComposing} from '@app/features/messaging/utils/IMECompositionUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {ArrowLeftIcon} from '@app/features/ui/icons/DirectionalIcons';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {ArrowLeftIcon, DownloadSimpleIcon, UploadSimpleIcon} from '@phosphor-icons/react';
+import {DownloadSimpleIcon, UploadSimpleIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 

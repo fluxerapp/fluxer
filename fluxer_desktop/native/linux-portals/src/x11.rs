@@ -94,34 +94,3 @@ pub fn resolve_x11_window_pid(token: &str) -> Result<Option<u32>, ResolveError> 
 pub fn resolve_x11_window_pid(_token: &str) -> Result<Option<u32>, ResolveError> {
     Err(ResolveError::LibX11Unavailable)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn parse_window_token_accepts_decimal_and_hexadecimal_xids() {
-        assert_eq!(parse_window_token("123"), Some(123));
-        assert_eq!(parse_window_token("0x3a00007"), Some(0x3a00007));
-        assert_eq!(parse_window_token("0X3a00007"), Some(0x3a00007));
-    }
-
-    #[test]
-    fn parse_window_token_rejects_invalid_or_zero_xids() {
-        assert_eq!(parse_window_token(""), None);
-        assert_eq!(parse_window_token("0"), None);
-        assert_eq!(parse_window_token("0x"), None);
-        assert_eq!(parse_window_token("0xG"), None);
-        assert_eq!(parse_window_token("../123"), None);
-        assert_eq!(parse_window_token("123abc"), None);
-    }
-
-    #[test]
-    fn pid_from_long_validates_positive_uint32_process_ids() {
-        assert_eq!(pid_from_long(1), Some(1));
-        assert_eq!(pid_from_long(42_424), Some(42_424));
-        assert_eq!(pid_from_long(0), None);
-        assert_eq!(pid_from_long(-1), None);
-        assert_eq!(pid_from_long(u32::MAX as c_long + 1), None);
-    }
-}

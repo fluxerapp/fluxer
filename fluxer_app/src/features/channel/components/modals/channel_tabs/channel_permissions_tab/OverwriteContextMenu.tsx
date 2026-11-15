@@ -34,22 +34,28 @@ interface OverwriteContextMenuProps {
 export const OverwriteContextMenu: React.FC<OverwriteContextMenuProps> = observer(
 	({overwrite, roleId, user, canDelete, onDelete, onClose}) => {
 		const {i18n} = useLingui();
+		let copyIdMenuItem: React.ReactNode = null;
+		if (overwrite.type === 0 && roleId) {
+			copyIdMenuItem = (
+				<CopyRoleIdMenuItem
+					roleId={roleId}
+					onClose={onClose}
+					data-flx="channel.channel-tabs.channel-permissions-tab.overwrite-context-menu.copy-role-id-menu-item"
+				/>
+			);
+		} else if (user) {
+			copyIdMenuItem = (
+				<CopyUserIdMenuItem
+					user={user}
+					onClose={onClose}
+					data-flx="channel.channel-tabs.channel-permissions-tab.overwrite-context-menu.copy-user-id-menu-item"
+				/>
+			);
+		}
 		return (
 			<>
 				<MenuGroup data-flx="channel.channel-tabs.channel-permissions-tab.overwrite-context-menu.menu-group">
-					{overwrite.type === 0 && roleId ? (
-						<CopyRoleIdMenuItem
-							roleId={roleId}
-							onClose={onClose}
-							data-flx="channel.channel-tabs.channel-permissions-tab.overwrite-context-menu.copy-role-id-menu-item"
-						/>
-					) : user ? (
-						<CopyUserIdMenuItem
-							user={user}
-							onClose={onClose}
-							data-flx="channel.channel-tabs.channel-permissions-tab.overwrite-context-menu.copy-user-id-menu-item"
-						/>
-					) : null}
+					{copyIdMenuItem}
 				</MenuGroup>
 				{canDelete && (
 					<MenuGroup data-flx="channel.channel-tabs.channel-permissions-tab.overwrite-context-menu.menu-group--2">

@@ -12,7 +12,6 @@ import Channels from '@app/features/channel/state/Channels';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {Message as MessageModel} from '@app/features/messaging/models/MessagingMessage';
 import {isNewMessageGroup} from '@app/features/messaging/utils/MessageGroupingUtils';
-import type {ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import {canResetSliderValue, SliderResetIconButton} from '@app/features/ui/components/slider/SliderResetIconButton';
 import type {RadioOption} from '@app/features/ui/radio_group/RadioGroup';
@@ -21,10 +20,19 @@ import MobileLayout from '@app/features/ui/state/MobileLayout';
 import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsCommands';
 import appearanceTabStyles from '@app/features/user/components/modals/tabs/AppearanceTab.module.css';
 import styles from '@app/features/user/components/modals/tabs/appearance_tab/MessagesTab.module.css';
-import {FontSizeTabContent} from '@app/features/user/components/modals/tabs/appearance_tab/ScalingTab';
-import {CompactComboboxRow} from '@app/features/user/components/modals/tabs/components/CompactComboboxRow';
+import {
+	FontSizeTabContent,
+	PIXELS_ACCESSIBLE_DESCRIPTOR,
+} from '@app/features/user/components/modals/tabs/appearance_tab/ScalingTab';
+import {StepSliderRow} from '@app/features/user/components/modals/tabs/appearance_tab/StepSliderRow';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
+import {
+	COMFY_DESCRIPTOR,
+	DENSE_DESCRIPTOR,
+	SPACE_BETWEEN_MESSAGE_GROUPS_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {MessagePreviewContext, MessageStates, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -53,18 +61,12 @@ const TURN_DENSE_MODE_ON_NICE_DESCRIPTOR = msg({
 	message: '... turn dense mode on. Nice!',
 	comment: 'Description text in the messages tab.',
 });
-const COMFY_DESCRIPTOR = msg({
-	message: 'Comfy',
-	comment: 'Short label in the messages tab. Keep it concise.',
-});
+
 const SPACIOUS_LAYOUT_WITH_CLEAR_VISUAL_SEPARATION_BETWEEN_MESSAGES_DESCRIPTOR = msg({
 	message: 'Spacious layout with clear visual separation between messages.',
 	comment: 'Description text in the messages tab.',
 });
-const DENSE_DESCRIPTOR = msg({
-	message: 'Dense',
-	comment: 'Short label in the messages tab. Keep it concise.',
-});
+
 const MAXIMIZES_VISIBLE_MESSAGES_WITH_MINIMAL_SPACING_DESCRIPTOR = msg({
 	message: 'Maximizes visible messages with minimal spacing.',
 	comment: 'Description text in the messages tab.',
@@ -77,19 +79,17 @@ const HIDE_USER_AVATARS_DESCRIPTOR = msg({
 	message: 'Hide user avatars',
 	comment: 'Short label in the messages tab. Keep it concise.',
 });
-const SPACE_BETWEEN_MESSAGE_GROUPS_DESCRIPTOR = msg({
-	message: 'Space between message groups',
-	comment: 'Label in the messages tab.',
-});
+
 const PIXELS_DESCRIPTOR = msg({
 	message: '{messageGroupSpacing}px',
-	comment: 'Message group spacing option label.',
+	comment: 'Current value and track label of the space between message groups slider, for example 16px.',
 });
 const RESET_SPACING_DESCRIPTOR = msg({
 	message: 'Reset spacing',
 	comment: 'Button below the space between message groups setting. Restores message group spacing to the default.',
 });
 const MESSAGE_GROUP_SPACING_OPTIONS = [0, 4, 8, 16, 24] as const;
+const MESSAGE_GROUP_SPACING_MAX = MESSAGE_GROUP_SPACING_OPTIONS[MESSAGE_GROUP_SPACING_OPTIONS.length - 1];
 
 const getNearestMessageGroupSpacing = (value: number): number => {
 	let nearest: number = MESSAGE_GROUP_SPACING_OPTIONS[0];
@@ -104,18 +104,6 @@ const getNearestMessageGroupSpacing = (value: number): number => {
 	return nearest;
 };
 
-const resolveMessageGroupSpacingInput = (
-	inputValue: string,
-	options: ReadonlyArray<ComboboxOption<number>>,
-): number | undefined => {
-	const numericMatch = inputValue.trim().match(/([0-9]+(?:\.[0-9]+)?)/);
-	if (!numericMatch) return undefined;
-	const parsedValue = Number(numericMatch[1]);
-	if (!Number.isFinite(parsedValue)) return undefined;
-	return options.reduce((nearest, option) =>
-		Math.abs(option.value - parsedValue) < Math.abs(nearest.value - parsedValue) ? option : nearest,
-	).value;
-};
 const MessagesPreview: React.FC = observer(() => {
 	const {i18n} = useLingui();
 	const {messageDisplayCompact} = UserSettings;
@@ -236,14 +224,7 @@ export const MessagesTabContent: React.FC = observer(() => {
 	const canResetMessageGroupSpacing = canResetSliderValue(messageGroupSpacing, defaultMessageGroupSpacing);
 	const showUserAvatarsInCompactMode = Accessibility.showUserAvatarsInCompactMode;
 	const mobileLayout = MobileLayout;
-	const messageGroupSpacingOptions: ReadonlyArray<ComboboxOption<number>> = useMemo(
-		() =>
-			MESSAGE_GROUP_SPACING_OPTIONS.map((value) => ({
-				value,
-				label: i18n._(PIXELS_DESCRIPTOR, {messageGroupSpacing: getCachedNumberFormat(i18n.locale).format(value)}),
-			})),
-		[i18n.locale],
-	);
+	const formatNumber = (value: number) => getCachedNumberFormat(getFormattingLocale()).format(value);
 	useEffect(() => {
 		if (messageGroupSpacing === selectedMessageGroupSpacing) return;
 		AccessibilityCommands.update(getMessageGroupSpacingPatch(messageDisplayCompact, selectedMessageGroupSpacing));
@@ -268,7 +249,7 @@ export const MessagesTabContent: React.FC = observer(() => {
 			<div id="chat-font-scaling" data-flx="user.appearance-tab.messages-tab.messages-tab-content.font-size-anchor">
 				<FontSizeTabContent data-flx="user.appearance-tab.messages-tab.messages-tab-content.font-size-tab-content" />
 			</div>
-			<CompactComboboxRow<number>
+			<StepSliderRow
 				label={i18n._(SPACE_BETWEEN_MESSAGE_GROUPS_DESCRIPTOR)}
 				action={
 					canResetMessageGroupSpacing ? (
@@ -285,15 +266,15 @@ export const MessagesTabContent: React.FC = observer(() => {
 						/>
 					) : null
 				}
+				stops={MESSAGE_GROUP_SPACING_OPTIONS}
 				value={selectedMessageGroupSpacing}
-				options={messageGroupSpacingOptions}
+				defaultValue={defaultMessageGroupSpacing}
+				labelledStops={[MESSAGE_GROUP_SPACING_OPTIONS[0], defaultMessageGroupSpacing, MESSAGE_GROUP_SPACING_MAX]}
+				formatValue={(value) => i18n._(PIXELS_DESCRIPTOR, {messageGroupSpacing: formatNumber(value)})}
+				formatAccessibleValue={(value) => i18n._(PIXELS_ACCESSIBLE_DESCRIPTOR, {value: formatNumber(value)})}
 				onChange={(value) => AccessibilityCommands.update(getMessageGroupSpacingPatch(messageDisplayCompact, value))}
-				autoSelectValueFromInput={resolveMessageGroupSpacingInput}
-				controlWidth="small"
-				menuMinWidth={128}
-				aria-label={i18n._(SPACE_BETWEEN_MESSAGE_GROUPS_DESCRIPTOR)}
-				dataFlx="user.appearance-tab.messages-tab.messages-tab-content.select.spacing"
-				data-flx="user.appearance-tab.messages-tab.messages-tab-content.compact-select-row.update"
+				dataFlx="user.appearance-tab.messages-tab.messages-tab-content.spacing"
+				data-flx="user.appearance-tab.messages-tab.messages-tab-content.step-slider-row.update"
 			/>
 			<RadioGroup
 				options={messageDisplayOptions}

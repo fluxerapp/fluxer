@@ -1,26 +1,39 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
-import {channelIdToMessageId} from '@app/api/BrandedTypes';
+import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {channelIdToMessageId, createMessageID} from '@app/api/BrandedTypes';
 import {
+	advanceRow,
+	advanceRows,
 	BatchBuilder,
 	fetchMany,
 	fetchManyInChunks,
 	fetchOne,
 	upsertOne,
 } from '@app/api/database/CassandraQueryExecution';
-import {defineTable} from '@app/api/database/CassandraTableDsl';
 import {Db, type DbOp} from '@app/api/database/CassandraTypes';
 import type {ReadStateRow} from '@app/api/database/types/ChannelTypes';
-import {READ_STATE_COLUMNS} from '@app/api/database/types/ChannelTypes';
 import {ReadState} from '@app/api/models/ReadState';
-import type {IReadStateRepository, ReadStateUpsert} from '@app/api/read_state/IReadStateRepository';
+import {ReadStates} from '@app/api/Tables';
+import {ReadStateFlags} from '@fluxer/constants/src/ThreadConstants';
 
-const ReadStates = defineTable<ReadStateRow, 'user_id' | 'channel_id'>({
-	name: 'read_states',
-	columns: READ_STATE_COLUMNS,
-	primaryKey: ['user_id', 'channel_id'],
-});
+export interface ReadStateUpsert {
+	readState: ReadState;
+	previous: ReadState | null;
+}
+
+export interface ReadStateMarker {
+	flags: number;
+	guildId: GuildID;
+}
+
+export interface ReadStateMentionUpdate {
+	userId: UserID;
+	channelId: ChannelID;
+	messageId: MessageID;
+	marker?: ReadStateMarker | null;
+}
+
 const FETCH_READ_STATES_CQL = ReadStates.selectCql({
 	where: ReadStates.where.eq('user_id'),
 });
@@ -33,7 +46,31 @@ const FETCH_READ_STATES_BY_CHANNEL_IDS_CQL = ReadStates.selectCql({
 });
 const BULK_READ_STATE_BATCH_QUERY_LIMIT = 50;
 
-export class ReadStateRepository implements IReadStateRepository {
+function markerNeeded(marker: ReadStateMarker | null | undefined, row: ReadStateRow | null): marker is ReadStateMarker {
+	return marker != null && (row?.guild_id == null || row.flags !== marker.flags);
+}
+
+function markerColumns(marker: ReadStateMarker): Pick<ReadStateRow, 'flags' | 'guild_id'> {
+	return {flags: marker.flags, guild_id: marker.guildId};
+}
+
+function markerPatch(marker: ReadStateMarker): Record<string, DbOp<unknown>> {
+	return {flags: Db.set(marker.flags), guild_id: Db.set(marker.guildId)};
+}
+
+function markerOf(row: ReadStateRow | null): Pick<ReadStateRow, 'flags' | 'guild_id'> {
+	return row?.guild_id != null ? {flags: row.flags ?? null, guild_id: row.guild_id} : {};
+}
+
+function mentionBaseline(channelId: ChannelID, marker: ReadStateMarker | null | undefined): MessageID {
+	const baseline = channelIdToMessageId(channelId);
+	if (marker != null && (marker.flags & ReadStateFlags.IS_THREAD) !== 0) {
+		return createMessageID(baseline - 1n);
+	}
+	return baseline;
+}
+
+export class ReadStateRepository {
 	async listReadStates(userId: UserID): Promise<Array<ReadState>> {
 		const rows = await fetchMany<ReadStateRow>(FETCH_READ_STATES_CQL, {user_id: userId});
 		return rows.map((row) => new ReadState(row));
@@ -54,8 +91,9 @@ export class ReadStateRepository implements IReadStateRepository {
 		mentionCount = 0,
 		lastPinTimestamp?: Date,
 		manual = false,
+		marker?: ReadStateMarker | null,
 	): Promise<ReadStateUpsert> {
-		return this.upsertReadStateRow(userId, channelId, messageId, mentionCount, lastPinTimestamp, manual);
+		return this.upsertReadStateRow(userId, channelId, messageId, mentionCount, lastPinTimestamp, manual, marker);
 	}
 
 	private async upsertReadStateRow(
@@ -65,75 +103,58 @@ export class ReadStateRepository implements IReadStateRepository {
 		mentionCount = 0,
 		lastPinTimestamp?: Date,
 		manual = false,
+		marker?: ReadStateMarker | null,
 	): Promise<ReadStateUpsert> {
 		const currentReadState = await fetchOne<ReadStateRow>(FETCH_READ_STATE_BY_USER_AND_CHANNEL_CQL, {
 			user_id: userId,
 			channel_id: channelId,
 		});
 		const previous = currentReadState ? new ReadState(currentReadState) : null;
+		const stamp = markerNeeded(marker, currentReadState);
 		if (!manual && previous?.lastMessageId != null && previous.lastMessageId > messageId) {
-			return {readState: previous, previous};
+			if (!stamp) return {readState: previous, previous};
+			await upsertOne(ReadStates.patchByPk({user_id: userId, channel_id: channelId}, markerPatch(marker)));
+			return {readState: new ReadState({...currentReadState!, ...markerColumns(marker)}), previous};
 		}
-		const patch: Record<string, DbOp<unknown>> = {
-			message_id: Db.set(messageId),
-			mention_count: Db.set(mentionCount),
+		const values: Partial<ReadStateRow> = {message_id: messageId, mention_count: mentionCount};
+		if (lastPinTimestamp !== undefined) values.last_pin_timestamp = lastPinTimestamp;
+		if (stamp) Object.assign(values, markerColumns(marker));
+		const write = async (): Promise<boolean> => {
+			const patch: Record<string, DbOp<unknown>> = {};
+			for (const [column, value] of Object.entries(values)) patch[column] = Db.set(value);
+			await upsertOne(ReadStates.patchByPk({user_id: userId, channel_id: channelId}, patch));
+			return true;
 		};
-		if (lastPinTimestamp !== undefined) {
-			patch['last_pin_timestamp'] = Db.set(lastPinTimestamp);
+		if (!manual) {
+			const pk = {user_id: userId, channel_id: channelId};
+			const advanced = await advanceRow(
+				{
+					table: ReadStates,
+					pk,
+					guard: {col: 'message_id', value: messageId, orEqual: true},
+					set: values,
+					insert: {...pk, ...values},
+				},
+				write,
+			);
+			if (!advanced) {
+				return this.upsertReadStateRow(userId, channelId, messageId, mentionCount, lastPinTimestamp, manual, marker);
+			}
+		} else {
+			await write();
 		}
-		await upsertOne(ReadStates.patchByPk({user_id: userId, channel_id: channelId}, patch));
 		const readState = new ReadState({
 			user_id: userId,
 			channel_id: channelId,
 			message_id: messageId,
 			mention_count: mentionCount,
 			last_pin_timestamp: lastPinTimestamp ?? currentReadState?.last_pin_timestamp ?? null,
+			...(stamp ? markerColumns(marker) : markerOf(currentReadState)),
 		});
 		return {readState, previous};
 	}
 
-	async incrementReadStateMentions(
-		userId: UserID,
-		channelId: ChannelID,
-		messageId: MessageID,
-		incrementBy = 1,
-	): Promise<ReadState | null> {
-		return this.incrementReadStateMentionsRow(userId, channelId, messageId, incrementBy);
-	}
-
-	private async incrementReadStateMentionsRow(
-		userId: UserID,
-		channelId: ChannelID,
-		messageId: MessageID,
-		incrementBy = 1,
-	): Promise<ReadState | null> {
-		const currentReadState = await fetchOne<ReadStateRow>(FETCH_READ_STATE_BY_USER_AND_CHANNEL_CQL, {
-			user_id: userId,
-			channel_id: channelId,
-		});
-		if (!currentReadState) {
-			const baselineMessageId = channelIdToMessageId(channelId);
-			if (baselineMessageId >= messageId) {
-				return null;
-			}
-			return (await this.upsertReadStateRow(userId, channelId, baselineMessageId, incrementBy)).readState;
-		}
-		if (currentReadState.message_id != null && currentReadState.message_id >= messageId) {
-			return null;
-		}
-		const newMentionCount = (currentReadState.mention_count || 0) + incrementBy;
-		const updatedReadState: ReadStateRow = {...currentReadState, mention_count: newMentionCount};
-		await upsertOne(ReadStates.upsertAll(updatedReadState));
-		return new ReadState(updatedReadState);
-	}
-
-	async bulkIncrementMentionCounts(
-		updates: Array<{
-			userId: UserID;
-			channelId: ChannelID;
-			messageId: MessageID;
-		}>,
-	): Promise<
+	async bulkIncrementMentionCounts(updates: Array<ReadStateMentionUpdate>): Promise<
 		Array<{
 			userId: UserID;
 			channelId: ChannelID;
@@ -145,13 +166,7 @@ export class ReadStateRepository implements IReadStateRepository {
 		return this.bulkIncrementMentionCountsRows(updates);
 	}
 
-	private async bulkIncrementMentionCountsRows(
-		updates: Array<{
-			userId: UserID;
-			channelId: ChannelID;
-			messageId: MessageID;
-		}>,
-	): Promise<
+	private async bulkIncrementMentionCountsRows(updates: Array<ReadStateMentionUpdate>): Promise<
 		Array<{
 			userId: UserID;
 			channelId: ChannelID;
@@ -160,34 +175,64 @@ export class ReadStateRepository implements IReadStateRepository {
 		if (updates.length === 0) {
 			return [];
 		}
+		const applied = await advanceRows(
+			updates.map(({userId, channelId, messageId, marker}) => {
+				const pk = {user_id: userId, channel_id: channelId};
+				const baselineMessageId = mentionBaseline(channelId, marker);
+				return {
+					table: ReadStates,
+					pk,
+					guard: {col: 'message_id', value: messageId},
+					set: marker != null ? markerColumns(marker) : {},
+					increment: {mention_count: 1},
+					insert:
+						baselineMessageId < messageId
+							? {
+									...pk,
+									message_id: baselineMessageId,
+									mention_count: 1,
+									last_pin_timestamp: null,
+									...(marker != null ? markerColumns(marker) : {}),
+								}
+							: null,
+				};
+			}),
+			() => this.incrementMentionCountsByRead(updates),
+		);
+		return updates.filter((_, index) => applied[index]).map(({userId, channelId}) => ({userId, channelId}));
+	}
+
+	private async incrementMentionCountsByRead(updates: Array<ReadStateMentionUpdate>): Promise<Array<boolean>> {
 		const existingStates = await Promise.all(
-			updates.map(({userId, channelId, messageId}) =>
+			updates.map(({userId, channelId, messageId, marker}) =>
 				fetchOne<ReadStateRow>(FETCH_READ_STATE_BY_USER_AND_CHANNEL_CQL, {
 					user_id: userId,
 					channel_id: channelId,
-				}).then((state) => ({userId, channelId, messageId, state})),
+				}).then((state) => ({userId, channelId, messageId, marker, state})),
 			),
 		);
 		const batch = new BatchBuilder();
-		const appliedUpdates: Array<{
-			userId: UserID;
-			channelId: ChannelID;
-		}> = [];
-		for (const {userId, channelId, messageId, state} of existingStates) {
+		const applied: Array<boolean> = [];
+		for (const {userId, channelId, messageId, marker, state} of existingStates) {
 			if (state) {
 				if (state.message_id != null && state.message_id >= messageId) {
+					applied.push(false);
 					continue;
 				}
 				batch.addPrepared(
 					ReadStates.patchByPk(
 						{user_id: userId, channel_id: channelId},
-						{mention_count: Db.set((state.mention_count || 0) + 1)},
+						{
+							mention_count: Db.set((state.mention_count || 0) + 1),
+							...(markerNeeded(marker, state) ? markerPatch(marker) : {}),
+						},
 					),
 				);
-				appliedUpdates.push({userId, channelId});
+				applied.push(true);
 			} else {
-				const baselineMessageId = channelIdToMessageId(channelId);
+				const baselineMessageId = mentionBaseline(channelId, marker);
 				if (baselineMessageId >= messageId) {
+					applied.push(false);
 					continue;
 				}
 				batch.addPrepared(
@@ -197,15 +242,16 @@ export class ReadStateRepository implements IReadStateRepository {
 						message_id: baselineMessageId,
 						mention_count: 1,
 						last_pin_timestamp: null,
+						...(marker != null ? markerColumns(marker) : {}),
 					}),
 				);
-				appliedUpdates.push({userId, channelId});
+				applied.push(true);
 			}
 		}
-		if (appliedUpdates.length > 0) {
+		if (applied.includes(true)) {
 			await batch.executeChunked(BULK_READ_STATE_BATCH_QUERY_LIMIT, false);
 		}
-		return appliedUpdates;
+		return applied;
 	}
 
 	async bulkAckMessages(
@@ -213,6 +259,7 @@ export class ReadStateRepository implements IReadStateRepository {
 		readStates: Array<{
 			channelId: ChannelID;
 			messageId: MessageID;
+			marker?: ReadStateMarker | null;
 		}>,
 	): Promise<Array<ReadState>> {
 		return this.bulkAckMessageRows(userId, readStates);
@@ -223,6 +270,7 @@ export class ReadStateRepository implements IReadStateRepository {
 		readStates: Array<{
 			channelId: ChannelID;
 			messageId: MessageID;
+			marker?: ReadStateMarker | null;
 		}>,
 	): Promise<Array<ReadState>> {
 		const currentRows = await fetchManyInChunks<ReadStateRow, ChannelID>(
@@ -234,9 +282,16 @@ export class ReadStateRepository implements IReadStateRepository {
 		const batch = new BatchBuilder();
 		const results: Array<ReadState> = [];
 		for (const readState of readStates) {
-			const currentReadState = currentRowsByChannel.get(readState.channelId);
+			const currentReadState = currentRowsByChannel.get(readState.channelId) ?? null;
+			const {marker} = readState;
+			const stamp = markerNeeded(marker, currentReadState);
 			if (currentReadState?.message_id != null && currentReadState.message_id > readState.messageId) {
-				results.push(new ReadState(currentReadState));
+				if (stamp) {
+					batch.addPrepared(
+						ReadStates.patchByPk({user_id: userId, channel_id: readState.channelId}, markerPatch(marker)),
+					);
+				}
+				results.push(new ReadState({...currentReadState, ...(stamp ? markerColumns(marker) : {})}));
 				continue;
 			}
 			batch.addPrepared(
@@ -245,6 +300,7 @@ export class ReadStateRepository implements IReadStateRepository {
 					{
 						message_id: Db.set(readState.messageId),
 						mention_count: Db.set(0),
+						...(stamp ? markerPatch(marker) : {}),
 					},
 				),
 			);
@@ -255,6 +311,7 @@ export class ReadStateRepository implements IReadStateRepository {
 					message_id: readState.messageId,
 					mention_count: 0,
 					last_pin_timestamp: currentReadState?.last_pin_timestamp ?? null,
+					...(stamp ? markerColumns(marker) : markerOf(currentReadState)),
 				}),
 			);
 		}
@@ -262,9 +319,17 @@ export class ReadStateRepository implements IReadStateRepository {
 		return results;
 	}
 
-	async upsertPinAck(userId: UserID, channelId: ChannelID, lastPinTimestamp: Date): Promise<void> {
+	async upsertPinAck(
+		userId: UserID,
+		channelId: ChannelID,
+		lastPinTimestamp: Date,
+		marker?: ReadStateMarker | null,
+	): Promise<void> {
 		await upsertOne(
-			ReadStates.patchByPk({user_id: userId, channel_id: channelId}, {last_pin_timestamp: Db.set(lastPinTimestamp)}),
+			ReadStates.patchByPk(
+				{user_id: userId, channel_id: channelId},
+				{last_pin_timestamp: Db.set(lastPinTimestamp), ...(marker != null ? markerPatch(marker) : {})},
+			),
 		);
 	}
 }

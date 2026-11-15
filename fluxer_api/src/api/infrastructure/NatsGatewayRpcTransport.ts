@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {GatewayRpcMethodError, GatewayRpcMethodErrorCodes} from '@app/api/infrastructure/GatewayRpcError';
-import type {IGatewayRpcTransport} from '@app/api/infrastructure/IGatewayRpcTransport';
 import {Logger} from '@app/api/Logger';
 import {type Msg, RequestError, TimeoutError} from '@nats-io/transport-node';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
@@ -50,7 +49,7 @@ function decodeNatsRpcResponse(responseText: string): NatsRpcResponse {
 	};
 }
 
-export class NatsGatewayRpcTransport implements IGatewayRpcTransport {
+export class NatsGatewayRpcTransport {
 	private readonly connectionManager: INatsConnectionManager;
 
 	constructor(connectionManager: INatsConnectionManager) {

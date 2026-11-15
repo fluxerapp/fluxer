@@ -1,0 +1,67 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Peer-to-peer voice
+description: Reporting whether each connection in a peer-to-peer voice call connected or failed.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+In a [peer-to-peer voice](/gateway/events/#peer-to-peer-voice) call, Fluxer gives clients STUN servers only and never relays media. Clients send a report for each peer connection once it connects or fails. Fluxer stores the reports, and no API returns them.
+
+## Connection report object
+
+The outcome of one peer connection, as the reporting client saw it.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the voice channel or private channel |
+| guild_id | ?snowflake | The ID of the guild, null in a private channel |
+| participant_count | integer | Number of people in the call when the connection connected or failed (2-4) |
+| outcome | string | `connected` or `failed` |
+| local_candidate_type | ?string | `host`, `srflx`, `prflx` or `relay` for the local end of the selected pair, null without one |
+| remote_candidate_type | ?string | `host`, `srflx`, `prflx` or `relay` for the remote end of the selected pair, null without one |
+| ip_family | ?string | `ipv4` or `ipv6`, null without a selected pair |
+| protocol | ?string | `udp` or `tcp`, null without a selected pair |
+| setup_ms | ?integer | Milliseconds from creating the connection until it first connected, null if it never connected |
+| ice_restarted | boolean | Whether the connection ran an ICE restart |
+
+### Example
+
+```json
+{
+  "channel_id": "1189375284394692610",
+  "guild_id": null,
+  "participant_count": 2,
+  "outcome": "connected",
+  "local_candidate_type": "srflx",
+  "remote_candidate_type": "host",
+  "ip_family": "ipv6",
+  "protocol": "udp",
+  "setup_ms": 840,
+  "ice_restarted": false
+}
+```
+
+## Report connection outcomes
+
+<RouteHeader method="POST" path="/v1/voice/p2p/connection-reports" />
+
+Records [connection reports](#connection-report-object). Fluxer keeps each report for 180 days, together with your user ID, your IP address and its country, and your session's platform and operating system. When peer-to-peer voice is off on the instance, the request returns 204 and stores nothing.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| reports | array[[connection report](#connection-report-object) object] | The reports to record (1-8) |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The reports were recorded |
+| 400 | [error response](/http-api/#error-response) | `INVALID_FORM_BODY` when any report is invalid, and nothing is recorded |
+| 403 | [error response](/http-api/#error-response) | `ACCESS_DENIED` when the caller is a bot or uses an OAuth2 bearer token |
+
+The rate limit is 10 requests per minute, on the `voice:p2p:connection_reports` bucket.

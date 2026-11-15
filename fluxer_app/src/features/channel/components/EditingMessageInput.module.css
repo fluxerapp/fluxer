@@ -1,10 +1,5 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-.scroller {
-	max-height: 50svh;
-	width: 100%;
-}
-
 .footer {
 	display: flex;
 	align-items: center;
@@ -32,24 +27,13 @@
 
 .separator {
 	display: inline-block;
-	margin-left: 0.25rem;
-	margin-right: 0.25rem;
+	margin-inline-start: 0.25rem;
+	margin-inline-end: 0.25rem;
 	height: 0.25rem;
 	width: 0.25rem;
 	border-radius: 50%;
 	background-color: var(--text-chat-muted);
 	vertical-align: middle;
-}
-
-.flexColumnContainer {
-	display: flex;
-	flex-direction: column;
-}
-
-.hiddenSpan {
-	position: absolute;
-	visibility: hidden;
-	pointer-events: none;
 }
 
 .editor {

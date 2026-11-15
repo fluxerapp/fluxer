@@ -1,10 +1,10 @@
 import type {UserID} from '@app/api/BrandedTypes';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
-import type {IUserRepositoryAggregate} from '@app/api/user/repositories/IUserRepositoryAggregate';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {runAllInOrder} from '@app/api/utils/ConcurrencyUtils';
 
 interface SessionRevocationDependencies {
-	users: IUserRepositoryAggregate;
+	users: UserRepository;
 	gateway: IGatewayService;
 }
 

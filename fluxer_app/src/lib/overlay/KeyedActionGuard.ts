@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-const DEFAULT_RELEASE_DELAY_MS = 2000;
+const RELEASE_DELAY_MS = 2000;
 
 export interface KeyedActionGuard {
 	begin: (key: string) => boolean;
@@ -8,13 +8,7 @@ export interface KeyedActionGuard {
 	scheduleRelease: (key: string) => void;
 }
 
-interface KeyedActionGuardOptions {
-	releaseDelayMs?: number;
-}
-
-export function createKeyedActionGuard({
-	releaseDelayMs = DEFAULT_RELEASE_DELAY_MS,
-}: KeyedActionGuardOptions = {}): KeyedActionGuard {
+export function createKeyedActionGuard(): KeyedActionGuard {
 	const inFlight = new Set<string>();
 	const releaseTimers = new Map<string, NodeJS.Timeout>();
 	const clearScheduledRelease = (key: string): void => {
@@ -40,7 +34,7 @@ export function createKeyedActionGuard({
 			const releaseTimer = setTimeout(() => {
 				inFlight.delete(key);
 				releaseTimers.delete(key);
-			}, releaseDelayMs);
+			}, RELEASE_DELAY_MS);
 			releaseTimers.set(key, releaseTimer);
 		},
 	};

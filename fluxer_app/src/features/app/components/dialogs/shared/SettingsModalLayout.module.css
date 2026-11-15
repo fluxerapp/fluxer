@@ -21,7 +21,6 @@
 	--settings-selected-color: var(--text-primary);
 	--settings-sidebar-highlight: var(--text-primary);
 	--settings-sidebar-selected-background: var(--settings-selected-background);
-	--settings-sidebar-selected-border-color: var(--settings-selected-border-color);
 	--settings-danger-text: color-mix(in srgb, var(--status-danger) 78%, var(--text-primary) 22%);
 	--settings-danger-background: color-mix(in srgb, var(--status-danger) 6%, var(--surface-interactive-hover-bg));
 	--settings-danger-border-color: color-mix(in srgb, var(--status-danger) 32%, transparent);
@@ -53,6 +52,11 @@
 	);
 	--settings-control-transition:
 		background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease, opacity 0.12s ease;
+}
+
+.modalRoot.modalRoot.modalRoot {
+	--settings-modal-inner-radius: calc(clamp(0.5rem, 1vw, 0.75rem) - 0.0625rem);
+	overflow: visible;
 }
 
 .containerFullscreen {
@@ -92,82 +96,14 @@
 	}
 }
 
-.mobileWrapper {
-	position: relative;
-	width: 100%;
-	height: 100%;
-	overflow: hidden;
-	background: var(--settings-panel-background);
-	display: flex;
-	flex-direction: column;
-}
-
-.mobileHeaderContainer {
-	position: relative;
-	flex-shrink: 0;
-	z-index: 10;
-	background: var(--background-primary);
-}
-
-.mobileHeaderContent {
-	width: 100%;
-}
-
-.mobileContentContainer {
-	position: relative;
-	flex: 1 1 auto;
-	overflow: hidden;
-}
-
-.mobileContentPane {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	display: flex;
-	flex-direction: column;
-	background: var(--background-secondary);
-	contain: layout style paint;
-}
-
-.mobileSlideContainer {
-	display: flex;
-	height: 100%;
-	width: 200%;
-	-webkit-backface-visibility: hidden;
-	backface-visibility: hidden;
-}
-
-.mobilePane {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	display: flex;
-	flex-direction: column;
-	background: var(--background-secondary);
-	-webkit-overflow-scrolling: touch;
-	overscroll-behavior-y: contain;
-	contain: layout style paint;
-}
-
-.mobilePaneActive {
-	z-index: 2;
-}
-
-.mobilePaneInactive {
-	z-index: 1;
-	pointer-events: none;
-}
-
 .desktopSidebar {
 	flex: 0 0 clamp(15.75rem, 24svw, 20rem);
 	display: flex;
-	border-right: 0.0625rem solid var(--settings-border-color);
+	border-inline-end: 0.0625rem solid var(--settings-border-color);
+	border-start-start-radius: var(--settings-modal-inner-radius, 0);
+	border-end-start-radius: var(--settings-modal-inner-radius, 0);
 	background: var(--settings-surface-background);
-	overflow: hidden;
+	min-width: 0;
 	position: relative;
 }
 
@@ -179,6 +115,8 @@
 	height: 100%;
 	flex: 1 1 auto;
 	min-width: 0;
+	position: relative;
+	overflow: hidden;
 }
 
 .desktopSidebar,
@@ -195,10 +133,11 @@
 	flex: 1;
 	display: flex;
 	flex-direction: column;
+	border-start-end-radius: var(--settings-modal-inner-radius, 0);
+	border-end-end-radius: var(--settings-modal-inner-radius, 0);
 	background: var(--background-secondary);
 	min-width: 0;
 	min-height: 0;
-	overflow: hidden;
 }
 
 .desktopContentPad {
@@ -232,6 +171,7 @@
 	justify-content: space-between;
 	padding: 0 1rem;
 	flex-shrink: 0;
+	border-start-end-radius: var(--settings-modal-inner-radius, 0);
 	background: var(--background-secondary);
 	border-bottom: 0.0625rem solid var(--settings-border-color);
 	contain: layout style paint;
@@ -242,6 +182,14 @@
 	min-height: 0;
 	overflow-anchor: none;
 	scroll-padding-top: 0;
+}
+
+.desktopScroll + [data-flx='ui.scroller.scroller-track.presentation.track-pointer-down'] {
+	clip-path: inset(-100vh 0 0 -100vw round var(--settings-modal-inner-radius, 0));
+}
+
+:global(html[dir='rtl']) .desktopScroll + [data-flx='ui.scroller.scroller-track.presentation.track-pointer-down'] {
+	clip-path: inset(-100vh -100vw 0 0 round var(--settings-modal-inner-radius, 0));
 }
 
 .desktopScrollInner {
@@ -332,12 +280,10 @@
 .sidebarCategoryTitle {
 	margin: 0 0 0.0625rem;
 	padding: 0.25rem 0.625rem 0.1875rem;
-	font-size: 0.6875rem;
+	font-size: 0.75rem;
 	font-weight: 600;
 	line-height: 1rem;
 	color: var(--text-tertiary);
-	text-transform: uppercase;
-	letter-spacing: 0.02em;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -366,7 +312,7 @@
 	-webkit-tap-highlight-color: transparent;
 	width: 100%;
 	min-height: 2.125rem;
-	text-align: left;
+	text-align: start;
 	box-sizing: border-box;
 	transition: none;
 }
@@ -406,9 +352,51 @@
 	border: 0;
 }
 
+.externalTabLabel {
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	width: 100%;
+	min-width: 0;
+}
+
+.externalTabLabelText {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.externalTabIcon {
+	flex-shrink: 0;
+	margin-inline-start: auto;
+	color: var(--text-tertiary);
+}
+
+.sidebarItemTrailing {
+	position: relative;
+	display: flex;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	margin-inline-start: 0.25rem;
+	min-width: 1rem;
+	min-height: 1rem;
+}
+
+.sidebarItemAttentionDot {
+	position: absolute;
+}
+
+.sidebarItem[data-expandable='true'].sidebarItemSelected .sidebarItemAttentionDot,
+.sidebarItem[data-expandable='true'][aria-expanded='true'] .sidebarItemAttentionDot,
+.sidebarItem[data-expandable='true']:hover .sidebarItemAttentionDot,
+.sidebarItem[data-expandable='true'].sidebarItemFocused .sidebarItemAttentionDot {
+	visibility: hidden;
+}
+
 .sidebarItemChevron {
 	flex-shrink: 0;
-	margin-inline-start: 0.25rem;
 	color: var(--text-tertiary);
 	opacity: 0;
 	transform: rotate(0deg);
@@ -542,13 +530,6 @@
 	color: var(--text-primary);
 }
 
-.preloadContent {
-	position: absolute;
-	opacity: 0;
-	pointer-events: none;
-	visibility: hidden;
-}
-
 .desktopScrollSpacerTop {
 	height: 1.25rem;
 	flex-shrink: 0;
@@ -577,9 +558,9 @@
 	display: flex;
 	flex-direction: column;
 	gap: 0.125rem;
-	margin-left: var(--settings-sidebar-subtree-line-x);
-	margin-right: 0;
-	padding-left: var(--settings-sidebar-subtree-content-gap);
+	margin-inline-start: var(--settings-sidebar-subtree-line-x);
+	margin-inline-end: 0;
+	padding-inline-start: var(--settings-sidebar-subtree-content-gap);
 	position: relative;
 	overflow: hidden;
 	min-height: 0;
@@ -596,7 +577,7 @@
 .sidebarSubItems::after {
 	content: '';
 	position: absolute;
-	left: 0;
+	inset-inline-start: 0;
 	top: 0;
 	bottom: 0;
 	width: var(--settings-sidebar-subtree-line-width);
@@ -607,7 +588,7 @@
 .sidebarSubItems::before {
 	content: '';
 	position: absolute;
-	left: 0;
+	inset-inline-start: 0;
 	top: var(--active-top, 0);
 	height: var(--active-height, 0);
 	width: var(--settings-sidebar-subtree-line-width);
@@ -645,7 +626,7 @@
 	-webkit-tap-highlight-color: transparent;
 	width: 100%;
 	min-height: 1.875rem;
-	text-align: left;
+	text-align: start;
 	position: relative;
 	z-index: 2;
 	box-sizing: border-box;

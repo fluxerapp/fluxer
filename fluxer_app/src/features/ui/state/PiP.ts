@@ -114,10 +114,6 @@ class PiP {
 		return this.isOpen;
 	}
 
-	getCorner(): PiPCorner {
-		return this.corner;
-	}
-
 	getEffectiveCorner(): PiPCorner {
 		return this.corner;
 	}
@@ -131,7 +127,7 @@ class PiP {
 	}
 }
 
-export type {PiPContent, PiPContentType, PiPCorner};
+export type {PiPContent};
 export {PIP_DEFAULT_WIDTH};
 
 export default new PiP();

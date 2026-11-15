@@ -1,17 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {randomUUID} from 'node:crypto';
 import type {UserID} from '@app/api/BrandedTypes';
 import {fetchMany, upsertOne} from '@app/api/database/CassandraQueryExecution';
-import {Db} from '@app/api/database/CassandraTypes';
+import {Db, type PreparedQuery} from '@app/api/database/CassandraTypes';
 import {Logger} from '@app/api/Logger';
-import {AuthSessions} from '@app/api/Tables';
+import {AuthSessions, AuthSessionsByAppChannel} from '@app/api/Tables';
 import {UserAccountRepository} from '@app/api/user/repositories/account/UserAccountRepository';
 import {isJsonRecord, parseJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
+import {
+	type ReportedClientApp,
+	readReportedClientApp,
+	reportedClientAppRecord,
+} from '@app/api/utils/SessionClientIdentity';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import {seconds} from 'itty-time';
 
 const PENDING_HASH_KEY = 'user_activity:pending';
 const PENDING_AUTH_SESSION_HASH_KEY = 'auth_session_activity:pending';
+const USER_FLUSH_LOCK_KEY = 'user_activity:flush_lock';
+const USER_FLUSH_LOCK_TTL_SECONDS = seconds('1 minute');
 const AUTH_SESSION_TOUCH_KEY_PREFIX = 'auth_session_activity:touched:';
 const WRITE_CONCURRENCY = 64;
 const AUTH_SESSION_TOUCH_DEBOUNCE_TTL_SECONDS = seconds('5 minutes');
@@ -19,7 +27,7 @@ const AUTH_SESSION_EXISTENCE_READ_SLICE = 100;
 type ActivityWriter = typeof upsertOne;
 
 const FETCH_AUTH_SESSION_OWNERS_CQL = AuthSessions.selectCql({
-	columns: ['session_id_hash', 'user_id'],
+	columns: ['session_id_hash', 'user_id', 'app_platform', 'app_release_channel'],
 	where: AuthSessions.where.in('session_id_hash', 'session_id_hashes'),
 });
 
@@ -34,6 +42,13 @@ interface PendingEntry {
 
 interface PendingAuthSessionEntry {
 	ts: number;
+	app: ReportedClientApp | null;
+}
+
+interface LiveAuthSession {
+	userId: UserID;
+	appPlatform: string | null;
+	appReleaseChannel: string | null;
 }
 
 interface FlushStats {
@@ -58,7 +73,7 @@ function parsePendingAuthSessionEntry(json: string): PendingAuthSessionEntry | n
 	if (!decoded || typeof decoded.ts !== 'number' || !Number.isFinite(decoded.ts)) {
 		return null;
 	}
-	return {ts: decoded.ts};
+	return {ts: decoded.ts, app: isJsonRecord(decoded.app) ? readReportedClientApp(decoded.app) : null};
 }
 
 function isStringRecord(value: unknown): value is Record<string, string> {
@@ -70,10 +85,12 @@ async function flushActivityEntries<T>(
 	entries: ReadonlyArray<T>,
 	write: (entry: T) => Promise<unknown>,
 	failureMessage: string,
+	keepLock?: () => Promise<unknown>,
 ): Promise<FlushStats> {
 	let written = 0;
 	let skipped = 0;
 	for (let index = 0; index < entries.length; index += WRITE_CONCURRENCY) {
+		if (index > 0) await keepLock?.();
 		const results = await Promise.allSettled(
 			entries.slice(index, index + WRITE_CONCURRENCY).map(async (entry) => write(entry)),
 		);
@@ -87,6 +104,77 @@ async function flushActivityEntries<T>(
 		}
 	}
 	return {drained: entries.length, written, skipped};
+}
+
+function dbValue<T>(value: T | null) {
+	return value === null ? Db.clear<T>() : Db.set(value);
+}
+
+function authSessionActivityStatements(
+	sessionIdHash: Buffer,
+	entry: PendingAuthSessionEntry,
+	session: LiveAuthSession,
+): Array<PreparedQuery> {
+	const lastUsed = {approx_last_used_at: Db.set(new Date(entry.ts))};
+	const {app} = entry;
+	if (!app) return [AuthSessions.patchByPk({session_id_hash: sessionIdHash}, lastUsed)];
+	const statements = [
+		AuthSessions.patchByPk(
+			{session_id_hash: sessionIdHash},
+			{
+				...lastUsed,
+				app_platform: dbValue(app.platform),
+				app_version: dbValue(app.version),
+				app_release_channel: dbValue(app.releaseChannel),
+				app_build_number: dbValue(app.buildNumber),
+				app_beta_number: dbValue(app.betaNumber),
+			},
+		),
+	];
+	const unchanged = session.appPlatform === app.platform && session.appReleaseChannel === app.releaseChannel;
+	if (unchanged) return statements;
+	if (session.appPlatform && session.appReleaseChannel) {
+		statements.push(
+			AuthSessionsByAppChannel.deleteByPk({
+				app_platform: session.appPlatform,
+				app_release_channel: session.appReleaseChannel,
+				session_id_hash: sessionIdHash,
+			}),
+		);
+	}
+	if (app.platform && app.releaseChannel) {
+		statements.push(
+			AuthSessionsByAppChannel.insert({
+				app_platform: app.platform,
+				app_release_channel: app.releaseChannel,
+				session_id_hash: sessionIdHash,
+				user_id: session.userId,
+			}),
+		);
+	}
+	return statements;
+}
+
+function revokedAuthSessionCleanupStatements(
+	sessionIdHash: Buffer,
+	entry: PendingAuthSessionEntry,
+	session: LiveAuthSession,
+): Array<PreparedQuery> {
+	const statements = [AuthSessions.deleteByPk({session_id_hash: sessionIdHash})];
+	const before = {platform: session.appPlatform, releaseChannel: session.appReleaseChannel};
+	const after = {platform: entry.app?.platform ?? null, releaseChannel: entry.app?.releaseChannel ?? null};
+	const sameChannel = before.platform === after.platform && before.releaseChannel === after.releaseChannel;
+	for (const channel of sameChannel ? [before] : [before, after]) {
+		if (!channel.platform || !channel.releaseChannel) continue;
+		statements.push(
+			AuthSessionsByAppChannel.deleteByPk({
+				app_platform: channel.platform,
+				app_release_channel: channel.releaseChannel,
+				session_id_hash: sessionIdHash,
+			}),
+		);
+	}
+	return statements;
 }
 
 export class UserActivityBuffer {
@@ -111,7 +199,11 @@ export class UserActivityBuffer {
 		});
 	}
 
-	async recordAuthSessionActivity(sessionIdHash: Buffer, timestamp: Date): Promise<boolean> {
+	async recordAuthSessionActivity(
+		sessionIdHash: Buffer,
+		timestamp: Date,
+		app: ReportedClientApp | null = null,
+	): Promise<boolean> {
 		const encodedSessionIdHash = this.encodeSessionIdHash(sessionIdHash);
 		const touchKey = `${AUTH_SESSION_TOUCH_KEY_PREFIX}${encodedSessionIdHash}`;
 		let touched: string | null;
@@ -130,7 +222,7 @@ export class UserActivityBuffer {
 		if (touched !== 'OK') {
 			return false;
 		}
-		const payload: PendingAuthSessionEntry = {ts: timestamp.getTime()};
+		const payload = {ts: timestamp.getTime(), ...(app ? {app: reportedClientAppRecord(app)} : {})};
 		try {
 			await this.kv.hset(PENDING_AUTH_SESSION_HASH_KEY, encodedSessionIdHash, JSON.stringify(payload));
 			return true;
@@ -165,42 +257,89 @@ export class UserActivityBuffer {
 	}
 
 	private async drainAndFlushUsers(): Promise<FlushStats> {
-		const drained = await this.atomicDrain();
-		return flushActivityEntries(
-			drained,
-			({userId, entry}) =>
-				this.accounts.updateLastActiveAt({
-					userId,
-					lastActiveAt: new Date(entry.ts),
-					lastActiveIp: entry.ip ?? undefined,
-				}),
-			'Failed to flush a user activity entry',
-		);
+		const lockToken = randomUUID();
+		if (!(await this.kv.acquireLock(USER_FLUSH_LOCK_KEY, lockToken, USER_FLUSH_LOCK_TTL_SECONDS))) {
+			return {drained: 0, written: 0, skipped: 0};
+		}
+		try {
+			const drained = await this.atomicDrain();
+			return await flushActivityEntries(
+				drained,
+				({userId, entry}) =>
+					this.accounts.updateLastActiveAt({
+						userId,
+						lastActiveAt: new Date(entry.ts),
+						lastActiveIp: entry.ip ?? undefined,
+					}),
+				'Failed to flush a user activity entry',
+				() => this.kv.extendLock(USER_FLUSH_LOCK_KEY, lockToken, USER_FLUSH_LOCK_TTL_SECONDS),
+			);
+		} finally {
+			await this.kv.releaseLock(USER_FLUSH_LOCK_KEY, lockToken);
+		}
 	}
 
 	private async drainAndFlushAuthSessions(): Promise<FlushStats> {
 		const drained = await this.atomicDrainAuthSessions();
-		const live = await this.liveAuthSessionHashes(drained.map(({sessionIdHash}) => sessionIdHash));
-		const writable = drained.filter(({sessionIdHash}) => live.has(this.encodeSessionIdHash(sessionIdHash)));
+		const live = await this.liveAuthSessions(drained.map(({sessionIdHash}) => sessionIdHash));
+		const writable = drained.flatMap((entry) => {
+			const session = live.get(this.encodeSessionIdHash(entry.sessionIdHash));
+			return session ? [{...entry, session}] : [];
+		});
 		const stats = await flushActivityEntries(
 			writable,
-			({sessionIdHash, entry}) =>
-				this.writer(
-					AuthSessions.patchByPk({session_id_hash: sessionIdHash}, {approx_last_used_at: Db.set(new Date(entry.ts))}),
-				),
+			async ({sessionIdHash, entry, session}) => {
+				for (const statement of authSessionActivityStatements(sessionIdHash, entry, session)) {
+					await this.writer(statement);
+				}
+			},
 			'Failed to flush an auth session activity entry',
 		);
+		await this.undoWritesForRevokedSessions(writable);
 		return {...stats, drained: drained.length, skipped: stats.skipped + drained.length - writable.length};
 	}
 
-	private async liveAuthSessionHashes(sessionIdHashes: ReadonlyArray<Buffer>): Promise<Set<string>> {
-		const live = new Set<string>();
+	private async undoWritesForRevokedSessions(
+		written: ReadonlyArray<{sessionIdHash: Buffer; entry: PendingAuthSessionEntry; session: LiveAuthSession}>,
+	): Promise<void> {
+		if (written.length === 0) return;
+		let live: Map<string, LiveAuthSession>;
+		try {
+			live = await this.liveAuthSessions(written.map(({sessionIdHash}) => sessionIdHash));
+		} catch (error) {
+			Logger.warn({error}, 'Failed to recheck auth sessions after flushing their activity');
+			return;
+		}
+		const revoked = written.filter(({sessionIdHash}) => !live.has(this.encodeSessionIdHash(sessionIdHash)));
+		await flushActivityEntries(
+			revoked,
+			async ({sessionIdHash, entry, session}) => {
+				for (const statement of revokedAuthSessionCleanupStatements(sessionIdHash, entry, session)) {
+					await this.writer(statement);
+				}
+			},
+			'Failed to undo activity written to a revoked auth session',
+		);
+	}
+
+	private async liveAuthSessions(sessionIdHashes: ReadonlyArray<Buffer>): Promise<Map<string, LiveAuthSession>> {
+		const live = new Map<string, LiveAuthSession>();
 		for (let index = 0; index < sessionIdHashes.length; index += AUTH_SESSION_EXISTENCE_READ_SLICE) {
-			const rows = await fetchMany<{session_id_hash: Buffer; user_id: UserID | null}>(FETCH_AUTH_SESSION_OWNERS_CQL, {
+			const rows = await fetchMany<{
+				session_id_hash: Buffer;
+				user_id: UserID | null;
+				app_platform: string | null;
+				app_release_channel: string | null;
+			}>(FETCH_AUTH_SESSION_OWNERS_CQL, {
 				session_id_hashes: sessionIdHashes.slice(index, index + AUTH_SESSION_EXISTENCE_READ_SLICE),
 			});
 			for (const row of rows) {
-				if (row.user_id != null) live.add(this.encodeSessionIdHash(row.session_id_hash));
+				if (row.user_id == null) continue;
+				live.set(this.encodeSessionIdHash(row.session_id_hash), {
+					userId: row.user_id,
+					appPlatform: row.app_platform ?? null,
+					appReleaseChannel: row.app_release_channel ?? null,
+				});
 			}
 		}
 		return live;

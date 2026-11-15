@@ -6,7 +6,6 @@ import guildStyles from '@app/features/app/components/layout/GuildsLayout.module
 import styles from '@app/features/app/components/layout/sidebar_nav/DiscoveryButton.module.css';
 import {useHover} from '@app/features/app/hooks/useHover';
 import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Navigation from '@app/features/navigation/state/Navigation';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -20,7 +19,7 @@ import {useCallback, useRef} from 'react';
 
 const EXPLORE_COMMUNITIES_DESCRIPTOR = msg({
 	message: 'Explore communities',
-	comment: 'Short label in the sidebar navigation discovery button.',
+	comment: 'Short label in the sidebar button that opens Explore.',
 });
 export const DiscoveryButton = observer(() => {
 	const {i18n} = useLingui();
@@ -33,9 +32,6 @@ export const DiscoveryButton = observer(() => {
 	const handleClick = useCallback(() => {
 		Navigation.navigateToDiscover();
 	}, []);
-	if (RuntimeConfig.singleCommunityEnabled) {
-		return null;
-	}
 	return (
 		<div className={guildStyles.createGuildButton} data-flx="app.sidebar-nav.discovery-button.div">
 			<Tooltip
@@ -66,7 +62,9 @@ export const DiscoveryButton = observer(() => {
 							animate={{borderRadius: isHovering || isSelected ? '30%' : '50%'}}
 							initial={{borderRadius: isHovering || isSelected ? '30%' : '50%'}}
 							transition={{duration: Accessibility.useReducedMotion ? 0 : 0.07, ease: 'easeOut'}}
-							style={isSelected ? {backgroundColor: 'var(--brand-primary)', color: 'white'} : undefined}
+							style={
+								isSelected ? {backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-fill)'} : undefined
+							}
 							data-flx="app.sidebar-nav.discovery-button.div--2"
 						>
 							<CompassIcon

@@ -1,0 +1,328 @@
+[
+	{
+		"name": "everyone defaults are masked to view and history",
+		"kind": "permissions",
+		"input": {
+			"guildId": "100",
+			"everyonePermissions": "1117248",
+			"guildNsfw": false,
+			"channel": {"id": "10", "type": 0, "nsfw_override": null, "permission_overwrites": []},
+			"adultContentAllowed": false
+		},
+		"visible": true,
+		"expected": "66560"
+	},
+	{
+		"name": "administrator on everyone is cleared, not expanded",
+		"kind": "permissions",
+		"input": {
+			"guildId": "100",
+			"everyonePermissions": "8",
+			"guildNsfw": false,
+			"channel": {"id": "10", "type": 0, "nsfw_override": null, "permission_overwrites": []},
+			"adultContentAllowed": true
+		},
+		"visible": false,
+		"expected": "0"
+	},
+	{
+		"name": "administrator does not bypass an everyone deny",
+		"kind": "permissions",
+		"input": {
+			"guildId": "100",
+			"everyonePermissions": "66568",
+			"guildNsfw": false,
+			"channel": {
+				"id": "10",
+				"type": 0,
+				"nsfw_override": null,
+				"permission_overwrites": [{"id": "100", "type": 0, "allow": "0", "deny": "1024"}]
+			},
+			"adultContentAllowed": true
+		},
+		"visible": false,
+		"expected": "65536"
+	},
+	{
+		"name": "everyone overwrite allowing send stays masked",
+		"kind": "permissions",
+		"input": {
+			"guildId": "100",
+			"everyonePermissions": "1024",
+			"guildNsfw": false,
+			"channel": {
+				"id": "10",
+				"type": 0,
+				"nsfw_override": null,
+				"permission_overwrites": [{"id": "100", "type": 0, "allow": "67648", "deny": "0"}]
+			},
+			"adultContentAllowed": false
+		},
+		"visible": true,
+		"expected": "66560"
+	},
+	{
+		"name": "everyone overwrite denying view hides the channel",
+		"kind": "permissions",
+		"input": {
+			"guildId": "100",
+			"everyonePermissions": "66560",
+			"guildNsfw": false,
+			"channel": {
+				"id": "10",
+				"type": 0,
+				"nsfw_override": null,
+				"permission_overwrites": [{"id": "100", "type": 0, "allow": "0", "deny": "1024"}]
+			},
+			"adultContentAllowed": false
+		},
+		"visible": false,
+		"expected": "65536"
+	},
+	{
+		"name": "everyone overwrite allowing history only grants no view",
+		"kind": "permissions",
+		"input": {
+			"guildId": "100",
+			"everyonePermissions": "0",
+			"guildNsfw": false,
+			"channel": {
+				"id": "10",
+				"type": 0,
+				"nsfw_override": null,
+				"permission_overwrites": [{"id": "100", "type": 0, "allow": "65536", "deny": "0"}]
+			},
+			"adultContentAllowed": false
+		},
+		"visible": false,
+		"expected": "65536"
+	},
+	{
+		"name": "role overwrite is ignored",
+		"kind": "permissions",
+		"input": {
+			"guildId": "100",
+			"everyonePermissions": "0",
+			"guildNsfw": false,
+			"channel": {
+				"id": "10",
+				"type": 0,
+				"nsfw_override": null,
+				"permission_overwrites": [{"id": "200", "type": 0, "allow": "66560", "deny": "0"}]
+			},
+			"adultContentAllowed": false
+		},
+		"visible": false,
+		"expected": "0"
+	},
+	{
+		"name": "member overwrite allow is ignored",
+		"kind": "permissions",
+		"input": {
+			"guildId": "100",
+			"everyonePermissions": "0",
+			"guildNsfw": false,
+			"channel": {
+				"id": "10",
+				"type": 0,
+				"nsfw_override": null,
+				"permission_overwrites": [{"id": "300", "type": 1, "allow": "66560", "deny": "0"}]
+			},
+			"adultContentAllowed": false
+		},
+		"visible": false,
+		"expected": "0"
+	},
+	{
+		"name": "member overwrite deny is ignored",
+		"kind": "permissions",
+		"input": {
+			"guildId": "100",
+			"everyonePermissions": "66560",
+			"guildNsfw": false,
+			"channel": {
+				"id": "10",
+				"type": 0,
+				"nsfw_override": null,
+				"permission_overwrites": [{"id": "300", "type": 1, "allow": "0", "deny": "1024"}]
+			},
+			"adultContentAllowed": false
+		},
+		"visible": true,
+		"expected": "66560"
+	},
+	{
+		"name": "member overwrite with the guild id is not the everyone overwrite",
+		"kind": "permissions",
+		"input": {
+			"guildId": "100",
+			"everyonePermissions": "0",
+			"guildNsfw": false,
+			"channel": {
+				"id": "10",
+				"type": 0,
+				"nsfw_override": null,
+				"permission_overwrites": [{"id": "100", "type": 1, "allow": "66560", "deny": "0"}]
+			},
+			"adultContentAllowed": false
+		},
+		"visible": false,
+		"expected": "0"
+	},
+	{
+		"name": "nsfw channel is hidden from a visitor without adult access",
+		"kind": "permissions",
+		"input": {
+			"guildId": "100",
+			"everyonePermissions": "66560",
+			"guildNsfw": false,
+			"channel": {"id": "10", "type": 0, "nsfw_override": true, "permission_overwrites": []},
+			"adultContentAllowed": false
+		},
+		"visible": false,
+		"expected": "0"
+	},
+	{
+		"name": "nsfw channel is visible to an adult visitor",
+		"kind": "permissions",
+		"input": {
+			"guildId": "100",
+			"everyonePermissions": "66560",
+			"guildNsfw": false,
+			"channel": {"id": "10", "type": 0, "nsfw_override": true, "permission_overwrites": []},
+			"adultContentAllowed": true
+		},
+		"visible": true,
+		"expected": "66560"
+	},
+	{
+		"name": "nsfw is inherited from the category",
+		"kind": "permissions",
+		"input": {
+			"guildId": "100",
+			"everyonePermissions": "66560",
+			"guildNsfw": false,
+			"channel": {"id": "10", "type": 0, "nsfw_override": null, "permission_overwrites": []},
+			"parent": {"nsfw_override": true},
+			"adultContentAllowed": false
+		},
+		"visible": false,
+		"expected": "0"
+	},
+	{
+		"name": "a channel marked safe overrides an adult guild",
+		"kind": "permissions",
+		"input": {
+			"guildId": "100",
+			"everyonePermissions": "66560",
+			"guildNsfw": true,
+			"channel": {"id": "10", "type": 0, "nsfw_override": false, "permission_overwrites": []},
+			"adultContentAllowed": false
+		},
+		"visible": true,
+		"expected": "66560"
+	},
+	{
+		"name": "an adult guild hides inheriting channels from non-adults",
+		"kind": "permissions",
+		"input": {
+			"guildId": "100",
+			"everyonePermissions": "66560",
+			"guildNsfw": true,
+			"channel": {"id": "10", "type": 0, "nsfw_override": null, "permission_overwrites": []},
+			"adultContentAllowed": false
+		},
+		"visible": false,
+		"expected": "0"
+	},
+	{
+		"name": "a category does not inherit from a parent",
+		"kind": "permissions",
+		"input": {
+			"guildId": "100",
+			"everyonePermissions": "66560",
+			"guildNsfw": false,
+			"channel": {"id": "10", "type": 4, "nsfw_override": null, "permission_overwrites": []},
+			"parent": {"nsfw_override": true},
+			"adultContentAllowed": false
+		},
+		"visible": true,
+		"expected": "66560"
+	},
+	{
+		"name": "category-synced channel uses its own copy of the everyone overwrite",
+		"kind": "permissions",
+		"input": {
+			"guildId": "100",
+			"everyonePermissions": "66560",
+			"guildNsfw": false,
+			"channel": {
+				"id": "11",
+				"type": 0,
+				"nsfw_override": null,
+				"permission_overwrites": [
+					{"id": "100", "type": 0, "allow": "0", "deny": "65536"},
+					{"id": "200", "type": 0, "allow": "65536", "deny": "0"}
+				]
+			},
+			"parent": {"nsfw_override": null},
+			"adultContentAllowed": false
+		},
+		"visible": true,
+		"expected": "1024"
+	},
+	{
+		"name": "public thread follows its parent",
+		"kind": "permissions",
+		"input": {
+			"guildId": "100",
+			"everyonePermissions": "66560",
+			"guildNsfw": false,
+			"channel": {"id": "10", "type": 0, "nsfw_override": null, "permission_overwrites": []},
+			"thread": {"private": false},
+			"adultContentAllowed": false
+		},
+		"visible": true,
+		"expected": "66560"
+	},
+	{
+		"name": "private thread is never visible",
+		"kind": "permissions",
+		"input": {
+			"guildId": "100",
+			"everyonePermissions": "66560",
+			"guildNsfw": false,
+			"channel": {"id": "10", "type": 0, "nsfw_override": null, "permission_overwrites": []},
+			"thread": {"private": true},
+			"adultContentAllowed": true
+		},
+		"visible": false,
+		"expected": "0"
+	},
+	{
+		"name": "stripping keeps only the everyone overwrite",
+		"kind": "strip",
+		"input": {
+			"guildId": "100",
+			"channel": {
+				"id": "10",
+				"type": 0,
+				"permission_overwrites": [
+					{"id": "200", "type": 0, "allow": "1024", "deny": "0"},
+					{"id": "100", "type": 0, "allow": "0", "deny": "2048"},
+					{"id": "300", "type": 1, "allow": "0", "deny": "1024"}
+				]
+			}
+		},
+		"expected": ["100"]
+	},
+	{
+		"name": "stripping a channel without overwrites leaves it empty",
+		"kind": "strip",
+		"input": {
+			"guildId": "100",
+			"channel": {"id": "10", "type": 0, "permission_overwrites": []}
+		},
+		"expected": []
+	}
+]

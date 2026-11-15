@@ -19,6 +19,9 @@ import ApplicationsTabState from '@app/features/user/components/modals/tabs/appl
 import {useSettingsContentKey} from '@app/features/user/hooks/useSettingsContentKey';
 import {useUnsavedChangesFlash} from '@app/features/user/hooks/useUnsavedChangesFlash';
 import Users from '@app/features/user/state/Users';
+import {accountGateReason} from '@app/features/user/utils/AccountGatePresentation';
+import {canPerform} from '@app/features/user/utils/AccountGates';
+import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {BookOpenIcon, WarningCircleIcon} from '@phosphor-icons/react';
@@ -26,10 +29,6 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useLayoutEffect} from 'react';
 
-const CLAIM_YOUR_ACCOUNT_TO_CREATE_APPLICATIONS_DESCRIPTOR = msg({
-	message: 'Claim your account to create applications.',
-	comment: 'Description text in the index.',
-});
 const READ_DOCUMENTATION_DESCRIPTOR = msg({
 	message: 'Read the documentation ({domain})',
 	comment: 'Developer applications link label. domain is the documentation domain.',
@@ -39,7 +38,7 @@ const ApplicationsTab: React.FC = observer(() => {
 	const {checkUnsavedChanges} = useUnsavedChangesFlash('applications');
 	const {setContentKey} = useSettingsContentKey();
 	const store = ApplicationsTabState;
-	const isUnclaimed = !(Users.currentUser?.isClaimed() ?? false);
+	const createGate = canPerform(Users.currentUser, TierGatedActions.APPLICATION_CREATE);
 	useLayoutEffect(() => {
 		setContentKey(store.contentKey);
 	}, [store.contentKey, setContentKey]);
@@ -130,11 +129,8 @@ const ApplicationsTab: React.FC = observer(() => {
 					data-flx="user.applications-tab.settings-tab-section--2"
 				>
 					<div className={styles.buttonContainer} data-flx="user.applications-tab.button-container">
-						{isUnclaimed ? (
-							<Tooltip
-								text={i18n._(CLAIM_YOUR_ACCOUNT_TO_CREATE_APPLICATIONS_DESCRIPTOR)}
-								data-flx="user.applications-tab.tooltip"
-							>
+						{!createGate.allowed ? (
+							<Tooltip text={accountGateReason(i18n, createGate)} data-flx="user.applications-tab.tooltip">
 								<div data-flx="user.applications-tab.div">
 									<Button
 										variant="primary"

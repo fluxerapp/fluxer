@@ -5,24 +5,25 @@ import type {LinuxDesktopKind, LinuxSessionType} from '@electron/common/Types';
 
 type SessionEnv = Readonly<Record<string, string | undefined>>;
 
-export function detectLinuxSessionType(env: SessionEnv, pathExists: (candidate: string) => boolean): LinuxSessionType {
+function detectLinuxSessionType(env: SessionEnv, pathExists: (candidate: string) => boolean): LinuxSessionType {
 	const sessionType = (env.XDG_SESSION_TYPE ?? '').trim().toLowerCase();
 	if (sessionType === 'x11' || sessionType === 'wayland') return sessionType;
 	const waylandDisplay = (env.WAYLAND_DISPLAY ?? '').trim();
 	if (waylandDisplay.length > 0) {
 		const runtimeDir = (env.XDG_RUNTIME_DIR ?? '').trim();
-		const socketPath = waylandDisplay.startsWith('/')
-			? waylandDisplay
-			: runtimeDir.length > 0
-				? `${runtimeDir.replace(/\/+$/, '')}/${waylandDisplay}`
-				: null;
+		let socketPath: string | null = null;
+		if (waylandDisplay.startsWith('/')) {
+			socketPath = waylandDisplay;
+		} else if (runtimeDir.length > 0) {
+			socketPath = `${runtimeDir.replace(/\/+$/, '')}/${waylandDisplay}`;
+		}
 		if (socketPath !== null && pathExists(socketPath)) return 'wayland';
 	}
 	if ((env.DISPLAY ?? '').trim().length > 0) return 'x11';
 	return 'unknown';
 }
 
-export function detectLinuxDesktop(env: SessionEnv): LinuxDesktopKind {
+function detectLinuxDesktop(env: SessionEnv): LinuxDesktopKind {
 	const tokens = new Set((env.XDG_CURRENT_DESKTOP ?? '').split(':').map((token) => token.trim().toLowerCase()));
 	if (tokens.has('kde')) return 'kde';
 	if (tokens.has('hyprland') || (env.HYPRLAND_INSTANCE_SIGNATURE ?? '').trim().length > 0) return 'hyprland';

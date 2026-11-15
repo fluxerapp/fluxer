@@ -95,12 +95,6 @@ interface ActiveNowCardSpec {
 	readonly streaming: boolean;
 }
 
-const FALLBACK_ACTIVE_NOW_CARDS: ReadonlyArray<RememberedSkeletonActiveNowCard> = Object.freeze([
-	Object.freeze({participantCount: 3, streaming: false}),
-	Object.freeze({participantCount: 2, streaming: false}),
-	Object.freeze({participantCount: 4, streaming: false}),
-]);
-
 function resolveViewportRowCount(): number {
 	if (typeof window === 'undefined') {
 		return MAX_FALLBACK_ROW_COUNT;
@@ -439,7 +433,7 @@ export const FriendsSkeleton = observer(function FriendsSkeleton() {
 		const rememberedLayout = getRememberedSkeletonFriendsLayout();
 		const layout = rememberedLayout ?? SKELETON_DEFAULT_FRIENDS_LAYOUT;
 		return {
-			activeNowCards: rememberedLayout != null ? rememberedLayout.activeNowCards : FALLBACK_ACTIVE_NOW_CARDS,
+			activeNowCards: layout.activeNowCards,
 			headerLayout: getRememberedSkeletonChannelHeaderLayout() ?? SKELETON_DEFAULT_CHANNEL_HEADER_LAYOUT,
 			layout,
 			rowCount: rememberedLayout != null ? resolveTabRowCount(rememberedLayout) : resolveViewportRowCount(),

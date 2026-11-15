@@ -1,0 +1,15 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.grid {
+	display: flex;
+	width: 100%;
+	max-width: calc(var(--tile) * 6 + var(--switcher-column-gap) * 5);
+	box-sizing: border-box;
+	flex-wrap: wrap;
+	justify-content: center;
+	column-gap: var(--switcher-column-gap);
+	row-gap: var(--switcher-row-gap);
+	margin: 0 auto;
+	padding: 0;
+	list-style: none;
+}

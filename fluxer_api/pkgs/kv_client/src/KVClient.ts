@@ -17,7 +17,6 @@ import {
 import {createInvalidResponseError, KVClientError, KVClientErrorCode} from '@pkgs/kv_client/src/KVClientError';
 import {resolveKVClusterConnection} from '@pkgs/kv_client/src/KVClusterConnection';
 import {
-	createStringEntriesFromPairs,
 	createZSetMembersFromScorePairs,
 	normalizeScoreBound,
 	parseRangeByScoreArguments,
@@ -64,52 +63,6 @@ if redis.call('GET', KEYS[1]) == ARGV[1] then
 	return 1
 end
 return 0
-`;
-const RENEW_SNOWFLAKE_SCRIPT = `
-if redis.call('GET', KEYS[1]) == ARGV[1] then
-	redis.call('SET', KEYS[1], ARGV[1], 'EX', ARGV[2])
-	return 1
-end
-return 0
-`;
-const TRY_CONSUME_TOKENS_SCRIPT = `
-${DECODE_BUCKET_STATE_SCRIPT}
-local key = KEYS[1]
-local now = tonumber(ARGV[1])
-local requested = tonumber(ARGV[2])
-local maxTokens = tonumber(ARGV[3])
-local refillRate = tonumber(ARGV[4])
-local refillIntervalMs = tonumber(ARGV[5])
-
-local data = redis.call('GET', key)
-local tokens = maxTokens
-local lastRefill = now
-
-if data then
-	tokens, lastRefill = decodeBucketState(data, 'tokens', 'lastRefill')
-end
-
-local elapsed = now - lastRefill
-if elapsed >= refillIntervalMs then
-	local intervals = math.floor(elapsed / refillIntervalMs)
-	local tokensToAdd = intervals * refillRate
-	if tokensToAdd > 0 then
-		tokens = math.min(maxTokens, tokens + tokensToAdd)
-		lastRefill = now
-	end
-end
-
-local consumed = 0
-if tokens >= requested then
-	consumed = requested
-	tokens = tokens - requested
-elseif tokens > 0 then
-	consumed = tokens
-	tokens = 0
-end
-
-redis.call('SET', key, cjson.encode({tokens = tokens, lastRefill = lastRefill}), 'EX', 3600)
-return consumed
 `;
 const CHECK_LEAKY_BUCKET_LIMIT_SCRIPT = `
 ${DECODE_BUCKET_STATE_SCRIPT}
@@ -324,15 +277,6 @@ export class KVClient implements IKVProvider {
 		this.client.disconnect(false);
 	}
 
-	async health(): Promise<boolean> {
-		try {
-			return (await this.execute('health', async () => this.client.ping())) === 'PONG';
-		} catch (error) {
-			this.logger.debug({error}, 'KV health check failed');
-			return false;
-		}
-	}
-
 	async get(key: string): Promise<string | null> {
 		return await this.execute('get', async () => this.client.get(key));
 	}
@@ -396,20 +340,6 @@ export class KVClient implements IKVProvider {
 		});
 	}
 
-	async mset(...args: Array<string>): Promise<void> {
-		const entries = createStringEntriesFromPairs(args);
-		if (entries.length === 0) {
-			return;
-		}
-		await this.execute('mset', async () => {
-			const batches = this.splitBySlot(entries, (entry) => entry.key);
-			await runSlotBatches(batches, async (batch) => {
-				const result = await this.client.mset(...batch.flatMap((entry) => [entry.key, entry.value]));
-				parseSetReply(result, 'mset');
-			});
-		});
-	}
-
 	async del(...keys: Array<string>): Promise<number> {
 		if (keys.length === 0) {
 			return 0;
@@ -438,13 +368,6 @@ export class KVClient implements IKVProvider {
 
 	async incr(key: string): Promise<number> {
 		return await this.execute('incr', async () => this.client.incr(key));
-	}
-
-	async getex(key: string, ttlSeconds: number): Promise<string | null> {
-		return await this.execute('getex', async () => {
-			const result = await this.client.call('GETEX', key, 'EX', ttlSeconds);
-			return parseNullableStringReply(result, 'getex');
-		});
 	}
 
 	async getdel(key: string): Promise<string | null> {
@@ -478,16 +401,6 @@ export class KVClient implements IKVProvider {
 
 	async scard(key: string): Promise<number> {
 		return await this.execute('scard', async () => this.client.scard(key));
-	}
-
-	async spop(key: string, count: number = 1): Promise<Array<string>> {
-		if (count <= 0) {
-			return [];
-		}
-		return await this.execute('spop', async () => {
-			const result = await this.client.spop(key, count);
-			return parsePoppedValues(result, 'spop', count);
-		});
 	}
 
 	async zadd(key: string, ...scoreMembers: Array<number | string>): Promise<number> {
@@ -571,10 +484,6 @@ export class KVClient implements IKVProvider {
 		return await this.execute('hdel', async () => this.client.hdel(key, ...fields));
 	}
 
-	async hget(key: string, field: string): Promise<string | null> {
-		return await this.execute('hget', async () => this.client.hget(key, field));
-	}
-
 	async hgetall(key: string): Promise<Record<string, string>> {
 		return await this.execute('hgetall', async () => this.client.hgetall(key));
 	}
@@ -611,18 +520,6 @@ export class KVClient implements IKVProvider {
 		return parseIntegerDecision(result, 'extendLock');
 	}
 
-	async renewSnowflakeNode(key: string, instanceId: string, ttlSeconds: number): Promise<boolean> {
-		const result = await this.executeScript(
-			'renewSnowflakeNode',
-			RENEW_SNOWFLAKE_SCRIPT,
-			1,
-			key,
-			instanceId,
-			ttlSeconds,
-		);
-		return parseIntegerDecision(result, 'renewSnowflakeNode');
-	}
-
 	async checkLeakyBucketLimit(key: string, limit: number, windowMs: number, cost: number): Promise<KVRateLimitResult> {
 		const result = await this.executeJsonScript(
 			'checkLeakyBucketLimit',
@@ -635,31 +532,6 @@ export class KVClient implements IKVProvider {
 			cost,
 		);
 		return parseRateLimitResult(result);
-	}
-
-	async tryConsumeTokens(
-		key: string,
-		requested: number,
-		maxTokens: number,
-		refillRate: number,
-		refillIntervalMs: number,
-	): Promise<number> {
-		const now = Date.now();
-		const result = await this.executeScript(
-			'tryConsumeTokens',
-			TRY_CONSUME_TOKENS_SCRIPT,
-			1,
-			key,
-			now,
-			requested,
-			maxTokens,
-			refillRate,
-			refillIntervalMs,
-		);
-		if (!isNonNegativeSafeInteger(result) || result > requested) {
-			throw createInvalidResponseError('tryConsumeTokens', 'an integer token count within the requested amount');
-		}
-		return result;
 	}
 
 	async scheduleBulkDeletion(queueKey: string, secondaryKey: string, score: number, value: string): Promise<void> {

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::utils::plural::count_noun;
 use crate::{
     api::types::DmChannel, config::AdminConfig,
     templates::components::page_container::card_with_header,
@@ -85,7 +86,7 @@ fn group_dm_card(base: &str, user_id: &str, channel: &DmChannel) -> Markup {
                         }
                         div class="space-y-1" {
                             p class="text-sm text-neutral-500" {
-                                (channel.recipients.len()) " recipients \u{00b7} Status: "
+                                (count_noun(channel.recipients.len() as u64, "recipient", "recipients")) " \u{00b7} Status: "
                                 @if channel.is_open { "Open" } @else { "Closed" }
                             }
                             @if let Some(o) = owner {

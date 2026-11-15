@@ -1,9 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {waitForAbortablePromise} from '@app/features/platform/utils/AbortablePromise';
+import {throwCollectedFailures} from '@app/features/voice/utils/camera-effects/AggregateOperations';
 import {runWithResponseDeadline} from '@app/features/voice/utils/camera-effects/BoundedResponse';
 import {
+	bytesEqualAt,
+	normalizedMediaType,
 	readWebCameraEffectCustomMediaBlob,
 	requireWebCameraEffectCustomMediaURL,
+	throwIfAborted,
 	WEB_CAMERA_EFFECT_CUSTOM_MEDIA_OPERATION_TIMEOUT_MS,
 } from '@app/features/voice/utils/camera-effects/WebCameraEffectCustomImage';
 import {validateCameraEffectFrameDimensions} from '@app/features/voice/utils/camera-effects/WebCameraEffectProtocol';
@@ -93,7 +98,7 @@ class WebCameraEffectVideoFrameProducerOwner implements WebCameraEffectVideoFram
 
 	stop(): void {
 		const failures = this.releaseOwnedResources(true);
-		throwCleanupFailures(failures, 'Custom camera background video producer teardown failed');
+		throwCollectedFailures({failures: failures, message: 'Custom camera background video producer teardown failed'});
 	}
 
 	private pullFrame(controller: ReadableStreamDefaultController<VideoFrame>): void | Promise<void> {
@@ -114,7 +119,7 @@ class WebCameraEffectVideoFrameProducerOwner implements WebCameraEffectVideoFram
 
 	private cancelFromStream(): void {
 		const failures = this.releaseOwnedResources(false);
-		throwCleanupFailures(failures, 'Custom camera background video stream cancellation failed');
+		throwCollectedFailures({failures: failures, message: 'Custom camera background video stream cancellation failed'});
 	}
 
 	private validateMetadata(): void {
@@ -260,18 +265,6 @@ class WebCameraEffectVideoFrameProducerOwner implements WebCameraEffectVideoFram
 	}
 }
 
-function normalizedMediaType(value: string): string {
-	return value.split(';', 1)[0]?.trim().toLowerCase() ?? '';
-}
-
-function bytesEqualAt(bytes: Uint8Array, offset: number, expected: ReadonlyArray<number>): boolean {
-	if (bytes.byteLength < offset + expected.length) return false;
-	for (let index = 0; index < expected.length; index += 1) {
-		if (bytes[offset + index] !== expected[index]) return false;
-	}
-	return true;
-}
-
 function isEBMLDocTypeByte(byte: number): boolean {
 	if (byte >= 0x30 && byte <= 0x39) return true;
 	if (byte >= 0x41 && byte <= 0x5a) return true;
@@ -367,34 +360,6 @@ function waitForVideoMetadata(video: HTMLVideoElement, signal: AbortSignal): Pro
 		video.addEventListener('error', handleError, {once: true});
 		signal.addEventListener('abort', handleAbort, {once: true});
 	});
-}
-
-function waitForAbortablePromise<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
-	if (signal.aborted) return Promise.reject(signal.reason);
-	return new Promise<T>((resolve, reject) => {
-		const handleAbort = (): void => reject(signal.reason);
-		signal.addEventListener('abort', handleAbort, {once: true});
-		promise.then(
-			(value) => {
-				signal.removeEventListener('abort', handleAbort);
-				resolve(value);
-			},
-			(error: unknown) => {
-				signal.removeEventListener('abort', handleAbort);
-				reject(error);
-			},
-		);
-	});
-}
-
-function throwIfAborted(signal: AbortSignal): void {
-	if (signal.aborted) throw signal.reason ?? new Error('Custom camera background video operation was aborted');
-}
-
-function throwCleanupFailures(failures: ReadonlyArray<unknown>, message: string): void {
-	if (failures.length === 0) return;
-	if (failures.length === 1) throw failures[0];
-	throw new AggregateError(failures, message);
 }
 
 export async function createWebCameraEffectVideoFrameProducer(

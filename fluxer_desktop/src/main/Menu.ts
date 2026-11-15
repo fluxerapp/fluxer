@@ -1,17 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
+import {DESKTOP_APP_NAME} from '@electron/common/DesktopIdentity';
+import {checkForUpdatesFromShell} from '@electron/main/DesktopUpdatePrompt';
+import {shouldDisableModuleUpdatesForLaunch} from '@electron/main/LaunchOptions';
 import {onLocaleChange, t} from '@electron/main/MainI18n';
 import {openExternalDeduped} from '@electron/main/OpenExternal';
 import {buildTroubleshootingMenuItems} from '@electron/main/Troubleshooting';
-import {getMainWindow, toggleWindowDevTools} from '@electron/main/Window';
+import {getMainWindow, reloadWindowAfterBootStateFlush, toggleWindowDevTools} from '@electron/main/Window';
 import {type BaseWindow, BrowserWindow, Menu, type MenuItem, type MenuItemConstructorOptions} from 'electron';
 
 const MACOS_HELP_MENU_TITLE_AUTODETECT_OPT_OUT = '\u200C';
 
+function checkForUpdatesItem(): MenuItemConstructorOptions {
+	return {
+		label: t('desktop.appMenu.checkForUpdates'),
+		click: () => {
+			void checkForUpdatesFromShell();
+		},
+	};
+}
+
 function buildTemplate(): Array<MenuItemConstructorOptions> {
-	const isCanary = BUILD_CHANNEL === 'canary';
-	const appName = isCanary ? 'Fluxer Canary' : 'Fluxer';
+	const appName = DESKTOP_APP_NAME;
 	const isMac = process.platform === 'darwin';
 	const template: Array<MenuItemConstructorOptions> = [];
 	if (isMac) {
@@ -22,6 +32,7 @@ function buildTemplate(): Array<MenuItemConstructorOptions> {
 					role: 'about',
 					label: t('desktop.appMenu.about', {appName}),
 				},
+				...(shouldDisableModuleUpdatesForLaunch() ? [] : [checkForUpdatesItem()]),
 				{type: 'separator'},
 				{
 					label: t('desktop.appMenu.preferences'),
@@ -111,8 +122,22 @@ function buildTemplate(): Array<MenuItemConstructorOptions> {
 	template.push({
 		label: t('desktop.appMenu.view'),
 		submenu: [
-			{role: 'reload', label: t('desktop.appMenu.reload')},
-			{role: 'forceReload', label: t('desktop.appMenu.forceReload')},
+			{
+				label: t('desktop.appMenu.reload'),
+				accelerator: 'CmdOrCtrl+R',
+				click: (_menuItem, browserWindow) => {
+					const targetWindow = browserWindow instanceof BrowserWindow ? browserWindow : getMainWindow();
+					if (targetWindow) reloadWindowAfterBootStateFlush(targetWindow, false);
+				},
+			},
+			{
+				label: t('desktop.appMenu.forceReload'),
+				accelerator: 'Shift+CmdOrCtrl+R',
+				click: (_menuItem, browserWindow) => {
+					const targetWindow = browserWindow instanceof BrowserWindow ? browserWindow : getMainWindow();
+					if (targetWindow) reloadWindowAfterBootStateFlush(targetWindow, true);
+				},
+			},
 			{
 				label: t('desktop.appMenu.toggleDeveloperTools'),
 				accelerator: isMac ? 'Alt+Command+I' : 'Ctrl+Shift+I',
@@ -199,10 +224,11 @@ function buildTemplate(): Array<MenuItemConstructorOptions> {
 			? `${t('desktop.appMenu.help')}${MACOS_HELP_MENU_TITLE_AUTODETECT_OPT_OUT}`
 			: t('desktop.appMenu.help'),
 		submenu: [
+			...(isMac || shouldDisableModuleUpdatesForLaunch() ? [] : [checkForUpdatesItem(), {type: 'separator' as const}]),
 			{
 				label: t('desktop.appMenu.website'),
 				click: async () => {
-					await openExternalDeduped('https://fluxer.app');
+					await openExternalDeduped('https://fluxer.com');
 				},
 			},
 			{

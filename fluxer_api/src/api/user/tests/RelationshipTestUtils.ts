@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createFriendship as channelCreateFriendship} from '@app/api/channel/tests/ChannelTestUtils';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
@@ -11,16 +10,13 @@ export async function sendFriendRequest(
 	harness: ApiTestHarness,
 	token: string,
 	targetId: string,
-	options: {
-		staffForceAccept?: boolean;
-	} = {},
 ): Promise<{
 	response: Response;
 	json: RelationshipResponse;
 }> {
 	const {response, json} = await createBuilder<RelationshipResponse>(harness, token)
 		.post(`/users/@me/relationships/${targetId}`)
-		.body(options.staffForceAccept ? {staff_force_accept: true} : {})
+		.body({})
 		.executeWithResponse();
 	if (response.status !== 200) {
 		throw new Error(`Expected 200, got ${response.status}`);
@@ -103,25 +99,6 @@ export async function listRelationships(
 	return {response, json};
 }
 
-export async function updateFriendNickname(
-	harness: ApiTestHarness,
-	token: string,
-	targetId: string,
-	nickname: string | null,
-): Promise<{
-	response: Response;
-	json: RelationshipResponse;
-}> {
-	const {response, json} = await createBuilder<RelationshipResponse>(harness, token)
-		.patch(`/users/@me/relationships/${targetId}`)
-		.body({nickname})
-		.executeWithResponse();
-	if (response.status !== 200) {
-		throw new Error(`Expected 200, got ${response.status}`);
-	}
-	return {response, json};
-}
-
 export function assertRelationshipType(relationship: RelationshipResponse, expectedType: number): void {
 	expect(relationship.type).toBe(expectedType);
 }
@@ -133,5 +110,3 @@ export function assertRelationshipId(relationship: RelationshipResponse, expecte
 export function findRelationship(relations: Array<RelationshipResponse>, userId: string): RelationshipResponse | null {
 	return relations.find((r) => r.id === userId) ?? null;
 }
-
-export const createFriendship = channelCreateFriendship;

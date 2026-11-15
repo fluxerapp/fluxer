@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import inboundVideoFrameStatsFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/inbound_video_frame_stats.json';
 import inboundVideoFramesFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/inbound_video_frames.json';
 import participantsTracksFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/participants_tracks.json';
 import subscriptionQualityFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/subscription_quality.json';
@@ -92,7 +91,6 @@ describe('voice engine v2 participants, subscriptions, and inbound video fixture
 		subscriptionQualityFixtureJson,
 		watchedStreamsFixtureJson,
 		inboundVideoFramesFixtureJson,
-		inboundVideoFrameStatsFixtureJson,
 	] as Array<ParticipantsTracksFixture>) {
 		it(`replays ${fixture.name}`, () => {
 			assertFixture(fixture);

@@ -16,20 +16,17 @@ pub struct ActivityPubReplyContext {
     pub url: String,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ActivityPubPost {
-    pub id: Option<String>,
-    #[serde(rename = "type")]
-    pub object_type: Option<String>,
     pub url: Option<String>,
     pub published: Option<String>,
     pub attributed_to: Option<serde_json::Value>,
     pub content: Option<String>,
     pub summary: Option<String>,
-    pub sensitive: Option<bool>,
     pub attachment: Option<Vec<ActivityPubAttachment>>,
+    pub to: Option<serde_json::Value>,
+    pub cc: Option<serde_json::Value>,
     pub in_reply_to: Option<String>,
     pub likes: Option<ActivityPubCollectionCount>,
     pub shares: Option<ActivityPubCollectionCount>,
@@ -40,18 +37,14 @@ pub struct ActivityPubPost {
     pub misskey_quote: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ActivityPubAttachment {
-    #[serde(rename = "type")]
-    pub attachment_type: Option<String>,
     pub media_type: Option<String>,
     pub url: Option<String>,
     pub width: Option<u32>,
     pub height: Option<u32>,
     pub name: Option<String>,
-    pub blurhash: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -75,6 +68,8 @@ pub struct ActivityPubActor {
     pub preferred_username: Option<String>,
     pub url: Option<String>,
     pub icon: Option<ActivityPubIcon>,
+    pub hides_to_public_from_unauthed_web: Option<bool>,
+    pub hides_cc_public_from_unauthed_web: Option<bool>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -82,10 +77,8 @@ pub struct ActivityPubIcon {
     pub url: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize)]
 pub struct MastodonPost {
-    pub id: Option<String>,
     pub created_at: Option<String>,
     pub in_reply_to_id: Option<String>,
     pub in_reply_to_account_id: Option<String>,
@@ -101,7 +94,6 @@ pub struct MastodonPost {
     pub poll: Option<MastodonPoll>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize)]
 pub struct MastodonAccount {
     pub username: Option<String>,
@@ -111,7 +103,6 @@ pub struct MastodonAccount {
     pub acct: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize)]
 pub struct MastodonMediaAttachment {
     #[serde(rename = "type")]
@@ -119,7 +110,6 @@ pub struct MastodonMediaAttachment {
     pub url: Option<String>,
     pub preview_url: Option<String>,
     pub description: Option<String>,
-    pub blurhash: Option<String>,
     pub meta: Option<MastodonMediaMeta>,
 }
 
@@ -150,6 +140,7 @@ pub struct MastodonPollOption {
 #[derive(Debug, Clone, Deserialize)]
 pub struct MastodonInstance {
     pub domain: Option<String>,
+    pub account_domain: Option<String>,
     pub title: Option<String>,
     pub thumbnail: Option<MastodonThumbnail>,
 }
@@ -175,7 +166,7 @@ impl From<MastodonInstance> for InstanceInfo {
     fn from(inst: MastodonInstance) -> Self {
         let thumbnail_url = inst.thumbnail_url();
         Self {
-            domain: inst.domain,
+            domain: inst.account_domain.or(inst.domain),
             title: inst.title,
             thumbnail_url,
         }

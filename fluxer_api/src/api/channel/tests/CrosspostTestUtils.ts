@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+export {RecordingWorkerService} from '@app/api/test/RecordingWorkerService';
+
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createChannelID, createGuildID, createMessageID} from '@app/api/BrandedTypes';
 import {createApiContext} from '@app/api/CreateApiContext';
 import {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
-import {publishedEditRateLimitIdentifier} from '@app/api/channel/services/message/CrosspostPropagation';
 import {crosspostChannelRateLimitIdentifier} from '@app/api/channel/services/message/MessageCrosspostService';
 import {
 	acceptInvite,
@@ -14,14 +15,13 @@ import {
 	createChannelInvite,
 	createGuild,
 	createRole,
-	sendChannelMessage,
 } from '@app/api/channel/tests/ChannelTestUtils';
 import type {GuildRow} from '@app/api/database/types/GuildTypes';
 import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {DisabledLiveKitService} from '@app/api/infrastructure/DisabledLiveKitService';
 import {InMemoryVoiceRoomStore} from '@app/api/infrastructure/InMemoryVoiceRoomStore';
 import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
-import {createGuildStackServices} from '@app/api/middleware/GuildStackServiceFactory';
+import {createGuildStackServices, type GuildStackServices} from '@app/api/middleware/GuildStackServiceFactory';
 import {getVoiceAvailabilityService} from '@app/api/middleware/ServiceRegistry';
 import {
 	getAssetDeletionQueue,
@@ -47,57 +47,11 @@ import {
 import type {Message} from '@app/api/models/Message';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
-import {
-	CROSSPOST_CHANNEL_RATE_LIMIT,
-	PUBLISHED_MESSAGE_EDIT_RATE_LIMIT,
-} from '@fluxer/constants/src/AnnouncementConstants';
+import {CROSSPOST_CHANNEL_RATE_LIMIT} from '@fluxer/constants/src/AnnouncementConstants';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
-import type {WorkerJobOptions, WorkerJobPayload} from '@pkgs/worker/src/contracts/WorkerTypes';
-
-export interface RecordedJob {
-	taskType: string;
-	payload: WorkerJobPayload;
-	options: WorkerJobOptions | undefined;
-}
-
-export class RecordingWorkerService implements IWorkerService {
-	readonly jobs: Array<RecordedJob> = [];
-	failure: ((taskType: string) => Error | null) | null = null;
-	private nextJobId = 1n;
-
-	async addJob<TPayload extends WorkerJobPayload = WorkerJobPayload>(
-		taskType: string,
-		payload: TPayload,
-		options?: WorkerJobOptions,
-	): Promise<bigint> {
-		const error = this.failure?.(taskType) ?? null;
-		if (error) {
-			throw error;
-		}
-		this.jobs.push({taskType, payload, options});
-		return this.nextJobId++;
-	}
-
-	async cancelJob(_jobId: bigint): Promise<boolean> {
-		return false;
-	}
-
-	async retryDeadLetterJob(_jobId: bigint): Promise<boolean> {
-		return false;
-	}
-
-	byTask(taskType: string): Array<RecordedJob> {
-		return this.jobs.filter((job) => job.taskType === taskType);
-	}
-
-	syncJobsFor(messageId: string): Array<RecordedJob> {
-		return this.byTask('syncCrosspostedMessage').filter((job) => job.payload.messageId === messageId);
-	}
-}
 
 export interface AnnouncementWorld {
 	owner: TestAccount;
@@ -130,24 +84,6 @@ export async function createAnnouncementWorld(harness: ApiTestHarness): Promise<
 	});
 	await addMemberRole(harness, owner.token, guild.id, mod.userId, modRole.id);
 	return {owner, author, mod, member, guild, announcement, text, modRoleId: modRole.id};
-}
-
-export async function createAnnouncementChannel(
-	harness: ApiTestHarness,
-	token: string,
-	guildId: string,
-	name: string,
-): Promise<ChannelResponse> {
-	return createChannel(harness, token, guildId, name, ChannelTypes.GUILD_ANNOUNCEMENT);
-}
-
-export async function postMessage(
-	harness: ApiTestHarness,
-	token: string,
-	channelId: string,
-	content: string,
-): Promise<MessageResponse> {
-	return sendChannelMessage(harness, token, channelId, content);
 }
 
 export function crosspostRequest(harness: ApiTestHarness, token: string, channelId: string, messageId: string) {
@@ -218,39 +154,7 @@ export async function channelBudgetRemaining(channelId: string): Promise<number>
 	return result.remaining;
 }
 
-export async function publishedEditBudgetRemaining(messageId: string): Promise<number> {
-	const result = await getRateLimitService().peekLimit({
-		identifier: publishedEditRateLimitIdentifier(createMessageID(BigInt(messageId))),
-		...PUBLISHED_MESSAGE_EDIT_RATE_LIMIT,
-	});
-	return result.remaining;
-}
-
-export interface StallGate {
-	reached: Promise<void>;
-	release: () => void;
-}
-
-export function createStallGate(): StallGate & {hit: () => Promise<void>} {
-	let markReached: () => void = () => {};
-	let release: () => void = () => {};
-	const reached = new Promise<void>((resolve) => {
-		markReached = resolve;
-	});
-	const released = new Promise<void>((resolve) => {
-		release = resolve;
-	});
-	return {
-		reached,
-		release,
-		hit: async () => {
-			markReached();
-			await released;
-		},
-	};
-}
-
-export function createTestChannelService(): ChannelService {
+export function createTestGuildStack(): GuildStackServices {
 	return createGuildStackServices({
 		apiContext: createApiContext(),
 		channelRepository: getChannelRepository(),
@@ -274,5 +178,11 @@ export function createTestChannelService(): ChannelService {
 		voiceRoomStore: new InMemoryVoiceRoomStore(),
 		liveKitService: new DisabledLiveKitService(),
 		voiceAvailabilityService: getVoiceAvailabilityService(),
-	}).channelService;
+	});
 }
+
+export function createTestChannelService(): ChannelService {
+	return createTestGuildStack().channelService;
+}
+
+export {sendChannelMessage as postMessage} from '@app/api/channel/tests/ChannelTestUtils';

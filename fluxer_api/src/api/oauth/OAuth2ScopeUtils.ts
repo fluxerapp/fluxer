@@ -5,6 +5,10 @@ import {type OAuth2Scope, OAuth2Scopes} from '@fluxer/constants/src/OAuth2Consta
 const OAUTH2_SCOPE_SET = new Set<string>(OAuth2Scopes);
 const OAUTH2_SCOPE_ORDER: ReadonlyArray<string> = OAuth2Scopes;
 
+export function parseOAuth2Scope(scope: string): Array<string> {
+	return scope.split(/[\s+]+/).filter(Boolean);
+}
+
 export function isOAuth2Scope(scope: string): scope is OAuth2Scope {
 	return OAUTH2_SCOPE_SET.has(scope);
 }

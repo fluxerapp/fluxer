@@ -3,118 +3,101 @@
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import {EMPTY_USER_ROW, type UserRow} from '@app/api/database/types/UserTypes';
 import {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
-import {User} from '@app/api/models/User';
-import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
-import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
-import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {getKVClient} from '@app/api/middleware/ServiceRegistry';
+import {getUserRepository} from '@app/api/middleware/ServiceSingletons';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {RecordingWorkerService} from '@app/api/test/RecordingWorkerService';
+import {createTestWorkerHelpers} from '@app/api/test/SyncTaskWorkerService';
 import userProcessPendingDeletions from '@app/api/worker/tasks/UserProcessPendingDeletions';
 import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
-import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
-import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
-import {afterEach, describe, expect, test} from 'vitest';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
-function createFakeUser(
-	userId: UserID,
-	pendingDeletionAt: Date,
-	options: Partial<Pick<UserRow, 'bot' | 'flags'>> = {},
-): User {
-	return new User({
-		...EMPTY_USER_ROW,
-		user_id: userId,
-		pending_deletion_at: pendingDeletionAt,
-		deletion_reason_code: 1,
-		bot: options.bot ?? false,
-		flags: options.flags ?? 0n,
-	});
+interface PendingUser {
+	userId: UserID;
+	pendingDeletionAt: Date;
+	bot?: boolean;
+	flags?: bigint;
 }
 
-async function createHarness(users: Array<User>) {
-	const kvClient = new MockKVProvider();
-	const removedPendingDeletions: Array<string> = [];
-	const scheduledJobs: Array<string> = [];
-	const usersById = new Map<string, User>();
+async function setupQueue(users: Array<PendingUser>) {
+	const userRepository = getUserRepository();
+	const workerService = new RecordingWorkerService();
+	const deletionQueueService = new KVAccountDeletionQueueService(getKVClient(), userRepository);
+	await getKVClient().set('deletion_queue:state_version', Date.now().toString());
 	for (const user of users) {
-		usersById.set(user.id.toString(), user);
-	}
-	const userRepository = {
-		async findUnique(userId: UserID): Promise<User | null> {
-			return usersById.get(userId.toString()) ?? null;
-		},
-		async removePendingDeletion(userId: UserID): Promise<void> {
-			removedPendingDeletions.push(userId.toString());
-		},
-	} as unknown as UserRepository;
-	const workerService = {
-		async addJob(name: string, payload: {userId: string; pendingDeletionAt: string}): Promise<bigint> {
-			scheduledJobs.push(`${name}:${payload.userId}:${payload.pendingDeletionAt}`);
-			return 0n;
-		},
-	} as unknown as IWorkerService;
-	const deletionQueueService = new KVAccountDeletionQueueService(kvClient, userRepository);
-	await kvClient.set('deletion_queue:state_version', Date.now().toString());
-	for (const user of users) {
-		if (user.pendingDeletionAt) {
-			await deletionQueueService.scheduleDeletion(user.id, user.pendingDeletionAt, 1);
-		}
+		const row: UserRow = {...EMPTY_USER_ROW, user_id: user.userId, bot: user.bot ?? false, flags: user.flags ?? 0n};
+		const created = await userRepository.create(row);
+		await userRepository.updateDeletionSchedule(created, {
+			pending_deletion_at: user.pendingDeletionAt,
+			deletion_reason_code: 1,
+		});
+		await deletionQueueService.scheduleDeletion(user.userId, user.pendingDeletionAt, 1);
 	}
 	setWorkerDependenciesForTest({userRepository, workerService, deletionQueueService});
-	return {deletionQueueService, scheduledJobs, removedPendingDeletions};
+	return {deletionQueueService, workerService};
 }
 
-function createHelpers(): WorkerTaskHelpers {
-	return {
-		logger: new NoopLogger(),
-		jobId: 1n,
-		addJob: async () => 0n,
-		reportProgress: async () => {},
-		shouldCancel: async () => false,
-		setContextLink: async () => {},
-	};
+function scheduledDeletions(workerService: RecordingWorkerService): Array<string> {
+	return workerService
+		.byTask('userProcessPendingDeletion')
+		.map((job) => `${job.payload['userId']}:${job.payload['pendingDeletionAt']}`);
 }
 
 describe('userProcessPendingDeletions', () => {
+	let harness: ApiTestHarness;
+
+	beforeAll(async () => {
+		harness = await createApiTestHarness();
+	});
+
+	beforeEach(async () => {
+		await harness.reset();
+	});
+
 	afterEach(() => {
 		clearWorkerDependencies();
+	});
+
+	afterAll(async () => {
+		await harness?.shutdown();
 	});
 
 	test('drains skipped accounts so a genuine deletion behind them is not starved', async () => {
 		const skippedAt = new Date(Date.now() - 10_000_000);
 		const genuineAt = new Date(Date.now() - 1_000);
-		const users: Array<User> = [];
+		const users: Array<PendingUser> = [];
 		for (let i = 0; i < 1000; i++) {
 			const userId = createUserID(BigInt(100_000 + i));
-			users.push(createFakeUser(userId, skippedAt, i % 2 === 0 ? {bot: true} : {flags: UserFlags.APP_STORE_REVIEWER}));
+			users.push(
+				i % 2 === 0
+					? {userId, pendingDeletionAt: skippedAt, bot: true}
+					: {userId, pendingDeletionAt: skippedAt, flags: UserFlags.APP_STORE_REVIEWER},
+			);
 		}
 		const genuineUserId = createUserID(999_999n);
-		users.push(createFakeUser(genuineUserId, genuineAt));
-		const harness = await createHarness(users);
+		users.push({userId: genuineUserId, pendingDeletionAt: genuineAt});
+		const {deletionQueueService, workerService} = await setupQueue(users);
 
-		await userProcessPendingDeletions({}, createHelpers());
-		const queueSizeAfterFirstPass = await harness.deletionQueueService.getQueueSize();
-		await userProcessPendingDeletions({}, createHelpers());
+		await userProcessPendingDeletions({}, createTestWorkerHelpers());
+		const queueSizeAfterFirstPass = await deletionQueueService.getQueueSize();
+		await userProcessPendingDeletions({}, createTestWorkerHelpers());
 
-		expect(harness.scheduledJobs).toEqual([
-			`userProcessPendingDeletion:${genuineUserId.toString()}:${genuineAt.toISOString()}`,
-		]);
-		expect(harness.removedPendingDeletions).toEqual([]);
+		expect(scheduledDeletions(workerService)).toEqual([`${genuineUserId.toString()}:${genuineAt.toISOString()}`]);
 		expect(queueSizeAfterFirstPass).toBe(1);
-		expect(await harness.deletionQueueService.getQueueSize()).toBe(0);
+		expect(await deletionQueueService.getQueueSize()).toBe(0);
 	});
 
 	test('keeps skipped accounts out of the queue while the skip condition holds', async () => {
 		const pendingAt = new Date(Date.now() - 10_000);
-		const botId = createUserID(1n);
-		const reviewerId = createUserID(2n);
-		const harness = await createHarness([
-			createFakeUser(botId, pendingAt, {bot: true}),
-			createFakeUser(reviewerId, pendingAt, {flags: UserFlags.APP_STORE_REVIEWER}),
+		const {deletionQueueService, workerService} = await setupQueue([
+			{userId: createUserID(500_001n), pendingDeletionAt: pendingAt, bot: true},
+			{userId: createUserID(500_002n), pendingDeletionAt: pendingAt, flags: UserFlags.APP_STORE_REVIEWER},
 		]);
 
-		await userProcessPendingDeletions({}, createHelpers());
+		await userProcessPendingDeletions({}, createTestWorkerHelpers());
 
-		expect(await harness.deletionQueueService.getQueueSize()).toBe(0);
-		expect(harness.scheduledJobs).toEqual([]);
-		expect(harness.removedPendingDeletions).toEqual([]);
+		expect(await deletionQueueService.getQueueSize()).toBe(0);
+		expect(scheduledDeletions(workerService)).toEqual([]);
 	});
 });

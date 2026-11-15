@@ -12,7 +12,7 @@ use crate::{
     templates,
 };
 use axum::{
-    Form, Json, Router,
+    Form, Router,
     extract::{FromRequest, Path, Query, Request, State},
     http::HeaderMap,
     response::{Html, IntoResponse, Response},
@@ -46,7 +46,6 @@ struct JobActionForm {
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/jobs", get(jobs_list))
-        .route("/jobs/active.json", get(jobs_active_json))
         .route("/jobs/{job_id}", get(job_detail).post(job_detail_post))
 }
 
@@ -128,21 +127,6 @@ async fn jobs_list(
     Html(markup.into_string()).into_response()
 }
 
-async fn jobs_active_json(
-    State(state): State<AppState>,
-    auth: axum::Extension<AuthContext>,
-) -> Response {
-    let config = state.config();
-    let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
-    match client.list_active_jobs().await {
-        Ok(data) => Json(serde_json::json!(data)).into_response(),
-        Err(error) => {
-            tracing::warn!(%error, "admin API request failed: list active jobs");
-            Json(serde_json::json!({ "jobs": [] })).into_response()
-        }
-    }
-}
-
 async fn job_detail(
     State(state): State<AppState>,
     headers: HeaderMap,
@@ -183,10 +167,10 @@ async fn job_detail_post(
     let form: JobActionForm = match Form::from_request(request, &state).await {
         Ok(Form(f)) => f,
         Err(_) => {
-            return flash::redirect_with_flash(
+            return flash::redirect_error(
+                config,
                 &format!("{base}/jobs/{job_id}"),
-                FlashData::error("Invalid form data"),
-                config.secure_cookies(),
+                "Invalid form data",
             );
         }
     };

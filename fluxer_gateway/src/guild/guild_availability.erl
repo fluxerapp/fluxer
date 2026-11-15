@@ -5,16 +5,13 @@
 
 -export([
     is_guild_unavailable_for_user/2,
-    is_user_staff/2,
-    check_unavailability_transition/2,
     handle_unavailability_transition/2,
-    get_cached_unavailability_mode/1,
-    is_unavailable_hidden_enabled/1,
     is_unavailable_hidden_enabled_from_cache/1,
     is_guild_unavailable_for_user_from_cache/2,
     update_unavailability_cache_for_state/1,
     schedule_availability_recheck/1,
-    handle_availability_recheck/1
+    handle_availability_recheck/1,
+    send_guild_create_to_session/4, send_guild_create_to_session/5
 ]).
 
 -type guild_state() :: map().
@@ -39,23 +36,6 @@ is_guild_unavailable_for_user(UserId, State) ->
         available ->
             false
     end.
-
--spec is_user_staff(user_id(), guild_state()) -> boolean().
-is_user_staff(UserId, State) ->
-    guild_availability_check:is_user_staff(UserId, State).
-
--spec check_unavailability_transition(guild_state(), guild_state()) ->
-    {unavailable_enabled, boolean()} | unavailable_disabled | no_change.
-check_unavailability_transition(OldState, NewState) ->
-    guild_availability_check:check_unavailability_transition(OldState, NewState).
-
--spec get_cached_unavailability_mode(guild_id()) -> unavailability_mode().
-get_cached_unavailability_mode(GuildId) ->
-    guild_availability_cache:get_cached_unavailability_mode(GuildId).
-
--spec is_unavailable_hidden_enabled(guild_state()) -> boolean().
-is_unavailable_hidden_enabled(State) ->
-    guild_availability_check:is_unavailable_hidden_enabled(State).
 
 -spec is_unavailable_hidden_enabled_from_cache(guild_id()) -> boolean().
 is_unavailable_hidden_enabled_from_cache(GuildId) ->
@@ -118,14 +98,22 @@ send_guild_create_to_sessions(State, GuildId) ->
 
 -spec send_guild_create_to_session(map(), guild_id(), guild_state(), list()) -> ok.
 send_guild_create_to_session(SessionData, GuildId, State, BulkPresences) ->
+    send_guild_create_to_session(SessionData, GuildId, State, BulkPresences, #{}).
+
+-spec send_guild_create_to_session(map(), guild_id(), guild_state(), list(), map()) -> ok.
+send_guild_create_to_session(SessionData, GuildId, State, BulkPresences, Extra) ->
     case maps:get(pending_connect, SessionData, false) of
         true ->
             ok;
         false ->
             UserId = maps:get(user_id, SessionData),
             Pid = maps:get(pid, SessionData),
-            GuildState = guild_data:get_guild_state(UserId, State),
-            gateway_dispatch_relay:dispatch(Pid, guild_create, GuildState, GuildId),
+            GuildState = guild_data:get_guild_state(
+                UserId, State, guild_thread_gate:state_opts(SessionData)
+            ),
+            gateway_dispatch_relay:dispatch(
+                Pid, guild_create, maps:merge(GuildState, Extra), GuildId
+            ),
             presence_utils:send_presence_bulk(Pid, GuildId, UserId, BulkPresences)
     end.
 
@@ -186,7 +174,7 @@ do_disconnect(
     Pid = maps:get(pid, SessionData, undefined),
     maybe_send_guild_leave(Pid, GuildId, UnavailableHidden),
     {VoiceState, UpdatedUsers} = maybe_disconnect_voice(UserId, ProcessedUsers, State),
-    NewState = guild_sessions:remove_session(SessionId, VoiceState),
+    NewState = guild_sessions_connect:remove_session(SessionId, VoiceState),
     {NewState, UpdatedUsers}.
 
 -spec should_disconnect_user(user_id(), boolean(), guild_state()) -> boolean().
@@ -244,56 +232,3 @@ handle_recheck_transition(OldMode, available, GuildId, State) when OldMode =/= a
     send_guild_create_to_sessions(State, GuildId);
 handle_recheck_transition(_OldMode, _CurrentMode, _GuildId, State) ->
     State.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-schedule_availability_recheck_available_no_timer_test() ->
-    State = #{data => #{<<"guild">> => #{<<"features">> => []}}},
-    ?assertEqual(State, schedule_availability_recheck(State)),
-    receive
-        availability_recheck -> ?assert(false, unexpected_timer)
-    after 50 ->
-        ok
-    end.
-
-schedule_availability_recheck_unavailable_sets_timer_test() ->
-    State = #{data => #{<<"guild">> => #{<<"features">> => [<<"UNAVAILABLE_FOR_EVERYONE">>]}}},
-    Result = schedule_availability_recheck(State),
-    ?assertEqual(State, Result).
-
-handle_recheck_transition_clears_cache_on_recovery_test() ->
-    GuildId = 99001,
-    State = #{
-        id => GuildId,
-        sessions => #{},
-        data => #{<<"guild">> => #{<<"features">> => []}}
-    },
-    guild_availability_cache:set_cached_unavailability_mode(GuildId, unavailable_for_everyone),
-    try
-        _ = handle_recheck_transition(unavailable_for_everyone, available, GuildId, State),
-        ?assertEqual(
-            available, guild_availability_cache:get_cached_unavailability_mode(GuildId)
-        )
-    after
-        guild_availability_cache:set_cached_unavailability_mode(GuildId, available)
-    end.
-
-handle_recheck_transition_no_change_when_still_unavailable_test() ->
-    GuildId = 99002,
-    State = #{
-        id => GuildId,
-        sessions => #{},
-        data => #{<<"guild">> => #{<<"features">> => [<<"UNAVAILABLE_FOR_EVERYONE">>]}}
-    },
-    guild_availability_cache:set_cached_unavailability_mode(GuildId, unavailable_for_everyone),
-    try
-        Result = handle_recheck_transition(
-            unavailable_for_everyone, unavailable_for_everyone, GuildId, State
-        ),
-        ?assertEqual(State, Result)
-    after
-        guild_availability_cache:set_cached_unavailability_mode(GuildId, available)
-    end.
-
--endif.

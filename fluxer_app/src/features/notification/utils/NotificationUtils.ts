@@ -1,19 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Authentication from '@app/features/auth/state/Authentication';
+import {unwrapDesktopLocalResourceURL} from '@app/features/messaging/utils/DesktopLocalResourceTarget';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {getNotificationIconURL} from '@app/features/notification/utils/NotificationIconURL';
 import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import type {NotificationAlertOptions} from '@app/features/platform/notifications/NotificationAlertOptions';
 import {getNotificationAlertOptions} from '@app/features/platform/notifications/NotificationAlertOptions';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {readBlobAsDataUrl as readBlobAsDataURL} from '@app/features/platform/utils/BlobDataUrl';
+import {isInsecureBrowserContext} from '@app/features/platform/utils/SecureContext';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
 import Sound from '@app/features/ui/state/Sound';
 import {getElectronAPI, hasUnavailableElectronNativeContext, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import {isInstalledIOSPwa, isInstalledPwa, isMobileOrTablet} from '@app/features/ui/utils/PwaUtils';
 import Users from '@app/features/user/state/Users';
-import type {I18n} from '@lingui/core';
+import type {I18n, MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
 const logger = new Logger('NotificationUtils');
@@ -51,17 +54,53 @@ export function ensureDesktopNotificationClickHandler(): void {
 	const electronApi = getElectronAPI();
 	if (!electronApi) return;
 	setDesktopNotificationClickHandlerInitialized();
-	electronApi.onNotificationClick((_id: string, url?: string) => {
-		if (url) {
-			RouterUtils.transitionTo(url);
-		}
+	electronApi.onNotificationClick((_id, url, accountKey) => {
+		void openNotificationTarget(accountKey ?? null, url ?? null);
 	});
+}
+
+async function openNotificationTarget(accountKey: string | null, url: string | null): Promise<void> {
+	if (accountKey !== null) {
+		const {default: Accounts} = await import('@app/features/auth/state/Accounts');
+		if (accountKey !== Accounts.currentAccountKey) {
+			if (Accounts.getAccount(accountKey) === null) return;
+			const {switchStoredAccountFromSwitcher} = await import('@app/features/auth/utils/AccountSwitcherModalUtils');
+			await switchStoredAccountFromSwitcher({
+				accountKey,
+				onSuccess: null,
+				redirectAfterSwitch: url,
+				switchAccount: null,
+			});
+			return;
+		}
+	}
+	if (url) {
+		RouterUtils.transitionTo(url);
+	}
+}
+
+const NATIVE_NOTIFICATION_ICON_URL_PATTERN = /^(?:https?:|data:)/i;
+
+async function resolveNativeNotificationIcon(icon: string | undefined): Promise<string> {
+	if (!icon) return '';
+	const unwrapped = unwrapDesktopLocalResourceURL(icon);
+	if (NATIVE_NOTIFICATION_ICON_URL_PATTERN.test(unwrapped)) return unwrapped;
+	try {
+		const absolute = new URL(unwrapped, window.location.href);
+		if (NATIVE_NOTIFICATION_ICON_URL_PATTERN.test(absolute.protocol)) return absolute.toString();
+		const response = await fetch(absolute);
+		if (!response.ok) return '';
+		return await readBlobAsDataURL(await response.blob());
+	} catch (error) {
+		logger.warn('Failed to resolve a bundled notification icon', {error});
+		return '';
+	}
 }
 
 export function hasNotification(): boolean {
 	if (hasUnavailableElectronNativeContext()) return false;
 	if (isDesktop()) return true;
-	return typeof Notification !== 'undefined';
+	return typeof Notification !== 'undefined' && !isInsecureBrowserContext();
 }
 
 export function isMacOSDesktopNotification(): boolean {
@@ -122,7 +161,8 @@ const requestBrowserPermission = async (): Promise<PermissionResult> => {
 	try {
 		const permission = await Notification.requestPermission();
 		return permission === 'granted' ? 'granted' : 'denied';
-	} catch {
+	} catch (error) {
+		logger.warn('Browser notification permission request failed', {error});
 		return 'denied';
 	}
 };
@@ -146,11 +186,14 @@ const applyGrantedPermission = async (i18n: I18n): Promise<void> => {
 	playNotificationSoundIfEnabled();
 	const icon = getCurrentUserAvatar() ?? '';
 	const isPwa = !isDesktop() && isInstalledPwa();
-	const body = isDesktop()
-		? HUZZAH_DESKTOP_NOTIFICATIONS_ARE_ENABLED_DESCRIPTOR
-		: isPwa
-			? HUZZAH_NOTIFICATIONS_ARE_ENABLED_DESCRIPTOR
-			: HUZZAH_BROWSER_NOTIFICATIONS_ARE_ENABLED_DESCRIPTOR;
+	let body: MessageDescriptor;
+	if (isDesktop()) {
+		body = HUZZAH_DESKTOP_NOTIFICATIONS_ARE_ENABLED_DESCRIPTOR;
+	} else if (isPwa) {
+		body = HUZZAH_NOTIFICATIONS_ARE_ENABLED_DESCRIPTOR;
+	} else {
+		body = HUZZAH_BROWSER_NOTIFICATIONS_ARE_ENABLED_DESCRIPTOR;
+	}
 	void showNotification({
 		title: i18n._(ACCESS_GRANTED_DESCRIPTOR),
 		body: i18n._(body),
@@ -186,7 +229,7 @@ export async function requestPermission(i18n: I18n): Promise<void> {
 	await applyGrantedPermission(i18n);
 }
 
-export interface NotificationResult {
+interface NotificationResult {
 	browserNotification: Notification | null;
 	nativeNotificationId: string | null;
 }
@@ -201,7 +244,8 @@ const getServiceWorkerRegistration = async (): Promise<ServiceWorkerRegistration
 	}
 	try {
 		return (await navigator.serviceWorker.getRegistration()) ?? null;
-	} catch {
+	} catch (error) {
+		logger.warn('Failed to read notification service worker registration', {error});
 		return null;
 	}
 };
@@ -255,11 +299,13 @@ const tryShowNotificationViaWindowNotification = ({
 	body,
 	url,
 	icon,
+	accountKey,
 }: {
 	title: string;
 	body: string;
 	url?: string;
 	icon?: string;
+	accountKey: string | null;
 }): NotificationResult => {
 	const notificationOptions: WebNotificationOptions = icon
 		? {body, icon, ...getWebNotificationAlertOptions()}
@@ -268,9 +314,7 @@ const tryShowNotificationViaWindowNotification = ({
 	notification.addEventListener('click', (event) => {
 		event.preventDefault();
 		window.focus();
-		if (url) {
-			RouterUtils.transitionTo(url);
-		}
+		void openNotificationTarget(accountKey, url ?? null);
 		notification.close();
 	});
 	return {browserNotification: notification, nativeNotificationId: null};
@@ -284,6 +328,7 @@ export async function showNotification({
 	url,
 	icon,
 	playSound = true,
+	accountKey = null,
 }: {
 	id?: string;
 	title: string;
@@ -292,6 +337,7 @@ export async function showNotification({
 	url?: string;
 	icon?: string;
 	playSound?: boolean;
+	accountKey?: string | null;
 }): Promise<NotificationResult> {
 	try {
 		if (StreamerMode.shouldDisableNotifications) {
@@ -305,16 +351,19 @@ export async function showNotification({
 			try {
 				try {
 					if (typeof electronApi.flashFrame === 'function' && !document.hasFocus()) {
-						electronApi.flashFrame(false);
+						electronApi.flashFrame(true);
 					}
-				} catch {}
+				} catch (error) {
+					logger.warn('Failed to flash the desktop window for a notification', {error});
+				}
 				const result = await electronApi.showNotification({
 					id,
 					title,
 					subtitle,
 					body,
-					icon: icon ?? '',
+					icon: await resolveNativeNotificationIcon(icon),
 					url,
+					accountKey: accountKey ?? undefined,
 				});
 				return {browserNotification: null, nativeNotificationId: result.id};
 			} catch (error) {
@@ -335,22 +384,17 @@ export async function showNotification({
 		}
 		if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
 			try {
-				return tryShowNotificationViaWindowNotification({title, body, url, icon});
-			} catch {
+				return tryShowNotificationViaWindowNotification({title, body, url, icon, accountKey});
+			} catch (error) {
+				logger.warn('Window notification failed; retrying through service worker', {error});
 				const swFallback = await tryShowNotificationViaServiceWorker({title, body, url, icon, targetUserId});
 				return swFallback.result;
 			}
 		}
 		return swAttempt.result;
-	} catch {
+	} catch (error) {
+		logger.warn('Notification delivery failed', {error});
 		return {browserNotification: null, nativeNotificationId: null};
-	}
-}
-
-export function closeNativeNotification(id: string): void {
-	const electronApi = getElectronAPI();
-	if (electronApi) {
-		electronApi.closeNotification(id);
 	}
 }
 

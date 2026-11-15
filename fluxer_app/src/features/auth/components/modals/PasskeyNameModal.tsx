@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
+import {describePasskeyError} from '@app/features/auth/utils/PasskeyErrorMessages';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -33,7 +34,12 @@ interface FormInputs {
 	name: string;
 }
 
-export const PasskeyNameModal = observer(({onSubmit}: {onSubmit: (name: string) => void | Promise<void>}) => {
+interface PasskeyNameModalProps {
+	onSubmit: (name: string) => void | Promise<void>;
+	rpId?: string | null;
+}
+
+export const PasskeyNameModal = observer(({onSubmit, rpId = null}: PasskeyNameModalProps) => {
 	const {i18n} = useLingui();
 	const form = useForm<FormInputs>();
 	const handleSubmit = async (data: FormInputs) => {
@@ -44,7 +50,10 @@ export const PasskeyNameModal = observer(({onSubmit}: {onSubmit: (name: string) 
 			if (error instanceof HttpError) {
 				FormUtils.handleError(i18n, form, error, 'name');
 			} else {
-				form.setError('name', {type: 'server', message: FormUtils.extractErrorMessage(i18n, error)});
+				form.setError('name', {
+					type: 'server',
+					message: describePasskeyError(i18n, error, rpId) ?? FormUtils.extractErrorMessage(i18n, error),
+				});
 			}
 		}
 	};

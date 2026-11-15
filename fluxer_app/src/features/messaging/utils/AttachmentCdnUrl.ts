@@ -196,3 +196,7 @@ export function attachmentUrlNeedsRefresh(url: string, nowMs: number): boolean {
 	if (signature === null) return true;
 	return signature.expiresAtMs <= nowMs + ATTACHMENT_URL_REFRESH_MARGIN_MS;
 }
+
+export function attachmentUrlMayNeedRefresh(url: string, nowMs: number): boolean {
+	return url.includes(ATTACHMENT_PATH_SEGMENT) && attachmentUrlNeedsRefresh(url, nowMs);
+}

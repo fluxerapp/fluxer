@@ -6,10 +6,34 @@ import type {DesktopWindowBehaviorSettings} from '@app/types/electron.d';
 
 const logger = new Logger('DesktopWindowBehaviorUtils');
 
+const MIDDLE_MOUSE_BUTTON = 1;
+const MIDDLE_MOUSE_BUTTONS_FLAG = 4;
+
 let cachedSettings: DesktopWindowBehaviorSettings | null = null;
 
 export function getCachedDesktopWindowBehaviorSettings(): DesktopWindowBehaviorSettings | null {
 	return cachedSettings;
+}
+
+const EDITABLE_SELECTOR = 'input, textarea, [contenteditable]:not([contenteditable="false"])';
+
+function isEditableTarget(target: EventTarget | null): boolean {
+	const element = target as Element | null;
+	return typeof element?.closest === 'function' && element.closest(EDITABLE_SELECTOR) !== null;
+}
+
+export function attachMiddleClickAutoscrollPasteGuard(target: Window): () => void {
+	const handler = (event: PointerEvent) => {
+		if (event.button !== MIDDLE_MOUSE_BUTTON || (event.buttons & MIDDLE_MOUSE_BUTTONS_FLAG) !== 0) return;
+		if (!cachedSettings?.activeMiddleClickAutoscroll && isEditableTarget(event.target)) return;
+		event.preventDefault();
+	};
+	target.addEventListener('pointerup', handler, true);
+	target.addEventListener('pointermove', handler, true);
+	return () => {
+		target.removeEventListener('pointerup', handler, true);
+		target.removeEventListener('pointermove', handler, true);
+	};
 }
 
 export async function getDesktopWindowBehaviorSettings(): Promise<DesktopWindowBehaviorSettings | null> {

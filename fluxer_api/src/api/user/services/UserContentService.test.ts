@@ -1,509 +1,338 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ApiContext} from '@app/api/ApiContext';
-import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
-import {createChannelID, createMessageID, createUserID} from '@app/api/BrandedTypes';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
-import type {ChannelService} from '@app/api/channel/services/ChannelService';
-import type {KVBulkMessageDeletionQueueService} from '@app/api/infrastructure/KVBulkMessageDeletionQueueService';
-import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
-import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
-import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
-import {Message} from '@app/api/models/Message';
-import {UserContentService, UserContentServiceTestHooks} from '@app/api/user/services/UserContentService';
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {MessageTypes} from '@fluxer/constants/src/ChannelConstants';
-import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
-import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
-import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedError';
-import {BadGatewayError} from '@fluxer/errors/src/domains/core/BadGatewayError';
-import {MaxBookmarksError} from '@fluxer/errors/src/domains/core/MaxBookmarksError';
-import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
-import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
-import {NsfwContentRequiresAgeVerificationError} from '@fluxer/errors/src/domains/moderation/NsfwContentRequiresAgeVerificationError';
-import type {LimitConfigSnapshot} from '@fluxer/limits/src/LimitTypes';
-import {describe, expect, it, vi} from 'vitest';
+import assert from 'node:assert/strict';
+import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createChannelID, createGuildID, createMessageID, createUserID} from '@app/api/BrandedTypes';
+import {resetApiServicesForTesting} from '@app/api/CreateApiContext';
+import {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import {
+	createChannel,
+	createDmChannel,
+	createFriendship,
+	createPermissionOverwrite,
+	setupTestGuildWithMembers,
+} from '@app/api/channel/tests/ChannelTestUtils';
+import {threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
+import type {MessageRow} from '@app/api/database/types/MessageTypes';
+import {setInjectedGatewayService} from '@app/api/middleware/ServiceRegistry';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {ChannelTypes, MessageReferenceTypes, MessageTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {HttpStatus} from '@fluxer/constants/src/HttpConstants';
+import {ServerMessageFlags} from '@fluxer/constants/src/ThreadConstants';
+import type {ThreadChannelResponse} from '@fluxer/schema/src/domains/channel/ThreadRequestSchemas';
+import type {MessageRequestSchemaType} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
+import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {SavedMessageEntryListResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
+import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
-const {isUnreachableEntityError} = UserContentServiceTestHooks;
+type PresenceDispatch = Parameters<NoopGatewayService['dispatchPresence']>[0];
 
-describe('isUnreachableEntityError', () => {
-	it('treats a deleted or left community as unreachable rather than fatal', () => {
-		expect(isUnreachableEntityError(new UnknownGuildError())).toBe(true);
-	});
+class RecordingGateway extends NoopGatewayService {
+	readonly dispatches: Array<PresenceDispatch> = [];
 
-	it('treats a gone channel and a lost permission as unreachable', () => {
-		expect(isUnreachableEntityError(new UnknownChannelError())).toBe(true);
-		expect(isUnreachableEntityError(new MissingPermissionsError())).toBe(true);
-	});
-
-	it('treats an age gate and an unresolved membership as unreachable', () => {
-		expect(isUnreachableEntityError(new AccessDeniedError())).toBe(true);
-		expect(isUnreachableEntityError(new NsfwContentRequiresAgeVerificationError())).toBe(true);
-	});
-
-	it('leaves a deleted message to the delete path instead of marking it unavailable', () => {
-		expect(isUnreachableEntityError(new UnknownMessageError())).toBe(false);
-	});
-
-	it('still lets unexpected failures surface', () => {
-		expect(isUnreachableEntityError(new Error('database is on fire'))).toBe(false);
-		expect(isUnreachableEntityError(null)).toBe(false);
-	});
-});
-
-const VIEWER_ID = createUserID(7n);
-
-interface ChannelBatchCall {
-	channelId: string;
-	messageIds: Array<string>;
-}
-
-function makeMessage(channelId: ChannelID, messageId: MessageID): Message {
-	return new Message({
-		channel_id: channelId,
-		bucket: 0,
-		message_id: messageId,
-		author_id: createUserID(3n),
-		type: MessageTypes.DEFAULT,
-		webhook_id: null,
-		webhook_name: null,
-		webhook_avatar_hash: null,
-		content: '',
-		edited_timestamp: null,
-		pinned_timestamp: null,
-		flags: 0,
-		mention_everyone: false,
-		mention_users: null,
-		mention_roles: null,
-		mention_channels: null,
-		attachments: null,
-		embeds: null,
-		sticker_items: null,
-		message_reference: null,
-		message_snapshots: null,
-		call: null,
-		has_reaction: null,
-		version: 1,
-	});
-}
-
-function createUserContentService({
-	entries,
-	readable,
-	stored,
-	failures = new Map<string, Error>(),
-}: {
-	entries: Array<{channelId: ChannelID; messageId: MessageID}>;
-	readable: Array<{channelId: ChannelID; messageId: MessageID}>;
-	stored?: Array<{channelId: ChannelID; messageId: MessageID}>;
-	failures?: Map<string, Error>;
-}) {
-	const batchCalls: Array<ChannelBatchCall> = [];
-	const deletedSavedMessageIds: Array<string> = [];
-	const savedMessageListCalls: Array<{limit?: number; before?: MessageID}> = [];
-	const readableByChannel = new Map<string, Map<string, Message>>();
-	for (const entry of readable) {
-		const key = entry.channelId.toString();
-		const messages = readableByChannel.get(key) ?? new Map<string, Message>();
-		messages.set(entry.messageId.toString(), makeMessage(entry.channelId, entry.messageId));
-		readableByChannel.set(key, messages);
+	override async dispatchPresence(params: PresenceDispatch): Promise<void> {
+		this.dispatches.push(params);
 	}
-	const userRepository = {
-		listRecentMentions: async () => entries,
-		listSavedMessages: async (_userId: UserID, limit?: number, before?: MessageID) => {
-			savedMessageListCalls.push({limit, before});
-			return entries;
-		},
-		deleteSavedMessage: async (_userId: UserID, messageId: MessageID) => {
-			deletedSavedMessageIds.push(messageId.toString());
-		},
-	};
-	const channelService = {
-		messages: {
-			retrieval: {
-				getMessagesByIds: async ({channelId, messageIds}: {channelId: ChannelID; messageIds: Array<MessageID>}) => {
-					batchCalls.push({
-						channelId: channelId.toString(),
-						messageIds: messageIds.map((messageId) => messageId.toString()),
-					});
-					const failure = failures.get(channelId.toString());
-					if (failure) throw failure;
-					return readableByChannel.get(channelId.toString()) ?? new Map<string, Message>();
-				},
-			},
-		},
-	};
-	const storedKeys = new Set(
-		(stored ?? readable).map((entry) => `${entry.channelId.toString()}:${entry.messageId.toString()}`),
-	);
-	const channelRepository = {
-		messages: {
-			getMessage: async (channelId: ChannelID, messageId: MessageID) =>
-				storedKeys.has(`${channelId.toString()}:${messageId.toString()}`) ? makeMessage(channelId, messageId) : null,
-		},
-	};
-	const service = new UserContentService(
-		{services: {users: userRepository, gateway: {}, worker: {}, snowflake: {}}} as unknown as ApiContext,
-		{} as unknown as UserCacheService,
-		channelService as unknown as ChannelService,
-		channelRepository as unknown as IChannelRepository,
-		{} as unknown as KVBulkMessageDeletionQueueService,
-		{} as unknown as LimitConfigService,
-	);
-	return {service, batchCalls, deletedSavedMessageIds, savedMessageListCalls};
+
+	savedPayloads(): Array<unknown> {
+		return this.dispatches.filter((entry) => entry.event === 'SAVED_MESSAGE_CREATE').map((entry) => entry.data);
+	}
 }
 
-const CHANNEL_A = createChannelID(100n);
-const CHANNEL_B = createChannelID(200n);
-const CHANNEL_C = createChannelID(300n);
+describe('user content routes', () => {
+	let harness: ApiTestHarness;
+	let gateway: RecordingGateway;
+	let users: UserRepository;
+	let channels: ChannelRepository;
 
-describe('getRecentMentions', () => {
-	it('authenticates each distinct channel once no matter how many mentions it holds', async () => {
-		const entries = [
-			{channelId: CHANNEL_A, messageId: createMessageID(11n)},
-			{channelId: CHANNEL_B, messageId: createMessageID(12n)},
-			{channelId: CHANNEL_A, messageId: createMessageID(13n)},
-			{channelId: CHANNEL_A, messageId: createMessageID(14n)},
-		];
-		const {service, batchCalls} = createUserContentService({entries, readable: entries});
-
-		const messages = await service.getRecentMentions({
-			userId: VIEWER_ID,
-			limit: 50,
-			everyone: true,
-			roles: true,
-			guilds: true,
-		});
-
-		expect(messages.map((message) => message.id.toString())).toEqual(['14', '13', '12', '11']);
-		expect(batchCalls).toEqual([
-			{channelId: '100', messageIds: ['11', '13', '14']},
-			{channelId: '200', messageIds: ['12']},
-		]);
+	beforeEach(async () => {
+		harness = await createApiTestHarness();
+		gateway = new RecordingGateway();
+		setInjectedGatewayService(gateway);
+		resetApiServicesForTesting();
+		users = new UserRepository();
+		channels = new ChannelRepository();
 	});
 
-	it('drops only the mentions from the channels the viewer can no longer reach', async () => {
-		const entries = [
-			{channelId: CHANNEL_A, messageId: createMessageID(11n)},
-			{channelId: CHANNEL_B, messageId: createMessageID(12n)},
-			{channelId: CHANNEL_C, messageId: createMessageID(13n)},
-			{channelId: CHANNEL_B, messageId: createMessageID(14n)},
-		];
-		const {service} = createUserContentService({
-			entries,
-			readable: [entries[0], entries[2]],
-			failures: new Map<string, Error>([
-				[CHANNEL_B.toString(), new MissingPermissionsError()],
-				[CHANNEL_C.toString(), new UnknownChannelError()],
-			]),
-		});
-
-		const messages = await service.getRecentMentions({
-			userId: VIEWER_ID,
-			limit: 50,
-			everyone: true,
-			roles: true,
-			guilds: true,
-		});
-
-		expect(messages.map((message) => message.id.toString())).toEqual(['11']);
+	afterEach(async () => {
+		await harness.shutdown();
 	});
 
-	it('drops a mention whose message the batch read did not return', async () => {
-		const entries = [
-			{channelId: CHANNEL_A, messageId: createMessageID(11n)},
-			{channelId: CHANNEL_A, messageId: createMessageID(12n)},
-		];
-		const {service} = createUserContentService({entries, readable: [entries[1]]});
+	async function world() {
+		const {owner, members, guild, systemChannel} = await setupTestGuildWithMembers(harness, 1);
+		const [member] = members;
+		assert(member, 'Expected a guild member');
+		const other = await createChannel(harness, owner.token, guild.id, 'other');
+		return {owner, member, guild, channel: systemChannel, other};
+	}
 
-		const messages = await service.getRecentMentions({
-			userId: VIEWER_ID,
-			limit: 50,
-			everyone: true,
-			roles: true,
-			guilds: true,
-		});
+	async function send(account: TestAccount, channelId: string, body: MessageRequestSchemaType = {}) {
+		return threadsRequest<MessageResponse>(harness, account.token)
+			.post(`/channels/${channelId}/messages`)
+			.body({content: 'Stored message', ...body})
+			.expect(HttpStatus.OK)
+			.execute();
+	}
 
-		expect(messages.map((message) => message.id.toString())).toEqual(['12']);
-	});
+	async function thread(account: TestAccount, channelId: string, messageId?: string) {
+		const path = `/channels/${channelId}${messageId ? `/messages/${messageId}` : ''}/threads`;
+		return threadsRequest<ThreadChannelResponse>(harness, account.token)
+			.post(path)
+			.body({name: 'Saved thread', type: ChannelTypes.PUBLIC_THREAD})
+			.expect(HttpStatus.CREATED)
+			.execute();
+	}
 
-	it('still lets an unexpected channel failure surface', async () => {
-		const entries = [{channelId: CHANNEL_A, messageId: createMessageID(11n)}];
-		const {service} = createUserContentService({
-			entries,
-			readable: [],
-			failures: new Map<string, Error>([[CHANNEL_A.toString(), new Error('database is on fire')]]),
-		});
-
-		await expect(
-			service.getRecentMentions({userId: VIEWER_ID, limit: 50, everyone: true, roles: true, guilds: true}),
-		).rejects.toThrow('database is on fire');
-	});
-});
-
-describe('getSavedMessages', () => {
-	it('passes the page cursor to the repository', async () => {
-		const entries = [{channelId: CHANNEL_A, messageId: createMessageID(11n)}];
-		const {service, savedMessageListCalls} = createUserContentService({entries, readable: entries});
-
-		await service.getSavedMessages({userId: VIEWER_ID, limit: 50, before: createMessageID(20n)});
-
-		expect(savedMessageListCalls).toEqual([{limit: 50, before: createMessageID(20n)}]);
-	});
-
-	it('marks every entry of an unreachable channel as missing permissions without deleting it', async () => {
-		const entries = [
-			{channelId: CHANNEL_A, messageId: createMessageID(11n)},
-			{channelId: CHANNEL_B, messageId: createMessageID(12n)},
-			{channelId: CHANNEL_B, messageId: createMessageID(13n)},
-		];
-		const {service, batchCalls, deletedSavedMessageIds} = createUserContentService({
-			entries,
-			readable: [entries[0]],
-			failures: new Map<string, Error>([[CHANNEL_B.toString(), new UnknownGuildError()]]),
-		});
-
-		const saved = await service.getSavedMessages({userId: VIEWER_ID, limit: 50});
-
-		expect(
-			saved.map((entry) => ({id: entry.messageId.toString(), status: entry.status, hasMessage: entry.message != null})),
-		).toEqual([
-			{id: '13', status: 'missing_permissions', hasMessage: false},
-			{id: '12', status: 'missing_permissions', hasMessage: false},
-			{id: '11', status: 'available', hasMessage: true},
-		]);
-		expect(deletedSavedMessageIds).toEqual([]);
-		expect(batchCalls).toEqual([
-			{channelId: '100', messageIds: ['11']},
-			{channelId: '200', messageIds: ['12', '13']},
-		]);
-	});
-
-	it('keeps a saved message the batch read could not return while the message still exists', async () => {
-		const entries = [
-			{channelId: CHANNEL_A, messageId: createMessageID(11n)},
-			{channelId: CHANNEL_A, messageId: createMessageID(12n)},
-		];
-		const {service, deletedSavedMessageIds} = createUserContentService({
-			entries,
-			readable: [entries[0]],
-			stored: entries,
-		});
-
-		const saved = await service.getSavedMessages({userId: VIEWER_ID, limit: 50});
-
-		expect(
-			saved.map((entry) => ({id: entry.messageId.toString(), status: entry.status, hasMessage: entry.message != null})),
-		).toEqual([
-			{id: '12', status: 'missing_permissions', hasMessage: false},
-			{id: '11', status: 'available', hasMessage: true},
-		]);
-		expect(deletedSavedMessageIds).toEqual([]);
-	});
-
-	it('deletes a saved message the repository no longer holds', async () => {
-		const entries = [
-			{channelId: CHANNEL_A, messageId: createMessageID(11n)},
-			{channelId: CHANNEL_A, messageId: createMessageID(12n)},
-		];
-		const {service, deletedSavedMessageIds} = createUserContentService({
-			entries,
-			readable: [entries[0]],
-			stored: [entries[0]],
-		});
-
-		const saved = await service.getSavedMessages({userId: VIEWER_ID, limit: 50});
-
-		expect(saved.map((entry) => entry.messageId.toString())).toEqual(['11']);
-		expect(deletedSavedMessageIds).toEqual(['12']);
-	});
-});
-
-describe('gateway dispatches after the write', () => {
-	function createDispatchingService(dispatchPresence: () => Promise<void>) {
-		const createdSavedMessageIds: Array<string> = [];
-		const deletedSavedMessageIds: Array<string> = [];
-		const deletedRecentMentionIds: Array<string> = [];
-		const message = makeMessage(CHANNEL_A, createMessageID(31n));
-		const userRepository = {
-			findUnique: async () => ({
-				isBot: false,
-				premiumType: 0,
-				premiumUntil: null,
-				premiumGiftExtensionEndsAt: null,
-				premiumWillCancel: false,
-				premiumGraceEndsAt: null,
-				flags: 0n,
-				premiumFlags: 0,
-				traits: null,
-			}),
-			listSavedMessages: async () => [],
-			countSavedMessages: async () => 0,
-			createSavedMessage: async (_userId: UserID, _channelId: ChannelID, messageId: MessageID) => {
-				createdSavedMessageIds.push(messageId.toString());
-			},
-			deleteSavedMessage: async (_userId: UserID, messageId: MessageID) => {
-				deletedSavedMessageIds.push(messageId.toString());
-			},
-			getRecentMention: async (_userId: UserID, messageId: MessageID) => ({messageId}),
-			deleteRecentMention: async (mention: {messageId: MessageID}) => {
-				deletedRecentMentionIds.push(mention.messageId.toString());
-			},
-		};
-		const channelService = {
-			channelData: {auth: {getChannelAuthenticated: async () => ({})}},
-			messages: {retrieval: {getMessage: async () => message}},
-		};
-		const service = new UserContentService(
-			{
-				services: {users: userRepository, gateway: {dispatchPresence}, worker: {}, snowflake: {}},
-			} as unknown as ApiContext,
-			{} as unknown as UserCacheService,
-			channelService as unknown as ChannelService,
-			{} as unknown as IChannelRepository,
-			{} as unknown as KVBulkMessageDeletionQueueService,
-			{getConfigSnapshot: () => null} as unknown as LimitConfigService,
+	async function mentionRows(account: TestAccount, guildId: string, messages: Array<MessageResponse>) {
+		await users.createRecentMentions(
+			messages.map((message) => ({
+				user_id: createUserID(BigInt(account.userId)),
+				channel_id: createChannelID(BigInt(message.channel_id)),
+				message_id: createMessageID(BigInt(message.id)),
+				guild_id: createGuildID(BigInt(guildId)),
+				is_everyone: false,
+				is_role: false,
+			})),
 		);
-		return {service, message, createdSavedMessageIds, deletedSavedMessageIds, deletedRecentMentionIds};
 	}
 
-	function saveMessageArgs(messageId: MessageID) {
-		return {
-			userId: VIEWER_ID,
-			channelId: CHANNEL_A,
-			messageId,
-			userCacheService: {} as unknown as UserCacheService,
-			requestCache: {} as unknown as RequestCache,
-		};
+	async function savedRows(account: TestAccount, messages: Array<{id: string; channel_id: string}>) {
+		for (const message of messages) {
+			await users.createSavedMessage(
+				createUserID(BigInt(account.userId)),
+				createChannelID(BigInt(message.channel_id)),
+				createMessageID(BigInt(message.id)),
+			);
+		}
 	}
 
-	it('keeps the saved message when SAVED_MESSAGE_CREATE fails to publish', async () => {
-		const {service, message, createdSavedMessageIds} = createDispatchingService(async () => {
-			throw new BadGatewayError();
-		});
-		vi.spyOn(service, 'buildMessageResponsesForUser').mockResolvedValue([]);
+	function save(account: TestAccount, message: MessageResponse) {
+		return threadsRequest(harness, account.token)
+			.post('/users/@me/saved-messages')
+			.body({channel_id: message.channel_id, message_id: message.id});
+	}
 
-		await expect(service.saveMessage(saveMessageArgs(message.id))).resolves.toBeUndefined();
+	function listPath(path: string, options: {limit?: number}) {
+		const query = new URLSearchParams();
+		if (options.limit !== undefined) {
+			query.set('limit', String(options.limit));
+		}
+		return `${path}?${query.toString()}`;
+	}
 
-		expect(createdSavedMessageIds).toEqual([message.id.toString()]);
-	});
+	async function mentions(account: TestAccount, options: {limit?: number; capable?: boolean} = {}) {
+		return threadsRequest<Array<MessageResponse>>(harness, account.token, options)
+			.get(listPath('/users/@me/mentions', options))
+			.expect(HttpStatus.OK)
+			.execute();
+	}
 
-	it('still surfaces a failure of the message response build', async () => {
-		const {service, message} = createDispatchingService(async () => {});
-		vi.spyOn(service, 'buildMessageResponsesForUser').mockRejectedValue(new Error('database is on fire'));
+	async function saved(account: TestAccount, options: {limit?: number; capable?: boolean} = {}) {
+		return threadsRequest<SavedMessageEntryListResponse>(harness, account.token, options)
+			.get(listPath('/users/@me/saved-messages', options))
+			.expect(HttpStatus.OK)
+			.execute();
+	}
 
-		await expect(service.saveMessage(saveMessageArgs(message.id))).rejects.toThrow('database is on fire');
-	});
-
-	it('keeps the deletion when SAVED_MESSAGE_DELETE fails to publish', async () => {
-		const {service, deletedSavedMessageIds} = createDispatchingService(async () => {
-			throw new BadGatewayError();
-		});
-
-		await expect(service.unsaveMessage({userId: VIEWER_ID, messageId: createMessageID(31n)})).resolves.toBeUndefined();
-
-		expect(deletedSavedMessageIds).toEqual(['31']);
-	});
-
-	it('keeps the deletion when RECENT_MENTION_DELETE fails to publish', async () => {
-		const {service, deletedRecentMentionIds} = createDispatchingService(async () => {
-			throw new BadGatewayError();
-		});
-
-		await expect(
-			service.deleteRecentMention({userId: VIEWER_ID, messageId: createMessageID(31n)}),
-		).resolves.toBeUndefined();
-
-		expect(deletedRecentMentionIds).toEqual(['31']);
-	});
-});
-
-describe('bookmark ceiling', () => {
-	function createBookmarkLimitedService({
-		savedMessageCount,
-		maxBookmarks,
-	}: {
-		savedMessageCount: number;
-		maxBookmarks: number;
-	}) {
-		const createdSavedMessageIds: Array<string> = [];
-		const message = makeMessage(CHANNEL_A, createMessageID(41n));
-		const userRepository = {
-			findUnique: async () => ({
-				isBot: false,
-				premiumType: 0,
-				premiumUntil: null,
-				premiumGiftExtensionEndsAt: null,
-				premiumWillCancel: false,
-				premiumGraceEndsAt: null,
-				flags: 0n,
-				premiumFlags: 0,
-				traits: null,
-			}),
-			countSavedMessages: async () => savedMessageCount,
-			listSavedMessages: async () => {
-				throw new Error('the ceiling check must not page through saved messages');
-			},
-			createSavedMessage: async (_userId: UserID, _channelId: ChannelID, messageId: MessageID) => {
-				createdSavedMessageIds.push(messageId.toString());
-			},
-		};
-		const channelService = {
-			channelData: {auth: {getChannelAuthenticated: async () => ({})}},
-			messages: {retrieval: {getMessage: async () => message}},
-		};
-		const snapshot: LimitConfigSnapshot = {
-			traitDefinitions: [],
-			rules: [{id: 'default', limits: {max_bookmarks: maxBookmarks}}],
-		};
-		const service = new UserContentService(
-			{
-				services: {users: userRepository, gateway: {dispatchPresence: async () => {}}, worker: {}, snowflake: {}},
-			} as unknown as ApiContext,
-			{} as unknown as UserCacheService,
-			channelService as unknown as ChannelService,
-			{} as unknown as IChannelRepository,
-			{} as unknown as KVBulkMessageDeletionQueueService,
-			{getConfigSnapshot: () => snapshot} as unknown as LimitConfigService,
+	async function storedSavedIds(account: TestAccount) {
+		return (await users.listSavedMessages(createUserID(BigInt(account.userId)))).map((entry) =>
+			String(entry.messageId),
 		);
-		return {service, message, createdSavedMessageIds};
 	}
 
-	function saveMessageArgs(messageId: MessageID) {
-		return {
-			userId: VIEWER_ID,
-			channelId: CHANNEL_A,
-			messageId,
-			userCacheService: {} as unknown as UserCacheService,
-			requestCache: {} as unknown as RequestCache,
-		};
-	}
-
-	it('enforces a configured max_bookmarks above 1000', async () => {
-		const {service, message, createdSavedMessageIds} = createBookmarkLimitedService({
-			savedMessageCount: 1002,
-			maxBookmarks: 1002,
+	async function deny(
+		account: TestAccount,
+		channelId: string,
+		member: TestAccount,
+		permission = Permissions.VIEW_CHANNEL,
+	) {
+		await createPermissionOverwrite(harness, account.token, channelId, member.userId, {
+			type: 1,
+			allow: '0',
+			deny: permission.toString(),
 		});
-		vi.spyOn(service, 'buildMessageResponsesForUser').mockResolvedValue([]);
+	}
 
-		const error = await service.saveMessage(saveMessageArgs(message.id)).catch((thrown: unknown) => thrown);
+	async function updateStoredMessage(
+		message: MessageResponse,
+		patch: Partial<Pick<MessageRow, 'flags' | 'type' | 'message_reference'>>,
+	) {
+		const stored = await channels.messages.getMessage(
+			createChannelID(BigInt(message.channel_id)),
+			createMessageID(BigInt(message.id)),
+		);
+		assert(stored, 'Expected a stored message');
+		await channels.messages.upsertMessage({...stored.toRow(), ...patch}, stored.toRow());
+	}
 
-		expect(error).toBeInstanceOf(MaxBookmarksError);
-		expect((error as MaxBookmarksError).status).toBe(400);
-		expect((error as MaxBookmarksError).code).toBe(APIErrorCodes.MAX_BOOKMARKS);
-		expect((error as MaxBookmarksError).data?.max_bookmarks).toBe(1002);
-		expect(createdSavedMessageIds).toEqual([]);
+	it('omits mentions from denied and deleted channels while retaining accessible mentions', async () => {
+		const w = await world();
+		const gone = await createChannel(harness, w.owner.token, w.guild.id, 'removed');
+		const visible = await send(w.owner, w.channel.id);
+		const denied = await send(w.owner, w.other.id);
+		const deleted = await send(w.owner, gone.id);
+		await deny(w.owner, w.other.id, w.member);
+		await threadsRequest(harness, w.owner.token).delete(`/channels/${gone.id}`).expect(HttpStatus.NO_CONTENT).execute();
+		await mentionRows(w.member, w.guild.id, [visible, denied, deleted]);
+		expect((await mentions(w.member)).map((message) => message.id)).toEqual([visible.id]);
 	});
 
-	it('still saves below a configured max_bookmarks above 1000', async () => {
-		const {service, message, createdSavedMessageIds} = createBookmarkLimitedService({
-			savedMessageCount: 1001,
-			maxBookmarks: 1002,
+	it('refills hidden thread mentions without replacing ordinary denied mentions', async () => {
+		const w = await world();
+		const t = await thread(w.owner, w.channel.id);
+		const first = await send(w.owner, w.channel.id);
+		const second = await send(w.owner, w.channel.id);
+		const denied = await send(w.owner, w.other.id);
+		const third = await send(w.owner, w.channel.id);
+		const hidden1 = await send(w.owner, t.id);
+		const hidden2 = await send(w.owner, t.id);
+		await deny(w.owner, w.other.id, w.member);
+		await mentionRows(w.member, w.guild.id, [first, second, denied, third, hidden1, hidden2]);
+		expect((await mentions(w.member, {limit: 4, capable: false})).map((message) => message.id)).toEqual([
+			third.id,
+			second.id,
+			first.id,
+		]);
+	});
+
+	it('keeps every saved reference to an unreachable channel', async () => {
+		const w = await world();
+		const visible = await send(w.owner, w.channel.id);
+		const first = await send(w.owner, w.other.id);
+		const second = await send(w.owner, w.other.id);
+		await savedRows(w.member, [visible, first, second]);
+		await deny(w.owner, w.other.id, w.member);
+		const result = await saved(w.member);
+		expect(result.map((entry) => [entry.message_id, entry.status, entry.message !== null])).toEqual([
+			[second.id, 'missing_permissions', false],
+			[first.id, 'missing_permissions', false],
+			[visible.id, 'available', true],
+		]);
+		expect(await storedSavedIds(w.member)).toEqual([second.id, first.id, visible.id]);
+	});
+
+	it('refills saved thread entries and includes ordinary missing-permission entries', async () => {
+		const w = await world();
+		const t = await thread(w.owner, w.channel.id);
+		const first = await send(w.owner, w.channel.id);
+		const denied = await send(w.owner, w.other.id);
+		const second = await send(w.owner, w.channel.id);
+		const hidden1 = await send(w.owner, t.id);
+		const hidden2 = await send(w.owner, t.id);
+		const third = await send(w.owner, w.channel.id);
+		await savedRows(w.member, [first, denied, second, hidden1, hidden2, third]);
+		await deny(w.owner, w.other.id, w.member);
+		expect(
+			(await saved(w.member, {limit: 4, capable: false})).map((entry) => [entry.message_id, entry.status]),
+		).toEqual([
+			[third.id, 'available'],
+			[second.id, 'available'],
+			[denied.id, 'missing_permissions'],
+			[first.id, 'available'],
+		]);
+	});
+
+	it('publishes a plain saved guild message without thread scoping', async () => {
+		const w = await world();
+		const message = await send(w.owner, w.channel.id);
+		gateway.dispatches.length = 0;
+		await save(w.owner, message).expect(HttpStatus.NO_CONTENT).execute();
+		expect(gateway.savedPayloads()).toEqual([expect.objectContaining({id: message.id, flags: 0})]);
+		const [payload] = gateway.savedPayloads();
+		expect(payload).not.toHaveProperty('__thread_scoped');
+		expect(payload).not.toHaveProperty('__thread_unscoped');
+	});
+
+	it('publishes a saved thread message only to thread viewers', async () => {
+		const w = await world();
+		const t = await thread(w.owner, w.channel.id);
+		const message = await send(w.owner, t.id);
+		gateway.dispatches.length = 0;
+		await save(w.owner, message).expect(HttpStatus.NO_CONTENT).execute();
+		expect(gateway.savedPayloads()).toEqual([
+			expect.objectContaining({id: message.id, channel_id: t.id, __thread_scoped: w.guild.id}),
+		]);
+	});
+
+	it('publishes a thread-created message without an unscoped copy', async () => {
+		const w = await world();
+		await thread(w.owner, w.channel.id);
+		const parentMessages = await channels.messages.listMessages(createChannelID(BigInt(w.channel.id)));
+		const created = parentMessages.find((message) => message.type === MessageTypes.THREAD_CREATED);
+		assert(created, 'Expected the thread-created parent message');
+		const message = await threadsRequest<MessageResponse>(harness, w.owner.token)
+			.get(`/channels/${w.channel.id}/messages/${created.id}`)
+			.execute();
+		gateway.dispatches.length = 0;
+		await save(w.owner, message).expect(HttpStatus.NO_CONTENT).execute();
+		expect(gateway.savedPayloads()).toEqual([
+			expect.objectContaining({id: message.id, type: MessageTypes.THREAD_CREATED, __thread_scoped: w.guild.id}),
+		]);
+	});
+
+	it('publishes a thread parent flag to viewers and a masked copy to other sessions', async () => {
+		const w = await world();
+		const message = await send(w.owner, w.channel.id, {flags: 4});
+		await thread(w.owner, w.channel.id, message.id);
+		gateway.dispatches.length = 0;
+		await save(w.owner, message).expect(HttpStatus.NO_CONTENT).execute();
+		expect(gateway.savedPayloads()).toEqual([
+			expect.objectContaining({id: message.id, flags: ServerMessageFlags.HAS_THREAD | 4, __thread_scoped: w.guild.id}),
+			expect.objectContaining({id: message.id, flags: 4, __thread_unscoped: w.guild.id}),
+		]);
+	});
+
+	async function maskingWorld() {
+		const w = await world();
+		const parent = await send(w.owner, w.channel.id, {flags: 4});
+		await thread(w.owner, w.channel.id, parent.id);
+		await thread(w.owner, w.other.id);
+		const created = (await channels.messages.listMessages(createChannelID(BigInt(w.other.id)))).find(
+			(message) => message.type === MessageTypes.THREAD_CREATED,
+		);
+		assert(created, 'Expected a thread-created message to reference');
+		const reply = await send(w.owner, w.other.id);
+		await updateStoredMessage(reply, {
+			type: MessageTypes.REPLY,
+			message_reference: {
+				message_id: created.id,
+				channel_id: createChannelID(BigInt(w.other.id)),
+				guild_id: createGuildID(BigInt(w.guild.id)),
+				type: MessageReferenceTypes.DEFAULT,
+			},
 		});
-		vi.spyOn(service, 'buildMessageResponsesForUser').mockResolvedValue([]);
+		const friend = await createTestAccount(harness);
+		await createFriendship(harness, w.member, friend);
+		const dm = await createDmChannel(harness, w.member.token, friend.userId);
+		const direct = await send(w.member, dm.id);
+		await updateStoredMessage(direct, {flags: ServerMessageFlags.HAS_THREAD});
+		await savedRows(w.member, [parent, reply, direct]);
+		return {w, parent, reply, direct};
+	}
 
-		await expect(service.saveMessage(saveMessageArgs(message.id))).resolves.toBeUndefined();
+	it('masks a parent thread flag and thread-created reply for a non-viewer', async () => {
+		const {w, parent, reply, direct} = await maskingWorld();
+		const result = await saved(w.member, {capable: false});
+		expect(result.map((entry) => [entry.message_id, entry.message?.flags])).toEqual([
+			[direct.id, 0],
+			[reply.id, 0],
+			[parent.id, 4],
+		]);
+		expect(result.find((entry) => entry.message_id === reply.id)?.message?.referenced_message).toBeNull();
+	});
 
-		expect(createdSavedMessageIds).toEqual([message.id.toString()]);
+	it('preserves guild thread artifacts for a capable viewer and still masks a direct message', async () => {
+		const {w, parent, reply, direct} = await maskingWorld();
+		const result = await saved(w.member);
+		expect(result.map((entry) => [entry.message_id, entry.message?.flags])).toEqual([
+			[direct.id, 0],
+			[reply.id, 0],
+			[parent.id, ServerMessageFlags.HAS_THREAD | 4],
+		]);
+		expect(result.find((entry) => entry.message_id === reply.id)?.message?.referenced_message).toMatchObject({
+			type: MessageTypes.THREAD_CREATED,
+		});
 	});
 });

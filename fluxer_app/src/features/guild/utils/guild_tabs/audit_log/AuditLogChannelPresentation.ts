@@ -85,6 +85,21 @@ import {
 	CHANNEL_VOICE_REGION_CHANGED_ROW,
 	CHANNEL_VOICE_REGION_SET_ROW,
 } from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages';
+import {
+	CHANNEL_CREATE_FORUM_IN_CATEGORY_SUMMARY,
+	CHANNEL_CREATE_FORUM_SUMMARY,
+	CHANNEL_CREATE_MEDIA_IN_CATEGORY_SUMMARY,
+	CHANNEL_CREATE_MEDIA_SUMMARY,
+	CHANNEL_DELETE_FORUM_SUMMARY,
+	CHANNEL_DELETE_MEDIA_SUMMARY,
+	CHANNEL_OVERRIDES_CHANGED_FORUM_SUMMARY,
+	CHANNEL_OVERRIDES_CHANGED_MEDIA_SUMMARY,
+	CHANNEL_RENAME_FORUM_SUMMARY,
+	CHANNEL_RENAME_MEDIA_SUMMARY,
+	CHANNEL_UPDATE_FORUM_SUMMARY,
+	CHANNEL_UPDATE_MEDIA_SUMMARY,
+	threadParentUpdateRows,
+} from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogForumPresentation';
 import type {
 	AuditLogDetailRow,
 	AuditLogDomainResult,
@@ -105,6 +120,7 @@ import {
 	readOption,
 	readSnowflake,
 	readString,
+	row,
 } from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogValues';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {
@@ -127,6 +143,8 @@ const CREATE_SUMMARIES: Record<Exclude<ChannelNoun, 'category'>, MessageDescript
 	announcement: CHANNEL_CREATE_ANNOUNCEMENT_SUMMARY,
 	voice: CHANNEL_CREATE_VOICE_SUMMARY,
 	link: CHANNEL_CREATE_LINK_SUMMARY,
+	forum: CHANNEL_CREATE_FORUM_SUMMARY,
+	media: CHANNEL_CREATE_MEDIA_SUMMARY,
 	generic: CHANNEL_CREATE_GENERIC_SUMMARY,
 };
 
@@ -135,6 +153,8 @@ const CREATE_IN_CATEGORY_SUMMARIES: Record<Exclude<ChannelNoun, 'category'>, Mes
 	announcement: CHANNEL_CREATE_ANNOUNCEMENT_IN_CATEGORY_SUMMARY,
 	voice: CHANNEL_CREATE_VOICE_IN_CATEGORY_SUMMARY,
 	link: CHANNEL_CREATE_LINK_IN_CATEGORY_SUMMARY,
+	forum: CHANNEL_CREATE_FORUM_IN_CATEGORY_SUMMARY,
+	media: CHANNEL_CREATE_MEDIA_IN_CATEGORY_SUMMARY,
 	generic: CHANNEL_CREATE_GENERIC_IN_CATEGORY_SUMMARY,
 };
 
@@ -144,6 +164,8 @@ const RENAME_SUMMARIES: Record<ChannelNoun, MessageDescriptor> = {
 	voice: CHANNEL_RENAME_VOICE_SUMMARY,
 	link: CHANNEL_RENAME_LINK_SUMMARY,
 	category: CHANNEL_RENAME_CATEGORY_SUMMARY,
+	forum: CHANNEL_RENAME_FORUM_SUMMARY,
+	media: CHANNEL_RENAME_MEDIA_SUMMARY,
 	generic: CHANNEL_RENAME_GENERIC_SUMMARY,
 };
 
@@ -153,6 +175,8 @@ const OVERRIDES_CHANGED_SUMMARIES: Record<ChannelNoun, MessageDescriptor> = {
 	voice: CHANNEL_OVERRIDES_CHANGED_VOICE_SUMMARY,
 	link: CHANNEL_OVERRIDES_CHANGED_LINK_SUMMARY,
 	category: CHANNEL_OVERRIDES_CHANGED_CATEGORY_SUMMARY,
+	forum: CHANNEL_OVERRIDES_CHANGED_FORUM_SUMMARY,
+	media: CHANNEL_OVERRIDES_CHANGED_MEDIA_SUMMARY,
 	generic: CHANNEL_OVERRIDES_CHANGED_GENERIC_SUMMARY,
 };
 
@@ -162,6 +186,8 @@ const UPDATE_SUMMARIES: Record<ChannelNoun, MessageDescriptor> = {
 	voice: CHANNEL_UPDATE_VOICE_SUMMARY,
 	link: CHANNEL_UPDATE_LINK_SUMMARY,
 	category: CHANNEL_UPDATE_CATEGORY_SUMMARY,
+	forum: CHANNEL_UPDATE_FORUM_SUMMARY,
+	media: CHANNEL_UPDATE_MEDIA_SUMMARY,
 	generic: CHANNEL_UPDATE_GENERIC_SUMMARY,
 };
 
@@ -171,6 +197,8 @@ const DELETE_SUMMARIES: Record<ChannelNoun, MessageDescriptor> = {
 	voice: CHANNEL_DELETE_VOICE_SUMMARY,
 	link: CHANNEL_DELETE_LINK_SUMMARY,
 	category: CHANNEL_DELETE_CATEGORY_SUMMARY,
+	forum: CHANNEL_DELETE_FORUM_SUMMARY,
+	media: CHANNEL_DELETE_MEDIA_SUMMARY,
 	generic: CHANNEL_DELETE_GENERIC_SUMMARY,
 };
 
@@ -191,15 +219,6 @@ const OVERWRITE_DELETE_SUMMARIES: Record<OverwriteTarget, MessageDescriptor> = {
 	member: CHANNEL_OVERWRITE_DELETE_MEMBER_SUMMARY,
 	everyone: CHANNEL_OVERWRITE_DELETE_EVERYONE_SUMMARY,
 };
-
-function row(
-	id: string,
-	tone: AuditLogTone,
-	descriptor: MessageDescriptor,
-	values: AuditLogSentence['values'] = {},
-): AuditLogDetailRow {
-	return {id, tone, sentence: {descriptor, values}};
-}
 
 function compactRows(candidates: ReadonlyArray<AuditLogDetailRow | null>): Array<AuditLogDetailRow> {
 	return candidates.filter((candidate): candidate is AuditLogDetailRow => candidate !== null);
@@ -262,10 +281,11 @@ function createRows(entry: GuildAuditLogEntryResponse, noun: ChannelNoun): Array
 	const isVoice = noun === 'voice';
 	const isTextLike = noun === 'text' || noun === 'announcement';
 	const url = noun === 'link' ? readString(created('url')) : null;
-	const topic = isTextLike || isVoice || noun === 'link' ? readString(created('topic')) : null;
+	const isForum = noun === 'forum' || noun === 'media';
+	const topic = isTextLike || isVoice || noun === 'link' || isForum ? readString(created('topic')) : null;
 	const nsfw = readBoolean(created('nsfw'));
 	const warningLevel = noun === 'category' ? null : readNumber(created('content_warning_level'));
-	const slowmode = isTextLike || isVoice ? readNumber(created('rate_limit_per_user')) : null;
+	const slowmode = isTextLike || isVoice || isForum ? readNumber(created('rate_limit_per_user')) : null;
 	const bitrate = isVoice ? readNumber(created('bitrate')) : null;
 	const userLimit = isVoice ? readNumber(created('user_limit')) : null;
 	const connectionLimit = isVoice ? readNumber(created('voice_connection_limit')) : null;
@@ -489,6 +509,7 @@ export function presentChannelUpdate(entry: GuildAuditLogEntryResponse): AuditLo
 		userLimitRow(entry),
 		connectionLimitRow(entry),
 		voiceRegionRow(entry),
+		...threadParentUpdateRows(entry),
 	]);
 	const overridesChanged = readTransition(entry, 'permission_overwrite_count', readNumber)?.kind === 'changed';
 	if (name?.kind === 'changed' && rows.length === 1 && !overridesChanged) {

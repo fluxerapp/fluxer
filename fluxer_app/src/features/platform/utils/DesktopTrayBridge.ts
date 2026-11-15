@@ -1,15 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Updater from '@app/features/app/state/Updater';
+import {openAccountSwitcherModal} from '@app/features/auth/commands/AccountSwitcherModalCommands';
 import Authentication from '@app/features/auth/state/Authentication';
+import {switchToSavedAccount} from '@app/features/auth/utils/AccountSwitcherModalUtils';
 import Channels from '@app/features/channel/state/Channels';
 import * as VoiceStateCommands from '@app/features/devtools/commands/VoiceStateCommands';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {formatClientBuildInfo, getClientInfo, getClientInfoSync} from '@app/features/platform/utils/ClientInfo';
 import Presence from '@app/features/presence/state/Presence';
+import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
+import * as ThemeSettingsCommands from '@app/features/theme_settings/commands/ThemeSettingsCommands';
+import ThemeSettingsState from '@app/features/theme_settings/state/ThemeSettingsState';
 import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
+import StatusExpiry from '@app/features/user/state/StatusExpiry';
 import UserSettings from '@app/features/user/state/UserSettings';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import {selectVoiceEngineV2AppConnectionWithFallback} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectors';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import {type StatusType, StatusTypes} from '@fluxer/constants/src/StatusConstants';
@@ -43,9 +49,11 @@ function toTrayStatus(status: StatusType): 'online' | 'idle' | 'dnd' | 'invisibl
 	}
 }
 
-function resolveVoiceConnectionProjection() {
-	const context = MediaEngine.connectionContext;
-	return selectVoiceEngineV2AppConnectionWithFallback(MediaEngine.voiceEngineV2Model, {
+function resolveVoiceConnectionProjection(): {connected: boolean; channelId: string | null} {
+	const engine = VoiceRuntime.engine;
+	if (engine === null) return VoiceRuntime.connection;
+	const context = engine.connectionContext;
+	return selectVoiceEngineV2AppConnectionWithFallback(engine.voiceEngineV2Model, {
 		connected: context.connected,
 		connecting: context.connecting,
 		reconnecting: context.reconnecting,
@@ -68,6 +76,8 @@ export function initializeDesktopTrayBridge(): (() => void) | null {
 			selfMute: LocalVoiceState.getSelfMute(),
 			selfDeaf: LocalVoiceState.getSelfDeaf(),
 			presenceStatus: toTrayStatus(resolvePresenceStatus()),
+			hidePersonalInformation: StreamerMode.shouldHidePersonalInformation,
+			customCssOff: ThemeSettingsState.customCssOff,
 		});
 	};
 	void getClientInfo()
@@ -82,12 +92,14 @@ export function initializeDesktopTrayBridge(): (() => void) | null {
 		() => {
 			const voiceConnection = resolveVoiceConnectionProjection();
 			return {
-				mediaEngineVersion: MediaEngine.getMobxSnapshot(),
+				mediaEngineVersion: VoiceRuntime.getMobxSnapshot(),
 				connected: voiceConnection.connected,
 				channelId: voiceConnection.channelId,
 				selfMute: LocalVoiceState.getSelfMute(),
 				selfDeaf: LocalVoiceState.getSelfDeaf(),
 				status: resolvePresenceStatus(),
+				hidePersonalInformation: StreamerMode.shouldHidePersonalInformation,
+				customCssOff: ThemeSettingsState.customCssOff,
 			};
 		},
 		pushState,
@@ -96,7 +108,7 @@ export function initializeDesktopTrayBridge(): (() => void) | null {
 	const disposeTrayAction = electronApi.onTrayAction((payload) => {
 		switch (payload.action) {
 			case 'set-status': {
-				void UserSettings.setStatus(payload.status);
+				StatusExpiry.setActiveStatusExpiry({status: payload.status, durationMs: null});
 				break;
 			}
 			case 'toggle-mute': {
@@ -108,11 +120,23 @@ export function initializeDesktopTrayBridge(): (() => void) | null {
 				break;
 			}
 			case 'disconnect-voice': {
-				void MediaEngine.disconnectFromVoiceChannel('user');
+				void VoiceRuntime.engine?.disconnectFromVoiceChannel('user');
 				break;
 			}
 			case 'check-for-updates': {
 				void Updater.checkForUpdates(true, true);
+				break;
+			}
+			case 'switch-account': {
+				void switchToSavedAccount({accountKey: payload.accountKey});
+				break;
+			}
+			case 'open-account-switcher': {
+				openAccountSwitcherModal();
+				break;
+			}
+			case 'toggle-custom-css': {
+				ThemeSettingsCommands.toggleCustomCss();
 				break;
 			}
 		}

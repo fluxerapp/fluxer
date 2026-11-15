@@ -148,7 +148,7 @@ int fluxer_validate_complete_gif(const uint8_t *bytes, size_t len,
         context.block_count++;
         uint8_t introducer = context.bytes[context.offset++];
         if (introducer == 0x3b) {
-            if (context.image_count == 0 || context.offset != context.len ||
+            if (context.image_count == 0 ||
                 context.image_count > (size_t)INT_MAX) {
                 return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
             }

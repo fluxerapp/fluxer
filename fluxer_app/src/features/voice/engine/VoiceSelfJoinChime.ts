@@ -4,11 +4,11 @@ import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
 import VoiceRegionTeleport from '@app/features/voice/state/VoiceRegionTeleport';
 
-export const SELF_JOIN_CHIME_DEDUPE_WINDOW_MS = 2000;
-export const SELF_JOIN_CHIME_START_DEADLINE_MS = 1500;
-export const VOICE_JOIN_CHIME_SEQUENCE_RETENTION_MS = 30_000;
+const SELF_JOIN_CHIME_DEDUPE_WINDOW_MS = 2000;
+const SELF_JOIN_CHIME_START_DEADLINE_MS = 1500;
+const VOICE_JOIN_CHIME_SEQUENCE_RETENTION_MS = 30_000;
 const RECENT_SELF_JOIN_CHIME_MAX_ENTRIES = 16;
-export const VOICE_JOIN_CHIME_SEQUENCE_MAX_ENTRIES = 64;
+const VOICE_JOIN_CHIME_SEQUENCE_MAX_ENTRIES = 64;
 
 export type SelfJoinChimeSource = 'gateway' | 'livekit-room' | 'native-ready';
 
@@ -40,20 +40,6 @@ interface RecentSelfJoinChime {
 
 const recentSelfJoinChimesByConnectionId = new Map<string, RecentSelfJoinChime>();
 const voiceJoinChimeSequenceEntries = new Map<string, VoiceJoinChimeSequenceEntry>();
-
-export function resetSelfJoinChimesForTests(): void {
-	recentSelfJoinChimesByConnectionId.clear();
-	for (const entry of voiceJoinChimeSequenceEntries.values()) {
-		entry.controller.abort();
-		if (entry.deadline) clearTimeout(entry.deadline);
-		if (entry.cleanup) clearTimeout(entry.cleanup);
-		if (entry.result === null) {
-			entry.result = 'unavailable';
-			entry.resolveResult('unavailable');
-		}
-	}
-	voiceJoinChimeSequenceEntries.clear();
-}
 
 function getVoiceJoinChimeSequenceKey(identity: VoiceJoinChimeSequenceIdentity): string {
 	return JSON.stringify([identity.channelId, identity.userId]);

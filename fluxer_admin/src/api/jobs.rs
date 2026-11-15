@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use reqwest::Method;
+
 use crate::api::generated::snowflake;
 
 use super::client::{AdminApiClient, ApiResult};
-use super::types::{ActiveJobsResponse, CancelJobResponse, GetJobResponse, ListJobsResponse};
+use super::types::{CancelJobResponse, GetJobResponse, ListJobsResponse};
 
 pub struct ListJobsParams {
     pub limit: u32,
@@ -52,21 +54,13 @@ impl AdminApiClient {
         job_id: &str,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<CancelJobResponse> {
-        self.put_with_reason(
+        self.send(
+            Method::PUT,
             &format!("/admin/jobs/{}/cancellation", urlencoding::encode(job_id)),
-            None,
+            None::<&serde_json::Value>,
             audit_log_reason,
         )
         .await
-    }
-
-    pub async fn list_active_jobs(&self) -> ApiResult<ActiveJobsResponse> {
-        let response = self
-            .generated()
-            .list_admin_active_jobs()
-            .await
-            .map_err(|e| self.generated_error(e))?;
-        self.generated_value(response.into_inner())
     }
 }
 

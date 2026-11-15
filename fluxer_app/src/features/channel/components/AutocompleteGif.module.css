@@ -58,11 +58,11 @@
 }
 
 :global(.theme-light) .gifButton:hover {
-	border-color: var(--brand-primary);
+	border-color: var(--brand-primary-foreground);
 }
 
 :global(.theme-light) .gifButtonSelected {
-	border-color: var(--brand-primary);
+	border-color: var(--brand-primary-foreground);
 }
 
 .gifVideoWrapper {

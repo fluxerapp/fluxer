@@ -10,34 +10,34 @@ import {DiscoveryMotionKind, DiscoveryTransition} from '@app/features/discovery/
 import Discovery from '@app/features/discovery/state/Discovery';
 import {CLEAR_SEARCH_DESCRIPTOR, GO_BACK_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {ArrowLeftIcon} from '@app/features/ui/icons/DirectionalIcons';
 import {getNextTabIndex, getTabNavigationDirection} from '@app/features/ui/tabs/TabKeyboardNavigation';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {ArrowLeftIcon, MagnifyingGlassIcon, XIcon} from '@phosphor-icons/react';
+import {MagnifyingGlassIcon, XIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import {type KeyboardEvent, type SubmitEvent, useCallback, useEffect, useRef, useState} from 'react';
 
 const ALL_DESCRIPTOR = msg({
 	message: 'All',
-	comment: 'Label for the all-categories tab in the Discovery page.',
+	comment: 'Label for the all-categories tab in the Explore page.',
 });
 const DISCOVERY_CATEGORIES_DESCRIPTOR = msg({
-	message: 'Discovery categories',
-	comment: 'Accessible label for the category tabs in the Discovery page.',
+	message: 'Explore categories',
+	comment: 'Accessible label for the category tabs in the Explore page.',
 });
 const SEARCH_COMMUNITIES_DESCRIPTOR = msg({
 	message: 'Search communities',
-	comment: 'Accessible label and placeholder for the community search field in the Discovery page.',
+	comment: 'Accessible label and placeholder for the community search field in the Explore page.',
 });
 const DISCOVERY_SEARCH_DESCRIPTOR = msg({
-	message: 'Discovery search',
-	comment: 'Accessible label for the search form in the Discovery navigation bar.',
+	message: 'Search Explore',
+	comment: 'Accessible label for the search form in the Explore navigation bar.',
 });
 const SEARCH_RESULTS_FOR_DESCRIPTOR = msg({
-	message: 'Search results for “{query}”',
-	comment:
-		'Heading in the Discovery navigation bar when a search is active. {query} is the text the user searched for.',
+	message: 'Search results for "{query}"',
+	comment: 'Heading in the Explore navigation bar when a search is active. {query} is the text the user searched for.',
 });
 
 function resolveLeftSectionTransitionKey(searchActive: boolean): string {

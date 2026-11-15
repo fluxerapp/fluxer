@@ -4,7 +4,7 @@
 -typing([eqwalizer]).
 -behaviour(gen_server).
 
--export([start_link/1, cast_member_list/4, cast_event/4, ensure/1]).
+-export([start_link/1, cast_event/4, ensure/1]).
 
 -define(MAX_MAILBOX, 500).
 -define(IDLE_GC_DELAY_MS, 1000).
@@ -12,7 +12,6 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -type broadcaster_ref() :: pid() | undefined.
--type snapshot() :: map().
 
 -spec start_link(integer()) -> gen_server:start_ret().
 start_link(GuildId) ->
@@ -35,13 +34,6 @@ ensure_alive(Pid, State) ->
         true -> {Pid, State};
         false -> start_and_store(State)
     end.
-
--spec cast_member_list(broadcaster_ref(), integer(), snapshot(), snapshot()) -> boolean().
-cast_member_list(BroadcasterPid, UserId, OldSnapshot, NewSnapshot) ->
-    maybe_cast(
-        BroadcasterPid,
-        {member_list_broadcast, UserId, OldSnapshot, NewSnapshot}
-    ).
 
 -spec cast_event(broadcaster_ref(), atom(), term(), [pid()]) -> boolean().
 cast_event(BroadcasterPid, Event, EncodedPayload, FilteredSessionPids) ->
@@ -73,8 +65,6 @@ handle_call(_Req, _From, State) ->
     {reply, {error, unknown_call}, State}.
 
 -spec handle_cast(term(), map()) -> {noreply, map()}.
-handle_cast({member_list_broadcast, _UserId, _OldSnapshot, _NewSnapshot}, State) ->
-    {noreply, maybe_schedule_gc(State)};
 handle_cast({event_broadcast, Event, EncodedPayload, FilteredSessionPids}, State) ->
     maybe_dispatch_event_from_terms(Event, EncodedPayload, FilteredSessionPids, State),
     {noreply, maybe_schedule_gc(State)};
@@ -164,95 +154,3 @@ maybe_schedule_gc(#{broadcaster_gc_ref := Ref} = State) when is_reference(Ref) -
 maybe_schedule_gc(State) ->
     Ref = erlang:send_after(?IDLE_GC_DELAY_MS, self(), run_broadcaster_gc),
     State#{broadcaster_gc_ref => Ref}.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-maybe_cast_to_valid_pid_test() ->
-    ?assertEqual(true, maybe_cast(self(), {test_msg, hello})),
-    receive
-        {'$gen_cast', {test_msg, hello}} -> ok
-    after 500 ->
-        ?assert(false)
-    end.
-
-maybe_cast_to_invalid_pid_test() ->
-    ?assertEqual(false, maybe_cast(undefined, {test_msg, hello})),
-    ?assertEqual(false, maybe_cast(not_a_pid, {test_msg, hello})).
-
-blocker_process(Parent) ->
-    receive
-        go -> ok
-    after 30000 -> ok
-    end,
-    Parent ! done.
-
-maybe_cast_sheds_when_mailbox_full_test() ->
-    Parent = self(),
-    Blocker = spawn(fun() -> blocker_process(Parent) end),
-    lists:foreach(
-        fun(I) -> Blocker ! {filler, I} end,
-        lists:seq(1, ?MAX_MAILBOX + 10)
-    ),
-    ?assertEqual(false, maybe_cast(Blocker, {should_be_shed})),
-    Blocker ! go,
-    receive
-        done -> ok
-    after 1000 -> ok
-    end.
-
-cast_event_delegates_to_maybe_cast_test() ->
-    ?assertEqual(true, cast_event(self(), message_create, {pre_encoded, <<"test">>}, [self()])),
-    receive
-        {'$gen_cast', {event_broadcast, message_create, {pre_encoded, <<"test">>}, [_]}} -> ok
-    after 500 ->
-        ?assert(false)
-    end.
-
-cast_event_returns_false_for_undefined_pid_test() ->
-    ?assertEqual(false, cast_event(undefined, message_create, {pre_encoded, <<"x">>}, [])).
-
-event_broadcast_handler_dispatches_test() ->
-    {ok, Broadcaster} = gen_server:start_link(
-        ?MODULE,
-        [42, self()],
-        [{spawn_opt, [{message_queue_data, off_heap}]}]
-    ),
-    Parent = self(),
-    Receiver = spawn(fun() -> event_receiver_loop(Parent) end),
-    EncodedPayload = {pre_encoded, <<"test_payload">>},
-    gen_server:cast(Broadcaster, {event_broadcast, typing_start, EncodedPayload, [Receiver]}),
-    receive
-        {received_dispatch, typing_start, {pre_encoded, <<"test_payload">>}} -> ok
-    after 2000 ->
-        ?assert(false)
-    end,
-    gen_server:stop(Broadcaster),
-    Receiver ! stop.
-
-event_broadcast_handler_survives_crash_test() ->
-    {ok, Broadcaster} = gen_server:start_link(
-        ?MODULE,
-        [99, self()],
-        [{spawn_opt, [{message_queue_data, off_heap}]}]
-    ),
-    BadPids = [not_a_pid],
-    gen_server:cast(Broadcaster, {event_broadcast, fake_event, {pre_encoded, <<>>}, BadPids}),
-    ok = gateway_retry_timer:wait(50),
-    ?assert(is_process_alive(Broadcaster)),
-    gen_server:stop(Broadcaster).
-
-event_receiver_loop(Parent) ->
-    receive
-        stop ->
-            ok;
-        {'$gen_cast', {dispatch, Event, Payload}} ->
-            Parent ! {received_dispatch, Event, Payload},
-            event_receiver_loop(Parent);
-        _Other ->
-            event_receiver_loop(Parent)
-    after 30000 ->
-        ok
-    end.
-
--endif.

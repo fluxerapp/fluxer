@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {ExpressionPickerPopout} from '@app/features/expressions/components/popouts/ExpressionPickerPopout';
 import {LexicalRichInput, type LexicalRichInputHandle} from '@app/features/lexical/composer/LexicalRichInput';
@@ -14,7 +15,7 @@ import surfaceStyles from '@app/features/ui/components/form/FormSurface.module.c
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import styles from '@app/features/user/components/modals/tabs/my_profile_tab/BioEditor.module.css';
-import {showUserErrorModal} from '@app/features/user/utils/UserErrorModalUtils';
+import {ABOUT_ME_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {SmileyIcon} from '@phosphor-icons/react';
@@ -23,7 +24,6 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useId, useRef, useState} from 'react';
 
-const ABOUT_ME_DESCRIPTOR = msg({message: 'About me'});
 const OPEN_EMOJI_PICKER_DESCRIPTOR = msg({message: 'Open emoji picker'});
 export const BIO_MARKDOWN_PARSER_FLAGS = getParserFlagsForContext(MarkdownContext.RESTRICTED_USER_BIO);
 const ABOUT_ME_IS_TOO_LONG_DESCRIPTOR = msg({
@@ -104,10 +104,11 @@ export const BioEditor = observer(
 			[onEmojiPickerOpenChange, onEmojiSelect],
 		);
 		const handleExceedMaxLength = useCallback(() => {
-			showUserErrorModal(
-				i18n._(ABOUT_ME_IS_TOO_LONG_DESCRIPTOR),
-				i18n._(SHORTEN_YOUR_ABOUT_ME_AND_TRY_AGAIN_DESCRIPTOR),
-			);
+			showGenericErrorModal({
+				title: i18n._(ABOUT_ME_IS_TOO_LONG_DESCRIPTOR),
+				message: i18n._(SHORTEN_YOUR_ABOUT_ME_AND_TRY_AGAIN_DESCRIPTOR),
+				dataFlx: 'user.user-error-modal-utils.show-user-error-modal.generic-error-modal',
+			});
 		}, [i18n]);
 		let resolvedPlaceholder = '';
 		if (placeholder != null) {

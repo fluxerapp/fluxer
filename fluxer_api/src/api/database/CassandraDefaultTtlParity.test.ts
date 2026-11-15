@@ -5,6 +5,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {DEFAULT_TTL_TABLES} from '@app/api/database/PostgresKvDefaultTtlExpiry';
 import * as DonationTables from '@app/api/donation/DonationTables';
+import * as OperatorPassTables from '@app/api/operator_pass/OperatorPassTables';
 import * as Tables from '@app/api/Tables';
 import {describe, expect, it} from 'vitest';
 
@@ -27,7 +28,7 @@ const SCHEMA_DEFAULTS = new Map<string, number>(
 	}),
 );
 
-const DSL_TABLES = [...Object.values(Tables), ...Object.values(DonationTables)];
+const DSL_TABLES = [...Object.values(Tables), ...Object.values(DonationTables), ...Object.values(OperatorPassTables)];
 const DSL_NAMES = new Set<string>(DSL_TABLES.map((table) => table.name));
 
 const NON_DSL_DEFAULTS: Record<string, number | null> = {

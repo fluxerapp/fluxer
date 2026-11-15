@@ -4,19 +4,45 @@
 -typing([eqwalizer]).
 
 -export([
-    max_positive/1,
+    find_shard_by_ref/2,
+    find_shard_by_pid/2,
     safe_gen_call/3,
     safe_gen_call_detailed/3,
     safe_gen_call_remote/3,
     safe_gen_call_wrapped/3,
     safe_apply/2,
     safe_cast/2,
-    check_mailbox_pressure/1
+    check_mailbox_pressure/1,
+    normalize_start_link/1
 ]).
 
--spec max_positive(list()) -> pos_integer().
-max_positive(Candidates) ->
-    lists:max([C || C <- Candidates, is_integer(C), C > 0] ++ [1]).
+-export_type([shard/0]).
+
+-type shard() :: #{pid := pid(), ref := reference()}.
+
+-spec find_shard_by_ref(reference(), #{non_neg_integer() => shard()}) ->
+    {ok, non_neg_integer()} | not_found.
+find_shard_by_ref(Ref, Shards) ->
+    maps:fold(
+        fun
+            (Index, #{ref := R}, _) when R =:= Ref -> {ok, Index};
+            (_, _, Acc) -> Acc
+        end,
+        not_found,
+        Shards
+    ).
+
+-spec find_shard_by_pid(pid(), #{non_neg_integer() => shard()}) ->
+    {ok, non_neg_integer()} | not_found.
+find_shard_by_pid(Pid, Shards) ->
+    maps:fold(
+        fun
+            (Index, #{pid := P}, _) when P =:= Pid -> {ok, Index};
+            (_, _, Acc) -> Acc
+        end,
+        not_found,
+        Shards
+    ).
 
 -spec safe_gen_call(pid() | atom(), term(), pos_integer()) -> term().
 safe_gen_call(Pid, Request, Timeout) ->
@@ -103,81 +129,10 @@ check_pid_mailbox_pressure(Pid) ->
         _ -> ok
     end.
 
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-max_positive_normal_test() ->
-    ?assertEqual(8, max_positive([4, 8, 2])).
-
-max_positive_fallback_test() ->
-    ?assertEqual(1, max_positive([])).
-
-max_positive_non_integers_test() ->
-    ?assertEqual(1, max_positive([undefined, foo, -1, 0])).
-
-max_positive_mixed_test() ->
-    ?assertEqual(4, max_positive([undefined, 4, -1, 0])).
-
-safe_gen_call_noproc_test() ->
-    Pid = spawn(fun() -> ok end),
-    ok = gateway_retry_timer:wait(50),
-    ?assertEqual({error, unavailable}, safe_gen_call(Pid, ping, 100)).
-
-safe_apply_success_test() ->
-    ?assertEqual(42, safe_apply(fun() -> 42 end, 0)).
-
-safe_apply_throw_test() ->
-    ?assertEqual(fallback, safe_apply(fun() -> exit(boom) end, fallback)).
-
-safe_apply_error_test() ->
-    ?assertEqual(fallback, safe_apply(fun() -> error(boom) end, fallback)).
-
-safe_apply_exit_test() ->
-    ?assertEqual(fallback, safe_apply(fun() -> exit(boom) end, fallback)).
-
-safe_gen_call_detailed_noproc_test() ->
-    Pid = spawn(fun() -> ok end),
-    ok = gateway_retry_timer:wait(50),
-    ?assertEqual({error, unavailable}, safe_gen_call_detailed(Pid, ping, 100)).
-
-safe_gen_call_remote_noproc_test() ->
-    Pid = spawn(fun() -> ok end),
-    ok = gateway_retry_timer:wait(50),
-    ?assertEqual({error, unavailable}, safe_gen_call_remote(Pid, ping, 100)).
-
-safe_gen_call_wrapped_noproc_test() ->
-    Pid = spawn(fun() -> ok end),
-    ok = gateway_retry_timer:wait(50),
-    ?assertMatch({exit, _}, safe_gen_call_wrapped(Pid, ping, 100)).
-
-check_mailbox_pressure_ok_test() ->
-    ?assertEqual(ok, check_mailbox_pressure(self())).
-
-check_mailbox_pressure_dead_pid_test() ->
-    Pid = spawn(fun() -> ok end),
-    ok = gateway_retry_timer:wait(50),
-    ?assertEqual(ok, check_mailbox_pressure(Pid)).
-
-check_mailbox_pressure_unregistered_name_test() ->
-    ?assertEqual(ok, check_mailbox_pressure(nonexistent_name_xyz_test)).
-
-check_mailbox_pressure_remote_tuple_test() ->
-    ?assertEqual(ok, check_mailbox_pressure({some_name, 'nonode@nohost'})).
-
-safe_cast_ok_test() ->
-    Pid = spawn(fun safe_cast_test_loop/0),
-    ?assertEqual(ok, safe_cast(Pid, hello)),
-    Pid ! stop.
-
-safe_cast_test_loop() ->
-    receive
-        stop -> ok
-    after 5000 -> ok
-    end.
-
-safe_cast_dead_pid_test() ->
-    Pid = spawn(fun() -> ok end),
-    ok = gateway_retry_timer:wait(50),
-    ?assertEqual(ok, safe_cast(Pid, hello)).
-
--endif.
+-spec normalize_start_link(gen_server:start_ret()) -> {ok, pid()} | {error, term()}.
+normalize_start_link({ok, Pid}) ->
+    {ok, Pid};
+normalize_start_link({error, Reason}) ->
+    {error, Reason};
+normalize_start_link(ignore) ->
+    {error, ignore}.

@@ -32,12 +32,6 @@
 	max-width: 100%;
 }
 
-.guildLayoutContentMobile {
-	composes: guildLayoutContent;
-	grid-template-columns: minmax(0, 1fr);
-	background-color: var(--background-tertiary);
-}
-
 .guildLayoutContentFullscreen {
 	grid-template-columns: minmax(0, 1fr);
 	background-color: #000;
@@ -67,8 +61,8 @@
 	display: none;
 	position: absolute;
 	top: 0;
-	right: 0;
-	left: 0;
+	inset-inline-end: 0;
+	inset-inline-start: 0;
 	height: var(--layout-header-height);
 	z-index: 2;
 }
@@ -142,53 +136,7 @@
 
 .nagbarActionsDesktop {
 	composes: nagbarActions;
-	margin-left: var(--spacing-3);
-}
-
-.nagbarButton {
-	border-radius: var(--radius-md);
-	border: 0.0625rem solid white;
-	background-color: transparent;
-	padding: var(--spacing-1) var(--spacing-3);
-	color: white;
-	font-size: 0.75rem;
-	font-weight: 400;
-	line-height: 1rem;
-	transition: background-color var(--transition-fast);
-	cursor: pointer;
-}
-
-:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-	.nagbarButton:hover {
-	background-color: rgba(255, 255, 255, 0.1);
-}
-
-.nagbarButtonPrimary {
-	composes: nagbarButton;
-	background-color: white;
-	font-weight: 600;
-}
-
-.nagbarButtonPrimaryOrange {
-	composes: nagbarButtonPrimary;
-	color: rgb(234, 88, 12);
-	cursor: pointer;
-}
-
-:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-	.nagbarButtonPrimaryOrange:hover {
-	background-color: rgba(255, 255, 255, 0.9);
-}
-
-.nagbarButtonPrimaryRed {
-	composes: nagbarButtonPrimary;
-	color: var(--status-danger);
-	cursor: pointer;
-}
-
-:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-	.nagbarButtonPrimaryRed:hover {
-	background-color: rgba(255, 255, 255, 0.9);
+	margin-inline-start: var(--spacing-3);
 }
 .mobileNavbarSlot {
 	display: contents;

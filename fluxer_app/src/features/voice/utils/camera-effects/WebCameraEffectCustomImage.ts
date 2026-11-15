@@ -10,14 +10,9 @@ import {createWebCameraEffectImageFrameSource} from '@app/features/voice/utils/c
 
 export type {
 	WebCameraEffectCustomFrame,
-	WebCameraEffectCustomFrameImage,
-	WebCameraEffectCustomFrameLease,
 	WebCameraEffectCustomFrameSource,
 } from '@app/features/voice/utils/camera-effects/WebCameraEffectCustomFrameSource';
-export {
-	createWebCameraEffectVideoFrameSource,
-	WebCameraEffectCustomFrameSourceKind,
-} from '@app/features/voice/utils/camera-effects/WebCameraEffectCustomFrameSource';
+export {createWebCameraEffectVideoFrameSource} from '@app/features/voice/utils/camera-effects/WebCameraEffectCustomFrameSource';
 
 const MAX_CUSTOM_MEDIA_BYTES = 10 * 1024 * 1024;
 const MAX_CUSTOM_MEDIA_URL_LENGTH = 16 * 1024;
@@ -32,7 +27,7 @@ export function requireWebCameraEffectCustomMediaURL(URL: string): void {
 	}
 }
 
-function throwIfCustomMediaOperationAborted(signal: AbortSignal): void {
+export function throwIfAborted(signal: AbortSignal): void {
 	if (signal.aborted) {
 		throw signal.reason ?? new Error('Custom camera background operation was aborted');
 	}
@@ -40,7 +35,7 @@ function throwIfCustomMediaOperationAborted(signal: AbortSignal): void {
 
 export async function readWebCameraEffectCustomMediaBlob(URL: string, signal: AbortSignal): Promise<Blob> {
 	requireWebCameraEffectCustomMediaURL(URL);
-	throwIfCustomMediaOperationAborted(signal);
+	throwIfAborted(signal);
 	let response: Response;
 	try {
 		response = await fetch(URL, {
@@ -66,18 +61,18 @@ export async function readWebCameraEffectCustomMediaBlob(URL: string, signal: Ab
 		maximumChunks: MAX_CUSTOM_MEDIA_RESPONSE_CHUNKS,
 		description: 'Custom camera background response',
 	});
-	throwIfCustomMediaOperationAborted(signal);
+	throwIfAborted(signal);
 	if (blob.size === 0) {
 		throw new Error('Custom camera background response is empty');
 	}
 	return blob;
 }
 
-function normalizedMediaType(value: string): string {
+export function normalizedMediaType(value: string): string {
 	return value.split(';', 1)[0]?.trim().toLowerCase() ?? '';
 }
 
-function bytesEqualAt(bytes: Uint8Array, offset: number, expected: ReadonlyArray<number>): boolean {
+export function bytesEqualAt(bytes: Uint8Array, offset: number, expected: ReadonlyArray<number>): boolean {
 	if (bytes.byteLength < offset + expected.length) return false;
 	for (let index = 0; index < expected.length; index += 1) {
 		if (bytes[offset + index] !== expected[index]) return false;
@@ -96,9 +91,9 @@ function sniffImageMediaType(bytes: Uint8Array): string | null {
 	return null;
 }
 
-export async function resolveWebCameraEffectCustomImageMediaType(blob: Blob, signal: AbortSignal): Promise<string> {
+async function resolveWebCameraEffectCustomImageMediaType(blob: Blob, signal: AbortSignal): Promise<string> {
 	const header = new Uint8Array(await blob.slice(0, 12).arrayBuffer());
-	throwIfCustomMediaOperationAborted(signal);
+	throwIfAborted(signal);
 	const detectedMediaType = sniffImageMediaType(header);
 	if (detectedMediaType == null) {
 		throw new Error('Custom camera background is not a supported image format');

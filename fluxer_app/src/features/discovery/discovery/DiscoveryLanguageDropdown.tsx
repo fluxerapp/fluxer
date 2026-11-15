@@ -13,7 +13,7 @@ import {useCallback, useMemo} from 'react';
 
 const ALL_LANGUAGES_DESCRIPTOR = msg({
 	message: 'All languages',
-	comment: 'Option in the discovery language filter that clears the filter. Keep it concise.',
+	comment: 'Option in the Explore language filter that clears the filter. Keep it concise.',
 });
 
 interface Props {

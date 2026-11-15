@@ -78,7 +78,7 @@ export abstract class Queue<TMessage, TResult = void> {
 			}
 			hasCompleted = true;
 			this.isDraining = false;
-			this.logger.info(
+			this.logger.debug(
 				`Finished processing queued item; ${this.queue.length} ${this.queue.length === 1 ? 'item' : 'items'} remaining in queue`,
 			);
 			if (retry === null) {
@@ -91,7 +91,7 @@ export abstract class Queue<TMessage, TResult = void> {
 				return;
 			}
 			const delay = retry.retryAfter ?? this.defaultRetryAfter;
-			this.logger.info(
+			this.logger.debug(
 				`Pausing queue processing for ${delay}ms due to retry request; ${this.queue.length} ${this.queue.length === 1 ? 'item' : 'items'} waiting`,
 			);
 			this.retryTimerId = window.setTimeout(() => {
@@ -100,7 +100,7 @@ export abstract class Queue<TMessage, TResult = void> {
 				this.maybeProcessNext();
 			}, delay);
 		};
-		this.logger.info(
+		this.logger.debug(
 			`Processing queued item; ${this.queue.length} ${this.queue.length === 1 ? 'item' : 'items'} left after dequeue`,
 		);
 		try {

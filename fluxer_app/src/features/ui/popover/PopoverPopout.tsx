@@ -39,7 +39,6 @@ interface PopoutProps {
 	uniqueId?: string | number;
 	tooltip?: string | (() => React.ReactNode);
 	tooltipPosition?: TooltipPosition;
-	tooltipAlign?: 'center' | 'top' | 'bottom' | 'left' | 'right';
 	tooltipDelay?: number;
 	tooltipNudge?: number;
 	zIndexBoost?: number;
@@ -47,6 +46,7 @@ interface PopoutProps {
 	freezePosition?: boolean;
 	offsetMainAxis?: number;
 	offsetCrossAxis?: number;
+	ignoreTitlebarBoundary?: boolean;
 	animationType?: PopoutAnimationType;
 	constrainHeight?: boolean;
 	containerClass?: string;
@@ -54,11 +54,11 @@ interface PopoutProps {
 	hoverDelay?: number;
 	hoverCloseDelay?: number;
 	subscribeTo?: ComponentActionType;
+	subscribeFilter?: (args: unknown) => boolean;
 	onOpen?: () => void;
 	onClose?: () => void;
 	onCloseRequest?: (event?: Event) => boolean;
 	returnFocusRef?: React.RefObject<HTMLElement | null>;
-	closeOnChildrenUnmount?: boolean;
 	disableBackdrop?: boolean;
 	keepOpenOnTargetUnmount?: boolean;
 	shouldOpenOnClick?: (event: React.MouseEvent<HTMLElement>) => boolean;
@@ -84,6 +84,7 @@ export const openPopout = (target: HTMLElement, props: OpenPopoutOptions, key: s
 		shouldAutoUpdate: props.shouldAutoUpdate,
 		offsetMainAxis: props.offsetMainAxis,
 		offsetCrossAxis: props.offsetCrossAxis,
+		ignoreTitlebarBoundary: props.ignoreTitlebarBoundary,
 		animationType: props.animationType,
 		constrainHeight: props.constrainHeight,
 		clickPos,
@@ -309,7 +310,7 @@ export const Popout = React.forwardRef<HTMLElement, PopoutProps>((props, ref) =>
 	);
 	const toggle = useCallback(
 		(clickPos?: number) => {
-			if (PopoutState.isOpen(state.id)) {
+			if (PopoutState.isOpen(state.id) && !PopoutState.isClosing(state.id)) {
 				if (props.hoverDelay != null && openModeRef.current === 'hover') {
 					clearTimers();
 					open(clickPos, 'click');
@@ -368,12 +369,15 @@ export const Popout = React.forwardRef<HTMLElement, PopoutProps>((props, ref) =>
 	}, [props.hoverDelay, clearTimers, close]);
 	useEffect(() => {
 		if (!props.subscribeTo) return;
-		const handler = () => toggle();
+		const filter = props.subscribeFilter;
+		const handler = (args: unknown) => {
+			if (filter && !filter(args)) return;
+			toggle();
+		};
 		ComponentBus.subscribe(props.subscribeTo, handler);
 		return () => ComponentBus.unsubscribe(props.subscribeTo!, handler);
-	}, [props.subscribeTo, toggle]);
-	const childToRender =
-		(props.children as React.ReactNode) || (!props.closeOnChildrenUnmount ? state.lastValidChildren : null);
+	}, [props.subscribeTo, props.subscribeFilter, toggle]);
+	const childToRender = (props.children as React.ReactNode) || state.lastValidChildren;
 	type PopoutChildProps = React.HTMLAttributes<HTMLElement> & {ref?: React.Ref<HTMLElement>};
 	const child =
 		childToRender && React.isValidElement<PopoutChildProps>(childToRender) ? React.Children.only(childToRender) : null;
@@ -513,7 +517,6 @@ export const Popout = React.forwardRef<HTMLElement, PopoutProps>((props, ref) =>
 		<Tooltip
 			text={props.tooltip}
 			position={props.tooltipPosition}
-			align={props.tooltipAlign}
 			delay={props.tooltipDelay}
 			nudge={props.tooltipNudge}
 			data-flx="ui.popover.popout.tooltip"

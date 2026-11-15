@@ -32,7 +32,7 @@ pub fn is_supported() -> bool {
         let rc = f::fido_dev_info_manifest(infos, MANIFEST_COUNT, &mut found);
         let mut local = infos;
         f::fido_dev_info_free(&mut local, MANIFEST_COUNT);
-        rc == f::FIDO_OK as c_int && found > 0
+        rc == f::FIDO_OK as c_int
     }
 }
 
@@ -108,13 +108,14 @@ pub fn support_diagnostics() -> String {
     }
 }
 
-fn uv_opt(requirement: u32, pin: Option<&CString>) -> f::fido_opt_t {
+fn uv_opt(requirement: u32, pin: Option<&CString>, built_in_uv_needed: bool) -> f::fido_opt_t {
     if pin.is_some() {
         return f::fido_opt_t_FIDO_OPT_OMIT;
     }
-    match requirement {
-        USER_VERIFICATION_REQUIRED => f::fido_opt_t_FIDO_OPT_TRUE,
-        _ => f::fido_opt_t_FIDO_OPT_OMIT,
+    if requirement == USER_VERIFICATION_REQUIRED || built_in_uv_needed {
+        f::fido_opt_t_FIDO_OPT_TRUE
+    } else {
+        f::fido_opt_t_FIDO_OPT_OMIT
     }
 }
 
@@ -137,6 +138,38 @@ fn dev_has_pin(dev: *mut f::fido_dev_t) -> bool {
 
 fn dev_has_uv(dev: *mut f::fido_dev_t) -> bool {
     unsafe { f::fido_dev_has_uv(dev) }
+}
+
+fn dev_supports_rk(dev: *mut f::fido_dev_t) -> bool {
+    unsafe {
+        let mut info = f::fido_cbor_info_new();
+        if info.is_null() {
+            return false;
+        }
+        let mut supported = false;
+        if f::fido_dev_get_cbor_info(dev, info) == f::FIDO_OK as c_int {
+            let len = f::fido_cbor_info_options_len(info);
+            let names = f::fido_cbor_info_options_name_ptr(info);
+            let values = f::fido_cbor_info_options_value_ptr(info);
+            if len > 0 && !names.is_null() && !values.is_null() {
+                let names = std::slice::from_raw_parts(names, len);
+                let values = std::slice::from_raw_parts(values, len);
+                supported = names
+                    .iter()
+                    .zip(values)
+                    .any(|(name, value)| *value && c_string(*name).as_deref() == Some("rk"));
+            }
+        }
+        f::fido_cbor_info_free(&mut info);
+        supported
+    }
+}
+
+fn wants_resident_key(input: &CreateInput, dev: *mut f::fido_dev_t) -> bool {
+    input.require_resident_key
+        || (input.prefer_resident_key
+            && dev_supports_rk(dev)
+            && (dev_has_pin(dev) || dev_has_uv(dev)))
 }
 
 fn pin_retry_count(dev: *mut f::fido_dev_t) -> Option<c_int> {
@@ -191,6 +224,12 @@ fn ceremony_failure(prefix: &str, dev: &DevGuard, operation: &str, rc: c_int) ->
         return ceremony_error(
             prefix,
             "NotAllowed (the request was denied on the security key)",
+        );
+    }
+    if rc == f::FIDO_ERR_NO_CREDENTIALS as c_int {
+        return ceremony_error(
+            prefix,
+            "NotAllowed (the security key has no passkey for this site)",
         );
     }
     if rc == f::FIDO_ERR_UNSUPPORTED_OPTION as c_int {
@@ -375,14 +414,22 @@ pub fn make_credential(input: &mut CreateInput) -> Result<CreateResult> {
             ),
             CREATE_PREFIX,
         )?;
-        if input.require_resident_key {
+        let resident_key = wants_resident_key(input, dev.0);
+        if resident_key {
             check(
                 f::fido_cred_set_rk(cred, f::fido_opt_t_FIDO_OPT_TRUE),
                 CREATE_PREFIX,
             )?;
         }
         check(
-            f::fido_cred_set_uv(cred, uv_opt(input.user_verification, pin.as_ref())),
+            f::fido_cred_set_uv(
+                cred,
+                uv_opt(
+                    input.user_verification,
+                    pin.as_ref(),
+                    resident_key && dev_has_uv(dev.0),
+                ),
+            ),
             CREATE_PREFIX,
         )?;
         for credential in &input.exclude_credentials {
@@ -392,7 +439,15 @@ pub fn make_credential(input: &mut CreateInput) -> Result<CreateResult> {
             )?;
         }
 
-        let rc = f::fido_dev_make_cred(dev.0, cred, pin_ptr(pin.as_ref()));
+        let mut rc = f::fido_dev_make_cred(dev.0, cred, pin_ptr(pin.as_ref()));
+        if rc == f::FIDO_ERR_KEY_STORE_FULL as c_int && resident_key && !input.require_resident_key
+        {
+            check(
+                f::fido_cred_set_rk(cred, f::fido_opt_t_FIDO_OPT_OMIT),
+                CREATE_PREFIX,
+            )?;
+            rc = f::fido_dev_make_cred(dev.0, cred, pin_ptr(pin.as_ref()));
+        }
         if rc != f::FIDO_OK as c_int {
             let _ = f::fido_dev_cancel(dev.0);
             return Err(ceremony_failure(
@@ -483,7 +538,10 @@ pub fn get_assertion(input: &mut GetInput) -> Result<GetResult> {
             GET_PREFIX,
         )?;
         check(
-            f::fido_assert_set_uv(assertion, uv_opt(input.user_verification, pin.as_ref())),
+            f::fido_assert_set_uv(
+                assertion,
+                uv_opt(input.user_verification, pin.as_ref(), false),
+            ),
             GET_PREFIX,
         )?;
         for credential in &input.allow_credentials {

@@ -21,7 +21,7 @@ import type {
 	VoiceEngineV2OperationId,
 } from '@fluxer/voice_engine_v2/src/protocol/types';
 
-type VoiceEngineV2GatewayEvent = Extract<VoiceEngineV2Event, {type: `gateway.${string}` | 'livekit.roomStateChanged'}>;
+type VoiceEngineV2GatewayEvent = Extract<VoiceEngineV2Event, {type: `gateway.${string}`}>;
 
 export function transitionGateway(
 	snapshot: VoiceEngineV2Snapshot,
@@ -30,10 +30,7 @@ export function transitionGateway(
 	assert.ok(snapshot != null, 'transitionGateway snapshot must not be null');
 	assert.ok(event != null, 'transitionGateway event must not be null');
 	assert.equal(typeof event.type, 'string', 'gateway event type must be a string');
-	assert.ok(
-		event.type.startsWith('gateway.') || event.type === 'livekit.roomStateChanged',
-		'gateway reducer received unrelated event',
-	);
+	assert.ok(event.type.startsWith('gateway.'), 'gateway reducer received unrelated event');
 	switch (event.type) {
 		case 'gateway.desiredVoiceStateChanged':
 			return onDesiredVoiceStateChanged(snapshot, event.desired);
@@ -53,19 +50,6 @@ export function transitionGateway(
 			return onClearFailed(snapshot, event.operationId, event.error);
 		case 'gateway.voiceStateUpdated':
 			return onVoiceStateUpdated(snapshot, event.voiceState);
-		case 'gateway.voiceServerUpdated':
-			return {
-				snapshot: {...snapshot, gateway: {...snapshot.gateway, voiceServer: event.voiceServer}},
-				commands: [],
-			};
-		case 'livekit.roomStateChanged':
-			return {
-				snapshot: {
-					...snapshot,
-					liveKit: {...snapshot.liveKit, ...event.room, failure: null},
-				},
-				commands: [],
-			};
 	}
 }
 
@@ -226,9 +210,10 @@ export function shouldApplyGatewayVoiceStateEcho(
 ): boolean {
 	assert.ok(snapshot != null, 'shouldApplyGatewayVoiceStateEcho snapshot must not be null');
 	assert.ok(echo != null, 'shouldApplyGatewayVoiceStateEcho echo must not be null');
-	const pending = snapshot.gateway.desiredVoiceStateWrite;
-	if (pending == null) return true;
-	return gatewayVoiceStateWriteMatchesReported(pending, echo);
+	if (snapshot.gateway.desiredVoiceStateWrite == null) return true;
+	const desired = deriveVoiceEngineV2DesiredGatewayVoiceState(snapshot);
+	if (desired == null) return false;
+	return gatewayVoiceStateWriteMatchesReported(desired, echo);
 }
 
 export function gatewayVoiceStateWriteMatchesReported(

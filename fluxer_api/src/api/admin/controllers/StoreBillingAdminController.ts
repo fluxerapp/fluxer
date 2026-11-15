@@ -2,26 +2,18 @@
 
 import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
 import {recordAdminRead, recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
-import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {createUserID} from '@app/api/BrandedTypes';
 import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
+import {HostedOnlyRoute} from '@app/api/middleware/BillingRouteAvailability';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
-import {HostedOnlyRoute} from '@app/api/store_billing/StoreBillingController';
 import {mapStorePurchaseToAdminResponse} from '@app/api/store_billing/StoreBillingMappers';
-import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
+import type {HonoApp} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
-import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import {AdminStorePurchaseListResponse} from '@fluxer/schema/src/domains/admin/AdminStoreBillingSchemas';
 import {UserIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
-import type {Context} from 'hono';
-
-async function requireUser(ctx: Context<HonoEnv>, userId: UserID): Promise<void> {
-	if (!(await ctx.get('userRepository').findUnique(userId))) {
-		throw new UnknownUserError();
-	}
-}
 
 export function StoreBillingAdminController(app: HonoApp) {
 	app.get(
@@ -42,7 +34,7 @@ export function StoreBillingAdminController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const userId = createUserID(ctx.req.valid('param').user_id);
-			await requireUser(ctx, userId);
+			await ctx.get('userRepository').findUniqueAssert(userId);
 			const rows = await ctx.get('storeEntitlementService').listStorePurchases(userId);
 			await recordAdminRead(ctx, {
 				targetType: 'user',
@@ -71,7 +63,7 @@ export function StoreBillingAdminController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const userId = createUserID(ctx.req.valid('param').user_id);
-			await requireUser(ctx, userId);
+			await ctx.get('userRepository').findUniqueAssert(userId);
 			const storeEntitlementService = ctx.get('storeEntitlementService');
 			const rows = await storeEntitlementService.listStorePurchases(userId);
 			for (const row of rows) {

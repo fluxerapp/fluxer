@@ -15,6 +15,7 @@ import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import {Button} from '@app/features/ui/button/Button';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import styles from '@app/features/user/components/modals/tabs/EmbedDebuggerTab.module.css';
+import {UNFURL_DESCRIPTOR, URL_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import * as FormUtils from '@app/lib/forms';
 import {ChannelTypes, MessagePreviewContext, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {
@@ -31,14 +32,6 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useMemo, useState} from 'react';
 
-const URL_DESCRIPTOR = msg({
-	message: 'URL',
-	comment: 'Short label for the URL input in the embed debugger.',
-});
-const UNFURL_DESCRIPTOR = msg({
-	message: 'Unfurl',
-	comment: 'Button label in the embed debugger.',
-});
 const EMBED_DEBUGGER_FORM_DESCRIPTOR = msg({
 	message: 'Embed debugger form',
 	comment: 'Accessible label for the embed debugger URL form.',

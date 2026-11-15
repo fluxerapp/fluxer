@@ -6,18 +6,9 @@ import MobileLayout from '@app/features/ui/state/MobileLayout';
 
 const logger = new Logger('Layout');
 
-interface MobileLayoutStatePatch {
-	navExpanded: boolean;
-	chatExpanded: boolean;
-}
-
-function writeMobileLayoutState(patch: MobileLayoutStatePatch): void {
-	MobileLayout.updateState(patch);
-}
-
 export function updateMobileLayoutState(navExpanded: boolean, chatExpanded: boolean): void {
 	logger.debug(`Updating mobile layout state: nav=${navExpanded}, chat=${chatExpanded}`);
-	writeMobileLayoutState({navExpanded, chatExpanded});
+	MobileLayout.updateState({navExpanded, chatExpanded});
 }
 
 export function toggleMembers(_isOpen: boolean): void {

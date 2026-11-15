@@ -3,16 +3,26 @@
 import type {ChannelID, UserID} from '@app/api/BrandedTypes';
 import {userIdToChannelId} from '@app/api/BrandedTypes';
 import type {ChannelRow} from '@app/api/database/types/ChannelTypes';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {Channel} from '@app/api/models/Channel';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {PersonalNotesDisabledError} from '@fluxer/errors/src/domains/channel/PersonalNotesDisabledError';
 
 interface PersonalNotesChannelRepository {
 	findUnique(channelId: ChannelID): Promise<Channel | null>;
-	upsert(data: ChannelRow): Promise<Channel>;
+	create(data: ChannelRow): Promise<Channel>;
 }
 
 export function isPersonalNotesChannelId({userId, channelId}: {userId: UserID; channelId: ChannelID}): boolean {
 	return userIdToChannelId(userId) === channelId;
+}
+
+export async function personalNotesEnabled(): Promise<boolean> {
+	return (await getInstanceConfigRepository().getInstancePolicyConfig()).personal_notes_enabled;
+}
+
+export async function assertPersonalNotesEnabled(): Promise<void> {
+	if (!(await personalNotesEnabled())) throw new PersonalNotesDisabledError();
 }
 
 function buildPersonalNotesChannelRow(userId: UserID): ChannelRow {
@@ -36,6 +46,7 @@ function buildPersonalNotesChannelRow(userId: UserID): ChannelRow {
 		user_limit: null,
 		voice_connection_limit: null,
 		rtc_region: null,
+		rtc_p2p: null,
 		last_message_id: null,
 		last_pin_timestamp: null,
 		permission_overwrites: null,
@@ -58,5 +69,5 @@ export async function ensurePersonalNotesChannelExists({
 	if (existingChannel) {
 		return existingChannel;
 	}
-	return channelRepository.upsert(buildPersonalNotesChannelRow(userId));
+	return channelRepository.create(buildPersonalNotesChannelRow(userId));
 }

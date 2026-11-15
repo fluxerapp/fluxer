@@ -10,6 +10,7 @@ record the license statement from the upstream package README.
 
 | Directory | License |
 | --- | --- |
+| `dictionary-be@1.0.0` | CC-BY-SA-3.0 |
 | `dictionary-bg@2.0.0` | GPL-2.0 OR LGPL-2.1 OR MPL-1.1 |
 | `dictionary-ca@3.0.0` | GPL-2.0 OR LGPL-2.1 |
 | `dictionary-cs@4.0.0` | GPL-2.0 |
@@ -37,6 +38,7 @@ record the license statement from the upstream package README.
 | `dictionary-nb@3.0.0` | GPL-2.0 |
 | `dictionary-nl@2.0.0` | BSD-3-Clause OR CC-BY-3.0 |
 | `dictionary-pl@2.0.0` | GPL-3.0 OR LGPL-3.0 OR MPL-2.0 |
+| `dictionary-pt-pt@2.0.0` | GPL-2.0 OR LGPL-2.1 OR MPL-1.1 |
 | `dictionary-pt@4.0.0` | LGPL-3.0 OR MPL-2.0 |
 | `dictionary-ro@3.0.0` | GPL-2.0 OR LGPL-2.1 OR MPL-1.1 |
 | `dictionary-ru@3.0.0` | BSD-3-Clause |

@@ -228,7 +228,7 @@ describe('Channel follow permissions and content rules', () => {
 		await follow(harness, b.owner.token, a.ann.id, b.ageRestricted.id);
 	});
 
-	test('an age-restricted source requires an age-verified caller', async () => {
+	test('an age-restricted source requires an adult caller', async () => {
 		const {a, b} = world;
 		const restrictedSource = await createAnnouncement(a.owner, a.guild.id, {nsfw_override: true});
 		const minor = await createTestAccount(harness, {dateOfBirth: '2011-06-15'});

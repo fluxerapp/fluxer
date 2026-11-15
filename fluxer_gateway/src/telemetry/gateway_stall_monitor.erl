@@ -88,7 +88,8 @@ handle_cast(_Msg, State) ->
 handle_info({monitor, Who, Kind, Info}, State) when
     Kind =:= long_schedule; Kind =:= long_gc; Kind =:= busy_dist_port
 ->
-    {noreply, record(Kind, event_ms(Kind, Info), Who, compact_info(Kind, Info), State)};
+    Event = compact_info(Kind, Info),
+    {noreply, record(Kind, event_ms(Kind, Info), eqwalizer:dynamic_cast(Who), Event, State)};
 handle_info(tick, #{tick_due := Due} = State) ->
     Now = now_ms(),
     State1 = State#{tick_due := schedule_tick(Now)},
@@ -113,22 +114,24 @@ install() ->
         false ->
             disabled;
         true ->
-            case erlang:system_monitor() of
-                undefined ->
-                    _ = erlang:system_monitor(self(), [
-                        {long_schedule,
-                            threshold(
-                                stall_monitor_long_schedule_ms, ?DEFAULT_LONG_SCHEDULE_MS
-                            )},
-                        {long_gc, threshold(stall_monitor_long_gc_ms, ?DEFAULT_LONG_GC_MS)},
-                        busy_dist_port
-                    ]),
-                    installed;
-                {Pid, _} when Pid =:= self() ->
-                    installed;
-                _ ->
-                    not_owner
-            end
+            claim_system_monitor()
+    end.
+
+-spec claim_system_monitor() -> monitor_status().
+claim_system_monitor() ->
+    case erlang:system_monitor() of
+        undefined ->
+            _ = erlang:system_monitor(self(), [
+                {long_schedule,
+                    threshold(stall_monitor_long_schedule_ms, ?DEFAULT_LONG_SCHEDULE_MS)},
+                {long_gc, threshold(stall_monitor_long_gc_ms, ?DEFAULT_LONG_GC_MS)},
+                busy_dist_port
+            ]),
+            installed;
+        {Pid, _} when Pid =:= self() ->
+            installed;
+        _ ->
+            not_owner
     end.
 
 -spec release() -> ok.
@@ -143,7 +146,10 @@ release() ->
 
 -spec enabled() -> boolean().
 enabled() ->
-    application:get_env(fluxer_gateway, stall_monitor_enabled, true) =/= false.
+    case application:get_env(fluxer_gateway, stall_monitor_enabled, true) of
+        false -> false;
+        _ -> true
+    end.
 
 -spec threshold(atom(), pos_integer()) -> pos_integer().
 threshold(Key, Default) ->

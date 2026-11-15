@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {getCachedDateTimeFormat} from '@app/features/i18n/utils/IntlCache';
+import {createNamedLoadableComponent} from '@app/features/platform/components/loadable/LoadableComponent';
 import {PASSWORD_MANAGER_IGNORE_ATTRIBUTES} from '@app/features/platform/utils/PasswordManagerAutocomplete';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import styles from '@app/features/ui/components/form/DateTimePickerField.module.css';
 import surfaceStyles from '@app/features/ui/components/form/FormSurface.module.css';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {getDateFormatter} from '@fluxer/date_utils/src/DateFormatterCache';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {CalendarBlankIcon} from '@phosphor-icons/react';
@@ -13,7 +14,7 @@ import {clsx} from 'clsx';
 import type React from 'react';
 import {useCallback, useMemo, useState} from 'react';
 import {Button, Dialog, DialogTrigger, Popover} from 'react-aria-components';
-import {DayPicker} from 'react-day-picker';
+import type {DayPicker as DayPickerComponent} from 'react-day-picker';
 
 const SELECT_A_DATE_AND_TIME_DESCRIPTOR = msg({
 	message: 'Select a date and time',
@@ -36,6 +37,25 @@ const TIME_DESCRIPTOR = msg({
 	comment: 'Form field label for a time value.',
 });
 
+type DayPickerProps = React.ComponentProps<typeof DayPickerComponent>;
+
+function DayPickerLoading() {
+	return (
+		<div
+			className={styles.rdpRoot}
+			style={{width: 'calc(var(--rdp-day-size) * 7)', height: 'calc(var(--rdp-day-size) * 7 + 1.75rem)'}}
+			aria-hidden={true}
+			data-flx="ui.form.date-time-picker-field.day-picker-loading"
+		/>
+	);
+}
+
+const DayPicker = createNamedLoadableComponent<DayPickerProps>({
+	displayName: 'DayPicker',
+	LoadingComponent: DayPickerLoading,
+	load: async () => (await import('react-day-picker')).DayPicker,
+});
+
 interface DateTimePickerFieldProps {
 	label?: string;
 	description?: string;
@@ -52,7 +72,7 @@ function formatDisplayDate(locale: string, date: Date | null): string {
 	if (!date) {
 		return '';
 	}
-	return getCachedDateTimeFormat(locale, {dateStyle: 'medium', timeStyle: 'short'}).format(date);
+	return getDateFormatter(locale, {dateStyle: 'medium', timeStyle: 'short'}).format(date);
 }
 
 function toTimeString(date: Date): string {

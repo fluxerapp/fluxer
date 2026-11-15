@@ -21,7 +21,7 @@
 	gap: 0.5rem;
 	max-height: min(56vh, 32.5rem);
 	overflow-y: auto;
-	padding-right: 0.125rem;
+	padding-inline-end: 0.125rem;
 }
 
 .gridItem {

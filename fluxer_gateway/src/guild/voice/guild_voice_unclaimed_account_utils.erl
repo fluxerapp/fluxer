@@ -3,38 +3,42 @@
 -module(guild_voice_unclaimed_account_utils).
 -typing([eqwalizer]).
 
--export([parse_unclaimed_error/1]).
+-export([voice_account_error/1]).
+-export_type([voice_account_error/0]).
 
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
+-type voice_account_error() ::
+    voice_unclaimed_account | voice_account_verification_required | none.
 
--spec parse_unclaimed_error(iodata() | term()) -> boolean().
-parse_unclaimed_error(Body) when is_binary(Body) ->
-    decode_unclaimed_error(Body);
-parse_unclaimed_error(Body) when is_list(Body) ->
+-spec voice_account_error(iodata() | term()) -> voice_account_error().
+voice_account_error(Body) when is_binary(Body) ->
+    decode_voice_account_error(Body);
+voice_account_error(Body) when is_list(Body) ->
     case guild_voice_connection_normalize:normalize_optional_binary(Body) of
-        Binary when is_binary(Binary) -> decode_unclaimed_error(Binary);
-        undefined -> false
+        Binary when is_binary(Binary) -> decode_voice_account_error(Binary);
+        undefined -> none
     end;
-parse_unclaimed_error(_) ->
-    false.
+voice_account_error(_) ->
+    none.
 
--spec decode_unclaimed_error(binary()) -> boolean().
-decode_unclaimed_error(Body) ->
+-spec decode_voice_account_error(binary()) -> voice_account_error().
+decode_voice_account_error(Body) ->
     try json:decode(Body) of
-        Map when is_map(Map) -> has_unclaimed_error_code(Map);
-        _ -> false
+        Map when is_map(Map) -> classify_error_code(get_unclaimed_error_code(Map));
+        _ -> none
     catch
-        _:_ -> false
+        _:_ -> none
     end.
 
--spec has_unclaimed_error_code(map()) -> boolean().
-has_unclaimed_error_code(Map) ->
-    case get_unclaimed_error_code(Map) of
-        Code when is_binary(Code) -> is_voice_unclaimed_error_code(Code);
-        _ -> false
-    end.
+-spec classify_error_code(binary() | undefined) -> voice_account_error().
+classify_error_code(<<"ACCOUNT_VERIFICATION_REQUIRED">>) ->
+    voice_account_verification_required;
+classify_error_code(Code) when is_binary(Code) ->
+    case is_voice_unclaimed_error_code(Code) of
+        true -> voice_unclaimed_account;
+        false -> none
+    end;
+classify_error_code(_) ->
+    none.
 
 -spec get_unclaimed_error_code(map()) -> binary() | undefined.
 get_unclaimed_error_code(Map) when is_map(Map) ->
@@ -61,42 +65,3 @@ is_voice_unclaimed_error_code(Code) when is_binary(Code) ->
             <<"UNCLAIMED_ACCOUNT_CANNOT_JOIN_VOICE_CHANNELS">>
         ]
     ).
-
--ifdef(TEST).
-
-parse_unclaimed_error_with_direct_code_test() ->
-    Body = json:encode(#{<<"code">> => <<"UNCLAIMED_ACCOUNT_CANNOT_JOIN_VOICE_CHANNELS">>}),
-    ?assertEqual(true, parse_unclaimed_error(Body)).
-
-parse_unclaimed_error_with_nested_code_test() ->
-    Body = json:encode(#{
-        <<"error">> => #{
-            <<"code">> => <<"UNCLAIMED_ACCOUNT_CANNOT_JOIN_ONE_ON_ONE_VOICE_CALLS">>
-        }
-    }),
-    ?assertEqual(true, parse_unclaimed_error(Body)).
-
-parse_unclaimed_error_with_unknown_code_test() ->
-    Body = json:encode(#{<<"code">> => <<"SOME_OTHER_ERROR">>}),
-    ?assertEqual(false, parse_unclaimed_error(Body)).
-
-parse_unclaimed_error_with_invalid_json_test() ->
-    ?assertEqual(false, parse_unclaimed_error(<<"not json">>)).
-
-parse_unclaimed_error_with_non_binary_test() ->
-    ?assertEqual(false, parse_unclaimed_error(undefined)),
-    ?assertEqual(false, parse_unclaimed_error(123)).
-
-is_voice_unclaimed_error_code_test() ->
-    ?assertEqual(
-        true, is_voice_unclaimed_error_code(<<"UNCLAIMED_ACCOUNT_CANNOT_JOIN_VOICE_CHANNELS">>)
-    ),
-    ?assertEqual(
-        true,
-        is_voice_unclaimed_error_code(
-            <<"UNCLAIMED_ACCOUNT_CANNOT_JOIN_ONE_ON_ONE_VOICE_CALLS">>
-        )
-    ),
-    ?assertEqual(false, is_voice_unclaimed_error_code(<<"OTHER_ERROR">>)).
-
--endif.

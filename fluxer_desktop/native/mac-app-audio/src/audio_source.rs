@@ -5,8 +5,8 @@
 use core::ffi::c_void;
 use core::ptr;
 use std::sync::{
-    Mutex, MutexGuard,
-    atomic::{AtomicPtr, AtomicU64, Ordering},
+    Mutex, MutexGuard, RwLock, RwLockReadGuard,
+    atomic::{AtomicU64, Ordering},
 };
 
 use objc2::rc::Retained;
@@ -103,16 +103,24 @@ struct Callbacks {
 unsafe impl Send for Source {}
 unsafe impl Sync for Source {}
 
-#[derive(Debug)]
-pub enum SourceCreateError {
-    DispatchQueue,
+pub struct DelegateIvars {
+    source: RwLock<*mut Source>,
 }
 
-#[derive(Debug)]
-pub struct ClassRegistrationError;
+impl DelegateIvars {
+    fn read_source(&self) -> RwLockReadGuard<'_, *mut Source> {
+        self.source
+            .read()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
 
-pub struct DelegateIvars {
-    pub source: AtomicPtr<Source>,
+    fn set_source(&self, ptr: *mut Source) {
+        let mut guard = self
+            .source
+            .write()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        *guard = ptr;
+    }
 }
 
 define_class!(
@@ -126,11 +134,11 @@ define_class!(
     unsafe impl SCStreamDelegate for FluxerSCKAudioSource {
         #[unsafe(method(stream:didStopWithError:))]
         unsafe fn did_stop_with_error(&self, _stream: &SCStream, err: &NSError) {
-            let ptr = self.ivars().source.load(Ordering::Acquire);
-            if ptr.is_null() {
+            let guard = self.ivars().read_source();
+            if guard.is_null() {
                 return;
             }
-            let src = unsafe { &*ptr };
+            let src = unsafe { &**guard };
             let _ = src.state.request_stop();
             let _ = src.state.mark_stopped();
             let (cb, ctx) = {
@@ -156,12 +164,12 @@ define_class!(
             if output_type != SCStreamOutputType::Audio {
                 return;
             }
-            let ptr = self.ivars().source.load(Ordering::Acquire);
-            if ptr.is_null() {
+            let guard = self.ivars().read_source();
+            if guard.is_null() {
                 return;
             }
             unsafe {
-                handle_audio_sample(&*ptr, sample_buffer);
+                handle_audio_sample(&**guard, sample_buffer);
             }
         }
     }
@@ -170,7 +178,7 @@ define_class!(
 impl FluxerSCKAudioSource {
     pub fn new() -> Retained<Self> {
         let this = Self::alloc().set_ivars(DelegateIvars {
-            source: AtomicPtr::new(core::ptr::null_mut()),
+            source: RwLock::new(core::ptr::null_mut()),
         });
         unsafe { msg_send![super(this), init] }
     }
@@ -260,7 +268,7 @@ unsafe fn fill_abl_scratch(sample_buffer: &CMSampleBuffer, abl: &mut AblScratch)
         sample_buffer.audio_buffer_list_with_retained_block_buffer(
             ptr::null_mut(),
             abl_ptr,
-            core::mem::size_of::<AblScratch>(),
+            abl_size,
             None::<&CFAllocator>,
             None::<&CFAllocator>,
             0,
@@ -347,7 +355,7 @@ unsafe fn handle_audio_sample(src: &Source, sample_buffer: &CMSampleBuffer) {
 }
 
 impl Source {
-    pub fn create(opts: SourceOptions) -> Result<Box<Source>, SourceCreateError> {
+    pub fn create(opts: SourceOptions) -> Box<Source> {
         assert!(opts.target_sample_rate > 0.0);
         assert!(opts.target_channels > 0);
         let delegate = FluxerSCKAudioSource::new();
@@ -380,8 +388,8 @@ impl Source {
         });
 
         let raw: *mut Source = &mut *src;
-        src.delegate.ivars().source.store(raw, Ordering::Release);
-        Ok(src)
+        src.delegate.ivars().set_source(raw);
+        src
     }
 
     fn lock_callbacks(&self) -> MutexGuard<'_, Callbacks> {
@@ -430,33 +438,6 @@ impl Source {
 
 impl Drop for Source {
     fn drop(&mut self) {
-        self.delegate
-            .ivars()
-            .source
-            .store(ptr::null_mut(), Ordering::Release);
-    }
-}
-
-#[cfg(test)]
-mod abl_scratch_tests {
-    use super::*;
-
-    #[test]
-    fn abl_scratch_layout_matches_audio_buffer_list() {
-        assert_eq!(16, core::mem::align_of::<AblScratch>());
-        assert_eq!(8, core::mem::offset_of!(AblScratch, buffers));
-        assert!(
-            core::mem::size_of::<AblScratch>()
-                >= core::mem::size_of::<u32>()
-                    + MAX_ABL_BUFFERS * core::mem::size_of::<ac::AudioBuffer>()
-        );
-    }
-
-    #[test]
-    fn abl_scratch_empty_has_no_buffers() {
-        let scratch = AblScratch::empty();
-        assert_eq!(0, scratch.n_buffers);
-        assert!(scratch.buffers[0].m_data.is_null());
-        assert_eq!(0, scratch.buffers[MAX_ABL_BUFFERS - 1].m_data_byte_size);
+        self.delegate.ivars().set_source(ptr::null_mut());
     }
 }

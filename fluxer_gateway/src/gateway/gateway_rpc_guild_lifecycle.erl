@@ -5,15 +5,12 @@
 
 -export([handle/2]).
 
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
-
 -define(GUILD_CALL_TIMEOUT, 4000).
 -define(RELOAD_ALL_TIMEOUT, 15000).
 
 -spec handle(binary(), map()) -> term().
 handle(<<"guild.dispatch">>, P) -> handle_dispatch(P);
+handle(<<"guild.dispatch_many">>, P) -> handle_dispatch_many(P);
 handle(<<"guild.get_data">>, P) -> handle_get_data(P);
 handle(<<"guild.get_auth_context">>, P) -> handle_get_auth_context(P);
 handle(<<"guild.start">>, P) -> handle_start(P);
@@ -35,6 +32,25 @@ handle_dispatch(#{<<"guild_id">> := GuildIdBin, <<"event">> := Event, <<"data">>
         gen_server:cast(Pid, {dispatch, #{event => EventAtom, data => Data}}),
         true
     end).
+
+-spec handle_dispatch_many(map()) -> term().
+handle_dispatch_many(#{<<"guild_id">> := GuildIdBin, <<"events">> := Events}) when
+    is_list(Events)
+->
+    GuildId = validation:snowflake_or_throw(<<"guild_id">>, GuildIdBin),
+    Requests = [dispatch_request(Event) || Event <- Events],
+    gateway_rpc_guild_infra:with_guild_unchecked(GuildId, fun(Pid) ->
+        gen_server:cast(Pid, {dispatch_many, Requests}),
+        true
+    end);
+handle_dispatch_many(_Params) ->
+    gateway_rpc_error:raise(validation_invalid_params).
+
+-spec dispatch_request(term()) -> map().
+dispatch_request(#{<<"event">> := Event, <<"data">> := Data}) when is_binary(Event) ->
+    #{event => constants:dispatch_event_atom(Event), data => Data};
+dispatch_request(_Event) ->
+    gateway_rpc_error:raise(validation_invalid_params).
 
 -spec handle_get_data(map()) -> term().
 handle_get_data(#{<<"guild_id">> := GuildIdBin, <<"user_id">> := UserIdBin}) ->
@@ -97,10 +113,14 @@ read_guild(GuildId, Request) ->
         {ok, Reply} ->
             Reply;
         miss ->
-            gateway_rpc_guild_infra:with_guild(GuildId, fun(Pid) ->
-                guild_query_handler:call(Pid, Request, ?GUILD_CALL_TIMEOUT)
-            end)
+            call_guild(GuildId, Request)
     end.
+
+-spec call_guild(integer(), {atom(), map()}) -> term().
+call_guild(GuildId, Request) ->
+    gateway_rpc_guild_infra:with_guild(GuildId, fun(Pid) ->
+        guild_query_handler:call(Pid, Request, ?GUILD_CALL_TIMEOUT)
+    end).
 
 -spec handle_start(map()) -> true.
 handle_start(#{<<"guild_id">> := GuildIdBin}) ->
@@ -221,20 +241,3 @@ owner_guild_manager_ref(OwnerNode) when OwnerNode =:= node() ->
     guild_manager;
 owner_guild_manager_ref(OwnerNode) ->
     {guild_manager, OwnerNode}.
-
--ifdef(TEST).
-optional_user_id_preserves_null_for_skip_membership_check_test() ->
-    ?assertEqual(null, optional_user_id(null)).
-
-optional_user_id_accepts_snowflake_test() ->
-    ?assertEqual(123, optional_user_id(<<"123">>)).
-
-optional_channel_id_defaults_to_null_test() ->
-    ?assertEqual(null, optional_channel_id(null)).
-
-optional_channel_id_accepts_snowflake_test() ->
-    ?assertEqual(456, optional_channel_id(<<"456">>)).
-
-optional_channel_id_rejects_garbage_test() ->
-    ?assertError({gateway_rpc_error, _}, optional_channel_id(<<"nope">>)).
--endif.

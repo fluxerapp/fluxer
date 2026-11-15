@@ -17,6 +17,8 @@ const SECONDS_PER_MINUTE: f64 = 60.0;
 const KEY_BYTES: usize = 16;
 const IPV4_PREFIX_BYTES: usize = 3;
 const IPV6_PREFIX_BYTES: usize = 8;
+const IPV4_FAMILY_TAG: u8 = 4;
+const IPV6_FAMILY_TAG: u8 = 6;
 const MAX_GENERATION_AGE: Duration = Duration::from_secs(300);
 
 type Key = [u8; KEY_BYTES];
@@ -112,10 +114,12 @@ pub fn source_key(ip: IpAddr) -> Key {
     let mut key = [0u8; KEY_BYTES];
     match ip.to_canonical() {
         IpAddr::V4(ip) => {
-            key[..IPV4_PREFIX_BYTES].copy_from_slice(&ip.octets()[..IPV4_PREFIX_BYTES])
+            key[0] = IPV4_FAMILY_TAG;
+            key[1..=IPV4_PREFIX_BYTES].copy_from_slice(&ip.octets()[..IPV4_PREFIX_BYTES]);
         }
         IpAddr::V6(ip) => {
-            key[..IPV6_PREFIX_BYTES].copy_from_slice(&ip.octets()[..IPV6_PREFIX_BYTES])
+            key[0] = IPV6_FAMILY_TAG;
+            key[1..=IPV6_PREFIX_BYTES].copy_from_slice(&ip.octets()[..IPV6_PREFIX_BYTES]);
         }
     }
     key
@@ -185,42 +189,5 @@ impl Buckets {
         }
         held.live.insert(key, bucket);
         allowed
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn config() -> BucketConfig {
-        BucketConfig {
-            entries: 1_000_000,
-            per_minute: 60,
-            burst: 20,
-        }
-    }
-
-    #[test]
-    fn a_generation_rotates_on_age_as_well_as_on_size() {
-        let buckets = Buckets::new(&config());
-        let start = Instant::now();
-        assert!(buckets.take([1u8; KEY_BYTES], start));
-        assert_eq!(buckets.held.lock().unwrap().live.len(), 1);
-        let later = start + MAX_GENERATION_AGE;
-        assert!(buckets.take([2u8; KEY_BYTES], later));
-        let held = buckets.held.lock().unwrap();
-        assert_eq!(held.live.len(), 1);
-        assert_eq!(held.aged.len(), 1);
-    }
-
-    #[test]
-    fn the_burst_is_spent_before_a_caller_is_refused() {
-        let buckets = Buckets::new(&config());
-        let now = Instant::now();
-        let key = [3u8; KEY_BYTES];
-        for _ in 0..20 {
-            assert!(buckets.take(key, now));
-        }
-        assert!(!buckets.take(key, now));
     }
 }

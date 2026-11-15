@@ -3,16 +3,17 @@
 import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
 import {recordAdminRead, recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
 import {createGuildID} from '@app/api/BrandedTypes';
-import {requireAdminACL, requireAnyAdminACL} from '@app/api/middleware/AdminMiddleware';
+import {enforcementActor} from '@app/api/enforcement/EnforcementActor';
+import {requireAdminACL, requireAnyAdminACL, requireGrantedAdminACLs} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {AdminRateLimitConfigs} from '@app/api/rate_limit_configs/AdminRateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
-import {MissingACLError} from '@fluxer/errors/src/domains/core/MissingACLError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {
+	AdminGuildDeleteRequest,
 	BanGuildMemberBody,
 	ListGuildAuditLogsResponse,
 	ListGuildMembersQuery,
@@ -27,13 +28,19 @@ import {
 	LookupGuildResponse,
 	SearchGuildsResponse,
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
-import {GuildIdParam, GuildIdUserIdParam, SuccessResponse} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
+import {
+	GuildIdParam,
+	GuildIdRoleIdParam,
+	GuildIdUserIdParam,
+	SuccessResponse,
+} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {GuildAuditLogListQuery} from '@fluxer/schema/src/domains/guild/GuildAuditLogSchemas';
 
 const GUILD_UPDATE_ACLS = [
 	AdminACLs.GUILD_UPDATE_NAME,
 	AdminACLs.GUILD_UPDATE_SETTINGS,
 	AdminACLs.GUILD_UPDATE_FEATURES,
+	AdminACLs.GUILD_UPDATE_BADGES,
 	AdminACLs.GUILD_UPDATE_VANITY,
 	AdminACLs.GUILD_TRANSFER_OWNERSHIP,
 ];
@@ -53,7 +60,9 @@ function hasGuildSettingsUpdate(body: UpdateGuildRequest): boolean {
 }
 
 function hasGuildFeatureUpdate(body: UpdateGuildRequest): boolean {
-	return body.add_features !== undefined || body.remove_features !== undefined;
+	return (
+		body.add_features !== undefined || body.remove_features !== undefined || body.planned_join_waves_until !== undefined
+	);
 }
 
 function selectGuildUpdateACLs(body: UpdateGuildRequest): Array<string> {
@@ -67,6 +76,9 @@ function selectGuildUpdateACLs(body: UpdateGuildRequest): Array<string> {
 	if (hasGuildFeatureUpdate(body)) {
 		required.push(AdminACLs.GUILD_UPDATE_FEATURES);
 	}
+	if (body.badge_ids !== undefined) {
+		required.push(AdminACLs.GUILD_UPDATE_BADGES);
+	}
 	if (body.vanity_url_code !== undefined) {
 		required.push(AdminACLs.GUILD_UPDATE_VANITY);
 	}
@@ -77,17 +89,6 @@ function selectGuildUpdateACLs(body: UpdateGuildRequest): Array<string> {
 		return required;
 	}
 	return Object.keys(body).length === 0 ? [] : [AdminACLs.WILDCARD];
-}
-
-function requireAllAdminACLs(granted: ReadonlySet<string>, required: ReadonlyArray<string>): void {
-	if (granted.has(AdminACLs.WILDCARD)) {
-		return;
-	}
-	for (const acl of required) {
-		if (!granted.has(acl)) {
-			throw new MissingACLError(acl);
-		}
-	}
 }
 
 export function GuildAdminController(app: HonoApp) {
@@ -167,7 +168,7 @@ export function GuildAdminController(app: HonoApp) {
 			operationId: 'update_admin_guild',
 			summary: 'Update guild',
 			description:
-				'Partially updates a guild. The permissions required are selected by the fields present in the body and are evaluated with all-of semantics: name requires GUILD_UPDATE_NAME, vanity_url_code requires GUILD_UPDATE_VANITY, new_owner_id requires GUILD_TRANSFER_OWNERSHIP, add_features and remove_features require GUILD_UPDATE_FEATURES, and fields together with every other setting requires GUILD_UPDATE_SETTINGS. A body with no fields applies no change. Every applied change is logged to the audit log.',
+				'Partially updates a guild. The permissions required are selected by the fields present in the body and are evaluated with all-of semantics: name requires GUILD_UPDATE_NAME, vanity_url_code requires GUILD_UPDATE_VANITY, new_owner_id requires GUILD_TRANSFER_OWNERSHIP, add_features and remove_features require GUILD_UPDATE_FEATURES, badge_ids requires GUILD_UPDATE_BADGES, and fields together with every other setting requires GUILD_UPDATE_SETTINGS. A body with no fields applies no change. Every applied change is logged to the audit log.',
 			responseSchema: GuildUpdateResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
@@ -179,7 +180,7 @@ export function GuildAdminController(app: HonoApp) {
 			const auditLogReason = ctx.get('auditLogReason');
 			const guildIdRaw = ctx.req.valid('param').guild_id;
 			const body = ctx.req.valid('json');
-			requireAllAdminACLs(ctx.get('adminUserAcls'), selectGuildUpdateACLs(body));
+			requireGrantedAdminACLs(ctx.get('adminUserAcls'), selectGuildUpdateACLs(body));
 			const {updateService, vanityService, lookupService} = adminService.guildServiceAggregate;
 			if (body.fields !== undefined) {
 				await updateService.clearGuildFields({guild_id: guildIdRaw, fields: body.fields}, adminUserId, auditLogReason);
@@ -207,6 +208,18 @@ export function GuildAdminController(app: HonoApp) {
 					guildId: createGuildID(guildIdRaw),
 					addFeatures: body.add_features ?? [],
 					removeFeatures: body.remove_features ?? [],
+					plannedJoinWavesUntil:
+						body.planned_join_waves_until == null
+							? body.planned_join_waves_until
+							: new Date(body.planned_join_waves_until),
+					adminUserId,
+					auditLogReason,
+				});
+			}
+			if (body.badge_ids !== undefined) {
+				await updateService.updateGuildBadges({
+					guildId: createGuildID(guildIdRaw),
+					badgeIds: body.badge_ids,
 					adminUserId,
 					auditLogReason,
 				});
@@ -236,6 +249,7 @@ export function GuildAdminController(app: HonoApp) {
 				body.fields !== undefined ||
 				hasGuildSettingsUpdate(body) ||
 				hasGuildFeatureUpdate(body) ||
+				body.badge_ids !== undefined ||
 				body.name !== undefined ||
 				body.vanity_url_code !== undefined ||
 				body.new_owner_id !== undefined;
@@ -261,26 +275,26 @@ export function GuildAdminController(app: HonoApp) {
 		RateLimitMiddleware(AdminRateLimitConfigs.ADMIN_GUILD_MODIFY),
 		requireAdminACL(AdminACLs.GUILD_DELETE),
 		Validator('param', GuildIdParam),
+		Validator('json', AdminGuildDeleteRequest),
 		OpenAPI({
 			operationId: 'delete_admin_guild',
 			summary: 'Delete guild',
 			description:
-				'Permanently deletes a guild. Deletes all channels, messages, and settings. Irreversible operation with no recovery window. Logged to audit log. Requires GUILD_DELETE permission.',
+				'Permanently deletes a guild. The guild becomes unavailable at once, and a background job deletes all channels, messages, and settings. Irreversible operation with no recovery window. The basis is enforcement or holder_request. An enforcement basis records a community removal decision and sends its notice to the owner, and is refused for child safety and violent extremism reasons. Logged to audit log. Requires GUILD_DELETE permission.',
 			responseSchema: SuccessResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: 'Admin',
 		}),
 		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			const adminUserId = ctx.get('adminUserId');
-			const auditLogReason = ctx.get('auditLogReason');
 			return ctx.json(
-				await adminService.guildServiceAggregate.managementService.deleteGuild(
-					ctx.req.valid('param').guild_id,
-					adminUserId,
-					auditLogReason,
-				),
+				await ctx
+					.get('adminService')
+					.guildServiceAggregate.managementService.deleteGuild(
+						createGuildID(ctx.req.valid('param').guild_id),
+						ctx.req.valid('json'),
+						enforcementActor(ctx),
+					),
 			);
 		},
 	);
@@ -363,7 +377,7 @@ export function GuildAdminController(app: HonoApp) {
 			operationId: 'kick_admin_guild_member',
 			summary: 'Remove guild member',
 			description:
-				'Temporarily removes a user from a guild. User can rejoin. Logged to audit log. Requires GUILD_KICK_MEMBER permission.',
+				'Removes a user from a guild as the Fluxer system user, without guild membership or guild permissions. User can rejoin. Refuses the guild owner. Logged to audit log. Requires GUILD_KICK_MEMBER permission.',
 			responseSchema: null,
 			statusCode: 204,
 			security: 'adminApiKey',
@@ -392,7 +406,7 @@ export function GuildAdminController(app: HonoApp) {
 			operationId: 'ban_admin_guild_member',
 			summary: 'Ban guild member',
 			description:
-				'Bans a user from a guild, optionally deleting their recent messages. Prevents the user from joining until the ban expires or is removed. Logged to audit log. Requires GUILD_BAN_MEMBER permission.',
+				'Bans a user from a guild as the Fluxer system user, without guild membership or guild permissions, optionally deleting their recent messages. Prevents the user from joining until the ban expires or is removed. Refuses the guild owner. Logged to audit log. Requires GUILD_BAN_MEMBER permission.',
 			responseSchema: null,
 			statusCode: 204,
 			security: 'adminApiKey',
@@ -407,6 +421,60 @@ export function GuildAdminController(app: HonoApp) {
 				{...ctx.req.valid('json'), guild_id: params.guild_id, user_id: params.user_id},
 				adminUserId,
 				auditLogReason,
+			);
+			return ctx.body(null, 204);
+		},
+	);
+	app.delete(
+		'/admin/guilds/:guild_id/bans/:user_id',
+		RateLimitMiddleware(AdminRateLimitConfigs.ADMIN_GUILD_MODIFY),
+		requireAdminACL(AdminACLs.GUILD_BAN_MEMBER),
+		Validator('param', GuildIdUserIdParam),
+		OpenAPI({
+			operationId: 'unban_admin_guild_member',
+			summary: 'Unban guild member',
+			description:
+				'Removes a guild ban as the Fluxer system user, without guild membership or guild permissions. Logged to audit log. Requires GUILD_BAN_MEMBER permission.',
+			responseSchema: null,
+			statusCode: 204,
+			security: 'adminApiKey',
+			tags: 'Admin',
+		}),
+		async (ctx) => {
+			const adminService = ctx.get('adminService');
+			const adminUserId = ctx.get('adminUserId');
+			const auditLogReason = ctx.get('auditLogReason');
+			const params = ctx.req.valid('param');
+			await adminService.guildServiceAggregate.membershipService.unbanMember(
+				{guild_id: params.guild_id, user_id: params.user_id},
+				adminUserId,
+				auditLogReason,
+			);
+			return ctx.body(null, 204);
+		},
+	);
+	app.delete(
+		'/admin/guilds/:guild_id/roles/:role_id/icon',
+		RateLimitMiddleware(AdminRateLimitConfigs.ADMIN_GUILD_MODIFY),
+		requireAdminACL(AdminACLs.GUILD_UPDATE_SETTINGS),
+		Validator('param', GuildIdRoleIdParam),
+		OpenAPI({
+			operationId: 'clear_admin_guild_role_icon',
+			summary: 'Clear guild role icon',
+			description:
+				'Removes the image icon and Unicode emoji from a guild role and queues the old image for deletion. Members see the change at once. Logged to audit log. Requires GUILD_UPDATE_SETTINGS permission.',
+			responseSchema: null,
+			statusCode: 204,
+			security: 'adminApiKey',
+			tags: 'Admin',
+		}),
+		async (ctx) => {
+			const adminService = ctx.get('adminService');
+			const params = ctx.req.valid('param');
+			await adminService.guildServiceAggregate.updateService.clearRoleIcon(
+				{guild_id: params.guild_id, role_id: params.role_id},
+				ctx.get('adminUserId'),
+				ctx.get('auditLogReason'),
 			);
 			return ctx.body(null, 204);
 		},

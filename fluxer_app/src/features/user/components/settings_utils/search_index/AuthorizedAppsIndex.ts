@@ -4,13 +4,11 @@ import type {SearchableSettingDescriptor} from '@app/features/user/components/se
 import {
 	APPLICATIONS_DESCRIPTOR,
 	AUTHORIZATION_DESCRIPTOR,
-} from '@app/features/user/components/settings_utils/search_index/SharedDescriptors';
+	AUTHORIZED_APPS_DESCRIPTOR,
+	INTEGRATIONS_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import {msg} from '@lingui/core/macro';
 
-const AUTHORIZED_APPS_DESCRIPTOR = msg({
-	message: 'Authorized apps',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
 const AUTHORIZED_DESCRIPTOR = msg({
 	message: 'Authorized',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -21,10 +19,6 @@ const PERMISSIONS_DESCRIPTOR = msg({
 });
 const THIRD_PARTY_DESCRIPTOR = msg({
 	message: 'Third party',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const INTEGRATIONS_DESCRIPTOR = msg({
-	message: 'Integrations',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const MANAGE_AUTHORIZED_APPLICATIONS_DESCRIPTOR = msg({

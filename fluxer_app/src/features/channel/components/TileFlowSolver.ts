@@ -16,20 +16,17 @@ interface NavGrid {
 interface TileBox {
 	position: 'absolute' | 'sticky';
 	left?: number;
-	right?: number;
 	width: number;
 	top: number;
 	height: number;
 }
 
-type LayoutPadding =
-	| number
-	| {
-			top?: number;
-			bottom?: number;
-			left?: number;
-			right?: number;
-	  };
+type LayoutPadding = {
+	top?: number;
+	bottom?: number;
+	left?: number;
+	right?: number;
+};
 
 function noSectionHeight(_section: number): number {
 	return 0;
@@ -59,7 +56,6 @@ export class TileFlowSolver {
 	public windowedTiles: Record<string, SectionWindow> = {};
 	public navGrid: NavGrid = {tileCells: {}, rowBase: []};
 	public tileBoxes: Record<string, TileBox> = {};
-	public laneOrder: Array<Array<string>> = [];
 	public contentHeight: number = 0;
 	private laneFill: Array<number> = [];
 	private laneWidth: number = 0;
@@ -70,13 +66,7 @@ export class TileFlowSolver {
 	private sectionSizes: Array<number> = [];
 	private laneCount: number = 0;
 	private tileSpacing: number = 0;
-	private trimOuterSpacing: boolean = false;
-	private sectionSpacing: number | null = null;
 	private padBox: LayoutPadding | null = null;
-	private padAxisY: number | null = null;
-	private padAxisX: number | null = null;
-	private originShift: number | null = null;
-	private flowDirection: 'ltr' | 'rtl' = 'ltr';
 	private layoutStamp: number | string | null = null;
 	private tileKeyOf: (section: number, item: number) => string | null = () => {
 		throw new Error('TileFlowSolver requires a tile key resolver before layout can run');
@@ -90,120 +80,72 @@ export class TileFlowSolver {
 		if (this.padBox == null) {
 			return this.tileSpacing;
 		}
-		if (typeof this.padBox === 'number') {
-			return this.padBox;
-		}
+
 		return this.padBox[key] ?? this.tileSpacing;
-	}
-
-	private padLeading(): number {
-		return this.padAxisX != null ? this.padAxisX : this.padFor('left');
-	}
-
-	private padTrailing(): number {
-		return this.padAxisX != null ? this.padAxisX : this.padFor('right');
-	}
-
-	private padTop(): number {
-		return this.padAxisY != null ? this.padAxisY : this.padFor('top');
-	}
-
-	private padBottom(): number {
-		return this.padAxisY != null ? this.padAxisY : this.padFor('bottom');
-	}
-
-	private spacingBetweenSections(): number {
-		return this.sectionSpacing != null ? this.sectionSpacing : this.tileSpacing;
 	}
 
 	applySettings(settings: {
 		sectionSizes?: Array<number>;
 		laneCount?: number;
 		tileSpacing?: number;
-		trimOuterSpacing?: boolean;
 		tileKeyOf?: (section: number, item: number) => string | null;
 		tileHeightOf?: (section: number, item: number, width: number) => number;
 		sectionHeightOf?: (section: number) => number;
 		viewportSpan?: number;
 		padBox?: LayoutPadding;
-		padAxisY?: number;
-		padAxisX?: number;
-		originShift?: number;
-		sectionSpacing?: number;
-		flowDirection?: 'ltr' | 'rtl';
 		layoutStamp?: number | string | null;
 	}): void {
 		const {
 			sectionSizes = this.sectionSizes,
 			laneCount = this.laneCount,
 			tileSpacing = this.tileSpacing,
-			trimOuterSpacing = this.trimOuterSpacing,
 			tileKeyOf = this.tileKeyOf,
 			tileHeightOf = this.tileHeightOf,
 			sectionHeightOf = this.sectionHeightOf,
 			viewportSpan = this.viewportSpan,
 			padBox = this.padBox,
-			padAxisY = this.padAxisY,
-			padAxisX = this.padAxisX,
-			originShift = this.originShift,
-			sectionSpacing = this.sectionSpacing,
-			flowDirection = this.flowDirection,
 			layoutStamp = this.layoutStamp,
 		} = settings;
 		if (
 			this.sectionSizes !== sectionSizes ||
 			this.laneCount !== laneCount ||
 			this.tileSpacing !== tileSpacing ||
-			this.trimOuterSpacing !== trimOuterSpacing ||
 			this.tileKeyOf !== tileKeyOf ||
 			this.sectionHeightOf !== sectionHeightOf ||
 			this.tileHeightOf !== tileHeightOf ||
 			this.viewportSpan !== viewportSpan ||
 			this.padBox !== padBox ||
-			this.padAxisY !== padAxisY ||
-			this.padAxisX !== padAxisX ||
-			this.originShift !== originShift ||
-			this.sectionSpacing !== sectionSpacing ||
-			this.flowDirection !== flowDirection ||
 			this.layoutStamp !== layoutStamp
 		) {
 			this.layoutDirty = true;
 			this.sectionSizes = sectionSizes;
 			this.laneCount = laneCount;
 			this.tileSpacing = tileSpacing;
-			this.trimOuterSpacing = trimOuterSpacing;
+
 			this.tileKeyOf = tileKeyOf;
 			this.sectionHeightOf = sectionHeightOf;
 			this.tileHeightOf = tileHeightOf;
 			this.viewportSpan = viewportSpan;
 			this.padBox = padBox;
-			this.padAxisY = padAxisY;
-			this.padAxisX = padAxisX;
-			this.originShift = originShift;
-			this.sectionSpacing = sectionSpacing;
-			this.flowDirection = flowDirection;
+
 			this.layoutStamp = layoutStamp;
 		}
 	}
 
 	private rebuildLayout(): void {
 		if (!this.layoutDirty) return;
-		const {laneCount, tileKeyOf, tileHeightOf, tileSpacing, sectionHeightOf, viewportSpan, trimOuterSpacing} = this;
-		const horizontalKey = this.flowDirection === 'rtl' ? 'right' : 'left';
+		const {laneCount, tileKeyOf, tileHeightOf, tileSpacing, sectionHeightOf, viewportSpan} = this;
 		this.tileBoxes = {};
 		this.navGrid = {rowBase: [], tileCells: {}};
 		this.rowCursor = 0;
 		this.prevLaneIndex = 0;
-		const padTop = this.padTop();
-		const padBottom = this.padBottom();
-		const padLeading = this.padLeading();
-		const padTrailing = this.padTrailing();
-		const originShift = this.originShift ?? 0;
+		const padTop = this.padFor('top');
+		const padBottom = this.padFor('bottom');
+		const padLeading = this.padFor('left');
+		const padTrailing = this.padFor('right');
 		this.laneFill = Array(laneCount).fill(padTop);
-		this.laneWidth =
-			(viewportSpan - padTrailing - padLeading - tileSpacing * (laneCount - 1) - (trimOuterSpacing ? tileSpacing : 0)) /
-			laneCount;
-		this.laneOrder = [];
+		this.laneWidth = (viewportSpan - padTrailing - padLeading - tileSpacing * (laneCount - 1)) / laneCount;
+
 		let sectionIndex = 0;
 		while (sectionIndex < this.sectionSizes.length) {
 			this.navGrid.rowBase[sectionIndex] = this.rowCursor;
@@ -216,7 +158,7 @@ export class TileFlowSolver {
 			const sectionHeight = sectionHeightOf(sectionIndex);
 			let laneCeiling = this.tallestLane(this.laneFill);
 			if (sectionIndex > 0) {
-				laneCeiling = laneCeiling - tileSpacing + this.spacingBetweenSections();
+				laneCeiling = laneCeiling - tileSpacing + tileSpacing;
 			}
 			const headerBand = sectionHeight > 0 ? sectionHeight + tileSpacing : 0;
 			for (let lane = 0; lane < this.laneFill.length; lane++) {
@@ -236,7 +178,7 @@ export class TileFlowSolver {
 				const tileHeight = tileHeightOf(sectionIndex, itemIndex, this.laneWidth);
 				const box: TileBox = {
 					position: 'absolute',
-					[horizontalKey]: this.laneWidth * laneIndex + tileSpacing * (laneIndex + 1) - tileSpacing + padLeading,
+					left: this.laneWidth * laneIndex + tileSpacing * (laneIndex + 1) - tileSpacing + padLeading,
 					width: this.laneWidth,
 					top: minHeight - laneCeiling,
 					height: tileHeight,
@@ -251,21 +193,20 @@ export class TileFlowSolver {
 				this.tileBoxes[tileKey] = box;
 				this.navGrid.tileCells[tileKey] = cell;
 				this.laneFill[laneIndex] = minHeight + tileHeight + tileSpacing;
-				this.laneOrder[laneIndex] = this.laneOrder[laneIndex] ?? [];
-				this.laneOrder[laneIndex].push(tileKey);
+
 				itemIndex++;
 			}
 			if (sectionHeight > 0) {
 				this.tileBoxes[getSectionHeaderKey(sectionIndex)] = {
 					position: 'sticky',
-					[horizontalKey]: padLeading,
+					left: padLeading,
 					width: this.laneWidth * laneCount + tileSpacing * laneCount,
 					top: 0,
 					height: sectionHeight,
 				};
 				this.tileBoxes[getSectionKey(sectionIndex)] = {
 					position: 'absolute',
-					[horizontalKey]: originShift,
+					left: 0,
 					width: this.laneWidth * laneCount + tileSpacing * (laneCount - 1) + padLeading + padTrailing,
 					top: laneCeiling,
 					height: this.tallestLane(this.laneFill) - laneCeiling,
@@ -273,7 +214,7 @@ export class TileFlowSolver {
 			} else if (Number.isFinite(minItemTop) && Number.isFinite(maxItemBottom)) {
 				this.tileBoxes[getSectionKey(sectionIndex)] = {
 					position: 'absolute',
-					[horizontalKey]: originShift,
+					left: 0,
 					width: this.laneWidth * laneCount + tileSpacing * (laneCount - 1) + padLeading + padTrailing,
 					top: minItemTop,
 					height: maxItemBottom - minItemTop,

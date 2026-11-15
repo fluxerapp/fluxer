@@ -41,7 +41,7 @@
 
 .sliderValue {
 	min-width: 3.5rem;
-	text-align: right;
+	text-align: end;
 	font-family: monospace;
 	font-size: 0.875rem;
 	color: var(--text-primary);
@@ -49,7 +49,7 @@
 
 .sliderValueDisabled {
 	min-width: 3.5rem;
-	text-align: right;
+	text-align: end;
 	font-family: monospace;
 	font-size: 0.875rem;
 	color: var(--text-tertiary);

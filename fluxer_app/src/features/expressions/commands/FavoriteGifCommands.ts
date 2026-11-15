@@ -30,7 +30,7 @@ const REMOVED_FROM_FAVORITE_GIFS_DESCRIPTOR = msg({
 	comment: 'Toast confirming a GIF was removed from favorites.',
 });
 const FAVORITE_GIF_LIMIT_REACHED_TITLE_DESCRIPTOR = msg({
-	message: 'Favorite GIF limit reached',
+	message: "You're at the favorite GIF limit",
 	comment: 'Title of the error modal shown when no more favorite GIFs can be added.',
 });
 const logger = new Logger('FavoriteGifs');
@@ -75,7 +75,7 @@ function requestFavoriteGifResolution(urls: Array<string>): Promise<ResolveGifUr
 		.then((response) => response.body);
 }
 
-export function addFavoriteGif(i18n: I18n, entry: FavoriteGifEntry): void {
+function addFavoriteGif(i18n: I18n, entry: FavoriteGifEntry): void {
 	if (FavoriteGif.hasUrl(entry.url)) return;
 	if (FavoriteGif.totalCount >= MAX_FAVORITE_GIFS) {
 		showFavoriteGifLimitModal(i18n);

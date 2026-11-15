@@ -65,10 +65,6 @@ class VoiceDevicePermissionState {
 		return state;
 	}
 
-	async refreshDevices(requestPermissions?: boolean): Promise<VoiceDeviceState> {
-		return this.ensureDevices({requestPermissions, forceRefresh: true});
-	}
-
 	async requestPermissionFor(type: 'audio' | 'video'): Promise<boolean> {
 		const permissionGranted =
 			type === 'audio' ? MediaPermission.isMicrophoneGranted() : MediaPermission.isCameraGranted();

@@ -11,41 +11,6 @@ export declare function resolveKwinWindowPid(token: string): Promise<number | nu
 
 export declare function resolveX11WindowPid(token: string): Promise<number | null>;
 
-export type FileChooserFilterKind = 0 | 1;
-
-export interface FileChooserFilterRule {
-	kind: FileChooserFilterKind;
-	pattern: string;
-}
-
-export interface FileChooserFilter {
-	name: string;
-	rules: ReadonlyArray<FileChooserFilterRule>;
-}
-
-export interface FileChooserOptions {
-	parentWindow?: string;
-	title?: string;
-	acceptLabel?: string;
-	modal?: boolean;
-	multiple?: boolean;
-	directory?: boolean;
-	currentFolder?: string;
-	currentName?: string;
-	currentFile?: string;
-	filters?: ReadonlyArray<FileChooserFilter>;
-	currentFilter?: FileChooserFilter;
-}
-
-export interface FileChooserResult {
-	cancelled: boolean;
-	uris: Array<string>;
-}
-
-export declare function openFile(options: FileChooserOptions): Promise<FileChooserResult>;
-
-export declare function saveFile(options: FileChooserOptions): Promise<FileChooserResult>;
-
 export interface BackgroundOptions {
 	reason?: string;
 	autostart?: boolean;

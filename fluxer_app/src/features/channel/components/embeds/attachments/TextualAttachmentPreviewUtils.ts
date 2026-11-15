@@ -9,8 +9,8 @@ export const PREVIEW_LIMIT_KB = TEXT_PREVIEW_MAX_BYTES / 1024;
 export const DEFAULT_PREVIEW_LINES = 6;
 export const MAX_EXPANDED_PREVIEW_LINES = 100;
 export const previewExpansionState = new Map<string | number, boolean>();
-export type PreviewCountKind = 'line' | 'row';
-export type TextualAttachmentRenderMode = 'code' | 'csv';
+type PreviewCountKind = 'line' | 'row';
+type TextualAttachmentRenderMode = 'code' | 'csv';
 
 export type PreviewError =
 	| {

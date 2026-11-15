@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use super::form::checkbox;
+use super::form::Checkbox;
 use maud::{Markup, html};
 
 pub fn voice_status_badges(vip_only: bool, has_features: bool, has_guild_ids: bool) -> Markup {
@@ -72,7 +72,13 @@ pub fn voice_restriction_fields(
     html! {
         div class="space-y-3 border-neutral-200 border-t pt-3" {
             h4 class="font-medium text-neutral-700 text-sm" { "Access Restrictions" }
-            (checkbox("vip_only", "true", "VIP Only", vip_only, true))
+            (Checkbox {
+                name: "vip_only",
+                value: "true",
+                label: "VIP Only",
+                checked: vip_only,
+                enabled: true,
+            }.render())
             div class="space-y-1" {
                 label class="block text-sm font-medium text-neutral-700" { "Required Guild Features" }
                 input type="text" name="required_guild_features" value=(required_features)

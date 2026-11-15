@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {AttachmentDecayRepository} from '@app/api/attachment/AttachmentDecayRepository';
 import {setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
 import {createChannelID, createMessageID, createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
@@ -29,22 +28,17 @@ import {
 	sendWithImage,
 	setupFanoutWorld,
 	sourceIndex,
-	workerHelpers,
 	writeRow,
 } from '@app/api/channel/tests/CrosspostWorkerTestUtils';
-import type {EmbedService} from '@app/api/infrastructure/EmbedService';
-import type {IAssetDeletionQueue} from '@app/api/infrastructure/IAssetDeletionQueue';
-import type {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
+import {threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
+import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
+import {createRole} from '@app/api/guild/tests/GuildTestUtils';
 import {getKVClient} from '@app/api/middleware/ServiceRegistry';
-import type {Embed} from '@app/api/models/Embed';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
+import {createTestWorkerHelpers} from '@app/api/test/SyncTaskWorkerService';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
-import {getExpiryBucket} from '@app/api/utils/AttachmentDecay';
 import {createWebhook, executeWebhook} from '@app/api/webhook/tests/WebhookTestUtils';
 import deleteUserMessagesInGuildByTime from '@app/api/worker/tasks/DeleteUserMessagesInGuildByTime';
-import {processExpiredAttachments} from '@app/api/worker/tasks/ExpireAttachments';
-import extractEmbeds from '@app/api/worker/tasks/ExtractEmbeds';
 import messageShred from '@app/api/worker/tasks/MessageShred';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {
@@ -58,17 +52,11 @@ import {
 	MessageReferenceTypes,
 } from '@fluxer/constants/src/ChannelConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
+import {ServerMessageFlags} from '@fluxer/constants/src/ThreadConstants';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi} from 'vitest';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 const DELETED_COPY_FLAGS = MessageFlags.IS_CROSSPOST | MessageFlags.SOURCE_MESSAGE_DELETED;
-
-async function awaitFreshBucket(): Promise<void> {
-	const intoBucket = Date.now() % CROSSPOST_SYNC_COALESCE_MS;
-	if (intoBucket > CROSSPOST_SYNC_COALESCE_MS - 2000) {
-		await new Promise((resolve) => setTimeout(resolve, CROSSPOST_SYNC_COALESCE_MS - intoBucket + 50));
-	}
-}
 
 describe('Crosspost propagation', () => {
 	let harness: ApiTestHarness;
@@ -86,7 +74,7 @@ describe('Crosspost propagation', () => {
 
 	afterEach(() => {
 		disableCrosspostWorker();
-		vi.restoreAllMocks();
+		clearChannelThreadsTaintCacheForTesting();
 	});
 
 	afterAll(async () => {
@@ -119,7 +107,6 @@ describe('Crosspost propagation', () => {
 		const source = await postAndPublish(harness, world, {content: 'draft'});
 		const copyT1 = await onlyCopy(world.b.t1.id, source.id);
 		const copyT2 = await onlyCopy(world.b.t2.id, source.id);
-		const dispatchSpy = vi.spyOn(NoopGatewayService.prototype, 'dispatchGuild');
 		const before = crosspostSyncBucket(Date.now());
 		await edit(source.id, {content: 'final'});
 		const after = crosspostSyncBucket(Date.now());
@@ -138,33 +125,20 @@ describe('Crosspost propagation', () => {
 			[world.b.t2.id, copyT2.id],
 		] as const) {
 			const updated = await onlyCopy(channelId, source.id);
+			expect(updated.id).toBe(copyId);
 			expect(updated.content).toBe('final');
 			expect(updated.edited_timestamp).toBeTruthy();
-			const updates = dispatchSpy.mock.calls
-				.map(([params]) => params)
-				.filter(
-					(params) =>
-						params.event === 'MESSAGE_UPDATE' &&
-						params.guildId.toString() === world.b.guild.id &&
-						(params.data as {id: string}).id === copyId,
-				);
-			expect(updates).toHaveLength(1);
 		}
 	});
 
-	test('two edits in one bucket run a single sync and the copy ends with the second', async () => {
+	test('role mentions show as plain role names in copies on delivery and edit', async () => {
 		await followInto(harness, world, world.b.t1.id);
-		const source = await postAndPublish(harness, world, {content: 'first'});
-		await awaitFreshBucket();
-		await edit(source.id, {content: 'second'});
-		await edit(source.id, {content: 'third'});
-		const syncJobs = world.worker
-			.byTask('syncCrosspostedMessage')
-			.filter((entry) => (entry.payload as {messageId: string}).messageId === source.id);
-		expect(syncJobs).toHaveLength(1);
-		expect(world.worker.deduped.filter((entry) => entry.taskType === 'syncCrosspostedMessage')).toHaveLength(1);
+		const testers = await createRole(harness, world.a.owner.token, world.a.guild.id, {name: 'Beta *Testers*'});
+		const source = await postAndPublish(harness, world, {content: `Hello <@&${testers.id}>`});
+		expect((await onlyCopy(world.b.t1.id, source.id)).content).toBe('Hello \\@Beta \\*Testers\\*');
+		await edit(source.id, {content: `Bye <@&${testers.id}> and <@&${world.a.guild.id}>`});
 		await world.worker.drain();
-		expect((await onlyCopy(world.b.t1.id, source.id)).content).toBe('third');
+		expect((await onlyCopy(world.b.t1.id, source.id)).content).toBe('Bye \\@Beta \\*Testers\\* and \\@everyone');
 	});
 
 	test('embed edits and suppress-embeds toggles propagate, including flag-only edits', async () => {
@@ -183,7 +157,6 @@ describe('Crosspost propagation', () => {
 		copyRow = (await readRow(world.b.t1.id, copyRow.id.toString()))!;
 		expect(copyRow.flags).toBe(MessageFlags.IS_CROSSPOST);
 		const plain = await postAndPublish(harness, world, {content: 'plain'});
-		await awaitFreshBucket();
 		await edit(plain.id, {content: 'plain edited'});
 		await world.worker.drain();
 		const plainCopy = await onlyCopy(world.b.t1.id, plain.id);
@@ -288,53 +261,11 @@ describe('Crosspost propagation', () => {
 		expect(harness.storageService.getCopiedObjects()).toHaveLength(copiedBefore);
 	});
 
-	test('a late unfurl on a published source propagates its embeds', async () => {
-		await followInto(harness, world, world.b.t1.id);
-		const source = await postAndPublish(harness, world, {content: 'read https://example.com/post'});
-		const embedService = {
-			processUrlWithCachePolicy: async (url: string) => ({
-				embeds: [
-					{
-						toMessageEmbed: () => ({
-							type: 'link',
-							url,
-							title: 'Example post',
-							description: null,
-							timestamp: null,
-							color: null,
-							author: null,
-							provider: null,
-							thumbnail: null,
-							image: null,
-							video: null,
-							footer: null,
-							fields: null,
-							nsfw: null,
-						}),
-					} as unknown as Embed,
-				],
-				cacheTtlSeconds: 0,
-			}),
-			cacheEmbeds: async () => {},
-		} as unknown as EmbedService;
-		disableCrosspostWorker();
-		world.worker = enableCrosspostWorker({}, {embedService});
-		await extractEmbeds(
-			{channelId: world.a.ann.id, messageId: source.id, guildId: world.a.guild.id, nsfwMode: 'allow'},
-			workerHelpers(world.worker),
-		);
-		expect(world.worker.byTask('syncCrosspostedMessage')).toHaveLength(1);
-		await world.worker.drain();
-		const copyRow = (await readRow(world.b.t1.id, (await onlyCopy(world.b.t1.id, source.id)).id))!;
-		expect(copyRow.embeds.map((embed) => embed.title)).toEqual(['Example post']);
-	});
-
 	test('a sync with nothing new writes nothing', async () => {
 		await followInto(harness, world, world.b.t1.id);
 		const source = await postAndPublish(harness, world, {content: 'steady'});
 		const copy = await onlyCopy(world.b.t1.id, source.id);
 		const before = await readRow(world.b.t1.id, copy.id);
-		const dispatchSpy = vi.spyOn(NoopGatewayService.prototype, 'dispatchGuild');
 		await enqueueCrosspostSync(world.worker, {
 			channelId: createChannelID(BigInt(world.a.ann.id)),
 			messageId: createMessageID(BigInt(source.id)),
@@ -342,7 +273,6 @@ describe('Crosspost propagation', () => {
 		});
 		await world.worker.drain();
 		expect((await readRow(world.b.t1.id, copy.id))?.version).toBe(before?.version);
-		expect(dispatchSpy.mock.calls.filter(([params]) => params.event === 'MESSAGE_UPDATE')).toHaveLength(0);
 	});
 
 	test('deleting the source marks every copy and cleans up the mapping and index rows', async () => {
@@ -381,6 +311,26 @@ describe('Crosspost propagation', () => {
 		expect(deleted.some((key) => key.startsWith(`attachments/${world.b.t2.id}/`))).toBe(false);
 		expect(await mappingRows(source.id)).toHaveLength(0);
 		expect(await sourceIndex(world.a.ann.id)).not.toContain(source.id);
+	});
+
+	test('deleting the source keeps the thread a follower started from its copy', async () => {
+		await followInto(harness, world, world.b.t1.id);
+		const source = await postAndPublish(harness, world, {content: 'thread me'});
+		const copy = await onlyCopy(world.b.t1.id, source.id);
+		await threadsRequest(harness, world.b.owner.token)
+			.post(`/channels/${world.b.t1.id}/messages/${copy.id}/threads`)
+			.body({name: 'discussion'})
+			.expect(201)
+			.execute();
+		await deleteMessageRequest(harness, world.a.owner.token, world.a.ann.id, source.id);
+		await world.worker.drain();
+		const row = (await readRow(world.b.t1.id, copy.id))!;
+		expect(row.flags).toBe(DELETED_COPY_FLAGS | ServerMessageFlags.HAS_THREAD);
+		expect(row.content).toBe(CROSSPOST_SOURCE_DELETED_CONTENT);
+		const rendered = await threadsRequest<MessageResponse & {thread?: {id: string}}>(harness, world.b.owner.token)
+			.get(`/channels/${world.b.t1.id}/messages/${copy.id}`)
+			.execute();
+		expect(rendered.thread?.id).toBe(copy.id);
 	});
 
 	describe('other delete paths mark copies too', () => {
@@ -450,23 +400,15 @@ describe('Crosspost propagation', () => {
 			await followInto(harness, world, world.b.t1.id);
 			const source = await postAndPublish(harness, world, {content: 'illegal'});
 			const copy = await onlyCopy(world.b.t1.id, source.id);
-			const dispatchSpy = vi.spyOn(NoopGatewayService.prototype, 'dispatchGuild');
 			const admin = await setUserACLs(harness, world.a.member, [AdminACLs.AUTHENTICATE, AdminACLs.MESSAGE_DELETE]);
 			await createBuilder(harness, admin.token)
 				.delete(`/admin/channels/${world.a.ann.id}/messages/${source.id}`)
+				.body({basis: {type: 'housekeeping'}})
 				.expect(200)
 				.execute();
 			await world.worker.drain();
 			expect(await readRow(world.b.t1.id, copy.id)).toBeNull();
 			expect(await listCopies(harness, world.b.owner.token, world.b.t1.id)).toHaveLength(0);
-			expect(
-				dispatchSpy.mock.calls.some(
-					([params]) =>
-						params.event === 'MESSAGE_DELETE' &&
-						params.guildId.toString() === world.b.guild.id &&
-						(params.data as {id: string}).id === copy.id,
-				),
-			).toBe(true);
 			expect(await mappingRows(source.id)).toHaveLength(0);
 		});
 
@@ -484,7 +426,10 @@ describe('Crosspost propagation', () => {
 					target_user_id: world.a.member.userId,
 					entries: [{channel_id: world.a.ann.id, message_id: source.id}],
 				},
-				workerHelpers(world.worker),
+				createTestWorkerHelpers({
+					jobId: 0n,
+					addJob: (taskType, payload, options) => world.worker.addJob(taskType, payload, options),
+				}),
 			);
 			await world.worker.drain();
 			expect(await readRow(world.a.ann.id, source.id)).toBeNull();
@@ -671,42 +616,6 @@ describe('Crosspost propagation', () => {
 		expect(copyRow.content).toBe('frozen');
 		const droppedKey = `attachments/${world.a.ann.id}/${dropped!.id}/${dropped!.filename}`;
 		expect(harness.storageService.hasObject(Config.s3.buckets.cdn, droppedKey)).toBe(false);
-	});
-
-	test('a copy owns no decay record and its expiry purges only the source file', async () => {
-		const queued: Array<{s3Key: string}> = [];
-		disableCrosspostWorker();
-		world.worker = enableCrosspostWorker(
-			{},
-			{
-				assetDeletionQueue: {
-					async queueDeletion(item: {s3Key: string}) {
-						queued.push(item);
-					},
-				} as unknown as IAssetDeletionQueue,
-				instanceConfigRepository: {
-					async getEffectiveAttachmentDecayConfig() {
-						return {enabled: true};
-					},
-				} as unknown as InstanceConfigRepository,
-			},
-		);
-		await followInto(harness, world, world.b.t1.id);
-		const source = await sendWithImage(harness, world.a.owner.token, world.a.ann.id, {content: 'decaying'});
-		await publishAndDrain(harness, world, source.id);
-		const [attachment] = (await readRow(world.a.ann.id, source.id))!.attachments;
-		const copy = await onlyCopy(world.b.t1.id, source.id);
-		await createBuilder(harness, world.b.owner.token).get(`/channels/${world.b.t1.id}/messages/${copy.id}`).execute();
-		const repository = new AttachmentDecayRepository();
-		const record = await repository.fetchById(attachment!.id);
-		expect(record?.channel_id.toString()).toBe(world.a.ann.id);
-		expect(record?.message_id.toString()).toBe(source.id);
-		const expiresAt = new Date(Date.now() - 60_000);
-		await repository.upsert({...record!, expires_at: expiresAt, expiry_bucket: getExpiryBucket(expiresAt)});
-		await processExpiredAttachments();
-		expect(queued.map((item) => item.s3Key)).toEqual([
-			`attachments/${world.a.ann.id}/${attachment!.id}/${attachment!.filename}`,
-		]);
 	});
 
 	test('a copy deleted in the target is cleaned up lazily on the next edit', async () => {

@@ -7,6 +7,7 @@ import {
 	createGuild,
 	sendChannelMessage,
 } from '@app/api/channel/tests/ChannelTestUtils';
+import {createOAuth2Application, createUniqueApplicationName} from '@app/api/oauth/tests/OAuth2TestUtils';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
@@ -122,6 +123,33 @@ describe('Account limitation', () => {
 			.body({has_dismissed_premium_onboarding: true})
 			.expect(200)
 			.execute();
+	});
+
+	it('blocks creating applications', async () => {
+		await setFlags(harness, member.userId, ['ACCOUNT_LIMITED']);
+		await expectLimited(
+			createBuilder<ErrorResponse>(harness, member.token)
+				.post('/oauth2/applications')
+				.body({name: createUniqueApplicationName(), redirect_uris: []})
+				.expect(403)
+				.executeWithResponse(),
+		);
+	});
+
+	it('blocks adding bots to a managed guild', async () => {
+		const app = await createOAuth2Application(harness, owner.token, {
+			name: createUniqueApplicationName(),
+			redirect_uris: ['https://example.com/callback'],
+			bot_public: true,
+		});
+		await setFlags(harness, owner.userId, ['ACCOUNT_LIMITED']);
+		await expectLimited(
+			createBuilder<ErrorResponse>(harness, owner.token)
+				.post('/oauth2/authorize/consent')
+				.body({client_id: app.application.id, scope: 'bot', guild_id: guild.id, permissions: '0'})
+				.expect(403)
+				.executeWithResponse(),
+		);
 	});
 
 	it('never limits exempt accounts', async () => {

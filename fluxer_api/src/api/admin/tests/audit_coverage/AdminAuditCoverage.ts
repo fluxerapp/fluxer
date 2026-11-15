@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {getAdminAuditAccess} from '@app/api/admin/AdminAuditActions';
-import type {AdminAuditLog} from '@app/api/admin/IAdminRepository';
+import type {AdminAuditLog} from '@app/api/admin/AdminRepository';
+import {markOperatorRequest} from '@app/api/admin/operator/OperatorRequests';
 import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {getAdminRepository} from '@app/api/middleware/ServiceSingletons';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
@@ -22,6 +23,7 @@ interface AdminAuditCoverageRequest {
 	body?: unknown;
 	headers?: Record<string, string>;
 	expectStatus?: number;
+	operator?: boolean;
 }
 
 interface AdminAuditExpectedEntry {
@@ -39,13 +41,13 @@ interface AdminAuditCoverageCaseBase {
 	auditLogReason?: unknown;
 }
 
-export interface AdminAuditAuditedCase extends AdminAuditCoverageCaseBase {
+interface AdminAuditAuditedCase extends AdminAuditCoverageCaseBase {
 	prepare(
 		context: AdminAuditCoverageContext,
 	): Promise<{request: AdminAuditCoverageRequest; expected: AdminAuditExpectedEntry}>;
 }
 
-export interface AdminAuditExemptCase extends AdminAuditCoverageCaseBase {
+interface AdminAuditExemptCase extends AdminAuditCoverageCaseBase {
 	exempt: true;
 	prepare(context: AdminAuditCoverageContext): Promise<{request: AdminAuditCoverageRequest}>;
 }
@@ -73,6 +75,24 @@ function describeEntry(log: AdminAuditLog) {
 	};
 }
 
+async function operatorRequest(
+	harness: ApiTestHarness,
+	method: AdminRouteMethod,
+	request: AdminAuditCoverageRequest,
+): Promise<Response> {
+	const raw = new Request(new URL(request.path, 'http://localhost'), {
+		method,
+		headers: {
+			'content-type': 'application/json',
+			'X-Audit-Log-Reason': ADMIN_AUDIT_COVERAGE_REASON,
+			...request.headers,
+		},
+		body: request.body === undefined ? undefined : JSON.stringify(request.body),
+	});
+	markOperatorRequest(raw);
+	return harness.app.fetch(raw);
+}
+
 export function describeAdminAuditCoverage(area: string, cases: ReadonlyArray<AdminAuditCoverageCase>): void {
 	describe(`Admin audit coverage: ${area}`, () => {
 		let harness: ApiTestHarness | undefined;
@@ -92,16 +112,18 @@ export function describeAdminAuditCoverage(area: string, cases: ReadonlyArray<Ad
 				const prepared = await coverageCase.prepare({harness, admin});
 				const {request} = prepared;
 				const before = new Set((await listAuditLogs()).map((log) => log.logId.toString()));
-				const response = await harness.requestJson({
-					path: request.path,
-					method: coverageCase.method,
-					body: request.body,
-					headers: {
-						Authorization: admin.token,
-						'X-Audit-Log-Reason': ADMIN_AUDIT_COVERAGE_REASON,
-						...request.headers,
-					},
-				});
+				const response = request.operator
+					? await operatorRequest(harness, coverageCase.method, request)
+					: await harness.requestJson({
+							path: request.path,
+							method: coverageCase.method,
+							body: request.body,
+							headers: {
+								Authorization: admin.token,
+								'X-Audit-Log-Reason': ADMIN_AUDIT_COVERAGE_REASON,
+								...request.headers,
+							},
+						});
 				const expectedStatus = request.expectStatus ?? 200;
 				if (response.status !== expectedStatus) {
 					throw new Error(`Expected ${expectedStatus}, got ${response.status}: ${await response.text()}`);
@@ -118,7 +140,7 @@ export function describeAdminAuditCoverage(area: string, cases: ReadonlyArray<Ad
 				const expectedAccess = coverageCase.method === 'GET' ? 'read' : 'write';
 				expect(getAdminAuditAccess(expected.action)).toBe(expectedAccess);
 				for (const log of recorded) {
-					expect(log.adminUserId.toString()).toBe(admin.userId);
+					expect(log.adminUserId.toString()).toBe(request.operator ? '0' : admin.userId);
 					expect(log.auditLogReason).toEqual(coverageCase.auditLogReason ?? ADMIN_AUDIT_COVERAGE_REASON);
 					expect(getAdminAuditAccess(log.action)).toBe(expectedAccess);
 				}

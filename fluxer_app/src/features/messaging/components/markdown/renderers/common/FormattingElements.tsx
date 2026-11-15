@@ -6,9 +6,10 @@ import {
 	type MarkdownRenderOptions,
 	type RendererProps,
 } from '@app/features/messaging/components/markdown/renderers/RendererTypes';
+import {normaliseUrlForComparison} from '@app/features/messaging/utils/markdown/Plaintext';
 import {NodeType} from '@app/features/messaging/utils/markdown/parser/Enums';
 import type {FormattingNode, Node} from '@app/features/messaging/utils/markdown/parser/Nodes';
-import {normalizeUrl, useSpoilerState} from '@app/features/messaging/utils/SpoilerUtils';
+import {useSpoilerState} from '@app/features/messaging/utils/SpoilerUtils';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {msg} from '@lingui/core/macro';
@@ -71,7 +72,7 @@ export const SpoilerRenderer = observer(function SpoilerRenderer({
 		const urls: Array<string> = [];
 		for (const child of nodes) {
 			if (child.type === NodeType.Link) {
-				const normalized = normalizeUrl(child.url);
+				const normalized = normaliseUrlForComparison(child.url);
 				if (normalized) urls.push(normalized);
 			}
 			if ('children' in child && Array.isArray((child as {children?: Array<Node>}).children)) {

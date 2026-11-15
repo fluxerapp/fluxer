@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GuildID, ReportID} from '@app/api/BrandedTypes';
-import type {IGuildDataRepository} from '@app/api/guild/repositories/IGuildDataRepository';
-import type {ILogger} from '@app/api/ILogger';
-import type {IReportRepository} from '@app/api/report/IReportRepository';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import type {ReportRepository} from '@app/api/report/ReportRepository';
 import {
 	getAuditLogSearchService,
 	getGuildSearchService,
@@ -13,15 +12,16 @@ import {
 import type {IGuildSearchService} from '@app/api/search/IGuildSearchService';
 import type {IReportSearchService} from '@app/api/search/IReportSearchService';
 import type {IUserSearchService} from '@app/api/search/IUserSearchService';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
 
 const BATCH_SIZE = 100;
 
 interface SearchWarmupDeps {
-	userRepository: IUserRepository;
-	guildRepository: IGuildDataRepository;
-	reportRepository: IReportRepository;
-	logger: ILogger;
+	userRepository: UserRepository;
+	guildRepository: GuildRepository;
+	reportRepository: ReportRepository;
+	logger: LoggerInterface;
 }
 
 export async function warmupAdminSearchIndexes(deps: SearchWarmupDeps): Promise<void> {
@@ -66,9 +66,9 @@ export async function warmupAdminSearchIndexes(deps: SearchWarmupDeps): Promise<
 }
 
 async function warmupGuilds(
-	guildRepository: IGuildDataRepository,
+	guildRepository: GuildRepository,
 	guildSearchService: IGuildSearchService,
-	logger: ILogger,
+	logger: LoggerInterface,
 ): Promise<void> {
 	let lastGuildId: GuildID | undefined;
 	let hasMore = true;
@@ -87,9 +87,9 @@ async function warmupGuilds(
 }
 
 async function warmupUsers(
-	userRepository: IUserRepository,
+	userRepository: UserRepository,
 	userSearchService: IUserSearchService,
-	logger: ILogger,
+	logger: LoggerInterface,
 ): Promise<void> {
 	let pageState: string | null = null;
 	let totalIndexed = 0;
@@ -106,9 +106,9 @@ async function warmupUsers(
 }
 
 async function warmupReports(
-	reportRepository: IReportRepository,
+	reportRepository: ReportRepository,
 	reportSearchService: IReportSearchService,
-	logger: ILogger,
+	logger: LoggerInterface,
 ): Promise<void> {
 	let lastReportId: ReportID | undefined;
 	let hasMore = true;

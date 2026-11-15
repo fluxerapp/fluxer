@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {HttpError} from '@app/features/platform/types/EndpointError';
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 
 function parseSeconds(value: unknown): number | null {
 	if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return null;

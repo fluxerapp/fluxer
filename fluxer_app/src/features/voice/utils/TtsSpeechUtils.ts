@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {isDesktopLocalAppDocument} from '@app/features/platform/DesktopLocalAppRuntime';
 import {isChromiumBrowser} from '@app/features/ui/utils/NativeUtils';
 
 const DEFAULT_CHUNK_LENGTH = 180;
@@ -32,8 +33,15 @@ const PREFERRED_VOICE_NAMES_BY_LOCALE: Record<string, Array<string>> = {
 	'en-US': ['Google US English', 'Samantha', 'Alex', 'Ava', 'Allison', 'Susan'],
 	'en-GB': ['Google UK English Female', 'Daniel', 'Serena', 'Kate'],
 };
+function speechSynthesisPresent(): boolean {
+	if (isDesktopLocalAppDocument()) {
+		return 'speechSynthesis' in window;
+	}
+	return window.speechSynthesis != null;
+}
+
 const synthesisSupported =
-	typeof window !== 'undefined' && window.speechSynthesis != null && typeof SpeechSynthesisUtterance !== 'undefined';
+	typeof window !== 'undefined' && speechSynthesisPresent() && typeof SpeechSynthesisUtterance !== 'undefined';
 
 export function nativeApiPresent(): boolean {
 	return synthesisSupported;
@@ -111,7 +119,7 @@ function chunkText(text: string, maxChunkLength: number): Array<string> {
 	return chunks;
 }
 
-export function prepareTextForSpeech(text: string, maxLength?: number): string {
+function prepareTextForSpeech(text: string, maxLength?: number): string {
 	let processed = stripUrlsToDomain(text);
 	processed = normaliseText(processed);
 	processed = capTextAtWordBoundary(processed, maxLength);
@@ -128,19 +136,6 @@ export function createUtteranceTexts(
 		return [];
 	}
 	return chunkText(processed, maxChunkLength);
-}
-
-export function createUtterance(text: string, maxLength?: number): SpeechSynthesisUtterance | null {
-	if (!synthesisSupported) {
-		return null;
-	}
-	const processed = prepareTextForSpeech(text, maxLength);
-	if (!processed) {
-		return null;
-	}
-	const utterance = new SpeechSynthesisUtterance(processed);
-	utterance.rate = Accessibility.ttsRate;
-	return utterance;
 }
 
 export function createUtterances(text: string, maxLength?: number): Array<SpeechSynthesisUtterance> {

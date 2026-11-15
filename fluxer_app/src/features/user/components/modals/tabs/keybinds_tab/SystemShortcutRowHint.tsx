@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import GlobalShortcuts from '@app/features/input/state/GlobalShortcuts';
 import Keybind, {type KeybindCommand} from '@app/features/input/state/InputKeybind';
 import {
@@ -33,11 +33,11 @@ const SYSTEM_WIDE_TRIGGER_DESCRIPTOR = msg({
 		'Hint under a shortcut on Linux showing the key the desktop assigned. {trigger} is the key, as named by the desktop.',
 });
 const SYSTEM_WIDE_NOT_ASSIGNED_DESCRIPTOR = msg({
-	message: 'System-wide: Not assigned',
+	message: 'System-wide: not assigned',
 	comment: 'Hint under a shortcut on Linux when the desktop has no key assigned for it system-wide.',
 });
 const EXTRA_MODIFIERS_DESCRIPTOR = msg({
-	message: 'Holding Shift, Ctrl or Alt blocks this shortcut. Add alternates in your system settings.',
+	message: 'Holding Shift, Ctrl or Alt blocks this keybind. Add alternates in your system settings.',
 	comment:
 		'Hint under a system-wide hold shortcut such as push-to-talk on Linux. The desktop ignores the key while other modifier keys are held.',
 });
@@ -62,11 +62,11 @@ export const SystemShortcutRowHint = observer(
 				<div data-flx={`${dataFlx}.focused`}>
 					{variant === 'voice-tab'
 						? i18n._(IN_APP_KEY_DESCRIPTOR, {
-								productName: PRODUCT_NAME,
+								productName: RuntimeConfig.productName,
 								settingsTabName: getUserSettingsTabLabel(i18n, 'keybinds'),
 								sectionName: i18n._(SYSTEM_WIDE_SHORTCUTS_DESCRIPTOR),
 							})
-						: i18n._(WORKS_WHILE_FOCUSED_DESCRIPTOR, {productName: PRODUCT_NAME})}
+						: i18n._(WORKS_WHILE_FOCUSED_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 				</div>
 				{showTrigger ? (
 					<div data-flx={`${dataFlx}.trigger`}>

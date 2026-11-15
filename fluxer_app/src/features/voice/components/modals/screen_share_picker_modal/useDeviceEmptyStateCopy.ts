@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import type {DisplayShareEnvironment} from '@app/features/voice/utils/ScreenShareEnvironment';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -49,7 +49,7 @@ export function useDeviceEmptyStateCopy(displayShareEnvironment: DisplayShareEnv
 			return {
 				title: i18n._(NO_CAMERAS_OR_VIRTUAL_DEVICES_FOUND_DESCRIPTOR),
 				description: i18n._(CAMERAS_AND_VIRTUAL_CAPTURE_DEVICES_ARE_SELECTED_HERE_DESCRIPTOR, {
-					productName: PRODUCT_NAME,
+					productName: RuntimeConfig.productName,
 				}),
 			};
 		}

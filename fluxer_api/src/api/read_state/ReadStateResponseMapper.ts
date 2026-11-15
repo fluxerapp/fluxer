@@ -10,5 +10,6 @@ export function mapReadStateResponse(readState: ReadState): ReadStateResponse {
 		last_message_id: readState.lastMessageId?.toString() ?? null,
 		last_pin_timestamp: readState.lastPinTimestamp?.toISOString() ?? null,
 		version: readState.version.toString(),
+		...(readState.isMarked ? {flags: readState.flags ?? 0} : {}),
 	};
 }

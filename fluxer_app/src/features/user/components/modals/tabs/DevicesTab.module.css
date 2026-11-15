@@ -4,8 +4,8 @@
 	display: inline-block;
 	height: 0.25rem;
 	width: 0.25rem;
-	margin-left: 0.25rem;
-	margin-right: 0.25rem;
+	margin-inline-start: 0.25rem;
+	margin-inline-end: 0.25rem;
 	border-radius: 624.9375rem;
 	background-color: var(--text-primary-muted);
 	vertical-align: middle;
@@ -188,36 +188,6 @@
 	padding-bottom: 4rem;
 }
 
-.devicesSection {
-	display: flex;
-	flex-direction: column;
-	gap: 1.5rem;
-}
-
-.deviceGroup {
-	display: flex;
-	flex-direction: column;
-	gap: 0.75rem;
-}
-
-.deviceGroupHeader {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-}
-
-.deviceGroupTitle {
-	font-size: 0.875rem;
-	font-weight: 600;
-	color: var(--text-primary);
-}
-
-@media (min-width: 640px) {
-	.deviceGroupTitle {
-		font-size: 1rem;
-	}
-}
-
 .devicesGrid {
 	display: flex;
 	flex-direction: column;
@@ -238,16 +208,5 @@
 	margin: 0;
 	font-size: 0.8125rem;
 	line-height: 1.25rem;
-	color: var(--text-primary-muted);
-}
-
-.logoutSection {
-	display: flex;
-	flex-direction: column;
-	gap: 0.5rem;
-}
-
-.logoutDescription {
-	font-size: 0.875rem;
 	color: var(--text-primary-muted);
 }

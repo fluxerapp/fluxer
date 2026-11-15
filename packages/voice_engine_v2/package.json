@@ -4,18 +4,9 @@
 	"private": true,
 	"type": "module",
 	"exports": {
-		".": "./src/index.ts",
 		"./bridge": "./src/bridge/index.ts",
-		"./core": "./src/core/index.ts",
-		"./implementations": "./src/implementations/index.ts",
-		"./policies": "./src/policies/index.ts",
-		"./ports": "./src/ports/index.ts",
-		"./protocol": "./src/protocol/index.ts",
-		"./runtime": "./src/runtime/index.ts",
-		"./testing": "./src/testing/index.ts"
+		"./ports": "./src/ports/index.ts"
 	},
-	"main": "./src/index.ts",
-	"types": "./src/index.ts",
 	"scripts": {
 		"bench": "vitest bench --run",
 		"test": "vitest run",

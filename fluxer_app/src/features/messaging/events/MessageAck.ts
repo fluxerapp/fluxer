@@ -4,7 +4,7 @@ import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRout
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import Notification from '@app/features/ui/state/Notification';
 
-interface MessageAckPayload {
+export interface MessageAckPayload {
 	channel_id: string;
 	message_id: string;
 	mention_count: number;

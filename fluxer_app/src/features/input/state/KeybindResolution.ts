@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {CustomKeybindEntry, KeybindCommand, KeybindConfig, KeyCombo} from '@app/features/input/state/InputKeybind';
+import {resolveKeybindCommand} from '@app/features/input/state/input_keybind/KeybindCommands';
 
 export const keyComboHasTriggerInput = (combo: KeyCombo): boolean =>
 	(combo.key ?? '') !== '' || (combo.code ?? '') !== '' || combo.mouseButton != null || combo.gamepadButton != null;
@@ -14,7 +15,8 @@ export const isActiveCustomKeybind = (entry: CustomKeybindEntry): boolean =>
 export function getSuppressedBuiltinActions(customs: ReadonlyArray<CustomKeybindEntry>): Set<KeybindCommand> {
 	const actions = new Set<KeybindCommand>();
 	for (const entry of customs) {
-		if (entry.action && (isBuiltinDisableMarker(entry) || isActiveCustomKeybind(entry))) actions.add(entry.action);
+		const action = resolveKeybindCommand(entry.action);
+		if (action !== null && (isBuiltinDisableMarker(entry) || isActiveCustomKeybind(entry))) actions.add(action);
 	}
 	return actions;
 }

@@ -4,14 +4,7 @@ const {existsSync} = require('node:fs');
 const {createHash} = require('node:crypto');
 const {join, sep} = require('node:path');
 const {createNativeLoadError, loadNativeBinding} = require('./loader-diagnostics.cjs');
-const {
-	base64Url,
-	clientDataJSON,
-	nativeFileName,
-	normalizeCreateOptions,
-	normalizeGetOptions,
-	transportBits,
-} = require('./pure.cjs');
+const {base64Url, nativeFileName, normalizeCreateOptions, normalizeGetOptions} = require('./pure.cjs');
 const MODULE_NAME = '@fluxer/webauthn';
 const SKIP_NATIVE_PROBE_ENV = 'FLUXER_WEBAUTHN_SKIP_NATIVE_PROBE';
 
@@ -158,13 +151,4 @@ module.exports = {
 	getBackendInfo,
 	isSupported,
 	loadError,
-	_private: {
-		base64Url,
-		clientDataJSON,
-		nativeFileName,
-		normalizeCreateOptions,
-		normalizeGetOptions,
-		resolveNativeRoot,
-		transportBits,
-	},
 };

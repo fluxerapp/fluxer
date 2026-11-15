@@ -3,7 +3,9 @@
 -module(push_notification).
 -typing([eqwalizer]).
 
--export([build_notification_title/5]).
+-export([build_notification_title/5, channel_label/2, thread_fields/2]).
+
+-define(THREAD_PUSH_KEY, <<"__thread_push">>).
 
 -spec build_notification_title(
     binary(), map(), integer(), binary() | undefined, binary() | undefined
@@ -11,9 +13,47 @@
 build_notification_title(AuthorUsername, MessageData, GuildId, GuildName, ChannelName) ->
     ChannelType = maps:get(<<"channel_type">>, MessageData, 1),
     case GuildId of
-        0 -> format_dm_title(AuthorUsername, ChannelType);
-        _ -> format_guild_title(AuthorUsername, GuildName, ChannelName)
+        0 ->
+            format_dm_title(AuthorUsername, ChannelType);
+        _ ->
+            format_guild_title(
+                AuthorUsername, GuildName, channel_label(MessageData, ChannelName)
+            )
     end.
+
+-spec channel_label(map(), binary() | undefined) -> binary() | undefined.
+channel_label(MessageData, ChannelName) when is_binary(ChannelName) ->
+    case thread_parent_name(MessageData) of
+        undefined -> ChannelName;
+        ParentName -> iolist_to_binary([ChannelName, <<", #">>, ParentName])
+    end;
+channel_label(_MessageData, ChannelName) ->
+    ChannelName.
+
+-spec thread_parent_name(map()) -> binary() | undefined.
+thread_parent_name(#{?THREAD_PUSH_KEY := #{<<"parent_name">> := Name}}) when
+    is_binary(Name), byte_size(Name) > 0
+->
+    Name;
+thread_parent_name(_MessageData) ->
+    undefined.
+
+-spec thread_fields(map(), binary() | undefined) -> map().
+thread_fields(
+    #{?THREAD_PUSH_KEY := #{<<"parent_id">> := ParentId}} = MessageData, ChannelName
+) when
+    is_integer(ParentId)
+->
+    maps:filter(
+        fun(_Key, Value) -> is_binary(Value) end,
+        #{
+            <<"channel_name">> => ChannelName,
+            <<"parent_id">> => integer_to_binary(ParentId),
+            <<"parent_name">> => thread_parent_name(MessageData)
+        }
+    );
+thread_fields(_MessageData, _ChannelName) ->
+    #{}.
 
 -spec format_dm_title(binary(), term()) -> binary().
 format_dm_title(AuthorUsername, 3) ->
@@ -28,35 +68,3 @@ format_guild_title(AuthorUsername, _, undefined) ->
     AuthorUsername;
 format_guild_title(AuthorUsername, GName, ChanName) ->
     iolist_to_binary([AuthorUsername, <<" (#">>, ChanName, <<", ">>, GName, <<")">>]).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-build_notification_title_dm_test() ->
-    ?assertEqual(
-        <<"Alice">>,
-        build_notification_title(<<"Alice">>, #{}, 0, undefined, undefined)
-    ).
-
-build_notification_title_group_dm_test() ->
-    MessageData = #{<<"channel_type">> => 3},
-    ?assertEqual(
-        <<"Alice (Group DM)">>,
-        build_notification_title(<<"Alice">>, MessageData, 0, undefined, undefined)
-    ).
-
-build_notification_title_guild_test() ->
-    ?assertEqual(
-        <<"Alice (#general, My Server)">>,
-        build_notification_title(<<"Alice">>, #{}, 123, <<"My Server">>, <<"general">>)
-    ).
-
-build_url_dm_test() ->
-    ?assertEqual(<<"/channels/@me/456/789">>, push_notification_format:build_url(0, 456, 789)).
-
-build_url_guild_test() ->
-    ?assertEqual(
-        <<"/channels/123/456/789">>, push_notification_format:build_url(123, 456, 789)
-    ).
-
--endif.

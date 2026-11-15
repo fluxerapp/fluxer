@@ -36,6 +36,7 @@ function applyMetadata(schema: core.$ZodType, json: OpenAPISchema): void {
 	if (!metadata) return;
 	if (metadata.format) json.format = metadata.format;
 	if (metadata.bitflagValues) json['x-bitflagValues'] = metadata.bitflagValues;
+	if (metadata.experiment) json['x-fluxer-experiment'] = metadata.experiment;
 	const entries = metadata.enumEntries;
 	if (!entries) return;
 	json['x-enumNames'] = entries.map((entry) => entry.name);
@@ -87,11 +88,14 @@ function toPascalCase(value: string): string {
 function branchNamePrefix(discriminator: core.JSONSchema._JSONSchema | undefined): string | undefined {
 	if (typeof discriminator !== 'object') return undefined;
 	const enumNames = discriminator['x-enumNames'];
-	const value = Array.isArray(enumNames)
-		? enumNames[0]
-		: discriminator.enum?.length === 1
-			? discriminator.enum[0]
-			: discriminator.const;
+	let value: unknown;
+	if (Array.isArray(enumNames)) {
+		value = enumNames[0];
+	} else if (discriminator.enum?.length === 1) {
+		value = discriminator.enum[0];
+	} else {
+		value = discriminator.const;
+	}
 	return typeof value === 'string' ? toPascalCase(value) : undefined;
 }
 

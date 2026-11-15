@@ -104,6 +104,85 @@ describe('Password reset flow', () => {
 		const login = await loginUser(harness, {email: account.email, password: newPassword});
 		expect('token' in login && login.token.length > 0).toBe(true);
 	});
+	it('accepts a reset token for only one of several concurrent resets', async () => {
+		const account = await createTestAccount(harness);
+		await createBuilderWithoutAuth(harness)
+			.post('/auth/forgot')
+			.body({email: account.email})
+			.expect(HTTP_STATUS.NO_CONTENT)
+			.execute();
+		const emails = await listTestEmails(harness, {recipient: account.email});
+		const token = findLastTestEmail(emails, 'password_reset')!.metadata!.token!;
+		const results = await Promise.all(
+			Array.from({length: 4}, () =>
+				createBuilderWithoutAuth(harness)
+					.post('/auth/reset')
+					.body({token, password: generateUniquePassword()})
+					.executeRaw(),
+			),
+		);
+		const statuses = results.map(({response}) => response.status).sort();
+		expect(statuses).toEqual(
+			[HTTP_STATUS.OK, HTTP_STATUS.BAD_REQUEST, HTTP_STATUS.BAD_REQUEST, HTTP_STATUS.BAD_REQUEST].sort(),
+		);
+	});
+	it('lets the inbox owner reset the password of an account holding the unconfirmed address', async () => {
+		const account = await createTestAccount(harness);
+		await createBuilder(harness, '')
+			.post(`/test/users/${account.userId}/security-flags`)
+			.body({email_verified: false})
+			.execute();
+		await createBuilderWithoutAuth(harness)
+			.post('/auth/forgot')
+			.body({email: account.email})
+			.expect(HTTP_STATUS.NO_CONTENT)
+			.execute();
+		const emails = await listTestEmails(harness, {recipient: account.email});
+		const token = findLastTestEmail(emails, 'password_reset')!.metadata!.token!;
+		const newPassword = generateUniquePassword();
+		const reset = await createBuilderWithoutAuth<LoginSuccessResponse>(harness)
+			.post('/auth/reset')
+			.body({token, password: newPassword})
+			.execute();
+		await createBuilder(harness, account.token).get('/users/@me').expect(HTTP_STATUS.UNAUTHORIZED).execute();
+		const me = await createBuilder<{has_password: boolean}>(harness, reset.token).get('/users/@me').execute();
+		expect(me.has_password).toBe(true);
+		await createBuilderWithoutAuth(harness)
+			.post('/auth/reset')
+			.body({token, password: generateUniquePassword()})
+			.expect(HTTP_STATUS.BAD_REQUEST)
+			.execute();
+		const login = await loginUser(harness, {email: account.email, password: newPassword});
+		expect('token' in login && login.token.length > 0).toBe(true);
+	});
+	it('refuses a new-IP approval requested before the password was reset', async () => {
+		const account = await createTestAccount(harness);
+		await clearTestEmails(harness);
+		await createBuilderWithoutAuth(harness)
+			.post('/auth/login')
+			.header('x-forwarded-for', '192.0.2.88')
+			.body({email: account.email, password: account.password})
+			.expect(HTTP_STATUS.FORBIDDEN)
+			.execute();
+		const approval = findLastTestEmail(await listTestEmails(harness, {recipient: account.email}), 'ip_authorization');
+		await createBuilderWithoutAuth(harness)
+			.post('/auth/forgot')
+			.body({email: account.email})
+			.expect(HTTP_STATUS.NO_CONTENT)
+			.execute();
+		const token = findLastTestEmail(await listTestEmails(harness, {recipient: account.email}), 'password_reset')!
+			.metadata!.token!;
+		await createBuilderWithoutAuth(harness)
+			.post('/auth/reset')
+			.body({token, password: generateUniquePassword()})
+			.execute();
+		await createBuilderWithoutAuth(harness)
+			.post('/auth/authorize-ip')
+			.header('x-forwarded-for', '192.0.2.88')
+			.body({token: approval!.metadata['token']})
+			.expect(HTTP_STATUS.BAD_REQUEST)
+			.execute();
+	});
 	it('rejects invalid reset token', async () => {
 		await createTestAccount(harness);
 		await createBuilderWithoutAuth(harness)

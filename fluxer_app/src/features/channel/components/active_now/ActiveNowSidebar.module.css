@@ -6,7 +6,7 @@
 	width: var(--active-now-sidebar-width);
 	min-width: var(--active-now-sidebar-width);
 	height: 100%;
-	border-left: 0.0625rem solid var(--background-modifier-accent);
+	border-inline-start: 0.0625rem solid var(--background-modifier-accent);
 	background-color: var(--background-secondary-lighter);
 }
 

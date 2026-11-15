@@ -20,14 +20,10 @@ import {Logger} from '@app/api/Logger';
 import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import {writeZipArchive} from '@app/api/worker/utils/ArchiveFile';
 import {createArchiveJsonBuffer} from '@app/api/worker/utils/ArchiveJson';
-import {
-	buildHashedAssetKey,
-	buildSimpleAssetKey,
-	getAnimatedAssetExtension,
-	getEmojiExtension,
-} from '@app/api/worker/utils/AssetArchiveHelpers';
+import {buildHashedAssetKey, getAnimatedAssetExtension} from '@app/api/worker/utils/AssetArchiveHelpers';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {GUILD_TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
+import {MAX_THREAD_MEMBERS, THREAD_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import {z} from 'zod';
 
@@ -55,7 +51,7 @@ interface PendingAttachmentDownload {
 	filename: string;
 }
 
-export interface GuildHarvestAttachment {
+interface GuildHarvestAttachment {
 	id: AttachmentID;
 	filename: string;
 	size: bigint;
@@ -64,7 +60,22 @@ export interface GuildHarvestAttachment {
 	height: number | null;
 }
 
-export function buildGuildHarvestAttachment(
+const MAX_ARCHIVE_FILENAME_BYTES = 255;
+
+function archiveAttachmentName(attachmentId: AttachmentID, filename: string): string {
+	if (
+		filename.length === 0 ||
+		filename === '.' ||
+		filename === '..' ||
+		Buffer.byteLength(filename, 'utf8') > MAX_ARCHIVE_FILENAME_BYTES ||
+		/[\0/\\]/.test(filename)
+	) {
+		return attachmentId.toString();
+	}
+	return filename;
+}
+
+function buildGuildHarvestAttachment(
 	channelId: ChannelID,
 	attachment: GuildHarvestAttachment,
 	includeAttachments: boolean,
@@ -74,7 +85,9 @@ export function buildGuildHarvestAttachment(
 		filename: attachment.filename,
 		size: attachment.size.toString(),
 		content_type: attachment.contentType,
-		archive_path: includeAttachments ? `attachments/${channelId}/${attachment.id}/${attachment.filename}` : null,
+		archive_path: includeAttachments
+			? `attachments/${channelId}/${attachment.id}/${archiveAttachmentName(attachment.id, attachment.filename)}`
+			: null,
 		cdn_url: makeDataPackageAttachmentCdnUrl(channelId, attachment.id, attachment.filename),
 		width: attachment.width,
 		height: attachment.height,
@@ -135,11 +148,24 @@ const harvestGuildData: ArchiveTaskHandler = async (payload, helpers, attempt) =
 		const [roles, members, channels, emojis, stickers] = await Promise.all([
 			guildRepository.listRoles(guildId),
 			guildRepository.listMembers(guildId),
-			channelRepository.channelData.listGuildChannels(guildId),
+			channelRepository.channelData
+				.listGuildChannels(guildId, 'complete')
+				.then(async (guildChannels) => [
+					...guildChannels,
+					...(await channelRepository.channelData.listChannels(
+						await channelRepository.threads.listGuildThreadIds(guildId, {parents: guildChannels}),
+					)),
+				]),
 			guildRepository.listEmojis(guildId),
 			guildRepository.listStickers(guildId),
 		]);
 		await updateProgress(P_META, 'Writing guild metadata');
+		const threadStates = await channelRepository.threads.getStates(
+			channels.filter((c) => THREAD_CHANNEL_TYPES.has(c.type)).map((c) => c.id),
+		);
+		const threadMembers = await mapWithConcurrency(threadStates, CHANNEL_CONCURRENCY, (state) =>
+			channelRepository.threads.listMembers(state.threadId, {limit: MAX_THREAD_MEMBERS}),
+		);
 		const guildJson = {
 			guild: {
 				id: guild.id.toString(),
@@ -159,6 +185,8 @@ const harvestGuildData: ArchiveTaskHandler = async (payload, helpers, attempt) =
 				permissions: r.permissions.toString(),
 				mentionable: r.isMentionable,
 				hoist: r.isHoisted,
+				icon: r.iconHash,
+				unicode_emoji: r.unicodeEmoji,
 			})),
 			members: members.map((m) => ({
 				user_id: m.userId.toString(),
@@ -192,10 +220,28 @@ const harvestGuildData: ArchiveTaskHandler = async (payload, helpers, attempt) =
 				position: c.position,
 				last_message_id: c.lastMessageId?.toString() ?? null,
 			})),
+			...(threadStates.length > 0
+				? {
+						threads: threadStates.map((state, index) => ({
+							id: state.threadId.toString(),
+							parent_id: state.parentId.toString(),
+							type: state.type,
+							archived: state.archived,
+							locked: state.locked,
+							invitable: state.invitable,
+							auto_archive_duration: state.autoArchiveDuration,
+							archive_timestamp: state.archiveTimestamp?.toISOString() ?? null,
+							created_at: state.createdAt.toISOString(),
+							member_ids: threadMembers[index]!.map((member) => member.userId.toString()),
+						})),
+					}
+				: {}),
 		};
 		await fs.promises.writeFile(path.join(contentDir, 'guild.json'), createArchiveJsonBuffer(guildJson));
 		await updateProgress(P_META, `Harvesting messages from ${channels.length} channels`);
-		const textChannels = channels.filter((c) => GUILD_TEXT_BASED_CHANNEL_TYPES.has(c.type));
+		const textChannels = channels.filter(
+			(c) => GUILD_TEXT_BASED_CHANNEL_TYPES.has(c.type) || THREAD_CHANNEL_TYPES.has(c.type),
+		);
 		const pendingDownloads: Array<PendingAttachmentDownload> = [];
 		let processedChannels = 0;
 		await mapWithConcurrency(textChannels, CHANNEL_CONCURRENCY, async (channel) => {
@@ -203,7 +249,7 @@ const harvestGuildData: ArchiveTaskHandler = async (payload, helpers, attempt) =
 			let beforeMessageId: MessageID | undefined;
 			let channelDownloads: Array<PendingAttachmentDownload> = [];
 			while (messages.length < MESSAGE_LIMIT_PER_CHANNEL) {
-				const batch = await channelRepository.listMessages(channel.id, beforeMessageId, MESSAGE_BATCH_SIZE);
+				const batch = await channelRepository.messages.listMessages(channel.id, beforeMessageId, MESSAGE_BATCH_SIZE);
 				if (batch.length === 0) break;
 				for (const msg of batch) {
 					if (msg.authorId == null) continue;
@@ -256,17 +302,31 @@ const harvestGuildData: ArchiveTaskHandler = async (payload, helpers, attempt) =
 				dest: path.join(contentDir, 'assets', 'guild', `${fileName}.${ext}`),
 			});
 		}
+		for (const role of roles) {
+			if (!role.iconHash) continue;
+			const id = role.id.toString();
+			assetJobs.push({
+				key: buildHashedAssetKey('role-icons', id, role.iconHash),
+				dest: path.join(
+					contentDir,
+					'assets',
+					'guild',
+					'role-icons',
+					`${id}.${getAnimatedAssetExtension(role.iconHash)}`,
+				),
+			});
+		}
 		for (const emoji of emojis) {
 			const id = emoji.id.toString();
 			assetJobs.push({
-				key: buildSimpleAssetKey('emojis', id),
-				dest: path.join(contentDir, 'assets', 'guild', 'emojis', `${id}.${getEmojiExtension(emoji.isAnimated)}`),
+				key: `emojis/${id}`,
+				dest: path.join(contentDir, 'assets', 'guild', 'emojis', `${id}.${emoji.isAnimated ? 'gif' : 'webp'}`),
 			});
 		}
 		for (const sticker of stickers) {
 			const id = sticker.id.toString();
 			assetJobs.push({
-				key: buildSimpleAssetKey('stickers', id),
+				key: `stickers/${id}`,
 				dest: path.join(contentDir, 'assets', 'guild', 'stickers', `${id}.${sticker.animated ? 'gif' : 'png'}`),
 			});
 		}
@@ -284,7 +344,7 @@ const harvestGuildData: ArchiveTaskHandler = async (payload, helpers, attempt) =
 					'attachments',
 					dl.channelId.toString(),
 					dl.attachmentId.toString(),
-					dl.filename,
+					archiveAttachmentName(dl.attachmentId, dl.filename),
 				);
 				await downloadToDisk(storageService, cdnBucket(), storageKey, dest);
 				doneCount++;

@@ -3,11 +3,11 @@
 import {OAuthAccountStep} from '@app/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep';
 import {OAuthCommunityStep} from '@app/features/auth/components/pages/oauth_authorize_page/OAuthCommunityStep';
 import {OAuthErrorState} from '@app/features/auth/components/pages/oauth_authorize_page/OAuthErrorState';
-import {OAuthLoadingState} from '@app/features/auth/components/pages/oauth_authorize_page/OAuthLoadingState';
 import {OAuthPermissionsStep} from '@app/features/auth/components/pages/oauth_authorize_page/OAuthPermissionsStep';
 import {OAuthScopesStep} from '@app/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep';
 import {OAuthSuccessState} from '@app/features/auth/components/pages/oauth_authorize_page/OAuthSuccessState';
 import type {AuthorizeFlow} from '@app/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow';
+import {AuthLoadingState} from '@app/features/auth/flow/AuthLoadingState';
 import {SteppedCarousel} from '@app/features/ui/stepped_carousel/SteppedCarousel';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -21,12 +21,13 @@ export const AUTHORIZE_APPLICATION_DESCRIPTOR = msg({
 
 interface OAuthAuthorizeFlowPanelProps {
 	flow: AuthorizeFlow;
+	onAccountChanged?: () => void;
 	onDone?: () => void;
 	showInlineActions?: boolean;
 }
 
 export const OAuthAuthorizeFlowPanel: React.FC<OAuthAuthorizeFlowPanelProps> = observer(
-	({flow, onDone, showInlineActions = true}) => {
+	({flow, onAccountChanged, onDone, showInlineActions = true}) => {
 		const {i18n} = useLingui();
 		if (flow.submitError) {
 			return (
@@ -40,9 +41,21 @@ export const OAuthAuthorizeFlowPanel: React.FC<OAuthAuthorizeFlowPanelProps> = o
 		switch (flow.phase.kind) {
 			case 'loading':
 				return (
-					<OAuthLoadingState data-flx="auth.oauth-authorize-page.o-auth-authorize-flow-panel.o-auth-loading-state" />
+					<AuthLoadingState data-flx="auth.oauth-authorize-page.o-auth-authorize-flow-panel.o-auth-loading-state" />
 				);
 			case 'session_expired':
+				if (flow.includesAccountStep && onAccountChanged != null) {
+					return (
+						<OAuthAccountStep
+							clientLabel={flow.clientLabel}
+							sessionExpired
+							onCancel={flow.onCancel}
+							onContinue={onAccountChanged}
+							onAccountChanged={onAccountChanged}
+							data-flx="auth.oauth-authorize-page.o-auth-authorize-flow-panel.o-auth-account-step--session-expired"
+						/>
+					);
+				}
 				return (
 					<OAuthErrorState
 						error={flow.sessionExpiredMessage}
@@ -83,8 +96,10 @@ export const OAuthAuthorizeFlowPanel: React.FC<OAuthAuthorizeFlowPanelProps> = o
 						return (
 							<OAuthAccountStep
 								clientLabel={flow.clientLabel}
+								sessionExpired={false}
 								onCancel={flow.onCancel}
 								onContinue={flow.goNext}
+								onAccountChanged={onAccountChanged ?? flow.goNext}
 								data-flx="auth.oauth-authorize-page.o-auth-authorize-flow-panel.render-review-step.o-auth-account-step"
 							/>
 						);
@@ -157,6 +172,7 @@ export const OAuthAuthorizeFlowPanel: React.FC<OAuthAuthorizeFlowPanelProps> = o
 							scopesAdjusted={flow.scopesAdjusted}
 							selectedScopes={flow.selectedScopes}
 							showInlineActions={showInlineActions}
+							showAccount={flow.includesAccountStep}
 							isScopeLocked={flow.isScopeLocked}
 							submitting={flow.submitting}
 							data-flx="auth.oauth-authorize-page.o-auth-authorize-flow-panel.render-review-step.o-auth-scopes-step"

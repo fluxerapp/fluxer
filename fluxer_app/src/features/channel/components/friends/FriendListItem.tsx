@@ -3,10 +3,11 @@
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {CustomStatusDisplay} from '@app/features/app/components/shared/custom_status_display/CustomStatusDisplay';
 import {getStatusTypeLabel} from '@app/features/app/constants/AppConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
 import {ActionButton} from '@app/features/channel/components/friends/ActionButton';
 import styles from '@app/features/channel/components/friends/FriendListItem.module.css';
-import {CANCEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {CANCEL_DESCRIPTOR, MORE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {isKeyboardActivationKey, stopPropagationOnEnterSpace} from '@app/features/input/utils/KeyboardUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {usePresenceCustomStatus} from '@app/features/presence/hooks/usePresenceCustomStatus';
@@ -59,10 +60,6 @@ const ARE_YOU_SURE_YOU_WANT_TO_CANCEL_YOUR_DESCRIPTOR = msg({
 const SEND_MESSAGE_DESCRIPTOR = msg({
 	message: 'Send message',
 	comment: 'Button or menu action label in the channel and chat friend list item. Keep it concise.',
-});
-const MORE_DESCRIPTOR = msg({
-	message: 'More',
-	comment: 'Short label in the channel and chat friend list item. Keep it concise.',
 });
 const logger = new Logger('FriendListItem');
 
@@ -253,18 +250,22 @@ export const FriendListItem: React.FC<FriendListItemProps> = observer((props) =>
 		switch (relationshipType) {
 			case RelationshipTypes.FRIEND:
 				return [
-					{
-						icon: (
-							<ChatTeardropIcon
-								weight="fill"
-								className={styles.iconSize}
-								data-flx="channel.friends.friend-list-item.get-friend-actions.icon-size"
-							/>
-						),
-						tooltip: i18n._(SEND_MESSAGE_DESCRIPTOR),
-						onClick: createDMChannel,
-						className: styles.actionButtonMessage,
-					},
+					...(RuntimeConfig.directMessagesDisabled
+						? []
+						: [
+								{
+									icon: (
+										<ChatTeardropIcon
+											weight="fill"
+											className={styles.iconSize}
+											data-flx="channel.friends.friend-list-item.get-friend-actions.icon-size"
+										/>
+									),
+									tooltip: i18n._(SEND_MESSAGE_DESCRIPTOR),
+									onClick: createDMChannel,
+									className: styles.actionButtonMessage,
+								},
+							]),
 					{
 						icon: (
 							<DotsThreeVerticalIcon

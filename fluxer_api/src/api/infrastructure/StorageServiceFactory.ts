@@ -2,9 +2,11 @@
 
 import {Config} from '@app/api/Config';
 import {ChangeFeedStorageService} from '@app/api/infrastructure/ChangeFeedStorageService';
+import {FilesystemStorageService} from '@app/api/infrastructure/FilesystemStorageService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import {JetStreamStorageChangeSink, StorageChangeFeed} from '@app/api/infrastructure/StorageChangeFeed';
 import {StorageService} from '@app/api/infrastructure/StorageService';
+import {Logger} from '@app/api/Logger';
 
 const CHANGE_FEED_SHUTDOWN_TIMEOUT_MS = 5000;
 
@@ -22,6 +24,16 @@ function withChangeFeed(service: IStorageService): IStorageService {
 }
 
 export function createStorageService(): IStorageService {
+	if (Config.storage.backend === 'filesystem') {
+		return withChangeFeed(
+			new FilesystemStorageService({
+				root: Config.storage.root,
+				buckets: Config.s3.buckets,
+				readOnly: Config.storage.readOnly,
+				logger: Logger,
+			}),
+		);
+	}
 	return withChangeFeed(new StorageService());
 }
 

@@ -7,14 +7,14 @@ export const SearchAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 	{
 		method: 'POST',
 		route: '/admin/search/indexes/:index_name/refreshes',
-		async prepare({admin}) {
+		async prepare() {
 			return {
-				request: {path: '/admin/search/indexes/favorite_memes/refreshes', body: {user_id: admin.userId}},
+				request: {path: '/admin/search/indexes/users/refreshes', body: {}},
 				expected: {
 					action: 'queue_refresh_index',
 					targetType: 'search_index',
 					targetId: '0',
-					metadata: {index_type: 'favorite_memes', job_id: expect.any(String), user_id: admin.userId},
+					metadata: {index_type: 'users', job_id: expect.any(String)},
 				},
 			};
 		},

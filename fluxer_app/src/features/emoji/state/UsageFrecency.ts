@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {compareStrings} from '@app/lib/list/CompareStrings';
+import {MS_PER_DAY} from '@fluxer/date_utils/src/DateConstants';
+
 export type UsageEntry = Readonly<{
 	count: number;
 	lastUsed: number;
@@ -17,10 +20,10 @@ export type UsageRanking = Readonly<{
 	scoreByKey: ReadonlyMap<string, number>;
 }>;
 
-export const USAGE_FRECENCY_HALF_LIFE_MS = 7 * 24 * 60 * 60 * 1000;
+const USAGE_FRECENCY_HALF_LIFE_MS = 7 * MS_PER_DAY;
 export const MAX_TRACKED_USAGE_KEYS = 200;
-export const MAX_USAGE_COUNT = 100_000;
-export const MAX_USAGE_KEY_LENGTH = 256;
+const MAX_USAGE_COUNT = 100_000;
+const MAX_USAGE_KEY_LENGTH = 256;
 
 export const EMPTY_USAGE_RANKING: UsageRanking = Object.freeze({
 	version: 0,
@@ -38,7 +41,7 @@ export function usageFrecencyScore(entry: UsageEntry, now: number): number {
 	return Math.log2(entry.count + 1) * 0.5 ** (ageMs / USAGE_FRECENCY_HALF_LIFE_MS);
 }
 
-export function sanitizeUsageEntry(entry: {count: number; lastUsed: number}, now: number): UsageEntry | null {
+function sanitizeUsageEntry(entry: {count: number; lastUsed: number}, now: number): UsageEntry | null {
 	if (!Number.isFinite(entry.count) || !Number.isFinite(entry.lastUsed)) {
 		return null;
 	}
@@ -73,7 +76,7 @@ function compareRankedUsage(a: RankedUsage, b: RankedUsage): number {
 	if (a.entry.count !== b.entry.count) {
 		return b.entry.count - a.entry.count;
 	}
-	return a.key < b.key ? -1 : a.key > b.key ? 1 : 0;
+	return compareStrings(a.key, b.key);
 }
 
 function rankEntries(usage: Readonly<Record<string, UsageEntry>>, now: number): Array<RankedUsage> {

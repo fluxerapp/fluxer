@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {signAttachmentUrl} from '@app/api/attachment/AttachmentUrls';
+import {publicAttachmentUrl} from '@app/api/attachment/AttachmentPublicUrl';
 import {tryExtractGifProviderSlug} from '@app/api/gif/GifProviderUtils';
-import type {GifService} from '@app/api/gif/GifService';
-import type {IGifProvider} from '@app/api/gif/IGifProvider';
+import type {NatsGifProvider} from '@app/api/gif/NatsGifProvider';
 import type {IMediaService, MediaProxyMetadataResponse} from '@app/api/infrastructure/IMediaService';
 import type {IUnfurlerService} from '@app/api/infrastructure/IUnfurlerService';
 import {Logger} from '@fluxer/logger/src/Logger';
@@ -53,7 +52,7 @@ export async function resolveFavoriteGifEntry({
 	url: string;
 	locale: string;
 	country: string;
-	gifService: GifService;
+	gifService: NatsGifProvider;
 	mediaService: IMediaService;
 	unfurlerService: IUnfurlerService;
 }): Promise<ResolvedGifEntrySchema> {
@@ -72,6 +71,10 @@ export async function resolveFavoriteGifEntry({
 	return favoriteGifEntryFromExternalMedia({url, mediaService, metadata});
 }
 
+export function unresolvedFavoriteGifEntry(url: string): ResolvedGifEntrySchema {
+	return {url, proxy_url: url, width: 0, height: 0, media: {}, content_type: '', placeholder: null};
+}
+
 async function resolveProviderGifUrl({
 	url,
 	locale,
@@ -81,15 +84,15 @@ async function resolveProviderGifUrl({
 	url: string;
 	locale: string;
 	country: string;
-	gifService: GifService;
+	gifService: NatsGifProvider;
 }): Promise<GifResponse | null> {
-	const provider = gifService.getProvider();
+	const provider = gifService;
 	if (!(await tryExtractGifProviderSlug(provider, url))) return null;
 	return resolveProviderUrl(provider, {url, locale, country});
 }
 
 async function resolveProviderUrl(
-	provider: IGifProvider,
+	provider: NatsGifProvider,
 	params: {url: string; locale: string; country: string},
 ): Promise<GifResponse | null> {
 	try {
@@ -109,8 +112,8 @@ function favoriteGifEntryFromExternalMedia({
 	mediaService: IMediaService;
 	metadata: MediaProxyMetadataResponse | null;
 }): ResolvedGifEntrySchema {
-	const signedUrl = signAttachmentUrl(url);
-	const proxyUrl = signAttachmentUrl(mediaService.getExternalMediaProxyURL(url));
+	const signedUrl = publicAttachmentUrl(url);
+	const proxyUrl = publicAttachmentUrl(mediaService.getExternalMediaProxyURL(url));
 	const media = directMediaFormatFromMetadata({url: signedUrl, proxyUrl, metadata});
 	return {
 		url: signedUrl,
@@ -155,16 +158,16 @@ function favoriteGifEntryFromEmbedMedia({
 	mediaService: IMediaService;
 	media: EmbedMediaResponse;
 }): ResolvedGifEntrySchema {
-	const proxyUrl = signAttachmentUrl(media.proxy_url ?? mediaService.getExternalMediaProxyURL(media.url));
+	const proxyUrl = publicAttachmentUrl(media.proxy_url ?? mediaService.getExternalMediaProxyURL(media.url));
 	const width = media.width ?? 0;
 	const height = media.height ?? 0;
 	const contentType = media.content_type ?? '';
 	return {
-		url: signAttachmentUrl(url),
+		url: publicAttachmentUrl(url),
 		proxy_url: proxyUrl,
 		width,
 		height,
-		media: directMediaFormatFromDetails({url: signAttachmentUrl(media.url), proxyUrl, contentType, width, height}),
+		media: directMediaFormatFromDetails({url: publicAttachmentUrl(media.url), proxyUrl, contentType, width, height}),
 		content_type: contentType,
 		placeholder: media.placeholder ?? null,
 	};

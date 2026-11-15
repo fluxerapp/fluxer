@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility, {ChannelTypingIndicatorMode} from '@app/features/accessibility/state/Accessibility';
+import {ChannelSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import styles from '@app/features/app/components/layout/ChannelItem.module.css';
 import {ChannelItemContent} from '@app/features/app/components/layout/ChannelItemContent';
 import {ChannelItemIcon} from '@app/features/app/components/layout/ChannelItemIcon';
@@ -24,17 +25,16 @@ import {VoiceChannelUserCount} from '@app/features/app/components/layout/VoiceCh
 import {useChannelHoverPreload} from '@app/features/app/hooks/useChannelHoverPreload';
 import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHoverState';
 import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
-import {useTextOverflow} from '@app/features/app/hooks/useTextOverflow';
 import * as LinkChannelCommands from '@app/features/channel/commands/LinkChannelCommands';
 import {CategoryBottomSheet} from '@app/features/channel/components/bottomsheets/CategoryBottomSheet';
 import {ChannelBottomSheet} from '@app/features/channel/components/bottomsheets/ChannelBottomSheet';
 import {Typing} from '@app/features/channel/components/ChannelTyping';
 import {ChannelCreateModal} from '@app/features/channel/components/modals/ChannelCreateModal';
-import {ChannelSettingsModal} from '@app/features/channel/components/modals/ChannelSettingsModal';
 import {getTypingText, usePresentableTypingUsers} from '@app/features/channel/components/TypingUsers';
 import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
+import {hasForumUnread} from '@app/features/forum/state/ForumReadState';
 import type {Guild} from '@app/features/guild/models/Guild';
 import {
 	CREATE_CHANNEL_DESCRIPTOR,
@@ -58,6 +58,7 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {MentionBadge} from '@app/features/ui/components/MentionBadge';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {useTextOverflow} from '@app/features/ui/hooks/useTextOverflow';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
@@ -65,7 +66,7 @@ import {CHANNEL_SETTINGS_LABEL_DESCRIPTOR} from '@app/features/user/components/s
 import type {User} from '@app/features/user/models/User';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import Users from '@app/features/user/state/Users';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import {usePendingVoiceConnection} from '@app/features/voice/hooks/usePendingVoiceConnection';
 import {computeChannelE2EEStatus} from '@app/features/voice/state/ChannelE2EEStatus';
 import CompactVoiceCallHeight, {getGuildVoiceCallExpansionKey} from '@app/features/voice/state/CompactVoiceCallHeight';
@@ -145,7 +146,7 @@ interface ChannelItemCoreProps {
 export const ChannelItemCore: React.FC<ChannelItemCoreProps> = observer(
 	({channel, isSelected = false, forceHover = false, typingIndicator, className}) => {
 		const channelLabelRef = useRef<HTMLSpanElement>(null);
-		const isChannelNameOverflowing = useTextOverflow(channelLabelRef);
+		const isChannelNameOverflowing = useTextOverflow(channelLabelRef, {content: channel.name});
 		return (
 			<div
 				className={clsx(
@@ -230,9 +231,9 @@ export const ChannelItem = observer(
 		const isVoiceDragActive = draggingChannel?.channelType === ChannelTypes.GUILD_VOICE;
 		const shouldDimForVoiceDrag = Boolean(isVoiceDragActive && channelIsText && channel.parentId !== null);
 		const unreadCount = ReadStates.getUnreadCount(channel.id);
-		const hasUnread = ReadStates.hasUnread(channel.id);
-		const connectedVoiceGuildId = channelIsVoice ? MediaEngine.guildId : null;
-		const connectedVoiceChannelId = channelIsVoice ? MediaEngine.channelId : null;
+		const hasUnread = channel.isThreadOnly() ? hasForumUnread(channel) : ReadStates.hasUnread(channel.id);
+		const connectedVoiceGuildId = channelIsVoice ? VoiceRuntime.guildId : null;
+		const connectedVoiceChannelId = channelIsVoice ? VoiceRuntime.channelId : null;
 		const canManageChannels = Permission.can(Permissions.MANAGE_CHANNELS, channel);
 		const canUpdateRtcRegion = channelIsVoice && Permission.can(Permissions.UPDATE_RTC_REGION, channel);
 		const canEditChannel = canManageChannels || canUpdateRtcRegion;
@@ -242,7 +243,7 @@ export const ChannelItem = observer(
 		const isChannelDirectlyMuted = UserGuildSettings.isChannelDirectlyMuted(guild.id, channel.id);
 		const currentUserCount =
 			channelIsVoice && channel.userLimit != null && channel.userLimit > 0
-				? Object.keys(MediaEngine.getAllVoiceStatesInChannel(guild.id, channel.id)).length
+				? Object.keys(VoiceRuntime.getAllVoiceStatesInChannel(guild.id, channel.id)).length
 				: 0;
 		const isMobileLayout = mobileLayout.enabled;
 		const allowHoverAffordances = !isMobileLayout;
@@ -350,7 +351,7 @@ export const ChannelItem = observer(
 						}
 						const currentUserId = Users.getCurrentUser()?.id ?? null;
 						if (currentUserId && item.userId === currentUserId) {
-							void MediaEngine.connectToVoiceChannel(guild.id, channel.id);
+							void VoiceRuntime.withEngine('join', (engine) => engine.connectToVoiceChannel(guild.id, channel.id));
 							setDropIndicator(null);
 							return;
 						}
@@ -485,11 +486,14 @@ export const ChannelItem = observer(
 				data-flx="app.channel-item.unread-indicator"
 			/>
 		) : null;
-		const channelKindLabel = channelIsCategory
-			? i18n._(CATEGORY_DESCRIPTOR)
-			: channelIsVoice
-				? i18n._(VOICE_CHANNEL_DESCRIPTOR)
-				: i18n._(CHANNEL_DESCRIPTOR);
+		let channelKindLabel: string;
+		if (channelIsCategory) {
+			channelKindLabel = i18n._(CATEGORY_DESCRIPTOR);
+		} else if (channelIsVoice) {
+			channelKindLabel = i18n._(VOICE_CHANNEL_DESCRIPTOR);
+		} else {
+			channelKindLabel = i18n._(CHANNEL_DESCRIPTOR);
+		}
 		const ariaLabelParts = [channel.name, channelKindLabel];
 		if (shouldShowSelectedState) ariaLabelParts.push(i18n._(SELECTED_DESCRIPTOR));
 		if (channelIsCategory)
@@ -606,35 +610,41 @@ export const ChannelItem = observer(
 		const handleChannelSettingsClick = useCallback(() => {
 			armActionModalReturn();
 			ModalCommands.push(
-				modal(() => (
-					<ChannelSettingsModal
-						channelId={channel.id}
-						data-flx="app.channel-item.handle-channel-settings-click.channel-settings-modal"
-					/>
-				)),
+				modal(
+					() => (
+						<ChannelSettingsModal
+							channelId={channel.id}
+							data-flx="app.channel-item.handle-channel-settings-click.channel-settings-modal"
+						/>
+					),
+					'channel-settings',
+				),
 			);
 		}, [channel.id, armActionModalReturn]);
 		const channelSettingsLabel = channelIsCategory
 			? i18n._(EDIT_CATEGORY_DESCRIPTOR)
 			: i18n._(CHANNEL_SETTINGS_LABEL_DESCRIPTOR);
 		const voiceLocked = channelIsVoice && !Permission.can(Permissions.CONNECT, channel);
+		let channelIconStateClass = styles.channelItemIconUnselected;
+		if (shouldShowSelectedState || (isHighlight && isSelected)) {
+			channelIconStateClass = styles.channelItemIconSelected;
+		} else if (isVoiceSelected && channel.type === ChannelTypes.GUILD_VOICE) {
+			channelIconStateClass = styles.channelItemHighlight;
+		} else if (isHighlight && !isSelected) {
+			channelIconStateClass = styles.channelItemIconHighlight;
+		}
+		let channelIconOptions: {locked?: boolean; e2eeEncrypted?: boolean} | undefined;
+		if (voiceLocked) {
+			channelIconOptions = {locked: true};
+		} else if (channelIsE2EEEncrypted) {
+			channelIconOptions = {e2eeEncrypted: true};
+		}
 		const channelIconNode = channelIsCategory
 			? null
 			: ChannelUtils.getIcon(
 					channel,
-					{
-						className: clsx(
-							styles.channelItemIcon,
-							shouldShowSelectedState || (isHighlight && isSelected)
-								? styles.channelItemIconSelected
-								: isVoiceSelected && channel.type === ChannelTypes.GUILD_VOICE
-									? styles.channelItemHighlight
-									: isHighlight && !isSelected
-										? styles.channelItemIconHighlight
-										: styles.channelItemIconUnselected,
-						),
-					},
-					voiceLocked ? {locked: true} : channelIsE2EEEncrypted ? {e2eeEncrypted: true} : undefined,
+					{className: clsx(styles.channelItemIcon, channelIconStateClass)},
+					channelIconOptions,
 				);
 		const typingIndicatorNode =
 			!channelIsCategory &&

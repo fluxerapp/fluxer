@@ -47,10 +47,6 @@ impl RouterService for GifsRouter {
             self.l1.insert(key, resp.clone());
         }
     }
-
-    fn l1_invalidate(&self, key: &str) {
-        self.l1.invalidate(key);
-    }
 }
 
 fn request_l1_key(req: &GifRequest) -> Option<String> {
@@ -59,9 +55,7 @@ fn request_l1_key(req: &GifRequest) -> Option<String> {
         | GifRequest::GetFeatured { .. }
         | GifRequest::GetTrendingGifs { .. }
         | GifRequest::Suggest { .. }
-        | GifRequest::ResolveByUrl { .. }
-        | GifRequest::BuildShareUrl { .. }
-        | GifRequest::ExtractSlugFromUrl { .. } => request_key(req),
+        | GifRequest::ResolveByUrl { .. } => request_key(req),
         GifRequest::IsAvailable { .. } | GifRequest::RegisterShare { .. } => None,
     }
 }
@@ -83,8 +77,6 @@ fn request_key(req: &GifRequest) -> Option<String> {
         GifRequest::ResolveByUrl { url, .. } => {
             Some(format!("resolve:{}", crate::klipy::resolve_cache_key(url)))
         }
-        GifRequest::BuildShareUrl { slug } => Some(format!("share-url:{slug}")),
-        GifRequest::ExtractSlugFromUrl { url } => Some(format!("extract-slug:{url}")),
     }
 }
 
@@ -95,122 +87,4 @@ fn response_is_cacheable(resp: &GifServiceResponse) -> bool {
             | GifServiceResponse::Registered
             | GifServiceResponse::Failed { .. }
     )
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn coalesce_key_excludes_api_key() {
-        let first = GifRequest::Search {
-            api_key: "a".to_owned(),
-            q: "wave".to_owned(),
-            locale: "en_US".to_owned(),
-            country: "US".to_owned(),
-        };
-        let second = GifRequest::Search {
-            api_key: "b".to_owned(),
-            q: "wave".to_owned(),
-            locale: "en_US".to_owned(),
-            country: "US".to_owned(),
-        };
-
-        assert_eq!(
-            GifsRouter::coalesce_key(&first),
-            GifsRouter::coalesce_key(&second)
-        );
-    }
-
-    #[test]
-    fn trending_key_is_locale_country_scoped_and_api_key_free() {
-        let base = GifRequest::GetTrendingGifs {
-            api_key: "a".to_owned(),
-            locale: "en_US".to_owned(),
-            country: "US".to_owned(),
-        };
-        let different_api_key = GifRequest::GetTrendingGifs {
-            api_key: "b".to_owned(),
-            locale: "en_US".to_owned(),
-            country: "US".to_owned(),
-        };
-        let different_locale = GifRequest::GetTrendingGifs {
-            api_key: "a".to_owned(),
-            locale: "sv_SE".to_owned(),
-            country: "US".to_owned(),
-        };
-        let different_country = GifRequest::GetTrendingGifs {
-            api_key: "a".to_owned(),
-            locale: "en_US".to_owned(),
-            country: "SE".to_owned(),
-        };
-
-        assert_eq!(
-            GifsRouter::coalesce_key(&base),
-            Some("trending:en_US:US".to_owned())
-        );
-        assert_eq!(
-            GifsRouter::coalesce_key(&base),
-            GifsRouter::coalesce_key(&different_api_key)
-        );
-        assert_ne!(
-            GifsRouter::coalesce_key(&base),
-            GifsRouter::coalesce_key(&different_locale)
-        );
-        assert_ne!(
-            GifsRouter::coalesce_key(&base),
-            GifsRouter::coalesce_key(&different_country)
-        );
-        assert_eq!(request_l1_key(&base), Some("trending:en_US:US".to_owned()));
-    }
-
-    #[test]
-    fn resolve_key_collapses_locale_country_and_url_spelling() {
-        let make = |url: &str, locale: &str, country: &str| GifRequest::ResolveByUrl {
-            api_key: "key".to_owned(),
-            url: url.to_owned(),
-            locale: locale.to_owned(),
-            country: country.to_owned(),
-        };
-        let base = make("https://klipy.com/gifs/kittens", "en_US", "US");
-
-        assert_eq!(
-            GifsRouter::coalesce_key(&base),
-            Some("resolve:gifs:kittens".to_owned())
-        );
-        assert_eq!(
-            GifsRouter::coalesce_key(&base),
-            GifsRouter::coalesce_key(&make("https://klipy.com/gifs/kittens", "sv_SE", "SE"))
-        );
-        assert_eq!(
-            GifsRouter::coalesce_key(&base),
-            GifsRouter::coalesce_key(&make(
-                "https://www.klipy.com/gif/kittens?x=1",
-                "en_US",
-                "US"
-            ))
-        );
-        assert_ne!(
-            GifsRouter::coalesce_key(&base),
-            GifsRouter::coalesce_key(&make("https://klipy.com/clips/kittens", "en_US", "US"))
-        );
-        assert_eq!(
-            request_l1_key(&base),
-            Some("resolve:gifs:kittens".to_owned())
-        );
-    }
-
-    #[test]
-    fn register_share_is_not_cached_or_coalesced() {
-        let request = GifRequest::RegisterShare {
-            api_key: "key".to_owned(),
-            id: "gif".to_owned(),
-            q: "wave".to_owned(),
-            locale: "en_US".to_owned(),
-            country: "US".to_owned(),
-        };
-
-        assert_eq!(GifsRouter::coalesce_key(&request), None);
-        assert_eq!(request_l1_key(&request), None);
-    }
 }

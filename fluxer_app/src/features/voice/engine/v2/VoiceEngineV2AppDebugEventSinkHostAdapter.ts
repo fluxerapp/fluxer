@@ -22,8 +22,8 @@ import {RoomEvent} from 'livekit-client';
 
 const logger = new Logger('VoiceEngineV2AppDebugEventSinkHostAdapter');
 
-export const VOICE_ENGINE_V2_APP_DEBUG_EVENT_SINK_MAX_ENTRIES = 1000;
-export const VOICE_ENGINE_V2_APP_DEBUG_EVENT_SINK_MAX_LINE_CHARS = 262_144;
+const VOICE_ENGINE_V2_APP_DEBUG_EVENT_SINK_MAX_ENTRIES = 1000;
+const VOICE_ENGINE_V2_APP_DEBUG_EVENT_SINK_MAX_LINE_CHARS = 262_144;
 const SCREEN_SHARE_CODEC_NEGOTIATION_TOPIC = 'fluxer.rtc.codec-negotiation.v1';
 const TEXT_DECODER = new TextDecoder();
 
@@ -304,7 +304,7 @@ function parseAllowedDataMessage(payload: Uint8Array, topic: string | undefined)
 	}
 }
 
-export class VoiceEngineV2AppDebugEventSinkHostAdapter {
+class VoiceEngineV2AppDebugEventSinkHostAdapter {
 	private channelId: string | null = null;
 	private connectionId: string | null = null;
 	private room: Room | null = null;

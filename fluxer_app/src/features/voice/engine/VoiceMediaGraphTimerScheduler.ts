@@ -20,7 +20,7 @@ export interface VoiceMediaGraphTimerSchedulerStore {
 	nowMs(): number;
 }
 
-export const systemVoiceMediaGraphTimerSchedulerPlatform: VoiceMediaGraphTimerSchedulerPlatform = {
+const systemVoiceMediaGraphTimerSchedulerPlatform: VoiceMediaGraphTimerSchedulerPlatform = {
 	setTimeout: (callback, delayMs) => globalThis.setTimeout(callback, delayMs),
 	clearTimeout: (handle) => globalThis.clearTimeout(handle as Parameters<typeof globalThis.clearTimeout>[0]),
 };
@@ -48,18 +48,6 @@ export class VoiceMediaGraphTimerScheduler {
 		if (this.unsubscribe) return;
 		this.unsubscribe = this.store.subscribe(() => this.sync());
 		this.sync();
-	}
-
-	stop(): void {
-		this.unsubscribe?.();
-		this.unsubscribe = null;
-		let visited = 0;
-		for (const timer of this.timers.values()) {
-			visited += 1;
-			assert.ok(visited <= VOICE_MEDIA_GRAPH_ENTRY_LIMIT, 'timer cancellation exceeded graph limit');
-			this.platform.clearTimeout(timer.handle);
-		}
-		this.timers.clear();
 	}
 
 	private sync(): void {
@@ -113,12 +101,4 @@ export function startVoiceMediaGraphTimerScheduler(
 	activeVoiceMediaGraphTimerSchedulerStore = store;
 	activeVoiceMediaGraphTimerSchedulerPlatform = platform;
 	return scheduler;
-}
-
-export function stopVoiceMediaGraphTimerScheduler(): void {
-	if (!activeVoiceMediaGraphTimerScheduler) return;
-	activeVoiceMediaGraphTimerScheduler.stop();
-	activeVoiceMediaGraphTimerScheduler = null;
-	activeVoiceMediaGraphTimerSchedulerStore = null;
-	activeVoiceMediaGraphTimerSchedulerPlatform = null;
 }

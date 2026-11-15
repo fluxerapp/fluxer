@@ -3,6 +3,7 @@
 import type {UserID} from '@app/api/BrandedTypes';
 import {
 	deleteOneOrMany,
+	executeConditional,
 	executeGroupedBatches,
 	fetchMany,
 	fetchOne,
@@ -12,6 +13,7 @@ import {Db} from '@app/api/database/CassandraTypes';
 import type {WebAuthnCredentialRow} from '@app/api/database/types/AuthTypes';
 import {WebAuthnCredential} from '@app/api/models/WebAuthnCredential';
 import {WebAuthnCredentialLookup, WebAuthnCredentials} from '@app/api/Tables';
+import {InvalidWebAuthnCredentialError} from '@fluxer/errors/src/domains/auth/InvalidWebAuthnCredentialError';
 
 const FETCH_USER_ID_BY_CREDENTIAL_ID_CQL = WebAuthnCredentialLookup.selectCql({
 	where: WebAuthnCredentialLookup.where.eq('credential_id'),
@@ -68,12 +70,40 @@ export class WebAuthnRepository {
 			rp_id: rpId,
 			superseded_by: null,
 		};
+		await this.claimCredentialLookup(userId, credentialId);
 		await upsertOne(WebAuthnCredentials.insert(credentialData));
-		await upsertOne(
-			WebAuthnCredentialLookup.insert({
-				credential_id: credentialId,
-				user_id: userId,
-			}),
+	}
+
+	private async claimCredentialLookup(userId: UserID, credentialId: string): Promise<void> {
+		const lookup = {credential_id: credentialId, user_id: userId};
+		if (await executeConditional(WebAuthnCredentialLookup.insertIfNotExists(lookup))) {
+			return;
+		}
+		const ownerId = await this.getUserIdByCredentialId(credentialId);
+		if (ownerId === userId) {
+			return;
+		}
+		if (ownerId !== null && (await this.getWebAuthnCredential(ownerId, credentialId))) {
+			throw new InvalidWebAuthnCredentialError();
+		}
+		const claimed =
+			ownerId === null
+				? await executeConditional(WebAuthnCredentialLookup.insertIfNotExists(lookup))
+				: await executeConditional(
+						WebAuthnCredentialLookup.conditionalPatchByPk(
+							{credential_id: credentialId},
+							{user_id: Db.set(userId)},
+							{user_id: ownerId},
+						),
+					);
+		if (!claimed) {
+			throw new InvalidWebAuthnCredentialError();
+		}
+	}
+
+	private async releaseCredentialLookup(userId: UserID, credentialId: string): Promise<void> {
+		await executeConditional(
+			WebAuthnCredentialLookup.conditionalDeleteByPk({credential_id: credentialId}, {user_id: userId}),
 		);
 	}
 
@@ -128,11 +158,7 @@ export class WebAuthnRepository {
 				credential_id: credentialId,
 			}),
 		);
-		await deleteOneOrMany(
-			WebAuthnCredentialLookup.deleteByPk({
-				credential_id: credentialId,
-			}),
-		);
+		await this.releaseCredentialLookup(userId, credentialId);
 	}
 
 	async getUserIdByCredentialId(credentialId: string): Promise<UserID | null> {
@@ -152,10 +178,10 @@ export class WebAuthnRepository {
 			user_id: userId,
 		});
 		await executeGroupedBatches(
-			credentials.map((cred) => [
-				WebAuthnCredentials.deleteByPk({user_id: userId, credential_id: cred.credential_id}),
-				WebAuthnCredentialLookup.deleteByPk({credential_id: cred.credential_id}),
-			]),
+			credentials.map((cred) => [WebAuthnCredentials.deleteByPk({user_id: userId, credential_id: cred.credential_id})]),
 		);
+		for (const cred of credentials) {
+			await this.releaseCredentialLookup(userId, cred.credential_id);
+		}
 	}
 }

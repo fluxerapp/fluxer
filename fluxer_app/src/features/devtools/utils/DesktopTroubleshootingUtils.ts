@@ -55,3 +55,16 @@ export async function setDesktopDisableHardwareAcceleration(
 		return null;
 	}
 }
+
+export async function setDesktopDisableModuleUpdates(disable: boolean): Promise<DesktopTroubleshootingSettings | null> {
+	const electronApi = getElectronAPI();
+	if (!electronApi?.setDesktopDisableModuleUpdates) return null;
+	try {
+		const next = await electronApi.setDesktopDisableModuleUpdates({disable});
+		cachedSettings = next;
+		return next;
+	} catch (error) {
+		logger.error('Failed to update desktop automatic-updates setting', error);
+		return null;
+	}
+}

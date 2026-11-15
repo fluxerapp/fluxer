@@ -170,11 +170,11 @@ export function getContentTypeFromFilename(filename: string): string {
 	const lowerFilename = filename.toLowerCase();
 	const lastDotIndex = lowerFilename.lastIndexOf('.');
 	const ext = lastDotIndex !== -1 ? lowerFilename.slice(lastDotIndex + 1) : '';
-	if (ext && CUSTOM_EXTENSION_MAPPINGS[ext]) {
+	if (ext && Object.hasOwn(CUSTOM_EXTENSION_MAPPINGS, ext)) {
 		return CUSTOM_EXTENSION_MAPPINGS[ext];
 	}
 	const baseFilename = lowerFilename.split('/').pop() ?? '';
-	if (CUSTOM_EXTENSION_MAPPINGS[baseFilename]) {
+	if (Object.hasOwn(CUSTOM_EXTENSION_MAPPINGS, baseFilename)) {
 		return CUSTOM_EXTENSION_MAPPINGS[baseFilename];
 	}
 	const mimeType = mime.getType(filename);

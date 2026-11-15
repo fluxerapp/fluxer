@@ -3,8 +3,8 @@
 import Authentication from '@app/features/auth/state/Authentication';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
-import TypingIndicator from '@app/features/typing/state/TypingIndicator';
 import Personas from '@app/features/user/state/Personas';
+import RollingTypingStore from '@app/features/typing/rolling/RollingTypingStore';
 import {autorun, type IReactionDisposer} from 'mobx';
 
 const SELF_TYPING_REFRESH_MS = 5000;
@@ -49,7 +49,7 @@ class ShowMyselfTypingHelper {
 	}
 
 	private trigger(channelId: string, userId: string, personaId: string | null): void {
-		TypingIndicator.startRemoteTyping(channelId, userId, personaId);
+		RollingTypingStore.start(channelId, userId, personaId, 'gateway');
 	}
 
 	private restartInterval(channelId: string, userId: string, personaId: string | null): void {

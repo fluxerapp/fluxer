@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
-import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import {describe, expect, it} from 'vitest';
 
 interface RateLimitResponseBody {
 	code: string;
@@ -10,19 +10,13 @@ interface RateLimitResponseBody {
 }
 
 describe('RateLimitError', () => {
-	beforeEach(() => {
-		vi.useFakeTimers();
-		vi.setSystemTime(new Date('2026-01-27T12:00:00.000Z'));
-	});
-	afterEach(() => {
-		vi.useRealTimers();
-	});
 	it('returns bucket headers for route limits', async () => {
+		const resetTime = new Date(Math.ceil(Date.now() / 1000) * 1000 + 60_000);
 		const error = new RateLimitError({
 			retryAfter: 5,
 			retryAfterDecimal: 4.5,
 			limit: 10,
-			resetTime: new Date('2026-01-27T12:00:05.000Z'),
+			resetTime,
 			resetAfterDecimal: 4.5,
 			bucketHash: 'bucket-hash',
 			scope: 'user',
@@ -38,9 +32,7 @@ describe('RateLimitError', () => {
 		expect(response.headers.get('Retry-After')).toBe('5');
 		expect(response.headers.get('X-RateLimit-Limit')).toBe('10');
 		expect(response.headers.get('X-RateLimit-Remaining')).toBe('0');
-		expect(response.headers.get('X-RateLimit-Reset')).toBe(
-			Math.floor(new Date('2026-01-27T12:00:05.000Z').getTime() / 1000).toString(),
-		);
+		expect(response.headers.get('X-RateLimit-Reset')).toBe(String(resetTime.getTime() / 1000));
 		expect(response.headers.get('X-RateLimit-Reset-After')).toBe('4.5');
 		expect(response.headers.get('X-RateLimit-Bucket')).toBe('bucket-hash');
 		expect(response.headers.get('X-RateLimit-Scope')).toBe('user');

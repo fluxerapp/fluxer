@@ -7,7 +7,7 @@ import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {lookupGeoip} from '@app/api/utils/IpUtils';
 import {getRequestClientIp} from '@app/api/utils/RequestClientIp';
 import {stripApiPrefix} from '@app/api/utils/RequestPathUtils';
-import {parseAcceptLanguage} from '@pkgs/locale/src/LocaleService';
+import {parseAcceptLanguage} from '@fluxer/i18n/src/locale/resolution/AcceptLanguageNegotiation';
 import type {Context} from 'hono';
 import {createMiddleware} from 'hono/factory';
 
@@ -31,7 +31,7 @@ export function setActivityProcessChannel(channel: Channel): void {
 	processChannel = channel;
 }
 
-export function activityMetaFromContext(ctx: Context<HonoEnv>): ActivityRequestContext {
+function activityMetaFromContext(ctx: Context<HonoEnv>): ActivityRequestContext {
 	const origin = ctx.req.header('origin');
 	const ua = ctx.req.header('user-agent');
 	const acceptLanguage = ctx.req.header('accept-language');

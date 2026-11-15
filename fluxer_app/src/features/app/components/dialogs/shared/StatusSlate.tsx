@@ -10,6 +10,7 @@ interface StatusAction {
 	onClick: () => void;
 	variant?: React.ComponentProps<typeof Button>['variant'];
 	fitContent?: boolean;
+	submitting?: boolean;
 }
 
 interface StatusSlateProps {
@@ -45,7 +46,8 @@ export const StatusSlate: React.FC<StatusSlateProps> = observer(
 								variant={action.variant ?? 'primary'}
 								fitContent={action.fitContent ?? true}
 								onClick={action.onClick}
-								submitting={false}
+								disabled={action.submitting}
+								submitting={action.submitting ?? false}
 								data-flx="app.status-slate.button.click"
 							>
 								{action.text}

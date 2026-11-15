@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	getExtendedDocument,
-	supportsMozRequestFullScreen,
-	supportsMsRequestFullscreen,
-	supportsWebkitRequestFullscreen,
-} from '@app/features/platform/types/Browser';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {getFullscreenElement} from '@app/features/platform/utils/FullscreenMediaUtils';
-import type {ExtendedHTMLElement, ExtendedHTMLVideoElement} from '@app/types/browser.d';
+import {
+	exitFullscreenAPI,
+	getFullscreenElement,
+	requestFullscreen,
+	supportsFullscreenAPI,
+} from '@app/features/platform/utils/FullscreenMediaUtils';
+import type {ExtendedHTMLVideoElement} from '@app/types/browser.d';
 import {useCallback, useEffect, useRef, useState} from 'react';
 
 const logger = new Logger('useMediaFullscreen');
@@ -16,7 +15,6 @@ const logger = new Logger('useMediaFullscreen');
 export interface UseMediaFullscreenOptions {
 	containerRef: React.RefObject<HTMLElement | null> | React.RefObject<HTMLElement>;
 	videoRef?: React.RefObject<HTMLVideoElement | null>;
-	onFullscreenChange?: (isFullscreen: boolean) => void;
 }
 
 export interface UseMediaFullscreenReturn {
@@ -27,58 +25,20 @@ export interface UseMediaFullscreenReturn {
 	toggleFullscreen: () => Promise<void>;
 }
 
-function supportsContainerFullscreenAPI(): boolean {
-	const doc = getExtendedDocument();
-	return !!(
-		document.fullscreenEnabled ||
-		doc.webkitFullscreenEnabled ||
-		doc.mozFullScreenEnabled ||
-		doc.msFullscreenEnabled
-	);
-}
-
 function supportsIOSVideoFullscreen(videoElement: HTMLVideoElement | null): boolean {
 	if (!videoElement) return false;
 	const extendedVideo = videoElement as ExtendedHTMLVideoElement;
 	return !!(extendedVideo.webkitSupportsFullscreen || extendedVideo.webkitEnterFullscreen);
 }
 
-async function requestFullscreen(element: HTMLElement): Promise<void> {
-	if (element.requestFullscreen) {
-		await element.requestFullscreen();
-	} else if (supportsWebkitRequestFullscreen(element)) {
-		const extendedElement = element as ExtendedHTMLElement;
-		await extendedElement.webkitRequestFullscreen!();
-	} else if (supportsMozRequestFullScreen(element)) {
-		const extendedElement = element as ExtendedHTMLElement;
-		await extendedElement.mozRequestFullScreen!();
-	} else if (supportsMsRequestFullscreen(element)) {
-		const extendedElement = element as ExtendedHTMLElement;
-		await extendedElement.msRequestFullscreen!();
-	}
-}
-
-async function exitFullscreenAPI(): Promise<void> {
-	const doc = getExtendedDocument();
-	if (document.exitFullscreen) {
-		await document.exitFullscreen();
-	} else if (doc.webkitExitFullscreen) {
-		await doc.webkitExitFullscreen();
-	} else if (doc.mozCancelFullScreen) {
-		await doc.mozCancelFullScreen();
-	} else if (doc.msExitFullscreen) {
-		await doc.msExitFullscreen();
-	}
-}
-
 export function useMediaFullscreen(options: UseMediaFullscreenOptions): UseMediaFullscreenReturn {
-	const {containerRef, videoRef, onFullscreenChange} = options;
+	const {containerRef, videoRef} = options;
 	const [isFullscreen, setIsFullscreen] = useState(false);
-	const [supportsFullscreen, setSupportsFullscreen] = useState(() => supportsContainerFullscreenAPI());
+	const [supportsFullscreen, setSupportsFullscreen] = useState(() => supportsFullscreenAPI());
 	const [useIOSFullscreen, setUseIOSFullscreen] = useState(false);
 	const claimedFullscreenHostRef = useRef<Element | null>(null);
 	useEffect(() => {
-		const hasContainerSupport = supportsContainerFullscreenAPI();
+		const hasContainerSupport = supportsFullscreenAPI();
 		const hasIOSSupport = supportsIOSVideoFullscreen(videoRef?.current ?? null);
 		setSupportsFullscreen(hasContainerSupport || hasIOSSupport);
 		setUseIOSFullscreen(!hasContainerSupport && hasIOSSupport);
@@ -89,14 +49,11 @@ export function useMediaFullscreen(options: UseMediaFullscreenOptions): UseMedia
 			const isNowFullscreen = fullscreenElement === containerRef.current;
 			claimedFullscreenHostRef.current = isNowFullscreen ? fullscreenElement : null;
 			setIsFullscreen(isNowFullscreen);
-			onFullscreenChange?.(isNowFullscreen);
 		};
 		const handleIOSFullscreenChange = () => {
 			const video = videoRef?.current as ExtendedHTMLVideoElement | null;
 			if (video) {
-				const isNowFullscreen = video.webkitDisplayingFullscreen ?? false;
-				setIsFullscreen(isNowFullscreen);
-				onFullscreenChange?.(isNowFullscreen);
+				setIsFullscreen(video.webkitDisplayingFullscreen ?? false);
 			}
 		};
 		document.addEventListener('fullscreenchange', handleFullscreenChange);
@@ -118,7 +75,7 @@ export function useMediaFullscreen(options: UseMediaFullscreenOptions): UseMedia
 				video.removeEventListener('webkitendfullscreen', handleIOSFullscreenChange);
 			}
 		};
-	}, [containerRef, videoRef, onFullscreenChange]);
+	}, [containerRef, videoRef]);
 	useEffect(() => {
 		return () => {
 			const claimedHost = claimedFullscreenHostRef.current;
@@ -142,7 +99,7 @@ export function useMediaFullscreen(options: UseMediaFullscreenOptions): UseMedia
 			}
 		}
 		const container = containerRef.current;
-		if (!container || !supportsContainerFullscreenAPI()) return;
+		if (!container || !supportsFullscreenAPI()) return;
 		try {
 			await requestFullscreen(container);
 		} catch (error) {

@@ -1,28 +1,12 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-.footer {
-	align-items: center;
-	display: flex;
-	flex-wrap: wrap;
-	width: 100%;
-	gap: 0.5rem;
-}
-
-.footer > * {
+.pickerLayout {
 	flex: 1;
-	min-width: fit-content;
+	min-height: 0;
 }
 
 .selectContainer {
 	margin-bottom: 1rem;
-}
-
-.checkboxLabel {
-	margin-bottom: 0.75rem;
-	display: flex;
-	cursor: pointer;
-	align-items: center;
-	gap: 0.5rem;
 }
 
 .checkboxRow {
@@ -58,7 +42,6 @@
 	font-weight: 600;
 	color: var(--text-tertiary);
 	font-size: 0.75rem;
-	text-transform: uppercase;
 }
 
 .channelRow {

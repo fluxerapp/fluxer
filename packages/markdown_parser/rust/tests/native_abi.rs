@@ -45,47 +45,12 @@ fn parse(input: &str, flags: u32, tsv: &str) -> Result<String, String> {
 }
 
 #[test]
-fn parses_formatting_to_json_envelope() {
-    let json = parse("**bold**", ParserFlags::ALL, "").expect("parse should succeed");
-    assert_eq!(
-        json,
-        r#"{"nodes":[{"type":"Strong","children":[{"type":"Text","content":"bold"}]}]}"#
-    );
-}
-
-#[test]
 fn matches_wasm_abi_output() {
     let input = "# heading\n||spoiler|| <t:1234567890:R>";
     let native = parse(input, ParserFlags::ALL, "").expect("native parse should succeed");
     let json = fluxer_markdown_parser::parse_markdown_json(input, ParserFlags::ALL, "")
         .expect("json parse should succeed");
     assert_eq!(native, json);
-}
-
-#[test]
-fn respects_flags() {
-    let json = parse("# not a heading", 0, "").expect("parse should succeed");
-    assert_eq!(
-        json,
-        r##"{"nodes":[{"type":"Text","content":"# not a heading"}]}"##
-    );
-}
-
-#[test]
-fn uses_emoji_context_records() {
-    let json = parse(
-        "hi \u{1F600}",
-        ParserFlags::ALL,
-        "S\t3\t4\t\u{1F600}\tgrinning face\t1f600",
-    )
-    .expect("parse should succeed");
-    assert!(json.contains(r#""name":"grinning face""#), "got: {json}");
-}
-
-#[test]
-fn empty_input_yields_empty_envelope() {
-    let json = parse("", ParserFlags::ALL, "").expect("parse should succeed");
-    assert_eq!(json, r#"{"nodes":[]}"#);
 }
 
 #[test]

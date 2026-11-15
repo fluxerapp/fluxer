@@ -61,13 +61,6 @@ export class Webhook {
 		return this.name;
 	}
 
-	withUpdates(updates: Partial<WireWebhook>): Webhook {
-		return new Webhook({
-			...this.toWire(this.creatorSnapshot),
-			...updates,
-		});
-	}
-
 	toJSON(): WireWebhook {
 		const creator = this.creator;
 		return this.toWire(creator ? creator.toJSON() : this.creatorSnapshot);

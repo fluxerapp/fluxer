@@ -9,10 +9,6 @@
 	"scripts": {
 		"typecheck": "tsc --noEmit"
 	},
-	"dependencies": {
-		"@fluxer/logger": "workspace:*",
-		"itty-time": "catalog:"
-	},
 	"devDependencies": {
 		"@types/node": "catalog:",
 		"typescript": "catalog:ts7"

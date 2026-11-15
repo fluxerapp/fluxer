@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export const MIN_BUFFERED_RANGE_SECONDS = 1;
+const MIN_BUFFERED_RANGE_SECONDS = 1;
 
 export const EMPTY_BUFFERED_SPANS: ReadonlyArray<BufferedSpanFraction> = Object.freeze([]);
 
@@ -50,7 +50,7 @@ export function quantiseMediaTimeToSecond(time: number): number {
 	return Math.trunc(time);
 }
 
-export function getFiniteMediaDuration(media: HTMLMediaElement | null | undefined): number {
+function getFiniteMediaDuration(media: HTMLMediaElement | null | undefined): number {
 	if (!media || !Number.isFinite(media.duration) || media.duration <= 0) return 0;
 	return media.duration;
 }
@@ -155,14 +155,10 @@ export function detachMediaElementSource(media: HTMLMediaElement | null | undefi
 export function resolveDoubleTapSeekDirection(
 	previousTap: SeekTapPoint | null,
 	currentTap: SeekTapPoint,
-	options: {
-		maxIntervalMs?: number;
-		sideZoneRatio?: number;
-	} = {},
 ): SeekDirection | null {
-	const {maxIntervalMs = 360, sideZoneRatio = 0.42} = options;
+	const sideZoneRatio = 0.42;
 	if (!previousTap) return null;
-	if (currentTap.time - previousTap.time > maxIntervalMs) return null;
+	if (currentTap.time - previousTap.time > 360) return null;
 	if (currentTap.width <= 0 || previousTap.width <= 0) return null;
 
 	const currentRatio = currentTap.x / currentTap.width;
@@ -172,9 +168,9 @@ export function resolveDoubleTapSeekDirection(
 	return null;
 }
 
-export const PLAYHEAD_SNAP_THRESHOLD_SECONDS = 0.5;
+const PLAYHEAD_SNAP_THRESHOLD_SECONDS = 0.5;
 
-export const PLAYHEAD_CONVERGENCE_RATE = 0.1;
+const PLAYHEAD_CONVERGENCE_RATE = 0.1;
 
 export interface PlayheadPredictionStep {
 	predictedSeconds: number | null;

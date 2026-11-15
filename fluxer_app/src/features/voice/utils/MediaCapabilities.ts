@@ -4,6 +4,7 @@ import {inspectImageFile} from '@app/features/expressions/utils/AnimatedImageUti
 import {isSvgMimeType, normalizeImageMimeType} from '@app/features/expressions/utils/ImageUploadFileUtils';
 import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {AVIF_ALPHA_PROBE_BASE64} from '@app/features/platform/utils/ImageDecoderInterop';
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 
 interface CapabilityResult {
 	avif: boolean;
@@ -21,10 +22,6 @@ const PROBE_TIMEOUT_MS = 1500;
 
 function buildUaKey(): string {
 	return typeof navigator !== 'undefined' ? navigator.userAgent : 'ssr';
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 async function probeOne(dataUrl: string): Promise<boolean> {

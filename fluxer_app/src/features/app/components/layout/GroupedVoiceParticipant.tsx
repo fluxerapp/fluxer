@@ -20,7 +20,7 @@ import {getStreamKey} from '@app/features/voice/components/StreamKeys';
 import {StreamWatchHoverPopout} from '@app/features/voice/components/StreamWatchHoverPopout';
 import {useStreamWatchState} from '@app/features/voice/components/useStreamWatchState';
 import {resolveVoiceParticipantDisplayState} from '@app/features/voice/components/VoiceParticipantDisplayState';
-import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime, {useVoiceRuntimeVersion} from '@app/features/voice/engine/VoiceRuntime';
 import {useStreamWatchDoubleClick} from '@app/features/voice/hooks/useStreamWatchDoubleClick';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import {buildVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
@@ -58,11 +58,11 @@ export const GroupedVoiceParticipant = observer(function GroupedVoiceParticipant
 	anySpeaking: propAnySpeaking,
 }: GroupedVoiceParticipantProps) {
 	const openProfileAriaLabel = useOpenProfileAriaLabel(user, guildId);
-	const mediaEngineVersion = useMediaEngineVersion();
+	const mediaEngineVersion = useVoiceRuntimeVersion();
 	const [isExpanded, setIsExpanded] = useState(false);
 	const currentUser = Users.getCurrentUser();
 	const isCurrentUser = currentUser?.id === user.id;
-	const currentConnectionId = MediaEngine.connectionId;
+	const currentConnectionId = VoiceRuntime.connectionId;
 	const localSelfMute = LocalVoiceState.getSelfMute();
 	const localSelfDeaf = LocalVoiceState.getSelfDeaf();
 	const localSelfVideo = LocalVoiceState.getSelfVideo();
@@ -116,7 +116,7 @@ export const GroupedVoiceParticipant = observer(function GroupedVoiceParticipant
 		let allSelfDeaf = true;
 		for (const state of voiceStates) {
 			const connectionId = state.connection_id ?? '';
-			const participant = MediaEngine.getParticipantByUserIdAndConnectionId(user.id, connectionId);
+			const participant = VoiceRuntime.getParticipantByUserIdAndConnectionId(user.id, connectionId);
 			const isCurrentLocalConnection = isCurrentUser && connectionId === currentConnectionId;
 			const statePermissionMuted = isParticipantVoicePermissionMuted({
 				voiceState: state,
@@ -168,7 +168,7 @@ export const GroupedVoiceParticipant = observer(function GroupedVoiceParticipant
 		for (const state of voiceStates) {
 			const connectionId = state.connection_id ?? '';
 			if (!connectionId) continue;
-			const participant = MediaEngine.getParticipantByUserIdAndConnectionId(user.id, connectionId);
+			const participant = VoiceRuntime.getParticipantByUserIdAndConnectionId(user.id, connectionId);
 			const live = state.self_stream === true || (participant ? participant.isScreenShareEnabled : false);
 			if (live) return state;
 		}

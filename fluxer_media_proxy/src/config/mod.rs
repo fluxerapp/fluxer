@@ -5,7 +5,7 @@ mod parse;
 mod tests;
 
 use crate::constants;
-use crate::secret::{SecretBytes, SecretString};
+use fluxer_common::secret::{SecretBytes, SecretString};
 use http::HeaderValue;
 use parse::{
     EnvMap, decode_upload_relay_secret, default_native_transform_concurrency,
@@ -13,7 +13,7 @@ use parse::{
     parse_mode_env, parse_policy_mode, parse_storage_backend, parse_u16, parse_u64, parse_usize,
     validate_read_endpoint,
 };
-use std::{env, path::PathBuf};
+use std::path::PathBuf;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum StorageBackend {
@@ -144,17 +144,13 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn load_from_env() -> anyhow::Result<Self> {
-        Self::load_from_iter(env::vars())
-    }
-
     pub fn load_from_iter<I, K, V>(vars: I) -> anyhow::Result<Self>
     where
         I: IntoIterator<Item = (K, V)>,
         K: Into<String>,
         V: Into<String>,
     {
-        let env = EnvMap::from_iter(vars);
+        let env = EnvMap::from_pairs(vars);
 
         let mode =
             parse_mode_env(env.get("FLUXER_MEDIA_PROXY_MODE"))?.unwrap_or(DeploymentMode::Mp);

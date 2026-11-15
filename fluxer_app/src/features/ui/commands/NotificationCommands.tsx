@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {OKAY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -34,10 +33,6 @@ export function permissionDenied(i18n: I18n, suppressModal = false): void {
 						</Trans>
 					</p>
 				}
-				primaryText={i18n._(OKAY_DESCRIPTOR)}
-				primaryVariant="primary"
-				secondaryText={false}
-				onPrimary={() => {}}
 				data-flx="ui.notification-commands.permission-denied.confirm-modal"
 			/>
 		)),

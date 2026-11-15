@@ -1,0 +1,22 @@
+{
+	{$FLUXER_VOICE_EDGE_GLOBAL_OPTIONS}
+	{$FLUXER_VOICE_EDGE_SNI_OPTION}
+}
+
+(livekit) {
+	reverse_proxy {args[0]} {
+		header_up X-Forwarded-For {client_ip}
+		header_up X-Real-IP {client_ip}
+		header_up -Forwarded
+		stream_timeout 24h
+		stream_close_delay 5m
+	}
+}
+
+:80 {
+	handle /_health {
+		respond "OK" 200
+	}
+}
+
+import /etc/caddy/sites.d/*.caddy

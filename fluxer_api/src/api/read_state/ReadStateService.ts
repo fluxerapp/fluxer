@@ -4,7 +4,22 @@ import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
 import type {ReadState} from '@app/api/models/ReadState';
-import type {IReadStateRepository} from '@app/api/read_state/IReadStateRepository';
+import {
+	loadChannelMeta,
+	type ReadStateChannelHint,
+	resolveReadStateMarker,
+} from '@app/api/read_state/ReadStateChannelMeta';
+import type {
+	ReadStateMarker,
+	ReadStateMentionUpdate,
+	ReadStateRepository,
+} from '@app/api/read_state/ReadStateRepository';
+import {visibleReadStates} from '@app/api/read_state/ReadStateVisibility';
+
+function threadScope(readState: ReadState | null | undefined): Record<string, unknown> {
+	if (!readState?.isMarked) return {};
+	return {flags: readState.flags ?? 0, __thread_scoped: readState.guildId!.toString()};
+}
 
 function hadUnreadThrough(previous: ReadState | null, messageId: MessageID, unreadThrough: MessageID | null): boolean {
 	const previousMessageId = previous?.lastMessageId ?? null;
@@ -19,7 +34,7 @@ function hadUnreadThrough(previous: ReadState | null, messageId: MessageID, unre
 
 export class ReadStateService {
 	constructor(
-		private repository: IReadStateRepository,
+		private repository: ReadStateRepository,
 		private gatewayService: IGatewayService,
 	) {}
 
@@ -39,8 +54,16 @@ export class ReadStateService {
 		manual?: boolean;
 		implicit?: {unreadThrough: MessageID | null};
 		emitGateway?: boolean;
+		capable?: boolean;
+		channel?: ReadStateChannelHint | null;
 	}): Promise<ReadState> {
 		const {userId, channelId, messageId, mentionCount, manual, implicit, emitGateway = true} = params;
+		const marker = await resolveReadStateMarker({
+			userId,
+			channelId,
+			capable: params.capable === true,
+			channel: params.channel,
+		});
 		const {readState, previous} = await this.repository.upsertReadState(
 			userId,
 			channelId,
@@ -48,6 +71,7 @@ export class ReadStateService {
 			mentionCount,
 			undefined,
 			manual ?? false,
+			marker,
 		);
 		if (!implicit) {
 			await this.clearPushChannelNotifications({userId, channelId, messageId});
@@ -62,6 +86,7 @@ export class ReadStateService {
 				mentionCount: readState.mentionCount,
 				manual,
 				version: readState.version,
+				readState,
 			}).catch((error) => {
 				Logger.error(
 					{userId: userId.toString(), channelId: channelId.toString(), error},
@@ -76,6 +101,7 @@ export class ReadStateService {
 	async ackReadStates({
 		userId,
 		readStates,
+		capable = false,
 	}: {
 		userId: UserID;
 		readStates: Array<{
@@ -84,6 +110,7 @@ export class ReadStateService {
 			mentionCount?: number;
 			manual?: boolean;
 		}>;
+		capable?: boolean;
 	}): Promise<Array<ReadState>> {
 		if (readStates.length === 0) {
 			return [];
@@ -92,16 +119,20 @@ export class ReadStateService {
 			(readState) => !readState.manual && (readState.mentionCount == null || readState.mentionCount === 0),
 		);
 		if (canUseBulkAck) {
-			return await this.bulkAckMessages({
+			const acked = await this.bulkAckMessages({
 				userId,
+				capable,
 				readStates: readStates.map((readState) => ({
 					channelId: readState.channelId,
 					messageId: readState.messageId,
 				})),
 			});
+			return visibleReadStates(acked, {userId, capable});
 		}
 		const results: Array<ReadState> = [];
 		for (const readState of readStates) {
+			const channel = await loadChannelMeta(readState.channelId);
+			if (!channel) continue;
 			results.push(
 				await this.ackMessage({
 					userId,
@@ -109,30 +140,49 @@ export class ReadStateService {
 					messageId: readState.messageId,
 					mentionCount: readState.mentionCount ?? 0,
 					manual: readState.manual,
+					capable,
+					channel,
 				}),
 			);
 		}
-		return results;
+		return visibleReadStates(results, {userId, capable});
 	}
 
 	async bulkAckMessages({
 		userId,
 		readStates,
+		capable = false,
 	}: {
 		userId: UserID;
 		readStates: Array<{
 			channelId: ChannelID;
 			messageId: MessageID;
 		}>;
+		capable?: boolean;
 	}): Promise<Array<ReadState>> {
-		if (readStates.length === 0) {
+		const channels = await Promise.all(readStates.map(({channelId}) => loadChannelMeta(channelId)));
+		const known = readStates.flatMap((readState, index) => {
+			const channel = channels[index];
+			return channel ? [{...readState, channel}] : [];
+		});
+		if (known.length === 0) {
 			return [];
 		}
 		try {
-			const updatedReadStates = await this.repository.bulkAckMessages(userId, readStates);
+			const markers: Array<ReadStateMarker | null> = capable
+				? await Promise.all(
+						known.map(({channelId, channel}) => resolveReadStateMarker({userId, channelId, capable, channel})),
+					)
+				: [];
+			const updatedReadStates = await this.repository.bulkAckMessages(
+				userId,
+				known.map(({channelId, messageId}, index) =>
+					markers.length > 0 ? {channelId, messageId, marker: markers[index]} : {channelId, messageId},
+				),
+			);
 			const readStatesByChannel = new Map(updatedReadStates.map((readState) => [readState.channelId, readState]));
 			await Promise.all(
-				readStates.map(({channelId, messageId}) =>
+				known.map(({channelId, messageId}) =>
 					Promise.all([
 						this.dispatchMessageAck({
 							userId,
@@ -140,6 +190,7 @@ export class ReadStateService {
 							messageId: readStatesByChannel.get(channelId)?.lastMessageId ?? messageId,
 							mentionCount: readStatesByChannel.get(channelId)?.mentionCount ?? 0,
 							version: readStatesByChannel.get(channelId)?.version,
+							readState: readStatesByChannel.get(channelId),
 						}).catch((error) => {
 							Logger.error(
 								{userId: userId.toString(), channelId: channelId.toString(), error},
@@ -158,25 +209,7 @@ export class ReadStateService {
 		}
 	}
 
-	async incrementMentionCount({
-		userId,
-		channelId,
-		messageId,
-	}: {
-		userId: UserID;
-		channelId: ChannelID;
-		messageId: MessageID;
-	}): Promise<void> {
-		await this.repository.incrementReadStateMentions(userId, channelId, messageId, 1);
-	}
-
-	async bulkIncrementMentionCounts(
-		updates: Array<{
-			userId: UserID;
-			channelId: ChannelID;
-			messageId: MessageID;
-		}>,
-	): Promise<void> {
+	async bulkIncrementMentionCounts(updates: Array<ReadStateMentionUpdate>): Promise<void> {
 		if (updates.length === 0) {
 			return;
 		}
@@ -188,10 +221,22 @@ export class ReadStateService {
 		}
 	}
 
-	async ackPins(params: {userId: UserID; channelId: ChannelID; timestamp: Date}): Promise<void> {
+	async ackPins(params: {
+		userId: UserID;
+		channelId: ChannelID;
+		timestamp: Date;
+		capable?: boolean;
+		channel?: ReadStateChannelHint | null;
+	}): Promise<void> {
 		const {userId, channelId, timestamp} = params;
-		await this.repository.upsertPinAck(userId, channelId, timestamp);
-		await this.dispatchPinsAck({userId, channelId, timestamp});
+		const marker = await resolveReadStateMarker({
+			userId,
+			channelId,
+			capable: params.capable === true,
+			channel: params.channel,
+		});
+		await this.repository.upsertPinAck(userId, channelId, timestamp, marker);
+		await this.dispatchPinsAck({userId, channelId, timestamp, marker});
 	}
 
 	private async dispatchMessageAck(params: {
@@ -201,6 +246,7 @@ export class ReadStateService {
 		mentionCount: number;
 		manual?: boolean;
 		version?: bigint;
+		readState?: ReadState | null;
 	}): Promise<void> {
 		const {userId, channelId, messageId, mentionCount, manual, version} = params;
 		await this.gatewayService.dispatchPresence({
@@ -212,6 +258,7 @@ export class ReadStateService {
 				mention_count: mentionCount,
 				manual,
 				version: version?.toString(),
+				...threadScope(params.readState),
 			},
 		});
 	}
@@ -231,14 +278,20 @@ export class ReadStateService {
 		});
 	}
 
-	private async dispatchPinsAck(params: {userId: UserID; channelId: ChannelID; timestamp: Date}): Promise<void> {
-		const {userId, channelId, timestamp} = params;
+	private async dispatchPinsAck(params: {
+		userId: UserID;
+		channelId: ChannelID;
+		timestamp: Date;
+		marker: ReadStateMarker | null;
+	}): Promise<void> {
+		const {userId, channelId, timestamp, marker} = params;
 		await this.gatewayService.dispatchPresence({
 			userId,
 			event: 'CHANNEL_PINS_ACK',
 			data: {
 				channel_id: channelId.toString(),
 				timestamp: timestamp.toISOString(),
+				...(marker ? {__thread_scoped: marker.guildId.toString()} : {}),
 			},
 		});
 	}

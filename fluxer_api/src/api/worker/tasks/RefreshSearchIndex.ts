@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GuildID, ReportID, UserID} from '@app/api/BrandedTypes';
+import {AttachmentDecayRepository} from '@app/api/attachment/AttachmentDecayRepository';
+import type {ChannelID, GuildID, ReportID, UserID} from '@app/api/BrandedTypes';
 import {createGuildID} from '@app/api/BrandedTypes';
 import {GuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
 import {Logger} from '@app/api/Logger';
@@ -11,17 +12,31 @@ import {
 	getGuildSearchService,
 	getMessageSearchService,
 	getReportSearchService,
+	getThreadSearchService,
 	getUserSearchService,
 } from '@app/api/SearchFactory';
 import type {IGuildMemberSearchService} from '@app/api/search/IGuildMemberSearchService';
 import type {IMessageSearchService} from '@app/api/search/IMessageSearchService';
 import {deleteChannelMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
+import {
+	finishSearchReindexAll,
+	holdSearchReindexAll,
+	INDEX_REFRESH_STATUS_TTL_SECONDS,
+	indexRefreshStatusKey,
+} from '@app/api/search/SearchReindexAllRun';
+import {backfillThreadSearch} from '@app/api/search/thread/ThreadSearchService';
+import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
+import {indexChannelMessageHistory} from '@app/api/worker/tasks/IndexChannelMessages';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {DiscoveryApplicationStatus} from '@fluxer/constants/src/DiscoveryConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import type {WorkerTaskHandler, WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
-import {seconds} from 'itty-time';
+import {
+	JobCancelledError,
+	JobFailedError,
+	type WorkerTaskHandler,
+	type WorkerTaskHelpers,
+} from '@pkgs/worker/src/contracts/WorkerTask';
 import {z} from 'zod';
 
 const INDEX_TYPES = [
@@ -32,6 +47,8 @@ const INDEX_TYPES = [
 	'channel_messages',
 	'guild_members',
 	'discovery',
+	'threads',
+	'all',
 ] as const;
 
 type IndexType = (typeof INDEX_TYPES)[number];
@@ -42,11 +59,14 @@ const PayloadSchema = z
 		job_id: z.string(),
 		admin_user_id: z.string(),
 		guild_id: z.string().optional(),
-		user_id: z.string().optional(),
 	})
 	.refine(
 		(data) => {
-			if (data.index_type === 'channel_messages' || data.index_type === 'guild_members') {
+			if (
+				data.index_type === 'channel_messages' ||
+				data.index_type === 'guild_members' ||
+				data.index_type === 'threads'
+			) {
 				return data.guild_id !== undefined;
 			}
 			return true;
@@ -57,7 +77,8 @@ const PayloadSchema = z
 type RefreshSearchIndexPayload = z.infer<typeof PayloadSchema>;
 
 const BATCH_SIZE = 1000;
-const PROGRESS_TTL = seconds('1 hour');
+const CHANNEL_PAGE_SIZE = 500;
+const CHANNEL_CONCURRENCY = 2;
 
 function requireSearchService<T>(service: T | null): T {
 	if (!service) {
@@ -67,32 +88,19 @@ function requireSearchService<T>(service: T | null): T {
 }
 
 async function setProgress(kvClient: IKVProvider, progressKey: string, data: Record<string, unknown>): Promise<void> {
-	await kvClient.set(progressKey, JSON.stringify(data), 'EX', PROGRESS_TTL);
+	await kvClient.set(progressKey, JSON.stringify(data), 'EX', INDEX_REFRESH_STATUS_TTL_SECONDS);
 }
 
-async function reportInProgress(
-	kvClient: IKVProvider,
-	progressKey: string,
-	indexType: IndexType,
-	indexed: number,
-): Promise<void> {
-	await setProgress(kvClient, progressKey, {
-		status: 'in_progress',
-		index_type: indexType,
-		total: indexed,
-		indexed,
-		started_at: new Date().toISOString(),
-	});
-}
+type ReportProgress = (indexed: number, total?: number, phase?: IndexType | 'messages') => Promise<void>;
+
+const ignoreProgress: ReportProgress = async () => {};
 
 interface PaginateAndIndexOptions<TCursor, TItem> {
 	fetchPage: (cursor: TCursor | undefined) => Promise<Array<TItem>>;
 	indexBatch: (items: Array<TItem>) => Promise<number>;
 	getCursor: (item: TItem) => TCursor;
 	label: string;
-	kvClient: IKVProvider;
-	progressKey: string;
-	indexType: IndexType;
+	report: ReportProgress;
 }
 
 async function paginateAndIndex<TCursor, TItem>(options: PaginateAndIndexOptions<TCursor, TItem>): Promise<number> {
@@ -106,7 +114,7 @@ async function paginateAndIndex<TCursor, TItem>(options: PaginateAndIndexOptions
 			indexedCount += batchCount;
 			cursor = options.getCursor(items[items.length - 1]!);
 			if (batchCount > 0) {
-				await reportInProgress(options.kvClient, options.progressKey, options.indexType, indexedCount);
+				await options.report(indexedCount);
 				Logger.debug({count: batchCount, total: indexedCount}, `Indexed ${options.label} batch`);
 			}
 		}
@@ -119,11 +127,10 @@ async function paginateAndIndex<TCursor, TItem>(options: PaginateAndIndexOptions
 type IndexHandler = (
 	payload: RefreshSearchIndexPayload,
 	helpers: WorkerTaskHelpers,
-	kvClient: IKVProvider,
-	progressKey: string,
+	report: ReportProgress,
 ) => Promise<number>;
 
-const refreshGuilds: IndexHandler = async (_payload, _helpers, kvClient, progressKey) => {
+const refreshGuilds: IndexHandler = async (_payload, _helpers, report) => {
 	const {guildRepository} = getWorkerDependencies();
 	const searchService = requireSearchService(getGuildSearchService());
 	await searchService.deleteAllDocuments();
@@ -135,12 +142,10 @@ const refreshGuilds: IndexHandler = async (_payload, _helpers, kvClient, progres
 		},
 		getCursor: (guild) => guild.id,
 		label: 'guild',
-		kvClient,
-		progressKey,
-		indexType: 'guilds',
+		report,
 	});
 };
-const refreshUsers: IndexHandler = async (_payload, _helpers, kvClient, progressKey) => {
+const refreshUsers: IndexHandler = async (_payload, _helpers, report) => {
 	const {userRepository} = getWorkerDependencies();
 	const searchService = requireSearchService(getUserSearchService());
 	await searchService.deleteAllDocuments();
@@ -153,13 +158,13 @@ const refreshUsers: IndexHandler = async (_payload, _helpers, kvClient, progress
 		if (users.length === 0) continue;
 		await searchService.indexUsers(users);
 		indexedCount += users.length;
-		await reportInProgress(kvClient, progressKey, 'users', indexedCount);
+		await report(indexedCount);
 		Logger.debug({count: users.length, total: indexedCount}, 'Indexed user batch');
 	} while (pageState);
 	Logger.debug({count: indexedCount}, 'Refreshed user search index');
 	return indexedCount;
 };
-const refreshReports: IndexHandler = async (_payload, _helpers, kvClient, progressKey) => {
+const refreshReports: IndexHandler = async (_payload, _helpers, report) => {
 	const {reportRepository} = getWorkerDependencies();
 	const searchService = requireSearchService(getReportSearchService());
 	await searchService.deleteAllDocuments();
@@ -171,12 +176,10 @@ const refreshReports: IndexHandler = async (_payload, _helpers, kvClient, progre
 		},
 		getCursor: (report) => report.reportId,
 		label: 'report',
-		kvClient,
-		progressKey,
-		indexType: 'reports',
+		report,
 	});
 };
-const refreshAuditLogs: IndexHandler = async (_payload, _helpers, kvClient, progressKey) => {
+const refreshAuditLogs: IndexHandler = async (_payload, _helpers, report) => {
 	const {adminRepository} = getWorkerDependencies();
 	const searchService = requireSearchService(getAuditLogSearchService());
 	await searchService.deleteAllDocuments();
@@ -188,20 +191,21 @@ const refreshAuditLogs: IndexHandler = async (_payload, _helpers, kvClient, prog
 		},
 		getCursor: (log) => log.logId,
 		label: 'audit log',
-		kvClient,
-		progressKey,
-		indexType: 'audit_logs',
+		report,
 	});
 };
-const refreshChannelMessages: IndexHandler = async (payload, helpers, kvClient, _progressKey) => {
-	const {channelRepository} = getWorkerDependencies();
+const refreshChannelMessages: IndexHandler = async (payload, helpers) => {
+	const {channelRepository, kvClient} = getWorkerDependencies();
 	const guildId = createGuildID(BigInt(payload.guild_id!));
 	const searchService = requireSearchService<IMessageSearchService>(getMessageSearchService());
-	const channels = await channelRepository.listGuildChannels(guildId);
+	const guildChannels = await channelRepository.channelData.listGuildChannels(guildId, 'complete');
+	const threadIds = await channelRepository.threads.listGuildThreadIds(guildId, {parents: guildChannels});
+	const channels = [...guildChannels.map((channel) => ({id: channel.id})), ...threadIds.map((id) => ({id}))];
 	if (channels.length === 0) {
 		return 0;
 	}
-	for (const channel of channels) {
+	const indexedChannels = channels;
+	for (const channel of indexedChannels) {
 		await deleteChannelMessageSearchDocuments(channel.id, {
 			searchService,
 			context: {source: 'bulk_reindex', guildId: guildId.toString()},
@@ -209,14 +213,14 @@ const refreshChannelMessages: IndexHandler = async (payload, helpers, kvClient, 
 	}
 	const completionKey = `bulk_reindex:${payload.job_id}:remaining`;
 	await kvClient.del(completionKey);
-	for (const channel of channels) {
+	for (const channel of indexedChannels) {
 		Logger.debug({channelId: channel.id.toString()}, 'Queuing bulk channel indexing');
 		await helpers.addJob(
 			'indexChannelMessages',
 			{
 				channelId: channel.id.toString(),
 				completionKey,
-				channelCount: channels.length,
+				channelCount: indexedChannels.length,
 			},
 			{
 				jobKey: `index-channel-${channel.id}-bulk`,
@@ -224,10 +228,13 @@ const refreshChannelMessages: IndexHandler = async (payload, helpers, kvClient, 
 			},
 		);
 	}
-	Logger.info({channels: channels.length, guildId: guildId.toString()}, 'Queued bulk channel message indexing jobs');
-	return channels.length;
+	Logger.info(
+		{channels: indexedChannels.length, guildId: guildId.toString()},
+		'Queued bulk channel message indexing jobs',
+	);
+	return indexedChannels.length;
 };
-const refreshGuildMembers: IndexHandler = async (payload, _helpers, kvClient, progressKey) => {
+const refreshGuildMembers: IndexHandler = async (payload, _helpers, report) => {
 	const {guildRepository, userRepository} = getWorkerDependencies();
 	const guildId = createGuildID(BigInt(payload.guild_id!));
 	const searchService = requireSearchService<IGuildMemberSearchService>(getGuildMemberSearchService());
@@ -249,9 +256,7 @@ const refreshGuildMembers: IndexHandler = async (payload, _helpers, kvClient, pr
 		},
 		getCursor: (member) => member.userId,
 		label: 'guild member',
-		kvClient,
-		progressKey,
-		indexType: 'guild_members',
+		report,
 	});
 	const guild = await guildRepository.findUnique(guildId);
 	if (guild) {
@@ -260,7 +265,7 @@ const refreshGuildMembers: IndexHandler = async (payload, _helpers, kvClient, pr
 	return indexedCount;
 };
 const DISCOVERY_BATCH_SIZE = 200;
-const refreshDiscovery: IndexHandler = async (_payload, _helpers, kvClient, progressKey) => {
+const refreshDiscovery: IndexHandler = async (_payload, _helpers, report) => {
 	const {guildRepository} = getWorkerDependencies();
 	const searchService = requireSearchService(getGuildSearchService());
 	const discoveryRepository = new GuildDiscoveryRepository();
@@ -295,15 +300,136 @@ const refreshDiscovery: IndexHandler = async (_payload, _helpers, kvClient, prog
 		}
 		await Promise.all(updates);
 		synced += updates.length;
-		await setProgress(kvClient, progressKey, {
-			status: 'in_progress',
-			index_type: 'discovery',
-			total: guildIds.length,
-			indexed: synced,
-			started_at: new Date().toISOString(),
-		});
+		await report(synced, guildIds.length);
 	}
 	return synced;
+};
+const refreshThreads: IndexHandler = async (payload) => {
+	const {channelRepository} = getWorkerDependencies();
+	const guildId = createGuildID(BigInt(payload.guild_id!));
+	requireSearchService(getThreadSearchService());
+	await channelRepository.threads.clearGuildSearchBackfilled(guildId);
+	return backfillThreadSearch(channelRepository, guildId);
+};
+async function forEachGuild(visit: (guildId: GuildID) => Promise<void>): Promise<void> {
+	const {guildRepository} = getWorkerDependencies();
+	let cursor: GuildID | undefined;
+	while (true) {
+		const guilds = await guildRepository.listAllGuildsPaginated(BATCH_SIZE, cursor);
+		for (const guild of guilds) {
+			await visit(guild.id);
+		}
+		if (guilds.length < BATCH_SIZE) return;
+		cursor = guilds[guilds.length - 1]!.id;
+	}
+}
+
+async function forEachChannelWithMessages(visit: (channelIds: Array<ChannelID>) => Promise<void>): Promise<void> {
+	const repository = new AttachmentDecayRepository();
+	let pageState: string | null = null;
+	let previous: ChannelID | null = null;
+	do {
+		const page = await repository.scanChannelsWithMessagesPage(CHANNEL_PAGE_SIZE, pageState);
+		pageState = page.pageState;
+		const channelIds = page.channelIds.filter((channelId) => channelId !== previous);
+		previous = page.channelIds.at(-1) ?? previous;
+		if (channelIds.length > 0) {
+			await visit(channelIds);
+		}
+	} while (pageState);
+}
+
+async function throwIfCancelled(helpers: WorkerTaskHelpers): Promise<void> {
+	if (await helpers.shouldCancel()) {
+		throw new JobCancelledError();
+	}
+}
+
+async function refreshEveryGuild(
+	handler: IndexHandler,
+	payload: RefreshSearchIndexPayload,
+	helpers: WorkerTaskHelpers,
+	guildCount: number,
+	report: ReportProgress,
+): Promise<number> {
+	let visited = 0;
+	let indexed = 0;
+	await report(0, guildCount);
+	await forEachGuild(async (guildId) => {
+		indexed += await handler({...payload, guild_id: guildId.toString()}, helpers, ignoreProgress);
+		visited++;
+		await report(visited, Math.max(guildCount, visited));
+		await throwIfCancelled(helpers);
+	});
+	return indexed;
+}
+
+async function refreshEveryChannel(
+	searchService: IMessageSearchService,
+	helpers: WorkerTaskHelpers,
+	report: ReportProgress,
+): Promise<number> {
+	await searchService.deleteAllDocuments();
+	let channelCount = 0;
+	await forEachChannelWithMessages(async (channelIds) => {
+		channelCount += channelIds.length;
+	});
+	let visited = 0;
+	let indexed = 0;
+	await report(0, channelCount);
+	await forEachChannelWithMessages(async (channelIds) => {
+		const counts = await mapWithConcurrency(channelIds, CHANNEL_CONCURRENCY, async (channelId) => {
+			const count = await indexChannelMessageHistory(searchService, channelId);
+			await searchService.refreshIndex().catch((error) => {
+				Logger.warn({error, channelId: channelId.toString()}, 'Search refresh after channel reindex failed');
+			});
+			return count;
+		});
+		indexed += counts.reduce((sum, count) => sum + count, 0);
+		visited += channelIds.length;
+		await report(visited, Math.max(channelCount, visited));
+		await throwIfCancelled(helpers);
+	});
+	return indexed;
+}
+
+const refreshAll: IndexHandler = async (payload, helpers, report) => {
+	let indexed = 0;
+	let guildCount = 0;
+	const globalHandlers = [
+		['users', refreshUsers],
+		['guilds', refreshGuilds],
+		['discovery', refreshDiscovery],
+		['reports', refreshReports],
+		['audit_logs', refreshAuditLogs],
+	] as const;
+	for (const [indexType, handler] of globalHandlers) {
+		const count = await handler(payload, helpers, (done, total) => report(done, total, indexType));
+		if (indexType === 'guilds') {
+			guildCount = count;
+		}
+		indexed += count;
+		await throwIfCancelled(helpers);
+	}
+	const memberSearch = getGuildMemberSearchService();
+	if (memberSearch) {
+		await memberSearch.deleteAllDocuments();
+		indexed += await refreshEveryGuild(refreshGuildMembers, payload, helpers, guildCount, (done, total) =>
+			report(done, total, 'guild_members'),
+		);
+	}
+	const threadSearch = getThreadSearchService();
+	if (threadSearch) {
+		await threadSearch.deleteAllDocuments();
+		indexed += await refreshEveryGuild(refreshThreads, payload, helpers, guildCount, (done, total) =>
+			report(done, total, 'threads'),
+		);
+	}
+	const messageSearch = getMessageSearchService();
+	if (messageSearch) {
+		indexed += await refreshEveryChannel(messageSearch, helpers, (done, total) => report(done, total, 'messages'));
+	}
+	return indexed;
 };
 const INDEX_HANDLERS: Record<IndexType, IndexHandler> = {
 	guilds: refreshGuilds,
@@ -313,32 +439,70 @@ const INDEX_HANDLERS: Record<IndexType, IndexHandler> = {
 	channel_messages: refreshChannelMessages,
 	guild_members: refreshGuildMembers,
 	discovery: refreshDiscovery,
+	threads: refreshThreads,
+	all: refreshAll,
 };
-const refreshSearchIndex: WorkerTaskHandler = async (payload, helpers) => {
-	const validated = PayloadSchema.parse(payload);
-	helpers.logger.debug({payload: validated}, 'Processing refreshSearchIndex task');
-	const {kvClient} = getWorkerDependencies();
-	const progressKey = `index_refresh_status:${validated.job_id}`;
-	await reportInProgress(kvClient, progressKey, validated.index_type, 0);
+async function runRefresh(
+	payload: RefreshSearchIndexPayload,
+	helpers: WorkerTaskHelpers,
+	kvClient: IKVProvider,
+): Promise<number> {
+	const progressKey = indexRefreshStatusKey(payload.job_id);
+	const indexType = payload.index_type;
+	const report: ReportProgress = async (indexed, total = indexed, phase) => {
+		if (indexType === 'all') {
+			await holdSearchReindexAll(kvClient, payload.job_id);
+		}
+		await setProgress(kvClient, progressKey, {
+			status: 'in_progress',
+			index_type: indexType,
+			...(phase ? {phase} : {}),
+			total,
+			indexed,
+			started_at: new Date().toISOString(),
+		});
+	};
+	await report(0);
 	try {
-		const handler = INDEX_HANDLERS[validated.index_type];
-		const indexedCount = await handler(validated, helpers, kvClient, progressKey);
+		const indexedCount = await INDEX_HANDLERS[indexType](payload, helpers, report);
 		await setProgress(kvClient, progressKey, {
 			status: 'completed',
-			index_type: validated.index_type,
+			index_type: indexType,
 			total: indexedCount,
 			indexed: indexedCount,
 			completed_at: new Date().toISOString(),
 		});
+		return indexedCount;
 	} catch (error) {
-		Logger.error({error, payload: validated}, 'Failed to refresh search index');
+		Logger.error({error, payload}, 'Failed to refresh search index');
+		const message = error instanceof Error ? error.message : 'Unknown error';
 		await setProgress(kvClient, progressKey, {
 			status: 'failed',
-			index_type: validated.index_type,
-			error: error instanceof Error ? error.message : 'Unknown error',
+			index_type: indexType,
+			error: message,
 			failed_at: new Date().toISOString(),
 		});
-		throw error;
+		if (error instanceof JobCancelledError) {
+			throw error;
+		}
+		throw new JobFailedError(message);
+	}
+}
+const refreshSearchIndex: WorkerTaskHandler = async (payload, helpers) => {
+	const validated = PayloadSchema.parse(payload);
+	helpers.logger.debug({payload: validated}, 'Processing refreshSearchIndex task');
+	const {kvClient} = getWorkerDependencies();
+	if (validated.index_type !== 'all') {
+		return {indexed: await runRefresh(validated, helpers, kvClient)};
+	}
+	if (!(await holdSearchReindexAll(kvClient, validated.job_id))) {
+		helpers.logger.info({jobId: validated.job_id}, 'Another search reindex is running, stopping this one');
+		return {superseded: true};
+	}
+	try {
+		return {indexed: await runRefresh(validated, helpers, kvClient)};
+	} finally {
+		await finishSearchReindexAll(kvClient, validated.job_id);
 	}
 };
 

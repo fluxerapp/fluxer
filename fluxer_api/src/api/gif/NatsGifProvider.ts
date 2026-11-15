@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Config} from '@app/api/Config';
-import type {GifProviderMeta, IGifProvider} from '@app/api/gif/IGifProvider';
 import {Logger} from '@app/api/Logger';
 import {readOptionalEnv, readOptionalIntegerEnv, requireIntegerInRange} from '@app/api/utils/IntegerOptions';
 import {isJsonRecord, parseJsonUnknown} from '@app/api/utils/JsonBoundaryUtils';
@@ -42,7 +41,7 @@ type NatsGifRequest =
 	| {op: 'RegisterShare'; api_key: string; id: string; q: string; locale: string; country: string}
 	| {op: 'ResolveByUrl'; api_key: string; url: string; locale: string; country: string};
 
-export function extractKlipySlugFromUrl(rawUrl: string): string | null {
+function extractKlipySlugFromUrl(rawUrl: string): string | null {
 	let parsed: URL;
 	try {
 		parsed = new URL(rawUrl);
@@ -69,7 +68,7 @@ export function extractKlipySlugFromUrl(rawUrl: string): string | null {
 	}
 }
 
-export function buildKlipyShareUrl(slug: string): string {
+function buildKlipyShareUrl(slug: string): string {
 	const trimmed = slug.trim();
 	if (!trimmed) {
 		return `${KLIPY_SHARE_ORIGIN}/gifs`;
@@ -137,7 +136,13 @@ function readResolved(value: unknown): GifResponse | null {
 	return parsed.data;
 }
 
-class NatsGifProvider implements IGifProvider {
+interface GifProviderMeta {
+	readonly name: string;
+	readonly displayName: string;
+	readonly attributionRequired: boolean;
+}
+
+export class NatsGifProvider {
 	readonly meta = GIF_PROVIDER_META;
 
 	constructor(
@@ -154,6 +159,11 @@ class NatsGifProvider implements IGifProvider {
 			1,
 			MAX_REQUEST_TIMEOUT_MS,
 		);
+	}
+
+	async requireAvailable(): Promise<NatsGifProvider> {
+		if (!(await this.isAvailable())) throw new FeatureTemporarilyDisabledError();
+		return this;
 	}
 
 	async isAvailable(): Promise<boolean> {

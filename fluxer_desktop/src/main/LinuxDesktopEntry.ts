@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import child_process from 'node:child_process';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -12,7 +13,9 @@ import {
 	LINUX_ICON_NAME,
 } from '@electron/common/DesktopIdentity';
 import {createChildLogger} from '@electron/common/Logger';
-import {TASK_ARG_PREFIX} from '@electron/main/JumpList';
+import {IS_OFFLINE_BUILD} from '@electron/common/OfflineBuild';
+import {getAppResourcesPath} from '@electron/main/DesktopDistributionPath';
+import {isDirectMessagesAvailable, onDirectMessagesAvailabilityChange, TASK_ARG_PREFIX} from '@electron/main/JumpList';
 import {getStableLinuxLaunchPath} from '@electron/main/LinuxLaunchPath';
 import {isFlatpakRuntime} from '@electron/main/LinuxSandbox';
 import {getNativeLocale, t} from '@electron/main/MainI18n';
@@ -27,6 +30,7 @@ const LEGACY_DESKTOP_FILE_BASENAME = `${LEGACY_LINUX_DESKTOP_ENTRY_ID}.desktop`;
 const GENERIC_NAME_DEFAULT = 'Instant Messenger';
 const COMMENT_DEFAULT = 'Instant messaging and VoIP';
 export const GENERATED_MARKER = '# X-Generated-By=fluxer-desktop';
+const GENERATED_DIGEST_PREFIX = '# X-Generated-Digest=';
 const DESKTOP_ACTIONS = [
 	{
 		id: 'open-settings',
@@ -38,6 +42,7 @@ const DESKTOP_ACTIONS = [
 	},
 ] as const;
 const HICOLOR_ICON_SIZES = [16, 24, 32, 48, 64, 128, 256, 512] as const;
+const PROTOCOL_REGISTRATION_TIMEOUT_MS = 5000;
 
 function getXdgDataHome(): string {
 	const override = process.env.XDG_DATA_HOME;
@@ -87,16 +92,16 @@ function findThirdPartyDesktopEntry(execPath: string): string | null {
 	return null;
 }
 
-function escapeDesktopValue(value: string): string {
+export function escapeDesktopValue(value: string): string {
 	return value.replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/\t/g, '\\t').replace(/\r/g, '\\r');
 }
 
-function quoteExecArg(value: string): string {
+export function quoteExecArg(value: string): string {
 	return `"${value.replace(/(["`$\\])/g, '\\$1')}"`;
 }
 
 function installHicolorIcons(): void {
-	const iconRoot = path.join(process.resourcesPath, 'icons');
+	const iconRoot = path.join(getAppResourcesPath(), 'icons');
 	for (const size of HICOLOR_ICON_SIZES) {
 		const source = path.join(iconRoot, `${size}x${size}.png`);
 		const target = path.join(getXdgDataHome(), 'icons', 'hicolor', `${size}x${size}`, 'apps', `${LINUX_ICON_NAME}.png`);
@@ -115,8 +120,9 @@ function buildDesktopActionExecLine(execPath: string, taskId: (typeof DESKTOP_AC
 }
 
 function buildDesktopActionEntries(execPath: string): Array<string> {
-	const entries = [`Actions=${DESKTOP_ACTIONS.map((action) => action.id).join(';')};`];
-	for (const action of DESKTOP_ACTIONS) {
+	const actions = DESKTOP_ACTIONS.filter((action) => action.id !== 'new-dm' || isDirectMessagesAvailable());
+	const entries = [`Actions=${actions.map((action) => action.id).join(';')};`];
+	for (const action of actions) {
 		entries.push(
 			'',
 			`[Desktop Action ${action.id}]`,
@@ -136,7 +142,7 @@ function buildLocalizedEntryLines(key: string, defaultValue: string, localizedVa
 	return lines;
 }
 
-export function buildDesktopFileContents(execPath: string, hidden: boolean): string {
+function buildDesktopFileBody(execPath: string, hidden: boolean): string {
 	const execLine = `${quoteExecArg(execPath)} %U`;
 	return [
 		'[Desktop Entry]',
@@ -159,6 +165,18 @@ export function buildDesktopFileContents(execPath: string, hidden: boolean): str
 		...buildDesktopActionEntries(execPath),
 		'',
 	].join('\n');
+}
+
+function digestDesktopFileBody(body: string): string {
+	return crypto.createHash('sha256').update(body, 'utf8').digest('hex');
+}
+
+function buildDesktopFileContents(execPath: string, hidden: boolean): string {
+	const body = buildDesktopFileBody(execPath, hidden);
+	return body.replace(
+		`${GENERATED_MARKER}\n`,
+		`${GENERATED_MARKER}\n${GENERATED_DIGEST_PREFIX}${digestDesktopFileBody(body)}\n`,
+	);
 }
 
 function readDesktopEntryValue(contents: string, key: string): string | null {
@@ -186,6 +204,18 @@ function isStaleDesktopFile(contents: string): boolean {
 	return !isExecutableFile(tryExec);
 }
 
+function isUnmodifiedGeneratedFile(contents: string, execPath: string): boolean {
+	if (!contents.includes(GENERATED_MARKER)) return false;
+	const lines = contents.split('\n');
+	const digestIndex = lines.findIndex((line) => line.startsWith(GENERATED_DIGEST_PREFIX));
+	if (digestIndex === -1) {
+		return contents === buildDesktopFileBody(execPath, false) || contents === buildDesktopFileBody(execPath, true);
+	}
+	const digest = lines[digestIndex].slice(GENERATED_DIGEST_PREFIX.length).trim();
+	const body = lines.filter((_, index) => index !== digestIndex).join('\n');
+	return digestDesktopFileBody(body) === digest;
+}
+
 function readExistingDesktopFile(filePath: string): string | null {
 	try {
 		return fs.readFileSync(filePath, 'utf8');
@@ -204,12 +234,42 @@ function runUpdateDesktopDatabase(applicationsDir: string): void {
 	});
 }
 
-function registerProtocolClient(): void {
+function isDefaultProtocolClient(): boolean {
+	try {
+		return app.isDefaultProtocolClient(APP_PROTOCOL);
+	} catch (error) {
+		logger.debug('Failed to read the protocol client registration', {error});
+		return false;
+	}
+}
+
+function registerProtocolClientInProcess(): void {
 	try {
 		app.setAsDefaultProtocolClient(APP_PROTOCOL);
 	} catch (error) {
 		logger.warn('Failed to register protocol client', {error});
 	}
+}
+
+function registerProtocolClient(): void {
+	if (isDefaultProtocolClient()) return;
+	const desktopName = process.env.CHROME_DESKTOP;
+	if (!desktopName) {
+		logger.debug('Skipping protocol client registration because the desktop name is not set');
+		return;
+	}
+	child_process.execFile(
+		'xdg-mime',
+		['default', desktopName, `x-scheme-handler/${APP_PROTOCOL}`],
+		{timeout: PROTOCOL_REGISTRATION_TIMEOUT_MS},
+		(error) => {
+			if (!error) return;
+			logger.debug('xdg-mime could not register the protocol client, registering in process', {
+				message: error.message,
+			});
+			registerProtocolClientInProcess();
+		},
+	);
 }
 
 function removeFile(filePath: string, reason: string): boolean {
@@ -231,10 +291,10 @@ function removeLegacyGeneratedDesktopEntry(): boolean {
 }
 
 function writeDesktopFileAtomically(filePath: string, contents: string): void {
-	const tempPath = `${filePath}.${process.pid}.tmp`;
+	const tempPath = `${filePath}.${crypto.randomBytes(8).toString('hex')}.tmp`;
 	try {
 		fs.mkdirSync(path.dirname(filePath), {recursive: true});
-		fs.writeFileSync(tempPath, contents, {encoding: 'utf8', mode: 0o644});
+		fs.writeFileSync(tempPath, contents, {encoding: 'utf8', mode: 0o644, flag: 'wx'});
 		fs.renameSync(tempPath, filePath);
 	} catch (error) {
 		try {
@@ -249,14 +309,15 @@ function syncUserDesktopEntry(): boolean {
 	const filePath = getDesktopFilePath();
 	const existing = readExistingDesktopFile(filePath);
 	const systemEntry = findSystemDesktopEntry();
+	const owned = existing !== null && (isUnmodifiedGeneratedFile(existing, execPath) || isStaleDesktopFile(existing));
 	if (systemEntry) {
-		if (existing !== null && (existing.includes(GENERATED_MARKER) || isStaleDesktopFile(existing))) {
+		if (owned) {
 			return removeFile(filePath, 'Removed a user .desktop entry shadowing the system entry');
 		}
 		logger.debug('System-wide .desktop entry detected; skipping user-local copy', {systemEntry});
 		return false;
 	}
-	if (existing !== null && !existing.includes(GENERATED_MARKER) && !isStaleDesktopFile(existing)) {
+	if (existing !== null && !owned) {
 		logger.debug('Linux .desktop entry was hand-edited; leaving untouched', {filePath});
 		return false;
 	}
@@ -275,21 +336,35 @@ function syncUserDesktopEntry(): boolean {
 	return true;
 }
 
+function refreshDesktopEntryActions(): void {
+	try {
+		if (syncUserDesktopEntry()) runUpdateDesktopDatabase(getUserApplicationsDir());
+	} catch (error) {
+		logger.warn('Failed to rewrite the Linux .desktop entry actions', {filePath: getDesktopFilePath(), error});
+	}
+}
+
+let actionRefreshSubscribed = false;
+
 function desktopEntryResolves(): boolean {
 	return findSystemDesktopEntry() !== null || readExistingDesktopFile(getDesktopFilePath()) !== null;
 }
 
-export function ensureLinuxDesktopEntry(): boolean {
-	if (process.platform !== 'linux') return false;
+export function ensureLinuxDesktopEntry(): void {
+	if (process.platform !== 'linux') return;
+	if (!app.isPackaged) {
+		logger.debug('Skipping .desktop entry management for an unpackaged run');
+		return;
+	}
 	if (isFlatpakRuntime()) {
 		logger.debug('Skipping .desktop entry creation in Flatpak; package export owns launcher/protocol integration');
 		registerProtocolClient();
-		return false;
+		return;
 	}
-	if (process.env.FLUXER_DISABLE_DESKTOP_FILE === '1') {
-		logger.debug('Skipping .desktop entry management; FLUXER_DISABLE_DESKTOP_FILE=1');
+	if (IS_OFFLINE_BUILD || process.env.FLUXER_DISABLE_DESKTOP_FILE === '1') {
+		logger.debug('Skipping .desktop entry management; the package installs its own entry');
 		if (findSystemDesktopEntry() !== null) registerProtocolClient();
-		return desktopEntryResolves();
+		return;
 	}
 	let changed = removeLegacyGeneratedDesktopEntry();
 	try {
@@ -301,7 +376,9 @@ export function ensureLinuxDesktopEntry(): boolean {
 		});
 	}
 	if (changed) runUpdateDesktopDatabase(getUserApplicationsDir());
-	const resolves = desktopEntryResolves();
-	if (resolves) registerProtocolClient();
-	return resolves;
+	if (!actionRefreshSubscribed) {
+		actionRefreshSubscribed = true;
+		onDirectMessagesAvailabilityChange(refreshDesktopEntryActions);
+	}
+	if (desktopEntryResolves()) registerProtocolClient();
 }

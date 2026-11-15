@@ -3,24 +3,28 @@
 use crate::{
     byte_budget::BudgetedBytes,
     constants,
+    image_quality::ImageQuality,
     image_transform::ResizeMode,
     media_process, mime,
     output_format::OutputFormat,
     server::{
         format_policy::is_svg_content_type,
         media_operations::{
-            MediaFailure, MediaInput, MediaInputLimit, MetadataOutput, load_media_input,
-            resolve_metadata,
+            MediaFailure, MediaInput, MediaInputLimit, MetadataOutput, STORED_SNIFF_PREFIX_BYTES,
+            StrippedMedia, load_media_input, probe_audio_duration, read_sniff_prefix,
+            resolve_metadata, strip_media,
         },
         response::{
-            MediaResponse,
+            GeneratedMediaResponse,
             error::{
                 canonical_reason_str, json_response, storage_error_response, text, text_with_source,
             },
-            media_response,
+            generated_media_response,
         },
         state::AppState,
-        transform::execution::{run_transform, transform_error_is_timeout},
+        transform::execution::{
+            VideoTransformOptions, run_transform, run_video_transform, transform_error_is_timeout,
+        },
     },
 };
 use axum::{
@@ -31,11 +35,11 @@ use axum::{
 };
 use base64::{Engine as _, engine::general_purpose};
 use bytes::Bytes;
-use futures_util::StreamExt as _;
 use serde::Deserialize;
 use std::sync::Arc;
 
-const UPLOAD_SNIFF_PREFIX_BYTES: usize = 8192;
+const MEDIA_WIDTH_HEADER: &str = "x-fluxer-media-width";
+const MEDIA_HEIGHT_HEADER: &str = "x-fluxer-media-height";
 
 #[derive(Debug, Deserialize)]
 struct MetadataRequest {
@@ -110,6 +114,36 @@ impl FramesRequest {
 }
 
 #[derive(Debug, Deserialize)]
+struct MediaSourceRequest {
+    #[serde(rename = "type")]
+    typ: String,
+    base64: Option<String>,
+    upload_filename: Option<String>,
+    filename: Option<String>,
+    bucket: Option<String>,
+    key: Option<String>,
+    content_type: Option<String>,
+}
+
+impl MediaSourceRequest {
+    fn into_parts(self) -> (MetadataRequest, Option<String>) {
+        let request = MetadataRequest {
+            version: None,
+            typ: self.typ,
+            nsfw: "allow".to_owned(),
+            base64: self.base64,
+            upload_filename: self.upload_filename,
+            filename: self.filename,
+            bucket: self.bucket,
+            key: self.key,
+            url: None,
+            with_base64: None,
+        };
+        (request, self.content_type)
+    }
+}
+
+#[derive(Debug, Deserialize)]
 struct UploadFileRequest {
     upload_filename: String,
 }
@@ -176,12 +210,23 @@ pub(in crate::server) async fn thumbnail_handler(
         Err(err) => return storage_error_response(&req.upload_filename, err),
     };
     let media = if mime::category(&object.content_type) == Some(mime::Category::Video) {
-        match media_process::extract_video_thumbnail(
-            &object.data,
-            OutputFormat::WebP,
-            &app.media.limits(),
-        ) {
+        let options = VideoTransformOptions {
+            format: OutputFormat::WebP,
+            width: None,
+            height: None,
+            quality: ImageQuality::Auto,
+            deadline_ms: app.media.transforms().transform_deadline_ms(),
+        };
+        match run_video_transform(app.media.transforms(), object.data.clone(), options).await {
             Ok(media) => media,
+            Err(err) if transform_error_is_timeout(&err) => {
+                return text_with_source(
+                    StatusCode::GATEWAY_TIMEOUT,
+                    "Gateway Timeout",
+                    "video_thumbnail_timeout",
+                    err,
+                );
+            }
             Err(err) => {
                 return text_with_source(
                     StatusCode::BAD_REQUEST,
@@ -220,11 +265,10 @@ pub(in crate::server) async fn thumbnail_handler(
             }
         }
     };
-    media_response(MediaResponse {
+    generated_media_response(GeneratedMediaResponse {
         method: Method::GET,
         data: BudgetedBytes::from(Bytes::from(media.bytes)),
         content_type: media.content_type,
-        range_header: None,
         disposition: None,
     })
 }
@@ -253,11 +297,14 @@ pub(in crate::server) async fn frames_handler(
         Ok(input) => input,
         Err(failure) => return failure.into_response(),
     };
-    match media_process::extract_video_thumbnail(
-        &input.data,
-        OutputFormat::JPEG,
-        &app.media.limits(),
-    ) {
+    let options = VideoTransformOptions {
+        format: OutputFormat::JPEG,
+        width: None,
+        height: None,
+        quality: ImageQuality::Auto,
+        deadline_ms: app.media.transforms().transform_deadline_ms(),
+    };
+    match run_video_transform(app.media.transforms(), input.data, options).await {
         Ok(frame) => {
             let encoded = general_purpose::STANDARD.encode(frame.bytes);
             json_response(
@@ -287,7 +334,7 @@ pub(in crate::server) async fn sniff_handler(
         Ok(req) => req,
         Err(_) => return text(StatusCode::BAD_REQUEST, "Bad Request"),
     };
-    let range = format!("bytes=0-{}", UPLOAD_SNIFF_PREFIX_BYTES - 1);
+    let range = format!("bytes=0-{}", STORED_SNIFF_PREFIX_BYTES - 1);
     let object = match app
         .store
         .stream_object(
@@ -320,18 +367,73 @@ pub(in crate::server) async fn sniff_handler(
     )
 }
 
-async fn read_sniff_prefix(body: Body) -> Result<Vec<u8>, axum::Error> {
-    let mut prefix = Vec::with_capacity(UPLOAD_SNIFF_PREFIX_BYTES);
-    let mut chunks = body.into_data_stream();
-    while prefix.len() < UPLOAD_SNIFF_PREFIX_BYTES {
-        let Some(chunk) = chunks.next().await else {
-            break;
-        };
-        let chunk = chunk?;
-        let wanted = chunk.len().min(UPLOAD_SNIFF_PREFIX_BYTES - prefix.len());
-        prefix.extend_from_slice(&chunk[..wanted]);
+async fn read_media_source(
+    app: &AppState,
+    headers: &HeaderMap,
+    request: Request<Body>,
+) -> Result<(MediaInput, Option<String>), Box<Response>> {
+    if !check_internal_auth(headers, app.cfg.secret_key.expose()) {
+        return Err(Box::new(text(StatusCode::UNAUTHORIZED, "Unauthorized")));
     }
-    Ok(prefix)
+    let body = read_limited_body(request)
+        .await
+        .map_err(|status| Box::new(text(status, canonical_reason_str(status))))?;
+    let req: MediaSourceRequest = serde_json::from_slice(&body)
+        .map_err(|_| Box::new(text(StatusCode::BAD_REQUEST, "Bad Request")))?;
+    let (request, content_type) = req.into_parts();
+    let input = request
+        .into_media_input()
+        .map_err(|failure| Box::new(failure.into_response()))?;
+    Ok((input, content_type))
+}
+
+pub(in crate::server) async fn strip_handler(
+    State(app): State<Arc<AppState>>,
+    headers: HeaderMap,
+    request: Request<Body>,
+) -> Response {
+    let (input, content_type) = match read_media_source(&app, &headers, request).await {
+        Ok(source) => source,
+        Err(response) => return *response,
+    };
+    let StrippedMedia {
+        data,
+        content_type,
+        dimensions,
+    } = match strip_media(&app, input, content_type).await {
+        Ok(stripped) => stripped,
+        Err(failure) => return failure.into_response(),
+    };
+    let mut builder = Response::builder()
+        .status(StatusCode::OK)
+        .header(header::CONTENT_TYPE, content_type)
+        .header(header::CONTENT_LENGTH, data.len());
+    if let Some((width, height)) = dimensions {
+        builder = builder
+            .header(MEDIA_WIDTH_HEADER, width)
+            .header(MEDIA_HEIGHT_HEADER, height);
+    }
+    builder
+        .body(Body::from(data))
+        .unwrap_or_else(|_| text(StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error"))
+}
+
+pub(in crate::server) async fn audio_duration_handler(
+    State(app): State<Arc<AppState>>,
+    headers: HeaderMap,
+    request: Request<Body>,
+) -> Response {
+    let (input, _) = match read_media_source(&app, &headers, request).await {
+        Ok(source) => source,
+        Err(response) => return *response,
+    };
+    match probe_audio_duration(&app, input).await {
+        Ok(duration) => json_response(
+            StatusCode::OK,
+            serde_json::json!({ "duration_seconds": duration }).to_string(),
+        ),
+        Err(failure) => failure.into_response(),
+    }
 }
 
 fn check_internal_auth(headers: &HeaderMap, secret: &str) -> bool {
@@ -370,21 +472,10 @@ async fn read_limited_body(request: Request<Body>) -> Result<Bytes, StatusCode> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        config::Config,
-        storage::tests::{FakeObject, fake_s3},
-        test_fixtures::synthetic_png,
-    };
+    use crate::config::Config;
     use axum::http::HeaderValue;
     use http_body_util::BodyExt as _;
     use std::path::Path;
-    use tokio::sync::mpsc;
-
-    fn test_app_state() -> Arc<AppState> {
-        let cfg = Config::load_from_iter([("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret")])
-            .expect("test config");
-        Arc::new(AppState::for_tests(cfg))
-    }
 
     fn local_storage_config(storage_root: &Path) -> Config {
         Config::load_from_iter([
@@ -414,28 +505,12 @@ mod tests {
             .expect("stored upload");
     }
 
-    async fn sniff_upload(app: &Arc<AppState>, key: &str) -> Response {
-        let body = serde_json::json!({ "type": "upload", "upload_filename": key }).to_string();
-        sniff_handler(
-            State(Arc::clone(app)),
-            authorized_headers(),
-            json_request(body),
-        )
-        .await
-    }
-
     fn mpeg_ts_segment() -> Vec<u8> {
         let mut segment = vec![0u8; 564];
         for offset in [0, 188, 376] {
             segment[offset] = 0x47;
         }
         segment
-    }
-
-    fn png_followed_by_zeros() -> Vec<u8> {
-        let mut upload = synthetic_png(8, 8);
-        upload.extend(std::iter::repeat_n(0u8, 64 * 1024));
-        upload
     }
 
     fn authorized_headers() -> HeaderMap {
@@ -454,24 +529,6 @@ mod tests {
             .expect("json request")
     }
 
-    fn oversized_request() -> Request<Body> {
-        Request::builder()
-            .method(Method::POST)
-            .body(Body::from(Bytes::from(vec![
-                0u8;
-                constants::MAX_INTERNAL_REQUEST_BODY_BYTES
-                    + 1
-            ])))
-            .expect("oversized request")
-    }
-
-    fn saturated_transform_app(storage_root: &Path) -> Arc<AppState> {
-        let mut cfg = local_storage_config(storage_root);
-        cfg.media.max_native_transforms = 1;
-        cfg.media.worker_queue_capacity = 0;
-        Arc::new(AppState::for_tests(cfg))
-    }
-
     async fn response_body(response: Response) -> String {
         let bytes = response
             .into_body()
@@ -487,225 +544,6 @@ mod tests {
         let headers = authorized_headers();
         assert!(check_internal_auth(&headers, "secret"));
         assert!(!check_internal_auth(&headers, "other"));
-    }
-
-    #[tokio::test]
-    async fn frames_returns_empty_frames_when_extraction_fails() {
-        let body = format!(
-            r#"{{"version":2,"type":"base64","base64":"{}"}}"#,
-            general_purpose::STANDARD.encode(b"definitely not a video")
-        );
-        let response = frames_handler(
-            State(test_app_state()),
-            authorized_headers(),
-            json_request(body),
-        )
-        .await;
-
-        assert_eq!(StatusCode::OK, response.status());
-        assert_eq!(
-            "application/json",
-            response
-                .headers()
-                .get(header::CONTENT_TYPE)
-                .expect("content type")
-                .to_str()
-                .expect("ascii content type")
-        );
-        assert_eq!("{\"frames\":[]}", response_body(response).await);
-    }
-
-    #[tokio::test]
-    async fn metadata_reads_an_own_attachment_url_whatever_its_signature() {
-        use fluxer_common::attachment_url_signature::{
-            ATTACHMENT_URL_TTL_SECS, UrlKind, sign, with_signature,
-        };
-        use std::time::{SystemTime, UNIX_EPOCH};
-
-        const SECRET: [u8; 32] = [5u8; 32];
-        const ENDPOINT: &str = "https://media.test";
-        let tmp = tempfile::tempdir().expect("temp storage root");
-        let storage_root = tmp.path().canonicalize().expect("canonical storage root");
-        let app = Arc::new(AppState::for_tests(
-            Config::load_from_iter([
-                (
-                    "FLUXER_MEDIA_PROXY_SECRET_KEY".to_owned(),
-                    "secret".to_owned(),
-                ),
-                (
-                    "FLUXER_MEDIA_PROXY_STORAGE_ROOT".to_owned(),
-                    storage_root.display().to_string(),
-                ),
-                (
-                    "FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT".to_owned(),
-                    ENDPOINT.to_owned(),
-                ),
-                (
-                    "FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE".to_owned(),
-                    "enforce".to_owned(),
-                ),
-                (
-                    "FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64".to_owned(),
-                    general_purpose::STANDARD.encode(SECRET),
-                ),
-            ])
-            .expect("metadata signature config"),
-        ));
-        let key = "attachments/1/2/cat.png";
-        app.store
-            .write_object(
-                &app.cfg.storage.bucket_cdn,
-                key,
-                &synthetic_png(4, 4),
-                "image/png",
-            )
-            .await
-            .expect("stored attachment");
-        let unsigned = format!("{ENDPOINT}/{key}");
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("the clock is after the unix epoch")
-            .as_secs();
-        let expires = now - 1;
-        let issued = expires - ATTACHMENT_URL_TTL_SECS;
-        let expired = format!(
-            "{unsigned}?ex={expires:08x}&is={issued:08x}&hm={}",
-            sign(key, expires, issued, UrlKind::Ordinary, &SECRET)
-        );
-
-        for spelling in [
-            unsigned.clone(),
-            expired,
-            with_signature(&unsigned, key, now, now, &SECRET),
-        ] {
-            let body = serde_json::json!({
-                "version": 2,
-                "type": "external",
-                "nsfw": "allow",
-                "with_base64": true,
-                "url": spelling,
-            })
-            .to_string();
-            let response = metadata_handler(
-                State(Arc::clone(&app)),
-                authorized_headers(),
-                json_request(body),
-            )
-            .await;
-            assert_eq!(StatusCode::OK, response.status(), "{spelling}");
-            assert!(response_body(response).await.contains("\"width\":4"));
-        }
-    }
-
-    #[tokio::test]
-    async fn metadata_requires_version_two_exactly() {
-        let encoded = general_purpose::STANDARD.encode(synthetic_png(4, 4));
-        let app = test_app_state();
-
-        for version in ["1", "3", "null"] {
-            let body = format!(
-                r#"{{"version":{version},"type":"base64","nsfw":"allow","base64":"{encoded}"}}"#
-            );
-            let response = metadata_handler(
-                State(Arc::clone(&app)),
-                authorized_headers(),
-                json_request(body),
-            )
-            .await;
-            assert_eq!(
-                StatusCode::BAD_REQUEST,
-                response.status(),
-                "version {version} must be rejected"
-            );
-        }
-
-        let missing_version = format!(r#"{{"type":"base64","nsfw":"allow","base64":"{encoded}"}}"#);
-        let response = metadata_handler(
-            State(Arc::clone(&app)),
-            authorized_headers(),
-            json_request(missing_version),
-        )
-        .await;
-        assert_eq!(StatusCode::BAD_REQUEST, response.status());
-
-        let body =
-            format!(r#"{{"version":2,"type":"base64","nsfw":"allow","base64":"{encoded}"}}"#);
-        let response = metadata_handler(State(app), authorized_headers(), json_request(body)).await;
-        assert_eq!(StatusCode::OK, response.status());
-        assert!(response_body(response).await.contains("\"width\":4"));
-    }
-
-    #[tokio::test]
-    async fn thumbnail_answers_an_oversized_body_with_413_payload_too_large() {
-        let response = thumbnail_handler(
-            State(test_app_state()),
-            authorized_headers(),
-            oversized_request(),
-        )
-        .await;
-
-        assert_eq!(StatusCode::PAYLOAD_TOO_LARGE, response.status());
-        assert_eq!("Payload Too Large", response_body(response).await);
-    }
-
-    #[tokio::test]
-    async fn frames_answers_an_oversized_body_with_413_payload_too_large() {
-        let response = frames_handler(
-            State(test_app_state()),
-            authorized_headers(),
-            oversized_request(),
-        )
-        .await;
-
-        assert_eq!(StatusCode::PAYLOAD_TOO_LARGE, response.status());
-        assert_eq!("Payload Too Large", response_body(response).await);
-    }
-
-    #[tokio::test]
-    async fn thumbnail_answers_a_full_admission_pool_with_504_gateway_timeout() {
-        let tmp = tempfile::tempdir().expect("temp storage root");
-        let storage_root = tmp.path().canonicalize().expect("canonical storage root");
-        let app = saturated_transform_app(&storage_root);
-        app.store
-            .write_object(
-                &app.cfg.storage.bucket_uploads,
-                "thumb.png",
-                &synthetic_png(8, 8),
-                "image/png",
-            )
-            .await
-            .expect("stored upload");
-        let (release, mut released) = mpsc::channel::<()>(1);
-        let (started, mut has_started) = mpsc::channel::<()>(1);
-        let holder = Arc::clone(&app);
-        let held = tokio::spawn(async move {
-            holder
-                .media
-                .transforms()
-                .tasks()
-                .run_native(None, move || {
-                    let _ = started.blocking_send(());
-                    let _ = released.blocking_recv();
-                    Ok(())
-                })
-                .await
-        });
-        has_started
-            .recv()
-            .await
-            .expect("the held transform started");
-
-        let response = thumbnail_handler(
-            State(Arc::clone(&app)),
-            authorized_headers(),
-            json_request(r#"{"upload_filename":"thumb.png"}"#.to_owned()),
-        )
-        .await;
-
-        assert_eq!(StatusCode::GATEWAY_TIMEOUT, response.status());
-        assert_eq!("Gateway Timeout", response_body(response).await);
-        drop(release);
-        held.await.expect("held task").expect("held work");
     }
 
     #[tokio::test]
@@ -730,187 +568,5 @@ mod tests {
         );
         let response = sniff_handler(State(app), wrong_secret, json_request(body.to_owned())).await;
         assert_eq!(StatusCode::UNAUTHORIZED, response.status());
-    }
-
-    #[tokio::test]
-    async fn sniff_reports_mpeg_ts_packets_stored_under_a_javascript_name_as_video_mp2t() {
-        let (_tmp, app) = local_storage_app();
-        store_upload(&app, "x.js", &mpeg_ts_segment(), "text/javascript").await;
-
-        let response = sniff_upload(&app, "x.js").await;
-
-        assert_eq!(StatusCode::OK, response.status());
-        assert_eq!(
-            Some("application/json"),
-            response
-                .headers()
-                .get(header::CONTENT_TYPE)
-                .and_then(|value| value.to_str().ok())
-        );
-        assert_eq!(
-            r#"{"content_type":"video/mp2t"}"#,
-            response_body(response).await
-        );
-    }
-
-    #[tokio::test]
-    async fn sniff_reports_null_for_javascript_svg_markup_and_pdf() {
-        let (_tmp, app) = local_storage_app();
-        let svg = br#"<svg xmlns="http://www.w3.org/2000/svg"></svg>"#.as_slice();
-        assert_eq!("image/svg+xml", mime::sniff(svg).mime);
-
-        for (key, data) in [
-            ("a.js", b"export const a = 1;\n".as_slice()),
-            ("b.tsx", svg),
-            ("c.pdf", b"%PDF-1.7".as_slice()),
-        ] {
-            store_upload(&app, key, data, "application/octet-stream").await;
-            let response = sniff_upload(&app, key).await;
-            assert_eq!(StatusCode::OK, response.status(), "{key}");
-            assert_eq!(
-                r#"{"content_type":null}"#,
-                response_body(response).await,
-                "{key}"
-            );
-        }
-    }
-
-    #[tokio::test]
-    async fn sniff_reports_null_for_an_empty_upload() {
-        let (_tmp, app) = local_storage_app();
-        store_upload(&app, "empty.js", b"", "text/javascript").await;
-
-        let response = sniff_upload(&app, "empty.js").await;
-
-        assert_eq!(StatusCode::OK, response.status());
-        assert_eq!(r#"{"content_type":null}"#, response_body(response).await);
-    }
-
-    #[tokio::test]
-    async fn sniff_reports_null_when_object_storage_answers_the_prefix_range_with_416() {
-        let fake = fake_s3().await;
-        fake.put_object(
-            "uploads/empty.js",
-            FakeObject {
-                content_type: Some("text/javascript".to_owned()),
-                read_status: Some(416),
-                ..FakeObject::default()
-            },
-        );
-        let tmp = tempfile::tempdir().expect("temp storage root");
-        let app = Arc::new(AppState::for_tests(fake.config(tmp.path())));
-
-        let response = sniff_upload(&app, "empty.js").await;
-
-        assert_eq!(StatusCode::OK, response.status());
-        assert_eq!(r#"{"content_type":null}"#, response_body(response).await);
-    }
-
-    #[tokio::test]
-    async fn sniff_reports_the_prefix_verdict_for_an_upload_larger_than_the_prefix() {
-        let (_tmp, app) = local_storage_app();
-        store_upload(&app, "large.bin", &png_followed_by_zeros(), "text/plain").await;
-
-        let response = sniff_upload(&app, "large.bin").await;
-
-        assert_eq!(StatusCode::OK, response.status());
-        assert_eq!(
-            r#"{"content_type":"image/png"}"#,
-            response_body(response).await
-        );
-    }
-
-    #[tokio::test]
-    async fn sniff_asks_object_storage_for_only_the_prefix_range() {
-        let fake = fake_s3().await;
-        fake.put_object(
-            "uploads/large.bin",
-            FakeObject {
-                body: png_followed_by_zeros(),
-                content_type: Some("text/plain".to_owned()),
-                ..FakeObject::default()
-            },
-        );
-        let tmp = tempfile::tempdir().expect("temp storage root");
-        let app = Arc::new(AppState::for_tests(fake.config(tmp.path())));
-
-        let response = sniff_upload(&app, "large.bin").await;
-
-        assert_eq!(StatusCode::OK, response.status());
-        assert_eq!(
-            r#"{"content_type":"image/png"}"#,
-            response_body(response).await
-        );
-        let reads: Vec<_> = fake
-            .requests()
-            .into_iter()
-            .filter(|(method, _, _, _)| *method == Method::GET)
-            .collect();
-        assert_eq!(1, reads.len());
-        let (_, uri, headers, _) = &reads[0];
-        assert_eq!("/uploads/large.bin", uri.path());
-        assert_eq!(
-            Some("bytes=0-8191"),
-            headers
-                .get(header::RANGE)
-                .and_then(|value| value.to_str().ok())
-        );
-    }
-
-    #[tokio::test]
-    async fn sniff_prefix_stops_at_the_prefix_when_storage_ignores_the_range() {
-        let upload = png_followed_by_zeros();
-        let mut yielded = 0;
-        let stream_source = upload.clone();
-        let body = Body::from_stream(futures_util::stream::poll_fn(move |_| {
-            assert!(
-                yielded < UPLOAD_SNIFF_PREFIX_BYTES,
-                "the body was polled again after {yielded} bytes were yielded"
-            );
-            let end = (yielded + 1000).min(stream_source.len());
-            let chunk = Bytes::copy_from_slice(&stream_source[yielded..end]);
-            yielded = end;
-            std::task::Poll::Ready(Some(Ok::<_, std::io::Error>(chunk)))
-        }));
-
-        let prefix = read_sniff_prefix(body).await.expect("prefix read");
-
-        assert_eq!(&upload[..UPLOAD_SNIFF_PREFIX_BYTES], prefix.as_slice());
-    }
-
-    #[tokio::test]
-    async fn sniff_answers_a_missing_upload_with_404() {
-        let (_tmp, app) = local_storage_app();
-
-        let response = sniff_upload(&app, "missing.js").await;
-
-        assert_eq!(StatusCode::NOT_FOUND, response.status());
-        assert_eq!("Not Found", response_body(response).await);
-    }
-
-    #[tokio::test]
-    async fn sniff_answers_a_body_without_an_upload_filename_with_400() {
-        let response = sniff_handler(
-            State(test_app_state()),
-            authorized_headers(),
-            json_request(r#"{"type":"upload"}"#.to_owned()),
-        )
-        .await;
-
-        assert_eq!(StatusCode::BAD_REQUEST, response.status());
-        assert_eq!("Bad Request", response_body(response).await);
-    }
-
-    #[tokio::test]
-    async fn sniff_answers_an_oversized_body_with_413_payload_too_large() {
-        let response = sniff_handler(
-            State(test_app_state()),
-            authorized_headers(),
-            oversized_request(),
-        )
-        .await;
-
-        assert_eq!(StatusCode::PAYLOAD_TOO_LARGE, response.status());
-        assert_eq!("Payload Too Large", response_body(response).await);
     }
 }

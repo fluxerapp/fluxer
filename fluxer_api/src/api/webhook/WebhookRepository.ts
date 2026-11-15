@@ -13,7 +13,6 @@ import type {WebhookRow, WebhooksBySourceChannelRow} from '@app/api/database/typ
 import {WEBHOOK_COLUMNS} from '@app/api/database/types/ChannelTypes';
 import {Webhook} from '@app/api/models/Webhook';
 import {Webhooks, WebhooksByChannel, WebhooksByGuild, WebhooksBySourceChannel} from '@app/api/Tables';
-import {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
 
 const FETCH_WEBHOOK_BY_ID_CQL = Webhooks.selectCql({
 	where: Webhooks.where.eq('webhook_id'),
@@ -57,7 +56,7 @@ function createSourceChannelPageQuery(limit: number) {
 	});
 }
 
-export class WebhookRepository extends IWebhookRepository {
+export class WebhookRepository {
 	async findUnique(webhookId: WebhookID): Promise<Webhook | null> {
 		const result = await fetchOne<WebhookRow>(FETCH_WEBHOOK_BY_ID_CQL, {webhook_id: webhookId});
 		return result ? new Webhook(result) : null;
@@ -147,9 +146,8 @@ export class WebhookRepository extends IWebhookRepository {
 			name: string;
 			avatarHash: string | null;
 		}>,
-		oldData?: WebhookRow | null,
 	): Promise<Webhook | null> {
-		const existing = oldData !== undefined ? (oldData ? new Webhook(oldData) : null) : await this.findUnique(webhookId);
+		const existing = await this.findUnique(webhookId);
 		if (!existing) return null;
 		const updatedData: WebhookRow = {
 			webhook_id: webhookId,
@@ -171,7 +169,6 @@ export class WebhookRepository extends IWebhookRepository {
 				patch: buildPatchFromData(updatedData, current, WEBHOOK_COLUMNS, ['webhook_id', 'webhook_token']),
 			}),
 			Webhooks,
-			{initialData: oldData},
 		);
 		const batch = new BatchBuilder();
 		if (existing.guildId !== updatedData.guild_id) {
@@ -249,10 +246,6 @@ export class WebhookRepository extends IWebhookRepository {
 			);
 		}
 		await batch.execute();
-	}
-
-	async findManyByIds(webhookIds: Array<WebhookID>): Promise<Array<Webhook>> {
-		return this.fetchWebhooksByIds(webhookIds);
 	}
 
 	async listIdsBySourceChannel(

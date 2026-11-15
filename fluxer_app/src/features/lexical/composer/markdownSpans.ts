@@ -2,11 +2,15 @@
 
 import {ParserFlags} from '@app/features/messaging/utils/markdown/parser/Enums';
 import {MAX_LINE_LENGTH} from '@app/features/messaging/utils/markdown/parser/MarkdownConstants';
-import {parseMarkdownAstWithWasm} from '@app/features/messaging/utils/markdown/parser/MarkdownParserWasm';
+import {
+	isMarkdownParserReady,
+	parseMarkdownAstWithWasm,
+} from '@app/features/messaging/utils/markdown/parser/MarkdownParserWasm';
 import type {Node} from '@app/features/messaging/utils/markdown/parser/Nodes';
 import {normalizeUrl} from '@app/features/messaging/utils/markdown/parser/UrlUtils';
 import {findUrlEnd} from '@app/features/messaging/utils/markdown/UrlSpanUtils';
 import {parseSilentMessagePrefix} from '@app/features/messaging/utils/SilentMessagePrefix';
+import {LRUMap} from '@app/lib/list/ListLruMap';
 
 export const MarkdownHl = {
 	none: 0,
@@ -53,12 +57,12 @@ export const DEFAULT_COMPOSER_MARKDOWN_FLAGS =
 	ParserFlags.ALLOW_TABLES |
 	ParserFlags.ALLOW_ALERTS;
 
-export interface MarkdownRecoveredRange {
+interface MarkdownRecoveredRange {
 	start: number;
 	end: number;
 }
 
-export interface MarkdownHighlightResult {
+interface MarkdownHighlightResult {
 	spans: Array<MarkdownSpan>;
 	recovered: Array<MarkdownRecoveredRange>;
 }
@@ -76,15 +80,54 @@ type AlignAttempt = {type: 'aligned'; spans: Array<MarkdownSpan>} | {type: 'desy
 
 const MAX_ALIGN_ATTEMPTS = 64;
 const MAX_URL_REALIGN_STEPS = 256;
+const HIGHLIGHT_CACHE_CAPACITY = 32;
+
+const highlightCache = new LRUMap<string, ReadonlyArray<MarkdownSpan>>(HIGHLIGHT_CACHE_CAPACITY);
 
 export function computeMarkdownHighlightSpans(
 	source: string,
 	parserFlags = DEFAULT_COMPOSER_MARKDOWN_FLAGS,
-): Array<MarkdownSpan> {
-	return computeMarkdownHighlightResult(source, parserFlags).spans;
+): ReadonlyArray<MarkdownSpan> {
+	const key = `${parserFlags}\u0000${source}`;
+	const cached = highlightCache.get(key);
+	if (cached !== undefined) {
+		return cached;
+	}
+	const spans = computeMarkdownHighlightResult(source, parserFlags).spans;
+	if (isMarkdownParserReady()) {
+		highlightCache.set(key, spans);
+	}
+	return spans;
 }
 
-export function computeMarkdownHighlightResult(
+export function splitSpansByLine(
+	spans: ReadonlyArray<MarkdownSpan>,
+	lineSources: ReadonlyArray<string>,
+): Array<Array<MarkdownSpan>> {
+	const result: Array<Array<MarkdownSpan>> = [];
+	let first = 0;
+	let lineStart = 0;
+	for (const lineSource of lineSources) {
+		const lineEnd = lineStart + lineSource.length;
+		while (first < spans.length && spans[first]!.end <= lineStart) {
+			first += 1;
+		}
+		const lineSpans: Array<MarkdownSpan> = [];
+		for (let index = first; index < spans.length && spans[index]!.start < lineEnd; index += 1) {
+			const span = spans[index]!;
+			const start = Math.max(span.start, lineStart) - lineStart;
+			const end = Math.min(span.end, lineEnd) - lineStart;
+			if (end > start) {
+				lineSpans.push({...span, start, end});
+			}
+		}
+		result.push(lineSpans);
+		lineStart = lineEnd + 1;
+	}
+	return result;
+}
+
+function computeMarkdownHighlightResult(
 	source: string,
 	parserFlags = DEFAULT_COMPOSER_MARKDOWN_FLAGS,
 ): MarkdownHighlightResult {
@@ -126,7 +169,10 @@ export function computeMarkdownHighlightResult(
 	return {spans: coalesce(spans), recovered};
 }
 
-export function markSilentMessagePrefix(spans: Array<MarkdownSpan>, source: string): Array<MarkdownSpan> {
+export function markSilentMessagePrefix(
+	spans: ReadonlyArray<MarkdownSpan>,
+	source: string,
+): ReadonlyArray<MarkdownSpan> {
 	const prefix = parseSilentMessagePrefix(source);
 	if (prefix == null) {
 		return spans;
@@ -284,12 +330,12 @@ function alignNode(node: Node, format: MarkdownHlFormat, ctx: AlignContext): voi
 			return;
 		}
 		case 'Strong': {
-			const delimiter = ctx.source.startsWith('**', ctx.pos)
-				? '**'
-				: ctx.source.startsWith('__', ctx.pos)
-					? '__'
-					: null;
-			if (delimiter == null) {
+			let delimiter: '**' | '__';
+			if (ctx.source.startsWith('**', ctx.pos)) {
+				delimiter = '**';
+			} else if (ctx.source.startsWith('__', ctx.pos)) {
+				delimiter = '__';
+			} else {
 				ctx.failed = true;
 				return;
 			}
@@ -351,7 +397,7 @@ function alignNode(node: Node, format: MarkdownHlFormat, ctx: AlignContext): voi
 			return;
 		}
 		case 'Blockquote': {
-			alignBlockquote(node.children, format | MarkdownHl.blockquote, ctx);
+			alignBlockquote(node.children, format | MarkdownHl.blockquote, ctx, false);
 			return;
 		}
 		case 'Sequence': {
@@ -367,6 +413,10 @@ function alignNode(node: Node, format: MarkdownHlFormat, ctx: AlignContext): voi
 			return;
 		}
 		case 'Emoji': {
+			if (node.kind.kind === 'Standard' && ctx.source.startsWith(`:${node.kind.name}:`, ctx.pos)) {
+				pushContent(ctx, ctx.pos + node.kind.name.length + 2, format);
+				return;
+			}
 			alignOpaque(EMOJI_TOKEN_RE, node.kind.kind === 'Standard' ? node.kind.raw : null, format, ctx);
 			return;
 		}
@@ -379,7 +429,7 @@ function alignNode(node: Node, format: MarkdownHlFormat, ctx: AlignContext): voi
 			return;
 		}
 		case 'Alert': {
-			alignAlert(format, ctx);
+			alignBlockquote(node.children, format | MarkdownHl.blockquote, ctx, true);
 			return;
 		}
 		case 'Table': {
@@ -788,7 +838,9 @@ function alignLinePrefixed(children: Array<Node>, format: MarkdownHlFormat, ctx:
 	alignChildren(children, format, ctx);
 }
 
-function alignBlockquote(children: Array<Node>, format: MarkdownHlFormat, ctx: AlignContext): void {
+const ALERT_HEADER_RE = /^\[![^\]\n]*\][ \t\r]*/;
+
+function alignBlockquote(children: Array<Node>, format: MarkdownHlFormat, ctx: AlignContext, alert: boolean): void {
 	const start = ctx.pos;
 	let trimmedStart = start;
 	while (ctx.source[trimmedStart] === ' ' || ctx.source[trimmedStart] === '\t' || ctx.source[trimmedStart] === '\r') {
@@ -799,7 +851,7 @@ function alignBlockquote(children: Array<Node>, format: MarkdownHlFormat, ctx: A
 	const sourceOffsets: Array<number> = [];
 	let virtualSource = '';
 	let blockEnd = start;
-	if (ctx.source.startsWith('>>> ', trimmedStart)) {
+	if (!alert && ctx.source.startsWith('>>> ', trimmedStart)) {
 		const contentStart = trimmedStart + 4;
 		markerRanges.push({start, end: contentStart, quote: true});
 		virtualSource = ctx.source.slice(contentStart);
@@ -808,7 +860,7 @@ function alignBlockquote(children: Array<Node>, format: MarkdownHlFormat, ctx: A
 		}
 		blockEnd = ctx.source.length;
 	} else {
-		const lines: Array<{start: number; end: number; prefixEnd: number; contentStart: number}> = [];
+		const lines: Array<{start: number; end: number; prefixEnd: number; headerEnd: number; contentStart: number}> = [];
 		let lineStart = start;
 		while (lineStart <= ctx.source.length) {
 			const newline = ctx.source.indexOf('\n', lineStart);
@@ -820,9 +872,18 @@ function alignBlockquote(children: Array<Node>, format: MarkdownHlFormat, ctx: A
 			if (!ctx.source.startsWith('> ', quoteStart)) {
 				break;
 			}
-			const rest = ctx.source.slice(quoteStart + 2, lineEnd);
-			const contentStart = /^[ \t\r]*$/.test(rest) ? lineEnd : quoteStart + 2;
-			lines.push({start: lineStart, end: lineEnd, prefixEnd: quoteStart + 2, contentStart});
+			let headerEnd = quoteStart + 2;
+			if (alert && lines.length === 0) {
+				const header = ALERT_HEADER_RE.exec(ctx.source.slice(headerEnd, lineEnd));
+				if (header == null) {
+					ctx.failed = true;
+					return;
+				}
+				headerEnd += header[0].length;
+			}
+			const rest = ctx.source.slice(headerEnd, lineEnd);
+			const contentStart = /^[ \t\r]*$/.test(rest) ? lineEnd : headerEnd;
+			lines.push({start: lineStart, end: lineEnd, prefixEnd: quoteStart + 2, headerEnd, contentStart});
 			if (newline < 0) {
 				break;
 			}
@@ -835,8 +896,11 @@ function alignBlockquote(children: Array<Node>, format: MarkdownHlFormat, ctx: A
 		for (let index = 0; index < lines.length; index += 1) {
 			const line = lines[index]!;
 			markerRanges.push({start: line.start, end: line.prefixEnd, quote: true});
-			if (line.contentStart > line.prefixEnd) {
-				blankRanges.push({start: line.prefixEnd, end: line.contentStart});
+			if (line.headerEnd > line.prefixEnd) {
+				markerRanges.push({start: line.prefixEnd, end: line.headerEnd, quote: false});
+			}
+			if (line.contentStart > line.headerEnd) {
+				blankRanges.push({start: line.headerEnd, end: line.contentStart});
 			}
 			let repeatedPrefix = line.contentStart;
 			while (ctx.source.startsWith('> ', repeatedPrefix) && repeatedPrefix < line.end) {
@@ -928,45 +992,6 @@ function alignBlockquote(children: Array<Node>, format: MarkdownHlFormat, ctx: A
 		runStart = position;
 	}
 	ctx.pos = blockEnd;
-}
-
-function alignAlert(format: MarkdownHlFormat, ctx: AlignContext): void {
-	const bodyFormat = format | MarkdownHl.blockquote;
-	let firstLine = true;
-	while (true) {
-		let quoteStart = ctx.pos;
-		while (ctx.source[quoteStart] === ' ' || ctx.source[quoteStart] === '\t' || ctx.source[quoteStart] === '\r') {
-			quoteStart += 1;
-		}
-		if (!ctx.source.startsWith('> ', quoteStart)) {
-			ctx.failed = true;
-			return;
-		}
-		const newline = ctx.source.indexOf('\n', ctx.pos);
-		const lineEnd = newline < 0 ? ctx.source.length : newline;
-		pushMarker(ctx, quoteStart + 2 - ctx.pos, bodyFormat | MarkdownHl.blockquoteMarker);
-		if (firstLine) {
-			const close = ctx.source.indexOf(']', ctx.pos);
-			if (!ctx.source.startsWith('[!', ctx.pos) || close < 0 || close >= lineEnd) {
-				ctx.failed = true;
-				return;
-			}
-			pushMarker(ctx, close + 1 - ctx.pos, bodyFormat);
-			firstLine = false;
-		}
-		pushContent(ctx, lineEnd, bodyFormat);
-		if (newline < 0) {
-			return;
-		}
-		let nextQuote = newline + 1;
-		while (ctx.source[nextQuote] === ' ' || ctx.source[nextQuote] === '\t' || ctx.source[nextQuote] === '\r') {
-			nextQuote += 1;
-		}
-		if (!ctx.source.startsWith('> ', nextQuote)) {
-			return;
-		}
-		pushContent(ctx, newline + 1, bodyFormat);
-	}
 }
 
 function alignTable(node: Extract<Node, {type: 'Table'}>, format: MarkdownHlFormat, ctx: AlignContext): void {
@@ -1109,6 +1134,12 @@ const DROPPED_WHITESPACE_RE = /^[ \t\r]+\n/;
 const LINE_WHITESPACE_RE = /^[ \t\r]+/;
 
 const REPLACEMENT_CHARACTER = '\uFFFD';
+const TEXT_PRESENTATION_SELECTOR = '\uFE0F';
+const PLAINTEXT_SYMBOL_SHORTCODES: Readonly<Record<string, string>> = {
+	'\u2122': ':tm:',
+	'\u00A9': ':copyright:',
+	'\u00AE': ':registered:',
+};
 const UNPAIRED_SURROGATE_RE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
 
 function isUnpairedSurrogateAt(text: string, index: number): boolean {
@@ -1124,11 +1155,11 @@ function isUnpairedSurrogateAt(text: string, index: number): boolean {
 	return false;
 }
 
-export function foldUnpairedSurrogates(text: string): string {
+function foldUnpairedSurrogates(text: string): string {
 	return text.replace(UNPAIRED_SURROGATE_RE, REPLACEMENT_CHARACTER);
 }
 
-export function equalsParserText(sourceText: string, parserText: string): boolean {
+function equalsParserText(sourceText: string, parserText: string): boolean {
 	return sourceText === parserText || foldUnpairedSurrogates(sourceText) === parserText;
 }
 
@@ -1168,6 +1199,15 @@ function advancePastText(
 		}
 		if (source[pos] === content[ci]) {
 			pos += 1;
+			ci += 1;
+			if (source[pos] === TEXT_PRESENTATION_SELECTOR && PLAINTEXT_SYMBOL_SHORTCODES[source[pos - 1]!] != null) {
+				pos += 1;
+			}
+			continue;
+		}
+		const symbolShortcode = PLAINTEXT_SYMBOL_SHORTCODES[content[ci]!];
+		if (symbolShortcode != null && source.startsWith(symbolShortcode, pos)) {
+			pos += symbolShortcode.length;
 			ci += 1;
 			continue;
 		}

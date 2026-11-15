@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {CAMERA_ON_DESCRIPTOR, INCOMING_CALL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import {
 	VOICE_DEAFEN_SOUND_DESCRIPTOR,
@@ -45,14 +46,7 @@ const VOICE_DISCONNECTED_DESCRIPTOR = msg({
 	message: 'Voice disconnected',
 	comment: 'Notification sound setting label. Sound played when the voice connection drops.',
 });
-const INCOMING_CALL_DESCRIPTOR = msg({
-	message: 'Incoming call',
-	comment: 'Notification sound setting label. Ringtone for an incoming DM or group DM call.',
-});
-const CAMERA_ON_DESCRIPTOR = msg({
-	message: 'Camera on',
-	comment: 'Notification sound setting label. Sound played when the user turns their camera on in a call.',
-});
+
 const CAMERA_OFF_DESCRIPTOR = msg({
 	message: 'Camera off',
 	comment: 'Notification sound setting label. Sound played when the user turns their camera off in a call.',

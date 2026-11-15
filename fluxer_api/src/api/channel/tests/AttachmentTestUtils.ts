@@ -4,9 +4,9 @@ import {randomUUID} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createChannel, createGuild} from '@app/api/guild/tests/GuildTestUtils';
 import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
@@ -69,23 +69,6 @@ export function loadFixture(filename: string): Buffer {
 	return readFileSync(fixturesPath);
 }
 
-export async function createGuild(harness: ApiTestHarness, token: string, name: string): Promise<GuildResponse> {
-	return createBuilder<GuildResponse>(harness, token).post('/guilds').body({name}).execute();
-}
-
-export async function createChannel(
-	harness: ApiTestHarness,
-	token: string,
-	guildId: string,
-	name: string,
-	type = 0,
-): Promise<ChannelResponse> {
-	return createBuilder<ChannelResponse>(harness, token)
-		.post(`/guilds/${guildId}/channels`)
-		.body({name, type})
-		.execute();
-}
-
 export async function sendMessageWithAttachments(
 	harness: ApiTestHarness,
 	token: string,
@@ -140,3 +123,5 @@ export async function createTestAccountForAttachmentTests(harness: ApiTestHarnes
 	await ensureSessionStarted(harness, account.token);
 	return account;
 }
+
+export {createChannel, createGuild} from '@app/api/guild/tests/GuildTestUtils';

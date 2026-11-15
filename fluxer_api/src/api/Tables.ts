@@ -39,12 +39,14 @@ import {
 	type AttachmentUploadTraceByKeyRow,
 } from '@app/api/database/types/AttachmentUploadTypes';
 import {
+	AUTH_SESSION_BY_APP_CHANNEL_COLUMNS,
 	AUTH_SESSION_COLUMNS,
 	AUTH_SESSION_TOMBSTONE_COLUMNS,
 	AUTHORIZED_IP_COLUMNS,
 	AUTHORIZED_IP_TRUST_KEY_COLUMNS,
 	type AuthorizedIpRow,
 	type AuthorizedIpTrustKeyRow,
+	type AuthSessionByAppChannelRow,
 	type AuthSessionRow,
 	type AuthSessionTombstoneRow,
 	EMAIL_CHANGE_TICKET_COLUMNS,
@@ -71,26 +73,17 @@ import {
 	type WebAuthnCredentialRow,
 } from '@app/api/database/types/AuthTypes';
 import {
-	BILLING_ACTION_INTENT_COLUMNS,
-	BILLING_CHARGE_BY_CUSTOMER_COLUMNS,
 	BILLING_CHARGE_COLUMNS,
-	BILLING_CHECKOUT_SESSION_BY_CUSTOMER_COLUMNS,
-	BILLING_CHECKOUT_SESSION_COLUMNS,
 	BILLING_CUSTOMER_BY_USER_ID_COLUMNS,
 	BILLING_CUSTOMER_COLUMNS,
-	BILLING_DISPUTE_BY_CHARGE_COLUMNS,
-	BILLING_DISPUTE_COLUMNS,
 	BILLING_INVOICE_BY_CUSTOMER_COLUMNS,
-	BILLING_INVOICE_BY_SUBSCRIPTION_COLUMNS,
 	BILLING_INVOICE_COLUMNS,
 	BILLING_PAYMENT_BY_INVOICE_COLUMNS,
 	BILLING_PAYMENT_COLUMNS,
-	BILLING_PAYMENT_INTENT_BY_CUSTOMER_COLUMNS,
 	BILLING_PAYMENT_INTENT_COLUMNS,
 	BILLING_PAYMENT_METHOD_BY_CUSTOMER_COLUMNS,
 	BILLING_PAYMENT_METHOD_COLUMNS,
 	BILLING_PRICE_COLUMNS,
-	BILLING_PRODUCT_COLUMNS,
 	BILLING_REFUND_BY_CHARGE_COLUMNS,
 	BILLING_REFUND_BY_INVOICE_COLUMNS,
 	BILLING_REFUND_BY_PAYMENT_INTENT_COLUMNS,
@@ -98,26 +91,17 @@ import {
 	BILLING_SUBSCRIPTION_BY_CUSTOMER_COLUMNS,
 	BILLING_SUBSCRIPTION_BY_USER_COLUMNS,
 	BILLING_SUBSCRIPTION_COLUMNS,
-	type BillingActionIntentRow,
-	type BillingChargeByCustomerRow,
 	type BillingChargeRow,
-	type BillingCheckoutSessionByCustomerRow,
-	type BillingCheckoutSessionRow,
 	type BillingCustomerByUserIdRow,
 	type BillingCustomerRow,
-	type BillingDisputeByChargeRow,
-	type BillingDisputeRow,
 	type BillingInvoiceByCustomerRow,
-	type BillingInvoiceBySubscriptionRow,
 	type BillingInvoiceRow,
 	type BillingPaymentByInvoiceRow,
-	type BillingPaymentIntentByCustomerRow,
 	type BillingPaymentIntentRow,
 	type BillingPaymentMethodByCustomerRow,
 	type BillingPaymentMethodRow,
 	type BillingPaymentRow,
 	type BillingPriceRow,
-	type BillingProductRow,
 	type BillingRefundByChargeRow,
 	type BillingRefundByInvoiceRow,
 	type BillingRefundByPaymentIntentRow,
@@ -141,18 +125,27 @@ import {
 	type InviteRow,
 	PRIVATE_CHANNEL_COLUMNS,
 	type PrivateChannelRow,
+	READ_STATE_COLUMNS,
+	type ReadStateRow,
 	WEBHOOK_COLUMNS,
 	WEBHOOKS_BY_SOURCE_CHANNEL_COLUMNS,
 	type WebhookRow,
 	type WebhooksBySourceChannelRow,
 } from '@app/api/database/types/ChannelTypes';
 import {USER_CONNECTION_STORAGE_COLUMNS, type UserConnectionStorageRow} from '@app/api/database/types/ConnectionTypes';
+import {CUSTOM_BADGE_COLUMNS, type CustomBadgeRow} from '@app/api/database/types/CustomBadgeTypes';
 import {
-	NCMEC_ATTACHMENT_SUBMISSION_COLUMNS,
-	NCMEC_USER_WORKFLOW_COLUMNS,
-	type NcmecAttachmentSubmissionRow,
-	type NcmecUserWorkflowRow,
-} from '@app/api/database/types/CsamTypes';
+	ENFORCEMENT_DECISION_BY_SUBJECT_COLUMNS,
+	ENFORCEMENT_DECISION_COLUMNS,
+	ENFORCEMENT_DECISION_EVIDENCE_COLUMNS,
+	ENFORCEMENT_DECISION_NOTE_COLUMNS,
+	ENFORCEMENT_REVIEW_QUEUE_COLUMNS,
+	type EnforcementDecisionBySubjectRow,
+	type EnforcementDecisionEvidenceRow,
+	type EnforcementDecisionNoteRow,
+	type EnforcementDecisionRow,
+	type EnforcementReviewQueueRow,
+} from '@app/api/database/types/EnforcementTypes';
 import {
 	GUILD_DISCOVERY_BY_STATUS_COLUMNS,
 	GUILD_DISCOVERY_COLUMNS,
@@ -185,6 +178,7 @@ import {
 	type GuildRow,
 	type GuildStickerRow,
 } from '@app/api/database/types/GuildTypes';
+import {GUILD_VISIT_COLUMNS, type GuildVisitRow} from '@app/api/database/types/GuildVisitTypes';
 import {
 	INSTANCE_CONFIGURATION_COLUMNS,
 	type InstanceConfigurationRow,
@@ -229,6 +223,12 @@ import {
 	type OAuth2RefreshTokenRow,
 } from '@app/api/database/types/OAuth2Types';
 import {
+	PAYMENT_DISPUTE_REVIEW_BY_PURCHASER_COLUMNS,
+	PAYMENT_DISPUTE_REVIEW_COLUMNS,
+	type PaymentDisputeReviewByPurchaserRow,
+	type PaymentDisputeReviewRow,
+} from '@app/api/database/types/PaymentDisputeTypes';
+import {
 	GIFT_CODE_BY_CREATOR_COLUMNS,
 	GIFT_CODE_BY_PAYMENT_INTENT_COLUMNS,
 	GIFT_CODE_BY_REDEEMER_COLUMNS,
@@ -253,10 +253,16 @@ import {
 	DSA_REPORT_TICKET_COLUMNS,
 	type DSAReportEmailVerificationRow,
 	type DSAReportTicketRow,
+	GUILD_REPORT_SUBMISSION_BY_REPORTER_COLUMNS,
+	type GuildReportSubmissionByReporterRow,
+	IAR_REPORT_NOTE_COLUMNS,
 	IAR_SUBMISSION_COLUMNS,
+	type IARReportNoteRow,
 	type IARSubmissionRow,
 	MESSAGE_REPORT_SUBMISSION_BY_REPORTER_COLUMNS,
 	type MessageReportSubmissionByReporterRow,
+	USER_REPORT_SUBMISSION_BY_REPORTER_COLUMNS,
+	type UserReportSubmissionByReporterRow,
 } from '@app/api/database/types/ReportTypes';
 import {
 	STORE_ACCOUNT_TOKEN_BY_USER_COLUMNS,
@@ -268,6 +274,30 @@ import {
 	type StorePurchaseByUserRow,
 	type StorePurchaseRow,
 } from '@app/api/database/types/StoreBillingTypes';
+import {
+	ACTIVE_THREADS_BY_GUILD_COLUMNS,
+	type ActiveThreadsByGuildRow,
+	ARCHIVED_THREADS_BY_PARENT_COLUMNS,
+	type ArchivedThreadsByParentRow,
+	FORUM_PINNED_THREAD_COLUMNS,
+	type ForumPinnedThreadRow,
+	GUILD_THREAD_STATE_COLUMNS,
+	type GuildThreadStateRow,
+	THREAD_MEMBER_COLUMNS,
+	THREAD_MEMBERS_BY_USER_COLUMNS,
+	THREAD_ONLY_CHANNELS_BY_GUILD_COLUMNS,
+	THREAD_PARENT_CONFIG_COLUMNS,
+	THREAD_STATE_COLUMNS,
+	THREAD_STATS_COLUMNS,
+	THREADS_BY_PARENT_COLUMNS,
+	type ThreadMemberRow,
+	type ThreadMembersByUserRow,
+	type ThreadOnlyChannelsByGuildRow,
+	type ThreadParentConfigRow,
+	type ThreadStateRow,
+	type ThreadStatsRow,
+	type ThreadsByParentRow,
+} from '@app/api/database/types/ThreadTypes';
 import {
 	FAVORITE_MEME_COLUMNS,
 	type FavoriteMemeRow,
@@ -281,6 +311,7 @@ import {
 	type RelationshipRow,
 	SAVED_MESSAGE_COLUMNS,
 	type SavedMessageRow,
+	USER_BY_ACL_COLUMNS,
 	USER_BY_EMAIL_COLUMNS,
 	USER_BY_LAST_ACTIVE_IP_COLUMNS,
 	USER_BY_LAST_ACTIVE_IP_TRUST_KEY_COLUMNS,
@@ -296,7 +327,7 @@ import {
 	USER_GUILD_SETTINGS_COLUMNS,
 	USER_HARVEST_COLUMNS,
 	USER_SETTINGS_COLUMNS,
-	USERS_PENDING_DELETION_COLUMNS,
+	type UserByAclRow,
 	type UserByEmailRow,
 	type UserByLastActiveIpRow,
 	type UserByLastActiveIpTrustKeyRow,
@@ -312,10 +343,14 @@ import {
 	type UserHarvestRow,
 	type UserRow,
 	type UserSettingsRow,
-	type UsersPendingDeletionRow,
 } from '@app/api/database/types/UserTypes';
 import {type PersonaRow, type PersonaGroupRow, PERSONA_COLUMNS, PERSONA_GROUP_COLUMNS, type PersonaTriggerRow, PERSONA_TRIGGER_COLUMNS} from './database/types/PersonaTypes';
+import {
+	VOICE_P2P_CONNECTION_REPORT_COLUMNS,
+	type VoiceP2pConnectionReportRow,
+} from '@app/api/database/types/VoiceTypes';
 import {ATTACHMENT_DECAY_COLUMNS, type AttachmentDecayRow} from '@app/api/types/AttachmentDecayTypes';
+import {GUILD_VISIT_TTL_SECONDS} from '@fluxer/constants/src/GuildVisitConstants';
 import {seconds} from 'itty-time';
 
 export const Users = defineTable<UserRow, 'user_id'>({
@@ -323,14 +358,7 @@ export const Users = defineTable<UserRow, 'user_id'>({
 	columns: USER_COLUMNS,
 	primaryKey: ['user_id'],
 });
-export const UsersPendingDeletion = defineTable<
-	UsersPendingDeletionRow,
-	'deletion_date' | 'pending_deletion_at' | 'user_id'
->({
-	name: 'users_pending_deletion',
-	columns: USERS_PENDING_DELETION_COLUMNS,
-	primaryKey: ['deletion_date', 'pending_deletion_at', 'user_id'],
-});
+
 export const UserDmHistory = defineTable<UserDmHistoryRow, 'user_id' | 'channel_id'>({
 	name: 'user_dm_history',
 	columns: USER_DM_HISTORY_COLUMNS,
@@ -356,6 +384,22 @@ export const UserSsoIdentities = defineTable<UserSsoIdentityRow, 'provider_id' |
 	columns: USER_SSO_IDENTITY_COLUMNS,
 	primaryKey: ['provider_id', 'subject'],
 	partitionKey: ['provider_id'],
+});
+export const UserSsoIdentitiesByUser = defineTable<
+	UserSsoIdentityRow,
+	'user_id' | 'provider_id' | 'subject',
+	'user_id'
+>({
+	name: 'user_sso_identities_by_user',
+	columns: USER_SSO_IDENTITY_COLUMNS,
+	primaryKey: ['user_id', 'provider_id', 'subject'],
+	partitionKey: ['user_id'],
+});
+export const UserByAcl = defineTable<UserByAclRow, 'acl' | 'user_id', 'acl'>({
+	name: 'users_by_acl',
+	columns: USER_BY_ACL_COLUMNS,
+	primaryKey: ['acl', 'user_id'],
+	partitionKey: ['acl'],
 });
 export const UserByStripeCustomerId = defineTable<UserByStripeCustomerIdRow, 'stripe_customer_id' | 'user_id'>({
 	name: 'users_by_stripe_customer_id',
@@ -471,6 +515,20 @@ export const GuildBansByUserId = defineTable<GuildBanByUserIdRow, 'user_id' | 'g
 	primaryKey: ['user_id', 'guild_id'],
 	partitionKey: ['user_id'],
 });
+export const GuildVisitsByUser = defineTable<GuildVisitRow, 'user_id' | 'guild_id', 'user_id'>({
+	name: 'guild_visits_by_user',
+	columns: GUILD_VISIT_COLUMNS,
+	primaryKey: ['user_id', 'guild_id'],
+	partitionKey: ['user_id'],
+	defaultTtlSeconds: GUILD_VISIT_TTL_SECONDS,
+});
+export const GuildVisitsByGuild = defineTable<GuildVisitRow, 'guild_id' | 'user_id', 'guild_id'>({
+	name: 'guild_visits_by_guild',
+	columns: GUILD_VISIT_COLUMNS,
+	primaryKey: ['guild_id', 'user_id'],
+	partitionKey: ['guild_id'],
+	defaultTtlSeconds: GUILD_VISIT_TTL_SECONDS,
+});
 export const GuildAuditLogs = defineTable<GuildAuditLogRow, 'guild_id' | 'log_id'>({
 	name: 'guild_audit_logs_v2',
 	columns: GUILD_AUDIT_LOG_COLUMNS,
@@ -580,6 +638,84 @@ export const DmStates = defineTable<DmStateRow, 'hi_user_id' | 'lo_user_id' | 'c
 	columns: DM_STATE_COLUMNS,
 	primaryKey: ['hi_user_id', 'lo_user_id', 'channel_id'],
 });
+export const ThreadState = defineTable<ThreadStateRow, 'thread_id'>({
+	name: 'thread_state',
+	columns: THREAD_STATE_COLUMNS,
+	primaryKey: ['thread_id'],
+	partitionKey: ['thread_id'],
+});
+export const ThreadStats = defineTable<ThreadStatsRow, 'thread_id'>({
+	name: 'thread_stats',
+	columns: THREAD_STATS_COLUMNS,
+	primaryKey: ['thread_id'],
+	partitionKey: ['thread_id'],
+});
+export const ThreadsByParent = defineTable<ThreadsByParentRow, 'parent_id' | 'thread_id', 'parent_id'>({
+	name: 'threads_by_parent',
+	columns: THREADS_BY_PARENT_COLUMNS,
+	primaryKey: ['parent_id', 'thread_id'],
+	partitionKey: ['parent_id'],
+});
+export const ActiveThreadsByGuild = defineTable<ActiveThreadsByGuildRow, 'guild_id' | 'thread_id', 'guild_id'>({
+	name: 'active_threads_by_guild',
+	columns: ACTIVE_THREADS_BY_GUILD_COLUMNS,
+	primaryKey: ['guild_id', 'thread_id'],
+	partitionKey: ['guild_id'],
+});
+export const ArchivedThreadsByParent = defineTable<
+	ArchivedThreadsByParentRow,
+	'parent_id' | 'is_private' | 'archive_timestamp' | 'thread_id',
+	'parent_id' | 'is_private'
+>({
+	name: 'archived_threads_by_parent',
+	columns: ARCHIVED_THREADS_BY_PARENT_COLUMNS,
+	primaryKey: ['parent_id', 'is_private', 'archive_timestamp', 'thread_id'],
+	partitionKey: ['parent_id', 'is_private'],
+});
+export const ThreadMembers = defineTable<ThreadMemberRow, 'thread_id' | 'user_id', 'thread_id'>({
+	name: 'thread_members',
+	columns: THREAD_MEMBER_COLUMNS,
+	primaryKey: ['thread_id', 'user_id'],
+	partitionKey: ['thread_id'],
+});
+export const ThreadMembersByUser = defineTable<
+	ThreadMembersByUserRow,
+	'user_id' | 'guild_id' | 'parent_id' | 'is_private' | 'thread_id',
+	'user_id'
+>({
+	name: 'thread_members_by_user',
+	columns: THREAD_MEMBERS_BY_USER_COLUMNS,
+	primaryKey: ['user_id', 'guild_id', 'parent_id', 'is_private', 'thread_id'],
+	partitionKey: ['user_id'],
+});
+export const ThreadParentConfig = defineTable<ThreadParentConfigRow, 'guild_id' | 'channel_id', 'guild_id'>({
+	name: 'thread_parent_config',
+	columns: THREAD_PARENT_CONFIG_COLUMNS,
+	primaryKey: ['guild_id', 'channel_id'],
+	partitionKey: ['guild_id'],
+});
+export const ForumPinnedThread = defineTable<ForumPinnedThreadRow, 'parent_id'>({
+	name: 'forum_pinned_thread',
+	columns: FORUM_PINNED_THREAD_COLUMNS,
+	primaryKey: ['parent_id'],
+	partitionKey: ['parent_id'],
+});
+export const ThreadOnlyChannelsByGuild = defineTable<
+	ThreadOnlyChannelsByGuildRow,
+	'guild_id' | 'channel_id',
+	'guild_id'
+>({
+	name: 'thread_only_channels_by_guild',
+	columns: THREAD_ONLY_CHANNELS_BY_GUILD_COLUMNS,
+	primaryKey: ['guild_id', 'channel_id'],
+	partitionKey: ['guild_id'],
+});
+export const GuildThreadState = defineTable<GuildThreadStateRow, 'guild_id'>({
+	name: 'guild_thread_state',
+	columns: GUILD_THREAD_STATE_COLUMNS,
+	primaryKey: ['guild_id'],
+	partitionKey: ['guild_id'],
+});
 
 interface PinnedDmRow {
 	user_id: bigint;
@@ -594,12 +730,6 @@ export const PinnedDms = defineTable<PinnedDmRow, 'user_id' | 'channel_id'>({
 	primaryKey: ['user_id', 'channel_id'],
 });
 
-interface ReadStateRow {
-	user_id: bigint;
-	channel_id: bigint;
-}
-
-const READ_STATE_COLUMNS = ['user_id', 'channel_id'] as const satisfies ReadonlyArray<keyof ReadStateRow>;
 export const ReadStates = defineTable<ReadStateRow, 'user_id' | 'channel_id'>({
 	name: 'read_states',
 	columns: READ_STATE_COLUMNS,
@@ -774,6 +904,44 @@ export const AdminApiKeysByCreator = defineTable<AdminApiKeyByCreatorRow, 'creat
 	primaryKey: ['created_by_user_id', 'key_id'],
 	partitionKey: ['created_by_user_id'],
 });
+export const EnforcementDecisions = defineTable<EnforcementDecisionRow, 'decision_id'>({
+	name: 'enforcement_decisions',
+	columns: ENFORCEMENT_DECISION_COLUMNS,
+	primaryKey: ['decision_id'],
+});
+export const EnforcementDecisionsBySubject = defineTable<
+	EnforcementDecisionBySubjectRow,
+	'subject_type' | 'subject_id' | 'decision_id',
+	'subject_type' | 'subject_id'
+>({
+	name: 'enforcement_decisions_by_subject',
+	columns: ENFORCEMENT_DECISION_BY_SUBJECT_COLUMNS,
+	primaryKey: ['subject_type', 'subject_id', 'decision_id'],
+	partitionKey: ['subject_type', 'subject_id'],
+});
+export const EnforcementDecisionEvidence = defineTable<EnforcementDecisionEvidenceRow, 'decision_id'>({
+	name: 'enforcement_decision_evidence',
+	columns: ENFORCEMENT_DECISION_EVIDENCE_COLUMNS,
+	primaryKey: ['decision_id'],
+	defaultTtlSeconds: seconds('365 days'),
+});
+export const EnforcementDecisionNotes = defineTable<
+	EnforcementDecisionNoteRow,
+	'decision_id' | 'note_id',
+	'decision_id'
+>({
+	name: 'enforcement_decision_notes',
+	columns: ENFORCEMENT_DECISION_NOTE_COLUMNS,
+	primaryKey: ['decision_id', 'note_id'],
+	partitionKey: ['decision_id'],
+	defaultTtlSeconds: seconds('365 days'),
+});
+export const EnforcementReviewQueue = defineTable<EnforcementReviewQueueRow, 'bucket' | 'decision_id', 'bucket'>({
+	name: 'enforcement_review_queue',
+	columns: ENFORCEMENT_REVIEW_QUEUE_COLUMNS,
+	primaryKey: ['bucket', 'decision_id'],
+	partitionKey: ['bucket'],
+});
 export const BannedIps = defineTable<BannedIpRow, 'ip'>({
 	name: 'banned_ips',
 	columns: BANNED_IP_COLUMNS,
@@ -819,6 +987,12 @@ export const IARSubmissions = defineTable<IARSubmissionRow, 'report_id'>({
 	columns: IAR_SUBMISSION_COLUMNS,
 	primaryKey: ['report_id'],
 });
+export const IARReportNotes = defineTable<IARReportNoteRow, 'report_id' | 'note_id', 'report_id'>({
+	name: 'iar_report_notes',
+	columns: IAR_REPORT_NOTE_COLUMNS,
+	primaryKey: ['report_id', 'note_id'],
+	partitionKey: ['report_id'],
+});
 export const MessageReportSubmissionsByReporter = defineTable<
 	MessageReportSubmissionByReporterRow,
 	'reporter_id' | 'channel_id' | 'message_id',
@@ -828,16 +1002,41 @@ export const MessageReportSubmissionsByReporter = defineTable<
 	columns: MESSAGE_REPORT_SUBMISSION_BY_REPORTER_COLUMNS,
 	primaryKey: ['reporter_id', 'channel_id', 'message_id'],
 	partitionKey: ['reporter_id'],
+	defaultTtlSeconds: seconds('365 days'),
+});
+export const UserReportSubmissionsByReporter = defineTable<
+	UserReportSubmissionByReporterRow,
+	'reporter_id' | 'reported_user_id',
+	'reporter_id'
+>({
+	name: 'user_report_submissions_by_reporter',
+	columns: USER_REPORT_SUBMISSION_BY_REPORTER_COLUMNS,
+	primaryKey: ['reporter_id', 'reported_user_id'],
+	partitionKey: ['reporter_id'],
+	defaultTtlSeconds: seconds('24 hours'),
+});
+export const GuildReportSubmissionsByReporter = defineTable<
+	GuildReportSubmissionByReporterRow,
+	'reporter_id' | 'reported_guild_id',
+	'reporter_id'
+>({
+	name: 'guild_report_submissions_by_reporter',
+	columns: GUILD_REPORT_SUBMISSION_BY_REPORTER_COLUMNS,
+	primaryKey: ['reporter_id', 'reported_guild_id'],
+	partitionKey: ['reporter_id'],
+	defaultTtlSeconds: seconds('24 hours'),
 });
 export const DSAReportEmailVerifications = defineTable<DSAReportEmailVerificationRow, 'email_lower'>({
 	name: 'dsa_report_email_verifications',
 	columns: DSA_REPORT_EMAIL_VERIFICATION_COLUMNS,
 	primaryKey: ['email_lower'],
+	defaultTtlSeconds: seconds('10 minutes'),
 });
 export const DSAReportTickets = defineTable<DSAReportTicketRow, 'ticket'>({
 	name: 'dsa_report_tickets',
 	columns: DSA_REPORT_TICKET_COLUMNS,
 	primaryKey: ['ticket'],
+	defaultTtlSeconds: seconds('1 hour'),
 });
 export const EmailVerificationTokens = defineTable<EmailVerificationTokenRow, 'token_' | 'user_id'>({
 	name: 'email_verification_tokens',
@@ -885,6 +1084,16 @@ export const AuthSessionsByUserId = defineTable<
 	columns: ['user_id', 'session_id_hash'],
 	primaryKey: ['user_id', 'session_id_hash'],
 });
+export const AuthSessionsByAppChannel = defineTable<
+	AuthSessionByAppChannelRow,
+	'app_platform' | 'app_release_channel' | 'session_id_hash',
+	'app_platform' | 'app_release_channel'
+>({
+	name: 'auth_sessions_by_app_channel',
+	columns: AUTH_SESSION_BY_APP_CHANNEL_COLUMNS,
+	primaryKey: ['app_platform', 'app_release_channel', 'session_id_hash'],
+	partitionKey: ['app_platform', 'app_release_channel'],
+});
 export const AuthSessionTombstones = defineTable<AuthSessionTombstoneRow, 'user_id' | 'session_id_hash'>({
 	name: 'auth_session_tombstones',
 	columns: AUTH_SESSION_TOMBSTONE_COLUMNS,
@@ -916,6 +1125,34 @@ export const WebAuthnCredentialLookup = defineTable<
 	name: 'webauthn_credential_lookup',
 	columns: ['credential_id', 'user_id'],
 	primaryKey: ['credential_id'],
+});
+export const AppAttestKeys = defineTable<
+	{
+		user_id: UserID;
+		key_id: string;
+		public_key: Buffer;
+		environment: string;
+		app_id: string;
+		counter: bigint;
+		created_at: Date;
+		last_used_at: Date | null;
+	},
+	'user_id' | 'key_id'
+>({
+	name: 'app_attest_keys',
+	columns: ['user_id', 'key_id', 'public_key', 'environment', 'app_id', 'counter', 'created_at', 'last_used_at'],
+	primaryKey: ['user_id', 'key_id'],
+});
+export const AppAttestKeyLookup = defineTable<
+	{
+		key_id: string;
+		user_id: UserID;
+	},
+	'key_id'
+>({
+	name: 'app_attest_key_lookup',
+	columns: ['key_id', 'user_id'],
+	primaryKey: ['key_id'],
 });
 export const IpAuthorizationTokens = defineTable<IpAuthorizationTokenRow, 'token_' | 'user_id'>({
 	name: 'ip_authorization_tokens',
@@ -1138,6 +1375,17 @@ export const InstanceConfiguration = defineTable<InstanceConfigurationRow, 'key'
 	columns: INSTANCE_CONFIGURATION_COLUMNS,
 	primaryKey: ['key'],
 });
+export const CustomBadges = defineTable<CustomBadgeRow, 'badge_id'>({
+	name: 'custom_badges',
+	columns: CUSTOM_BADGE_COLUMNS,
+	primaryKey: ['badge_id'],
+});
+export const CustomBadgesByPosition = defineTable<CustomBadgeRow, 'type' | 'position', 'type'>({
+	name: 'custom_badges_by_position',
+	columns: CUSTOM_BADGE_COLUMNS,
+	primaryKey: ['type', 'position'],
+	partitionKey: ['type'],
+});
 export const JobsById = defineTable<JobByIdRow, 'job_id'>({
 	name: 'jobs_by_id',
 	columns: JOB_BY_ID_COLUMNS,
@@ -1168,16 +1416,6 @@ export const AttachmentUploadTracesByAttachment = defineTable<AttachmentUploadTr
 	primaryKey: ['attachment_id'],
 	defaultTtlSeconds: seconds('30 days'),
 });
-export const NcmecAttachmentSubmissions = defineTable<NcmecAttachmentSubmissionRow, 'attachment_id'>({
-	name: 'ncmec_attachment_submissions',
-	columns: NCMEC_ATTACHMENT_SUBMISSION_COLUMNS,
-	primaryKey: ['attachment_id'],
-});
-export const NcmecUserWorkflows = defineTable<NcmecUserWorkflowRow, 'user_id'>({
-	name: 'ncmec_user_workflows',
-	columns: NCMEC_USER_WORKFLOW_COLUMNS,
-	primaryKey: ['user_id'],
-});
 export const BillingCustomers = defineTable<BillingCustomerRow, 'provider_id'>({
 	name: 'billing_customers',
 	columns: BILLING_CUSTOMER_COLUMNS,
@@ -1187,11 +1425,6 @@ export const BillingCustomersByUserId = defineTable<BillingCustomerByUserIdRow, 
 	name: 'billing_customers_by_user_id',
 	columns: BILLING_CUSTOMER_BY_USER_ID_COLUMNS,
 	primaryKey: ['user_id', 'provider_id'],
-});
-export const BillingProducts = defineTable<BillingProductRow, 'provider_id'>({
-	name: 'billing_products',
-	columns: BILLING_PRODUCT_COLUMNS,
-	primaryKey: ['provider_id'],
 });
 export const BillingPrices = defineTable<BillingPriceRow, 'provider_id'>({
 	name: 'billing_prices',
@@ -1244,45 +1477,15 @@ export const BillingInvoicesByCustomer = defineTable<
 	primaryKey: ['customer_id', 'stripe_created_at', 'provider_id'],
 	partitionKey: ['customer_id'],
 });
-export const BillingInvoicesBySubscription = defineTable<
-	BillingInvoiceBySubscriptionRow,
-	'subscription_id' | 'stripe_created_at' | 'provider_id',
-	'subscription_id'
->({
-	name: 'billing_invoices_by_subscription',
-	columns: BILLING_INVOICE_BY_SUBSCRIPTION_COLUMNS,
-	primaryKey: ['subscription_id', 'stripe_created_at', 'provider_id'],
-	partitionKey: ['subscription_id'],
-});
 export const BillingPaymentIntents = defineTable<BillingPaymentIntentRow, 'provider_id'>({
 	name: 'billing_payment_intents',
 	columns: BILLING_PAYMENT_INTENT_COLUMNS,
 	primaryKey: ['provider_id'],
 });
-export const BillingPaymentIntentsByCustomer = defineTable<
-	BillingPaymentIntentByCustomerRow,
-	'customer_id' | 'stripe_created_at' | 'provider_id',
-	'customer_id'
->({
-	name: 'billing_payment_intents_by_customer',
-	columns: BILLING_PAYMENT_INTENT_BY_CUSTOMER_COLUMNS,
-	primaryKey: ['customer_id', 'stripe_created_at', 'provider_id'],
-	partitionKey: ['customer_id'],
-});
 export const BillingCharges = defineTable<BillingChargeRow, 'provider_id'>({
 	name: 'billing_charges',
 	columns: BILLING_CHARGE_COLUMNS,
 	primaryKey: ['provider_id'],
-});
-export const BillingChargesByCustomer = defineTable<
-	BillingChargeByCustomerRow,
-	'customer_id' | 'stripe_created_at' | 'provider_id',
-	'customer_id'
->({
-	name: 'billing_charges_by_customer',
-	columns: BILLING_CHARGE_BY_CUSTOMER_COLUMNS,
-	primaryKey: ['customer_id', 'stripe_created_at', 'provider_id'],
-	partitionKey: ['customer_id'],
 });
 export const BillingPayments = defineTable<BillingPaymentRow, 'provider_id'>({
 	name: 'billing_payments',
@@ -1334,35 +1537,26 @@ export const BillingRefundsByInvoice = defineTable<
 	primaryKey: ['invoice_id', 'stripe_created_at', 'provider_id'],
 	partitionKey: ['invoice_id'],
 });
-export const BillingCheckoutSessions = defineTable<BillingCheckoutSessionRow, 'provider_id'>({
-	name: 'billing_checkout_sessions',
-	columns: BILLING_CHECKOUT_SESSION_COLUMNS,
-	primaryKey: ['provider_id'],
+export const PaymentDisputeReviews = defineTable<PaymentDisputeReviewRow, 'dispute_id'>({
+	name: 'payment_dispute_reviews',
+	columns: PAYMENT_DISPUTE_REVIEW_COLUMNS,
+	primaryKey: ['dispute_id'],
 });
-export const BillingCheckoutSessionsByCustomer = defineTable<
-	BillingCheckoutSessionByCustomerRow,
-	'customer_id' | 'stripe_created_at' | 'provider_id',
-	'customer_id'
+export const PaymentDisputeReviewsByPurchaser = defineTable<
+	PaymentDisputeReviewByPurchaserRow,
+	'purchaser_id' | 'dispute_id',
+	'purchaser_id'
 >({
-	name: 'billing_checkout_sessions_by_customer',
-	columns: BILLING_CHECKOUT_SESSION_BY_CUSTOMER_COLUMNS,
-	primaryKey: ['customer_id', 'stripe_created_at', 'provider_id'],
-	partitionKey: ['customer_id'],
+	name: 'payment_dispute_reviews_by_purchaser',
+	columns: PAYMENT_DISPUTE_REVIEW_BY_PURCHASER_COLUMNS,
+	primaryKey: ['purchaser_id', 'dispute_id'],
+	partitionKey: ['purchaser_id'],
 });
-export const BillingDisputes = defineTable<BillingDisputeRow, 'provider_id'>({
-	name: 'billing_disputes',
-	columns: BILLING_DISPUTE_COLUMNS,
-	primaryKey: ['provider_id'],
-});
-export const BillingDisputesByCharge = defineTable<BillingDisputeByChargeRow, 'charge_id' | 'provider_id'>({
-	name: 'billing_disputes_by_charge',
-	columns: BILLING_DISPUTE_BY_CHARGE_COLUMNS,
-	primaryKey: ['charge_id', 'provider_id'],
-});
-export const BillingActionIntents = defineTable<BillingActionIntentRow, 'intent_id'>({
-	name: 'billing_action_intents',
-	columns: BILLING_ACTION_INTENT_COLUMNS,
-	primaryKey: ['intent_id'],
+export const VoiceP2pConnectionReports = defineTable<VoiceP2pConnectionReportRow, 'user_id' | 'report_id'>({
+	name: 'voice_p2p_connection_reports',
+	columns: VOICE_P2P_CONNECTION_REPORT_COLUMNS,
+	primaryKey: ['user_id', 'report_id'],
+	defaultTtlSeconds: seconds('180 days'),
 });
 export const Personas = defineTable<PersonaRow, 'owner_id' | 'persona_id'>({
 	name: 'personas',

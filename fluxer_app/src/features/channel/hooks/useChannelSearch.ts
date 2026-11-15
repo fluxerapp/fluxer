@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
+	applyMatureContentToParamsIfNeeded,
+	applySortModeToParams,
+	runChannelSearch,
+} from '@app/features/channel/components/channel_search_results/ChannelSearchResultsShared';
+import {
 	DEFAULT_SCOPE_VALUE,
 	getScopeOptionsForChannel,
 	type ScopeValueOption,
@@ -13,27 +18,14 @@ import {
 	transitionSearchMachineSnapshot,
 } from '@app/features/channel/components/SearchStateMachine';
 import type {Channel} from '@app/features/channel/models/Channel';
-import {getChannelSearchContextId} from '@app/features/channel/state/ChannelSearch';
-import Channels from '@app/features/channel/state/Channels';
+
 import {getChannelSearchIndexingPollInterval} from '@app/features/channel/utils/ChannelSearchPolling';
-import GuildMatureContentAgree from '@app/features/guild/state/GuildMatureContentAgree';
-import type {SearchSegment} from '@app/features/search/utils/SearchSegmentManager';
-import {
-	isIndexing,
-	type MessageSearchParams,
-	type MessageSearchScope,
-	parseSearchQueryWithSegments,
-	searchMessages,
-} from '@app/features/search/utils/SearchUtils';
-import * as FormUtils from '@app/lib/forms';
-import {msg} from '@lingui/core/macro';
+
+import type {MessageSearchParams, MessageSearchScope} from '@app/features/search/utils/SearchUtils';
+
 import {useLingui} from '@lingui/react/macro';
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
-const AN_ERROR_OCCURRED_WHILE_SEARCHING_DESCRIPTOR = msg({
-	message: 'An error occurred while searching',
-	comment: 'Error message in the use channel search hook.',
-});
 const DEFAULT_RESULTS_PER_PAGE = 25;
 
 export type ChannelSearchSortMode = 'newest' | 'oldest' | 'relevant';
@@ -41,18 +33,8 @@ export type ChannelSearchSortMode = 'newest' | 'oldest' | 'relevant';
 export interface ChannelSearchFilters {
 	content?: string;
 	authorIds?: Array<string>;
-	excludeAuthorIds?: Array<string>;
-	mentionIds?: Array<string>;
-	excludeMentionIds?: Array<string>;
 	channelIds?: Array<string>;
-	excludeChannelIds?: Array<string>;
 	has?: Array<'image' | 'sound' | 'video' | 'file' | 'sticker' | 'embed' | 'link' | 'poll'>;
-	excludeHas?: Array<'image' | 'sound' | 'video' | 'file' | 'sticker' | 'embed' | 'link' | 'poll'>;
-	pinned?: boolean;
-	authorType?: Array<'user' | 'bot' | 'webhook'>;
-	before?: string;
-	after?: string;
-	during?: string;
 }
 
 export interface UseChannelSearchOptions {
@@ -66,12 +48,6 @@ export interface UseChannelSearchReturn {
 	scope: MessageSearchScope;
 	scopeOptions: Array<ScopeValueOption>;
 	hasSearched: boolean;
-	performSearch: (
-		query: string,
-		segments?: Array<SearchSegment>,
-		page?: number,
-		overrides?: ChannelSearchExecutionOverrides,
-	) => Promise<void>;
 	performFilterSearch: (
 		filters: ChannelSearchFilters,
 		page?: number,
@@ -88,22 +64,6 @@ interface ChannelSearchExecutionOverrides {
 	sortMode?: ChannelSearchSortMode;
 }
 
-const applySortModeToParams = (params: MessageSearchParams, mode: ChannelSearchSortMode): void => {
-	switch (mode) {
-		case 'newest':
-			params.sortBy = 'timestamp';
-			params.sortOrder = 'desc';
-			break;
-		case 'oldest':
-			params.sortBy = 'timestamp';
-			params.sortOrder = 'asc';
-			break;
-		case 'relevant':
-			params.sortBy = 'relevance';
-			params.sortOrder = 'desc';
-			break;
-	}
-};
 const filtersToParams = (filters: ChannelSearchFilters): MessageSearchParams => {
 	const params: MessageSearchParams = {};
 	if (filters.content?.trim()) {
@@ -112,33 +72,15 @@ const filtersToParams = (filters: ChannelSearchFilters): MessageSearchParams => 
 	if (filters.authorIds?.length) {
 		params.authorId = filters.authorIds;
 	}
-	if (filters.excludeAuthorIds?.length) {
-		params.excludeAuthorId = filters.excludeAuthorIds;
-	}
-	if (filters.mentionIds?.length) {
-		params.mentions = filters.mentionIds;
-	}
-	if (filters.excludeMentionIds?.length) {
-		params.excludeMentions = filters.excludeMentionIds;
-	}
+
 	if (filters.channelIds?.length) {
 		params.channelId = filters.channelIds;
 	}
-	if (filters.excludeChannelIds?.length) {
-		params.excludeChannelId = filters.excludeChannelIds;
-	}
+
 	if (filters.has?.length) {
 		params.has = filters.has;
 	}
-	if (filters.excludeHas?.length) {
-		params.excludeHas = filters.excludeHas;
-	}
-	if (filters.pinned !== undefined) {
-		params.pinned = filters.pinned;
-	}
-	if (filters.authorType?.length) {
-		params.authorType = filters.authorType;
-	}
+
 	return params;
 };
 export const useChannelSearch = ({
@@ -156,9 +98,7 @@ export const useChannelSearch = ({
 	const [hasSearched, setHasSearched] = useState(false);
 	const mountedRef = useRef(true);
 	const pollingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-	const currentQueryRef = useRef<string>('');
 	const currentFiltersRef = useRef<ChannelSearchFilters | null>(null);
-	const currentSegmentsRef = useRef<Array<SearchSegment>>([]);
 	const scopeOptions = useMemo(
 		() => getScopeOptionsForChannel(i18n, channel),
 		[i18n.locale, channel?.id, channel?.type, channel?.guildId],
@@ -169,35 +109,6 @@ export const useChannelSearch = ({
 			pollingTimeoutRef.current = null;
 		}
 	}, []);
-	const checkMatureContentChannels = useCallback(
-		(params: MessageSearchParams): boolean => {
-			const searchingMatureContentChannels: Array<string> = [];
-			if (
-				GuildMatureContentAgree.isGatedContent({channelId: channel.id, guildId: channel.guildId ?? null}) &&
-				!GuildMatureContentAgree.shouldShowGate({channelId: channel.id, guildId: channel.guildId ?? null})
-			) {
-				searchingMatureContentChannels.push(channel.id);
-			}
-			if (params.channelId) {
-				for (const channelId of params.channelId) {
-					const targetChannel = Channels.getChannel(channelId);
-					if (
-						targetChannel &&
-						GuildMatureContentAgree.isGatedContent({channelId, guildId: targetChannel.guildId ?? null}) &&
-						!GuildMatureContentAgree.shouldShowGate({channelId, guildId: targetChannel.guildId ?? null})
-					) {
-						searchingMatureContentChannels.push(channelId);
-					}
-				}
-			}
-			if (searchingMatureContentChannels.length > 0) {
-				params.includeNsfw = true;
-				return true;
-			}
-			return false;
-		},
-		[channel],
-	);
 	const executeSearch = useCallback(
 		async (
 			params: MessageSearchParams,
@@ -205,83 +116,30 @@ export const useChannelSearch = ({
 			overrides: ChannelSearchExecutionOverrides = {},
 		): Promise<void> => {
 			if (!mountedRef.current) return;
-			if (GuildMatureContentAgree.shouldShowGate({channelId: channel.id, guildId: channel.guildId ?? null})) {
-				dispatchMachine({
-					type: 'channelSearch.succeeded',
-					channels: [],
-					results: [],
-					total: 0,
-					hitsPerPage: resultsPerPage,
-					page: 1,
-				});
-				setHasSearched(true);
-				return;
-			}
 			dispatchMachine({type: 'channelSearch.loading'});
 			setHasSearched(true);
-			try {
-				const searchScope = overrides.scope ?? scope;
-				const searchSortMode = overrides.sortMode ?? sortMode;
-				const searchParams: MessageSearchParams = {
-					...params,
-					page,
-					hitsPerPage: resultsPerPage,
-					scope: searchScope,
-				};
-				applySortModeToParams(searchParams, searchSortMode);
-				checkMatureContentChannels(searchParams);
-				const result = await searchMessages(
-					i18n,
-					{contextChannelId: channel.id, contextGuildId: channel.guildId ?? null},
-					searchParams,
-				);
-				if (!mountedRef.current) return;
-				if (isIndexing(result)) {
-					dispatchMachine({type: 'channelSearch.indexingStarted'});
-				} else {
-					dispatchMachine({
-						type: 'channelSearch.succeeded',
-						channels: result.channels,
-						results: result.messages,
-						total: result.total,
-						hitsPerPage: result.hitsPerPage,
-						page: result.page,
-					});
-				}
-			} catch (error) {
-				if (!mountedRef.current) return;
-				dispatchMachine({
-					type: 'channelSearch.failed',
-					error: FormUtils.extractErrorMessage(i18n, error) || i18n._(AN_ERROR_OCCURRED_WHILE_SEARCHING_DESCRIPTOR),
-				});
-			}
+			const searchParams: MessageSearchParams = {
+				...params,
+				page,
+				hitsPerPage: resultsPerPage,
+				scope: overrides.scope ?? scope,
+			};
+			applySortModeToParams(searchParams, overrides.sortMode ?? sortMode);
+			applyMatureContentToParamsIfNeeded(searchParams, channel.id);
+			const event = await runChannelSearch(
+				i18n,
+				{contextChannelId: channel.id, contextGuildId: channel.guildId ?? null},
+				searchParams,
+			);
+			if (!mountedRef.current) return;
+			dispatchMachine(event);
 		},
-		[channel, resultsPerPage, scope, sortMode, checkMatureContentChannels, dispatchMachine],
-	);
-	const performSearch = useCallback(
-		async (
-			query: string,
-			segments: Array<SearchSegment> = [],
-			page = 1,
-			overrides?: ChannelSearchExecutionOverrides,
-		): Promise<void> => {
-			if (!query['trim']()) return;
-			currentQueryRef.current = query;
-			currentSegmentsRef.current = segments;
-			currentFiltersRef.current = null;
-			const params = parseSearchQueryWithSegments(query, segments, {
-				historyKey: getChannelSearchContextId(channel) ?? undefined,
-				guildId: channel.guildId ?? null,
-			});
-			await executeSearch(params, page, overrides);
-		},
-		[executeSearch],
+		[channel, resultsPerPage, scope, sortMode, dispatchMachine, i18n],
 	);
 	const performFilterSearch = useCallback(
 		async (filters: ChannelSearchFilters, page = 1, overrides?: ChannelSearchExecutionOverrides): Promise<void> => {
 			currentFiltersRef.current = filters;
-			currentQueryRef.current = '';
-			currentSegmentsRef.current = [];
+
 			const params = filtersToParams(filters);
 			await executeSearch(params, page, overrides);
 		},
@@ -291,12 +149,6 @@ export const useChannelSearch = ({
 		(page: number) => {
 			if (currentFiltersRef.current) {
 				const params = filtersToParams(currentFiltersRef.current);
-				executeSearch(params, page);
-			} else if (currentQueryRef.current) {
-				const params = parseSearchQueryWithSegments(currentQueryRef.current, currentSegmentsRef.current, {
-					historyKey: getChannelSearchContextId(channel) ?? undefined,
-					guildId: channel.guildId ?? null,
-				});
 				executeSearch(params, page);
 			}
 		},
@@ -308,12 +160,10 @@ export const useChannelSearch = ({
 			if (hasSearched && machineState.status === 'success') {
 				if (currentFiltersRef.current) {
 					performFilterSearch(currentFiltersRef.current, 1, {sortMode: mode});
-				} else if (currentQueryRef.current) {
-					performSearch(currentQueryRef.current, currentSegmentsRef.current, 1, {sortMode: mode});
 				}
 			}
 		},
-		[hasSearched, machineState.status, performFilterSearch, performSearch],
+		[hasSearched, machineState.status, performFilterSearch],
 	);
 	const setScope = useCallback(
 		(newScope: MessageSearchScope) => {
@@ -321,20 +171,17 @@ export const useChannelSearch = ({
 			if (hasSearched && machineState.status === 'success') {
 				if (currentFiltersRef.current) {
 					performFilterSearch(currentFiltersRef.current, 1, {scope: newScope});
-				} else if (currentQueryRef.current) {
-					performSearch(currentQueryRef.current, currentSegmentsRef.current, 1, {scope: newScope});
 				}
 			}
 		},
-		[hasSearched, machineState.status, performFilterSearch, performSearch],
+		[hasSearched, machineState.status, performFilterSearch],
 	);
 	const reset = useCallback(() => {
 		stopPolling();
 		dispatchMachine({type: 'channelSearch.reset'});
 		setHasSearched(false);
-		currentQueryRef.current = '';
+
 		currentFiltersRef.current = null;
-		currentSegmentsRef.current = [];
 	}, [stopPolling, dispatchMachine]);
 	useEffect(() => {
 		if (machineState.status !== 'indexing') {
@@ -347,59 +194,23 @@ export const useChannelSearch = ({
 				stopPolling();
 				return;
 			}
-			if (GuildMatureContentAgree.shouldShowGate({channelId: channel.id, guildId: channel.guildId ?? null})) {
+			if (!currentFiltersRef.current) return;
+			const params = filtersToParams(currentFiltersRef.current);
+			params.page = 1;
+			params.hitsPerPage = resultsPerPage;
+			params.scope = scope;
+			applySortModeToParams(params, sortMode);
+			applyMatureContentToParamsIfNeeded(params, channel.id);
+			const event = await runChannelSearch(
+				i18n,
+				{contextChannelId: channel.id, contextGuildId: channel.guildId ?? null},
+				params,
+			);
+			if (!mountedRef.current) return;
+			if (event.type === 'channelSearch.indexingStarted') dispatchMachine({type: 'channelSearch.indexingPolled'});
+			else {
 				stopPolling();
-				dispatchMachine({
-					type: 'channelSearch.succeeded',
-					channels: [],
-					results: [],
-					total: 0,
-					hitsPerPage: resultsPerPage,
-					page: 1,
-				});
-				return;
-			}
-			try {
-				let params: MessageSearchParams;
-				if (currentFiltersRef.current) {
-					params = filtersToParams(currentFiltersRef.current);
-				} else {
-					params = parseSearchQueryWithSegments(currentQueryRef.current, currentSegmentsRef.current, {
-						historyKey: getChannelSearchContextId(channel) ?? undefined,
-						guildId: channel.guildId ?? null,
-					});
-				}
-				params.page = 1;
-				params.hitsPerPage = resultsPerPage;
-				params.scope = scope;
-				applySortModeToParams(params, sortMode);
-				checkMatureContentChannels(params);
-				const result = await searchMessages(
-					i18n,
-					{contextChannelId: channel.id, contextGuildId: channel.guildId ?? null},
-					params,
-				);
-				if (!mountedRef.current) return;
-				if (isIndexing(result)) {
-					dispatchMachine({type: 'channelSearch.indexingPolled'});
-				} else {
-					stopPolling();
-					dispatchMachine({
-						type: 'channelSearch.succeeded',
-						channels: result.channels,
-						results: result.messages,
-						total: result.total,
-						hitsPerPage: result.hitsPerPage,
-						page: result.page,
-					});
-				}
-			} catch (error) {
-				if (!mountedRef.current) return;
-				stopPolling();
-				dispatchMachine({
-					type: 'channelSearch.failed',
-					error: FormUtils.extractErrorMessage(i18n, error) || i18n._(AN_ERROR_OCCURRED_WHILE_SEARCHING_DESCRIPTOR),
-				});
+				dispatchMachine(event);
 			}
 		};
 		stopPolling();
@@ -408,16 +219,7 @@ export const useChannelSearch = ({
 			void poll();
 		}, pollInterval);
 		return stopPolling;
-	}, [
-		machineState,
-		channel,
-		resultsPerPage,
-		scope,
-		sortMode,
-		stopPolling,
-		checkMatureContentChannels,
-		dispatchMachine,
-	]);
+	}, [machineState, channel, resultsPerPage, scope, sortMode, stopPolling, i18n, dispatchMachine]);
 	useEffect(() => {
 		mountedRef.current = true;
 		return () => {
@@ -431,7 +233,6 @@ export const useChannelSearch = ({
 		scope,
 		scopeOptions,
 		hasSearched,
-		performSearch,
 		performFilterSearch,
 		goToPage,
 		setSortMode,

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import type {Channel} from '@app/features/channel/models/Channel';
@@ -8,7 +7,7 @@ import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import type {GuildSticker} from '@app/features/expressions/models/GuildSticker';
 import Permission from '@app/features/permissions/state/Permission';
 import {formatPermissionLabel} from '@app/features/permissions/utils/PermissionUtils';
-import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
+import {getPremiumProductName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -58,6 +57,14 @@ export function checkEmojiAvailability(i18n: I18n, emoji: FlatEmoji, channel: Ch
 	return checkEmojiAvailabilityWithGuildFallback(i18n, emoji, channel, null);
 }
 
+export function checkRoleIconEmojiAvailability(emoji: FlatEmoji, guildId: string): AvailabilityCheck {
+	return {
+		canUse: !emoji.guildId || emoji.guildId === guildId,
+		isLockedByPremium: false,
+		isLockedByPermission: false,
+	};
+}
+
 export function checkEmojiAvailabilityWithGuildFallback(
 	i18n: I18n,
 	emoji: FlatEmoji,
@@ -80,7 +87,9 @@ export function checkEmojiAvailabilityWithGuildFallback(
 					canUse: false,
 					isLockedByPremium: true,
 					isLockedByPermission: false,
-					lockReason: i18n._(UNLOCK_CUSTOM_EMOJIS_IN_DMS_WITH_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME}),
+					lockReason: i18n._(UNLOCK_CUSTOM_EMOJIS_IN_DMS_WITH_DESCRIPTOR, {
+						premiumProductName: getPremiumProductName(),
+					}),
 				};
 			}
 			return {
@@ -122,7 +131,9 @@ export function checkEmojiAvailabilityWithGuildFallback(
 				canUse: false,
 				isLockedByPremium: true,
 				isLockedByPermission: false,
-				lockReason: i18n._(UNLOCK_EXTERNAL_CUSTOM_EMOJIS_WITH_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME}),
+				lockReason: i18n._(UNLOCK_EXTERNAL_CUSTOM_EMOJIS_WITH_DESCRIPTOR, {
+					premiumProductName: getPremiumProductName(),
+				}),
 			};
 		}
 		return {
@@ -163,7 +174,7 @@ export function checkStickerAvailability(
 					canUse: false,
 					isLockedByPremium: true,
 					isLockedByPermission: false,
-					lockReason: i18n._(UNLOCK_STICKERS_IN_DMS_WITH_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME}),
+					lockReason: i18n._(UNLOCK_STICKERS_IN_DMS_WITH_DESCRIPTOR, {premiumProductName: getPremiumProductName()}),
 				};
 			}
 			return {
@@ -213,7 +224,7 @@ export function checkStickerAvailability(
 				canUse: false,
 				isLockedByPremium: true,
 				isLockedByPermission: false,
-				lockReason: i18n._(UNLOCK_EXTERNAL_STICKERS_WITH_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME}),
+				lockReason: i18n._(UNLOCK_EXTERNAL_STICKERS_WITH_DESCRIPTOR, {premiumProductName: getPremiumProductName()}),
 			};
 		}
 		return {

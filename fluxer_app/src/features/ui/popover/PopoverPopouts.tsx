@@ -14,6 +14,7 @@ import {observePopoutKeyboardDismiss, resolvePopoutReturnFocus} from '@app/featu
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import LayerManager from '@app/features/ui/state/LayerManager';
 import PopoutState from '@app/features/ui/state/Popout';
+import {toDocumentPlacement} from '@app/features/ui/utils/DocumentPlacement';
 import {isScrollbarDragActive} from '@app/features/ui/utils/ScrollbarDragState';
 import {canUseWindowFocusedHoverControls} from '@app/features/ui/utils/WindowFocusInteractionGuard';
 import {wasPointerDownInside} from '@app/lib/overlay/DismissGuard';
@@ -118,6 +119,7 @@ function getPopoutMotion(
 	animationType: PopoutAnimationType,
 	shouldAnimate: boolean,
 	isOpen: boolean,
+	isRtl: boolean,
 ): {
 	initial: false | Record<string, number>;
 	animate: Record<string, number>;
@@ -131,7 +133,8 @@ function getPopoutMotion(
 		};
 	}
 	if (isProfileSlideAnimation(animationType)) {
-		const slideOffset = animationType === 'profile-slide-inverted' ? -10 : 10;
+		const baseOffset = animationType === 'profile-slide-inverted' ? -10 : 10;
+		const slideOffset = isRtl ? -baseOffset : baseOffset;
 		return {
 			initial: {opacity: 0, x: slideOffset},
 			animate: {opacity: isOpen ? 1 : 0, x: isOpen ? 0 : slideOffset},
@@ -168,6 +171,7 @@ const PopoutItem: React.FC<PopoutItemProps> = observer(
 		shouldAutoUpdate = true,
 		offsetMainAxis = 8,
 		offsetCrossAxis = 0,
+		ignoreTitlebarBoundary = false,
 		animationType = 'smooth',
 		constrainHeight = true,
 		containerClass,
@@ -192,14 +196,14 @@ const PopoutItem: React.FC<PopoutItemProps> = observer(
 			state,
 			style,
 			beginManualPositioning,
-		} = useAntiShiftFloating(positionReference, true, {
-			placement: position,
+		} = useAntiShiftFloating(positionReference, {
+			placement: toDocumentPlacement(position, target),
 			offsetMainAxis,
 			offsetCrossAxis,
+			ignoreTitlebarBoundary,
 			shouldAutoUpdate: frozenTargetRect ? false : shouldAutoUpdate,
 			shouldObserveFloatingResize: !frozenTargetRect || !constrainHeight,
 			constrainHeight,
-			enableSmartBoundary: true,
 		});
 		const resizePositionController = useMemo(
 			() => ({begin: beginManualPositioning, placement: state.placement}),
@@ -240,11 +244,21 @@ const PopoutItem: React.FC<PopoutItemProps> = observer(
 				setTargetInDOM(true);
 			}
 		}, [target, ownerDocument, keepOpenOnTargetUnmount, beginClose]);
+		const wasClosingRequestedRef = useRef(isClosingRequested);
 		useEffect(() => {
+			const wasClosingRequested = wasClosingRequestedRef.current;
+			wasClosingRequestedRef.current = isClosingRequested;
 			if (isClosingRequested) {
 				beginClose();
+				return;
 			}
-		}, [isClosingRequested, beginClose]);
+			if (!wasClosingRequested) return;
+			if (closeTimerRef.current != null && ownerWindow != null) {
+				ownerWindow.clearTimeout(closeTimerRef.current);
+				closeTimerRef.current = null;
+			}
+			setIsVisible(true);
+		}, [isClosingRequested, beginClose, ownerWindow]);
 		useEffect(() => {
 			return () => {
 				if (closeTimerRef.current != null && ownerWindow != null) {
@@ -276,8 +290,9 @@ const PopoutItem: React.FC<PopoutItemProps> = observer(
 		const shouldShowOpenState = isVisible && !isClosingRequested;
 		const motionOpen = shouldShowOpenState && hasUsableReference && isPositioned;
 		const popoutMotion = useMemo(
-			() => getPopoutMotion(animationType, !prefersReducedMotion, motionOpen),
-			[animationType, motionOpen, prefersReducedMotion],
+			() =>
+				getPopoutMotion(animationType, !prefersReducedMotion, motionOpen, ownerDocument.documentElement.dir === 'rtl'),
+			[animationType, motionOpen, prefersReducedMotion, ownerDocument],
 		);
 		const transitionStyles = useMemo(() => {
 			return {
@@ -332,13 +347,13 @@ const PopoutItem: React.FC<PopoutItemProps> = observer(
 				}
 				const targetElement = event.target;
 				const ownerWindow = ownerDocument.defaultView;
-				if (!ownerWindow || !(targetElement instanceof ownerWindow.HTMLElement)) return;
+				if (!ownerWindow || !(targetElement instanceof ownerWindow.Element)) return;
 				if (target.contains(targetElement)) {
 					return;
 				}
 				if (
 					targetElement.closest('[role="dialog"][aria-modal="true"]') ||
-					targetElement.className.includes('backdrop') ||
+					(targetElement.getAttribute('class') ?? '').includes('backdrop') ||
 					targetElement.closest('.focusLock') ||
 					targetElement.closest('[data-native-titlebar]')
 				) {
@@ -460,13 +475,13 @@ export const Popouts: React.FC<PopoutsProps> = observer(({ownerDocument}) => {
 	const portalHost = scopePortalHostToDocument(activePortalHost, scopeDocument);
 	const popouts = PopoutState.getPopouts(scopeDocument);
 	const topPopout = popouts.length ? popouts[popouts.length - 1] : null;
-	const needsBackdrop = Boolean(topPopout && !topPopout.disableBackdrop);
+	const needsBackdrop = PopoutState.requiresBackdrop(scopeDocument);
 	useEffect(() => {
 		const currentKeys = new Set(popouts.map((popout) => popout.key.toString()));
 		const prevKeys = prevPopoutKeysRef.current;
 		currentKeys.forEach((key) => {
 			if (!prevKeys.has(key)) {
-				LayerManager.addLayer('popout', key);
+				LayerManager.addLayer('popout', key, undefined, scopeDocument);
 			}
 		});
 		prevKeys.forEach((key) => {
@@ -475,7 +490,7 @@ export const Popouts: React.FC<PopoutsProps> = observer(({ownerDocument}) => {
 			}
 		});
 		prevPopoutKeysRef.current = currentKeys;
-	}, [popouts]);
+	}, [popouts, scopeDocument]);
 	useEffect(() => {
 		return () => {
 			prevPopoutKeysRef.current.forEach((key) => {

@@ -1,0 +1,15 @@
+domain: chat.example.test
+networkPolicy:
+  enabled: false
+livekit:
+  enabled: false
+nats:
+  replicas: 3
+initImage:
+  repository: registry.example.test/busybox
+  digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+postgres:
+  image:
+    repository: registry.example.test/postgres
+    tag: "16"
+  runAsUser: 999

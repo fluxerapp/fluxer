@@ -3,12 +3,12 @@
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import styles from '@app/features/discovery/discovery/DiscoverySearchFilters.module.css';
 import Discovery from '@app/features/discovery/state/Discovery';
+import {formatNumber} from '@app/features/i18n/utils/IntlCache';
 import {Combobox, type ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
-import {getCurrentLocale, getSortedDiscoveryLanguages} from '@app/features/user/utils/LocaleUtils';
+import {getFormattingLocale, getSortedDiscoveryLanguages} from '@app/features/user/utils/LocaleUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {formatNumber} from '@pkgs/number_utils/src/NumberFormatting';
 import {animate} from 'animejs';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
@@ -16,28 +16,28 @@ import {type ReactNode, useCallback, useId, useLayoutEffect, useMemo, useRef} fr
 
 const SEARCH_FILTERS_DESCRIPTOR = msg({
 	message: 'Search filters',
-	comment: 'Accessible label for the filter sidebar shown beside the Discovery search results.',
+	comment: 'Accessible label for the filter sidebar shown beside the Explore search results.',
 });
 const CATEGORIES_DESCRIPTOR = msg({
 	message: 'Categories',
-	comment: 'Heading above the category filter list in the Discovery search sidebar.',
+	comment: 'Heading above the category filter list in the Explore search sidebar.',
 });
 const ALL_DESCRIPTOR = msg({
 	message: 'All',
-	comment: 'Label for the all-categories tab in the Discovery page.',
+	comment: 'Label for the all-categories tab in the Explore page.',
 });
 const ALL_LANGUAGES_DESCRIPTOR = msg({
 	message: 'All languages',
-	comment: 'Short label in the discovery page. Keep it concise.',
+	comment: 'Short label in the Explore page. Keep it concise.',
 });
 const FILTER_BY_LANGUAGE_DESCRIPTOR = msg({
 	message: 'Filter by language',
-	comment: 'Short label in the discovery page. Keep it concise.',
+	comment: 'Short label in the Explore page. Keep it concise.',
 });
 const CATEGORY_FILTER_DESCRIPTOR = msg({
 	message: '{categoryLabel}, {count, plural, one {# community} other {# communities}}',
 	comment:
-		'Accessible label for a category row in the Discovery search sidebar. {categoryLabel} is the category name and {count} is how many communities match the current search in it. Both are inserted by code.',
+		'Accessible label for a category row in the Explore search sidebar. {categoryLabel} is the category name and {count} is how many communities match the current search in it. Both are inserted by code.',
 });
 
 const FILTERS_ENTER_TRANSLATE_Y_PX = 8;
@@ -133,7 +133,7 @@ export const DiscoverySearchFilters = observer(function DiscoverySearchFilters({
 						aria-hidden
 						data-flx="discovery.discovery.discovery-search-filters.render-category-row.category-count"
 					>
-						{formatNumber(row.count, getCurrentLocale())}
+						{formatNumber(row.count, getFormattingLocale())}
 					</span>
 				</button>
 			</FocusRing>

@@ -24,10 +24,10 @@ import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import {TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
-import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
+import {CheckboxItem, SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import {MenuItemSlider} from '@app/features/ui/action_menu/MenuItemSlider';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
+
 import * as UserCommands from '@app/features/user/commands/UserCommands';
 import Users from '@app/features/user/state/Users';
 import {msg, plural} from '@lingui/core/macro';

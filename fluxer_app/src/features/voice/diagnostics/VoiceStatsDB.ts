@@ -9,12 +9,6 @@ const DB_VERSION = 1;
 const STORE_NAME = 'stats';
 const browserIndexedDB = getProtectedIndexedDB();
 
-interface StatEntry {
-	reportId: string;
-	bytes: number;
-	timestamp: number;
-}
-
 const IDB_TIMEOUT = 5000;
 
 class VoiceStatsDB {
@@ -60,41 +54,6 @@ class VoiceStatsDB {
 		return this.initPromise;
 	}
 
-	async set(reportId: string, bytes: number, timestamp: number): Promise<void> {
-		await this.init();
-		if (!this.db) return;
-		return new Promise((resolve, reject) => {
-			const transaction = this.db!.transaction([STORE_NAME], 'readwrite');
-			const store = transaction.objectStore(STORE_NAME);
-			const entry: StatEntry = {reportId, bytes, timestamp};
-			const request = store.put(entry);
-			request.onsuccess = () => resolve();
-			request.onerror = () => reject(request.error);
-		});
-	}
-
-	async get(reportId: string): Promise<{
-		bytes: number;
-		timestamp: number;
-	} | null> {
-		await this.init();
-		if (!this.db) return null;
-		return new Promise((resolve, reject) => {
-			const transaction = this.db!.transaction([STORE_NAME], 'readonly');
-			const store = transaction.objectStore(STORE_NAME);
-			const request = store.get(reportId);
-			request.onsuccess = () => {
-				const entry = request.result as StatEntry | undefined;
-				if (entry) {
-					resolve({bytes: entry.bytes, timestamp: entry.timestamp});
-				} else {
-					resolve(null);
-				}
-			};
-			request.onerror = () => reject(request.error);
-		});
-	}
-
 	async clear(): Promise<void> {
 		await this.init();
 		if (!this.db) return;
@@ -103,30 +62,6 @@ class VoiceStatsDB {
 			const store = transaction.objectStore(STORE_NAME);
 			const request = store.clear();
 			request.onsuccess = () => resolve();
-			request.onerror = () => reject(request.error);
-		});
-	}
-
-	async clearOldEntries(maxAgeMs: number): Promise<void> {
-		await this.init();
-		if (!this.db) return;
-		const cutoffTime = Date.now() - maxAgeMs;
-		return new Promise((resolve, reject) => {
-			const transaction = this.db!.transaction([STORE_NAME], 'readwrite');
-			const store = transaction.objectStore(STORE_NAME);
-			const request = store.openCursor();
-			request.onsuccess = (event) => {
-				const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
-				if (cursor) {
-					const entry = cursor.value as StatEntry;
-					if (entry.timestamp < cutoffTime) {
-						cursor.delete();
-					}
-					cursor.continue();
-				} else {
-					resolve();
-				}
-			};
 			request.onerror = () => reject(request.error);
 		});
 	}

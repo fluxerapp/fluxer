@@ -1,0 +1,158 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.row {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-3);
+	min-height: 3rem;
+	padding: var(--spacing-1) 0;
+}
+
+.text {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	gap: 0.125rem;
+	min-width: 0;
+}
+
+.label {
+	overflow: hidden;
+	font-weight: 500;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.label::first-letter {
+	text-transform: uppercase;
+}
+
+.variableName {
+	overflow: hidden;
+	font-family: var(--font-mono, ui-monospace, monospace);
+	font-size: 0.75rem;
+	line-height: 1rem;
+	color: var(--text-tertiary);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.controls {
+	display: flex;
+	flex: 0 0 auto;
+	align-items: center;
+	gap: var(--spacing-1);
+}
+
+.field {
+	display: flex;
+	align-items: center;
+	height: 2.25rem;
+	overflow: hidden;
+	border: 0.0625rem solid var(--background-modifier-accent);
+	border-radius: 0.5rem;
+	transition: border-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.field:focus-within {
+	border-color: var(--background-modifier-accent-focus);
+}
+
+.textField {
+	width: 15rem;
+}
+
+.input {
+	flex: 1 1 auto;
+	min-width: 0;
+	height: 100%;
+	padding: 0 0.75rem;
+	border: none;
+	outline: none;
+	appearance: none;
+	background: transparent;
+	font-family: var(--font-mono, ui-monospace, monospace);
+	font-size: 0.8125rem;
+	color: var(--text-primary);
+}
+
+.input::placeholder {
+	color: var(--text-tertiary);
+}
+
+.colorInput {
+	width: 6.5rem;
+}
+
+.divider {
+	align-self: stretch;
+	width: 0.0625rem;
+	background-color: var(--background-modifier-accent);
+}
+
+.swatch {
+	align-self: stretch;
+	width: 2.5rem;
+	padding: 0;
+	border: none;
+	cursor: pointer;
+}
+
+.fontPreview {
+	flex: 0 0 auto;
+	padding-inline-start: 0.75rem;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.popover {
+	z-index: 20000;
+	outline: none;
+}
+
+.resetButton {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2rem;
+	height: 2rem;
+	padding: 0;
+	border: none;
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: var(--text-primary-muted);
+	cursor: pointer;
+}
+
+.resetButton:hover {
+	color: var(--text-primary);
+	background-color: var(--background-modifier-hover);
+}
+
+.resetSpacer {
+	width: 2rem;
+	height: 2rem;
+}
+
+@media (max-width: 720px) {
+	.row {
+		flex-wrap: wrap;
+	}
+
+	.text {
+		flex-basis: 100%;
+	}
+
+	.controls {
+		flex: 1 1 auto;
+	}
+
+	.textField {
+		flex: 1 1 auto;
+		width: auto;
+	}
+}

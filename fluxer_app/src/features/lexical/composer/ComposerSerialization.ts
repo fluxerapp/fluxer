@@ -60,7 +60,7 @@ const STANDARD_EMOJI_WIRE_RE = /^(?:[0-9#*]\uFE0F?\u20E3|\P{ASCII})+$/u;
 const SLOT_USER_WIRE_RE = /^<@!?(\d+)>$/;
 const SLOT_ROLE_WIRE_RE = /^<@&(\d+)>$/;
 const SLOT_CHANNEL_WIRE_RE = /^<#(\d+)>$/;
-export const COMPOSER_SLASH_SLOT_SEGMENT_PREFIX = 'slash-slot:';
+const COMPOSER_SLASH_SLOT_SEGMENT_PREFIX = 'slash-slot:';
 const SLASH_SLOT_OPTION_NAME_RE = /^[a-z0-9_-]{1,32}$/;
 
 function isStandardEmojiSegment(segment: MentionSegment): boolean {

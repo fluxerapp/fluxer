@@ -47,7 +47,7 @@ export type ComposerInsertPayload =
 	| {kind: 'customEmoji'; emojiId: string; animated: boolean; display: string; wire: string}
 	| {kind: 'standardEmoji'; name: string; surrogate: string; url: string | null; display: string};
 
-function $firstParagraph(): ElementNode {
+export function $firstParagraph(): ElementNode {
 	const root = $getRoot();
 	const first = root.getFirstChild();
 	if (first != null && first.getType() === 'paragraph') {
@@ -168,10 +168,6 @@ function pointToDisplayOffset(
 	const boundaries = layout.elementBoundaries.get(pointNode.getKey());
 	invariant(boundaries != null, 'Composer selection points to an element outside the editor display');
 	return boundaries[Math.min(Math.max(0, pointOffset), boundaries.length - 1)]!;
-}
-
-export function $getComposerDisplayOffset(): number | null {
-	return $getComposerDisplayOffsetFromLayout($buildDisplayLayout());
 }
 
 function $getComposerDisplayOffsetFromLayout(layout: DisplayLayout): number | null {
@@ -541,11 +537,6 @@ function codeBlockPlanFor(
 		return null;
 	}
 	return plan;
-}
-
-export function $isComposerSelectionWrapped(prefix: string, suffix: string): boolean {
-	const wrapped = $queryComposerSelectionWrappers([{prefix, suffix}]).wrapped[0];
-	return wrapped == null ? false : wrapped;
 }
 
 export function $queryComposerSelectionWrappers(

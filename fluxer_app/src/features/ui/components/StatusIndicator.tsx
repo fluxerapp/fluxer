@@ -53,36 +53,3 @@ export const StatusIndicator = memo(
 		);
 	},
 );
-
-interface RenderStatusIconOptions {
-	appearance?: 'default' | 'monochrome';
-	monochromeColor?: string;
-}
-
-export const renderStatusIconContent = (status: string, size: number, options: RenderStatusIconOptions = {}) => {
-	const {appearance = 'default', monochromeColor} = options;
-	const normalizedStatus = normalizeStatus(status);
-	const maskId = `flx-mask-presence-${normalizedStatus}`;
-	const fill = appearance === 'monochrome' ? (monochromeColor ?? 'currentColor') : `var(--status-${normalizedStatus})`;
-	return (
-		<svg
-			width={remFromPx(size)}
-			height={remFromPx(size)}
-			viewBox="0 0 1 1"
-			preserveAspectRatio="none"
-			className={styles.displayBlock}
-			aria-hidden
-			data-flx="ui.status-indicator.render-status-icon-content.display-block"
-		>
-			<rect
-				x={0}
-				y={0}
-				width={1}
-				height={1}
-				fill={fill}
-				mask={`url(#${maskId})`}
-				data-flx="ui.status-indicator.render-status-icon-content.rect"
-			/>
-		</svg>
-	);
-};

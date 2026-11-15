@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import styles from '@app/features/input/components/modals/KeyboardModeIntroModal.module.css';
 import {SHIFT_KEY_DESCRIPTOR} from '@app/features/input/utils/KeyboardUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -40,7 +40,7 @@ const STEP_THROUGH_MESSAGES_AND_ACTION_BARS_IN_CHAT_DESCRIPTOR = msg({
 	comment: 'Tip explaining up/down arrow navigation in the keyboard mode intro modal.',
 });
 const OPEN_THE_SHORTCUTS_LIST_ANYTIME_FOR_QUICK_ACTIONS_DESCRIPTOR = msg({
-	message: 'Open the shortcuts list for quick actions.',
+	message: 'Open the keybind list for quick actions.',
 	comment: 'Tip explaining the keyboard shortcut for opening the shortcuts list.',
 });
 export function KeyboardModeIntroModal() {
@@ -57,7 +57,7 @@ export function KeyboardModeIntroModal() {
 			<Modal.Header title={title} onClose={handleClose} data-flx="input.keyboard-mode-intro-modal.modal-header" />
 			<Modal.Content contentClassName={styles.content} data-flx="input.keyboard-mode-intro-modal.modal-content">
 				<p className={styles.description} data-flx="input.keyboard-mode-intro-modal.description">
-					{i18n._(YOU_JUST_PRESSED_TAB_KEYBOARD_MODE_IS_NOW_DESCRIPTOR, {productName: PRODUCT_NAME})}
+					{i18n._(YOU_JUST_PRESSED_TAB_KEYBOARD_MODE_IS_NOW_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 				</p>
 				<ul className={styles.tips} data-flx="input.keyboard-mode-intro-modal.tips">
 					<li className={styles.tip} data-flx="input.keyboard-mode-intro-modal.tip">

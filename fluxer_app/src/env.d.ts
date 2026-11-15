@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import MediaEngineFacade from '@app/features/voice/engine/MediaEngineFacade';
-import type {ElectronAPI} from '@app/features/platform/types/Electron';
-import type {InstanceDiscoveryResponse} from '@fluxer/instance_bootstrap/src/Types';
+import type {ElectronAPI} from '@app/types/electron.d';
 import {Buffer} from 'buffer';
 
 type MediaEngineInstance = typeof MediaEngineFacade;
@@ -20,15 +19,6 @@ interface FluxerDebugApi {
 }
 
 type FluxerDebugGlobal = Record<string, unknown> & FluxerDebugApi;
-
-interface FluxerBootstrapGlobal {
-	config: {
-		releaseChannel: 'stable' | 'canary';
-		bootstrapApiEndpoint: string;
-		bootstrapApiPublicEndpoint?: string;
-	};
-	instance: InstanceDiscoveryResponse;
-}
 
 declare global {
 	interface FilePickerAcceptType {
@@ -55,10 +45,8 @@ declare global {
 		readonly MODE: 'development' | 'production' | 'test';
 		readonly DEV: boolean;
 		readonly PROD: boolean;
-		readonly PUBLIC_BUILD_VERSION?: string;
-		readonly PUBLIC_RELEASE_CHANNEL?: 'stable' | 'canary';
-		readonly PUBLIC_BOOTSTRAP_API_ENDPOINT?: string;
-		readonly PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT?: string;
+		readonly BUILD_VERSION?: string;
+		readonly BUILD_CHANNEL?: 'stable' | 'canary' | 'development';
 	}
 	interface ImportMetaHot {
 		readonly data: Record<string, unknown>;
@@ -77,7 +65,6 @@ declare global {
 		};
 	}
 	interface Window {
-		__FLUXER_BOOTSTRAP__?: FluxerBootstrapGlobal;
 		__FLUXER_DEBUG__?: FluxerDebugGlobal;
 		__notificationCleanup?: () => void;
 		_mediaEngine?: MediaEngineInstance;

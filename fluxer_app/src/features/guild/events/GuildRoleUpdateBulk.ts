@@ -7,7 +7,7 @@ import MemberSidebar from '@app/features/member/state/MemberSidebar';
 import Permission from '@app/features/permissions/state/Permission';
 import type {GuildRole} from '@fluxer/schema/src/domains/guild/GuildRoleSchemas';
 
-interface GuildRoleUpdateBulkPayload {
+export interface GuildRoleUpdateBulkPayload {
 	guild_id: string;
 	roles: Array<GuildRole>;
 }

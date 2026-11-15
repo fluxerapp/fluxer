@@ -24,6 +24,10 @@ pub(in crate::server) enum MediaFailure {
     MetadataSvgRasterizeTimeout { detail: String },
     MetadataSvgRasterizeFailed { detail: String },
     MetadataExtractionFailed { detail: String },
+    StripUnsupportedType,
+    StripSpoolExhausted,
+    StripTimeout,
+    StripFailed { detail: String },
 }
 
 impl MediaFailure {
@@ -49,6 +53,10 @@ impl MediaFailure {
             Self::MetadataSvgRasterizeTimeout { .. } => "metadata_svg_rasterize_timeout",
             Self::MetadataSvgRasterizeFailed { .. } => "metadata_svg_rasterize_failed",
             Self::MetadataExtractionFailed { .. } => "metadata_extraction_failed",
+            Self::StripUnsupportedType => "strip_unsupported_type",
+            Self::StripSpoolExhausted => "strip_spool_exhausted",
+            Self::StripTimeout => "strip_timeout",
+            Self::StripFailed { .. } => "strip_failed",
         }
     }
 
@@ -63,7 +71,11 @@ impl MediaFailure {
             | Self::MetadataS3Read
             | Self::ExternalSourceBlocked
             | Self::MetadataSvgRasterizeFailed { .. }
-            | Self::MetadataExtractionFailed { .. } => StatusCode::BAD_REQUEST,
+            | Self::MetadataExtractionFailed { .. }
+            | Self::StripFailed { .. } => StatusCode::BAD_REQUEST,
+            Self::StripUnsupportedType => StatusCode::UNSUPPORTED_MEDIA_TYPE,
+            Self::StripSpoolExhausted => StatusCode::SERVICE_UNAVAILABLE,
+            Self::StripTimeout => StatusCode::GATEWAY_TIMEOUT,
             Self::ExternalSourcePayloadTooLarge => StatusCode::PAYLOAD_TOO_LARGE,
             Self::ExternalSourceBufferBudgetExhausted
             | Self::ExternalSourceBufferAllocationFailed => StatusCode::SERVICE_UNAVAILABLE,
@@ -89,7 +101,8 @@ impl MediaFailure {
         match self {
             Self::MetadataSvgRasterizeTimeout { detail }
             | Self::MetadataSvgRasterizeFailed { detail }
-            | Self::MetadataExtractionFailed { detail } => Some(detail),
+            | Self::MetadataExtractionFailed { detail }
+            | Self::StripFailed { detail } => Some(detail),
             _ => None,
         }
     }

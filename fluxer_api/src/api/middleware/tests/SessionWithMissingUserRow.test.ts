@@ -40,6 +40,12 @@ describe('Session token whose account row is gone', () => {
 			client_user_agent: null,
 			client_os: null,
 			client_country: null,
+			app_platform: null,
+			app_version: null,
+			app_release_channel: null,
+			app_build_number: null,
+			app_beta_number: null,
+			auth_method: null,
 			version: 1,
 		});
 		const result = await createBuilder<UnauthorizedErrorResponse>(harness, SESSION_TOKEN)

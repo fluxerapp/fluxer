@@ -3,106 +3,109 @@
 import styles from '@app/features/app/components/layout/AuthLayout.module.css';
 import {GuildSplashCardAlignment} from '@fluxer/constants/src/GuildConstants';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
+import clsx from 'clsx';
 import type React from 'react';
+import {useState} from 'react';
 
-const getSplashAlignmentStyles = (alignment: ValueOf<typeof GuildSplashCardAlignment>) => {
+const getSplashObjectPosition = (alignment: ValueOf<typeof GuildSplashCardAlignment>) => {
 	switch (alignment) {
 		case GuildSplashCardAlignment.LEFT:
-			return {transformOrigin: 'bottom left', objectPosition: 'left bottom'};
+			return 'left bottom';
 		case GuildSplashCardAlignment.RIGHT:
-			return {transformOrigin: 'bottom right', objectPosition: 'right bottom'};
+			return 'right bottom';
 		default:
-			return {transformOrigin: 'bottom center', objectPosition: 'center bottom'};
+			return 'center bottom';
 	}
 };
+
+export const AuthBackdropScrim = Object.freeze({
+	CARD: 'card',
+	MOBILE: 'mobile',
+} as const);
+
+export type AuthBackdropScrim = (typeof AuthBackdropScrim)[keyof typeof AuthBackdropScrim];
 
 export interface AuthBackgroundProps {
 	splashUrl: string | null;
 	splashDimensions?: {width: number; height: number} | null;
-	splashScale?: number | null;
-	patternReady: boolean;
-	patternImageUrl: string;
+	backdropUrl?: string | null;
+	backdropScrim?: AuthBackdropScrim;
 	className?: string;
-	useFullCover?: boolean;
 	splashAlignment?: ValueOf<typeof GuildSplashCardAlignment>;
+}
+
+interface AuthBackdropProps {
+	url: string;
+	scrim: AuthBackdropScrim;
+}
+
+function AuthBackdrop({url, scrim}: AuthBackdropProps): React.ReactElement | null {
+	const [status, setStatus] = useState<'loading' | 'ready' | 'failed'>('loading');
+	if (status === 'failed') {
+		return null;
+	}
+	return (
+		<div
+			className={clsx(styles.backdropLayer, status === 'ready' && styles.backdropLayerReady)}
+			data-flx="auth.flow.auth-background.backdrop"
+		>
+			<img
+				className={styles.backdropImage}
+				src={url}
+				alt=""
+				draggable={false}
+				decoding="async"
+				referrerPolicy="no-referrer"
+				onLoad={() => setStatus('ready')}
+				onError={() => setStatus('failed')}
+				data-flx="auth.flow.auth-background.backdrop-image"
+			/>
+			<div
+				className={clsx(styles.backdropScrim, scrim === AuthBackdropScrim.MOBILE && styles.backdropScrimMobile)}
+				data-flx="auth.flow.auth-background.backdrop-scrim"
+			/>
+		</div>
+	);
 }
 
 export const AuthBackground: React.FC<AuthBackgroundProps> = ({
 	splashUrl,
 	splashDimensions,
-	splashScale,
-	patternReady,
-	patternImageUrl,
+	backdropUrl = null,
+	backdropScrim = AuthBackdropScrim.CARD,
 	className,
-	useFullCover = false,
 	splashAlignment = GuildSplashCardAlignment.CENTER,
 }) => {
-	const shouldShowSplash = splashUrl && splashDimensions && (useFullCover || splashScale);
-	const {transformOrigin, objectPosition} = getSplashAlignmentStyles(splashAlignment);
-	if (shouldShowSplash) {
-		if (useFullCover) {
-			return (
-				<div className={className} data-flx="auth.flow.auth-background.div">
-					<div style={{position: 'absolute', inset: 0}} data-flx="auth.flow.auth-background.div--2">
-						<img
-							src={splashUrl}
-							alt=""
-							style={{
-								position: 'absolute',
-								inset: 0,
-								width: '100%',
-								height: '100%',
-								objectFit: 'cover',
-								objectPosition,
-							}}
-							data-flx="auth.flow.auth-background.img"
-						/>
-						<div className={styles.splashOverlay} data-flx="auth.flow.auth-background.splash-overlay" />
-					</div>
-				</div>
-			);
-		}
+	if (splashUrl && splashDimensions) {
 		return (
-			<div className={styles.rightSplit} data-flx="auth.flow.auth-background.right-split">
-				<div
-					className={styles.splashImage}
+			<div className={className} data-flx="auth.flow.auth-background.div">
+				<img
+					src={splashUrl}
+					alt=""
 					style={{
-						width: splashDimensions.width,
-						height: splashDimensions.height,
-						transform: `scale(${splashScale})`,
-						transformOrigin,
+						position: 'absolute',
+						inset: 0,
+						width: '100%',
+						height: '100%',
+						objectFit: 'cover',
+						objectPosition: getSplashObjectPosition(splashAlignment),
 					}}
-					data-flx="auth.flow.auth-background.splash-image"
-				>
-					<img
-						src={splashUrl}
-						alt=""
-						width={splashDimensions.width}
-						height={splashDimensions.height}
-						style={{
-							position: 'absolute',
-							left: 0,
-							top: 0,
-							width: '100%',
-							height: '100%',
-							objectFit: 'cover',
-							objectPosition,
-						}}
-						data-flx="auth.flow.auth-background.img--2"
-					/>
-					<div className={styles.splashOverlay} data-flx="auth.flow.auth-background.splash-overlay--2" />
-				</div>
+					data-flx="auth.flow.auth-background.img"
+				/>
+				<div className={styles.splashOverlay} data-flx="auth.flow.auth-background.splash-overlay" />
 			</div>
 		);
 	}
-	if (patternReady) {
+	if (splashUrl == null && backdropUrl != null) {
 		return (
-			<div
-				className={className || styles.patternHost}
-				style={{backgroundImage: `url(${patternImageUrl})`}}
-				aria-hidden
-				data-flx="auth.flow.auth-background.pattern-host"
-			/>
+			<div className={clsx(className, styles.operatorBackdrop)} data-flx="auth.flow.auth-background.operator-backdrop">
+				<AuthBackdrop
+					key={backdropUrl}
+					url={backdropUrl}
+					scrim={backdropScrim}
+					data-flx="auth.flow.auth-background.auth-backdrop"
+				/>
+			</div>
 		);
 	}
 	return null;

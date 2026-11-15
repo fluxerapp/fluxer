@@ -2,7 +2,6 @@
 
 import {
 	createVoiceLatencySnapshot,
-	type LatencyDataPoint,
 	observeVoiceLatencyGap,
 	recordVoiceLatencySample,
 	resetVoiceLatencySnapshot,
@@ -11,15 +10,16 @@ import {
 	type VoiceLatencySnapshot,
 } from '@app/features/voice/engine/VoiceLatencyTracker';
 import type {
+	VoiceEngineV2LatencyDataPoint as LatencyDataPoint,
 	VoiceEngineV2PerTrackStats as PerTrackStats,
 	VoiceEngineV2TransportInfo as TransportInfo,
 	VoiceEngineV2VoiceStats as VoiceStats,
 	VoiceEngineV2StatsSample as VoiceStatsSample,
-} from '@fluxer/voice_engine_v2';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
-export const MAX_LATENCY_HISTORY = 60;
-export const MAX_TIME_SERIES_SAMPLES = 60;
+const MAX_LATENCY_HISTORY = 60;
+const MAX_TIME_SERIES_SAMPLES = 60;
 
 export interface VoiceStatsRtpCounter {
 	bytes?: number;
@@ -28,7 +28,7 @@ export interface VoiceStatsRtpCounter {
 	timestamp: number;
 }
 
-export interface VoiceStatsMachineContext {
+interface VoiceStatsMachineContext {
 	roomIdentity: unknown | null;
 	latencyIntervalActive: boolean;
 	statsIntervalActive: boolean;
@@ -371,7 +371,7 @@ function resetState(context: VoiceStatsMachineContext): VoiceStatsMachineContext
 	};
 }
 
-export const voiceStatsStateMachine = setup({
+const voiceStatsStateMachine = setup({
 	types: {} as {
 		context: VoiceStatsMachineContext;
 		events: VoiceStatsEvent;
@@ -416,6 +416,22 @@ export const voiceStatsStateMachine = setup({
 	id: 'voiceStats',
 	context: () => initialContext(),
 	initial: 'routing',
+	on: {
+		'room.set': {target: '.routing', actions: 'setRoom'},
+		'latency.start': {target: '.routing', actions: 'startLatency'},
+		'latency.stop': {target: '.routing', actions: 'stopLatency'},
+		'latency.sample': {target: '.routing', actions: 'recordLatencySample'},
+		'latency.gap': {target: '.routing', actions: 'recordLatencyGap'},
+		'stats.start': {target: '.routing', actions: 'startStats'},
+		'stats.stop': {target: '.routing', actions: 'stopStats'},
+		'stats.tick': {target: '.routing', actions: 'tickStats'},
+		'stats.collectionStarted': {target: '.routing', actions: 'startCollection'},
+		'stats.collectionSucceeded': {target: '.routing', actions: 'applyCollectionResult'},
+		'stats.collectionFinished': {target: '.routing', actions: 'finishCollection'},
+		'reconnection.increment': {target: '.routing', actions: 'incrementReconnectionCount'},
+		'stats.reset': {target: '.routing', actions: 'reset'},
+		'stats.cleanup': {target: '.routing', actions: 'reset'},
+	},
 	states: {
 		routing: {
 			always: [
@@ -425,83 +441,14 @@ export const voiceStatsStateMachine = setup({
 				{target: 'idle'},
 			],
 		},
-		idle: {
-			on: {
-				'room.set': {target: 'routing', actions: 'setRoom'},
-				'latency.start': {target: 'routing', actions: 'startLatency'},
-				'latency.stop': {target: 'routing', actions: 'stopLatency'},
-				'latency.sample': {target: 'routing', actions: 'recordLatencySample'},
-				'latency.gap': {target: 'routing', actions: 'recordLatencyGap'},
-				'stats.start': {target: 'routing', actions: 'startStats'},
-				'stats.stop': {target: 'routing', actions: 'stopStats'},
-				'stats.tick': {target: 'routing', actions: 'tickStats'},
-				'stats.collectionStarted': {target: 'routing', actions: 'startCollection'},
-				'stats.collectionSucceeded': {target: 'routing', actions: 'applyCollectionResult'},
-				'stats.collectionFinished': {target: 'routing', actions: 'finishCollection'},
-				'reconnection.increment': {target: 'routing', actions: 'incrementReconnectionCount'},
-				'stats.reset': {target: 'routing', actions: 'reset'},
-				'stats.cleanup': {target: 'routing', actions: 'reset'},
-			},
-		},
-		trackingLatency: {
-			on: {
-				'room.set': {target: 'routing', actions: 'setRoom'},
-				'latency.start': {target: 'routing', actions: 'startLatency'},
-				'latency.stop': {target: 'routing', actions: 'stopLatency'},
-				'latency.sample': {target: 'routing', actions: 'recordLatencySample'},
-				'latency.gap': {target: 'routing', actions: 'recordLatencyGap'},
-				'stats.start': {target: 'routing', actions: 'startStats'},
-				'stats.stop': {target: 'routing', actions: 'stopStats'},
-				'stats.tick': {target: 'routing', actions: 'tickStats'},
-				'stats.collectionStarted': {target: 'routing', actions: 'startCollection'},
-				'stats.collectionSucceeded': {target: 'routing', actions: 'applyCollectionResult'},
-				'stats.collectionFinished': {target: 'routing', actions: 'finishCollection'},
-				'reconnection.increment': {target: 'routing', actions: 'incrementReconnectionCount'},
-				'stats.reset': {target: 'routing', actions: 'reset'},
-				'stats.cleanup': {target: 'routing', actions: 'reset'},
-			},
-		},
-		trackingStats: {
-			on: {
-				'room.set': {target: 'routing', actions: 'setRoom'},
-				'latency.start': {target: 'routing', actions: 'startLatency'},
-				'latency.stop': {target: 'routing', actions: 'stopLatency'},
-				'latency.sample': {target: 'routing', actions: 'recordLatencySample'},
-				'latency.gap': {target: 'routing', actions: 'recordLatencyGap'},
-				'stats.start': {target: 'routing', actions: 'startStats'},
-				'stats.stop': {target: 'routing', actions: 'stopStats'},
-				'stats.tick': {target: 'routing', actions: 'tickStats'},
-				'stats.collectionStarted': {target: 'routing', actions: 'startCollection'},
-				'stats.collectionSucceeded': {target: 'routing', actions: 'applyCollectionResult'},
-				'stats.collectionFinished': {target: 'routing', actions: 'finishCollection'},
-				'reconnection.increment': {target: 'routing', actions: 'incrementReconnectionCount'},
-				'stats.reset': {target: 'routing', actions: 'reset'},
-				'stats.cleanup': {target: 'routing', actions: 'reset'},
-			},
-		},
-		trackingBoth: {
-			on: {
-				'room.set': {target: 'routing', actions: 'setRoom'},
-				'latency.start': {target: 'routing', actions: 'startLatency'},
-				'latency.stop': {target: 'routing', actions: 'stopLatency'},
-				'latency.sample': {target: 'routing', actions: 'recordLatencySample'},
-				'latency.gap': {target: 'routing', actions: 'recordLatencyGap'},
-				'stats.start': {target: 'routing', actions: 'startStats'},
-				'stats.stop': {target: 'routing', actions: 'stopStats'},
-				'stats.tick': {target: 'routing', actions: 'tickStats'},
-				'stats.collectionStarted': {target: 'routing', actions: 'startCollection'},
-				'stats.collectionSucceeded': {target: 'routing', actions: 'applyCollectionResult'},
-				'stats.collectionFinished': {target: 'routing', actions: 'finishCollection'},
-				'reconnection.increment': {target: 'routing', actions: 'incrementReconnectionCount'},
-				'stats.reset': {target: 'routing', actions: 'reset'},
-				'stats.cleanup': {target: 'routing', actions: 'reset'},
-			},
-		},
+		idle: {},
+		trackingLatency: {},
+		trackingStats: {},
+		trackingBoth: {},
 	},
 });
 
 export type VoiceStatsSnapshot = SnapshotFrom<typeof voiceStatsStateMachine>;
-export type VoiceStatsStateValue = 'idle' | 'trackingLatency' | 'trackingStats' | 'trackingBoth';
 
 export function createVoiceStatsSnapshot(): VoiceStatsSnapshot {
 	return initialTransition(voiceStatsStateMachine)[0];
@@ -509,13 +456,6 @@ export function createVoiceStatsSnapshot(): VoiceStatsSnapshot {
 
 export function transitionVoiceStatsSnapshot(snapshot: VoiceStatsSnapshot, event: VoiceStatsEvent): VoiceStatsSnapshot {
 	return transition(voiceStatsStateMachine, snapshot, event)[0] as VoiceStatsSnapshot;
-}
-
-export function getVoiceStatsStateValue(snapshot: VoiceStatsSnapshot): VoiceStatsStateValue {
-	if (snapshot.value === 'trackingLatency' || snapshot.value === 'trackingStats' || snapshot.value === 'trackingBoth') {
-		return snapshot.value;
-	}
-	return 'idle';
 }
 
 export function selectVoiceStatsCollectionDecision(snapshot: VoiceStatsSnapshot): VoiceStatsCollectionDecision {

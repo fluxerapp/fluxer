@@ -13,7 +13,9 @@
 	},
 	"dependencies": {
 		"@fluxer/constants": "workspace:*",
-		"undici": "catalog:"
+		"undici": "catalog:",
+		"@fluxer/schema": "workspace:*",
+		"@fluxer/ip_utils": "workspace:*"
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",

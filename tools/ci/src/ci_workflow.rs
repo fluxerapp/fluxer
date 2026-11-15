@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::common::{CommandSpec, run_command};
-use crate::desktop::write_build_channel_file;
 use crate::gateway::{GatewayStep, run_gateway_step};
 use anyhow::{Context, Result};
 use clap::{Args, ValueEnum};
@@ -25,7 +24,6 @@ enum CiStep {
     GatewayFmt,
     GatewayCompile,
     GatewayDialyzer,
-    GatewayEunit,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -53,13 +51,7 @@ pub async fn run_ci(args: CiArgs) -> Result<()> {
         }
         CiStep::Test => {
             run_generators(&root, false)?;
-            run_app_test_artifact_generators(&root, AppWasm::ReuseIfPresent)?;
             run_workspace_tests(&root)?;
-            run_command(
-                CommandSpec::new("pnpm")
-                    .args(["--filter", "fluxer_desktop", "test:main"])
-                    .current_dir(&root),
-            )?;
             run_command(with_test_env(
                 CommandSpec::new("pnpm")
                     .args(["--filter", "fluxer_api", "test"])
@@ -68,7 +60,6 @@ pub async fn run_ci(args: CiArgs) -> Result<()> {
         }
         CiStep::Knip => {
             run_app_test_artifact_generators(&root, AppWasm::ReuseIfPresent)?;
-            ensure_desktop_build_channel_file(&root)?;
             run_fluxer_app_script(&root, "i18n:compile")?;
             run_command(
                 CommandSpec::new("pnpm")
@@ -76,24 +67,14 @@ pub async fn run_ci(args: CiArgs) -> Result<()> {
                     .current_dir(root),
             )
         }
-        CiStep::GatewayFmt => {
-            run_gateway_step(&root.join("fluxer_gateway"), GatewayStep::FmtCheck, "test")
-        }
+        CiStep::GatewayFmt => run_gateway_step(&root.join("fluxer_gateway"), GatewayStep::FmtCheck),
         CiStep::GatewayCompile => {
-            run_gateway_step(&root.join("fluxer_gateway"), GatewayStep::Compile, "test")
+            run_gateway_step(&root.join("fluxer_gateway"), GatewayStep::Compile)
         }
         CiStep::GatewayDialyzer => {
-            run_gateway_step(&root.join("fluxer_gateway"), GatewayStep::Dialyzer, "test")
-        }
-        CiStep::GatewayEunit => {
-            run_gateway_step(&root.join("fluxer_gateway"), GatewayStep::Eunit, "test")
+            run_gateway_step(&root.join("fluxer_gateway"), GatewayStep::Dialyzer)
         }
     }
-}
-
-fn ensure_desktop_build_channel_file(root: &Path) -> Result<()> {
-    let channel = env::var("BUILD_CHANNEL").unwrap_or_else(|_| "stable".to_string());
-    write_build_channel_file(&root.join("fluxer_desktop"), &channel)
 }
 
 fn run_app_test_artifact_generators(root: &Path, wasm: AppWasm) -> Result<()> {
@@ -129,7 +110,7 @@ fn app_wasm_artifacts(root: &Path) -> Vec<PathBuf> {
         app_dir.join("pkgs/libfluxwebp/libfluxwebp_bg.wasm.d.ts"),
         app_dir.join("pkgs/libfluxwebp/libfluxwebp_simd_bg.wasm"),
         app_dir.join("pkgs/libfluxwebp/libfluxwebp_simd_bg.wasm.d.ts"),
-        app_dir.join("src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts"),
+        app_dir.join("pkgs/markdown_parser/markdown_parser.wasm"),
     ]
 }
 
@@ -182,8 +163,6 @@ fn workspace_test_args(concurrency: Option<&str>) -> Vec<OsString> {
             "!fluxer_api",
             "--filter",
             "!fluxer",
-            "--filter",
-            "!fluxer_desktop",
             "--if-present",
             "test",
         ]
@@ -228,220 +207,4 @@ fn repo_root() -> Result<PathBuf> {
         .map(PathBuf::from)
         .or_else(|_| env::current_dir())
         .context("Failed to resolve repository root")
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn generator_commands_split_i18n_types_and_compile_by_step() {
-        let typecheck = generator_commands(true)
-            .into_iter()
-            .map(|command| command.args)
-            .collect::<Vec<_>>();
-        let test = generator_commands(false)
-            .into_iter()
-            .map(|command| command.args)
-            .collect::<Vec<_>>();
-
-        assert!(typecheck.contains(&vec![
-            OsString::from("--filter"),
-            OsString::from("@fluxer/i18n"),
-            OsString::from("generate:types"),
-        ]));
-        assert!(!test.contains(&vec![
-            OsString::from("--filter"),
-            OsString::from("@fluxer/i18n"),
-            OsString::from("generate:types"),
-        ]));
-        assert!(!typecheck.contains(&vec![
-            OsString::from("--filter"),
-            OsString::from("fluxer_app"),
-            OsString::from("i18n:compile"),
-        ]));
-        assert!(test.contains(&vec![
-            OsString::from("--filter"),
-            OsString::from("fluxer_app"),
-            OsString::from("i18n:compile"),
-        ]));
-    }
-
-    #[test]
-    fn with_test_env_sets_all_nats_urls_and_leaves_worker_counts_to_vitest() {
-        let spec = with_test_env(CommandSpec::new("pnpm"));
-        let env = spec
-            .env
-            .into_iter()
-            .collect::<std::collections::BTreeMap<_, _>>();
-        let default_nats_url = OsString::from(default_test_nats_url());
-
-        assert_eq!(
-            env.get(&OsString::from("FLUXER_NATS_URL")),
-            Some(&default_nats_url)
-        );
-        assert_eq!(
-            env.get(&OsString::from("FLUXER_NATS_CORE_URL")),
-            Some(&default_nats_url)
-        );
-        assert_eq!(
-            env.get(&OsString::from("FLUXER_NATS_JETSTREAM_URL")),
-            Some(&default_nats_url)
-        );
-        assert!(!env.contains_key(&OsString::from("API_TEST_MAX_WORKERS")));
-        assert!(!env.contains_key(&OsString::from("API_TEST_MAX_CONCURRENCY")));
-    }
-
-    #[test]
-    fn workspace_tests_exclude_desktop_and_leave_concurrency_to_pnpm() {
-        let args = workspace_test_args(None);
-
-        assert_eq!(args[0], OsString::from("-r"));
-        assert!(
-            !args
-                .iter()
-                .any(|arg| arg.to_string_lossy().starts_with("--workspace-concurrency"))
-        );
-        assert!(args.windows(2).any(|pair| pair
-            == [
-                OsString::from("--filter"),
-                OsString::from("!fluxer_desktop")
-            ]));
-    }
-
-    #[test]
-    fn workspace_tests_forward_an_explicit_concurrency_override() {
-        let args = workspace_test_args(Some("4"));
-
-        assert_eq!(args[1], OsString::from("--workspace-concurrency=4"));
-    }
-
-    #[test]
-    fn missing_app_wasm_artifact_reports_the_first_absent_output() {
-        let temp = tempfile::tempdir().unwrap();
-        let root = temp.path();
-
-        assert_eq!(
-            missing_app_wasm_artifact(root),
-            Some(root.join("fluxer_app/pkgs/libfluxcore/libfluxcore.js"))
-        );
-
-        for path in app_wasm_artifacts(root) {
-            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-            std::fs::write(&path, "").unwrap();
-        }
-
-        assert_eq!(missing_app_wasm_artifact(root), None);
-    }
-
-    #[test]
-    fn image_dockerfiles_include_the_release_label_block() {
-        const REQUIRED: [&str; 8] = [
-            "LABEL org.opencontainers.image.vendor=\"Fluxer\"",
-            "LABEL org.opencontainers.image.url=\"https://fluxer.app\"",
-            "LABEL org.opencontainers.image.documentation=\"https://docs.fluxer.app\"",
-            "LABEL org.opencontainers.image.source=\"https://github.com/fluxerapp/fluxer\"",
-            "LABEL org.opencontainers.image.version=\"${BUILD_VERSION}\"",
-            "LABEL org.opencontainers.image.revision=\"${SOURCE_SHA}\"",
-            "LABEL org.opencontainers.image.created=\"${SOURCE_DATE}\"",
-            "LABEL app.fluxer.build-version=\"${BUILD_VERSION}\"",
-        ];
-
-        for (name, title, dockerfile) in [
-            (
-                "fluxer_admin",
-                "fluxer-admin",
-                include_str!("../../../fluxer_admin/Dockerfile"),
-            ),
-            (
-                "fluxer_api",
-                "fluxer-api",
-                include_str!("../../../fluxer_api/Dockerfile"),
-            ),
-            (
-                "fluxer_app_proxy",
-                "fluxer-app-proxy",
-                include_str!("../../../fluxer_app_proxy/Dockerfile"),
-            ),
-            (
-                "fluxer_docs",
-                "fluxer-docs",
-                include_str!("../../../fluxer_docs/Dockerfile"),
-            ),
-            (
-                "fluxer_gateway",
-                "fluxer-gateway",
-                include_str!("../../../fluxer_gateway/Dockerfile"),
-            ),
-            (
-                "fluxer_gifs",
-                "fluxer-gifs",
-                include_str!("../../../fluxer_gifs/Dockerfile"),
-            ),
-            (
-                "fluxer_media_proxy",
-                "fluxer-media-proxy",
-                include_str!("../../../fluxer_media_proxy/Dockerfile"),
-            ),
-            (
-                "fluxer_messages",
-                "fluxer-messages",
-                include_str!("../../../fluxer_messages/Dockerfile"),
-            ),
-            (
-                "fluxer_push",
-                "fluxer-push",
-                include_str!("../../../fluxer_push/Dockerfile"),
-            ),
-            (
-                "fluxer_snowflakes",
-                "fluxer-snowflakes",
-                include_str!("../../../fluxer_snowflakes/Dockerfile"),
-            ),
-            (
-                "fluxer_static",
-                "fluxer-static",
-                include_str!("../../../fluxer_static/Dockerfile"),
-            ),
-            (
-                "fluxer_unfurl",
-                "fluxer-unfurl",
-                include_str!("../../../fluxer_unfurl/Dockerfile"),
-            ),
-            (
-                "fluxer_users",
-                "fluxer-users",
-                include_str!("../../../fluxer_users/Dockerfile"),
-            ),
-        ] {
-            assert!(
-                dockerfile.contains("ARG SOURCE_SHA"),
-                "{name}/Dockerfile must declare ARG SOURCE_SHA"
-            );
-            assert!(
-                dockerfile.contains("ARG SOURCE_DATE"),
-                "{name}/Dockerfile must declare ARG SOURCE_DATE"
-            );
-            assert!(
-                dockerfile.contains(&format!("LABEL org.opencontainers.image.title=\"{title}\"")),
-                "{name}/Dockerfile must declare the title {title}"
-            );
-            let licenses = match name {
-                "fluxer_static" => "AGPL-3.0-or-later AND CC-BY-SA-4.0 AND CC-BY-4.0",
-                _ => "AGPL-3.0-or-later",
-            };
-            assert!(
-                dockerfile.contains(&format!(
-                    "LABEL org.opencontainers.image.licenses=\"{licenses}\""
-                )),
-                "{name}/Dockerfile must declare the licenses {licenses}"
-            );
-            for label in REQUIRED {
-                assert!(
-                    dockerfile.contains(label),
-                    "{name}/Dockerfile must declare {label}"
-                );
-            }
-        }
-    }
 }

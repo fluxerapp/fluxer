@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {$firstParagraph} from '@app/features/lexical/composer/composerOffsets';
 import {$createSearchTokenNode, $isSearchTokenNode} from '@app/features/lexical/search/SearchTokenNode';
 import {resolveSearchChipDeletion, type SearchChipRole, tokenize} from '@app/features/search/utils/SearchQueryParser';
 import {
@@ -41,18 +42,6 @@ interface SearchSegment {
 	readonly text: string;
 	readonly role: SearchChipRole | null;
 	readonly exclude: boolean;
-}
-
-function $ensureRootParagraph(): ElementNode {
-	const root = $getRoot();
-	const first = root.getFirstChild();
-	if (first != null && first.getType() === 'paragraph') {
-		return first as ElementNode;
-	}
-	const paragraph = $createParagraphNode();
-	root.clear();
-	root.append(paragraph);
-	return paragraph;
 }
 
 function resolveSearchSelectionDirection(anchor: number, focus: number): SearchSelectionDirection {
@@ -305,7 +294,7 @@ export function $getSelectionRange(): SearchSelectionRange | null {
 	if (!$isRangeSelection(selection)) {
 		return null;
 	}
-	const paragraph = $ensureRootParagraph();
+	const paragraph = $firstParagraph();
 	const anchor = $getPointOffset(selection.anchor, paragraph);
 	const focus = $getPointOffset(selection.focus, paragraph);
 	if (anchor == null || focus == null) {
@@ -345,7 +334,7 @@ function $selectRange(
 	end: number,
 	direction: SearchSelectionDirection = SearchSelectionDirection.NONE,
 ): void {
-	const paragraph = $ensureRootParagraph();
+	const paragraph = $firstParagraph();
 	const queryLength = paragraph.getTextContent().length;
 	const clampedEnd = Math.min(Math.max(0, end), queryLength);
 	let clampedStart: number;

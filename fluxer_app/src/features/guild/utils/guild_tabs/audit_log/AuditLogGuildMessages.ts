@@ -193,6 +193,16 @@ export const GUILD_OWNER_CROWN_SHOWN_ROW = msg({
 	comment:
 		'Activity log detail line under a community settings update, shown when the Hide community owner crown setting was turned off, so the crown icon marks the owner in the member list again. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.',
 });
+export const GUILD_MEMBER_DMS_DISABLED_ROW = msg({
+	message: "Turned off DMs between members who aren't friends",
+	comment:
+		'Activity log detail line under a community settings update, shown when the setting that stops direct messages between community members who are not friends was turned on. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.',
+});
+export const GUILD_MEMBER_DMS_ENABLED_ROW = msg({
+	message: "Turned DMs between members who aren't friends back on",
+	comment:
+		'Activity log detail line under a community settings update, shown when the setting that stops direct messages between community members who are not friends was turned off again. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.',
+});
 export const GUILD_MESSAGE_HISTORY_THRESHOLD_SET_ROW = msg({
 	message: 'Set the message history threshold to {date}',
 	comment:

@@ -100,7 +100,7 @@
 }
 
 .nativeDateInput::-webkit-date-and-time-value {
-	text-align: left;
+	text-align: start;
 }
 
 .nativeDateInput::-webkit-calendar-picker-indicator {

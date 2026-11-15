@@ -9,10 +9,10 @@ use crate::metrics::{JobKind, JobRejection, Provider, elapsed_ms};
 use crate::payload;
 use crate::providers::{self, SendOutcome};
 use crate::retry::{self, RETRY_DEADLINE};
-use crate::rpc::RpcError;
+use crate::rpc::{RpcClient, RpcError};
 use crate::server::AppState;
 use crate::subscription::{Platform, Subscription};
-use crate::unix_millis;
+use fluxer_common::time::unix_millis;
 use fluxer_svc::metrics::now_ms;
 use fluxer_svc::transport::{Transport, TransportMessage, TransportSubscriber};
 use futures::future::join_all;
@@ -22,7 +22,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::{Semaphore, TryAcquireError, watch};
 use tokio::task::JoinSet;
-use tracing::{error, info, warn};
+use tracing::{Instrument as _, error, info, warn};
 
 const JOB_REPLY_DEADLINE: Duration = Duration::from_secs(90);
 const RING_JOB_DEADLINE: Duration = Duration::from_secs(10);
@@ -53,6 +53,7 @@ impl Job {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum Audience {
     Standard,
+    Thread,
     Ring,
 }
 
@@ -60,6 +61,7 @@ impl Audience {
     fn admits(self, subscription: &Subscription) -> bool {
         match self {
             Self::Standard => subscription.platform() != Some(Platform::IosApnsVoip),
+            Self::Thread => Self::Standard.admits(subscription) && subscription.thread_channels,
             Self::Ring => Self::rings(subscription),
         }
     }
@@ -277,16 +279,19 @@ async fn run_subject<T: Transport>(
             let job_state = Arc::clone(&state);
             let job_sends = Arc::clone(&sends);
             let job_transport = transport.clone();
-            running.spawn(async move {
-                let _permit = permit;
-                let result = run_job(&job_state, &job_sends, job).await;
-                if matches!(result, Answer::Done) {
-                    for claim in claims {
-                        claim.done();
+            running.spawn(
+                async move {
+                    let _permit = permit;
+                    let result = run_job(&job_state, &job_sends, job).await;
+                    if matches!(result, Answer::Done) {
+                        for claim in claims {
+                            claim.done();
+                        }
                     }
+                    answer(&job_transport, reply_to, result).await;
                 }
-                answer(&job_transport, reply_to, result).await;
-            });
+                .in_current_span(),
+            );
         }
     }
 
@@ -351,13 +356,8 @@ async fn run_message_job(
 ) -> anyhow::Result<()> {
     let started_ms = now_ms();
     let deadline = Instant::now() + RETRY_DEADLINE;
-    let (badges, subscriptions) = lookup(deadline, || async {
-        tokio::try_join!(
-            state.rpc.badge_counts(&job.user_ids),
-            state.rpc.push_subscriptions(&job.user_ids)
-        )
-    })
-    .await?;
+    let (badges, subscriptions) =
+        lookup_recipients(&state.rpc, &job.user_ids, job.age_restricted, deadline).await?;
     state.metrics.record_recipients(job.user_ids.len() as u64);
 
     let envelopes = job
@@ -377,7 +377,11 @@ async fn run_message_job(
         &subscriptions,
         envelopes,
         deadline,
-        Audience::Standard,
+        if job.is_thread() {
+            Audience::Thread
+        } else {
+            Audience::Standard
+        },
     )
     .await;
     let duration_ms = elapsed_ms(started_ms);
@@ -404,13 +408,7 @@ async fn run_clear_job(state: &AppState, sends: &Semaphore, job: ClearJob) -> an
     let started_ms = now_ms();
     let deadline = Instant::now() + RETRY_DEADLINE;
     let user_ids = std::slice::from_ref(&job.user_id);
-    let (badges, subscriptions) = lookup(deadline, || async {
-        tokio::try_join!(
-            state.rpc.badge_counts(user_ids),
-            state.rpc.push_subscriptions(user_ids)
-        )
-    })
-    .await?;
+    let (badges, subscriptions) = lookup_recipients(&state.rpc, user_ids, false, deadline).await?;
     state.metrics.record_recipients(1);
 
     let envelope = payload::web_push_clear(&job, badge_of(&badges, &job.user_id));
@@ -464,7 +462,7 @@ async fn run_ring_job(state: &AppState, sends: &Semaphore, job: RingJob) -> anyh
 
     let deadline = Instant::now() + RING_JOB_DEADLINE;
     let user_ids = std::slice::from_ref(&job.user_id);
-    let subscriptions = lookup(deadline, || state.rpc.push_subscriptions(user_ids)).await?;
+    let subscriptions = lookup(deadline, || state.rpc.push_subscriptions(user_ids, false)).await?;
     state.metrics.record_recipients(1);
 
     let envelopes = vec![(job.user_id.as_str(), payload::web_push_call_ring(&job))];
@@ -495,6 +493,28 @@ async fn run_ring_job(state: &AppState, sends: &Semaphore, job: RingJob) -> anyh
         .metrics
         .record_job_completed(JobKind::Ring, duration_ms);
     Ok(())
+}
+
+async fn lookup_recipients(
+    rpc: &RpcClient,
+    user_ids: &[String],
+    age_restricted: bool,
+    deadline: Instant,
+) -> Result<(HashMap<String, u32>, HashMap<String, Vec<Subscription>>), RpcError> {
+    let subscriptions = lookup(deadline, || {
+        rpc.push_subscriptions(user_ids, age_restricted)
+    })
+    .await?;
+    let subscribed_ids: Vec<String> = user_ids
+        .iter()
+        .filter(|user_id| subscribed(&subscriptions, user_id))
+        .cloned()
+        .collect();
+    if subscribed_ids.is_empty() {
+        return Ok((HashMap::new(), subscriptions));
+    }
+    let badges = lookup(deadline, || rpc.badge_counts(&subscribed_ids)).await?;
+    Ok((badges, subscriptions))
 }
 
 async fn lookup<T, F, Fut>(deadline: Instant, mut call: F) -> Result<T, RpcError>

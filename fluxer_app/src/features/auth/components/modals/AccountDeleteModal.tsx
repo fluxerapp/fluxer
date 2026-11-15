@@ -6,6 +6,7 @@ import {DELETE_ACCOUNT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageD
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
+import {TimelineList} from '@app/features/ui/timeline_list/TimelineList';
 import * as UserCommands from '@app/features/user/commands/UserCommands';
 import {formatUserSettingsPath} from '@app/features/user/components/settings_utils/SettingsConstants';
 import * as FormUtils from '@app/lib/forms';
@@ -34,33 +35,38 @@ export const AccountDeleteModal = observer(() => {
 			<Modal.Header title={i18n._(DELETE_ACCOUNT_DESCRIPTOR)} data-flx="auth.account-delete-modal.modal-header" />
 			<Modal.Content data-flx="auth.account-delete-modal.modal-content">
 				<Modal.ContentLayout data-flx="auth.account-delete-modal.modal-content-layout">
-					<Modal.Description className={styles.infoSection} data-flx="auth.account-delete-modal.info-section">
+					<Modal.Description className={styles.content} data-flx="auth.account-delete-modal.description">
 						<p data-flx="auth.account-delete-modal.p">
 							<Trans>
 								Are you sure you want to delete your account? This action will schedule your account for permanent
 								deletion.
 							</Trans>
 						</p>
-						<div className={styles.infoBox} data-flx="auth.account-delete-modal.info-box">
-							<p className={styles.infoBoxTitle} data-flx="auth.account-delete-modal.info-box-title">
-								<Trans>Important information:</Trans>
-							</p>
-							<ul className={styles.infoList} data-flx="auth.account-delete-modal.info-list">
-								<li data-flx="auth.account-delete-modal.li">
-									<Trans>You can cancel the deletion process within 14 days</Trans>
-								</li>
-								<li data-flx="auth.account-delete-modal.li--2">
-									<Trans>After 14 days, your account will be permanently deleted</Trans>
-								</li>
-								<li data-flx="auth.account-delete-modal.li--3">
-									<Trans>Once deletion is processed, you cannot recover access to your account</Trans>
-								</li>
-								<li data-flx="auth.account-delete-modal.li--4">
-									<Trans>After your account is deleted, you will not be able to delete the messages you sent</Trans>
-								</li>
-							</ul>
-						</div>
-						<p className={styles.disclaimer} data-flx="auth.account-delete-modal.disclaimer">
+						<section className={styles.infoSection} data-flx="auth.account-delete-modal.info">
+							<h4 className={styles.infoHeading} data-flx="auth.account-delete-modal.info-heading">
+								<Trans comment="Heading above the list of what happens when you delete your account.">
+									Important information
+								</Trans>
+							</h4>
+							<TimelineList
+								items={[
+									{key: 'cancel-window', content: <Trans>You can cancel the deletion process within 14 days</Trans>},
+									{key: 'permanent', content: <Trans>After 14 days, your account will be permanently deleted</Trans>},
+									{
+										key: 'no-recovery',
+										content: <Trans>Once deletion is processed, you cannot recover access to your account</Trans>,
+									},
+									{
+										key: 'messages-stay',
+										content: (
+											<Trans>After your account is deleted, you will not be able to delete the messages you sent</Trans>
+										),
+									},
+								]}
+								data-flx="auth.account-delete-modal.info-list"
+							/>
+						</section>
+						<p data-flx="auth.account-delete-modal.disclaimer">
 							<Trans>
 								If you want to export your data or delete your messages first, please visit {privacyDashboardPath}{' '}
 								before proceeding.

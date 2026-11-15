@@ -3,6 +3,7 @@
 import {createRequire} from 'node:module';
 import os from 'node:os';
 import {stopWindowsScreenCaptureGuard} from '@electron/main/WindowsScreenCaptureGuard';
+import {reportWindowsCaptureItemReuse} from '@electron/main/WindowsWindowCaptureItemReuse';
 import {app, powerSaveBlocker} from 'electron';
 import log from 'electron-log';
 
@@ -127,6 +128,13 @@ function formatErrorDetail(error: unknown): string {
 		return (error as {message: string}).message;
 	}
 	return String(error);
+}
+
+function gpuPriorityResultStatus(succeededCount: number, failedCount: number): GpuPriorityAttemptStatus {
+	if (failedCount === 0) {
+		return 'succeeded';
+	}
+	return succeededCount > 0 ? 'partial' : 'failed';
 }
 
 const GPU_PRIORITY_MODULE_UNAVAILABLE_DETAIL = 'Windows GPU priority native API unavailable';
@@ -472,7 +480,7 @@ function elevateGpuSchedulingPriority(targets: Array<GpuPriorityTarget>): void {
 		}
 	}
 	lastGpuPriorityAcquire = {
-		status: failedProcessIds.length === 0 ? 'succeeded' : elevatedProcessIds.length > 0 ? 'partial' : 'failed',
+		status: gpuPriorityResultStatus(elevatedProcessIds.length, failedProcessIds.length),
 		priorityClass: GPU_SCHEDULING_PRIORITY,
 		targets: limitGpuPriorityTargets(targets),
 		elevatedProcessIds: elevatedProcessIds.slice(0, MAX_GPU_PRIORITY_DIAGNOSTIC_TARGETS),
@@ -554,7 +562,7 @@ function restoreGpuSchedulingPriority(): void {
 		}
 	}
 	lastGpuPriorityRestore = {
-		status: failedProcessIds.length === 0 ? 'succeeded' : restoredProcessIds.length > 0 ? 'partial' : 'failed',
+		status: gpuPriorityResultStatus(restoredProcessIds.length, failedProcessIds.length),
 		processIds,
 		restoredProcessIds,
 		failedProcessIds,
@@ -631,6 +639,7 @@ export function releaseStreamingPriority(): void {
 		restoreProcessPriority();
 		restoreGpuSchedulingPriority();
 		stopWindowsScreenCaptureGuard('streaming-priority-release');
+		reportWindowsCaptureItemReuse('streaming-priority-release');
 		log.info('[StreamingPriority] Released');
 	}
 }
@@ -645,5 +654,6 @@ export function resetStreamingPriority(): void {
 	restoreProcessPriority();
 	restoreGpuSchedulingPriority();
 	stopWindowsScreenCaptureGuard('streaming-priority-reset');
+	reportWindowsCaptureItemReuse('streaming-priority-reset');
 	log.info('[StreamingPriority] Reset');
 }

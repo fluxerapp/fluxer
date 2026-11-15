@@ -7,6 +7,7 @@ import GuildMembers from '@app/features/member/state/GuildMembers';
 import Users from '@app/features/user/state/Users';
 import type {ConnectionResponse} from '@fluxer/schema/src/domains/connection/ConnectionSchemas';
 import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
+import type {ProfileBadgeResponse} from '@fluxer/schema/src/domains/user/ProfileBadgeSchemas';
 import type {UserPartial, UserProfile} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 
 export interface ProfileMutualGuild {
@@ -14,19 +15,14 @@ export interface ProfileMutualGuild {
 	nick: string | null;
 }
 
-export type MiniGuildMember = Readonly<{
-	id: string;
-	nick: string | null;
-}>;
 export type ProfileWire = Readonly<{
 	user: UserPartial;
 	user_profile: UserProfile;
 	guild_member_profile?: UserProfile | null;
 	timezone_offset: number | null;
 	guild_member?: GuildMemberData;
-	premium_type?: number;
-	premium_since?: string;
-	premium_lifetime_sequence?: number;
+	profile_badges?: ReadonlyArray<ProfileBadgeResponse>;
+	hidden_profile_badge_count?: number;
 	mutual_friends?: Array<UserPartial>;
 	mutual_guilds?: Array<ProfileMutualGuild>;
 	connected_accounts?: Array<ConnectionResponse>;
@@ -39,9 +35,8 @@ export class Profile {
 	readonly userProfile: Readonly<UserProfile>;
 	readonly guildMemberProfile: Readonly<UserProfile> | null;
 	readonly timezoneOffset: number | null;
-	readonly premiumType: number | null;
-	readonly premiumSince: Date | null;
-	readonly premiumLifetimeSequence: number | null;
+	readonly profileBadges: ReadonlyArray<ProfileBadgeResponse>;
+	readonly hiddenProfileBadgeCount: number;
 	readonly mutualFriends: ReadonlyArray<UserPartial> | null;
 	readonly mutualGuilds: ReadonlyArray<ProfileMutualGuild> | null;
 	readonly connectedAccounts: ReadonlyArray<ConnectionResponse> | null;
@@ -54,9 +49,8 @@ export class Profile {
 		this.userProfile = Object.freeze({...profile.user_profile});
 		this.guildMemberProfile = profile.guild_member_profile ? Object.freeze({...profile.guild_member_profile}) : null;
 		this.timezoneOffset = profile.timezone_offset;
-		this.premiumType = profile.premium_type ?? null;
-		this.premiumSince = profile.premium_since ? new Date(profile.premium_since) : null;
-		this.premiumLifetimeSequence = profile.premium_lifetime_sequence ?? null;
+		this.profileBadges = Object.freeze([...(profile.profile_badges ?? [])]);
+		this.hiddenProfileBadgeCount = profile.hidden_profile_badge_count ?? 0;
 		this.mutualFriends = profile.mutual_friends ? Object.freeze([...profile.mutual_friends]) : null;
 		this.mutualGuilds = profile.mutual_guilds ? Object.freeze([...profile.mutual_guilds]) : null;
 		this.connectedAccounts = profile.connected_accounts ? Object.freeze([...profile.connected_accounts]) : null;
@@ -77,13 +71,8 @@ export class Profile {
 				timezone_offset: updates.timezone_offset !== undefined ? updates.timezone_offset : this.timezoneOffset,
 				guild_member:
 					updates.guild_member !== undefined ? updates.guild_member : (this.embeddedGuildMember?.toJSON() ?? undefined),
-				premium_type: updates.premium_type !== undefined ? updates.premium_type : (this.premiumType ?? undefined),
-				premium_since:
-					updates.premium_since !== undefined ? updates.premium_since : (this.premiumSince?.toISOString() ?? undefined),
-				premium_lifetime_sequence:
-					updates.premium_lifetime_sequence !== undefined
-						? updates.premium_lifetime_sequence
-						: (this.premiumLifetimeSequence ?? undefined),
+				profile_badges: updates.profile_badges ?? this.profileBadges,
+				hidden_profile_badge_count: updates.hidden_profile_badge_count ?? this.hiddenProfileBadgeCount,
 				mutual_friends: updates.mutual_friends ?? (this.mutualFriends ? [...this.mutualFriends] : undefined),
 				mutual_guilds: updates.mutual_guilds ?? (this.mutualGuilds ? [...this.mutualGuilds] : undefined),
 				connected_accounts:
@@ -130,25 +119,6 @@ export class Profile {
 		};
 	}
 
-	equals(other: Profile): boolean {
-		return (
-			this.userId === other.userId &&
-			this.guildId === other.guildId &&
-			JSON.stringify(this.userProfile) === JSON.stringify(other.userProfile) &&
-			JSON.stringify(this.guildMemberProfile) === JSON.stringify(other.guildMemberProfile) &&
-			JSON.stringify(this.embeddedGuildMember?.toJSON() ?? null) ===
-				JSON.stringify(other.embeddedGuildMember?.toJSON() ?? null) &&
-			this.timezoneOffset === other.timezoneOffset &&
-			this.premiumType === other.premiumType &&
-			this.premiumSince === other.premiumSince &&
-			this.premiumLifetimeSequence === other.premiumLifetimeSequence &&
-			JSON.stringify(this.mutualFriends) === JSON.stringify(other.mutualFriends) &&
-			JSON.stringify(this.mutualGuilds) === JSON.stringify(other.mutualGuilds) &&
-			JSON.stringify(this.connectedAccounts) === JSON.stringify(other.connectedAccounts) &&
-			this.profileLimited === other.profileLimited
-		);
-	}
-
 	toJSON(): ProfileWire {
 		return {
 			user: Users.getUser(this.userId)!.toJSON(),
@@ -156,9 +126,8 @@ export class Profile {
 			guild_member_profile: this.guildMemberProfile ? {...this.guildMemberProfile} : undefined,
 			guild_member: this.embeddedGuildMember?.toJSON(),
 			timezone_offset: this.timezoneOffset,
-			premium_type: this.premiumType ?? undefined,
-			premium_since: this.premiumSince?.toISOString() ?? undefined,
-			premium_lifetime_sequence: this.premiumLifetimeSequence ?? undefined,
+			profile_badges: [...this.profileBadges],
+			hidden_profile_badge_count: this.hiddenProfileBadgeCount,
 			mutual_friends: this.mutualFriends ? [...this.mutualFriends] : undefined,
 			mutual_guilds: this.mutualGuilds ? [...this.mutualGuilds] : undefined,
 			connected_accounts: this.connectedAccounts ? [...this.connectedAccounts] : undefined,

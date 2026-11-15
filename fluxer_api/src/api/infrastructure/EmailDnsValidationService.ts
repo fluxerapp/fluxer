@@ -2,7 +2,6 @@
 
 import {Resolver} from 'node:dns/promises';
 import {Config} from '@app/api/Config';
-import type {IEmailDnsValidationService} from '@app/api/infrastructure/IEmailDnsValidationService';
 import {Logger} from '@app/api/Logger';
 import {ms} from 'itty-time';
 
@@ -52,7 +51,7 @@ function createLookupTimeoutError(): NodeJS.ErrnoException {
 	return error;
 }
 
-export class EmailDnsValidationService implements IEmailDnsValidationService {
+export class EmailDnsValidationService {
 	private readonly resolver: IDnsResolver;
 	private readonly enforceInTestMode: boolean;
 	private readonly positiveTtlMs: number;

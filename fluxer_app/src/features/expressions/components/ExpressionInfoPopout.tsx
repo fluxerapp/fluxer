@@ -14,29 +14,21 @@ const CLICKABLE_ANCESTOR_SELECTOR = 'a, button, [role="button"], [role="link"]';
 
 interface ExpressionInfoPopoutProps {
 	children: React.ReactElement;
-	canOpenCard?: boolean;
 	renderTooltip: () => React.ReactNode;
 	renderCard: (props: {onClose: () => void}) => React.ReactNode;
 }
 
 export const ExpressionInfoPopout = observer(function ExpressionInfoPopout({
 	children,
-	canOpenCard = true,
 	renderTooltip,
 	renderCard,
 }: ExpressionInfoPopoutProps): React.ReactElement {
-	const shouldOpenOnClick = useCallback(
-		(event: React.MouseEvent<HTMLElement>) => {
-			if (!canOpenCard) {
-				return false;
-			}
-			if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
-				return false;
-			}
-			return event.currentTarget.parentElement?.closest(CLICKABLE_ANCESTOR_SELECTOR) == null;
-		},
-		[canOpenCard],
-	);
+	const shouldOpenOnClick = useCallback((event: React.MouseEvent<HTMLElement>) => {
+		if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+			return false;
+		}
+		return event.currentTarget.parentElement?.closest(CLICKABLE_ANCESTOR_SELECTOR) == null;
+	}, []);
 	return (
 		<Popout
 			position="right-start"

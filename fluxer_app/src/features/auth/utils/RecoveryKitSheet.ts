@@ -3,7 +3,7 @@
 import type {PDFDocument, PDFFont, PDFPage, RGB} from 'pdf-lib';
 import QRCode from 'qrcode';
 
-export interface RecoveryKitSheetDetail {
+interface RecoveryKitSheetDetail {
 	label: string;
 	value: string;
 }

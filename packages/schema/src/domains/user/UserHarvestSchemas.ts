@@ -59,4 +59,8 @@ export const HarvestDownloadUrlResponse = z.object({
 
 export type HarvestDownloadUrlResponse = z.infer<typeof HarvestDownloadUrlResponse>;
 
+export const HarvestDownloadQuery = z.object({
+	token: createStringType(1, 2048).describe('The signed download token from the harvest download URL'),
+});
+
 export const HarvestArchiveResponse = z.file().describe('The ZIP archive containing the requested user data');

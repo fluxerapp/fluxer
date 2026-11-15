@@ -4,7 +4,7 @@ import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
 import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
-import {DESKTOP_DOWNLOAD_URL, PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {DESKTOP_DOWNLOAD_URL} from '@app/features/app/config/I18nDisplayConstants';
 import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -14,9 +14,9 @@ const CORRUPTED_INSTALLATION_MESSAGE_DESCRIPTOR = msg({
 	message: 'Your installation is corrupted, and you need to reinstall the app for all functionality to work.',
 	comment: 'Critical nagbar body shown when the desktop installation appears corrupted. Keep the tone plain.',
 });
-const DOWNLOAD_PRODUCT_DESCRIPTOR = msg({
-	message: 'Download {productName}',
-	comment: 'Nagbar button label that downloads the desktop app. productName is the app name.',
+const DOWNLOAD_THE_APP_DESCRIPTOR = msg({
+	message: 'Download the app',
+	comment: 'Nagbar button label in the desktop app that opens the desktop app download page.',
 });
 export const CorruptedInstallationNagbar = observer(({isMobile}: {isMobile: boolean}) => {
 	const {i18n} = useLingui();
@@ -39,7 +39,7 @@ export const CorruptedInstallationNagbar = observer(({isMobile}: {isMobile: bool
 						onClick={handleDownload}
 						data-flx="app.app-layout.nagbars.corrupted-installation-nagbar.nagbar-button.download"
 					>
-						{i18n._(DOWNLOAD_PRODUCT_DESCRIPTOR, {productName: PRODUCT_NAME})}
+						{i18n._(DOWNLOAD_THE_APP_DESCRIPTOR)}
 					</NagbarButton>
 				}
 				data-flx="app.app-layout.nagbars.corrupted-installation-nagbar.nagbar-content"

@@ -3,7 +3,7 @@
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
 import UserNote from '@app/features/user/state/UserNote';
 
-interface UserNoteUpdatePayload {
+export interface UserNoteUpdatePayload {
 	id: string;
 	note?: string | null;
 }

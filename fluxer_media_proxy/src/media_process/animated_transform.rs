@@ -4,9 +4,11 @@ use super::image_probe::animated_probe_from_image;
 use super::loaded_image::validate_dimensions;
 use super::native_runtime::{clear_vips_error, vips_runtime};
 use super::{
-    MediaError, native_animated_frame_limit, native_buffer_to_media_bytes, native_status_error,
+    MediaError, native_animated_frame_limit, native_buffer_to_media_bytes,
+    native_optional_deadline, native_status_error,
 };
 use crate::{
+    constants,
     image_transform::ImageOptions,
     media_limits::MediaLimits,
     metrics::transform::TransformMetrics,
@@ -30,6 +32,7 @@ pub(super) fn try_decode_heif_primary_still(
     input: &[u8],
     media_limits: &MediaLimits,
     metrics: &TransformMetrics,
+    deadline_ms: Option<i64>,
 ) -> Result<Option<DecodedHEIFPrimaryStill>, MediaError> {
     let mut raw = ptr::null_mut();
     let mut facts = native::FluxerHEIFPrimaryStillDecodeFacts::empty();
@@ -37,7 +40,7 @@ pub(super) fn try_decode_heif_primary_still(
         native::fluxer_heif_decode_primary_still(
             input.as_ptr().cast(),
             input.len(),
-            0,
+            native_optional_deadline(deadline_ms),
             &mut raw,
             media_limits.image_pixels(),
             c_int::try_from(media_limits.image_dimension())
@@ -50,19 +53,23 @@ pub(super) fn try_decode_heif_primary_still(
         NativeStatus::Ok if image.is_some() => {}
         NativeStatus::Ok | NativeStatus::Unsupported | NativeStatus::CodecFailure => {
             clear_vips_error();
-            metrics.record_heif_primary_still_decode_failure();
+            metrics.avif_libheif_decode_failures.inc();
             return Ok(None);
+        }
+        NativeStatus::DeadlineExceeded => {
+            clear_vips_error();
+            return Err(MediaError::RequestTimeout);
         }
         status => {
             clear_vips_error();
-            metrics.record_heif_primary_still_decode_failure();
+            metrics.avif_libheif_decode_failures.inc();
             return Err(native_status_error(status, MediaError::MediaDecodeFailed)
                 .expect("non-success native status must map to an error"));
         }
     }
-    metrics.record_heif_primary_still_decode();
+    metrics.avif_libheif_decode_count.inc();
     if facts.hdr_gain_map_detected != 0 {
-        metrics.record_heif_hdr_gain_map_detected();
+        metrics.heif_hdr_gain_map_count.inc();
     }
     let image = image.ok_or(MediaError::MediaDecodeFailed)?;
     Ok(Some(DecodedHEIFPrimaryStill {
@@ -74,7 +81,9 @@ pub(super) fn try_decode_heif_primary_still(
 pub(super) fn try_decode_apng(
     input: &[u8],
     animated: bool,
+    max_total_pixels: usize,
     media_limits: &MediaLimits,
+    deadline_ms: Option<i64>,
 ) -> Result<Option<DecodedAnimation>, MediaError> {
     let runtime = vips_runtime()?;
     let mut raw = ptr::null_mut();
@@ -84,14 +93,14 @@ pub(super) fn try_decode_apng(
             input.as_ptr().cast(),
             input.len(),
             runtime.config().ffmpeg_decoder_threads(),
-            0,
+            native_optional_deadline(deadline_ms),
             &mut raw,
             if animated {
                 native_animated_frame_limit(media_limits)
             } else {
                 1
             },
-            media_limits.animated_total_pixels(),
+            max_total_pixels,
             if animated { 1 } else { 0 },
             &mut num_plays,
         )
@@ -123,7 +132,9 @@ pub(super) fn try_decode_apng(
 
 pub(super) fn decode_heif_sequence(
     input: &[u8],
+    max_total_pixels: usize,
     media_limits: &MediaLimits,
+    deadline_ms: Option<i64>,
 ) -> Result<Option<DecodedAnimation>, MediaError> {
     let runtime = vips_runtime()?;
     let mut raw = ptr::null_mut();
@@ -133,10 +144,10 @@ pub(super) fn decode_heif_sequence(
             input.as_ptr().cast(),
             input.len(),
             runtime.config().ffmpeg_decoder_threads(),
-            0,
+            native_optional_deadline(deadline_ms),
             &mut raw,
             native_animated_frame_limit(media_limits),
-            media_limits.animated_total_pixels(),
+            max_total_pixels,
             &mut frame_count,
         )
     };
@@ -174,6 +185,15 @@ pub(super) fn decode_heif_sequence(
 pub(super) struct GifResizeDims {
     pub(super) width: c_int,
     pub(super) height: c_int,
+}
+
+impl GifResizeDims {
+    pub(super) fn fits_work_budget(self, frames: c_int) -> bool {
+        (self.width as usize)
+            .saturating_mul(self.height as usize)
+            .saturating_mul(frames.max(1) as usize)
+            <= constants::MAX_ANIMATED_OUTPUT_PIXELS
+    }
 }
 
 pub(super) fn gif_resize_dims(

@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createGuildID, createUserID} from '@app/api/BrandedTypes';
+import {createGuildID, createRoleID, createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import {stripAnimationPrefix} from '@app/api/infrastructure/AssetEntitlementUtils';
 import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
 import type {
 	IAssetDeletionQueue,
@@ -12,6 +13,8 @@ import type {
 	QueuedAssetType,
 } from '@app/api/infrastructure/IAssetDeletionQueue';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {isCustomBadgeAssetReferenced} from '@app/api/instance/custom_badges/CustomBadgeCatalog';
+import type {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
 import {Logger} from '@app/api/Logger';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
@@ -29,7 +32,11 @@ interface ProcessItemResult {
 
 interface AssetReferenceRepositories {
 	userRepository: Pick<UserRepository, 'findUnique'>;
-	guildRepository: Pick<GuildRepository, 'findUnique' | 'getMember'>;
+	guildRepository: Pick<GuildRepository, 'findUnique' | 'getMember' | 'getRole'>;
+	instanceConfigRepository: Pick<
+		InstanceConfigRepository,
+		'readStoredBrandingAssetKeys' | 'readStoredCustomBadgeReferences'
+	>;
 }
 
 interface AssetDeletionDependencies extends AssetReferenceRepositories {
@@ -38,7 +45,8 @@ interface AssetDeletionDependencies extends AssetReferenceRepositories {
 }
 
 const processAssetDeletionQueue: WorkerTaskHandler = async (_payload, _helpers) => {
-	const {assetDeletionQueue, purgeQueue, storageService, userRepository, guildRepository} = getWorkerDependencies();
+	const {assetDeletionQueue, purgeQueue, storageService, userRepository, guildRepository, instanceConfigRepository} =
+		getWorkerDependencies();
 	const queueSize = await assetDeletionQueue.getQueueSize();
 	if (!Number.isSafeInteger(queueSize) || queueSize < 0) {
 		throw new Error('Asset deletion queue size must be a non-negative safe integer');
@@ -48,7 +56,13 @@ const processAssetDeletionQueue: WorkerTaskHandler = async (_payload, _helpers) 
 		return;
 	}
 	Logger.info({queueSize}, 'Starting asset deletion queue processing');
-	const dependencies: AssetDeletionDependencies = {storageService, purgeQueue, userRepository, guildRepository};
+	const dependencies: AssetDeletionDependencies = {
+		storageService,
+		purgeQueue,
+		userRepository,
+		guildRepository,
+		instanceConfigRepository,
+	};
 	let remainingReadBudget = Math.min(MAX_ITEMS_PER_RUN, queueSize);
 	let totalProcessed = 0;
 	let totalDeleted = 0;
@@ -168,6 +182,15 @@ async function isQueuedAssetStillCurrent(
 	item: QueuedAssetDeletion,
 	deps: AssetReferenceRepositories,
 ): Promise<boolean> {
+	if (/^branding(?:-backdrops)?\//.test(item.s3Key)) {
+		return (await deps.instanceConfigRepository.readStoredBrandingAssetKeys()).has(item.s3Key);
+	}
+	if (item.s3Key.startsWith('custom-badges/')) {
+		return isCustomBadgeAssetReferenced(deps.instanceConfigRepository, item.s3Key);
+	}
+	if (item.s3Key.startsWith('role-icons/')) {
+		return isRoleIconStillCurrent(item, deps);
+	}
 	const references = inferAssetReferencesFromS3Key(item.s3Key);
 	const {staleReference} = item;
 	if (
@@ -191,6 +214,28 @@ async function isQueuedAssetStillCurrent(
 		if (currentHash !== null && stripAnimationPrefix(currentHash) === reference.hash) return true;
 	}
 	return false;
+}
+
+async function isRoleIconStillCurrent(item: QueuedAssetDeletion, deps: AssetReferenceRepositories): Promise<boolean> {
+	const parts = item.s3Key.split('/');
+	const reference = item.staleReference;
+	if (
+		parts.length !== 3 ||
+		!reference ||
+		reference.entityType !== 'role' ||
+		reference.assetType !== 'role_icon' ||
+		!reference.guildId ||
+		reference.entityId !== parts[1] ||
+		stripAnimationPrefix(reference.hash) !== parts[2]
+	) {
+		Logger.warn({s3Key: item.s3Key}, 'Role icon deletion has no matching reference, keeping the asset');
+		return true;
+	}
+	const role = await deps.guildRepository.getRole(
+		createRoleID(parseAssetEntityId(reference.entityId, 'entityId')),
+		createGuildID(parseAssetEntityId(reference.guildId, 'guildId')),
+	);
+	return role?.iconHash != null && stripAnimationPrefix(role.iconHash) === parts[2];
 }
 
 async function getCurrentAssetHash(
@@ -237,8 +282,6 @@ function inferAssetReferencesFromS3Key(s3Key: string): Array<QueuedAssetReferenc
 			return [createAssetReference(parts, 'guild', 'embed_splash')];
 		case 'banners':
 			return [createAssetReference(parts, 'user', 'banner'), createAssetReference(parts, 'guild', 'banner')];
-		case 'branding':
-			throw new Error('Branding asset deletion requires an instance reference lookup');
 		case 'guilds':
 			if (parts.length !== 6 || parts[2] !== 'users' || (parts[4] !== 'avatars' && parts[4] !== 'banners')) {
 				throw new Error('Asset deletion storage key has an invalid guild member path');
@@ -275,10 +318,6 @@ function parseAssetEntityId(value: string | undefined, field: 'entityId' | 'guil
 	const parsed = SnowflakeType.safeParse(value);
 	if (!parsed.success) throw new Error(`Asset deletion reference has an invalid ${field}`);
 	return parsed.data;
-}
-
-function stripAnimationPrefix(hash: string): string {
-	return hash.startsWith('a_') ? hash.substring(2) : hash;
 }
 
 export default processAssetDeletionQueue;

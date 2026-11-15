@@ -1,0 +1,27 @@
+{
+	"fill": {
+		"linear-gradient": ["srgb:0.20784,0.21569,0.23137,1.00000", "srgb:0.07059,0.07843,0.08627,1.00000"]
+	},
+	"groups": [
+		{
+			"layers": [
+				{
+					"image-name": "Vector.svg",
+					"name": "Vector"
+				}
+			],
+			"shadow": {
+				"kind": "neutral",
+				"opacity": 0.5
+			},
+			"translucency": {
+				"enabled": true,
+				"value": 0.5
+			}
+		}
+	],
+	"supported-platforms": {
+		"circles": ["watchOS"],
+		"squares": "shared"
+	}
+}

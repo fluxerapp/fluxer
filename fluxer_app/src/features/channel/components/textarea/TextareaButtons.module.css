@@ -8,12 +8,6 @@
 	height: 0;
 }
 
-.mobileGiftWrapper {
-	overflow: hidden;
-	display: flex;
-	align-items: stretch;
-}
-
 .mobileRightButtonContainer {
 	position: relative;
 	flex-shrink: 0;

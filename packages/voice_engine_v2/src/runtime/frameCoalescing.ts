@@ -20,22 +20,3 @@ export function canCoalesceVoiceEngineV2Events(tailEvent: VoiceEngineV2Event, ne
 	assert.equal(typeof nextEvent.frame.trackSid, 'string', 'next frame event must have a string trackSid');
 	return tailEvent.frame.trackSid === nextEvent.frame.trackSid;
 }
-
-export function coalesceVoiceEngineV2EventSequence(
-	events: ReadonlyArray<VoiceEngineV2Event>,
-): Array<VoiceEngineV2Event> {
-	const coalesced: Array<VoiceEngineV2Event> = [];
-	const limit = events.length;
-	for (let index = 0; index < limit; index += 1) {
-		const event = events[index];
-		assert.ok(event !== undefined, 'coalesceVoiceEngineV2EventSequence must not encounter holes');
-		const tail = coalesced[coalesced.length - 1];
-		if (tail !== undefined && canCoalesceVoiceEngineV2Events(tail, event)) {
-			coalesced[coalesced.length - 1] = event;
-		} else {
-			coalesced.push(event);
-		}
-	}
-	assert.ok(coalesced.length <= events.length, 'coalescing must never grow the event sequence');
-	return coalesced;
-}

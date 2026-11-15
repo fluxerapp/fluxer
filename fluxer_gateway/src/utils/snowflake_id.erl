@@ -4,14 +4,13 @@
 -typing([eqwalizer]).
 
 -export([
+    extract_timestamp/1,
     parse/1,
     parse_optional/1,
     parse_maybe/1,
     parse_list/1,
     first/1,
     filter/1,
-    require/1,
-    to_integer/1,
     to_binary/1,
     is_valid/1,
     equal/2,
@@ -91,14 +90,6 @@ filter(Value) ->
         Id -> {true, Id}
     end.
 
--spec require(term()) -> t().
-require(Value) ->
-    parse(Value).
-
--spec to_integer(t()) -> pos_integer().
-to_integer(Id) when is_integer(Id), Id > 0 ->
-    Id.
-
 -spec to_binary(t()) -> binary().
 to_binary(Id) when is_integer(Id), Id > 0 ->
     integer_to_binary(Id).
@@ -174,46 +165,16 @@ all_digits(<<Digit, Rest/binary>>) when Digit >= $0, Digit =< $9 ->
 all_digits(_) ->
     false.
 
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
+-define(FLUXER_EPOCH, 1420070400000).
+-define(TIMESTAMP_SHIFT, 22).
 
-parse_accepts_integer_binary_and_list_test() ->
-    ?assertEqual(123, parse(123)),
-    ?assertEqual(456, parse(<<"456">>)),
-    ?assertEqual(789, parse("789")).
-
-parse_rejects_non_canonical_values_test() ->
-    ?assertError({invalid_snowflake, 0}, parse(0)),
-    ?assertError({invalid_snowflake, <<"0">>}, parse(<<"0">>)),
-    ?assertError({invalid_snowflake, -1}, parse(-1)),
-    ?assertError({invalid_snowflake, <<"001">>}, parse(<<"001">>)),
-    ?assertError({invalid_snowflake, <<"+1">>}, parse(<<"+1">>)),
-    ?assertError({invalid_snowflake, <<"abc">>}, parse(<<"abc">>)).
-
-parse_rejects_values_above_int64_test() ->
-    ?assertEqual(9223372036854775807, parse(9223372036854775807)),
-    ?assertEqual(9223372036854775807, parse(<<"9223372036854775807">>)),
-    ?assertEqual(9223372036854775807, parse("9223372036854775807")),
-    ?assertError({invalid_snowflake, 9223372036854775808}, parse(9223372036854775808)),
-    ?assertError(
-        {invalid_snowflake, <<"9223372036854775808">>}, parse(<<"9223372036854775808">>)
-    ),
-    ?assertError({invalid_snowflake, "9223372036854775808"}, parse("9223372036854775808")).
-
-member_handles_mixed_edge_values_test() ->
-    ?assertEqual(true, member(123, [<<"123">>, 456])),
-    ?assertError({invalid_snowflake, <<"00123">>}, member(123, [<<"00123">>, 456])).
-
-first_returns_first_valid_snowflake_test() ->
-    ?assertEqual(123, first([undefined, <<"123">>, 456])),
-    ?assertError({invalid_snowflake, <<"001">>}, first([undefined, <<"001">>, <<"123">>])),
-    ?assertError({invalid_snowflake, <<"0">>}, first([undefined, <<"0">>])).
-
-get_prefers_integer_key_test() ->
-    Map = #{123 => int, <<"123">> => bin},
-    ?assertEqual(int, get(123, Map, missing)).
-
-get_falls_back_to_binary_key_test() ->
-    ?assertEqual(bin, get(123, #{<<"123">> => bin}, missing)).
-
--endif.
+-spec extract_timestamp(term()) -> integer() | undefined.
+extract_timestamp(SnowflakeValue) ->
+    try snowflake_id:parse_optional(SnowflakeValue) of
+        Snowflake when is_integer(Snowflake), Snowflake > 0 ->
+            (Snowflake bsr ?TIMESTAMP_SHIFT) + ?FLUXER_EPOCH;
+        undefined ->
+            undefined
+    catch
+        error:{invalid_snowflake, _} -> undefined
+    end.

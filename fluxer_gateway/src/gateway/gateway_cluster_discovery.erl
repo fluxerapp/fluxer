@@ -8,7 +8,6 @@
     start_link/0, start_link/1,
     peers/0,
     subscribe/1,
-    unsubscribe/1,
     force_refresh/0
 ]).
 -export([
@@ -20,7 +19,7 @@
     code_change/3
 ]).
 
--export([ip_addrs_to_peers/2, poll/1, add_subscriber/2, remove_subscriber/2]).
+-export([remove_subscriber/2]).
 
 -define(PEERS_KEY, {gateway_cluster_discovery, peers}).
 -define(DEFAULT_POLL_INTERVAL_MS, 5000).
@@ -64,10 +63,6 @@ peers() ->
 -spec subscribe(pid()) -> ok.
 subscribe(Pid) when is_pid(Pid) ->
     gen_server:cast(?MODULE, {subscribe, Pid}).
-
--spec unsubscribe(pid()) -> ok.
-unsubscribe(Pid) when is_pid(Pid) ->
-    gen_server:cast(?MODULE, {unsubscribe, Pid}).
 
 -spec force_refresh() -> {ok, [peer()]} | {error, term()}.
 force_refresh() ->
@@ -150,8 +145,6 @@ handle_call(_Request, _From, State) ->
 -spec handle_cast(term(), state()) -> {noreply, state()}.
 handle_cast({subscribe, Pid}, State) when is_pid(Pid) ->
     {noreply, add_subscriber(Pid, State)};
-handle_cast({unsubscribe, Pid}, State) when is_pid(Pid) ->
-    {noreply, remove_subscriber(Pid, State)};
 handle_cast({apply_resolved_peers, NewPeers}, #{peers := OldPeers} = State) when
     is_list(NewPeers)
 ->
@@ -420,56 +413,3 @@ coerce_ip_address({A, B, C, D, E, F, G, H} = Addr) when
     {true, Addr};
 coerce_ip_address(_) ->
     false.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-poll_empty_dns_answer_keeps_existing_peers_test() ->
-    OldPeers = ['fluxer_gateway@127.0.0.2'],
-    State0 = discovery_test_state(fun(_Name) -> {ok, []} end, OldPeers),
-    {Peers, State1} = poll(State0),
-    ?assertEqual(OldPeers, Peers),
-    ?assertEqual(OldPeers, maps:get(peers, State1)).
-
-poll_empty_initial_dns_answer_stays_empty_test() ->
-    State0 = discovery_test_state(fun(_Name) -> {ok, []} end, []),
-    {Peers, State1} = poll(State0),
-    ?assertEqual([], Peers),
-    ?assertEqual([], maps:get(peers, State1)).
-
-poll_dns_failure_keeps_existing_peers_test() ->
-    OldPeers = ['fluxer_gateway@127.0.0.2'],
-    State0 = discovery_test_state(fun(_Name) -> {error, timeout} end, OldPeers),
-    {Peers, State1} = poll(State0),
-    ?assertEqual(OldPeers, Peers),
-    ?assertEqual(OldPeers, maps:get(peers, State1)).
-
-init_seeds_existing_peers_from_persistent_term_test() ->
-    PreviousPeers = persistent_term:get(?PEERS_KEY, undefined),
-    OldPeers = ['fluxer_gateway@127.0.0.2'],
-    persistent_term:put(?PEERS_KEY, OldPeers),
-    {ok, State} = init(#{
-        dns_name => undefined,
-        node_basename => "fluxer_gateway",
-        poll_interval_ms => 5000,
-        resolver => fun(_Name) -> {ok, []} end
-    }),
-    ?assertEqual(OldPeers, maps:get(peers, State)),
-    cancel_timer(maps:get(timer, State)),
-    case PreviousPeers of
-        undefined -> persistent_term:erase(?PEERS_KEY);
-        _ -> persistent_term:put(?PEERS_KEY, PreviousPeers)
-    end.
-
-discovery_test_state(Resolver, Peers) ->
-    #{
-        dns_name => "fluxer-gateway-headless.fluxer.svc.cluster.local",
-        node_basename => "fluxer_gateway",
-        poll_interval_ms => 5000,
-        resolver => Resolver,
-        peers => Peers,
-        subscribers => [],
-        timer => undefined
-    }.
-
--endif.

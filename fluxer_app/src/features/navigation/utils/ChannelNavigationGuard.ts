@@ -2,19 +2,20 @@
 
 import * as LinkChannelCommands from '@app/features/channel/commands/LinkChannelCommands';
 import Channels from '@app/features/channel/state/Channels';
+import {resolveDocumentURLFromRoot} from '@app/features/platform/URLOriginUtils';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 
-export interface ChannelNavigationTarget {
+interface ChannelNavigationTarget {
 	guildId: string | null;
 	channelId: string;
 	messageId: string | null;
 }
 
-export function parseChannelNavigationPath(path: string): ChannelNavigationTarget | null {
+function parseChannelNavigationPath(path: string): ChannelNavigationTarget | null {
 	let url: URL;
 	try {
-		url = new URL(path, window.location.origin);
+		url = resolveDocumentURLFromRoot(path);
 	} catch {
 		return null;
 	}

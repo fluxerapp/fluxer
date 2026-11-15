@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GuildID, UserID} from '@app/api/BrandedTypes';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {Logger} from '@app/api/Logger';
 import type {GuildMember} from '@app/api/models/GuildMember';
 import type {User} from '@app/api/models/User';
@@ -19,11 +19,7 @@ function getGuildMemberIndexService(options: GuildMemberSearchIndexOptions = {})
 }
 
 export class GuildMemberSearchIndexService {
-	async updateUserMembers(
-		user: User,
-		guildIds: Array<GuildID>,
-		guildRepository: IGuildRepositoryAggregate,
-	): Promise<void> {
+	async updateUserMembers(user: User, guildIds: Array<GuildID>, guildRepository: GuildRepository): Promise<void> {
 		if (guildIds.length === 0) return;
 		const guilds = await guildRepository.listGuilds(guildIds);
 		const indexedGuilds = guilds.filter((guild) => guild.membersIndexedAt != null);

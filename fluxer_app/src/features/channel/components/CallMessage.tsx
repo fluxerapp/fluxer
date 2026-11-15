@@ -11,18 +11,17 @@ import {
 	ONE_MONTH_DURATION_DESCRIPTOR,
 	ONE_WEEK_DURATION_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {formatList, formatNumber} from '@app/features/i18n/utils/IntlCache';
 import {useSystemMessageData} from '@app/features/messaging/hooks/useSystemMessageData';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
-import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
+import {getCurrentLocale, getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import * as CallCommands from '@app/features/voice/commands/CallCommands';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {PhoneIcon} from '@phosphor-icons/react';
-import {formatListWithConfig} from '@pkgs/list_utils/src/ListFormatting';
-import {formatNumber} from '@pkgs/number_utils/src/NumberFormatting';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -79,10 +78,7 @@ const DURATION_UNITS: Array<{unit: DurationUnit; minutes: number}> = [
 	{unit: 'hour', minutes: 60},
 	{unit: 'minute', minutes: 1},
 ];
-const formatLocalizedNumber = (value: number): string => {
-	const locale = getCurrentLocale();
-	return formatNumber(value, locale);
-};
+const formatLocalizedNumber = (value: number): string => formatNumber(value, getFormattingLocale());
 const formatDurationUnit = (i18n: I18n, value: number, unit: DurationUnit): string => {
 	if (value === 1) {
 		switch (unit) {
@@ -134,14 +130,14 @@ const formatCallDuration = (i18n: I18n, durationSeconds: number): string => {
 		return i18n._(A_MINUTE_DESCRIPTOR);
 	}
 	const locale = getCurrentLocale();
-	return formatListWithConfig(parts, {locale, style: 'long', type: 'conjunction'});
+	return formatList(parts, {locale, style: 'long', type: 'conjunction'});
 };
 export const CallMessage = observer(({message}: {message: Message}) => {
 	const {i18n} = useLingui();
 	const {author, channel, guild} = useSystemMessageData(message);
 	const currentUserId = Authentication.currentUserId;
 	const callData = message.call;
-	const isLocalConnected = channel ? MediaEngine.connected && MediaEngine.channelId === channel.id : false;
+	const isLocalConnected = channel ? VoiceRuntime.connected && VoiceRuntime.channelId === channel.id : false;
 	const callHeaderState = useCallHeaderState(channel);
 	const shouldShowJoinLink =
 		!isLocalConnected &&
@@ -236,10 +232,13 @@ export const CallMessage = observer(({message}: {message: Message}) => {
 			</Trans>
 		);
 	}
-	const iconClassname = clsx(
-		styles.icon,
-		callEnded ? (isMissedCall ? styles.iconMissed : styles.iconEnded) : styles.iconActive,
-	);
+	let iconStateClassname = styles.iconActive;
+	if (callEnded && isMissedCall) {
+		iconStateClassname = styles.iconMissed;
+	} else if (callEnded) {
+		iconStateClassname = styles.iconEnded;
+	}
+	const iconClassname = clsx(styles.icon, iconStateClassname);
 	return (
 		<SystemMessage
 			icon={PhoneIcon}

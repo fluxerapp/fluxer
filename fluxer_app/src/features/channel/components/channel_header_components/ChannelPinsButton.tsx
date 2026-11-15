@@ -6,6 +6,7 @@ import {ChannelHeaderIcon} from '@app/features/channel/components/channel_header
 import {ChannelPinsPopout} from '@app/features/channel/components/popouts/ChannelPinsPopout';
 import type {Channel} from '@app/features/channel/models/Channel';
 import ReadStates from '@app/features/read_state/state/ReadStates';
+import {NotificationDot} from '@app/features/ui/components/NotificationDot';
 import {usePopout} from '@app/features/ui/hooks/usePopout';
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
@@ -30,7 +31,7 @@ interface ChannelPinsButtonProps {
 
 export const ChannelPinsButton = observer(({channel}: ChannelPinsButtonProps) => {
 	const {i18n} = useLingui();
-	const {isOpen, openProps} = usePopout('channel-pins');
+	const {isOpen, openProps} = usePopout(`channel-pins-${channel.id}`);
 	const isMobile = MobileLayout.isMobileLayout();
 	const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
 	const hasUnreadPins = ReadStates.hasUnreadPins(channel.id);
@@ -42,10 +43,13 @@ export const ChannelPinsButton = observer(({channel}: ChannelPinsButtonProps) =>
 			setIsBottomSheetOpen(true);
 		}
 	}, [isMobile]);
+	const isOwnPinsOpen = useCallback(
+		(args: unknown) => (args as {channelId?: string} | undefined)?.channelId === channel.id,
+		[channel.id],
+	);
 	const indicator = hasUnreadPins ? (
-		<div
+		<NotificationDot
 			className={styles.unreadPinIndicator}
-			aria-hidden="true"
 			data-flx="channel.channel-header-components.channel-pins-button.unread-pin-indicator"
 		/>
 	) : null;
@@ -78,34 +82,34 @@ export const ChannelPinsButton = observer(({channel}: ChannelPinsButtonProps) =>
 		);
 	}
 	return (
-		<Popout
-			data-flx="channel.channel-header-components.channel-pins-button.popout"
-			{...openProps}
-			render={({onClose}) => (
-				<ChannelPinsPopout
-					channel={channel}
-					onClose={onClose}
-					data-flx="channel.channel-header-components.channel-pins-button.channel-pins-popout"
-				/>
-			)}
-			position="bottom-end"
-			subscribeTo="CHANNEL_PINS_OPEN"
+		<div
+			className={styles.iconButtonWrapper}
+			data-flx="channel.channel-header-components.channel-pins-button.icon-button-wrapper--2"
 		>
-			<div
-				className={styles.iconButtonWrapper}
-				data-flx="channel.channel-header-components.channel-pins-button.icon-button-wrapper--2"
+			<Popout
+				data-flx="channel.channel-header-components.channel-pins-button.popout"
+				{...openProps}
+				render={({onClose}) => (
+					<ChannelPinsPopout
+						channel={channel}
+						onClose={onClose}
+						data-flx="channel.channel-header-components.channel-pins-button.channel-pins-popout"
+					/>
+				)}
+				position="bottom-end"
+				subscribeTo="CHANNEL_PINS_OPEN"
+				subscribeFilter={isOwnPinsOpen}
 			>
 				<ChannelHeaderIcon
 					icon={PushPinIcon}
 					label={pinsLabel}
 					isSelected={isOpen}
 					aria-haspopup={true}
-					aria-expanded={isOpen}
 					keybindAction="chat_toggle_pins"
 					data-flx="channel.channel-header-components.channel-pins-button.channel-header-icon"
 				/>
-				{indicator}
-			</div>
-		</Popout>
+			</Popout>
+			{indicator}
+		</div>
 	);
 });

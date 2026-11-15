@@ -16,9 +16,23 @@ import {create, equals, type Message, type MessageInitShape, toBinary} from '@bu
 import type {GenMessage} from '@bufbuild/protobuf/codegenv2';
 import {compareShallow, reaction, runInAction} from 'mobx';
 
-export {verifyRoundtripStability};
-
 const logger = new Logger('SyncedField');
+
+interface SyncedFieldUserSettings {
+	isHydrated(): boolean;
+	getAccountEpoch(): number;
+	getSubPreference<F extends SyncedPreferencesField>(field: F): SyncedPreferences[F] | undefined;
+	setSubPreference<F extends SyncedPreferencesField>(field: F, value: NonNullable<SyncedPreferences[F]>): Promise<void>;
+}
+
+let announceUserSettings: (settings: SyncedFieldUserSettings) => void;
+const userSettingsReady = new Promise<SyncedFieldUserSettings>((resolve) => {
+	announceUserSettings = resolve;
+});
+
+export function setSyncedFieldUserSettings(settings: SyncedFieldUserSettings): void {
+	announceUserSettings(settings);
+}
 
 function isMessageSchema(value: unknown): value is GenMessage<Message> {
 	return (
@@ -61,8 +75,8 @@ export async function makeSyncedField<
 	const isEnabled = (): boolean => config.enabled?.() ?? true;
 	let machine = createSyncedFieldMachineSnapshot();
 	let lastPreparedBytes: number | null = null;
-	let ownerUserId: string | null = null;
-	let observedUserId: string | null = null;
+	let ownerEpoch: number | null = null;
+	let observedEpoch = 0;
 	const suspend = (reason: SyncedFieldFailureReason, message: string, error?: unknown): void => {
 		logger.error(`${tag}: ${message}; synced persistence disabled:`, error);
 		transitionMachine({
@@ -75,6 +89,14 @@ export async function makeSyncedField<
 		});
 	};
 	const buildMessage = (): M => create(schema, config.toMessage(store)) as NonNullable<SyncedPreferences[F]> as M;
+	const defaults = ((): M | null => {
+		try {
+			return buildMessage();
+		} catch (error) {
+			logger.error(`${tag}: failed to capture the default snapshot:`, error);
+			return null;
+		}
+	})();
 	const buildMessageOrSuspend = (message: string): M | null => {
 		if (!selectSyncedFieldMachineModel(machine).isActive) return null;
 		try {
@@ -98,14 +120,19 @@ export async function makeSyncedField<
 		const candidate = buildMessageOrSuspend('failed to build the local snapshot before applying a remote update');
 		if (candidate == null) return;
 		try {
-			transitionOnly({type: equals(schema, snapshot, candidate) ? 'sync.remoteMatched' : 'sync.remoteNeedsApply'});
+			if (equals(schema, snapshot, candidate)) {
+				ownerEpoch = observedEpoch;
+				transitionOnly({type: 'sync.remoteMatched'});
+				return;
+			}
+			transitionOnly({type: 'sync.remoteNeedsApply'});
 		} catch (error) {
 			suspend('compare-remote', 'failed to compare the remote snapshot with local state', error);
 		}
 	};
 	const applyRemote = (snapshot: M): void => {
 		let effective = snapshot;
-		if (config.mergeRemote && (ownerUserId === null || ownerUserId === observedUserId)) {
+		if (config.mergeRemote && ownerEpoch === observedEpoch) {
 			try {
 				effective = create(schema, config.mergeRemote(buildMessage(), snapshot)) as M;
 			} catch (error) {
@@ -120,11 +147,14 @@ export async function makeSyncedField<
 		} catch (error) {
 			logger.error(`${tag}: applyMessage threw:`, error);
 		}
-		ownerUserId = observedUserId;
+		ownerEpoch = observedEpoch;
 		transitionOnly({type: 'sync.applyFinished'});
 	};
 	const preparePush = (candidate: M): void => {
-		ownerUserId ??= observedUserId;
+		if (!UserSettings.isHydrated() || ownerEpoch !== UserSettings.getAccountEpoch()) {
+			transitionOnly({type: 'sync.localAlreadySynced'});
+			return;
+		}
 		try {
 			const current = UserSettings.getSubPreference(config.field);
 			if (current !== undefined && equals(schema, current as M, candidate)) {
@@ -212,38 +242,37 @@ export async function makeSyncedField<
 		transitionOnly(event);
 		processCommands();
 	}
-	await Promise.resolve();
 	const maxEncodedBytes = config.maxEncodedBytes ?? DEFAULT_SYNCED_FIELD_MAX_ENCODED_BYTES;
-	const UserSettings = (await import('@app/features/user/state/UserSettings')).default;
-	const SessionManager = (await import('@app/features/platform/state/AuthSession')).default;
-	const applyDefaultsForUserChange = (userId: string): void => {
+	const UserSettings = await userSettingsReady;
+	const applyDefaultsForAccountChange = (epoch: number, message: M): void => {
 		try {
 			runInAction(() => {
-				config.applyMessage(store, create(schema) as M);
+				config.applyMessage(store, message);
 			});
 		} catch (error) {
 			logger.error(`${tag}: applyMessage threw while resetting to defaults after an account change:`, error);
 		}
-		ownerUserId = userId;
+		ownerEpoch = epoch;
 	};
 	try {
 		reaction(
 			() => ({
 				snapshot: getRemoteSnapshot(),
-				userId: SessionManager?.userId ?? null,
+				epoch: UserSettings.getAccountEpoch(),
 				hydrated: UserSettings.isHydrated(),
 			}),
-			({snapshot, userId, hydrated}) => {
-				observedUserId = userId;
+			({snapshot, epoch}) => {
+				observedEpoch = epoch;
+				if (ownerEpoch === null || !isEnabled()) {
+					ownerEpoch = epoch;
+				}
 				if (
 					snapshot === undefined &&
-					hydrated &&
-					userId != null &&
-					ownerUserId != null &&
-					ownerUserId !== userId &&
+					ownerEpoch !== epoch &&
+					defaults !== null &&
 					selectSyncedFieldMachineModel(machine).isActive
 				) {
-					applyDefaultsForUserChange(userId);
+					applyDefaultsForAccountChange(epoch, defaults);
 				}
 				transitionMachine({
 					type: 'sync.remoteObserved',

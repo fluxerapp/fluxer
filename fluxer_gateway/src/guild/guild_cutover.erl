@@ -17,7 +17,7 @@
 -type saved_pins() :: #{node() => {ok, term()} | undefined}.
 -type report() :: map().
 
--export_type([report/0]).
+-export_type([report/0, guild_id/0]).
 
 -spec run(map()) -> {ok, report()} | {error, report()}.
 run(#{guild_id := GuildId, source_node := SourceNode} = Opts) when
@@ -210,14 +210,18 @@ lookup(Shard, GuildId) ->
 absent_on(GuildId, Node) ->
     case guild_handoff_freeze:shard_pid(GuildId, Node) of
         {ok, Shard} ->
-            try gen_server:call(Shard, {lookup, GuildId}, ?DEFAULT_ROUTE_TIMEOUT) of
-                {error, not_found} -> ok;
-                Other -> {error, {target_not_empty, Other}}
-            catch
-                exit:Reason -> {error, {target_lookup, Reason}}
-            end;
+            shard_lacks_guild(Shard, GuildId);
         {error, _} = Error ->
             Error
+    end.
+
+-spec shard_lacks_guild(pid(), guild_id()) -> ok | {error, term()}.
+shard_lacks_guild(Shard, GuildId) ->
+    try gen_server:call(Shard, {lookup, GuildId}, ?DEFAULT_ROUTE_TIMEOUT) of
+        {error, not_found} -> ok;
+        Other -> {error, {target_not_empty, Other}}
+    catch
+        exit:Reason -> {error, {target_lookup, Reason}}
     end.
 
 -spec mailbox_below(pid(), non_neg_integer()) -> ok | {error, term()}.
@@ -302,41 +306,3 @@ write_group(undefined, Nodes, Acc) ->
 -spec collect_failures([node()], list(), list()) -> list().
 collect_failures(Nodes, Results, Acc) ->
     [{N, R} || {N, R} <- lists:zip(Nodes, Results), R =/= {ok, ok}] ++ Acc.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-cutover_refuses_once_the_pin_keeper_has_armed_test() ->
-    Opts = #{guild_id => 42, target_node => 'fluxer_gateway@10.9.9.7'},
-    application:set_env(fluxer_gateway, guild_pin_keeper_ever_armed, true),
-    try
-        ?assertMatch(
-            {error, #{
-                phase := preflight,
-                reason := {pin_keeper_active, [{_, guild_pin_keeper_ever_armed}]}
-            }},
-            reverse(Opts)
-        )
-    after
-        application:unset_env(fluxer_gateway, guild_pin_keeper_ever_armed)
-    end,
-    ?assertMatch(
-        {error, #{phase := preflight, reason := {pin_keeper_unreadable, _}}}, reverse(Opts)
-    ).
-
-exposed_abort_repairs_the_source_test() ->
-    Gone = spawn(fun() -> ok end),
-    Ref = erlang:monitor(process, Gone),
-    receive
-        {'DOWN', Ref, process, Gone, _} -> ok
-    end,
-    Exposed = #{abort => #{routes => ok, exposed => true}},
-    ?assertEqual({error, noproc}, repair_source(42, Gone, Exposed, #{})),
-    Crashed = #{abort => #{routes => ok, target => ok}},
-    ?assertEqual({error, noproc}, repair_source(42, Gone, Crashed, #{})),
-    Unexposed = #{abort => #{routes => ok, exposed => false}},
-    ?assertEqual(skipped, repair_source(42, Gone, Unexposed, #{})),
-    Unrouted = #{abort => #{routes => skipped, exposed => true}},
-    ?assertEqual(skipped, repair_source(42, Gone, Unrouted, #{})).
-
--endif.

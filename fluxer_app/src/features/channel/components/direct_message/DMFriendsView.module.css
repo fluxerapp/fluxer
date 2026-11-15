@@ -15,6 +15,7 @@
 	flex: 1;
 	min-width: 0;
 	min-height: 0;
+	container: friends-view / inline-size;
 }
 
 .content {
@@ -140,4 +141,19 @@
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
+}
+
+@container friends-view (max-width: 36rem) {
+	.titleSection,
+	.divider {
+		display: none;
+	}
+
+	.tabsInner {
+		gap: 0.25rem;
+	}
+
+	.tabButton {
+		padding: 0.25rem 0.5rem;
+	}
 }

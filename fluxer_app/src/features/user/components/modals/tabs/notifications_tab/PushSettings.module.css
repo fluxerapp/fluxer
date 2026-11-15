@@ -9,10 +9,6 @@
 	padding: 0.25rem 0;
 }
 
-.selectOnlyContainer {
-	display: inline-flex;
-}
-
 .text {
 	display: flex;
 	min-width: 0;
@@ -36,7 +32,7 @@
 
 .description {
 	margin: 0;
-	padding-right: 1rem;
+	padding-inline-end: 1rem;
 	font-size: 0.875rem;
 	line-height: 1.25rem;
 	color: var(--text-primary-muted);
@@ -58,6 +54,6 @@
 	}
 
 	.description {
-		padding-right: 0;
+		padding-inline-end: 0;
 	}
 }

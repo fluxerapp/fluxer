@@ -16,7 +16,7 @@
 }
 
 :global(html.platform-native) .container {
-	border-top-left-radius: clamp(0.5rem, 1.2vw, 0.875rem);
+	border-start-start-radius: clamp(0.5rem, 1.2vw, 0.875rem);
 	background-clip: padding-box;
 }
 
@@ -38,7 +38,8 @@
 	justify-content: space-between;
 	min-height: var(--dm-sidebar-mobile-header-height);
 	min-width: 0;
-	padding: 0.5rem 0.5rem 0.5rem 1rem;
+	padding-block: 0.5rem;
+	padding-inline: 1rem 0.5rem;
 	border-bottom: var(--theme-border-width) solid var(--background-header-secondary);
 }
 
@@ -61,8 +62,8 @@
 	flex-direction: column;
 	gap: 0.0625rem;
 	min-width: 0;
-	padding-left: var(--spacing-2);
-	padding-right: var(--spacing-2);
+	padding-inline-start: var(--spacing-2);
+	padding-inline-end: var(--spacing-2);
 }
 
 .mobileContent {
@@ -70,8 +71,8 @@
 	flex-direction: column;
 	gap: 0.25rem;
 	min-width: 0;
-	padding-left: var(--spacing-2);
-	padding-right: var(--spacing-2);
+	padding-inline-start: var(--spacing-2);
+	padding-inline-end: var(--spacing-2);
 	padding-bottom: var(--mobile-bottom-nav-height);
 }
 
@@ -84,8 +85,8 @@
 	height: 2.625rem;
 	min-width: 0;
 	align-items: center;
-	padding-left: 0.5rem;
-	padding-right: 0.5rem;
+	padding-inline-start: 0.5rem;
+	padding-inline-end: 0.5rem;
 }
 
 .mobileRow {
@@ -141,8 +142,8 @@
 	justify-content: space-between;
 	margin-top: 0.5rem;
 	margin-bottom: 0.5rem;
-	padding-left: 0.5rem;
-	padding-right: 0.5rem;
+	padding-inline-start: 0.5rem;
+	padding-inline-end: 0.5rem;
 }
 
 .channelList {
@@ -159,7 +160,7 @@
 
 .mobileFab {
 	position: fixed;
-	right: 1rem;
+	inset-inline-end: 1rem;
 	bottom: calc(var(--mobile-bottom-nav-height) + env(safe-area-inset-bottom, 0px) + 1rem);
 	z-index: 50;
 }

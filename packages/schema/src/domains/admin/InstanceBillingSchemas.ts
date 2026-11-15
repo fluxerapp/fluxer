@@ -4,17 +4,17 @@ import {PremiumCurrency} from '@fluxer/schema/src/domains/premium/PremiumSchemas
 import {schemaMetadata} from '@fluxer/schema/src/SchemaMetadata';
 import {z} from 'zod';
 
-export const BILLING_MAX_CURRENCIES = 64;
-export const BILLING_MAX_COUNTRY_CURRENCIES = 300;
-export const BILLING_MAX_LEGACY_SLOTS = 256;
-export const BILLING_MAX_LEGACY_PRICES_PER_SLOT = 32;
+const BILLING_MAX_CURRENCIES = 64;
+const BILLING_MAX_COUNTRY_CURRENCIES = 300;
+const BILLING_MAX_LEGACY_SLOTS = 256;
+const BILLING_MAX_LEGACY_PRICES_PER_SLOT = 32;
 
-export const BillingCountryCodeSchema = z.string().regex(/^[A-Z]{2}$/);
+const BillingCountryCodeSchema = z.string().regex(/^[A-Z]{2}$/);
 export const StripePriceIdSchema = z
 	.string()
 	.max(255)
 	.regex(/^price_[A-Za-z0-9]+$/);
-export const BillingLegacyPriceSlotSchema = z.string().regex(/^(monthly|yearly|gift_1_month|gift_1_year)_[A-Z]{3}$/);
+const BillingLegacyPriceSlotSchema = z.string().regex(/^(monthly|yearly|gift_1_month|gift_1_year)_[A-Z]{3}$/);
 export const BillingCatalogModeSchema = z.enum(['env', 'operator']);
 export type BillingCatalogMode = z.infer<typeof BillingCatalogModeSchema>;
 
@@ -63,9 +63,11 @@ export const InstanceBillingResponse = z.object({
 	automatic_tax: z.boolean().nullable(),
 	tax_id_collection: z.boolean().nullable(),
 	terms_consent_required: z.boolean().nullable(),
+	billing_emails: z.boolean().nullable(),
 	effective_automatic_tax: z.boolean(),
 	effective_tax_id_collection: z.boolean(),
 	effective_terms_consent_required: z.boolean(),
+	effective_billing_emails: z.boolean(),
 	default_currency: PremiumCurrency.nullable(),
 	prices: z.record(z.string(), BillingPriceSetResponse).nullable(),
 	country_currencies: z.record(z.string(), z.string()).nullable(),
@@ -85,6 +87,7 @@ export const InstanceBillingUpdateRequest = z
 		automatic_tax: z.boolean().nullish(),
 		tax_id_collection: z.boolean().nullish(),
 		terms_consent_required: z.boolean().nullish(),
+		billing_emails: z.boolean().nullish(),
 		default_currency: PremiumCurrency.nullish(),
 		prices: BillingPricesSchema(BillingPriceSetUpdateRequest).nullish(),
 		country_currencies: BillingCountryCurrenciesSchema.nullish(),
@@ -110,6 +113,7 @@ export const StoredBillingConfigSchema = z.object({
 	automatic_tax: z.boolean().nullable().default(null),
 	tax_id_collection: z.boolean().nullable().default(null),
 	terms_consent_required: z.boolean().nullable().default(null),
+	billing_emails: z.boolean().nullable().default(null),
 	default_currency: PremiumCurrency.nullable().default(null),
 	prices: BillingPricesSchema(
 		z.object({

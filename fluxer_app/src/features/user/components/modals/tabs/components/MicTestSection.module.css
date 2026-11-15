@@ -1,7 +1,6 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 .bar {
-	--mic-peak-percent: 0%;
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) auto;
 	align-items: center;

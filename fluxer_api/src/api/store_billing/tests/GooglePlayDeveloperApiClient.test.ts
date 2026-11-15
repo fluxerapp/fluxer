@@ -7,10 +7,6 @@ import {
 	GooglePlayDeveloperApiClient,
 } from '@app/api/store_billing/google_play/GooglePlayDeveloperApiClient';
 import {
-	buildGooglePlayProductSnapshot,
-	buildGooglePlaySubscriptionSnapshot,
-} from '@app/api/store_billing/google_play/GooglePlayPurchaseSync';
-import {
 	buildFakeProductPurchase,
 	buildFakeSubscriptionPurchase,
 	createGooglePlayDeveloperApiHandlers,
@@ -264,25 +260,5 @@ describe('GooglePlayDeveloperApiClient', () => {
 			maxResults: '2',
 			token: first.nextPageToken,
 		});
-	});
-
-	it('feeds the purchase sync end to end', async () => {
-		fake.setSubscription(PACKAGE, TOKEN, buildFakeSubscriptionPurchase());
-		fake.setProduct(PACKAGE, 'gift-token', buildFakeProductPurchase());
-		const now = new Date();
-		const subscription = buildGooglePlaySubscriptionSnapshot({
-			packageName: PACKAGE,
-			purchaseToken: TOKEN,
-			purchase: await client.getSubscription(PACKAGE, TOKEN),
-			now,
-		});
-		expect(subscription).toMatchObject({state: 'active', providerEntitled: true, slot: 'monthly', acknowledged: false});
-		const gift = buildGooglePlayProductSnapshot({
-			packageName: PACKAGE,
-			purchaseToken: 'gift-token',
-			purchase: await client.getProduct(PACKAGE, 'gift-token'),
-			now,
-		});
-		expect(gift).toMatchObject({state: 'purchased', providerEntitled: true, slot: 'gift_1_month'});
 	});
 });

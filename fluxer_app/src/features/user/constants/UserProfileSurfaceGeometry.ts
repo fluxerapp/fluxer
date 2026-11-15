@@ -51,12 +51,12 @@ export const PROFILE_MODAL_BANNER_AVATAR_CUTOUT = {
 	cy: PROFILE_MODAL_GEOMETRY.bannerViewBoxHeightPx,
 	r: PROFILE_MODAL_AVATAR_OUTER_RADIUS_PX,
 } as const;
-
-export const PROFILE_POPOUT_OUTER_WIDTH_PX =
-	PROFILE_POPOUT_GEOMETRY.contentWidthPx + PROFILE_POPOUT_GEOMETRY.borderWidthPx * 2;
-
-export const PROFILE_POPOUT_OUTER_HEIGHT_PX =
-	PROFILE_POPOUT_GEOMETRY.contentHeightPx + PROFILE_POPOUT_GEOMETRY.borderWidthPx * 2;
+export function getBannerCutoutCx(
+	cutout: {readonly viewBoxWidthPx: number; readonly cx: number},
+	direction: 'ltr' | 'rtl',
+): number {
+	return direction === 'rtl' ? cutout.viewBoxWidthPx - cutout.cx : cutout.cx;
+}
 
 export const PROFILE_POPOUT_GEOMETRY_STYLE: CssLengthVariables = {
 	'--profile-popout-content-width': remFromPx(PROFILE_POPOUT_GEOMETRY.contentWidthPx),

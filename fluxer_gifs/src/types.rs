@@ -44,12 +44,6 @@ pub enum GifRequest {
         locale: String,
         country: String,
     },
-    BuildShareUrl {
-        slug: String,
-    },
-    ExtractSlugFromUrl {
-        url: String,
-    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -67,12 +61,6 @@ pub enum GifServiceResponse {
     Registered,
     Resolved {
         gif: Arc<Option<GifItem>>,
-    },
-    ShareUrl {
-        url: String,
-    },
-    ExtractedSlug {
-        slug: Option<String>,
     },
     Failed {
         message: String,

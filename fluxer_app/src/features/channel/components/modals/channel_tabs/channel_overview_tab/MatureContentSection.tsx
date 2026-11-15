@@ -77,7 +77,12 @@ export const MatureContentSection: React.FC<MatureContentSectionProps> = ({form,
 			label: i18n._(OFF_2_DESCRIPTOR),
 		},
 	];
-	const overrideToKey = (v: boolean | null): string => (v === null ? 'inherit' : v ? 'on' : 'off');
+	const overrideToKey = (v: boolean | null): string => {
+		if (v === null) {
+			return 'inherit';
+		}
+		return v ? 'on' : 'off';
+	};
 	const keyToOverride = (k: string): boolean | null => (k === 'inherit' ? null : k === 'on');
 	const inheritedWarningText = inheritedWarning.text ?? i18n._(THIS_CONTAINS_SENSITIVE_CONTENT_DESCRIPTOR);
 	return (

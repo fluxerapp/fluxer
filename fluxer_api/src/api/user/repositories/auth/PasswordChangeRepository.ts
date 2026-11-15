@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {deleteOneOrMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import type {PasswordChangeTicketRow} from '@app/api/database/types/AuthTypes';
 import {PasswordChangeTickets} from '@app/api/Tables';
 
@@ -20,9 +20,5 @@ export class PasswordChangeRepository {
 
 	async findTicket(ticket: string): Promise<PasswordChangeTicketRow | null> {
 		return await fetchOne<PasswordChangeTicketRow>(FETCH_TICKET_CQL, {ticket});
-	}
-
-	async deleteTicket(ticket: string): Promise<void> {
-		await deleteOneOrMany(PasswordChangeTickets.deleteByPk({ticket}));
 	}
 }

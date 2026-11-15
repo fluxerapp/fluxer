@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {waitForAbortablePromise} from '@app/features/platform/utils/AbortablePromise';
+
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {ensureDesktopModuleForAsset} from '@app/features/platform/utils/DesktopModuleAssets';
 import {acquireIdleVoiceInputContext, isVoiceInputSourceLive} from '@app/features/voice/engine/VoiceInputAudioContext';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import NoiseSuppressionAvailability, {
@@ -86,24 +89,6 @@ function toDeepFilterBuildFailure(error: unknown): DeepFilterUnavailableError {
 	return new DeepFilterUnavailableError('build', error instanceof Error ? error.message : String(error));
 }
 
-function raceAbort<T>(pending: Promise<T>, signal: AbortSignal): Promise<T> {
-	if (signal.aborted) return Promise.reject(signal.reason);
-	return new Promise((resolve, reject) => {
-		const onAbort = () => reject(signal.reason);
-		signal.addEventListener('abort', onAbort, {once: true});
-		pending.then(
-			(value) => {
-				signal.removeEventListener('abort', onAbort);
-				resolve(value);
-			},
-			(error: unknown) => {
-				signal.removeEventListener('abort', onAbort);
-				reject(error);
-			},
-		);
-	});
-}
-
 async function fetchAssetBody(url: string, controller: AbortController): Promise<ReadableStream<Uint8Array>> {
 	let idleTimer: ReturnType<typeof setTimeout> | undefined;
 	const stopIdleTimer = () => clearTimeout(idleTimer);
@@ -164,6 +149,9 @@ async function fetchDeepFilterAssets(): Promise<DeepFilterAssets> {
 		controller.abort(new DeepFilterUnavailableError('assets', 'DeepFilterNet assets took too long to download'));
 	}, DEEP_FILTER_ASSET_TOTAL_MS);
 	try {
+		if (!(await ensureDesktopModuleForAsset(DEEP_FILTER_WASM_URL))) {
+			throw new DeepFilterUnavailableError('assets', 'The DeepFilterNet module has not finished downloading');
+		}
 		const [module, modelBytes] = await Promise.all([
 			fetchAssetBody(DEEP_FILTER_WASM_URL, controller).then(compileDeepFilterWasm),
 			fetchAssetBody(DEEP_FILTER_MODEL_URL, controller).then(readDeepFilterModel),
@@ -181,7 +169,7 @@ async function fetchDeepFilterAssets(): Promise<DeepFilterAssets> {
 
 let assetsLoad: Promise<DeepFilterAssets> | null = null;
 
-export function loadDeepFilterAssets(signal?: AbortSignal): Promise<DeepFilterAssets> {
+function loadDeepFilterAssets(signal?: AbortSignal): Promise<DeepFilterAssets> {
 	if (!assetsLoad) {
 		const load = fetchDeepFilterAssets();
 		assetsLoad = load;
@@ -198,7 +186,7 @@ export function loadDeepFilterAssets(signal?: AbortSignal): Promise<DeepFilterAs
 			},
 		);
 	}
-	return signal ? raceAbort(assetsLoad, signal) : assetsLoad;
+	return signal ? waitForAbortablePromise(assetsLoad, signal) : assetsLoad;
 }
 
 function isDeepFilterRequested(): boolean {
@@ -390,7 +378,7 @@ async function createDeepFilterNode(context: AudioContext): Promise<DeepFilterNo
 	let node: AudioWorkletNode | null = null;
 	let listen: ((listener: DeepFilterMessageListener) => () => void) | null = null;
 	try {
-		await raceAbort(addDeepFilterWorkletModule(context), controller.signal);
+		await waitForAbortablePromise(addDeepFilterWorkletModule(context), controller.signal);
 		node = new AudioWorkletNode(context, DEEP_FILTER_PROCESSOR_NAME, {
 			numberOfInputs: 1,
 			numberOfOutputs: 1,
@@ -532,7 +520,7 @@ export async function acquireDeepFilterNode(
 	clearTimeout(entry.idleTimer);
 	let handle: DeepFilterNodeHandle;
 	try {
-		handle = await raceAbort(entry.build, signal);
+		handle = await waitForAbortablePromise(entry.build, signal);
 	} catch (error) {
 		releasePoolEntry(pool, entry, token);
 		throw error;

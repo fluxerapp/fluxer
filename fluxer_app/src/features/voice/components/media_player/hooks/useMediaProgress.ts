@@ -63,11 +63,10 @@ export function useMediaProgress(options: UseMediaProgressOptions): UseMediaProg
 	const setDurationFromMedia = useCallback((rawDuration: number) => {
 		const hasRealDuration = Number.isFinite(rawDuration) && rawDuration > 0;
 		setDuration((previousDuration) => {
-			const nextDuration = hasRealDuration
-				? rawDuration
-				: previousDuration > 0
-					? previousDuration
-					: fallbackDurationRef.current;
+			let nextDuration = rawDuration;
+			if (!hasRealDuration) {
+				nextDuration = previousDuration > 0 ? previousDuration : fallbackDurationRef.current;
+			}
 			return previousDuration === nextDuration ? previousDuration : nextDuration;
 		});
 	}, []);
@@ -216,7 +215,12 @@ export function useMediaProgress(options: UseMediaProgressOptions): UseMediaProg
 			setPendingProgressIfChanged(null);
 		}
 	}, [mediaRef, setPendingProgressIfChanged]);
-	const progress = pendingProgress !== null ? pendingProgress : duration > 0 ? (currentTime / duration) * 100 : 0;
+	let progress = 0;
+	if (pendingProgress !== null) {
+		progress = pendingProgress;
+	} else if (duration > 0) {
+		progress = (currentTime / duration) * 100;
+	}
 	return {
 		currentTime,
 		duration,

@@ -3,13 +3,7 @@
 import {Routes} from '@app/app/Routes';
 import {tryInterceptChannelNavigationPath} from '@app/features/navigation/utils/ChannelNavigationGuard';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
-
-export interface Navigator {
-	replace: (path: string) => void;
-	push: (path: string) => void;
-	getPath: () => string;
-	replaceSilent: (path: string) => void;
-}
+import {resolveDocumentURLFromRoot} from '@app/features/platform/URLOriginUtils';
 
 function getStateWithoutMobileOverlayMarkers(state: unknown): unknown {
 	if (!state || typeof state !== 'object') {
@@ -21,25 +15,16 @@ function getStateWithoutMobileOverlayMarkers(state: unknown): unknown {
 	return Object.keys(nextState).length > 0 ? nextState : null;
 }
 
-const defaultNavigator: Navigator = {
-	replace: (p: string) => RouterUtils.replaceWith(p),
-	push: (p: string) => RouterUtils.transitionTo(p),
-	getPath: () => {
-		const location = RouterUtils.getHistory()?.location;
-		if (!location) return '';
-		return location.pathname + location.search + location.hash;
-	},
-	replaceSilent: (p: string) => {
-		if (typeof window !== 'undefined') {
-			window.history.replaceState(getStateWithoutMobileOverlayMarkers(window.history.state), '', p);
-		}
-	},
-};
+function replaceSilent(p: string): void {
+	if (typeof window !== 'undefined') {
+		window.history.replaceState(getStateWithoutMobileOverlayMarkers(window.history.state), '', p);
+	}
+}
 
 let inProgress = false;
 
 function computeBasePath(url: string): string | null {
-	const pathname = new URL(url, window.location.origin).pathname;
+	const pathname = resolveDocumentURLFromRoot(url).pathname;
 	if (Routes.isDMRoute(pathname) && pathname !== Routes.ME) {
 		return Routes.ME;
 	}
@@ -52,16 +37,16 @@ function computeBasePath(url: string): string | null {
 	return null;
 }
 
-export function navigateToWithMobileHistory(url: string, isMobile: boolean, nav: Navigator = defaultNavigator): void {
+export function navigateToWithMobileHistory(url: string, isMobile: boolean): void {
 	if (!isMobile) {
 		inProgress = false;
-		nav.replace(url);
+		RouterUtils.replaceWith(url);
 		return;
 	}
 	if (inProgress) {
 		return;
 	}
-	const current = nav.getPath();
+	const current = RouterUtils.getCurrentPath();
 	if (current === url) {
 		return;
 	}
@@ -70,13 +55,13 @@ export function navigateToWithMobileHistory(url: string, isMobile: boolean, nav:
 	}
 	const base = computeBasePath(url);
 	if (!base) {
-		nav.replace(url);
+		RouterUtils.replaceWith(url);
 		return;
 	}
 	inProgress = true;
 	try {
-		nav.replaceSilent(base);
-		nav.push(url);
+		replaceSilent(base);
+		RouterUtils.transitionTo(url);
 	} finally {
 		inProgress = false;
 	}

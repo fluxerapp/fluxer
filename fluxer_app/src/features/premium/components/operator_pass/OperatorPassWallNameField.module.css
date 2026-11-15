@@ -1,0 +1,19 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.hint {
+	color: var(--text-secondary);
+	font-size: 0.8125rem;
+	line-height: 1.125rem;
+}
+
+.optOutLabel {
+	color: var(--text-primary);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}

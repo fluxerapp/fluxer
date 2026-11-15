@@ -1,9 +1,11 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(guild_client).
+
 -typing([eqwalizer]).
 
--export([voice_state_update/3]).
+-dialyzer({nowarn_function, execute_with_slot/3}).
+
 -export([voice_state_update/4]).
 -export([do_call/3]).
 -export([request_trace/1]).
@@ -20,7 +22,9 @@
     endpoint => binary(),
     connection_id => binary(),
     voice_state => map(),
-    needs_token => boolean()
+    needs_token => boolean(),
+    p2p => true,
+    ice_servers => [map()]
 }.
 
 -type voice_state_update_rejection() :: #{
@@ -39,43 +43,45 @@
     | {error, too_many_requests}
     | {error, atom(), atom()}.
 
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
-
--spec voice_state_update(pid(), map(), timeout()) -> voice_state_update_result().
-voice_state_update(GuildPid, Request, Timeout) ->
-    guild_client_circuit_breaker:ensure_table(),
-    case guild_client_circuit_breaker:acquire_slot(GuildPid) of
-        ok -> execute_with_slot(GuildPid, Request, Timeout);
-        {error, Reason} -> {error, Reason}
-    end.
-
 -spec execute_with_slot(pid(), map(), timeout()) -> voice_state_update_result().
 execute_with_slot(TargetPid, Request, Timeout) ->
-    try
-        circuit_breaker_execute(TargetPid, Request, Timeout)
-    after
-        guild_client_circuit_breaker:release_slot(TargetPid)
+    {_Worker, Ref} = spawn_monitor(fun() ->
+        exit({?MODULE, acquire_and_execute(TargetPid, Request, Timeout)})
+    end),
+    receive
+        {'DOWN', Ref, process, _, {?MODULE, Result}} ->
+            Result;
+        {'DOWN', Ref, process, Worker, _Reason} ->
+            guild_client_circuit_breaker:release_slot(TargetPid, Worker),
+            {error, unknown, internal_error}
+    end.
+
+-spec acquire_and_execute(pid(), map(), timeout()) -> voice_state_update_result().
+acquire_and_execute(TargetPid, Request, Timeout) ->
+    case guild_client_circuit_breaker:acquire_slot(TargetPid) of
+        ok ->
+            try
+                circuit_breaker_execute(TargetPid, Request, Timeout)
+            after
+                guild_client_circuit_breaker:release_slot(TargetPid, self())
+            end;
+        {error, too_many_requests} ->
+            {error, too_many_requests}
     end.
 
 -spec voice_state_update(pid(), integer(), map(), timeout()) -> voice_state_update_result().
 voice_state_update(GuildPid, GuildId, Request, Timeout) ->
     guild_client_circuit_breaker:ensure_table(),
-    maybe
-        {ok, TargetPid} ?= resolve_voice_pid(GuildId, GuildPid),
-        ok ?= guild_client_circuit_breaker:acquire_slot(TargetPid),
-        execute_with_slot(TargetPid, Request, Timeout)
-    else
+    case resolve_voice_pid(GuildId, GuildPid) of
+        {ok, TargetPid} ->
+            execute_with_slot(TargetPid, Request, Timeout);
         {error, not_found} ->
             logger:warning(
                 "guild_client_no_voice_server:"
                 " guild_id=~p guild_pid=~p request=~p",
                 [GuildId, GuildPid, request_trace(Request)]
             ),
-            {error, noproc};
-        {error, Reason} ->
-            {error, Reason}
+            {error, noproc}
     end.
 
 -spec resolve_voice_pid(integer(), pid()) -> {ok, pid()} | {error, not_found}.
@@ -223,67 +229,3 @@ require_success_response(#{success := true} = Response) ->
 -spec require_rejection_response(map()) -> voice_state_update_rejection().
 require_rejection_response(#{success := false, ack := Ack} = Response) when is_map(Ack) ->
     Response.
-
--ifdef(TEST).
-
-module_exports_test() ->
-    Exports = guild_client:module_info(exports),
-    ?assert(lists:member({voice_state_update, 3}, Exports)).
-
-do_call_ok_reply_returns_error_test() ->
-    Pid = start_test_call_server(ok),
-    ?assertEqual({error, unknown, internal_error}, do_call(Pid, #{}, 1000)),
-    stop_test_call_server(Pid).
-
-do_call_success_map_reply_returns_ok_test() ->
-    Reply = #{success => true, token => <<"abc">>},
-    Pid = start_test_call_server(Reply),
-    ?assertEqual({ok, Reply}, do_call(Pid, #{}, 1000)),
-    stop_test_call_server(Pid).
-
-do_call_rejected_ack_map_reply_returns_ok_test() ->
-    Reply = #{success => false, ack => #{<<"status">> => <<"rejected">>}},
-    Pid = start_test_call_server(Reply),
-    ?assertEqual({ok, Reply}, do_call(Pid, #{}, 1000)),
-    stop_test_call_server(Pid).
-
-do_call_error_tuple_reply_passthrough_test() ->
-    Reply = {error, validation_error, voice_member_not_found},
-    Pid = start_test_call_server(Reply),
-    ?assertEqual(Reply, do_call(Pid, #{}, 1000)),
-    stop_test_call_server(Pid).
-
-do_call_nested_error_tuple_reply_passthrough_test() ->
-    Reply = {error, {validation_error, voice_member_not_found}},
-    Pid = start_test_call_server(Reply),
-    ?assertEqual({error, validation_error, voice_member_not_found}, do_call(Pid, #{}, 1000)),
-    stop_test_call_server(Pid).
-
-do_call_not_owner_error_tuple_reply_normalized_test() ->
-    Reply = {error, {not_owner, 'fluxer_gateway@127.0.0.1'}},
-    Pid = start_test_call_server(Reply),
-    ?assertEqual({error, not_owner, 'fluxer_gateway@127.0.0.1'}, do_call(Pid, #{}, 1000)),
-    stop_test_call_server(Pid).
-
--spec start_test_call_server(term()) -> pid().
-start_test_call_server(Reply) ->
-    spawn(fun() -> test_call_server_loop(Reply) end).
-
--spec stop_test_call_server(pid()) -> ok.
-stop_test_call_server(Pid) ->
-    Pid ! stop,
-    ok.
-
--spec test_call_server_loop(term()) -> ok.
-test_call_server_loop(Reply) ->
-    receive
-        {'$gen_call', From, {voice_state_update, _Request}} ->
-            gen_server:reply(From, Reply),
-            test_call_server_loop(Reply);
-        stop ->
-            ok
-    after 30000 ->
-        ok
-    end.
-
--endif.

@@ -12,7 +12,7 @@ import {
 	errorToVoiceEngineV2Error,
 	type VoiceEngineV2CommandResult,
 	type VoiceEngineV2Implementation,
-} from '@fluxer/voice_engine_v2/src/implementations';
+} from '@fluxer/voice_engine_v2/src/implementations/VoiceEngineV2ImplementationBase';
 import {
 	getVoiceEngineV2CommandResourceKey,
 	type VoiceEngineV2Command,
@@ -38,9 +38,7 @@ import {
 } from '@fluxer/voice_engine_v2/src/runtime/frameCoalescing';
 import {
 	createVoiceEngineV2SystemClockPort,
-	createVoiceEngineV2SystemRandomPort,
 	type VoiceEngineV2ClockPort,
-	type VoiceEngineV2RandomPort,
 } from '@fluxer/voice_engine_v2/src/runtime/platformPort';
 
 export type {
@@ -67,24 +65,19 @@ export interface VoiceEngineV2RuntimeDiagnostic {
 
 export type VoiceEngineV2RuntimeDiagnosticListener = (diagnostic: VoiceEngineV2RuntimeDiagnostic) => void;
 
-export interface VoiceEngineV2RuntimeListenerPayload {
+interface VoiceEngineV2RuntimeListenerPayload {
 	event: VoiceEngineV2Event;
 	transition: VoiceEngineV2Transition;
 }
 
 export type VoiceEngineV2RuntimeListener = (payload: VoiceEngineV2RuntimeListenerPayload) => void;
 
-export type VoiceEngineV2RuntimeClock = VoiceEngineV2ClockPort;
-
 export interface VoiceEngineV2RuntimeOptions {
 	capabilities?: VoiceEngineV2Capabilities;
 	clock?: VoiceEngineV2ClockPort;
-	random?: VoiceEngineV2RandomPort;
-	eventLogCap?: number;
 	eventLogSpillSink: VoiceEngineV2EventLogSpillSink;
 	queuedCommandsCap?: number;
 	resourceQueuesCap?: number;
-	cancelledOperationsCap?: number;
 	verifyEventLogInvariantsOnDispatch?: boolean;
 }
 
@@ -102,7 +95,6 @@ export class VoiceEngineV2Runtime {
 	private readonly diagnosticListeners = new Set<VoiceEngineV2RuntimeDiagnosticListener>();
 	private readonly unsubscribeImplementationEvents: () => void;
 	private readonly clock: VoiceEngineV2ClockPort;
-	private readonly random: VoiceEngineV2RandomPort;
 	private readonly eventLogRing: VoiceEngineV2EventLogRing;
 	private readonly eventLogSpillSink: VoiceEngineV2EventLogSpillSink;
 	private readonly queuedCommandsById = new Map<number, VoiceEngineV2Command>();
@@ -111,25 +103,19 @@ export class VoiceEngineV2Runtime {
 	private readonly cancelledOperationIds = new Set<number>();
 	private readonly queuedCommandsCap: number;
 	private readonly resourceQueuesCap: number;
-	private readonly cancelledOperationsCap: number;
 	private readonly verifyEventLogInvariantsOnDispatch: boolean;
 	private readonly coalesceCandidatesByTrack = new Map<
 		string,
 		{sequence: number; snapshotBefore: VoiceEngineV2Snapshot}
 	>();
 	private queueFullDropCount = 0;
-	private coalescedEventsCountValue = 0;
 
 	constructor(
 		private readonly implementation: VoiceEngineV2Implementation,
 		options: VoiceEngineV2RuntimeOptions,
 	) {
 		this.clock = options.clock ?? createVoiceEngineV2SystemClockPort();
-		this.random = options.random ?? createVoiceEngineV2SystemRandomPort();
-		const cap = options.eventLogCap ?? VOICE_ENGINE_V2_EVENT_LOG_CAP;
-		assert.ok(Number.isInteger(cap), 'eventLogCap must be an integer');
-		assert.ok(cap >= 1, 'eventLogCap must be >= 1');
-		this.eventLogRing = new VoiceEngineV2EventLogRing(cap);
+		this.eventLogRing = new VoiceEngineV2EventLogRing(VOICE_ENGINE_V2_EVENT_LOG_CAP);
 		assert.ok(
 			options.eventLogSpillSink !== null && typeof options.eventLogSpillSink === 'object',
 			'eventLogSpillSink is required',
@@ -144,10 +130,6 @@ export class VoiceEngineV2Runtime {
 		assert.ok(Number.isInteger(resourceQueuesCap), 'resourceQueuesCap must be an integer');
 		assert.ok(resourceQueuesCap >= 1, 'resourceQueuesCap must be >= 1');
 		this.resourceQueuesCap = resourceQueuesCap;
-		const cancelledOperationsCap = options.cancelledOperationsCap ?? VOICE_ENGINE_V2_CANCELLED_OPERATIONS_CAP;
-		assert.ok(Number.isInteger(cancelledOperationsCap), 'cancelledOperationsCap must be an integer');
-		assert.ok(cancelledOperationsCap >= 1, 'cancelledOperationsCap must be >= 1');
-		this.cancelledOperationsCap = cancelledOperationsCap;
 		this.verifyEventLogInvariantsOnDispatch = options.verifyEventLogInvariantsOnDispatch === true;
 		this.snapshotValue = createVoiceEngineV2InitialSnapshot(
 			options.capabilities ?? availableVoiceEngineV2Capabilities(),
@@ -166,16 +148,8 @@ export class VoiceEngineV2Runtime {
 		return this.eventLogRing.snapshotEntries();
 	}
 
-	get eventLogCap(): number {
-		return this.eventLogRing.cap;
-	}
-
 	get droppedEventsCount(): number {
 		return this.eventLogRing.droppedEventsCount;
-	}
-
-	get evictedSequenceMin(): number | null {
-		return this.eventLogRing.evictedSequenceMin;
 	}
 
 	get commandQueue(): ReadonlyArray<VoiceEngineV2Command> {
@@ -186,28 +160,8 @@ export class VoiceEngineV2Runtime {
 		return this.queuedCommandsById.size;
 	}
 
-	get platformRandom(): VoiceEngineV2RandomPort {
-		return this.random;
-	}
-
-	get platformClock(): VoiceEngineV2ClockPort {
-		return this.clock;
-	}
-
-	get queuedCommandsCapacity(): number {
-		return this.queuedCommandsCap;
-	}
-
-	get resourceQueuesCapacity(): number {
-		return this.resourceQueuesCap;
-	}
-
 	get queueFullDropTotal(): number {
 		return this.queueFullDropCount;
-	}
-
-	get activeResourceQueueCount(): number {
-		return this.resourceQueues.size;
 	}
 
 	getExecutingCommand(resourceKey: VoiceEngineV2ResourceKey): VoiceEngineV2Command | null {
@@ -282,8 +236,6 @@ export class VoiceEngineV2Runtime {
 			event,
 			commands: transition.commands,
 		});
-		this.coalescedEventsCountValue += 1;
-		assert.ok(this.coalescedEventsCountValue >= 1, 'coalesced events count must stay positive after coalescing');
 		if (this.verifyEventLogInvariantsOnDispatch) {
 			this.verifyEventLogInvariants();
 		}
@@ -320,19 +272,6 @@ export class VoiceEngineV2Runtime {
 			assert.ok(command !== undefined, 'command batch must not contain holes');
 			this.enqueueCommand(command);
 		}
-	}
-
-	get coalescedEventsCount(): number {
-		assert.ok(this.coalescedEventsCountValue >= 0, 'coalesced events count cannot be negative');
-		return this.coalescedEventsCountValue;
-	}
-
-	get coalesceTrackedTracksCount(): number {
-		assert.ok(
-			this.coalesceCandidatesByTrack.size <= VOICE_ENGINE_V2_COALESCED_TRACKS_CAP,
-			'coalesce candidates exceeded cap',
-		);
-		return this.coalesceCandidatesByTrack.size;
 	}
 
 	verifyEventLogInvariants(): void {
@@ -478,7 +417,7 @@ export class VoiceEngineV2Runtime {
 		assert.ok(Number.isInteger(operationId), 'cancelOperation requires an integer operationId');
 		assert.ok(operationId >= 0, 'cancelOperation requires a non-negative operationId');
 		if (this.cancelledOperationIds.has(operationId)) return;
-		if (this.cancelledOperationIds.size >= this.cancelledOperationsCap) {
+		if (this.cancelledOperationIds.size >= VOICE_ENGINE_V2_CANCELLED_OPERATIONS_CAP) {
 			const oldest = this.cancelledOperationIds.values().next();
 			assert.ok(oldest.done !== true, 'cancelledOperationIds at cap must yield an evictable id');
 			this.cancelledOperationIds.delete(oldest.value);
@@ -486,15 +425,14 @@ export class VoiceEngineV2Runtime {
 		}
 		this.cancelledOperationIds.add(operationId);
 		assert.ok(this.cancelledOperationIds.has(operationId), 'cancelledOperationIds insert postcondition');
-		assert.ok(this.cancelledOperationIds.size <= this.cancelledOperationsCap, 'cancelledOperationIds exceeded cap');
+		assert.ok(
+			this.cancelledOperationIds.size <= VOICE_ENGINE_V2_CANCELLED_OPERATIONS_CAP,
+			'cancelledOperationIds exceeded cap',
+		);
 	}
 
 	get cancelledOperationCount(): number {
 		return this.cancelledOperationIds.size;
-	}
-
-	get cancelledOperationsCapacity(): number {
-		return this.cancelledOperationsCap;
 	}
 
 	private emitDiagnostic(diagnostic: VoiceEngineV2RuntimeDiagnostic): void {
@@ -512,7 +450,7 @@ export class VoiceEngineV2Runtime {
 		this.emitDiagnostic({
 			kind: 'voiceEngineV2.queueFull',
 			queue: 'cancelledOperations',
-			cap: this.cancelledOperationsCap,
+			cap: VOICE_ENGINE_V2_CANCELLED_OPERATIONS_CAP,
 			droppedCommandType: queuedCommand === null ? 'operation.cancel' : queuedCommand.type,
 			droppedOperationId: evictedOperationId,
 			resourceKey: queuedCommand === null ? 'lifecycle' : getVoiceEngineV2CommandResourceKey(queuedCommand),
@@ -575,5 +513,3 @@ export function assertEventLogInvariants(runtime: VoiceEngineV2Runtime): void {
 	assert.ok(runtime instanceof VoiceEngineV2Runtime, 'assertEventLogInvariants requires a runtime instance');
 	runtime.verifyEventLogInvariants();
 }
-
-export {commandResultToEvent} from '@fluxer/voice_engine_v2/src/runtime/commandEvents';

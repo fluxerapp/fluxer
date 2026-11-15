@@ -6,7 +6,6 @@ import {
 	NOTIFICATION_LEVEL_NOTHING_DESCRIPTOR,
 	NOTIFICATION_LEVEL_ONLY_MENTIONS_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {isLegacyDocument} from '@app/features/platform/types/Browser';
 import {GuildMemberContextMenu} from '@app/features/ui/action_menu/GuildMemberContextMenu';
 import {UserContextMenu} from '@app/features/ui/action_menu/UserContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
@@ -36,14 +35,7 @@ function toAbstractView(view: Window | null): AbstractView | null {
 }
 
 function getSelectionText(): string {
-	if (window.getSelection) {
-		return window.getSelection()?.toString() || '';
-	}
-	const doc = document;
-	if (isLegacyDocument(doc) && doc.selection && doc.selection.type !== 'Control') {
-		return doc.selection.createRange().text;
-	}
-	return '';
+	return window.getSelection()?.toString() ?? '';
 }
 
 function findUserData(element: HTMLElement): {userId?: string; guildId?: string; channelId?: string} {

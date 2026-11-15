@@ -31,8 +31,4 @@ export class DonorMagicLinkToken {
 	isUsed(): boolean {
 		return this.usedAt !== null;
 	}
-
-	isValid(): boolean {
-		return !this.isExpired() && !this.isUsed();
-	}
 }

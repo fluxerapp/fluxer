@@ -8,7 +8,7 @@
     delete_table/0,
     lookup/1,
     put_if_local/2,
-    clean_by_pid/1,
+    clean/2,
     invalidate/1
 ]).
 
@@ -64,20 +64,11 @@ invalidate(UserId) ->
         error:badarg -> ok
     end.
 
--spec clean_by_pid(pid()) -> ok.
-clean_by_pid(Pid) ->
+-spec clean(integer(), pid()) -> ok.
+clean(UserId, Pid) ->
     try
-        ets:foldl(
-            fun
-                ({UserId, CachedPid, _}, Acc) when CachedPid =:= Pid ->
-                    ets:delete(?PID_CACHE_TABLE, UserId),
-                    Acc;
-                (_, Acc) ->
-                    Acc
-            end,
-            ok,
-            ?PID_CACHE_TABLE
-        )
+        ets:match_delete(?PID_CACHE_TABLE, {UserId, Pid, '_'}),
+        ok
     catch
         error:badarg -> ok
     end.

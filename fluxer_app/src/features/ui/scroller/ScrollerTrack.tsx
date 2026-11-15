@@ -12,6 +12,7 @@ interface ScrollerTrackProps {
 	scrollbar: 'thin' | 'regular';
 	hasTrack: boolean;
 	isVisible: boolean;
+	animateVisibility: boolean;
 	isDragging: boolean;
 	trackRef: RefCallback<HTMLDivElement>;
 	thumbRef: RefCallback<HTMLDivElement>;
@@ -25,6 +26,7 @@ export function ScrollerTrack({
 	scrollbar,
 	hasTrack,
 	isVisible,
+	animateVisibility,
 	isDragging,
 	trackRef,
 	thumbRef,
@@ -42,14 +44,14 @@ export function ScrollerTrack({
 		[styles.visible]: isVisible,
 	});
 	const thumbClassName = clsx(styles.thumb, {[styles.active]: isDragging});
-	const trackPointerEvents = isTouchDevice ? 'none' : isVisible ? 'auto' : 'none';
+	const trackPointerEvents = !isTouchDevice && isVisible ? 'auto' : 'none';
 	return (
 		<div
 			ref={trackRef}
 			className={trackClassName}
 			onPointerDown={onTrackPointerDown}
 			onWheel={onWheel}
-			style={{pointerEvents: trackPointerEvents}}
+			style={{pointerEvents: trackPointerEvents, transition: animateVisibility ? undefined : 'none'}}
 			role="presentation"
 			data-sheet-drag-disabled="true"
 			data-flx="ui.scroller.scroller-track.presentation.track-pointer-down"

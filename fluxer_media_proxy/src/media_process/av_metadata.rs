@@ -1,17 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use super::encoding::{VipsEncodeRequest, anim_limits_from_options, encode_vips_image};
 use super::loaded_image::{resize_loaded_image, validate_dimensions_u32, validate_vips_image};
 use super::native_runtime::{clear_vips_error, vips_runtime};
 use super::placeholder::encode_thumbhash_image;
 use super::{MediaError, native_status_error};
 use crate::{
     constants,
-    image_quality::ResolvedImageQuality,
     image_transform::ImageOptions,
     media_limits::MediaLimits,
     native::{self, NativeStatus, VipsImageHandle, buffer::NativeBuffer},
-    output_format::OutputFormat,
     thumbhash,
 };
 use libc::c_int;
@@ -57,30 +54,6 @@ impl AVMetadataFrame {
         encode_thumbhash_image(&resized, deadline_ms)
     }
 
-    pub fn encode_nsfw_jpeg(
-        &self,
-        media_limits: &MediaLimits,
-        deadline_ms: Option<i64>,
-    ) -> Result<Vec<u8>, MediaError> {
-        let image = self.borrow_as_vips_image(media_limits)?;
-        encode_vips_image(
-            &image,
-            VipsEncodeRequest {
-                format: OutputFormat::JPEG,
-                quality: ResolvedImageQuality::Low,
-                page_height: None,
-                effort_override: None,
-                animation: anim_limits_from_options(&ImageOptions {
-                    deadline_ms,
-                    ..Default::default()
-                }),
-                animation_loop_count: None,
-                media_limits,
-                full_canvas_animation: false,
-            },
-        )
-    }
-
     fn borrow_as_vips_image(
         &self,
         media_limits: &MediaLimits,
@@ -119,9 +92,6 @@ pub fn probe_av_metadata(
 ) -> Result<AVMetadata, MediaError> {
     if input.is_empty() {
         return Err(MediaError::MediaDecodeFailed);
-    }
-    if input.len() > media_limits.max_media_proxy_bytes() {
-        return Err(MediaError::StreamTooLong);
     }
     if preview_max_dimension > NSFW_PREVIEW_MAX_DIMENSION {
         return Err(MediaError::InvalidImageDimensions);

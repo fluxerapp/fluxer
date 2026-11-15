@@ -12,7 +12,7 @@ export const ValidationErrorItem = z.object({
 export type ValidationErrorItem = z.infer<typeof ValidationErrorItem>;
 
 export const ErrorResponse = z.looseObject({
-	code: z.string().describe('Machine-readable error code'),
+	code: z.string().describe('Machine-readable error code. Known values are listed in the APIErrorCode schema'),
 	message: z.string().describe('Human-readable error message'),
 	errors: z.array(ValidationErrorItem).optional().describe('Field-specific validation errors'),
 });

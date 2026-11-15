@@ -10,7 +10,7 @@ import type React from 'react';
 
 const FLUXER_TAG_REGEX = /^[a-zA-Z0-9_]+$/;
 
-export interface UsernameValidationResult {
+interface UsernameValidationResult {
 	validLength: boolean;
 	validCharacters: boolean;
 	allValid: boolean;

@@ -15,7 +15,6 @@ pub mod moderation;
 pub mod overview;
 pub mod relationships;
 pub mod reports;
-pub mod settings;
 
 pub(super) fn resolved_user_display(user: &AdminResolvedUser) -> String {
     let tag = user_tag(

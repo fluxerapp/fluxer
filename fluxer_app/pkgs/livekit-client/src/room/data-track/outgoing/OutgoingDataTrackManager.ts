@@ -263,8 +263,13 @@ export default class OutgoingDataTrackManager extends (EventEmitter as new () =>
 				if (result.type === 'ok') {
 					const info = result.data;
 					log.debug(`SFU accepted publish request for handle ${handle}`, {sid: info.sid});
-					const e2eeManager = info.usesE2ee ? this.e2eeManager : null;
-					this.descriptors.set(info.pubHandle, Descriptor.active(info, e2eeManager));
+					if (this.e2eeManager && !info.usesE2ee) {
+						log.warn(`SFU accepted publish request for handle ${handle} without encryption`, {sid: info.sid});
+						this.emit('sfuUnpublishRequest', {handle: info.pubHandle});
+						descriptor.completionFuture.reject?.(DataTrackPublishError.encryptionMismatch());
+						return;
+					}
+					this.descriptors.set(info.pubHandle, Descriptor.active(info, this.e2eeManager));
 
 					descriptor.completionFuture.resolve?.();
 				} else {

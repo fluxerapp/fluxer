@@ -51,7 +51,7 @@
 .icon {
 	position: absolute;
 	top: calc(var(--crosspost-card-banner-height) - 1.75rem);
-	left: var(--spacing-4);
+	inset-inline-start: var(--spacing-4);
 	z-index: 1;
 	box-shadow: 0 0 0 0.1875rem var(--crosspost-card-surface);
 	pointer-events: none;

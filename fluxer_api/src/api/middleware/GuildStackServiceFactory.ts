@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ApiContext} from '@app/api/ApiContext';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
 import {ChannelService} from '@app/api/channel/services/ChannelService';
-import type {IFavoriteMemeRepository} from '@app/api/favorite_meme/IFavoriteMemeRepository';
+import type {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRepository';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {GuildService} from '@app/api/guild/services/GuildService';
 import type {AvatarService} from '@app/api/infrastructure/AvatarService';
 import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
@@ -21,19 +21,19 @@ import type {InviteRepository} from '@app/api/invite/InviteRepository';
 import {InviteService} from '@app/api/invite/InviteService';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import type {ReadStateService} from '@app/api/read_state/ReadStateService';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
-import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
+import type {WebhookRepository} from '@app/api/webhook/WebhookRepository';
 import type {IVirusScanService} from '@pkgs/virus_scan/src/IVirusScanService';
 
 interface GuildStackServiceFactoryDependencies {
 	apiContext: ApiContext;
-	channelRepository: IChannelRepository;
-	userRepository: IUserRepository;
-	guildRepository: IGuildRepositoryAggregate;
+	channelRepository: ChannelRepository;
+	userRepository: UserRepository;
+	guildRepository: GuildRepository;
 	inviteRepository: InviteRepository;
-	webhookRepository: IWebhookRepository;
-	favoriteMemeRepository: IFavoriteMemeRepository;
+	webhookRepository: WebhookRepository;
+	favoriteMemeRepository: FavoriteMemeRepository;
 	avatarService: AvatarService;
 	entityAssetService: EntityAssetService;
 	assetDeletionQueue: IAssetDeletionQueue;

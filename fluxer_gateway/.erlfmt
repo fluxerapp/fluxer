@@ -1,5 +1,13 @@
 % erlfmt configuration
 % Options here are used by editor integrations and the escript.
 % Rebar3 reads from rebar.config's {erlfmt, [...]} section.
-{print_width, 100}.
-{files, ["{src,include,test}/*.{hrl,erl,app.src}", "rebar.config"]}.
+{print_width, 96}.
+{files, [
+    "src/**/*.erl",
+    "src/*.app.src",
+    "include/**/*.hrl",
+    "test/**/*.erl",
+    "elvis.config",
+    "rebar.config",
+    "rebar.config.script"
+]}.

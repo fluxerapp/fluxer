@@ -1,0 +1,121 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.button {
+	--face: var(--pl-btn2-face);
+	--face-hover: var(--pl-btn2-hover);
+	--face-press: var(--pl-btn2-press);
+	--face-ledge: var(--pl-btn2-ledge);
+	--face-ink: var(--pl-btn2-ink);
+	--ledge: var(--pl-ledge-m);
+	position: relative;
+	display: flex;
+	width: 100%;
+	min-height: 3rem;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	margin: 0 0 var(--ledge);
+	padding: 0.625rem 1.5rem;
+	border: 0;
+	border-radius: var(--pl-radius-m);
+	background-color: var(--face);
+	box-shadow: 0 var(--ledge) 0 var(--face-ledge);
+	color: var(--face-ink);
+	font-family: inherit;
+	font-size: 1rem;
+	font-weight: 800;
+	line-height: 1.3;
+	text-align: center;
+	text-wrap: balance;
+	cursor: pointer;
+	user-select: none;
+	transition-property: transform, box-shadow, background-color, color;
+	transition-duration: var(--pl-time);
+	transition-timing-function: var(--pl-ease);
+}
+
+.primary {
+	--face: var(--pl-btn-face);
+	--face-hover: var(--pl-btn-hover);
+	--face-press: var(--pl-btn-press);
+	--face-ledge: var(--pl-btn-ledge);
+	--face-ink: var(--pl-btn-ink);
+}
+
+@container plutonium-page (min-width: 40rem) {
+	.button {
+		width: auto;
+	}
+}
+
+@media (hover: hover) {
+	.button:hover:not(:disabled, [aria-busy='true']) {
+		box-shadow: 0 calc(var(--ledge) + var(--pl-lift)) 0 var(--face-ledge);
+		transform: translateY(calc(-1 * var(--pl-lift)));
+	}
+}
+
+.button:active:not(:disabled, [aria-busy='true']) {
+	box-shadow: 0 calc(var(--ledge) - var(--pl-press)) 0 var(--face-ledge);
+	transform: translateY(var(--pl-press));
+	transition-duration: var(--pl-press-time);
+}
+
+.button:disabled,
+.button[aria-busy='true'] {
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.button:hover:not(:disabled, [aria-busy='true']),
+	.button:active:not(:disabled, [aria-busy='true']) {
+		box-shadow: 0 var(--ledge) 0 var(--face-ledge);
+		transform: none;
+	}
+
+	.button:hover:not(:disabled, [aria-busy='true']) {
+		background-color: var(--face-hover);
+	}
+
+	.button:active:not(:disabled, [aria-busy='true']) {
+		background-color: var(--face-press);
+	}
+}
+
+@media (forced-colors: active) {
+	.button {
+		border: 1px solid ButtonText;
+		box-shadow: none;
+	}
+}
+
+.label {
+	min-width: 0;
+}
+
+.icon {
+	width: 1rem;
+	height: 1rem;
+	flex-shrink: 0;
+}
+
+:global(html[dir='rtl']) .icon {
+	transform: scaleX(-1);
+}
+
+.spinner {
+	width: 1rem;
+	height: 1rem;
+	flex-shrink: 0;
+	border: 2px solid currentColor;
+	border-inline-end-color: transparent;
+	border-radius: 50%;
+	animation: plutonium-button-spin 0.7s linear infinite;
+}
+
+@keyframes plutonium-button-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}

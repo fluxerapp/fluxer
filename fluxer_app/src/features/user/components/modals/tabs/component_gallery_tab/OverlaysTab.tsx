@@ -10,6 +10,7 @@ import {Button} from '@app/features/ui/button/Button';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import styles from '@app/features/user/components/modals/tabs/component_gallery_tab/OverlaysTab.module.css';
+import {OPEN_MENU_ICON_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {DotsThreeOutlineIcon} from '@phosphor-icons/react';
@@ -43,10 +44,6 @@ const GREAT_SUCCESS_DESCRIPTOR = msg({
 const SOMETHING_WENT_WRONG_DESCRIPTOR = msg({
 	message: 'Something went wrong.',
 	comment: 'Short label in the overlays tab. Keep it concise.',
-});
-const OPEN_MENU_ICON_DESCRIPTOR = msg({
-	message: 'Open menu icon',
-	comment: 'Button or menu action label in the overlays tab. Keep it concise.',
 });
 
 interface OverlaysTabProps {

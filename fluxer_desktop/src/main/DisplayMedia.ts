@@ -5,10 +5,10 @@ import {
 	isValidDesktopSourceId,
 	isValidDisplayMediaRequestId,
 	normalizeDesktopSourceTypes,
-	shouldHonorSelectedAudio,
 } from '@electron/main/DisplayMediaValidation';
 import {isWaylandSession} from '@electron/main/LinuxSession';
 import {startWindowsScreenCaptureGuardForSource} from '@electron/main/WindowsScreenCaptureGuard';
+import {reuseWindowsCaptureItemsForSource} from '@electron/main/WindowsWindowCaptureItemReuse';
 import {BrowserWindow, desktopCapturer, ipcMain, screen} from 'electron';
 import log from 'electron-log';
 
@@ -111,10 +111,6 @@ function collectOwnWindowMediaSourceIds(): Set<string> {
 		log.debug('[DisplayMedia] Failed to enumerate Fluxer windows for own-source detection', {error});
 	}
 	return ids;
-}
-
-function _isOwnWindowSourceId(sourceId: string): boolean {
-	return collectOwnWindowMediaSourceIds().has(sourceId);
 }
 
 function consumeWaylandPortalSurfacePreference(): DisplayMediaPortalSurfacePreference | null {
@@ -453,7 +449,7 @@ export function registerDisplayMediaHandlers(): void {
 					withAudio: withAudio === true,
 				});
 				startWindowsScreenCaptureGuardForSource(selectedSource, event.sender);
-				const _attachAudio = shouldHonorSelectedAudio(pending.audioRequested, withAudio);
+				reuseWindowsCaptureItemsForSource(selectedSource);
 				const streams: Electron.Streams = {
 					video: selectedSource,
 				};

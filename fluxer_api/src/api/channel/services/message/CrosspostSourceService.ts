@@ -3,8 +3,8 @@
 import {createGuildID, type GuildID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {mapGuildToPartialResponse} from '@app/api/guild/GuildModel';
-import type {IGuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
-import type {IGuildDataRepository} from '@app/api/guild/repositories/IGuildDataRepository';
+import type {GuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
 import {MessageFlags, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -29,11 +29,11 @@ interface CrosspostSourceCounts {
 	presenceCount: number;
 }
 
-export function crosspostSourceCountsCacheKey(guildId: GuildID): string {
+function crosspostSourceCountsCacheKey(guildId: GuildID): string {
 	return `crosspost-source:counts:${guildId.toString()}`;
 }
 
-export function getCrosspostSourceGuildId(message: MessageResponse): GuildID | null {
+function getCrosspostSourceGuildId(message: MessageResponse): GuildID | null {
 	const isCopy = (message.flags & MessageFlags.IS_CROSSPOST) !== 0;
 	const isFollowNotice = message.type === MessageTypes.CHANNEL_FOLLOW_ADD;
 	if (!isCopy && !isFollowNotice) {
@@ -45,8 +45,8 @@ export function getCrosspostSourceGuildId(message: MessageResponse): GuildID | n
 
 export class CrosspostSourceService {
 	constructor(
-		private readonly guildRepository: IGuildDataRepository,
-		private readonly discoveryRepository: IGuildDiscoveryRepository,
+		private readonly guildRepository: GuildRepository,
+		private readonly discoveryRepository: GuildDiscoveryRepository,
 		private readonly gatewayService: IGatewayService,
 		private readonly cacheService: ICacheService,
 	) {}
@@ -73,6 +73,7 @@ export class CrosspostSourceService {
 				icon: partial.icon ?? null,
 				banner: partial.banner ?? null,
 				features: partial.features.filter((feature) => CROSSPOST_SOURCE_PUBLIC_FEATURES.has(feature)),
+				badge_ids: partial.badge_ids,
 				approximate_member_count: counts?.memberCount ?? null,
 				approximate_presence_count: counts?.presenceCount ?? null,
 				description,

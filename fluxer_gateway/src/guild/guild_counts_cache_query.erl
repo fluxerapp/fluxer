@@ -8,7 +8,6 @@
 -export([
     safe_owner_call/3,
     safe_local_call/2,
-    safe_local_cast/1,
     safe_bulk_get/1,
     ensure_started/0,
     resolve_owner_node/1,
@@ -30,8 +29,6 @@
 -type counts() :: {non_neg_integer(), non_neg_integer()}.
 
 -export_type([guild_id/0, counts/0]).
-
--define(REMOTE_CALL_TIMEOUT_MS, 1000).
 
 -spec safe_local_call(term(), term()) -> term().
 safe_local_call(Request, Fallback) ->
@@ -106,7 +103,7 @@ fetch_bulk_local(Request) ->
 
 -spec merge_reply(term(), #{guild_id() => counts()}) -> #{guild_id() => counts()}.
 merge_reply(ReplyMap, AccMap) when is_map(ReplyMap) ->
-    maps:merge(AccMap, ReplyMap);
+    maps:merge(AccMap, eqwalizer:dynamic_cast(ReplyMap));
 merge_reply(_, AccMap) ->
     AccMap.
 
@@ -129,23 +126,6 @@ try_start_cache() ->
     case guild_counts_cache:start_link() of
         {ok, _Pid} -> ok;
         {error, _Reason} -> error
-    end.
-
--spec safe_local_cast(term()) -> ok | error.
-safe_local_cast(Msg) ->
-    case fluxer_gateway_sup:role_enabled(guilds) of
-        true -> do_safe_local_cast(Msg);
-        false -> error
-    end.
-
--spec do_safe_local_cast(term()) -> ok | error.
-do_safe_local_cast(Msg) ->
-    case whereis(guild_counts_cache) of
-        Pid when is_pid(Pid) ->
-            gen_server:cast(guild_counts_cache, Msg),
-            ok;
-        _ ->
-            error
     end.
 
 -spec resolve_owner_node(guild_id()) -> node() | unavailable.
@@ -261,7 +241,7 @@ bulk_get_local(GuildIds, State) ->
 -spec merge_bulk_reply(term(), #{guild_id() => counts()}, map()) ->
     {#{guild_id() => counts()}, map()}.
 merge_bulk_reply(ReplyMap, AccMap, State) when is_map(ReplyMap) ->
-    {maps:merge(AccMap, ReplyMap), State};
+    {maps:merge(AccMap, eqwalizer:dynamic_cast(ReplyMap)), State};
 merge_bulk_reply(_, AccMap, State) ->
     {AccMap, State}.
 

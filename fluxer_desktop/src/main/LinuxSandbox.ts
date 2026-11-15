@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import {LINUX_DESKTOP_ENTRY_ID} from '@electron/common/DesktopIdentity';
 
 const FLATPAK_INFO_PATH = '/.flatpak-info';
+const FLUXER_FLATPAK_REPOSITORY_MARKER_PATH = '/app/share/fluxer/flatpak-repository';
 
 export function isFlatpakRuntime(): boolean {
 	if (process.platform !== 'linux') return false;
@@ -14,7 +15,16 @@ export function isFlatpakRuntime(): boolean {
 	}
 }
 
-export function parseFlatpakInfoAppId(contents: string): string | null {
+export function isFlatpakFromFluxerRepository(): boolean {
+	if (!isFlatpakRuntime()) return false;
+	try {
+		return fs.existsSync(FLUXER_FLATPAK_REPOSITORY_MARKER_PATH);
+	} catch {
+		return false;
+	}
+}
+
+function parseFlatpakInfoAppId(contents: string): string | null {
 	let inApplication = false;
 	for (const rawLine of contents.split('\n')) {
 		const line = rawLine.trim();

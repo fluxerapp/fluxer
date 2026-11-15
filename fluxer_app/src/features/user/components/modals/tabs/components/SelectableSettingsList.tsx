@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
+import {isApplePlatform as isMacPlatform} from '@app/features/platform/utils/PlatformHelpers';
 import styles from '@app/features/user/components/modals/tabs/components/SelectableSettingsList.module.css';
 import {CheckIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
@@ -52,11 +53,6 @@ export const SelectionCheckbox = ({checked, className, ...props}: SelectionCheck
 		)}
 	</div>
 );
-
-function isMacPlatform(): boolean {
-	if (typeof navigator === 'undefined') return false;
-	return /Mac|iPod|iPhone|iPad/.test(navigator.platform);
-}
 
 function getSelectAllShortcutLabel(): string {
 	return isMacPlatform() ? 'Cmd+A' : 'Ctrl+A';

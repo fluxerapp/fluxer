@@ -12,8 +12,7 @@ import {
 	usageFrecencyScore,
 } from '@app/features/emoji/state/UsageFrecency';
 import type {FavoriteMeme} from '@app/features/expressions/models/FavoriteMeme';
-import {Logger} from '@app/features/platform/utils/AppLogger';
-import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import {MemesPickerStateSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/pickers_pb';
 import {makeAutoObservable} from 'mobx';
@@ -24,7 +23,6 @@ const MAX_FRECENT_MEMES = 21;
 const MAX_FAVORITE_MEMES = 500;
 const MAX_COLLAPSED_MEME_CATEGORIES = 200;
 const USAGE_SYNC_DEBOUNCE_MS = 1_500;
-const logger = new Logger('MemesPicker');
 
 class MemesPicker {
 	memeUsage: Record<string, MemeUsageEntry> = {};
@@ -33,7 +31,7 @@ class MemesPicker {
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		void this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {
@@ -72,40 +70,6 @@ class MemesPicker {
 		}
 	}
 
-	toggleFavorite(memeKey: string): void {
-		if (this.favoriteMemes.includes(memeKey)) {
-			const index = this.favoriteMemes.indexOf(memeKey);
-			if (index > -1) {
-				this.favoriteMemes.splice(index, 1);
-			}
-		} else {
-			this.favoriteMemes.push(memeKey);
-		}
-		ComponentBus.dispatch('MEMES_PICKER_RERENDER');
-		logger.debug(`Toggled favorite meme: ${memeKey}`);
-	}
-
-	toggleCategory(category: string): void {
-		if (this.collapsedCategories.includes(category)) {
-			const index = this.collapsedCategories.indexOf(category);
-			if (index > -1) {
-				this.collapsedCategories.splice(index, 1);
-			}
-		} else {
-			this.collapsedCategories.push(category);
-		}
-		ComponentBus.dispatch('MEMES_PICKER_RERENDER');
-		logger.debug(`Toggled category: ${category}`);
-	}
-
-	isFavorite(meme: FavoriteMeme): boolean {
-		return this.favoriteMemes.includes(this.getMemeKey(meme));
-	}
-
-	isCategoryCollapsed(categoryId: string): boolean {
-		return this.collapsedCategories.includes(categoryId);
-	}
-
 	private getFrecencyScore(entry: MemeUsageEntry): number {
 		return usageFrecencyScore(entry, Date.now());
 	}
@@ -125,16 +89,6 @@ class MemesPicker {
 		}
 		memeScores.sort((a, b) => b.score - a.score);
 		return memeScores.slice(0, limit).map((item) => item.meme);
-	}
-
-	getFavoriteMemes(allMemes: ReadonlyArray<FavoriteMeme>): Array<FavoriteMeme> {
-		const favorites: Array<FavoriteMeme> = [];
-		for (const meme of allMemes) {
-			if (this.isFavorite(meme)) {
-				favorites.push(meme);
-			}
-		}
-		return favorites;
 	}
 
 	getFrecencyScoreForMeme(meme: FavoriteMeme): number {

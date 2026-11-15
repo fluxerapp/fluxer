@@ -3,6 +3,11 @@
 import sharp from 'sharp';
 
 const FALLBACK_AVATAR_COLOR = 0x4641d9;
+const LOW_CHROMA_THRESHOLD = 18;
+const MEDIUM_CHROMA_THRESHOLD = 40;
+const LOW_CHROMA_WEIGHT = 0.25;
+const MEDIUM_CHROMA_WEIGHT = 0.6;
+const HIGH_CHROMA_WEIGHT = 1;
 
 function clamp(value: number, min: number, max: number): number {
 	return Math.min(max, Math.max(min, value));
@@ -95,7 +100,14 @@ export async function deriveDominantAvatarColor(imageBuffer: Uint8Array): Promis
 			const qg = Math.floor(g / 12);
 			const qb = Math.floor(b / 12);
 			const key = `${qr},${qg},${qb}`;
-			const weight = chroma < 18 ? 0.25 : chroma < 40 ? 0.6 : 1.0;
+			let weight: number;
+			if (chroma < LOW_CHROMA_THRESHOLD) {
+				weight = LOW_CHROMA_WEIGHT;
+			} else if (chroma < MEDIUM_CHROMA_THRESHOLD) {
+				weight = MEDIUM_CHROMA_WEIGHT;
+			} else {
+				weight = HIGH_CHROMA_WEIGHT;
+			}
 			buckets.set(key, (buckets.get(key) ?? 0) + weight);
 		}
 		if (buckets.size === 0) {

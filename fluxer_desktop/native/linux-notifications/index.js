@@ -41,7 +41,6 @@ function bindingSurface(bindingValue) {
 		freedesktopNotificationsType: typeof freedesktopNotifications,
 		freedesktopNotificationsName: freedesktopNotifications ? freedesktopNotifications.name : null,
 		freedesktopNotificationsPrototypeKeys: ownPropertyNames(prototype),
-		getServerInformationType: typeof (bindingValue ? bindingValue.getServerInformation : null),
 	};
 }
 
@@ -56,9 +55,6 @@ function validateBindingSurface(bindingValue, nativeRoot, nativePath) {
 				missing.push(`FreedesktopNotifications.prototype.${method}`);
 			}
 		}
-	}
-	if (typeof bindingValue?.getServerInformation !== 'function') {
-		missing.push('getServerInformation');
 	}
 	if (missing.length === 0) return;
 	throw createNativeLoadError({
@@ -105,6 +101,5 @@ if (process.platform === 'linux') {
 
 module.exports = {
 	FreedesktopNotifications: binding ? binding.FreedesktopNotifications : null,
-	getServerInformation: binding ? binding.getServerInformation : null,
 	loadError,
 };

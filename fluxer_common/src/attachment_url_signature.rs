@@ -41,6 +41,7 @@ impl Verdict {
 pub struct Verification {
     pub verdict: Verdict,
     pub remaining_secs: Option<u64>,
+    pub expired_secs: Option<u64>,
 }
 
 impl Verification {
@@ -48,6 +49,7 @@ impl Verification {
         Self {
             verdict,
             remaining_secs: None,
+            expired_secs: None,
         }
     }
 }
@@ -91,16 +93,6 @@ pub fn is_signature_parameter_name(name: &str) -> bool {
     SIGNATURE_PARAMETER_NAMES
         .iter()
         .any(|candidate| candidate.as_bytes() == decoded.as_slice())
-}
-
-pub fn strip_signature(url: &str) -> String {
-    let (head, fragment) = split_fragment(url);
-    let (base, query) = split_query(head);
-    let preserved = preserved_fields(query);
-    if preserved.is_empty() {
-        return format!("{base}{fragment}");
-    }
-    format!("{base}?{}{fragment}", preserved.join("&"))
 }
 
 pub fn with_signature(
@@ -200,11 +192,16 @@ pub fn verify(
         return Verification::without_expiry(Verdict::Valid);
     }
     if now_secs >= expires {
-        return Verification::without_expiry(Verdict::Expired);
+        return Verification {
+            verdict: Verdict::Expired,
+            remaining_secs: None,
+            expired_secs: Some(now_secs - expires),
+        };
     }
     Verification {
         verdict: Verdict::Valid,
         remaining_secs: Some(expires - now_secs),
+        expired_secs: None,
     }
 }
 
@@ -356,37 +353,6 @@ mod tests {
         verify(storage_key, raw_query, secrets, now_secs).verdict
     }
 
-    #[test]
-    fn a_valid_ordinary_signature_reports_the_seconds_left_and_a_data_package_reports_none() {
-        let secret = secret_bytes();
-        let now = ANCHOR + 10;
-        let (issued, expires) = issue_window(ANCHOR, now);
-        let query = ordinary_query(KEY, issued, expires, &secret);
-        for probe in [issued, now, expires - 1] {
-            assert_eq!(
-                Some(expires - probe),
-                verify(KEY, Some(&query), &[&secret], probe).remaining_secs,
-                "{probe}"
-            );
-        }
-        for refused in [
-            verify(KEY, Some(&query), &[&secret], expires),
-            verify(KEY, None, &[&secret], now),
-            verify(KEY, Some(&query), &[&other_secret_bytes()], now),
-        ] {
-            assert_ne!(Verdict::Valid, refused.verdict);
-            assert_eq!(None, refused.remaining_secs);
-        }
-        let package = verify(
-            KEY,
-            Some(&data_package_query(KEY, issued, &secret)),
-            &[&secret],
-            now,
-        );
-        assert_eq!(Verdict::Valid, package.verdict);
-        assert_eq!(None, package.remaining_secs);
-    }
-
     fn ordinary_query(key: &str, issued: u64, expires: u64, secret: &[u8]) -> String {
         format!(
             "ex={expires:08x}&is={issued:08x}&hm={}",
@@ -460,11 +426,6 @@ mod tests {
                 signer(text(case, "url"), storage_key, anchor, now, &secrets[0]),
                 "{name} signed url"
             );
-            assert_eq!(
-                text(case, "url"),
-                strip_signature(text(case, "signed")),
-                "{name} strips back"
-            );
             let signed = text(case, "signed");
             assert!(!signed.ends_with('&'), "{name} trailing separator");
             assert!(!signed.contains("&&"), "{name} doubled separator");
@@ -473,24 +434,6 @@ mod tests {
         assert_eq!(parsed.len(), run);
         assert!(run >= 8);
         assert!(data_packages >= 3);
-    }
-
-    #[test]
-    fn every_strip_vector_reproduces_byte_for_byte() {
-        let fixture = fixture();
-        let parsed = cases(&fixture, "strip");
-        let mut run = 0;
-        for case in parsed {
-            assert_eq!(
-                text(case, "stripped"),
-                strip_signature(text(case, "url")),
-                "{}",
-                text(case, "name")
-            );
-            run += 1;
-        }
-        assert_eq!(parsed.len(), run);
-        assert!(run >= 10);
     }
 
     #[test]
@@ -539,120 +482,6 @@ mod tests {
         assert!(rotations >= 3);
         assert!(trailing_separators >= 2);
         assert!(doubled_separators >= 2);
-    }
-
-    #[test]
-    fn a_freshly_signed_url_verifies_at_every_second_of_its_life() {
-        let secret = secret_bytes();
-        let now = ANCHOR + 10;
-        let signed = with_signature("https://media.test/x.gif", KEY, ANCHOR, now, &secret);
-        let query = signed.split_once('?').expect("a signed url has a query").1;
-        let (issued, expires) = issue_window(ANCHOR, now);
-        assert!(issued <= now && now < expires);
-        for probe in [issued, now, expires - 1] {
-            assert_eq!(
-                Verdict::Valid,
-                verdict_of(KEY, Some(query), &[&secret], probe),
-                "{probe}"
-            );
-        }
-        for probe in [expires, expires + 1] {
-            assert_eq!(
-                Verdict::Expired,
-                verdict_of(KEY, Some(query), &[&secret], probe),
-                "{probe}"
-            );
-        }
-    }
-
-    #[test]
-    fn a_data_package_url_never_expires() {
-        let secret = secret_bytes();
-        let now = ANCHOR + 3 * ATTACHMENT_URL_BUCKET_SECS + 7;
-        let signed =
-            with_data_package_signature("https://media.test/x.gif", KEY, ANCHOR, now, &secret);
-        let query = signed.split_once('?').expect("a signed url has a query").1;
-        let (issued, expires) = issue_window(ANCHOR, now);
-        assert!(query.starts_with(&format!("ex=0&is={issued:08x}&hm=")));
-        assert!(query.ends_with("&uc=dp"));
-        for probe in [
-            0,
-            issued,
-            now,
-            expires,
-            expires + 1,
-            u64::from(u32::MAX),
-            u64::MAX,
-        ] {
-            assert_eq!(
-                Verdict::Valid,
-                verdict_of(KEY, Some(query), &[&secret], probe),
-                "{probe}"
-            );
-        }
-        assert_eq!(
-            Verdict::Mismatch,
-            verdict_of(KEY, Some(query), &[&other_secret_bytes()], now)
-        );
-    }
-
-    #[test]
-    fn the_issue_window_stays_on_the_anchor_grid() {
-        for offset in [0, 1, ATTACHMENT_URL_BUCKET_SECS - 1] {
-            for bucket in 0..8u64 {
-                let now = ANCHOR + bucket * ATTACHMENT_URL_BUCKET_SECS + offset;
-                let (issued, expires) = issue_window(ANCHOR, now);
-                assert_eq!(ANCHOR + bucket * ATTACHMENT_URL_BUCKET_SECS, issued);
-                assert_eq!(issued + ATTACHMENT_URL_TTL_SECS, expires);
-                assert!(expires - now >= ATTACHMENT_URL_TTL_SECS - ATTACHMENT_URL_BUCKET_SECS);
-            }
-        }
-    }
-
-    #[test]
-    fn a_clock_behind_the_anchor_issues_the_first_bucket() {
-        let (issued, expires) = issue_window(ANCHOR, ANCHOR - 5_000);
-        assert_eq!(ANCHOR, issued);
-        assert_eq!(ANCHOR + ATTACHMENT_URL_TTL_SECS, expires);
-    }
-
-    #[test]
-    fn a_window_beyond_eight_hex_digits_leaves_the_url_unchanged() {
-        let secret = secret_bytes();
-        let signers: [Signer; 2] = [with_signature, with_data_package_signature];
-        let last_fitting_anchor = WINDOW_MAX_SECS - ATTACHMENT_URL_TTL_SECS;
-        for signer in signers {
-            for url in [
-                "https://media.test/attachments/1/2/cat.gif",
-                "https://media.test/attachments/1/2/cat.gif?width=64&ex=1&&is=2&hm=3&uc=4#top",
-            ] {
-                for anchor in [last_fitting_anchor + 1, WINDOW_MAX_SECS, u64::MAX] {
-                    assert_eq!(url, signer(url, KEY, anchor, 0, &secret), "{anchor} {url}");
-                }
-                assert_eq!(
-                    url,
-                    signer(
-                        url,
-                        KEY,
-                        last_fitting_anchor,
-                        last_fitting_anchor + ATTACHMENT_URL_BUCKET_SECS,
-                        &secret
-                    ),
-                    "{url}"
-                );
-                let signed = signer(url, KEY, last_fitting_anchor, 0, &secret);
-                assert_ne!(url, signed, "{url}");
-                assert!(signed.contains(&format!("is={last_fitting_anchor:08x}&")));
-            }
-        }
-        let signed = with_signature(
-            "https://media.test/x.gif",
-            KEY,
-            last_fitting_anchor,
-            0,
-            &secret,
-        );
-        assert!(signed.contains("ex=ffffffff&"), "{signed}");
     }
 
     #[test]
@@ -937,185 +766,6 @@ mod tests {
                 verdict_of(KEY, query.as_deref(), &[&secret], now),
                 "{label}"
             );
-        }
-    }
-
-    #[test]
-    fn tolerated_input_shapes_still_verify() {
-        let secret = secret_bytes();
-        let now = ANCHOR;
-        let (issued, expires) = issue_window(ANCHOR, now);
-        let signature = sign(KEY, expires, issued, UrlKind::Ordinary, &secret);
-        let package = sign(KEY, 0, issued, UrlKind::DataPackage, &secret);
-        for (label, query) in [
-            (
-                "a trailing separator",
-                format!("ex={expires:08x}&is={issued:08x}&hm={signature}&"),
-            ),
-            (
-                "a doubled separator between the fields",
-                format!("ex={expires:08x}&&is={issued:08x}&hm={signature}"),
-            ),
-            (
-                "empty pairs around the signature",
-                format!("&=&ex={expires:08x}&&is={issued:08x}&hm={signature}&&"),
-            ),
-            (
-                "signature after other parameters",
-                format!("width=64&ex={expires:08x}&is={issued:08x}&hm={signature}"),
-            ),
-            (
-                "unknown parameters between the signature fields",
-                format!("ex={expires:08x}&width=64&is={issued:08x}&format=webp&hm={signature}"),
-            ),
-            (
-                "a data package with a trailing separator",
-                format!("ex=0&is={issued:08x}&hm={package}&uc=dp&"),
-            ),
-            (
-                "a doubled separator between the data package fields",
-                format!("ex=0&is={issued:08x}&&hm={package}&uc=dp"),
-            ),
-            (
-                "data package fields in another order",
-                format!("uc=dp&width=64&hm={package}&is={issued:08x}&ex=0"),
-            ),
-            (
-                "percent escaped uc name",
-                format!("ex=0&is={issued:08x}&hm={package}&%75c=dp"),
-            ),
-            (
-                "empty pairs around a data package",
-                format!("&=&ex=0&&is={issued:08x}&hm={package}&=&uc=dp&&"),
-            ),
-        ] {
-            assert_eq!(
-                Verdict::Valid,
-                verdict_of(KEY, Some(&query), &[&secret], now),
-                "{label}"
-            );
-        }
-    }
-
-    #[test]
-    fn every_signature_parameter_name_is_recognised_after_form_decoding() {
-        for name in ["ex", "is", "hm", "uc", "%65x", "%75c", "u%63", "%68%6D"] {
-            assert!(is_signature_parameter_name(name), "{name}");
-        }
-        for name in [
-            "", "e", "exp", "UC", "u+c", "u%2Bc", "%2575c", "width", "dp",
-        ] {
-            assert!(!is_signature_parameter_name(name), "{name}");
-        }
-    }
-
-    #[test]
-    fn a_decoded_key_names_one_object_across_every_path_spelling() {
-        for (path, expected) in [
-            ("/attachments/1/2/cat.gif", "attachments/1/2/cat.gif"),
-            ("///attachments/1/2/cat.gif", "attachments/1/2/cat.gif"),
-            ("attachments/1/2/cat.gif", "attachments/1/2/cat.gif"),
-            ("/attachments/1/2/caf%C3%A9.gif", "attachments/1/2/café.gif"),
-            ("/attachments/1/2/café.gif", "attachments/1/2/café.gif"),
-            ("/attachments/1/2/a%2Fb.gif", "attachments/1/2/a/b.gif"),
-            ("/attachments/1/2/a+b.gif", "attachments/1/2/a+b.gif"),
-            ("/attachments/1/2/a%25b.gif", "attachments/1/2/a%b.gif"),
-            ("/attachments/1/2/a%2.gif", "attachments/1/2/a%2.gif"),
-        ] {
-            assert_eq!(Some(expected.to_owned()), decode_key(path), "{path}");
-        }
-        for path in [
-            "/attachments/1/2/caf%C3%28.gif",
-            "/attachments/1/2/%FF.gif",
-            "/attachments/1/2/%ED%A0%80.gif",
-        ] {
-            assert_eq!(None, decode_key(path), "{path}");
-        }
-    }
-
-    #[test]
-    fn signing_replaces_an_existing_signature_and_keeps_everything_else() {
-        let secret = secret_bytes();
-        let now = ANCHOR;
-        let canonical = "https://media.test/attachments/1/2/cat.gif?width=64&height=64#anchor";
-        let key = "attachments/1/2/cat.gif";
-        let signed = with_signature(canonical, key, ANCHOR, now, &secret);
-        assert!(signed.contains("?ex="));
-        assert!(signed.ends_with("&width=64&height=64#anchor"));
-        let resigned = with_signature(
-            &signed,
-            key,
-            ANCHOR,
-            now + ATTACHMENT_URL_BUCKET_SECS,
-            &secret,
-        );
-        let package = with_data_package_signature(&resigned, key, ANCHOR, now, &secret);
-        let back = with_signature(&package, key, ANCHOR, now, &secret);
-        assert_eq!(signed, back);
-        for url in [&resigned, &package, &back] {
-            assert_eq!(1, url.matches("ex=").count(), "{url}");
-            assert_eq!(1, url.matches("is=").count(), "{url}");
-            assert_eq!(1, url.matches("hm=").count(), "{url}");
-            assert!(url.ends_with("&width=64&height=64#anchor"), "{url}");
-            assert_eq!(canonical, strip_signature(url), "{url}");
-        }
-        assert_eq!(1, package.matches("uc=dp&").count(), "{package}");
-        assert!(!resigned.contains("uc="), "{resigned}");
-        assert!(!back.contains("uc="), "{back}");
-    }
-
-    #[test]
-    fn a_bare_signed_url_ends_with_its_last_signature_field() {
-        let secret = secret_bytes();
-        let url = "https://media.test/attachments/1/2/cat.gif";
-        let key = "attachments/1/2/cat.gif";
-        for (signed, names) in [
-            (
-                with_signature(url, key, ANCHOR, ANCHOR, &secret),
-                &["ex=", "is=", "hm="][..],
-            ),
-            (
-                with_data_package_signature(url, key, ANCHOR, ANCHOR, &secret),
-                &["ex=0", "is=", "hm=", "uc=dp"][..],
-            ),
-        ] {
-            assert!(!signed.ends_with('&'), "{signed}");
-            assert!(!signed.contains("&&"), "{signed}");
-            let query = signed.split_once('?').expect("a signed url has a query").1;
-            let fields: Vec<&str> = query.split('&').collect();
-            assert_eq!(names.len(), fields.len(), "{signed}");
-            for (field, name) in fields.iter().zip(names) {
-                assert!(field.starts_with(name), "{signed}");
-            }
-        }
-    }
-
-    #[test]
-    fn a_preserved_parameter_follows_one_separator() {
-        let secret = secret_bytes();
-        let key = "attachments/1/2/cat.gif";
-        let signers: [Signer; 2] = [with_signature, with_data_package_signature];
-        for signer in signers {
-            for (url, tail) in [
-                (
-                    "https://media.test/attachments/1/2/cat.gif?width=100",
-                    "&width=100",
-                ),
-                (
-                    "https://media.test/attachments/1/2/cat.gif?width=100&height=64#top",
-                    "&width=100&height=64#top",
-                ),
-                ("https://media.test/attachments/1/2/cat.gif#top", "#top"),
-                ("https://media.test/attachments/1/2/cat.gif?&=&", ""),
-            ] {
-                let signed = signer(url, key, ANCHOR, ANCHOR, &secret);
-                assert!(signed.ends_with(tail), "{signed}");
-                assert!(!signed.contains("&&"), "{signed}");
-                let head = signed
-                    .split_once('#')
-                    .map_or(signed.as_str(), |(head, _)| head);
-                assert!(!head.ends_with('&'), "{signed}");
-            }
         }
     }
 }

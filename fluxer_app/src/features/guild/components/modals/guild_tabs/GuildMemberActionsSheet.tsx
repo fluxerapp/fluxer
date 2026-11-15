@@ -1,25 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
 import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
 import {canReportMessage} from '@app/features/channel/components/MessageActionUtils';
 import styles from '@app/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.module.css';
-import {TransferOwnershipModal} from '@app/features/guild/components/modals/TransferOwnershipModal';
 import {ManageRolesBottomSheet} from '@app/features/guild/components/RoleManagement';
-import Guilds from '@app/features/guild/state/Guilds';
 import {
-	resolveGuildModerationCapabilities,
 	resolveGuildScopedModerationActionKeys,
+	useGuildMemberModerationCapabilities,
 } from '@app/features/guild/utils/GuildModerationCapabilityUtils';
 import {
-	BLOCKED_USER_DM_WARNING_DESCRIPTOR,
 	CHANGE_NICKNAME_DESCRIPTOR,
 	COPY_USER_ID_DESCRIPTOR,
 	OPEN_DM_DESCRIPTOR,
 	REPORT_MESSAGE_DESCRIPTOR,
-	TRANSFER_OWNERSHIP_DESCRIPTOR,
 	VIEW_PROFILE_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
@@ -32,12 +27,9 @@ import {
 	BAN_ACTION_DESCRIPTOR,
 	BLOCK_DESCRIPTOR,
 	REMOVE_TIMEOUT_DESCRIPTOR,
-	REPORT_USER_DESCRIPTOR,
 	TIMEOUT_DESCRIPTOR,
 } from '@app/features/moderation/utils/ModerationMessageDescriptors';
-import {openReportMessageModal, openReportUserModal} from '@app/features/moderation/utils/ReportActionUtils';
-import {useRoleHierarchy} from '@app/features/permissions/hooks/useRoleHierarchy';
-import Permission from '@app/features/permissions/state/Permission';
+import {openReportMessageModal} from '@app/features/moderation/utils/ReportActionUtils';
 import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import Relationships from '@app/features/relationship/state/Relationships';
@@ -56,10 +48,13 @@ import {ChangeNicknameModal} from '@app/features/user/components/modals/ChangeNi
 import type {User} from '@app/features/user/models/User';
 import UserProfileMobile from '@app/features/user/state/UserProfileMobile';
 import Users from '@app/features/user/state/Users';
+import {canPerform} from '@app/features/user/utils/AccountGates';
+import {blockedDmConfirmModal} from '@app/features/user/utils/DMActionUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import * as CallUtils from '@app/features/voice/utils/CallUtils';
 import {hasActiveDirectCallWithUser} from '@app/features/voice/utils/PrivateCallMenuUtils';
 import {VOICE_CALL_DESCRIPTOR} from '@app/features/voice/utils/VoiceMessageDescriptors';
+import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {msg} from '@lingui/core/macro';
@@ -67,7 +62,6 @@ import {useLingui} from '@lingui/react/macro';
 import {
 	ChatTeardropIcon,
 	ClockIcon,
-	CrownIcon,
 	FlagIcon,
 	GavelIcon,
 	IdentificationCardIcon,
@@ -116,37 +110,22 @@ export const GuildMemberActionsSheet: FC<GuildMemberActionsSheetProps> = observe
 		const currentUserId = Authentication.currentUserId;
 		const isCurrentUser = user.id === currentUserId;
 		const isBot = user.bot;
-		const currentUserUnclaimed = !(Users.currentUser?.isClaimed() ?? true);
+		const canSendFriendRequest = canPerform(Users.currentUser, TierGatedActions.FRIEND_REQUEST).allowed;
 		const relationship = Relationships.getRelationship(user.id);
 		const relationshipType = relationship?.type;
 		const isBlocked = relationshipType === RelationshipTypes.BLOCKED;
-		const canKickMembers = Permission.can(Permissions.KICK_MEMBERS, {guildId});
-		const canBanMembers = Permission.can(Permissions.BAN_MEMBERS, {guildId});
-		const canModerateMembers = Permission.can(Permissions.MODERATE_MEMBERS, {guildId});
-		const guild = Guilds.getGuild(guildId);
-		const guildSnapshot = guild?.toJSON();
-		const {canManageTarget} = useRoleHierarchy(guild);
-		const targetHasAdministratorPermission =
-			guildSnapshot !== undefined && PermissionUtils.can(Permissions.ADMINISTRATOR, user.id, guildSnapshot);
-		const {canKick, canBan, canTimeout} = resolveGuildModerationCapabilities({
+
+		const {canKick, canBan, canTimeout, guild, canManageNicknames} = useGuildMemberModerationCapabilities(
+			guildId,
+			user,
 			isCurrentUser,
-			canManageTarget: canManageTarget(user.id),
-			canKickMembers,
-			canBanMembers,
-			canModerateMembers,
-			targetHasAdministratorPermission,
-		});
+			member,
+		);
 		const memberIsTimedOut = member.isTimedOut();
-		const isOwner = guild?.ownerId === currentUserId;
-		const canTransfer = !isCurrentUser && !isBot && isOwner;
 		const hasRoles = guild && Object.values(guild.roles).some((r) => !r.isEveryone);
 		const manageRolesLabel = PermissionUtils.formatPermissionLabel(i18n, Permissions.MANAGE_ROLES);
 		const [manageRolesSheetOpen, setManageRolesSheetOpen] = useState(false);
-		const hasChangeNicknamePermission = Permission.can(Permissions.CHANGE_NICKNAME, {guildId});
-		const hasManageNicknamesPermission = Permission.can(Permissions.MANAGE_NICKNAMES, {guildId});
-		const canManageNicknames =
-			(isCurrentUser && hasChangeNicknamePermission && !memberIsTimedOut) ||
-			(!isCurrentUser && hasManageNicknamesPermission);
+
 		const displayName = NicknameUtils.getNickname(user, guildId);
 		const handleViewProfile = () => {
 			ModalCommands.runAfterBottomSheetClose(onClose, () => UserProfileMobile.open(user.id, guildId));
@@ -165,16 +144,12 @@ export const GuildMemberActionsSheet: FC<GuildMemberActionsSheetProps> = observe
 		const handleOpenBlockedDm = () => {
 			ModalCommands.pushAfterBottomSheetClose(
 				onClose,
-				modal(() => (
-					<ConfirmModal
-						title={i18n._(OPEN_DM_DESCRIPTOR)}
-						description={i18n._(BLOCKED_USER_DM_WARNING_DESCRIPTOR, {userName: displayName})}
-						primaryText={i18n._(OPEN_DM_DESCRIPTOR)}
-						primaryVariant="primary"
-						onPrimary={openDmChannel}
-						data-flx="guild.guild-tabs.guild-member-actions-sheet.handle-open-blocked-dm.confirm-modal"
-					/>
-				)),
+				blockedDmConfirmModal(
+					i18n,
+					displayName,
+					openDmChannel,
+					'guild.guild-tabs.guild-member-actions-sheet.handle-open-blocked-dm.confirm-modal',
+				),
 			);
 		};
 		const handleStartVoiceCall = async () => {
@@ -257,22 +232,6 @@ export const GuildMemberActionsSheet: FC<GuildMemberActionsSheetProps> = observe
 		const handleManageRoles = () => {
 			setManageRolesSheetOpen(true);
 		};
-		const handleTransferOwnership = () => {
-			ModalCommands.pushAfterBottomSheetClose(
-				onClose,
-				modal(() => (
-					<TransferOwnershipModal
-						guildId={guildId}
-						targetUser={user}
-						targetMember={member}
-						data-flx="guild.guild-tabs.guild-member-actions-sheet.handle-transfer-ownership.transfer-ownership-modal"
-					/>
-				)),
-			);
-		};
-		const handleReportUser = () => {
-			ModalCommands.runAfterBottomSheetClose(onClose, () => openReportUserModal({i18n, user, guildId, message}));
-		};
 		const handleReportMessage = () => {
 			if (!message || !canReportMessage(message)) {
 				return;
@@ -317,7 +276,7 @@ export const GuildMemberActionsSheet: FC<GuildMemberActionsSheetProps> = observe
 		if (guildItems.length > 0) {
 			menuGroups.push({items: guildItems});
 		}
-		if (!isCurrentUser && !isBot && !RuntimeConfig.directMessagesDisabled) {
+		if (!isCurrentUser && !isBot && !RuntimeConfig.friendsDisabled) {
 			const relationshipItems = [];
 			if (relationshipType === RelationshipTypes.FRIEND) {
 				relationshipItems.push({
@@ -337,8 +296,7 @@ export const GuildMemberActionsSheet: FC<GuildMemberActionsSheetProps> = observe
 			} else if (
 				relationshipType !== RelationshipTypes.OUTGOING_REQUEST &&
 				relationshipType !== RelationshipTypes.BLOCKED &&
-				!currentUserUnclaimed &&
-				Users.currentUser?.verified !== false
+				canSendFriendRequest
 			) {
 				relationshipItems.push({
 					icon: <UserPlusIcon className={styles.icon} data-flx="guild.guild-tabs.guild-member-actions-sheet.icon--7" />,
@@ -359,17 +317,6 @@ export const GuildMemberActionsSheet: FC<GuildMemberActionsSheetProps> = observe
 						),
 						label: manageRolesLabel,
 						onClick: handleManageRoles,
-					},
-				],
-			});
-		}
-		if (canTransfer) {
-			menuGroups.push({
-				items: [
-					{
-						icon: <CrownIcon className={styles.icon} data-flx="guild.guild-tabs.guild-member-actions-sheet.icon--9" />,
-						label: i18n._(TRANSFER_OWNERSHIP_DESCRIPTOR),
-						onClick: handleTransferOwnership,
 					},
 				],
 			});
@@ -468,12 +415,6 @@ export const GuildMemberActionsSheet: FC<GuildMemberActionsSheetProps> = observe
 							},
 						]
 					: []),
-				{
-					icon: <FlagIcon className={styles.icon} data-flx="guild.guild-tabs.guild-member-actions-sheet.icon--15" />,
-					label: i18n._(REPORT_USER_DESCRIPTOR),
-					onClick: handleReportUser,
-					danger: true,
-				},
 			];
 			if (relationshipType === RelationshipTypes.BLOCKED) {
 				reportBlockItems.push({

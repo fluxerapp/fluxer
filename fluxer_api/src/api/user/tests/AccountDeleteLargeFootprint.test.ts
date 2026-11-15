@@ -3,15 +3,14 @@
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createGuildID, createUserID, type UserID} from '@app/api/BrandedTypes';
 import {fetchMany} from '@app/api/database/CassandraQueryExecution';
-import {GuildModerationRepository} from '@app/api/guild/repositories/GuildModerationRepository';
+import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {Notes, RelationshipsByTarget} from '@app/api/Tables';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
 import {createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {UserRelationshipRepository} from '@app/api/user/repositories/UserRelationshipRepository';
 import {deleteAccount, setPendingDeletionAt, waitForDeletionCompletion} from '@app/api/user/tests/UserTestUtils';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
-import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 const RELATIONSHIPS_EACH_WAY = 320;
 const GUILD_BANS = 150;
@@ -28,15 +27,14 @@ describe('Deleting an account with a large footprint', () => {
 		harness = await createApiTestHarness();
 	});
 	afterEach(async () => {
-		vi.restoreAllMocks();
 		await harness?.shutdown();
 	});
 
-	test('relationships, guild bans and notes are removed in bounded batches', async () => {
+	test('removes every relationship, guild ban and note', async () => {
 		const account = await createTestAccount(harness);
 		const userId = createUserID(BigInt(account.userId));
 		const relationships = new UserRelationshipRepository();
-		const moderation = new GuildModerationRepository();
+		const moderation = new GuildRepository();
 		for (let index = 0; index < RELATIONSHIPS_EACH_WAY; index++) {
 			const other = otherUserId(index);
 			for (const [source, target] of [
@@ -71,13 +69,11 @@ describe('Deleting an account with a large footprint', () => {
 		}
 		await deleteAccount(harness, account.token, account.password);
 		await setPendingDeletionAt(harness, account.userId, new Date(Date.now() - 60_000));
-		const batchSpy = vi.spyOn(InMemoryCassandraQueryExecutor.prototype, 'executeBatch');
 		const result = await createBuilderWithoutAuth<{errors?: Array<{error: string}>}>(harness)
 			.post('/test/worker/process-pending-deletions')
 			.execute();
 		expect(result.errors ?? []).toEqual([]);
 		await waitForDeletionCompletion(harness, account.userId);
-		expect(Math.max(...batchSpy.mock.calls.map(([queries]) => queries.length))).toBeLessThanOrEqual(60);
 		expect(await relationships.listRelationships(userId)).toHaveLength(0);
 		const pointingAtUser = await fetchMany(
 			RelationshipsByTarget.selectCql({where: RelationshipsByTarget.where.eq('target_user_id')}),

@@ -11,7 +11,6 @@ interface UseMediaDevicesOptions {
 
 interface RefreshOptions {
 	requestPermissions?: boolean;
-	forceRefresh?: boolean;
 }
 
 type UseMediaDevicesResult = VoiceDeviceState & {
@@ -29,7 +28,7 @@ export const useMediaDevices = (options: UseMediaDevicesOptions = {}): UseMediaD
 	const refreshDevices = useCallback(
 		async (refreshOptions?: RefreshOptions) => {
 			await VoiceDevicePermissionState.ensureDevices({
-				forceRefresh: refreshOptions?.forceRefresh ?? true,
+				forceRefresh: true,
 				requestPermissions: refreshOptions?.requestPermissions ?? requestPermissions,
 			});
 		},

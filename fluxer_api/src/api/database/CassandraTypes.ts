@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type cassandra from 'cassandra-driver';
+import {LocalDate} from '@app/api/database/LocalDate';
 
 const MAX_TTL_SECONDS = 630_720_000;
 
@@ -42,14 +42,14 @@ export type CassandraParam =
 	| boolean
 	| Buffer
 	| Date
-	| cassandra.types.LocalDate
+	| LocalDate
 	| Set<unknown>
 	| Map<unknown, unknown>
 	| Array<unknown>
 	| Record<string, unknown>
 	| null;
 export type CassandraParams = Record<string, CassandraParam>;
-export type KvAction = 'select' | 'count' | 'insert' | 'upsert' | 'delete' | 'patch' | 'batch';
+type KvAction = 'select' | 'count' | 'insert' | 'upsert' | 'delete' | 'patch' | 'batch';
 
 export interface KvTableSpec<Row extends object = Record<string, unknown>> {
 	name: string;
@@ -102,6 +102,16 @@ export interface KvQueryMeta<Row extends object = Record<string, unknown>> {
 	conditions?: ReadonlyArray<KvQueryCondition<Row>>;
 	batchEntries?: ReadonlyArray<KvConditionalBatchEntry<Row>>;
 	ifNotExists?: boolean;
+}
+
+export interface KvAdvance {
+	table: KvTableSpec;
+	pk: CassandraParams;
+	guard: {col: string; value: bigint; orEqual?: boolean};
+	set: CassandraParams;
+	always?: CassandraParams;
+	increment?: Record<string, number>;
+	insert: CassandraParams | null;
 }
 
 export interface PreparedQuery<P extends CassandraParams = CassandraParams> {
@@ -163,11 +173,6 @@ export type WhereExpr<Row extends object> =
 			kind: 'tokenGt';
 			col: ColumnName<Row>;
 			param: string;
-	  }
-	| {
-			kind: 'tupleGt';
-			cols: ReadonlyArray<ColumnName<Row>>;
-			params: ReadonlyArray<string>;
 	  };
 export type OrderBy<Row extends object> = {
 	col: ColumnName<Row>;
@@ -206,8 +211,6 @@ export interface Table<Row extends object, PK extends ColumnName<Row>, PartKey e
 		orderBy?: OrderBy<Row>;
 		limit?: number;
 	}): QueryTemplate;
-	updateAllCql(): string;
-	paramsFromRow(row: Row): CassandraParams;
 	upsertAll(row: Row): PreparedQuery;
 	patchByPk(
 		pk: Pick<Row, PK>,
@@ -236,7 +239,6 @@ export interface Table<Row extends object, PK extends ColumnName<Row>, PartKey e
 	deleteByPk(pk: Pick<Row, PK>): PreparedQuery;
 	conditionalDeleteByPk(pk: Pick<Row, PK>, expected: Partial<Row>): PreparedQuery;
 	deletePartition(pk: Pick<Row, PartKey>): PreparedQuery;
-	insertCql(opts?: {ttlParam?: string}): string;
 	insert(row: Row): PreparedQuery;
 	insertIfNotExists(row: Row): PreparedQuery;
 	insertIfNotExistsWithTtl(row: Row, ttlSeconds: number): PreparedQuery;
@@ -252,16 +254,7 @@ export interface Table<Row extends object, PK extends ColumnName<Row>, PartKey e
 		}>,
 		ttlSeconds: number,
 	): PreparedQuery;
-	patchByPkWithTtlParam(
-		pk: Pick<Row, PK>,
-		patch: Partial<{
-			[K in Exclude<ColumnName<Row>, PK>]: DbOp<RowValue<Row, K>>;
-		}>,
-		ttlParamName: string,
-		ttlValue: number,
-	): PreparedQuery;
 	upsertAllWithTtl(row: Row, ttlSeconds: number): PreparedQuery;
-	upsertAllWithTtlParam(row: Row, ttlParamName: string, ttlValue: number): PreparedQuery;
 	where: {
 		eq: <K extends ColumnName<Row>>(col: K, param?: string) => WhereExpr<Row>;
 		in: <K extends ColumnName<Row>>(col: K, param: string) => WhereExpr<Row>;
@@ -270,7 +263,6 @@ export interface Table<Row extends object, PK extends ColumnName<Row>, PartKey e
 		lte: <K extends ColumnName<Row>>(col: K, param?: string) => WhereExpr<Row>;
 		gte: <K extends ColumnName<Row>>(col: K, param?: string) => WhereExpr<Row>;
 		tokenGt: <K extends ColumnName<Row>>(col: K, param: string) => WhereExpr<Row>;
-		tupleGt: <K extends ColumnName<Row>>(cols: ReadonlyArray<K>, params: ReadonlyArray<string>) => WhereExpr<Row>;
 	};
 }
 
@@ -355,90 +347,59 @@ export function normalizeInParams<P extends CassandraParams>(meta: CqlStatementM
 	return (changed ? (out as P) : params) as P;
 }
 
-function hasUndefinedDeep(value: unknown): boolean {
-	if (value === undefined) return true;
-	if (value === null) return false;
+function findUndefinedPath(value: unknown): string | null {
+	if (value === undefined) return '';
+	if (value === null) return null;
 	const t = typeof value;
-	if (t === 'string' || t === 'number' || t === 'bigint' || t === 'boolean') return false;
-	if (value instanceof Date) return false;
-	if (value instanceof Buffer) return false;
-	if (t === 'object' && value.constructor?.name === 'LocalDate') return false;
+	if (t === 'string' || t === 'number' || t === 'bigint' || t === 'boolean') return null;
+	if (value instanceof Date || value instanceof Buffer) return null;
+	if (value instanceof LocalDate) return null;
 	if (Array.isArray(value)) {
 		for (let i = 0; i < value.length; i++) {
-			if (hasUndefinedDeep(value[i])) return true;
+			const suffix = findUndefinedPath(value[i]);
+			if (suffix !== null) return `[${i}]${suffix}`;
 		}
-		return false;
+		return null;
 	}
 	if (value instanceof Set) {
-		for (const v of value.values()) {
-			if (hasUndefinedDeep(v)) return true;
+		let index = 0;
+		for (const item of value.values()) {
+			const suffix = findUndefinedPath(item);
+			if (suffix !== null) return `{set:${index}}${suffix}`;
+			index++;
 		}
-		return false;
+		return null;
 	}
 	if (value instanceof Map) {
-		for (const [k, v] of value.entries()) {
-			if (hasUndefinedDeep(k) || hasUndefinedDeep(v)) return true;
+		let index = 0;
+		for (const [key, item] of value.entries()) {
+			const keySuffix = findUndefinedPath(key);
+			if (keySuffix !== null) return `{mapKey:${index}}${keySuffix}`;
+			const valueSuffix = findUndefinedPath(item);
+			if (valueSuffix !== null) return `{mapVal:${index}}${valueSuffix}`;
+			index++;
 		}
-		return false;
+		return null;
 	}
 	if (t === 'object') {
 		const keys = Object.keys(value as Record<string, unknown>);
-		for (let i = 0; i < keys.length; i++) {
-			if (hasUndefinedDeep((value as Record<string, unknown>)[keys[i]!])) return true;
+		for (const key of keys) {
+			const suffix = findUndefinedPath((value as Record<string, unknown>)[key]);
+			if (suffix !== null) return `.${key}${suffix}`;
 		}
 	}
-	return false;
-}
-
-function assertNoUndefinedDeep(value: unknown, path: string): void {
-	if (value === undefined) {
-		throw new Error(
-			`Undefined value at "${path}". This project forbids undefined in Cassandra params; use null explicitly or omit the column via PATCH.`,
-		);
-	}
-	if (value === null) return;
-	const t = typeof value;
-	if (t === 'string' || t === 'number' || t === 'bigint' || t === 'boolean') return;
-	if (value instanceof Date) return;
-	if (value instanceof Buffer) return;
-	if (typeof value === 'object' && value && value.constructor?.name === 'LocalDate') return;
-	if (Array.isArray(value)) {
-		for (let i = 0; i < value.length; i++) {
-			assertNoUndefinedDeep(value[i], `${path}[${i}]`);
-		}
-		return;
-	}
-	if (value instanceof Set) {
-		let idx = 0;
-		for (const v of value.values()) {
-			assertNoUndefinedDeep(v, `${path}{set:${idx}}`);
-			idx++;
-		}
-		return;
-	}
-	if (value instanceof Map) {
-		let idx = 0;
-		for (const [k, v] of value.entries()) {
-			assertNoUndefinedDeep(k, `${path}{mapKey:${idx}}`);
-			assertNoUndefinedDeep(v, `${path}{mapVal:${idx}}`);
-			idx++;
-		}
-		return;
-	}
-	if (typeof value === 'object') {
-		for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-			assertNoUndefinedDeep(v, `${path}.${k}`);
-		}
-	}
+	return null;
 }
 
 export function assertNoUndefinedParams(params: Record<string, unknown>): void {
 	const keys = Object.keys(params);
 	for (let i = 0; i < keys.length; i++) {
 		const k = keys[i]!;
-		const v = params[k];
-		if (hasUndefinedDeep(v)) {
-			assertNoUndefinedDeep(v, `:${k}`);
+		const suffix = findUndefinedPath(params[k]);
+		if (suffix !== null) {
+			throw new Error(
+				`Undefined value at ":${k}${suffix}". This project forbids undefined in Cassandra params; use null explicitly or omit the column via PATCH.`,
+			);
 		}
 	}
 }

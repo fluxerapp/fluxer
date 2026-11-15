@@ -102,7 +102,7 @@ interface InviteBase {
 
 export interface GuildInvite extends InviteBase {
 	readonly type: typeof InviteTypes.GUILD;
-	readonly guild: Guild;
+	readonly guild: Guild & {readonly visits_enabled?: boolean};
 	readonly channel: Channel;
 	readonly member_count: number;
 	readonly presence_count: number;

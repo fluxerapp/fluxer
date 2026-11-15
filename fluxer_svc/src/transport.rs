@@ -11,6 +11,18 @@ use tracing::{debug, info, warn};
 const NATS_SUBSCRIPTION_CAPACITY: usize = 8_192;
 const SLOW_CONSUMER_LOG_INTERVAL_MS: u64 = 1_000;
 const SLOW_CONSUMER_LOG_NEVER_MS: u64 = u64::MAX;
+const DRAIN_HEADROOM_MESSAGES: u64 = 32;
+
+#[derive(Debug)]
+pub struct NoResponders;
+
+impl std::fmt::Display for NoResponders {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("no responders")
+    }
+}
+
+impl std::error::Error for NoResponders {}
 
 #[async_trait]
 pub trait Transport: Clone + Send + Sync + 'static {
@@ -30,8 +42,8 @@ pub trait Transport: Clone + Send + Sync + 'static {
         queue_group: &str,
     ) -> anyhow::Result<Self::Subscriber>;
     async fn publish(&self, subject: &str, payload: &[u8]) -> anyhow::Result<()>;
+    async fn flush(&self) -> anyhow::Result<()>;
     async fn wait_for_reconnect(&self);
-    fn is_connected(&self) -> bool;
 }
 
 #[async_trait]
@@ -39,6 +51,8 @@ pub trait TransportSubscriber {
     type Message: TransportMessage + Send + Sync + 'static;
 
     async fn next(&mut self) -> Option<Self::Message>;
+    async fn drain(&mut self) -> anyhow::Result<()>;
+    async fn unsubscribe(&mut self) -> anyhow::Result<()>;
 }
 
 pub trait TransportMessage {
@@ -93,6 +107,7 @@ pub struct NatsTransport {
 
 pub struct Subscriber {
     inner: async_nats::Subscriber,
+    received: u64,
 }
 
 pub struct NatsMessage {
@@ -161,28 +176,12 @@ impl NatsTransport {
         <Self as Transport>::request(self, subject, payload, timeout).await
     }
 
-    pub async fn subscribe(&self, subject: &str) -> anyhow::Result<Subscriber> {
-        <Self as Transport>::subscribe(self, subject).await
-    }
-
     pub async fn subscribe_queue(
         &self,
         subject: &str,
         queue_group: &str,
     ) -> anyhow::Result<Subscriber> {
         <Self as Transport>::subscribe_queue(self, subject, queue_group).await
-    }
-
-    pub async fn publish(&self, subject: &str, payload: &[u8]) -> anyhow::Result<()> {
-        <Self as Transport>::publish(self, subject, payload).await
-    }
-
-    pub async fn wait_for_reconnect(&self) {
-        <Self as Transport>::wait_for_reconnect(self).await;
-    }
-
-    pub fn is_connected(&self) -> bool {
-        <Self as Transport>::is_connected(self)
     }
 }
 
@@ -220,14 +219,20 @@ impl Transport for NatsTransport {
             self.client
                 .request(subject, Bytes::copy_from_slice(payload)),
         )
-        .await??;
-        Ok(response.payload.to_vec())
+        .await?;
+        match response {
+            Ok(response) => Ok(response.payload.to_vec()),
+            Err(error) if error.kind() == async_nats::RequestErrorKind::NoResponders => {
+                Err(NoResponders.into())
+            }
+            Err(error) => Err(error.into()),
+        }
     }
 
     async fn subscribe(&self, subject: &str) -> anyhow::Result<Subscriber> {
         let subject = async_nats::Subject::from(subject.to_owned());
         let inner = self.client.subscribe(subject).await?;
-        Ok(Subscriber { inner })
+        Ok(Subscriber { inner, received: 0 })
     }
 
     async fn subscribe_queue(
@@ -238,7 +243,7 @@ impl Transport for NatsTransport {
         let subject = async_nats::Subject::from(subject.to_owned());
         let queue = queue_group.to_owned();
         let inner = self.client.queue_subscribe(subject, queue).await?;
-        Ok(Subscriber { inner })
+        Ok(Subscriber { inner, received: 0 })
     }
 
     async fn publish(&self, subject: &str, payload: &[u8]) -> anyhow::Result<()> {
@@ -249,15 +254,13 @@ impl Transport for NatsTransport {
         Ok(())
     }
 
-    async fn wait_for_reconnect(&self) {
-        self.reconnect_notify.notified().await;
+    async fn flush(&self) -> anyhow::Result<()> {
+        self.client.flush().await?;
+        Ok(())
     }
 
-    fn is_connected(&self) -> bool {
-        matches!(
-            self.client.connection_state(),
-            async_nats::connection::State::Connected
-        )
+    async fn wait_for_reconnect(&self) {
+        self.reconnect_notify.notified().await;
     }
 }
 
@@ -267,7 +270,21 @@ impl TransportSubscriber for Subscriber {
 
     async fn next(&mut self) -> Option<NatsMessage> {
         use futures::StreamExt;
-        self.inner.next().await.map(|inner| NatsMessage { inner })
+        let inner = self.inner.next().await?;
+        self.received += 1;
+        Some(NatsMessage { inner })
+    }
+
+    async fn drain(&mut self) -> anyhow::Result<()> {
+        self.inner
+            .unsubscribe_after(self.received + DRAIN_HEADROOM_MESSAGES)
+            .await?;
+        Ok(())
+    }
+
+    async fn unsubscribe(&mut self) -> anyhow::Result<()> {
+        self.inner.unsubscribe().await?;
+        Ok(())
     }
 }
 
@@ -291,43 +308,9 @@ impl NatsMessage {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn slow_consumer_logs_initial_event_then_throttles() {
-        let last_log_ms = AtomicU64::new(SLOW_CONSUMER_LOG_NEVER_MS);
-
-        assert!(should_log_slow_consumer(10, &last_log_ms));
-        assert!(!should_log_slow_consumer(1_009, &last_log_ms));
-        assert!(should_log_slow_consumer(1_010, &last_log_ms));
-    }
-
-    #[test]
-    fn slow_consumer_throttle_allows_one_racing_logger() {
-        let last_log_ms = Arc::new(AtomicU64::new(SLOW_CONSUMER_LOG_NEVER_MS));
-        let logged = Arc::new(AtomicU64::new(0));
-
-        std::thread::scope(|scope| {
-            for _ in 0..8 {
-                let last_log_ms = last_log_ms.clone();
-                let logged = logged.clone();
-                scope.spawn(move || {
-                    if should_log_slow_consumer(42, &last_log_ms) {
-                        logged.fetch_add(1, Ordering::Relaxed);
-                    }
-                });
-            }
-        });
-
-        assert_eq!(logged.load(Ordering::Relaxed), 1);
-    }
-}
-
-#[cfg(debug_assertions)]
+#[cfg(any(test, feature = "mock"))]
 mod in_memory {
-    use super::{Transport, TransportMessage, TransportSubscriber};
+    use super::{NoResponders, Transport, TransportMessage, TransportSubscriber};
     use async_trait::async_trait;
     use std::collections::HashMap;
     use std::sync::Arc;
@@ -385,29 +368,31 @@ mod in_memory {
             subject: &str,
             payload: &[u8],
             reply_subject: Option<String>,
-        ) -> anyhow::Result<()> {
+        ) -> bool {
             let message = InMemoryMessage {
                 subject: subject.to_owned(),
                 payload: payload.to_vec(),
                 reply_subject,
             };
             let mut subscribers = self.bus.subscribers.lock().await;
+            let mut delivered = false;
 
             for (pattern, senders) in subscribers.plain.iter_mut() {
-                if !matches_subject(pattern, subject) {
+                if pattern != subject {
                     continue;
                 }
                 senders.retain(|sender| sender.send(message.clone()).is_ok());
+                delivered |= !senders.is_empty();
             }
 
             for (key, queue) in subscribers.queue.iter_mut() {
-                if !matches_subject(&key.subject, subject) {
+                if key.subject != subject {
                     continue;
                 }
-                send_one_queue_subscriber(queue, message.clone());
+                delivered |= send_one_queue_subscriber(queue, message.clone());
             }
 
-            Ok(())
+            delivered
         }
     }
 
@@ -427,8 +412,9 @@ mod in_memory {
                 self.bus.next_inbox.fetch_add(1, Ordering::Relaxed)
             );
             let mut subscriber = self.subscribe(&inbox).await?;
-            self.publish_with_reply(subject, payload, Some(inbox))
-                .await?;
+            if !self.publish_with_reply(subject, payload, Some(inbox)).await {
+                return Err(NoResponders.into());
+            }
             let message = tokio::time::timeout(timeout, subscriber.next())
                 .await?
                 .ok_or_else(|| anyhow::anyhow!("in-memory request subscriber closed"))?;
@@ -470,15 +456,16 @@ mod in_memory {
         }
 
         async fn publish(&self, subject: &str, payload: &[u8]) -> anyhow::Result<()> {
-            self.publish_with_reply(subject, payload, None).await
+            self.publish_with_reply(subject, payload, None).await;
+            Ok(())
+        }
+
+        async fn flush(&self) -> anyhow::Result<()> {
+            Ok(())
         }
 
         async fn wait_for_reconnect(&self) {
             std::future::pending::<()>().await;
-        }
-
-        fn is_connected(&self) -> bool {
-            true
         }
     }
 
@@ -488,6 +475,16 @@ mod in_memory {
 
         async fn next(&mut self) -> Option<Self::Message> {
             self.receiver.recv().await
+        }
+
+        async fn drain(&mut self) -> anyhow::Result<()> {
+            self.receiver.close();
+            Ok(())
+        }
+
+        async fn unsubscribe(&mut self) -> anyhow::Result<()> {
+            self.receiver.close();
+            Ok(())
         }
     }
 
@@ -505,29 +502,21 @@ mod in_memory {
         }
     }
 
-    fn send_one_queue_subscriber(queue: &mut QueueSubscribers, message: InMemoryMessage) {
+    fn send_one_queue_subscriber(queue: &mut QueueSubscribers, message: InMemoryMessage) -> bool {
         while !queue.senders.is_empty() {
             let index = queue.next % queue.senders.len();
             queue.next = queue.next.wrapping_add(1);
             if queue.senders[index].send(message.clone()).is_ok() {
-                return;
+                return true;
             }
             queue.senders.remove(index);
             if index < queue.next {
                 queue.next = queue.next.saturating_sub(1);
             }
         }
-    }
-
-    fn matches_subject(pattern: &str, subject: &str) -> bool {
-        if pattern == subject {
-            return true;
-        }
-        pattern
-            .strip_suffix(".>")
-            .is_some_and(|prefix| subject.starts_with(&format!("{prefix}.")))
+        false
     }
 }
 
-#[cfg(debug_assertions)]
+#[cfg(any(test, feature = "mock"))]
 pub use in_memory::InMemoryTransport;

@@ -4,7 +4,7 @@ import ChannelPins from '@app/features/channel/state/ChannelPins';
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 
-interface ChannelPinsUpdatePayload {
+export interface ChannelPinsUpdatePayload {
 	channel_id: string;
 	last_pin_timestamp?: string | null;
 }

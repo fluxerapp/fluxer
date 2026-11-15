@@ -3,6 +3,7 @@
 import {isMediaAttachment} from '@app/features/channel/components/MessageAttachmentUtils';
 import type {ForwardMediaSelection} from '@app/features/messaging/commands/MessageCommands';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {
 	buildMediaProxyURL,
 	snapMediaProxyImageSize,
@@ -18,7 +19,7 @@ import type {
 
 const FORWARD_MESSAGE_PREVIEW_THUMBNAIL_SIZE = 56;
 
-export type ForwardMessagePreviewMessage = Pick<
+type ForwardMessagePreviewMessage = Pick<
 	Message,
 	'attachments' | 'content' | 'editedTimestamp' | 'embeds' | 'mentionChannels' | 'messageSnapshots'
 >;
@@ -190,7 +191,7 @@ function resolveAttachmentThumbnail(
 	const proxyUrl = attachment.proxy_url ?? attachment.url;
 	if (proxyUrl == null) return null;
 	return Object.freeze({
-		proxyUrl,
+		proxyUrl: AttachmentUrlRefresher.fresh(proxyUrl),
 		isVideo: kind === 'video',
 		showsPlayIcon,
 		showsFilePlaceholder: kind === 'file',
@@ -207,7 +208,7 @@ function resolveEmbedThumbnail(embed: MessageEmbed | undefined): ForwardMessageP
 	const isSensitive =
 		embed.nsfw === true || thumbnail.nsfw === true || (thumbnail.flags & EmbedMediaFlags.CONTAINS_EXPLICIT_MEDIA) !== 0;
 	return Object.freeze({
-		proxyUrl: thumbnail.proxy_url,
+		proxyUrl: AttachmentUrlRefresher.fresh(thumbnail.proxy_url),
 		isVideo: false,
 		showsPlayIcon: false,
 		showsFilePlaceholder: false,

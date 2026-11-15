@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ChannelHeaderIcon} from '@app/features/channel/components/channel_header_components/ChannelHeaderIcon';
-import {DeveloperToolsContextMenu} from '@app/features/channel/components/channel_header_components/DeveloperToolsContextMenu';
 import DeveloperMode from '@app/features/devtools/state/DeveloperMode';
 import {INBOX_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {InboxPopout} from '@app/features/messaging/components/popouts/InboxPopout';
+import {createNamedLoadableComponent} from '@app/features/platform/components/loadable/LoadableComponent';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import {FluxerStaffIcon} from '@app/features/ui/components/icons/FluxerStaffIcon';
 import {InboxIcon} from '@app/features/ui/components/icons/InboxIcon';
@@ -15,7 +14,20 @@ import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback} from 'react';
+import {type ComponentProps, useCallback} from 'react';
+
+const InboxPopout = createNamedLoadableComponent<
+	NonNullable<ComponentProps<typeof import('@app/features/messaging/components/popouts/InboxPopout').InboxPopout>>
+>({
+	displayName: 'InboxPopout',
+	load: async () => (await import('@app/features/messaging/components/popouts/InboxPopout')).InboxPopout,
+});
+const DeveloperToolsContextMenu = createNamedLoadableComponent<{onClose: () => void}>({
+	displayName: 'DeveloperToolsContextMenu',
+	load: async () =>
+		(await import('@app/features/channel/components/channel_header_components/DeveloperToolsContextMenu'))
+			.DeveloperToolsContextMenu,
+});
 
 const DEVELOPER_TOOLS_DESCRIPTOR = msg({
 	message: 'Developer tools',

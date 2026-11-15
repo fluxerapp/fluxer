@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
+import {ForbiddenError} from '@fluxer/errors/src/domains/core/ForbiddenError';
 
-export class UnclaimedAccountCannotAcceptFriendRequestsError extends BadRequestError {
+export class UnclaimedAccountCannotAcceptFriendRequestsError extends ForbiddenError {
 	constructor() {
 		super({code: APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_ACCEPT_FRIEND_REQUESTS});
 	}

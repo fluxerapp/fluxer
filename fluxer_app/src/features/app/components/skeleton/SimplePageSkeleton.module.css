@@ -289,6 +289,6 @@
 
 .tableActionsCell {
 	justify-content: center;
-	padding-left: 0.5rem;
-	padding-right: 0.5rem;
+	padding-inline-start: 0.5rem;
+	padding-inline-end: 0.5rem;
 }

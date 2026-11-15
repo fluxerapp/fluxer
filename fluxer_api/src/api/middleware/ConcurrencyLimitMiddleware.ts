@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isAttachmentMediaRequest} from '@app/api/attachment/AttachmentPublicUrl';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {normalizeRequestPath} from '@app/api/utils/RequestPathUtils';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
@@ -15,7 +16,7 @@ interface ConcurrencyLimitOptions {
 export function ConcurrencyLimitMiddleware({maxInflightRequests}: ConcurrencyLimitOptions) {
 	let inflight = 0;
 	return createMiddleware<HonoEnv>(async (ctx, next) => {
-		if (PROBE_PATHS.has(normalizeRequestPath(ctx.req.path))) {
+		if (PROBE_PATHS.has(normalizeRequestPath(ctx.req.path)) || isAttachmentMediaRequest(ctx.req.method, ctx.req.path)) {
 			await next();
 			return;
 		}

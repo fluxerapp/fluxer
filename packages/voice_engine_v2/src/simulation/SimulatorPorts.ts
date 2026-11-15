@@ -15,7 +15,6 @@ import type {
 	VoiceEngineV2DisconnectReason,
 	VoiceEngineV2Error,
 	VoiceEngineV2GatewayVoiceStateWrite,
-	VoiceEngineV2HardwareEncoderCapabilities,
 	VoiceEngineV2MicrophoneOptions,
 	VoiceEngineV2NativeAudioTapOptions,
 	VoiceEngineV2NativeCaptureOptions,
@@ -30,82 +29,6 @@ import type {
 	VoiceEngineV2ScreenOptions,
 	VoiceEngineV2Stats,
 } from '@fluxer/voice_engine_v2/src/protocol/types';
-import type {VoiceEngineV2ClockPort, VoiceEngineV2RandomPort} from '@fluxer/voice_engine_v2/src/runtime/platformPort';
-
-const SIMULATOR_CLOCK_MAX_NS = 1_000_000_000_000;
-const SIMULATOR_NS_PER_MS = 1_000_000;
-const SIMULATOR_RANDOM_MULTIPLIER = 0x5deece66d;
-const SIMULATOR_RANDOM_INCREMENT = 0xbn;
-const SIMULATOR_RANDOM_MASK = (1n << 48n) - 1n;
-
-interface VoiceEngineV2SimulatorClock extends VoiceEngineV2ClockPort {
-	advanceNs(deltaNs: number): void;
-	currentNs(): number;
-}
-
-export interface VoiceEngineV2SimulatorRandom extends VoiceEngineV2RandomPort {
-	nextU32(): number;
-	nextFloat01(): number;
-	nextBool(probability: number): boolean;
-}
-
-export function createSimulatorClock(initialNs = 0): VoiceEngineV2SimulatorClock {
-	assert.ok(Number.isFinite(initialNs), 'simulator clock requires a finite initial nanosecond value');
-	assert.ok(initialNs >= 0, 'simulator clock cannot start at a negative nanosecond value');
-	let currentNs = initialNs;
-	return {
-		now(): number {
-			assert.ok(currentNs >= 0, 'simulator clock yielded a negative wall time');
-			assert.ok(currentNs <= SIMULATOR_CLOCK_MAX_NS, 'simulator clock exceeded its bounded horizon');
-			return Math.floor(currentNs / SIMULATOR_NS_PER_MS);
-		},
-		advanceNs(deltaNs: number): void {
-			assert.ok(Number.isFinite(deltaNs), 'simulator clock delta must be finite');
-			assert.ok(deltaNs >= 0, 'simulator clock cannot advance backwards');
-			assert.ok(currentNs + deltaNs <= SIMULATOR_CLOCK_MAX_NS, 'simulator clock advance exceeds horizon');
-			currentNs += deltaNs;
-		},
-		currentNs(): number {
-			assert.ok(currentNs >= 0, 'simulator clock currentNs underflow');
-			return currentNs;
-		},
-	};
-}
-
-export function createSimulatorRandom(seed: number): VoiceEngineV2SimulatorRandom {
-	assert.ok(Number.isInteger(seed), 'simulator random seed must be an integer');
-	assert.ok(seed >= 0, 'simulator random seed must be non-negative');
-	let state = BigInt(seed ^ 0xdeadbeef) & SIMULATOR_RANDOM_MASK;
-	const advance = (): bigint => {
-		state = (state * BigInt(SIMULATOR_RANDOM_MULTIPLIER) + SIMULATOR_RANDOM_INCREMENT) & SIMULATOR_RANDOM_MASK;
-		return state;
-	};
-	const nextFloat01 = (): number => {
-		const u32 = Number(advance() >> 16n) >>> 0;
-		const value = u32 / 0x100000000;
-		assert.ok(value >= 0, 'simulator random float underflow');
-		assert.ok(value < 1, 'simulator random float overflow');
-		return value;
-	};
-	return {
-		next(): number {
-			return nextFloat01();
-		},
-		nextU32(): number {
-			const value = Number(advance() >> 16n) >>> 0;
-			assert.ok(value >= 0, 'simulator random produced a negative u32');
-			assert.ok(value <= 0xffffffff, 'simulator random produced an out-of-range u32');
-			return value;
-		},
-		nextFloat01,
-		nextBool(probability: number): boolean {
-			assert.ok(probability >= 0, 'probability must be non-negative');
-			assert.ok(probability <= 1, 'probability cannot exceed one');
-			const u32 = Number(advance() >> 16n) >>> 0;
-			return u32 / 0x100000000 < probability;
-		},
-	};
-}
 
 export interface SimulatorDriverFaultPolicy {
 	shouldDropConnect(): boolean;
@@ -117,7 +40,7 @@ export interface SimulatorDriverFaultPolicy {
 	shouldEmitDeviceLoss(): boolean;
 }
 
-export interface SimulatorDriverDeviceInventory {
+interface SimulatorDriverDeviceInventory {
 	audioInputs: Array<string>;
 	audioOutputs: Array<string>;
 	cameras: Array<string>;
@@ -161,14 +84,6 @@ export class VoiceEngineV2SimulatorDriver implements VoiceEngineV2Driver {
 		assert.ok(options.inventory, 'simulator driver requires a device inventory');
 		this.policy = options.policy;
 		this.inventory = options.inventory;
-	}
-
-	get capturesActive(): ReadonlyArray<string> {
-		return [...this.activeCaptures];
-	}
-
-	get frameSinksActive(): ReadonlyArray<string> {
-		return [...this.activeFrameSinks];
 	}
 
 	subscribe(listener: VoiceEngineV2ExternalEventListener): () => void {
@@ -265,19 +180,6 @@ export class VoiceEngineV2SimulatorDriver implements VoiceEngineV2Driver {
 	async collectStats(): Promise<VoiceEngineV2Stats> {
 		this.calls.push({type: 'collectStats'});
 		return {rttMs: 0, outbound: [], inbound: []};
-	}
-
-	async getHardwareEncoderCapabilities(): Promise<VoiceEngineV2HardwareEncoderCapabilities> {
-		return {
-			available: true,
-			backend: 'none',
-			compiled: false,
-			runtime: false,
-			codecs: [],
-			zeroCopy: false,
-			nativeInputs: [],
-			reason: 'simulator',
-		};
 	}
 
 	async checkPermission(name: VoiceEngineV2PermissionName): Promise<VoiceEngineV2PermissionResult> {

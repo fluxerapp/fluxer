@@ -2,8 +2,10 @@
 
 export interface SudoVerificationPayload extends Record<string, unknown> {
 	password?: string;
-	mfa_method?: 'totp' | 'webauthn';
+	mfa_method?: 'totp' | 'webauthn' | 'email_code';
 	mfa_code?: string;
+	email_code_ticket?: string;
+	email_code?: string;
 	webauthn_response?: unknown;
 	webauthn_challenge?: string;
 }

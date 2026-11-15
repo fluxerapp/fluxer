@@ -151,7 +151,7 @@ export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 	override async resumeUpstream() {
 		await super.resumeUpstream();
 		for await (const sc of this.simulcastCodecs.values()) {
-			await sc.sender?.replaceTrack(sc.mediaStreamTrack);
+			await sc.sender?.replaceTrack(this.processor?.processedTrack ?? sc.mediaStreamTrack);
 		}
 	}
 

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
+	getColorWithAlpha,
 	getColorWithHue,
 	getColorWithSaturationBrightness,
 	getUnitPointFromClientPosition,
@@ -22,18 +23,22 @@ import {
 	SliderTrack,
 } from 'react-aria-components';
 
-type DragTarget = 'color-area' | 'hue-slider';
+type DragTarget = 'color-area' | 'hue-slider' | 'alpha-slider';
 
 export const ColorPickerPopover = observer(
 	({
 		color,
 		onChange,
 		onReset,
+		showAlpha = false,
+		children,
 	}: {
 		popoutKey?: string | number;
 		color: string;
 		onChange: (color: string) => void;
 		onReset: () => void;
+		showAlpha?: boolean;
+		children?: React.ReactNode;
 	}) => {
 		const hasCustomColor = color !== null && color !== '#4641D9';
 		const parsedColor = useMemo(() => {
@@ -50,9 +55,9 @@ export const ColorPickerPopover = observer(
 			(newColor: Color) => {
 				colorRef.current = newColor;
 				setPickerColor(newColor);
-				onChange(newColor.toString('hex'));
+				onChange(newColor.toString(showAlpha ? 'hexa' : 'hex'));
 			},
-			[onChange],
+			[onChange, showAlpha],
 		);
 		useEffect(() => {
 			if (!shouldSyncPickerColorFromProp(parsedColor, colorRef.current)) return;
@@ -70,11 +75,15 @@ export const ColorPickerPopover = observer(
 			},
 			[handleColorChange],
 		);
-		const updateHueFromPointer = useCallback(
-			(clientX: number, element: HTMLElement) => {
+		const updateSliderFromPointer = useCallback(
+			(clientX: number, element: HTMLElement, target: DragTarget) => {
 				const unitValue = getUnitValueFromClientX(clientX, element.getBoundingClientRect());
 				if (unitValue === null) return;
-				handleColorChange(getColorWithHue(colorRef.current, unitValue));
+				handleColorChange(
+					target === 'alpha-slider'
+						? getColorWithAlpha(colorRef.current, unitValue)
+						: getColorWithHue(colorRef.current, unitValue),
+				);
 			},
 			[handleColorChange],
 		);
@@ -92,10 +101,10 @@ export const ColorPickerPopover = observer(
 				if (target === 'color-area') {
 					updateColorAreaFromPointer(event.clientX, event.clientY, element);
 				} else {
-					updateHueFromPointer(event.clientX, element);
+					updateSliderFromPointer(event.clientX, element, target);
 				}
 			},
-			[focusGestureInput, updateColorAreaFromPointer, updateHueFromPointer],
+			[focusGestureInput, updateColorAreaFromPointer, updateSliderFromPointer],
 		);
 		const updateCapturedPointer = useCallback(
 			(event: React.PointerEvent<HTMLElement>, target: DragTarget) => {
@@ -106,10 +115,10 @@ export const ColorPickerPopover = observer(
 				if (target === 'color-area') {
 					updateColorAreaFromPointer(event.clientX, event.clientY, event.currentTarget);
 				} else {
-					updateHueFromPointer(event.clientX, event.currentTarget);
+					updateSliderFromPointer(event.clientX, event.currentTarget, target);
 				}
 			},
-			[updateColorAreaFromPointer, updateHueFromPointer],
+			[updateColorAreaFromPointer, updateSliderFromPointer],
 		);
 		const releaseCapturedPointer = useCallback(
 			(event: React.PointerEvent<HTMLElement>, target: DragTarget) => {
@@ -120,14 +129,14 @@ export const ColorPickerPopover = observer(
 				if (target === 'color-area') {
 					updateColorAreaFromPointer(event.clientX, event.clientY, event.currentTarget);
 				} else {
-					updateHueFromPointer(event.clientX, event.currentTarget);
+					updateSliderFromPointer(event.clientX, event.currentTarget, target);
 				}
 				activeDragRef.current = null;
 				if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
 					event.currentTarget.releasePointerCapture(event.pointerId);
 				}
 			},
-			[updateColorAreaFromPointer, updateHueFromPointer],
+			[updateColorAreaFromPointer, updateSliderFromPointer],
 		);
 		return (
 			<div className={styles.container} data-flx="app.floating.color-picker-popover.container">
@@ -175,9 +184,32 @@ export const ColorPickerPopover = observer(
 									/>
 								</SliderTrack>
 							</ColorSlider>
+							{showAlpha ? (
+								<ColorSlider
+									channel="alpha"
+									className={styles.colorSlider}
+									data-flx="app.floating.color-picker-popover.alpha-slider"
+								>
+									<SliderTrack
+										className={styles.sliderTrack}
+										onPointerDownCapture={(event) => capturePointer(event, 'alpha-slider')}
+										onPointerMoveCapture={(event) => updateCapturedPointer(event, 'alpha-slider')}
+										onPointerUpCapture={(event) => releaseCapturedPointer(event, 'alpha-slider')}
+										onPointerCancelCapture={(event) => releaseCapturedPointer(event, 'alpha-slider')}
+										onLostPointerCaptureCapture={(event) => releaseCapturedPointer(event, 'alpha-slider')}
+										data-flx="app.floating.color-picker-popover.alpha-slider-track"
+									>
+										<ColorThumb
+											className={styles.colorThumb}
+											data-flx="app.floating.color-picker-popover.alpha-color-thumb"
+										/>
+									</SliderTrack>
+								</ColorSlider>
+							) : null}
 						</div>
 					</div>
 				</ColorPicker>
+				{children}
 				<FocusRing offset={-2} data-flx="app.floating.color-picker-popover.focus-ring">
 					<button
 						type="button"

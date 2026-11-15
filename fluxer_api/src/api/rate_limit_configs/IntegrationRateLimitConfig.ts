@@ -24,10 +24,6 @@ export const IntegrationRateLimitConfigs = {
 		bucket: 'gif:register_share',
 		config: {limit: 60, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
-	STRIPE_VISIONARY_SLOTS: {
-		bucket: 'stripe:visionary:slots',
-		config: {limit: 20, windowMs: ms('10 seconds')},
-	} as RouteRateLimitConfig,
 	STRIPE_PRICE_IDS: {
 		bucket: 'stripe:price:ids',
 		config: {limit: 40, windowMs: ms('10 seconds')},
@@ -83,10 +79,6 @@ export const IntegrationRateLimitConfigs = {
 	STRIPE_VISIONARY_REJOIN: {
 		bucket: 'stripe:visionary:rejoin',
 		config: {limit: 5, windowMs: ms('1 minute')},
-	} as RouteRateLimitConfig,
-	AGE_VERIFICATION: {
-		bucket: 'age_verification',
-		config: {limit: 3, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
 	GIFT_CODE_GET: {
 		bucket: 'gift:get',

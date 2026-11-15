@@ -31,7 +31,7 @@
 	display: none;
 	position: absolute;
 	top: 0.75rem;
-	right: 0.75rem;
+	inset-inline-end: 0.75rem;
 	gap: 0.25rem;
 }
 
@@ -195,12 +195,6 @@
 	height: 5rem;
 	align-items: center;
 	justify-content: center;
-}
-
-.loadingText {
-	font-size: 0.875rem;
-	line-height: 1.25rem;
-	color: var(--text-primary-muted);
 }
 
 .menuIcon {

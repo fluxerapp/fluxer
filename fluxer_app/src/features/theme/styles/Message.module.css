@@ -22,7 +22,7 @@
 }
 
 .message {
-	text-align: left;
+	text-align: start;
 	position: relative;
 	user-select: text;
 	-webkit-user-select: text;
@@ -48,10 +48,6 @@
 
 .messagePreview {
 	--message-media-max-width: 100%;
-}
-
-.messageHovered {
-	--message-hovered: 1;
 }
 
 .focusRingAnchor {
@@ -162,7 +158,7 @@
 	user-select: text;
 	-webkit-user-select: text;
 	word-break: break-word;
-	text-align: left;
+	text-align: start;
 	-webkit-tap-highlight-color: transparent;
 	display: grid;
 	grid-template-columns: var(--message-compact-horizontal-padding) minmax(0, 1fr);
@@ -406,13 +402,41 @@
 }
 
 .messageAuthorRow {
-	display: inline;
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	row-gap: 0;
 	max-inline-size: 100%;
 	white-space: nowrap;
 	line-height: var(--message-line-height);
 	min-inline-size: 0;
 	user-select: text;
 	-webkit-user-select: text;
+}
+
+.messagePreview .messageAuthorRow {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	column-gap: 0.35rem;
+	white-space: normal;
+}
+
+.messagePreview .messageAuthorPart {
+	display: contents;
+}
+
+.messagePreview .messageAuthorPart > :last-child {
+	margin-inline-end: 0.1rem;
+}
+
+.messagePreview .userTagOffset,
+.messagePreview .messageTimestamp {
+	margin-inline-start: 0;
+}
+
+.messagePreview .authorDashSeparator {
+	margin: 0;
 }
 
 .messageNoText {
@@ -450,7 +474,6 @@
 .messageUsername,
 .messageTimestamp,
 .messageTimestampCompact,
-.messageAuthorInfoCompact,
 .compactAuthorPrefix,
 .copyOnly,
 .compactInlineContent,
@@ -467,6 +490,12 @@
 .messageText [aria-hidden='true'] *,
 .compactInlineContent [aria-hidden='true'],
 .compactInlineContent [aria-hidden='true'] * {
+	user-select: none !important;
+	-webkit-user-select: none !important;
+}
+
+.compactInlineContent .messageRoleIcon,
+.compactInlineContent .messageRoleIcon * {
 	user-select: none !important;
 	-webkit-user-select: none !important;
 }
@@ -576,13 +605,17 @@
 	justify-content: flex-end;
 	width: var(--message-avatar-size);
 	height: var(--message-line-height);
-	text-align: right;
+	text-align: end;
 	user-select: none;
 	-webkit-user-select: none;
 	white-space: nowrap;
 	opacity: 0;
 	pointer-events: none;
 	transform: translateX(0.5rem);
+}
+
+:global(html[dir='rtl']) .messageTimestampHover {
+	transform: translateX(-0.5rem);
 }
 
 :global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
@@ -592,27 +625,12 @@
 	pointer-events: auto;
 }
 
-.messageAuthorInfoCompact {
-	position: relative;
-	display: inline;
-	min-height: var(--message-line-height);
-	color: var(--text-chat-muted);
-	line-height: var(--message-line-height);
-	white-space: nowrap;
-	text-indent: 0;
-	vertical-align: baseline;
-	margin: 0;
-	margin-inline-end: var(--message-compact-username-gap);
-	user-select: text;
-	-webkit-user-select: text;
-}
-
 .messageTimestampCompact {
 	margin-inline-end: var(--message-compact-gap);
 	width: max-content;
 	height: var(--message-timestamp-compact-height);
 	font-size: var(--message-timestamp-compact-font-size);
-	text-align: left;
+	text-align: start;
 	display: inline-block;
 	vertical-align: middle;
 	line-height: var(--message-line-height);
@@ -636,7 +654,7 @@
 	vertical-align: middle;
 	line-height: var(--message-line-height);
 	cursor: default;
-	text-align: left;
+	text-align: start;
 	flex-shrink: 0;
 	opacity: 0;
 	pointer-events: none;
@@ -774,14 +792,14 @@
 	box-sizing: border-box;
 	top: 50%;
 	bottom: calc(-1 * (var(--reply-spacing) + var(--reply-spine-terminal-gap)));
-	right: calc(100% + var(--reply-spine-terminal-gap));
-	left: calc(-1 * (0.5 * var(--avatar-size) + var(--gutter)));
+	inset-inline-end: calc(100% + var(--reply-spine-terminal-gap));
+	inset-inline-start: calc(-1 * (0.5 * var(--avatar-size) + var(--gutter)));
 	margin-block-start: calc(-0.5 * var(--spine-width));
 	margin-inline-start: 0;
 	border-color: var(--reply-spine-color);
 	border-width: var(--spine-width) 0 0 var(--spine-width);
 	border-style: solid;
-	border-top-left-radius: var(--reply-spine-radius);
+	border-start-start-radius: var(--reply-spine-radius);
 }
 
 .repliedMessageCompact {
@@ -818,7 +836,7 @@
 	border-color: var(--reply-spine-color);
 	border-width: var(--spine-width) 0 0 var(--spine-width);
 	border-style: solid;
-	border-top-left-radius: var(--reply-spine-radius);
+	border-start-start-radius: var(--reply-spine-radius);
 }
 
 .repliedTextPreview {
@@ -1087,7 +1105,7 @@
 	display: inline-block;
 	width: max-content;
 	vertical-align: baseline;
-	text-align: left;
+	text-align: start;
 }
 
 .systemMessageContent .container {
@@ -1123,6 +1141,7 @@
 	font-weight: 500;
 	color: var(--text-primary);
 	line-height: var(--message-line-height);
+	text-align: start;
 	user-select: text;
 	-webkit-user-select: text;
 }
@@ -1131,22 +1150,6 @@
 	.systemMessageLink:hover {
 		text-decoration: underline;
 	}
-}
-
-.messageAssistiveText {
-	border: 0;
-	clip: rect(0 0 0 0);
-	height: 0.0625rem;
-	margin: -0.0625rem;
-	overflow: hidden;
-	padding: 0;
-	position: absolute;
-	width: 0.0625rem;
-	white-space: nowrap;
-}
-
-.messageAuthorInfoCompact .messageUsername {
-	margin-inline-end: 0;
 }
 
 .userTagOffset {
@@ -1160,6 +1163,18 @@
 	flex-shrink: 0;
 	vertical-align: middle;
 	display: inline-flex;
+}
+
+.messageAuthorName {
+	display: inline-flex;
+	align-items: center;
+	min-inline-size: 0;
+	white-space: nowrap;
+	vertical-align: baseline;
+}
+
+.messageRoleIcon {
+	margin-inline-start: 0.25rem;
 }
 
 .editedTimestamp {
@@ -1202,29 +1217,6 @@
 	flex: 1 1 auto;
 	min-width: 0;
 	width: 100%;
-}
-
-.typingPill {
-	position: relative;
-	display: inline-flex;
-	align-items: center;
-	gap: 0;
-	min-height: var(--typing-pill-height);
-	padding: 0 0.35rem;
-	border-radius: var(--radius-xl);
-	background-color: var(--background-tertiary);
-	border: 0.0625rem solid color-mix(in srgb, var(--background-modifier-accent) 80%, transparent);
-	pointer-events: auto;
-	grid-column: 1 / -1;
-	justify-self: flex-start;
-	margin-inline-start: 0;
-}
-
-:global(.theme-light) .typingPill {
-	background-color: var(--brand-primary);
-	border: none;
-	color: var(--text-on-brand-primary);
-	--typing-indicator-color: var(--text-on-brand-primary);
 }
 
 .typingIndicator {

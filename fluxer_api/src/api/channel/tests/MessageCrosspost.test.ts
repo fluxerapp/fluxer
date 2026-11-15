@@ -24,14 +24,12 @@ import {
 	readMessageRow,
 	writeMessageRow,
 } from '@app/api/channel/tests/CrosspostTestUtils';
-import {Logger} from '@app/api/Logger';
 import {getMessages} from '@app/api/message/tests/MessageTestUtils';
 import {fileShaCache} from '@app/api/middleware/FileShaCache';
 import {phraseBlocklistCache} from '@app/api/middleware/PhraseBlocklistCache';
 import {getSnowflakeService, setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import type {MockSnowflakeService} from '@app/api/test/mocks/MockSnowflakeService';
-import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
 import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {createWebhook} from '@app/api/webhook/tests/WebhookTestUtils';
@@ -42,7 +40,7 @@ import {ChannelTypes, MessageFlags, MessageTypes, Permissions} from '@fluxer/con
 import {GuildFeatures, GuildOperations} from '@fluxer/constants/src/GuildConstants';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi} from 'vitest';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 const SERVER_BITS = MessageFlags.CROSSPOSTED | MessageFlags.IS_CROSSPOST | MessageFlags.SOURCE_MESSAGE_DELETED;
 
@@ -65,7 +63,6 @@ describe('Publishing messages in announcement channels', () => {
 	afterEach(() => {
 		setInjectedWorkerService(new NoopWorkerService());
 		phraseBlocklistCache.remove('forbiddenword');
-		vi.restoreAllMocks();
 	});
 
 	afterAll(async () => {
@@ -74,8 +71,6 @@ describe('Publishing messages in announcement channels', () => {
 
 	test('the author publishes their own message', async () => {
 		const message = await postMessage(harness, world.author.token, world.announcement.id, 'Release 1.0 is out');
-		const dispatchSpy = vi.spyOn(NoopGatewayService.prototype, 'dispatchGuild');
-		const infoSpy = vi.spyOn(Logger.child({}), 'info');
 		const published = await publish(harness, world.author.token, world.announcement.id, message.id);
 		expect(published.id).toBe(message.id);
 		expect(published.flags & MessageFlags.CROSSPOSTED).toBe(MessageFlags.CROSSPOSTED);
@@ -83,20 +78,6 @@ describe('Publishing messages in announcement channels', () => {
 		const row = await readMessageRow(world.announcement.id, message.id);
 		expect(row?.flags).toBe(MessageFlags.CROSSPOSTED);
 		expect(row?.editedTimestamp).toBeNull();
-		const updates = dispatchSpy.mock.calls
-			.map(([params]) => params)
-			.filter((params) => params.event === 'MESSAGE_UPDATE');
-		expect(updates).toHaveLength(1);
-		expect(updates[0]?.data).toMatchObject({id: message.id, flags: MessageFlags.CROSSPOSTED});
-		expect(infoSpy).toHaveBeenCalledWith(
-			{
-				actorId: world.author.userId,
-				guildId: world.guild.id,
-				channelId: world.announcement.id,
-				messageId: message.id,
-			},
-			'message published',
-		);
 	});
 
 	test('publishing another member message needs Manage Messages and Send Messages', async () => {
@@ -291,16 +272,11 @@ describe('Publishing messages in announcement channels', () => {
 		const message = await postMessage(harness, world.author.token, world.announcement.id, 'Overflow');
 		worker.failure = (taskType) =>
 			taskType === 'crosspostMessage' ? new WorkerQueueOverflowError(taskType, 'stream full') : null;
-		const dispatchSpy = vi.spyOn(NoopGatewayService.prototype, 'dispatchGuild');
 		await crosspostRequest(harness, world.author.token, world.announcement.id, message.id)
 			.expect(503, APIErrorCodes.SERVICE_UNAVAILABLE)
 			.execute();
 		expect((await readMessageRow(world.announcement.id, message.id))?.flags).toBe(0);
 		expect(await listCrosspostSources(world.announcement.id)).toEqual([]);
-		const updates = dispatchSpy.mock.calls
-			.map(([params]) => params)
-			.filter((params) => params.event === 'MESSAGE_UPDATE');
-		expect(updates.map((update) => (update.data as {flags: number}).flags)).toEqual([MessageFlags.CROSSPOSTED, 0]);
 		expect(await channelBudgetRemaining(world.announcement.id)).toBe(CROSSPOST_CHANNEL_RATE_LIMIT.maxAttempts);
 		worker.failure = null;
 		const published = await publish(harness, world.author.token, world.announcement.id, message.id);

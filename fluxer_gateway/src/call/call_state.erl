@@ -5,29 +5,43 @@
 
 -export([
     build_call_event/1,
+    broadcast_call_event/1,
     caller_from_state/1,
     put_caller/2,
     format_voice_state/1,
     format_voice_states/1,
-    format_pending_connections/1,
     integer_list_to_binaries/1,
     find_session_by_pid/2,
     remove_session_entry/2,
     user_has_session/2,
+    voice_state_connection_id/1,
+    voice_user_ids/1,
+    user_voice_states/2,
+    without_session_voice_states/2,
+    session_has_voice_state/2,
+    voice_states_by_user/1,
+    voice_states_by_connection/1,
     sync_voice_state_count_diff/2,
     cleanup_voice_state_counts/1
 ]).
 
--define(PENDING_CONNECTION_TIMEOUT_MS, 30000).
-
 -spec build_call_event(map()) -> map().
 build_call_event(State) ->
-    #{
+    broadcast_call_event(#{
         channel_id => integer_to_binary(maps:get(channel_id, State)),
         message_id => integer_to_binary(maps:get(message_id, State)),
         region => maps:get(region, State),
         ringing => integer_list_to_binaries(maps:get(ringing, State)),
         voice_states => format_voice_states(maps:get(voice_states, State))
+    }).
+
+-spec broadcast_call_event(map()) -> map().
+broadcast_call_event(CallData) ->
+    (maps:with([channel_id, message_id, region, ringing], CallData))#{
+        voice_states => [
+            voice_state_utils:sanitize_voice_state_for_broadcast(VS)
+         || VS <- maps:get(voice_states, CallData, [])
+        ]
     }.
 
 -spec caller_from_state(map()) -> map().
@@ -66,93 +80,58 @@ format_voice_state(VoiceState) ->
         VoiceState
     ).
 
--spec format_voice_states(#{integer() => map()}) -> [map()].
+-spec format_voice_states(#{binary() => map()}) -> [map()].
 format_voice_states(VoiceStates) ->
     Sorted = lists:keysort(1, maps:to_list(VoiceStates)),
-    [format_voice_state(VS) || {_UserId, VS} <- Sorted].
+    [format_voice_state(VS) || {_ConnectionId, VS} <- Sorted].
 
--spec format_pending_connections(term()) -> [map()].
-format_pending_connections(PendingConnections) when is_map(PendingConnections) ->
-    Sorted = lists:keysort(1, maps:to_list(PendingConnections)),
-    lists:filtermap(
-        fun format_pending_connection_entry/1,
-        Sorted
-    );
-format_pending_connections(_) ->
-    [].
+-spec voice_user_ids(#{binary() => map()}) -> [integer()].
+voice_user_ids(VoiceStates) ->
+    lists:usort([
+        UserId
+     || VS <- maps:values(VoiceStates),
+        UserId <- [voice_state_utils:voice_state_user_id(VS)],
+        is_integer(UserId)
+    ]).
 
--spec format_pending_connection_entry({term(), term()}) -> false | {true, map()}.
-format_pending_connection_entry({ConnectionId, Metadata}) ->
-    case format_pending_connection(ConnectionId, Metadata) of
-        undefined -> false;
-        Entry -> {true, Entry}
-    end.
+-spec user_voice_states(integer(), #{binary() => map()}) -> #{binary() => map()}.
+user_voice_states(UserId, VoiceStates) ->
+    maps:filter(
+        fun(_ConnectionId, VS) -> voice_state_utils:voice_state_user_id(VS) =:= UserId end,
+        VoiceStates
+    ).
 
--spec format_pending_connection(term(), term()) -> map() | undefined.
-format_pending_connection(ConnectionId, Metadata) when is_map(Metadata) ->
-    NormalizedConnectionId = normalize_pending_binary(ConnectionId),
-    UserId = normalize_pending_id(maps:get(user_id, Metadata, undefined)),
-    case {NormalizedConnectionId, UserId} of
-        {undefined, _} ->
-            undefined;
-        {_, undefined} ->
-            undefined;
-        _ ->
-            JoinedAt = normalize_pending_millisecond(
-                maps:get(joined_at, Metadata, erlang:system_time(millisecond))
-            ),
-            #{
-                connection_id => NormalizedConnectionId,
-                user_id => UserId,
-                token_nonce => normalize_pending_binary(
-                    maps:get(token_nonce, Metadata, <<>>), <<>>
-                ),
-                expires_at => JoinedAt + ?PENDING_CONNECTION_TIMEOUT_MS
-            }
-    end;
-format_pending_connection(_, _) ->
-    undefined.
+-spec without_session_voice_states(binary(), #{binary() => map()}) -> #{binary() => map()}.
+without_session_voice_states(SessionId, VoiceStates) ->
+    maps:filter(
+        fun(_ConnectionId, VS) -> maps:get(<<"session_id">>, VS, undefined) =/= SessionId end,
+        VoiceStates
+    ).
 
--spec normalize_pending_id(term()) -> binary() | undefined.
-normalize_pending_id(Value) when is_integer(Value), Value > 0 ->
-    integer_to_binary(Value);
-normalize_pending_id(Value) ->
-    try snowflake_id:parse_optional(Value) of
-        Id when is_integer(Id), Id > 0 -> integer_to_binary(Id);
-        _ -> undefined
-    catch
-        error:{invalid_snowflake, _} -> undefined
-    end.
+-spec session_has_voice_state(binary(), #{binary() => map()}) -> boolean().
+session_has_voice_state(SessionId, VoiceStates) ->
+    lists:any(
+        fun(VS) -> maps:get(<<"session_id">>, VS, undefined) =:= SessionId end,
+        maps:values(VoiceStates)
+    ).
 
--spec normalize_pending_binary(term()) -> binary() | undefined.
-normalize_pending_binary(Value) ->
-    normalize_pending_binary(Value, undefined).
+-spec voice_states_by_user(#{binary() => map()}) -> #{integer() => map()}.
+voice_states_by_user(VoiceStates) ->
+    maps:from_list([
+        {UserId, VS}
+     || VS <- maps:values(VoiceStates),
+        UserId <- [voice_state_utils:voice_state_user_id(VS)],
+        is_integer(UserId)
+    ]).
 
--spec normalize_pending_binary(term(), binary() | undefined) -> binary() | undefined.
-normalize_pending_binary(Value, _Default) when is_binary(Value) ->
-    Value;
-normalize_pending_binary(Value, _Default) when is_integer(Value) ->
-    integer_to_binary(Value);
-normalize_pending_binary(Value, Default) when is_list(Value), is_binary(Default) ->
-    type_conv:ensure_binary(Value, Default);
-normalize_pending_binary(Value, Default) when is_list(Value) ->
-    case type_conv:ensure_binary(Value) of
-        <<>> -> Default;
-        Binary -> Binary
-    end;
-normalize_pending_binary(_, Default) ->
-    Default.
-
--spec normalize_pending_millisecond(term()) -> integer().
-normalize_pending_millisecond(Value) when is_integer(Value) ->
-    Value;
-normalize_pending_millisecond(Value) when is_binary(Value); is_list(Value) ->
-    case type_conv:to_integer(Value) of
-        Millisecond when is_integer(Millisecond) -> Millisecond;
-        undefined -> erlang:system_time(millisecond)
-    end;
-normalize_pending_millisecond(_) ->
-    erlang:system_time(millisecond).
+-spec voice_states_by_connection(map()) -> #{binary() => map()}.
+voice_states_by_connection(VoiceStates) ->
+    maps:from_list([
+        {ConnectionId, VS}
+     || VS <- maps:values(VoiceStates),
+        ConnectionId <- [voice_state_connection_id(VS)],
+        is_binary(ConnectionId)
+    ]).
 
 -spec user_has_session(integer(), #{binary() => {integer(), pid(), reference()}}) -> boolean().
 user_has_session(UserId, Sessions) ->
@@ -205,16 +184,16 @@ sync_voice_state_count_diff(OldState, NewState) ->
 -spec sync_replaced_voice_states(map(), map()) -> ok.
 sync_replaced_voice_states(OldVoiceStates, NewVoiceStates) ->
     maps:foreach(
-        fun(UserId, OldVoiceState) ->
-            sync_replaced_voice_state(UserId, OldVoiceState, NewVoiceStates)
+        fun(ConnectionId, OldVoiceState) ->
+            sync_replaced_voice_state(ConnectionId, OldVoiceState, NewVoiceStates)
         end,
         OldVoiceStates
     ),
     sync_voice_state_counts(NewVoiceStates).
 
 -spec sync_replaced_voice_state(term(), map(), map()) -> ok.
-sync_replaced_voice_state(UserId, OldVoiceState, NewVoiceStates) ->
-    case maps:get(UserId, NewVoiceStates, undefined) of
+sync_replaced_voice_state(ConnectionId, OldVoiceState, NewVoiceStates) ->
+    case maps:get(ConnectionId, NewVoiceStates, undefined) of
         NewVS when is_map(NewVS) ->
             maybe_remove_replaced(OldVoiceState, NewVS);
         _ ->
@@ -233,7 +212,7 @@ maybe_remove_replaced(OldVoiceState, NewVoiceState) ->
 -spec sync_voice_state_counts(map()) -> ok.
 sync_voice_state_counts(VoiceStates) ->
     maps:foreach(
-        fun(_UserId, VoiceState) ->
+        fun(_ConnectionId, VoiceState) ->
             _ = voice_state_counts_cache:upsert_voice_state(VoiceState),
             ok
         end,
@@ -244,7 +223,7 @@ sync_voice_state_counts(VoiceStates) ->
 -spec cleanup_voice_state_counts(map()) -> ok.
 cleanup_voice_state_counts(VoiceStates) ->
     maps:foreach(
-        fun(_UserId, VoiceState) ->
+        fun(_ConnectionId, VoiceState) ->
             remove_voice_state_count(VoiceState)
         end,
         VoiceStates
@@ -267,39 +246,3 @@ voice_state_connection_id(VoiceState) ->
         VoiceState,
         maps:get(connection_id, VoiceState, undefined)
     ).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-put_caller_stores_a_resolved_caller_test() ->
-    Caller = #{caller_id => 7, caller_name => <<"Ada">>, caller_avatar => <<"a1b2c3d4">>},
-    ?assertEqual(Caller, caller_from_state(put_caller(Caller, #{}))).
-
-put_caller_overwrites_an_earlier_caller_test() ->
-    First = #{caller_id => 7, caller_name => <<"Ada">>, caller_avatar => <<"a1b2c3d4">>},
-    Second = #{caller_id => 9, caller_name => <<"Bo">>, caller_avatar => undefined},
-    State = put_caller(Second, put_caller(First, #{})),
-    ?assertEqual(Second, caller_from_state(State)).
-
-put_caller_keeps_the_stored_caller_when_the_new_one_is_unresolved_test() ->
-    Caller = #{caller_id => 7, caller_name => <<"Ada">>, caller_avatar => <<"a1b2c3d4">>},
-    State = put_caller(Caller, #{}),
-    Unresolved = #{
-        caller_id => undefined, caller_name => undefined, caller_avatar => undefined
-    },
-    ?assertEqual(Caller, caller_from_state(put_caller(Unresolved, State))).
-
-put_caller_rejects_a_caller_without_a_name_test() ->
-    Caller = #{caller_id => 7, caller_name => <<>>, caller_avatar => undefined},
-    ?assertEqual(
-        #{caller_id => undefined, caller_name => undefined, caller_avatar => undefined},
-        caller_from_state(put_caller(Caller, #{}))
-    ).
-
-caller_from_state_reads_an_absent_caller_as_undefined_test() ->
-    ?assertEqual(
-        #{caller_id => undefined, caller_name => undefined, caller_avatar => undefined},
-        caller_from_state(#{})
-    ).
-
--endif.

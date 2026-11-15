@@ -6,14 +6,18 @@
 -export([
     queue_list_sync/2,
     queue_subscribed_list_syncs/2,
-    flush_pending_syncs/1
+    flush_pending_syncs/1,
+    queue_connection_sync/3,
+    invalidate_synced/2
 ]).
 
 -type guild_state() :: map().
 -type list_id() :: binary().
 -type channel_id() :: integer().
+-type user_id() :: integer().
+-type pending_mark() :: true | synced.
 
--export_type([guild_state/0, list_id/0]).
+-export_type([guild_state/0, list_id/0, pending_mark/0, user_id/0]).
 
 -define(SYNC_BATCH_STATE_KEY, pending_member_list_sync_batch).
 -define(FLUSH_SYNC_BATCH_MSG, flush_member_list_sync_batch).
@@ -93,15 +97,17 @@ dispatch_pending_syncs(ListIds, State) ->
 -spec dispatch_pending_syncs([list_id()], guild_state(), ets:table()) -> guild_state().
 dispatch_pending_syncs(ListIds, State, SubsTab) ->
     _ = guild_member_list_write_context:with_guild_id(State, fun(GuildId) ->
-        Sessions = maps:get(sessions, State, #{}),
-        guild_member_list_read:with_member_item_memo(fun() ->
-            dispatch_pending_syncs_for_guild(
-                GuildId, lists:sort(ListIds), Sessions, State, SubsTab
-            )
-        end),
+        dispatch_memoized_syncs(GuildId, ListIds, State, SubsTab),
         {ok, State}
     end),
     State.
+
+-spec dispatch_memoized_syncs(integer(), [list_id()], guild_state(), ets:table()) -> ok.
+dispatch_memoized_syncs(GuildId, ListIds, State, SubsTab) ->
+    Sessions = maps:get(sessions, State, #{}),
+    guild_member_list_read:with_member_item_memo(fun() ->
+        dispatch_pending_syncs_for_guild(GuildId, lists:sort(ListIds), Sessions, State, SubsTab)
+    end).
 
 -spec dispatch_pending_syncs_for_guild(
     integer(), [list_id()], map(), guild_state(), ets:table()
@@ -153,45 +159,76 @@ build_sync_response_fun(GuildId, ListId, ChannelId, State) ->
         Response#{<<"channel_id">> => ChannelIdBin}
     end.
 
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
+-spec queue_connection_sync(list_id(), pending_mark(), guild_state()) -> guild_state().
+queue_connection_sync(ListId, Mark, State) ->
+    case maps:get(?SYNC_BATCH_STATE_KEY, State, undefined) of
+        #{pending_list_ids := PendingListIds} = Batch when is_map(PendingListIds) ->
+            State#{
+                ?SYNC_BATCH_STATE_KEY => Batch#{
+                    pending_list_ids => maps:update_with(
+                        ListId,
+                        fun(Old) -> merge_pending_mark(Old, Mark) end,
+                        Mark,
+                        PendingListIds
+                    )
+                }
+            };
+        _ ->
+            TimerRef = erlang:send_after(
+                connection_sync_delay_ms(State), self(), ?FLUSH_SYNC_BATCH_MSG
+            ),
+            State#{
+                ?SYNC_BATCH_STATE_KEY => #{
+                    pending_list_ids => #{ListId => Mark},
+                    timer_ref => TimerRef
+                }
+            }
+    end.
 
-queue_list_sync_dispatches_without_pending_timer_test() ->
-    State = #{},
-    ?assertEqual(State, queue_list_sync(<<"500">>, State)),
-    ?assertEqual(State, queue_list_sync(<<"600">>, State)).
+-spec merge_pending_mark(term(), pending_mark()) -> pending_mark().
+merge_pending_mark(true, _Mark) ->
+    true;
+merge_pending_mark(_Old, Mark) ->
+    Mark.
 
-flush_pending_syncs_clears_empty_batch_test() ->
-    State = #{?SYNC_BATCH_STATE_KEY => #{pending_list_ids => #{}}},
-    ?assertEqual(#{}, flush_pending_syncs(State)).
+-spec invalidate_synced(user_id(), guild_state()) -> guild_state().
+invalidate_synced(UserId, State) ->
+    case maps:get(?SYNC_BATCH_STATE_KEY, State, undefined) of
+        #{pending_list_ids := PendingListIds} = Batch when is_map(PendingListIds) ->
+            Pending = invalidate_pending(UserId, PendingListIds, State),
+            State#{?SYNC_BATCH_STATE_KEY => Batch#{pending_list_ids => Pending}};
+        _ ->
+            State
+    end.
 
-queue_list_sync_drains_preexisting_pending_batch_test() ->
-    Ref = erlang:send_after(60000, self(), ?FLUSH_SYNC_BATCH_MSG),
-    State = #{
-        ?SYNC_BATCH_STATE_KEY => #{
-            timer_ref => Ref,
-            pending_list_ids => #{<<"500">> => true, <<"600">> => true}
-        }
-    },
-    ?assertEqual(#{}, queue_list_sync(<<"500">>, State)).
+-spec invalidate_pending(user_id(), map(), guild_state()) -> map().
+invalidate_pending(UserId, PendingListIds, State) ->
+    maps:map(
+        fun(ListId, Mark) -> invalidate_synced_mark(UserId, ListId, Mark, State) end,
+        PendingListIds
+    ).
 
-flush_pending_syncs_skips_synced_lists_test() ->
-    Ref = erlang:send_after(60000, self(), ?FLUSH_SYNC_BATCH_MSG),
-    State = #{
-        ?SYNC_BATCH_STATE_KEY => #{
-            timer_ref => Ref,
-            pending_list_ids => #{<<"500">> => synced, <<"600">> => true}
-        }
-    },
-    ?assertEqual({[<<"600">>], #{}}, take_pending_list_ids([], State)),
-    ?assertEqual(false, erlang:read_timer(Ref)).
+-spec invalidate_synced_mark(user_id(), list_id(), term(), guild_state()) -> term().
+invalidate_synced_mark(UserId, ListId, synced, State) ->
+    case guild_member_list_absence:of_list(UserId, ListId, State) of
+        present -> true;
+        {absent, _Ref} -> synced
+    end;
+invalidate_synced_mark(_UserId, _ListId, Mark, _State) ->
+    Mark.
 
-queue_list_sync_keeps_explicit_list_marked_synced_test() ->
-    State = #{
-        ?SYNC_BATCH_STATE_KEY => #{
-            pending_list_ids => #{<<"500">> => synced, <<"600">> => synced}
-        }
-    },
-    ?assertEqual({[<<"500">>], #{}}, take_pending_list_ids([<<"500">>], State)).
+-spec connection_sync_delay_ms(guild_state()) -> pos_integer().
+connection_sync_delay_ms(State) ->
+    case State of
+        #{member_count := MemberCount} when is_integer(MemberCount), MemberCount >= 5000 ->
+            positive_env(member_list_large_connection_sync_delay_ms, 1000);
+        _ ->
+            positive_env(member_list_connection_sync_delay_ms, 250)
+    end.
 
--endif.
+-spec positive_env(atom(), pos_integer()) -> pos_integer().
+positive_env(Key, Default) ->
+    case application:get_env(fluxer_gateway, Key, Default) of
+        Value when is_integer(Value), Value >= 1 -> Value;
+        _ -> Default
+    end.

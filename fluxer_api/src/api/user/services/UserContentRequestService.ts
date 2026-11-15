@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
-import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
-import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Message} from '@app/api/models/Message';
 import type {SavedMessageEntry, UserContentService} from '@app/api/user/services/UserContentService';
 import type {MessageListResponse, MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
@@ -22,12 +21,12 @@ type HarvestLatestResponse = HarvestStatusResponse | null;
 
 interface UserMentionsParams {
 	userId: UserID;
+	viewer: ThreadViewer;
 	limit: number;
 	roles: boolean;
 	everyone: boolean;
 	guilds: boolean;
 	before?: MessageID;
-	requestCache: RequestCache;
 }
 
 interface UserMentionDeleteParams {
@@ -42,16 +41,16 @@ interface UserMentionsReadParams {
 
 interface SavedMessagesParams {
 	userId: UserID;
+	viewer: ThreadViewer;
 	limit: number;
 	before?: MessageID;
-	requestCache: RequestCache;
 }
 
 interface SaveMessageParams {
 	userId: UserID;
+	viewer: ThreadViewer;
 	channelId: ChannelID;
 	messageId: MessageID;
-	requestCache: RequestCache;
 }
 
 interface UnsaveMessageParams {
@@ -80,21 +79,19 @@ interface HarvestDownloadParams {
 }
 
 export class UserContentRequestService {
-	constructor(
-		private readonly userContentService: UserContentService,
-		private readonly userCacheService: UserCacheService,
-	) {}
+	constructor(private readonly userContentService: UserContentService) {}
 
 	async listMentions(params: UserMentionsParams): Promise<MessageListResponse> {
 		const messages = await this.userContentService.getRecentMentions({
 			userId: params.userId,
+			viewer: params.viewer,
 			limit: params.limit,
 			everyone: params.everyone,
 			roles: params.roles,
 			guilds: params.guilds,
 			before: params.before,
 		});
-		return this.userContentService.buildMessageResponsesForUser(params.userId, messages);
+		return this.userContentService.buildMessageResponsesForUser(params.userId, params.viewer, messages);
 	}
 
 	async deleteMention(params: UserMentionDeleteParams): Promise<void> {
@@ -108,11 +105,16 @@ export class UserContentRequestService {
 	async listSavedMessages(params: SavedMessagesParams): Promise<SavedMessageEntryListResponse> {
 		const entries = await this.userContentService.getSavedMessages({
 			userId: params.userId,
+			viewer: params.viewer,
 			limit: params.limit,
 			before: params.before,
 		});
 		const messages = entries.map((entry) => entry.message).filter((message): message is Message => message != null);
-		const responses = await this.userContentService.buildMessageResponsesForUser(params.userId, messages);
+		const responses = await this.userContentService.buildMessageResponsesForUser(
+			params.userId,
+			params.viewer,
+			messages,
+		);
 		const responseByMessageId = new Map(responses.map((response) => [response.id, response] as const));
 		return entries.map((entry) =>
 			this.mapSavedMessageEntry(entry, responseByMessageId.get(entry.messageId.toString()) ?? null),
@@ -122,10 +124,9 @@ export class UserContentRequestService {
 	async saveMessage(params: SaveMessageParams): Promise<void> {
 		await this.userContentService.saveMessage({
 			userId: params.userId,
+			viewer: params.viewer,
 			channelId: params.channelId,
 			messageId: params.messageId,
-			userCacheService: this.userCacheService,
-			requestCache: params.requestCache,
 		});
 	}
 

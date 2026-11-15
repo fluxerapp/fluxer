@@ -48,6 +48,33 @@ export const OverwriteItem: React.FC<OverwriteItemProps> = observer(
 			},
 			[overwrite, roleId, user, canDelete, onDelete],
 		);
+		let overwriteIcon: React.ReactNode;
+		if (overwrite.type === 0 && !isEveryone) {
+			overwriteIcon = (
+				<div
+					className={styles.roleDot}
+					style={{backgroundColor: color === 0 ? DEFAULT_ROLE_COLOR_HEX : getRoleColor(color || 0)}}
+					data-flx="channel.channel-tabs.channel-permissions-tab.overwrite-item.role-dot"
+				/>
+			);
+		} else if (overwrite.type === 1 && user) {
+			overwriteIcon = (
+				<Avatar
+					user={user}
+					size={12}
+					className={styles.overwriteIcon}
+					guildId={guildId}
+					data-flx="channel.channel-tabs.channel-permissions-tab.overwrite-item.overwrite-icon"
+				/>
+			);
+		} else {
+			overwriteIcon = (
+				<UsersIcon
+					className={styles.overwriteIcon}
+					data-flx="channel.channel-tabs.channel-permissions-tab.overwrite-item.overwrite-icon--2"
+				/>
+			);
+		}
 		return (
 			<button
 				ref={buttonRef}
@@ -61,26 +88,7 @@ export const OverwriteItem: React.FC<OverwriteItemProps> = observer(
 				onContextMenu={handleContextMenu}
 				data-flx="channel.channel-tabs.channel-permissions-tab.overwrite-item.overwrite-item.click.button"
 			>
-				{overwrite.type === 0 && !isEveryone ? (
-					<div
-						className={styles.roleDot}
-						style={{backgroundColor: color === 0 ? DEFAULT_ROLE_COLOR_HEX : getRoleColor(color || 0)}}
-						data-flx="channel.channel-tabs.channel-permissions-tab.overwrite-item.role-dot"
-					/>
-				) : overwrite.type === 1 && user ? (
-					<Avatar
-						user={user}
-						size={12}
-						className={styles.overwriteIcon}
-						guildId={guildId}
-						data-flx="channel.channel-tabs.channel-permissions-tab.overwrite-item.overwrite-icon"
-					/>
-				) : (
-					<UsersIcon
-						className={styles.overwriteIcon}
-						data-flx="channel.channel-tabs.channel-permissions-tab.overwrite-item.overwrite-icon--2"
-					/>
-				)}
+				{overwriteIcon}
 				<span
 					className={styles.overwriteName}
 					data-flx="channel.channel-tabs.channel-permissions-tab.overwrite-item.overwrite-name"

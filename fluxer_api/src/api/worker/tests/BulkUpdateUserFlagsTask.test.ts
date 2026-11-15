@@ -14,11 +14,10 @@ import {
 	getUserRepository,
 } from '@app/api/middleware/ServiceSingletons';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
+import {createTestWorkerHelpers} from '@app/api/test/SyncTaskWorkerService';
 import bulkUpdateUserFlags from '@app/api/worker/tasks/admin_bulk/BulkUpdateUserFlags';
 import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
-import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 interface BulkJobResult {
@@ -33,17 +32,6 @@ interface BulkJobResult {
 const ADMIN_USER_ID = 4000000000000000000n;
 const JOB_ID = 7100000000000000000n;
 const MISSING_USER_ID = 4200000000000000001n;
-
-function createHelpers(): WorkerTaskHelpers {
-	return {
-		logger: new NoopLogger(),
-		jobId: JOB_ID,
-		addJob: async () => 0n,
-		reportProgress: async () => {},
-		shouldCancel: async () => false,
-		setContextLink: async () => {},
-	};
-}
 
 function installWorkerDependencies(): void {
 	setWorkerDependenciesForTest({
@@ -82,12 +70,12 @@ describe('bulkUpdateUserFlags task', () => {
 		const result = (await bulkUpdateUserFlags(
 			{
 				user_ids: [first.userId, MISSING_USER_ID.toString(), second.userId],
-				add_flags: [UserFlags.SPAMMER.toString()],
+				add_flags: [UserFlags.PARTNER.toString()],
 				remove_flags: [UserFlags.HAS_SESSION_STARTED.toString()],
 				admin_user_id: ADMIN_USER_ID.toString(),
 				audit_log_reason: 'Lilith spam sweep',
 			},
-			createHelpers(),
+			createTestWorkerHelpers({jobId: JOB_ID}),
 		)) as unknown as BulkJobResult;
 
 		expect(result.successful_count).toBe(2);
@@ -96,7 +84,7 @@ describe('bulkUpdateUserFlags task', () => {
 
 		const userRepository = getUserRepository();
 		const updatedFirst = await userRepository.findUnique(createUserID(BigInt(first.userId)));
-		expect(updatedFirst!.flags & UserFlags.SPAMMER).toBe(UserFlags.SPAMMER);
+		expect(updatedFirst!.flags & UserFlags.PARTNER).toBe(UserFlags.PARTNER);
 		expect(updatedFirst!.flags & UserFlags.HAS_SESSION_STARTED).toBe(0n);
 
 		const auditLogs = await new AdminRepository().listAllAuditLogsPaginated(50);
@@ -106,9 +94,9 @@ describe('bulkUpdateUserFlags task', () => {
 			expect(log.targetType).toBe('user');
 			expect(log.adminUserId.toString()).toBe(ADMIN_USER_ID.toString());
 			expect(log.auditLogReason).toBe('Lilith spam sweep');
-			expect(log.metadata.get('add_flags')).toBe(UserFlags.SPAMMER.toString());
+			expect(log.metadata.get('add_flags')).toBe(UserFlags.PARTNER.toString());
 			expect(log.metadata.get('remove_flags')).toBe(UserFlags.HAS_SESSION_STARTED.toString());
-			expect(log.metadata.get('new_flags')).toBe(UserFlags.SPAMMER.toString());
+			expect(log.metadata.get('new_flags')).toBe(UserFlags.PARTNER.toString());
 		}
 		expect(auditLogs.some((log) => log.action === 'update_flags' && log.targetId === MISSING_USER_ID)).toBe(false);
 	});
@@ -123,7 +111,7 @@ describe('bulkUpdateUserFlags task', () => {
 				admin_user_id: ADMIN_USER_ID.toString(),
 				audit_log_reason: 'Staff grant',
 			},
-			createHelpers(),
+			createTestWorkerHelpers({jobId: JOB_ID}),
 		);
 
 		const auditLogs = await new AdminRepository().listAllAuditLogsPaginated(50);

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 export const MARKDOWN_BLOCK_ATTRIBUTE = 'data-markdown-block';
-export const MARKDOWN_TABLE_ATTRIBUTE = 'data-markdown-table';
+const MARKDOWN_TABLE_ATTRIBUTE = 'data-markdown-table';
 export const MarkdownBlock = {
 	Alert: 'alert',
 	Blockquote: 'blockquote',

@@ -36,7 +36,7 @@ const StorePurchaseStateSchema = withOpenApiType(
 );
 
 const StorePurchaseBlockedReasonSchema = withOpenApiType(
-	z.enum(['lifetime', 'existing_subscription', 'purchase_disabled']),
+	z.enum(['lifetime', 'existing_subscription', 'purchase_disabled', 'payment_dispute_open']),
 	'StorePurchaseBlockedReason',
 );
 

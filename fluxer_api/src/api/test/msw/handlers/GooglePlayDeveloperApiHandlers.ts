@@ -12,11 +12,10 @@ import {
 	type ProductPurchaseV2,
 	type SubscriptionPurchaseV2,
 } from '@app/api/store_billing/google_play/GooglePlayDeveloperApiClient';
-import {GOOGLE_OIDC_JWKS_URL} from '@app/api/store_billing/google_play/GooglePlayPushVerifier';
 import {type JWTPayload, jwtVerify, SignJWT} from 'jose';
 import {HttpResponse, http, type RequestHandler} from 'msw';
 
-export type GooglePlayFakeOperation =
+type GooglePlayFakeOperation =
 	| 'token'
 	| 'jwks'
 	| 'subscriptions.get'
@@ -28,13 +27,13 @@ export type GooglePlayFakeOperation =
 	| 'orders.refund'
 	| 'voidedpurchases.list';
 
-export interface GooglePlayFakeFailure {
+interface GooglePlayFakeFailure {
 	status: number;
 	reason?: string;
 	retryAfter?: string;
 }
 
-export interface GooglePlayFakeSpies {
+interface GooglePlayFakeSpies {
 	tokenAssertions: Array<{header: Record<string, unknown>; claims: JWTPayload}>;
 	apiRequests: Array<{operation: GooglePlayFakeOperation; method: string; packageName: string; authorization: string}>;
 	acknowledged: Array<{packageName: string; productId: string; purchaseToken: string; body: unknown}>;
@@ -61,11 +60,6 @@ interface SignPushTokenOptions {
 	omitClaims?: Array<string>;
 	signer?: 'trusted' | 'untrusted';
 	kid?: string;
-}
-
-interface FakeGooglePlayOptions {
-	jwksUrl?: string;
-	tokenUri?: string;
 }
 
 const API_PATH_PATTERN = new RegExp(`^${escapeRegExp(new URL(GOOGLE_PLAY_API_BASE_URL).pathname)}/([^/]+)(/.*)$`, 'u');
@@ -176,8 +170,7 @@ export function buildGooglePlayPushEnvelope(
 
 export class FakeGooglePlayDeveloperApi {
 	readonly spies: GooglePlayFakeSpies = emptySpies();
-	readonly jwksUrl: string;
-	readonly tokenUri: string;
+	private readonly tokenUri = GOOGLE_DEFAULT_TOKEN_URI;
 	private readonly subscriptions = new Map<string, StoredPurchase<SubscriptionPurchaseV2>>();
 	private readonly products = new Map<string, StoredPurchase<ProductPurchaseV2>>();
 	private readonly goneTokens = new Set<string>();
@@ -190,16 +183,11 @@ export class FakeGooglePlayDeveloperApi {
 	private readonly trustedKeys = generateKeyPairSync('rsa', {modulusLength: 2048});
 	private readonly untrustedKeys = generateKeyPairSync('rsa', {modulusLength: 2048});
 
-	constructor(options: FakeGooglePlayOptions = {}) {
-		this.jwksUrl = options.jwksUrl ?? GOOGLE_OIDC_JWKS_URL;
-		this.tokenUri = options.tokenUri ?? GOOGLE_DEFAULT_TOKEN_URI;
-	}
-
 	get handlers(): Array<RequestHandler> {
 		const apiOrigin = new URL(GOOGLE_PLAY_API_BASE_URL).origin;
 		return [
 			http.post(this.tokenUri, ({request}) => this.handleToken(request)),
-			http.get(this.jwksUrl, () => this.handleJwks()),
+			http.get('https://www.googleapis.com/oauth2/v3/certs', () => this.handleJwks()),
 			http.all(`${apiOrigin}/*`, ({request}) => this.handleApi(request)),
 		];
 	}
@@ -641,6 +629,6 @@ export class FakeGooglePlayDeveloperApi {
 	}
 }
 
-export function createGooglePlayDeveloperApiHandlers(options: FakeGooglePlayOptions = {}): FakeGooglePlayDeveloperApi {
-	return new FakeGooglePlayDeveloperApi(options);
+export function createGooglePlayDeveloperApiHandlers(): FakeGooglePlayDeveloperApi {
+	return new FakeGooglePlayDeveloperApi();
 }

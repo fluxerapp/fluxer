@@ -40,10 +40,10 @@ export function shouldShowLoadingSkeleton({
 	if (shouldBypassGateway) {
 		return false;
 	}
-	if (!isAuthSessionInitialized) {
-		return true;
-	}
 	if (!isAuthenticated) {
+		return false;
+	}
+	if (!isAuthSessionInitialized) {
 		return true;
 	}
 	return booting;

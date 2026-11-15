@@ -13,12 +13,12 @@ import {isScreenShareAudioPublicationLike, VoiceTrackSource} from '@app/features
 import type {
 	VoiceEngineV2ParticipantVolumeOptions,
 	VoiceEngineV2RemoteTrackSubscriptionOptions,
-} from '@fluxer/voice_engine_v2';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 import type {RemoteTrackPublication, Room} from 'livekit-client';
 
 const logger = new Logger('VoiceEngineV2AppSubscriptionAdapter');
 
-export type VideoQualityLevel = VoiceMediaGraphVideoQuality;
+type VideoQualityLevel = VoiceMediaGraphVideoQuality;
 
 type VoiceEngineV2AppSubscriptionSource = 'camera' | 'screen';
 
@@ -62,9 +62,9 @@ class VoiceEngineV2AppSubscriptionAdapter extends Store {
 		this.videoManager.setRoom(room);
 		this.screenShareManager.setRoom(room);
 		if (room) {
-			logger.info('Room set', {participantCount: room.remoteParticipants.size});
+			logger.debug('Room set', {participantCount: room.remoteParticipants.size});
 		} else {
-			logger.info('Room cleared');
+			logger.debug('Room cleared');
 		}
 	}
 
@@ -135,7 +135,7 @@ class VoiceEngineV2AppSubscriptionAdapter extends Store {
 		});
 		this.videoManager.setRoom(null);
 		this.screenShareManager.setRoom(null);
-		logger.info('All subscriptions cleaned up');
+		logger.debug('All subscriptions cleaned up');
 	}
 
 	subscribeToVideo(
@@ -174,10 +174,6 @@ class VoiceEngineV2AppSubscriptionAdapter extends Store {
 		this.screenShareManager.setContext(participantIdentity, context);
 	}
 
-	isVideoSubscribed(participantIdentity: string): boolean {
-		return this.videoManager.isSubscribed(participantIdentity);
-	}
-
 	isScreenShareSubscribed(participantIdentity: string): boolean {
 		return this.screenShareManager.isSubscribed(participantIdentity);
 	}
@@ -192,18 +188,6 @@ class VoiceEngineV2AppSubscriptionAdapter extends Store {
 			this.videoManager.applyReconciledCommand(command);
 			this.screenShareManager.applyReconciledCommand(command);
 		}
-	}
-
-	reattachVideoAfterPublish(participantIdentity: string): void {
-		this.videoManager.reattachAfterPublish(participantIdentity);
-	}
-
-	getVideoQuality(participantIdentity: string): VideoQualityLevel | null {
-		return this.videoManager.getQuality(participantIdentity);
-	}
-
-	getScreenShareContext(participantIdentity: string): VoiceMediaGraphSubscriptionContext | null {
-		return this.screenShareManager.getContext(participantIdentity);
 	}
 }
 

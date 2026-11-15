@@ -2,12 +2,11 @@
 
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
-import {updateUserSettings} from '@app/api/channel/tests/ChannelTestUtils';
+import {createFriendship, updateUserSettings} from '@app/api/channel/tests/ChannelTestUtils';
 import {
 	acceptInvite,
 	createChannelInvite,
 	createDMChannel,
-	createFriendship,
 	createGuild,
 	ensureSessionStarted,
 	sendMessage,

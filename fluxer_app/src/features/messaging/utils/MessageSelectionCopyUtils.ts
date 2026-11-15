@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {escapeRegex} from '@app/features/messaging/utils/RegexUtils';
+
 const RANGE_START_TO_START = 0;
 const RANGE_START_TO_END = 1;
 const RANGE_END_TO_END = 2;
@@ -685,8 +687,8 @@ function removeHeaderPrefix(rowText: string, headerInfo: HeaderInfo): string {
 function removeInlineStyleHeaderPrefix(rowText: string, headerInfo: HeaderInfo): string {
 	const normalisedRowText = normaliseLineEndings(rowText);
 	const username = collapseWhitespace(headerInfo.username);
-	const timestampAlternatives = createTimestampAlternatives(headerInfo.timestamp).map(escapeRegExp).join('|');
-	const escapedUsername = escapeRegExp(username);
+	const timestampAlternatives = createTimestampAlternatives(headerInfo.timestamp).map(escapeRegex).join('|');
+	const escapedUsername = escapeRegex(username);
 	const headerPrefixPattern = new RegExp(
 		`^\\s*(?:${timestampAlternatives})\\s*(?:\\n\\s*)*[^\\n]*?${escapedUsername}\\s*(?::\\s*)?`,
 		'u',
@@ -727,8 +729,8 @@ function lineContainsTimestamp(line: string, timestamp: string): boolean {
 }
 
 function createHeaderPrefixPattern(username: string, timestamp: string): RegExp {
-	const escapedUsername = escapeRegExp(username);
-	const escapedTimestamp = escapeRegExp(timestamp);
+	const escapedUsername = escapeRegex(username);
+	const escapedTimestamp = escapeRegex(timestamp);
 	return new RegExp(`^\\s*${escapedUsername}[^\\n]*?(?:\\n\\s*)?(?:[-—]\\s*)*${escapedTimestamp}\\s*`, 'u');
 }
 
@@ -737,7 +739,7 @@ function removeInlineHeaderPrefix(line: string, username: string, timestamp: str
 }
 
 function removeTimestampLinePrefix(line: string, timestamp: string): string {
-	const escapedTimestamp = escapeRegExp(timestamp);
+	const escapedTimestamp = escapeRegex(timestamp);
 	const timestampPrefixPattern = new RegExp(`^\\s*(?:[-—]\\s*)*${escapedTimestamp}\\s*`, 'u');
 	return line.replace(timestampPrefixPattern, '');
 }
@@ -748,10 +750,6 @@ function stripLeadingHeaderSeparator(value: string): string {
 
 function stripLeadingInlineHeaderSeparator(value: string): string {
 	return value.replace(/^\s*(?::\s*)+/u, '');
-}
-
-function escapeRegExp(value: string): string {
-	return value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
 }
 
 function collapseWhitespace(value: string): string {

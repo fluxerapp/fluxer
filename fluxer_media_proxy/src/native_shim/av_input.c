@@ -218,12 +218,21 @@ int fluxer_find_stream_info_bounded(AVFormatContext *format) {
 
     AVDictionary **options = av_calloc(stream_count, sizeof(*options));
     if (options == NULL) return AVERROR(ENOMEM);
+    size_t video_count = 0;
+    for (unsigned int i = 0; i < stream_count; i++) {
+        const AVStream *stream = format->streams[i];
+        if (stream != NULL && stream->codecpar != NULL &&
+            stream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO &&
+            stream->discard < AVDISCARD_ALL) {
+            video_count++;
+        }
+    }
+    int64_t max_pixels = (int64_t)(FLUXER_MAX_VIDEO_PIXELS / (video_count > 0 ? video_count : 1));
     int rc = 0;
     for (unsigned int i = 0; i < stream_count; i++) {
         const AVStream *stream = format->streams[i];
         if (stream == NULL || stream->codecpar == NULL) continue;
-        if (av_dict_set_int(&options[i], "max_pixels",
-                            (int64_t)FLUXER_MAX_VIDEO_PIXELS, 0) < 0 ||
+        if (av_dict_set_int(&options[i], "max_pixels", max_pixels, 0) < 0 ||
             av_dict_set(&options[i], "threads", "1", 0) < 0) {
             rc = AVERROR(ENOMEM);
             break;

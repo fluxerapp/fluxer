@@ -1,13 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
-import {shouldShowClaimedAccountSettings} from '@app/features/user/components/settings_utils/search_index/SearchIndexHelpers';
+import {shouldShowClaimedAccountSettings} from '@app/features/user/components/settings_utils/SettingsVisibility';
 import type {SearchableSettingDescriptor} from '@app/features/user/components/settings_utils/search_index/SearchIndexTypes';
 import {
 	BACKGROUND_DESCRIPTOR,
-	PREMIUM_PRODUCT_NAME_KEYWORD,
-} from '@app/features/user/components/settings_utils/search_index/SharedDescriptors';
-import Users from '@app/features/user/state/Users';
+	BIO_DESCRIPTOR,
+	COLOR_DESCRIPTOR,
+	PRONOUNS_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {
+	ABOUT_ME_DESCRIPTOR,
+	ACCENT_COLOR_DESCRIPTOR,
+	CHANGE_YOUR_USERNAME_DESCRIPTOR,
+	COMMUNITY_NICKNAME_DESCRIPTOR,
+	DISPLAY_NAME_DESCRIPTOR,
+	GLOBAL_PROFILE_DESCRIPTOR,
+	NAME_DESCRIPTOR,
+	NICKNAME_DESCRIPTOR,
+	PROFILE_TYPE_DESCRIPTOR,
+	TAG_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 
 const AVATAR_DESCRIPTOR = msg({
@@ -54,14 +66,7 @@ const USERNAME_DESCRIPTOR = msg({
 	message: 'Username',
 	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
 });
-const NAME_DESCRIPTOR = msg({
-	message: 'Name',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const DISPLAY_NAME_DESCRIPTOR = msg({
-	message: 'Display name',
-	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
-});
+
 const USER_DESCRIPTOR = msg({
 	message: 'User',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -70,14 +75,7 @@ const HANDLE_DESCRIPTOR = msg({
 	message: 'Handle',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const TAG_DESCRIPTOR = msg({
-	message: 'Tag',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const CHANGE_YOUR_USERNAME_DESCRIPTOR = msg({
-	message: 'Change your username',
-	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
-});
+
 const GLOBAL_NAME_DESCRIPTOR = msg({
 	message: 'Global name',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -90,14 +88,7 @@ const CHANGE_THE_NAME_SHOWN_ON_YOUR_GLOBAL_PROFILE_DESCRIPTOR = msg({
 	message: 'Change the name shown on your global profile',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const PROFILE_TYPE_DESCRIPTOR = msg({
-	message: 'Profile type',
-	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
-});
-const GLOBAL_PROFILE_DESCRIPTOR = msg({
-	message: 'Global profile',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const COMMUNITY_PROFILE_DESCRIPTOR = msg({
 	message: 'Community profile',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -110,14 +101,7 @@ const SWITCH_BETWEEN_YOUR_GLOBAL_PROFILE_AND_PER_COMMUNITY_DESCRIPTOR = msg({
 	message: 'Switch between your global profile and per-community profiles',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const COMMUNITY_NICKNAME_DESCRIPTOR = msg({
-	message: 'Community nickname',
-	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
-});
-const NICKNAME_DESCRIPTOR = msg({
-	message: 'Nickname',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const PROFILE_NICKNAME_DESCRIPTOR = msg({
 	message: 'Profile nickname',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -126,14 +110,7 @@ const CHANGE_YOUR_NICKNAME_FOR_A_COMMUNITY_PROFILE_DESCRIPTOR = msg({
 	message: 'Change your nickname for a community profile',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const BIO_DESCRIPTOR = msg({
-	message: 'Bio',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
-const ABOUT_ME_DESCRIPTOR = msg({
-	message: 'About me',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Description',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -150,18 +127,12 @@ const EDIT_YOUR_PROFILE_BIO_DESCRIPTOR = msg({
 	message: 'Edit your profile bio',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const ACCENT_COLOR_DESCRIPTOR = msg({
-	message: 'Accent color',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
+
 const ACCENT_DESCRIPTOR = msg({
 	message: 'Accent',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const COLOR_DESCRIPTOR = msg({
-	message: 'Color',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const THEME_COLOR_DESCRIPTOR = msg({
 	message: 'Theme color',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -173,10 +144,6 @@ const PROFILE_COLOR_DESCRIPTOR = msg({
 const CHOOSE_YOUR_PROFILE_ACCENT_COLOR_DESCRIPTOR = msg({
 	message: 'Choose your profile accent color',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
-});
-const PRONOUNS_DESCRIPTOR = msg({
-	message: 'Pronouns',
-	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
 });
 const IDENTITY_DESCRIPTOR = msg({
 	message: 'Identity',
@@ -198,25 +165,6 @@ const SET_YOUR_PRONOUNS_DESCRIPTOR = msg({
 	message: 'Set your pronouns',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const BADGE_DESCRIPTOR = msg({
-	message: 'Badge',
-	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
-});
-const PREMIUM_BADGE_DESCRIPTOR = msg({
-	message: 'Premium badge',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const CONFIGURE_YOUR_PROFILE_BADGE_DESCRIPTOR = msg({
-	message: 'Configure your profile badge',
-	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
-});
-
-function shouldShowPremiumBadgeSettings(): boolean {
-	return (
-		shouldShowClaimedAccountSettings() && shouldShowPremiumFeatures() && (Users.getCurrentUser()?.isPremium() ?? false)
-	);
-}
-
 export const myProfileIndex: Array<SearchableSettingDescriptor> = [
 	{
 		id: 'profile-avatar',
@@ -306,13 +254,5 @@ export const myProfileIndex: Array<SearchableSettingDescriptor> = [
 		keywords: [PRONOUNS_DESCRIPTOR, IDENTITY_DESCRIPTOR, HE_DESCRIPTOR, SHE_DESCRIPTOR, THEY_DESCRIPTOR],
 		description: SET_YOUR_PRONOUNS_DESCRIPTOR,
 		isVisible: shouldShowClaimedAccountSettings,
-	},
-	{
-		id: 'profile-badge',
-		tabType: 'my_profile',
-		label: BADGE_DESCRIPTOR,
-		keywords: [BADGE_DESCRIPTOR, PREMIUM_BADGE_DESCRIPTOR, PREMIUM_PRODUCT_NAME_KEYWORD],
-		description: CONFIGURE_YOUR_PROFILE_BADGE_DESCRIPTOR,
-		isVisible: shouldShowPremiumBadgeSettings,
 	},
 ];

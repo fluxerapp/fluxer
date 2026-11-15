@@ -27,13 +27,12 @@ export interface DebugTab {
 interface DebugModalProps {
 	title: string;
 	tabs: Array<DebugTab>;
-	defaultTab?: string;
 }
 
 const logger = new Logger('DebugModal');
-export const DebugModal: React.FC<DebugModalProps> = observer(({title, tabs, defaultTab}) => {
+export const DebugModal: React.FC<DebugModalProps> = observer(({title, tabs}) => {
 	const {i18n} = useLingui();
-	const [activeTabId, setActiveTabId] = useState<string>(defaultTab ?? tabs[0]?.id ?? '');
+	const [activeTabId, setActiveTabId] = useState<string>(tabs[0]?.id ?? '');
 	const activeTab = useMemo(() => tabs.find((tab) => tab.id === activeTabId) ?? tabs[0], [tabs, activeTabId]);
 	const tabItems = useMemo<Array<TabItem<string>>>(() => tabs.map(({id, label}) => ({key: id, label})), [tabs]);
 	const codeContent = useMemo(() => {

@@ -7,7 +7,7 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import styles from '@app/features/user/components/modals/tabs/privacy_safety_tab/DataDeletionTab.module.css';
 import {
 	DataRequestModal,
-	DELETE_TAB_DESCRIPTION,
+	deleteTabDescription,
 } from '@app/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -32,7 +32,7 @@ export const DataDeletionTabContent: React.FC = observer(() => {
 				className={styles.warningText}
 				data-flx="user.privacy-safety-tab.data-deletion-tab.data-deletion-tab-content.warning-text"
 			>
-				{i18n._(DELETE_TAB_DESCRIPTION)}
+				{i18n._(deleteTabDescription())}
 			</Modal.Description>
 			<Button
 				variant="danger"

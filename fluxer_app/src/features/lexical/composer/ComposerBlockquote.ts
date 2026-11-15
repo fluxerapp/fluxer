@@ -10,6 +10,7 @@ import {
 	planBlockquoteDropCaret,
 	planBlockquoteForwardDelete,
 	planBlockquoteLineBreak,
+	planBlockquoteLineDown,
 	planBlockquoteMove,
 	planBlockquotePaste,
 	resolveBlockquoteSelection,
@@ -67,6 +68,7 @@ import {
 	IS_APPLE,
 	isHTMLElement,
 	isLexicalEditor,
+	KEY_ARROW_DOWN_COMMAND,
 	KEY_ARROW_LEFT_COMMAND,
 	KEY_ARROW_RIGHT_COMMAND,
 	KEY_DOWN_COMMAND,
@@ -278,6 +280,23 @@ function $moveAcrossBlockquoteMarker(
 	return true;
 }
 
+function $moveDownFromEmptyBlockquoteLine(editor: LexicalEditor, event: KeyboardEvent): boolean {
+	if (isIMEComposing(event) || editor.isComposing() || event.altKey || event.ctrlKey || event.metaKey) {
+		return false;
+	}
+	const {scanText, selection, lines} = $getComposerBlockquoteState();
+	if (selection == null || (!event.shiftKey && selection.anchor !== selection.focus)) {
+		return false;
+	}
+	const focus = planBlockquoteLineDown(lines, selection.focus, scanText.length);
+	if (focus == null) {
+		return false;
+	}
+	event.preventDefault();
+	$selectComposerRange(event.shiftKey ? selection.anchor : focus, focus);
+	return true;
+}
+
 function shouldWrapLine(line: ComposerLine, quoted: boolean | undefined): boolean {
 	return quoted === true && $isComposerBlockquoteMarkerNode(line.nodes[0]);
 }
@@ -481,6 +500,11 @@ export function registerComposerBlockquote(editor: LexicalEditor, parserFlags?: 
 		editor.registerCommand(
 			KEY_ARROW_RIGHT_COMMAND,
 			(event) => $moveAcrossBlockquoteMarker(editor, event, false, false),
+			COMMAND_PRIORITY_HIGH,
+		),
+		editor.registerCommand(
+			KEY_ARROW_DOWN_COMMAND,
+			(event) => $moveDownFromEmptyBlockquoteLine(editor, event),
 			COMMAND_PRIORITY_HIGH,
 		),
 		editor.registerCommand(

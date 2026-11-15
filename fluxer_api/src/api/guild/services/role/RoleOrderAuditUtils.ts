@@ -2,6 +2,7 @@
 
 import type {RoleID} from '@app/api/BrandedTypes';
 import type {GuildRole} from '@app/api/models/GuildRole';
+import {compareSnowflakes} from '@fluxer/snowflake/src/SnowflakeComparison';
 
 export function computeMovedIds<T extends string | bigint>(before: ReadonlyArray<T>, after: ReadonlyArray<T>): Set<T> {
 	const width = after.length + 1;
@@ -39,6 +40,6 @@ export function computeMovedIds<T extends string | bigint>(before: ReadonlyArray
 export function getMemberListRoleOrderIds(roles: ReadonlyArray<GuildRole>, everyoneRoleId: RoleID): Array<RoleID> {
 	return roles
 		.filter((role) => role.isHoisted && role.id !== everyoneRoleId)
-		.sort((a, b) => b.effectiveHoistPosition - a.effectiveHoistPosition || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+		.sort((a, b) => b.effectiveHoistPosition - a.effectiveHoistPosition || compareSnowflakes(a.id, b.id))
 		.map((role) => role.id);
 }

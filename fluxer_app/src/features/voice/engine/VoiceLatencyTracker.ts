@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export const DEFAULT_VOICE_LATENCY_HISTORY_LIMIT = 60;
-export const DEFAULT_VOICE_LATENCY_STALE_AFTER_MS = 10_000;
+import type {VoiceEngineV2LatencyDataPoint as LatencyDataPoint} from '@fluxer/voice_engine_v2/src/protocol/types';
 
-export interface LatencyDataPoint {
-	timestamp: number;
-	latency: number;
-}
+const DEFAULT_VOICE_LATENCY_HISTORY_LIMIT = 60;
+const VOICE_LATENCY_STALE_AFTER_MS = 10_000;
 
-export type VoiceLatencyStatus = 'idle' | 'measuring' | 'fresh' | 'stale';
+type VoiceLatencyStatus = 'idle' | 'measuring' | 'fresh' | 'stale';
 
 export interface VoiceLatencySnapshot {
 	tracking: boolean;
@@ -27,18 +24,15 @@ export interface VoiceLatencySnapshotOptions {
 
 export interface VoiceLatencyRecordOptions {
 	historyLimit?: number;
-	staleAfterMs?: number;
 }
 
 function latencyStatusFor(
 	snapshot: Pick<VoiceLatencySnapshot, 'tracking' | 'currentLatency' | 'lastSampledAt'>,
 	now: number,
-	options: VoiceLatencyRecordOptions = {},
 ): VoiceLatencyStatus {
 	if (!snapshot.tracking) return 'idle';
 	if (snapshot.currentLatency == null || snapshot.lastSampledAt == null) return 'measuring';
-	const staleAfterMs = options.staleAfterMs ?? DEFAULT_VOICE_LATENCY_STALE_AFTER_MS;
-	return now - snapshot.lastSampledAt > staleAfterMs ? 'stale' : 'fresh';
+	return now - snapshot.lastSampledAt > VOICE_LATENCY_STALE_AFTER_MS ? 'stale' : 'fresh';
 }
 
 function roundedLatency(latency: number): number | null {
@@ -87,19 +81,17 @@ export function createVoiceLatencySnapshot(options: VoiceLatencySnapshotOptions 
 export function startVoiceLatencyTracking(
 	snapshot: VoiceLatencySnapshot,
 	now: number = Date.now(),
-	options: VoiceLatencyRecordOptions = {},
 ): VoiceLatencySnapshot {
 	const next = {...snapshot, tracking: true, lastObservedAt: snapshot.lastObservedAt ?? now};
-	return {...next, status: latencyStatusFor(next, now, options)};
+	return {...next, status: latencyStatusFor(next, now)};
 }
 
 export function stopVoiceLatencyTracking(
 	snapshot: VoiceLatencySnapshot,
 	now: number = Date.now(),
-	options: VoiceLatencyRecordOptions = {},
 ): VoiceLatencySnapshot {
 	const next = {...snapshot, tracking: false, lastObservedAt: snapshot.lastObservedAt ?? now};
-	return {...next, status: latencyStatusFor(next, now, options)};
+	return {...next, status: latencyStatusFor(next, now)};
 }
 
 export function resetVoiceLatencySnapshot(options: VoiceLatencySnapshotOptions = {}): VoiceLatencySnapshot {
@@ -109,10 +101,9 @@ export function resetVoiceLatencySnapshot(options: VoiceLatencySnapshotOptions =
 export function observeVoiceLatencyGap(
 	snapshot: VoiceLatencySnapshot,
 	timestamp: number = Date.now(),
-	options: VoiceLatencyRecordOptions = {},
 ): VoiceLatencySnapshot {
 	const next = {...snapshot, lastObservedAt: timestamp};
-	return {...next, status: latencyStatusFor(next, timestamp, options)};
+	return {...next, status: latencyStatusFor(next, timestamp)};
 }
 
 export function recordVoiceLatencySample(
@@ -122,7 +113,7 @@ export function recordVoiceLatencySample(
 	options: VoiceLatencyRecordOptions = {},
 ): VoiceLatencySnapshot {
 	const sample = roundedLatency(latency);
-	if (sample == null) return observeVoiceLatencyGap(snapshot, timestamp, options);
+	if (sample == null) return observeVoiceLatencyGap(snapshot, timestamp);
 	const historyLimit = options.historyLimit ?? DEFAULT_VOICE_LATENCY_HISTORY_LIMIT;
 	const latencyHistory = appendLatencySample(snapshot.latencyHistory, {timestamp, latency: sample}, historyLimit);
 	const next = {

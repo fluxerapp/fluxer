@@ -13,8 +13,9 @@ import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
+import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import * as TtsSpeechUtils from '@app/features/voice/utils/TtsSpeechUtils';
-import {formatMessageForTts} from '@app/features/voice/utils/TtsTextFormatter';
+import {formatContentForTts, formatMessageForTts} from '@app/features/voice/utils/TtsTextFormatter';
 import {MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {Message} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {type I18n, i18n as linguiI18n} from '@lingui/core';
@@ -148,7 +149,6 @@ function hasRecentlySpoken(messageId: string): boolean {
 
 interface SpeakTextOptions {
 	text: string;
-	interrupt?: boolean;
 	maxLength?: number;
 	rate?: number;
 	onStart?: () => void;
@@ -173,10 +173,8 @@ interface SpeakCallbacks {
 
 function speakText(options: SpeakTextOptions): void {
 	ensureInitialized();
-	const {text, interrupt = true, maxLength, rate, onStart, onEnd, onError} = options;
-	if (interrupt) {
-		stopSpeaking();
-	}
+	const {text, maxLength, rate, onStart, onEnd, onError} = options;
+	stopSpeaking();
 	const sessionId = beginSpeechSession();
 	const callbacks: SpeakCallbacks = {onStart, onEnd, onError};
 	if (canUseNativeSpeech()) {
@@ -334,7 +332,7 @@ async function speakWithFallback(
 	void speakNextChunk();
 }
 
-function speakMessage(content: string): void {
+function speakMessage(content: string, guildId: string | null): void {
 	ensureInitialized();
 	if (!isSupported()) {
 		void showUnsupportedModal();
@@ -344,7 +342,7 @@ function speakMessage(content: string): void {
 		stopSpeaking();
 		return;
 	}
-	speakText({text: content});
+	speakText({text: formatContentForTts(content, guildId, getI18n())});
 }
 
 function isUserMessageType(type: number): boolean {
@@ -365,22 +363,18 @@ function describeNonTextContent(message: Message, authorName: string, localI18n:
 }
 
 function shouldSpeakMessage(message: Message): boolean {
-	const mode = Notification.ttsNotificationMode;
-	const isExplicitTts = message.tts === true;
-	const isSelf = message.author.id === Authentication.currentUserId;
-	const isSystemMessage = !isUserMessageType(message.type);
-	if (isSelf && !isSystemMessage) {
+	if (LocalVoiceState.getSelfDeaf()) {
 		return false;
 	}
-	if (mode === TTSNotificationMode.NEVER) {
-		return isExplicitTts && Accessibility.enableTTSCommand;
+	const viewing = Notification.isViewingChannel(message.channel_id);
+	if (Accessibility.enableTTSCommand && message.tts === true && viewing) {
+		return true;
 	}
-	if (mode === TTSNotificationMode.FOR_CURRENT_CHANNEL) {
-		if (message.channel_id !== SelectedChannel.currentChannelId) {
-			return false;
-		}
+	if (message.author.id === Authentication.currentUserId) {
+		return false;
 	}
-	return true;
+	const mode = Notification.ttsNotificationMode;
+	return mode === TTSNotificationMode.FOR_ALL_CHANNELS || (mode === TTSNotificationMode.FOR_CURRENT_CHANNEL && viewing);
 }
 
 function handleIncomingTtsMessage(message: Message): void {

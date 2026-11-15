@@ -10,7 +10,6 @@ import {i18n, type MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {
 	$applyNodeReplacement,
-	$isTextNode,
 	type EditorConfig,
 	ElementNode,
 	type LexicalNode,
@@ -368,16 +367,6 @@ export class SlashSlotNode extends ElementNode {
 		placeholder.select(0, 0);
 	}
 
-	selectValueStart(): void {
-		const latest = this.getLatest();
-		const first = latest.getFirstChild();
-		if ($isTextNode(first)) {
-			first.select(0, 0);
-			return;
-		}
-		latest.select(0, 0);
-	}
-
 	ensurePlaceholder(): SlashSlotPlaceholderNode {
 		const writable = this.getWritable();
 		let placeholder: SlashSlotPlaceholderNode | null = null;
@@ -425,8 +414,7 @@ export class SlashSlotNode extends ElementNode {
 	setResolvedWire(resolvedWire: string | null, resolvedDisplay?: string | null): this {
 		const writable = this.getWritable();
 		writable.__resolvedWire = resolvedWire;
-		writable.__resolvedDisplay =
-			resolvedWire == null ? null : resolvedDisplay == null ? this.getTextContent() : resolvedDisplay;
+		writable.__resolvedDisplay = resolvedWire == null ? null : (resolvedDisplay ?? this.getTextContent());
 		if (resolvedWire != null) {
 			writable.__validity = 'valid';
 			writable.__validationError = null;

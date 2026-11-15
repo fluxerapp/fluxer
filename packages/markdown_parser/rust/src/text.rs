@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::ast::Node;
-use crate::constants::{MAX_LINE_LENGTH, MAX_LINK_URL_LENGTH};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Line {
@@ -21,14 +20,14 @@ pub fn split_lines(input: &str) -> Vec<Line> {
         }
         let text = segment.strip_suffix('\n').unwrap_or(segment);
         out.push(Line {
-            text: bounded_line_text(text).to_owned(),
+            text: text.to_owned(),
             offset: start,
         });
         start += segment.len();
     }
     if start < input.len() && out.len() < crate::constants::MAX_LINES {
         out.push(Line {
-            text: bounded_line_text(&input[start..]).to_owned(),
+            text: input[start..].to_owned(),
             offset: start,
         });
     }
@@ -58,10 +57,6 @@ pub fn bounded_utf8_prefix_length(value: &str, max_len: usize) -> usize {
     end
 }
 
-pub fn bounded_line_text(value: &str) -> &str {
-    &value[..bounded_utf8_prefix_length(value, MAX_LINE_LENGTH)]
-}
-
 pub fn concat(left: &str, right: &str) -> String {
     if left.is_empty() {
         return right.to_owned();
@@ -75,28 +70,17 @@ pub fn concat(left: &str, right: &str) -> String {
     out
 }
 
-pub fn concat3(a: &str, b: &str, c: &str) -> String {
-    let mut out = String::with_capacity(a.len() + b.len() + c.len());
-    out.push_str(a);
-    out.push_str(b);
-    out.push_str(c);
-    out
-}
-
-pub fn repeat_byte(byte: u8, count: usize) -> String {
-    std::iter::repeat_n(byte as char, count).collect()
-}
-
-pub fn append_text(nodes: &mut Vec<Node>, content: impl Into<String>) {
-    let content = content.into();
+pub fn append_text(nodes: &mut Vec<Node>, content: &str) {
     if content.is_empty() {
         return;
     }
     if let Some(Node::Text { content: previous }) = nodes.last_mut() {
-        previous.push_str(&content);
+        previous.push_str(content);
         return;
     }
-    nodes.push(Node::Text { content });
+    nodes.push(Node::Text {
+        content: content.to_owned(),
+    });
 }
 
 pub fn line_as_text(lines: &[Line], current: usize) -> String {
@@ -143,11 +127,6 @@ pub fn trim_line_window(lines: &mut [Line]) -> Vec<Line> {
 #[inline]
 pub fn starts_with(value: &str, prefix: &str) -> bool {
     value.as_bytes().starts_with(prefix.as_bytes())
-}
-
-#[inline]
-pub fn ends_with(value: &[u8], suffix: &[u8]) -> bool {
-    value.ends_with(suffix)
 }
 
 #[inline]
@@ -245,21 +224,13 @@ pub fn find_from(value: &str, start: usize, needle: u8) -> Option<usize> {
         .map(|pos| start + pos)
 }
 
-pub fn bounded_url_end(value: &str, end: usize, prefix_len: usize) -> usize {
-    bounded_utf8_prefix_length(&value[..end], prefix_len + MAX_LINK_URL_LENGTH)
-}
-
-pub fn remove_text_presentation(text: &str) -> String {
-    if !text.contains('\u{fe0f}') {
-        return text.to_owned();
+pub fn remove_text_presentation(text: &mut String) {
+    if !text.is_ascii() && text.contains('\u{fe0f}') {
+        *text = text
+            .replace("™️", "™")
+            .replace("©️", "©")
+            .replace("®️", "®");
     }
-    text.replace("™️", "™")
-        .replace("©️", "©")
-        .replace("®️", "®")
-}
-
-pub fn ascii_eq_ignore_case(left: &str, right: &str) -> bool {
-    left.eq_ignore_ascii_case(right)
 }
 
 pub fn trim_start_newline_whitespace(value: &str) -> &str {

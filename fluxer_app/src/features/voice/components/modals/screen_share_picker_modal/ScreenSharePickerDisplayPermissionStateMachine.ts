@@ -23,7 +23,7 @@ export function screenRecordingPermissionAllowsPickerSources(permission: NativeP
 	return permissionAllowsDisplaySources(permission);
 }
 
-export const screenSharePickerDisplayPermissionStateMachine = setup({
+const screenSharePickerDisplayPermissionStateMachine = setup({
 	types: {} as {
 		context: ScreenSharePickerDisplayPermissionContext;
 		events: ScreenSharePickerDisplayPermissionEvent;
@@ -58,12 +58,12 @@ export const screenSharePickerDisplayPermissionStateMachine = setup({
 			on: {
 				'permission.result': [
 					{
-						guard: 'settingsAlreadyOpened',
-						target: 'restartRequired',
-					},
-					{
 						guard: 'permissionAllowsDisplaySources',
 						target: 'ready',
+					},
+					{
+						guard: 'settingsAlreadyOpened',
+						target: 'restartRequired',
 					},
 					{target: 'blocked'},
 				],
@@ -94,7 +94,13 @@ export const screenSharePickerDisplayPermissionStateMachine = setup({
 		restartRequired: {
 			on: {
 				'permission.check': {target: 'checking'},
-				'permission.result': {target: 'restartRequired'},
+				'permission.result': [
+					{
+						guard: 'permissionAllowsDisplaySources',
+						target: 'ready',
+					},
+					{target: 'restartRequired'},
+				],
 				'permission.settingsOpened': {actions: 'markSettingsOpened'},
 				'permission.clear': {target: 'idle', actions: 'clear'},
 			},

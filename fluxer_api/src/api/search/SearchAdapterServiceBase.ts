@@ -8,11 +8,7 @@ export abstract class SearchAdapterServiceBase<
 	TDocument,
 	TAdapter extends ISearchAdapter<TFilters, TDocument>,
 > {
-	protected readonly adapter: TAdapter;
-
-	protected constructor(adapter: TAdapter) {
-		this.adapter = adapter;
-	}
+	constructor(protected readonly adapter: TAdapter) {}
 
 	initialize(): Promise<void> {
 		return this.adapter.initialize();

@@ -1,0 +1,52 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.card {
+	overflow: hidden;
+	border: 0.0625rem solid var(--background-modifier-accent);
+	border-radius: 0.5rem;
+	user-select: text;
+}
+
+.banner {
+	height: 3rem;
+	background-color: var(--background-modifier-accent);
+	background-position: center;
+	background-size: cover;
+}
+
+.body {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.75rem;
+}
+
+.text {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.name {
+	overflow: hidden;
+	color: var(--text-primary);
+	font-size: 1rem;
+	font-weight: 600;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.tag {
+	overflow: hidden;
+	color: var(--text-secondary);
+	font-size: 0.8125rem;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.userId {
+	color: var(--text-tertiary);
+	font-size: 0.75rem;
+	line-height: 1rem;
+}

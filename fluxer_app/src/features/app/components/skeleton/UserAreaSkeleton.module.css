@@ -3,7 +3,7 @@
 .userArea {
 	position: absolute;
 	bottom: 0;
-	left: 0;
+	inset-inline-start: 0;
 	width: calc(var(--layout-guild-list-width) + var(--layout-sidebar-width) + 0.0625rem);
 	padding: 0 var(--footer-box-inset-inline) var(--user-area-box-inset-block-end);
 	box-sizing: border-box;
@@ -73,5 +73,5 @@
 	align-items: center;
 	gap: var(--spacing-1);
 	flex-shrink: 0;
-	padding-left: var(--spacing-3);
+	padding-inline-start: var(--spacing-3);
 }

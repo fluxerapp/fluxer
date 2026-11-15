@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {MUTUAL_GUILDS_DESCRIPTOR as MUTUAL_COMMUNITIES_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
@@ -9,30 +10,27 @@ interface MutualItemsDescriptorOptions {
 	includeCount: boolean;
 }
 
-export const MUTUAL_COMMUNITIES_GROUPS_DESCRIPTOR = msg({
+const MUTUAL_COMMUNITIES_GROUPS_DESCRIPTOR = msg({
 	message: 'Mutual places',
 	comment:
 		'Short label for a combined list of mutual group DMs and mutual communities. Translate "places" as the most accurate local word for shared communities and groups.',
 });
-export const MUTUAL_COMMUNITIES_GROUPS_COUNT_DESCRIPTOR = msg({
+const MUTUAL_COMMUNITIES_GROUPS_COUNT_DESCRIPTOR = msg({
 	message: 'Mutual places ({count})',
 	comment:
 		'Short tab or button label for a combined list of mutual group DMs and mutual communities. Preserve {count}; it is inserted by code. Translate "places" as the most accurate local word for shared communities and groups.',
 });
-export const MUTUAL_COMMUNITIES_DESCRIPTOR = msg({
-	message: 'Mutual communities',
-	comment: 'Short label for a list of mutual communities in the user profile modal.',
-});
-export const MUTUAL_COMMUNITIES_COUNT_DESCRIPTOR = msg({
+
+const MUTUAL_COMMUNITIES_COUNT_DESCRIPTOR = msg({
 	message: 'Mutual communities ({count})',
 	comment:
 		'Short tab or button label for a list of mutual communities in the user profile modal. Preserve {count}; it is inserted by code.',
 });
-export const MUTUAL_GROUPS_DESCRIPTOR = msg({
+const MUTUAL_GROUPS_DESCRIPTOR = msg({
 	message: 'Mutual groups',
 	comment: 'Short label for a list of mutual group DMs in the user profile modal.',
 });
-export const MUTUAL_GROUPS_COUNT_DESCRIPTOR = msg({
+const MUTUAL_GROUPS_COUNT_DESCRIPTOR = msg({
 	message: 'Mutual groups ({count})',
 	comment:
 		'Short tab or button label for a list of mutual group DMs in the user profile modal. Preserve {count}; it is inserted by code.',

@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::{
-    Metrics, attachment_signature,
-    histogram::Histogram,
-    now_ms,
+    Metrics, attachment_signature, now_ms,
     request::{REQUEST_KIND_COUNT, RequestKind},
 };
 use std::{
@@ -57,12 +55,12 @@ pub(super) fn render_metrics(out: &mut String, metrics: &Metrics) -> fmt::Result
         "fluxer_media_proxy_native_transform_wait_ms",
         &metrics.native_transform.native_transform_wait,
     )?;
-    render_counter(
+    render_atomic_counter(
         out,
         "fluxer_media_proxy_native_transform_rejected_total",
         &metrics.native_transform.native_transform_rejected,
     )?;
-    render_counter(
+    render_atomic_counter(
         out,
         "fluxer_media_proxy_native_tasks_detached_total",
         &metrics.native_transform.native_tasks_detached,
@@ -184,16 +182,6 @@ pub(super) fn render_metrics(out: &mut String, metrics: &Metrics) -> fmt::Result
     )?;
     render_counter(
         out,
-        "fluxer_media_proxy_framebuffer_pool_borrows_total",
-        &metrics.native_transform.framebuffer_pool_borrows,
-    )?;
-    render_counter(
-        out,
-        "fluxer_media_proxy_framebuffer_pool_grow_events_total",
-        &metrics.native_transform.framebuffer_pool_grow_events,
-    )?;
-    render_counter(
-        out,
         "fluxer_media_proxy_relay_upstream_success_total",
         &metrics.relay.relay_upstream_success,
     )?;
@@ -219,18 +207,12 @@ pub(super) fn render_metrics(out: &mut String, metrics: &Metrics) -> fmt::Result
     writeln!(
         out,
         "fluxer_media_proxy_http_retryable_classifications_total{{reason=\"status\"}} {}",
-        metrics
-            .http_client
-            .http_retryable_status
-            .load(Ordering::Relaxed)
+        metrics.http_client.http_retryable_status.get()
     )?;
     writeln!(
         out,
         "fluxer_media_proxy_http_retryable_classifications_total{{reason=\"error\"}} {}",
-        metrics
-            .http_client
-            .http_retryable_error
-            .load(Ordering::Relaxed)
+        metrics.http_client.http_retryable_error.get()
     )?;
     writeln!(
         out,
@@ -239,18 +221,12 @@ pub(super) fn render_metrics(out: &mut String, metrics: &Metrics) -> fmt::Result
     writeln!(
         out,
         "fluxer_media_proxy_relay_upstream_failures_total{{status=\"503\",retryable=\"true\"}} {}",
-        metrics
-            .relay
-            .relay_upstream_failures_retryable
-            .load(Ordering::Relaxed)
+        metrics.relay.relay_upstream_failures_retryable.get()
     )?;
     writeln!(
         out,
         "fluxer_media_proxy_relay_upstream_failures_total{{status=\"502\",retryable=\"false\"}} {}",
-        metrics
-            .relay
-            .relay_upstream_failures_hard
-            .load(Ordering::Relaxed)
+        metrics.relay.relay_upstream_failures_hard.get()
     )?;
     render_counter(
         out,
@@ -301,14 +277,9 @@ pub(super) fn render_metrics(out: &mut String, metrics: &Metrics) -> fmt::Result
     )
 }
 
-fn render_counter(out: &mut String, name: &str, counter: &AtomicU64) -> fmt::Result {
+fn render_counter(out: &mut String, name: &str, counter: &super::Counter) -> fmt::Result {
     writeln!(out, "# TYPE {name} counter")?;
-    writeln!(out, "{name} {}", counter.load(Ordering::Relaxed))
-}
-
-fn render_gauge(out: &mut String, name: &str, gauge: &AtomicU64) -> fmt::Result {
-    writeln!(out, "# TYPE {name} gauge")?;
-    writeln!(out, "{name} {}", gauge.load(Ordering::Relaxed))
+    writeln!(out, "{name} {}", counter.get())
 }
 
 fn render_request_series(
@@ -345,3 +316,5 @@ fn render_per_kind_histogram(
     }
     Ok(())
 }
+
+use fluxer_common::metrics::{Histogram, render_counter as render_atomic_counter, render_gauge};

@@ -19,7 +19,7 @@ export interface AuthorizeParams {
 	codeChallengeMethod: string | null;
 }
 
-export interface PublicAppBot {
+interface PublicAppBot {
 	id: string;
 	avatar: string | null;
 	username?: string | null;
@@ -42,6 +42,7 @@ export interface GuildSummary {
 	name: string | null;
 	icon: string | null;
 	permissions?: string | null;
+	threads_active?: true;
 }
 
 export interface GuildWithPermissions {
@@ -49,14 +50,7 @@ export interface GuildWithPermissions {
 	name: string;
 	icon: string | null;
 	canAuthorizeBotInvite: boolean;
-}
-
-export interface SignedInView {
-	userId: string;
-	displayName: string;
-	username: string;
-	discriminator: string;
-	avatarUrl: string | undefined;
+	threadsActive: boolean;
 }
 
 export function isSafeRedirectUri(uri: string): boolean {

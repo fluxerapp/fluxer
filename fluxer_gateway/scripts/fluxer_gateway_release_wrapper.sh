@@ -18,4 +18,8 @@ if [ -r "$node_name_file" ]; then
 	FLUXER_ERLANG_NODE_NAME="$(cat "$node_name_file")"
 	export FLUXER_ERLANG_NODE_NAME
 fi
+if [ -r "${FLUXER_ERLANG_COOKIE_FILE:-}" ] && [ -z "$(printf '%s' "${FLUXER_ERLANG_COOKIE:-}" | tr -d '[:space:]')" ]; then
+	FLUXER_ERLANG_COOKIE="$(cat "$FLUXER_ERLANG_COOKIE_FILE")"
+	export FLUXER_ERLANG_COOKIE
+fi
 exec "$script_dir/fluxer_gateway.real" "$@"

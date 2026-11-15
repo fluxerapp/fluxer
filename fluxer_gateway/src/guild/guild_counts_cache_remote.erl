@@ -3,8 +3,6 @@
 -module(guild_counts_cache_remote).
 -typing([eqwalizer]).
 
--include_lib("fluxer_gateway/include/timeout_config.hrl").
-
 -export([
     safe_remote_call/3, safe_remote_call/4,
     start_remote_pending_handoff/4, start_remote_pending_handoff/5,
@@ -17,14 +15,12 @@
     pending_handoffs/1,
     set_pending_handoffs/2,
     enqueue_pending_upsert/4,
-    enqueue_pending_delete/2,
     clear_pending_handoff/2,
     pending_handoff_count_from_state/1,
     sanitize_pending_handoffs/1,
     normalize_pending_operation/1,
     cap_pending_handoffs/1,
     rebalance_ownership/1,
-    handoff_all_to_target_async/2,
     pending_operation_request/2,
     pending_operation_success_action/1,
     merge_pending_handoffs_with_snapshot/2
@@ -212,11 +208,6 @@ enqueue_pending_upsert(GuildId, MC, OC, State) ->
     Updated = Pending#{GuildId => {upsert, {MC, OC}}},
     set_pending_handoffs(cap_pending_handoffs(Updated), State).
 
--spec enqueue_pending_delete(guild_id(), map()) -> map().
-enqueue_pending_delete(GuildId, State) ->
-    Pending = pending_handoffs(State),
-    set_pending_handoffs(cap_pending_handoffs(Pending#{GuildId => delete}), State).
-
 -spec cap_pending_handoffs(pending_handoffs()) -> pending_handoffs().
 cap_pending_handoffs(Pending) ->
     Size = maps:size(Pending),
@@ -248,23 +239,6 @@ rebalance_ownership(State) ->
     guild_counts_cache_shard_mgmt:refresh_rebalance_retry_timer(
         set_pending_handoffs(Remaining, State2)
     ).
-
--spec handoff_all_to_target_async(node(), map()) -> map().
-handoff_all_to_target_async(TargetNode, State) ->
-    Snapshot = guild_counts_cache_query:local_snapshot(State),
-    State1 = maps:fold(
-        fun(GId, {MC, OC}, AccState) ->
-            Op = {upsert, {MC, OC}},
-            Next = enqueue_pending_upsert(GId, MC, OC, AccState),
-            start_remote_pending_handoff(
-                TargetNode, GId, Op, delete_local, {update_local, GId, MC, OC}
-            ),
-            Next
-        end,
-        State,
-        Snapshot
-    ),
-    guild_counts_cache_shard_mgmt:refresh_rebalance_retry_timer(State1).
 
 -spec start_pending_handoff_attempts(pending_handoffs(), map()) -> {pending_handoffs(), map()}.
 start_pending_handoff_attempts(Pending, State) ->

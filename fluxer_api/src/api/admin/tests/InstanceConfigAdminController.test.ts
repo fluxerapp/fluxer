@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AdminAuditLog} from '@app/api/admin/IAdminRepository';
+import type {AdminAuditLog} from '@app/api/admin/AdminRepository';
 import type {TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
 import {setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
-import {PushRelayConfigPublisher} from '@app/api/instance/PushRelayConfigPublisher';
 import {InstanceConfigWriteRaceExecutor} from '@app/api/instance/tests/InstanceConfigWriteRaceExecutor';
-import {getAdminRepository} from '@app/api/middleware/ServiceSingletons';
+import {getAdminRepository, getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
@@ -19,7 +18,7 @@ import {
 	type LegacyPushServiceDeliveryWire,
 	toLegacyPushServiceDeliveryWire,
 } from '@fluxer/schema/src/domains/admin/PushRelaySchemas';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 const PUSH_RELAY_CONFIG_KEY = 'push_service_delivery_config';
 
@@ -37,10 +36,6 @@ describe('instance config admin PATCH under concurrent writes', () => {
 		await harness.reset();
 	});
 
-	afterEach(() => {
-		vi.restoreAllMocks();
-	});
-
 	afterAll(async () => {
 		await harness.shutdown();
 	});
@@ -54,9 +49,6 @@ describe('instance config admin PATCH under concurrent writes', () => {
 
 	const patchConfig = (admin: TestAccount, body: Record<string, unknown>) =>
 		createBuilder<InstanceConfigResponse>(harness, admin.token).patch('/admin/instance/config').body(body);
-
-	const spyOnPushRelayPublishes = () =>
-		vi.spyOn(PushRelayConfigPublisher.prototype, 'publish').mockResolvedValue(undefined);
 
 	async function readStoredPushRelay(): Promise<LegacyPushServiceDeliveryWire> {
 		const raw = await executor.readDirectly(PUSH_RELAY_CONFIG_KEY);
@@ -84,17 +76,16 @@ describe('instance config admin PATCH under concurrent writes', () => {
 	});
 
 	it('answers with a conflict and neither writes, publishes nor audits once every attempt has lost the race', async () => {
-		const publish = spyOnPushRelayPublishes();
 		const admin = await createAdmin();
-		await patchConfig(admin, {push_relay: {relay_consent_accepted: false}}).execute();
-		publish.mockClear();
-		const auditsBefore = await listConfigUpdateAudits();
-		executor.watch(PUSH_RELAY_CONFIG_KEY);
 		const unaccepted = {
 			relay_consent_accepted: false,
 			relay_consent_accepted_at: null,
 			relay_consent_accepted_by: null,
 		};
+		await executor.writeDirectly(PUSH_RELAY_CONFIG_KEY, JSON.stringify(toLegacyPushServiceDeliveryWire(unaccepted, 1)));
+		getInstanceConfigRepository().clearCacheForTesting();
+		const auditsBefore = await listConfigUpdateAudits();
+		executor.watch(PUSH_RELAY_CONFIG_KEY);
 		let competingWrites = 0;
 		executor.competeBeforeEachWrite(async () => {
 			competingWrites++;
@@ -110,7 +101,6 @@ describe('instance config admin PATCH under concurrent writes', () => {
 
 		expect(executor.events).not.toContain('write');
 		expect(await readStoredPushRelay()).toEqual(toLegacyPushServiceDeliveryWire(unaccepted, 100 + competingWrites));
-		expect(publish).not.toHaveBeenCalled();
 		expect(await listConfigUpdateAudits()).toHaveLength(auditsBefore.length);
 	});
 });

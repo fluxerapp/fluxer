@@ -9,8 +9,10 @@ import type {
 } from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/GuildOverviewTypes';
 import {BrandingSection} from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/BrandingSection';
 import {DefaultNotificationsSection} from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/DefaultNotificationsSection';
+import {GuildVisitsSection} from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/GuildVisitsSection';
 import {IdleSettingsSection} from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/IdleSettingsSection';
 import {OwnerCrownSection} from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/OwnerCrownSection';
+import {OwnerTransferSection} from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/OwnerTransferSection';
 import {SystemWelcomeSection} from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/SystemWelcomeSection';
 import {TextChannelNamesSection} from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/TextChannelNamesSection';
 import type {FormInputs} from '@app/features/guild/utils/guild_tabs/GuildOverviewTabUtils';
@@ -148,6 +150,11 @@ const GuildOverviewTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 					textChannels={textChannels as Array<ChannelLike>}
 					data-flx="guild.guild-tabs.guild-overview-tab.system-welcome-section"
 				/>
+				<GuildVisitsSection
+					guildId={guildId}
+					canManageGuild={canManageGuild}
+					data-flx="guild.guild-tabs.guild-overview-tab.guild-visits-section"
+				/>
 				<DefaultNotificationsSection
 					form={form}
 					canManageGuild={canManageGuild}
@@ -173,6 +180,7 @@ const GuildOverviewTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 						data-flx="guild.guild-tabs.guild-overview-tab.owner-crown-section"
 					/>
 				</SettingsSection>
+				<OwnerTransferSection guildId={guildId} data-flx="guild.guild-tabs.guild-overview-tab.owner-transfer-section" />
 			</Form>
 		</div>
 	);

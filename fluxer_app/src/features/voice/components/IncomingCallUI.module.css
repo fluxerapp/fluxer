@@ -41,7 +41,6 @@
 
 	--ic-circle-size: 4rem;
 	--ic-circle-gap: 3.5rem;
-	--ic-action-icon-size: 1.75rem;
 	--ic-action-label-size: 0.8125rem;
 	--ic-action-label-weight: 500;
 
@@ -62,7 +61,7 @@
 	z-index: var(--ic-z-index);
 	position: fixed;
 	top: 0;
-	left: 0;
+	inset-inline-start: 0;
 	width: min(var(--ic-width), calc(100vw - var(--ic-viewport-margin)));
 	pointer-events: auto;
 	isolation: isolate;
@@ -84,8 +83,8 @@
 .dragHandle {
 	position: absolute;
 	top: 0;
-	left: 0;
-	right: 0;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
 	height: var(--ic-drag-handle-height);
 	display: flex;
 	align-items: flex-end;

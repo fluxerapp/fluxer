@@ -29,11 +29,11 @@ import type React from 'react';
 import {useCallback} from 'react';
 
 const SET_CUSTOM_SHORTCUT_DESCRIPTOR = msg({
-	message: 'Set custom shortcut',
+	message: 'Set custom keybind',
 	comment: 'Short label in the keybinds tab. Keep it concise.',
 });
 const DISABLE_BUILT_IN_SHORTCUT_DESCRIPTOR = msg({
-	message: 'Disable built-in shortcut',
+	message: 'Disable built-in keybind',
 	comment: 'Button or menu action label in the keybinds tab. Keep it concise.',
 });
 const RESET_TO_BUILT_IN_DESCRIPTOR = msg({
@@ -41,7 +41,7 @@ const RESET_TO_BUILT_IN_DESCRIPTOR = msg({
 	comment: 'Button or menu action label in the keybinds tab. Keep it concise.',
 });
 const ADD_ANOTHER_CUSTOM_SHORTCUT_DESCRIPTOR = msg({
-	message: 'Add another custom shortcut',
+	message: 'Add another custom keybind',
 	comment: 'Button or menu action label in the keybinds tab. Keep it concise.',
 });
 const RESET_TO_BUILT_IN_2_DESCRIPTOR = msg({
@@ -50,20 +50,20 @@ const RESET_TO_BUILT_IN_2_DESCRIPTOR = msg({
 		'Button or menu action label in the keybinds tab. Keep it concise. Preserve {label}; it is inserted by code.',
 });
 const RE_ENABLE_BUILT_IN_SHORTCUT_DESCRIPTOR = msg({
-	message: 'Re-enable built-in shortcut',
+	message: 'Re-enable built-in keybind',
 	comment:
 		'Button or menu action label in the keybinds tab. Turns a disabled built-in shortcut back on. Keep it concise.',
 });
 const SET_CUSTOM_SHORTCUT_FOR_DESCRIPTOR = msg({
-	message: 'Set custom shortcut for "{label}"',
+	message: 'Set custom keybind for "{label}"',
 	comment: 'Label in the keybinds tab. Preserve {label}; it is inserted by code.',
 });
 const MORE_SHORTCUT_OPTIONS_DESCRIPTOR = msg({
-	message: 'More shortcut options',
+	message: 'More keybind options',
 	comment: 'Short label in the keybinds tab. Keep it concise.',
 });
 const GLOBAL_SHORTCUT_DESCRIPTOR = msg({
-	message: 'Global shortcut',
+	message: 'Global keybind',
 	comment: 'Toggle in the keybinds tab. When on, the shortcut works even when Fluxer is not focused. Keep it concise.',
 });
 export const DefaultShortcutRow: React.FC<{

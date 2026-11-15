@@ -61,7 +61,7 @@ export function getCachedBackgroundImageURL(id: string): string | null {
 	return resolvedMedia.get(id)?.url ?? null;
 }
 
-export function releaseBackgroundImageURL(id: string): void {
+function releaseBackgroundImageURL(id: string): void {
 	const resolved = resolvedMedia.get(id);
 	if (resolved != null) {
 		URL.revokeObjectURL(resolved.url);

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import ChannelPins from '@app/features/channel/state/ChannelPins';
+import ForumPosts from '@app/features/forum/state/ForumPosts';
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
 import MessageReactions from '@app/features/messaging/state/MessageReactions';
 import Messages from '@app/features/messaging/state/MessagingMessages';
@@ -24,10 +25,11 @@ export function handleMessageReactionRemoveEmoji(
 	_context: GatewayHandlerContext,
 ): void {
 	const emoji = data.emoji as ReactionEmoji;
-	SavedMessages.handleMessageReactionRemoveEmoji(data.message_id);
+	SavedMessages.handleMessageReactionChange(data.message_id);
 	MessageReactions.handleReactionRemoveEmoji(data.message_id, emoji);
 	ChannelPins.handleMessageReactionRemoveEmoji(data.channel_id, data.message_id);
-	MentionFeed.handleMessageReactionRemoveEmoji(data.message_id);
+	ForumPosts.handleReactionClear(data.channel_id, data.message_id, emoji);
+	MentionFeed.handleMessageReactionChange(data.message_id);
 	Messages.handleRemoveReactionEmoji({
 		channelId: data.channel_id,
 		messageId: data.message_id,

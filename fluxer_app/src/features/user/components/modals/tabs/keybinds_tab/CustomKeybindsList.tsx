@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import Keybind from '@app/features/input/state/InputKeybind';
+import Keybind, {type KeybindCommand} from '@app/features/input/state/InputKeybind';
+import {resolveKeybindCommand} from '@app/features/input/state/input_keybind/KeybindCommands';
 import {isBuiltinDisableMarker} from '@app/features/input/state/KeybindResolution';
+import {combosLooseEqual} from '@app/features/input/utils/KeybindComboUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {RetryIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import {Button} from '@app/features/ui/button/Button';
@@ -12,11 +14,12 @@ import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import styles from '@app/features/user/components/modals/tabs/KeybindsTab.module.css';
 import {getCustomKeybindActionLabelMap} from '@app/features/user/components/modals/tabs/keybinds_tab/AssignableActionOptions';
 import {CustomKeybindRow} from '@app/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow';
+import {comboMatchesQuery, normalizeQuery} from '@app/features/user/components/modals/tabs/keybinds_tab/shared';
 import {
-	comboMatchesQuery,
-	combosLooseEqual,
-	normalizeQuery,
-} from '@app/features/user/components/modals/tabs/keybinds_tab/shared';
+	CUSTOM_SHORTCUTS_DESCRIPTOR,
+	RESET_TO_DEFAULTS_DESCRIPTOR,
+	SYNC_SHORTCUTS_DESCRIPTOR as SYNC_SHORTCUTS_ACROSS_DEVICES_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {PlusIcon} from '@phosphor-icons/react';
@@ -29,33 +32,31 @@ const UNASSIGNED_2_DESCRIPTOR = msg({
 	comment: 'Short label in the keybinds tab. Keep it concise.',
 });
 const RESET_ALL_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Reset all shortcuts?',
+	message: 'Reset all keybinds?',
 	comment: 'Confirmation prompt in the keybinds tab.',
 });
 const THIS_REMOVES_EVERY_CUSTOM_SHORTCUT_AND_RE_ENABLES_DESCRIPTOR = msg({
-	message: 'This removes every custom shortcut and re-enables all built-in shortcuts. This cannot be undone.',
+	message: 'This removes every custom keybind and re-enables all built-in keybinds. This cannot be undone.',
 	comment: 'Error message in the keybinds tab. Keep the tone plain and specific.',
 });
-const RESET_TO_DEFAULTS_DESCRIPTOR = msg({
-	message: 'Reset to defaults',
-	comment: 'Button or menu action label in the keybinds tab. Keep it concise.',
-});
+
 const DISABLE_BUILT_IN_SHORTCUTS_DESCRIPTOR = msg({
 	message: 'Disable built-ins',
 	comment: 'Button or menu action label in the keybinds tab. Keep it concise.',
 });
-const SYNC_SHORTCUTS_ACROSS_DEVICES_DESCRIPTOR = msg({
-	message: 'Sync shortcuts',
-	comment: 'Label in the keybinds tab.',
-});
-const CUSTOM_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Custom shortcuts',
-	comment: 'Short heading in the keybinds tab.',
-});
+
 const SHORTCUTS_ARE_PAUSED_WHILE_RECORDING_DESCRIPTOR = msg({
-	message: 'Shortcuts are paused while recording.',
+	message: 'Keybinds are paused while recording.',
 	comment: 'Short helper text in the keybinds tab.',
 });
+function resolveActionLabel(labelByAction: ReadonlyMap<KeybindCommand, string>, action: string | null): string | null {
+	const resolved = resolveKeybindCommand(action);
+	if (resolved === null) {
+		return action;
+	}
+	return labelByAction.get(resolved) ?? resolved;
+}
+
 export const CustomKeybindsList: React.FC<{searchQuery: string}> = observer(({searchQuery}) => {
 	const {i18n} = useLingui();
 	const allCustomKeybinds = Keybind.getCustomKeybinds();
@@ -70,7 +71,7 @@ export const CustomKeybindsList: React.FC<{searchQuery: string}> = observer(({se
 	const filteredKeybinds = useMemo(() => {
 		if (!normalized) return customKeybinds;
 		return customKeybinds.filter((entry) => {
-			const label = entry.action ? (labelByAction.get(entry.action) ?? entry.action) : '';
+			const label = resolveActionLabel(labelByAction, entry.action) ?? '';
 			if (label.toLowerCase().includes(normalized)) return true;
 			return comboMatchesQuery(i18n, entry.combo, normalized);
 		});
@@ -85,9 +86,7 @@ export const CustomKeybindsList: React.FC<{searchQuery: string}> = observer(({se
 				const other = customKeybinds[j];
 				if (!other.enabled || !other.combo.key) continue;
 				if (combosLooseEqual(target.combo, other.combo)) {
-					const otherLabel = other.action
-						? (labelByAction.get(other.action) ?? other.action)
-						: i18n._(UNASSIGNED_2_DESCRIPTOR);
+					const otherLabel = resolveActionLabel(labelByAction, other.action) ?? i18n._(UNASSIGNED_2_DESCRIPTOR);
 					result.set(target.id, otherLabel);
 					break;
 				}
@@ -116,6 +115,30 @@ export const CustomKeybindsList: React.FC<{searchQuery: string}> = observer(({se
 		);
 	};
 	const hasAnyOverrides = allCustomKeybinds.length > 0 || disableBuiltinKeybinds;
+	let customList: React.ReactNode;
+	if (customKeybinds.length === 0) {
+		customList = (
+			<div className={styles.emptyState} data-flx="user.keybinds-tab.custom-keybinds-list.empty-state">
+				<Trans>No custom keybinds yet.</Trans>
+			</div>
+		);
+	} else if (filteredKeybinds.length === 0) {
+		customList = (
+			<div className={styles.emptyState} data-flx="user.keybinds-tab.custom-keybinds-list.empty-state--2">
+				<Trans>No custom keybinds match that search.</Trans>
+			</div>
+		);
+	} else {
+		customList = filteredKeybinds.map((entry) => (
+			<CustomKeybindRow
+				key={entry.id}
+				entry={entry}
+				conflictLabel={conflictLabels.get(entry.id) ?? null}
+				onRemove={() => Keybind.removeCustomKeybind(entry.id)}
+				data-flx="user.keybinds-tab.custom-keybinds-list.custom-keybind-row"
+			/>
+		));
+	}
 	return (
 		<div className={styles.customSection} data-flx="user.keybinds-tab.custom-keybinds-list.custom-section">
 			<div className={styles.customHeader} data-flx="user.keybinds-tab.custom-keybinds-list.custom-header">
@@ -157,7 +180,7 @@ export const CustomKeybindsList: React.FC<{searchQuery: string}> = observer(({se
 						}
 						data-flx="user.keybinds-tab.custom-keybinds-list.button.add"
 					>
-						<Trans>Add shortcut</Trans>
+						<Trans>Add keybind</Trans>
 					</Button>
 				</div>
 			</div>
@@ -180,25 +203,7 @@ export const CustomKeybindsList: React.FC<{searchQuery: string}> = observer(({se
 				/>
 			</div>
 			<div className={styles.customList} data-flx="user.keybinds-tab.custom-keybinds-list.custom-list">
-				{customKeybinds.length === 0 ? (
-					<div className={styles.emptyState} data-flx="user.keybinds-tab.custom-keybinds-list.empty-state">
-						<Trans>No custom shortcuts yet.</Trans>
-					</div>
-				) : filteredKeybinds.length === 0 ? (
-					<div className={styles.emptyState} data-flx="user.keybinds-tab.custom-keybinds-list.empty-state--2">
-						<Trans>No custom shortcuts match that search.</Trans>
-					</div>
-				) : (
-					filteredKeybinds.map((entry) => (
-						<CustomKeybindRow
-							key={entry.id}
-							entry={entry}
-							conflictLabel={conflictLabels.get(entry.id) ?? null}
-							onRemove={() => Keybind.removeCustomKeybind(entry.id)}
-							data-flx="user.keybinds-tab.custom-keybinds-list.custom-keybind-row"
-						/>
-					))
-				)}
+				{customList}
 			</div>
 		</div>
 	);

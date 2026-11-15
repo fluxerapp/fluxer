@@ -3,6 +3,7 @@
 import {createGuildID, createStickerID} from '@app/api/BrandedTypes';
 import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {jsonAssetBodyLimit, RequestBodyLimit} from '@app/api/middleware/RequestBodyLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
@@ -51,12 +52,13 @@ export function GuildStickerController(app: HonoApp) {
 			const auditLogReason = ctx.get('auditLogReason') ?? null;
 			const sticker = await ctx
 				.get('guildService')
-				.content.createSticker({user, guildId, name, description, tags, image}, auditLogReason);
+				.content.stickers.createSticker({user, guildId, name, description, tags, image}, auditLogReason);
 			return ctx.json(sticker);
 		},
 	);
 	app.post(
 		'/guilds/:guild_id/stickers/bulk',
+		RequestBodyLimit(jsonAssetBodyLimit({sticker: 50})),
 		RateLimitMiddleware(RateLimitConfigs.GUILD_STICKER_BULK_CREATE),
 		LoginRequired,
 		Validator('param', GuildIdParam),
@@ -78,7 +80,7 @@ export function GuildStickerController(app: HonoApp) {
 			const auditLogReason = ctx.get('auditLogReason') ?? null;
 			const result = await ctx
 				.get('guildService')
-				.content.bulkCreateStickers({user, guildId, stickers}, auditLogReason);
+				.content.stickers.bulkCreateStickers({user, guildId, stickers}, auditLogReason);
 			return ctx.json(result);
 		},
 	);
@@ -106,7 +108,7 @@ export function GuildStickerController(app: HonoApp) {
 			const auditLogReason = ctx.get('auditLogReason') ?? null;
 			const sticker = await ctx
 				.get('guildService')
-				.content.cloneSticker({user, guildId, sourceStickerId}, auditLogReason);
+				.content.stickers.cloneSticker({user, guildId, sourceStickerId}, auditLogReason);
 			return ctx.json(sticker);
 		},
 	);
@@ -130,7 +132,7 @@ export function GuildStickerController(app: HonoApp) {
 			const userId = ctx.get('user').id;
 			const guildId = createGuildID(guild_id);
 			const requestCache = ctx.get('requestCache');
-			return ctx.json(await ctx.get('guildService').content.getStickers({userId, guildId, requestCache}));
+			return ctx.json(await ctx.get('guildService').content.stickers.getStickers({userId, guildId, requestCache}));
 		},
 	);
 	app.patch(
@@ -159,7 +161,7 @@ export function GuildStickerController(app: HonoApp) {
 			return ctx.json(
 				await ctx
 					.get('guildService')
-					.content.updateSticker({userId, guildId, stickerId, name, description, tags}, auditLogReason),
+					.content.stickers.updateSticker({userId, guildId, stickerId, name, description, tags}, auditLogReason),
 			);
 		},
 	);
@@ -187,7 +189,7 @@ export function GuildStickerController(app: HonoApp) {
 			const stickerId = createStickerID(sticker_id);
 			const auditLogReason = ctx.get('auditLogReason') ?? null;
 			const {purge = false} = ctx.req.valid('query');
-			await ctx.get('guildService').content.deleteSticker({userId, guildId, stickerId, purge}, auditLogReason);
+			await ctx.get('guildService').content.stickers.deleteSticker({userId, guildId, stickerId, purge}, auditLogReason);
 			return ctx.body(null, 204);
 		},
 	);

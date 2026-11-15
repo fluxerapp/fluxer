@@ -9,19 +9,14 @@
     remove_virtual_access/3,
     has_virtual_access/3,
     has_voice_access/3,
-    is_view_only/3,
     get_virtual_channels_for_user/2,
-    get_users_with_virtual_access/2,
     dispatch_channel_visibility_change/4,
-    mark_pending_join/3,
     clear_pending_join/3,
     mark_transition_flags/3,
     clear_transition_flags/3,
     is_pending_join/3,
-    mark_preserve/3,
     clear_preserve/3,
     has_preserve/3,
-    mark_move_pending/3,
     clear_move_pending/3,
     is_move_pending/3
 ]).
@@ -40,9 +35,10 @@ add_virtual_access(UserId, ChannelId, State) ->
         UserId, ChannelId, State#{virtual_channel_access => VirtualAccess#{UserId => Updated}}
     ),
     State2 = update_user_session_view_cache(UserId, ChannelId, add, State1),
-    mark_pending_join(
+    State3 = mark_pending_join(
         UserId, ChannelId, guild_member_list_engine_inputs:mark_stale(ChannelId, State2)
-    ).
+    ),
+    guild_dm_partners:reevaluate_user(UserId, State3).
 
 -spec clear_view_only(user_id(), channel_id(), guild_state()) -> guild_state().
 clear_view_only(UserId, ChannelId, State) ->
@@ -78,11 +74,14 @@ remove_virtual_access(UserId, ChannelId, State) ->
     guild_state().
 remove_channel_from_user(UserId, ChannelId, UserChannels, State0) ->
     Updated = sets:del_element(ChannelId, UserChannels),
+    ok = guild_viewable_channels_cache:invalidate_user(UserId, State0),
     State = guild_member_list_engine_inputs:mark_stale(ChannelId, State0),
-    case sets:size(Updated) of
-        0 -> remove_all_user_virtual_access(UserId, State);
-        _ -> update_user_virtual_access(UserId, ChannelId, Updated, State)
-    end.
+    State1 =
+        case sets:size(Updated) of
+            0 -> remove_all_user_virtual_access(UserId, State);
+            _ -> update_user_virtual_access(UserId, ChannelId, Updated, State)
+        end,
+    guild_dm_partners:reevaluate_user(UserId, State1).
 
 -spec remove_all_user_virtual_access(user_id(), guild_state()) -> guild_state().
 remove_all_user_virtual_access(UserId, State) ->
@@ -231,28 +230,10 @@ clear_move_pending(UserId, ChannelId, State) ->
 is_move_pending(UserId, ChannelId, State) ->
     user_channel_check(UserId, ChannelId, virtual_channel_access_move_pending, State).
 
--spec get_users_with_virtual_access(channel_id(), guild_state()) -> [user_id()].
-get_users_with_virtual_access(ChannelId, State) ->
-    VirtualAccess = maps:get(virtual_channel_access, State, #{}),
-    maps:fold(
-        fun(UserId, UserChannels, Acc) ->
-            collect_user_with_access(UserId, ChannelId, UserChannels, Acc)
-        end,
-        [],
-        VirtualAccess
-    ).
-
--spec collect_user_with_access(user_id(), channel_id(), sets:set(), [user_id()]) -> [user_id()].
-collect_user_with_access(UserId, ChannelId, UserChannels, Acc) ->
-    case sets:is_element(ChannelId, UserChannels) of
-        true -> [UserId | Acc];
-        false -> Acc
-    end.
-
 -spec dispatch_channel_visibility_change(user_id(), channel_id(), add | remove, guild_state()) ->
     ok.
 dispatch_channel_visibility_change(UserId, ChannelId, Action, State) ->
-    case guild_permissions:find_channel_by_id(ChannelId, State) of
+    case guild_permissions_check:find_channel_by_id(ChannelId, State) of
         undefined ->
             ok;
         Channel ->

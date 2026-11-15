@@ -3,7 +3,6 @@
 pub mod attachment_signature;
 pub mod cache;
 pub mod external;
-pub mod histogram;
 pub mod http_client;
 pub mod nsfw;
 pub mod relay;
@@ -11,9 +10,6 @@ mod rendering;
 pub mod request;
 pub mod storage;
 pub mod transform;
-
-#[cfg(test)]
-mod tests;
 
 use self::{
     attachment_signature::AttachmentSignatureMetrics,
@@ -27,23 +23,8 @@ use self::{
     storage::StorageMetrics,
     transform::{NativeTransformMetrics, TransformMetrics},
 };
-use libc::{CLOCK_MONOTONIC, clock_gettime, timespec};
 use std::sync::Arc;
 use std::time::Duration;
-
-pub fn now_ms() -> i64 {
-    let mut ts = timespec {
-        tv_sec: 0,
-        tv_nsec: 0,
-    };
-    let rc = unsafe { clock_gettime(CLOCK_MONOTONIC, &mut ts) };
-    if rc != 0 {
-        return 0;
-    }
-    ts.tv_sec
-        .saturating_mul(1_000)
-        .saturating_add(ts.tv_nsec / 1_000_000)
-}
 
 pub fn duration_millis(duration: Duration) -> u64 {
     u64::try_from(duration.as_millis()).unwrap_or(u64::MAX)
@@ -68,15 +49,15 @@ impl Metrics {
     pub fn new() -> Self {
         Self {
             request: Arc::new(RequestMetrics::new()),
-            transform: Arc::new(TransformMetrics::new()),
+            transform: Arc::new(TransformMetrics::default()),
             native_transform: Arc::new(NativeTransformMetrics::new()),
-            coalescer: Arc::new(CoalescerMetrics::new()),
-            transform_cache: Arc::new(TransformCacheMetrics::new()),
-            storage: Arc::new(StorageMetrics::new()),
-            nsfw: Arc::new(NSFWMetrics::new()),
-            external: Arc::new(ExternalMetrics::new()),
-            relay: Arc::new(RelayMetrics::new()),
-            http_client: Arc::new(HTTPClientMetrics::new()),
+            coalescer: Arc::new(CoalescerMetrics::default()),
+            transform_cache: Arc::new(TransformCacheMetrics::default()),
+            storage: Arc::new(StorageMetrics::default()),
+            nsfw: Arc::new(NSFWMetrics::default()),
+            external: Arc::new(ExternalMetrics::default()),
+            relay: Arc::new(RelayMetrics::default()),
+            http_client: Arc::new(HTTPClientMetrics::default()),
             attachment_signature: Arc::new(AttachmentSignatureMetrics::new()),
             start_ms: now_ms(),
         }
@@ -137,5 +118,18 @@ impl Metrics {
 impl Default for Metrics {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+pub use fluxer_common::metrics::now_ms;
+
+#[derive(Debug, Default)]
+pub struct Counter(std::sync::atomic::AtomicU64);
+impl Counter {
+    pub fn inc(&self) {
+        self.0.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    }
+    pub fn get(&self) -> u64 {
+        self.0.load(std::sync::atomic::Ordering::Relaxed)
     }
 }

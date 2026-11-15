@@ -21,7 +21,7 @@ const PUSH_TARGET_SUBSCRIPTION_PREFIX = 'push_target_subscription:';
 const PUSH_INSTALLED_LEGACY_SUBSCRIPTION_PREFIX = 'push_installed_legacy_subscription:';
 const USER_AGENT_VERSION_PATTERN = /\d+(?:[._]\d+)*/g;
 
-export const WEB_PUSH_ORIGIN_RECORD_TTL_SECONDS = seconds('400 days');
+const WEB_PUSH_ORIGIN_RECORD_TTL_SECONDS = seconds('400 days');
 
 export function classifyWebPushOrigin(
 	origin: string | null | undefined,

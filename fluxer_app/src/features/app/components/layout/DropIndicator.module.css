@@ -2,8 +2,8 @@
 
 .dropIndicator {
 	position: absolute;
-	right: 0;
-	left: 0;
+	inset-inline-end: 0;
+	inset-inline-start: 0;
 	height: 0.125rem;
 	border-radius: 624.9375rem;
 	transition: background-color 150ms;
@@ -27,5 +27,5 @@
 }
 
 :global(.theme-light) .dropIndicatorValid {
-	background-color: var(--brand-primary);
+	background-color: var(--brand-primary-foreground);
 }

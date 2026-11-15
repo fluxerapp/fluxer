@@ -39,6 +39,7 @@ static int fluxer_set_heif_security_limits(struct heif_context *ctx,
 #define FLUXER_BMFF_MAX_ILOC_ITEMS 4096u
 #define FLUXER_BMFF_MAX_ILOC_EXTENTS_PER_ITEM 4096u
 #define FLUXER_BMFF_MAX_ILOC_EXTENTS_TOTAL 65536u
+#define FLUXER_BMFF_MAX_SAMPLE_TABLE_ENTRIES 65536u
 
 static uint32_t bmff_read_u32(const uint8_t *p) {
     return ((uint32_t)p[0] << 24) | ((uint32_t)p[1] << 16) |
@@ -70,6 +71,7 @@ typedef struct {
     bmff_frame frames[FLUXER_BMFF_MAX_DEPTH];
     size_t depth;
     size_t *box_count;
+    int clamp_truncated;
     uint8_t parent_type[4];
     size_t parent_payload_start;
 } bmff_cursor;
@@ -119,6 +121,27 @@ static int bmff_parse_box(const uint8_t *data, size_t data_len,
     out->payload_end = start + parsed_size;
     return 0;
 }
+static int bmff_parse_truncated_box(const uint8_t *data, size_t start,
+                                    size_t end, bmff_box *out) {
+    size_t remaining = end - start;
+    if (remaining < 8) return 1;
+    uint32_t size32 = bmff_read_u32(data + start);
+    uint64_t box_size = size32;
+    size_t header_len = 8;
+    if (size32 == 1) {
+        if (remaining < 16) return 1;
+        box_size = bmff_read_u64(data + start + 8);
+        header_len = 16;
+    }
+    if (box_size < (uint64_t)header_len || box_size <= (uint64_t)remaining) {
+        return -1;
+    }
+    memcpy(out->type, data + start + 4, sizeof(out->type));
+    out->payload_start = start + header_len;
+    out->payload_end = end;
+    return 0;
+}
+
 static int bmff_cursor_init(bmff_cursor *cursor, const uint8_t *data,
                             size_t data_len, size_t start, size_t end,
                             size_t *box_count) {
@@ -160,7 +183,16 @@ static int bmff_cursor_next(bmff_cursor *cursor, bmff_box *out) {
         if (frame->next > frame->end) return -1;
         if (*cursor->box_count >= FLUXER_BMFF_MAX_BOXES) return -1;
         if (bmff_parse_box(cursor->data, cursor->data_len,
-                           frame->next, frame->end, out) != 0) return -1;
+                           frame->next, frame->end, out) != 0) {
+            if (!cursor->clamp_truncated) return -1;
+            int truncated = bmff_parse_truncated_box(cursor->data, frame->next,
+                                                     frame->end, out);
+            if (truncated < 0) return -1;
+            if (truncated > 0) {
+                frame->next = frame->end;
+                continue;
+            }
+        }
         frame->next = out->payload_end;
         (*cursor->box_count)++;
         memcpy(cursor->parent_type, frame->type, 4);
@@ -185,6 +217,53 @@ static int bmff_cursor_next(bmff_cursor *cursor, bmff_box *out) {
         return 1;
     }
     return 0;
+}
+
+static int bmff_sample_table_count_offset(const uint8_t type[4],
+                                          size_t *offset) {
+    if (bmff_type_is(type, "stsc") || bmff_type_is(type, "stco") ||
+        bmff_type_is(type, "co64")) {
+        *offset = 4;
+        return 1;
+    }
+    if (bmff_type_is(type, "stsz")) {
+        *offset = 8;
+        return 1;
+    }
+    return 0;
+}
+
+static int bmff_validate_sample_table(const bmff_cursor *cursor,
+                                      const bmff_box *box) {
+    size_t count_offset = 0;
+    if (!bmff_sample_table_count_offset(box->type, &count_offset)) return 0;
+    if (!bmff_cursor_parent_is(cursor, "stbl")) return 0;
+    size_t len = box->payload_end - box->payload_start;
+    if (len < count_offset + 4) return -1;
+    uint32_t entry_count = bmff_read_u32(
+        cursor->data + box->payload_start + count_offset);
+    return entry_count <= FLUXER_BMFF_MAX_SAMPLE_TABLE_ENTRIES ? 0 : -1;
+}
+
+int fluxer_bmff_sample_tables_validate(const void *buf, size_t len) {
+    if (buf == NULL || len < 8) return FLUXER_NATIVE_STATUS_OK;
+    const uint8_t *data = (const uint8_t *)buf;
+    if (!bmff_type_is(data + 4, "ftyp")) return FLUXER_NATIVE_STATUS_OK;
+    size_t box_count = 0;
+    bmff_cursor cursor;
+    if (bmff_cursor_init(&cursor, data, len, 0, len, &box_count) != 0) {
+        return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
+    }
+    cursor.clamp_truncated = 1;
+    for (;;) {
+        bmff_box box;
+        int result = bmff_cursor_next(&cursor, &box);
+        if (result < 0) return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
+        if (result == 0) return FLUXER_NATIVE_STATUS_OK;
+        if (bmff_validate_sample_table(&cursor, &box) != 0) {
+            return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
+        }
+    }
 }
 
 static int bmff_infe_has_tmap(const uint8_t *payload, size_t len, int *found) {
@@ -472,6 +551,7 @@ static int validate_isobmff_item_metadata(const void *buf, size_t len,
         int result = bmff_cursor_next(&cursor, &box);
         if (result < 0) return -1;
         if (result == 0) break;
+        if (bmff_validate_sample_table(&cursor, &box) != 0) return -1;
         bmff_item_box_kind kind = bmff_item_box_kind_from_type(box.type);
         if (kind == BMFF_ITEM_BOX_OTHER) continue;
         if (!bmff_cursor_parent_is(&cursor, "meta")) return -1;

@@ -2,12 +2,6 @@
 
 import type {ChannelID, MessageID, WebhookID} from '@app/api/BrandedTypes';
 import {
-	type CrosspostedMessageKey,
-	type CrosspostSource,
-	type CrosspostSyncState,
-	ICrosspostedMessageRepository,
-} from '@app/api/channel/repositories/ICrosspostedMessageRepository';
-import {
 	deleteOneOrMany,
 	executeConditional,
 	fetchMany,
@@ -17,6 +11,21 @@ import {
 import {Db} from '@app/api/database/CassandraTypes';
 import type {CrosspostedMessageRow, CrosspostSourceByChannelRow} from '@app/api/database/types/ChannelTypes';
 import {CrosspostedMessages, CrosspostSourcesByChannel} from '@app/api/Tables';
+
+export interface CrosspostedMessageKey {
+	sourceMessageId: MessageID;
+	webhookId: WebhookID;
+}
+
+export interface CrosspostSyncState {
+	targetMessageId: MessageID;
+	sourceFingerprint: string | null;
+}
+
+export interface CrosspostSource {
+	sourceChannelId: ChannelID;
+	sourceMessageId: MessageID;
+}
 
 const FETCH_CROSSPOSTED_MESSAGE_CQL = CrosspostedMessages.selectCql({
 	where: [CrosspostedMessages.where.eq('source_message_id'), CrosspostedMessages.where.eq('webhook_id')],
@@ -64,7 +73,7 @@ function toPk(key: CrosspostedMessageKey): Pick<CrosspostedMessageRow, 'source_m
 	return {source_message_id: key.sourceMessageId, webhook_id: key.webhookId};
 }
 
-export class CrosspostedMessageRepository extends ICrosspostedMessageRepository {
+export class CrosspostedMessageRepository {
 	async get(sourceMessageId: MessageID, webhookId: WebhookID): Promise<CrosspostedMessageRow | null> {
 		return fetchOne<CrosspostedMessageRow>(FETCH_CROSSPOSTED_MESSAGE_CQL, {
 			source_message_id: sourceMessageId,

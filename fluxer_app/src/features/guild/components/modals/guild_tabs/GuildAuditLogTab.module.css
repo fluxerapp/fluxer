@@ -144,12 +144,6 @@
 	text-align: center;
 }
 
-.statusActions {
-	display: flex;
-	justify-content: center;
-	width: 100%;
-}
-
 .loadMore {
 	display: flex;
 	justify-content: center;
@@ -183,7 +177,7 @@
 	padding: 0 var(--input-container-padding);
 	background: transparent;
 	border: none;
-	text-align: left;
+	text-align: start;
 	cursor: pointer;
 	transition: background-color var(--transition-fast);
 	gap: var(--spacing-2);
@@ -314,9 +308,7 @@
 .reasonLabel {
 	font-weight: 600;
 	color: var(--text-primary-muted);
-	font-size: 0.6875rem;
-	letter-spacing: 0.04em;
-	text-transform: uppercase;
+	font-size: 0.75rem;
 }
 
 .reasonValue {
@@ -412,7 +404,7 @@
 	border: 0.0625rem solid var(--border-color);
 	position: relative;
 	top: 0.0625rem;
-	margin-left: 0.25rem;
+	margin-inline-start: 0.25rem;
 }
 
 .clickableUser {

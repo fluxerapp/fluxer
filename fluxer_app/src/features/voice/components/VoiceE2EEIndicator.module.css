@@ -18,3 +18,15 @@
 	composes: indicatorBase;
 	color: var(--status-danger);
 }
+
+.indicatorP2p {
+	composes: indicatorEncrypted;
+	width: fit-content;
+	margin-inline: auto;
+}
+
+.indicatorP2pBroken {
+	composes: indicatorBroken;
+	width: fit-content;
+	margin-inline: auto;
+}

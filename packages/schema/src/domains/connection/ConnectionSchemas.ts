@@ -19,6 +19,7 @@ const ConnectionTypeSchema = withOpenApiType(
 		[
 			[ConnectionTypes.BLUESKY, 'BLUESKY', 'Bluesky social account connection'],
 			[ConnectionTypes.DOMAIN, 'DOMAIN', 'Custom domain ownership connection'],
+			[ConnectionTypes.OAUTH, 'OAUTH', 'Account at an OAuth or OpenID Connect provider set up by the instance'],
 		] as const,
 		'The type of external connection',
 	),
@@ -36,6 +37,13 @@ export const ConnectionResponse = z.object({
 		'ConnectionVisibilityFlags',
 	).describe('Bitfield controlling who can see this connection'),
 	sort_order: Int32Type.describe('The display order of this connection'),
+	provider_id: z
+		.string()
+		.nullable()
+		.describe(
+			'For oauth connections, the id of the instance connection provider, or null while that provider is removed, turned off or set to another identity provider. Null for other types',
+		),
+	url: z.string().nullable().describe('Link to the connected account or domain, when there is one'),
 });
 
 export type ConnectionResponse = z.infer<typeof ConnectionResponse>;

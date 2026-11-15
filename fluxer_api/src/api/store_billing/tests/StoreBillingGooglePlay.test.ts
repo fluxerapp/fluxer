@@ -3,11 +3,12 @@
 import {randomUUID} from 'node:crypto';
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {Config} from '@app/api/Config';
+import {KvOnceClaims} from '@app/api/infrastructure/KvOnceClaims';
 import {getKVClient} from '@app/api/middleware/ServiceRegistry';
 import {getStoreBillingRepository, getUserRepository} from '@app/api/middleware/ServiceSingletons';
 import type {SubscriptionPurchaseV2} from '@app/api/store_billing/google_play/GooglePlayDeveloperApiClient';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
-import {googlePlayMessageClaimKey, StoreNotificationClaims} from '@app/api/store_billing/StoreNotificationClaims';
+import {googlePlayMessageClaimKey} from '@app/api/store_billing/StoreNotificationClaims';
 import {STORE_PURCHASE_REFRESH_QUEUE_KEY} from '@app/api/store_billing/StorePurchaseRefresh';
 import {
 	findUser,
@@ -17,7 +18,6 @@ import {
 	uninstallStoreBillingWorker,
 } from '@app/api/store_billing/tests/StoreBillingTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import {
 	buildFakeProductPurchase,
 	buildFakeSubscriptionPurchase,
@@ -27,6 +27,7 @@ import {
 	type FakeGooglePlayDeveloperApi,
 } from '@app/api/test/msw/handlers/GooglePlayDeveloperApiHandlers';
 import {server} from '@app/api/test/msw/server';
+import {createTestWorkerHelpers} from '@app/api/test/SyncTaskWorkerService';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import pollGooglePlayVoidedPurchases from '@app/api/worker/tasks/PollGooglePlayVoidedPurchases';
 import processGooglePlayNotification from '@app/api/worker/tasks/ProcessGooglePlayNotification';
@@ -38,7 +39,6 @@ import type {
 	StorePurchaseClaimResponse,
 	StorePurchaseResponse,
 } from '@fluxer/schema/src/domains/premium/StoreBillingSchemas';
-import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import {ms} from 'itty-time';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
@@ -59,21 +59,6 @@ interface ScheduledJob {
 	taskType: string;
 	payload: unknown;
 	runAt: Date | undefined;
-}
-
-function createWorkerHelpers(isLastAttempt = false, scheduled: Array<ScheduledJob> = []): WorkerTaskHelpers {
-	return {
-		logger: new NoopLogger(),
-		jobId: 1n,
-		attempt: {isLastAttempt},
-		addJob: async (taskType, payload, options) => {
-			scheduled.push({taskType, payload, runAt: options?.runAt});
-			return 0n;
-		},
-		reportProgress: async () => {},
-		shouldCancel: async () => false,
-		setContextLink: async () => {},
-	};
 }
 
 function buildSubscription(seed: SubscriptionSeed): SubscriptionPurchaseV2 {
@@ -176,7 +161,7 @@ describe('Google Play purchases', () => {
 
 	async function runRefreshQueueFor(storeKey: string): Promise<void> {
 		await getKVClient().zadd(STORE_PURCHASE_REFRESH_QUEUE_KEY, Date.now() - 1000, storeKey);
-		await processStorePurchaseRefreshQueue({}, createWorkerHelpers());
+		await processStorePurchaseRefreshQueue({}, createTestWorkerHelpers({attempt: {isLastAttempt: false}}));
 	}
 
 	it('acknowledges a claimed subscription and grants premium', async () => {
@@ -469,7 +454,7 @@ describe('Google Play purchases', () => {
 			purchaseToken,
 			buildSubscription({expiresAt: renewedExpiry, accountToken: token}),
 		);
-		await processStorePurchaseRefreshQueue({}, createWorkerHelpers());
+		await processStorePurchaseRefreshQueue({}, createTestWorkerHelpers({attempt: {isLastAttempt: false}}));
 		expect((await findUser(account.userId)).premiumUntil?.getTime()).toBe(renewedExpiry);
 		const rescheduled = await kv.zrangebyscore(STORE_PURCHASE_REFRESH_QUEUE_KEY, '-inf', '+inf');
 		expect(rescheduled).toEqual([storeKey]);
@@ -493,7 +478,7 @@ describe('Google Play purchases', () => {
 			voidedSource: 1,
 			voidedReason: 1,
 		});
-		await pollGooglePlayVoidedPurchases({}, createWorkerHelpers());
+		await pollGooglePlayVoidedPurchases({}, createTestWorkerHelpers({attempt: {isLastAttempt: false}}));
 		const gift = await getUserRepository().findGiftCode(result.gift_code!);
 		expect(gift?.revokedAt).not.toBeNull();
 		const row = await getStoreBillingRepository().findPurchase(`google_play:${purchaseToken}`);
@@ -642,7 +627,7 @@ describe('Google Play purchases', () => {
 			voidedSource: 1,
 			voidedReason: 1,
 		});
-		await pollGooglePlayVoidedPurchases({}, createWorkerHelpers());
+		await pollGooglePlayVoidedPurchases({}, createTestWorkerHelpers({attempt: {isLastAttempt: false}}));
 		const storeKey = `google_play:${purchaseToken}`;
 		expect(await getStoreBillingRepository().findPurchase(storeKey)).toMatchObject({
 			state: 'refunded',
@@ -650,7 +635,7 @@ describe('Google Play purchases', () => {
 		});
 		const gift = await getUserRepository().findGiftCode(result.gift_code!);
 		expect(gift?.revokedAt).not.toBeNull();
-		await pollGooglePlayVoidedPurchases({}, createWorkerHelpers());
+		await pollGooglePlayVoidedPurchases({}, createTestWorkerHelpers({attempt: {isLastAttempt: false}}));
 		await sendRtdn({
 			version: '1.0',
 			oneTimeProductNotification: {version: '1.0', notificationType: 1, purchaseToken, sku: 'gift_1_month'},
@@ -758,21 +743,35 @@ describe('Google Play purchases', () => {
 			subscriptionNotification: {version: '1.0', notificationType: 4, purchaseToken},
 		});
 		fake.failNext('subscriptions.get', {status: 503, reason: 'backendError'});
-		await expect(processGooglePlayNotification({messageId, data}, createWorkerHelpers(false))).rejects.toThrow();
+		await expect(
+			processGooglePlayNotification({messageId, data}, createTestWorkerHelpers({attempt: {isLastAttempt: false}})),
+		).rejects.toThrow();
 		const scheduled: Array<ScheduledJob> = [];
 		fake.failNext('subscriptions.get', {status: 503, reason: 'backendError'});
 		const before = Date.now();
-		await processGooglePlayNotification({messageId, data}, createWorkerHelpers(true, scheduled));
+		await processGooglePlayNotification(
+			{messageId, data},
+			createTestWorkerHelpers({
+				attempt: {isLastAttempt: true},
+				addJob: async (taskType, payload, options) => {
+					scheduled.push({taskType, payload, runAt: options?.runAt});
+					return 0n;
+				},
+			}),
+		);
 		expect(scheduled).toHaveLength(1);
 		expect(scheduled[0]).toMatchObject({
 			taskType: 'processGooglePlayNotification',
 			payload: {messageId, data, retry: 1},
 		});
 		expect(scheduled[0].runAt!.getTime()).toBeGreaterThanOrEqual(before + ms('5 minutes'));
-		const claims = new StoreNotificationClaims(getKVClient());
+		const claims = new KvOnceClaims(getKVClient());
 		expect(await claims.tryClaim(googlePlayMessageClaimKey(messageId))).toBe('claimed');
 		await claims.releaseClaim(googlePlayMessageClaimKey(messageId));
-		await processGooglePlayNotification({messageId, data, retry: 1}, createWorkerHelpers(true));
+		await processGooglePlayNotification(
+			{messageId, data, retry: 1},
+			createTestWorkerHelpers({attempt: {isLastAttempt: true}}),
+		);
 		expect(await getStoreBillingRepository().findPurchase(`google_play:${purchaseToken}`)).not.toBeNull();
 	});
 });

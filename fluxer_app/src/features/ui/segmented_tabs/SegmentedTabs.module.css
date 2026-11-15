@@ -28,6 +28,13 @@
 	cursor: pointer;
 }
 
+.tabContent {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.25rem;
+}
+
 .tabInactive {
 	color: var(--text-secondary);
 }

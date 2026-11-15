@@ -7,6 +7,7 @@
 		"./*": "./*"
 	},
 	"scripts": {
+		"test": "vitest run",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
@@ -15,6 +16,7 @@
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",
-		"typescript": "catalog:ts7"
+		"typescript": "catalog:ts7",
+		"vitest": "catalog:"
 	}
 }

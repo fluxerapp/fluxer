@@ -45,8 +45,8 @@
 .cancelButton {
 	border-radius: 0.375rem;
 	background-color: transparent;
-	padding-left: 1rem;
-	padding-right: 1rem;
+	padding-inline-start: 1rem;
+	padding-inline-end: 1rem;
 	padding-top: 0.5rem;
 	padding-bottom: 0.5rem;
 	font-weight: 500;
@@ -65,8 +65,8 @@
 .createButton {
 	border-radius: 0.375rem;
 	background-color: var(--brand-primary);
-	padding-left: 1rem;
-	padding-right: 1rem;
+	padding-inline-start: 1rem;
+	padding-inline-end: 1rem;
 	padding-top: 0.5rem;
 	padding-bottom: 0.5rem;
 	font-weight: 500;

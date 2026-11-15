@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AutocompleteOption} from '@app/features/channel/components/message_search_bar/AutocompleteOption';
+
 import styles from '@app/features/channel/components/message_search_bar/MessageSearchBar.module.css';
-import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
+
 import type {SearchFilterOption} from '@app/features/search/utils/SearchUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {FunnelIcon, PlusIcon} from '@phosphor-icons/react';
+import {FunnelIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback} from 'react';
 
 const SEARCH_FILTERS_DESCRIPTOR = msg({
 	message: 'Search filters',
@@ -29,32 +30,16 @@ interface FilterOptionProps {
 
 export const FilterOption: React.FC<FilterOptionProps> = observer(
 	({option, index, isSelected, isHovered, onSelect, onMouseEnter, onMouseLeave, listboxId}) => {
-		const handleKeyDown = useCallback(
-			(e: React.KeyboardEvent) => {
-				if (isKeyboardActivationKey(e.key)) {
-					e.preventDefault();
-					onSelect();
-				}
-			},
-			[onSelect],
-		);
-		const isActive = isSelected || isHovered;
-		const showIcon = isSelected || isHovered;
 		return (
-			<div
-				role="option"
-				id={`${listboxId}-opt-${index}`}
-				aria-selected={isSelected}
-				tabIndex={-1}
+			<AutocompleteOption
+				index={index}
+				isSelected={isSelected}
+				isHovered={isHovered}
+				onSelect={onSelect}
 				onMouseEnter={onMouseEnter}
 				onMouseLeave={onMouseLeave}
-				onMouseDown={(ev) => {
-					if (ev.button === 0) ev.preventDefault();
-				}}
-				onClick={onSelect}
-				onKeyDown={handleKeyDown}
-				className={`${styles.option} ${isActive ? styles.optionActive : ''} ${isSelected ? styles.optionKeyboardFocus : ''}`}
-				data-flx="channel.message-search-bar.filter-option.option.select"
+				listboxId={listboxId}
+				data-flx="channel.message-search-bar.filter-option.autocomplete-option"
 			>
 				<div className={styles.optionLabel} data-flx="channel.message-search-bar.filter-option.option-label">
 					<div className={styles.optionContent} data-flx="channel.message-search-bar.filter-option.option-content">
@@ -73,12 +58,7 @@ export const FilterOption: React.FC<FilterOptionProps> = observer(
 						</div>
 					</div>
 				</div>
-				<PlusIcon
-					weight="bold"
-					className={`${styles.optionMetaIcon} ${showIcon ? '' : styles.optionMetaIconInactive}`}
-					data-flx="channel.message-search-bar.filter-option.option-meta-icon"
-				/>
-			</div>
+			</AutocompleteOption>
 		);
 	},
 );

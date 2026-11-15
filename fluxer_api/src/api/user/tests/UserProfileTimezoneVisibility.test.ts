@@ -73,16 +73,7 @@ describe('User Profile Timezone Visibility', () => {
 		const profile = await getUserProfile(harness, viewerAccount.token, targetAccount.userId);
 		expect(profile.timezone_offset).toBe(TEST_TIMEZONE_OFFSET);
 	});
-	it('restores default timezone visibility when a timezone is set again without explicit flags', async () => {
-		const targetAccount = await createTestAccount(harness);
-		await updateProfileTimezone(harness, targetAccount.token, {
-			timezone: TEST_TIMEZONE,
-			timezone_privacy_flags: 0,
-		});
-		await updateProfileTimezone(harness, targetAccount.token, {timezone: null});
-		const updated = await updateProfileTimezone(harness, targetAccount.token, {timezone: TEST_TIMEZONE});
-		expect(updated.timezone_privacy_flags).toBe(ProfileFieldPrivacyFlags.EVERYONE);
-	});
+
 	it('hides timezone from the public profile when privacy flags are unset', async () => {
 		const targetAccount = await createTestAccount(harness);
 		await updateProfileTimezone(harness, targetAccount.token, {

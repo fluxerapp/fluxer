@@ -5,18 +5,20 @@
 
 -export([finalize/1, sanitize/1, sanitize_message/1]).
 
--define(REMOTE_POD_LOOKUP_TIMEOUT_MS, 100).
-
 -spec finalize(term()) -> map().
 finalize(Recorder0) ->
-    Recorder = ensure_map(Recorder0),
-    Trace = sanitize_trace(lists:reverse(ensure_trace(maps:get(trace, Recorder, [])))),
+    Recorder = map_utils:ensure_map(Recorder0),
+    Trace = sanitize_trace(
+        lists:reverse(gateway_timings:ensure_trace(maps:get(trace, Recorder, [])))
+    ),
     build_payload(Recorder, Trace, total_us(Recorder, Trace)).
 
 -spec sanitize(term()) -> map().
 sanitize(Timings0) ->
-    Timings = ensure_map(Timings0),
-    Trace = sanitize_trace(ensure_trace(first_present([<<"trace">>, trace], Timings, []))),
+    Timings = map_utils:ensure_map(Timings0),
+    Trace = sanitize_trace(
+        gateway_timings:ensure_trace(first_present([<<"trace">>, trace], Timings, []))
+    ),
     build_payload(Timings, Trace, sanitized_total_us(Timings, Trace)).
 
 -spec sanitize_message(map()) -> map().
@@ -40,18 +42,6 @@ build_payload(Source, Trace, TotalUs) ->
         <<"trace">> => Trace
     }.
 
--spec ensure_map(term()) -> map().
-ensure_map(Value) when is_map(Value) ->
-    Value;
-ensure_map(_) ->
-    #{}.
-
--spec ensure_trace(term()) -> [map()].
-ensure_trace(Trace) when is_list(Trace) ->
-    [Span || Span <- Trace, is_map(Span)];
-ensure_trace(_) ->
-    [].
-
 -spec sanitize_trace([map()]) -> [map()].
 sanitize_trace(Trace) ->
     [sanitize_span(Span) || Span <- Trace].
@@ -62,12 +52,12 @@ sanitize_span(Span) ->
         <<"name">> => span_name(Span),
         <<"duration_us">> => span_duration_us(Span)
     },
-    Span1 = maybe_put_remote(remote_info(Span), Span0),
+    Span1 = gateway_timings:maybe_put_remote(remote_info(Span), Span0),
     maybe_put_children(span_children(Span), Span1).
 
 -spec span_name(map()) -> binary().
 span_name(Span) ->
-    normalize_key(first_present([<<"name">>, name], Span, <<"unknown">>)).
+    gateway_timings:normalize_key(first_present([<<"name">>, name], Span, <<"unknown">>)).
 
 -spec span_duration_us(map()) -> non_neg_integer().
 span_duration_us(Span) ->
@@ -101,12 +91,6 @@ span_children(Span) ->
         _ ->
             []
     end.
-
--spec maybe_put_remote(term(), map()) -> map().
-maybe_put_remote(Remote, Span) when is_map(Remote), map_size(Remote) > 0 ->
-    Span#{<<"remote">> => Remote};
-maybe_put_remote(_, Span) ->
-    Span.
 
 -spec maybe_put_children([map()], map()) -> map().
 maybe_put_children([], Span) ->
@@ -201,29 +185,7 @@ remote_pod_name_from_node(NodeName) ->
         PodName when is_binary(PodName), byte_size(PodName) > 0 ->
             PodName;
         _ ->
-            lookup_remote_pod_name(NodeName)
-    end.
-
--spec lookup_remote_pod_name(node()) -> binary() | undefined.
-lookup_remote_pod_name(NodeName) ->
-    try
-        rpc:call(
-            NodeName,
-            gateway_node_metadata,
-            local_pod_name,
-            [],
-            ?REMOTE_POD_LOOKUP_TIMEOUT_MS
-        )
-    of
-        PodName when is_binary(PodName), byte_size(PodName) > 0 ->
-            ok = gateway_node_metadata:cache_node_pod_name(NodeName, PodName),
-            PodName;
-        _ ->
-            undefined
-    catch
-        throw:_Reason -> undefined;
-        error:_Reason -> undefined;
-        exit:_Reason -> undefined
+            gateway_timings:lookup_remote_pod_name(NodeName)
     end.
 
 -spec node_from_map(map()) -> node() | undefined.
@@ -246,7 +208,7 @@ existing_node_atom(NodeName) when is_binary(NodeName), byte_size(NodeName) > 0 -
         error:_Reason -> undefined
     end;
 existing_node_atom(NodeName) when is_list(NodeName), NodeName =/= [] ->
-    existing_node_atom(normalize_key(NodeName));
+    existing_node_atom(gateway_timings:normalize_key(NodeName));
 existing_node_atom(_) ->
     undefined.
 
@@ -269,7 +231,7 @@ maybe_put_optional(_Key, _Value, Map) ->
 optional_binary(undefined) ->
     undefined;
 optional_binary(Value) ->
-    case normalize_key(Value) of
+    case gateway_timings:normalize_key(Value) of
         Binary when byte_size(Binary) > 0 -> Binary;
         _ -> undefined
     end.
@@ -279,22 +241,3 @@ non_negative_integer(Value) when is_integer(Value), Value >= 0 ->
     Value;
 non_negative_integer(_) ->
     0.
-
--spec normalize_key(term()) -> binary().
-normalize_key(Value) when is_binary(Value) ->
-    Value;
-normalize_key(Value) when is_atom(Value) ->
-    atom_to_binary(Value, utf8);
-normalize_key(Value) when is_integer(Value) ->
-    integer_to_binary(Value);
-normalize_key(Value) when is_list(Value) ->
-    case unicode:characters_to_binary(eqwalizer:dynamic_cast(Value)) of
-        Binary when is_binary(Binary) -> Binary;
-        _ -> fallback_binary(Value)
-    end;
-normalize_key(Value) ->
-    fallback_binary(Value).
-
--spec fallback_binary(term()) -> binary().
-fallback_binary(Value) ->
-    iolist_to_binary(io_lib:format("~p", [Value])).

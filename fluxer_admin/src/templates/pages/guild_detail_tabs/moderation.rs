@@ -2,9 +2,10 @@
 
 use crate::{
     acl,
-    api::types::GuildInfo,
+    api::{generated::types::EnforcementKindType, types::GuildInfo},
     config::AdminConfig,
     templates::components::{
+        enforcement_fields::{BasisFields, DecisionFields, basis_fields},
         form::{csrf_input, danger_button, form_actions, submit_button},
         page_container::card_with_header,
     },
@@ -144,17 +145,32 @@ pub fn moderation_tab(
             }
 
             @if can_delete {
-                (card_with_header("Delete Guild", html! {
-                    p class="mb-3 text-sm text-neutral-500" {
-                        "Deleting a guild permanently removes it and all associated data. \
-                         This action cannot be undone."
-                    }
+                (card_with_header("Remove community", html! {
                     form method="post"
                         action={(base) "/guilds/" (guild.id) "?action=delete_guild&tab=moderation"} {
                         (csrf_input(csrf_token))
-                        (form_actions(html! {
-                            (danger_button("Delete Guild"))
-                        }))
+                        div class="space-y-4" {
+                            p class="text-sm text-neutral-500" {
+                                "Removes the community with its channels, messages and settings. It can't be undone. Child safety and violent extremism reasons can't be used, because the removal deletes the content."
+                            }
+                            (basis_fields(&BasisFields {
+                                decision: DecisionFields {
+                                    id_prefix: "remove-community",
+                                    kind: EnforcementKindType::CommunityRemoval,
+                                    report_ids: &[],
+                                    messages: Some(&[]),
+                                    user_flags: None,
+                                    allow_restricted: false,
+                                },
+                                choices: &[
+                                    ("enforcement", "A rule was broken"),
+                                    ("holder_request", "The owner asked"),
+                                ],
+                                plain_note_help: "Staff only. Saved in the audit log.",
+                                enforcement_extra: html! {},
+                            }))
+                            (form_actions(danger_button("Remove community")))
+                        }
                     }
                 }))
             }

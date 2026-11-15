@@ -112,7 +112,7 @@
 .cardIcon {
 	position: absolute;
 	top: calc(7.5rem - 1.75rem);
-	left: var(--spacing-4);
+	inset-inline-start: var(--spacing-4);
 	display: flex;
 	border-radius: var(--radius-full);
 	background-color: var(--background-secondary);

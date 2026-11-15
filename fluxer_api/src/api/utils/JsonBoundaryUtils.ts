@@ -27,3 +27,15 @@ export function parseJsonWithGuard<T>(text: string, guard: (value: unknown) => v
 		return null;
 	}
 }
+
+export function isStringArray(value: unknown): value is Array<string> {
+	return Array.isArray(value) && value.every((entry) => typeof entry === 'string');
+}
+
+export function parseJsonOrNull(raw: string): unknown {
+	try {
+		return parseJsonUnknown(raw);
+	} catch {
+		return null;
+	}
+}

@@ -12,6 +12,7 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import type {MessageAttachment} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -66,7 +67,7 @@ export const MessageUploadProgress = observer(({attachment, message}: MessageUpl
 	const progress = resolveProgress();
 	const failed = hasFailedUploads();
 	const fileName = attachment.filename;
-	const fileSize = formatFileSize(i18n.locale, attachment.size);
+	const fileSize = formatFileSize(getFormattingLocale(), attachment.size);
 	const isIndeterminate = progress === null;
 	const progressValue = progress ?? 0;
 	const containerStyles: React.CSSProperties = isMobile

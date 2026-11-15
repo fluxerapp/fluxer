@@ -159,10 +159,10 @@ fn ftyp_layout(data: &[u8]) -> Option<FTYPLayout> {
         return None;
     }
     let major_brand_end = header_bytes.checked_add(4)?;
-    let scan_end = match declared_box_size {
-        Some(declared) if declared <= data.len() => declared,
-        _ => data.len().min(ISO_BMFF_BRAND_SCAN_BYTES),
-    };
+    let scan_end = declared_box_size
+        .unwrap_or(usize::MAX)
+        .min(data.len())
+        .min(ISO_BMFF_BRAND_SCAN_BYTES);
     if major_brand_end > scan_end {
         return None;
     }

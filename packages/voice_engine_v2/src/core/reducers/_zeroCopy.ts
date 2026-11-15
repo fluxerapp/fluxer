@@ -9,14 +9,18 @@ export function nativeZeroCopyRequiredError(
 ): VoiceEngineV2Error {
 	assert.equal(typeof resource, 'string', 'nativeZeroCopyRequiredError resource must be a string');
 	assert.ok(resource.length > 0, 'nativeZeroCopyRequiredError resource must not be empty');
-	const label =
-		resource === 'capture'
-			? 'Native Electron capture'
-			: resource === 'frame'
-				? 'Native Electron capture frames'
-				: resource === 'frameSink'
-					? 'Native Electron frame sinks'
-					: 'Native hardware encoder usage';
+	let label = 'Native hardware encoder usage';
+	switch (resource) {
+		case 'capture':
+			label = 'Native Electron capture';
+			break;
+		case 'frame':
+			label = 'Native Electron capture frames';
+			break;
+		case 'frameSink':
+			label = 'Native Electron frame sinks';
+			break;
+	}
 	return implementationError(`${label} require zero-copy transport`, 'zeroCopyScreenTransport');
 }
 
@@ -25,12 +29,15 @@ export function unavailableZeroCopyTransportError(
 ): VoiceEngineV2Error {
 	assert.equal(typeof resource, 'string', 'unavailableZeroCopyTransportError resource must be a string');
 	assert.ok(resource.length > 0, 'unavailableZeroCopyTransportError resource must not be empty');
-	const label =
-		resource === 'capture'
-			? 'native Electron capture'
-			: resource === 'frameSink'
-				? 'native Electron frame sinks'
-				: 'native hardware encoders';
+	let label = 'native hardware encoders';
+	switch (resource) {
+		case 'capture':
+			label = 'native Electron capture';
+			break;
+		case 'frameSink':
+			label = 'native Electron frame sinks';
+			break;
+	}
 	return {
 		code: 'unsupportedCapability',
 		capability: 'zeroCopyScreenTransport',

@@ -8,12 +8,8 @@
     determine_shard_count/2,
     default_shard_count/0,
     select_shard/2,
-    resolve_owner_node/1,
     resolve_owner_node/2,
-    resolve_owner_node/3,
-    resolve_owner_nodes/2,
     resolve_owner_nodes/3,
-    group_keys_by_owner/1,
     group_keys_by_owner/2
 ]).
 -export_type([shard_source/0]).
@@ -49,50 +45,21 @@ safe_config_value(ConfigKey, GetConfigValue) ->
 
 -spec default_shard_count() -> pos_integer().
 default_shard_count() ->
-    shard_utils:max_positive([
-        erlang:system_info(logical_processors_available),
-        erlang:system_info(schedulers_online)
-    ]).
+    erlang:system_info(schedulers_online).
 
 -spec select_shard(term(), pos_integer()) -> non_neg_integer().
 select_shard(Key, Count) when Count > 0 ->
     rendezvous_router:select(Key, Count).
 
--spec resolve_owner_node(term()) -> node().
-resolve_owner_node(Key) ->
-    resolve_owner_node(Key, node(), fun gateway_node_router:owner_node/1).
-
 -spec resolve_owner_node(term(), atom()) -> node() | unavailable.
 resolve_owner_node(Key, Role) when is_atom(Role) ->
     owner_node_from_result(safe_owner_node_result(Key, Role)).
-
--spec resolve_owner_node(term(), node(), fun((term()) -> term())) -> node().
-resolve_owner_node(Key, LocalNode, OwnerResolver) ->
-    owner_node_or_local(safe_owner_node(Key, OwnerResolver), LocalNode).
 
 -spec owner_node_from_result({ok, node()} | unavailable) -> node() | unavailable.
 owner_node_from_result({ok, OwnerNode}) ->
     OwnerNode;
 owner_node_from_result(unavailable) ->
     unavailable.
-
--spec owner_node_or_local(term(), node()) -> node().
-owner_node_or_local(OwnerNode, LocalNode) when is_atom(OwnerNode) ->
-    case lists:member($@, atom_to_list(OwnerNode)) of
-        true -> OwnerNode;
-        false -> LocalNode
-    end;
-owner_node_or_local(_OwnerNode, LocalNode) ->
-    LocalNode.
-
--spec safe_owner_node(term(), fun((term()) -> term())) -> term().
-safe_owner_node(Key, OwnerResolver) ->
-    try OwnerResolver(Key) of
-        OwnerNode -> OwnerNode
-    catch
-        error:_Reason -> undefined;
-        exit:_Reason -> undefined
-    end.
 
 -spec safe_owner_node_result(term(), atom() | fun((term()) -> term())) ->
     {ok, node()} | unavailable.
@@ -124,12 +91,6 @@ normalize_owner_node(OwnerNode) when is_atom(OwnerNode) ->
         false -> unavailable
     end.
 
--spec resolve_owner_nodes(term(), pos_integer()) -> [node()].
-resolve_owner_nodes(Key, ReplicaCount) when is_integer(ReplicaCount), ReplicaCount > 0 ->
-    PrimaryNode = resolve_owner_node(Key),
-    CandidateNodes = resolve_candidate_nodes(PrimaryNode),
-    select_owner_nodes(Key, CandidateNodes, ReplicaCount).
-
 -spec resolve_owner_nodes(term(), pos_integer(), atom()) -> [node()].
 resolve_owner_nodes(Key, ReplicaCount, Role) when is_integer(ReplicaCount), ReplicaCount > 0 ->
     case resolve_owner_node(Key, Role) of
@@ -139,10 +100,6 @@ resolve_owner_nodes(Key, ReplicaCount, Role) when is_integer(ReplicaCount), Repl
             CandidateNodes = resolve_candidate_nodes(PrimaryNode, Role),
             select_owner_nodes(Key, CandidateNodes, ReplicaCount)
     end.
-
--spec group_keys_by_owner([term()]) -> [{node(), [term()]}].
-group_keys_by_owner(Keys) ->
-    group_keys_by_owner(Keys, fun gateway_node_router:owner_node/1).
 
 -spec group_keys_by_owner([term()], atom() | fun((term()) -> term())) -> [{node(), [term()]}].
 group_keys_by_owner(Keys, Role) when is_atom(Role) ->
@@ -180,10 +137,6 @@ add_owner_key(Key, OwnerResolver, Acc) ->
         unavailable ->
             Acc
     end.
-
--spec resolve_candidate_nodes(node()) -> [node()].
-resolve_candidate_nodes(PrimaryNode) ->
-    resolve_candidate_nodes(PrimaryNode, undefined).
 
 -spec resolve_candidate_nodes(node(), atom() | undefined) -> [node()].
 resolve_candidate_nodes(PrimaryNode, Role) ->
@@ -259,118 +212,3 @@ validate_shard_count(Value) when is_integer(Value), Value > 0 ->
     {ok, Value};
 validate_shard_count(_) ->
     error.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-resolve_owner_node_uses_remote_owner_test() ->
-    LocalNode = node(),
-    RemoteNode = 'gateway_b@127.0.0.1',
-    ?assertEqual(
-        RemoteNode,
-        resolve_owner_node(42, LocalNode, fun(_Key) -> RemoteNode end)
-    ).
-
-resolve_owner_node_rejects_invalid_role_owner_test() ->
-    persistent_term:put(
-        {fluxer_gateway, runtime_config},
-        #{gateway_role => websocket}
-    ),
-    persistent_term:put({gateway_cluster_membership, members_by_role}, #{
-        websocket => [node()]
-    }),
-    ?assertEqual(
-        unavailable,
-        resolve_owner_node(42, presence)
-    ),
-    persistent_term:erase({gateway_cluster_membership, members_by_role}),
-    persistent_term:erase({fluxer_gateway, runtime_config}).
-
-group_keys_by_owner_skips_unavailable_role_owner_test() ->
-    persistent_term:put(
-        {fluxer_gateway, runtime_config},
-        #{gateway_role => websocket}
-    ),
-    persistent_term:put({gateway_cluster_membership, members_by_role}, #{
-        websocket => [node()]
-    }),
-    ?assertEqual([], group_keys_by_owner([1, 2], presence)),
-    persistent_term:erase({gateway_cluster_membership, members_by_role}),
-    persistent_term:erase({fluxer_gateway, runtime_config}).
-
-group_keys_by_owner_deduplicates_and_sorts_test() ->
-    NodeA = 'gateway_a@127.0.0.1',
-    NodeB = 'gateway_b@127.0.0.1',
-    Groups = group_keys_by_owner(
-        [2, 1, 2, 4, 3],
-        fun
-            (Key) when Key rem 2 =:= 0 -> NodeB;
-            (_Key) -> NodeA
-        end
-    ),
-    ?assertEqual([{NodeA, [1, 3]}, {NodeB, [2, 4]}], Groups).
-
-group_keys_by_owner_accepts_role_test() ->
-    persistent_term:put({gateway_cluster_membership, members_by_role}, #{
-        presence => ['presence_a@127.0.0.1'],
-        all => ['gateway_a@127.0.0.1']
-    }),
-    Groups = group_keys_by_owner([1, 2], presence),
-    Owners = [Owner || {Owner, _Keys} <- Groups],
-    ?assert(
-        lists:all(
-            fun(Owner) ->
-                lists:member(Owner, ['presence_a@127.0.0.1', 'gateway_a@127.0.0.1'])
-            end,
-            Owners
-        )
-    ),
-    persistent_term:erase({gateway_cluster_membership, members_by_role}).
-
-resolve_owner_nodes_accepts_role_test() ->
-    persistent_term:put({gateway_cluster_membership, members_by_role}, #{
-        presence => ['presence_a@127.0.0.1', 'presence_b@127.0.0.1']
-    }),
-    Nodes = resolve_owner_nodes(123, 2, presence),
-    ?assertEqual(2, length(Nodes)),
-    ?assert(
-        lists:all(
-            fun(Node) ->
-                lists:member(Node, ['presence_a@127.0.0.1', 'presence_b@127.0.0.1'])
-            end,
-            Nodes
-        )
-    ),
-    persistent_term:erase({gateway_cluster_membership, members_by_role}).
-
-select_owner_nodes_respects_replica_count_test() ->
-    Nodes = ['gateway_a@127.0.0.1', 'gateway_b@127.0.0.1', 'gateway_c@127.0.0.1'],
-    SelectedNodes = select_owner_nodes(<<"guild-123">>, Nodes, 2),
-    ?assertEqual(2, length(SelectedNodes)),
-    ?assertEqual(length(SelectedNodes), length(lists:usort(SelectedNodes))).
-
-resolve_owner_nodes_includes_primary_owner_test() ->
-    Key = <<"presence-owner-set">>,
-    PrimaryNode = resolve_owner_node(Key, node(), fun(_AnyKey) -> 'gateway_z@127.0.0.1' end),
-    CandidateNodes = [PrimaryNode, 'gateway_a@127.0.0.1'],
-    SelectedNodes = select_owner_nodes(Key, CandidateNodes, 2),
-    ?assert(lists:member(PrimaryNode, SelectedNodes)).
-
-determine_shard_count_uses_first_valid_key_test() ->
-    {Count, Source} = determine_shard_count(
-        [guild_counts_cache_shards, guild_shards],
-        fun
-            (guild_counts_cache_shards) -> undefined;
-            (guild_shards) -> 5;
-            (_) -> undefined
-        end
-    ),
-    ?assertEqual(5, Count),
-    ?assertEqual(guild_shards, Source).
-
-determine_shard_count_defaults_when_no_keys_set_test() ->
-    {Count, Source} = determine_shard_count([presence_cache_shards], fun(_) -> undefined end),
-    ?assert(Count >= 1),
-    ?assertEqual(auto, Source).
-
--endif.

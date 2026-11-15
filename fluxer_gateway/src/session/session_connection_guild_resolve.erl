@@ -23,7 +23,9 @@
     bot := boolean(),
     is_staff := boolean(),
     initial_guild_id := guild_id() | undefined,
-    user_data := map()
+    user_data := map(),
+    thread_channels_capable => boolean(),
+    visit => map()
 }.
 
 -spec do_local_guild_connect(connect_ctx()) ->
@@ -196,15 +198,17 @@ do_start_connect_async(GuildPid, Ctx) ->
         session_connection_unavailability:build_initial_active_guilds(
             InitialGuildId, GuildId
         ),
-    Request = #{
+    Request0 = #{
         session_id => SessionId,
         user_id => UserId,
         session_pid => SessionPid,
         bot => Bot,
         is_staff => IsStaff,
         initial_guild_id => InitialGuildId,
-        active_guilds => ActiveGuilds
+        active_guilds => ActiveGuilds,
+        thread_channels_capable => maps:get(thread_channels_capable, Ctx, false)
     },
+    Request = maps:merge(Request0, maps:get(visit, Ctx, #{})),
     CastMsg =
         {session_connect_async, #{
             guild_id => GuildId, attempt => Attempt, request => Request

@@ -32,16 +32,6 @@
 	color: white;
 }
 
-.avatarPosition {
-	position: absolute;
-	border-radius: 624.9375rem;
-}
-
-.avatarWrapper {
-	position: absolute;
-	border-radius: 624.9375rem;
-}
-
 .multiAvatarContainer {
 	position: relative;
 	flex-shrink: 0;

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {EVERYONE_MENTION, HERE_MENTION} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {createMuteConfig, getMuteDurationOptions} from '@app/features/channel/components/MuteOptions';
 import type {Channel} from '@app/features/channel/models/Channel';
 import type {Guild} from '@app/features/guild/models/Guild';
@@ -11,9 +12,9 @@ import {
 	NOTIFICATION_LEVEL_NOTHING_DESCRIPTOR,
 	NOTIFICATION_LEVEL_ONLY_MENTIONS_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import type {
 	ChannelOverrideUpdate,
 	UserGuildSettingsUpdate,
@@ -303,43 +304,45 @@ export const BulkGuildSettingsMenuItems: React.FC<BulkGuildSettingsMenuItemsProp
 				)}
 				data-flx="ui.action-menu.items.bulk-settings-menu-items.bulk-guild-settings-menu-items.menu-item-submenu--2"
 			/>
-			<MenuItemSubmenu
-				label={i18n._(COMMUNITY_PRIVACY_SETTINGS_DESCRIPTOR)}
-				disabled={!hasGuilds}
-				render={() => (
-					<>
-						<MenuGroup data-flx="ui.action-menu.items.bulk-settings-menu-items.bulk-guild-settings-menu-items.menu-group--7">
-							<MenuItem
-								onClick={() => handleGuildPrivacy('user', true)}
-								data-flx="ui.action-menu.items.bulk-settings-menu-items.bulk-guild-settings-menu-items.menu-item.guild-privacy"
-							>
-								{i18n._(ALLOW_DIRECT_MESSAGES_DESCRIPTOR)}
-							</MenuItem>
-							<MenuItem
-								onClick={() => handleGuildPrivacy('user', false)}
-								data-flx="ui.action-menu.items.bulk-settings-menu-items.bulk-guild-settings-menu-items.menu-item.guild-privacy--2"
-							>
-								{i18n._(BLOCK_DIRECT_MESSAGES_DESCRIPTOR)}
-							</MenuItem>
-						</MenuGroup>
-						<MenuGroup data-flx="ui.action-menu.items.bulk-settings-menu-items.bulk-guild-settings-menu-items.menu-group--8">
-							<MenuItem
-								onClick={() => handleGuildPrivacy('bot', true)}
-								data-flx="ui.action-menu.items.bulk-settings-menu-items.bulk-guild-settings-menu-items.menu-item.guild-privacy--3"
-							>
-								{i18n._(ALLOW_BOT_DIRECT_MESSAGES_DESCRIPTOR)}
-							</MenuItem>
-							<MenuItem
-								onClick={() => handleGuildPrivacy('bot', false)}
-								data-flx="ui.action-menu.items.bulk-settings-menu-items.bulk-guild-settings-menu-items.menu-item.guild-privacy--4"
-							>
-								{i18n._(BLOCK_BOT_DIRECT_MESSAGES_DESCRIPTOR)}
-							</MenuItem>
-						</MenuGroup>
-					</>
-				)}
-				data-flx="ui.action-menu.items.bulk-settings-menu-items.bulk-guild-settings-menu-items.menu-item-submenu--3"
-			/>
+			{!RuntimeConfig.directMessagesDisabled && (
+				<MenuItemSubmenu
+					label={i18n._(COMMUNITY_PRIVACY_SETTINGS_DESCRIPTOR)}
+					disabled={!hasGuilds}
+					render={() => (
+						<>
+							<MenuGroup data-flx="ui.action-menu.items.bulk-settings-menu-items.bulk-guild-settings-menu-items.menu-group--7">
+								<MenuItem
+									onClick={() => handleGuildPrivacy('user', true)}
+									data-flx="ui.action-menu.items.bulk-settings-menu-items.bulk-guild-settings-menu-items.menu-item.guild-privacy"
+								>
+									{i18n._(ALLOW_DIRECT_MESSAGES_DESCRIPTOR)}
+								</MenuItem>
+								<MenuItem
+									onClick={() => handleGuildPrivacy('user', false)}
+									data-flx="ui.action-menu.items.bulk-settings-menu-items.bulk-guild-settings-menu-items.menu-item.guild-privacy--2"
+								>
+									{i18n._(BLOCK_DIRECT_MESSAGES_DESCRIPTOR)}
+								</MenuItem>
+							</MenuGroup>
+							<MenuGroup data-flx="ui.action-menu.items.bulk-settings-menu-items.bulk-guild-settings-menu-items.menu-group--8">
+								<MenuItem
+									onClick={() => handleGuildPrivacy('bot', true)}
+									data-flx="ui.action-menu.items.bulk-settings-menu-items.bulk-guild-settings-menu-items.menu-item.guild-privacy--3"
+								>
+									{i18n._(ALLOW_BOT_DIRECT_MESSAGES_DESCRIPTOR)}
+								</MenuItem>
+								<MenuItem
+									onClick={() => handleGuildPrivacy('bot', false)}
+									data-flx="ui.action-menu.items.bulk-settings-menu-items.bulk-guild-settings-menu-items.menu-item.guild-privacy--4"
+								>
+									{i18n._(BLOCK_BOT_DIRECT_MESSAGES_DESCRIPTOR)}
+								</MenuItem>
+							</MenuGroup>
+						</>
+					)}
+					data-flx="ui.action-menu.items.bulk-settings-menu-items.bulk-guild-settings-menu-items.menu-item-submenu--3"
+				/>
+			)}
 		</>
 	);
 });

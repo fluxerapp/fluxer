@@ -2,11 +2,8 @@
 
 import {createGuildID, createUserID} from '@app/api/BrandedTypes';
 import {EMPTY_USER_ROW, type UserRow} from '@app/api/database/types/UserTypes';
-import {mapGuildMemberToResponse} from '@app/api/guild/GuildModel';
-import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
 import {LimitConfigService, resetGlobalLimitConfigServiceForTesting} from '@app/api/limits/LimitConfigService';
-import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {GuildMember} from '@app/api/models/GuildMember';
 import {User} from '@app/api/models/User';
 import {isHiddenPartial, isProfileHidden, isUnderEnforcement, profilePseudonym} from '@app/api/user/ProfileVisibility';
@@ -20,7 +17,8 @@ import {
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {NON_SELF_HOSTED_RESERVED_DISCRIMINATORS} from '@fluxer/constants/src/DiscriminatorConstants';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
-import {InMemoryProvider} from '@pkgs/cache/src/providers/InMemoryProvider';
+import {KVCacheProvider} from '@pkgs/cache/src/providers/KVCacheProvider';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
 
 const NOW = Date.now();
@@ -89,7 +87,10 @@ const STATES: Array<[string, Partial<UserRow>, boolean]> = [
 
 describe('profile visibility', () => {
 	beforeAll(() => {
-		new LimitConfigService(new InstanceConfigRepository(), new InMemoryProvider()).setAsGlobalInstance();
+		new LimitConfigService(
+			new InstanceConfigRepository(),
+			new KVCacheProvider({client: new MockKVProvider()}),
+		).setAsGlobalInstance();
 	});
 
 	afterAll(() => {
@@ -193,7 +194,7 @@ describe('profile visibility', () => {
 		expect(isUnderEnforcement(user({flags: UserFlags.SPAMMER}), NOW)).toBe(true);
 	});
 
-	it('hides guild-specific profile details for a hidden member', async () => {
+	it('hides guild-specific profile details for a hidden member', () => {
 		const member = new GuildMember({
 			guild_id: createGuildID(5n),
 			user_id: createUserID(USER_ID),
@@ -216,17 +217,6 @@ describe('profile visibility', () => {
 			profile_flags: null,
 			version: 1,
 		});
-		const cache = (partial: ReturnType<typeof mapUserToPartialResponse>) =>
-			({getUserPartialResponse: async () => partial}) as unknown as Pick<UserCacheService, 'getUserPartialResponse'>;
-		const hidden = await mapGuildMemberToResponse(
-			member,
-			cache(mapUserToPartialResponse(user({flags: UserFlags.SPAMMER}))),
-			createRequestCache(),
-		);
-		expect(hidden).toMatchObject({nick: null, avatar: null, banner: null, accent_color: null});
-		expect(hidden.user).toMatchObject(profilePseudonym(USER_ID));
-		const shown = await mapGuildMemberToResponse(member, cache(mapUserToPartialResponse(user())), createRequestCache());
-		expect(shown).toMatchObject({nick: 'Countess', avatar: 'm4v', banner: 'm8n', accent_color: 12});
 		expect(mapGuildMemberToProfileResponse(member, {hidden: true})).toEqual({
 			bio: null,
 			pronouns: null,

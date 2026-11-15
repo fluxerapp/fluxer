@@ -3,14 +3,13 @@
 import Keybind from '@app/features/input/state/InputKeybind';
 import {compareStructural, reaction} from 'mobx';
 
-export function reactToPushToTalkModeChanges(onChange: (options: {preserveSelfMute: boolean}) => void): () => void {
+export function reactToPushToTalkModeChanges(onChange: () => void): () => void {
 	return reaction(
 		() => ({
-			transmitMode: Keybind.transmitMode,
 			pushToTalk: Keybind.isPushToTalkEffective(),
 			pushToMute: Keybind.isPushToMuteEffective(),
 		}),
-		(current, previous) => onChange({preserveSelfMute: current.transmitMode === previous.transmitMode}),
+		() => onChange(),
 		{equals: compareStructural},
 	);
 }

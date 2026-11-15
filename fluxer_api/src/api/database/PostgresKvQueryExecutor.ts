@@ -4,15 +4,16 @@ import {getKvMeta, getTableMetadata} from '@app/api/database/CassandraMetaRegist
 import type {
 	CassandraParams,
 	ColumnName,
+	KvAdvance,
 	KvColumnParam,
 	KvQueryMeta,
 	PreparedQuery,
 	WhereExpr,
 } from '@app/api/database/CassandraTypes';
 import {isConditionalQuery, validateTtlSeconds} from '@app/api/database/CassandraTypes';
+import {LocalDate} from '@app/api/database/LocalDate';
 import {Logger} from '@app/api/Logger';
 import {type IPostgresClient, type PostgresQueryable, quoteIdentifier} from '@pkgs/postgres/src/Client';
-import cassandra from 'cassandra-driver';
 
 type Row = Record<string, unknown>;
 type EqWhereExpr = Extract<WhereExpr<Row>, {kind: 'eq'}>;
@@ -28,6 +29,19 @@ interface PageState {
 	offset: number;
 	after?: string;
 	keyed?: boolean;
+	byRowKey?: boolean;
+	since?: string;
+}
+
+interface ScanWalk {
+	numeric: boolean;
+	after: string | null;
+	since: string | null;
+}
+
+interface NumericFloor {
+	value: string;
+	inclusive: boolean;
 }
 
 interface PageEntry {
@@ -40,13 +54,32 @@ interface RangeGroup {
 	upperBounds: Array<string>;
 }
 
+interface KeyBound {
+	op: '<' | '<=' | '>' | '>=';
+	value: string;
+}
+
+interface OrderedRange {
+	lowerBound: string;
+	upperBound: string;
+	segment: number;
+	descending: boolean;
+	bounds: Array<KeyBound>;
+	partition: string | null;
+}
+
+interface OrderedWalk {
+	entries: Array<PageEntry>;
+	after: string | null;
+	more: boolean;
+}
+
 export type CandidatePlan =
 	| {kind: 'none'}
 	| {kind: 'rowKeys'; rowKeys: Array<string>}
 	| {kind: 'range'; lowerBound: string; upperBound: string}
 	| {kind: 'ranges'; lowerBounds: Array<string>; upperBounds: Array<string>}
 	| {kind: 'rangeGroups'; groups: Array<RangeGroup>}
-	| {kind: 'partitionKeys'; partitionKeys: Array<string>}
 	| {kind: 'scan'};
 
 interface QueryPlan {
@@ -56,7 +89,6 @@ interface QueryPlan {
 
 interface QueryShape {
 	leadingClauses: ReadonlyArray<PinnedWhereExpr>;
-	partitionClauses: ReadonlyArray<PinnedWhereExpr> | null;
 	inClauses: ReadonlyArray<InWhereExpr>;
 	whereColumns: ReadonlyArray<string>;
 	requiredColumns: ReadonlyArray<string> | null;
@@ -65,6 +97,7 @@ interface QueryShape {
 }
 
 interface PlanFragments {
+	using: string;
 	predicate: string;
 	params: Array<unknown>;
 }
@@ -81,24 +114,47 @@ const POSTGRES_KV_SCHEMA_LOCK_TIMEOUT = '120s';
 const POSTGRES_KV_SCHEMA_MIGRATION_TIMEOUT = '30min';
 export const POSTGRES_KV_MIGRATION_TABLE = '__fluxer_schema_migrations';
 const POSTGRES_KV_MESSAGES_PARTITION_MIGRATION = 'messages_partition_key_v1';
+const POSTGRES_KV_SORT_ID_MIGRATION = 'sort_id_v1';
+const POSTGRES_KV_SORT_ID_TABLES = ['messages', 'message_reactions'];
+const POSTGRES_KV_SORT_ID_BACKFILL_BATCH = 5000;
+const POSTGRES_KV_STORAGE_OPTIONS = [
+	'fillfactor=85',
+	'autovacuum_vacuum_scale_factor=0',
+	'autovacuum_vacuum_threshold=20000',
+	'autovacuum_vacuum_insert_scale_factor=0.05',
+	'autovacuum_analyze_scale_factor=0.01',
+];
+const POSTGRES_KV_ALTER_LOCK_TIMEOUT = '10s';
 const POSTGRES_KV_SCHEMA_ATTEMPTS = 3;
+const KV_WRITE_PARALLELISM = 4;
 const POSTGRES_KV_SCHEMA_RETRY_DELAY_MS = 250;
-const POSTGRES_KV_CONCURRENT_DDL_CODES = new Set(['23505', '42P07', '42710']);
+const POSTGRES_KV_CONCURRENT_DDL_CODES = new Set(['23505', '42P07', '42710', '55P03']);
 const NUMERIC_ROW_KEY_BIGINT_PATTERN = '^\\{"__fluxer_type":"bigint","value":"(-?[0-9]+)"\\}$';
 const NUMERIC_ROW_KEY_NUMBER_PATTERN = '^(-?[0-9]+(?:\\.[0-9]+)?(?:[eE][-+]?[0-9]+)?)$';
 const EXPIRED_STORED_ROW = 'kv.expires_at IS NOT NULL AND kv.expires_at <= now()';
 const MERGED_ROW_DATA = `CASE WHEN ${EXPIRED_STORED_ROW} THEN EXCLUDED.row_data ELSE kv.row_data || EXCLUDED.row_data END`;
 const KEPT_EXPIRES_AT = `CASE WHEN ${EXPIRED_STORED_ROW} THEN NULL ELSE kv.expires_at END`;
 const NO_EXPIRY = 'infinity';
+const BIGINT_ROW_KEY_PREFIX = `{"${ENCODED_TYPE_KEY}":"bigint","value":"`;
+const INT64_MIN = -(2n ** 63n);
+const INT64_MAX = 2n ** 63n - 1n;
+const KEY_BOUND_OPERATORS: Partial<Record<WhereExpr<Row>['kind'], KeyBound['op']>> = {
+	lt: '<',
+	lte: '<=',
+	gt: '>',
+	gte: '>=',
+};
+const KEY_BOUND_NAMES: Record<KeyBound['op'], string> = {'<': 'lt', '<=': 'lte', '>': 'gt', '>=': 'gte'};
+const NON_NUMERIC_ROW_KEY_RANGES = [
+	`kv.row_key COLLATE "C" < '-'`,
+	`kv.row_key COLLATE "C" >= ':' AND kv.row_key COLLATE "C" < '${BIGINT_ROW_KEY_PREFIX}'`,
+	`kv.row_key COLLATE "C" >= '${BIGINT_ROW_KEY_PREFIX}:'`,
+];
 
-export async function postgresKvPassIsFresh(
-	client: IPostgresClient,
-	marker: string,
-	maxAgeMs: number,
-): Promise<boolean> {
+export async function postgresKvPassRecorded(client: IPostgresClient, marker: string): Promise<boolean> {
 	const result = await client.query(
-		`SELECT 1 FROM ${quoteIdentifier(client.kvTable())} WHERE table_name = $1 AND row_key = $2 AND (row_data ->> 'applied_at')::timestamptz > now() - make_interval(secs => $3::double precision)`,
-		[POSTGRES_KV_MIGRATION_TABLE, marker, maxAgeMs / 1000],
+		`SELECT 1 FROM ${quoteIdentifier(client.kvTable())} WHERE table_name = $1 AND row_key = $2`,
+		[POSTGRES_KV_MIGRATION_TABLE, marker],
 	);
 	return result.rows.length > 0;
 }
@@ -118,18 +174,27 @@ function numericRowKeyExpr(column: string): string {
 
 const NUMERIC_ROW_KEY = numericRowKeyExpr('kv.row_key');
 
-function planStatementName(prefix: string, plan: CandidatePlan): string | undefined {
+function numericKeySegmentExpr(segment: number): string {
+	const value = `split_part(kv.row_key, chr(31), ${segment})`;
+	const digits = `substr(${value}, ${BIGINT_ROW_KEY_PREFIX.length + 1}, greatest(length(${value}) - ${BIGINT_ROW_KEY_PREFIX.length + 2}, 0))`;
+	return `(CASE WHEN left(${value}, ${BIGINT_ROW_KEY_PREFIX.length}) = '${BIGINT_ROW_KEY_PREFIX}' AND right(${value}, 2) = '"}' AND ${digits} ~ '^-?[0-9]+$' THEN ${digits}::numeric WHEN ${value} ~ '${NUMERIC_ROW_KEY_NUMBER_PATTERN}' THEN ${value}::numeric END)`;
+}
+
+function planStatementName(prefix: string, plan: CandidatePlan): string {
 	switch (plan.kind) {
 		case 'rowKeys':
 			return `${prefix}_rowkeys`;
 		case 'range':
 			return `${prefix}_range`;
+		case 'ranges':
+		case 'rangeGroups':
+			return `${prefix}_ranges`;
 		default:
-			return undefined;
+			return `${prefix}_scan`;
 	}
 }
 
-function normalizeCql(cql: string): string {
+export function normalizeCql(cql: string): string {
 	return cql.replace(/\s+/g, ' ').trim();
 }
 
@@ -149,7 +214,7 @@ function encodeValue(value: unknown): unknown {
 			value: [...value.entries()].map(([key, entry]) => [encodeValue(key), encodeValue(entry)]),
 		};
 	}
-	if (typeof value === 'object' && value.constructor?.name === 'LocalDate') {
+	if (value instanceof LocalDate) {
 		return {[ENCODED_TYPE_KEY]: 'local_date', value: value.toString()};
 	}
 	if (Array.isArray(value)) return value.map(encodeValue);
@@ -176,7 +241,7 @@ function decodeValue(value: unknown): unknown {
 			((value.value as Array<[unknown, unknown]>) ?? []).map(([key, entry]) => [decodeValue(key), decodeValue(entry)]),
 		);
 	}
-	if (encodedType === 'local_date') return cassandra.types.LocalDate.fromString(String(value.value));
+	if (encodedType === 'local_date') return LocalDate.fromString(String(value.value));
 	const decoded: Record<string, unknown> = {};
 	for (const [key, entry] of Object.entries(value)) {
 		decoded[key] = decodeValue(entry);
@@ -219,6 +284,12 @@ function valueKey(value: unknown): string {
 
 export function keyFromColumns(columns: ReadonlyArray<string>, row: Row): string {
 	return columns.map((column) => valueKey(row[column])).join(VALUE_SEPARATOR);
+}
+
+function sortId(meta: KvQueryMeta, row: Row): string | null {
+	if (!POSTGRES_KV_SORT_ID_TABLES.includes(meta.table.name)) return null;
+	const messageId = row['message_id'];
+	return typeof messageId === 'bigint' ? messageId.toString() : null;
 }
 
 function paramsRow(params: CassandraParams, columns: ReadonlyArray<string>): Row {
@@ -268,6 +339,13 @@ function rowKeyFromParams(meta: KvQueryMeta, params: CassandraParams): string {
 	return rowKey(meta, paramsRow(params, (meta.pkColumns ?? meta.table.primaryKey) as ReadonlyArray<string>));
 }
 
+function comparisonValue(value: unknown): unknown {
+	if (value instanceof Date) {
+		return value.getTime();
+	}
+	return value instanceof LocalDate ? value.toString() : value;
+}
+
 function compareValues(left: unknown, right: unknown): number {
 	if (typeof left === 'bigint' || typeof right === 'bigint') {
 		const l = typeof left === 'bigint' ? left : BigInt(left as number | string);
@@ -275,19 +353,18 @@ function compareValues(left: unknown, right: unknown): number {
 		if (l === r) return 0;
 		return l < r ? -1 : 1;
 	}
-	const l = left instanceof Date ? left.getTime() : left?.constructor?.name === 'LocalDate' ? left.toString() : left;
-	const r =
-		right instanceof Date ? right.getTime() : right?.constructor?.name === 'LocalDate' ? right.toString() : right;
+	const l = comparisonValue(left);
+	const r = comparisonValue(right);
 	if (Buffer.isBuffer(l) && Buffer.isBuffer(r)) return Buffer.compare(l, r);
 	if (l === r) return 0;
 	return (l as number | string) < (r as number | string) ? -1 : 1;
 }
 
-function valuesEqual(left: unknown, right: unknown): boolean {
+export function valuesEqual(left: unknown, right: unknown): boolean {
 	if (left == null && right == null) return true;
 	if (left instanceof Date && right instanceof Date) return left.getTime() === right.getTime();
 	if (Buffer.isBuffer(left) && Buffer.isBuffer(right)) return left.equals(right);
-	if (left?.constructor?.name === 'LocalDate' && right?.constructor?.name === 'LocalDate') {
+	if (left instanceof LocalDate && right instanceof LocalDate) {
 		return left.toString() === right.toString();
 	}
 	return left === right;
@@ -326,21 +403,6 @@ export function matchesWhere(
 			case 'gte':
 				if (compareValues(row[clause.col], getParam(params, clause.param)) < 0) return false;
 				break;
-			case 'tupleGt': {
-				const left = clause.cols.map((column) => row[column]);
-				const right = clause.params.map((param) => getParam(params, param));
-				let greater = false;
-				for (let i = 0; i < left.length; i += 1) {
-					const cmp = compareValues(left[i], right[i]);
-					if (cmp > 0) {
-						greater = true;
-						break;
-					}
-					if (cmp < 0) break;
-				}
-				if (!greater) return false;
-				break;
-			}
 		}
 	}
 	return true;
@@ -363,7 +425,7 @@ function compareColumns(columns: ReadonlyArray<string>, left: Row, right: Row): 
 	return 0;
 }
 
-function rowComparator(meta: KvQueryMeta): (left: Row, right: Row) => number {
+export function rowComparator(meta: KvQueryMeta): (left: Row, right: Row) => number {
 	const primaryKey = meta.table.primaryKey as ReadonlyArray<string>;
 	if (!meta.orderBy) return (left, right) => compareColumns(primaryKey, left, right);
 	const column = meta.orderBy.col as string;
@@ -417,7 +479,7 @@ function pinnedClause(where: ReadonlyArray<WhereExpr<Row>>, column: string): Pin
 }
 
 function clauseColumns(clause: WhereExpr<Row>): ReadonlyArray<string> {
-	return clause.kind === 'tupleGt' ? (clause.cols as ReadonlyArray<string>) : [clause.col as string];
+	return [clause.col as string];
 }
 
 function describeClause(clause: WhereExpr<Row>): string {
@@ -448,21 +510,9 @@ function queryShape(meta: KvQueryMeta): QueryShape {
 		if (!clause) break;
 		leadingClauses.push(clause);
 	}
-	const partitionColumns = meta.table.partitionKey as ReadonlyArray<string>;
-	const partitionClauses: Array<PinnedWhereExpr> = [];
-	for (const column of partitionColumns) {
-		const clause = pinnedClause(where, column);
-		if (!clause) {
-			partitionClauses.length = 0;
-			break;
-		}
-		partitionClauses.push(clause);
-	}
 	const whereColumns = [...new Set(where.flatMap(clauseColumns))];
 	const shape: QueryShape = {
 		leadingClauses,
-		partitionClauses:
-			partitionColumns.length > 0 && partitionClauses.length === partitionColumns.length ? partitionClauses : null,
 		inClauses: where.filter((clause): clause is InWhereExpr => clause.kind === 'in'),
 		whereColumns,
 		requiredColumns: requiredColumnsFor(meta, whereColumns),
@@ -628,47 +678,35 @@ export function buildCandidatePlan(meta: KvQueryMeta, params: CassandraParams): 
 			exact,
 		};
 	}
-	if (shape.partitionClauses) {
-		const partition = pinnedColumns(shape.partitionClauses, params);
-		if (
-			partition.length === shape.partitionClauses.length &&
-			combinationCount(partition.map((column) => column.segments)) <= MAX_ROW_KEY_COMBINATIONS
-		) {
-			return {
-				candidates: {kind: 'partitionKeys', partitionKeys: keyPrefixes(partition.map((column) => column.segments))},
-				exact: planIsExact(meta, shape, partition),
-			};
-		}
-	}
 	return {candidates: {kind: 'scan'}, exact: planIsExact(meta, shape, [])};
 }
 
 function rangeFragments(group: RangeGroup): PlanFragments {
-	const params: Array<unknown> = [];
-	const arms = group.lowerBounds.map((lowerBound, index) => {
-		params.push(lowerBound, group.upperBounds[index]);
-		return `(kv.row_key COLLATE "C" >= $${params.length} AND kv.row_key COLLATE "C" < $${params.length + 1})`;
-	});
-	return {predicate: ` AND (${arms.join(' OR ')})`, params};
+	return {
+		using: 'unnest($2::text[], $3::text[]) AS r(lo, hi)',
+		predicate: ' AND kv.row_key COLLATE "C" >= r.lo AND kv.row_key COLLATE "C" < r.hi',
+		params: [group.lowerBounds, group.upperBounds],
+	};
+}
+
+function fromPlan(table: string, fragments: PlanFragments): string {
+	return fragments.using === '' ? `${table} kv` : `${table} kv, ${fragments.using}`;
 }
 
 function planFragments(plan: Exclude<CandidatePlan, {kind: 'rangeGroups'}>): PlanFragments {
 	switch (plan.kind) {
 		case 'rowKeys':
-			return {predicate: ' AND kv.row_key = ANY($2::text[])', params: [plan.rowKeys]};
+			return {using: '', predicate: ' AND kv.row_key = ANY($2::text[])', params: [plan.rowKeys]};
 		case 'range':
 			return {
+				using: '',
 				predicate: ' AND kv.row_key COLLATE "C" >= $2 AND kv.row_key COLLATE "C" < $3',
 				params: [plan.lowerBound, plan.upperBound],
 			};
 		case 'ranges':
 			return rangeFragments(plan);
-		case 'partitionKeys':
-			return plan.partitionKeys.length === 1
-				? {predicate: ' AND kv.partition_key = $2', params: [plan.partitionKeys[0]]}
-				: {predicate: ' AND kv.partition_key = ANY($2::text[])', params: [plan.partitionKeys]};
 		default:
-			return {predicate: '', params: []};
+			return {using: '', predicate: '', params: []};
 	}
 }
 
@@ -691,15 +729,18 @@ function logError(details: Record<string, unknown>, message: string): void {
 
 const fullScanLoggedAt = new Map<string, number>();
 
-function logFullScan(meta: KvQueryMeta): void {
+function logFullScan(meta: KvQueryMeta, walk?: 'numeric' | 'row_key'): void {
 	const shape = queryShape(meta);
-	const key = `${meta.table.name}|${meta.action}|${shape.summary}`;
+	const key = `${meta.table.name}|${meta.action}|${shape.summary}|${walk ?? 'load'}`;
 	const now = Date.now();
 	const last = fullScanLoggedAt.get(key);
 	if (last !== undefined && now - last < FULL_SCAN_LOG_INTERVAL_MS) return;
 	if (fullScanLoggedAt.size >= FULL_SCAN_LOG_KEY_LIMIT) fullScanLoggedAt.clear();
 	fullScanLoggedAt.set(key, now);
-	logWarn({table: meta.table.name, action: meta.action, where: shape.summary || 'none'}, 'Postgres KV full table scan');
+	logWarn(
+		{table: meta.table.name, action: meta.action, where: shape.summary || 'none', walk: walk ?? 'load'},
+		'Postgres KV full table scan',
+	);
 }
 
 function ttlExpiresAt(meta: KvQueryMeta, params: CassandraParams): Date | typeof NO_EXPIRY | null | undefined {
@@ -730,7 +771,13 @@ function decodePageState(pageState: string | null | undefined): PageState {
 		throw new Error('Invalid Postgres KV page state');
 	}
 	if (typeof decoded.after !== 'string') return {offset: decoded.offset};
-	return {offset: decoded.offset, after: decoded.after, keyed: decoded.keyed === true};
+	return {
+		offset: decoded.offset,
+		after: decoded.after,
+		keyed: decoded.keyed === true,
+		byRowKey: decoded.byRowKey === true,
+		...(typeof decoded.since === 'string' ? {since: decoded.since} : {}),
+	};
 }
 
 function pageableSelect(meta: KvQueryMeta, pageSize: number): boolean {
@@ -749,22 +796,30 @@ function numericKeyValue(value: unknown): string | null {
 	return null;
 }
 
-function numericScanPlan(meta: KvQueryMeta, plan: QueryPlan): boolean {
-	return plan.exact && plan.candidates.kind === 'scan' && (meta.table.primaryKey as ReadonlyArray<string>).length === 1;
+function numericRowKeyValue(key: string): string | null {
+	const values = decodeRowKey(key, 1);
+	return values === null ? null : numericKeyValue(values[0]);
 }
 
-function numericScanKeyed(meta: KvQueryMeta, plan: QueryPlan, entries: ReadonlyArray<PageEntry>): boolean {
-	if (!numericScanPlan(meta, plan)) return false;
-	const column = (meta.table.primaryKey as ReadonlyArray<string>)[0]!;
-	return entries.every((entry) => numericKeyValue(entry.row[column]) !== null);
+function singlePrimaryKey(meta: KvQueryMeta): boolean {
+	return (meta.table.primaryKey as ReadonlyArray<string>).length === 1;
 }
 
-function numericScanCursor(state: PageState): {rowKey: string; value: string} | null {
-	if (state.keyed !== true || state.after === undefined) return null;
-	const values = decodeRowKey(state.after, 1);
-	if (values === null) return null;
-	const value = numericKeyValue(values[0]);
-	return value === null ? null : {rowKey: state.after, value};
+function walksInPrimaryKeyOrder(meta: KvQueryMeta): boolean {
+	if (!singlePrimaryKey(meta)) return false;
+	if (meta.orderBy === undefined) return true;
+	return meta.orderBy.col === meta.table.primaryKey[0] && meta.orderBy.direction !== 'DESC';
+}
+
+function numericFloor(meta: KvQueryMeta, params: CassandraParams): NumericFloor | null {
+	const column = meta.table.primaryKey[0];
+	for (const clause of whereClauses(meta)) {
+		if (clause.col !== column) continue;
+		if (clause.kind !== 'gt' && clause.kind !== 'tokenGt' && clause.kind !== 'gte') continue;
+		const value = numericKeyValue(getParam(params, clause.param));
+		if (value !== null) return {value, inclusive: clause.kind === 'gte'};
+	}
+	return null;
 }
 
 function pageStart(meta: KvQueryMeta, entries: ReadonlyArray<PageEntry>, state: PageState): number {
@@ -776,6 +831,52 @@ function pageStart(meta: KvQueryMeta, entries: ReadonlyArray<PageEntry>, state: 
 	let start = 0;
 	while (start < entries.length && compareRowToKeyValues(meta, entries[start]!.row, values) <= 0) start += 1;
 	return start;
+}
+
+function integerKeyValue(value: unknown): string | null {
+	if (typeof value === 'bigint') return value.toString();
+	if (typeof value === 'number' && Number.isSafeInteger(value)) return String(value);
+	return null;
+}
+
+function fitsInt64(value: string): boolean {
+	if (!/^-?[0-9]+$/.test(value)) return false;
+	const parsed = BigInt(value);
+	return parsed >= INT64_MIN && parsed <= INT64_MAX;
+}
+
+function orderedRange(meta: KvQueryMeta, params: CassandraParams, plan: CandidatePlan): OrderedRange | null {
+	if (plan.kind !== 'range') return null;
+	const primaryKey = meta.table.primaryKey as ReadonlyArray<string>;
+	const column = primaryKey[primaryKey.length - 1]!;
+	if (plan.lowerBound.split(VALUE_SEPARATOR).length !== primaryKey.length) return null;
+	if (meta.orderBy !== undefined && meta.orderBy.col !== column) return null;
+	const bounds: Array<KeyBound> = [];
+	for (const clause of whereClauses(meta)) {
+		const op = KEY_BOUND_OPERATORS[clause.kind];
+		if (clause.col !== column || op === undefined) continue;
+		const value = integerKeyValue(getParam(params, clause.param));
+		if (value !== null) bounds.push({op, value});
+	}
+	const shape = queryShape(meta);
+	if (Math.min(shape.leadingClauses.length, primaryKey.length - 1) + bounds.length !== shape.clauseCount) return null;
+	const sorted =
+		column === 'message_id' &&
+		POSTGRES_KV_SORT_ID_TABLES.includes(meta.table.name) &&
+		meta.table.partitionKey.length === primaryKey.length - 1 &&
+		bounds.every((bound) => fitsInt64(bound.value));
+	return {
+		lowerBound: plan.lowerBound,
+		upperBound: plan.upperBound,
+		segment: primaryKey.length,
+		descending: meta.orderBy?.direction === 'DESC',
+		bounds,
+		partition: sorted ? plan.lowerBound.slice(0, -VALUE_SEPARATOR.length) : null,
+	};
+}
+
+function lastKeySegmentValue(key: string): string | null {
+	return numericRowKeyValue(key.slice(key.lastIndexOf(VALUE_SEPARATOR) + VALUE_SEPARATOR.length));
 }
 
 function parseRawMeta(cql: string): KvQueryMeta<Row> | null {
@@ -837,6 +938,22 @@ function parseEqWhere(whereSql: string, cql: string): ReadonlyArray<EqWhereExpr>
 	});
 }
 
+function sortIdIndexName(kvTable: string, tableName: string): string {
+	return `${kvTable}_${tableName}_sort_idx`;
+}
+
+function sortIdIndexNames(kvTable: string): Array<string> {
+	return POSTGRES_KV_SORT_ID_TABLES.map((tableName) => sortIdIndexName(kvTable, tableName));
+}
+
+function jsonbSortIndexNames(kvTable: string): Array<string> {
+	return [`${kvTable}_messages_message_idx`, `${kvTable}_message_reactions_message_idx`];
+}
+
+function retiredIndexNames(kvTable: string): Array<string> {
+	return [...jsonbSortIndexNames(kvTable), `${kvTable}_partition_row_idx`];
+}
+
 async function repairInvalidPostgresKvIndexes(db: PostgresQueryable, kvTable: string): Promise<void> {
 	const invalid = await db.query<{index_name: string; index_def: string}>(
 		`SELECT cls.relname AS index_name, pg_get_indexdef(idx.indexrelid) AS index_def
@@ -845,8 +962,9 @@ JOIN pg_class cls ON cls.oid = idx.indexrelid
 WHERE idx.indrelid = to_regclass($1)
 	AND NOT idx.indisvalid
 	AND NOT idx.indisprimary
-	AND NOT idx.indisunique`,
-		[kvTable],
+	AND NOT idx.indisunique
+	AND cls.relname <> ALL($2::text[])`,
+		[kvTable, [...sortIdIndexNames(kvTable), ...retiredIndexNames(kvTable)]],
 	);
 	for (const row of invalid.rows) {
 		logError({table: kvTable, index: row.index_name}, 'Postgres KV index is invalid, rebuilding it');
@@ -868,6 +986,56 @@ WHERE att.attrelid = to_regclass($1)
 	return result.rows[0]?.c_collated === true;
 }
 
+async function postgresKvHasSortId(db: PostgresQueryable, kvTable: string): Promise<boolean> {
+	const result = await db.query(
+		`SELECT 1 FROM pg_attribute WHERE attrelid = to_regclass($1) AND attname = 'sort_id' AND NOT attisdropped`,
+		[kvTable],
+	);
+	return result.rows.length > 0;
+}
+
+async function postgresKvHasSortIdFill(db: PostgresQueryable, kvTable: string): Promise<boolean> {
+	const result = await db.query('SELECT 1 FROM pg_trigger WHERE tgrelid = to_regclass($1) AND tgname = $2', [
+		kvTable,
+		`${kvTable}_sort_id_fill`,
+	]);
+	return result.rows.length > 0;
+}
+
+async function createPostgresKvSortIdFill(db: PostgresQueryable, kvTable: string): Promise<void> {
+	const fill = quoteIdentifier(`${kvTable}_sort_id_fill`);
+	await db.query(`CREATE OR REPLACE FUNCTION ${fill}() RETURNS trigger LANGUAGE plpgsql AS $fill$
+BEGIN
+	IF NEW.row_data -> 'message_id' ->> 'value' ~ '^-?[0-9]+$' THEN
+		NEW.sort_id := (NEW.row_data -> 'message_id' ->> 'value')::bigint;
+	END IF;
+	RETURN NEW;
+END
+$fill$`);
+	await db.query(
+		`CREATE TRIGGER ${fill} BEFORE INSERT OR UPDATE ON ${quoteIdentifier(kvTable)} FOR EACH ROW WHEN (NEW.sort_id IS NULL AND NEW.table_name IN ('messages', 'message_reactions')) EXECUTE FUNCTION ${fill}()`,
+	);
+}
+
+async function postgresKvNeedsLz4(db: PostgresQueryable, kvTable: string): Promise<boolean> {
+	const result = await db.query<{needs_lz4: boolean}>(
+		`SELECT att.attcompression <> 'l' AND EXISTS (SELECT 1 FROM pg_settings WHERE name = 'default_toast_compression' AND 'lz4' = ANY(enumvals)) AS needs_lz4
+FROM pg_attribute att
+WHERE att.attrelid = to_regclass($1) AND att.attname = 'row_data' AND NOT att.attisdropped`,
+		[kvTable],
+	);
+	return result.rows[0]?.needs_lz4 === true;
+}
+
+async function missingPostgresKvStorageOptions(db: PostgresQueryable, kvTable: string): Promise<Array<string>> {
+	const result = await db.query<{options: Array<string> | null}>(
+		'SELECT reloptions AS options FROM pg_class WHERE oid = to_regclass($1)',
+		[kvTable],
+	);
+	const current = new Set(result.rows[0]?.options ?? []);
+	return POSTGRES_KV_STORAGE_OPTIONS.filter((option) => !current.has(option));
+}
+
 async function ensurePostgresKvSchemaOnce(client: IPostgresClient): Promise<void> {
 	const kvTable = client.kvTable();
 	const table = quoteIdentifier(kvTable);
@@ -883,11 +1051,21 @@ CREATE TABLE IF NOT EXISTS ${table} (
 	row_data jsonb NOT NULL,
 	expires_at timestamptz,
 	updated_at timestamptz NOT NULL DEFAULT now(),
+	sort_id bigint,
 	PRIMARY KEY (table_name, row_key)
 )`);
-		await db.query(
-			`CREATE INDEX IF NOT EXISTS ${quoteIdentifier(`${kvTable}_partition_row_idx`)} ON ${table} (table_name, partition_key, row_key)`,
-		);
+		const addSortId = !(await postgresKvHasSortId(db, kvTable));
+		const addSortIdFill = !(await postgresKvHasSortIdFill(db, kvTable));
+		const missingOptions = await missingPostgresKvStorageOptions(db, kvTable);
+		const setLz4 = await postgresKvNeedsLz4(db, kvTable);
+		if (addSortId || addSortIdFill || missingOptions.length > 0 || setLz4) {
+			await db.query("SELECT set_config('lock_timeout', $1, true)", [POSTGRES_KV_ALTER_LOCK_TIMEOUT]);
+			if (addSortId) await db.query(`ALTER TABLE ${table} ADD COLUMN sort_id bigint`);
+			if (addSortIdFill) await createPostgresKvSortIdFill(db, kvTable);
+			if (missingOptions.length > 0) await db.query(`ALTER TABLE ${table} SET (${missingOptions.join(', ')})`);
+			if (setLz4) await db.query(`ALTER TABLE ${table} ALTER COLUMN row_data SET COMPRESSION lz4`);
+			await db.query("SELECT set_config('lock_timeout', '0', true)");
+		}
 		if (!(await postgresKvRowKeyIsCCollated(db, kvTable))) {
 			await db.query(
 				`CREATE INDEX IF NOT EXISTS ${quoteIdentifier(`${kvTable}_row_key_c_idx`)} ON ${table} (table_name, row_key COLLATE "C")`,
@@ -898,12 +1076,6 @@ CREATE TABLE IF NOT EXISTS ${table} (
 		);
 		await db.query(
 			`CREATE INDEX IF NOT EXISTS ${quoteIdentifier(`${kvTable}_expires_idx`)} ON ${table} (expires_at) WHERE expires_at IS NOT NULL`,
-		);
-		await db.query(
-			`CREATE INDEX IF NOT EXISTS ${quoteIdentifier(`${kvTable}_messages_message_idx`)} ON ${table} (partition_key, ((CASE WHEN row_data -> 'message_id' ->> 'value' ~ '^-?[0-9]+$' THEN (row_data -> 'message_id' ->> 'value')::bigint END))) WHERE table_name = 'messages'`,
-		);
-		await db.query(
-			`CREATE INDEX IF NOT EXISTS ${quoteIdentifier(`${kvTable}_message_reactions_message_idx`)} ON ${table} (partition_key, ((CASE WHEN row_data -> 'message_id' ->> 'value' ~ '^-?[0-9]+$' THEN (row_data -> 'message_id' ->> 'value')::bigint END))) WHERE table_name = 'message_reactions'`,
 		);
 		await repairInvalidPostgresKvIndexes(db, kvTable);
 		const migrated = await db.query(`SELECT 1 FROM ${table} WHERE table_name = $1 AND row_key = $2 LIMIT 1`, [
@@ -950,12 +1122,129 @@ export async function ensurePostgresKvSchema(client: IPostgresClient): Promise<v
 	for (let attempt = 1; attempt <= POSTGRES_KV_SCHEMA_ATTEMPTS; attempt += 1) {
 		try {
 			await ensurePostgresKvSchemaOnce(client);
-			return;
+			break;
 		} catch (error) {
 			if (attempt === POSTGRES_KV_SCHEMA_ATTEMPTS || !isConcurrentDdlConflict(error)) throw error;
 			logWarn({table: client.kvTable(), attempt}, 'Postgres KV schema hit a concurrent DDL conflict, retrying');
 			await new Promise((resolve) => setTimeout(resolve, POSTGRES_KV_SCHEMA_RETRY_DELAY_MS));
 		}
+	}
+	await enableStatementStats(client);
+	if (await postgresKvIndexesPending(client)) {
+		void client
+			.session((db) => migratePostgresKvIndexes(db, client.kvTable()))
+			.catch((error: unknown) => logError({error, table: client.kvTable()}, 'Postgres KV sort_id migration failed'));
+	}
+}
+
+async function enableStatementStats(client: IPostgresClient): Promise<void> {
+	try {
+		const missing = await client.query(
+			`SELECT 1 FROM pg_available_extensions
+WHERE name = 'pg_stat_statements'
+	AND installed_version IS NULL
+	AND 'pg_stat_statements' = ANY(string_to_array(replace(current_setting('shared_preload_libraries'), ' ', ''), ','))`,
+		);
+		if (missing.rows.length === 0) return;
+		await client.query('CREATE EXTENSION IF NOT EXISTS pg_stat_statements');
+	} catch (error) {
+		if (isConcurrentDdlConflict(error)) return;
+		logWarn({error}, 'Postgres KV could not enable pg_stat_statements');
+	}
+}
+
+async function postgresKvIndexesPending(client: IPostgresClient): Promise<boolean> {
+	const kvTable = client.kvTable();
+	const result = await client.query<{marked: boolean; valid: number; retired: number}>(
+		`SELECT
+	EXISTS (SELECT 1 FROM ${quoteIdentifier(kvTable)} WHERE table_name = $1 AND row_key = $2) AS marked,
+	(SELECT count(*)::int FROM pg_index idx JOIN pg_class cls ON cls.oid = idx.indexrelid
+		WHERE idx.indrelid = to_regclass($3) AND idx.indisvalid AND cls.relname = ANY($4::text[])) AS valid,
+	(SELECT count(*)::int FROM pg_index idx JOIN pg_class cls ON cls.oid = idx.indexrelid
+		WHERE idx.indrelid = to_regclass($3) AND cls.relname = ANY($5::text[])) AS retired`,
+		[
+			POSTGRES_KV_MIGRATION_TABLE,
+			POSTGRES_KV_SORT_ID_MIGRATION,
+			kvTable,
+			sortIdIndexNames(kvTable),
+			retiredIndexNames(kvTable),
+		],
+	);
+	const row = result.rows[0];
+	return !row?.marked || row.valid !== POSTGRES_KV_SORT_ID_TABLES.length || row.retired > 0;
+}
+
+async function migratePostgresKvIndexes(db: PostgresQueryable, kvTable: string): Promise<void> {
+	const table = quoteIdentifier(kvTable);
+	const locked = await db.query<{locked: boolean}>('SELECT pg_try_advisory_lock($1, hashtext($2)) AS locked', [
+		POSTGRES_KV_SCHEMA_LOCK_NAMESPACE,
+		`${kvTable}_${POSTGRES_KV_SORT_ID_MIGRATION}`,
+	]);
+	if (locked.rows[0]?.locked !== true) return;
+	await db.query("SELECT set_config('statement_timeout', '0', false)");
+	const retired = await db.query<{index_name: string; valid: boolean}>(
+		`SELECT cls.relname AS index_name, idx.indisvalid AS valid FROM pg_index idx JOIN pg_class cls ON cls.oid = idx.indexrelid
+WHERE idx.indrelid = to_regclass($1) AND cls.relname = ANY($2::text[])`,
+		[kvTable, retiredIndexNames(kvTable)],
+	);
+	const marked = await db.query(`SELECT 1 FROM ${table} WHERE table_name = $1 AND row_key = $2`, [
+		POSTGRES_KV_MIGRATION_TABLE,
+		POSTGRES_KV_SORT_ID_MIGRATION,
+	]);
+	const jsonbSortIndexes = jsonbSortIndexNames(kvTable);
+	if (
+		marked.rows.length === 0 ||
+		retired.rows.some(({index_name, valid}) => valid && jsonbSortIndexes.includes(index_name))
+	) {
+		for (const tableName of POSTGRES_KV_SORT_ID_TABLES) {
+			await backfillPostgresKvSortIds(db, table, tableName);
+		}
+	}
+	for (const tableName of POSTGRES_KV_SORT_ID_TABLES) {
+		const name = sortIdIndexName(kvTable, tableName);
+		const existing = await db.query<{valid: boolean}>(
+			`SELECT idx.indisvalid AS valid FROM pg_index idx JOIN pg_class cls ON cls.oid = idx.indexrelid
+WHERE idx.indrelid = to_regclass($1) AND cls.relname = $2`,
+			[kvTable, name],
+		);
+		if (existing.rows[0]?.valid === true) continue;
+		if (existing.rows.length > 0) await db.query(`DROP INDEX CONCURRENTLY IF EXISTS ${quoteIdentifier(name)}`);
+		await db.query(
+			`CREATE INDEX CONCURRENTLY IF NOT EXISTS ${quoteIdentifier(name)} ON ${table} (partition_key, sort_id) WHERE table_name = '${tableName}'`,
+		);
+	}
+	await db.query(
+		`INSERT INTO ${table} (table_name, partition_key, row_key, row_data)
+VALUES ($1, $2, $2, jsonb_build_object('applied_at', now()))
+ON CONFLICT (table_name, row_key) DO UPDATE SET row_data = EXCLUDED.row_data, updated_at = now()`,
+		[POSTGRES_KV_MIGRATION_TABLE, POSTGRES_KV_SORT_ID_MIGRATION],
+	);
+	for (const {index_name} of retired.rows) {
+		await db.query(`DROP INDEX CONCURRENTLY IF EXISTS ${quoteIdentifier(index_name)}`);
+	}
+}
+
+async function backfillPostgresKvSortIds(db: PostgresQueryable, table: string, tableName: string): Promise<void> {
+	let after = '';
+	for (;;) {
+		const result = await db.query<{picked: number; last: string | null}>(
+			`WITH batch AS (
+	SELECT row_key FROM ${table}
+	WHERE table_name = $1 AND row_key COLLATE "C" > $2 AND sort_id IS NULL
+	ORDER BY row_key COLLATE "C"
+	LIMIT $3
+), filled AS (
+	UPDATE ${table} kv
+	SET sort_id = CASE WHEN kv.row_data -> 'message_id' ->> 'value' ~ '^-?[0-9]+$' THEN (kv.row_data -> 'message_id' ->> 'value')::bigint END
+	FROM batch
+	WHERE kv.table_name = $1 AND kv.row_key = batch.row_key
+)
+SELECT count(*)::int AS picked, max(row_key COLLATE "C") AS last FROM batch`,
+			[tableName, after, POSTGRES_KV_SORT_ID_BACKFILL_BATCH],
+		);
+		const row = result.rows[0];
+		if (!row?.last || row.picked < POSTGRES_KV_SORT_ID_BACKFILL_BATCH) return;
+		after = row.last;
 	}
 }
 
@@ -980,6 +1269,45 @@ WHERE kv.table_name = expired.table_name AND kv.row_key = expired.row_key`,
 		[batchSize],
 	);
 	return result.rowCount ?? 0;
+}
+
+function writtenRowKeys(meta: KvQueryMeta, params: CassandraParams): ReadonlyArray<string> | null {
+	try {
+		switch (meta.action) {
+			case 'upsert':
+			case 'insert':
+				return [rowKey(meta, rowFromParams(meta, params))];
+			case 'patch':
+				return [rowKeyFromParams(meta, params)];
+			case 'delete': {
+				const plan = buildCandidatePlan(meta, params);
+				if (plan.candidates.kind === 'none') return [];
+				return plan.candidates.kind === 'rowKeys' ? plan.candidates.rowKeys : null;
+			}
+			default:
+				return null;
+		}
+	} catch {
+		return null;
+	}
+}
+
+async function inParallel<T>(items: ReadonlyArray<T>, run: (item: T, index: number) => Promise<void>): Promise<void> {
+	let next = 0;
+	const errors: Array<unknown> = [];
+	const worker = async (): Promise<void> => {
+		while (errors.length === 0 && next < items.length) {
+			const index = next;
+			next += 1;
+			try {
+				await run(items[index]!, index);
+			} catch (error) {
+				errors.push(error);
+			}
+		}
+	};
+	await Promise.all(Array.from({length: Math.min(KV_WRITE_PARALLELISM, items.length)}, worker));
+	if (errors.length > 0) throw errors[0];
 }
 
 export class PostgresKvQueryExecutor {
@@ -1033,10 +1361,10 @@ export class PostgresKvQueryExecutor {
 		const meta = this.meta(query);
 		if (pageableSelect(meta, options.pageSize) && (state.after !== undefined || state.offset === 0)) {
 			const plan = buildCandidatePlan(meta, query.params);
-			const cursor = numericScanPlan(meta, plan) ? numericScanCursor(state) : null;
-			const page = cursor
-				? await this.numericScanPage(meta, query.params, cursor, state.offset, options.pageSize)
-				: await this.sortedPage(meta, query.params, plan, state, options.pageSize);
+			const page =
+				plan.candidates.kind === 'scan'
+					? await this.scanPage(meta, query.params, await this.scanWalk(meta, state), state.offset, options.pageSize)
+					: await this.sortedPage(meta, query.params, plan, state, options.pageSize);
 			return {rows: page.rows as Array<T>, pageState: page.pageState};
 		}
 		const rows = await this.executeQuery<T, P>(query);
@@ -1048,27 +1376,117 @@ export class PostgresKvQueryExecutor {
 		};
 	}
 
-	private async numericScanPage(
+	private async scanWalk(meta: KvQueryMeta, state: PageState): Promise<ScanWalk> {
+		if (state.byRowKey) return {numeric: false, after: state.after ?? null, since: state.since ?? null};
+		const after = state.after ?? null;
+		const numericAfter = after === null || numericRowKeyValue(after) !== null;
+		if (state.keyed && after !== null && numericAfter && singlePrimaryKey(meta)) {
+			return {numeric: true, after, since: null};
+		}
+		const numeric = singlePrimaryKey(meta) && !(await this.hasNonNumericRows(meta, this.client));
+		if (numeric && numericAfter) return {numeric: true, after, since: null};
+		return {numeric: false, after: null, since: after};
+	}
+
+	private async hasNonNumericRows(meta: KvQueryMeta, db: PostgresQueryable): Promise<boolean> {
+		const probes = NON_NUMERIC_ROW_KEY_RANGES.map(
+			(range) =>
+				`(SELECT kv.row_key FROM ${this.table} kv WHERE kv.table_name = $1 AND ${range} AND (kv.expires_at IS NULL OR kv.expires_at > now()) AND ${NUMERIC_ROW_KEY} IS NULL ORDER BY kv.row_key COLLATE "C" LIMIT 1) IS NOT NULL`,
+		);
+		const result = await db.query<{found: boolean}>(
+			`SELECT ${probes.join(' OR ')} AS found`,
+			[meta.table.name],
+			'kv_non_numeric_probe',
+		);
+		return result.rows[0]?.found === true;
+	}
+
+	private async scanPage(
 		meta: KvQueryMeta,
 		params: CassandraParams,
-		cursor: {rowKey: string; value: string},
+		walk: ScanWalk,
 		offset: number,
 		pageSize: number,
 	): Promise<{rows: Array<Row>; pageState: string | null}> {
-		logFullScan(meta);
-		const result = await this.client.query<StoredRow>(
-			`SELECT kv.row_key, kv.row_data FROM ${this.table} kv WHERE kv.table_name = $1 AND ${NUMERIC_ROW_KEY} IS NOT NULL AND (${NUMERIC_ROW_KEY}, kv.row_key COLLATE "C") > ($2::numeric, $3) AND (kv.expires_at IS NULL OR kv.expires_at > now()) ORDER BY ${NUMERIC_ROW_KEY}, kv.row_key COLLATE "C" LIMIT $4`,
-			[meta.table.name, cursor.value, cursor.rowKey, pageSize + 1],
+		const page = await this.walkScan(meta, params, walk, pageSize, this.client);
+		if (!page.more || page.after === null) return {rows: this.projected(meta, page.entries), pageState: null};
+		const position = {offset: offset + page.entries.length, after: page.after};
+		const rows = this.projected(meta, page.entries);
+		let state: PageState;
+		if (walk.numeric) {
+			state = {...position, keyed: true};
+		} else {
+			state = {...position, byRowKey: true, ...(walk.since === null ? {} : {since: walk.since})};
+		}
+		return {rows, pageState: encodePageState(state)};
+	}
+
+	private async walkScan(
+		meta: KvQueryMeta,
+		params: CassandraParams,
+		walk: ScanWalk,
+		want: number,
+		db: PostgresQueryable,
+	): Promise<{entries: Array<PageEntry>; after: string | null; more: boolean}> {
+		logFullScan(meta, walk.numeric ? 'numeric' : 'row_key');
+		const floor = walk.numeric ? numericFloor(meta, params) : null;
+		const since = walk.since === null ? null : decodeRowKey(walk.since, meta.table.primaryKey.length);
+		if (walk.since !== null && since === null) throw new Error('Invalid Postgres KV page state');
+		const limit = want + 1;
+		const entries: Array<PageEntry> = [];
+		let after = walk.after;
+		while (entries.length < want) {
+			const batch = await this.scanBatch(meta, walk.numeric, floor, after, limit, db);
+			for (let index = 0; index < batch.length; index += 1) {
+				const stored = batch[index]!;
+				after = stored.row_key;
+				const entry = this.matchingEntry(meta, stored, params);
+				if (entry && (since === null || compareRowToKeyValues(meta, entry.row, since) > 0)) entries.push(entry);
+				if (entries.length === want) {
+					return {entries, after, more: index < batch.length - 1 || batch.length === limit};
+				}
+			}
+			if (batch.length < limit) return {entries, after, more: false};
+		}
+		return {entries, after, more: false};
+	}
+
+	private async scanBatch(
+		meta: KvQueryMeta,
+		numeric: boolean,
+		floor: NumericFloor | null,
+		after: string | null,
+		limit: number,
+		db: PostgresQueryable,
+	): Promise<Array<StoredRow>> {
+		const params: Array<unknown> = [meta.table.name, limit];
+		let predicate = '';
+		let shape = 'key';
+		if (numeric) {
+			predicate = ` AND ${NUMERIC_ROW_KEY} IS NOT NULL`;
+			shape = 'numeric';
+			if (floor) {
+				shape = floor.inclusive ? 'numeric_from' : 'numeric_above';
+				params.push(floor.value);
+				predicate += ` AND ${NUMERIC_ROW_KEY} ${floor.inclusive ? '>=' : '>'} $${params.length}::numeric`;
+			}
+			if (after !== null) {
+				const value = numericRowKeyValue(after);
+				if (value === null) throw new Error('Invalid Postgres KV page state');
+				params.push(value, after);
+				predicate += ` AND (${NUMERIC_ROW_KEY}, kv.row_key COLLATE "C") > ($${params.length - 1}::numeric, $${params.length})`;
+			}
+		} else if (after !== null) {
+			params.push(after);
+			predicate = ` AND kv.row_key COLLATE "C" > $${params.length}`;
+		}
+		const order = numeric ? `${NUMERIC_ROW_KEY}, kv.row_key COLLATE "C"` : 'kv.row_key COLLATE "C"';
+		const result = await db.query<StoredRow>(
+			`SELECT kv.row_key, kv.row_data FROM ${this.table} kv WHERE kv.table_name = $1${predicate} AND (kv.expires_at IS NULL OR kv.expires_at > now()) ORDER BY ${order} LIMIT $2`,
+			params,
+			`kv_scan_${shape}_${after === null ? 'start' : 'next'}`,
 		);
-		const entries = this.matchingEntries(meta, result.rows.slice(0, pageSize), params);
-		const last = entries[entries.length - 1];
-		return {
-			rows: this.projected(meta, entries),
-			pageState:
-				result.rows.length > pageSize && last
-					? encodePageState({offset: offset + entries.length, after: last.key, keyed: true})
-					: null,
-		};
+		return result.rows;
 	}
 
 	private async sortedPage(
@@ -1078,6 +1496,15 @@ export class PostgresKvQueryExecutor {
 		state: PageState,
 		pageSize: number,
 	): Promise<{rows: Array<Row>; pageState: string | null}> {
+		const ordered = await this.orderedWalk(meta, params, plan.candidates, state.after ?? null, pageSize, this.client);
+		if (ordered !== null) {
+			const rows = this.projected(meta, ordered.entries);
+			if (!ordered.more || ordered.after === null) return {rows, pageState: null};
+			return {
+				rows,
+				pageState: encodePageState({offset: state.offset + ordered.entries.length, after: ordered.after}),
+			};
+		}
 		const entries = this.matchingEntries(meta, await this.candidates(meta, plan, this.client), params);
 		const compare = rowComparator(meta);
 		entries.sort((left, right) => compare(left.row, right.row));
@@ -1086,13 +1513,132 @@ export class PostgresKvQueryExecutor {
 		const last = page[page.length - 1];
 		const nextOffset = start + page.length;
 		if (nextOffset >= entries.length || !last) return {rows: this.projected(meta, page), pageState: null};
-		const keyed = numericScanKeyed(meta, plan, entries);
 		return {
 			rows: this.projected(meta, page),
-			pageState: encodePageState(
-				keyed ? {offset: nextOffset, after: last.key, keyed: true} : {offset: nextOffset, after: last.key},
-			),
+			pageState: encodePageState({offset: nextOffset, after: last.key}),
 		};
+	}
+
+	private async orderedWalk(
+		meta: KvQueryMeta,
+		params: CassandraParams,
+		plan: CandidatePlan,
+		after: string | null,
+		want: number,
+		db: PostgresQueryable,
+	): Promise<OrderedWalk | null> {
+		const range = orderedRange(meta, params, plan);
+		if (range === null) return null;
+		const afterValue = after === null ? null : lastKeySegmentValue(after);
+		if (after !== null && (afterValue === null || !after.startsWith(range.lowerBound))) return null;
+		const probe = await this.probeOrderedRange(meta, range, db);
+		const sorted = range.partition !== null && !probe.unsorted && (afterValue === null || fitsInt64(afterValue));
+		if (!sorted && probe.mixed) return null;
+		const limit = want + 1;
+		const entries: Array<PageEntry> = [];
+		let cursor = after;
+		let cursorValue = afterValue;
+		for (;;) {
+			const batch = await this.orderedBatch(meta, range, sorted, cursor, cursorValue, limit, db);
+			for (let index = 0; index < batch.length; index += 1) {
+				const stored = batch[index]!;
+				cursor = stored.row_key;
+				const entry = this.matchingEntry(meta, stored, params);
+				if (entry) entries.push(entry);
+				if (entries.length === want) {
+					return {entries, after: cursor, more: index < batch.length - 1 || batch.length === limit};
+				}
+			}
+			if (batch.length < limit || cursor === null) return {entries, after: cursor, more: false};
+			cursorValue = lastKeySegmentValue(cursor);
+			if (cursorValue === null) throw new Error('Postgres KV ordered walk read a non-numeric key');
+		}
+	}
+
+	private async probeOrderedRange(
+		meta: KvQueryMeta,
+		range: OrderedRange,
+		db: PostgresQueryable,
+	): Promise<{mixed: boolean; unsorted: boolean}> {
+		const live = '(kv.expires_at IS NULL OR kv.expires_at > now())';
+		const params: Array<unknown> = [
+			meta.table.name,
+			range.lowerBound,
+			`${range.lowerBound}-`,
+			`${range.lowerBound}:`,
+			`${range.lowerBound}${BIGINT_ROW_KEY_PREFIX}`,
+			`${range.lowerBound}${BIGINT_ROW_KEY_PREFIX}:`,
+			range.upperBound,
+		];
+		const spans: Array<[number, number]> = [
+			[2, 3],
+			[4, 5],
+			[6, 7],
+		];
+		const mixed = spans
+			.map(
+				([lo, hi]) =>
+					`(SELECT 1 FROM ${this.table} kv WHERE kv.table_name = $1 AND kv.row_key COLLATE "C" >= $${lo} AND kv.row_key COLLATE "C" < $${hi} AND ${live} LIMIT 1) IS NOT NULL`,
+			)
+			.join(' OR ');
+		let unsorted = 'false';
+		let name = 'kv_ordered_probe';
+		if (range.partition !== null) {
+			params.push(range.partition);
+			unsorted = `EXISTS (SELECT 1 FROM ${this.table} kv WHERE kv.table_name = $1 AND kv.table_name = '${meta.table.name}' AND kv.partition_key = $8 AND kv.row_key COLLATE "C" >= $2 AND kv.row_key COLLATE "C" < $7 AND kv.sort_id IS NULL AND ${live})`;
+			name = `kv_ordered_probe_${meta.table.name}`;
+		}
+		const result = await db.query<{mixed: boolean; unsorted: boolean}>(
+			`SELECT ${mixed} AS mixed, ${unsorted} AS unsorted`,
+			params,
+			name,
+		);
+		const row = result.rows[0];
+		return {mixed: row?.mixed !== false, unsorted: row?.unsorted !== false};
+	}
+
+	private async orderedBatch(
+		meta: KvQueryMeta,
+		range: OrderedRange,
+		sorted: boolean,
+		after: string | null,
+		afterValue: string | null,
+		limit: number,
+		db: PostgresQueryable,
+	): Promise<Array<StoredRow>> {
+		const key = sorted ? 'kv.sort_id' : numericKeySegmentExpr(range.segment);
+		const cast = sorted ? 'bigint' : 'numeric';
+		const direction = range.descending ? 'DESC' : 'ASC';
+		const params: Array<unknown> = [meta.table.name, range.lowerBound, range.upperBound, limit];
+		let predicate = '';
+		const shape = [sorted ? meta.table.name : `seg${range.segment}`, direction.toLowerCase()];
+		if (sorted) {
+			params.push(range.partition);
+			predicate += ` AND kv.table_name = '${meta.table.name}' AND kv.partition_key = $${params.length}`;
+		}
+		for (const bound of range.bounds) {
+			params.push(bound.value);
+			predicate += ` AND ${key} ${bound.op} $${params.length}::${cast}`;
+			shape.push(KEY_BOUND_NAMES[bound.op]);
+		}
+		const op = range.descending ? '<' : '>';
+		if (after !== null && afterValue !== null) {
+			params.push(afterValue);
+			if (sorted) {
+				predicate += ` AND kv.sort_id ${op} $${params.length}::bigint`;
+			} else {
+				params.push(after);
+				predicate += ` AND (${key}, kv.row_key COLLATE "C") ${op} ($${params.length - 1}::numeric, $${params.length})`;
+			}
+			shape.push('next');
+		}
+		const order = sorted ? `kv.sort_id ${direction}` : `${key} ${direction}, kv.row_key COLLATE "C" ${direction}`;
+		const result = await db.query<StoredRow>(
+			`SELECT kv.row_key, kv.row_data FROM ${this.table} kv WHERE kv.table_name = $1 AND kv.row_key COLLATE "C" >= $2 AND kv.row_key COLLATE "C" < $3${predicate} AND (kv.expires_at IS NULL OR kv.expires_at > now()) ORDER BY ${order} LIMIT $4`,
+			params,
+			`kv_ordered_${shape.join('_')}`,
+		);
+		return result.rows;
 	}
 
 	private projected(meta: KvQueryMeta, entries: ReadonlyArray<PageEntry>): Array<Row> {
@@ -1116,9 +1662,104 @@ export class PostgresKvQueryExecutor {
 			});
 			return;
 		}
-		for (const query of queries) {
-			await this.executeQuery({cql: query.query, params: query.params as CassandraParams, kvMeta: query.meta});
+		const prepared = queries.map((query) => ({
+			cql: query.query,
+			params: query.params as CassandraParams,
+			kvMeta: query.meta,
+		}));
+		if (!this.writesCommute(prepared)) {
+			for (const query of prepared) await this.executeQuery(query);
+			return;
 		}
+		await inParallel(prepared, async (query) => {
+			await this.executeQuery(query);
+		});
+	}
+
+	async advanceRows(writes: ReadonlyArray<KvAdvance>): Promise<Array<boolean>> {
+		const written = writes.map(() => false);
+		await inParallel(writes, async (write, index) => {
+			written[index] = await this.advanceRow(write);
+		});
+		return written;
+	}
+
+	private async advanceRow(write: KvAdvance): Promise<boolean> {
+		const meta: KvQueryMeta = {action: 'patch', table: write.table};
+		const always = write.always ?? {};
+		const increments = Object.entries(write.increment ?? {});
+		const params: Array<unknown> = [
+			write.table.name,
+			rowKey(meta, write.pk),
+			write.guard.col,
+			write.guard.value.toString(),
+			JSON.stringify(encodeRow(always)),
+			JSON.stringify(encodeRow(write.set)),
+		];
+		const guard = `COALESCE((kv.row_data -> $3::text ->> 'value')::numeric ${write.guard.orEqual ? '<=' : '<'} $4::numeric, true)`;
+		let advanced = 'kv.row_data || $5::jsonb || $6::jsonb';
+		for (const [column, amount] of increments) {
+			params.push(column, amount);
+			const name = `$${params.length - 1}::text`;
+			advanced += ` || jsonb_build_object(${name}, COALESCE((kv.row_data ->> ${name})::numeric, 0) + $${params.length}::numeric)`;
+		}
+		const rowData = `CASE WHEN ${guard} THEN ${advanced} ELSE kv.row_data || $5::jsonb END`;
+		const unconditional = Object.keys(always).length > 0;
+		const fallbackTtl = defaultExpiresAt(meta);
+		const shape = [
+			write.guard.orEqual ? 'lte' : 'lt',
+			increments.length,
+			unconditional ? 'always' : 'guarded',
+			fallbackTtl === undefined ? 'keep' : 'ttl',
+		].join('_');
+		if (write.insert === null) {
+			const assignments = [`row_data = ${rowData}`, 'updated_at = now()'];
+			if (fallbackTtl !== undefined) {
+				params.push(fallbackTtl);
+				assignments.push(`expires_at = GREATEST(kv.expires_at, $${params.length}::timestamptz)`);
+			}
+			const result = await this.client.query(
+				`UPDATE ${this.table} kv SET ${assignments.join(', ')} WHERE kv.table_name = $1 AND kv.row_key = $2 AND (kv.expires_at IS NULL OR kv.expires_at > now())${unconditional ? '' : ` AND ${guard}`}`,
+				params,
+				`kv_advance_update_${shape}`,
+			);
+			return result.rowCount === 1;
+		}
+		params.push(partitionKey(meta, write.insert), JSON.stringify(encodeRow(write.insert)), fallbackTtl ?? null);
+		const last = params.length;
+		const expiresAt = fallbackTtl === undefined ? KEPT_EXPIRES_AT : 'GREATEST(kv.expires_at, EXCLUDED.expires_at)';
+		const result = await this.client.query(
+			`INSERT INTO ${this.table} AS kv (table_name, partition_key, row_key, row_data, expires_at, updated_at)
+VALUES ($1, $${last - 2}, $2, $${last - 1}::jsonb, $${last}, now())
+ON CONFLICT (table_name, row_key)
+DO UPDATE SET partition_key = EXCLUDED.partition_key, row_data = CASE WHEN ${EXPIRED_STORED_ROW} THEN EXCLUDED.row_data ELSE ${rowData} END, expires_at = ${expiresAt}, updated_at = now()${unconditional ? '' : `\nWHERE ${EXPIRED_STORED_ROW} OR ${guard}`}`,
+			params,
+			`kv_advance_upsert_${shape}`,
+		);
+		return result.rowCount === 1;
+	}
+
+	private writesCommute(queries: ReadonlyArray<PreparedQuery>): boolean {
+		if (queries.length < 2) return false;
+		let metas: Array<KvQueryMeta>;
+		try {
+			metas = queries.map((query) => this.meta(query));
+		} catch {
+			return false;
+		}
+		if (metas.every((meta) => meta.action === 'delete')) return true;
+		const touched = new Set<string>();
+		for (let index = 0; index < queries.length; index += 1) {
+			const meta = metas[index]!;
+			const keys = writtenRowKeys(meta, queries[index]!.params);
+			if (keys === null) return false;
+			for (const key of keys) {
+				const id = `${meta.table.name}${VALUE_SEPARATOR}${key}`;
+				if (touched.has(id)) return false;
+				touched.add(id);
+			}
+		}
+		return true;
 	}
 
 	private meta(query: PreparedQuery): KvQueryMeta<Row> {
@@ -1133,10 +1774,10 @@ export class PostgresKvQueryExecutor {
 		meta: KvQueryMeta,
 		fragments: PlanFragments,
 		db: PostgresQueryable,
-		name?: string,
+		name: string,
 	): Promise<Array<StoredRow>> {
 		const result = await db.query<StoredRow>(
-			`SELECT kv.row_key, kv.row_data FROM ${this.table} kv WHERE kv.table_name = $1${fragments.predicate} AND (kv.expires_at IS NULL OR kv.expires_at > now())`,
+			`SELECT kv.row_key, kv.row_data FROM ${fromPlan(this.table, fragments)} WHERE kv.table_name = $1${fragments.predicate} AND (kv.expires_at IS NULL OR kv.expires_at > now())`,
 			[meta.table.name, ...fragments.params],
 			name,
 		);
@@ -1161,15 +1802,20 @@ export class PostgresKvQueryExecutor {
 		stored: ReadonlyArray<StoredRow>,
 		params: CassandraParams,
 	): Array<PageEntry> {
-		const required = queryShape(meta).requiredColumns;
 		const entries: Array<PageEntry> = [];
 		for (const entry of stored) {
-			const row = required ? decodeRowColumns(entry.row_data, required) : decodeRow(entry.row_data);
-			if (matchesWhere(row, meta.where as ReadonlyArray<WhereExpr<Row>> | undefined, params)) {
-				entries.push({key: entry.row_key, row});
-			}
+			const matched = this.matchingEntry(meta, entry, params);
+			if (matched) entries.push(matched);
 		}
 		return entries;
+	}
+
+	private matchingEntry(meta: KvQueryMeta, stored: StoredRow, params: CassandraParams): PageEntry | null {
+		const required = queryShape(meta).requiredColumns;
+		const row = required ? decodeRowColumns(stored.row_data, required) : decodeRow(stored.row_data);
+		return matchesWhere(row, meta.where as ReadonlyArray<WhereExpr<Row>> | undefined, params)
+			? {key: stored.row_key, row}
+			: null;
 	}
 
 	private matchingRows(meta: KvQueryMeta, stored: ReadonlyArray<StoredRow>, params: CassandraParams): Array<Row> {
@@ -1180,6 +1826,7 @@ export class PostgresKvQueryExecutor {
 		const result = await db.query<StoredRow>(
 			`SELECT kv.row_key, kv.row_data FROM ${this.table} kv WHERE kv.table_name = $1 AND (kv.expires_at IS NULL OR kv.expires_at > now()) LIMIT $2`,
 			[meta.table.name, limit],
+			'kv_sel_unordered',
 		);
 		return this.matchingRows(meta, result.rows, {}).map((row) =>
 			projectRow(row, meta.columns as ReadonlyArray<string> | undefined),
@@ -1200,6 +1847,20 @@ export class PostgresKvQueryExecutor {
 		) {
 			return this.unorderedScan(meta, meta.limit, db);
 		}
+		if (
+			typeof meta.limit === 'number' &&
+			Number.isInteger(meta.limit) &&
+			plan.candidates.kind === 'scan' &&
+			walksInPrimaryKeyOrder(meta) &&
+			!(await this.hasNonNumericRows(meta, db))
+		) {
+			const walk = {numeric: true, after: null, since: null};
+			return this.projected(meta, (await this.walkScan(meta, params, walk, meta.limit, db)).entries);
+		}
+		if (typeof meta.limit === 'number' && Number.isInteger(meta.limit) && meta.limit > 0) {
+			const ordered = await this.orderedWalk(meta, params, plan.candidates, null, meta.limit, db);
+			if (ordered !== null) return this.projected(meta, ordered.entries);
+		}
 		let rows = this.matchingRows(meta, await this.candidates(meta, plan, db), params);
 		rows = sortRows(meta, rows);
 		if (typeof meta.limit === 'number') rows = rows.slice(0, meta.limit);
@@ -1216,7 +1877,7 @@ export class PostgresKvQueryExecutor {
 		let total = 0;
 		for (const fragments of planFragmentGroups(plan.candidates)) {
 			const result = await db.query<{count: string}>(
-				`SELECT count(*) AS count FROM ${this.table} kv WHERE kv.table_name = $1${fragments.predicate} AND (kv.expires_at IS NULL OR kv.expires_at > now())`,
+				`SELECT count(*) AS count FROM ${fromPlan(this.table, fragments)} WHERE kv.table_name = $1${fragments.predicate} AND (kv.expires_at IS NULL OR kv.expires_at > now())`,
 				[meta.table.name, ...fragments.params],
 				planStatementName('kv_count', plan.candidates),
 			);
@@ -1227,38 +1888,36 @@ export class PostgresKvQueryExecutor {
 
 	private async upsert(meta: KvQueryMeta, params: CassandraParams, db: PostgresQueryable): Promise<Array<Row>> {
 		const incoming = rowFromParams(meta, params);
-		const key = rowKey(meta, incoming);
-		if (meta.ifNotExists) {
-			if (await this.getRow(meta, key, db)) {
-				return [{'[applied]': false}];
-			}
-			await db.query(
-				`DELETE FROM ${this.table} WHERE table_name = $1 AND row_key = $2 AND expires_at IS NOT NULL AND expires_at <= now()`,
-				[meta.table.name, key],
-				'kv_del_expired',
-			);
-		}
 		const explicit = ttlExpiresAt(meta, params);
 		const expiresAt = explicit === undefined ? (defaultExpiresAt(meta) ?? null) : explicit;
-		const result = await db.query(
-			`INSERT INTO ${this.table} AS kv (table_name, partition_key, row_key, row_data, expires_at, updated_at)
-VALUES ($1, $2, $3, $4::jsonb, $5, now())
-ON CONFLICT (table_name, row_key)
-DO UPDATE SET partition_key = EXCLUDED.partition_key, row_data = ${MERGED_ROW_DATA}, expires_at = EXCLUDED.expires_at, updated_at = now()
-WHERE NOT $6`,
-			[
-				meta.table.name,
-				partitionKey(meta, incoming),
-				key,
-				JSON.stringify(encodeRow(incoming)),
-				expiresAt,
-				meta.ifNotExists === true,
-			],
-			'kv_upsert',
-		);
+		const values = [
+			meta.table.name,
+			partitionKey(meta, incoming),
+			rowKey(meta, incoming),
+			JSON.stringify(encodeRow(incoming)),
+			expiresAt,
+			sortId(meta, incoming),
+		];
 		if (meta.ifNotExists) {
+			const result = await db.query(
+				`INSERT INTO ${this.table} AS kv (table_name, partition_key, row_key, row_data, expires_at, sort_id, updated_at)
+VALUES ($1, $2, $3, $4::jsonb, $5, $6::bigint, now())
+ON CONFLICT (table_name, row_key)
+DO UPDATE SET partition_key = EXCLUDED.partition_key, row_data = EXCLUDED.row_data, expires_at = EXCLUDED.expires_at, sort_id = EXCLUDED.sort_id, updated_at = now()
+WHERE ${EXPIRED_STORED_ROW}`,
+				values,
+				'kv_insert_absent',
+			);
 			return [{'[applied]': result.rowCount === 1}];
 		}
+		await db.query(
+			`INSERT INTO ${this.table} AS kv (table_name, partition_key, row_key, row_data, expires_at, sort_id, updated_at)
+VALUES ($1, $2, $3, $4::jsonb, $5, $6::bigint, now())
+ON CONFLICT (table_name, row_key)
+DO UPDATE SET partition_key = EXCLUDED.partition_key, row_data = ${MERGED_ROW_DATA}, expires_at = EXCLUDED.expires_at, sort_id = EXCLUDED.sort_id, updated_at = now()`,
+			values,
+			'kv_upsert',
+		);
 		return [];
 	}
 
@@ -1274,6 +1933,7 @@ WHERE NOT $6`,
 			throw new Error('Conditional writes require expected values');
 		}
 		const bindings: Array<unknown> = [meta.table.name, rowKeyFromParams(meta, params)];
+		let expiry = 'keep';
 		const predicates = ['kv.table_name = $1', 'kv.row_key = $2', '(kv.expires_at IS NULL OR kv.expires_at > now())'];
 		for (const {col, expectedParam} of meta.conditions) {
 			if (!Object.hasOwn(params, expectedParam) || params[expectedParam] === undefined) {
@@ -1297,13 +1957,15 @@ WHERE NOT $6`,
 			if (explicit !== undefined) {
 				bindings.push(explicit);
 				assignments.push(`expires_at = $${bindings.length}`);
+				expiry = 'set';
 			} else if (fallback !== undefined) {
 				bindings.push(fallback);
 				assignments.push(`expires_at = GREATEST(kv.expires_at, $${bindings.length}::timestamptz)`);
+				expiry = 'extend';
 			}
 			sql = `UPDATE ${this.table} kv SET ${assignments.join(', ')} WHERE ${where}`;
 		}
-		const result = await db.query(sql, bindings);
+		const result = await db.query(sql, bindings, `kv_cond_${meta.action}_${meta.conditions.length}_${expiry}`);
 		if (result.rowCount !== 0 && result.rowCount !== 1) {
 			throw new Error('Conditional write returned an invalid affected row count');
 		}
@@ -1400,23 +2062,27 @@ WHERE NOT $6`,
 		}
 		const explicit = ttlExpiresAt(meta, params);
 		const fallback = explicit === undefined ? defaultExpiresAt(meta) : undefined;
-		const [expiresAtExpr, statementName] =
-			explicit !== undefined
-				? ['EXCLUDED.expires_at', 'kv_patch_set_ttl']
-				: fallback !== undefined
-					? ['GREATEST(kv.expires_at, EXCLUDED.expires_at)', 'kv_patch_default_ttl']
-					: [KEPT_EXPIRES_AT, 'kv_patch_keep_ttl'];
+		let patchExpiration: [string, string];
+		if (explicit !== undefined) {
+			patchExpiration = ['EXCLUDED.expires_at', 'kv_patch_set_ttl'];
+		} else if (fallback !== undefined) {
+			patchExpiration = ['GREATEST(kv.expires_at, EXCLUDED.expires_at)', 'kv_patch_default_ttl'];
+		} else {
+			patchExpiration = [KEPT_EXPIRES_AT, 'kv_patch_keep_ttl'];
+		}
+		const [expiresAtExpr, statementName] = patchExpiration;
 		await db.query(
-			`INSERT INTO ${this.table} AS kv (table_name, partition_key, row_key, row_data, expires_at, updated_at)
-VALUES ($1, $2, $3, $4::jsonb, $5, now())
+			`INSERT INTO ${this.table} AS kv (table_name, partition_key, row_key, row_data, expires_at, sort_id, updated_at)
+VALUES ($1, $2, $3, $4::jsonb, $5, $6::bigint, now())
 ON CONFLICT (table_name, row_key)
-DO UPDATE SET partition_key = EXCLUDED.partition_key, row_data = ${MERGED_ROW_DATA}, expires_at = ${expiresAtExpr}, updated_at = now()`,
+DO UPDATE SET partition_key = EXCLUDED.partition_key, row_data = ${MERGED_ROW_DATA}, expires_at = ${expiresAtExpr}, sort_id = EXCLUDED.sort_id, updated_at = now()`,
 			[
 				meta.table.name,
 				partitionKey(meta, incoming),
 				key,
 				JSON.stringify(encodeRow(incoming)),
 				explicit ?? fallback ?? null,
+				sortId(meta, incoming),
 			],
 			statementName,
 		);
@@ -1429,7 +2095,7 @@ DO UPDATE SET partition_key = EXCLUDED.partition_key, row_data = ${MERGED_ROW_DA
 			if (plan.candidates.kind === 'scan') logFullScan(meta);
 			for (const fragments of planFragmentGroups(plan.candidates)) {
 				await db.query(
-					`DELETE FROM ${this.table} kv WHERE kv.table_name = $1${fragments.predicate} AND (kv.expires_at IS NULL OR kv.expires_at > now())`,
+					`DELETE FROM ${this.table} kv${fragments.using === '' ? '' : ` USING ${fragments.using}`} WHERE kv.table_name = $1${fragments.predicate} AND (kv.expires_at IS NULL OR kv.expires_at > now())`,
 					[meta.table.name, ...fragments.params],
 					planStatementName('kv_del', plan.candidates),
 				);
@@ -1453,15 +2119,5 @@ DO UPDATE SET partition_key = EXCLUDED.partition_key, row_data = ${MERGED_ROW_DA
 			[meta.table.name, matchingKeys],
 			'kv_del_keys',
 		);
-	}
-
-	private async getRow(meta: KvQueryMeta, key: string, db: PostgresQueryable): Promise<Row | null> {
-		const result = await db.query<{row_data: unknown}>(
-			`SELECT row_data FROM ${this.table} WHERE table_name = $1 AND row_key = $2 AND (expires_at IS NULL OR expires_at > now()) LIMIT 1`,
-			[meta.table.name, key],
-			'kv_get_row',
-		);
-		const row = result.rows[0];
-		return row ? decodeRow(row.row_data) : null;
 	}
 }

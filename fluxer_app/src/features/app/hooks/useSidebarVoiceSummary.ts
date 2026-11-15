@@ -17,8 +17,8 @@ export const SidebarVoiceSummaryScope = Object.freeze({
 
 export type SidebarVoiceSummaryScope = (typeof SidebarVoiceSummaryScope)[keyof typeof SidebarVoiceSummaryScope];
 
-export type SidebarVoiceStatesByChannel = Readonly<Record<string, Readonly<Record<string, NormalizedVoiceState>>>>;
-export type SidebarVoiceStatesByConnection = Readonly<Record<string, NormalizedVoiceState>>;
+type SidebarVoiceStatesByChannel = Readonly<Record<string, Readonly<Record<string, NormalizedVoiceState>>>>;
+type SidebarVoiceStatesByConnection = Readonly<Record<string, NormalizedVoiceState>>;
 
 interface GuildSidebarVoiceSummaryInput {
 	readonly scope: typeof SidebarVoiceSummaryScope.GUILD;

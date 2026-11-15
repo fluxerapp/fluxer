@@ -48,15 +48,16 @@ export const SlashCommandParamBar = ({activeSlot, onClear}: SlashCommandParamBar
 					<span className={styles.name} data-flx="channel.slash-command-param-bar.name">
 						{activeSlot.optionName}
 					</span>
-					{showRequiredError ? (
+					{showRequiredError && (
 						<span className={styles.requiredError} data-flx="channel.slash-command-param-bar.required-error">
 							{i18n._(OPTION_IS_REQUIRED_DESCRIPTOR)}
 						</span>
-					) : showDescription ? (
+					)}
+					{showDescription && (
 						<span className={styles.description} data-flx="channel.slash-command-param-bar.description">
 							{activeSlot.description}
 						</span>
-					) : null}
+					)}
 				</flx-channel-slash-command-param-bar-text>
 				<flx-channel-slash-command-param-bar-controls
 					className={flxElementClassName(styles.controls)}

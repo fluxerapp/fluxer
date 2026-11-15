@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::api::client::{AdminApiClient, ApiResult};
+use crate::api::client::{AdminApiClient, ApiError, ApiResult};
 use crate::api::types::{FlashLevel, FlashMessage};
 use crate::middleware::auth::AuthContext;
 use crate::templates;
+use crate::utils::timestamps::format_admin_timestamp;
 use axum::response::{Html, IntoResponse, Response};
 use serde::Deserialize;
 
@@ -45,7 +46,6 @@ pub fn extract_value(form: &BanFormData, field: &str) -> String {
     let v = match field {
         "ip" => form.ip.as_deref(),
         "email" => form.email.as_deref(),
-        "domain" => form.domain.as_deref(),
         "phrase" => form.phrase.as_deref(),
         "url" => form.url.as_deref(),
         "sha256_hex" => form.sha256_hex.as_deref(),
@@ -163,21 +163,30 @@ async fn execute_single_ban(
     )
 }
 
+fn blocklist_type(ban_type: &str) -> Option<&'static str> {
+    match ban_type {
+        "ip-bans" => Some("ip"),
+        "email-bans" => Some("email"),
+        "phrase-bans" => Some("phrase"),
+        "url-bans" => Some("url"),
+        "file-sha-bans" => Some("file-sha"),
+        "avatar-hash-bans" => Some("avatar-hash"),
+        _ => None,
+    }
+}
+
 async fn execute_single_unban(
     client: &AdminApiClient,
     ban_type: &str,
     value: &str,
     audit_log_reason: Option<&str>,
 ) -> (&'static str, String) {
-    let result = match ban_type {
-        "ip-bans" => client.unban_ip(value, audit_log_reason).await,
-        "email-bans" => client.unban_email(value, audit_log_reason).await,
-        "phrase-bans" => client.unban_phrase(value, audit_log_reason).await,
-        "url-bans" => client.unban_url(value, audit_log_reason).await,
-        "file-sha-bans" => client.unban_file_sha(value, audit_log_reason).await,
-        "avatar-hash-bans" => client.unban_avatar_hash(value, audit_log_reason).await,
-        _ => return ("error", "Unknown ban type".into()),
+    let Some(list_type) = blocklist_type(ban_type) else {
+        return ("error", "Unknown ban type".into());
     };
+    let result = client
+        .delete_blocklist_entry(list_type, value, None, audit_log_reason)
+        .await;
     ban_action_result(
         result,
         format!("{value} unbanned successfully"),
@@ -190,18 +199,29 @@ async fn execute_check(
     ban_type: &str,
     value: &str,
 ) -> (&'static str, String) {
-    let result = match ban_type {
-        "ip-bans" => client.check_ip_ban(value).await,
-        "email-bans" => client.check_email_ban(value).await,
-        "phrase-bans" => client.check_phrase_ban(value).await,
-        "url-bans" => client.check_url_ban(value).await,
-        "file-sha-bans" => client.check_file_sha_ban(value).await,
-        "avatar-hash-bans" => client.check_avatar_hash_ban(value).await,
-        _ => return ("error", "Unknown ban type".into()),
+    let Some(list_type) = blocklist_type(ban_type) else {
+        return ("error", "Unknown ban type".into());
     };
+    let result = client.check_blocklist_entry(list_type, value, None).await;
     match result {
+        Ok(r) if r.banned && r.decision_id.is_some() => (
+            "info",
+            format!(
+                "{value} is blocked by decision {}{}. End that decision to remove the block.",
+                r.decision_id.unwrap_or_default(),
+                r.expires_at
+                    .map(|expires_at| format!(" until {}", format_admin_timestamp(&expires_at)))
+                    .unwrap_or_default()
+            ),
+        ),
         Ok(r) if r.banned => match r.expires_at {
-            Some(expires_at) => ("info", format!("{value} is banned until {expires_at}")),
+            Some(expires_at) => (
+                "info",
+                format!(
+                    "{value} is banned until {}",
+                    format_admin_timestamp(&expires_at)
+                ),
+            ),
             None => ("info", format!("{value} is banned")),
         },
         Ok(_) => ("info", format!("{value} is NOT banned")),
@@ -219,6 +239,12 @@ fn ban_action_result(
 ) -> (&'static str, String) {
     match result {
         Ok(()) => ("success", success_message),
+        Err(ApiError::Http { status: 409, .. }) => (
+            "error",
+            format!(
+                "{error_message}. It belongs to an enforcement decision, so end that decision instead."
+            ),
+        ),
         Err(error) => {
             tracing::warn!(%error, "admin API request failed: ban action");
             ("error", error_message)

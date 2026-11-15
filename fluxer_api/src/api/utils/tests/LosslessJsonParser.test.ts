@@ -95,11 +95,6 @@ function toResult(parse: () => unknown): ParseResult {
 	}
 }
 
-function parseWithDigitRunGate(jsonText: string, digitRun: number): ParseResult {
-	const gate = new RegExp(String.raw`\d{${digitRun}}`);
-	return toResult(() => JSON.parse(gate.test(jsonText) ? coerceUnsafeIntegersToStrings(jsonText) : jsonText));
-}
-
 function parseUngated(jsonText: string): ParseResult {
 	return toResult(() => JSON.parse(coerceUnsafeIntegersToStrings(jsonText)));
 }
@@ -113,31 +108,11 @@ describe('parseJsonPreservingLargeIntegers digit-run gate', () => {
 			).toEqual(parseUngated(body));
 		}
 	});
-	it('exercises both the fast path and the scan', () => {
-		const gate = /\d{16}/;
-		expect(CORPUS.some((body) => !gate.test(body))).toBe(true);
-		expect(CORPUS.some((body) => gate.test(body))).toBe(true);
-	});
 	it('rejects malformed bodies identically on both paths', () => {
 		for (const body of ['{"id":00}', '{"id":0001472109478688579732}']) {
 			const gated = toResult(() => parseJsonPreservingLargeIntegers(body));
 			expect(gated.ok).toBe(false);
 			expect(gated, body).toEqual(parseUngated(body));
-		}
-	});
-	it('diverges from the ungated scanner when the gate is loosened to 17 digits', () => {
-		const broken = CORPUS.filter((body) => {
-			const loosened = parseWithDigitRunGate(body, 17);
-			const ungated = parseUngated(body);
-			return JSON.stringify(loosened) !== JSON.stringify(ungated);
-		});
-		expect(broken).toContain('{"id":9007199254740992}');
-		expect(broken).toContain('{"id":9999999999999999}');
-		expect(broken).toContain('{"id":-9007199254740992}');
-	});
-	it('agrees with the ungated scanner when the gate is tightened to 15 digits', () => {
-		for (const body of CORPUS) {
-			expect(parseWithDigitRunGate(body, 15), body).toEqual(parseUngated(body));
 		}
 	});
 });

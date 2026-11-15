@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import {videoElementHasRenderedFrame} from '@app/features/voice/components/VideoElementFrameState';
 import {Store} from '@app/features/voice/engine/Store';
 
-export const LAST_FRAME_SNAPSHOTS_MAX = 8;
-export const LAST_FRAME_SNAPSHOT_WIDTH_MAX = 640;
-export const LAST_FRAME_SNAPSHOT_JPEG_QUALITY = 0.7;
+const LAST_FRAME_SNAPSHOTS_MAX = 8;
+const LAST_FRAME_SNAPSHOT_WIDTH_MAX = 640;
+const LAST_FRAME_SNAPSHOT_JPEG_QUALITY = 0.7;
 
 function computeSnapshotDimensions(sourceWidth: number, sourceHeight: number): {width: number; height: number} {
 	if (sourceWidth <= LAST_FRAME_SNAPSHOT_WIDTH_MAX) {
@@ -66,10 +67,6 @@ class LastFrameSnapshotCache extends Store {
 	private captureIds = new Map<string, number>();
 	private nextCaptureId = 1;
 
-	get size(): number {
-		return this.snapshots.size;
-	}
-
 	getSnapshotUrl(key: string): string | null {
 		return this.snapshots.get(key) ?? null;
 	}
@@ -128,28 +125,20 @@ class LastFrameSnapshotCache extends Store {
 		this.retainSnapshot(key, dataUrl);
 	}
 
-	release(key: string): void {
-		this.captureIds.delete(key);
-		const url = this.snapshots.get(key);
-		if (url === undefined) return;
-		this.update(() => {
-			this.snapshots.delete(key);
-		});
-		revokeSnapshotUrl(url);
-	}
-
 	clear(): void {
-		this.captureIds.clear();
-		if (this.snapshots.size === 0) return;
-		const revoked = [...this.snapshots.values()];
+		const revoked = Array.from(this.snapshots.values());
 		this.update(() => {
 			this.snapshots.clear();
 		});
-		for (const stale of revoked) {
-			revokeSnapshotUrl(stale);
+		this.captureIds.clear();
+		for (const url of revoked) {
+			revokeSnapshotUrl(url);
 		}
 	}
 }
 
-export default new LastFrameSnapshotCache();
-export {LastFrameSnapshotCache};
+const lastFrameSnapshotCache = new LastFrameSnapshotCache();
+
+ResettableStates.register(lastFrameSnapshotCache, () => lastFrameSnapshotCache.clear());
+
+export default lastFrameSnapshotCache;

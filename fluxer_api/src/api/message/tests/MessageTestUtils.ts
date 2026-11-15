@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
@@ -44,18 +43,6 @@ export async function deleteMessage(
 ): Promise<void> {
 	await createBuilder<void>(harness, token)
 		.delete(`/channels/${channelId}/messages/${messageId}`)
-		.expect(204)
-		.execute();
-}
-export async function pinMessage(
-	harness: ApiTestHarness,
-	token: string,
-	channelId: string,
-	messageId: string,
-): Promise<void> {
-	await createBuilder<void>(harness, token)
-		.put(`/channels/${channelId}/pins/${messageId}`)
-		.body(null)
 		.expect(204)
 		.execute();
 }
@@ -121,13 +108,6 @@ export async function updateChannelPermissions(
 		.expect(204)
 		.execute();
 }
-export async function createFriendship(harness: ApiTestHarness, user1: TestAccount, user2: TestAccount): Promise<void> {
-	await createBuilder<unknown>(harness, user1.token)
-		.post(`/users/@me/relationships/${user2.userId}`)
-		.body({})
-		.execute();
-	await createBuilder<unknown>(harness, user2.token).put(`/users/@me/relationships/${user1.userId}`).body({}).execute();
-}
 export async function ensureSessionStarted(harness: ApiTestHarness, token: string): Promise<void> {
 	const me = await createBuilder<{
 		id: string;
@@ -167,16 +147,6 @@ export async function markGuildChannelsAsIndexed(
 		}>
 	>(harness, token)
 		.get(`/guilds/${guildId}/channels`)
-		.execute();
-	await Promise.all(channels.map((channel) => markChannelAsIndexed(harness, channel.id)));
-}
-export async function markUserDmChannelsAsIndexed(harness: ApiTestHarness, token: string): Promise<void> {
-	const channels = await createBuilder<
-		Array<{
-			id: string;
-		}>
-	>(harness, token)
-		.get('/users/@me/channels')
 		.execute();
 	await Promise.all(channels.map((channel) => markChannelAsIndexed(harness, channel.id)));
 }

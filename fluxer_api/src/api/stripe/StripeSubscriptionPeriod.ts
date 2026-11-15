@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {extractId} from '@app/api/stripe/StripeUtils';
 import type Stripe from 'stripe';
 
 type StripePaymentIntentWithExpandedLatestCharge = Stripe.PaymentIntent & {
@@ -7,7 +8,12 @@ type StripePaymentIntentWithExpandedLatestCharge = Stripe.PaymentIntent & {
 };
 type StripeInvoicePaymentEntry = {
 	payment?: {
+		charge?: string | Stripe.Charge | null;
 		payment_intent?: string | StripePaymentIntentWithExpandedLatestCharge | null;
+	} | null;
+	status?: string | null;
+	status_transitions?: {
+		paid_at?: number | null;
 	} | null;
 };
 type StripeInvoiceWithPayments = Stripe.Invoice & {
@@ -63,6 +69,19 @@ function getSubscriptionCurrentPeriodEnd(subscription: Stripe.Subscription): Dat
 	return latestPeriodEnd == null ? null : new Date(latestPeriodEnd * 1000);
 }
 
+export function getSubscriptionCurrentPeriodStart(subscription: Stripe.Subscription): Date | null {
+	let latestPeriodStart: number | null = null;
+	for (const item of subscription.items?.data ?? []) {
+		if (item.current_period_start == null) {
+			continue;
+		}
+		if (latestPeriodStart == null || item.current_period_start > latestPeriodStart) {
+			latestPeriodStart = item.current_period_start;
+		}
+	}
+	return latestPeriodStart == null ? null : new Date(latestPeriodStart * 1000);
+}
+
 export function getSubscriptionPremiumPeriodEnd(subscription: Stripe.Subscription): Date | null {
 	if (subscription.cancel_at) {
 		return new Date(subscription.cancel_at * 1000);
@@ -70,13 +89,24 @@ export function getSubscriptionPremiumPeriodEnd(subscription: Stripe.Subscriptio
 	const trialEnd = subscription.trial_end ? new Date(subscription.trial_end * 1000) : null;
 	const currentPeriodEnd = getSubscriptionCurrentPeriodEnd(subscription);
 	if (trialEnd && currentPeriodEnd) {
-		return trialEnd > currentPeriodEnd ? trialEnd : currentPeriodEnd;
+		return new Date(Math.max(trialEnd.getTime(), currentPeriodEnd.getTime()));
 	}
 	return trialEnd ?? currentPeriodEnd;
 }
 
 export function getSubscriptionStartDate(subscription: Stripe.Subscription): Date {
 	return new Date((subscription.start_date ?? subscription.created) * 1000);
+}
+
+export function getInvoiceLatestLinePeriodStart(invoice: Stripe.Invoice): Date | null {
+	let latestPeriodStartUnix: number | null = null;
+	for (const line of invoice.lines?.data ?? []) {
+		const periodStart = line.period?.start ?? null;
+		if (periodStart && (latestPeriodStartUnix === null || periodStart > latestPeriodStartUnix)) {
+			latestPeriodStartUnix = periodStart;
+		}
+	}
+	return latestPeriodStartUnix ? new Date(latestPeriodStartUnix * 1000) : null;
 }
 
 export function getInvoiceLatestLinePeriodEnd(invoice: Stripe.Invoice): Date | null {
@@ -114,4 +144,52 @@ export function getFirstInvoicePaymentIntentId(invoice: Stripe.Invoice | null): 
 		return paymentIntent;
 	}
 	return paymentIntent.id ?? null;
+}
+
+export function getInvoicePaymentRef(invoice: Stripe.Invoice): {
+	chargeId: string | null;
+	paymentIntentId: string | null;
+	paidAt: Date | null;
+} | null {
+	const candidates = (invoice as StripeInvoiceWithPayments).payments?.data ?? [];
+	const preferred =
+		candidates.find((c) => c.status === 'paid' && (c.payment?.payment_intent || c.payment?.charge)) ??
+		candidates.find((c) => c.payment?.payment_intent || c.payment?.charge) ??
+		null;
+	if (!preferred) {
+		return null;
+	}
+	const paymentIntentId = extractId(preferred.payment?.payment_intent);
+	let chargeId = extractId(preferred.payment?.charge);
+	if (!chargeId && preferred.payment?.payment_intent && typeof preferred.payment.payment_intent !== 'string') {
+		chargeId = extractId(preferred.payment.payment_intent.latest_charge);
+	}
+	const paidAtSec = preferred.status_transitions?.paid_at ?? null;
+	return {
+		chargeId,
+		paymentIntentId,
+		paidAt: paidAtSec ? new Date(paidAtSec * 1000) : null,
+	};
+}
+
+export function getSubscriptionBillingCycle(subscription: Stripe.Subscription): 'monthly' | 'yearly' | null {
+	const item = getPrimarySubscriptionItem(subscription);
+	const interval = item?.price?.recurring?.interval;
+	if (interval === 'month') {
+		return 'monthly';
+	}
+	if (interval === 'year') {
+		return 'yearly';
+	}
+	return null;
+}
+
+export async function loadSubscriptionSchedule(
+	stripe: Stripe | null,
+	scheduleRef: Stripe.Subscription['schedule'],
+): Promise<Stripe.SubscriptionSchedule | null> {
+	if (!scheduleRef) return null;
+	if (typeof scheduleRef === 'object') return scheduleRef;
+	if (!stripe) return null;
+	return stripe.subscriptionSchedules.retrieve(scheduleRef);
 }

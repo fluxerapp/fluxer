@@ -3,6 +3,7 @@
 import {createEmojiID, createGuildID} from '@app/api/BrandedTypes';
 import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {jsonAssetBodyLimit, RequestBodyLimit} from '@app/api/middleware/RequestBodyLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
@@ -45,12 +46,15 @@ export function GuildEmojiController(app: HonoApp) {
 			const guildId = createGuildID(ctx.req.valid('param').guild_id);
 			const {name, image} = ctx.req.valid('json');
 			const auditLogReason = ctx.get('auditLogReason') ?? null;
-			const emoji = await ctx.get('guildService').content.createEmoji({user, guildId, name, image}, auditLogReason);
+			const emoji = await ctx
+				.get('guildService')
+				.content.emojis.createEmoji({user, guildId, name, image}, auditLogReason);
 			return ctx.json(emoji);
 		},
 	);
 	app.post(
 		'/guilds/:guild_id/emojis/bulk',
+		RequestBodyLimit(jsonAssetBodyLimit({emoji: 50})),
 		RateLimitMiddleware(RateLimitConfigs.GUILD_EMOJI_BULK_CREATE),
 		LoginRequired,
 		Validator('param', GuildIdParam),
@@ -70,7 +74,9 @@ export function GuildEmojiController(app: HonoApp) {
 			const guildId = createGuildID(ctx.req.valid('param').guild_id);
 			const {emojis} = ctx.req.valid('json');
 			const auditLogReason = ctx.get('auditLogReason') ?? null;
-			const result = await ctx.get('guildService').content.bulkCreateEmojis({user, guildId, emojis}, auditLogReason);
+			const result = await ctx
+				.get('guildService')
+				.content.emojis.bulkCreateEmojis({user, guildId, emojis}, auditLogReason);
 			return ctx.json(result);
 		},
 	);
@@ -96,7 +102,9 @@ export function GuildEmojiController(app: HonoApp) {
 			const {source_emoji_id} = ctx.req.valid('json');
 			const sourceEmojiId = createEmojiID(source_emoji_id);
 			const auditLogReason = ctx.get('auditLogReason') ?? null;
-			const emoji = await ctx.get('guildService').content.cloneEmoji({user, guildId, sourceEmojiId}, auditLogReason);
+			const emoji = await ctx
+				.get('guildService')
+				.content.emojis.cloneEmoji({user, guildId, sourceEmojiId}, auditLogReason);
 			return ctx.json(emoji);
 		},
 	);
@@ -120,7 +128,7 @@ export function GuildEmojiController(app: HonoApp) {
 			const userId = ctx.get('user').id;
 			const guildId = createGuildID(guild_id);
 			const requestCache = ctx.get('requestCache');
-			return ctx.json(await ctx.get('guildService').content.getEmojis({userId, guildId, requestCache}));
+			return ctx.json(await ctx.get('guildService').content.emojis.getEmojis({userId, guildId, requestCache}));
 		},
 	);
 	app.patch(
@@ -146,7 +154,9 @@ export function GuildEmojiController(app: HonoApp) {
 			const emojiId = createEmojiID(emoji_id);
 			const {name} = ctx.req.valid('json');
 			const auditLogReason = ctx.get('auditLogReason') ?? null;
-			const emoji = await ctx.get('guildService').content.updateEmoji({userId, guildId, emojiId, name}, auditLogReason);
+			const emoji = await ctx
+				.get('guildService')
+				.content.emojis.updateEmoji({userId, guildId, emojiId, name}, auditLogReason);
 			return ctx.json(emoji);
 		},
 	);
@@ -174,7 +184,7 @@ export function GuildEmojiController(app: HonoApp) {
 			const emojiId = createEmojiID(emoji_id);
 			const auditLogReason = ctx.get('auditLogReason') ?? null;
 			const {purge = false} = ctx.req.valid('query');
-			await ctx.get('guildService').content.deleteEmoji({userId, guildId, emojiId, purge}, auditLogReason);
+			await ctx.get('guildService').content.emojis.deleteEmoji({userId, guildId, emojiId, purge}, auditLogReason);
 			return ctx.body(null, 204);
 		},
 	);

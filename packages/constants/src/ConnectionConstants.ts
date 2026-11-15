@@ -5,6 +5,7 @@ import type {ValueOf} from '@fluxer/constants/src/ValueOf';
 export const ConnectionTypes = {
 	BLUESKY: 'bsky',
 	DOMAIN: 'domain',
+	OAUTH: 'oauth',
 } as const;
 
 export type ConnectionType = ValueOf<typeof ConnectionTypes>;
@@ -22,3 +23,4 @@ export const ConnectionVisibilityFlagsDescriptions: Record<keyof typeof Connecti
 export const MAX_CONNECTIONS_PER_USER = 20;
 export const CONNECTION_VERIFICATION_TOKEN_LENGTH = 32;
 export const CONNECTION_INITIATION_TOKEN_EXPIRY_MS = 30 * 60 * 1000;
+export const MAX_CONNECTION_PROVIDERS = 20;

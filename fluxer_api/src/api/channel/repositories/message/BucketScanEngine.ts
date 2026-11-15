@@ -5,37 +5,6 @@ export enum BucketScanDirection {
 	Desc = 'desc',
 }
 
-enum BucketScanTraceKind {
-	Start = 'start',
-	ListBucketsFromIndex = 'listBucketsFromIndex',
-	ProcessBucket = 'processBucket',
-	FetchBucket = 'fetchBucket',
-	MarkBucketEmpty = 'markBucketEmpty',
-	TouchBucket = 'touchBucket',
-	StopAfterBucketReached = 'stopAfterBucketReached',
-	Complete = 'complete',
-}
-
-interface BucketScanTraceEvent {
-	kind: BucketScanTraceKind;
-	minBucket: number;
-	maxBucket: number;
-	limit: number;
-	direction: BucketScanDirection;
-	bucket?: number;
-	remaining?: number;
-	indexQuery?: {
-		minBucket: number;
-		maxBucket: number;
-		limit: number;
-	};
-	indexResult?: Array<number>;
-	fetchResult?: {
-		rowCount: number;
-		unbounded: boolean;
-	};
-}
-
 interface BucketScanIndexQuery {
 	minBucket: number;
 	maxBucket: number;
@@ -53,7 +22,6 @@ interface BucketScanDeps<Row> {
 	getRowId: (row: Row) => bigint;
 	onEmptyUnboundedBucket?: (bucket: number) => Promise<void>;
 	onBucketHasRows?: (bucket: number) => Promise<void>;
-	trace?: (event: BucketScanTraceEvent) => void;
 }
 
 interface BucketScanOptions {
@@ -62,7 +30,6 @@ interface BucketScanOptions {
 	limit: number;
 	direction: BucketScanDirection;
 	indexPageSize: number;
-	stopAfterBucket?: number;
 }
 
 interface BucketScanResult<Row> {
@@ -73,22 +40,7 @@ export async function scanBucketsWithIndex<Row>(
 	deps: BucketScanDeps<Row>,
 	opts: BucketScanOptions,
 ): Promise<BucketScanResult<Row>> {
-	const trace = deps.trace;
-	trace?.({
-		kind: BucketScanTraceKind.Start,
-		minBucket: opts.minBucket,
-		maxBucket: opts.maxBucket,
-		limit: opts.limit,
-		direction: opts.direction,
-	});
 	if (opts.limit <= 0) {
-		trace?.({
-			kind: BucketScanTraceKind.Complete,
-			minBucket: opts.minBucket,
-			maxBucket: opts.maxBucket,
-			limit: opts.limit,
-			direction: opts.direction,
-		});
 		return {rows: []};
 	}
 	let remaining = opts.limit;
@@ -96,60 +48,14 @@ export async function scanBucketsWithIndex<Row>(
 	const seenRowIds = new Set<bigint>();
 	const processedBuckets = new Set<number>();
 	const processBucket = async (bucket: number) => {
-		trace?.({
-			kind: BucketScanTraceKind.ProcessBucket,
-			minBucket: opts.minBucket,
-			maxBucket: opts.maxBucket,
-			limit: opts.limit,
-			direction: opts.direction,
-			bucket,
-			remaining,
-		});
-		trace?.({
-			kind: BucketScanTraceKind.FetchBucket,
-			minBucket: opts.minBucket,
-			maxBucket: opts.maxBucket,
-			limit: opts.limit,
-			direction: opts.direction,
-			bucket,
-			remaining,
-		});
 		const {rows, unbounded} = await deps.fetchRowsForBucket(bucket, remaining);
-		trace?.({
-			kind: BucketScanTraceKind.FetchBucket,
-			minBucket: opts.minBucket,
-			maxBucket: opts.maxBucket,
-			limit: opts.limit,
-			direction: opts.direction,
-			bucket,
-			remaining,
-			fetchResult: {rowCount: rows.length, unbounded},
-		});
 		if (rows.length === 0) {
 			if (unbounded && deps.onEmptyUnboundedBucket) {
-				trace?.({
-					kind: BucketScanTraceKind.MarkBucketEmpty,
-					minBucket: opts.minBucket,
-					maxBucket: opts.maxBucket,
-					limit: opts.limit,
-					direction: opts.direction,
-					bucket,
-					remaining,
-				});
 				await deps.onEmptyUnboundedBucket(bucket);
 			}
 			return;
 		}
 		if (deps.onBucketHasRows) {
-			trace?.({
-				kind: BucketScanTraceKind.TouchBucket,
-				minBucket: opts.minBucket,
-				maxBucket: opts.maxBucket,
-				limit: opts.limit,
-				direction: opts.direction,
-				bucket,
-				remaining,
-			});
 			await deps.onBucketHasRows(bucket);
 		}
 		for (const row of rows) {
@@ -161,33 +67,13 @@ export async function scanBucketsWithIndex<Row>(
 			remaining--;
 		}
 	};
-	const stopAfterBucket = typeof opts.stopAfterBucket === 'number' ? opts.stopAfterBucket : null;
-	const shouldStopAfterBucket = (bucket: number) => stopAfterBucket !== null && bucket === stopAfterBucket;
 	if (opts.direction === BucketScanDirection.Desc) {
 		let cursorMax: number | null = opts.maxBucket;
 		while (remaining > 0 && cursorMax !== null && cursorMax >= opts.minBucket) {
-			const query: BucketScanIndexQuery = {
+			const buckets = await deps.listBucketsFromIndex({
 				minBucket: opts.minBucket,
 				maxBucket: cursorMax,
 				limit: opts.indexPageSize,
-			};
-			trace?.({
-				kind: BucketScanTraceKind.ListBucketsFromIndex,
-				minBucket: opts.minBucket,
-				maxBucket: opts.maxBucket,
-				limit: opts.limit,
-				direction: opts.direction,
-				indexQuery: query,
-			});
-			const buckets = await deps.listBucketsFromIndex(query);
-			trace?.({
-				kind: BucketScanTraceKind.ListBucketsFromIndex,
-				minBucket: opts.minBucket,
-				maxBucket: opts.maxBucket,
-				limit: opts.limit,
-				direction: opts.direction,
-				indexQuery: query,
-				indexResult: buckets,
 			});
 			if (buckets.length === 0) break;
 			for (const bucket of buckets) {
@@ -196,18 +82,6 @@ export async function scanBucketsWithIndex<Row>(
 				if (processedBuckets.has(bucket)) continue;
 				processedBuckets.add(bucket);
 				await processBucket(bucket);
-				if (shouldStopAfterBucket(bucket)) {
-					trace?.({
-						kind: BucketScanTraceKind.StopAfterBucketReached,
-						minBucket: opts.minBucket,
-						maxBucket: opts.maxBucket,
-						limit: opts.limit,
-						direction: opts.direction,
-						bucket,
-						remaining,
-					});
-					return {rows: out};
-				}
 			}
 			const last = buckets[buckets.length - 1];
 			const nextCursor = last - 1;
@@ -218,45 +92,15 @@ export async function scanBucketsWithIndex<Row>(
 				if (processedBuckets.has(bucket)) continue;
 				processedBuckets.add(bucket);
 				await processBucket(bucket);
-				if (shouldStopAfterBucket(bucket)) {
-					trace?.({
-						kind: BucketScanTraceKind.StopAfterBucketReached,
-						minBucket: opts.minBucket,
-						maxBucket: opts.maxBucket,
-						limit: opts.limit,
-						direction: opts.direction,
-						bucket,
-						remaining,
-					});
-					return {rows: out};
-				}
 			}
 		}
 	} else {
 		let cursorMin: number | null = opts.minBucket;
 		while (remaining > 0 && cursorMin !== null && cursorMin <= opts.maxBucket) {
-			const query: BucketScanIndexQuery = {
+			const buckets = await deps.listBucketsFromIndex({
 				minBucket: cursorMin,
 				maxBucket: opts.maxBucket,
 				limit: opts.indexPageSize,
-			};
-			trace?.({
-				kind: BucketScanTraceKind.ListBucketsFromIndex,
-				minBucket: opts.minBucket,
-				maxBucket: opts.maxBucket,
-				limit: opts.limit,
-				direction: opts.direction,
-				indexQuery: query,
-			});
-			const buckets = await deps.listBucketsFromIndex(query);
-			trace?.({
-				kind: BucketScanTraceKind.ListBucketsFromIndex,
-				minBucket: opts.minBucket,
-				maxBucket: opts.maxBucket,
-				limit: opts.limit,
-				direction: opts.direction,
-				indexQuery: query,
-				indexResult: buckets,
 			});
 			if (buckets.length === 0) break;
 			for (const bucket of buckets) {
@@ -265,18 +109,6 @@ export async function scanBucketsWithIndex<Row>(
 				if (processedBuckets.has(bucket)) continue;
 				processedBuckets.add(bucket);
 				await processBucket(bucket);
-				if (shouldStopAfterBucket(bucket)) {
-					trace?.({
-						kind: BucketScanTraceKind.StopAfterBucketReached,
-						minBucket: opts.minBucket,
-						maxBucket: opts.maxBucket,
-						limit: opts.limit,
-						direction: opts.direction,
-						bucket,
-						remaining,
-					});
-					return {rows: out};
-				}
 			}
 			const last = buckets[buckets.length - 1];
 			const nextCursor = last + 1;
@@ -287,27 +119,8 @@ export async function scanBucketsWithIndex<Row>(
 				if (processedBuckets.has(bucket)) continue;
 				processedBuckets.add(bucket);
 				await processBucket(bucket);
-				if (shouldStopAfterBucket(bucket)) {
-					trace?.({
-						kind: BucketScanTraceKind.StopAfterBucketReached,
-						minBucket: opts.minBucket,
-						maxBucket: opts.maxBucket,
-						limit: opts.limit,
-						direction: opts.direction,
-						bucket,
-						remaining,
-					});
-					return {rows: out};
-				}
 			}
 		}
 	}
-	trace?.({
-		kind: BucketScanTraceKind.Complete,
-		minBucket: opts.minBucket,
-		maxBucket: opts.maxBucket,
-		limit: opts.limit,
-		direction: opts.direction,
-	});
 	return {rows: out};
 }

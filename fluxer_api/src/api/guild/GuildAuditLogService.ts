@@ -2,9 +2,14 @@
 
 import {type ChannelID, createRoleID, type GuildID, type RoleID, type UserID} from '@app/api/BrandedTypes';
 import type {GuildAuditLogRow} from '@app/api/database/types/GuildTypes';
-import {isNoopGuildAuditLog, mapGuildAuditLogEntry} from '@app/api/guild/GuildAuditLogEntryMapper';
+import {
+	isNoopGuildAuditLog,
+	mapGuildAuditLogEntry,
+	THREAD_AUDIT_LOG_ACTION_TYPES,
+	THREAD_SCOPED_AUDIT_OPTION,
+} from '@app/api/guild/GuildAuditLogEntryMapper';
 import type {AuditLogChange, GuildAuditLogChange} from '@app/api/guild/GuildAuditLogTypes';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import {Logger} from '@app/api/Logger';
@@ -12,10 +17,13 @@ import type {ChannelPermissionOverwrite} from '@app/api/models/ChannelPermission
 import type {GuildAuditLog} from '@app/api/models/GuildAuditLog';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
+import {ChannelOverwriteTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import {ms} from 'itty-time';
 
 const MESSAGE_DELETE_BATCH_DELAY_MS = ms('30 seconds');
+const MESSAGE_DELETE_BATCH_MAX_ATTEMPTS = 3;
+const RECENT_MESSAGE_DELETE_LOG_LIMIT = 250;
 
 interface MessageDeleteBatchGroup {
 	logs: Array<GuildAuditLog>;
@@ -38,6 +46,7 @@ interface CreateGuildAuditLogParams {
 	metadata?: Map<string, string> | Record<string, string> | Array<[string, string]>;
 	changes?: GuildAuditLogChange | null;
 	createdAt?: Date;
+	threadScoped?: boolean;
 }
 
 function normalizeAuditLogMetadata(metadata?: CreateGuildAuditLogParams['metadata']): Map<string, string> {
@@ -54,8 +63,50 @@ function normalizeAuditLogMetadata(metadata?: CreateGuildAuditLogParams['metadat
 }
 
 export class GuildAuditLogService {
+	async record(params: {
+		guildId: GuildID;
+		userId: UserID;
+		action: AuditLogActionType;
+		targetId?: bigint | string | null;
+		auditLogReason?: string | null;
+		metadata?: Map<string, string> | Record<string, string>;
+		changes?: GuildAuditLogChange | null;
+		createdAt?: Date;
+	}): Promise<void> {
+		let targetId: string | null = null;
+		if (params.targetId !== undefined && params.targetId !== null) {
+			targetId = typeof params.targetId === 'string' ? params.targetId : params.targetId.toString();
+		}
+		try {
+			const builder = this.createBuilder(params.guildId, params.userId)
+				.withAction(params.action, targetId)
+				.withReason(params.auditLogReason ?? null);
+			if (params.metadata) {
+				builder.withMetadata(params.metadata);
+			}
+			if (params.changes) {
+				builder.withChanges(params.changes);
+			}
+			if (params.createdAt) {
+				builder.withCreatedAt(params.createdAt);
+			}
+			await builder.commit();
+		} catch (error) {
+			Logger.error(
+				{
+					error,
+					guildId: params.guildId.toString(),
+					userId: params.userId.toString(),
+					action: params.action,
+					targetId,
+				},
+				'Failed to record guild audit log',
+			);
+		}
+	}
+
 	constructor(
-		private readonly guildRepository: IGuildRepositoryAggregate,
+		private readonly guildRepository: GuildRepository,
 		private readonly snowflakeService: ISnowflakeService,
 		private readonly workerService: IWorkerService<WorkerTaskName>,
 		private readonly gatewayService: IGatewayService,
@@ -64,6 +115,9 @@ export class GuildAuditLogService {
 	async createLog(params: CreateGuildAuditLogParams): Promise<GuildAuditLog> {
 		const logId = await this.snowflakeService.generate();
 		const metadataMap = normalizeAuditLogMetadata(params.metadata);
+		if (params.threadScoped) {
+			metadataMap.set(THREAD_SCOPED_AUDIT_OPTION, '1');
+		}
 		const row: GuildAuditLogRow = {
 			guild_id: params.guildId,
 			log_id: logId,
@@ -75,14 +129,14 @@ export class GuildAuditLogService {
 			changes: params.changes ? JSON.stringify(params.changes) : null,
 		};
 		const log = await this.guildRepository.createAuditLog(row);
-		await this.dispatchAuditLogEntryCreate(log);
+		await this.dispatchAuditLogEntryCreate(log, {threadScoped: params.threadScoped === true});
 		if (params.actionType === AuditLogActionType.MESSAGE_DELETE) {
 			await this.scheduleMessageDeleteBatchJob(params.guildId);
 		}
 		return log;
 	}
 
-	async scheduleMessageDeleteBatchJob(guildId: GuildID): Promise<void> {
+	private async scheduleMessageDeleteBatchJob(guildId: GuildID): Promise<void> {
 		const batchWindow = Math.floor(Date.now() / MESSAGE_DELETE_BATCH_DELAY_MS);
 		await this.workerService.addJob(
 			'batchGuildAuditLogMessageDeletes',
@@ -90,7 +144,7 @@ export class GuildAuditLogService {
 			{
 				jobKey: `batch-audit-log-message-deletes:${guildId}:${batchWindow}`,
 				runAt: new Date((batchWindow + 2) * MESSAGE_DELETE_BATCH_DELAY_MS),
-				maxAttempts: 3,
+				maxAttempts: MESSAGE_DELETE_BATCH_MAX_ATTEMPTS,
 				skipLedger: true,
 			},
 		);
@@ -103,23 +157,27 @@ export class GuildAuditLogService {
 		const processedLogs: Array<GuildAuditLog> = [];
 		for (const log of logs) {
 			const group = groups.find((g) => g.logs.includes(log));
-			if (group && group.logs.length >= 2) {
-				if (log === group.logs[0]) {
-					for (const groupLog of group.logs) {
-						deletedLogIds.push(groupLog.logId);
-					}
-					const batchedLog = await this.createBatchedMessageDeleteLog(guildId, group);
-					createdLogs.push(batchedLog);
-					processedLogs.push(batchedLog);
-				}
-			} else {
+			if (!group || group.logs.length < 2) {
 				processedLogs.push(log);
+				continue;
 			}
+			if (log !== group.logs[0]) {
+				continue;
+			}
+			for (const groupLog of group.logs) {
+				deletedLogIds.push(groupLog.logId);
+			}
+			const batchedLog = await this.createBatchedMessageDeleteLog(guildId, group);
+			createdLogs.push(batchedLog);
+			processedLogs.push(batchedLog);
 		}
 		return {processedLogs, deletedLogIds, createdLogs};
 	}
 
-	async batchRecentMessageDeleteLogs(guildId: GuildID, limit: number = 250): Promise<BatchResult> {
+	async batchRecentMessageDeleteLogs(
+		guildId: GuildID,
+		limit: number = RECENT_MESSAGE_DELETE_LOG_LIMIT,
+	): Promise<BatchResult> {
 		const logs = await this.guildRepository.listAuditLogs({
 			guildId,
 			limit,
@@ -177,10 +235,8 @@ export class GuildAuditLogService {
 		guildId: GuildID,
 		group: MessageDeleteBatchGroup,
 	): Promise<GuildAuditLog> {
-		// Must be a fresh id: reusing one of the replaced logs would put a delete and an insert for the same
-		// primary key in one batch, and Cassandra resolves that tie in favour of the tombstone, so the entry
-		// would silently vanish from every table whose key does not include action_type.
 		const logId = await this.snowflakeService.generate();
+		const threadScoped = group.logs.some((log) => log.options.has(THREAD_SCOPED_AUDIT_OPTION));
 		const row: GuildAuditLogRow = {
 			guild_id: guildId,
 			log_id: logId,
@@ -191,11 +247,12 @@ export class GuildAuditLogService {
 			options: new Map([
 				['channel_id', group.channelId],
 				['count', group.logs.length.toString()],
+				...(threadScoped ? [[THREAD_SCOPED_AUDIT_OPTION, '1'] as [string, string]] : []),
 			]),
 			changes: null,
 		};
 		const log = await this.guildRepository.batchDeleteAndCreateAuditLogs(guildId, group.logs, row);
-		await this.dispatchAuditLogEntryCreate(log);
+		await this.dispatchAuditLogEntryCreate(log, {threadScoped});
 		return log;
 	}
 
@@ -220,7 +277,7 @@ export class GuildAuditLogService {
 			if (before && after && before.type === after.type && before.allow === after.allow && before.deny === after.deny) {
 				continue;
 			}
-			const overwriteType = (after ?? before)?.type ?? 0;
+			const overwriteType = (after ?? before)?.type ?? ChannelOverwriteTypes.ROLE;
 			const previousSnapshot = before
 				? {
 						id: targetId.toString(),
@@ -238,15 +295,17 @@ export class GuildAuditLogService {
 					}
 				: null;
 			const changes = this.computeChanges(previousSnapshot, nextSnapshot);
-			if (changes.length === 0) continue;
-			const action =
-				!before && after
-					? AuditLogActionType.CHANNEL_OVERWRITE_CREATE
-					: before && !after
-						? AuditLogActionType.CHANNEL_OVERWRITE_DELETE
-						: AuditLogActionType.CHANNEL_OVERWRITE_UPDATE;
+			if (changes.length === 0) {
+				continue;
+			}
+			let action = AuditLogActionType.CHANNEL_OVERWRITE_UPDATE;
+			if (!before && after) {
+				action = AuditLogActionType.CHANNEL_OVERWRITE_CREATE;
+			} else if (before && !after) {
+				action = AuditLogActionType.CHANNEL_OVERWRITE_DELETE;
+			}
 			let roleName: string | null = null;
-			if (overwriteType === 0 && targetId.toString() !== params.guildId.toString()) {
+			if (overwriteType === ChannelOverwriteTypes.ROLE && targetId.toString() !== params.guildId.toString()) {
 				try {
 					const role = await this.guildRepository.getRole(createRoleID(BigInt(targetId)), params.guildId);
 					roleName = role?.name ?? null;
@@ -332,50 +391,33 @@ export class GuildAuditLogService {
 		return changes;
 	}
 
-	computeArrayChange<T>(
-		previous: Array<T> | null | undefined,
-		next: Array<T> | null | undefined,
-		key: string,
-	): AuditLogChange | null {
-		if (!previous?.length && !next?.length) {
-			return null;
-		}
-		if (!this.areArraysEqual(previous, next)) {
-			const change: AuditLogChange = {key};
-			if (previous !== undefined && previous !== null) {
-				change.old_value = previous;
-			}
-			if (next !== undefined && next !== null) {
-				change.new_value = next;
-			}
-			return change;
-		}
-		return null;
-	}
-
 	private areValuesEqual(a: unknown, b: unknown): boolean {
-		if (a === b) return true;
-		if (a == null || b == null) return false;
-		if (typeof a !== typeof b) return false;
+		if (a === b) {
+			return true;
+		}
+		if (a == null || b == null) {
+			return false;
+		}
+		if (typeof a !== typeof b) {
+			return false;
+		}
 		if (typeof a === 'object' && typeof b === 'object') {
 			return JSON.stringify(a) === JSON.stringify(b);
 		}
 		return false;
 	}
 
-	private areArraysEqual(a: Array<unknown> | null | undefined, b: Array<unknown> | null | undefined): boolean {
-		if (a === b) return true;
-		if (!a || !b) return false;
-		if (a.length !== b.length) return false;
-		return JSON.stringify(a) === JSON.stringify(b);
-	}
-
-	private async dispatchAuditLogEntryCreate(log: GuildAuditLog): Promise<void> {
+	private async dispatchAuditLogEntryCreate(log: GuildAuditLog, options: {threadScoped: boolean}): Promise<void> {
+		const scoped = options.threadScoped || THREAD_AUDIT_LOG_ACTION_TYPES.has(log.actionType);
 		try {
 			await this.gatewayService.dispatchGuild({
 				guildId: log.guildId,
 				event: 'GUILD_AUDIT_LOG_ENTRY_CREATE',
-				data: {...mapGuildAuditLogEntry(log), guild_id: log.guildId.toString()},
+				data: {
+					...mapGuildAuditLogEntry(log),
+					guild_id: log.guildId.toString(),
+					...(scoped ? {__thread_scoped: log.guildId.toString()} : {}),
+				},
 			});
 		} catch (error) {
 			Logger.error(
@@ -391,7 +433,7 @@ export class GuildAuditLogService {
 }
 
 class GuildAuditLogBuilder {
-	private readonly params: Partial<CreateGuildAuditLogParams>;
+	private readonly params: Pick<CreateGuildAuditLogParams, 'guildId' | 'userId'> & Partial<CreateGuildAuditLogParams>;
 	private metadataMap: Map<string, string> | null = null;
 
 	constructor(
@@ -418,24 +460,13 @@ class GuildAuditLogBuilder {
 		return this;
 	}
 
-	withMetadataEntry(key: string, value: string): this {
-		if (!this.metadataMap) {
-			this.metadataMap = new Map();
-		}
-		this.metadataMap.set(key, value);
-		return this;
-	}
-
 	withChanges(changes: GuildAuditLogChange | null): this {
 		this.params.changes = changes;
 		return this;
 	}
 
-	withComputedChanges(
-		previous: Record<string, unknown> | null | undefined,
-		next: Record<string, unknown> | null | undefined,
-	): this {
-		this.params.changes = this.service.computeChanges(previous, next);
+	withThreadScope(scoped = true): this {
+		this.params.threadScoped = scoped;
 		return this;
 	}
 
@@ -452,14 +483,15 @@ class GuildAuditLogBuilder {
 			return null;
 		}
 		return this.service.createLog({
-			guildId: this.params.guildId!,
-			userId: this.params.userId!,
+			guildId: this.params.guildId,
+			userId: this.params.userId,
 			actionType: this.params.actionType,
 			targetId: this.params.targetId ?? null,
 			auditLogReason: this.params.auditLogReason ?? null,
 			metadata: this.metadataMap ?? undefined,
 			changes: this.params.changes ?? null,
 			createdAt: this.params.createdAt,
+			threadScoped: this.params.threadScoped,
 		});
 	}
 }

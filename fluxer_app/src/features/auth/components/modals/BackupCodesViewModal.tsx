@@ -11,6 +11,7 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import type {User} from '@app/features/user/models/User';
 import * as FormUtils from '@app/lib/forms';
+import {EmailCodeAvailability} from '@fluxer/constants/src/AccountConfigConstants';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -84,7 +85,9 @@ export const BackupCodesViewModal = observer(({user}: BackupCodesViewModalProps)
 		setResendAt(null);
 		setStage('intro');
 	}, []);
-	const usesSudo = RuntimeConfig.usesUsernameSignIn;
+	const usesSudo =
+		RuntimeConfig.emailCodeAvailabilityFor({hasEmail: user.email != null, emailVerified: user.verified === true}) !==
+		EmailCodeAvailability.AVAILABLE;
 	const showWithSudo = useCallback(async () => {
 		setSubmitting(true);
 		try {
@@ -190,6 +193,7 @@ export const BackupCodesViewModal = observer(({user}: BackupCodesViewModalProps)
 					label={i18n._(VERIFICATION_CODE_DESCRIPTOR)}
 					placeholder="XXXX-XXXX"
 					required={true}
+					sensitive
 					error={codeError ?? undefined}
 					data-flx="auth.backup-codes-view-modal.input.set-code"
 				/>

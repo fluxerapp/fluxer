@@ -8,6 +8,7 @@ import FavoriteGif from '@app/features/expressions/state/FavoriteGif';
 import FavoriteMemes from '@app/features/expressions/state/FavoriteMemes';
 import * as FavoriteGifUtils from '@app/features/expressions/utils/FavoriteGifUtils';
 import * as FavoriteMemeUtils from '@app/features/expressions/utils/FavoriteMemeUtils';
+import {isMediaDownloadHidden} from '@app/features/forum/utils/MediaDownloadPolicy';
 import {
 	ADD_TO_FAVORITES_DESCRIPTOR,
 	COPY_LINK_DESCRIPTOR,
@@ -18,7 +19,14 @@ import {
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {EditAltTextModal} from '@app/features/messaging/components/modals/EditAltTextModal';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
+import apiAttachmentFileTokens from '@app/features/messaging/state/ApiAttachmentFileTokens';
+import {fetchApiAttachmentBlob} from '@app/features/messaging/state/ApiAttachmentMedia';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
+import {isApiAttachmentUrl} from '@app/features/messaging/utils/ApiAttachmentUrl';
+import {
+	unwrapDesktopLocalResourceURL,
+	wrapDesktopLocalResourceURL,
+} from '@app/features/messaging/utils/DesktopResourceUrl';
 import {createDownloadHandler} from '@app/features/messaging/utils/FileDownloadUtils';
 import {buildMediaProxyURL, stripMediaProxyParams} from '@app/features/messaging/utils/MediaProxyUtils';
 import Permission from '@app/features/permissions/state/Permission';
@@ -248,15 +256,21 @@ async function convertImageBlobToPng(blob: Blob): Promise<Blob> {
 	}
 }
 
+async function fetchImageBlob(url: string): Promise<Blob> {
+	const response = await fetch(wrapDesktopLocalResourceURL(url));
+	if (!response.ok) {
+		throw new Error(`Unexpected response status ${response.status} for ${url}`);
+	}
+	return response.blob();
+}
+
 async function fetchFirstPngBlob(urls: Array<string>): Promise<Blob> {
 	let lastError: unknown = null;
 	for (const url of urls) {
 		try {
-			const response = await fetch(url);
-			if (!response.ok) {
-				throw new Error(`Unexpected response status ${response.status} for ${url}`);
-			}
-			const blob = await response.blob();
+			const blob = isApiAttachmentUrl(unwrapDesktopLocalResourceURL(url))
+				? await fetchApiAttachmentBlob(url)
+				: await fetchImageBlob(url);
 			return await convertImageBlobToPng(blob);
 		} catch (error) {
 			lastError = error;
@@ -305,15 +319,9 @@ export interface MediaMenuData {
 }
 
 export interface MediaMenuHandlers {
-	handleAddToFavorites: () => void;
-	handleRemoveFromFavorites: () => Promise<void>;
-	handleEditAltText: () => void;
-	handleCopyMedia: () => Promise<void>;
-	handleDownloadMedia: () => void;
 	handleCopyLink: () => Promise<void>;
 	handleOpenLink: () => void;
 	handleCopyAttachmentId: () => Promise<void>;
-	canEditAltText: boolean;
 	canCopyAttachmentId: boolean;
 	copyLinkLabel: string;
 	openLinkLabel: string;
@@ -326,11 +334,9 @@ export const mediaMenuItemIds = {
 	openLink: 'media-open-link',
 	favorite: 'media-favorite',
 	editAltText: 'media-edit-alt-text',
-	copyAttachmentId: 'media-copy-attachment-id',
 } as const;
 
-export interface MediaMenuState {
-	isFavorited: boolean;
+interface MediaMenuState {
 	copyLabel: string;
 	downloadLabel: string;
 }
@@ -436,7 +442,11 @@ export async function copyMediaToClipboard({
 		ToastCommands.createToast({type: 'success', children: i18n._(LINK_COPIED_TO_CLIPBOARD_DESCRIPTOR)});
 		return;
 	}
-	const baseProxyURL = proxyURL ? await AttachmentUrlRefresher.refresh(stripMediaProxyParams(proxyURL)) : null;
+	const baseProxyURL = proxyURL
+		? wrapDesktopLocalResourceURL(
+				await AttachmentUrlRefresher.refresh(unwrapDesktopLocalResourceURL(stripMediaProxyParams(proxyURL))),
+			)
+		: null;
 	const clipboardFileMediaType = getClipboardFileMediaType(type);
 	if (clipboardFileMediaType) {
 		const electronApi = getElectronAPI();
@@ -453,7 +463,7 @@ export async function copyMediaToClipboard({
 				timeout: 0,
 			});
 			const result = await electronApi.clipboardWriteFile({
-				url: baseProxyURL || freshSrc,
+				url: await apiAttachmentFileTokens.linkUrl(unwrapDesktopLocalResourceURL(baseProxyURL || freshSrc)),
 				suggestedName: defaultName,
 				mediaType: clipboardFileMediaType,
 			});
@@ -707,37 +717,17 @@ export function useMediaMenuData(props: MediaMenuDataProps, options: MediaMenuDa
 	const openLinkLabel = useMemo(() => getOpenLinkLabel(type, i18n), [type, i18n.locale]);
 	const handlers: MediaMenuHandlers = useMemo(
 		() => ({
-			handleAddToFavorites,
-			handleRemoveFromFavorites,
-			handleEditAltText,
-			handleCopyMedia,
-			handleDownloadMedia,
 			handleCopyLink,
 			handleOpenLink,
 			handleCopyAttachmentId,
-			canEditAltText,
 			canCopyAttachmentId: Boolean(attachmentId),
 			copyLinkLabel,
 			openLinkLabel,
 		}),
-		[
-			handleAddToFavorites,
-			handleRemoveFromFavorites,
-			handleEditAltText,
-			handleCopyMedia,
-			handleDownloadMedia,
-			handleCopyLink,
-			handleOpenLink,
-			handleCopyAttachmentId,
-			canEditAltText,
-			attachmentId,
-			copyLinkLabel,
-			openLinkLabel,
-		],
+		[handleCopyLink, handleOpenLink, handleCopyAttachmentId, attachmentId, copyLinkLabel, openLinkLabel],
 	);
 	const state: MediaMenuState = useMemo(
 		() => ({
-			isFavorited,
 			copyLabel,
 			downloadLabel,
 		}),
@@ -838,6 +828,7 @@ export function useMediaMenuData(props: MediaMenuDataProps, options: MediaMenuDa
 				],
 			});
 		}
+		if (isMediaDownloadHidden(message.channelId, type)) return result;
 		result.push({
 			items: [
 				{

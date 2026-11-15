@@ -32,15 +32,3 @@ export function AuthBottomLink({variant, to}: AuthBottomLinkProps) {
 		</div>
 	);
 }
-
-interface AuthBottomLinksProps {
-	children: React.ReactNode;
-}
-
-export function AuthBottomLinks({children}: AuthBottomLinksProps) {
-	return (
-		<div className={styles.bottomLinks} data-flx="auth.flow.auth-bottom-link.auth-bottom-links.bottom-links">
-			{children}
-		</div>
-	);
-}

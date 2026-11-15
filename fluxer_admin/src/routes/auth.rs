@@ -1,17 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
-    api::client::AdminApiClient,
+    api::client::{AdminApiClient, ApiError},
     config::AdminConfig,
+    middleware::csrf,
     oauth2,
-    session::{self, LEGACY_SESSION_COOKIE_NAME, SESSION_COOKIE_NAME, SESSION_MAX_AGE},
+    session::{
+        self, SESSION_COOKIE_NAME, SESSION_MAX_AGE, admin_cookie_path, append_cookies,
+        clear_cookie_values,
+    },
+    sso,
     state::AppState,
-    templates::pages::login,
+    templates::{layout_scripts::HISTORY_CACHE_CLEAR_SCRIPT, pages::login},
 };
 use axum::{
     Json, Router,
     extract::{Query, State},
-    http::{HeaderMap, HeaderValue, StatusCode, header},
+    http::{HeaderMap, StatusCode, header},
     response::{Html, IntoResponse, Redirect, Response},
     routing::{get, post},
 };
@@ -24,13 +29,19 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 type HmacSha256 = Hmac<Sha256>;
 
-const OAUTH_STATE_MAX_AGE_SECONDS: u64 = 300;
+const OAUTH_STATE_MAX_AGE_SECONDS: u64 = 1800;
 const OAUTH_STATE_NONCE_BYTES: usize = 16;
 const OAUTH_STATE_VERIFIER_HASH_BYTES: usize = 32;
 const OAUTH_STATE_PAYLOAD_BYTES: usize =
     std::mem::size_of::<u64>() + OAUTH_STATE_NONCE_BYTES + OAUTH_STATE_VERIFIER_HASH_BYTES;
 const OAUTH_FLOW_STORAGE_KEY: &str = "fluxer-admin-oauth-flow";
+const SSO_FLOW_STORAGE_KEY: &str = "fluxer-admin-sso-flow";
 const OAUTH_FINISH_HEADER: &str = "x-fluxer-admin-oauth";
+const OAUTH_STATE_PURPOSE: &str = "oauth";
+const SSO_STATE_PURPOSE: &str = "sso";
+const OAUTH_FAILED: &str = "oauth_failed";
+const SSO_FAILED: &str = "sso_failed";
+const SSO_UNAVAILABLE: &str = "sso_unavailable";
 
 #[derive(Deserialize)]
 struct LoginQuery {
@@ -41,6 +52,7 @@ struct LoginQuery {
 struct CallbackQuery {
     code: Option<String>,
     state: Option<String>,
+    iss: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -48,6 +60,7 @@ struct CallbackFinishBody {
     code: String,
     state: String,
     verifier: String,
+    iss: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -62,6 +75,11 @@ pub fn router() -> Router<AppState> {
         .route(
             "/oauth2_callback",
             get(oauth2_callback_page).post(oauth2_callback_finish),
+        )
+        .route("/sso/start", get(sso_start))
+        .route(
+            "/sso/callback",
+            get(sso_callback_page).post(sso_callback_finish),
         )
         .route("/logout", post(logout))
         .route("/logout", get(logout_get))
@@ -78,25 +96,23 @@ async fn login_page(
     {
         return Redirect::to(&format!("{}/dashboard", config.base_path)).into_response();
     }
-    let error_msg = match query.error.as_deref() {
-        Some("oauth_failed") => Some("Authentication failed. Please try again."),
-        Some("missing_admin_acl") => Some(
-            "Access denied: missing admin:authenticate permission. \
-             Ask an administrator to grant access.",
-        ),
-        Some(_) => Some("Login error. Please try again."),
-        None => None,
-    };
-    Html(login::login_page(config, error_msg).into_string()).into_response()
+    let error_msg = query.error.as_deref().map(login_error_message);
+    let branding = state.self_hosted_branding().await;
+    Html(login::login_page(config, branding.as_ref(), error_msg).into_string()).into_response()
 }
 
 async fn auth_start(State(state): State<AppState>) -> Response {
     let config = state.config();
+    if let Some(response) = sso_only_redirect(config) {
+        return response;
+    }
     let verifier = random_nonce();
-    let oauth_state = generate_oauth_state(&config.secret_key_base, &verifier);
+    let oauth_state = generate_oauth_state(&config.secret_key_base, OAUTH_STATE_PURPOSE, &verifier);
     let authorize_url = oauth2::authorize_url(config, &oauth_state);
     Html(oauth_start_page(
         config,
+        OAUTH_FLOW_STORAGE_KEY,
+        OAUTH_FAILED,
         &authorize_url,
         &oauth_state,
         &verifier,
@@ -104,15 +120,148 @@ async fn auth_start(State(state): State<AppState>) -> Response {
     .into_response()
 }
 
+async fn sso_start(State(state): State<AppState>) -> Response {
+    let config = state.config();
+    let base = &config.base_path;
+    let Some(sso_config) = config.sso.as_ref() else {
+        return Redirect::to(&format!("{base}/login")).into_response();
+    };
+    let Some(metadata) = state.sso_provider().await else {
+        return Redirect::to(&format!("{base}/login?error={SSO_UNAVAILABLE}")).into_response();
+    };
+    let verifier = random_nonce();
+    let sso_state = generate_oauth_state(&config.secret_key_base, SSO_STATE_PURPOSE, &verifier);
+    let authorize_url = match sso::authorize_url(
+        &metadata,
+        sso_config,
+        &sso_state,
+        &sso::nonce(&config.secret_key_base, &verifier),
+        &sso::code_challenge(&verifier),
+    ) {
+        Ok(url) => url,
+        Err(err) => {
+            tracing::error!(%err, "SSO authorization URL is invalid");
+            return Redirect::to(&format!("{base}/login?error={SSO_UNAVAILABLE}")).into_response();
+        }
+    };
+    Html(oauth_start_page(
+        config,
+        SSO_FLOW_STORAGE_KEY,
+        SSO_FAILED,
+        &authorize_url,
+        &sso_state,
+        &verifier,
+    ))
+    .into_response()
+}
+
+async fn sso_callback_page(
+    State(state): State<AppState>,
+    Query(query): Query<CallbackQuery>,
+) -> Response {
+    let config = state.config();
+    if config.sso.is_none() {
+        return Redirect::to(&format!("{}/login", config.base_path)).into_response();
+    }
+    Html(oauth_callback_page(
+        config,
+        SSO_FLOW_STORAGE_KEY,
+        SSO_FAILED,
+        query.code.as_deref(),
+        query.state.as_deref(),
+        query.iss.as_deref(),
+    ))
+    .into_response()
+}
+
+async fn sso_callback_finish(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(body): Json<CallbackFinishBody>,
+) -> Response {
+    let config = state.config();
+    let base = &config.base_path;
+    let failed = |status: StatusCode, code: &str| {
+        oauth_finish_response(status, &format!("{base}/login?error={code}"), &[])
+    };
+
+    let Some(sso_config) = config.sso.as_ref() else {
+        return failed(StatusCode::NOT_FOUND, SSO_FAILED);
+    };
+    if !has_finish_header(&headers) {
+        return failed(StatusCode::FORBIDDEN, SSO_FAILED);
+    }
+    if !verify_oauth_state(
+        &config.secret_key_base,
+        SSO_STATE_PURPOSE,
+        &body.state,
+        &body.verifier,
+    ) {
+        tracing::error!("SSO state token is invalid, expired, or malformed");
+        return failed(StatusCode::BAD_REQUEST, SSO_FAILED);
+    }
+    if let Some(iss) = body.iss.as_deref().filter(|iss| !iss.is_empty())
+        && iss.trim_end_matches('/') != sso_config.issuer.trim_end_matches('/')
+    {
+        tracing::error!("SSO callback came from a different issuer");
+        return failed(StatusCode::BAD_REQUEST, SSO_FAILED);
+    }
+    let Some(metadata) = state.sso_provider().await else {
+        return failed(StatusCode::BAD_GATEWAY, SSO_UNAVAILABLE);
+    };
+    let id_token = match sso::exchange_code(
+        state.sso_http_client(),
+        &metadata,
+        sso_config,
+        &body.code,
+        &body.verifier,
+    )
+    .await
+    {
+        Ok(id_token) => id_token,
+        Err(err) => {
+            tracing::error!(%err, "SSO token exchange failed");
+            return failed(StatusCode::BAD_REQUEST, SSO_FAILED);
+        }
+    };
+    let nonce = sso::nonce(&config.secret_key_base, &body.verifier);
+    let signed_in = match sso::sign_in(state.http_client(), config, &id_token, &nonce).await {
+        Ok(signed_in) => signed_in,
+        Err(err) => {
+            let code = sso_sign_in_error_code(&err);
+            if code == "missing_admin_acl" {
+                tracing::warn!(%err, "SSO sign-in refused by the API");
+                return failed(StatusCode::FORBIDDEN, code);
+            }
+            tracing::error!(%err, "SSO sign-in through the API failed");
+            return failed(StatusCode::BAD_GATEWAY, code);
+        }
+    };
+    finish_admin_sign_in(&state, &signed_in.user_id, &signed_in.access_token).await
+}
+
+fn has_finish_header(headers: &HeaderMap) -> bool {
+    headers
+        .get(OAUTH_FINISH_HEADER)
+        .and_then(|value| value.to_str().ok())
+        == Some("1")
+}
+
 async fn oauth2_callback_page(
     State(state): State<AppState>,
     Query(query): Query<CallbackQuery>,
 ) -> Response {
     let config = state.config();
+    if let Some(response) = sso_only_redirect(config) {
+        return response;
+    }
     Html(oauth_callback_page(
         config,
+        OAUTH_FLOW_STORAGE_KEY,
+        OAUTH_FAILED,
         query.code.as_deref(),
         query.state.as_deref(),
+        None,
     ))
     .into_response()
 }
@@ -125,11 +274,15 @@ async fn oauth2_callback_finish(
     let config = state.config();
     let base = &config.base_path;
 
-    if headers
-        .get(OAUTH_FINISH_HEADER)
-        .and_then(|value| value.to_str().ok())
-        != Some("1")
-    {
+    if config.sso.as_ref().is_some_and(|sso| sso.only) {
+        return oauth_finish_response(
+            StatusCode::FORBIDDEN,
+            &format!("{base}/login?error=sso_only"),
+            &[],
+        );
+    }
+
+    if !has_finish_header(&headers) {
         return oauth_finish_response(
             StatusCode::FORBIDDEN,
             &format!("{base}/login?error=oauth_failed"),
@@ -137,7 +290,12 @@ async fn oauth2_callback_finish(
         );
     }
 
-    if !verify_oauth_state(&config.secret_key_base, &body.state, &body.verifier) {
+    if !verify_oauth_state(
+        &config.secret_key_base,
+        OAUTH_STATE_PURPOSE,
+        &body.state,
+        &body.verifier,
+    ) {
         tracing::error!("OAuth2 state token is invalid, expired, or malformed");
         return oauth_finish_response(
             StatusCode::BAD_REQUEST,
@@ -171,22 +329,32 @@ async fn oauth2_callback_finish(
         }
     };
 
+    finish_admin_sign_in(&state, &user.id, &token.access_token).await
+}
+
+async fn finish_admin_sign_in(state: &AppState, user_id: &str, access_token: &str) -> Response {
+    let config = state.config();
+    let base = &config.base_path;
     let temp_session = session::Session {
-        user_id: user.id.clone(),
-        access_token: token.access_token.clone(),
+        user_id: user_id.to_owned(),
+        access_token: access_token.to_owned(),
         created_at: 0,
     };
     let api_client = AdminApiClient::new(state.http_client(), config, &temp_session);
-    if api_client.get_current_admin().await.is_err() {
-        return oauth_finish_response(
-            StatusCode::FORBIDDEN,
-            &format!("{base}/login?error=missing_admin_acl"),
-            &[],
-        );
+    if let Err(err) = api_client.get_current_admin().await {
+        let code = admin_check_error_code(&err);
+        let status = if code == "missing_admin_acl" {
+            tracing::warn!(%err, %user_id, "Admin access check denied");
+            StatusCode::FORBIDDEN
+        } else {
+            tracing::error!(%err, %user_id, "Admin access check failed");
+            StatusCode::BAD_GATEWAY
+        };
+        return oauth_finish_response(status, &format!("{base}/login?error={code}"), &[]);
     }
 
     let session_cookie_value =
-        session::create_session(&user.id, &token.access_token, &config.secret_key_base);
+        session::create_session(user_id, access_token, &config.secret_key_base);
     let secure = if config.secure_cookies() {
         "; Secure"
     } else {
@@ -201,13 +369,16 @@ async fn oauth2_callback_finish(
         secure
     );
 
-    let mut cookies = clear_session_cookie_values(config);
+    let mut cookies = clear_cookie_values(SESSION_COOKIE_NAME, config);
     cookies.push(session_cookie);
     oauth_finish_response(StatusCode::OK, &format!("{base}/dashboard"), &cookies)
 }
 
 async fn logout(State(state): State<AppState>, headers: axum::http::HeaderMap) -> Response {
     let config = state.config();
+    if !csrf::is_same_site_request(&headers, config.admin_origin().as_deref()) {
+        return StatusCode::FORBIDDEN.into_response();
+    }
     if let Some(session_value) = extract_cookie(&headers, SESSION_COOKIE_NAME)
         && let Some(session) = session::parse_session(&session_value, &config.secret_key_base)
     {
@@ -215,7 +386,7 @@ async fn logout(State(state): State<AppState>, headers: axum::http::HeaderMap) -
     }
     redirect_with_cookies(
         &format!("{}/login", config.base_path),
-        &clear_session_cookie_values(config),
+        &clear_cookie_values(SESSION_COOKIE_NAME, config),
     )
 }
 
@@ -246,13 +417,15 @@ fn extract_cookie(headers: &axum::http::HeaderMap, name: &str) -> Option<String>
 
 fn oauth_start_page(
     config: &AdminConfig,
+    storage_key: &str,
+    failure_code: &str,
     authorize_url: &str,
     state: &str,
     verifier: &str,
 ) -> String {
-    let storage_key = json_string(OAUTH_FLOW_STORAGE_KEY);
+    let storage_key = json_string(storage_key);
     let authorize_url = json_string(authorize_url);
-    let login_url = json_string(&format!("{}/login?error=oauth_failed", config.base_path));
+    let login_url = json_string(&format!("{}/login?error={failure_code}", config.base_path));
     let state = json_string(state);
     let verifier = json_string(verifier);
     format!(
@@ -261,11 +434,12 @@ fn oauth_start_page(
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Fluxer Admin</title>
+<title>Signing in</title>
 </head>
 <body>
 <p>Starting authentication...</p>
 <script>
+{HISTORY_CACHE_CLEAR_SCRIPT}
 (function () {{
 	var flow = {{state: {state}, verifier: {verifier}, createdAt: Date.now()}};
 	try {{
@@ -281,18 +455,26 @@ fn oauth_start_page(
     )
 }
 
-fn oauth_callback_page(config: &AdminConfig, code: Option<&str>, state: Option<&str>) -> String {
-    let storage_key = json_string(OAUTH_FLOW_STORAGE_KEY);
-    let login_url = json_string(&format!("{}/login?error=oauth_failed", config.base_path));
+fn oauth_callback_page(
+    config: &AdminConfig,
+    storage_key: &str,
+    failure_code: &str,
+    code: Option<&str>,
+    state: Option<&str>,
+    iss: Option<&str>,
+) -> String {
+    let storage_key = json_string(storage_key);
+    let login_url = json_string(&format!("{}/login?error={failure_code}", config.base_path));
     let code = json_string(code.unwrap_or_default());
     let state = json_string(state.unwrap_or_default());
+    let iss = iss.map_or_else(|| "null".to_owned(), json_string);
     format!(
         r#"<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Fluxer Admin</title>
+<title>Signing in</title>
 </head>
 <body>
 <p>Completing authentication...</p>
@@ -302,6 +484,7 @@ fn oauth_callback_page(config: &AdminConfig, code: Option<&str>, state: Option<&
 	var loginUrl = {login_url};
 	var code = {code};
 	var state = {state};
+	var iss = {iss};
 	function fail(clearFlow) {{
 		if (clearFlow) {{
 			try {{ window.sessionStorage.removeItem(storageKey); }} catch (error) {{}}
@@ -330,7 +513,7 @@ fn oauth_callback_page(config: &AdminConfig, code: Option<&str>, state: Option<&
 			'Content-Type': 'application/json',
 			'X-Fluxer-Admin-OAuth': '1'
 		}},
-		body: JSON.stringify({{code: code, state: state, verifier: flow.verifier}})
+		body: JSON.stringify({{code: code, state: state, verifier: flow.verifier, iss: iss}})
 	}})
 		.then(function (response) {{
 			return response.json().catch(function () {{ return null; }});
@@ -358,45 +541,6 @@ pub(crate) fn json_string(value: &str) -> String {
         .replace('\u{2029}', "\\u2029")
 }
 
-fn admin_cookie_path(config: &AdminConfig) -> &str {
-    if config.base_path.is_empty() {
-        "/"
-    } else {
-        config.base_path.as_str()
-    }
-}
-
-fn clear_cookie_value(name: &str, path: &str) -> String {
-    format!("{name}=; Path={path}; HttpOnly; SameSite=Lax; Max-Age=0")
-}
-
-fn clear_cookie_values(name: &str, config: &AdminConfig) -> Vec<String> {
-    let admin_path = admin_cookie_path(config);
-    let mut cookies = vec![clear_cookie_value(name, admin_path)];
-    if admin_path != "/" {
-        cookies.push(clear_cookie_value(name, "/"));
-    }
-    cookies
-}
-
-fn clear_session_cookie_values(config: &AdminConfig) -> Vec<String> {
-    let mut cookies = clear_cookie_values(SESSION_COOKIE_NAME, config);
-    cookies.extend(clear_cookie_values(LEGACY_SESSION_COOKIE_NAME, config));
-    cookies
-}
-
-fn append_cookie(response: &mut Response, cookie: &str) {
-    if let Ok(value) = HeaderValue::from_str(cookie) {
-        response.headers_mut().append(header::SET_COOKIE, value);
-    }
-}
-
-fn append_cookies(response: &mut Response, cookies: &[String]) {
-    for cookie in cookies {
-        append_cookie(response, cookie);
-    }
-}
-
 fn redirect_with_cookies(url: &str, cookies: &[String]) -> Response {
     let mut response = Redirect::to(url).into_response();
     append_cookies(&mut response, cookies);
@@ -415,28 +559,35 @@ fn oauth_finish_response(status: StatusCode, redirect_to: &str, cookies: &[Strin
     response
 }
 
-fn generate_oauth_state(secret_key: &str, verifier: &str) -> String {
-    sign_oauth_state(secret_key, now_seconds(), random_state_nonce(), verifier)
+fn generate_oauth_state(secret_key: &str, purpose: &str, verifier: &str) -> String {
+    sign_oauth_state(
+        secret_key,
+        purpose,
+        now_seconds(),
+        random_state_nonce(),
+        verifier,
+    )
 }
 
 fn sign_oauth_state(
     secret_key: &str,
+    purpose: &str,
     issued_at: u64,
     nonce: [u8; OAUTH_STATE_NONCE_BYTES],
     verifier: &str,
 ) -> String {
     let encoded_payload = encode_oauth_state_payload(issued_at, nonce, verifier);
-    let signature = sign_oauth_state_payload(secret_key, &encoded_payload);
+    let signature = sign_oauth_state_payload(secret_key, purpose, &encoded_payload);
     format!("{encoded_payload}.{signature}")
 }
 
-fn verify_oauth_state(secret_key: &str, state: &str, verifier: &str) -> bool {
+fn verify_oauth_state(secret_key: &str, purpose: &str, state: &str, verifier: &str) -> bool {
     let Some((payload, signature)) = state.rsplit_once('.') else {
         return false;
     };
     if !constant_time_eq(
         signature.as_bytes(),
-        sign_oauth_state_payload(secret_key, payload).as_bytes(),
+        sign_oauth_state_payload(secret_key, purpose, payload).as_bytes(),
     ) {
         return false;
     }
@@ -483,10 +634,10 @@ fn verifier_hash_bytes(verifier: &str) -> [u8; OAUTH_STATE_VERIFIER_HASH_BYTES] 
     bytes
 }
 
-fn sign_oauth_state_payload(secret_key: &str, payload: &str) -> String {
+fn sign_oauth_state_payload(secret_key: &str, purpose: &str, payload: &str) -> String {
     let mut mac =
         HmacSha256::new_from_slice(secret_key.as_bytes()).expect("HMAC can take key of any size");
-    mac.update(b"fluxer-admin-oauth-state:");
+    mac.update(format!("fluxer-admin-{purpose}-state:").as_bytes());
     mac.update(payload.as_bytes());
     URL_SAFE_NO_PAD.encode(mac.finalize().into_bytes())
 }
@@ -519,67 +670,106 @@ fn now_seconds() -> u64 {
         .as_secs()
 }
 
+fn admin_check_error_code(err: &ApiError) -> &'static str {
+    match err {
+        ApiError::Http {
+            status: 401 | 403, ..
+        } => "missing_admin_acl",
+        ApiError::Http {
+            status: 404 | 405, ..
+        }
+        | ApiError::Parse(_) => "admin_api_mismatch",
+        ApiError::Network(_) => "admin_api_unreachable",
+        ApiError::Http { .. } => "admin_check_failed",
+    }
+}
+
+fn sso_sign_in_error_code(err: &ApiError) -> &'static str {
+    match err {
+        ApiError::Http {
+            status: 403,
+            message,
+            ..
+        } if message.contains("FEATURE_TEMPORARILY_DISABLED") => SSO_FAILED,
+        ApiError::Http { status: 403, .. } => "missing_admin_acl",
+        ApiError::Http {
+            status: 400 | 401, ..
+        } => SSO_FAILED,
+        ApiError::Http { status: 503, .. } => SSO_UNAVAILABLE,
+        ApiError::Http {
+            status: 404 | 405, ..
+        }
+        | ApiError::Parse(_) => "admin_api_mismatch",
+        ApiError::Network(_) => "admin_api_unreachable",
+        ApiError::Http { .. } => "admin_check_failed",
+    }
+}
+
+fn sso_only_redirect(config: &crate::config::AdminConfig) -> Option<Response> {
+    config.sso.as_ref().filter(|sso| sso.only).map(|_| {
+        Redirect::to(&format!("{}/login?error=sso_only", config.base_path)).into_response()
+    })
+}
+
+fn login_error_message(code: &str) -> &'static str {
+    match code {
+        "sso_only" => "Signing in with your Fluxer account is turned off here. Use single sign-on.",
+        "oauth_failed" => "Authentication failed. Please try again.",
+        "sso_failed" => "Single sign-on failed. Try again.",
+        "sso_unavailable" => "Could not reach the sign-on provider. Try again in a moment.",
+        "missing_admin_acl" => {
+            "Access denied: missing admin:authenticate permission. \
+             Ask an administrator to grant access."
+        }
+        "admin_api_mismatch" => {
+            "Could not verify admin access because the API response did not match this admin panel. \
+             Make sure the admin and API services run the same release."
+        }
+        "admin_api_unreachable" => {
+            "Could not connect to the API to verify admin access. \
+             Check that the admin service can connect to the API and try again."
+        }
+        "admin_check_failed" => {
+            "Could not verify admin access. \
+             Try again in a moment and check the admin service logs if it keeps failing."
+        }
+        _ => "Login error. Please try again.",
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    const SECRET: &str = "test-admin-state-secret";
-    const VERIFIER: &str = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
-
     #[test]
-    fn generated_oauth_state_verifies() {
-        let state = generate_oauth_state(SECRET, VERIFIER);
-        assert!(verify_oauth_state(SECRET, &state, VERIFIER));
-    }
-
-    #[test]
-    fn generated_oauth_state_fits_api_state_limit() {
-        let state = generate_oauth_state(SECRET, VERIFIER);
-        assert!(state.len() <= 256, "state length was {}", state.len());
-    }
-
-    #[test]
-    fn oauth_state_rejects_tampering() {
-        let mut state = generate_oauth_state(SECRET, VERIFIER);
-        let last = state.pop().unwrap();
-        state.push(if last == 'A' { 'B' } else { 'A' });
-        assert!(!verify_oauth_state(SECRET, &state, VERIFIER));
-    }
-
-    #[test]
-    fn oauth_state_rejects_wrong_secret() {
-        let state = generate_oauth_state(SECRET, VERIFIER);
-        assert!(!verify_oauth_state("different-secret", &state, VERIFIER));
-    }
-
-    #[test]
-    fn oauth_state_rejects_wrong_verifier() {
-        let state = generate_oauth_state(SECRET, VERIFIER);
-        assert!(!verify_oauth_state(
-            SECRET,
-            &state,
-            "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+    fn state_signed_for_one_flow_fails_for_the_other() {
+        let secret = "test-secret";
+        let verifier = random_nonce();
+        let oauth_state = generate_oauth_state(secret, OAUTH_STATE_PURPOSE, &verifier);
+        let sso_state = generate_oauth_state(secret, SSO_STATE_PURPOSE, &verifier);
+        assert!(verify_oauth_state(
+            secret,
+            OAUTH_STATE_PURPOSE,
+            &oauth_state,
+            &verifier
         ));
-    }
-
-    #[test]
-    fn oauth_state_rejects_expired_payloads() {
-        let issued_at = now_seconds().saturating_sub(OAUTH_STATE_MAX_AGE_SECONDS + 1);
-        let state = sign_oauth_state(SECRET, issued_at, random_state_nonce(), VERIFIER);
-        assert!(!verify_oauth_state(SECRET, &state, VERIFIER));
-    }
-
-    #[test]
-    fn oauth_state_rejects_future_payloads() {
-        let issued_at = now_seconds() + 1;
-        let state = sign_oauth_state(SECRET, issued_at, random_state_nonce(), VERIFIER);
-        assert!(!verify_oauth_state(SECRET, &state, VERIFIER));
-    }
-
-    #[test]
-    fn json_string_is_safe_inside_script_tags() {
-        let encoded = json_string("</script><script>alert(1)</script>");
-        assert!(!encoded.contains("</script>"));
-        assert!(encoded.contains("\\u003c/script\\u003e"));
+        assert!(verify_oauth_state(
+            secret,
+            SSO_STATE_PURPOSE,
+            &sso_state,
+            &verifier
+        ));
+        assert!(!verify_oauth_state(
+            secret,
+            SSO_STATE_PURPOSE,
+            &oauth_state,
+            &verifier
+        ));
+        assert!(!verify_oauth_state(
+            secret,
+            OAUTH_STATE_PURPOSE,
+            &sso_state,
+            &verifier
+        ));
     }
 }

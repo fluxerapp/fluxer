@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import AppStorage from '@app/features/platform/state/PersistentStorage';
+import AppStorage, {subscribeAppStorageScope} from '@app/features/platform/state/PersistentStorage';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 import {MemberListStateSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
-import {makeAutoObservable, reaction} from 'mobx';
+import {makeAutoObservable} from 'mobx';
 
 const logger = new Logger('MemberList');
 const DEFAULT_HIDDEN_CHANNEL_MEMBER_LIST_STORAGE_KEY = 'member_list_default_hidden_channel_overrides';
@@ -13,10 +15,6 @@ const getInitialWidth = (): number => window.innerWidth;
 interface MemberListVisibilityOptions {
 	channelId?: string | null;
 	defaultHiddenForChannel?: boolean;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value != null && !Array.isArray(value);
 }
 
 function parseBooleanMap(value: unknown): Record<string, boolean> {
@@ -44,7 +42,7 @@ class MemberList {
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
 		this.defaultHiddenChannelMembersOpenByChannelId = getInitialDefaultHiddenChannelState();
-		void this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {
@@ -105,13 +103,13 @@ class MemberList {
 		logger.debug(`Toggled default-hidden channel members list: channel=${channelId}, open=${isOpen}`);
 	}
 
-	subscribe(callback: () => void): () => void {
-		return reaction(
-			() => [this.isMembersOpen, this.defaultHiddenChannelMembersOpenByChannelId],
-			() => callback(),
-			{fireImmediately: true},
-		);
+	reloadDefaultHiddenChannelState(): void {
+		this.defaultHiddenChannelMembersOpenByChannelId = getInitialDefaultHiddenChannelState();
 	}
 }
 
-export default new MemberList();
+const memberList = new MemberList();
+
+subscribeAppStorageScope(memberList.reloadDefaultHiddenChannelState);
+
+export default memberList;

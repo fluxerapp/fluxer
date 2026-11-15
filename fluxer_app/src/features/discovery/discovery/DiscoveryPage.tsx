@@ -25,27 +25,20 @@ import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {useVirtualizer} from '@tanstack/react-virtual';
 import {observer} from 'mobx-react-lite';
-import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
+import {type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
 
 const DISCOVERY_RESULTS_DESCRIPTOR = msg({
-	message: 'Discovery results',
-	comment: 'Accessible label for the Discovery community results region.',
+	message: 'Explore results',
+	comment: 'Accessible label for the Explore community results region.',
 });
 const DISCOVERY_RESULTS_COUNT_DESCRIPTOR = msg({
 	message: '{count, plural, one {# community found} other {# communities found}}',
-	comment: 'Screen-reader status text in Discovery. {count} is the total number of matching communities.',
+	comment: 'Screen-reader status text in Explore. {count} is the total number of matching communities.',
 });
 const LOADING_COMMUNITIES_DESCRIPTOR = msg({
 	message: 'Loading communities',
-	comment: 'Screen-reader status text shown while Discovery communities are loading.',
+	comment: 'Screen-reader status text shown while communities in Explore are loading.',
 });
-
-function resolveDiscoveryResultsSurfaceKey(searchActive: boolean): string {
-	if (searchActive) {
-		return 'search';
-	}
-	return 'browse';
-}
 
 const PAGE_SIZE = 36;
 const OVERSCAN_ROWS = 3;
@@ -194,7 +187,7 @@ export const DiscoveryPage = observer(function DiscoveryPage() {
 		columns > 0
 			? `repeat(${columns}, minmax(0, var(--discovery-card-max-width)))`
 			: `repeat(auto-fill, minmax(${SKELETON_DISCOVERY_MIN_CARD_WIDTH_PX}px, var(--discovery-card-max-width)))`;
-	const resultsTransitionKey = resolveDiscoveryResultsSurfaceKey(searchActive);
+	const resultsTransitionKey = searchActive ? 'search' : 'browse';
 	const categoriesSettled = useCategoriesSettledLatch();
 	const resultsSettled = useFirstResultsSettledLatch();
 	const showPageSkeleton = !categoriesSettled || !resultsSettled;
@@ -205,102 +198,121 @@ export const DiscoveryPage = observer(function DiscoveryPage() {
 	if (showPageSkeleton) {
 		return <DiscoveryPageSkeleton data-flx="discovery.discovery.discovery-page.discovery-page-skeleton" />;
 	}
+	const containerClassName = styles.container;
+	const navbar = (
+		<DiscoveryNavbar
+			resultsRegionId={DISCOVERY_RESULTS_REGION_ID}
+			onCategorySelect={handleCategorySelect}
+			onSearchSubmit={handleSearchSubmit}
+			onSearchClear={handleSearchClear}
+			onBack={searchActive ? handleSearchClear : null}
+			data-flx="discovery.discovery.discovery-page.discovery-navbar"
+		/>
+	);
+	const scrollBodyClassName = styles.scrollBody;
+	const contentClassName = styles.content;
+	const resultsRegionLabel = i18n._(DISCOVERY_RESULTS_DESCRIPTOR);
+	const resultsBusy = Discovery.loading;
+	const status = (
+		<div
+			className={styles.srOnly}
+			role="status"
+			aria-live="polite"
+			aria-atomic="true"
+			data-flx="discovery.discovery.discovery-page.sr-only"
+		>
+			{resultsStatus}
+		</div>
+	);
+	const layoutClassName = searchActive ? styles.searchLayout : styles.browseLayout;
+	const resultsColumnClassName = styles.resultsColumn;
+	const resultsMotionKind = DiscoveryMotionKind.RESULTS;
+	const resultsSurfaceClassName = styles.resultsSurface;
+	let resultsContent: ReactNode;
+	if (Discovery.loading && guilds.length === 0) {
+		resultsContent = (
+			<DiscoveryResultsSkeleton
+				columnCount={columns}
+				data-flx="discovery.discovery.discovery-page.discovery-results-skeleton"
+			/>
+		);
+	} else if (guilds.length > 0 && columns > 0) {
+		resultsContent = (
+			<div
+				className={styles.virtualGrid}
+				role="list"
+				aria-label={i18n._(DISCOVERY_RESULTS_DESCRIPTOR)}
+				style={{height: virtualizer.getTotalSize()}}
+				data-flx="discovery.discovery.discovery-page.virtual-grid"
+			>
+				{virtualRows.map((virtualRow) => {
+					const startIndex = virtualRow.index * columns;
+					const rowGuilds = guilds.slice(startIndex, startIndex + columns);
+					return (
+						<div
+							key={virtualRow.key}
+							ref={virtualizer.measureElement}
+							data-index={virtualRow.index}
+							className={styles.gridRow}
+							role="presentation"
+							style={{
+								transform: `translateY(${virtualRow.start - gridOffsetTop}px)`,
+								gridTemplateColumns: gridColumnsStyle,
+							}}
+							data-flx="discovery.discovery.discovery-page.grid-row"
+						>
+							{rowGuilds.map((guild, columnIndex) => (
+								<DiscoveryGuildCard
+									key={guild.id}
+									guild={guild}
+									positionInSet={startIndex + columnIndex + 1}
+									setSize={Discovery.total}
+									data-flx="discovery.discovery.discovery-page.discovery-guild-card"
+								/>
+							))}
+						</div>
+					);
+				})}
+			</div>
+		);
+	} else if (guilds.length === 0 && !Discovery.loading) {
+		resultsContent = (
+			<DiscoveryEmptyState onRetry={handleRetry} data-flx="discovery.discovery.discovery-page.discovery-empty-state" />
+		);
+	} else {
+		resultsContent = null;
+	}
 	return (
 		<div
-			className={styles.container}
+			className={containerClassName}
 			style={DISCOVERY_GRID_METRICS_STYLE}
 			data-flx="discovery.discovery.discovery-page.container"
 		>
-			<DiscoveryNavbar
-				resultsRegionId={DISCOVERY_RESULTS_REGION_ID}
-				onCategorySelect={handleCategorySelect}
-				onSearchSubmit={handleSearchSubmit}
-				onSearchClear={handleSearchClear}
-				onBack={searchActive ? handleSearchClear : null}
-				data-flx="discovery.discovery.discovery-page.discovery-navbar"
-			/>
+			{navbar}
 			<Scroller ref={scrollerRef} data-flx="discovery.discovery.discovery-page.scroller">
-				<div className={styles.scrollBody} data-flx="discovery.discovery.discovery-page.scroll-body">
+				<div className={scrollBodyClassName} data-flx="discovery.discovery.discovery-page.scroll-body">
 					<div
 						id={DISCOVERY_RESULTS_REGION_ID}
-						className={styles.content}
+						className={contentClassName}
 						role="region"
-						aria-label={i18n._(DISCOVERY_RESULTS_DESCRIPTOR)}
-						aria-busy={Discovery.loading}
+						aria-label={resultsRegionLabel}
+						aria-busy={resultsBusy}
 						data-flx="discovery.discovery.discovery-page.content"
 					>
-						<div
-							className={styles.srOnly}
-							role="status"
-							aria-live="polite"
-							aria-atomic="true"
-							data-flx="discovery.discovery.discovery-page.sr-only"
-						>
-							{resultsStatus}
-						</div>
-						<div
-							className={searchActive ? styles.searchLayout : styles.browseLayout}
-							data-flx="discovery.discovery.discovery-page.search-layout"
-						>
+						{status}
+						<div className={layoutClassName} data-flx="discovery.discovery.discovery-page.search-layout">
 							<div
 								ref={attachResultsColumn}
-								className={styles.resultsColumn}
+								className={resultsColumnClassName}
 								data-flx="discovery.discovery.discovery-page.results-column"
 							>
 								<DiscoveryTransition
 									transitionKey={resultsTransitionKey}
-									motionKind={DiscoveryMotionKind.RESULTS}
-									className={styles.resultsSurface}
+									motionKind={resultsMotionKind}
+									className={resultsSurfaceClassName}
 									data-flx="discovery.discovery.discovery-page.results-surface"
 								>
-									{Discovery.loading && guilds.length === 0 ? (
-										<DiscoveryResultsSkeleton
-											columnCount={columns}
-											data-flx="discovery.discovery.discovery-page.discovery-results-skeleton"
-										/>
-									) : guilds.length > 0 && columns > 0 ? (
-										<div
-											className={styles.virtualGrid}
-											role="list"
-											aria-label={i18n._(DISCOVERY_RESULTS_DESCRIPTOR)}
-											style={{height: virtualizer.getTotalSize()}}
-											data-flx="discovery.discovery.discovery-page.virtual-grid"
-										>
-											{virtualRows.map((virtualRow) => {
-												const startIndex = virtualRow.index * columns;
-												const rowGuilds = guilds.slice(startIndex, startIndex + columns);
-												return (
-													<div
-														key={virtualRow.key}
-														ref={virtualizer.measureElement}
-														data-index={virtualRow.index}
-														className={styles.gridRow}
-														role="presentation"
-														style={{
-															transform: `translateY(${virtualRow.start - gridOffsetTop}px)`,
-															gridTemplateColumns: gridColumnsStyle,
-														}}
-														data-flx="discovery.discovery.discovery-page.grid-row"
-													>
-														{rowGuilds.map((guild, columnIndex) => (
-															<DiscoveryGuildCard
-																key={guild.id}
-																guild={guild}
-																positionInSet={startIndex + columnIndex + 1}
-																setSize={Discovery.total}
-																data-flx="discovery.discovery.discovery-page.discovery-guild-card"
-															/>
-														))}
-													</div>
-												);
-											})}
-										</div>
-									) : guilds.length === 0 && !Discovery.loading ? (
-										<DiscoveryEmptyState
-											onRetry={handleRetry}
-											data-flx="discovery.discovery.discovery-page.discovery-empty-state"
-										/>
-									) : null}
+									{resultsContent}
 								</DiscoveryTransition>
 								{guilds.length > 0 && hasMore && Discovery.loading && (
 									<div className={styles.loadingMore} data-flx="discovery.discovery.discovery-page.loading-more">

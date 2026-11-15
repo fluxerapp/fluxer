@@ -15,7 +15,7 @@ interface InlineEditProps {
 	suffix?: string;
 	placeholder?: string;
 	maxLength?: number;
-	validate?: (value: string) => boolean;
+	getValidationError?: (value: string) => string | null;
 	className?: string;
 	inputClassName?: string;
 	buttonClassName?: string;
@@ -41,7 +41,7 @@ export const InlineEdit: React.FC<InlineEditProps> = observer((props) => {
 		prefix = '',
 		suffix = '',
 		maxLength,
-		validate,
+		getValidationError,
 		allowEmpty = false,
 	} = props;
 	const [mode, setMode] = useState<Mode>('idle');
@@ -62,9 +62,9 @@ export const InlineEdit: React.FC<InlineEditProps> = observer((props) => {
 	const canSave = (raw: string): boolean => {
 		const trimmed = raw.trim();
 		if (trimmed === value.trim()) return true;
-		if (!trimmed.length) return !!allowEmpty;
-		if (validate && !validate(trimmed)) return false;
-		return true;
+		if (!trimmed.length && allowEmpty) return true;
+		if (getValidationError?.(trimmed) != null) return false;
+		return trimmed.length > 0;
 	};
 	const startEdit = () => {
 		setError(null);
@@ -96,7 +96,7 @@ export const InlineEdit: React.FC<InlineEditProps> = observer((props) => {
 	const doSave = async () => {
 		const next = draft.trim();
 		if (!canSave(next)) {
-			setError('VALIDATION_FAILED');
+			setError(getValidationError?.(next) ?? null);
 			return;
 		}
 		if (next === value.trim()) {
@@ -107,11 +107,8 @@ export const InlineEdit: React.FC<InlineEditProps> = observer((props) => {
 		setError(null);
 		try {
 			await Promise.resolve(onSave(next));
-			setMode('idle');
-		} catch (e: unknown) {
-			setError(e instanceof Error ? e.message : 'SAVE_FAILED');
-			setMode('editing');
-		}
+		} catch {}
+		setMode('idle');
 	};
 	const handleEditableInput: React.InputEventHandler<HTMLDivElement> = (e) => {
 		const el = e.currentTarget;
@@ -196,11 +193,6 @@ export const InlineEdit: React.FC<InlineEditProps> = observer((props) => {
 						</span>
 					</button>
 				</FocusRing>
-				{error && (
-					<span className={styles.error} data-flx="ui.inline-edit.error">
-						{error}
-					</span>
-				)}
 			</div>
 		);
 	}
@@ -215,7 +207,7 @@ export const InlineEdit: React.FC<InlineEditProps> = observer((props) => {
 				<div
 					ref={editableRef}
 					className={clsx(styles.inlineTextBase, styles.text, styles.editable, inputClassName)}
-					contentEditable
+					contentEditable="plaintext-only"
 					suppressContentEditableWarning
 					onInput={handleEditableInput}
 					onKeyDown={handleEditableKeyDown}

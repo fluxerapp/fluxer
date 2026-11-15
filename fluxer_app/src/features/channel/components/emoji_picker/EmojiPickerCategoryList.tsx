@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/channel/components/EmojiPicker.module.css';
-import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
+
 import UnicodeEmojis from '@app/features/expressions/utils/UnicodeEmojis';
 import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
 import Guilds from '@app/features/guild/state/Guilds';
@@ -19,8 +19,8 @@ const FREQUENTLY_USED_DESCRIPTOR = msg({
 });
 
 interface EmojiPickerCategoryListProps {
-	customEmojisByGuildId: Map<string, Array<FlatEmoji>>;
-	unicodeEmojisByCategory: Map<string, Array<FlatEmoji>>;
+	customEmojisByGuildId: ReadonlyMap<string, unknown>;
+	unicodeEmojisByCategory: ReadonlyMap<string, unknown>;
 	handleCategoryClick: (category: string) => void;
 	showFrequentlyUsedButton: boolean;
 	horizontal?: boolean;

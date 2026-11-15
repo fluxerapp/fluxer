@@ -105,12 +105,7 @@ async fn application_detail(
     let config = state.config();
     let is_detail_fragment = htmx::targets(request.headers(), "main-content");
     let csrf_token = csrf::get_csrf_token(&request);
-    let admin_acls = auth
-        .0
-        .admin_user
-        .as_ref()
-        .map(|user| user.acls.as_slice())
-        .unwrap_or(&[]);
+    let admin_acls = auth.0.acls();
     let can_transfer_ownership =
         acl::has_permission(admin_acls, acl::APPLICATION_TRANSFER_OWNERSHIP);
     let can_list_by_owner = acl::has_permission(admin_acls, acl::APPLICATION_LIST_BY_OWNER);
@@ -148,10 +143,10 @@ async fn application_detail_post(
     let form = match MultiValueForm::from_request(request).await {
         Some(form) => form,
         None => {
-            return flash::redirect_with_flash(
+            return flash::redirect_error(
+                config,
                 &format!("{base}/applications/{application_id}"),
-                FlashData::error("Invalid form data"),
-                config.secure_cookies(),
+                "Invalid form data",
             );
         }
     };

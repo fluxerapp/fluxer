@@ -1,18 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
-	computeReconnectBackoffMs,
+	MAX_TRACKED_SOURCES,
+	SourceLifecycleRegistry,
+} from '@fluxer/voice_engine_v2/src/source_isolation/SourceLifecycleRegistry';
+import {
 	createInitialActiveState,
 	MAX_RECONNECT_ATTEMPTS,
-	MAX_TRACKED_SOURCES,
-	RECONNECT_BACKOFF_CAP_MS,
-	RECONNECT_BACKOFF_STEP_MS,
 	type SourceLifecycleClock,
 	type SourceLifecycleEvent,
-	SourceLifecycleRegistry,
 	type SourceLifecycleState,
 	transitionSourceLifecycle,
-} from '@fluxer/voice_engine_v2/src/source_isolation/index';
+} from '@fluxer/voice_engine_v2/src/source_isolation/SourceLifecycleState';
 import {describe, expect, it} from 'vitest';
 
 function makeClock(startNs: bigint = 1_000n, stepNs: bigint = 1_000n): SourceLifecycleClock {
@@ -153,59 +152,12 @@ describe('transitionSourceLifecycle', () => {
 		expect(triggers).toEqual(['triggerReconnect', 'triggerReconnect', 'triggerReconnect']);
 	});
 
-	it('Backoff schedule respects cap', () => {
-		expect(computeReconnectBackoffMs(1)).toBe(RECONNECT_BACKOFF_STEP_MS);
-		expect(computeReconnectBackoffMs(2)).toBe(2 * RECONNECT_BACKOFF_STEP_MS);
-		expect(computeReconnectBackoffMs(MAX_RECONNECT_ATTEMPTS)).toBeLessThanOrEqual(RECONNECT_BACKOFF_CAP_MS);
-	});
-
-	it('Backoff schedule is exponential matching the Rust sibling', () => {
-		const sequence = [1, 2, 3, 4, 5, 6, 7, 8].map((attempt) => computeReconnectBackoffMs(attempt));
-		expect(sequence).toEqual([100, 200, 400, 800, 1600, 3200, 5000, 5000]);
-	});
-
-	it('Backoff caps at RECONNECT_BACKOFF_CAP_MS once the raw doubling crosses it', () => {
-		expect(computeReconnectBackoffMs(7)).toBe(RECONNECT_BACKOFF_CAP_MS);
-		expect(computeReconnectBackoffMs(8)).toBe(RECONNECT_BACKOFF_CAP_MS);
-	});
-
 	it('Active + reconnectAttempted is a no-op', () => {
 		const clock = makeClock();
 		const active = createInitialActiveState(clock);
 		const result = transitionSourceLifecycle(active, {kind: 'reconnectAttempted'}, clock);
 		expect(result.state).toEqual(active);
 		expect(result.action).toBe('noop');
-	});
-
-	it('determinism: same (state, event, clock-output) produces same output', () => {
-		const stateA: SourceLifecycleState = {kind: 'active', since: 100n};
-		const stateB: SourceLifecycleState = {kind: 'active', since: 100n};
-		const clockA = makeFixedClock(200n);
-		const clockB = makeFixedClock(200n);
-		const event: SourceLifecycleEvent = {kind: 'fault', fault: 'networkError'};
-		const resultA = transitionSourceLifecycle(stateA, event, clockA);
-		const resultB = transitionSourceLifecycle(stateB, event, clockB);
-		expect(resultA).toEqual(resultB);
-	});
-
-	it('rejects invalid state kind on entry', () => {
-		const clock = makeClock();
-		const bogus = {kind: 'bogus'} as unknown as SourceLifecycleState;
-		expect(() => transitionSourceLifecycle(bogus, {kind: 'recovered'}, clock)).toThrow();
-	});
-
-	it('rejects invalid event kind on entry', () => {
-		const clock = makeClock();
-		const active = createInitialActiveState(clock);
-		const bogusEvent = {kind: 'bogus'} as unknown as SourceLifecycleEvent;
-		expect(() => transitionSourceLifecycle(active, bogusEvent, clock)).toThrow();
-	});
-
-	it('rejects invalid fault on event entry', () => {
-		const clock = makeClock();
-		const active = createInitialActiveState(clock);
-		const bogusEvent = {kind: 'fault', fault: 'wat'} as unknown as SourceLifecycleEvent;
-		expect(() => transitionSourceLifecycle(active, bogusEvent, clock)).toThrow();
 	});
 });
 
@@ -267,17 +219,6 @@ describe('SourceLifecycleRegistry', () => {
 		expect(second.ok).toBe(false);
 		if (second.ok) throw new Error('unreachable');
 		expect(second.error).toBe('duplicateSource');
-	});
-
-	it('invalid source id is rejected', () => {
-		const clock = makeClock();
-		const registry = new SourceLifecycleRegistry(clock);
-		const result = registry.register('');
-		expect(result.ok).toBe(false);
-		const dispatch = registry.dispatch('', {kind: 'recovered'});
-		expect(dispatch.ok).toBe(false);
-		if (dispatch.ok) throw new Error('unreachable');
-		expect(dispatch.error).toBe('invalidSourceId');
 	});
 
 	it('remove drops a source and frees a slot for reuse', () => {

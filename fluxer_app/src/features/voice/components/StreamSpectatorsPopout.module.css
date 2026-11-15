@@ -29,8 +29,6 @@
 	font-size: 0.75rem;
 	font-weight: 600;
 	color: var(--text-primary-muted);
-	text-transform: uppercase;
-	letter-spacing: 0.02em;
 	flex-shrink: 0;
 }
 

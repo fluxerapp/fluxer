@@ -8,6 +8,8 @@ import {
 	GooglePlayApiError,
 	parseRetryAfterMs,
 } from '@app/api/store_billing/google_play/GooglePlayApiError';
+import {hasText, normalizePem} from '@app/api/store_billing/StoreBillingCredentials';
+import {parseJsonOrNull} from '@app/api/utils/JsonBoundaryUtils';
 import {ms, seconds} from 'itty-time';
 import {type CryptoKey, importPKCS8, SignJWT} from 'jose';
 import {z} from 'zod';
@@ -56,22 +58,6 @@ interface GooglePlayAccessTokenProviderOptions {
 	timeoutMs?: number;
 }
 
-function hasText(value: string | undefined): value is string {
-	return value !== undefined && value.trim().length > 0;
-}
-
-function normalizePem(value: string): string {
-	return value.replaceAll('\\n', '\n');
-}
-
-function parseJsonOrNull(raw: string): unknown {
-	try {
-		return JSON.parse(raw);
-	} catch {
-		return null;
-	}
-}
-
 function configFingerprint(): string {
 	const cfg = Config.googlePlay;
 	return createHash('sha256')
@@ -87,7 +73,7 @@ function configFingerprint(): string {
 		.digest('hex');
 }
 
-export async function resolveGooglePlayCredentials(): Promise<GooglePlayServiceAccountCredentials> {
+async function resolveGooglePlayCredentials(): Promise<GooglePlayServiceAccountCredentials> {
 	const cfg = Config.googlePlay;
 	let serviceAccount: z.infer<typeof ServiceAccountJsonSchema> = {};
 	if (hasText(cfg.serviceAccountJsonPath)) {

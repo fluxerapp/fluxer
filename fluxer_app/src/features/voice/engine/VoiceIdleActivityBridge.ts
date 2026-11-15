@@ -13,7 +13,6 @@ type VoiceActivitySource = Readonly<{
 }>;
 type NoteVoiceActivityOptions = Readonly<{
 	force?: boolean;
-	now?: number;
 	speaking?: boolean;
 }>;
 
@@ -45,7 +44,7 @@ export function noteLocalVoiceActivity(
 	options?: NoteVoiceActivityOptions,
 ): boolean {
 	if (!source || !shouldRecordVoiceActivity(source, options)) return false;
-	maybeRecordActivity(options?.now ?? Date.now(), options?.force === true);
+	maybeRecordActivity(Date.now(), options?.force === true);
 	return true;
 }
 
@@ -54,8 +53,4 @@ export function noteLocalVoiceActivityFromSnapshot(
 	options?: NoteVoiceActivityOptions,
 ): boolean {
 	return noteLocalVoiceActivity(snapshot, options);
-}
-
-export function resetVoiceIdleActivityBridgeForTests(): void {
-	lastRecordedVoiceActivityAt = null;
 }

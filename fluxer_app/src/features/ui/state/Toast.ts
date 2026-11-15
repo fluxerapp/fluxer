@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {randomUuid} from '@app/features/platform/utils/RandomUuid';
+import {getActivePortalHost} from '@app/features/ui/overlay/PortalHostContext';
 import type {ToastProps} from '@app/features/ui/toast';
 import {makeAutoObservable, observableRef} from 'mobx';
 
@@ -9,6 +11,7 @@ const logger = new Logger('Toast');
 interface ToastEntry {
 	id: string;
 	data: ToastProps;
+	ownerDocument: Document;
 }
 
 class Toast {
@@ -25,9 +28,9 @@ class Toast {
 	}
 
 	createToast(data: ToastProps): string {
-		const id = crypto.randomUUID();
+		const id = randomUuid();
 		logger.debug(`Creating toast: ${id}, type: ${data.type}`);
-		this.currentToast = {id, data};
+		this.currentToast = {id, data, ownerDocument: getActivePortalHost()?.ownerDocument ?? document};
 		return id;
 	}
 
@@ -44,21 +47,6 @@ class Toast {
 
 	error(message: string): string {
 		return this.createToast({type: 'error', children: message, timeout: 5000});
-	}
-
-	getCurrentToast() {
-		return this.currentToast;
-	}
-
-	hasToast(id: string): boolean {
-		return this.currentToast?.id === id;
-	}
-
-	getToast(id: string): ToastProps | undefined {
-		if (this.currentToast?.id === id) {
-			return this.currentToast.data;
-		}
-		return undefined;
 	}
 }
 

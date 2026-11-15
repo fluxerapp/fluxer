@@ -11,8 +11,9 @@ import {ROLES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptor
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {openRoleContextMenu} from '@app/features/ui/action_menu/RoleContextMenu';
 import {Button} from '@app/features/ui/button/Button';
+import {CaretRightIcon} from '@app/features/ui/icons/DirectionalIcons';
 import {Trans, useLingui} from '@lingui/react/macro';
-import {CaretRightIcon, LockIcon, PlusIcon} from '@phosphor-icons/react';
+import {LockIcon, PlusIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 

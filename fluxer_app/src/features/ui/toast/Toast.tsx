@@ -71,7 +71,8 @@ export const Toast = observer(
 						className={`${styles.icon} ${styles.iconSuccess} ${isMobileExperience ? styles.iconMobile : styles.iconDesktop}`}
 						data-flx="ui.toast.toast.icon"
 					/>
-				) : type === 'error' ? (
+				) : null}
+				{type === 'error' ? (
 					<XIcon
 						weight="bold"
 						className={`${styles.icon} ${styles.iconError} ${isMobileExperience ? styles.iconMobile : styles.iconDesktop}`}

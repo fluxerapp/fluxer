@@ -1,0 +1,36 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Upload size limits
+description: Change how large attachments can be for people and bots on your instance.
+sidebar:
+  label: Upload limits
+---
+
+Attachment sizes come from two [limit keys](/http-api/instance/#limit-keys). `max_attachment_file_size` is the largest file anyone can attach. `max_bot_attachment_file_size` is the largest file a bot can attach, and a bot gets the lower of the two. By default, people with premium can attach files up to 500 MiB and people without it up to 25 MiB, and bots can attach files up to 50 MiB.
+
+You can change both keys under Limit Config in the admin panel sidebar or with [Replace limit configuration](/admin-api/instance/#replace-limit-configuration).
+
+## Pick the rule to edit
+
+Which rule to edit depends on the instance's [premium mode](/admin-api/instance/#premium-modes).
+
+| Premium mode | Rule for people | Rule for bots |
+| --- | --- | --- |
+| everyone | `default` | `default` |
+| mirror | `default` for people without premium and `premium` for people with it | `premium` or `default` |
+
+Bots always count as having premium, and when a rule with a filter matches, Fluxer uses the higher of its value and the value from `default`. Raising `max_bot_attachment_file_size` in either rule raises it for every bot.
+
+To raise the bot limit for one bot, give the bot a trait with [Set user traits](/admin-api/users/#set-user-traits) and add a rule for that trait that sets `max_bot_attachment_file_size`. To go above `max_attachment_file_size`, which is 500 MiB for bots by default, set `max_attachment_file_size` in the same rule too. A rule for a trait can raise a limit above the value in `default` but can't lower it.
+
+## Large files and the upload relay
+
+The web and desktop apps upload files to storage before they send the message. Each part is 10 MiB or a twentieth of the file, whichever is larger. When the [upload relay](/media-proxy/upload-relay/) is in use, `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES` limits each part and not the whole file. With the default of 500 MiB, you only need to raise it for files above about 10 GB.
+
+## Multipart messages
+
+Bots and other clients can also attach files in a multipart message. The API streams each file to storage while it arrives and doesn't keep whole files in memory. When a file goes over its limit, the API stops saving it and reads up to 64 MiB more of the body for up to 30 seconds, so the client is done sending when the error arrives. If more than that is left, the API answers right away and closes the connection, and some clients report a connection reset instead of the error. The whole request has to finish within `FLUXER_API_REQUEST_TIMEOUT_MS`, which is 120 seconds by default. For files of hundreds of MiB, clients should upload first.
+
+`FLUXER_API_MAX_CONCURRENT_FORM_UPLOADS` sets how many files the API streams to storage at once, which is 16 by default. Plan for up to about 25 MiB of memory for each, so the default adds up to about 400 MiB to what the API uses. When all of them are busy, the next file waits up to 10 seconds and then fails with 503 and a `Retry-After` header.
+
+Your proxy's body size limit also applies to multipart messages. The Helm chart sets `nginx.ingress.kubernetes.io/proxy-body-size` to `512m` on its ingress, and the [nginx example](/operator/reverse-proxy/) uses `client_max_body_size 512m`. Uploading first sends each part in its own request, and these limits apply to one part at a time.

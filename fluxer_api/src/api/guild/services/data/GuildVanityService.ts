@@ -7,12 +7,14 @@ import {
 	type UserID,
 	vanityCodeToInviteCode,
 } from '@app/api/BrandedTypes';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildDataHelpers} from '@app/api/guild/services/data/GuildDataHelpers';
+import {enqueueEndGuildVisitsForCode} from '@app/api/guild/visits/GuildVisitLifecycle';
 import type {InviteRepository} from '@app/api/invite/InviteRepository';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {serializeGuildForAudit} from '@app/api/utils/AuditSerializationUtils';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
-import {InviteTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -23,7 +25,7 @@ const VANITY_AUDIT_KEYS: ReadonlySet<string> = new Set(['vanity_url_code']);
 
 export class GuildVanityService {
 	constructor(
-		private readonly guildRepository: IGuildRepositoryAggregate,
+		private readonly guildRepository: GuildRepository,
 		private readonly inviteRepository: InviteRepository,
 		private readonly helpers: GuildDataHelpers,
 	) {}
@@ -61,7 +63,7 @@ export class GuildVanityService {
 		await checkPermission(Permissions.MANAGE_GUILD);
 		const guild = await this.guildRepository.findUnique(guildId);
 		if (!guild) throw new UnknownGuildError();
-		const previousSnapshot = this.helpers.serializeGuildForAudit(guild);
+		const previousSnapshot = serializeGuildForAudit(guild);
 		if (code && !guild.features.has(GuildFeatures.VANITY_URL)) {
 			throw InputValidationError.fromCode('code', ValidationErrorCodes.VANITY_URL_REQUIRES_FEATURE);
 		}
@@ -75,11 +77,12 @@ export class GuildVanityService {
 			if (guild.vanityUrlCode != null) {
 				const oldInvite = await this.inviteRepository.findUnique(vanityCodeToInviteCode(guild.vanityUrlCode));
 				if (oldInvite) {
-					await this.inviteRepository.delete(oldInvite.code);
+					await this.inviteRepository.releaseVanityInvite(oldInvite.code, guildId);
+					await enqueueEndGuildVisitsForCode(guildId, oldInvite.code);
 				}
 				const updatedGuild = await this.guildRepository.upsertPartial(guildId, {vanity_url_code: null}, guild.toRow());
 				await this.helpers.dispatchGuildUpdate(updatedGuild);
-				await this.helpers.recordAuditLog({
+				await this.helpers.guildAuditLogService.record({
 					guildId,
 					userId,
 					action: AuditLogActionType.GUILD_UPDATE,
@@ -91,33 +94,24 @@ export class GuildVanityService {
 			}
 			return {code: null};
 		}
-		const existingInvite = await this.inviteRepository.findUnique(createInviteCode(code));
-		if (existingInvite != null) {
+		const claimed = await this.inviteRepository.claimVanityInvite(createInviteCode(code), guildId);
+		if (claimed == null) {
 			throw InputValidationError.fromCode('code', ValidationErrorCodes.VANITY_URL_CODE_ALREADY_TAKEN);
 		}
 		if (guild.vanityUrlCode != null) {
 			const oldInvite = await this.inviteRepository.findUnique(vanityCodeToInviteCode(guild.vanityUrlCode));
 			if (oldInvite) {
-				await this.inviteRepository.delete(oldInvite.code);
+				await this.inviteRepository.releaseVanityInvite(oldInvite.code, guildId);
+				await enqueueEndGuildVisitsForCode(guildId, oldInvite.code);
 			}
 		}
-		await this.inviteRepository.create({
-			code: createInviteCode(code),
-			type: InviteTypes.GUILD,
-			guild_id: guildId,
-			channel_id: null,
-			inviter_id: null,
-			uses: 0,
-			max_uses: 0,
-			max_age: 0,
-		});
 		const updatedGuild = await this.guildRepository.upsertPartial(
 			guildId,
 			{vanity_url_code: createVanityURLCode(code)},
 			guild.toRow(),
 		);
 		await this.helpers.dispatchGuildUpdate(updatedGuild);
-		await this.helpers.recordAuditLog({
+		await this.helpers.guildAuditLogService.record({
 			guildId,
 			userId,
 			action: AuditLogActionType.GUILD_UPDATE,

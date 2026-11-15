@@ -103,7 +103,3 @@ export function getRecentScreenShares(): Array<ScreenShareLifecycleEntry> {
 		sourceKind: entry === open ? ActiveScreenShareSource.getPublishedSource() : entry.sourceKind,
 	}));
 }
-
-export function resetRecentScreenSharesForTests(): void {
-	entries = [];
-}

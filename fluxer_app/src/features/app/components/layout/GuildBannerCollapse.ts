@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 export const GUILD_BANNER_DEFAULT_ASPECT_RATIO = 16 / 9;
-export const GUILD_BANNER_MAX_VIEWPORT_HEIGHT_FRACTION = 0.3;
+const GUILD_BANNER_MAX_VIEWPORT_HEIGHT_FRACTION = 0.3;
 export const GUILD_BANNER_HEADER_GLASS_MAX_OPACITY = 0.72;
-export const GUILD_BANNER_HEADER_GLASS_DISTANCE = 16;
+const GUILD_BANNER_HEADER_GLASS_DISTANCE = 16;
 
 export interface GuildBannerMetrics {
 	readonly containerWidth: number;

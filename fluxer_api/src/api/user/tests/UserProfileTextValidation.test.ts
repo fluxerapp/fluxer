@@ -9,18 +9,7 @@ import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHa
 import {HTTP_STATUS, TEST_CREDENTIALS, TEST_USER_DATA} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-
-interface ValidationErrorResponse {
-	code: string;
-	message?: string;
-	errors?: Array<{
-		path?: string;
-		code?: string;
-		message?: string;
-	}>;
-}
 
 describe('User profile text validation', () => {
 	let harness: ApiTestHarness;
@@ -38,19 +27,6 @@ describe('User profile text validation', () => {
 	});
 	afterAll(async () => {
 		await harness?.shutdown();
-	});
-	it('includes min/max in bio length validation message', async () => {
-		const account = await createTestAccount(harness);
-		await ensureSessionStarted(harness, account.token);
-		const json = await createBuilder<ValidationErrorResponse>(harness, account.token)
-			.patch('/users/@me')
-			.body({bio: 'a'.repeat(321)})
-			.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
-			.execute();
-		const error = json.errors?.find((e) => e.path === 'bio');
-		expect(error?.code).toBe(ValidationErrorCodes.STRING_LENGTH_INVALID);
-		expect(error?.message).toBe('String length must be between 1 and 320 characters.');
-		expect(error?.message).not.toContain('undefined');
 	});
 	it('blocks banned substrings in account profile text fields', async () => {
 		const account = await createTestAccount(harness);

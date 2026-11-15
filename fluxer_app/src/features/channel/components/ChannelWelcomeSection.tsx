@@ -6,8 +6,11 @@ import {GroupDMWelcomeSection} from '@app/features/channel/components/direct_mes
 import {PersonalNotesWelcomeSection} from '@app/features/channel/components/direct_message/PersonalNotesWelcomeSection';
 import type {Channel} from '@app/features/channel/models/Channel';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
+import Guilds from '@app/features/guild/state/Guilds';
+import {ThreadWelcomeSection} from '@app/features/threads/components/ThreadWelcomeSection';
 import Users from '@app/features/user/state/Users';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {MS_PER_DAY} from '@fluxer/date_utils/src/DateConstants';
 import {Trans} from '@lingui/react/macro';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
@@ -40,7 +43,17 @@ export const ChannelWelcomeSection = observer(({channel}: ChannelWelcomeSectionP
 			<GroupDMWelcomeSection channel={channel} data-flx="channel.channel-welcome-section.group-dm-welcome-section" />
 		);
 	}
+	if (channel.isThread()) {
+		return <ThreadWelcomeSection thread={channel} data-flx="channel.channel-welcome-section.thread-welcome-section" />;
+	}
 	const channelDisplayName = `#${channel.name ?? ''}`;
+	const visitor = Users.currentUser;
+	const visitHistoryLimited =
+		channel.guildId != null &&
+		Guilds.getGuild(channel.guildId)?.visiting === true &&
+		visitor != null &&
+		visitor.accountTier !== 'verified' &&
+		channel.createdAt.getTime() < Date.now() - visitor.guildVisitHistoryDays * MS_PER_DAY;
 	return (
 		<div className={styles.container} data-flx="channel.channel-welcome-section.container">
 			<div
@@ -53,7 +66,13 @@ export const ChannelWelcomeSection = observer(({channel}: ChannelWelcomeSectionP
 				<Trans>Welcome to {channelDisplayName}</Trans>
 			</h1>
 			<p className={styles.description} data-flx="channel.channel-welcome-section.description">
-				<Trans>In the beginning, there was nothing. Then, there was {channelDisplayName}. And it was good.</Trans>
+				{visitHistoryLimited ? (
+					<Trans comment="Shown at the top of a channel you are previewing before joining the community, where older messages are hidden until you join.">
+						Older messages are visible after you join.
+					</Trans>
+				) : (
+					<Trans>This is the start of {channelDisplayName}.</Trans>
+				)}
 			</p>
 		</div>
 	);

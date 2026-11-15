@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import styles from '@app/features/channel/components/ThemeEmbed.module.css';
 import {
 	EmbedCard,
@@ -9,7 +10,6 @@ import {
 	EmbedSkeletonTitle,
 } from '@app/features/messaging/components/embeds/embed_card/EmbedCard';
 import cardStyles from '@app/features/messaging/components/embeds/embed_card/EmbedCard.module.css';
-import {useEmbedSkeletonOverride} from '@app/features/messaging/components/embeds/embed_card/useEmbedSkeletonOverride';
 import * as ThemeCommands from '@app/features/theme/commands/ThemeCommands';
 import {useThemeExists} from '@app/features/theme/hooks/useThemeExists';
 import {Button} from '@app/features/ui/button/Button';
@@ -45,12 +45,12 @@ interface ThemeEmbedProps {
 
 export const ThemeEmbed = observer(function ThemeEmbed({themeId}: ThemeEmbedProps) {
 	const {i18n} = useLingui();
-	const status = useThemeExists(themeId);
-	const shouldForceSkeleton = useEmbedSkeletonOverride();
+	const runtimeSnapshot = RuntimeConfig.getSnapshot();
+	const status = useThemeExists(themeId, runtimeSnapshot);
 	const handleImport = () => {
-		ThemeCommands.openAcceptModal(themeId, i18n);
+		ThemeCommands.openAcceptModal(themeId, i18n, runtimeSnapshot);
 	};
-	if (shouldForceSkeleton || status === 'loading') {
+	if (status === 'loading') {
 		return <ThemeLoadingState data-flx="channel.theme-embed.theme-loading-state" />;
 	}
 	if (status === 'error') {

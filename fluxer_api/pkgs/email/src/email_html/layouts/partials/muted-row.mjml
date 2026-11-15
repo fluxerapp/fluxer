@@ -1,0 +1,3 @@
+%%?[[slot]]%%<tr>
+	<td dir="[[dir]]" class="x-muted" style="padding:[[gap]] 0 0;font-family:[[font]];font-size:14px;line-height:21px;color:#5b5a70;text-align:[[start]];direction:[[dir]];overflow-wrap:anywhere;word-break:break-word">%%[[slot]]%%</td>
+</tr>%%/[[slot]]%%

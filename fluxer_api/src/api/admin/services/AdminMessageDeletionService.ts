@@ -1,20 +1,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
-import type {AdminMessageShredService} from '@app/api/admin/services/AdminMessageShredService';
+import {queueMessageShredJob} from '@app/api/admin/services/AdminMessageShredService';
 import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
-import {createUserID} from '@app/api/BrandedTypes';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
-import {Logger} from '@app/api/Logger';
-import type {
-	DeleteAllUserMessagesRequest,
-	DeleteAllUserMessagesResponse,
-} from '@fluxer/schema/src/domains/admin/AdminMessageSchemas';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import type {EnforcementDecisionRow} from '@app/api/database/types/EnforcementTypes';
+import type {EnforcementActor} from '@app/api/enforcement/EnforcementActor';
+import {decisionAuditMetadata, type EnforcementDecisionService} from '@app/api/enforcement/EnforcementDecisionService';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
+import type {DeleteAllUserMessagesResponse} from '@fluxer/schema/src/domains/admin/AdminMessageSchemas';
+import type {ModerationBasis} from '@fluxer/schema/src/domains/admin/EnforcementSchemas';
 
 interface AdminMessageDeletionServiceDeps {
-	channelRepository: IChannelRepository;
-	messageShredService: AdminMessageShredService;
+	apiContext: ApiContext;
+	channelRepository: ChannelRepository;
 	auditService: AdminAuditService;
+	enforcement: EnforcementDecisionService;
+}
+
+interface DeleteAllUserMessages {
+	dryRun: boolean;
+	basis: ModerationBasis | undefined;
 }
 
 const FETCH_CHUNK_SIZE = 200;
@@ -23,49 +31,57 @@ export class AdminMessageDeletionService {
 	constructor(private readonly deps: AdminMessageDeletionServiceDeps) {}
 
 	async deleteAllUserMessages(
-		data: DeleteAllUserMessagesRequest,
-		adminUserId: UserID,
-		auditLogReason: string | null,
+		userId: UserID,
+		{dryRun, basis}: DeleteAllUserMessages,
+		actor: EnforcementActor,
 	): Promise<DeleteAllUserMessagesResponse> {
-		const authorId = createUserID(data.user_id);
-		const {entries, channelCount, messageCount} = await this.collectMessageRefs(authorId, !data.dry_run);
-		const metadata = new Map<string, string>([
-			['user_id', data.user_id.toString()],
-			['channel_count', channelCount.toString()],
-			['message_count', messageCount.toString()],
-			['dry_run', data.dry_run ? 'true' : 'false'],
-		]);
-		const action = data.dry_run ? 'delete_all_user_messages_dry_run' : 'delete_all_user_messages';
-		await this.deps.auditService.createAuditLog({
-			adminUserId,
-			targetType: 'message_deletion',
-			targetId: data.user_id,
-			action,
-			auditLogReason,
-			metadata,
-		});
-		Logger.debug(
-			{user_id: data.user_id, channel_count: channelCount, message_count: messageCount, dry_run: data.dry_run},
-			'Computed delete-all-messages stats',
-		);
+		if (!dryRun && !basis) {
+			throw InputValidationError.fromCode('basis', ValidationErrorCodes.MODERATION_BASIS_REQUIRED);
+		}
+		const {entries, channelCount, messageCount} = await this.collectMessageRefs(userId, !dryRun);
 		const response: DeleteAllUserMessagesResponse = {
 			success: true,
-			dry_run: data.dry_run,
+			dry_run: dryRun,
 			channel_count: channelCount,
 			message_count: messageCount,
 		};
-		if (data.dry_run || messageCount === 0) {
-			return response;
+		let decision: EnforcementDecisionRow | null = null;
+		if (basis && !dryRun && messageCount > 0) {
+			const queue = async () => {
+				response.job_id = await queueMessageShredJob(this.deps.apiContext, actor.adminUserId, userId, entries);
+			};
+			if (basis.type === 'enforcement') {
+				({decision} = await this.deps.enforcement.record(
+					{
+						subject: {type: 'user', user: await this.deps.apiContext.services.users.findUniqueAssert(userId)},
+						kind: 'content_removal',
+						input: basis.decision,
+						removal: {type: 'all_messages'},
+						actor,
+					},
+					queue,
+				));
+				response.decision_id = decision.decision_id.toString();
+			} else {
+				await queue();
+			}
 		}
-		const shredResult = await this.deps.messageShredService.queueMessageShred(
-			{
-				user_id: data.user_id,
-				entries,
-			},
-			adminUserId,
-			auditLogReason,
-		);
-		response.job_id = shredResult.job_id;
+		await this.deps.auditService.createAuditLog({
+			adminUserId: actor.adminUserId,
+			targetType: 'message_deletion',
+			targetId: userId,
+			action: dryRun ? 'delete_all_user_messages_dry_run' : 'delete_all_user_messages',
+			auditLogReason: actor.internalNote,
+			metadata: new Map([
+				['user_id', userId.toString()],
+				['channel_count', channelCount.toString()],
+				['message_count', messageCount.toString()],
+				['dry_run', dryRun ? 'true' : 'false'],
+				...(basis && !dryRun ? ([['basis', basis.type]] as Array<[string, string]>) : []),
+				...(response.job_id ? ([['job_id', response.job_id]] as Array<[string, string]>) : []),
+				...(decision ? decisionAuditMetadata(decision) : []),
+			]),
+		});
 		return response;
 	}
 
@@ -78,7 +94,7 @@ export class AdminMessageDeletionService {
 		let messageCount = 0;
 		let channelCount = 0;
 		while (true) {
-			const messageRefs = await this.deps.channelRepository.listMessagesByAuthor(
+			const messageRefs = await this.deps.channelRepository.messages.listMessagesByAuthor(
 				authorId,
 				FETCH_CHUNK_SIZE,
 				lastMessageId,

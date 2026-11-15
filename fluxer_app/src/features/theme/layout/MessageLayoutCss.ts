@@ -28,7 +28,7 @@ function renderRootVariables(variables: Record<string, string>): string {
 	return `:root {\n${lines.join('\n')}\n}`;
 }
 
-export function renderCompactMarkdownLayoutCss(): string {
+function renderCompactMarkdownLayoutCss(): string {
 	const compact = attributeSelector(COMPACT_MARKDOWN_ATTRIBUTE);
 	const markdownBlock = `${compact} ${attributeSelector(MARKDOWN_BLOCK_ATTRIBUTE)}`;
 	return [

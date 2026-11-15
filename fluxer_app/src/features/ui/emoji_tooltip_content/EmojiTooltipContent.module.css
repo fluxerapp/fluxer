@@ -30,7 +30,7 @@
 }
 
 .textContainer {
-	margin-left: 0.75rem;
+	margin-inline-start: 0.75rem;
 	font-size: 0.8125rem;
 	line-height: 1.25;
 	color: var(--text-primary);

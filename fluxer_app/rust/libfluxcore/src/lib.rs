@@ -2,43 +2,11 @@
 
 mod formats;
 mod rgba;
-mod zstd_frame;
 mod zstd_stream;
 
 use formats::{is_animated_image_bytes, sniff_image_format_bytes};
-use rgba::{TransformRequest, crop_rotate_rgba_alloc, crop_rotate_rgba_into};
+use rgba::{TransformRequest, crop_rotate_rgba_into};
 use wasm_bindgen::prelude::*;
-
-#[wasm_bindgen]
-#[allow(clippy::too_many_arguments)]
-pub fn crop_rotate_rgba_raw(
-    input: &[u8],
-    src_width: u32,
-    src_height: u32,
-    x: u32,
-    y: u32,
-    width: u32,
-    height: u32,
-    rotation_deg: u32,
-    resize_width: Option<u32>,
-    resize_height: Option<u32>,
-) -> Result<Vec<u8>, JsValue> {
-    crop_rotate_rgba_alloc(
-        input,
-        TransformRequest {
-            src_width,
-            src_height,
-            x,
-            y,
-            width,
-            height,
-            rotation_deg,
-            resize_width: optional_dimension_to_abi(resize_width),
-            resize_height: optional_dimension_to_abi(resize_height),
-        },
-    )
-    .map_err(|error| JsValue::from_str(error.message()))
-}
 
 #[wasm_bindgen]
 #[allow(clippy::too_many_arguments)]
@@ -71,11 +39,6 @@ pub fn crop_rotate_rgba_into_buffer(
         },
     )
     .map_err(|error| JsValue::from_str(error.message()))
-}
-
-#[wasm_bindgen]
-pub fn decompress_zstd_frame(input: &[u8]) -> Result<Vec<u8>, JsValue> {
-    zstd_frame::decompress(input).map_err(zstd_error_to_js)
 }
 
 #[wasm_bindgen]
@@ -144,11 +107,7 @@ pub fn sniff_image_format(input: &[u8]) -> u8 {
     sniff_image_format_bytes(input)
 }
 
-fn optional_dimension_to_abi(value: Option<u32>) -> u32 {
-    value.filter(|dimension| *dimension > 0).unwrap_or(u32::MAX)
-}
-
-fn zstd_error_to_js(error: zstd_frame::ZstdError) -> JsValue {
+fn zstd_error_to_js(error: zstd_stream::ZstdError) -> JsValue {
     JsValue::from_str(error.message())
 }
 

@@ -5,6 +5,7 @@ import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActi
 import {FeatureTemporarilyDisabledModal} from '@app/features/app/components/alerts/FeatureTemporarilyDisabledModal';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {describeAccountTierBlock, promptForAccountTier} from '@app/features/auth/utils/AccountTierPrompt';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import {createSystemMessage} from '@app/features/devtools/utils/CommandUtils';
 import * as DraftCommands from '@app/features/messaging/commands/DraftCommands';
@@ -21,10 +22,15 @@ import {
 } from '@app/features/messaging/state/MessageQueueStateMachine';
 import {planTextareaAttachmentCancellation} from '@app/features/messaging/state/TextareaAttachmentUploadCancellation';
 import {
-	type ChunkedUploadPart,
-	type ChunkedUploadPlan,
-	uploadFileInChunks,
-} from '@app/features/messaging/upload/ChunkedAttachmentUploader';
+	canUsePresignedAttachmentUploads,
+	completeMultipartAttachmentUploads,
+	type MultipartAttachmentUpload,
+	type PresignedAttachmentUploadResponseAttachment,
+	requestPresignedAttachmentUploads,
+	type TextareaAttachmentUploadResult,
+	uploadAttachmentsViaPlans,
+	uploadTextareaAttachmentViaPlan,
+} from '@app/features/messaging/upload/AttachmentUploadPlan';
 import {type CloudAttachment, CloudUpload} from '@app/features/messaging/upload/CloudUpload';
 import {exceedsMultipartFallbackRequestSize} from '@app/features/messaging/utils/AttachmentUploadFallbackUtils';
 import {prepareAttachmentsForNonce} from '@app/features/messaging/utils/MessageAttachmentUtils';
@@ -36,16 +42,21 @@ import {
 import {resolveRetryAfterMs} from '@app/features/messaging/utils/RetryAfterUtils';
 import {MatureContentRejectedModal} from '@app/features/moderation/components/alerts/MatureContentRejectedModal';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
+import {AccountScopedWork, accountScopedWorkAbortError} from '@app/features/platform/state/AccountScopedWork';
+import {isAccountTransitionAbortError} from '@app/features/platform/state/AccountTransitionAbort';
+import SessionManager from '@app/features/platform/state/AuthSession';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import type {RestResponse} from '@app/features/platform/types/TransportTypes';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as SlowmodeCommands from '@app/features/slowmode/commands/SlowmodeCommands';
 import {SlowmodeRateLimitedModal} from '@app/features/slowmode/components/alerts/SlowmodeRateLimitedModal';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {formatUserSettingsPath} from '@app/features/user/components/settings_utils/SettingsConstants';
 import PrivacyPreferences from '@app/features/user/state/PrivacyPreferences';
+import {accountGateReason} from '@app/features/user/utils/AccountGatePresentation';
 import {Queue} from '@app/lib/list/ListQueue';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import type {
@@ -64,6 +75,12 @@ const YOUR_MESSAGE_COULD_NOT_BE_DELIVERED_THIS_IS_DESCRIPTOR = msg({
 		"Your message could not be delivered. This is usually because you don't share a community with the recipient or the recipient is only accepting direct messages from friends. You may also need to adjust your own direct message privacy settings in {directMessagePrivacySettingsPath}.",
 	comment: 'Label in the message queue state.',
 });
+const COMMUNITY_MEMBER_DMS_DISABLED_DESCRIPTOR = msg({
+	message:
+		"Your message could not be delivered. A community you share with this person has turned off direct messages between members who aren't friends.",
+	comment:
+		'System message in a DM after a send fails because the only community the two people share has turned off direct messages between members who are not friends.',
+});
 const YOUR_MESSAGE_COULD_NOT_BE_DELIVERED_YOU_NEED_DESCRIPTOR = msg({
 	message: 'Your message could not be delivered. You need to claim your account to send direct messages.',
 	comment: 'Description text in the message queue state.',
@@ -76,6 +93,11 @@ const YOUR_MESSAGE_COULD_NOT_BE_DELIVERED_BECAUSE_IT_DESCRIPTOR = msg({
 	message:
 		'Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact support.',
 	comment: 'Label in the message queue state.',
+});
+const YOUR_MESSAGE_COULD_NOT_BE_DELIVERED_SELF_HOSTED_DESCRIPTOR = msg({
+	message:
+		'Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact the administrators of this instance.',
+	comment: 'Message send error on a self-hosted instance when the safety system blocks the message.',
 });
 const logger = new Logger('MessageQueue');
 const DEFAULT_MAX_SIZE = 5;
@@ -92,6 +114,7 @@ const MESSAGE_SEND_RATE_LIMIT_MAX_AUTOMATIC_RETRIES = 2;
 const MESSAGE_SEND_RATE_LIMIT_MAX_AUTOMATIC_DELAY_MS = 30 * 1000;
 
 interface BaseMessagePayload {
+	accountKey: string | null;
 	channelId: string;
 }
 
@@ -112,80 +135,25 @@ interface SendMessagePayload extends BaseMessagePayload {
 	persona?: PersonaSnapshot;
 }
 
-export type MessageQueuePayload = SendMessagePayload;
+type MessageQueuePayload = SendMessagePayload;
 type MessageQueueCompletion<TResult> = {
 	retry: RetryError | null;
 	result?: TResult;
 	error?: unknown;
 };
 
-export interface RetryError {
+interface RetryError {
 	retryAfter?: number;
 }
 
-export interface ApiErrorBody {
+interface ApiErrorBody {
 	code?: number | string;
 	message?: string;
 }
 
-interface PresignedAttachmentUploadSinglepartResponse {
-	upload_mode: 'singlepart';
-	id: string | number;
-	filename: string;
-	upload_filename: string;
-	upload_url: string;
-	file_size: number;
-	content_type: string;
-}
-
-interface PresignedAttachmentUploadMultipartResponse {
-	upload_mode: 'multipart';
-	id: string | number;
-	filename: string;
-	upload_filename: string;
-	file_size: number;
-	content_type: string;
-	upload_id: string;
-	part_size: number;
-	parts: Array<{part_number: number; upload_url: string}>;
-}
-
-type PresignedAttachmentUploadResponseAttachment =
-	| PresignedAttachmentUploadSinglepartResponse
-	| PresignedAttachmentUploadMultipartResponse;
-
-interface PresignedAttachmentUploadRequestFile {
-	id: string;
-	filename: string;
-	file_size: number;
-	content_type: string;
-}
-
-interface PresignedAttachmentUploadRequestBody {
-	attachments: Array<PresignedAttachmentUploadRequestFile>;
-}
-
-interface PresignedAttachmentUploadResponseBody {
-	attachments: Array<PresignedAttachmentUploadResponseAttachment>;
-}
-
-interface CompleteMultipartAttachmentUploadRequestBody {
-	uploads: Array<{upload_filename: string; upload_id: string}>;
-}
-
-interface CompleteMultipartAttachmentUploadResponseBody {
-	uploads: Array<{upload_filename: string}>;
-}
-
-export interface PreparedSendAttachments {
+interface PreparedSendAttachments {
 	attachments?: Array<ApiAttachmentMetadata>;
 	files?: Array<File>;
-}
-
-interface TextareaAttachmentUploadResult {
-	uploadFilename: string;
-	fileSize: number;
-	contentType: string;
 }
 
 interface TextareaAttachmentUpload {
@@ -265,6 +233,10 @@ function isDMRestrictedError(error: HttpError): boolean {
 	return getApiErrorBody(error)?.code === APIErrorCodes.CANNOT_SEND_MESSAGES_TO_USER;
 }
 
+function isCommunityMemberDmsDisabledError(error: HttpError): boolean {
+	return getApiErrorBody(error)?.code === APIErrorCodes.COMMUNITY_MEMBER_DMS_DISABLED;
+}
+
 function getUnclaimedAccountErrorCode(error: HttpError): string | undefined {
 	const code = getApiErrorBody(error)?.code;
 	if (
@@ -293,7 +265,7 @@ class PresignedUploadFallbackUnavailableError extends Error {
 	}
 }
 
-export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Message> | undefined> {
+class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Message> | undefined> {
 	private readonly maxSize: number;
 	private readonly abortControllers = new Map<string, AbortController>();
 	private readonly textareaAttachmentUploads = new Map<number, TextareaAttachmentUpload>();
@@ -312,6 +284,18 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 				}
 			},
 		);
+		AccountScopedWork.registerCancellation(() => this.handleAccountTransition());
+	}
+
+	private handleAccountTransition(): void {
+		for (const controller of this.abortControllers.values()) {
+			controller.abort(accountScopedWorkAbortError());
+		}
+		this.abortControllers.clear();
+		this.cancelAllTextareaAttachmentUploads();
+		this.localSendLimiters.clear();
+		this.localSendReservations.clear();
+		CloudUpload.clearAll();
 	}
 
 	isFull(): boolean {
@@ -462,7 +446,7 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 	}
 
 	cancelRequest(nonce: string): void {
-		logger.info('Cancel message send:', nonce);
+		logger.debug('Cancel message send:', nonce);
 		const messageUpload = CloudUpload.getMessageUpload(nonce);
 		if (messageUpload) {
 			this.cancelTextareaAttachmentUploads(messageUpload.attachments.map((attachment) => attachment.id));
@@ -480,7 +464,7 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 			}
 			const retryAfter = completion.retry.retryAfter;
 			const delay = retryAfter === undefined ? this.defaultRetryAfter : retryAfter;
-			logger.info(`Pausing immediate send retry for ${delay}ms due to retry request`);
+			logger.debug(`Pausing immediate send retry for ${delay}ms due to retry request`);
 			await new Promise<void>((resolve) => window.setTimeout(resolve, delay));
 		}
 	}
@@ -521,7 +505,7 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 			return;
 		}
 		const files = pendingAttachments.map((attachment) => attachment.file);
-		if (!this.canUsePresignedAttachmentUploads(files)) {
+		if (!canUsePresignedAttachmentUploads(files)) {
 			return;
 		}
 		this.ensureTextareaAttachmentUploadPruner(channelId);
@@ -535,7 +519,7 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 			waveform: attachment.waveform ?? undefined,
 		}));
 		const requestAbortController = new AbortController();
-		const plansPromise = this.requestPresignedAttachmentUploads(
+		const plansPromise = requestPresignedAttachmentUploads(
 			channelId,
 			requestAttachments,
 			files,
@@ -567,7 +551,7 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 					if (!plan) {
 						throw new Error(`Missing presigned upload metadata for attachment ${attachment.id}`);
 					}
-					const result = await this.uploadTextareaAttachmentViaPlan({
+					const result = await uploadTextareaAttachmentViaPlan({
 						channelId,
 						attachmentId: attachment.id,
 						file,
@@ -744,6 +728,10 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 		favoriteMemeId?: string;
 	}): Promise<PreparedSendAttachments | null> {
 		const {channelId, nonce, favoriteMemeId} = params;
+		if (ThreadGuilds.purgedThreadIds.has(channelId)) {
+			this.discardPurgedThreadSend(nonce);
+			return null;
+		}
 		const abortController = new AbortController();
 		this.abortControllers.set(nonce, abortController);
 		try {
@@ -751,7 +739,7 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 			if (!files?.length || !rawAttachments?.length) {
 				return {attachments: rawAttachments, files};
 			}
-			if (!this.canUsePresignedAttachmentUploads(files)) {
+			if (!canUsePresignedAttachmentUploads(files)) {
 				return {attachments: rawAttachments, files};
 			}
 			if (rawAttachments.length !== files.length) {
@@ -770,7 +758,7 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 			}
 			let plans: Array<PresignedAttachmentUploadResponseAttachment>;
 			try {
-				plans = await this.requestPresignedAttachmentUploads(channelId, rawAttachments, files, abortController.signal);
+				plans = await requestPresignedAttachmentUploads(channelId, rawAttachments, files, abortController.signal);
 			} catch (error) {
 				if (isAbortError(error)) {
 					return null;
@@ -807,10 +795,10 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 					return null;
 				}
 			}
-			const multipartUploadsToComplete: Array<{upload_filename: string; upload_id: string}> = [];
+			const multipartUploadsToComplete: Array<MultipartAttachmentUpload> = [];
 			let finalized: Array<ApiAttachmentMetadata>;
 			try {
-				finalized = await this.uploadAttachmentsViaPlans({
+				finalized = await uploadAttachmentsViaPlans({
 					nonce,
 					attachments: rawAttachments,
 					files,
@@ -839,7 +827,7 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 			}
 			if (multipartUploadsToComplete.length > 0) {
 				try {
-					await this.completeMultipartAttachmentUploads(channelId, multipartUploadsToComplete, abortController.signal);
+					await completeMultipartAttachmentUploads(channelId, multipartUploadsToComplete, abortController.signal);
 				} catch (error) {
 					if (isAbortError(error)) {
 						return null;
@@ -870,6 +858,18 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 	): Promise<void> {
 		const {channelId, nonce, hasAttachments} = payload;
 		await this.applyDevDelay();
+		if (payload.accountKey !== SessionManager.currentAccountKey) {
+			logger.debug(`Discarding a send to channel ${channelId} queued by another account`);
+			CloudUpload.removeMessageUpload(nonce);
+			completed(null, undefined, accountScopedWorkAbortError());
+			return;
+		}
+		if (ThreadGuilds.purgedThreadIds.has(channelId)) {
+			logger.debug(`Dropping message send to purged thread ${channelId}`);
+			this.discardPurgedThreadSend(nonce);
+			completed(null, undefined, new Error('Thread is no longer available'));
+			return;
+		}
 		const executionDecision = resolveMessageQueueSendExecutionDecision({
 			forceFailure: DeveloperOptions.forceFailMessageSends,
 		});
@@ -929,6 +929,13 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 		}
 	}
 
+	private discardPurgedThreadSend(nonce: string): void {
+		const messageUpload = CloudUpload.getMessageUpload(nonce);
+		if (!messageUpload) return;
+		this.cancelTextareaAttachmentUploads(messageUpload.attachments.map((attachment) => attachment.id));
+		CloudUpload.removeMessageUpload(nonce);
+	}
+
 	private async applyDevDelay(): Promise<void> {
 		if (!DeveloperOptions.slowMessageSend) return;
 		logger.debug(`Slow message send enabled, delaying by ${DEV_MESSAGE_DELAY}ms`);
@@ -961,204 +968,7 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 		}
 	}
 
-	private canUsePresignedAttachmentUploads(files?: Array<File>): files is Array<File> {
-		return RuntimeConfig.features.presigned_attachment_uploads && Boolean(files?.length);
-	}
-
-	private async requestPresignedAttachmentUploads(
-		channelId: string,
-		attachments: Array<ApiAttachmentMetadata>,
-		files: Array<File>,
-		signal: AbortSignal,
-	): Promise<Array<PresignedAttachmentUploadResponseAttachment>> {
-		const requestBody: PresignedAttachmentUploadRequestBody = {
-			attachments: attachments.map((attachment, index) => ({
-				id: attachment.id,
-				filename: attachment.filename,
-				file_size: files[index].size,
-				content_type: files[index].type || 'application/octet-stream',
-			})),
-		};
-		const response = await http.post<PresignedAttachmentUploadResponseBody>(Endpoints.CHANNEL_ATTACHMENTS(channelId), {
-			body: requestBody,
-			signal,
-		});
-		const plans = response.body?.attachments ?? [];
-		for (const entry of plans) {
-			if (!entry?.upload_mode || !entry.upload_filename || !entry.filename) {
-				throw new Error('Invalid presigned attachment upload response');
-			}
-			if (entry.upload_mode === 'singlepart') {
-				if (!entry.upload_url) {
-					throw new Error(`Missing upload_url for singlepart attachment ${entry.id}`);
-				}
-			} else if (entry.upload_mode === 'multipart') {
-				if (!entry.upload_id || !Array.isArray(entry.parts) || entry.parts.length === 0) {
-					throw new Error(`Missing multipart metadata for attachment ${entry.id}`);
-				}
-			} else {
-				throw new Error(`Unknown upload_mode for attachment ${(entry as {id: string}).id}`);
-			}
-		}
-		return plans;
-	}
-
-	private async uploadAttachmentsViaPlans(params: {
-		nonce: string;
-		attachments: Array<ApiAttachmentMetadata>;
-		files: Array<File>;
-		plans: Array<PresignedAttachmentUploadResponseAttachment>;
-		planIndexById: Map<string, number>;
-		multipartUploadsToComplete: Array<{upload_filename: string; upload_id: string}>;
-		signal: AbortSignal;
-	}): Promise<Array<ApiAttachmentMetadata>> {
-		const {nonce, attachments, files, plans, planIndexById, multipartUploadsToComplete, signal} = params;
-		const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
-		const loadedBytesByIndex = new Array<number>(files.length).fill(0);
-		let completedUploads = 0;
-		const reportProgress = (): void => {
-			if (totalBytes > 0) {
-				const uploadedBytes = loadedBytesByIndex.reduce((sum, loaded) => sum + loaded, 0);
-				CloudUpload.updateSendingProgress(nonce, (uploadedBytes / totalBytes) * 100);
-				return;
-			}
-			if (files.length > 0) {
-				CloudUpload.updateSendingProgress(nonce, (completedUploads / files.length) * 100);
-			}
-		};
-		for (let index = 0; index < attachments.length; index += 1) {
-			const attachment = attachments[index];
-			const file = files[index];
-			const planIndex = planIndexById.get(String(attachment.id));
-			if (planIndex == null) {
-				throw new Error(`Missing presigned upload metadata for attachment ${attachment.id}`);
-			}
-			const plan = plans[planIndex];
-			if (plan.upload_mode === 'singlepart') {
-				await http.put(plan.upload_url, {
-					body: file,
-					headers: {
-						'Content-Type': plan.content_type,
-					},
-					signal,
-					onProgress: (event) => {
-						const loaded = Math.min(file.size, event.loaded);
-						if (loaded > loadedBytesByIndex[index]) {
-							loadedBytesByIndex[index] = loaded;
-							reportProgress();
-						}
-					},
-				});
-				loadedBytesByIndex[index] = file.size;
-			} else {
-				multipartUploadsToComplete.push({
-					upload_filename: plan.upload_filename,
-					upload_id: plan.upload_id,
-				});
-				const parts: Array<ChunkedUploadPart> = plan.parts.map((entry) => ({
-					partNumber: entry.part_number,
-					uploadUrl: entry.upload_url,
-				}));
-				const uploadPlan: ChunkedUploadPlan = {file, contentType: plan.content_type, partSize: plan.part_size, parts};
-				await uploadFileInChunks(uploadPlan, {
-					signal,
-					onProgress: (uploaded) => {
-						if (uploaded > loadedBytesByIndex[index]) {
-							loadedBytesByIndex[index] = uploaded;
-							reportProgress();
-						}
-					},
-				});
-				loadedBytesByIndex[index] = file.size;
-			}
-			completedUploads += 1;
-			reportProgress();
-		}
-		return attachments.map((attachment) => {
-			const planIndex = planIndexById.get(String(attachment.id));
-			if (planIndex == null) {
-				throw new Error(`Missing presigned upload metadata for attachment ${attachment.id}`);
-			}
-			const plan = plans[planIndex];
-			return {
-				...attachment,
-				upload_filename: plan.upload_filename,
-				file_size: plan.file_size,
-				content_type: plan.content_type,
-			};
-		});
-	}
-
-	private async uploadTextareaAttachmentViaPlan(params: {
-		channelId: string;
-		attachmentId: number;
-		file: File;
-		plan: PresignedAttachmentUploadResponseAttachment;
-		signal: AbortSignal;
-	}): Promise<TextareaAttachmentUploadResult> {
-		const {channelId, attachmentId, file, plan, signal} = params;
-		const reportProgress = (uploadedBytes: number): void => {
-			if (file.size <= 0) {
-				CloudUpload.updateAttachment(channelId, attachmentId, {status: 'uploading', uploadProgress: 0});
-				return;
-			}
-			const uploadProgress = Math.round((Math.min(file.size, uploadedBytes) / file.size) * 100);
-			CloudUpload.updateAttachment(channelId, attachmentId, {status: 'uploading', uploadProgress});
-		};
-		if (plan.upload_mode === 'singlepart') {
-			await http.put(plan.upload_url, {
-				body: file,
-				headers: {
-					'Content-Type': plan.content_type,
-				},
-				signal,
-				onProgress: (event) => {
-					reportProgress(event.loaded);
-				},
-			});
-		} else {
-			const parts: Array<ChunkedUploadPart> = plan.parts.map((entry) => ({
-				partNumber: entry.part_number,
-				uploadUrl: entry.upload_url,
-			}));
-			await uploadFileInChunks(
-				{file, contentType: plan.content_type, partSize: plan.part_size, parts},
-				{
-					signal,
-					onProgress: (uploadedBytes) => {
-						reportProgress(uploadedBytes);
-					},
-				},
-			);
-			await this.completeMultipartAttachmentUploads(
-				channelId,
-				[{upload_filename: plan.upload_filename, upload_id: plan.upload_id}],
-				signal,
-			);
-		}
-		return {
-			uploadFilename: plan.upload_filename,
-			fileSize: plan.file_size,
-			contentType: plan.content_type,
-		};
-	}
-
-	private async completeMultipartAttachmentUploads(
-		channelId: string,
-		uploads: Array<{upload_filename: string; upload_id: string}>,
-		signal: AbortSignal,
-	): Promise<void> {
-		const body: CompleteMultipartAttachmentUploadRequestBody = {uploads};
-		await http.post<CompleteMultipartAttachmentUploadResponseBody>(Endpoints.CHANNEL_ATTACHMENTS_COMPLETE(channelId), {
-			body,
-			signal,
-		});
-	}
-
-	private abortRemainingMultipartUploads(
-		channelId: string,
-		uploads: Array<{upload_filename: string; upload_id: string}>,
-	): void {
+	private abortRemainingMultipartUploads(channelId: string, uploads: Array<MultipartAttachmentUpload>): void {
 		if (uploads.length === 0) return;
 		logger.debug(
 			`Leaving ${uploads.length} multipart ${uploads.length === 1 ? 'upload' : 'uploads'} for server to GC in channel ${channelId}`,
@@ -1251,8 +1061,16 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 		if (hasAttachments) {
 			this.restoreFailedMessage(channelId, nonce);
 		}
+		if (isAccountTransitionAbortError(error)) {
+			return;
+		}
 		if (!(error instanceof HttpError)) {
 			this.showErrorModal(error, channelId, hasAttachments);
+			return;
+		}
+		if (isCommunityMemberDmsDisabledError(error)) {
+			const systemMessage = createSystemMessage(channelId, i18n._(COMMUNITY_MEMBER_DMS_DISABLED_DESCRIPTOR));
+			MessageCommands.createOptimistic(channelId, systemMessage.toJSON());
 			return;
 		}
 		if (isDMRestrictedError(error)) {
@@ -1262,6 +1080,12 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 				i18n._(YOUR_MESSAGE_COULD_NOT_BE_DELIVERED_THIS_IS_DESCRIPTOR, {directMessagePrivacySettingsPath}),
 			);
 			MessageCommands.createOptimistic(channelId, systemMessage.toJSON());
+			return;
+		}
+		const tierBlock = describeAccountTierBlock(error);
+		if (tierBlock !== null && promptForAccountTier(error)) {
+			const tierMessage = accountGateReason(i18n, tierBlock);
+			MessageCommands.createOptimistic(channelId, createSystemMessage(channelId, tierMessage).toJSON());
 			return;
 		}
 		const unclaimedErrorCode = getUnclaimedAccountErrorCode(error);
@@ -1294,7 +1118,11 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 		if (getApiErrorBody(error)?.code === APIErrorCodes.CONTENT_BLOCKED) {
 			const systemMessage = createSystemMessage(
 				channelId,
-				i18n._(YOUR_MESSAGE_COULD_NOT_BE_DELIVERED_BECAUSE_IT_DESCRIPTOR),
+				i18n._(
+					RuntimeConfig.isSelfHosted()
+						? YOUR_MESSAGE_COULD_NOT_BE_DELIVERED_SELF_HOSTED_DESCRIPTOR
+						: YOUR_MESSAGE_COULD_NOT_BE_DELIVERED_BECAUSE_IT_DESCRIPTOR,
+				),
 			);
 			MessageCommands.createOptimistic(channelId, systemMessage.toJSON());
 			return;
@@ -1304,10 +1132,13 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 
 	private restoreFailedMessage(channelId: string, nonce: string): void {
 		const messageUpload = CloudUpload.getMessageUpload(nonce);
+		if (messageUpload === null) {
+			MessageCommands.deleteOptimistic(channelId, nonce);
+			return;
+		}
 		CloudUpload.restoreAttachmentsToTextarea(nonce);
-		const contentToRestore = messageUpload?.content ?? '';
-		DraftCommands.createDraft(channelId, contentToRestore);
-		if (messageUpload?.messageReference) {
+		DraftCommands.createDraft(SessionManager.currentAccountKey, channelId, messageUpload.content ?? '');
+		if (messageUpload.messageReference) {
 			MessageCommands.startReply(
 				channelId,
 				messageUpload.messageReference.message_id,
@@ -1358,7 +1189,12 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 			);
 		} else if (error instanceof HttpError && isExplicitContentError(error)) {
 			ModalCommands.push(
-				modal(() => <MatureContentRejectedModal data-flx="messaging.message-queue.mature-content-rejected-modal" />),
+				modal(() => (
+					<MatureContentRejectedModal
+						channelId={channelId}
+						data-flx="messaging.message-queue.mature-content-rejected-modal"
+					/>
+				)),
 			);
 		} else if (error instanceof HttpError && isFileTooLargeError(error)) {
 			ModalCommands.push(

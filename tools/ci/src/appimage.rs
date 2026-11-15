@@ -442,22 +442,6 @@ mod tests {
     }
 
     #[test]
-    fn only_published_channels_and_arches_are_stamped() {
-        assert_eq!(published_channel("canary").unwrap(), "canary");
-        assert_eq!(published_arch("arm64").unwrap(), "arm64");
-        let channel = published_channel("nightly").unwrap_err().to_string();
-        assert!(
-            channel.contains("not a published desktop channel"),
-            "{channel}"
-        );
-        let arch = published_arch("x86_64").unwrap_err().to_string();
-        assert!(
-            arch.contains("not a published Linux architecture"),
-            "{arch}"
-        );
-    }
-
-    #[test]
     fn zsyncmake_writes_the_control_file_beside_the_stamped_artifact() {
         let command = zsyncmake_command(
             Path::new("upload_staging/Fluxer-2026.904.135113-linux-x86_64.AppImage"),

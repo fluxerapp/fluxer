@@ -18,7 +18,7 @@ pub fn normalize_child_nodes(nodes: &mut Vec<Node>, inside_blockquote: bool) {
 
 pub fn normalize_node(node: &mut Node) {
     match node {
-        Node::Text { content } => *content = remove_text_presentation(content),
+        Node::Text { content } => remove_text_presentation(content),
         Node::Strong { children }
         | Node::Emphasis { children }
         | Node::Underline { children }
@@ -61,7 +61,7 @@ pub fn normalize_node(node: &mut Node) {
 
 pub fn apply_text_presentation_node(node: &mut Node) {
     match node {
-        Node::Text { content } => *content = remove_text_presentation(content),
+        Node::Text { content } => remove_text_presentation(content),
         Node::Strong { children }
         | Node::Emphasis { children }
         | Node::Underline { children }

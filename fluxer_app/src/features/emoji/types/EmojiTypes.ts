@@ -2,7 +2,7 @@
 
 import type {UserPartial} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 
-export interface GuildEmojiShape {
+interface GuildEmojiShape {
 	id: string;
 	guildId: string;
 	name: string;

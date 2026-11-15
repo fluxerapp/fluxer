@@ -37,7 +37,8 @@ export const DefaultShortcutChipList: React.FC<{chips: Array<string>; overridden
 			>
 				<Trans>Overridden</Trans>
 			</span>
-		) : disabled ? (
+		) : null}
+		{!overridden && disabled ? (
 			<span
 				className={styles.defaultChipsEmpty}
 				data-flx="user.keybinds-tab.default-shortcut-chip-list.default-chips-empty--3"

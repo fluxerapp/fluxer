@@ -1,0 +1,27 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.pageLink {
+	padding: 0;
+	border: none;
+	background: none;
+	color: var(--text-link);
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+
+.pageLink:hover {
+	text-decoration: underline;
+}
+
+.loadFailed {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	align-items: baseline;
+}
+
+.loadFailedText {
+	margin: 0;
+	color: var(--text-secondary);
+}

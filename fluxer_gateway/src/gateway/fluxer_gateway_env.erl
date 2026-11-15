@@ -3,7 +3,7 @@
 -module(fluxer_gateway_env).
 -typing([eqwalizer]).
 
--export([load/0, get/1, get_optional/1, get_map/0, patch/1, update/1]).
+-export([load/0, get/1, get_optional/1, get_map/0, update/1]).
 -export_type([config/0]).
 
 -define(CONFIG_TERM_KEY, {fluxer_gateway, runtime_config}).
@@ -29,11 +29,6 @@ get_optional(Key) when is_atom(Key) ->
 -spec get_map() -> config().
 get_map() ->
     ensure_loaded().
-
--spec patch(map()) -> config().
-patch(Patch) when is_map(Patch) ->
-    Map = get_map(),
-    set_config(maps:merge(Map, Patch)).
 
 -spec update(fun((config()) -> config())) -> config().
 update(Fun) when is_function(Fun, 1) ->

@@ -63,6 +63,7 @@ export class ElasticsearchUserAdapter extends ElasticsearchIndexAdapter<UserSear
 			client: options.client,
 			index: ELASTICSEARCH_INDEX_DEFINITIONS.users,
 			searchableFields: ['username', 'email', 'id'],
+			buildSearchableFields: (filters) => (filters.excludeEmail ? ['username', 'id'] : ['username', 'email', 'id']),
 			buildFilters: buildUserFilters,
 			buildSort: buildUserSort,
 			lock: options.lock,

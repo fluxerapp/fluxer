@@ -5,7 +5,6 @@ import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
 import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {
 	installDomainMovedApp,
 	openDomainMovedBrowserMigration,
@@ -16,11 +15,13 @@ import {
 	type DomainMovedStepsPlatform,
 	showDomainMovedStepsModal,
 } from '@app/features/app/domain_migration/DomainMovedStepsModal';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {isIOSMobileOrTabletUserAgent} from '@app/features/platform/notifications/NotificationAlertOptions';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
+import type React from 'react';
 import {useCallback} from 'react';
 
 type DomainMovedPresentation = 'install' | 'browser' | 'apple' | 'generic';
@@ -112,7 +113,7 @@ export const DomainMovedNagbar = observer(({isMobile}: {isMobile: boolean}) => {
 		RouterUtils.transitionTo(`${Routes.LOGIN}?handoff=1`);
 	}, []);
 	const tone = NAGBAR_TONES[NagbarToneKind.BRAND];
-	const values = {productName: PRODUCT_NAME, host: DomainMovedNotice.targetHost};
+	const values = {productName: RuntimeConfig.productName, host: DomainMovedNotice.targetHost};
 	const linkDeviceButton = (
 		<NagbarButton
 			isMobile={isMobile}
@@ -123,6 +124,44 @@ export const DomainMovedNagbar = observer(({isMobile}: {isMobile: boolean}) => {
 			{i18n._(LINK_NEW_DEVICE_DESCRIPTOR)}
 		</NagbarButton>
 	);
+	let actions: React.ReactNode;
+	if (presentation === 'install') {
+		actions = (
+			<NagbarButton
+				isMobile={isMobile}
+				onClick={handleInstall}
+				data-flx="app.app-layout.nagbars.domain-moved-nagbar.nagbar-button.install"
+			>
+				{i18n._(INSTALL_NEW_APP_DESCRIPTOR)}
+			</NagbarButton>
+		);
+	} else if (presentation === 'browser') {
+		actions = (
+			<>
+				{linkDeviceButton}
+				<NagbarButton
+					isMobile={isMobile}
+					onClick={handleOpenInBrowser}
+					data-flx="app.app-layout.nagbars.domain-moved-nagbar.nagbar-button.open-in-browser"
+				>
+					{i18n._(OPEN_IN_BROWSER_DESCRIPTOR, values)}
+				</NagbarButton>
+			</>
+		);
+	} else {
+		actions = (
+			<>
+				{linkDeviceButton}
+				<NagbarButton
+					isMobile={isMobile}
+					onClick={handleShowSteps}
+					data-flx="app.app-layout.nagbars.domain-moved-nagbar.nagbar-button.show-steps"
+				>
+					{i18n._(SHOW_ME_HOW_DESCRIPTOR)}
+				</NagbarButton>
+			</>
+		);
+	}
 	return (
 		<Nagbar
 			isMobile={isMobile}
@@ -136,39 +175,7 @@ export const DomainMovedNagbar = observer(({isMobile}: {isMobile: boolean}) => {
 				isMobile={isMobile}
 				onDismiss={handleDismiss}
 				message={i18n._(MESSAGE_DESCRIPTORS[presentation], values)}
-				actions={
-					presentation === 'install' ? (
-						<NagbarButton
-							isMobile={isMobile}
-							onClick={handleInstall}
-							data-flx="app.app-layout.nagbars.domain-moved-nagbar.nagbar-button.install"
-						>
-							{i18n._(INSTALL_NEW_APP_DESCRIPTOR)}
-						</NagbarButton>
-					) : presentation === 'browser' ? (
-						<>
-							{linkDeviceButton}
-							<NagbarButton
-								isMobile={isMobile}
-								onClick={handleOpenInBrowser}
-								data-flx="app.app-layout.nagbars.domain-moved-nagbar.nagbar-button.open-in-browser"
-							>
-								{i18n._(OPEN_IN_BROWSER_DESCRIPTOR, values)}
-							</NagbarButton>
-						</>
-					) : (
-						<>
-							{linkDeviceButton}
-							<NagbarButton
-								isMobile={isMobile}
-								onClick={handleShowSteps}
-								data-flx="app.app-layout.nagbars.domain-moved-nagbar.nagbar-button.show-steps"
-							>
-								{i18n._(SHOW_ME_HOW_DESCRIPTOR)}
-							</NagbarButton>
-						</>
-					)
-				}
+				actions={actions}
 				data-flx="app.app-layout.nagbars.domain-moved-nagbar.nagbar-content"
 			/>
 		</Nagbar>

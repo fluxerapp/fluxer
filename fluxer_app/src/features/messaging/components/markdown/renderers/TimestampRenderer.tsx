@@ -9,11 +9,26 @@ import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import timestampRendererStyles from '@app/features/theme/styles/TimestampRenderer.module.css';
 import Tick from '@app/features/ui/state/Tick';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {getFormattedDateTimeWithSeconds} from '@app/features/user/utils/DateFormatting';
 import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
-import {getFormattedDateTimeWithSeconds} from '@fluxer/date_utils/src/DateFormatting';
+import {resolveFormattingLocale} from '@fluxer/constants/src/Locales';
 import {DateTime} from 'luxon';
+import {computed} from 'mobx';
 import {observer} from 'mobx-react-lite';
 import React, {type ReactElement, useMemo} from 'react';
+
+interface RelativeLabels {
+	readonly displayTime: string;
+	readonly relativeTime: string | null;
+}
+
+function areRelativeLabelsEqual(a: RelativeLabels, b: RelativeLabels): boolean {
+	return a.displayTime === b.displayTime && a.relativeTime === b.relativeTime;
+}
+
+function readTickSecond(): number {
+	return Tick.nowSecond;
+}
 
 export const TimestampRenderer = observer(function TimestampRenderer({
 	node,
@@ -23,15 +38,30 @@ export const TimestampRenderer = observer(function TimestampRenderer({
 	const {timestamp, style} = node;
 	const i18n = options.i18n;
 	const date = getDateFromUnixTimestampSeconds(timestamp);
-	const isValidTimestamp = date !== null;
 	const locale = getCurrentLocale();
-	const fullDateTime = date !== null ? getFormattedDateTimeWithSeconds(date, locale) : null;
+	const fullDateTime = date !== null ? getFormattedDateTimeWithSeconds(date) : null;
 	const isRelativeStyle = style === TimestampStyle.RelativeTime;
-	const tick = isRelativeStyle ? Tick.nowSecond : 0;
-	const relativeDisplayTime = useMemo(() => {
-		return isValidTimestamp ? formatTimestamp(timestamp, style, i18n) : '';
-	}, [tick, isValidTimestamp, timestamp, style, i18n.locale]);
-	const relativeTime = date !== null ? DateTime.fromJSDate(date).setLocale(locale).toRelative() : null;
+	const relativeLabels = useMemo(
+		() =>
+			computed(
+				(): RelativeLabels => {
+					if (isRelativeStyle) {
+						readTickSecond();
+					}
+					const labelDate = getDateFromUnixTimestampSeconds(timestamp);
+					if (labelDate === null) {
+						return {displayTime: '', relativeTime: null};
+					}
+					return {
+						displayTime: formatTimestamp(timestamp, style, i18n),
+						relativeTime: DateTime.fromJSDate(labelDate).setLocale(resolveFormattingLocale(locale)).toRelative(),
+					};
+				},
+				{equals: areRelativeLabelsEqual},
+			),
+		[isRelativeStyle, timestamp, style, i18n, i18n.locale, locale],
+	).get();
+	const relativeTime = relativeLabels.relativeTime;
 	if (date === null || fullDateTime === null) {
 		return React.createElement('span', {className: markupStyles.timestamp}, String(timestamp));
 	}
@@ -54,7 +84,7 @@ export const TimestampRenderer = observer(function TimestampRenderer({
 			</div>
 		</div>
 	);
-	const displayTime = isRelativeStyle ? relativeDisplayTime : formatTimestamp(timestamp, style, i18n);
+	const displayTime = relativeLabels.displayTime;
 	return (
 		<Tooltip
 			key={id}

@@ -11,16 +11,14 @@ import type {
 } from '@app/api/database/types/OAuth2Types';
 import {Logger} from '@app/api/Logger';
 import type {Application} from '@app/api/models/Application';
-import {filterOAuth2ScopeSet, isOAuth2Scope, sortOAuth2Scopes} from '@app/api/oauth/OAuth2ScopeUtils';
+import {filterOAuth2ScopeSet, isOAuth2Scope, parseOAuth2Scope, sortOAuth2Scopes} from '@app/api/oauth/OAuth2ScopeUtils';
 import {ACCESS_TOKEN_TTL_SECONDS} from '@app/api/oauth/OAuth2TokenConstants';
-import {generateOAuthTokenSecret} from '@app/api/oauth/OAuthTokenSecret';
-import {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
-import type {IApplicationRepository} from '@app/api/oauth/repositories/IApplicationRepository';
-import type {IOAuth2TokenRepository} from '@app/api/oauth/repositories/IOAuth2TokenRepository';
-import {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
+import type {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
+import type {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
 import {isSignInRefused} from '@app/api/user/UserHelpers';
 import {mapUserToOAuthResponse} from '@app/api/user/UserMappers';
-import {verifyPassword} from '@app/api/utils/PasswordUtils';
+import {randomBase64Url} from '@app/api/utils/SecretHash';
+import type {StoredSecretVerifier} from '@app/api/utils/StoredSecret';
 import {InvalidRequestError} from '@fluxer/errors/src/domains/core/InvalidRequestError';
 import {InvalidTokenError} from '@fluxer/errors/src/domains/core/InvalidTokenError';
 import {BotIsPrivateError} from '@fluxer/errors/src/domains/oauth/BotIsPrivateError';
@@ -32,32 +30,40 @@ import {InvalidScopeError} from '@fluxer/errors/src/domains/oauth/InvalidScopeEr
 import {MissingClientSecretError} from '@fluxer/errors/src/domains/oauth/MissingClientSecretError';
 import {MissingRedirectUriError} from '@fluxer/errors/src/domains/oauth/MissingRedirectUriError';
 
+const ADMIN_SSO_TOKEN_SCOPES = ['identify', 'email'];
+
 interface OAuth2ServiceDeps {
-	applicationRepository?: IApplicationRepository;
-	oauth2TokenRepository?: IOAuth2TokenRepository;
+	applicationRepository: ApplicationRepository;
+	oauth2TokenRepository: OAuth2TokenRepository;
+	storedSecrets: StoredSecretVerifier;
 }
 
-export {ACCESS_TOKEN_TTL_SECONDS};
-
 export class OAuth2Service {
-	private applications: IApplicationRepository;
-	private tokens: IOAuth2TokenRepository;
+	private applications: ApplicationRepository;
+	private tokens: OAuth2TokenRepository;
+	private storedSecrets: StoredSecretVerifier;
 
 	constructor(
 		private readonly apiContext: ApiContext,
 		deps: OAuth2ServiceDeps,
 	) {
-		this.applications = deps.applicationRepository ?? new ApplicationRepository();
-		this.tokens = deps.oauth2TokenRepository ?? new OAuth2TokenRepository();
+		this.applications = deps.applicationRepository;
+		this.tokens = deps.oauth2TokenRepository;
+		this.storedSecrets = deps.storedSecrets;
+	}
+
+	async clientSecretMatches(application: Application, clientSecret: string): Promise<boolean> {
+		if (!application.clientSecretHash) return true;
+		return this.storedSecrets.matches(
+			`client_secret:${application.applicationId}`,
+			clientSecret,
+			application.clientSecretHash,
+		);
 	}
 
 	private async findActiveUser(userId: UserID) {
 		const user = await this.apiContext.services.users.findUnique(userId);
 		return user && !isSignInRefused(user) ? user : null;
-	}
-
-	private parseScope(scope: string): Array<string> {
-		return scope.split(/[\s+]+/).filter(Boolean);
 	}
 
 	private validateRedirectUri(application: Application, redirectUri: string): boolean {
@@ -91,7 +97,6 @@ export class OAuth2Service {
 		state?: string;
 		codeChallenge?: string;
 		codeChallengeMethod?: 'S256' | 'plain';
-		responseType?: 'code';
 		userId: UserID;
 	}): Promise<{
 		redirectTo: string;
@@ -106,7 +111,7 @@ export class OAuth2Service {
 		if (!application) {
 			throw new InvalidClientError();
 		}
-		const scopeSet = new Set<string>(this.parseScope(params.scope));
+		const scopeSet = new Set<string>(parseOAuth2Scope(params.scope));
 		for (const s of scopeSet) {
 			if (!isOAuth2Scope(s)) {
 				throw new InvalidScopeError();
@@ -132,7 +137,7 @@ export class OAuth2Service {
 			throw new InvalidRequestError();
 		}
 		const codeRow: OAuth2AuthorizationCodeRow = {
-			code: generateOAuthTokenSecret(),
+			code: randomBase64Url(32),
 			application_id: application.applicationId,
 			user_id: params.userId,
 			redirect_uri: loc.toString(),
@@ -172,40 +177,93 @@ export class OAuth2Service {
 		};
 	}
 
-	private async issueTokens(args: {application: Application; userId: UserID | null; scope: Set<string>}): Promise<{
+	private async issueTokens(args: {application: Application; userId: UserID; scope: Set<string>}): Promise<{
 		accessToken: OAuth2AccessTokenRow;
-		refreshToken?: OAuth2RefreshTokenRow;
+		refreshToken: OAuth2RefreshTokenRow;
 		token_type: 'Bearer';
 		expires_in: number;
 		scope?: string;
 	}> {
 		const scope = filterOAuth2ScopeSet(args.scope);
 		const accessToken: OAuth2AccessTokenRow = {
-			token_: generateOAuthTokenSecret(),
+			token_: randomBase64Url(32),
 			application_id: args.application.applicationId,
 			user_id: args.userId,
 			scope,
 			created_at: new Date(),
 		};
 		const createdAccess = await this.tokens.createAccessToken(accessToken);
-		let refreshToken: OAuth2RefreshTokenRow | undefined;
-		if (args.userId) {
-			const row: OAuth2RefreshTokenRow = {
-				token_: generateOAuthTokenSecret(),
-				application_id: args.application.applicationId,
-				user_id: args.userId,
-				scope,
-				created_at: new Date(),
-			};
-			const created = await this.tokens.createRefreshToken(row);
-			refreshToken = created.toRow();
-		}
+		const row: OAuth2RefreshTokenRow = {
+			token_: randomBase64Url(32),
+			application_id: args.application.applicationId,
+			user_id: args.userId,
+			scope,
+			created_at: new Date(),
+		};
+		const created = await this.tokens.createRefreshToken(row);
+		const refreshToken = created.toRow();
 		return {
 			accessToken: createdAccess.toRow(),
 			refreshToken,
 			token_type: 'Bearer',
 			expires_in: ACCESS_TOKEN_TTL_SECONDS,
 			scope: sortOAuth2Scopes(scope).join(' '),
+		};
+	}
+
+	async authenticateClient(args: {
+		authorizationHeader?: string;
+		clientId?: string;
+		clientSecret?: string;
+	}): Promise<Application> {
+		const basic = this.basicAuth(args.authorizationHeader);
+		const clientId = args.clientId ?? basic?.clientId ?? '';
+		const clientSecret = args.clientSecret ?? basic?.clientSecret;
+		let parsedClientId: ApplicationID;
+		try {
+			parsedClientId = BigInt(clientId) as ApplicationID;
+		} catch {
+			throw new InvalidClientError();
+		}
+		const application = await this.applications.getApplication(parsedClientId);
+		if (!application) {
+			Logger.debug({client_id_len: clientId.length}, 'OAuth2 client authentication: unknown application');
+			throw new InvalidClientError();
+		}
+		if (!clientSecret) {
+			Logger.debug(
+				{application_id: application.applicationId.toString()},
+				'OAuth2 client authentication: missing client_secret',
+			);
+			throw new MissingClientSecretError();
+		}
+		if (!(await this.clientSecretMatches(application, clientSecret))) {
+			Logger.debug(
+				{application_id: application.applicationId.toString()},
+				'OAuth2 client authentication: client_secret verification failed',
+			);
+			throw new InvalidClientSecretError();
+		}
+		return application;
+	}
+
+	async issueAdminSsoTokens(
+		application: Application,
+		userId: UserID,
+	): Promise<{
+		access_token: string;
+		token_type: 'Bearer';
+		expires_in: number;
+		scope: string;
+		refresh_token: string;
+	}> {
+		const res = await this.issueTokens({application, userId, scope: new Set(ADMIN_SSO_TOKEN_SCOPES)});
+		return {
+			access_token: res.accessToken.token_,
+			token_type: 'Bearer',
+			expires_in: res.expires_in,
+			scope: res.scope ?? '',
+			refresh_token: res.refreshToken.token_,
 		};
 	}
 
@@ -223,7 +281,7 @@ export class OAuth2Service {
 		token_type: 'Bearer';
 		expires_in: number;
 		scope?: string;
-		refresh_token?: string;
+		refresh_token: string;
 	}> {
 		Logger.debug(
 			{
@@ -236,37 +294,11 @@ export class OAuth2Service {
 			},
 			'OAuth2 tokenExchange start',
 		);
-		const basic = this.basicAuth(params.headersAuthorization);
-		const clientId = params.clientId ?? basic?.clientId ?? '';
-		const clientSecret = params.clientSecret ?? basic?.clientSecret;
-		let parsedClientId: ApplicationID;
-		try {
-			parsedClientId = BigInt(clientId) as ApplicationID;
-		} catch {
-			throw new InvalidClientError();
-		}
-		const application = await this.applications.getApplication(parsedClientId);
-		if (!application) {
-			Logger.debug({client_id_len: clientId.length}, 'OAuth2 tokenExchange: unknown application');
-			throw new InvalidClientError();
-		}
-		if (!clientSecret) {
-			Logger.debug(
-				{application_id: application.applicationId.toString()},
-				'OAuth2 tokenExchange: missing client_secret',
-			);
-			throw new MissingClientSecretError();
-		}
-		if (application.clientSecretHash) {
-			const ok = await verifyPassword({password: clientSecret, passwordHash: application.clientSecretHash});
-			if (!ok) {
-				Logger.debug(
-					{application_id: application.applicationId.toString()},
-					'OAuth2 tokenExchange: client_secret verification failed',
-				);
-				throw new InvalidClientSecretError();
-			}
-		}
+		const application = await this.authenticateClient({
+			authorizationHeader: params.headersAuthorization,
+			clientId: params.clientId,
+			clientSecret: params.clientSecret,
+		});
 		if (params.grantType === 'authorization_code') {
 			const code = params.code!;
 			const authCode = await this.tokens.getAuthorizationCode(code);
@@ -301,7 +333,7 @@ export class OAuth2Service {
 					throw new InvalidGrantError();
 				}
 			}
-			if (authCode.userId && !(await this.findActiveUser(authCode.userId))) {
+			if (!(await this.findActiveUser(authCode.userId))) {
 				throw new InvalidGrantError();
 			}
 			if (!(await this.tokens.consumeAuthorizationCode(code, authCode.applicationId))) {
@@ -318,7 +350,7 @@ export class OAuth2Service {
 				token_type: 'Bearer',
 				expires_in: res.expires_in,
 				scope: res.scope,
-				refresh_token: res.refreshToken?.token_,
+				refresh_token: res.refreshToken.token_,
 			};
 		}
 		const refresh = await this.tokens.getRefreshToken(params.refreshToken!);
@@ -344,13 +376,13 @@ export class OAuth2Service {
 			token_type: 'Bearer',
 			expires_in: res.expires_in,
 			scope: res.scope,
-			refresh_token: res.refreshToken?.token_,
+			refresh_token: res.refreshToken.token_,
 		};
 	}
 
 	async userInfo(accessToken: string) {
 		const token = await this.tokens.getAccessToken(accessToken);
-		if (!token?.userId) {
+		if (!token) {
 			throw new InvalidTokenError();
 		}
 		const application = await this.applications.getApplication(token.applicationId);
@@ -367,10 +399,7 @@ export class OAuth2Service {
 
 	async introspect(
 		tokenStr: string,
-		auth: {
-			clientId: ApplicationID;
-			clientSecret?: string | null;
-		},
+		applicationId: ApplicationID,
 	): Promise<{
 		active: boolean;
 		client_id?: string;
@@ -380,28 +409,15 @@ export class OAuth2Service {
 		exp?: number;
 		iat?: number;
 	}> {
-		const application = await this.applications.getApplication(auth.clientId);
-		if (!application) {
-			return {active: false};
-		}
-		if (!auth.clientSecret) {
-			return {active: false};
-		}
-		if (application.clientSecretHash) {
-			const valid = await verifyPassword({password: auth.clientSecret, passwordHash: application.clientSecretHash});
-			if (!valid) {
-				return {active: false};
-			}
-		}
 		const accessToken = await this.tokens.getAccessToken(tokenStr);
-		if (accessToken && accessToken.applicationId === application.applicationId) {
-			if (accessToken.userId && !(await this.findActiveUser(accessToken.userId))) {
+		if (accessToken && accessToken.applicationId === applicationId) {
+			if (!(await this.findActiveUser(accessToken.userId))) {
 				return {active: false};
 			}
 			return {
 				active: true,
 				client_id: accessToken.applicationId.toString(),
-				sub: accessToken.userId ? accessToken.userId.toString() : undefined,
+				sub: accessToken.userId.toString(),
 				scope: sortOAuth2Scopes(filterOAuth2ScopeSet(accessToken.scope)).join(' '),
 				token_type: 'Bearer',
 				exp: Math.floor((accessToken.createdAt.getTime() + ACCESS_TOKEN_TTL_SECONDS * 1000) / 1000),
@@ -409,7 +425,7 @@ export class OAuth2Service {
 			};
 		}
 		const refreshToken = await this.tokens.getRefreshToken(tokenStr);
-		if (refreshToken && refreshToken.applicationId === application.applicationId) {
+		if (refreshToken && refreshToken.applicationId === applicationId) {
 			if (!(await this.findActiveUser(refreshToken.userId))) {
 				return {active: false};
 			}
@@ -430,20 +446,15 @@ export class OAuth2Service {
 		tokenTypeHint: 'access_token' | 'refresh_token' | undefined,
 		auth: {
 			clientId: ApplicationID;
-			clientSecret?: string | null;
+			clientSecret: string;
 		},
 	): Promise<void> {
 		const application = await this.applications.getApplication(auth.clientId);
 		if (!application) {
 			throw new InvalidClientError();
 		}
-		if (application.clientSecretHash) {
-			const valid = auth.clientSecret
-				? await verifyPassword({password: auth.clientSecret, passwordHash: application.clientSecretHash})
-				: false;
-			if (!valid) {
-				throw new InvalidClientSecretError();
-			}
+		if (!(await this.clientSecretMatches(application, auth.clientSecret))) {
+			throw new InvalidClientSecretError();
 		}
 		if (tokenTypeHint === 'refresh_token') {
 			const refresh = await this.tokens.getRefreshToken(tokenStr);
@@ -454,11 +465,7 @@ export class OAuth2Service {
 		}
 		const access = await this.tokens.getAccessToken(tokenStr);
 		if (access && access.applicationId === application.applicationId) {
-			if (access.userId) {
-				await this.tokens.deleteAllTokensForUserAndApplication(access.userId, application.applicationId);
-				return;
-			}
-			await this.tokens.deleteAccessToken(tokenStr, application.applicationId, access.userId);
+			await this.tokens.deleteAllTokensForUserAndApplication(access.userId, application.applicationId);
 			return;
 		}
 	}

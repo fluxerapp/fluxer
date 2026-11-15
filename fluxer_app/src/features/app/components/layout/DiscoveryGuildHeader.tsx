@@ -8,7 +8,7 @@ import {useLingui} from '@lingui/react/macro';
 
 const EXPLORE_DESCRIPTOR = msg({
 	message: 'Explore',
-	comment: 'Short label in the app layout discovery guild header.',
+	comment: 'Short label in the Explore page header.',
 });
 
 export function DiscoveryGuildHeader() {

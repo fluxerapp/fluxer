@@ -1,0 +1,150 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.showcase {
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+	min-width: 0;
+	min-height: 0;
+	padding: 2rem 1.5rem 1.5rem;
+	background-color: var(--brand-primary);
+	color: var(--brand-primary-fill);
+	overflow: hidden;
+}
+
+.stage {
+	flex: 1 1 auto;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	overflow-y: auto;
+	scrollbar-width: none;
+}
+
+.slide {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.picture {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 12.5rem;
+	margin-bottom: 0.25rem;
+}
+
+.image {
+	display: block;
+	max-width: 100%;
+	max-height: 100%;
+	width: auto;
+	height: auto;
+	border-radius: 0.5rem;
+	object-fit: contain;
+	user-select: none;
+}
+
+.title {
+	margin: 0;
+	color: var(--brand-primary-fill);
+	font-size: 1.125rem;
+	font-weight: 700;
+	line-height: 1.5rem;
+	text-wrap: balance;
+}
+
+.body {
+	margin: 0;
+	color: color-mix(in srgb, var(--brand-primary-fill) 86%, transparent);
+	font-size: 0.8125rem;
+	line-height: 1.25rem;
+}
+
+.footer {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.dots {
+	display: flex;
+	gap: 0.25rem;
+	margin-inline-start: -0.4375rem;
+}
+
+.dot {
+	position: relative;
+	width: 1.25rem;
+	height: 1.25rem;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	cursor: pointer;
+}
+
+.dot::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	margin: auto;
+	width: 0.375rem;
+	height: 0.375rem;
+	border-radius: 50%;
+	background-color: color-mix(in srgb, var(--brand-primary-fill) 40%, transparent);
+	transition: background-color 0.2s ease;
+}
+
+.dot[aria-current='true']::after {
+	background-color: var(--brand-primary-fill);
+}
+
+.dot:disabled {
+	cursor: default;
+}
+
+.terms {
+	margin: 0;
+	color: color-mix(in srgb, var(--brand-primary-fill) 72%, transparent);
+	font-size: 0.75rem;
+	line-height: 1.125rem;
+}
+
+.termsLink,
+.termsLink:hover {
+	color: var(--brand-primary-fill);
+	text-decoration: underline;
+}
+
+.compact {
+	flex: 0 0 auto;
+	gap: 0;
+	margin-bottom: 1.25rem;
+	padding: 1rem;
+}
+
+.compact .stage {
+	overflow: visible;
+}
+
+.compact .slide {
+	flex-direction: row;
+	align-items: center;
+	gap: 1rem;
+}
+
+.compact .picture {
+	flex: 0 0 auto;
+	width: 7rem;
+	height: 7rem;
+	margin: 0;
+}
+
+.compact .title {
+	font-size: 1rem;
+}
+
+:global(html.reduced-motion) .dot::after {
+	transition: none;
+}

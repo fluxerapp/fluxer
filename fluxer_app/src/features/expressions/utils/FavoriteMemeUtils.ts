@@ -89,15 +89,12 @@ export function deriveDefaultNameFromEmbedMedia(i18n: I18n, embedMedia: EmbedMed
 	return i18n._(MEDIA_DESCRIPTOR);
 }
 
-export function isFavoritedByContentHash(
-	memes: ReadonlyArray<FavoriteMeme>,
-	contentHash: string | null | undefined,
-): boolean {
+function isFavoritedByContentHash(memes: ReadonlyArray<FavoriteMeme>, contentHash: string | null | undefined): boolean {
 	if (!contentHash) return false;
 	return memes.some((meme) => meme.contentHash === contentHash);
 }
 
-export function isFavoritedByGifSlug(
+function isFavoritedByGifSlug(
 	memes: ReadonlyArray<FavoriteMeme>,
 	gifProvider: string | null | undefined,
 	gifSlug: string | null | undefined,

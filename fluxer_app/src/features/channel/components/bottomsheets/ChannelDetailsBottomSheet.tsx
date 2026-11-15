@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Routes} from '@app/app/Routes';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {MuteDurationSheet} from '@app/features/app/components/bottomsheets/MuteDurationSheet';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
+import {ChannelSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {ChannelPinsContent} from '@app/features/app/components/shared/ChannelPinsContent';
 import Authentication from '@app/features/auth/state/Authentication';
 import * as ChannelCommands from '@app/features/channel/commands/ChannelCommands';
@@ -12,7 +12,7 @@ import {
 	showChannelErrorModal,
 	showChannelErrorModalAfterCurrentModal,
 } from '@app/features/channel/components/alerts/ChannelErrorModalUtils';
-import {DMCloseFailedModal} from '@app/features/channel/components/alerts/DMCloseFailedModal';
+import {showCloseDMConfirmation} from '@app/features/channel/components/alerts/CloseDMConfirmation';
 import styles from '@app/features/channel/components/bottomsheets/ChannelDetailsBottomSheet.module.css';
 import {GuildMemberList} from '@app/features/channel/components/bottomsheets/ChannelDetailsBottomSheetMemberList';
 import type {
@@ -21,7 +21,6 @@ import type {
 } from '@app/features/channel/components/bottomsheets/ChannelDetailsBottomSheetTypes';
 import {ChannelSearchBottomSheet} from '@app/features/channel/components/bottomsheets/ChannelSearchBottomSheet';
 import {
-	ARE_YOU_SURE_YOU_WANT_TO_CLOSE_YOUR_DESCRIPTOR,
 	ARE_YOU_SURE_YOU_WANT_TO_DELETE_THIS_DESCRIPTOR,
 	CHANNEL_DESCRIPTOR,
 	CHANNEL_DETAILS_SECTIONS_DESCRIPTOR,
@@ -29,7 +28,6 @@ import {
 	CHANNEL_SETTINGS_DESCRIPTOR,
 	DELETE_DESCRIPTOR,
 	DIRECT_MESSAGE_DESCRIPTOR,
-	DM_CLOSED_DESCRIPTOR,
 	DM_SETTINGS_DESCRIPTOR,
 	FAILED_TO_DELETE_CHANNEL_DESCRIPTOR,
 	FAILED_TO_PIN_DM_DESCRIPTOR,
@@ -40,7 +38,6 @@ import {
 	GROUP_SETTINGS_DESCRIPTOR,
 	logger,
 	MARKED_AS_READ_DESCRIPTOR,
-	MORE_DESCRIPTOR,
 	MUTE_DESCRIPTOR,
 	PINNED_GROUP_DESCRIPTOR,
 	SEARCH_DESCRIPTOR,
@@ -56,22 +53,24 @@ import {NotificationSettingsSheet} from '@app/features/channel/components/bottom
 import {QuickActionButton} from '@app/features/channel/components/bottomsheets/channel_details_bottom_sheet/QuickActionButton';
 import {createMuteConfig} from '@app/features/channel/components/MuteOptions';
 import {ChannelFollowModal} from '@app/features/channel/components/modals/ChannelFollowModal';
-import {ChannelSettingsModal} from '@app/features/channel/components/modals/ChannelSettingsModal';
 import {CreateDMModal} from '@app/features/channel/components/modals/CreateDMModal';
 import {EditGroupModal} from '@app/features/channel/components/modals/EditGroupModal';
 import {GroupInvitesModal} from '@app/features/channel/components/modals/GroupInvitesModal';
 import {useDeleteMyMessagesInChannel} from '@app/features/channel/hooks/useDeleteMyMessagesInChannel';
 import {canFollowAnnouncementChannel, FOLLOW_DESCRIPTOR} from '@app/features/channel/utils/ChannelFollowUtils';
 import {
-	CLOSE_DM_DESCRIPTOR,
 	DELETE_CHANNEL_DESCRIPTOR,
 	MUTE_CHANNEL_DESCRIPTOR,
 	MUTE_CONVERSATION_DESCRIPTOR,
 	UNMUTE_CHANNEL_DESCRIPTOR,
 	UNMUTE_CONVERSATION_DESCRIPTOR,
 } from '@app/features/channel/utils/ChannelMessageDescriptors';
-import {ChannelDebugModal} from '@app/features/devtools/components/debug/ChannelDebugModal';
-import {UserDebugModal} from '@app/features/devtools/components/debug/UserDebugModal';
+import {
+	CHANNEL_RECORD_DESCRIPTOR,
+	RecordDebugModal,
+	USER_RECORD_DESCRIPTOR,
+} from '@app/features/devtools/components/debug/RecordDebugModal';
+
 import {GuildNotificationSettingsModal} from '@app/features/guild/components/modals/GuildNotificationSettingsModal';
 import {GuildMemberActionsSheet} from '@app/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet';
 import {useLeaveGroup} from '@app/features/guild/hooks/useLeaveGroup';
@@ -81,6 +80,7 @@ import {
 	ANNOUNCEMENT_CHANNEL_DESCRIPTOR,
 	CHANNEL_DELETED_DESCRIPTOR,
 	LINK_COPIED_TO_CLIPBOARD_DESCRIPTOR,
+	MORE_DESCRIPTOR,
 	PERSONAL_NOTES_DESCRIPTOR,
 	PINNED_DM_DESCRIPTOR,
 	REMOVED_FROM_FAVORITES_TOAST_DESCRIPTOR,
@@ -94,9 +94,9 @@ import type {GuildMember} from '@app/features/member/models/GuildMember';
 import * as MemberListUtils from '@app/features/member/utils/MemberListUtils';
 import Favorites from '@app/features/messaging/state/Favorites';
 import {buildChannelLink} from '@app/features/messaging/utils/MessageLinkUtils';
-import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
-import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
+
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
+import {ThreadMembersList} from '@app/features/threads/components/ThreadMembersPanel';
 import {
 	MembersIcon,
 	MoreOptionsVerticalIcon,
@@ -120,7 +120,7 @@ import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {getMutedText} from '@app/lib/overlay/OverlayContextMenu';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
+
 import {Trans, useLingui} from '@lingui/react/macro';
 import {MegaphoneSimpleIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
@@ -257,9 +257,10 @@ export const ChannelDetailsBottomSheet: React.FC<ChannelDetailsBottomSheetProps>
 			ModalCommands.pushAfterBottomSheetClose(
 				onClose,
 				modal(() => (
-					<ChannelDebugModal
+					<RecordDebugModal
+						label={i18n._(CHANNEL_RECORD_DESCRIPTOR)}
 						title={channelName}
-						channel={channel}
+						record={channel}
 						data-flx="channel.channel-details-bottom-sheet.handle-debug-channel.channel-debug-modal"
 					/>
 				)),
@@ -270,9 +271,10 @@ export const ChannelDetailsBottomSheet: React.FC<ChannelDetailsBottomSheetProps>
 			ModalCommands.pushAfterBottomSheetClose(
 				onClose,
 				modal(() => (
-					<UserDebugModal
+					<RecordDebugModal
+						label={i18n._(USER_RECORD_DESCRIPTOR)}
 						title={NicknameUtils.getDisplayName(recipient)}
-						user={recipient}
+						record={recipient}
 						data-flx="channel.channel-details-bottom-sheet.handle-debug-user.user-debug-modal"
 					/>
 				)),
@@ -313,42 +315,15 @@ export const ChannelDetailsBottomSheet: React.FC<ChannelDetailsBottomSheetProps>
 			}
 		}, [channel.id, isGroupDM, closeMoreOptions, i18n]);
 		const handleCloseDM = useCallback(() => {
-			ModalCommands.pushAfterBottomSheetClose(
-				() => {
+			showCloseDMConfirmation({
+				i18n,
+				channelId: channel.id,
+				displayName: recipient ? NicknameUtils.getNickname(recipient, null) : '',
+				beforeOpen: () => {
 					closeMoreOptions();
 					onClose();
 				},
-				modal(() => (
-					<ConfirmModal
-						title={i18n._(CLOSE_DM_DESCRIPTOR)}
-						description={i18n._(ARE_YOU_SURE_YOU_WANT_TO_CLOSE_YOUR_DESCRIPTOR, {
-							recipientUsername: recipient ? NicknameUtils.getNickname(recipient, null) : '',
-						})}
-						primaryText={i18n._(CLOSE_DM_DESCRIPTOR)}
-						primaryVariant="danger"
-						onPrimary={async () => {
-							try {
-								await ChannelCommands.remove(channel.id);
-								const selectedChannel = SelectedChannel.selectedChannelIds.get(ME);
-								if (selectedChannel === channel.id) {
-									RouterUtils.transitionTo(Routes.ME);
-								}
-								ToastCommands.createToast({type: 'success', children: i18n._(DM_CLOSED_DESCRIPTOR)});
-							} catch (error) {
-								logger.error('Failed to close DM:', error);
-								window.setTimeout(() => {
-									ModalCommands.push(
-										modal(() => (
-											<DMCloseFailedModal data-flx="channel.channel-details-bottom-sheet.handle-close-dm.dm-close-failed-modal" />
-										)),
-									);
-								}, 0);
-							}
-						}}
-						data-flx="channel.channel-details-bottom-sheet.handle-close-dm.confirm-modal"
-					/>
-				)),
-			);
+			});
 		}, [channel.id, i18n, recipient, onClose, closeMoreOptions]);
 		const handleLeaveGroup = useCallback(() => {
 			ModalCommands.runAfterBottomSheetClose(
@@ -404,12 +379,15 @@ export const ChannelDetailsBottomSheet: React.FC<ChannelDetailsBottomSheetProps>
 		const handleEditChannel = useCallback(() => {
 			ModalCommands.pushAfterBottomSheetClose(
 				onClose,
-				modal(() => (
-					<ChannelSettingsModal
-						channelId={channel.id}
-						data-flx="channel.channel-details-bottom-sheet.handle-edit-channel.channel-settings-modal"
-					/>
-				)),
+				modal(
+					() => (
+						<ChannelSettingsModal
+							channelId={channel.id}
+							data-flx="channel.channel-details-bottom-sheet.handle-edit-channel.channel-settings-modal"
+						/>
+					),
+					'channel-settings',
+				),
 			);
 		}, [channel.id, onClose]);
 		const handleDeleteChannel = useCallback(() => {
@@ -468,18 +446,7 @@ export const ChannelDetailsBottomSheet: React.FC<ChannelDetailsBottomSheetProps>
 		const handleNotificationLevelChange = useCallback(
 			(level: number) => {
 				if (!guildId) return;
-				if (level === MessageNotifications.INHERIT) {
-					UserGuildSettingsCommands.updateChannelOverride(
-						guildId,
-						channel.id,
-						{message_notifications: MessageNotifications.INHERIT},
-						{persistImmediately: true},
-					);
-				} else {
-					UserGuildSettingsCommands.updateMessageNotifications(guildId, level, channel.id, {
-						persistImmediately: true,
-					});
-				}
+				UserGuildSettingsCommands.updateMessageNotifications(guildId, level, channel.id, {persistImmediately: true});
 			},
 			[guildId, channel.id],
 		);
@@ -657,7 +624,13 @@ export const ChannelDetailsBottomSheet: React.FC<ChannelDetailsBottomSheetProps>
 												data-flx="channel.channel-details-bottom-sheet.dm-members-list"
 											/>
 										)}
-										{isGuildChannel && guild && (
+										{isGuildChannel && guild && channel.isThread() && (
+											<ThreadMembersList
+												thread={channel}
+												data-flx="channel.channel-details-bottom-sheet.thread-members-list"
+											/>
+										)}
+										{isGuildChannel && guild && !channel.isThread() && (
 											<GuildMemberList
 												guild={guild}
 												channel={channel}

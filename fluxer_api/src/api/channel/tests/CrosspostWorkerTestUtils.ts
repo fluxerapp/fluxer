@@ -10,18 +10,14 @@ import {
 	publish,
 } from '@app/api/channel/tests/AnnouncementTestUtils';
 import {loadFixture, sendMessageWithAttachments} from '@app/api/channel/tests/AttachmentTestUtils';
-import type {ChannelRow, CrosspostedMessageRow} from '@app/api/database/types/ChannelTypes';
-import type {MessageRow} from '@app/api/database/types/MessageTypes';
+import type {CrosspostedMessageRow} from '@app/api/database/types/ChannelTypes';
 import {ensureSessionStarted, getMessages} from '@app/api/message/tests/MessageTestUtils';
-import type {Message} from '@app/api/models/Message';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import type {SyncTaskWorkerService} from '@app/api/test/SyncTaskWorkerService';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {MessageFlags, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 
 export interface FanoutWorld extends AnnouncementWorld {
 	worker: SyncTaskWorkerService;
@@ -129,13 +125,6 @@ export async function copiesOf(
 	return copies.filter((copy) => copy.message_reference?.message_id === sourceMessageId);
 }
 
-export async function readRow(channelId: string, messageId: string): Promise<Message | null> {
-	return new ChannelRepository().messages.getMessage(
-		createChannelID(BigInt(channelId)),
-		createMessageID(BigInt(messageId)),
-	);
-}
-
 export async function mappingRow(sourceMessageId: string, webhookId: string): Promise<CrosspostedMessageRow | null> {
 	return new ChannelRepository().crossposts.get(
 		createMessageID(BigInt(sourceMessageId)),
@@ -156,18 +145,6 @@ export async function sourceIndex(channelId: string): Promise<Array<string>> {
 	return ids.map((id) => id.toString());
 }
 
-export function editRequest(
-	harness: ApiTestHarness,
-	token: string,
-	channelId: string,
-	messageId: string,
-	body: Record<string, unknown>,
-) {
-	return createBuilder<MessageResponse>(harness, token)
-		.patch(`/channels/${channelId}/messages/${messageId}`)
-		.body(body);
-}
-
 export async function deleteMessageRequest(
 	harness: ApiTestHarness,
 	token: string,
@@ -177,30 +154,12 @@ export async function deleteMessageRequest(
 	await createBuilder(harness, token).delete(`/channels/${channelId}/messages/${messageId}`).expect(204).execute();
 }
 
-export function workerHelpers(worker: SyncTaskWorkerService): WorkerTaskHelpers {
-	return {
-		logger: new NoopLogger(),
-		jobId: 0n,
-		addJob: (taskType, payload, options) => worker.addJob(taskType, payload, options),
-		reportProgress: async () => {},
-		shouldCancel: async () => false,
-		setContextLink: async () => {},
-	};
-}
-
-export async function patchChannelRow(channelId: string, patch: Partial<ChannelRow>): Promise<void> {
-	const repository = new ChannelRepository();
-	const channel = await repository.findUnique(createChannelID(BigInt(channelId)));
-	if (!channel) {
-		throw new Error(`channel ${channelId} not found`);
-	}
-	await repository.upsert({...channel.toRow(), ...patch});
-}
-
-export async function writeRow(message: Message, patch: Partial<MessageRow>): Promise<void> {
-	await new ChannelRepository().messages.upsertMessage({...message.toRow(), ...patch}, message.toRow());
-}
-
 export function patchChannel(harness: ApiTestHarness, token: string, channelId: string, body: Record<string, unknown>) {
 	return createBuilder<ChannelResponse>(harness, token).patch(`/channels/${channelId}`).body(body);
 }
+
+export {
+	editMessage as editRequest,
+	readMessageRow as readRow,
+	writeMessageRow as writeRow,
+} from '@app/api/channel/tests/CrosspostTestUtils';

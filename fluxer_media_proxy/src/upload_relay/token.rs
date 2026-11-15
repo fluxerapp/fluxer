@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::{secret::SecretBytes, upload_relay::RelayError};
+use crate::upload_relay::RelayError;
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
+use fluxer_common::secret::SecretBytes;
 use hmac::{Hmac, KeyInit, Mac};
-use http::Method;
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -20,13 +20,7 @@ pub enum TokenMethod {
     Put,
 }
 
-impl TokenMethod {
-    pub fn http(self) -> Method {
-        match self {
-            Self::Put => Method::PUT,
-        }
-    }
-}
+impl TokenMethod {}
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct TokenPayload {
@@ -60,14 +54,8 @@ pub enum TokenError {
 pub fn encode_token(token: &TokenPayload, secret: &[u8]) -> anyhow::Result<String> {
     let payload = serde_json::to_vec(token)?;
     let encoded_payload = URL_SAFE_NO_PAD.encode(payload);
-    let mut mac = HmacSha256::new_from_slice(secret).expect("HMAC accepts any key length");
-    mac.update(encoded_payload.as_bytes());
-    let sig = mac.finalize().into_bytes();
-    Ok(format!(
-        "{}.{}",
-        encoded_payload,
-        URL_SAFE_NO_PAD.encode(sig)
-    ))
+    let signature = fluxer_common::external_media_path::create_signature(&encoded_payload, secret);
+    Ok(format!("{encoded_payload}.{signature}"))
 }
 
 pub fn decode_token(raw: &str, secret: &[u8], now_unix: u64) -> Result<TokenPayload, TokenError> {

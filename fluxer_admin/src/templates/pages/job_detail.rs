@@ -17,7 +17,7 @@ use crate::{
 };
 use maud::{Markup, html};
 
-use super::jobs_list_helpers::status_badge;
+use super::jobs_list_helpers::{job_time, status_badge};
 
 fn val_str<'a>(job: &'a serde_json::Value, key: &str) -> &'a str {
     job.get(key).and_then(|v| v.as_str()).unwrap_or("")
@@ -113,10 +113,10 @@ fn overview_section(job: &serde_json::Value) -> Markup {
             html! {
                 (data_field_mono("Task", task_type))
                 (data_field_mono("Lane", if lane.is_empty() { "\u{2014}" } else { lane }))
-                (data_field_text("Created", if created_at.is_empty() { "\u{2014}" } else { created_at }))
-                (data_field_text("Started", if started_at.is_empty() { "\u{2014}" } else { started_at }))
-                (data_field_text("Completed", if completed_at.is_empty() { "\u{2014}" } else { completed_at }))
-                (data_field_text("Run-at", run_at))
+                (data_field_text("Created", &job_time(created_at)))
+                (data_field_text("Started", &job_time(started_at)))
+                (data_field_text("Completed", &job_time(completed_at)))
+                (data_field_text("Run-at", &job_time(run_at)))
                 (data_field_text("Attempts", &format!("{attempts}/{max_attempts}")))
                 (data_field_mono("Scheduled by", requester_display))
                 (data_field_text("Audit reason", if audit_reason.is_empty() { "\u{2014}" } else { audit_reason }))
@@ -201,11 +201,7 @@ pub fn job_detail_page(
 ) -> Markup {
     let base = &config.base_path;
     let title = format!("Job {job_id}");
-    let admin_acls = auth
-        .admin_user
-        .as_ref()
-        .map(|u| u.acls.as_slice())
-        .unwrap_or(&[]);
+    let admin_acls = auth.acls();
     let can_cancel = acl::has_permission(admin_acls, acl::JOBS_CANCEL);
 
     let content = match job {

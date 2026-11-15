@@ -1,30 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import MemberSidebar from '@app/features/member/state/MemberSidebar';
+import {filterExpiredStatus, useCustomStatusExpiryTick} from '@app/features/presence/hooks/usePresenceCustomStatus';
 import Presence from '@app/features/presence/state/Presence';
 import type {CustomStatus} from '@app/features/user/state/CustomStatus';
-import {isCustomStatusExpired} from '@app/features/user/state/CustomStatus';
 import {CustomStatusEmitter} from '@app/features/user/state/CustomStatusEmitter';
 import {isOfflineStatus} from '@fluxer/constants/src/StatusConstants';
-import {useCallback, useEffect, useRef, useState, useSyncExternalStore} from 'react';
+import {useCallback, useSyncExternalStore} from 'react';
 
 interface UseMemberListCustomStatusOptions {
 	guildId: string;
 	channelId: string;
 	userId: string;
 	enabled?: boolean;
-}
-
-type CustomStatusResult = CustomStatus | null | undefined;
-
-function filterExpiredStatus<T extends CustomStatusResult>(status: T): T | null {
-	if (status === undefined) {
-		return status;
-	}
-	if (status === null || isCustomStatusExpired(status)) {
-		return null;
-	}
-	return status;
 }
 
 export function resolveMemberListCustomStatus({
@@ -53,14 +41,9 @@ export function useMemberListCustomStatus({
 	userId,
 	enabled = true,
 }: UseMemberListCustomStatusOptions): CustomStatus | null | undefined {
-	const [expiryTick, setExpiryTick] = useState(0);
-	const timerRef = useRef<number | null>(null);
-	const clearTimer = useCallback(() => {
-		if (timerRef.current !== null) {
-			window.clearTimeout(timerRef.current);
-			timerRef.current = null;
-		}
-	}, []);
+	const expiryTick = useCustomStatusExpiryTick(
+		enabled ? MemberSidebar.getCustomStatus(guildId, channelId, userId)?.expiresAt : undefined,
+	);
 	const subscribe = useCallback(
 		(onChange: () => void) => {
 			if (!enabled) {
@@ -81,23 +64,6 @@ export function useMemberListCustomStatus({
 		return filterExpiredStatus(MemberSidebar.getCustomStatus(guildId, channelId, userId));
 	}, [guildId, channelId, userId, enabled, expiryTick]);
 	const customStatus = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
-	useEffect(() => {
-		clearTimer();
-		if (!customStatus?.expiresAt) {
-			return;
-		}
-		const expiresAtMs = Date.parse(customStatus.expiresAt);
-		if (Number.isNaN(expiresAtMs)) {
-			return;
-		}
-		const delay = expiresAtMs - Date.now();
-		if (delay <= 0) {
-			return;
-		}
-		timerRef.current = window.setTimeout(() => {
-			setExpiryTick((t) => t + 1);
-		}, delay);
-		return clearTimer;
-	}, [customStatus?.expiresAt, clearTimer]);
+
 	return customStatus;
 }

@@ -10,7 +10,7 @@ import {
 	type VoiceMediaGraphTrackInfo,
 } from '@app/features/voice/engine/VoiceMediaGraphStats';
 import type {VoiceMediaGraphStatsTrackTarget} from '@app/features/voice/engine/VoiceMediaGraphStatsObservations';
-import voiceMediaGraphStore from '@app/features/voice/engine/VoiceMediaGraphStore';
+import {voiceMediaGraphStore} from '@app/features/voice/engine/VoiceMediaGraphStore';
 import {asVoiceTrackSource, VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import {isTrackReference, type TrackReferenceOrPlaceholder} from '@livekit/components-react';
 import {TrackEvent} from 'livekit-client';
@@ -40,7 +40,7 @@ type NativeStreamTrackInfoTarget = VoiceMediaGraphNativeStatsTarget;
 
 type UseStreamTrackInfoOptions = NativeStreamTrackInfoTarget;
 
-export type PartialStreamTrackInfo = VoiceMediaGraphPartialTrackInfo;
+type PartialStreamTrackInfo = VoiceMediaGraphPartialTrackInfo;
 
 function isPositiveDimension(value: number | undefined): value is number {
 	return typeof value === 'number' && Number.isFinite(value) && value > 0;
@@ -75,7 +75,7 @@ function getLargestAttachedElementDimensions(
 	return largest;
 }
 
-export function resolveStreamTrackInfoSnapshot(snapshot: StreamTrackInfoSnapshot): StreamTrackInfo | null {
+function resolveStreamTrackInfoSnapshot(snapshot: StreamTrackInfoSnapshot): StreamTrackInfo | null {
 	const settingsDimensions = buildDimensions(snapshot.settings?.width, snapshot.settings?.height);
 	const publicationDimensions = buildDimensions(
 		snapshot.publicationDimensions?.width,
@@ -100,14 +100,14 @@ function isScreenShareStatsTarget(trackRef: TrackReferenceOrPlaceholder | null, 
 	return asVoiceTrackSource(trackRef.source) === VoiceTrackSource.ScreenShare;
 }
 
-export function mergeStreamTrackInfo(
+function mergeStreamTrackInfo(
 	primary: StreamTrackInfo | null,
 	fallback: PartialStreamTrackInfo | null,
 ): StreamTrackInfo | null {
 	return mergeVoiceMediaGraphTrackInfo(primary, fallback);
 }
 
-export function resolveStreamTrackStatsInfo(
+function resolveStreamTrackStatsInfo(
 	view: VoiceMediaGraphStatsView,
 	target: VoiceMediaGraphStatsTrackTarget,
 ): PartialStreamTrackInfo | null {

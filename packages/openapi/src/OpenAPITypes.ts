@@ -19,8 +19,10 @@ export interface ExtractedRoute {
 	middlewares: Array<string>;
 	hasLoginRequired: boolean;
 	hasDefaultUserOnly: boolean;
+	hasBotOnly: boolean;
 	rateLimitConfig: string | null;
 	responseSchemaName: string | null;
+	acceptedResponseSchemaName?: string | null;
 	responseContentType: string;
 	hasNoContent: boolean;
 	bodylessStatusCodes: Array<number>;
@@ -32,6 +34,7 @@ export interface ExtractedRoute {
 	explicitOperationId: string | null;
 	explicitDescription: string | null;
 	explicitStatusCodes: Array<number> | null;
+	errorStatusCodes: Array<number>;
 	explicitSecurity: Array<string> | null;
 	oauth2RequiredScopes: Array<string> | null;
 	oauth2ScopeMode: 'all' | 'any' | null;
@@ -39,6 +42,7 @@ export interface ExtractedRoute {
 	explicitTags: Array<string> | null;
 	explicitDeprecated: boolean;
 	explicitExternalDocs: OpenAPIExternalDocs | null;
+	explicitExperiment: string | null;
 }
 export interface OpenAPIPathItem {
 	[method: string]: OpenAPIOperation;
@@ -54,6 +58,7 @@ export interface OpenAPIOperation {
 	responses: Record<string, OpenAPIResponse>;
 	deprecated?: boolean;
 	externalDocs?: OpenAPIExternalDocs;
+	'x-fluxer-experiment'?: string;
 }
 export interface OpenAPIParameter {
 	name: string;
@@ -74,14 +79,14 @@ export interface OpenAPIResponse {
 	content?: Record<string, OpenAPIMediaType>;
 	headers?: Record<string, OpenAPIHeaderObject>;
 }
-export interface OpenAPIHeaderObject {
+interface OpenAPIHeaderObject {
 	description?: string;
 	schema: OpenAPISchemaOrRef;
 }
 export interface OpenAPIRef extends core.JSONSchema.JSONSchema {
 	$ref: string;
 }
-export type OpenAPISchemaOrRef = OpenAPISchema | OpenAPIRef;
+type OpenAPISchemaOrRef = OpenAPISchema | OpenAPIRef;
 export type OpenAPISchema = core.JSONSchema.JSONSchema;
 export interface OpenAPIDocument {
 	openapi: '3.0.3' | '3.1.0';

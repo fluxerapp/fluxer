@@ -3,6 +3,7 @@
 import {Routes} from '@app/app/Routes';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import GuildListState from '@app/features/guild/state/GuildList';
 
 function getFirstAvailableGuildId(): string | null {
@@ -15,18 +16,25 @@ function getFirstAvailableGuildId(): string | null {
 	return null;
 }
 
-export function getDirectMessagesFallbackPath(): string {
+function getHomeFallbackPath(): string | null {
 	const firstGuildId = getFirstAvailableGuildId();
 	if (firstGuildId) {
 		return Routes.guildChannel(firstGuildId);
 	}
+	if (!GatewaySessions.foregroundConnection.isReady) {
+		return null;
+	}
 	if (Accessibility.showFavorites) {
 		return Routes.FAVORITES;
 	}
-	if (!RuntimeConfig.singleCommunityEnabled) {
+	if (RuntimeConfig.discoveryAvailable) {
 		return Routes.DISCOVER;
 	}
-	return Routes.ME;
+	return null;
+}
+
+function getDirectMessagesFallbackPath(): string {
+	return getHomeFallbackPath() ?? Routes.ME;
 }
 
 export function getDefaultLandingPath(): string {
@@ -34,11 +42,4 @@ export function getDefaultLandingPath(): string {
 		return getDirectMessagesFallbackPath();
 	}
 	return Routes.ME;
-}
-
-export function shouldRedirectAwayFromDirectMessages(pathname: string): boolean {
-	if (!RuntimeConfig.directMessagesDisabled) {
-		return false;
-	}
-	return Routes.isDMRoute(pathname);
 }

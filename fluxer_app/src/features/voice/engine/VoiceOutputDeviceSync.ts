@@ -164,7 +164,7 @@ async function applyOutputDeviceToAttachedElements(room: Room, deviceId: string)
 	}
 }
 
-export async function applyOutputDeviceToRoom(room: Room, deviceId: string): Promise<void> {
+async function applyOutputDeviceToRoom(room: Room, deviceId: string): Promise<void> {
 	const resolvedDeviceId = await resolveAvailableOutputDeviceId(deviceId);
 	if (canRoomSwitchAudioOutput(room)) {
 		try {

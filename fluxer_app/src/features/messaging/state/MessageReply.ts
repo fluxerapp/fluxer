@@ -3,9 +3,10 @@
 import Authentication from '@app/features/auth/state/Authentication';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import Messages from '@app/features/messaging/state/MessagingMessages';
+import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
 import {makeAutoObservable} from 'mobx';
 
-export interface MessageReplyState {
+interface MessageReplyState {
 	messageId: string;
 	mentioning: boolean;
 	snapshot: Message;
@@ -69,14 +70,6 @@ class MessageReply {
 		}
 	}
 
-	highlightMessage(messageId: string): void {
-		this.highlightMessageId = messageId;
-	}
-
-	clearHighlight(): void {
-		this.highlightMessageId = null;
-	}
-
 	getReplyingMessage(channelId: string): MessageReplyState | null {
 		return this.replyingMessageIds[channelId] ?? null;
 	}
@@ -88,6 +81,15 @@ class MessageReply {
 		}
 		return Messages.getMessage(channelId, state.messageId) ?? state.snapshot;
 	}
+
+	reset(): void {
+		this.replyingMessageIds = {};
+		this.highlightMessageId = null;
+	}
 }
 
-export default new MessageReply();
+const messageReply = new MessageReply();
+
+AccountScopedWork.registerCancellation(() => messageReply.reset());
+
+export default messageReply;

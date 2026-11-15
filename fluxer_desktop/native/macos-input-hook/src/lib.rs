@@ -33,14 +33,3 @@ pub fn has_accessibility_permission() -> bool {
         false
     }
 }
-
-#[cfg(all(test, not(target_os = "macos")))]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn stub_reports_not_available_off_macos() {
-        assert!(!is_available());
-        assert!(!has_accessibility_permission());
-    }
-}

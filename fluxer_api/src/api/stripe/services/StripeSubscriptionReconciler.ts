@@ -5,9 +5,13 @@ import type {UserRow} from '@app/api/database/types/UserTypes';
 import {Logger} from '@app/api/Logger';
 import type {User} from '@app/api/models/User';
 import type {ProductInfo, ProductRegistry} from '@app/api/stripe/ProductRegistry';
-import {getPrimarySubscriptionItem, getSubscriptionStartDate} from '@app/api/stripe/StripeSubscriptionPeriod';
+import {
+	getPrimarySubscriptionItem,
+	getSubscriptionBillingCycle,
+	getSubscriptionStartDate,
+} from '@app/api/stripe/StripeSubscriptionPeriod';
 import {extractId} from '@app/api/stripe/StripeUtils';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
 import type Stripe from 'stripe';
@@ -21,7 +25,7 @@ interface InvoiceRenewalContext {
 export class StripeSubscriptionReconciler {
 	constructor(
 		private stripe: Stripe | null,
-		private userRepository: IUserRepository,
+		private userRepository: UserRepository,
 		private productRegistry: ProductRegistry,
 	) {}
 
@@ -203,7 +207,7 @@ export class StripeSubscriptionReconciler {
 	): Promise<User> {
 		const customerId = extractId(subscription.customer) ?? this.getCustomerIdFromInvoice(options?.fallbackInvoice);
 		const productInfo = options?.productInfo;
-		const billingCycle = productInfo?.billingCycle || this.getBillingCycleFromSubscription(subscription);
+		const billingCycle = productInfo?.billingCycle || getSubscriptionBillingCycle(subscription);
 		const subscriptionStartDate = getSubscriptionStartDate(subscription);
 		const patch: Partial<UserRow> = {};
 		if (user.stripeSubscriptionId !== subscription.id) {
@@ -247,19 +251,7 @@ export class StripeSubscriptionReconciler {
 		return false;
 	}
 
-	getBillingCycleFromSubscription(subscription: Stripe.Subscription): 'monthly' | 'yearly' | null {
-		const item = getPrimarySubscriptionItem(subscription);
-		const interval = item?.price?.recurring?.interval;
-		if (interval === 'month') {
-			return 'monthly';
-		}
-		if (interval === 'year') {
-			return 'yearly';
-		}
-		return null;
-	}
-
-	getPriceIdFromInvoice(invoice: Stripe.Invoice): string | null {
+	private getPriceIdFromInvoice(invoice: Stripe.Invoice): string | null {
 		if (!invoice.lines?.data?.length) {
 			return null;
 		}

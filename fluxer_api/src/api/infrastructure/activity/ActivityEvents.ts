@@ -35,6 +35,7 @@ const RETRY_DELAYS_MS = [100, 400];
 const QUEUE_CAPACITY = 20_000;
 const QUEUE_CONCURRENCY = 64;
 const STREAM_PROBE_INTERVAL_MS = 15_000;
+const STREAM_IDLE_PROBE_INTERVAL_MS = 300_000;
 const STREAM_REPROBE_INTERVAL_MS = 2_000;
 const STREAM_NOT_FOUND = 10059;
 const SPOOL_DEPTH_INTERVAL_MS = 15_000;
@@ -227,6 +228,10 @@ export async function emitActivity<K extends EventKind>(
 	}
 }
 
+export function activityEventsPublishing(): boolean {
+	return runtime?.mode() === 'publish';
+}
+
 export function idleActivityEvents(): Promise<void> {
 	if (inFlight === 0 && queue.length === 0) return Promise.resolve();
 	return new Promise((resolve) => {
@@ -275,10 +280,12 @@ export async function startActivityEvents(options: ActivityEventsOptions): Promi
 	let state: StreamState = jsm ? await probeStream(jsm) : 'present';
 	const timers: Array<ReturnType<typeof setTimeout>> = [];
 	const whenMissing: EmitMode = options.spoolWhileMissing ? 'spool' : 'off';
+	const missingProbeMs = options.spoolWhileMissing ? STREAM_PROBE_INTERVAL_MS : STREAM_IDLE_PROBE_INTERVAL_MS;
 	let stopped = false;
+	const mode = (): EmitMode => (state === 'missing' ? whenMissing : 'publish');
 	const schedule = (probe: Pick<JetStreamManager, 'streams'>) => {
 		if (stopped || state === 'present') return;
-		const wait = state === 'unknown' ? STREAM_REPROBE_INTERVAL_MS : STREAM_PROBE_INTERVAL_MS;
+		const wait = state === 'unknown' ? STREAM_REPROBE_INTERVAL_MS : missingProbeMs;
 		const timer = setTimeout(() => {
 			void probeStream(probe).then((next) => {
 				if (next !== state) Logger.info({stream: EVENTS_STREAM, state: next}, 'Activity stream state changed');
@@ -294,6 +301,7 @@ export async function startActivityEvents(options: ActivityEventsOptions): Promi
 		schedule(jsm);
 	}
 	const depth = setInterval(() => {
+		if (mode() === 'off') return;
 		void options.kv
 			.llen(ACTIVITY_SPOOL_KEY)
 			.then((value) => {
@@ -306,7 +314,7 @@ export async function startActivityEvents(options: ActivityEventsOptions): Promi
 	runtime = {
 		publisher: options.publisher,
 		kv: options.kv,
-		mode: () => (state === 'missing' ? whenMissing : 'publish'),
+		mode,
 		stop: () => {
 			stopped = true;
 			for (const timer of timers) {
@@ -322,7 +330,7 @@ export async function shutdownActivityEvents(timeoutMs = 2000): Promise<void> {
 	stopActivityEvents();
 }
 
-export function stopActivityEvents(): void {
+function stopActivityEvents(): void {
 	runtime?.stop();
 	runtime = null;
 }

@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import AccountEngine from '@app/features/account_engine/state/AccountEngine';
+import {computeAppBadge, UNREAD_INDICATOR} from '@app/features/app/components/AppBadgeCount';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {findActiveIconLink, getDocumentFavicons} from '@app/features/app/state/RuntimeDocumentBranding';
 import GuildReadState from '@app/features/guild/state/GuildReadState';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import Relationships from '@app/features/relationship/state/Relationships';
+import Theme from '@app/features/theme/state/Theme';
 import Notification from '@app/features/ui/state/Notification';
-import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
+import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import {updateDocumentTitleBadge} from '@app/features/window/hooks/useFluxerDocumentTitle';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import Favico from 'favico.js';
@@ -14,31 +18,56 @@ import type React from 'react';
 import {useEffect} from 'react';
 
 const logger = new Logger('AppBadge');
-const UNREAD_INDICATOR = -1;
 
 let favico: Favico | null = null;
+let favicoLink: HTMLLinkElement | null = null;
+let favicoLinkHref: string | null = null;
+let favicoSource: string | null = null;
+
+const releaseFavico = (): void => {
+	if (favicoLink !== null && favicoLinkHref !== null && favicoLink.getAttribute('href')?.startsWith('data:')) {
+		favicoLink.setAttribute('href', favicoLinkHref);
+	}
+	favico = null;
+	favicoLink = null;
+	favicoLinkHref = null;
+};
 
 const initFavico = (): Favico | null => {
 	if (favico) return favico;
 	try {
-		favico = new Favico({animation: 'none'});
+		const link = findActiveIconLink();
+		favicoLink = link;
+		favicoLinkHref = link?.getAttribute('href') ?? null;
+		favico = new Favico(link === null ? {animation: 'none'} : {animation: 'none', element: link});
 		return favico;
 	} catch (e) {
 		logger.warn('Failed to initialize Favico', e);
+		releaseFavico();
 		return null;
 	}
 };
 const setElectronBadge = (badge: number): void => {
 	const electronApi = getElectronAPI();
-	if (!electronApi?.setBadgeCount) return;
-	const electronBadge = badge > 0 ? badge : 0;
 	try {
-		electronApi.setBadgeCount(electronBadge);
+		if (electronApi?.setUnreadBadge) {
+			electronApi.setUnreadBadge(badge);
+		} else {
+			electronApi?.setBadgeCount?.(Math.max(badge, 0));
+		}
 	} catch (e) {
 		logger.warn('Failed to set Electron badge', e);
 	}
 };
-const setFaviconBadge = (badge: number): void => {
+const setFaviconBadge = (badge: number, source: string | null): void => {
+	if (isDesktop()) {
+		return;
+	}
+	if (source !== favicoSource) {
+		releaseFavico();
+		favicoSource = source;
+	}
+	if (badge === 0 && favico === null) return;
 	const fav = initFavico();
 	if (!fav) return;
 	try {
@@ -52,7 +81,7 @@ const setFaviconBadge = (badge: number): void => {
 	}
 };
 const setPwaBadge = (badge: number): void => {
-	if (!navigator.setAppBadge || !navigator.clearAppBadge) {
+	if (isDesktop() || !navigator.setAppBadge || !navigator.clearAppBadge) {
 		return;
 	}
 	try {
@@ -67,35 +96,38 @@ const setPwaBadge = (badge: number): void => {
 		logger.warn('Failed to set PWA badge', e);
 	}
 };
-const setBadge = (badge: number): void => {
+const setBadge = (badge: number, faviconSource: string | null): void => {
 	setElectronBadge(badge);
-	setFaviconBadge(badge);
+	setFaviconBadge(badge, faviconSource);
 	setPwaBadge(badge);
 };
+function appBadgeMentionCount(): number {
+	return GuildReadState.mentionCountAcrossGuilds(RuntimeConfig.directMessagesDisabled);
+}
+
 export const AppBadge: React.FC = observer(() => {
 	const relationships = Relationships.getRelationships();
-	const unreadMessageBadgeEnabled = Notification.unreadMessageBadgeEnabled;
-	const mentionCount = GuildReadState.mentionCountAcrossGuilds();
-	const hasUnread = GuildReadState.anyGuildUnread;
-	const pendingCount = RuntimeConfig.directMessagesDisabled
-		? 0
-		: relationships.filter((relationship) => relationship.type === RelationshipTypes.INCOMING_REQUEST).length;
-	const totalCount = mentionCount + pendingCount;
-	let badge: number = 0;
-	if (totalCount > 0) {
-		badge = totalCount;
-	} else if (hasUnread && unreadMessageBadgeEnabled) {
-		badge = UNREAD_INDICATOR;
-	}
+	const {badge, totalCount, showUnread} = computeAppBadge({
+		foregroundMentionCount: appBadgeMentionCount(),
+		otherAccountsMentionCount: AccountEngine.otherAccountsMentionCount,
+		pendingFriendRequestCount: RuntimeConfig.friendsDisabled
+			? 0
+			: relationships.filter((relationship) => relationship.type === RelationshipTypes.INCOMING_REQUEST).length,
+		foregroundHasUnread: GuildReadState.anyGuildUnread,
+		otherAccountsHaveUnread: AccountEngine.otherAccountsHaveUnread,
+		unreadMessageBadgeEnabled: Notification.unreadMessageBadgeEnabled,
+	});
+	const favicons = getDocumentFavicons(RuntimeConfig.getSnapshotOrNull()?.appPublic ?? null);
+	const faviconSource = favicons.dark !== null && Theme.systemPrefersDark ? favicons.dark : favicons.light;
 	useEffect(() => {
-		setBadge(badge);
-	}, [badge]);
+		setBadge(badge, faviconSource);
+	}, [badge, faviconSource]);
 	useEffect(() => {
-		updateDocumentTitleBadge(totalCount, hasUnread && unreadMessageBadgeEnabled);
-	}, [totalCount, hasUnread, unreadMessageBadgeEnabled]);
+		updateDocumentTitleBadge(totalCount, showUnread);
+	}, [totalCount, showUnread]);
 	useEffect(() => {
 		return () => {
-			setBadge(0);
+			setBadge(0, favicoSource);
 			updateDocumentTitleBadge(0, false);
 		};
 	}, []);

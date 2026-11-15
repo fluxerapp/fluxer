@@ -14,7 +14,7 @@ export function hasFixedDiscriminator(user: Pick<TaggedUser, 'isBot'>): boolean 
 	return !user.isBot && usesUniqueUsernames();
 }
 
-export function hidesDiscriminator(user: Pick<TaggedUser, 'discriminator' | 'isBot'>): boolean {
+function hidesDiscriminator(user: Pick<TaggedUser, 'discriminator' | 'isBot'>): boolean {
 	return user.discriminator === USERNAME_MODE_DISCRIMINATOR && hasFixedDiscriminator(user);
 }
 

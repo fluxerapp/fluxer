@@ -9,6 +9,7 @@ import {
 	setUserACLs,
 	type TestAccount,
 } from '@app/api/auth/tests/AuthTestUtils';
+import {decisionBody} from '@app/api/enforcement/tests/EnforcementTestUtils';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import type {AuthSessionResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
@@ -96,7 +97,11 @@ describe('Auth session cache invalidation', () => {
 		}
 		await createBuilder(harness, admin.token)
 			.put(`/admin/users/${target.userId}/ban`)
-			.body({duration_hours: 24, reason: 'cache invalidation coverage'})
+			.header('X-Audit-Log-Reason', 'cache invalidation coverage')
+			.body({
+				duration_hours: 24,
+				decision: decisionBody(),
+			})
 			.execute();
 		for (const token of [target.token, targetSecond.token]) {
 			expect(await readCachedSession(harness, token)).toBeNull();

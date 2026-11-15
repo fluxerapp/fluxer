@@ -171,7 +171,7 @@ has_view_audit_log_permission(SessionData, State) ->
     case maps:get(user_id, SessionData, undefined) of
         UserId when is_integer(UserId) ->
             Permissions = guild_permissions:get_member_permissions(UserId, undefined, State),
-            permission_bits:has(Permissions, constants:view_audit_log_permission());
+            bitset:has(Permissions, constants:view_audit_log_permission());
         _ ->
             false
     end.
@@ -203,108 +203,7 @@ extract_channel_id(Event, FinalData) when
     Event =:= channel_create; Event =:= channel_update; Event =:= channel_delete
 ->
     ChannelIdBin = maps:get(<<"id">>, FinalData, undefined),
-    guild_dispatch_decorate:require_snowflake(<<"id">>, ChannelIdBin);
+    validation:snowflake_or_throw(<<"id">>, ChannelIdBin);
 extract_channel_id(_, FinalData) ->
     ChannelIdBin = maps:get(<<"channel_id">>, FinalData, undefined),
-    guild_dispatch_decorate:require_snowflake(<<"channel_id">>, ChannelIdBin).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-is_channel_scoped_event_test() ->
-    ?assertEqual(true, is_channel_scoped_event(message_create)),
-    ?assertEqual(true, is_channel_scoped_event(channel_update)),
-    ?assertEqual(true, is_channel_scoped_event(typing_start)),
-    ?assertEqual(false, is_channel_scoped_event(guild_update)),
-    ?assertEqual(false, is_channel_scoped_event(guild_member_add)).
-
-is_invite_event_test() ->
-    ?assertEqual(true, is_invite_event(invite_create)),
-    ?assertEqual(true, is_invite_event(invite_delete)),
-    ?assertEqual(false, is_invite_event(message_create)).
-
-is_bulk_update_event_test() ->
-    ?assertEqual(true, is_bulk_update_event(channel_update_bulk)),
-    ?assertEqual(false, is_bulk_update_event(channel_update)).
-
-is_message_access_filtered_event_test() ->
-    ?assertEqual(true, is_message_access_filtered_event(message_update)),
-    ?assertEqual(true, is_message_access_filtered_event(message_delete)),
-    ?assertEqual(true, is_message_access_filtered_event(message_reaction_add)),
-    ?assertEqual(true, is_message_access_filtered_event(message_reaction_remove)),
-    ?assertEqual(true, is_message_access_filtered_event(message_reaction_remove_all)),
-    ?assertEqual(true, is_message_access_filtered_event(message_reaction_remove_emoji)),
-    ?assertEqual(false, is_message_access_filtered_event(message_create)),
-    ?assertEqual(false, is_message_access_filtered_event(message_delete_bulk)),
-    ?assertEqual(false, is_message_access_filtered_event(typing_start)),
-    ?assertEqual(false, is_message_access_filtered_event(channel_create)).
-
-extract_message_id_from_id_field_test() ->
-    Data = #{<<"id">> => <<"12345">>, <<"channel_id">> => <<"100">>},
-    ?assertEqual(<<"12345">>, extract_message_id(Data)).
-
-extract_message_id_from_message_id_field_test() ->
-    Data = #{<<"message_id">> => <<"67890">>, <<"channel_id">> => <<"100">>},
-    ?assertEqual(<<"67890">>, extract_message_id(Data)).
-
-extract_message_id_prefers_message_id_test() ->
-    Data = #{<<"id">> => <<"12345">>, <<"message_id">> => <<"67890">>},
-    ?assertEqual(<<"67890">>, extract_message_id(Data)).
-
-extract_channel_id_channel_delete_uses_id_field_test() ->
-    Data = #{<<"id">> => <<"42">>},
-    ?assertEqual(42, extract_channel_id(channel_delete, Data)).
-
-extract_channel_id_message_create_uses_channel_id_field_test() ->
-    Data = #{<<"channel_id">> => <<"42">>},
-    ?assertEqual(42, extract_channel_id(message_create, Data)).
-
-extract_channel_id_channel_create_uses_id_field_test() ->
-    Data = #{<<"id">> => <<"42">>},
-    ?assertEqual(42, extract_channel_id(channel_create, Data)).
-
-extract_channel_id_channel_update_uses_id_field_test() ->
-    Data = #{<<"id">> => <<"42">>},
-    ?assertEqual(42, extract_channel_id(channel_update, Data)).
-
-filter_sessions_for_event_guild_wide_goes_to_all_sessions_test() ->
-    S1 = #{session_id => <<"s1">>, user_id => 10, pid => self()},
-    S2 = #{session_id => <<"s2">>, user_id => 11, pid => self()},
-    Sessions = #{<<"s1">> => S1, <<"s2">> => S2},
-    State = #{sessions => Sessions, data => #{<<"members">> => #{}}},
-    Result = filter_sessions_for_event(guild_member_add, #{}, undefined, Sessions, State),
-    ?assertEqual(2, length(Result)).
-
-filter_sessions_for_event_audit_log_requires_view_permission_test() ->
-    {Sessions, State, Allowed} = audit_log_test_fixture(),
-    Result = filter_sessions_for_event(
-        guild_audit_log_entry_create, #{}, undefined, Sessions, State
-    ),
-    ?assertEqual([{<<"allowed">>, Allowed}], Result).
-
-audit_log_test_fixture() ->
-    GuildId = 1,
-    GIdBin = integer_to_binary(GuildId),
-    AuditPerm = integer_to_binary(constants:view_audit_log_permission()),
-    Allowed = #{session_id => <<"allowed">>, user_id => 2001, pid => self()},
-    Denied = #{session_id => <<"denied">>, user_id => 2002, pid => self()},
-    Sessions = #{<<"allowed">> => Allowed, <<"denied">> => Denied},
-    Guild = #{<<"id">> => GIdBin, <<"owner_id">> => <<"999">>, <<"features">> => []},
-    State = #{
-        id => GuildId,
-        sessions => Sessions,
-        data => #{
-            <<"guild">> => Guild,
-            <<"roles">> => [
-                #{<<"id">> => GIdBin, <<"permissions">> => <<"0">>},
-                #{<<"id">> => <<"300">>, <<"permissions">> => AuditPerm}
-            ],
-            <<"members">> => [
-                #{<<"user">> => #{<<"id">> => <<"2001">>}, <<"roles">> => [<<"300">>]},
-                #{<<"user">> => #{<<"id">> => <<"2002">>}, <<"roles">> => []}
-            ]
-        }
-    },
-    {Sessions, State, Allowed}.
-
--endif.
+    validation:snowflake_or_throw(<<"channel_id">>, ChannelIdBin).

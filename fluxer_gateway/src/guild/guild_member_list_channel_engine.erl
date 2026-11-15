@@ -8,7 +8,6 @@
     is_engine_list/2,
     ensure/2,
     rebuild/2,
-    rebuild_all/1,
     rebuild_channels/2,
     drop/2,
     destroy_all/1,
@@ -17,7 +16,6 @@
     update_user_all/2,
     remove_user/3,
     remove_user_all/2,
-    member_index/3,
     set_hoisted_roles_all/2
 ]).
 
@@ -72,14 +70,6 @@ replace_engine(ListId, ChannelId, OldRef, State) ->
     State1 = put_engines(maps:put(ListId, NewRef, engines(State)), State),
     guild_member_list_engine:destroy(OldRef),
     guild_member_list_engine_inputs:record(ListId, ChannelId, State, State1).
-
--spec rebuild_all(guild_state()) -> guild_state().
-rebuild_all(State) ->
-    lists:foldl(
-        fun rebuild/2,
-        State,
-        maps:keys(engines(State))
-    ).
 
 -spec rebuild_channels([pos_integer()], guild_state()) -> guild_state().
 rebuild_channels(ChannelIds, State) ->
@@ -159,7 +149,7 @@ update_user_in_engine(UserId, ListId, Ref, State) ->
 -spec update_user_in_channel(integer(), pos_integer(), engine_ref(), guild_state()) -> ok.
 update_user_in_channel(UserId, ChannelId, Ref, State) ->
     Data = maps:get(data, State, #{}),
-    case guild_data_index:get_member(UserId, Data) of
+    case guild_data_index_members:get_member(UserId, Data) of
         Member when is_map(Member) ->
             upsert_visible_user(UserId, ChannelId, Member, Ref, State);
         _ ->
@@ -195,13 +185,6 @@ remove_user_all(UserId, State) ->
         engines(State)
     ),
     ok.
-
--spec member_index(list_id(), integer(), guild_state()) -> non_neg_integer() | not_found.
-member_index(ListId, UserId, State) ->
-    case ref(ListId, State) of
-        undefined -> not_found;
-        Ref -> guild_member_list_engine:index_of(Ref, UserId)
-    end.
 
 -spec set_hoisted_roles_all([integer()], guild_state()) -> boolean().
 set_hoisted_roles_all(HoistedRoleIds, State) ->
@@ -258,7 +241,7 @@ load_engine(ChannelId, State) ->
     {[guild_member_list_store:member_tuple()], [integer()]}.
 build_inputs(ChannelId, State) ->
     Data = maps:get(data, State, #{}),
-    MemberMap = guild_data_index:member_map(Data),
+    MemberMap = guild_data_index_members:member_map(Data),
     ConnectedUserIds = guild_member_list_common:connected_session_user_ids(State),
     PresenceTab = maps:get(member_presence, State),
     {Tuples, _Memo, _RoleCache} = maps:fold(
@@ -354,25 +337,31 @@ new_visibility_memo(ChannelId, Data, State) ->
 memoised_can_view(UserId, ChannelId, Member, _SortedRoleIds, State, disabled) ->
     {can_view(UserId, ChannelId, Member, State), disabled};
 memoised_can_view(UserId, ChannelId, Member, SortedRoleIds, State, Memo) ->
-    #{exceptions := Exceptions, cache := Cache} = Memo,
+    #{exceptions := Exceptions} = Memo,
     case sets:is_element(UserId, Exceptions) of
         true ->
             {can_view(UserId, ChannelId, Member, State), Memo};
         false ->
-            case maps:find(SortedRoleIds, Cache) of
-                {ok, Visible} ->
-                    {Visible, Memo};
-                error ->
-                    Visible = can_view(UserId, ChannelId, Member, State),
-                    {Visible, Memo#{cache := Cache#{SortedRoleIds => Visible}}}
-            end
+            cached_can_view(UserId, ChannelId, Member, SortedRoleIds, State, Memo)
+    end.
+
+-spec cached_can_view(
+    integer(), pos_integer(), map(), [integer()], guild_state(), visibility_memo()
+) -> {boolean(), visibility_memo()}.
+cached_can_view(UserId, ChannelId, Member, SortedRoleIds, State, #{cache := Cache} = Memo) ->
+    case maps:find(SortedRoleIds, Cache) of
+        {ok, Visible} ->
+            {Visible, Memo};
+        error ->
+            Visible = can_view(UserId, ChannelId, Member, State),
+            {Visible, Memo#{cache := Cache#{SortedRoleIds => Visible}}}
     end.
 
 %% Category visibility recurses into child channels, each with its own
 %% overwrites, so the exception set is not local to this channel. Do not memoise.
 -spec memoisable_channel(pos_integer(), map()) -> boolean().
 memoisable_channel(ChannelId, Data) ->
-    case maps:get(ChannelId, guild_data_index:channel_index(Data), undefined) of
+    case maps:get(ChannelId, guild_data_index_channels:channel_index(Data), undefined) of
         Channel when is_map(Channel) -> maps:get(<<"type">>, Channel, undefined) =/= 4;
         _ -> false
     end.
@@ -402,10 +391,10 @@ overwrite_target_ids(ChannelId, Data) ->
 
 -spec channel_overwrite_target_ids(pos_integer(), map()) -> [integer()].
 channel_overwrite_target_ids(ChannelId, Data) ->
-    case maps:get(ChannelId, guild_data_index:channel_index(Data), undefined) of
+    case maps:get(ChannelId, guild_data_index_channels:channel_index(Data), undefined) of
         Channel when is_map(Channel) ->
             lists:filtermap(
-                fun(Overwrite) -> overwrite_target_id(Overwrite) end,
+                fun overwrite_target_id/1,
                 map_utils:ensure_list(maps:get(<<"permission_overwrites">>, Channel, []))
             );
         _ ->
@@ -452,7 +441,7 @@ presence_status_is_online(UserId, PresenceTab) ->
 -spec can_view(integer(), pos_integer(), map(), guild_state()) -> boolean().
 can_view(UserId, ChannelId, Member, State) when is_integer(UserId), UserId > 0 ->
     try
-        guild_permissions:can_view_channel(UserId, ChannelId, Member, State)
+        guild_permissions_check:can_view_channel(UserId, ChannelId, Member, State)
     catch
         _:_ -> false
     end;
@@ -482,115 +471,3 @@ channel_id(ListId) ->
 -spec guild_id(guild_state()) -> integer() | undefined.
 guild_id(State) ->
     snowflake_id:parse_maybe(maps:get(id, State, undefined)).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-is_engine_list_test() ->
-    Any = #{data => #{<<"guild">> => #{<<"features">> => []}}},
-    ?assertNot(is_engine_list(<<"0">>, Any)),
-    ?assert(is_engine_list(<<"123">>, Any)),
-    ?assertNot(is_engine_list(<<"notasnowflake">>, Any)).
-
-ref_reads_engine_map_test() ->
-    R = make_ref(),
-    State = #{
-        data => #{<<"guild">> => #{<<"features">> => []}},
-        channel_member_list_engines => #{<<"123">> => R}
-    },
-    ?assertEqual(R, ref(<<"123">>, State)),
-    ?assertEqual(undefined, ref(<<"456">>, State)).
-
-sync_online_noop_without_engines_test() ->
-    ?assertEqual(
-        ok, sync_online(1, true, #{data => #{<<"guild">> => #{<<"features">> => []}}})
-    ).
-
-memo_channel_state() ->
-    #{
-        data => #{
-            <<"guild">> => #{<<"features">> => [], <<"owner_id">> => <<"7">>},
-            <<"channel_index">> => #{
-                500 => #{
-                    <<"id">> => <<"500">>,
-                    <<"type">> => 0,
-                    <<"permission_overwrites">> => [#{<<"id">> => <<"42">>, <<"type">> => 1}]
-                },
-                600 => #{<<"id">> => <<"600">>, <<"type">> => 4}
-            }
-        },
-        virtual_channel_access => #{99 => sets:from_list([500])}
-    }.
-
-memoisable_channel_skips_categories_test() ->
-    Data = maps:get(data, memo_channel_state()),
-    ?assert(memoisable_channel(500, Data)),
-    ?assertNot(memoisable_channel(600, Data)),
-    ?assertNot(memoisable_channel(777, Data)).
-
-visibility_exceptions_cover_owner_virtual_and_overwrites_test() ->
-    State = memo_channel_state(),
-    Exceptions = visibility_exceptions(500, maps:get(data, State), State),
-    ?assert(sets:is_element(7, Exceptions)),
-    ?assert(sets:is_element(99, Exceptions)),
-    ?assert(sets:is_element(42, Exceptions)),
-    ?assertNot(sets:is_element(1234, Exceptions)).
-
-new_visibility_memo_is_disabled_for_categories_test() ->
-    State = memo_channel_state(),
-    ?assertEqual(disabled, new_visibility_memo(600, maps:get(data, State), State)),
-    ?assertNotEqual(disabled, new_visibility_memo(500, maps:get(data, State), State)).
-
-memoised_can_view_caches_one_entry_per_role_set_test() ->
-    State = memo_channel_state(),
-    Memo0 = new_visibility_memo(500, maps:get(data, State), State),
-    {First, Memo1} = memoised_can_view(
-        1000, 500, #{<<"roles">> => [2, 1]}, lists:sort([2, 1]), State, Memo0
-    ),
-    ?assertEqual(1, map_size(maps:get(cache, Memo1))),
-    {Second, Memo2} = memoised_can_view(
-        1001, 500, #{<<"roles">> => [1, 2]}, lists:sort([1, 2]), State, Memo1
-    ),
-    ?assertEqual(First, Second),
-    ?assertEqual(1, map_size(maps:get(cache, Memo2))).
-
-memoised_can_view_bypasses_exception_users_test() ->
-    State = memo_channel_state(),
-    Memo0 = new_visibility_memo(500, maps:get(data, State), State),
-    {_, Memo1} = memoised_can_view(7, 500, #{<<"roles">> => []}, [], State, Memo0),
-    ?assertEqual(0, map_size(maps:get(cache, Memo1))),
-    {_, Memo2} = memoised_can_view(42, 500, #{<<"roles">> => []}, [], State, Memo1),
-    ?assertEqual(0, map_size(maps:get(cache, Memo2))).
-
-memoised_can_view_disabled_never_caches_test() ->
-    State = memo_channel_state(),
-    ?assertMatch(
-        {_, disabled},
-        memoised_can_view(1000, 600, #{<<"roles">> => [1]}, [1], State, disabled)
-    ).
-
-member_role_ids_caches_and_sorts_test() ->
-    Member = #{<<"roles">> => [3, 1, 2]},
-    {RoleIds, Sorted, Cache1} = member_role_ids(Member, #{}),
-    ?assertEqual([1, 2, 3], Sorted),
-    ?assertEqual(lists:sort(RoleIds), Sorted),
-    ?assertEqual(1, map_size(Cache1)),
-    {RoleIds2, Sorted2, Cache2} = member_role_ids(#{<<"roles">> => [3, 1, 2]}, Cache1),
-    ?assertEqual({RoleIds, Sorted}, {RoleIds2, Sorted2}),
-    ?assertEqual(1, map_size(Cache2)),
-    {_, _, Cache3} = member_role_ids(#{<<"roles">> => [9]}, Cache2),
-    ?assertEqual(2, map_size(Cache3)).
-
-offline_member_skips_the_presence_lookup_test() ->
-    Presences = #{7 => #{<<"status">> => <<"online">>}},
-    Connected = sets:from_list([7]),
-    ?assert(member_is_online(7, Presences, Connected)),
-    ?assertNot(member_is_online(8, Presences, Connected)),
-    ?assertNot(member_is_online(7, Presences, sets:new())).
-
-invisible_member_is_not_online_test() ->
-    Connected = sets:from_list([7]),
-    ?assertNot(member_is_online(7, #{7 => #{<<"status">> => <<"invisible">>}}, Connected)),
-    ?assertNot(member_is_online(7, #{7 => #{<<"status">> => <<"offline">>}}, Connected)).
-
--endif.

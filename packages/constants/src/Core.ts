@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 export const FLUXER_EPOCH = 1420070400000;
-export const FLUXER_USER_AGENT = 'Mozilla/5.0 (compatible; Fluxerbot/1.0; +https://fluxer.app)';
+export const FLUXER_USER_AGENT = 'Mozilla/5.0 (compatible; Fluxerbot/1.0; +https://fluxer.com)';
 export const ADMIN_OAUTH2_APPLICATION_ID = 1234567890123456789n;
 export const URL_REGEX = /https?:\/\/[^\s/$.?#].[^\s]*/g;
 export const DeletionReasons = {
@@ -27,4 +27,16 @@ export const DeletionReasons = {
 	HATE_SPEECH_OR_EXTREMIST_CONTENT: 20,
 	MALICIOUS_LINKS_OR_MALWARE: 21,
 	IMPERSONATION_OR_FAKE_IDENTITY: 22,
+	THREATS_OR_VIOLENT_SPEECH: 23,
+	VIOLENT_EXTREMISM: 24,
+	SELF_HARM_PROMOTION: 25,
+	SEXUAL_CONTENT_PLACEMENT: 26,
+	ILLEGAL_GOODS_OR_ACTIVITY: 27,
+	HARMFUL_DECEPTION: 28,
+	REPORTING_ABUSE: 29,
+	UNDERAGE_ACCOUNT: 30,
+	COPYRIGHT: 31,
+	BELOW_MINIMUM_AGE: 32,
+	UNCLAIMED_ACCOUNT_ABANDONED: 33,
+	OPERATOR_PASS_PAYMENT_DISPUTE: 34,
 } as const;

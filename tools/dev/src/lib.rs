@@ -3,12 +3,12 @@
 pub mod bootstrap;
 pub mod cassandra;
 pub mod desktop;
+pub mod desktop_modules;
 pub mod dev;
 pub mod disclaim;
 pub mod env;
 pub mod gateway;
 pub mod manifest;
-pub mod media_external;
 pub mod media_proxy;
 pub mod object_store;
 pub mod paths;

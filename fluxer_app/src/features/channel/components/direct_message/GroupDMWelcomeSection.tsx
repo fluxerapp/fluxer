@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {GroupDMAvatar} from '@app/features/app/components/shared/GroupDMAvatar';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import styles from '@app/features/channel/components/direct_message/GroupDMWelcomeSection.module.css';
 import {EditGroupModal} from '@app/features/channel/components/modals/EditGroupModal';
 import type {Channel} from '@app/features/channel/models/Channel';
@@ -27,7 +28,7 @@ interface GroupDMWelcomeSectionProps {
 export const GroupDMWelcomeSection: React.FC<GroupDMWelcomeSectionProps> = observer(({channel}) => {
 	useLingui();
 	const displayName = ChannelUtils.getDMDisplayName(channel);
-	const isGroupDMFull = isGroupDmFull(channel);
+	const dmPickerAvailable = RuntimeConfig.dmPickerAvailable;
 	const handleOpenEditGroup = useCallback(() => {
 		ModalCommands.push(
 			modal(() => (
@@ -81,10 +82,17 @@ export const GroupDMWelcomeSection: React.FC<GroupDMWelcomeSectionProps> = obser
 				</span>
 			</button>
 			<p className={styles.welcomeText} data-flx="channel.direct-message.group-dm-welcome-section.welcome-text">
-				<Trans>
-					Welcome to <strong data-flx="channel.direct-message.group-dm-welcome-section.strong">{displayName}</strong>.
-					Add friends to get the group going.
-				</Trans>
+				{dmPickerAvailable ? (
+					<Trans>
+						Welcome to <strong data-flx="channel.direct-message.group-dm-welcome-section.strong">{displayName}</strong>.
+						Add friends to get the group going.
+					</Trans>
+				) : (
+					<Trans>
+						Welcome to{' '}
+						<strong data-flx="channel.direct-message.group-dm-welcome-section.strong--2">{displayName}</strong>.
+					</Trans>
+				)}
 			</p>
 			<div className={styles.actions} data-flx="channel.direct-message.group-dm-welcome-section.actions">
 				<Button
@@ -102,7 +110,7 @@ export const GroupDMWelcomeSection: React.FC<GroupDMWelcomeSectionProps> = obser
 				>
 					<Trans>Edit group</Trans>
 				</Button>
-				{!isGroupDMFull && (
+				{dmPickerAvailable && !isGroupDmFull(channel) && (
 					<Button
 						variant="primary"
 						leftIcon={

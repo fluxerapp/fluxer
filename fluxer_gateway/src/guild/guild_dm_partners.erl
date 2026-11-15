@@ -3,7 +3,7 @@
 -module(guild_dm_partners).
 -typing([eqwalizer]).
 
--export([handle_cast/2, maybe_reevaluate/4]).
+-export([handle_cast/2, maybe_reevaluate/4, reevaluate_user/2, reevaluate_all/1]).
 
 -type guild_state() :: map().
 -type session_id() :: binary().
@@ -17,7 +17,7 @@
 -type registrations() :: #{session_id() => registration()}.
 -type scope() :: none | all | {user, user_id()}.
 
--export_type([guild_state/0]).
+-export_type([guild_state/0, user_id/0]).
 
 -define(MAX_PARTNERS, 1000).
 -define(PRUNE_SLACK, 64).
@@ -44,6 +44,22 @@ maybe_reevaluate(Event, Data, PreviousState, State) ->
             )
     end.
 
+-spec reevaluate_user(user_id(), guild_state()) -> guild_state().
+reevaluate_user(UserId, State) ->
+    reevaluate_registered({user, UserId}, State).
+
+-spec reevaluate_all(guild_state()) -> guild_state().
+reevaluate_all(State) ->
+    reevaluate_registered(all, State).
+
+-spec reevaluate_registered(scope(), guild_state()) -> guild_state().
+reevaluate_registered(Scope, State) ->
+    Registrations = registrations(State),
+    case map_size(Registrations) of
+        0 -> State;
+        _ -> reevaluate(Scope, Registrations, State)
+    end.
+
 -spec effective_scope(scope(), guild_state(), guild_state()) -> scope().
 effective_scope(all, PreviousState, State) ->
     case visibility_inputs(PreviousState) =:= visibility_inputs(State) of
@@ -59,8 +75,8 @@ visibility_inputs(State) ->
     Guild = map_utils:ensure_map(maps:get(<<"guild">>, Data, #{})),
     {
         maps:get(<<"owner_id">>, Guild, undefined),
-        role_inputs(guild_data_index:role_index(Data)),
-        channel_inputs(guild_data_index:channel_index(Data)),
+        role_inputs(guild_data_index_roles:role_index(Data)),
+        channel_inputs(guild_data_index_channels:channel_index(Data)),
         maps:get(virtual_channel_access, State, #{})
     }.
 
@@ -121,15 +137,8 @@ reevaluate(all, Registrations, State) ->
     {Evaluated, State1} = evaluate(live_registrations(Registrations, State), State),
     State1#{dm_partners => Evaluated};
 reevaluate({user, UserId}, Registrations, State) ->
-    Affected = maps:fold(
-        fun(SessionId, Entry, Acc) ->
-            case involves_user(UserId, Entry) of
-                true -> Acc#{SessionId => Entry};
-                false -> Acc
-            end
-        end,
-        #{},
-        Registrations
+    Affected = maps:filter(
+        fun(_SessionId, Entry) -> involves_user(UserId, Entry) end, Registrations
     ),
     case map_size(Affected) of
         0 ->
@@ -153,13 +162,13 @@ put_all(Entries, Registrations) ->
 maybe_prune(Registrations, State) ->
     Sessions = maps:get(sessions, State, #{}),
     case map_size(Registrations) > map_size(Sessions) + ?PRUNE_SLACK of
-        true ->
-            maps:filter(
-                fun(SessionId, _Entry) -> maps:is_key(SessionId, Sessions) end, Registrations
-            );
-        false ->
-            Registrations
+        true -> live_session_registrations(Registrations, Sessions);
+        false -> Registrations
     end.
+
+-spec live_session_registrations(registrations(), map()) -> registrations().
+live_session_registrations(Registrations, Sessions) ->
+    maps:filter(fun(SessionId, _Entry) -> maps:is_key(SessionId, Sessions) end, Registrations).
 
 -spec evaluate(registrations(), guild_state()) -> {registrations(), guild_state()}.
 evaluate(Entries, State) when map_size(Entries) =:= 0 ->

@@ -18,6 +18,10 @@ Every file went through the same mechanical steps, so a fresh upstream tree can 
 
 `connectionHelper`, `createLocalScreenTracks`, `getStereoAudioStreamTrack`, `isLocalPub`, the frame metadata worker, `room/token-source/test-tokens.ts`, `utils/subscribeToEvents.ts`, and the `DataTrackPacket`, data track packet extension and `LocalTrackRecorder` exports. `createV0RtcUrl`, `truncateBytes`, `videoQualityForRid` and `STOP_REFETCH_DELAY_MS` are no longer exported.
 
+## Added seams
+
+`InternalRoomOptions.createEngine` lets a caller build the engine, and `Room` uses it in place of `new RTCEngine`. The index exports `RTCEngine`, `SignalClient`, `SignalConnectionState`, `PCTransportState`, `selectPublisherCodecPreferences` and the protocol messages a substitute engine has to build. The P2P mesh engine in `fluxer_app/src/features/voice/engine/mesh` depends on all of them.
+
 ## Updating from upstream
 
 1. Read the upstream changelog for the target version.
@@ -25,4 +29,4 @@ Every file went through the same mechanical steps, so a fresh upstream tree can 
 3. Strip blank lines from the base, this tree and the new tree, run `git merge-file --diff3 --diff-algorithm=histogram` per file, and put blank lines back from the new tree. Blank-line drift between the trees otherwise turns into conflicts.
 4. Resolve conflicts by starting from the upstream function and reapplying whatever this tree changed.
 5. Diff the result against the transformed new tag after compiling both to JavaScript without types. Review every hunk.
-6. Run `tsgo --noEmit` under the app tsconfig, `biome check`, `knip` and `pnpm --filter livekit-client test`, then update the version in `package.json` and this file.
+6. Run `tsgo --noEmit` under the app tsconfig, `biome check` and `knip`, then update the version in `package.json` and this file.

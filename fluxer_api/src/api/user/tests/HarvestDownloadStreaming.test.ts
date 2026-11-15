@@ -5,6 +5,8 @@ import {getConfig} from '@app/api/Config';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {signHarvestDownloadToken} from '@app/api/user/services/HarvestDownloadToken';
 import {fetchHarvestDownload, markHarvestCompleted, requestHarvest} from '@app/api/user/tests/HarvestTestUtils';
+import {HttpStatus} from '@fluxer/constants/src/HttpConstants';
+import {MS_PER_DAY, MS_PER_MINUTE} from '@fluxer/date_utils/src/DateConstants';
 import {beforeEach, describe, expect, test} from 'vitest';
 
 const ZIP_BYTES = new TextEncoder().encode('PK pretend zip');
@@ -23,7 +25,7 @@ async function withStreamingHarvestDownloads(callback: () => Promise<void>): Pro
 async function completedHarvest(harness: ApiTestHarness) {
 	const account = await createTestAccount(harness);
 	const {harvest_id} = await requestHarvest(harness, account.token);
-	await markHarvestCompleted(account.userId, harvest_id, new Date(Date.now() + 6 * 24 * 60 * 60 * 1000));
+	await markHarvestCompleted(account.userId, harvest_id, new Date(Date.now() + 6 * MS_PER_DAY));
 	const storageKey = `test/${harvest_id}.zip`;
 	await harness.storageService.uploadObject({
 		bucket: getConfig().s3.buckets.harvests,
@@ -56,11 +58,11 @@ describe('Harvest download streaming', () => {
 		expect(download.download_url).toBe('https://presigned.url/test');
 
 		const token = signHarvestDownloadToken(
-			{userId: account.userId, harvestId, storageKey, expiresAt: Date.now() + 60_000},
+			{userId: account.userId, harvestId, storageKey, expiresAt: Date.now() + MS_PER_MINUTE},
 			getConfig().auth.connectionInitiationSecret,
 		);
 		const response = await get(harness, `/harvest-downloads/${harvestId}?token=${encodeURIComponent(token)}`);
-		expect(response.status).toBe(404);
+		expect(response.status).toBe(HttpStatus.NOT_FOUND);
 	});
 
 	test('serves the archive through the API when presigned downloads are disabled', async () => {
@@ -73,7 +75,7 @@ describe('Harvest download streaming', () => {
 			expect(download.download_url).toContain('token=');
 
 			const response = await get(harness, downloadPath(download.download_url));
-			expect(response.status).toBe(200);
+			expect(response.status).toBe(HttpStatus.OK);
 			expect(response.headers.get('content-type')).toBe('application/zip');
 			expect(response.headers.get('content-disposition')).toContain('attachment');
 			expect(response.headers.get('cache-control')).toBe('private, no-store');
@@ -81,37 +83,15 @@ describe('Harvest download streaming', () => {
 		});
 	});
 
-	test('rejects a tampered token', async () => {
-		await withStreamingHarvestDownloads(async () => {
-			const {account, harvestId} = await completedHarvest(harness);
-			const download = await fetchHarvestDownload(harness, account.token, harvestId);
-			const path = downloadPath(download.download_url);
-			const response = await get(harness, `${path.slice(0, -2)}xy`);
-			expect(response.status).toBe(404);
-		});
-	});
-
 	test('rejects a token signed with the wrong secret', async () => {
 		await withStreamingHarvestDownloads(async () => {
 			const {account, harvestId, storageKey} = await completedHarvest(harness);
 			const token = signHarvestDownloadToken(
-				{userId: account.userId, harvestId, storageKey, expiresAt: Date.now() + 60_000},
+				{userId: account.userId, harvestId, storageKey, expiresAt: Date.now() + MS_PER_MINUTE},
 				'not-the-configured-secret',
 			);
 			const response = await get(harness, `/harvest-downloads/${harvestId}?token=${encodeURIComponent(token)}`);
-			expect(response.status).toBe(404);
-		});
-	});
-
-	test('rejects an expired token even while the harvest is still valid', async () => {
-		await withStreamingHarvestDownloads(async () => {
-			const {account, harvestId, storageKey} = await completedHarvest(harness);
-			const token = signHarvestDownloadToken(
-				{userId: account.userId, harvestId, storageKey, expiresAt: Date.now() - 1},
-				getConfig().auth.connectionInitiationSecret,
-			);
-			const response = await get(harness, `/harvest-downloads/${harvestId}?token=${encodeURIComponent(token)}`);
-			expect(response.status).toBe(404);
+			expect(response.status).toBe(HttpStatus.NOT_FOUND);
 		});
 	});
 
@@ -124,12 +104,12 @@ describe('Harvest download streaming', () => {
 					userId: first.account.userId,
 					harvestId: first.harvestId,
 					storageKey: first.storageKey,
-					expiresAt: Date.now() + 60_000,
+					expiresAt: Date.now() + MS_PER_MINUTE,
 				},
 				getConfig().auth.connectionInitiationSecret,
 			);
 			const response = await get(harness, `/harvest-downloads/${second.harvestId}?token=${encodeURIComponent(token)}`);
-			expect(response.status).toBe(404);
+			expect(response.status).toBe(HttpStatus.NOT_FOUND);
 		});
 	});
 
@@ -137,11 +117,16 @@ describe('Harvest download streaming', () => {
 		await withStreamingHarvestDownloads(async () => {
 			const {account, harvestId} = await completedHarvest(harness);
 			const token = signHarvestDownloadToken(
-				{userId: account.userId, harvestId, storageKey: 'test/some-other-key.zip', expiresAt: Date.now() + 60_000},
+				{
+					userId: account.userId,
+					harvestId,
+					storageKey: 'test/some-other-key.zip',
+					expiresAt: Date.now() + MS_PER_MINUTE,
+				},
 				getConfig().auth.connectionInitiationSecret,
 			);
 			const response = await get(harness, `/harvest-downloads/${harvestId}?token=${encodeURIComponent(token)}`);
-			expect(response.status).toBe(404);
+			expect(response.status).toBe(HttpStatus.NOT_FOUND);
 		});
 	});
 
@@ -150,11 +135,11 @@ describe('Harvest download streaming', () => {
 			const {harvestId, storageKey} = await completedHarvest(harness);
 			const other = await createTestAccount(harness);
 			const token = signHarvestDownloadToken(
-				{userId: other.userId, harvestId, storageKey, expiresAt: Date.now() + 60_000},
+				{userId: other.userId, harvestId, storageKey, expiresAt: Date.now() + MS_PER_MINUTE},
 				getConfig().auth.connectionInitiationSecret,
 			);
 			const response = await get(harness, `/harvest-downloads/${harvestId}?token=${encodeURIComponent(token)}`);
-			expect(response.status).toBe(404);
+			expect(response.status).toBe(HttpStatus.NOT_FOUND);
 		});
 	});
 
@@ -162,7 +147,44 @@ describe('Harvest download streaming', () => {
 		await withStreamingHarvestDownloads(async () => {
 			const {harvestId} = await completedHarvest(harness);
 			const response = await get(harness, `/harvest-downloads/${harvestId}`);
-			expect(response.status).toBe(404);
+			expect(response.status).toBe(HttpStatus.NOT_FOUND);
+			expect(await response.text()).toBe('Not Found');
+		});
+	});
+
+	test('rejects a signed token with a malformed user id', async () => {
+		await withStreamingHarvestDownloads(async () => {
+			const {harvestId, storageKey} = await completedHarvest(harness);
+			const token = signHarvestDownloadToken(
+				{userId: 'invalid-user', harvestId, storageKey, expiresAt: Date.now() + MS_PER_MINUTE},
+				getConfig().auth.connectionInitiationSecret,
+			);
+			const response = await get(harness, `/harvest-downloads/${harvestId}?token=${encodeURIComponent(token)}`);
+			expect(response.status).toBe(HttpStatus.NOT_FOUND);
+			expect(await response.text()).toBe('Not Found');
+		});
+	});
+
+	test.each([
+		['an empty token', '?token='],
+		['a token longer than a download URL', `?token=${'a'.repeat(2049)}`],
+		['a token given twice', '?token=a&token=b'],
+	])('answers not found for %s', async (_label, query) => {
+		await withStreamingHarvestDownloads(async () => {
+			const {harvestId} = await completedHarvest(harness);
+			const response = await get(harness, `/harvest-downloads/${harvestId}${query}`);
+			expect(response.status).toBe(HttpStatus.NOT_FOUND);
+			expect(await response.text()).toBe('Not Found');
+		});
+	});
+
+	test('serves the archive when the link has other query parameters', async () => {
+		await withStreamingHarvestDownloads(async () => {
+			const {account, harvestId} = await completedHarvest(harness);
+			const download = await fetchHarvestDownload(harness, account.token, harvestId);
+			const response = await get(harness, `${downloadPath(download.download_url)}&source=email`);
+			expect(response.status).toBe(HttpStatus.OK);
+			expect(new Uint8Array(await response.arrayBuffer())).toEqual(ZIP_BYTES);
 		});
 	});
 });

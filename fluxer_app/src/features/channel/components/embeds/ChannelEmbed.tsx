@@ -12,6 +12,7 @@ import {
 	isDuplicateEmbedAtIndex,
 	isMediaMatureContent,
 	isValidMedia,
+	withFreshEmbedMediaUrls,
 } from '@app/features/channel/components/embeds/channel_embed/ChannelEmbedShared';
 import {SuppressEmbedsConfirmModal} from '@app/features/channel/components/embeds/channel_embed/EmbedLink';
 import {RichEmbed} from '@app/features/channel/components/embeds/channel_embed/RichEmbed';
@@ -30,7 +31,7 @@ import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlR
 import {getEmbedMediaDimensions} from '@app/features/messaging/utils/MediaDimensionConfig';
 import {buildAnimatedImageProxyURL} from '@app/features/messaging/utils/MediaProxyUtils';
 import {buildMessageEmbedCopyText} from '@app/features/messaging/utils/MessageCopyTextUtils';
-import {canonicalizeMediaUrl, extractSpoileredUrls, useSpoilerState} from '@app/features/messaging/utils/SpoilerUtils';
+import {getEmbedSpoilerUrls, useSpoilerState} from '@app/features/messaging/utils/SpoilerUtils';
 import Permission from '@app/features/permissions/state/Permission';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import messageStyles from '@app/features/theme/styles/Message.module.css';
@@ -40,7 +41,7 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {MessageAttachmentFlags, MessageEmbedTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
-import type {EmbedMedia, MessageEmbed} from '@fluxer/schema/src/domains/message/EmbedSchemas';
+import type {MessageEmbed} from '@fluxer/schema/src/domains/message/EmbedSchemas';
 import {useLingui} from '@lingui/react/macro';
 import {XIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
@@ -50,23 +51,32 @@ import {type FC, useCallback, useMemo} from 'react';
 
 const mediaFocusRingClass = messageStyles.mediaFocusRing;
 
-function withFreshEmbedMediaUrls(media: EmbedMedia | undefined): EmbedMedia | undefined {
-	if (!media) return media;
-	const url = AttachmentUrlRefresher.fresh(media.url);
-	const proxyUrl = media.proxy_url === undefined ? undefined : AttachmentUrlRefresher.fresh(media.proxy_url);
-	if (url === media.url && proxyUrl === media.proxy_url) return media;
-	return {...media, url, proxy_url: proxyUrl};
+function withFreshIconUrl<T extends {proxy_icon_url?: string | null}>(part: T | undefined): T | undefined {
+	if (!part?.proxy_icon_url) return part;
+	const proxyIconUrl = AttachmentUrlRefresher.fresh(part.proxy_icon_url);
+	return proxyIconUrl === part.proxy_icon_url ? part : {...part, proxy_icon_url: proxyIconUrl};
 }
 
 function withFreshEmbedUrls(embed: MessageEmbed): MessageEmbed {
+	const url = embed.url ? AttachmentUrlRefresher.fresh(embed.url) : embed.url;
 	const image = withFreshEmbedMediaUrls(embed.image);
 	const thumbnail = withFreshEmbedMediaUrls(embed.thumbnail);
 	const video = withFreshEmbedMediaUrls(embed.video);
 	const audio = withFreshEmbedMediaUrls(embed.audio);
-	if (image === embed.image && thumbnail === embed.thumbnail && video === embed.video && audio === embed.audio) {
+	const author = withFreshIconUrl(embed.author);
+	const footer = withFreshIconUrl(embed.footer);
+	if (
+		url === embed.url &&
+		image === embed.image &&
+		thumbnail === embed.thumbnail &&
+		video === embed.video &&
+		audio === embed.audio &&
+		author === embed.author &&
+		footer === embed.footer
+	) {
 		return embed;
 	}
-	return {...embed, image, thumbnail, video, audio};
+	return {...embed, url, image, thumbnail, video, audio, author, footer};
 }
 
 export const Embed: FC<EmbedProps> = observer((props: EmbedProps) => {
@@ -121,26 +131,11 @@ export const Embed: FC<EmbedProps> = observer((props: EmbedProps) => {
 			} as const)
 		: {};
 	const spoilerSourceContent = contextualContent ?? message.content;
-	const spoileredUrls = useMemo(() => extractSpoileredUrls(spoilerSourceContent), [spoilerSourceContent]);
-	const {isSpoilerEmbed, matchingSpoilerUrls} = useMemo(() => {
-		const urlsToCheck = [
-			embed.url,
-			embed.provider?.url,
-			embed.image?.url,
-			embed.image?.proxy_url,
-			embed.thumbnail?.url,
-			embed.thumbnail?.proxy_url,
-			embed.video?.url,
-			embed.video?.proxy_url,
-			embed.audio?.url,
-			embed.audio?.proxy_url,
-		].filter(Boolean) as Array<string>;
-		if (spoileredUrls.size === 0) return {isSpoilerEmbed: false, matchingSpoilerUrls: [] as Array<string>};
-		const matches = urlsToCheck
-			.map((url) => canonicalizeMediaUrl(url))
-			.filter((canonical): canonical is string => !!canonical && spoileredUrls.has(canonical));
-		return {isSpoilerEmbed: matches.length > 0, matchingSpoilerUrls: matches};
-	}, [embed, spoileredUrls]);
+	const matchingSpoilerUrls = useMemo(
+		() => getEmbedSpoilerUrls(embed, spoilerSourceContent),
+		[embed, spoilerSourceContent],
+	);
+	const isSpoilerEmbed = matchingSpoilerUrls.length > 0;
 	const {hidden: spoilerHidden, reveal: revealSpoiler} = useSpoilerState(
 		isSpoilerEmbed,
 		message.channelId,

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::common::{CommandSpec, command_succeeds, output_text, run_command};
-use crate::desktop::MACOS_UNIVERSAL_ARCH;
+use crate::desktop::{MACOS_MINIMUM_SYSTEM_VERSION, MACOS_UNIVERSAL_ARCH};
 use anyhow::{Context, Result, anyhow, bail, ensure};
 use clap::Args;
 use sha2::{Digest, Sha256};
@@ -13,7 +13,10 @@ use std::path::{Path, PathBuf};
 
 #[derive(Debug, Args, Clone)]
 pub struct BuildDesktopNativeAddonArgs {
-    #[arg(long)]
+    #[arg(
+        long,
+        help = "Directory holding the addon crate to build, defaults to the current directory"
+    )]
     addon_root: Option<PathBuf>,
 }
 
@@ -49,12 +52,33 @@ struct BuiltNodeAddon {
     target: String,
 }
 
+const NATIVE_PROFILE: &str = "desktop-native";
 const LINUX_AUDIO_CAPTURE_PKG_CONFIG: &[PkgConfigRequirement] = &[PkgConfigRequirement {
     package: "libpipewire-0.3",
     message: "@fluxer/linux-audio-capture requires libpipewire-0.3-dev (or your distro's equivalent: `apt install libpipewire-0.3-dev`, `dnf install pipewire-devel`, `apk add pipewire-dev`) to build. Install it on the build host, then re-run `pnpm build`.",
 }];
 
 const DESKTOP_NATIVE_ADDONS: &[DesktopNativeAddon] = &[
+    DesktopNativeAddon {
+        package_dir: "app-store",
+        package_name: "@fluxer/app-store",
+        crate_name: "fluxer_app_store",
+        node_file_stem: "app-store",
+        required_platform: None,
+        features: &[],
+        pkg_config: &[],
+        special: DesktopNativeSpecialBuild::None,
+    },
+    DesktopNativeAddon {
+        package_dir: "gateway-socket",
+        package_name: "@fluxer/gateway-socket",
+        crate_name: "fluxer_gateway_socket",
+        node_file_stem: "gateway-socket",
+        required_platform: None,
+        features: &[],
+        pkg_config: &[],
+        special: DesktopNativeSpecialBuild::None,
+    },
     DesktopNativeAddon {
         package_dir: "hardware-encoder",
         package_name: "@fluxer/hardware-encoder",
@@ -110,16 +134,6 @@ const DESKTOP_NATIVE_ADDONS: &[DesktopNativeAddon] = &[
         package_name: "@fluxer/linux-portals",
         crate_name: "fluxer_linux_portals",
         node_file_stem: "linux-portals",
-        required_platform: Some("linux"),
-        features: &[],
-        pkg_config: &[],
-        special: DesktopNativeSpecialBuild::None,
-    },
-    DesktopNativeAddon {
-        package_dir: "linux-screen-capture",
-        package_name: "@fluxer/linux-screen-capture",
-        crate_name: "fluxer_linux_screen_capture",
-        node_file_stem: "linux-screen-capture",
         required_platform: Some("linux"),
         features: &[],
         pkg_config: &[],
@@ -256,16 +270,6 @@ const DESKTOP_NATIVE_ADDONS: &[DesktopNativeAddon] = &[
         special: DesktopNativeSpecialBuild::None,
     },
     DesktopNativeAddon {
-        package_dir: "win-toast",
-        package_name: "@fluxer/win-toast",
-        crate_name: "fluxer_win_toast",
-        node_file_stem: "win-toast",
-        required_platform: Some("win32"),
-        features: &[],
-        pkg_config: &[],
-        special: DesktopNativeSpecialBuild::None,
-    },
-    DesktopNativeAddon {
         package_dir: "windows-input-hook",
         package_name: "@fluxer/windows-input-hook",
         crate_name: "fluxer_windows_input_hook",
@@ -359,7 +363,9 @@ fn build_rust_node_addon_for_arch(
     let target_root = cargo_target_root_for_build(addon_root, platform)?;
     let mut args = vec![
         OsString::from("build"),
-        OsString::from("--release"),
+        OsString::from("--profile"),
+        OsString::from(NATIVE_PROFILE),
+        OsString::from("--locked"),
         OsString::from("--target"),
         OsString::from(&target),
         OsString::from("--manifest-path"),
@@ -372,26 +378,25 @@ fn build_rust_node_addon_for_arch(
 
     let mut command = CommandSpec::new(resolve_cargo_bin())
         .args(args)
-        .current_dir(addon_root);
-    if env::var_os("CARGO_TARGET_DIR").is_none() && platform == "win32" {
-        command = command.env("CARGO_TARGET_DIR", target_root.as_os_str());
-    }
+        .current_dir(addon_root)
+        .env("CARGO_TARGET_DIR", target_root.as_os_str());
     if platform == "win32" && arch == "arm64" {
         command = configure_windows_arm64_msvc_cc(command);
     }
+    if platform == "darwin" {
+        command = command.env("MACOSX_DEPLOYMENT_TARGET", MACOS_MINIMUM_SYSTEM_VERSION);
+    }
 
     println!("[buildRustNodeAddon] cwd={}", addon_root.display());
-    if env::var_os("CARGO_TARGET_DIR").is_some() || platform == "win32" {
-        println!(
-            "[buildRustNodeAddon] CARGO_TARGET_DIR={}",
-            target_root.display()
-        );
-    }
+    println!(
+        "[buildRustNodeAddon] CARGO_TARGET_DIR={}",
+        target_root.display()
+    );
     run_command(command)?;
 
     let source = target_root
         .join(&target)
-        .join("release")
+        .join(NATIVE_PROFILE)
         .join(cargo_dynamic_library_file_name(addon.crate_name, platform)?);
     let out_file = addon_root.join(format!("{}.{}.node", addon.node_file_stem, tag));
     ensure!(
@@ -412,6 +417,7 @@ fn build_rust_node_addon_for_arch(
         out_file.display()
     );
     sign_macos_node_addon(&out_file, platform)?;
+    assert_macos_addon_loads_on_minimum_system(&out_file, &source, platform)?;
     assert_no_redistributable_runtime_imports(&out_file, platform)?;
     assert_system32_dependent_load_flag(&out_file, platform)?;
     assert_no_disabled_win_game_capture_capabilities(&out_file, addon, platform)?;
@@ -591,6 +597,12 @@ fn copy_webauthn_linux_shared_libraries(native_path: &Path, root: &Path) -> Resu
     if current_platform() != "linux" {
         return Ok(());
     }
+    if env::var("FLUXER_SYSTEM_LIBS").as_deref() == Ok("1") {
+        println!(
+            "[webauthn] FLUXER_SYSTEM_LIBS=1, linking the system libfido2 without bundling it"
+        );
+        return Ok(());
+    }
     for dependency in collect_linux_shared_library_dependencies(native_path)? {
         let target_path = root.join(&dependency.library_name);
         if target_path
@@ -723,6 +735,149 @@ fn assert_no_redistributable_runtime_imports(node_file_path: &Path, platform: &s
             .collect::<Vec<_>>()
             .join("\n")
     )
+}
+
+const MACHO_MAGIC_64: u32 = 0xfeed_facf;
+const MACHO_HEADER_64_SIZE: usize = 32;
+const MACHO_PLATFORM_MACOS: u32 = 1;
+const MACHO_LC_REQ_DYLD: u32 = 0x8000_0000;
+const MACHO_LC_LOAD_DYLIB: u32 = 0x0c;
+const MACHO_LC_LOAD_WEAK_DYLIB: u32 = 0x18 | MACHO_LC_REQ_DYLD;
+const MACHO_LC_REEXPORT_DYLIB: u32 = 0x1f | MACHO_LC_REQ_DYLD;
+const MACHO_LC_LAZY_LOAD_DYLIB: u32 = 0x20;
+const MACHO_LC_LOAD_UPWARD_DYLIB: u32 = 0x23 | MACHO_LC_REQ_DYLD;
+const MACHO_LC_VERSION_MIN_MACOSX: u32 = 0x24;
+const MACHO_LC_BUILD_VERSION: u32 = 0x32;
+const MACOS_SYSTEM_LIBRARY_ROOTS: &[&str] = &["/System/Library/", "/usr/lib/"];
+
+#[derive(Debug, Default, PartialEq, Eq)]
+struct MachOLoadInfo {
+    minimum_macos: Option<u32>,
+    dylibs: Vec<String>,
+}
+
+fn read_macho_load_info(buffer: &[u8]) -> Option<MachOLoadInfo> {
+    let u32_at = |offset: usize| -> Option<u32> {
+        let bytes = buffer.get(offset..offset.checked_add(4)?)?;
+        Some(u32::from_le_bytes(bytes.try_into().ok()?))
+    };
+    if u32_at(0)? != MACHO_MAGIC_64 {
+        return None;
+    }
+    let command_count = u32_at(16)?;
+    let commands_end = MACHO_HEADER_64_SIZE.checked_add(u32_at(20)? as usize)?;
+    if commands_end > buffer.len() {
+        return None;
+    }
+    let mut info = MachOLoadInfo::default();
+    let mut offset = MACHO_HEADER_64_SIZE;
+    for _ in 0..command_count {
+        let command = u32_at(offset)?;
+        let end = offset.checked_add(u32_at(offset + 4)? as usize)?;
+        if end < offset + 8 || end > commands_end {
+            return None;
+        }
+        let field = |index: usize| -> Option<u32> {
+            let at = offset + index * 4;
+            if at + 4 > end {
+                return None;
+            }
+            u32_at(at)
+        };
+        match command {
+            MACHO_LC_LOAD_DYLIB
+            | MACHO_LC_LOAD_WEAK_DYLIB
+            | MACHO_LC_REEXPORT_DYLIB
+            | MACHO_LC_LAZY_LOAD_DYLIB
+            | MACHO_LC_LOAD_UPWARD_DYLIB => {
+                let name_start = offset.checked_add(field(2)? as usize)?;
+                let name = buffer.get(name_start..end)?;
+                let name = name.split(|byte| *byte == 0).next()?;
+                info.dylibs.push(String::from_utf8_lossy(name).into_owned());
+            }
+            MACHO_LC_VERSION_MIN_MACOSX => info.minimum_macos = Some(field(2)?),
+            MACHO_LC_BUILD_VERSION if field(2)? == MACHO_PLATFORM_MACOS => {
+                info.minimum_macos = Some(field(3)?);
+            }
+            _ => {}
+        }
+        offset = end;
+    }
+    Some(info)
+}
+
+fn pack_macos_version(version: &str) -> Option<u32> {
+    let mut parts = version.split('.');
+    let mut packed = 0;
+    for (shift, limit) in [(16, 0xffff), (8, 0xff), (0, 0xff)] {
+        let part = parts
+            .next()
+            .map_or(Some(0), |part| part.parse::<u32>().ok())?;
+        if part > limit {
+            return None;
+        }
+        packed |= part << shift;
+    }
+    parts.next().is_none().then_some(packed)
+}
+
+fn format_macos_version(packed: u32) -> String {
+    format!(
+        "{}.{}.{}",
+        packed >> 16,
+        (packed >> 8) & 0xff,
+        packed & 0xff
+    )
+}
+
+fn assert_macos_addon_loads_on_minimum_system(
+    node_file_path: &Path,
+    cargo_output_path: &Path,
+    platform: &str,
+) -> Result<()> {
+    if platform != "darwin" {
+        return Ok(());
+    }
+    let buffer = fs::read(node_file_path)
+        .with_context(|| format!("Failed to read {}", node_file_path.display()))?;
+    let info = read_macho_load_info(&buffer).ok_or_else(|| {
+        anyhow!(
+            "{} is not a single-architecture 64-bit Mach-O file",
+            node_file_path.display()
+        )
+    })?;
+    let expected = pack_macos_version(MACOS_MINIMUM_SYSTEM_VERSION).ok_or_else(|| {
+        anyhow!("Unsupported macOS minimum system version: {MACOS_MINIMUM_SYSTEM_VERSION}")
+    })?;
+    ensure!(
+        info.minimum_macos == Some(expected),
+        "{} is linked for macOS {}, expected {}.\nThe addon build sets MACOSX_DEPLOYMENT_TARGET to the oldest macOS the app supports, and the linker picks library install names for that version.\nCargo keeps earlier output for crates that do not track that variable. Delete {} and build again.",
+        node_file_path.display(),
+        info.minimum_macos
+            .map_or_else(|| "an unknown version".to_string(), format_macos_version),
+        format_macos_version(expected),
+        cargo_output_path
+            .parent()
+            .unwrap_or(cargo_output_path)
+            .display()
+    );
+    let unresolved = info
+        .dylibs
+        .iter()
+        .filter(|dylib| {
+            !MACOS_SYSTEM_LIBRARY_ROOTS
+                .iter()
+                .any(|root| dylib.starts_with(root))
+        })
+        .map(|dylib| format!("  - {dylib}"))
+        .collect::<Vec<_>>();
+    ensure!(
+        unresolved.is_empty(),
+        "{} depends on libraries that macOS cannot find when the addon is loaded:\n{}\nA shipped addon has no LC_RPATH and bundles no dylib, so every dependency must be an absolute path under /System/Library/ or /usr/lib/.",
+        node_file_path.display(),
+        unresolved.join("\n")
+    );
+    Ok(())
 }
 
 const DISABLED_WIN_GAME_CAPTURE_BINARY_MARKERS: &[&[u8]] = &[
@@ -982,54 +1137,88 @@ mod tests {
     use super::*;
 
     #[test]
-    fn addon_mapping_covers_expected_packages() {
-        let names = DESKTOP_NATIVE_ADDONS
+    fn the_desktop_build_script_builds_and_verifies_every_registered_addon() {
+        let build_script =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fluxer_desktop/scripts/build.mjs");
+        let source = fs::read_to_string(&build_script)
+            .unwrap_or_else(|error| panic!("failed to read {}: {error}", build_script.display()));
+        for addon in DESKTOP_NATIVE_ADDONS {
+            assert!(
+                source.contains(&format!("dirName: '{}'", addon.package_dir)),
+                "{} is registered but fluxer_desktop/scripts/build.mjs never builds it",
+                addon.package_dir
+            );
+            assert!(
+                source
+                    .matches(&format!("label: '{}'", addon.package_name))
+                    .count()
+                    >= 2,
+                "{} must appear in both the build list and the artifact verification list in fluxer_desktop/scripts/build.mjs",
+                addon.package_name
+            );
+        }
+    }
+
+    #[test]
+    fn addon_directory_names_stay_within_the_velopack_path_budget() {
+        for addon in DESKTOP_NATIVE_ADDONS {
+            assert!(
+                addon.package_dir.len() <= 20,
+                "{} exceeds the 20 character addon directory budget",
+                addon.package_dir
+            );
+        }
+    }
+
+    #[test]
+    fn the_registry_covers_every_shipped_addon_package() {
+        let native_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fluxer_desktop/native");
+        let mut shipped = Vec::new();
+        for entry in fs::read_dir(&native_root).expect("failed to read the native addon root") {
+            let entry = entry.expect("failed to read a native addon directory entry");
+            if entry.path().join("package.json").exists() {
+                shipped.push(entry.file_name().to_string_lossy().into_owned());
+            }
+        }
+        shipped.sort();
+        let mut registered = DESKTOP_NATIVE_ADDONS
             .iter()
-            .map(|addon| addon.package_dir)
+            .map(|addon| addon.package_dir.to_string())
             .collect::<Vec<_>>();
-
-        assert!(names.contains(&"linux-audio-capture"));
-        assert!(names.contains(&"webauthn"));
-        assert!(names.contains(&"win-game-capture"));
-        assert_eq!(DESKTOP_NATIVE_ADDONS.len(), 22);
-    }
-
-    #[test]
-    fn platform_tags_match_legacy_node_helper() {
-        assert_eq!(platform_tag("linux", "x64").unwrap(), "linux-x64-gnu");
-        assert_eq!(platform_tag("darwin", "arm64").unwrap(), "darwin-arm64");
-        assert_eq!(platform_tag("win32", "x64").unwrap(), "win32-x64-msvc");
-    }
-
-    #[test]
-    fn rust_targets_match_legacy_node_helper() {
+        registered.sort();
         assert_eq!(
-            rust_target_for_platform("linux", "arm64").unwrap(),
-            "aarch64-unknown-linux-gnu"
-        );
-        assert_eq!(
-            rust_target_for_platform("darwin", "x64").unwrap(),
-            "x86_64-apple-darwin"
-        );
-        assert_eq!(
-            rust_target_for_platform("win32", "arm64").unwrap(),
-            "aarch64-pc-windows-msvc"
+            shipped, registered,
+            "every fluxer_desktop/native/* directory with a package.json must be registered in DESKTOP_NATIVE_ADDONS"
         );
     }
 
     #[test]
-    fn dynamic_library_names_match_legacy_node_helper() {
-        assert_eq!(
-            cargo_dynamic_library_file_name("fluxer_webauthn", "linux").unwrap(),
-            "libfluxer_webauthn.so"
-        );
-        assert_eq!(
-            cargo_dynamic_library_file_name("fluxer-webauthn", "darwin").unwrap(),
-            "libfluxer_webauthn.dylib"
-        );
-        assert_eq!(
-            cargo_dynamic_library_file_name("fluxer_webauthn", "win32").unwrap(),
-            "fluxer_webauthn.dll"
+    fn every_addon_ships_a_byte_identical_loader_diagnostics_copy() {
+        let native_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fluxer_desktop/native");
+        let mut canonical: Option<(String, Vec<u8>)> = None;
+        let mut checked = 0;
+        for addon in DESKTOP_NATIVE_ADDONS {
+            let path = native_root
+                .join(addon.package_dir)
+                .join("loader-diagnostics.cjs");
+            if !path.exists() {
+                continue;
+            }
+            let contents = fs::read(&path)
+                .unwrap_or_else(|error| panic!("failed to read {}: {error}", path.display()));
+            match &canonical {
+                None => canonical = Some((addon.package_dir.to_string(), contents)),
+                Some((first_dir, first_contents)) => assert!(
+                    first_contents == &contents,
+                    "{} ships a loader-diagnostics.cjs that differs from {first_dir}",
+                    addon.package_dir
+                ),
+            }
+            checked += 1;
+        }
+        assert!(
+            checked >= DESKTOP_NATIVE_ADDONS.len() - 1,
+            "expected every addon but hardware-encoder to ship loader-diagnostics.cjs, checked {checked}"
         );
     }
 
@@ -1110,10 +1299,106 @@ mod tests {
         }
     }
 
+    fn synthetic_macho(version_command: u32, minimum_macos: u32, dylibs: &[&str]) -> Vec<u8> {
+        let words = |values: &[u32]| {
+            values
+                .iter()
+                .flat_map(|value| value.to_le_bytes())
+                .collect::<Vec<u8>>()
+        };
+        let mut commands = vec![if version_command == MACHO_LC_BUILD_VERSION {
+            words(&[
+                version_command,
+                24,
+                MACHO_PLATFORM_MACOS,
+                minimum_macos,
+                0,
+                0,
+            ])
+        } else {
+            words(&[version_command, 16, minimum_macos, 0])
+        }];
+        for dylib in dylibs {
+            let size = (24 + dylib.len() + 1).next_multiple_of(8);
+            let mut command = words(&[MACHO_LC_LOAD_DYLIB, size as u32, 24, 2, 0, 0]);
+            command.extend_from_slice(dylib.as_bytes());
+            command.resize(size, 0);
+            commands.push(command);
+        }
+        let body = commands.concat();
+        let mut buffer = words(&[
+            MACHO_MAGIC_64,
+            0,
+            0,
+            6,
+            commands.len() as u32,
+            body.len() as u32,
+            0,
+            0,
+        ]);
+        buffer.extend(body);
+        buffer
+    }
+
     #[test]
-    fn linux_library_bundling_denylist_matches_legacy_prefixes() {
-        assert!(!should_bundle_linux_library("libc.so.6"));
-        assert!(!should_bundle_linux_library("ld-linux-x86-64.so.2"));
-        assert!(should_bundle_linux_library("libfido2.so.1"));
+    fn macos_addons_must_target_the_app_minimum_and_link_only_system_libraries() {
+        let minimum = pack_macos_version(MACOS_MINIMUM_SYSTEM_VERSION).expect("minimum");
+        let sierra = pack_macos_version("10.12").expect("sierra");
+        let core_media = "/System/Library/Frameworks/CoreMedia.framework/Versions/A/CoreMedia";
+        let swift_overlay = "@rpath/libswiftCoreMedia.dylib";
+        let dir = tempfile::tempdir().expect("tempdir");
+        let cargo_output = dir.path().join("release/libaddon.dylib");
+        let check = |bytes: Vec<u8>, platform: &str| {
+            let path = dir.path().join("addon.node");
+            fs::write(&path, bytes).expect("write");
+            assert_macos_addon_loads_on_minimum_system(&path, &cargo_output, platform)
+                .map_err(|error| error.to_string())
+        };
+
+        assert_eq!(pack_macos_version("10.14.4"), Some(0x000a_0e04));
+        for version_command in [MACHO_LC_BUILD_VERSION, MACHO_LC_VERSION_MIN_MACOSX] {
+            assert_eq!(
+                read_macho_load_info(&synthetic_macho(
+                    version_command,
+                    sierra,
+                    &[swift_overlay, "/usr/lib/libSystem.B.dylib"]
+                )),
+                Some(MachOLoadInfo {
+                    minimum_macos: Some(sierra),
+                    dylibs: vec![
+                        swift_overlay.to_string(),
+                        "/usr/lib/libSystem.B.dylib".to_string()
+                    ],
+                }),
+                "version_command={version_command:#x}"
+            );
+            assert_eq!(
+                check(
+                    synthetic_macho(
+                        version_command,
+                        minimum,
+                        &[core_media, "/usr/lib/libSystem.B.dylib"]
+                    ),
+                    "darwin"
+                ),
+                Ok(())
+            );
+            let rewritten = check(
+                synthetic_macho(version_command, minimum, &[core_media, swift_overlay]),
+                "darwin",
+            )
+            .expect_err("an @rpath dependency must fail the build");
+            assert!(rewritten.contains("  - @rpath/libswiftCoreMedia.dylib"));
+            assert!(!rewritten.contains("  - /System/Library/"));
+            let older = check(
+                synthetic_macho(version_command, sierra, &[core_media]),
+                "darwin",
+            )
+            .expect_err("an addon linked for an older macOS must fail the build");
+            assert!(older.contains("is linked for macOS 10.12.0"));
+            assert!(older.contains(&dir.path().join("release").display().to_string()));
+        }
+        assert!(check(vec![0; 64], "darwin").is_err());
+        assert_eq!(check(vec![0; 64], "linux"), Ok(()));
     }
 }

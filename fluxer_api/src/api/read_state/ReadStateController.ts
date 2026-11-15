@@ -4,6 +4,7 @@ import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import {readStateCapable} from '@app/api/read_state/ReadStateChannelMeta';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
 import {
@@ -35,6 +36,7 @@ export function ReadStateController(app: Hono<HonoEnv>): void {
 				await ctx.get('readStateRequestService').ackReadStates({
 					userId: ctx.get('user').id,
 					data: ctx.req.valid('json'),
+					capable: readStateCapable(ctx),
 				}),
 			);
 		},
@@ -58,6 +60,7 @@ export function ReadStateController(app: Hono<HonoEnv>): void {
 			await ctx.get('readStateRequestService').bulkAckMessages({
 				userId: ctx.get('user').id,
 				data: ctx.req.valid('json'),
+				capable: readStateCapable(ctx),
 			});
 			return ctx.body(null, 204);
 		},

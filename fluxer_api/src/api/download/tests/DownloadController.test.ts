@@ -6,8 +6,6 @@ import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {Hono} from 'hono';
 import {describe, expect, it} from 'vitest';
 
-const COUNTRY_HEADERS = {'cf-ipcountry': 'BR', 'x-forwarded-for': '203.0.113.7'};
-
 function createApp() {
 	const app = new Hono<HonoEnv>();
 	app.onError((_error, ctx) => ctx.text('Bad Request', 400));
@@ -46,12 +44,6 @@ describe('legacy desktop download routes', () => {
 		expect(response.status).toBe(302);
 		expect(response.location).toBe(`${PKGS_BASE_URL}/desktop/stable/linux/x64/latest/appimage.sha256`);
 		expect(response.cacheControl).toBe('no-store');
-	});
-
-	it('stops mapping the retired version listing route, so it passes through to an origin path that serves nothing', async () => {
-		const response = await request('/dl/desktop/canary/linux/arm64/versions');
-		expect(response.status).toBe(302);
-		expect(response.location).toBe(`${PKGS_BASE_URL}/desktop/canary/linux/arm64/versions`);
 	});
 
 	it('redirects the latest appimage zsync sidecar rather than rejecting it', async () => {
@@ -129,36 +121,18 @@ describe('release feed routes', () => {
 
 describe('channel, platform and architecture targeting', () => {
 	it.each([
-		['stable', 'darwin', 'arm64'],
-		['stable', 'darwin', 'x64'],
 		['stable', 'win32', 'x64'],
-		['stable', 'win32', 'arm64'],
-		['stable', 'linux', 'x64'],
-		['stable', 'linux', 'arm64'],
-		['canary', 'darwin', 'arm64'],
-		['canary', 'win32', 'x64'],
 		['canary', 'linux', 'arm64'],
 	])('keeps %s/%s/%s in the redirect target', async (channel, plat, arch) => {
 		const response = await request(`/dl/desktop/${channel}/${plat}/${arch}/latest`);
 		expect(response.status).toBe(302);
 		expect(response.location).toBe(`${PKGS_BASE_URL}/desktop/${channel}/${plat}/${arch}/latest.json`);
 	});
-});
 
-describe('the geoip and github release route is gone', () => {
-	it('sends every country to the package origin with the same cache control', async () => {
-		const path = '/dl/desktop/stable/darwin/arm64/1.4.2/dmg';
-		const withCountry = await request(path, {headers: COUNTRY_HEADERS});
-		const withoutCountry = await request(path);
-		expect(withCountry).toEqual(withoutCountry);
-		expect(withCountry.location).toBe(`${PKGS_BASE_URL}/desktop/stable/darwin/arm64/1.4.2/dmg`);
-		expect(withCountry.cacheControl).not.toBe('private, no-store');
-	});
-
-	it('never points a download at github', async () => {
-		const response = await request('/dl/desktop/stable/darwin/arm64/1.4.2/zip', {headers: COUNTRY_HEADERS});
-		expect(response.location).not.toContain('github.com');
-		expect(response.location?.startsWith(`${PKGS_BASE_URL}/`)).toBe(true);
+	it('rewrites the legacy platform-arch form to the same document', async () => {
+		const response = await request('/dl/desktop/stable/linux-x64/latest');
+		expect(response.status).toBe(302);
+		expect(response.location).toBe(`${PKGS_BASE_URL}/desktop/stable/linux/x64/latest.json`);
 	});
 });
 

@@ -17,9 +17,13 @@
 
 -spec export_handoff_state(guild_state()) -> map().
 export_handoff_state(State) ->
-    #{
+    Threads = maps:merge(
+        guild_thread_flip:export_handoff(State),
+        guild_thread_subscriptions:export_handoff(State)
+    ),
+    Threads#{
         id => maps:get(id, State),
-        data => maps:without(derived_data_keys(), maps:get(data, State, #{})),
+        data => maps:without(derived_data_keys(), guild_thread_load:export_handoff(State)),
         sessions => export_handoff_sessions(maps:get(sessions, State, #{})),
         voice_states => maps:get(voice_states, State, #{}),
         virtual_channel_access => maps:get(virtual_channel_access, State, #{}),

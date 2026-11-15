@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import type {ExpressionKind} from '@app/features/expressions/commands/ExpressionMetadataCommands';
 import {
 	type ExpressionSourceGuild,
@@ -7,7 +8,7 @@ import {
 } from '@app/features/expressions/commands/ExpressionSourceCommands';
 import {makeAutoObservable} from 'mobx';
 
-export type ExpressionSourceState =
+type ExpressionSourceState =
 	| {status: 'idle'}
 	| {status: 'loading'}
 	| {status: 'available'; guild: ExpressionSourceGuild}
@@ -47,6 +48,14 @@ class ExpressionSourceStore {
 	private setSource(key: string, state: ExpressionSourceState): void {
 		this.sources = new Map(this.sources).set(key, state);
 	}
+
+	reset(): void {
+		this.sources = new Map();
+	}
 }
 
-export default new ExpressionSourceStore();
+const expressionSource = new ExpressionSourceStore();
+
+ResettableStates.register(expressionSource, () => expressionSource.reset());
+
+export default expressionSource;

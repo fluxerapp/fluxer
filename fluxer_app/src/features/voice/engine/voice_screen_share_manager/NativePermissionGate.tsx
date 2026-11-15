@@ -12,8 +12,8 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 
 export type ScreenShareDevicePermissionContext = 'start' | 'replace';
 
-export type NativeMediaPermissionKind = 'camera' | 'microphone' | 'screen';
-export type NativeMediaPermissionDeniedPolicy = 'modal' | 'throw' | 'modal-then-throw' | 'none';
+type NativeMediaPermissionKind = 'camera' | 'microphone' | 'screen';
+type NativeMediaPermissionDeniedPolicy = 'modal' | 'throw' | 'modal-then-throw' | 'none';
 
 export interface EnsureNativeMediaPermissionArgs {
 	kind: NativeMediaPermissionKind;
@@ -80,7 +80,7 @@ export async function ensureNativeMediaPermission(
 	if (args.kind === 'screen') {
 		assert.equal(args.onDenied, 'throw', 'screen permission denial has no modal; use the throw policy');
 		if (MediaPermission.isScreenRecordingExplicitlyDenied()) {
-			logger.info('Screen recording permission previously denied; re-querying the OS');
+			logger.debug('Screen recording permission previously denied; re-querying the OS');
 		}
 	}
 	const result = await ensureNativePermission(args.kind);

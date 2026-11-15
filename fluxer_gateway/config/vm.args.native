@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+-sname fluxer_gateway@localhost
+-setcookie fluxer_gateway_native
+-start_epmd false
+-dist_listen false
++A1
++P 262144
++Q 65536
++S ${FLUXER_ERLANG_SCHEDULERS:-2}:${FLUXER_ERLANG_SCHEDULERS:-2}
++SDcpu ${FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS:-1}:${FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS:-1}
++SDio ${FLUXER_ERLANG_DIRTY_IO_SCHEDULERS:-2}
++sbwt none
++sbwtdcpu none
++sbwtdio none
++zdbbl 32768
++MBacul 0
++MBramv true
++MHas ageffcbf
++MBas ageffcbf
++MEas ageffcbf
++MHlmbcs 512
++MBlmbcs 512
++MElmbcs 512
+-kernel logger_level warning

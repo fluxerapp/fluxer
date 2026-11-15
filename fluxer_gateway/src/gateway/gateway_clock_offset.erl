@@ -126,17 +126,3 @@ report(_Server, _Node, _Ref, discard) ->
 -spec read_remote_clock(node()) -> integer().
 read_remote_clock(Node) ->
     erpc:call(Node, erlang, monotonic_time, [millisecond], ?PROBE_TIMEOUT_MS).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-sample_retains_the_full_return_trip_uncertainty_test() ->
-    ?assertEqual({ok, 4990}, sample(15000, 10010, 20)),
-    ?assertEqual({ok, -5000}, sample(5000, 10000, 0)),
-    ?assertEqual(discard, sample(15000, 10000, 101)),
-    ?assertEqual(discard, sample(15000, 10000, -1)).
-
-local_clock_does_not_need_a_probe_test() ->
-    ?assertEqual(0, offset(node())).
-
--endif.

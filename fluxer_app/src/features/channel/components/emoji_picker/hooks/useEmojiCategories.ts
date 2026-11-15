@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {groupByGuildInGuildListOrder} from '@app/features/channel/components/pickers/shared/PickerRows';
 import EmojiPicker from '@app/features/emoji/state/EmojiPicker';
 import type {UsageRanking} from '@app/features/emoji/state/UsageFrecency';
 import type {FlatEmoji, UnicodeEmoji} from '@app/features/emoji/types/EmojiTypes';
@@ -22,31 +23,10 @@ export function useEmojiCategories(
 		() => EmojiPicker.getFrecentEmojis(allEmojis, 42, pinnedRanking),
 		[allEmojis, pinnedRanking],
 	);
-	const customEmojisByGuildId = useMemo(() => {
-		const guildEmojis = allEmojis.filter((emoji) => emoji.guildId != null);
-		const guildEmojisByGuildId = new Map<string, Array<FlatEmoji>>();
-		for (const guildEmoji of guildEmojis) {
-			if (!guildEmojisByGuildId.has(guildEmoji.guildId!)) {
-				guildEmojisByGuildId.set(guildEmoji.guildId!, []);
-			}
-			guildEmojisByGuildId.get(guildEmoji.guildId!)?.push(guildEmoji);
-		}
-		const sortedGuildIds = guilds.map((guild) => guild.id);
-		if (selectedGuildId) {
-			const index = sortedGuildIds.indexOf(selectedGuildId);
-			if (index > 0) {
-				sortedGuildIds.splice(index, 1);
-				sortedGuildIds.unshift(selectedGuildId);
-			}
-		}
-		const sortedGuildEmojisByGuildId = new Map<string, Array<FlatEmoji>>();
-		for (const guildId of sortedGuildIds) {
-			if (guildEmojisByGuildId.has(guildId)) {
-				sortedGuildEmojisByGuildId.set(guildId, guildEmojisByGuildId.get(guildId)!);
-			}
-		}
-		return sortedGuildEmojisByGuildId;
-	}, [allEmojis, guilds, selectedGuildId]);
+	const customEmojisByGuildId = useMemo(
+		() => groupByGuildInGuildListOrder(allEmojis),
+		[allEmojis, guilds, selectedGuildId],
+	);
 	const unicodeEmojisByCategory = useMemo(() => {
 		const unicodeEmojis = allEmojis.filter((emoji) => emoji.guildId == null);
 		const unicodeEmojisByCategory = new Map<string, Array<FlatEmoji>>();

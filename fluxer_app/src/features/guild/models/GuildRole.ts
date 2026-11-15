@@ -19,6 +19,8 @@ export class GuildRole {
 	readonly permissions: bigint;
 	readonly hoist: boolean;
 	readonly mentionable: boolean;
+	readonly icon: string | null;
+	readonly unicodeEmoji: string | null;
 
 	constructor(guildId: string, guildRole: WireGuildRole, options?: GuildRoleRecordOptions) {
 		this.instanceId = options?.instanceId ?? RuntimeConfig.localInstanceDomain;
@@ -31,6 +33,8 @@ export class GuildRole {
 		this.permissions = BigInt(guildRole.permissions);
 		this.hoist = guildRole.hoist;
 		this.mentionable = guildRole.mentionable;
+		this.icon = guildRole.icon ?? null;
+		this.unicodeEmoji = guildRole.unicode_emoji ?? null;
 		noteText(this.name);
 	}
 
@@ -50,6 +54,8 @@ export class GuildRole {
 				permissions: updates.permissions ?? this.permissions.toString(),
 				hoist: updates.hoist ?? this.hoist,
 				mentionable: updates.mentionable ?? this.mentionable,
+				icon: updates.icon !== undefined ? updates.icon : this.icon,
+				unicode_emoji: updates.unicode_emoji !== undefined ? updates.unicode_emoji : this.unicodeEmoji,
 			},
 			{instanceId: this.instanceId},
 		);
@@ -57,21 +63,6 @@ export class GuildRole {
 
 	get isEveryone(): boolean {
 		return this.id === this.guildId;
-	}
-
-	equals(other: GuildRole): boolean {
-		return (
-			this.instanceId === other.instanceId &&
-			this.id === other.id &&
-			this.guildId === other.guildId &&
-			this.name === other.name &&
-			this.color === other.color &&
-			this.position === other.position &&
-			this.hoistPosition === other.hoistPosition &&
-			this.permissions === other.permissions &&
-			this.hoist === other.hoist &&
-			this.mentionable === other.mentionable
-		);
 	}
 
 	toJSON(): WireGuildRole {
@@ -84,6 +75,8 @@ export class GuildRole {
 			permissions: this.permissions.toString(),
 			hoist: this.hoist,
 			mentionable: this.mentionable,
+			icon: this.icon,
+			unicode_emoji: this.unicodeEmoji,
 		};
 	}
 }

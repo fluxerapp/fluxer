@@ -41,3 +41,21 @@ export const ExpressionCloneShortcutsControl = observer(() => {
 		/>
 	);
 });
+
+const HIDE_BLOCKED_MESSAGES_DESCRIPTOR = msg({
+	message: 'Hide messages from blocked users',
+	comment: 'Short label for the experimental advanced setting.',
+});
+
+export const HideBlockedMessagesControl = observer(() => {
+	const {i18n} = useLingui();
+	return (
+		<Switch
+			ariaLabel={i18n._(HIDE_BLOCKED_MESSAGES_DESCRIPTOR)}
+			value={AdvancedSettings.hideBlockedMessages}
+			onChange={AdvancedSettings.setHideBlockedMessages}
+			compact
+			data-flx="user.advanced-settings-tab.switch.hide-blocked-messages"
+		/>
+	);
+});

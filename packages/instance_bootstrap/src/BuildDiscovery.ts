@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {
+	InstanceAgePolicy,
 	InstanceAppPublic,
 	InstanceCaptcha,
 	InstanceCommunity,
@@ -23,6 +24,7 @@ export interface DiscoveryStaticInput {
 	gif: InstanceGif;
 	push: InstancePush;
 	appPublic: InstanceAppPublic;
+	agePolicy: InstanceAgePolicy;
 }
 
 export interface DiscoveryDynamicInput {
@@ -50,5 +52,6 @@ export function buildDiscoveryResponse(
 		limits: dynamicInput.limits,
 		push: staticInput.push,
 		app_public: staticInput.appPublic,
+		age_policy: staticInput.agePolicy,
 	};
 }

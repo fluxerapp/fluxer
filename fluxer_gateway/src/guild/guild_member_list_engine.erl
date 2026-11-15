@@ -8,7 +8,6 @@
     clone/1,
     destroy/1,
     bulk_load/3,
-    add_member/5,
     remove_member/2,
     update_member/5,
     set_online/3,
@@ -16,14 +15,9 @@
     get_counts/1,
     get_groups/1,
     get_items/3,
-    get_all_item_keys/1,
-    get_sorted_user_ids/1,
-    index_of/2,
     is_member_online/2,
     version/1
 ]).
-
--export([info/1]).
 
 -define(ONLINE_IDX, 16#F0000000).
 -define(OFFLINE_IDX, 16#F0000001).
@@ -196,88 +190,12 @@ get_items(Ref, Start, End) ->
     SO = lookup_section_order(Ref),
     lists:reverse(collect_range(OSet, Ref, SO, Start, End, 0, 0, [])).
 
--spec index_of(ets:table(), integer()) -> non_neg_integer() | not_found.
-index_of(Ref, UserId) ->
-    {OSet, ITab} = lookup_tabs(Ref),
-    case ets:lookup(ITab, UserId) of
-        [{UserId, SortKey, SIdx, _RoleIds, _IsOnline}] ->
-            index_of_member(OSet, Ref, SIdx, SortKey, UserId);
-        [] ->
-            not_found
-    end.
-
--spec index_of_member(
-    guild_member_list_oset:oset(), ets:table(), non_neg_integer(), binary(), integer()
-) ->
-    non_neg_integer() | not_found.
-index_of_member(OSet, Ref, SIdx, SortKey, UserId) ->
-    case guild_member_list_oset:rank(OSet, {SIdx, SortKey, UserId}) of
-        not_found -> not_found;
-        MemberRank -> MemberRank + headers_before(Ref, SIdx)
-    end.
-
 -spec is_member_online(ets:table(), integer()) -> boolean() | not_present.
 is_member_online(Ref, UserId) ->
     {_OSet, ITab} = lookup_tabs(Ref),
     case ets:lookup(ITab, UserId) of
         [{UserId, _SortKey, _SIdx, _RoleIds, IsOnline}] -> IsOnline;
         [] -> not_present
-    end.
-
--spec get_all_item_keys(ets:table()) -> [item()].
-get_all_item_keys(Ref) ->
-    {OSet, _ITab} = lookup_tabs(Ref),
-    SO = lookup_section_order(Ref),
-    {_Base, Rev} = lists:foldl(
-        fun(Section, Acc) -> collect_all_section_items(Section, Ref, OSet, Acc) end,
-        {0, []},
-        SO
-    ),
-    lists:reverse(Rev).
-
--spec collect_all_section_items(
-    {non_neg_integer(), binary()},
-    ets:table(),
-    guild_member_list_oset:oset(),
-    {non_neg_integer(), [item()]}
-) ->
-    {non_neg_integer(), [item()]}.
-collect_all_section_items({SIdx, DisplayId}, Ref, OSet, {Base, Acc}) ->
-    case read_section_count(Ref, SIdx) of
-        0 ->
-            {Base, Acc};
-        Count ->
-            Members = section_members(OSet, Base, Count),
-            {Base + Count, prepend_members(Members, [{group, DisplayId, 0} | Acc])}
-    end.
-
--spec get_sorted_user_ids(ets:table()) -> [integer()].
-get_sorted_user_ids(Ref) ->
-    {OSet, _ITab} = lookup_tabs(Ref),
-    [UId || {_SIdx, _SK, UId} <- guild_member_list_oset:to_list(OSet), is_integer(UId)].
-
--spec info(ets:table()) -> map().
-info(Ref) ->
-    {OSet, ITab} = lookup_tabs(Ref),
-    {Total, Online} = get_counts(Ref),
-    WordSize = erlang:system_info(wordsize),
-    MembersMem = guild_member_list_oset:memory_bytes(OSet),
-    IndexMem = ets_mem(ITab) * WordSize,
-    RefMem = ets_mem(Ref) * WordSize,
-    #{
-        total => Total,
-        online => Online,
-        members_table_bytes => MembersMem,
-        index_table_bytes => IndexMem,
-        ref_table_bytes => RefMem,
-        total_bytes => MembersMem + IndexMem + RefMem
-    }.
-
--spec ets_mem(ets:table()) -> non_neg_integer().
-ets_mem(Tab) ->
-    case ets:info(Tab, memory) of
-        N when is_integer(N), N >= 0 -> N;
-        _ -> 0
     end.
 
 -spec do_remove(ets:table(), integer()) -> ok.
@@ -530,23 +448,6 @@ read_section_count(Ref, SIdx) ->
         Count -> Count
     catch
         error:badarg -> 0
-    end.
-
--spec headers_before(ets:table(), non_neg_integer()) -> non_neg_integer().
-headers_before(Ref, SIdx) ->
-    headers_before_loop(lookup_section_order(Ref), Ref, SIdx, 1).
-
--spec headers_before_loop(
-    [{non_neg_integer(), binary()}], ets:table(), non_neg_integer(), non_neg_integer()
-) -> non_neg_integer().
-headers_before_loop([], _Ref, _SIdx, Acc) ->
-    Acc;
-headers_before_loop([{Idx, _} | _Rest], _Ref, SIdx, Acc) when Idx >= SIdx ->
-    Acc;
-headers_before_loop([{Idx, _} | Rest], Ref, SIdx, Acc) ->
-    case read_section_count(Ref, Idx) > 0 of
-        true -> headers_before_loop(Rest, Ref, SIdx, Acc + 1);
-        false -> headers_before_loop(Rest, Ref, SIdx, Acc)
     end.
 
 -spec collect_range(

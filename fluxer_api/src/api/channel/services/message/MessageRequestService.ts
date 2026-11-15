@@ -1,15 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
 import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
+import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import type {CrosspostSourceService} from '@app/api/channel/services/message/CrosspostSourceService';
-import {isPersonalNotesChannel} from '@app/api/channel/services/message/MessageHelpers';
 import type {MessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
+import {carriesThreadArtifact, maskThreadArtifactsFor} from '@app/api/channel/services/message/ThreadMessageResponses';
+import {isPersonalNotesChannelId} from '@app/api/channel/services/PersonalNotesChannelRepair';
+import {isTainted, type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {User} from '@app/api/models/User';
+import {assertTierAllows, NO_TIER_CONTEXT} from '@app/api/user/AccountTier';
 import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
-import {UnclaimedAccountCannotSendMessagesError} from '@fluxer/errors/src/domains/channel/UnclaimedAccountCannotSendMessagesError';
+import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
+import {InvalidChannelTypeError} from '@fluxer/errors/src/domains/channel/InvalidChannelTypeError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import type {CrosspostSourceResponse} from '@fluxer/schema/src/domains/message/CrosspostSourceSchemas';
 import type {
@@ -26,6 +31,7 @@ export class MessageRequestService {
 
 	async listMessages(params: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		channelId: ChannelID;
 		query: {
 			limit: number;
@@ -36,11 +42,15 @@ export class MessageRequestService {
 		requestCache: RequestCache;
 		personaFallbackBehavior?: boolean;
 	}): Promise<Array<MessageResponse>> {
-		const access = await this.channelService.messages.retrieval.getResponseAccessContext({
+		const retrieval = this.channelService.messages.retrieval;
+		const {access, authChannel} = await retrieval.getResponseAccess({
+			viewer: params.viewer,
 			userId: params.userId,
 			channelId: params.channelId,
+			access: 'visitor_read',
 		});
-		return this.responseDataService.listMessages({
+		if (authChannel.channel.isThreadOnly()) throw new InvalidChannelTypeError();
+		const request = {
 			userId: params.userId,
 			channelId: params.channelId,
 			limit: params.query.limit,
@@ -49,11 +59,35 @@ export class MessageRequestService {
 			around: params.query.around,
 			access,
 			personaFallbackBehavior: params.personaFallbackBehavior
+		};
+		let responses = await this.responseDataService.listMessages(request);
+		if (await this.needsThreadsMask(params.viewer, authChannel.channel.guildId, responses)) {
+			responses = await this.responseDataService.listMessages({...request, threadsMask: true});
+		}
+		return retrieval.threadResponses.shape({
+			viewer: params.viewer,
+			userId: params.userId,
+			authChannel,
+			access,
+			responses,
+			requestCache: params.requestCache,
+			query: params.query,
 		});
+	}
+
+	private async needsThreadsMask(
+		viewer: ThreadViewer,
+		guildId: GuildID | null,
+		responses: Array<MessageResponse>,
+	): Promise<boolean> {
+		if (guildId === null || viewerActive(viewer, guildId)) return false;
+		if (!responses.some(carriesThreadArtifact)) return false;
+		return isTainted(guildId);
 	}
 
 	async listMessagesBulk(params: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		requests: Array<{
 			channelId: ChannelID;
 			query: {
@@ -70,6 +104,7 @@ export class MessageRequestService {
 			channel_id: request.channelId.toString(),
 			messages: await this.listMessages({
 				userId: params.userId,
+				viewer: params.viewer,
 				channelId: request.channelId,
 				query: request.query,
 				requestCache: params.requestCache,
@@ -81,31 +116,60 @@ export class MessageRequestService {
 
 	async getMessage(params: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		channelId: ChannelID;
 		messageId: MessageID;
 		requestCache: RequestCache;
 		personaFallbackBehavior?: boolean;
 	}): Promise<MessageResponse> {
-		const access = await this.channelService.messages.retrieval.getResponseAccessContext({
+		const retrieval = this.channelService.messages.retrieval;
+		const {access, authChannel} = await retrieval.getResponseAccess({
+			viewer: params.viewer,
 			userId: params.userId,
 			channelId: params.channelId,
 			messageId: params.messageId,
+			access: 'visitor_read',
 		});
-		const response = await this.responseDataService.getMessage({
+		const starter = await retrieval.threadResponses.getStarter({
+			viewer: params.viewer,
+			userId: params.userId,
+			authChannel,
+			access,
+			messageId: params.messageId,
+			requestCache: params.requestCache,
+		});
+		if (starter) return starter;
+		const request = {
 			userId: params.userId,
 			channelId: params.channelId,
 			messageId: params.messageId,
 			access,
 			personaFallbackBehavior: params.personaFallbackBehavior,
-		});
+		};
+		let response = await this.responseDataService.getMessage(request);
+		if (response !== null && (await this.needsThreadsMask(params.viewer, authChannel.channel.guildId, [response]))) {
+			response = await this.responseDataService.getMessage({...request, threadsMask: true});
+		}
 		if (response === null) {
 			throw new UnknownMessageError();
 		}
-		return response;
+		const [shaped] = await retrieval.threadResponses.shape({
+			viewer: params.viewer,
+			userId: params.userId,
+			authChannel,
+			access,
+			responses: [response],
+			requestCache: params.requestCache,
+		});
+		if (!shaped) {
+			throw new UnknownMessageError();
+		}
+		return shaped;
 	}
 
 	async getCrosspostSource(params: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		channelId: ChannelID;
 		messageId: MessageID;
 		requestCache: RequestCache;
@@ -116,28 +180,28 @@ export class MessageRequestService {
 
 	async sendMessage(params: {
 		user: User;
+		viewer: ThreadViewer;
 		channelId: ChannelID;
 		data: MessageRequest;
 		requestCache: RequestCache;
 	}): Promise<MessageResponse> {
-		if (
-			params.user.isUnclaimedAccount() &&
-			!isPersonalNotesChannel({userId: params.user.id, channelId: params.channelId})
-		) {
-			throw new UnclaimedAccountCannotSendMessagesError();
+		if (!isPersonalNotesChannelId({userId: params.user.id, channelId: params.channelId})) {
+			assertTierAllows(params.user, TierGatedActions.MESSAGE, NO_TIER_CONTEXT);
 		}
 		const {message, authChannel} = await this.channelService.messages.send.sendMessage({
+			viewer: params.viewer,
 			user: params.user,
 			channelId: params.channelId,
 			data: params.data,
 			requestCache: params.requestCache,
 		});
 		const access = await this.channelService.messages.retrieval.getResponseAccessContext({
+			viewer: params.viewer,
 			userId: params.user.id,
 			channelId: params.channelId,
 			authChannel,
 		});
-		return this.responseDataService.buildMessage({
+		const response = await this.responseDataService.buildMessage({
 			userId: params.user.id,
 			message,
 			access: {...access, messageHistoryCutoff: null, canReadMessageHistory: true},
@@ -145,37 +209,92 @@ export class MessageRequestService {
 			tts: params.data.tts ?? false,
 			personaFallbackBehavior: false,
 		});
+		const [shaped] = maskThreadArtifactsFor(params.viewer, authChannel.channel.guildId, [response]);
+		return shaped ?? response;
 	}
 
 	async crosspostMessage(params: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		channelId: ChannelID;
 		messageId: MessageID;
 		requestCache: RequestCache;
 	}): Promise<MessageResponse> {
 		const {message, authChannel} = await this.channelService.messages.crosspost.crosspostMessage(params);
-		const access = await this.channelService.messages.retrieval.getResponseAccessContext({
+		const retrieval = this.channelService.messages.retrieval;
+		const access = await retrieval.getResponseAccessContext({
+			viewer: params.viewer,
 			userId: params.userId,
 			channelId: params.channelId,
 			messageId: message.id,
 			authChannel,
 		});
-		return this.responseDataService.buildMessage({
+		const response = await this.responseDataService.buildMessage({
 			userId: params.userId,
 			message,
 			access,
 			personaFallbackBehavior: false,
 		});
+		const [shaped] = await retrieval.threadResponses.shape({
+			viewer: params.viewer,
+			userId: params.userId,
+			authChannel,
+			access,
+			responses: [response],
+			requestCache: params.requestCache,
+		});
+		return shaped ?? response;
+	}
+
+	async validateForumStarter(params: {
+		user: User;
+		parentAuth: AuthenticatedChannel;
+		data: MessageRequest;
+	}): Promise<void> {
+		assertTierAllows(params.user, TierGatedActions.MESSAGE, NO_TIER_CONTEXT);
+		await this.channelService.messages.send.validateForumStarter(params);
+	}
+
+	async sendForumStarter(params: {
+		user: User;
+		viewer: ThreadViewer;
+		parentAuth: AuthenticatedChannel;
+		threadId: ChannelID;
+		data: MessageRequest;
+		requestCache: RequestCache;
+	}): Promise<MessageResponse> {
+		assertTierAllows(params.user, TierGatedActions.MESSAGE, NO_TIER_CONTEXT);
+		const {message, authChannel} = await this.channelService.messages.send.sendMessage({
+			viewer: params.viewer,
+			user: params.user,
+			channelId: params.threadId,
+			data: params.data,
+			requestCache: params.requestCache,
+			forumStarter: {parentAuth: params.parentAuth},
+		});
+		const access = await this.channelService.messages.retrieval.getResponseAccessContext({
+			viewer: params.viewer,
+			userId: params.user.id,
+			channelId: params.threadId,
+			authChannel,
+		});
+		return this.responseDataService.buildMessage({
+			userId: params.user.id,
+			message,
+			access: {...access, messageHistoryCutoff: null, canReadMessageHistory: true},
+		});
 	}
 
 	async editMessage(params: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		channelId: ChannelID;
 		messageId: MessageID;
 		data: MessageUpdateRequest;
 		requestCache: RequestCache;
 	}): Promise<MessageResponse> {
 		const {message, authChannel} = await this.channelService.messages.edit.editMessage({
+			viewer: params.viewer,
 			userId: params.userId,
 			channelId: params.channelId,
 			messageId: params.messageId,
@@ -183,16 +302,19 @@ export class MessageRequestService {
 			requestCache: params.requestCache,
 		});
 		const access = await this.channelService.messages.retrieval.getResponseAccessContext({
+			viewer: params.viewer,
 			userId: params.userId,
 			channelId: params.channelId,
 			messageId: message.id,
 			authChannel,
 		});
-		return this.responseDataService.buildMessage({
+		const response = await this.responseDataService.buildMessage({
 			userId: params.userId,
 			message,
 			access,
 			personaFallbackBehavior: false,
 		});
+		const [shaped] = maskThreadArtifactsFor(params.viewer, authChannel.channel.guildId, [response]);
+		return shaped ?? response;
 	}
 }

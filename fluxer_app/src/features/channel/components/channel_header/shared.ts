@@ -24,10 +24,6 @@ export const OPEN_DIRECT_MESSAGE_PROFILE_DESCRIPTOR = msg({
 	comment:
 		'Fallback accessible label for the avatar button in the channel header of a DM when the recipient name is not available.',
 });
-export const BACK_DESCRIPTOR = msg({
-	message: 'Back',
-	comment: 'Accessible label on the mobile back button in the channel header. Returns to the previous screen.',
-});
 export const SHOW_CHANNEL_LIST_DESCRIPTOR = msg({
 	message: 'Show channel list',
 	comment: 'Accessible label on the mobile channel header button that opens the channel list drawer.',

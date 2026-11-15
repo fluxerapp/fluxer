@@ -30,9 +30,9 @@ interface LegacyCeremony {
 	nonce: string;
 }
 
-async function createNonce(): Promise<{nonce: string; nonceHash: string}> {
+function createNonce(): {nonce: string; nonceHash: string} {
 	const nonce = randomBase64Url(NONCE_BYTES);
-	return {nonce, nonceHash: await sha256Hex(nonce)};
+	return {nonce, nonceHash: sha256Hex(nonce)};
 }
 
 export function isPasskeyCeremonyDismissed(error: unknown): boolean {
@@ -103,7 +103,7 @@ async function runNativeCeremony(ceremonyId: string): Promise<string> {
 
 export async function startPasskeyBridgePageLogin(mfa: MfaChallenge | null, returnPath: string): Promise<void> {
 	const purpose: PasskeyBridgeLoginPurpose = mfa === null ? 'login' : 'login_mfa';
-	const {nonce, nonceHash} = await createNonce();
+	const {nonce, nonceHash} = createNonce();
 	const started = await startLogin({
 		purpose,
 		runner: 'page',
@@ -135,7 +135,7 @@ export async function runPasskeyBridgeNativeLogin(
 	purpose: PasskeyBridgeLoginPurpose,
 	ticket?: string,
 ): Promise<PasskeyBridgeLoginRedeemResponse> {
-	const {nonce, nonceHash} = await createNonce();
+	const {nonce, nonceHash} = createNonce();
 	const started = await startLogin({
 		purpose,
 		runner: 'native',
@@ -147,7 +147,7 @@ export async function runPasskeyBridgeNativeLogin(
 }
 
 export async function runPasskeyBridgeNativeSudo(): Promise<PasskeyBridgeSudoRedeemResponse> {
-	const {nonce, nonceHash} = await createNonce();
+	const {nonce, nonceHash} = createNonce();
 	const started = await startSudo('native', nonceHash);
 	const completionCode = await runNativeCeremony(started.ceremony_id);
 	return redeemSudo({id: started.ceremony_id, nonce}, completionCode);
@@ -174,7 +174,7 @@ export class PasskeyBridgeSudoLink {
 		const generation = this.reset();
 		this.handlers.onLink(null);
 		try {
-			const {nonce, nonceHash} = await createNonce();
+			const {nonce, nonceHash} = createNonce();
 			const started = await startSudo('page', nonceHash);
 			if (generation !== this.generation) {
 				return;

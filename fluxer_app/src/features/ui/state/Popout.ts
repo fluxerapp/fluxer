@@ -162,21 +162,6 @@ class Popout {
 		this.focusReturnMeta.clear();
 	}
 
-	reposition(key: PopoutKey): void {
-		const normalizedKey = this.normalizeKey(key);
-		const existingPopout = this.popouts[normalizedKey];
-		if (!existingPopout) return;
-		runInAction(() => {
-			this.popouts = {
-				...this.popouts,
-				[normalizedKey]: {
-					...existingPopout,
-					shouldReposition: true,
-				},
-			};
-		});
-	}
-
 	isOpen(key: PopoutKey): boolean {
 		return this.normalizeKey(key) in this.popouts;
 	}
@@ -216,6 +201,11 @@ class Popout {
 			.filter(
 				(popout): popout is PopoutDefinition => popout != null && this.getOwnerDocument(popout) === ownerDocument,
 			);
+	}
+
+	requiresBackdrop(ownerDocument: Document = document): boolean {
+		const owner = this.getPopouts(ownerDocument).findLast((popout) => !this.isClosing(popout.key));
+		return owner != null && !owner.disableBackdrop;
 	}
 
 	private getParentPopoutChain(dependsOnKey: string): Record<string, PopoutDefinition> {

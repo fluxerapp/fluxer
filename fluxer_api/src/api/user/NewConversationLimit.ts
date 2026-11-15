@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createMessageID, type UserID} from '@app/api/BrandedTypes';
-import type {IMessageRepository} from '@app/api/channel/repositories/IMessageRepository';
+import type {MessageRepository} from '@app/api/channel/repositories/MessageRepository';
 import {getCacheService, getChannelRepository} from '@app/api/middleware/ServiceSingletons';
 import type {Channel} from '@app/api/models/Channel';
 import type {User} from '@app/api/models/User';
 import {isAccountLimitExempt} from '@app/api/user/AccountLimit';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {NewConversationsLimitedError} from '@fluxer/errors/src/domains/user/NewConversationsLimitedError';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 
-export const NEW_CONVERSATION_LIMIT_MAX_MS = 7 * 24 * 60 * 60 * 1000;
+const NEW_CONVERSATION_LIMIT_MAX_MS = 7 * 24 * 60 * 60 * 1000;
 const RECENT_PAGE = 100;
 const OPENING_PAGE = 50;
 
@@ -38,10 +38,6 @@ function nowOf(deps: NewConversationLimitDeps): number {
 
 function limitKey(userId: UserID | bigint | string): string {
 	return `user:new_conversation_limit:${userId.toString()}`;
-}
-
-export function isNewConversationLimitExempt(user: Pick<User, 'isBot' | 'isSystem' | 'flags'>): boolean {
-	return isAccountLimitExempt(user);
 }
 
 export async function getNewConversationLimit(
@@ -80,8 +76,8 @@ export function oneToOneDmRecipient(channel: Pick<Channel, 'guildId' | 'type' | 
 	return others.length === 1 ? others[0]! : null;
 }
 
-type ConversationUsers = Pick<IUserRepository, 'getRelationship' | 'findExistingDmState' | 'findUnique'>;
-type ConversationMessages = Pick<IMessageRepository, 'listMessages'>;
+type ConversationUsers = Pick<UserRepository, 'getRelationship' | 'findExistingDmState' | 'findUnique'>;
+type ConversationMessages = Pick<MessageRepository, 'listMessages'>;
 
 export interface NewConversationCheck {
 	user: Pick<User, 'id' | 'isBot' | 'isSystem' | 'flags'>;
@@ -108,7 +104,7 @@ export async function assertMayStartConversation(
 	{user, targetId, users, messages, channel}: NewConversationCheck,
 	deps: NewConversationLimitDeps = {},
 ): Promise<void> {
-	if (isNewConversationLimitExempt(user)) return;
+	if (isAccountLimitExempt(user)) return;
 	const limit = await getNewConversationLimit(user.id, deps);
 	if (!limit) return;
 	const [friendship, target] = await Promise.all([

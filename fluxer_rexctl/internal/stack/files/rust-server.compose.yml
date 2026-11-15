@@ -1,0 +1,64 @@
+services:
+  snowflakes:
+    profiles: [split-rust]
+  users:
+    profiles: [split-rust]
+  messages:
+    profiles: [split-rust]
+  gifs:
+    profiles: [split-rust]
+  unfurl:
+    profiles: [split-rust]
+  push:
+    profiles: [split-rust]
+  app-proxy:
+    profiles: [split-rust]
+  admin:
+    profiles: [split-rust]
+  rust:
+    image: ${FLUXER_REGISTRY:-ghcr.io/${FLUXER_REGISTRY_OWNER:-fluxerapp}}/fluxer-server:${FLUXER_IMAGE_TAG:-v1}
+    restart: ${FLUXER_RESTART_POLICY:-unless-stopped}
+    stop_grace_period: 30s
+    networks:
+      fluxer:
+        aliases: [app-proxy, admin]
+    logging:
+      driver: json-file
+      options:
+        max-size: ${FLUXER_LOG_MAX_SIZE:-10m}
+        max-file: "${FLUXER_LOG_MAX_FILE:-3}"
+    deploy:
+      resources:
+        limits:
+          memory: ${FLUXER_RUST_MEMORY_LIMIT:-1gb}
+    environment:
+      FLUXER_RUST_PROCESS: ${FLUXER_RUST_PROCESS:-}
+      FLUXER_SERVER_SERVICES: snowflakes,users,messages,gifs,unfurl,push,app-proxy,admin
+      TOKIO_WORKER_THREADS: ${FLUXER_RUST_SERVER_TOKIO_WORKER_THREADS:-2}
+      MALLOC_ARENA_MAX: ${FLUXER_MALLOC_ARENA_MAX:-2}
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/fluxer-server", "healthcheck"]
+      interval: ${FLUXER_HEALTHCHECK_INTERVAL:-10s}
+      timeout: ${FLUXER_HEALTHCHECK_TIMEOUT:-5s}
+      retries: ${FLUXER_APP_HEALTHCHECK_RETRIES:-30}
+      start_period: ${FLUXER_SVC_HEALTHCHECK_START_PERIOD:-60s}
+      start_interval: ${FLUXER_HEALTHCHECK_START_INTERVAL:-1s}
+    depends_on:
+      nats: {condition: service_healthy}
+      postgres: {condition: service_healthy}
+  edge:
+    environment:
+      FLUXER_ADMIN_UPSTREAM: ${FLUXER_ADMIN_UPSTREAM:-admin:18083}
+  api:
+    depends_on:
+      gifs: !reset null
+      snowflakes: !reset null
+      messages: !reset null
+      users: !reset null
+      rust: {condition: service_healthy}
+  worker:
+    depends_on:
+      snowflakes: !reset null
+      messages: !reset null
+      users: !reset null
+      rust: {condition: service_healthy}

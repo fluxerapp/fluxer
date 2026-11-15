@@ -87,7 +87,7 @@ class LazyPhraseMatchForms implements PhraseMatchForms {
 }
 
 export function canonicalizeStoredPhrase(value: string): string {
-	return stripIgnorableCharacters(value.normalize('NFKC')).toLowerCase().trim();
+	return stripIgnorableCharacters(value.normalize('NFKC')).toLowerCase().normalize('NFKC').trim();
 }
 
 export function buildPhraseMatchForms(value: string): PhraseMatchForms {

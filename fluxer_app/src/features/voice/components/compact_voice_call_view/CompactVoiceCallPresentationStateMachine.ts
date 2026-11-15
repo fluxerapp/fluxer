@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup} from 'xstate';
 
 export interface CompactVoiceCallPresentationInput {
 	readonly audioOnly?: boolean;
@@ -16,16 +16,12 @@ interface CompactVoiceCallPresentationMachineContext {
 	hasRenderableCallMedia: boolean;
 }
 
-export type CompactVoiceCallPresentationMachineEvent = {
+type CompactVoiceCallPresentationMachineEvent = {
 	type: 'presentation.update';
 	input: CompactVoiceCallPresentationInput;
 };
 
-export type CompactVoiceCallPresentationStateValue =
-	| 'compactCallLayout'
-	| 'fullHeightCallLayout'
-	| 'avatarFallback'
-	| 'empty';
+type CompactVoiceCallPresentationStateValue = 'compactCallLayout' | 'fullHeightCallLayout' | 'avatarFallback' | 'empty';
 
 export interface CompactVoiceCallPresentationModel {
 	readonly stateValue: CompactVoiceCallPresentationStateValue;
@@ -58,7 +54,7 @@ function shouldShowAvatarFallback(context: CompactVoiceCallPresentationMachineCo
 	return context.showAvatarFallback && !shouldRenderCallLayout(context);
 }
 
-export const compactVoiceCallPresentationStateMachine = setup({
+const compactVoiceCallPresentationStateMachine = setup({
 	types: {} as {
 		context: CompactVoiceCallPresentationMachineContext;
 		events: CompactVoiceCallPresentationMachineEvent;
@@ -108,26 +104,15 @@ export const compactVoiceCallPresentationStateMachine = setup({
 	},
 });
 
-export type CompactVoiceCallPresentationMachineSnapshot = SnapshotFrom<typeof compactVoiceCallPresentationStateMachine>;
+type CompactVoiceCallPresentationMachineSnapshot = SnapshotFrom<typeof compactVoiceCallPresentationStateMachine>;
 
-export function createCompactVoiceCallPresentationSnapshot(
+function createCompactVoiceCallPresentationSnapshot(
 	input: CompactVoiceCallPresentationInput,
 ): CompactVoiceCallPresentationMachineSnapshot {
 	return initialTransition(compactVoiceCallPresentationStateMachine, input)[0];
 }
 
-export function transitionCompactVoiceCallPresentationSnapshot(
-	snapshot: CompactVoiceCallPresentationMachineSnapshot,
-	event: CompactVoiceCallPresentationMachineEvent,
-): CompactVoiceCallPresentationMachineSnapshot {
-	return transition(
-		compactVoiceCallPresentationStateMachine,
-		snapshot,
-		event,
-	)[0] as CompactVoiceCallPresentationMachineSnapshot;
-}
-
-export function getCompactVoiceCallPresentationStateValue(
+function getCompactVoiceCallPresentationStateValue(
 	snapshot: CompactVoiceCallPresentationMachineSnapshot,
 ): CompactVoiceCallPresentationStateValue {
 	if (snapshot.value === 'fullHeightCallLayout') return 'fullHeightCallLayout';
@@ -136,7 +121,7 @@ export function getCompactVoiceCallPresentationStateValue(
 	return 'empty';
 }
 
-export function selectCompactVoiceCallPresentationModel(
+function selectCompactVoiceCallPresentationModel(
 	snapshot: CompactVoiceCallPresentationMachineSnapshot,
 ): CompactVoiceCallPresentationModel {
 	const stateValue = getCompactVoiceCallPresentationStateValue(snapshot);

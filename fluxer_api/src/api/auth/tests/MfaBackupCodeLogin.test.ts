@@ -168,6 +168,21 @@ describe('MFA backup code login', () => {
 		expect(consumed).toHaveLength(1);
 		expect(consumed[0]!.code).toBe(issued);
 	});
+	it('accepts a backup code for only one of several concurrent logins', async () => {
+		const account = await createTestAccount(harness);
+		const secret = createTotpSecret();
+		const codes = await enableTotp(harness, account, secret);
+		const tickets = await Promise.all(Array.from({length: 4}, () => startMfaLogin(harness, account)));
+		const results = await Promise.all(
+			tickets.map((ticket) =>
+				createBuilderWithoutAuth(harness).post('/auth/login/mfa/totp').body({ticket, code: codes[0]!}).executeRaw(),
+			),
+		);
+		const statuses = results.map(({response}) => response.status).sort();
+		expect(statuses).toEqual(
+			[HTTP_STATUS.OK, HTTP_STATUS.BAD_REQUEST, HTTP_STATUS.BAD_REQUEST, HTTP_STATUS.BAD_REQUEST].sort(),
+		);
+	});
 	it('rejects empty and whitespace only backup codes', async () => {
 		const account = await createTestAccount(harness);
 		const secret = createTotpSecret();

@@ -2,9 +2,10 @@
 
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ForbiddenError} from '@fluxer/errors/src/domains/core/ForbiddenError';
+import type {EnforcementNotice} from '@fluxer/schema/src/domains/auth/EnforcementNoticeSchemas';
 
 export class AccountTemporarilySuspendedError extends ForbiddenError {
-	constructor() {
-		super({code: APIErrorCodes.ACCOUNT_SUSPENDED_TEMPORARILY});
+	constructor(notice: EnforcementNotice) {
+		super({code: APIErrorCodes.ACCOUNT_SUSPENDED_TEMPORARILY, data: {notice}});
 	}
 }

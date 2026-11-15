@@ -2,27 +2,22 @@
 
 import {initialTransition, setup, transition} from 'xstate';
 
-export type LocalParticipantMediaControl = 'camera' | 'screenShare';
-export type LocalParticipantMediaControlStateValue =
-	| 'waiting'
-	| 'permissionBlocked'
-	| 'capBlocked'
-	| 'active'
-	| 'ready';
-export type LocalParticipantCameraLabelKey =
+type LocalParticipantMediaControl = 'camera' | 'screenShare';
+type LocalParticipantMediaControlStateValue = 'waiting' | 'permissionBlocked' | 'capBlocked' | 'active' | 'ready';
+type LocalParticipantCameraLabelKey =
 	| 'waitingForConnection'
 	| 'noCameraPermission'
 	| 'cameraUserCapReached'
 	| 'turnOffCamera'
 	| 'turnOnCamera';
-export type LocalParticipantScreenShareLabelKey =
+type LocalParticipantScreenShareLabelKey =
 	| 'waitingForConnection'
 	| 'noScreenSharePermission'
 	| 'configureOrEndScreenShare'
 	| 'shareScreen';
-export type LocalParticipantScreenShareClickAction = 'none' | 'openPicker' | 'openMenu';
+type LocalParticipantScreenShareClickAction = 'none' | 'openPicker' | 'openMenu';
 
-export interface LocalParticipantControlSignals {
+interface LocalParticipantControlSignals {
 	isConnected: boolean;
 	canStream: boolean;
 	isCameraEnabled: boolean;
@@ -36,14 +31,14 @@ interface LocalParticipantMediaControlEvent {
 	signals: LocalParticipantControlSignals;
 }
 
-export interface LocalParticipantCameraControlState {
+interface LocalParticipantCameraControlState {
 	value: LocalParticipantMediaControlStateValue;
 	labelKey: LocalParticipantCameraLabelKey;
 	disabled: boolean;
 	canOpenSettings: boolean;
 }
 
-export interface LocalParticipantScreenShareControlState {
+interface LocalParticipantScreenShareControlState {
 	value: LocalParticipantMediaControlStateValue;
 	labelKey: LocalParticipantScreenShareLabelKey;
 	disabled: boolean;
@@ -52,7 +47,7 @@ export interface LocalParticipantScreenShareControlState {
 	canPreloadPicker: boolean;
 }
 
-export interface LocalParticipantControlsViewState {
+interface LocalParticipantControlsViewState {
 	camera: LocalParticipantCameraControlState;
 	screenShare: LocalParticipantScreenShareControlState;
 }
@@ -78,7 +73,7 @@ function isControlEnabled(control: LocalParticipantMediaControl, signals: LocalP
 	return control === 'camera' ? signals.isCameraEnabled : signals.isScreenShareEnabled;
 }
 
-export const localParticipantMediaControlStateMachine = setup({
+const localParticipantMediaControlStateMachine = setup({
 	types: {} as {
 		events: LocalParticipantMediaControlEvent;
 	},
@@ -114,7 +109,7 @@ function isDisabled(value: LocalParticipantMediaControlStateValue): boolean {
 	return value === 'waiting' || value === 'permissionBlocked' || value === 'capBlocked';
 }
 
-export function selectLocalParticipantMediaControlState(
+function selectLocalParticipantMediaControlState(
 	control: LocalParticipantMediaControl,
 	signals: LocalParticipantControlSignals,
 ): LocalParticipantMediaControlStateValue {
@@ -137,6 +132,14 @@ export function selectLocalParticipantControlsViewState(
 	const screenShareValue = selectLocalParticipantMediaControlState('screenShare', signals);
 	const cameraDisabled = isDisabled(cameraValue);
 	const screenShareDisabled = isDisabled(screenShareValue);
+	let clickAction: LocalParticipantScreenShareClickAction;
+	if (screenShareValue === 'active') {
+		clickAction = 'openMenu';
+	} else if (screenShareValue === 'ready') {
+		clickAction = 'openPicker';
+	} else {
+		clickAction = 'none';
+	}
 	return {
 		camera: {
 			value: cameraValue,
@@ -148,7 +151,7 @@ export function selectLocalParticipantControlsViewState(
 			value: screenShareValue,
 			labelKey: SCREEN_SHARE_LABEL_BY_STATE[screenShareValue],
 			disabled: screenShareDisabled,
-			clickAction: screenShareValue === 'active' ? 'openMenu' : screenShareValue === 'ready' ? 'openPicker' : 'none',
+			clickAction,
 			canOpenMenu: screenShareValue === 'active',
 			canPreloadPicker: screenShareValue === 'ready',
 		},

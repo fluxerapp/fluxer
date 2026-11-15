@@ -25,6 +25,7 @@ type EmojiSearchMeta<TEmoji extends FlatEmoji> = Readonly<{
 	emoji: TEmoji;
 	names: ReadonlyArray<string>;
 	lowerNames: ReadonlyArray<string>;
+	compactNames: ReadonlyArray<string>;
 	lowerKeywords: ReadonlyArray<string>;
 	primaryName: string;
 	order: number;
@@ -62,6 +63,10 @@ function normalizeQuery(query: string): NormalizedEmojiQuery {
 	return query.toLowerCase() as NormalizedEmojiQuery;
 }
 
+function compactName(value: string): string {
+	return value.replace(/[_-]/g, '');
+}
+
 function getEmojiNames(emoji: FlatEmoji): ReadonlyArray<string> {
 	if (emoji.names && emoji.names.length > 0) {
 		return emoji.names;
@@ -96,18 +101,21 @@ function hasBoundaryMatch(name: string, lowerName: string, lowerCasedQuery: stri
 function getEmojiMatchTier<TEmoji extends FlatEmoji>(
 	meta: EmojiSearchMeta<TEmoji>,
 	lowerCasedQuery: NormalizedEmojiQuery,
+	compactQuery: NormalizedEmojiQuery,
 ): MatchTier | null {
 	for (const lowerName of meta.lowerNames) {
 		if (lowerName === lowerCasedQuery) return MATCH_TIER.exactName;
 	}
-	for (const lowerName of meta.lowerNames) {
-		if (lowerName.startsWith(lowerCasedQuery)) return MATCH_TIER.nameStartsWith;
+	for (let i = 0; i < meta.names.length; i++) {
+		if (meta.lowerNames[i].startsWith(lowerCasedQuery)) return MATCH_TIER.nameStartsWith;
+		if (compactQuery && meta.compactNames[i].startsWith(compactQuery)) return MATCH_TIER.nameStartsWith;
 	}
 	for (let i = 0; i < meta.names.length; i++) {
 		if (hasBoundaryMatch(meta.names[i], meta.lowerNames[i], lowerCasedQuery)) return MATCH_TIER.nameBoundary;
 	}
-	for (const lowerName of meta.lowerNames) {
-		if (lowerName.includes(lowerCasedQuery)) return MATCH_TIER.nameContains;
+	for (let i = 0; i < meta.names.length; i++) {
+		if (meta.lowerNames[i].includes(lowerCasedQuery)) return MATCH_TIER.nameContains;
+		if (compactQuery && meta.compactNames[i].includes(compactQuery)) return MATCH_TIER.nameContains;
 	}
 	let hasKeywordContains = false;
 	for (const lowerKeyword of meta.lowerKeywords) {
@@ -195,10 +203,12 @@ export class EmojiSearchIndex<TEmoji extends FlatEmoji = FlatEmoji> {
 		this.metas = Object.freeze(
 			emojis.map((emoji, order) => {
 				const names = getEmojiNames(emoji);
+				const lowerNames = names.map((name) => name.toLowerCase());
 				return {
 					emoji,
 					names,
-					lowerNames: names.map((name) => name.toLowerCase()),
+					lowerNames,
+					compactNames: lowerNames.map(compactName),
 					lowerKeywords: emoji.keywords?.map((keyword) => keyword.toLowerCase()) ?? [],
 					primaryName: emoji.uniqueName || names[0] || emoji.name,
 					order,
@@ -209,13 +219,11 @@ export class EmojiSearchIndex<TEmoji extends FlatEmoji = FlatEmoji> {
 		for (const meta of this.metas) {
 			const ordinal = asOrdinal(meta.order);
 			const indexedGrams = new Set<NGram>();
-			for (const lowerName of meta.lowerNames) {
-				for (const gram of uniqueGramsForToken(lowerName)) {
+			for (const token of [...meta.lowerNames, ...meta.lowerKeywords]) {
+				for (const gram of uniqueGramsForToken(token)) {
 					indexedGrams.add(gram);
 				}
-			}
-			for (const lowerKeyword of meta.lowerKeywords) {
-				for (const gram of uniqueGramsForToken(lowerKeyword)) {
+				for (const gram of uniqueGramsForToken(compactName(token))) {
 					indexedGrams.add(gram);
 				}
 			}
@@ -250,14 +258,15 @@ export class EmojiSearchIndex<TEmoji extends FlatEmoji = FlatEmoji> {
 	search(query: string, options: EmojiSearchOptions<TEmoji> = {}): ReadonlyArray<TEmoji> {
 		const normalizedQuery = normalizeQuery(query);
 		if (!normalizedQuery) return this.metas.map((meta) => meta.emoji);
-		const candidateOrdinals = this.getCandidateOrdinals(normalizedQuery);
+		const compactQuery = compactName(normalizedQuery) as NormalizedEmojiQuery;
+		const candidateOrdinals = this.getCandidateOrdinals(compactQuery || normalizedQuery);
 		if (candidateOrdinals.length === 0) return [];
 		const results: Array<SearchResult<TEmoji>> = [];
 		const limit = options.count ?? 0;
 		for (const ordinal of candidateOrdinals) {
 			const meta = this.metas[ordinal];
 			if (!meta) continue;
-			const tier = getEmojiMatchTier(meta, normalizedQuery);
+			const tier = getEmojiMatchTier(meta, normalizedQuery, compactQuery);
 			if (tier === null) continue;
 			if (options.canUse && !options.canUse(meta.emoji)) continue;
 			insertBoundedResult(

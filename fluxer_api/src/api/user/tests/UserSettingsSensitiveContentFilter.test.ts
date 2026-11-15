@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
-import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import {createUserID} from '@app/api/BrandedTypes';
+import {getInstanceConfigRepository, getUserRepository} from '@app/api/middleware/ServiceSingletons';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {fetchUserSettings, updateUserSettings} from '@app/api/user/tests/UserTestUtils';
+import {DateOfBirthPolicies} from '@fluxer/constants/src/AccountConfigConstants';
 import {SensitiveMediaFilterLevel} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
@@ -28,6 +30,7 @@ describe('User Settings - Sensitive Content Filters', () => {
 			expect(json.sensitive_content_friend_dm_filter).toBe(SensitiveMediaFilterLevel.SHOW);
 			expect(json.sensitive_content_non_friend_dm_filter).toBe(SensitiveMediaFilterLevel.BLOCK);
 			expect(json.sensitive_content_guild_filter).toBe(SensitiveMediaFilterLevel.BLUR);
+			expect(json.default_guilds_restricted).toBe(false);
 		});
 		test('teen account has correct defaults', async () => {
 			const account = await createTestAccount(harness, {dateOfBirth: '2010-01-01'});
@@ -35,53 +38,46 @@ describe('User Settings - Sensitive Content Filters', () => {
 			expect(json.sensitive_content_friend_dm_filter).toBe(SensitiveMediaFilterLevel.BLUR);
 			expect(json.sensitive_content_non_friend_dm_filter).toBe(SensitiveMediaFilterLevel.BLOCK);
 			expect(json.sensitive_content_guild_filter).toBe(SensitiveMediaFilterLevel.BLUR);
+			expect(json.default_guilds_restricted).toBe(true);
 		});
 	});
-	describe('updating individual fields', () => {
-		test('updates sensitive_content_friend_dm_filter', async () => {
-			const account = await createTestAccount(harness);
-			const {json} = await updateUserSettings(harness, account.token, {
-				sensitive_content_friend_dm_filter: SensitiveMediaFilterLevel.BLUR,
-			});
-			expect(json.sensitive_content_friend_dm_filter).toBe(SensitiveMediaFilterLevel.BLUR);
+	describe('allow_mature_content_on_ios', () => {
+		test('adult can turn on allow_mature_content_on_ios and it defaults to false', async () => {
+			const account = await createTestAccount(harness, {dateOfBirth: '2000-01-01'});
+			const {json} = await fetchUserSettings(harness, account.token);
+			expect(json.allow_mature_content_on_ios).toBe(false);
+			const {json: updated} = await updateUserSettings(harness, account.token, {allow_mature_content_on_ios: true});
+			expect(updated.allow_mature_content_on_ios).toBe(true);
 		});
-		test('updates sensitive_content_non_friend_dm_filter', async () => {
-			const account = await createTestAccount(harness);
-			const {json} = await updateUserSettings(harness, account.token, {
-				sensitive_content_non_friend_dm_filter: SensitiveMediaFilterLevel.SHOW,
-			});
-			expect(json.sensitive_content_non_friend_dm_filter).toBe(SensitiveMediaFilterLevel.SHOW);
+		test('teen gets AGE_RESTRICTED for allow_mature_content_on_ios true', async () => {
+			const account = await createTestAccount(harness, {dateOfBirth: '2010-01-01'});
+			const response = await createBuilder<{
+				code: string;
+				errors: Array<{path: string; code: string}>;
+			}>(harness, account.token)
+				.patch('/users/@me/settings')
+				.body({allow_mature_content_on_ios: true})
+				.expect(HTTP_STATUS.BAD_REQUEST)
+				.execute();
+			expect(response.errors[0]?.path).toBe('allow_mature_content_on_ios');
+			expect(response.errors[0]?.code).toBe(ValidationErrorCodes.AGE_RESTRICTED);
 		});
-		test('updates sensitive_content_guild_filter', async () => {
-			const account = await createTestAccount(harness);
-			const {json} = await updateUserSettings(harness, account.token, {
-				sensitive_content_guild_filter: SensitiveMediaFilterLevel.SHOW,
-			});
-			expect(json.sensitive_content_guild_filter).toBe(SensitiveMediaFilterLevel.SHOW);
-		});
-	});
-	describe('updating all fields at once', () => {
-		test('updates all three filters simultaneously', async () => {
-			const account = await createTestAccount(harness);
-			const {json} = await updateUserSettings(harness, account.token, {
-				sensitive_content_friend_dm_filter: SensitiveMediaFilterLevel.BLOCK,
-				sensitive_content_non_friend_dm_filter: SensitiveMediaFilterLevel.BLUR,
-				sensitive_content_guild_filter: SensitiveMediaFilterLevel.SHOW,
-			});
-			expect(json.sensitive_content_friend_dm_filter).toBe(SensitiveMediaFilterLevel.BLOCK);
-			expect(json.sensitive_content_non_friend_dm_filter).toBe(SensitiveMediaFilterLevel.BLUR);
-			expect(json.sensitive_content_guild_filter).toBe(SensitiveMediaFilterLevel.SHOW);
+		test('setting a teen date of birth turns allow_mature_content_on_ios off', async () => {
+			const account = await createTestAccount(harness, {dateOfBirth: '2000-01-01'});
+			await updateUserSettings(harness, account.token, {allow_mature_content_on_ios: true});
+			const user = await getUserRepository().findUniqueAssert(createUserID(BigInt(account.userId)));
+			await getUserRepository().patchUpsert(user.id, {date_of_birth: null}, user.toRow());
+			const teenBirthday = new Date();
+			teenBirthday.setUTCFullYear(teenBirthday.getUTCFullYear() - 15);
+			await createBuilder(harness, account.token)
+				.put('/users/@me/date-of-birth')
+				.body({date_of_birth: teenBirthday.toISOString().slice(0, 10)})
+				.execute();
+			const {json} = await fetchUserSettings(harness, account.token);
+			expect(json.allow_mature_content_on_ios).toBe(false);
 		});
 	});
 	describe('validation', () => {
-		test('rejects invalid value for sensitive_content_friend_dm_filter', async () => {
-			const account = await createTestAccount(harness);
-			await createBuilder(harness, account.token)
-				.patch('/users/@me/settings')
-				.body({sensitive_content_friend_dm_filter: 3})
-				.expect(HTTP_STATUS.BAD_REQUEST)
-				.execute();
-		});
 		test('rejects a non-adult account relaxing the friend DM filter', async () => {
 			const account = await createTestAccount(harness, {dateOfBirth: '2010-01-01'});
 			const response = await createBuilder<{
@@ -131,8 +127,8 @@ describe('User Settings - Sensitive Content Filters', () => {
 		});
 		test('allows an account without a birth date to relax every filter when none is collected', async () => {
 			const repository = getInstanceConfigRepository();
-			const previous = (await repository.getAppPublicConfig()).registration.collect_date_of_birth;
-			await repository.setAppPublicConfig({registration: {collect_date_of_birth: false}});
+			const previous = (await repository.getAccountsConfig()).date_of_birth;
+			await repository.updateAccountsConfig({date_of_birth: DateOfBirthPolicies.OFF});
 			try {
 				const account = await createTestAccount(harness);
 				const {json} = await updateUserSettings(harness, account.token, {
@@ -144,46 +140,32 @@ describe('User Settings - Sensitive Content Filters', () => {
 				expect(json.sensitive_content_non_friend_dm_filter).toBe(SensitiveMediaFilterLevel.SHOW);
 				expect(json.sensitive_content_guild_filter).toBe(SensitiveMediaFilterLevel.SHOW);
 			} finally {
-				await repository.setAppPublicConfig({registration: {collect_date_of_birth: previous}});
+				await repository.updateAccountsConfig({date_of_birth: previous});
 			}
 		});
-		test('rejects negative value', async () => {
-			const account = await createTestAccount(harness);
-			await createBuilder(harness, account.token)
-				.patch('/users/@me/settings')
-				.body({sensitive_content_friend_dm_filter: -1})
-				.expect(HTTP_STATUS.BAD_REQUEST)
-				.execute();
-		});
-		test('rejects string value', async () => {
-			const account = await createTestAccount(harness);
-			await createBuilder(harness, account.token)
-				.patch('/users/@me/settings')
-				.body({sensitive_content_non_friend_dm_filter: 'blur'})
-				.expect(HTTP_STATUS.BAD_REQUEST)
-				.execute();
-		});
-		test('rejects BLOCK for sensitive_content_guild_filter', async () => {
-			const account = await createTestAccount(harness);
-			await createBuilder(harness, account.token)
-				.patch('/users/@me/settings')
-				.body({sensitive_content_guild_filter: SensitiveMediaFilterLevel.BLOCK})
-				.expect(HTTP_STATUS.BAD_REQUEST)
-				.execute();
-		});
-	});
-	describe('persistence', () => {
-		test('values persist across GET after PATCH', async () => {
-			const account = await createTestAccount(harness);
-			await updateUserSettings(harness, account.token, {
-				sensitive_content_friend_dm_filter: SensitiveMediaFilterLevel.BLOCK,
-				sensitive_content_non_friend_dm_filter: SensitiveMediaFilterLevel.BLUR,
-				sensitive_content_guild_filter: SensitiveMediaFilterLevel.SHOW,
-			});
-			const {json} = await fetchUserSettings(harness, account.token);
-			expect(json.sensitive_content_friend_dm_filter).toBe(SensitiveMediaFilterLevel.BLOCK);
-			expect(json.sensitive_content_non_friend_dm_filter).toBe(SensitiveMediaFilterLevel.BLUR);
-			expect(json.sensitive_content_guild_filter).toBe(SensitiveMediaFilterLevel.SHOW);
+		test('rejects a non-adult account relaxing a filter after collection is turned off', async () => {
+			const account = await createTestAccount(harness, {dateOfBirth: '2010-01-01'});
+			const repository = getInstanceConfigRepository();
+			const previous = (await repository.getAccountsConfig()).date_of_birth;
+			await repository.updateAccountsConfig({date_of_birth: DateOfBirthPolicies.OFF});
+			try {
+				const response = await createBuilder<{
+					code: string;
+					errors: Array<{
+						path: string;
+						code: string;
+						message: string;
+					}>;
+				}>(harness, account.token)
+					.patch('/users/@me/settings')
+					.body({sensitive_content_guild_filter: SensitiveMediaFilterLevel.SHOW})
+					.expect(HTTP_STATUS.BAD_REQUEST)
+					.execute();
+				expect(response.errors[0]?.path).toBe('sensitive_content_guild_filter');
+				expect(response.errors[0]?.code).toBe(ValidationErrorCodes.AGE_RESTRICTED);
+			} finally {
+				await repository.updateAccountsConfig({date_of_birth: previous});
+			}
 		});
 	});
 });

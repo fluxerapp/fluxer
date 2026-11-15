@@ -3,7 +3,20 @@
 const {existsSync} = require('node:fs');
 const {join, sep} = require('node:path');
 const {createNativeLoadError, loadNativeBinding} = require('./loader-diagnostics.cjs');
-const {nativeFileName} = require('./pure.cjs');
+function nativeFileName(platform = process.platform, arch = process.arch) {
+	switch (platform) {
+		case 'darwin':
+			if (arch === 'x64' || arch === 'arm64') return `platform-info.darwin-${arch}.node`;
+			break;
+		case 'win32':
+			if (arch === 'x64' || arch === 'arm64') return `platform-info.win32-${arch}-msvc.node`;
+			break;
+		case 'linux':
+			if (arch === 'x64' || arch === 'arm64') return `platform-info.linux-${arch}-gnu.node`;
+			break;
+	}
+	throw new Error(`Unsupported platform-info target: ${platform}/${arch}`);
+}
 const MODULE_NAME = '@fluxer/platform-info';
 const SKIP_NATIVE_PROBE_ENV = 'FLUXER_PLATFORM_INFO_SKIP_NATIVE_PROBE';
 
@@ -45,7 +58,4 @@ try {
 module.exports = {
 	getGpuInfo: binding ? binding.getGpuInfo : null,
 	loadError,
-	_private: {
-		nativeFileName,
-	},
 };

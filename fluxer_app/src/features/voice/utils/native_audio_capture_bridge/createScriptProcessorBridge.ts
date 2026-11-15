@@ -35,10 +35,6 @@ class PendingStereoChunkRing {
 		this.chunks = new Array(MAX_PENDING_CHUNKS).fill(null);
 	}
 
-	get length(): number {
-		return this.count;
-	}
-
 	push(chunk: Float32Array): number {
 		assert.equal(chunk.length % 2, 0, 'script processor chunks must be interleaved stereo');
 		let dropped = 0;

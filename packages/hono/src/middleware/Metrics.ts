@@ -2,7 +2,7 @@
 
 import {isLoopbackIpAddress} from '@fluxer/ip_utils/src/IpAddress';
 import type {HttpBindings} from '@hono/node-server';
-import type {Handler, MiddlewareHandler} from 'hono';
+import type {Context, Handler, MiddlewareHandler} from 'hono';
 
 const SKIP_PATHS = new Set(['/_health', '/_healthz', '/_metrics']);
 
@@ -24,11 +24,11 @@ function statusClass(status: number): string {
 	return '5xx';
 }
 
-class Counter {
+export class Counter {
 	private labels = new Map<string, number>();
 
-	inc(labelKey: string = ''): void {
-		this.labels.set(labelKey, (this.labels.get(labelKey) ?? 0) + 1);
+	inc(labelKey: string = '', amount = 1): void {
+		this.labels.set(labelKey, (this.labels.get(labelKey) ?? 0) + amount);
 	}
 
 	render(name: string, help: string): string {
@@ -50,7 +50,7 @@ class Counter {
 	}
 }
 
-class Histogram {
+export class Histogram {
 	private readonly buckets: Array<number>;
 	private readonly counts: Array<number>;
 	private sum = 0;
@@ -85,7 +85,7 @@ class Histogram {
 	}
 }
 
-class Gauge {
+export class Gauge {
 	private valueFn: () => number;
 
 	constructor(valueFn: () => number) {
@@ -117,6 +117,62 @@ function renderRegisteredSections(): Array<string> {
 		if (text !== '') rendered.push(text);
 	}
 	return rendered;
+}
+
+interface RegisteredMetric {
+	help: string;
+	metric: Counter | Histogram | Gauge;
+}
+
+const registeredMetrics = new Map<string, RegisteredMetric>();
+
+function register<T extends Counter | Histogram | Gauge>(
+	name: string,
+	help: string,
+	create: () => T,
+	kind: new (...args: Array<never>) => T,
+): T {
+	const existing = registeredMetrics.get(name);
+	if (existing !== undefined) {
+		if (!(existing.metric instanceof kind)) {
+			throw new Error(`metric ${name} is already registered with another type`);
+		}
+		return existing.metric;
+	}
+	const metric = create();
+	registeredMetrics.set(name, {help, metric});
+	return metric;
+}
+
+export function registerCounter(name: string, help: string): Counter {
+	return register(name, help, () => new Counter(), Counter);
+}
+
+export function registerHistogram(name: string, help: string, buckets: Array<number> = DEFAULT_BUCKETS): Histogram {
+	return register(name, help, () => new Histogram(buckets), Histogram);
+}
+
+export function registerGauge(name: string, help: string, valueFn: () => number): Gauge {
+	return register(name, help, () => new Gauge(valueFn), Gauge);
+}
+
+function renderRegisteredMetrics(): Array<string> {
+	return [...registeredMetrics].map(([name, {help, metric}]) => metric.render(name, help));
+}
+
+const METRICS_CONTENT_TYPE = 'text/plain; version=0.0.4; charset=utf-8';
+
+function renderMetricsResponse(c: Context, sections: Array<string>): Response {
+	if (!isLoopbackPeer(c.env)) {
+		return c.text('FORBIDDEN', 403, {'Content-Type': 'text/plain'});
+	}
+	return c.text(`${[...sections, ...renderRegisteredMetrics()].join('\n\n')}\n`, 200, {
+		'Content-Type': METRICS_CONTENT_TYPE,
+	});
+}
+
+export function createRegisteredMetricsHandler(): Handler {
+	return (c) => renderMetricsResponse(c, []);
 }
 
 interface MetricsState {
@@ -165,21 +221,14 @@ export function createMetricsMiddleware(serviceName: string): MetricsResult {
 		}
 	};
 
-	const metricsHandler: Handler = (c) => {
-		if (!isLoopbackPeer(c.env)) {
-			return c.text('FORBIDDEN', 403, {'Content-Type': 'text/plain'});
-		}
-		const sections = [
+	const metricsHandler: Handler = (c) =>
+		renderMetricsResponse(c, [
 			requestsTotal.render(`${prefix}_http_requests_total`, 'Total HTTP requests'),
 			requestDuration.render(`${prefix}_http_request_duration_seconds`, 'HTTP request duration in seconds'),
 			errorsTotal.render(`${prefix}_http_errors_total`, 'Total HTTP 5xx errors'),
 			uptime.render(`${prefix}_uptime_seconds`, 'Process uptime in seconds'),
 			...renderRegisteredSections(),
-		];
-		return c.text(`${sections.join('\n\n')}\n`, 200, {
-			'Content-Type': 'text/plain; version=0.0.4; charset=utf-8',
-		});
-	};
+		]);
 
 	return {middleware, metricsHandler, state};
 }

@@ -120,7 +120,7 @@ describe('Guild deletion attachment purge', () => {
 		]);
 		await createBuilder(harness, admin.token)
 			.delete(`/admin/guilds/${world.b.guild.id}`)
-			.body(null)
+			.body({basis: {type: 'holder_request'}})
 			.expect(HTTP_STATUS.OK)
 			.execute();
 		await world.worker.drain();

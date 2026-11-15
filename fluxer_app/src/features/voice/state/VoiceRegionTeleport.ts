@@ -2,7 +2,7 @@
 
 import {makeAutoObservable} from 'mobx';
 
-export const VOICE_REGION_TELEPORT_SOUND_GRACE_MS = 2500;
+const VOICE_REGION_TELEPORT_SOUND_GRACE_MS = 2500;
 
 class VoiceRegionTeleport {
 	isTeleporting = false;
@@ -30,11 +30,6 @@ class VoiceRegionTeleport {
 			return true;
 		}
 		return Date.now() < this.soundSuppressedUntilMs;
-	}
-
-	reset(): void {
-		this.isTeleporting = false;
-		this.soundSuppressedUntilMs = 0;
 	}
 }
 

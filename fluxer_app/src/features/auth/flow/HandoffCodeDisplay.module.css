@@ -39,8 +39,6 @@
 	font-size: 0.75rem;
 	font-weight: 600;
 	color: var(--text-tertiary);
-	text-transform: uppercase;
-	letter-spacing: 0.05em;
 	margin: 0;
 }
 
@@ -98,7 +96,7 @@
 	width: 1.5rem;
 	height: 1.5rem;
 	border: 0.1875rem solid var(--background-modifier-accent);
-	border-top-color: var(--brand-primary);
+	border-top-color: var(--brand-primary-foreground);
 	border-radius: 50%;
 	animation: spin 1s linear infinite;
 }

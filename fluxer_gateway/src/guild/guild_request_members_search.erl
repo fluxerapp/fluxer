@@ -5,10 +5,7 @@
 
 -export([
     fetch_members_with_rollout/6,
-    filter_members_by_query/3,
     member_matches_normalized_query/2,
-    get_display_name/1,
-    get_username/1,
     extract_user_id/1,
     resolve_member_limit/2
 ]).
@@ -111,25 +108,6 @@ resolve_member_limit(_Query, 0) ->
 resolve_member_limit(_Query, Limit) ->
     Limit.
 
--spec filter_members_by_query([member()], binary(), non_neg_integer()) -> [member()].
-filter_members_by_query(_Members, _Query, 0) ->
-    [];
-filter_members_by_query(Members, Query, Limit) ->
-    NormalizedQuery = string:lowercase(Query),
-    filter_members_by_query(Members, NormalizedQuery, Limit, []).
-
--spec filter_members_by_query([member()], binary(), non_neg_integer(), [member()]) ->
-    [member()].
-filter_members_by_query(_Members, _NormalizedQuery, 0, Acc) ->
-    lists:reverse(Acc);
-filter_members_by_query([], _NormalizedQuery, _Limit, Acc) ->
-    lists:reverse(Acc);
-filter_members_by_query([Member | Rest], NormalizedQuery, Limit, Acc) ->
-    case member_matches_normalized_query(Member, NormalizedQuery) of
-        true -> filter_members_by_query(Rest, NormalizedQuery, Limit - 1, [Member | Acc]);
-        false -> filter_members_by_query(Rest, NormalizedQuery, Limit, Acc)
-    end.
-
 -spec member_matches_normalized_query(member(), binary()) -> boolean().
 member_matches_normalized_query(_Member, <<>>) ->
     true;
@@ -152,42 +130,6 @@ prefix_binary(Prefix, Value) ->
     PrefixSize = byte_size(Prefix),
     byte_size(Value) >= PrefixSize andalso
         binary:part(Value, 0, PrefixSize) =:= Prefix.
-
--spec get_display_name(member()) -> binary().
-get_display_name(Member) when is_map(Member) ->
-    Nick = maps:get(<<"nick">>, Member, undefined),
-    resolve_nick(Nick, Member);
-get_display_name(_) ->
-    <<>>.
-
--spec resolve_nick(term(), member()) -> binary().
-resolve_nick(undefined, Member) -> get_fallback_name(Member);
-resolve_nick(null, Member) -> get_fallback_name(Member);
-resolve_nick(Nick, _Member) when is_binary(Nick) -> Nick;
-resolve_nick(_, Member) -> get_fallback_name(Member).
-
--spec get_fallback_name(member()) -> binary().
-get_fallback_name(Member) ->
-    User = maps:get(<<"user">>, Member, #{}),
-    GlobalName = maps:get(<<"global_name">>, User, undefined),
-    resolve_global_name(GlobalName, User).
-
--spec resolve_global_name(term(), map()) -> binary().
-resolve_global_name(undefined, User) -> get_username(User);
-resolve_global_name(null, User) -> get_username(User);
-resolve_global_name(Name, _User) when is_binary(Name) -> Name;
-resolve_global_name(_, User) -> get_username(User).
-
--spec get_username(map()) -> binary().
-get_username(User) ->
-    Username = maps:get(<<"username">>, User, <<>>),
-    safe_binary(Username).
-
--spec safe_binary(term()) -> binary().
-safe_binary(null) -> <<>>;
-safe_binary(undefined) -> <<>>;
-safe_binary(V) when is_binary(V) -> V;
-safe_binary(_) -> <<>>.
 
 -spec extract_user_id(member()) -> integer() | undefined.
 extract_user_id(Member) when is_map(Member) ->

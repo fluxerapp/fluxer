@@ -3,6 +3,7 @@
 use crate::config::{Config, Mode};
 use anyhow::Context as _;
 use clap::{Parser, Subcommand};
+use fluxer_common::config::EnvMap;
 use std::net::IpAddr;
 
 #[derive(Debug, Parser)]
@@ -26,17 +27,8 @@ pub enum Command {
     Healthcheck,
 }
 
-pub fn load_config(args: &Args) -> anyhow::Result<Config> {
-    load_config_from_iter(args, std::env::vars())
-}
-
-fn load_config_from_iter<I, K, V>(args: &Args, vars: I) -> anyhow::Result<Config>
-where
-    I: IntoIterator<Item = (K, V)>,
-    K: Into<String>,
-    V: Into<String>,
-{
-    let mut cfg = Config::load_from_iter(args.mode, vars)?;
+pub fn load_config(args: &Args, env: &EnvMap) -> anyhow::Result<Config> {
+    let mut cfg = Config::load_from_iter(args.mode, env.iter())?;
     apply_overrides(args, &mut cfg)?;
     Ok(cfg)
 }

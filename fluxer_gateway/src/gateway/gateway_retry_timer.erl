@@ -23,7 +23,7 @@ wait_non_neg(_DelayMs) ->
 
 -spec wait_until(term(), integer()) -> ok | expired | {error, invalid_delay}.
 wait_until(DelayMs, DeadlineMs) when is_integer(DelayMs), DelayMs >= 0 ->
-    NowMs = erlang:monotonic_time(millisecond),
+    NowMs = gateway_clock:monotonic_ms(),
     case DeadlineMs =< NowMs of
         true ->
             expired;

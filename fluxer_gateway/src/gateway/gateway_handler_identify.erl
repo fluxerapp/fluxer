@@ -7,25 +7,19 @@
     handle_identify/3,
     handle_resume/2,
     handle_rollout_config_changed/1,
-    handle_pending_identify_retry/1,
     handle_pending_identify_retry/2,
-    start_session/3,
-    start_session_with_drain_guard/4,
-    handle_session_start_result/2,
-    validate_identify_data/1,
-    validate_resume_data/1,
-    parse_ignored_events/1
+    handle_session_start_message/2
 ]).
 
 -type state() :: gateway_handler:state().
 -type ws_result() :: gateway_handler:ws_result().
--type pending_retry_timer() :: {reference(), reference()} | reference() | undefined.
-
+-type pending_retry_timer() :: {reference(), reference()} | undefined.
 -export_type([state/0, ws_result/0]).
 
 -define(PENDING_IDENTIFY_RETRY_BASE_MS, 1000).
 -define(PENDING_IDENTIFY_RETRY_JITTER_MS, 1000).
 -define(MAX_IGNORED_EVENTS, 256).
+-define(MAX_TOKEN_BYTES, 256).
 
 -spec handle_identify(map(), binary(), state()) -> ws_result().
 handle_identify(Data, PeerIP, State) ->
@@ -35,7 +29,9 @@ handle_identify(Data, PeerIP, State) ->
 handle_rate_limited_identify(Data, PeerIP, State) ->
     case session_abuse_protection:check_identify_rate(PeerIP) of
         {error, identify_rate_limited} ->
-            hold_identify(<<"Identify rate limited">>, State);
+            gateway_handler_encode:close_with_reason(
+                rate_limited, <<"Identify rate limited">>, State
+            );
         ok ->
             handle_identify_validated(Data, PeerIP, State)
     end.
@@ -53,7 +49,7 @@ handle_identify_validated(Data, PeerIP, State) ->
     ),
     case ValidateResult of
         {ok, Token, Properties, Presence, IgnoredEvents, Flags, InitialGuildId, Shard} ->
-            do_identify(
+            identify_within_token_limit(
                 Token,
                 Properties,
                 Presence,
@@ -71,10 +67,58 @@ handle_identify_validated(Data, PeerIP, State) ->
                 <<"Invalid shard">>,
                 State
             );
+        {error, invalid_token} ->
+            gateway_handler_encode:close_with_reason(
+                authentication_failed,
+                <<"Invalid token">>,
+                State
+            );
         {error, _Reason} ->
             gateway_handler_encode:close_with_reason(
                 decode_error,
                 <<"Invalid identify payload">>,
+                State
+            )
+    end.
+
+-spec identify_within_token_limit(
+    binary(),
+    map(),
+    term(),
+    list(),
+    non_neg_integer(),
+    integer() | undefined,
+    gateway_sharding:shard() | undefined,
+    binary(),
+    gateway_timings:recorder(),
+    state()
+) -> ws_result().
+identify_within_token_limit(
+    Token,
+    Properties,
+    Presence,
+    IgnoredEvents,
+    Flags,
+    InitialGuildId,
+    Shard,
+    PeerIP,
+    GwTimings,
+    State
+) ->
+    case session_abuse_protection:check_token_identify_rate(Token) of
+        {error, identify_rate_limited} ->
+            hold_identify(<<"Identify rate limited">>, State);
+        ok ->
+            do_identify(
+                Token,
+                Properties,
+                Presence,
+                IgnoredEvents,
+                Flags,
+                InitialGuildId,
+                Shard,
+                PeerIP,
+                GwTimings,
                 State
             )
     end.
@@ -103,6 +147,9 @@ do_identify(
     GwTimings,
     State
 ) ->
+    ok = channel_threads_identify_counts:note(
+        session_manager_shard_drain:thread_channels_capable(#{flags => Flags}), Properties
+    ),
     SessionId = utils:generate_session_id(),
     IdentifyData = build_identify_data(
         Token,
@@ -158,14 +205,33 @@ validate_identify_data(Data) when is_map(Data) ->
         IgnoredEventsRaw = maps:get(<<"ignored_events">>, Data, []),
         InitialGuildIdRaw = maps:get(<<"initial_guild_id">>, Data, undefined),
         ShardRaw = maps:get(<<"shard">>, Data, undefined),
-        validate_properties(
-            Token, Properties, IgnoredEventsRaw, InitialGuildIdRaw, ShardRaw, Data
-        )
+        case is_valid_token(Token) of
+            true ->
+                validate_properties(
+                    Token, Properties, IgnoredEventsRaw, InitialGuildIdRaw, ShardRaw, Data
+                );
+            false ->
+                {error, invalid_token}
+        end
     catch
         error:{badkey, _} -> {error, missing_required_field}
     end;
 validate_identify_data(_Data) ->
     {error, invalid_data}.
+
+-spec is_valid_token(term()) -> boolean().
+is_valid_token(Token) when is_binary(Token), byte_size(Token) =< ?MAX_TOKEN_BYTES ->
+    has_visible_byte(Token);
+is_valid_token(_) ->
+    false.
+
+-spec has_visible_byte(binary()) -> boolean().
+has_visible_byte(<<Byte, Rest/binary>>) when Byte =< 32 ->
+    has_visible_byte(Rest);
+has_visible_byte(<<_, _/binary>>) ->
+    true;
+has_visible_byte(<<>>) ->
+    false.
 
 -spec validate_properties(binary(), term(), term(), term(), term(), map()) ->
     {ok, binary(), map(), term(), [binary()], non_neg_integer(), integer() | undefined,
@@ -284,13 +350,59 @@ start_session(Request, SocketPid, State) ->
 -spec start_session_with_drain_guard(boolean(), map(), pid(), state()) -> ws_result().
 start_session_with_drain_guard(true, Request, SocketPid, State) ->
     hold_session_start(Request, SocketPid, <<"Gateway draining">>, State);
-start_session_with_drain_guard(false, Request, SocketPid, State) ->
-    StartResult = session_manager:start(Request, SocketPid),
-    handle_session_start_result(StartResult, Request, SocketPid, State).
+start_session_with_drain_guard(false, Request, SocketPid, State0) ->
+    State = release_hold(State0),
+    case session_manager:send_start(Request, SocketPid) of
+        {ok, StartRequest} ->
+            {ok, await_session_start(StartRequest, Request, SocketPid, State)};
+        {error, Reason} ->
+            handle_session_start_result({error, Reason}, Request, SocketPid, State)
+    end.
 
--spec handle_session_start_result(term(), state()) -> ws_result().
-handle_session_start_result(StartResult, State) ->
-    handle_session_start_result(StartResult, undefined, undefined, State).
+-spec release_hold(state()) -> state().
+release_hold(State) ->
+    case maps:get(pending_identify, State, undefined) of
+        undefined ->
+            State;
+        _Held ->
+            gateway_rollout_config:unsubscribe_changes(self()),
+            clear_pending_identify(State)
+    end.
+
+-spec await_session_start(session_manager:start_request(), map(), pid(), state()) -> state().
+await_session_start(StartRequest, Request, SocketPid, State) ->
+    Token = make_ref(),
+    TimerRef = erlang:send_after(
+        session_manager:start_timeout(StartRequest), self(), {session_start_timeout, Token}
+    ),
+    State#{session_start => {StartRequest, Request, SocketPid, {TimerRef, Token}}}.
+
+-spec handle_session_start_message(term(), state()) -> no_reply | ws_result().
+handle_session_start_message(
+    {session_start_timeout, Token},
+    #{session_start := {StartRequest, Request, SocketPid, {_TimerRef, Token}}} = State
+) ->
+    Reply = session_manager:abandon_start(StartRequest),
+    complete_session_start(Reply, Request, SocketPid, State);
+handle_session_start_message(
+    Msg, #{session_start := {StartRequest, Request, SocketPid, Timer}} = State
+) ->
+    case session_manager:check_start_response(Msg, StartRequest, Request, SocketPid) of
+        no_reply ->
+            no_reply;
+        {reply, Reply} ->
+            cancel_timer_value(Timer),
+            complete_session_start(Reply, Request, SocketPid, State);
+        {pending, NextRequest} ->
+            cancel_timer_value(Timer),
+            {ok, await_session_start(NextRequest, Request, SocketPid, State)}
+    end;
+handle_session_start_message(_Msg, _State) ->
+    no_reply.
+
+-spec complete_session_start(term(), map(), pid(), state()) -> ws_result().
+complete_session_start(Reply, Request, SocketPid, State) ->
+    handle_session_start_result(Reply, Request, SocketPid, State#{session_start => undefined}).
 
 -spec handle_session_start_result(term(), map() | undefined, pid() | undefined, state()) ->
     ws_result().
@@ -363,48 +475,39 @@ log_session_start_error(Reason, State) ->
 handle_rollout_config_changed(State) ->
     retry_pending_identify(State).
 
--spec handle_pending_identify_retry(state()) -> ws_result().
-handle_pending_identify_retry(State) ->
-    handle_legacy_pending_identify_retry(State).
-
 -spec handle_pending_identify_retry(reference(), state()) -> ws_result().
 handle_pending_identify_retry(Token, State) ->
     case maps:get(pending_identify_retry_timer, State, undefined) of
         {TimerRef, Token} ->
-            cancel_pending_identify_retry_value({TimerRef, Token}),
-            retry_pending_identify(State#{pending_identify_retry_timer => undefined});
-        _ ->
-            {ok, State}
-    end.
-
--spec handle_legacy_pending_identify_retry(state()) -> ws_result().
-handle_legacy_pending_identify_retry(State) ->
-    case maps:get(pending_identify_retry_timer, State, undefined) of
-        TimerRef when is_reference(TimerRef) ->
-            cancel_pending_identify_retry_value(TimerRef),
+            cancel_timer_value({TimerRef, Token}),
             retry_pending_identify(State#{pending_identify_retry_timer => undefined});
         _ ->
             {ok, State}
     end.
 
 -spec retry_pending_identify(state()) -> ws_result().
-retry_pending_identify(#{pending_identify := {Request, SocketPid}} = State) when
+retry_pending_identify(State) ->
+    case maps:get(session_start, State, undefined) of
+        undefined -> retry_held_identify(State);
+        _SessionStart -> {ok, State}
+    end.
+
+-spec retry_held_identify(state()) -> ws_result().
+retry_held_identify(#{pending_identify := {Request, SocketPid}} = State) when
     is_map(Request), is_pid(SocketPid)
 ->
     case gateway_rollout_config:session_rollout_percentage() > 0 of
         true ->
-            gateway_rollout_config:unsubscribe_changes(self()),
-            RetryState = clear_pending_identify(State),
             start_session_with_drain_guard(
                 gateway_node_router:is_draining(),
                 Request,
                 SocketPid,
-                RetryState
+                State
             );
         false ->
             {ok, schedule_pending_identify_retry(State)}
     end;
-retry_pending_identify(State) ->
+retry_held_identify(State) ->
     {ok, clear_pending_identify(State)}.
 
 -spec hold_session_start(map() | undefined, pid() | undefined, binary(), state()) ->
@@ -429,10 +532,6 @@ schedule_pending_identify_retry(
     is_reference(TimerRef), is_reference(Token)
 ->
     State;
-schedule_pending_identify_retry(#{pending_identify_retry_timer := TimerRef} = State) when
-    is_reference(TimerRef)
-->
-    State;
 schedule_pending_identify_retry(State) ->
     Delay =
         ?PENDING_IDENTIFY_RETRY_BASE_MS +
@@ -455,48 +554,14 @@ clear_pending_identify(State) ->
 -spec maybe_cancel_pending_identify_retry(pending_retry_timer()) -> ok.
 maybe_cancel_pending_identify_retry(undefined) ->
     ok;
-maybe_cancel_pending_identify_retry({TimerRef, _Token}) when is_reference(TimerRef) ->
-    cancel_pending_identify_retry_value(TimerRef);
-maybe_cancel_pending_identify_retry(TimerRef) when is_reference(TimerRef) ->
-    cancel_pending_identify_retry_value(TimerRef).
+maybe_cancel_pending_identify_retry({TimerRef, Token}) when is_reference(TimerRef) ->
+    cancel_timer_value({TimerRef, Token}).
 
--spec cancel_pending_identify_retry_value({reference(), reference()} | reference()) -> ok.
-cancel_pending_identify_retry_value({TimerRef, _Token}) ->
-    cancel_pending_identify_retry_value(TimerRef);
-cancel_pending_identify_retry_value(TimerRef) ->
+-spec cancel_timer_value({reference(), reference()}) -> ok.
+cancel_timer_value({TimerRef, _Token}) ->
     _ = erlang:cancel_timer(TimerRef, [{async, true}, {info, false}]),
     ok.
 
 -spec handle_resume(map(), state()) -> ws_result().
 handle_resume(Data, State) ->
     gateway_handler_resume:handle_resume(Data, State).
-
--spec validate_resume_data(map()) -> {ok, binary(), binary(), integer()} | {error, atom()}.
-validate_resume_data(Data) ->
-    gateway_handler_resume:validate_resume_data(Data).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-handle_session_start_capacity_holds_without_reconnect_test() ->
-    {ok, _State} = handle_session_start_result({error, at_capacity}, identify_test_state()).
-
-handle_session_start_rate_limit_holds_without_close_test() ->
-    {ok, _State} = handle_session_start_result({error, rate_limited}, identify_test_state()).
-
-start_session_with_drain_guard_holds_pending_identify_test() ->
-    {ok, State} = start_session_with_drain_guard(
-        true, #{token => <<"t">>}, self(), identify_test_state()
-    ),
-    {PendingRequest, PendingPid} = maps:get(pending_identify, State),
-    ?assertEqual(#{token => <<"t">>}, PendingRequest),
-    ?assert(is_pid(PendingPid)).
-
-identify_test_state() ->
-    #{
-        encoding => json,
-        compress_ctx => gateway_compress:new_context(none),
-        peer_ip => <<"127.0.0.1">>
-    }.
-
--endif.

@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {errorMessage} from '@electron/common/ErrorMessage';
+
 const INITIAL_RETRY_DELAY_MS = 1000;
 const MAX_RETRY_DELAY_MS = 30000;
 const FAILURES_BEFORE_PROMPT = 3;
 const ERR_ABORTED = -3;
 
-export interface AppLoadFailure {
+interface AppLoadFailure {
 	errorCode: number;
 	errorDescription: string;
 	url: string;
@@ -22,17 +24,13 @@ interface AppLoadRetryOptions {
 	appUrl: string;
 	logger: AppLoadRetryLogger;
 	isTrustedUrl: (url: string) => boolean;
-	getFallbackUrl: (failedUrl: string) => string | null;
 	onRepeatedFailure: (failure: AppLoadFailure) => void;
 	onCommitted: () => void;
-	setTimer?: (callback: () => void, delayMs: number) => ReturnType<typeof setTimeout>;
-	clearTimer?: (timer: ReturnType<typeof setTimeout>) => void;
 }
 
 export interface AppLoadRetry {
 	start(): void;
 	retryNow(): void;
-	getAppUrl(): string;
 }
 
 function isRetryableLoadError(errorCode: number): boolean {
@@ -40,7 +38,7 @@ function isRetryableLoadError(errorCode: number): boolean {
 }
 
 function getLoadErrorCode(error: unknown): number | null {
-	const message = error instanceof Error ? error.message : String(error);
+	const message = errorMessage(error);
 	const match = /\(([-\d]+)\)/.exec(message);
 	if (!match) return null;
 	const value = Number.parseInt(match[1], 10);
@@ -49,14 +47,12 @@ function getLoadErrorCode(error: unknown): number | null {
 
 export function createAppLoadRetry(options: AppLoadRetryOptions): AppLoadRetry {
 	const {webContents, logger} = options;
-	const setTimer = options.setTimer ?? setTimeout;
-	const clearTimer = options.clearTimer ?? clearTimeout;
-	let appUrl = options.appUrl;
+	const appUrl = options.appUrl;
 	let attempt = 0;
 	let timer: ReturnType<typeof setTimeout> | null = null;
 	const cancelTimer = () => {
 		if (timer) {
-			clearTimer(timer);
+			clearTimeout(timer);
 			timer = null;
 		}
 	};
@@ -76,7 +72,7 @@ export function createAppLoadRetry(options: AppLoadRetryOptions): AppLoadRetry {
 		const delay = Math.min(INITIAL_RETRY_DELAY_MS * 2 ** attempt, MAX_RETRY_DELAY_MS);
 		attempt += 1;
 		logger.warn('Scheduling app load retry', {reason, delay, attempt, ...detail});
-		timer = setTimer(() => {
+		timer = setTimeout(() => {
 			timer = null;
 			if (webContents.isDestroyed()) return;
 			if (webContents.isLoadingMainFrame()) {
@@ -90,32 +86,17 @@ export function createAppLoadRetry(options: AppLoadRetryOptions): AppLoadRetry {
 		cancelTimer();
 		attempt = 0;
 	};
-	const fallBackFromMigratedOrigin = (failedUrl: string, detail: Record<string, unknown>): boolean => {
-		const fallbackUrl = options.getFallbackUrl(failedUrl);
-		if (fallbackUrl === null || fallbackUrl === appUrl) return false;
-		logger.warn('Migrated app origin failed to load, falling back to the legacy app URL', {failedUrl, ...detail});
-		appUrl = fallbackUrl;
-		reset();
-		load('legacy-fallback');
-		return true;
-	};
 	return {
 		start() {
-			webContents.on('did-navigate', (_event, url, httpResponseCode) => {
+			webContents.on('did-navigate', () => {
 				reset();
 				options.onCommitted();
-				if (httpResponseCode >= 400) {
-					fallBackFromMigratedOrigin(url, {httpResponseCode});
-				}
 			});
 			webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL, isMainFrame) => {
 				if (isMainFrame) {
 					logger.error('App main-frame load failed', {errorCode, errorDescription, validatedURL});
 				}
 				if (!isMainFrame || !options.isTrustedUrl(validatedURL) || !isRetryableLoadError(errorCode)) {
-					return;
-				}
-				if (fallBackFromMigratedOrigin(validatedURL, {errorCode, errorDescription})) {
 					return;
 				}
 				schedule('did-fail-load', {errorCode, errorDescription, validatedURL});
@@ -129,9 +110,6 @@ export function createAppLoadRetry(options: AppLoadRetryOptions): AppLoadRetry {
 		retryNow() {
 			reset();
 			load('manual-retry');
-		},
-		getAppUrl() {
-			return appUrl;
 		},
 	};
 }

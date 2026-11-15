@@ -3,7 +3,7 @@
 .clearButton {
 	position: absolute;
 	top: 50%;
-	right: 0.5rem;
+	inset-inline-end: 0.5rem;
 	transform: translateY(-50%);
 	padding: 0.25rem;
 	color: var(--text-tertiary);
@@ -13,9 +13,4 @@
 
 .clearButton:hover {
 	color: var(--text-primary);
-}
-
-.helperText {
-	font-size: 0.875rem;
-	color: var(--text-primary-muted);
 }

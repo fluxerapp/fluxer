@@ -18,9 +18,7 @@ import {
 	isJoinMethodFilterActive,
 	isPresetMatch,
 	type JoinMethodFilter,
-	MAX_VISIBLE_PAGES,
 	type MemberDisplayData,
-	type PaginationEllipsisSide,
 	SEARCH_DEBOUNCE_MS,
 	type SortMode,
 } from '@app/features/channel/components/guild_members_page/GuildMembersPageShared';
@@ -29,7 +27,7 @@ import {MembersTableFooter} from '@app/features/channel/components/guild_members
 import {MembersTableHeaderRow} from '@app/features/channel/components/guild_members_page/MembersTableHeaderRow';
 import {MembersTableProgressSlot} from '@app/features/channel/components/guild_members_page/MembersTableProgressSlot';
 import {MembersTableToolbar} from '@app/features/channel/components/guild_members_page/MembersTableToolbar';
-import {buildPaginationRange} from '@app/features/channel/components/guild_members_page/Pagination';
+
 import {RolesFilterMenuContent} from '@app/features/channel/components/guild_members_page/RolesFilterMenuContent';
 import {
 	buildMemberSearchParams,
@@ -117,12 +115,11 @@ export const MembersTableView: React.FC<{guildId: string}> = observer(({guildId}
 	const [indexing, setIndexing] = useState(false);
 	const [initialLoadDone, setInitialLoadDone] = useState(false);
 	const [searchError, setSearchError] = useState(false);
-	const [pageJumpValue, setPageJumpValue] = useState('');
-	const [activeEllipsis, setActiveEllipsis] = useState<PaginationEllipsisSide | null>(null);
+
 	const isLoadingRef = useRef(false);
 	const abortControllerRef = useRef<AbortController | null>(null);
 	const filterKeyRef = useRef('');
-	const ellipsisInputRef = useRef<HTMLInputElement | null>(null);
+
 	const tableScrollerRef = useRef<ScrollerHandle | null>(null);
 	const roles = Guilds.getGuildRoles(guildId);
 	const filterKey = useMemo(
@@ -139,7 +136,7 @@ export const MembersTableView: React.FC<{guildId: string}> = observer(({guildId}
 		[searchQuery, sortMode, pageSize, roleFilter, memberSinceFilter, joinedFluxerFilter, joinMethodFilter],
 	);
 	const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
-	const paginationRange = buildPaginationRange(currentPage, totalPages, MAX_VISIBLE_PAGES);
+
 	const resetTableScroll = useCallback(() => {
 		tableScrollerRef.current?.scrollTo({to: 0, animate: false});
 	}, []);
@@ -244,16 +241,7 @@ export const MembersTableView: React.FC<{guildId: string}> = observer(({guildId}
 			abortControllerRef.current?.abort();
 		};
 	}, [debouncedSetQuery]);
-	useEffect(() => {
-		if (activeEllipsis && ellipsisInputRef.current) {
-			ellipsisInputRef.current.focus();
-			ellipsisInputRef.current.select();
-		}
-	}, [activeEllipsis]);
-	useEffect(() => {
-		setPageJumpValue('');
-		setActiveEllipsis(null);
-	}, [currentPage, totalPages]);
+
 	useEffect(() => {
 		resetTableScroll();
 	}, [currentPage, filterKey, resetTableScroll]);
@@ -581,16 +569,10 @@ export const MembersTableView: React.FC<{guildId: string}> = observer(({guildId}
 							pageSize={pageSize}
 							onPageSizeChange={handlePageSizeChange}
 							showPagination={showPagination}
-							paginationRange={paginationRange}
 							currentPage={currentPage}
 							totalPages={totalPages}
 							isSearching={isSearching}
-							activeEllipsis={activeEllipsis}
-							pageJumpValue={pageJumpValue}
-							ellipsisInputRef={ellipsisInputRef}
 							onPageSelect={handlePageSelect}
-							setActiveEllipsis={setActiveEllipsis}
-							setPageJumpValue={setPageJumpValue}
 							data-flx="channel.guild-members-page.members-table-view.members-table-footer"
 						/>
 					)}

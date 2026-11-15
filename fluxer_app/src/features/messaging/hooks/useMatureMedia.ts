@@ -23,7 +23,11 @@ function getSensitiveFilterLevel(channelId: string | undefined): number {
 	if (!channelId) {
 		return SensitiveMediaFilterLevel.SHOW;
 	}
-	const channel = Channels.getChannel(channelId);
+	const requestedChannel = Channels.getChannel(channelId);
+	const channel =
+		requestedChannel?.isThread() && requestedChannel.parentId
+			? Channels.getChannel(requestedChannel.parentId)
+			: requestedChannel;
 	if (!channel) {
 		return SensitiveMediaFilterLevel.SHOW;
 	}
@@ -47,13 +51,33 @@ function getSensitiveFilterLevel(channelId: string | undefined): number {
 	return SensitiveMediaFilterLevel.SHOW;
 }
 
+function isEffectiveMatureMedia(mature: boolean | undefined, channelId: string | undefined): boolean {
+	const hasGateableContext = channelId ? GuildMatureContentAgree.isGatedContent({channelId}) : false;
+	return (
+		DeveloperOptions.forceMatureMedia ||
+		DeveloperOptions.mockMatureMediaGateReason !== 'none' ||
+		!!mature ||
+		hasGateableContext
+	);
+}
+
+export function isSensitiveMediaBlocked(mature: boolean | undefined, channelId: string | undefined): boolean {
+	return (
+		isEffectiveMatureMedia(mature, channelId) && getSensitiveFilterLevel(channelId) === SensitiveMediaFilterLevel.BLOCK
+	);
+}
+
+export function isSensitiveMediaHidden(mature: boolean | undefined, channelId: string | undefined): boolean {
+	return (
+		isEffectiveMatureMedia(mature, channelId) && getSensitiveFilterLevel(channelId) !== SensitiveMediaFilterLevel.SHOW
+	);
+}
+
 export function useMatureMedia(mature: boolean | undefined, channelId: string | undefined): MatureMediaResult {
 	const mockMatureMediaGateReason = DeveloperOptions.mockMatureMediaGateReason;
 	const forceMatureMedia = DeveloperOptions.forceMatureMedia;
 	const [isRevealed, setIsRevealed] = useState(false);
-	const hasGateableContext = channelId ? GuildMatureContentAgree.isGatedContent({channelId}) : false;
-	const effectiveMatureMedia =
-		forceMatureMedia || mockMatureMediaGateReason !== 'none' || !!mature || hasGateableContext;
+	const effectiveMatureMedia = isEffectiveMatureMedia(mature, channelId);
 	const gateReasonFromState = GuildMatureContentAgree.getGateReason({channelId: channelId ?? null});
 	let gateReason: MatureContentGateReason;
 	if (mockMatureMediaGateReason !== 'none') {

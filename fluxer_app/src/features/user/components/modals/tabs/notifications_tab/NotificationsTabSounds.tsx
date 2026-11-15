@@ -14,6 +14,9 @@ import {SliderResetIconButton} from '@app/features/ui/components/slider/SliderRe
 import type {SoundSettings} from '@app/features/ui/state/Sound';
 import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
 import styles from '@app/features/user/components/modals/tabs/notifications_tab/NotificationsTabSounds.module.css';
+import {MASTER_VOLUME_DESCRIPTOR} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
+import {PER_SOUND_VOLUME_DESCRIPTOR, PREVIEW_SOUND_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {CaretDownIcon, SpeakerHighIcon, SpeakerXIcon, TrashIcon, UploadIcon} from '@phosphor-icons/react';
@@ -23,10 +26,6 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useId, useRef, useState} from 'react';
 
-const MASTER_VOLUME_DESCRIPTOR = msg({
-	message: 'Master volume',
-	comment: 'Short label in the sounds. Keep it concise.',
-});
 const SETS_THE_LEVEL_FOR_EVERY_SOUND_EFFECT_PER_DESCRIPTOR = msg({
 	message: 'Sets the level for every sound effect. Per-sound overrides ignore this.',
 	comment: 'Description text in the sounds.',
@@ -56,10 +55,7 @@ const SHOW_FEWER_SOUND_EFFECTS_DESCRIPTOR = msg({
 	message: 'Show fewer sound effects',
 	comment: 'Button label in the sounds section for hiding less common sound effects.',
 });
-const PREVIEW_SOUND_DESCRIPTOR = msg({
-	message: 'Preview sound',
-	comment: 'Short label in the sounds. Keep it concise.',
-});
+
 const UPLOAD_CUSTOM_SOUND_FOR_DESCRIPTOR = msg({
 	message: 'Upload custom sound for {label}',
 	comment: 'Button or menu action label in the sounds. Keep it concise. Preserve {label}; it is inserted by code.',
@@ -69,10 +65,7 @@ const REMOVE_CUSTOM_SOUND_FOR_DESCRIPTOR = msg({
 	comment:
 		'Button or menu action label in the sounds. Keep it concise. Preserve {label}; it is inserted by code. Keep the tone plain and specific.',
 });
-const PER_SOUND_VOLUME_DESCRIPTOR = msg({
-	message: 'Per-sound volume',
-	comment: 'Short label in the sounds. Keep it concise.',
-});
+
 const SOUND_S_OVERRIDE_THE_MASTER_VOLUME_DESCRIPTOR = msg({
 	message: 'Active custom sound volume overrides: {overrideCount}.',
 	comment: 'Description text in the sounds. Preserve {overrideCount}; it is inserted by code.',
@@ -153,7 +146,7 @@ export const Sounds: React.FC<SoundsProps> = observer(
 	}) => {
 		const {i18n} = useLingui();
 		const formatPercentage = useCallback(
-			(value: number) => formatRoundedPercentage(i18n.locale, value),
+			(value: number) => formatRoundedPercentage(getFormattingLocale(), value),
 			[i18n, i18n.locale],
 		);
 		const masterVolume = soundSettings.masterVolume ?? DEFAULT_MASTER;
@@ -289,7 +282,7 @@ export const Sounds: React.FC<SoundsProps> = observer(
 					/>
 					<div className={styles.hint} data-flx="user.notifications-tab.sounds.hint">
 						{i18n._(CLICK_THE_UPLOAD_ICON_NEXT_TO_ANY_SOUND_DESCRIPTOR, {
-							customSoundMaxSizeLabel: formatFileSize(i18n.locale, CUSTOM_SOUND_MAX_SIZE_BYTES),
+							customSoundMaxSizeLabel: formatFileSize(getFormattingLocale(), CUSTOM_SOUND_MAX_SIZE_BYTES),
 						})}
 					</div>
 					<div
@@ -419,7 +412,6 @@ export const Sounds: React.FC<SoundsProps> = observer(
 											maxValue={200}
 											step={1}
 											disabled={rowDisabled}
-											className={styles.overrideSlider}
 											onValueRender={formatPercentage}
 											onValueChange={(value) => onSoundOverrideChange(type, value)}
 											data-flx="user.notifications-tab.sounds.slider--2"

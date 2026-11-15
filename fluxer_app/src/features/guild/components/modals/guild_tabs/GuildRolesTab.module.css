@@ -8,14 +8,6 @@
 	font-size: 0.875rem;
 }
 
-.grid {
-	display: grid;
-	grid-template-columns: 1fr;
-	gap: 1rem;
-	min-height: 0;
-	align-items: start;
-}
-
 .right {
 	display: flex;
 	flex: 1 1 auto;
@@ -79,32 +71,9 @@
 	min-width: 0;
 }
 
-.sectionDescription {
-	color: var(--text-primary-muted);
-	font-size: 0.8125rem;
-	line-height: 1.4;
-}
-
-.sectionHeaderRow {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	justify-content: space-between;
-	width: 100%;
-	gap: 0.75rem;
-}
-
-.sectionHelp {
-	color: var(--text-primary-muted);
-	font-size: 0.8125rem;
-	flex: 1;
-}
-
 .sectionSubtitle {
 	font-weight: 600;
 	font-size: 0.75rem;
-	text-transform: uppercase;
-	letter-spacing: 0.02em;
 	margin: 1rem 0 0.625rem 0;
 	color: var(--text-tertiary);
 }
@@ -150,33 +119,6 @@
 	min-width: 0;
 }
 
-.layoutButtons {
-	display: flex;
-	align-items: center;
-	gap: 0.25rem;
-	flex-shrink: 0;
-}
-
-.layoutButton {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 2.25rem;
-	height: 2.25rem;
-	border-radius: 0.375rem;
-	background: var(--background-secondary);
-	color: var(--text-primary-muted);
-	cursor: pointer;
-	transition:
-		background-color 150ms ease,
-		color 150ms ease;
-}
-
-.layoutButton:hover {
-	background: var(--background-modifier-hover);
-	color: var(--text-primary);
-}
-
 .permCategories {
 	display: flex;
 	flex-direction: column;
@@ -196,14 +138,6 @@
 	color: var(--text-primary-muted);
 	font-size: 0.8125rem;
 	flex: 1;
-}
-
-.icon {
-	width: 1rem;
-	height: 1rem;
-	margin-right: 0.375rem;
-	display: inline-flex;
-	align-items: center;
 }
 
 .emptyState {
@@ -236,16 +170,10 @@
 	color: var(--text-primary-muted);
 }
 
-.sectionPad {
-	padding-top: 1rem;
-}
-
 .leftTitle {
 	margin-bottom: 0.25rem;
 	font-weight: 600;
 	font-size: 0.75rem;
-	text-transform: uppercase;
-	letter-spacing: 0.02em;
 	color: var(--text-tertiary);
 }
 
@@ -257,7 +185,7 @@
 	gap: 0.5rem;
 	border-radius: 0.25rem;
 	padding: 0.375rem 0.5rem;
-	text-align: left;
+	text-align: start;
 	cursor: pointer;
 	background: transparent;
 }
@@ -272,11 +200,24 @@
 	color: var(--brand-primary-fill);
 }
 
+.overwriteItemSelected .lockIcon {
+	color: inherit;
+}
+
 .roleDot {
 	width: 0.75rem;
 	height: 0.75rem;
 	border-radius: 624.9375rem;
 	flex-shrink: 0;
+}
+
+.roleIconSlot {
+	display: flex;
+	width: 1rem;
+	height: 1rem;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
 }
 
 .overwriteName {
@@ -339,7 +280,7 @@
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	font-size: 0.875rem;
-	text-align: left;
+	text-align: start;
 	line-height: 1.2;
 	max-height: 1.2em;
 }

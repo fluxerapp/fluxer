@@ -9,7 +9,7 @@
 	color: var(--text-chat);
 	display: block;
 	width: 100%;
-	text-align: left;
+	text-align: start;
 }
 .nameRoleColored {
 	color: var(--member-role-color);
@@ -49,8 +49,8 @@
 	grid-template-columns: 1fr auto;
 	align-items: center;
 	gap: 0.25rem;
-	padding-left: var(--member-list-item-padding-inline);
-	padding-right: var(--member-list-item-padding-inline);
+	padding-inline-start: var(--member-list-item-padding-inline);
+	padding-inline-end: var(--member-list-item-padding-inline);
 }
 
 .content {
@@ -115,7 +115,7 @@
 
 .ownerIcon {
 	margin-top: 0.1em;
-	margin-left: 0.25rem;
+	margin-inline-start: 0.25rem;
 	flex-shrink: 0;
 }
 
@@ -126,5 +126,5 @@
 }
 
 .userTag {
-	margin-left: 0.25rem;
+	margin-inline-start: 0.25rem;
 }

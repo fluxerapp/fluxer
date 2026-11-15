@@ -12,23 +12,23 @@ import {SectionCard} from '@app/features/user/components/modals/tabs/application
 import type {ApplicationDetailForm} from '@app/features/user/components/modals/tabs/applications_tab/application_detail/ApplicationDetailTypes';
 import {AvatarUploader} from '@app/features/user/components/modals/tabs/my_profile_tab/AvatarUploader';
 import {BannerUploader} from '@app/features/user/components/modals/tabs/my_profile_tab/BannerUploader';
+import {shouldShowFriendSettings} from '@app/features/user/components/settings_utils/SettingsVisibility';
+import {
+	BOT_AVATAR_DESCRIPTOR,
+	BOT_PROFILE_DESCRIPTOR,
+	BOT_USERNAME_DESCRIPTOR,
+	FRIENDLY_BOT_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import type React from 'react';
 import {Controller} from 'react-hook-form';
 
-const BOT_PROFILE_DESCRIPTOR = msg({
-	message: 'Bot profile',
-	comment: 'Short label in the bot profile section. Keep it concise.',
-});
 const AVATAR_TAG_AND_RICH_PROFILE_DETAILS_FOR_YOUR_DESCRIPTOR = msg({
 	message: 'Avatar, tag, and rich profile details for your bot.',
 	comment: 'Description text in the bot profile section.',
 });
-const BOT_AVATAR_DESCRIPTOR = msg({
-	message: 'Bot avatar',
-	comment: 'Short label in the bot profile section. Keep it concise.',
-});
+
 const USERNAME_IS_REQUIRED_DESCRIPTOR = msg({
 	message: 'Username is required',
 	comment: 'Short label in the bot profile section. Keep it concise.',
@@ -45,10 +45,7 @@ const USERNAME_CAN_ONLY_CONTAIN_LETTERS_NUMBERS_AND_UNDERSCORES_DESCRIPTOR = msg
 	message: 'Username can only contain letters, numbers, and underscores',
 	comment: 'Label in the bot profile section.',
 });
-const BOT_USERNAME_DESCRIPTOR = msg({
-	message: 'Bot username',
-	comment: 'Short label in the bot profile section. Keep it concise.',
-});
+
 const DISCRIMINATOR_DESCRIPTOR = msg({
 	message: 'Discriminator',
 	comment: 'Short label in the bot profile section. Keep it concise.',
@@ -69,10 +66,7 @@ const BOT_BANNER_PREVIEW_DESCRIPTOR = msg({
 	message: 'Bot banner preview',
 	comment: 'Short label in the bot profile section. Keep it concise. Keep the tone plain and specific.',
 });
-const FRIENDLY_BOT_DESCRIPTOR = msg({
-	message: 'Friendly bot',
-	comment: 'Short label in the bot profile section. Keep it concise.',
-});
+
 const ALLOW_USERS_TO_SEND_THIS_BOT_FRIEND_REQUESTS_DESCRIPTOR = msg({
 	message: 'Allow users to send this bot friend requests for manual approval.',
 	comment: 'Description text in the bot profile section.',
@@ -253,35 +247,39 @@ export const BotProfileSection: React.FC<BotProfileSectionProps> = ({
 					objectFit="contain"
 					data-flx="user.applications-tab.application-detail.bot-profile-section.image-preview-field"
 				/>
-				<Controller
-					name="friendlyBot"
-					control={form.control}
-					render={({field}) => (
-						<Switch
-							label={i18n._(FRIENDLY_BOT_DESCRIPTOR)}
-							description={i18n._(ALLOW_USERS_TO_SEND_THIS_BOT_FRIEND_REQUESTS_DESCRIPTOR)}
-							value={Boolean(field.value)}
-							onChange={field.onChange}
-							data-flx="user.applications-tab.application-detail.bot-profile-section.switch.change"
+				{shouldShowFriendSettings() && (
+					<>
+						<Controller
+							name="friendlyBot"
+							control={form.control}
+							render={({field}) => (
+								<Switch
+									label={i18n._(FRIENDLY_BOT_DESCRIPTOR)}
+									description={i18n._(ALLOW_USERS_TO_SEND_THIS_BOT_FRIEND_REQUESTS_DESCRIPTOR)}
+									value={Boolean(field.value)}
+									onChange={field.onChange}
+									data-flx="user.applications-tab.application-detail.bot-profile-section.switch.change"
+								/>
+							)}
+							data-flx="user.applications-tab.application-detail.bot-profile-section.controller--3"
 						/>
-					)}
-					data-flx="user.applications-tab.application-detail.bot-profile-section.controller--3"
-				/>
-				<Controller
-					name="botManualFriendRequestApproval"
-					control={form.control}
-					render={({field}) => (
-						<Switch
-							label={i18n._(REQUIRE_MANUAL_FRIEND_APPROVAL_DESCRIPTOR)}
-							description={i18n._(WHEN_ENABLED_YOU_MUST_ACCEPT_FRIEND_REQUESTS_TO_DESCRIPTOR)}
-							value={Boolean(field.value)}
-							onChange={field.onChange}
-							disabled={!friendlyFlagEnabled}
-							data-flx="user.applications-tab.application-detail.bot-profile-section.switch.change--2"
+						<Controller
+							name="botManualFriendRequestApproval"
+							control={form.control}
+							render={({field}) => (
+								<Switch
+									label={i18n._(REQUIRE_MANUAL_FRIEND_APPROVAL_DESCRIPTOR)}
+									description={i18n._(WHEN_ENABLED_YOU_MUST_ACCEPT_FRIEND_REQUESTS_TO_DESCRIPTOR)}
+									value={Boolean(field.value)}
+									onChange={field.onChange}
+									disabled={!friendlyFlagEnabled}
+									data-flx="user.applications-tab.application-detail.bot-profile-section.switch.change--2"
+								/>
+							)}
+							data-flx="user.applications-tab.application-detail.bot-profile-section.controller--4"
 						/>
-					)}
-					data-flx="user.applications-tab.application-detail.bot-profile-section.controller--4"
-				/>
+					</>
+				)}
 			</div>
 		</SectionCard>
 	);

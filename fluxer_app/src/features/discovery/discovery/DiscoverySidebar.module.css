@@ -29,7 +29,7 @@
 	font-size: 1rem;
 	font-weight: 500;
 	cursor: pointer;
-	text-align: left;
+	text-align: start;
 	transition:
 		background-color var(--transition-fast),
 		color var(--transition-fast);
@@ -84,5 +84,4 @@
 	font-size: 0.6875rem;
 	font-weight: 600;
 	line-height: 1rem;
-	text-transform: uppercase;
 }

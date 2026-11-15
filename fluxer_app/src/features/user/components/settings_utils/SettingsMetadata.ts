@@ -23,7 +23,7 @@ export interface SettingsMetadata {
 	badges?: ReadonlyArray<SettingsStatusBadgeKind>;
 }
 
-export const SETTINGS_NEW_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+const SETTINGS_NEW_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
 function parseTimestampMs(value: string | undefined): number | null {
 	if (!value) return null;

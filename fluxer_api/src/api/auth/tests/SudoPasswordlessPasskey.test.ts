@@ -16,6 +16,8 @@ interface SudoMfaMethodsResponse {
 	webauthn: boolean;
 	backup_codes: boolean;
 	has_mfa: boolean;
+	email_code?: boolean;
+	password?: boolean;
 }
 
 describe('Sudo mode for passwordless accounts holding a passkey', () => {
@@ -46,7 +48,14 @@ describe('Sudo mode for passwordless accounts holding a passkey', () => {
 		const methods = await createBuilder<SudoMfaMethodsResponse>(harness, account.token)
 			.get('/users/@me/sudo/mfa-methods')
 			.execute();
-		expect(methods).toEqual({totp: false, webauthn: true, backup_codes: false, has_mfa: true});
+		expect(methods).toEqual({
+			totp: false,
+			webauthn: true,
+			backup_codes: false,
+			has_mfa: true,
+			email_code: false,
+			password: false,
+		});
 		const errorResp = await createBuilder<{
 			code: string;
 		}>(harness, account.token)

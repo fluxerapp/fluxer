@@ -4,6 +4,7 @@ import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRout
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import TypingIndicator from '@app/features/typing/state/TypingIndicator';
 import Personas from '@app/features/user/state/Personas';
+import RollingTypingStore from '@app/features/typing/rolling/RollingTypingStore';
 import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type { PersonaSnapshot } from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
 import * as PersonaCommands from '@app/features/personas/commands/Personas';
@@ -26,5 +27,5 @@ export function handleTypingStart(data: TypingStartPayload, _context: GatewayHan
 			Personas.cachePersonas([persona]);
 		});
 	}
-	TypingIndicator.startRemoteTyping(data.channel_id, data.user_id, data.persona_id || null);
+	RollingTypingStore.start(data.channel_id, data.user_id, data.persona_id ?? null, 'gateway');
 }

@@ -41,5 +41,5 @@
 }
 
 :global(.theme-light) .progressBar {
-	background-color: var(--brand-primary);
+	background-color: var(--brand-primary-foreground);
 }

@@ -4,7 +4,7 @@ import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ForbiddenError} from '@fluxer/errors/src/domains/core/ForbiddenError';
 import type {FluxerErrorData} from '@fluxer/errors/src/FluxerError';
 
-type PremiumPurchaseBlockedReason = 'lifetime' | 'existing_subscription' | 'purchase_disabled';
+type PremiumPurchaseBlockedReason = 'lifetime' | 'existing_subscription' | 'purchase_disabled' | 'payment_dispute_open';
 
 type PremiumPurchaseBlockingProvider = 'stripe' | 'app_store' | 'google_play';
 

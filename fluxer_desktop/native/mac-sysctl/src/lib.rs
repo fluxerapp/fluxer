@@ -106,26 +106,6 @@ fn read_int_blocking(_: String) -> Result<Option<f64>> {
     Err(unsupported_platform_error())
 }
 
-#[cfg(target_os = "macos")]
-fn read_string_blocking(name: String) -> Result<Option<String>> {
-    let Some(ctl) = ctl_for_name(&name)? else {
-        return Ok(None);
-    };
-    match ctl.value().map_err(map_sysctl_error)? {
-        CtlValue::None => Ok(None),
-        CtlValue::String(value) => Ok(Some(value)),
-        _ => Err(Error::new(
-            Status::GenericFailure,
-            "sysctlbyname failed (errno 22)".to_owned(),
-        )),
-    }
-}
-
-#[cfg(not(target_os = "macos"))]
-fn read_string_blocking(_: String) -> Result<Option<String>> {
-    Err(unsupported_platform_error())
-}
-
 async fn spawn_sysctl<T: Send + 'static>(
     work: impl FnOnce() -> Result<T> + Send + 'static,
 ) -> Result<T> {
@@ -143,41 +123,4 @@ pub async fn sysctl_by_name_int(name: String) -> Result<Option<f64>> {
         return Err(invalid_name_error("sysctlByNameInt"));
     }
     spawn_sysctl(move || read_int_blocking(name)).await
-}
-
-#[napi(js_name = "sysctlByNameString")]
-pub async fn sysctl_by_name_string(name: String) -> Result<Option<String>> {
-    if name.is_empty() {
-        return Err(invalid_name_error("sysctlByNameString"));
-    }
-    spawn_sysctl(move || read_string_blocking(name)).await
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn empty_name_error_mentions_function_name() {
-        let error = invalid_name_error("sysctlByNameInt");
-        assert_eq!(Status::InvalidArg, error.status);
-        assert!(error.reason.contains("sysctlByNameInt"));
-    }
-
-    #[cfg(not(target_os = "macos"))]
-    #[test]
-    fn non_macos_returns_same_synthetic_errno_as_previous_js_contract() {
-        let error = unsupported_platform_error();
-        assert_eq!("sysctlbyname failed (errno 22)", error.reason);
-    }
-
-    #[cfg(target_os = "macos")]
-    #[test]
-    fn missing_sysctl_maps_to_null() {
-        assert!(
-            ctl_for_name("fluxer.definitely_missing_sysctl")
-                .unwrap()
-                .is_none()
-        );
-    }
 }

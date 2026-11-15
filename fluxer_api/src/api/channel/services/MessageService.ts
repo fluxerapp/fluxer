@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
 import {CrosspostPropagation} from '@app/api/channel/services/message/CrosspostPropagation';
-import {MessageAnonymizationService} from '@app/api/channel/services/message/MessageAnonymizationService';
 import {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
 import {MessageCrosspostService} from '@app/api/channel/services/message/MessageCrosspostService';
 import {MessageDeleteService} from '@app/api/channel/services/message/MessageDeleteService';
-import {MessageDispatchService} from '@app/api/channel/services/message/MessageDispatchService';
 import {MessageEditService} from '@app/api/channel/services/message/MessageEditService';
 import {MessageMentionService} from '@app/api/channel/services/message/MessageMentionService';
 import {MessageOperationsHelpers} from '@app/api/channel/services/message/MessageOperationsHelpers';
@@ -20,9 +18,10 @@ import {MessageSendService} from '@app/api/channel/services/message/MessageSendS
 import {MessageSystemService} from '@app/api/channel/services/message/MessageSystemService';
 import {MessageValidationService} from '@app/api/channel/services/message/MessageValidationService';
 import {MessageWriteLock} from '@app/api/channel/services/message/MessageWriteLock';
-import type {IFavoriteMemeRepository} from '@app/api/favorite_meme/IFavoriteMemeRepository';
+import {ThreadMessageActivity} from '@app/api/channel/services/message/ThreadMessageActivity';
+import type {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRepository';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {IMediaService} from '@app/api/infrastructure/IMediaService';
@@ -31,7 +30,7 @@ import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import type {ReadStateService} from '@app/api/read_state/ReadStateService';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
@@ -43,22 +42,21 @@ export class MessageService {
 	public readonly search: MessageSearchService;
 	public readonly persistence: MessagePersistenceService;
 	public readonly channelAuth: MessageChannelAuthService;
-	public readonly dispatch: MessageDispatchService;
 	public readonly processing: MessageProcessingService;
 	public readonly system: MessageSystemService;
 	public readonly send: MessageSendService;
 	public readonly edit: MessageEditService;
 	public readonly deletion: MessageDeleteService;
 	public readonly retrieval: MessageRetrievalService;
-	public readonly anonymization: MessageAnonymizationService;
 	public readonly writeLock: MessageWriteLock;
 	public readonly crosspostPropagation: CrosspostPropagation;
 	public readonly crosspost: MessageCrosspostService;
+	public readonly threadActivity: ThreadMessageActivity;
 
 	constructor(
-		channelRepository: IChannelRepositoryAggregate,
-		userRepository: IUserRepository,
-		guildRepository: IGuildRepositoryAggregate,
+		channelRepository: ChannelRepository,
+		userRepository: UserRepository,
+		guildRepository: GuildRepository,
 		userCacheService: UserCacheService,
 		readStateService: ReadStateService,
 		cacheService: ICacheService,
@@ -69,13 +67,13 @@ export class MessageService {
 		snowflakeService: ISnowflakeService,
 		rateLimitService: IRateLimitService,
 		purgeQueue: IPurgeQueue,
-		favoriteMemeRepository: IFavoriteMemeRepository,
+		favoriteMemeRepository: FavoriteMemeRepository,
 		guildAuditLogService: GuildAuditLogService,
 		persistenceService: MessagePersistenceService,
 		attachmentUploadTraceRepository: AttachmentUploadTraceRepository,
 		limitConfigService: LimitConfigService,
 	) {
-		this.validation = new MessageValidationService(cacheService, limitConfigService);
+		this.validation = new MessageValidationService(limitConfigService);
 		this.writeLock = new MessageWriteLock(cacheService, channelRepository.messages);
 		this.crosspostPropagation = new CrosspostPropagation({rateLimitService, workerService});
 		this.mention = new MessageMentionService(
@@ -93,7 +91,6 @@ export class MessageService {
 			guildRepository,
 			gatewayService,
 		);
-		this.dispatch = new MessageDispatchService(gatewayService);
 		this.processing = new MessageProcessingService(
 			channelRepository,
 			userRepository,
@@ -107,7 +104,7 @@ export class MessageService {
 			guildRepository,
 			snowflakeService,
 			this.persistence,
-			this.dispatch,
+			gatewayService,
 		);
 		const operationsHelpers = new MessageOperationsHelpers({
 			channelRepository,
@@ -117,7 +114,9 @@ export class MessageService {
 			snowflakeService,
 			favoriteMemeRepository,
 		});
+		this.threadActivity = new ThreadMessageActivity(channelRepository, gatewayService);
 		this.send = new MessageSendService({
+			threadActivity: this.threadActivity,
 			channelRepository,
 			userRepository,
 			storageService,
@@ -131,7 +130,6 @@ export class MessageService {
 			persistenceService: this.persistence,
 			channelAuthService: this.channelAuth,
 			processingService: this.processing,
-			dispatchService: this.dispatch,
 			embedAttachmentResolver: this.persistence.getEmbedAttachmentResolver(),
 			attachmentUploadTraceRepository,
 			operationsHelpers,
@@ -146,7 +144,7 @@ export class MessageService {
 			persistenceService: this.persistence,
 			channelAuthService: this.channelAuth,
 			processingService: this.processing,
-			dispatchService: this.dispatch,
+			gatewayService,
 			searchService: this.search,
 			embedAttachmentResolver: this.persistence.getEmbedAttachmentResolver(),
 			mentionService: this.mention,
@@ -159,19 +157,19 @@ export class MessageService {
 			purgeQueue,
 			validationService: this.validation,
 			channelAuthService: this.channelAuth,
-			dispatchService: this.dispatch,
-			searchService: this.search,
 			gatewayService,
+			searchService: this.search,
 			guildAuditLogService,
 			crosspostPropagation: this.crosspostPropagation,
 		});
 		this.crosspost = new MessageCrosspostService({
 			channelRepository,
 			channelAuthService: this.channelAuth,
-			dispatchService: this.dispatch,
+			gatewayService,
 			rateLimitService,
 			messageWriteLock: this.writeLock,
 			crosspostPropagation: this.crosspostPropagation,
+			cacheService,
 		});
 		this.retrieval = new MessageRetrievalService(
 			channelRepository,
@@ -181,6 +179,5 @@ export class MessageService {
 			this.search,
 			userRepository,
 		);
-		this.anonymization = new MessageAnonymizationService(channelRepository);
 	}
 }

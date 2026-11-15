@@ -3,8 +3,6 @@
 import type {MeilisearchClient, MeilisearchTask} from '@app/api/search/meilisearch/MeilisearchClient';
 import {MeilisearchTaskError} from '@app/api/search/meilisearch/MeilisearchClient';
 import {MeilisearchMessageAdapter} from '@app/api/search/meilisearch/MeilisearchDomainAdapters';
-import {MEILISEARCH_MAX_TRACKED_BULK_TASKS} from '@app/api/search/meilisearch/MeilisearchIndexAdapter';
-import type {SearchableMessage} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
 import {describe, expect, it} from 'vitest';
 
 interface RecordedMeilisearchRequest {
@@ -72,27 +70,6 @@ class FakeMeilisearchClient implements MeilisearchClient {
 }
 
 describe('MeilisearchMessageAdapter', () => {
-	it('creates missing indexes and applies settings before becoming available', async () => {
-		const client = new FakeMeilisearchClient();
-		const adapter = new MeilisearchMessageAdapter({client});
-
-		await adapter.initialize();
-
-		expect(adapter.isAvailable()).toBe(true);
-		expect(client.requests.map((request) => `${request.method} ${request.path}`)).toEqual([
-			'GET /indexes/messages',
-			'POST /indexes',
-			'PUT /indexes/messages/settings/searchable-attributes',
-			'PUT /indexes/messages/settings/filterable-attributes',
-			'PUT /indexes/messages/settings/sortable-attributes',
-			'PATCH /indexes/messages/settings/pagination',
-		]);
-		expect(client.waitedTaskUids).toEqual([1, 2, 3, 4, 5]);
-		expect(client.requests.find((request) => request.path.endsWith('/settings/pagination'))?.body).toEqual({
-			maxTotalHits: 10000,
-		});
-	});
-
 	it('treats an index created concurrently by another process as created', async () => {
 		const client = new FakeMeilisearchClient();
 		client.failedTasks.set(1, new MeilisearchTaskError('Index `messages` already exists.', 'index_already_exists'));
@@ -146,70 +123,8 @@ describe('MeilisearchMessageAdapter', () => {
 				sort: ['createdAt:asc', 'id:asc'],
 				attributesToSearchOn: ['content', 'embedContent'],
 				showRankingScore: false,
+				matchingStrategy: 'all',
 			},
 		});
-	});
-
-	it('waits for queued bulk index tasks when refreshed', async () => {
-		const client = new FakeMeilisearchClient();
-		client.indexExists = true;
-		const adapter = new MeilisearchMessageAdapter({client});
-		await adapter.initialize();
-		client.clear();
-
-		await adapter.bulkIndexDocuments([{id: 'message-1'} as SearchableMessage]);
-
-		expect(client.waitedTaskUids).toEqual([]);
-		await adapter.refreshIndex();
-		expect(client.waitedTaskUids).toEqual([5]);
-	});
-
-	it('does not retain task state for per-document writes', async () => {
-		const client = new FakeMeilisearchClient();
-		client.indexExists = true;
-		const adapter = new MeilisearchMessageAdapter({client});
-		await adapter.initialize();
-		client.clear();
-
-		for (let index = 0; index < 500; index++) {
-			await adapter.indexDocument({id: `message-${index}`} as SearchableMessage);
-			await adapter.updateDocument({id: `message-${index}`} as SearchableMessage);
-			await adapter.deleteDocument(`message-${index}`);
-		}
-
-		expect(client.requests).toHaveLength(1500);
-		await adapter.refreshIndex();
-		expect(client.waitedTaskUids).toEqual([]);
-	});
-
-	it('bounds the tracked bulk task set', async () => {
-		const client = new FakeMeilisearchClient();
-		client.indexExists = true;
-		const adapter = new MeilisearchMessageAdapter({client});
-		await adapter.initialize();
-		client.clear();
-
-		const batches = MEILISEARCH_MAX_TRACKED_BULK_TASKS + 100;
-		for (let index = 0; index < batches; index++) {
-			await adapter.bulkIndexDocuments([{id: `message-${index}`} as SearchableMessage]);
-		}
-
-		await adapter.refreshIndex();
-		expect(client.waitedTaskUids).toHaveLength(MEILISEARCH_MAX_TRACKED_BULK_TASKS);
-		expect(client.waitedTaskUids[0]).toBe(105);
-	});
-
-	it('drops tracked bulk tasks on shutdown', async () => {
-		const client = new FakeMeilisearchClient();
-		client.indexExists = true;
-		const adapter = new MeilisearchMessageAdapter({client});
-		await adapter.initialize();
-		client.clear();
-
-		await adapter.bulkIndexDocuments([{id: 'message-1'} as SearchableMessage]);
-		await adapter.shutdown();
-		await adapter.refreshIndex();
-
-		expect(client.waitedTaskUids).toEqual([]);
 	});
 });

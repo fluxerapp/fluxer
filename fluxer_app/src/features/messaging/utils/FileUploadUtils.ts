@@ -2,7 +2,7 @@
 
 import MessageQueue from '@app/features/messaging/state/MessageQueue';
 import {CloudUpload} from '@app/features/messaging/upload/CloudUpload';
-import {getMaxAttachmentFileSize} from '@app/features/messaging/utils/AttachmentUtils';
+import {countOversizedAttachments} from '@app/features/messaging/utils/AttachmentUtils';
 
 export interface FileUploadResult {
 	success: boolean;
@@ -15,6 +15,7 @@ export async function handleFileUpload(
 	files: FileList | Array<File>,
 	currentAttachmentCount: number,
 	maxAttachments: number,
+	attachmentKey: string = channelId,
 ): Promise<FileUploadResult> {
 	const fileArray = Array.from(files);
 	if (fileArray.length === 0) {
@@ -23,13 +24,14 @@ export async function handleFileUpload(
 	if (currentAttachmentCount + fileArray.length > maxAttachments) {
 		return {success: false, error: 'too_many_attachments'};
 	}
-	const maxFileSize = getMaxAttachmentFileSize();
-	const oversizedFileCount = fileArray.filter((file) => file.size > maxFileSize).length;
+	const oversizedFileCount = await countOversizedAttachments(fileArray);
 	if (oversizedFileCount > 0) {
 		return {success: false, error: 'file_size_too_large', oversizedFileCount};
 	}
-	const attachments = await CloudUpload.addFiles(channelId, fileArray);
-	MessageQueue.startTextareaAttachmentUploads(channelId, attachments);
+	const attachments = await CloudUpload.addFiles(attachmentKey, fileArray);
+	if (attachmentKey === channelId) {
+		MessageQueue.startTextareaAttachmentUploads(channelId, attachments);
+	}
 	return {success: true};
 }
 
@@ -38,6 +40,7 @@ export async function convertTextToFile(
 	text: string,
 	currentAttachmentCount: number,
 	maxAttachments: number,
+	attachmentKey: string = channelId,
 ): Promise<FileUploadResult> {
 	const trimmedText = text.trim();
 	if (!trimmedText) {
@@ -45,5 +48,5 @@ export async function convertTextToFile(
 	}
 	const blob = new Blob([text], {type: 'text/plain'});
 	const file = new File([blob], 'message.txt', {type: 'text/plain'});
-	return handleFileUpload(channelId, [file], currentAttachmentCount, maxAttachments);
+	return handleFileUpload(channelId, [file], currentAttachmentCount, maxAttachments, attachmentKey);
 }

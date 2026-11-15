@@ -62,6 +62,10 @@ export function isFqdnHostname(hostname: string): boolean {
 	return !/^\d+$/.test(labels[labels.length - 1]);
 }
 
+export function isSingleLabelHostname(hostname: string): boolean {
+	return HOSTNAME_LABEL_REGEX.test(hostname) && !/^\d+$/.test(hostname);
+}
+
 export const HostnameType = z
 	.string()
 	.overwrite((value) => {

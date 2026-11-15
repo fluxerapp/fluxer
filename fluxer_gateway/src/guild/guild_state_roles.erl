@@ -29,7 +29,7 @@ handle_role_create(EventData, Data) ->
         undefined ->
             Data;
         RoleData ->
-            Roles = guild_data_index:role_list(Data),
+            Roles = guild_data_index_roles:role_list(Data),
             guild_data_index:put_roles([RoleData | Roles], Data)
     end.
 
@@ -39,7 +39,7 @@ handle_role_update(EventData, Data) ->
         undefined ->
             Data;
         RoleData ->
-            Roles = guild_data_index:role_list(Data),
+            Roles = guild_data_index_roles:role_list(Data),
             RoleId = maps:get(<<"id">>, RoleData),
             UpdatedRoles = guild_state_utils:replace_item_by_id(Roles, RoleId, RoleData),
             guild_data_index:put_roles(UpdatedRoles, Data)
@@ -47,7 +47,7 @@ handle_role_update(EventData, Data) ->
 
 -spec handle_role_update_bulk(event_data(), guild_data()) -> guild_data().
 handle_role_update_bulk(EventData, Data) ->
-    Roles = guild_data_index:role_list(Data),
+    Roles = guild_data_index_roles:role_list(Data),
     BulkRoles = maps:get(<<"roles">>, EventData, []),
     UpdatedRoles = guild_state_utils:bulk_update_items(Roles, BulkRoles),
     guild_data_index:put_roles(UpdatedRoles, Data).
@@ -58,7 +58,7 @@ handle_role_delete(EventData, Data) ->
         undefined ->
             Data;
         RoleIdInt ->
-            Roles = guild_data_index:role_list(Data),
+            Roles = guild_data_index_roles:role_list(Data),
             FilteredRoles = guild_state_utils:remove_item_by_id(Roles, RoleIdInt),
             Data1 = guild_data_index:put_roles(FilteredRoles, Data),
             Data2 = guild_state_roles_delete:strip_role_from_members(RoleIdInt, Data1),
@@ -85,7 +85,7 @@ sync_zero_engine_hoisted_roles(HoistedRoleIds, State) ->
         undefined ->
             false;
         Ref ->
-            guild_member_list_store:set_hoisted_roles(Ref, HoistedRoleIds) =:= changed
+            guild_member_list_engine:set_hoisted_roles(Ref, HoistedRoleIds) =:= changed
     end.
 
 -spec recompute_visibility_for_roles([integer()], guild_state(), guild_state()) ->
@@ -107,7 +107,7 @@ recompute_visibility_for_roles(RoleIds, StateWithUpdatedUser, UpdatedState) ->
 recompute_visibility_for_valid_roles(GuildId, ValidRoleIds, StateWithUpdatedUser, UpdatedState) ->
     case lists:member(GuildId, ValidRoleIds) of
         true ->
-            guild_visibility:compute_and_dispatch_visibility_changes(
+            guild_visibility_overwrites:compute_and_dispatch_visibility_changes(
                 StateWithUpdatedUser,
                 UpdatedState
             );
@@ -122,7 +122,7 @@ recompute_visibility_for_valid_roles(GuildId, ValidRoleIds, StateWithUpdatedUser
 recompute_for_user_ids([], _StateWithUpdatedUser, UpdatedState) ->
     UpdatedState;
 recompute_for_user_ids(UserIds, StateWithUpdatedUser, UpdatedState) ->
-    guild_visibility:compute_and_dispatch_visibility_changes_for_users(
+    guild_visibility_overwrites:compute_and_dispatch_visibility_changes_for_users(
         UserIds,
         StateWithUpdatedUser,
         UpdatedState
@@ -132,8 +132,8 @@ recompute_for_user_ids(UserIds, StateWithUpdatedUser, UpdatedState) ->
 affected_user_ids_for_roles(RoleIds, StateWithUpdatedUser, UpdatedState) ->
     OldData = maps:get(data, StateWithUpdatedUser, #{}),
     NewData = maps:get(data, UpdatedState, #{}),
-    OldMemberRoleIndex = guild_data_index:member_role_index(OldData),
-    NewMemberRoleIndex = guild_data_index:member_role_index(NewData),
+    OldMemberRoleIndex = guild_data_index_members:member_role_index(OldData),
+    NewMemberRoleIndex = guild_data_index_members:member_role_index(NewData),
     UserIdSet = lists:foldl(
         fun(RoleId, AccSet) ->
             collect_users_for_role(RoleId, OldMemberRoleIndex, NewMemberRoleIndex, AccSet)

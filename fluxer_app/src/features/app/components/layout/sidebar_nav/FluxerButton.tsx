@@ -9,7 +9,7 @@ import {useHover} from '@app/features/app/hooks/useHover';
 import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Channels from '@app/features/channel/state/Channels';
-import {DIRECT_MESSAGES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {DIRECT_MESSAGES_DESCRIPTOR, PERSONAL_NOTES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
@@ -42,6 +42,15 @@ const FRIEND_REQUESTS_DESCRIPTOR = msg({
 	message: '{displayedIncomingFriendRequestCount, plural, one {# friend request} other {# friend requests}}',
 	comment:
 		'Sidebar Fluxer-home button tooltip showing how many incoming friend requests are pending. Count is interpolated.',
+});
+const FRIENDS_DESCRIPTOR = msg({
+	message: 'Friends',
+	comment: 'Sidebar home button tooltip when the instance turns direct messages off but keeps friends.',
+});
+const HOME_DESCRIPTOR = msg({
+	message: 'Home',
+	comment:
+		'Sidebar home button tooltip when the instance turns off direct messages, friend requests and personal notes.',
 });
 export const FluxerButton = observer(() => {
 	const {i18n} = useLingui();
@@ -79,8 +88,16 @@ export const FluxerButton = observer(() => {
 	});
 	const displayedUnreadDmCount = inlineDmsCollapsed && showCollapsedUnreadDmsBadge ? unreadDmCount : 0;
 	const displayedIncomingFriendRequestCount = showIncomingFriendRequestBadge ? incomingFriendRequestCount : 0;
+	let homeDescriptor = DIRECT_MESSAGES_DESCRIPTOR;
+	if (RuntimeConfig.directMessagesDisabled && !RuntimeConfig.friendsDisabled) {
+		homeDescriptor = FRIENDS_DESCRIPTOR;
+	} else if (RuntimeConfig.directMessagesDisabled && RuntimeConfig.personalNotesEnabled) {
+		homeDescriptor = PERSONAL_NOTES_DESCRIPTOR;
+	} else if (RuntimeConfig.directMessagesDisabled) {
+		homeDescriptor = HOME_DESCRIPTOR;
+	}
 	const directMessagesLabel = useMemo(() => {
-		const parts = [i18n._(DIRECT_MESSAGES_DESCRIPTOR)];
+		const parts = [i18n._(homeDescriptor)];
 		if (displayedUnreadDmCount > 0) {
 			parts.push(i18n._(UNREAD_DMS_DESCRIPTOR, {displayedUnreadDmCount}));
 		}
@@ -88,12 +105,12 @@ export const FluxerButton = observer(() => {
 			parts.push(i18n._(FRIEND_REQUESTS_DESCRIPTOR, {displayedIncomingFriendRequestCount}));
 		}
 		return parts.join(', ');
-	}, [displayedIncomingFriendRequestCount, displayedUnreadDmCount, i18n.locale]);
+	}, [displayedIncomingFriendRequestCount, displayedUnreadDmCount, homeDescriptor, i18n.locale]);
 	const handleSelect = () => {
 		const isMobile = MobileLayout.isMobileLayout();
 		const route = (() => {
 			if (isMobile) return Routes.ME;
-			if (selectedChannel) return Routes.dmChannel(selectedChannel);
+			if (selectedChannel && !RuntimeConfig.directMessagesDisabled) return Routes.dmChannel(selectedChannel);
 			return Routes.ME;
 		})();
 		RouterUtils.transitionTo(route);
@@ -110,14 +127,11 @@ export const FluxerButton = observer(() => {
 	const shouldShowHoverState = isHovering || contextMenuOpen;
 	const indicatorTarget = resolveGuildListIndicatorBarTarget({isSelected, showHoverState: shouldShowHoverState});
 	const isActive = shouldShowHoverState || isSelected;
-	if (RuntimeConfig.directMessagesDisabled) {
-		return null;
-	}
 	return (
 		<Tooltip
 			position="right"
 			size="large"
-			text={i18n._(DIRECT_MESSAGES_DESCRIPTOR)}
+			text={i18n._(homeDescriptor)}
 			data-flx="app.sidebar-nav.fluxer-button.tooltip"
 		>
 			<FocusRing

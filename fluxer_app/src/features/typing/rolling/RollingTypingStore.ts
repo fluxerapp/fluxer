@@ -95,6 +95,12 @@ class RollingTypingStore {
 		return this.entries.get(channelId)?.has(userId) ?? false;
 	}
 
+	isMemberListTyping(channelId: string, userId: string, currentUserId: string | null | undefined): boolean {
+		if (currentUserId && userId === currentUserId) {
+			return this.isConfirmedTyping(channelId, userId);
+		}
+		return this.isTyping(channelId, userId);
+	}
 	isConfirmedTyping(channelId: string, userId: string): boolean {
 		return this.entries.get(channelId)?.get(userId)?.confirmed ?? false;
 	}

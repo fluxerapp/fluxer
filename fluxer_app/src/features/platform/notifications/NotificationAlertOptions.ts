@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export const NOTIFICATION_VIBRATION_PATTERN = [200, 100, 200] as const;
+const NOTIFICATION_VIBRATION_PATTERN = [200, 100, 200] as const;
 
 export interface NotificationAlertOptions {
 	readonly silent?: true;

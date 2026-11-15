@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isAttachmentDecayReconcileRunning} from '@app/api/attachment/AttachmentDecayReconcileRun';
 import {AttachmentDecayRepository} from '@app/api/attachment/AttachmentDecayRepository';
 import {makeAttachmentCdnKey, makeAttachmentCdnUrl} from '@app/api/channel/services/message/MessageHelpers';
 import {Logger} from '@app/api/Logger';
@@ -11,10 +12,14 @@ const BUCKET_LOOKBACK_DAYS = 3;
 const FETCH_LIMIT = 200;
 
 export async function processExpiredAttachments(now = new Date()): Promise<void> {
-	const {assetDeletionQueue, instanceConfigRepository} = getWorkerDependencies();
+	const {assetDeletionQueue, instanceConfigRepository, kvClient} = getWorkerDependencies();
 	const attachmentDecay = await instanceConfigRepository.getEffectiveAttachmentDecayConfig();
 	if (!attachmentDecay.enabled) {
 		Logger.info('Attachment decay disabled; skipping expireAttachments task');
+		return;
+	}
+	if (await isAttachmentDecayReconcileRunning(kvClient)) {
+		Logger.info('Attachment decay reconcile in progress; skipping expireAttachments task');
 		return;
 	}
 	const repo = new AttachmentDecayRepository();

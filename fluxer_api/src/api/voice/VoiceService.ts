@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
-import type {ListParticipantsResult} from '@app/api/infrastructure/ILiveKitService';
+import {Config} from '@app/api/Config';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import {resolveExperimentTargeting} from '@app/api/experiment/ExperimentTargeting';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {LiveKitService} from '@app/api/infrastructure/LiveKitService';
 import type {PinnedRoomServer, VoiceRoomStore} from '@app/api/infrastructure/VoiceRoomStore';
+import type {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
 import {Logger} from '@app/api/Logger';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {User} from '@app/api/models/User';
+import {assertTierAllows, canReachOthers, NO_TIER_CONTEXT} from '@app/api/user/AccountTier';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {VoiceAccessContext, VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
 import type {VoiceRegionAvailability, VoiceServerRecord} from '@app/api/voice/VoiceModel';
 import {
@@ -16,13 +20,13 @@ import {
 	selectVoiceRegionId,
 } from '@app/api/voice/VoiceRegionSelection';
 import {generateConnectionId} from '@app/api/words/Words';
+import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import {UnclaimedAccountCannotJoinOneOnOneVoiceCallsError} from '@fluxer/errors/src/domains/channel/UnclaimedAccountCannotJoinOneOnOneVoiceCallsError';
-import {UnclaimedAccountCannotJoinVoiceChannelsError} from '@fluxer/errors/src/domains/channel/UnclaimedAccountCannotJoinVoiceChannelsError';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {UnknownGuildMemberError} from '@fluxer/errors/src/domains/guild/UnknownGuildMemberError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
+import {resolveVoiceP2pAssignment} from '@fluxer/schema/src/domains/admin/VoiceP2pSchemas';
 
 interface GetVoiceTokenParams {
 	guildId?: GuildID;
@@ -36,7 +40,34 @@ interface GetVoiceTokenParams {
 	canStream?: boolean;
 	canVideo?: boolean;
 	tokenNonce?: string;
+	p2p?: boolean;
+	p2pInitiator?: boolean;
+	p2pParticipantCount?: number;
+	countryCode?: string;
 }
+
+interface VoiceTokenGrant {
+	token: string;
+	endpoint: string;
+	connectionId: string;
+	tokenNonce: string;
+	regionId: string;
+	serverId: string;
+}
+
+interface VoiceP2pGrant {
+	p2p: true;
+	connectionId: string;
+	iceServers: Array<{urls: Array<string>}>;
+	maxParticipants: number;
+}
+
+interface VoiceP2pDecline {
+	p2p: false;
+	declineReason: 'channel_full';
+}
+
+type VoiceP2pDecision = {kind: 'granted'; maxParticipants: number} | {kind: 'declined'} | {kind: 'channel_full'};
 
 interface VoicePermissions {
 	canSpeak: boolean;
@@ -44,36 +75,18 @@ interface VoicePermissions {
 	canVideo: boolean;
 }
 
-interface UpdateVoiceStateParams {
-	guildId?: GuildID;
-	channelId: ChannelID;
-	userId: UserID;
-	connectionId: string;
-	mute?: boolean;
-	deaf?: boolean;
-	canSpeak?: boolean;
-	canStream?: boolean;
-	canVideo?: boolean;
-}
-
 export class VoiceService {
 	constructor(
 		private liveKitService: LiveKitService,
-		private guildRepository: IGuildRepositoryAggregate,
-		private userRepository: IUserRepository,
-		private channelRepository: IChannelRepository,
+		private guildRepository: GuildRepository,
+		private userRepository: UserRepository,
+		private channelRepository: ChannelRepository,
 		private voiceRoomStore: VoiceRoomStore,
 		private voiceAvailabilityService: VoiceAvailabilityService,
+		private instanceConfigRepository: InstanceConfigRepository,
 	) {}
 
-	async getVoiceToken(params: GetVoiceTokenParams): Promise<{
-		token: string;
-		endpoint: string;
-		connectionId: string;
-		tokenNonce: string;
-		regionId: string;
-		serverId: string;
-	}> {
+	async getVoiceToken(params: GetVoiceTokenParams): Promise<VoiceTokenGrant | VoiceP2pGrant | VoiceP2pDecline> {
 		const {guildId, channelId, userId, connectionId: providedConnectionId} = params;
 		const selectionKey = this.createVoiceRoutingSelectionKey(guildId, channelId);
 		let connectionId = providedConnectionId;
@@ -83,22 +96,12 @@ export class VoiceService {
 		if (!user) {
 			throw new UnknownUserError();
 		}
-		const channel = await this.channelRepository.findUnique(channelId);
+		const channel = await this.channelRepository.channelData.findUnique(channelId);
 		if (!channel) {
 			throw new UnknownChannelError();
 		}
-		const isUnclaimed = user.isUnclaimedAccount();
-		if (isUnclaimed) {
-			if (channel.type === ChannelTypes.DM) {
-				throw new UnclaimedAccountCannotJoinOneOnOneVoiceCallsError();
-			}
-			if (channel.type === ChannelTypes.GUILD_VOICE) {
-				const guild = guildId ? await this.guildRepository.findUnique(guildId) : null;
-				const isOwner = guild?.ownerId === userId;
-				if (!isOwner) {
-					throw new UnclaimedAccountCannotJoinVoiceChannelsError();
-				}
-			}
+		if (!canReachOthers(user)) {
+			await this.assertVoiceReach(user, channel.type, guildId);
 		}
 		let mute = false;
 		let deaf = false;
@@ -120,19 +123,32 @@ export class VoiceService {
 				guildFeatures = guild.features;
 			}
 		}
+		const p2pDecision: VoiceP2pDecision = params.p2p ? await this.decideVoiceP2p(user, params) : {kind: 'declined'};
+		if (p2pDecision.kind === 'channel_full') {
+			return {p2p: false, declineReason: 'channel_full'};
+		}
+		if (p2pDecision.kind === 'granted') {
+			const stunUrls = Config.voice.p2pStunUrls;
+			return {
+				p2p: true,
+				connectionId: providedConnectionId || generateConnectionId(),
+				iceServers: stunUrls?.length ? [{urls: stunUrls}] : [],
+				maxParticipants: p2pDecision.maxParticipants,
+			};
+		}
 		const context: VoiceAccessContext = {
 			requestingUserId: userId,
 			guildId,
 			guildFeatures,
 		};
-		const availableRegions = this.voiceAvailabilityService.getAvailableRegions(context);
-		const accessibleRegions = availableRegions.filter((region) => region.isAccessible);
+		const accessibleRegions = this.voiceAvailabilityService
+			.getAvailableRegions(context)
+			.filter((region) => region.isAccessible);
 		const defaultRegionId = this.liveKitService.getDefaultRegionId();
 		const preferredRegionId = params.region ?? channel.rtcRegion ?? null;
 		const regionPreference = resolveVoiceRegionPreference({
 			preferredRegionId,
 			accessibleRegions,
-			availableRegions,
 			defaultRegionId,
 		});
 		const accessibleServers = this.getAccessibleServersForRegions(accessibleRegions, context);
@@ -143,6 +159,7 @@ export class VoiceService {
 			guildId,
 			channelId,
 			context,
+			accessibleRegions,
 			preferredRegionId: regionPreference.regionId,
 			mode: regionPreference.mode,
 		});
@@ -169,7 +186,6 @@ export class VoiceService {
 					preferredRegionId: regionPreference.regionId,
 					mode: regionPreference.mode,
 					accessibleRegions,
-					availableRegions,
 					latitude: params.latitude,
 					longitude: params.longitude,
 					selectionKey,
@@ -177,11 +193,11 @@ export class VoiceService {
 				if (!regionId) {
 					throw new FeatureTemporarilyDisabledError();
 				}
-				const serverSelection = this.selectServerForRegion({
+				const serverSelection = this.voiceAvailabilityService.selectServerOrFallback(
 					regionId,
 					context,
 					accessibleRegions,
-				});
+				);
 				if (!serverSelection) {
 					throw new FeatureTemporarilyDisabledError();
 				}
@@ -257,6 +273,22 @@ export class VoiceService {
 		return {token, endpoint, connectionId, tokenNonce, regionId, serverId};
 	}
 
+	private async decideVoiceP2p(user: User, params: GetVoiceTokenParams): Promise<VoiceP2pDecision> {
+		const config = await this.instanceConfigRepository.getVoiceP2pConfig();
+		if (!config.enabled) {
+			return {kind: 'declined'};
+		}
+		if (params.p2pParticipantCount !== undefined && params.p2pParticipantCount > config.max_participants) {
+			return {kind: 'channel_full'};
+		}
+		const granted: VoiceP2pDecision = {kind: 'granted', maxParticipants: config.max_participants};
+		if (!params.p2pInitiator) {
+			return granted;
+		}
+		const targeting = await resolveExperimentTargeting(user, params.countryCode ?? null, [config]);
+		return resolveVoiceP2pAssignment(config, user.id.toString(), targeting).enabled ? granted : {kind: 'declined'};
+	}
+
 	private createVoiceRoutingSelectionKey(guildId: GuildID | undefined, channelId: ChannelID): string {
 		const guildKey = guildId?.toString() ?? 'dm';
 		return `${guildKey}:${channelId.toString()}`;
@@ -267,6 +299,7 @@ export class VoiceService {
 		guildId,
 		channelId,
 		context,
+		accessibleRegions,
 		preferredRegionId,
 		mode,
 	}: {
@@ -274,6 +307,7 @@ export class VoiceService {
 		guildId?: GuildID;
 		channelId: ChannelID;
 		context: VoiceAccessContext;
+		accessibleRegions: Array<VoiceRegionAvailability>;
 		preferredRegionId: string | null;
 		mode: 'explicit' | 'automatic';
 	}): Promise<{
@@ -289,7 +323,12 @@ export class VoiceService {
 			return null;
 		}
 		const serverRecord = this.liveKitService.getServer(pinnedServer.regionId, pinnedServer.serverId);
-		if (serverRecord && this.voiceAvailabilityService.isServerAccessible(serverRecord, context)) {
+		if (
+			serverRecord &&
+			accessibleRegions.some((region) => region.id === pinnedServer.regionId) &&
+			this.voiceAvailabilityService.isServerAccessible(serverRecord, context) &&
+			!this.voiceAvailabilityService.isServerDown(serverRecord)
+		) {
 			return {
 				regionId: pinnedServer.regionId,
 				serverId: pinnedServer.serverId,
@@ -297,35 +336,6 @@ export class VoiceService {
 			};
 		}
 		await this.voiceRoomStore.deleteRoomServer(guildId, channelId);
-		return null;
-	}
-
-	private selectServerForRegion({
-		regionId,
-		context,
-		accessibleRegions,
-	}: {
-		regionId: string;
-		context: VoiceAccessContext;
-		accessibleRegions: Array<VoiceRegionAvailability>;
-	}): {
-		regionId: string;
-		server: VoiceServerRecord;
-	} | null {
-		const initialServer = this.voiceAvailabilityService.selectServer(regionId, context);
-		if (initialServer) {
-			return {regionId, server: initialServer};
-		}
-		const fallbackRegion = accessibleRegions.find((region) => region.id !== regionId);
-		if (fallbackRegion) {
-			const fallbackServer = this.voiceAvailabilityService.selectServer(fallbackRegion.id, context);
-			if (fallbackServer) {
-				return {
-					regionId: fallbackRegion.id,
-					server: fallbackServer,
-				};
-			}
-		}
 		return null;
 	}
 
@@ -337,37 +347,7 @@ export class VoiceService {
 		for (const region of accessibleRegions) {
 			servers.push(...this.voiceAvailabilityService.getAccessibleServersForRegion(region.id, context));
 		}
-		return servers;
-	}
-
-	async listParticipantsOnServer(params: {
-		guildId?: GuildID;
-		channelId: ChannelID;
-		regionId: string;
-		serverId: string;
-	}): Promise<ListParticipantsResult> {
-		return await this.liveKitService.listParticipants(params);
-	}
-
-	async updateVoiceState(params: UpdateVoiceStateParams): Promise<void> {
-		const {guildId, channelId, userId, connectionId, mute, deaf} = params;
-		const pinnedServer = await this.voiceRoomStore.getPinnedRoomServer(guildId, channelId);
-		if (!pinnedServer) {
-			return;
-		}
-		await this.liveKitService.updateParticipant({
-			userId,
-			guildId,
-			channelId,
-			connectionId,
-			regionId: pinnedServer.regionId,
-			serverId: pinnedServer.serverId,
-			mute,
-			deaf,
-			canSpeak: params.canSpeak,
-			canStream: params.canStream,
-			canVideo: params.canVideo,
-		});
+		return this.voiceAvailabilityService.preferPlaceableServers(servers);
 	}
 
 	async updateParticipant(params: {
@@ -396,8 +376,10 @@ export class VoiceService {
 				{errorCode: result.errorCode, guildId, channelId},
 				'Failed to list participants for self mute/deaf update',
 			);
-			return;
+			if (result.serverMissing) return;
+			throw new Error(`Failed to list voice participants: ${result.errorCode}`);
 		}
+		let failures = 0;
 		for (const participant of result.participants) {
 			const parts = participant.identity.split('_');
 			if (parts.length >= 2 && parts[0] === 'user') {
@@ -434,10 +416,36 @@ export class VoiceService {
 							},
 							'Failed to update participant',
 						);
+						failures += 1;
 					}
 				}
 			}
 		}
+		if (failures > 0) {
+			throw new Error(`Failed to update ${failures} voice participant connection(s)`);
+		}
+	}
+
+	async updateConnectionPermissions(params: {
+		guildId?: GuildID;
+		channelId: ChannelID;
+		userId: UserID;
+		connectionId: string;
+		deaf: boolean;
+		canSpeak: boolean;
+		canStream: boolean;
+		canVideo: boolean;
+	}): Promise<void> {
+		const {guildId, channelId} = params;
+		const pinnedServer = await this.voiceRoomStore.getPinnedRoomServer(guildId, channelId);
+		if (!pinnedServer) {
+			return;
+		}
+		await this.liveKitService.updateParticipant({
+			...params,
+			regionId: pinnedServer.regionId,
+			serverId: pinnedServer.serverId,
+		});
 	}
 
 	async disconnectParticipant(params: {
@@ -449,6 +457,18 @@ export class VoiceService {
 		const {guildId, channelId, userId, connectionId} = params;
 		const pinnedServer = await this.voiceRoomStore.getPinnedRoomServer(guildId, channelId);
 		if (!pinnedServer) {
+			await Promise.allSettled(
+				this.liveKitService.listServers().map((server) =>
+					this.liveKitService.disconnectParticipant({
+						userId,
+						guildId,
+						channelId,
+						connectionId,
+						regionId: server.regionId,
+						serverId: server.serverId,
+					}),
+				),
+			);
 			return;
 		}
 		await this.liveKitService.disconnectParticipant({
@@ -461,101 +481,16 @@ export class VoiceService {
 		});
 	}
 
-	async updateParticipantPermissions(params: {
-		guildId?: GuildID;
-		channelId: ChannelID;
-		userId: UserID;
-		connectionId: string;
-		canSpeak: boolean;
-		canStream: boolean;
-		canVideo: boolean;
-		deaf?: boolean;
-	}): Promise<void> {
-		const {guildId, channelId, userId, connectionId, canSpeak, canStream, canVideo, deaf} = params;
-		const pinnedServer = await this.voiceRoomStore.getPinnedRoomServer(guildId, channelId);
-		if (!pinnedServer) {
+	private async assertVoiceReach(user: User, channelType: number, guildId: GuildID | null | undefined): Promise<void> {
+		if (channelType === ChannelTypes.GUILD_VOICE) {
+			const guild = guildId ? await this.guildRepository.findUnique(guildId) : null;
+			assertTierAllows(user, TierGatedActions.VOICE, {...NO_TIER_CONTEXT, isGuildOwner: guild?.ownerId === user.id});
 			return;
 		}
-		await this.liveKitService.updateParticipantPermissions({
-			userId,
-			guildId,
-			channelId,
-			connectionId,
-			regionId: pinnedServer.regionId,
-			serverId: pinnedServer.serverId,
-			canSpeak,
-			canStream,
-			canVideo,
-			deaf,
-		});
-	}
-
-	async disconnectChannel(params: {guildId?: GuildID; channelId: ChannelID}): Promise<{
-		success: boolean;
-		disconnectedCount: number;
-	}> {
-		const {guildId, channelId} = params;
-		const pinnedServer = await this.voiceRoomStore.getPinnedRoomServer(guildId, channelId);
-		if (!pinnedServer) {
-			return {
-				success: false,
-				disconnectedCount: 0,
-			};
-		}
-		try {
-			const result = await this.liveKitService.listParticipants({
-				guildId,
-				channelId,
-				regionId: pinnedServer.regionId,
-				serverId: pinnedServer.serverId,
-			});
-			if (result.status === 'error') {
-				return {
-					success: false,
-					disconnectedCount: 0,
-				};
-			}
-			let disconnectedCount = 0;
-			for (const participant of result.participants) {
-				try {
-					const identityMatch = participant.identity.match(/^user_(\d+)_(.+)$/);
-					if (identityMatch) {
-						const [, userIdStr, connectionId] = identityMatch;
-						const userId = BigInt(userIdStr) as UserID;
-						await this.liveKitService.disconnectParticipant({
-							userId,
-							guildId,
-							channelId,
-							connectionId,
-							regionId: pinnedServer.regionId,
-							serverId: pinnedServer.serverId,
-						});
-						disconnectedCount++;
-					}
-				} catch (error) {
-					Logger.error(
-						{
-							identity: participant.identity,
-							guildId,
-							channelId,
-							regionId: pinnedServer.regionId,
-							serverId: pinnedServer.serverId,
-							error,
-						},
-						'Failed to disconnect participant',
-					);
-				}
-			}
-			return {
-				success: true,
-				disconnectedCount,
-			};
-		} catch (error) {
-			Logger.error({guildId, channelId, error}, 'Error disconnecting channel participants');
-			return {
-				success: false,
-				disconnectedCount: 0,
-			};
+		if (channelType === ChannelTypes.DM) {
+			assertTierAllows(user, TierGatedActions.CALL, NO_TIER_CONTEXT);
+		} else if (channelType === ChannelTypes.GROUP_DM) {
+			assertTierAllows(user, TierGatedActions.GROUP_CALL, NO_TIER_CONTEXT);
 		}
 	}
 }

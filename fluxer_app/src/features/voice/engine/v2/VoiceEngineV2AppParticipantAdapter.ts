@@ -4,24 +4,17 @@ import assert from 'node:assert/strict';
 import type {LivekitParticipantSnapshot} from '@app/features/voice/engine/VoiceParticipantStateMachine';
 import {asVoiceConnectionQuality, VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import {assertNonNullObject, assertString} from '@app/features/voice/engine/v2/VoiceEngineV2AppAdapterAssertions';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
 import type {
-	VoiceEngineV2Controller,
-	VoiceEngineV2Event,
 	VoiceEngineV2Model,
 	VoiceEngineV2Participant,
 	VoiceEngineV2Track,
-} from '@fluxer/voice_engine_v2';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
+import type {VoiceEngineV2Controller} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Controller';
 import type {Participant, Room, TrackPublication} from 'livekit-client';
 import {Track} from 'livekit-client';
 
 const MAX_DISCARDED_CONNECTION_IDS = 4096;
-
-export interface VoiceEngineV2AppParticipantTrackFlags {
-	isMicrophoneEnabled?: boolean;
-	isCameraEnabled?: boolean;
-	isScreenShareEnabled?: boolean;
-	isScreenShareAudioEnabled?: boolean;
-}
 
 export interface VoiceEngineV2AppParticipantAdapterOptions {
 	controller: VoiceEngineV2Controller;
@@ -124,19 +117,6 @@ function collectParticipantTracks(participant: Participant): Array<VoiceEngineV2
 	return tracks;
 }
 
-function updateTrackFlags(
-	participant: VoiceEngineV2AppLivekitParticipantSnapshot,
-	flags: VoiceEngineV2AppParticipantTrackFlags,
-): VoiceEngineV2AppLivekitParticipantSnapshot {
-	return {
-		...participant,
-		isMicrophoneEnabled: flags.isMicrophoneEnabled ?? participant.isMicrophoneEnabled,
-		isCameraEnabled: flags.isCameraEnabled ?? participant.isCameraEnabled,
-		isScreenShareEnabled: flags.isScreenShareEnabled ?? participant.isScreenShareEnabled,
-		isScreenShareAudioEnabled: flags.isScreenShareAudioEnabled ?? participant.isScreenShareAudioEnabled,
-	};
-}
-
 export class VoiceEngineV2AppParticipantAdapter {
 	private readonly controller: VoiceEngineV2Controller;
 	private readonly getModel: () => VoiceEngineV2Model;
@@ -225,52 +205,9 @@ export class VoiceEngineV2AppParticipantAdapter {
 		}
 	}
 
-	patchParticipantTrackFlags(identity: string, flags: VoiceEngineV2AppParticipantTrackFlags): void {
-		assertString(identity, 'identity');
-		assertNonNullObject(flags, 'flags');
-		const participant = this.participants[identity];
-		if (!participant) return;
-		if (this.isConnectionDiscarded(participant.connectionId)) return;
-		this.upsertSnapshot(updateTrackFlags(participant, flags));
-	}
-
-	updateActiveSpeakersBySid(sids: ReadonlyArray<string>): void {
-		assert.ok(Array.isArray(sids), 'sids must be array');
-		const speakerSids = new Set(sids);
-		const participants = this.participants;
-		for (const identity in participants) {
-			const participant = participants[identity];
-			if (!participant) continue;
-			const speaking = speakerSids.has(participant.sid);
-			if (participant.isSpeaking === speaking) continue;
-			this.upsertSnapshot({...participant, isSpeaking: speaking});
-		}
-	}
-
 	removeParticipant(identity: string): void {
 		assertString(identity, 'identity');
 		this.ingest({type: 'room.participantLeft', participantIdentity: identity});
-	}
-
-	removeParticipantBySid(sid: string): void {
-		assertString(sid, 'sid');
-		const participant = this.getParticipantBySid(sid);
-		if (participant) this.removeParticipant(participant.identity);
-	}
-
-	getParticipant(identity: string): VoiceEngineV2AppLivekitParticipantSnapshot | undefined {
-		assertString(identity, 'identity');
-		return this.participants[identity];
-	}
-
-	getParticipantBySid(sid: string): VoiceEngineV2AppLivekitParticipantSnapshot | undefined {
-		assertString(sid, 'sid');
-		const participants = this.participants;
-		for (const identity in participants) {
-			const participant = participants[identity];
-			if (participant?.sid === sid) return participant;
-		}
-		return undefined;
 	}
 
 	getLocalParticipant(): VoiceEngineV2AppLivekitParticipantSnapshot | undefined {
@@ -309,11 +246,6 @@ export class VoiceEngineV2AppParticipantAdapter {
 			if (participant.connectionId === connectionId) return participant;
 		}
 		return undefined;
-	}
-
-	extractConnectionId(identity: string): string | null {
-		assertString(identity, 'identity');
-		return extractParticipantConnectionId(identity);
 	}
 
 	clear(): void {

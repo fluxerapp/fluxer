@@ -14,7 +14,7 @@ export interface ComposerTypeaheadActiveState {
 	readonly current: boolean;
 }
 
-function hasModifier(event: KeyboardEvent | null): boolean {
+export function hasModifier(event: KeyboardEvent | null): boolean {
 	return event != null && (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey);
 }
 

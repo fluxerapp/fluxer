@@ -11,7 +11,6 @@ import type {
 import {createVoiceEngineV2MemoryEventLogSpillSink} from '@fluxer/voice_engine_v2/src/runtime/eventLogRing';
 import {createVoiceEngineV2DeterministicClockPort} from '@fluxer/voice_engine_v2/src/runtime/platformPort';
 import {assertEventLogInvariants, VoiceEngineV2Runtime} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Runtime';
-import {hashSnapshot} from '@fluxer/voice_engine_v2/src/simulation/Simulator';
 import {
 	type SimulatorDriverFaultPolicy,
 	VoiceEngineV2SimulatorDriver,
@@ -28,26 +27,21 @@ export const FUZZ_REDUCER_ARBITRARY_ITERATIONS = 200;
 
 const FUZZ_REDUCER_FLUSH_MICROTASKS_MAX = 64;
 
-export const FUZZ_REDUCER_EXTERNAL_CONNECTION_ITERATIONS = 512;
-
-const FUZZ_EXTERNAL_CONNECTION_WEIGHT = 6;
-
 interface ReducerFuzzerFailure {
 	seed: number;
 	iteration: number;
-	mode: 'positive' | 'negative' | 'qualitative' | 'arbitraryOrder' | 'externalConnection';
+	mode: 'positive' | 'negative' | 'qualitative' | 'arbitraryOrder';
 	reason: string;
 	event: VoiceEngineV2Event | null;
 }
 
 interface ReducerFuzzerReport {
 	seed: number;
-	mode: 'positive' | 'negative' | 'qualitative' | 'arbitraryOrder' | 'externalConnection';
+	mode: 'positive' | 'negative' | 'qualitative' | 'arbitraryOrder';
 	iterations: number;
 	dispatched: number;
 	rejected: number;
 	failures: ReadonlyArray<ReducerFuzzerFailure>;
-	snapshotHash?: string;
 }
 
 const POSITIVE_EVENT_KINDS: ReadonlyArray<VoiceEngineV2Event['type']> = [
@@ -74,7 +68,6 @@ const POSITIVE_EVENT_KINDS: ReadonlyArray<VoiceEngineV2Event['type']> = [
 	'devices.selectCameraRequested',
 	'permissions.checkRequested',
 	'permissions.requestRequested',
-	'capabilities.hardwareEncoderQueryRequested',
 	'localAudio.muteRequested',
 	'localAudio.deafenRequested',
 	'lifecycle.teardownRequested',
@@ -85,7 +78,7 @@ const POSITIVE_EVENT_KINDS: ReadonlyArray<VoiceEngineV2Event['type']> = [
 	'gateway.voiceStateUpdated',
 ];
 
-export const EXTERNAL_CONNECTION_EVENT_KINDS: ReadonlyArray<VoiceEngineV2Event['type']> = [
+const EXTERNAL_CONNECTION_EVENT_KINDS: ReadonlyArray<VoiceEngineV2Event['type']> = [
 	'connection.externallyEstablished',
 	'connection.remoteDisconnected',
 ];
@@ -94,25 +87,6 @@ const ARBITRARY_EVENT_KINDS: ReadonlyArray<VoiceEngineV2Event['type']> = [
 	...POSITIVE_EVENT_KINDS,
 	...EXTERNAL_CONNECTION_EVENT_KINDS,
 ];
-
-const EXTERNAL_CONNECTION_CYCLE_KIND_POOL: ReadonlyArray<VoiceEngineV2Event['type']> = buildWeightedKindPool();
-
-function buildWeightedKindPool(): ReadonlyArray<VoiceEngineV2Event['type']> {
-	assert.ok(FUZZ_EXTERNAL_CONNECTION_WEIGHT >= 1, 'external connection weight must be >= 1');
-	assert.ok(FUZZ_EXTERNAL_CONNECTION_WEIGHT <= 16, 'external connection weight must stay bounded');
-	const pool: Array<VoiceEngineV2Event['type']> = [...POSITIVE_EVENT_KINDS];
-	for (let repeat = 0; repeat < FUZZ_EXTERNAL_CONNECTION_WEIGHT; repeat += 1) {
-		for (const kind of EXTERNAL_CONNECTION_EVENT_KINDS) {
-			pool.push(kind);
-		}
-	}
-	assert.equal(
-		pool.length,
-		POSITIVE_EVENT_KINDS.length + EXTERNAL_CONNECTION_EVENT_KINDS.length * FUZZ_EXTERNAL_CONNECTION_WEIGHT,
-		'weighted kind pool must contain every positive kind plus the weighted external kinds',
-	);
-	return pool;
-}
 
 const DISCONNECT_REASONS: ReadonlyArray<VoiceEngineV2DisconnectReason> = [
 	'user',
@@ -234,31 +208,6 @@ export class ReducerFuzzer {
 		runtime.dispose();
 		return {seed: this.seed, mode: 'arbitraryOrder', iterations, dispatched, rejected, failures};
 	}
-
-	fuzzExternalConnectionCycles(iterations: number = FUZZ_REDUCER_EXTERNAL_CONNECTION_ITERATIONS): ReducerFuzzerReport {
-		assert.ok(Number.isInteger(iterations), 'iterations must be an integer');
-		assert.ok(iterations >= 1, 'iterations must be >= 1');
-		assert.ok(iterations <= FUZZ_ITERATIONS_MAX, 'iterations must respect FUZZ_ITERATIONS_MAX');
-		const prng = new FuzzPrng({seed: this.seed});
-		const runtime = freshRuntime();
-		const failures: Array<ReducerFuzzerFailure> = [];
-		let dispatched = 0;
-		let rejected = 0;
-		for (let iteration = 0; iteration < iterations; iteration += 1) {
-			const event = generateExternalConnectionCycleEvent(prng);
-			const failure = tryDispatch(runtime, event, this.seed, iteration, 'externalConnection');
-			if (failure !== null) {
-				rejected += 1;
-				continue;
-			}
-			dispatched += 1;
-			const guardFailure = guardRuntimeInvariants(runtime, this.seed, iteration, 'externalConnection', event);
-			if (guardFailure !== null) failures.push(guardFailure);
-		}
-		const snapshotHash = hashSnapshot(runtime.snapshot);
-		runtime.dispose();
-		return {seed: this.seed, mode: 'externalConnection', iterations, dispatched, rejected, failures, snapshotHash};
-	}
 }
 
 function freshRuntime(): VoiceEngineV2Runtime {
@@ -313,12 +262,6 @@ function generateArbitraryEvent(prng: FuzzPrng): VoiceEngineV2Event {
 	const distort = prng.nextBool(0.4);
 	const kind = prng.nextChoice(ARBITRARY_EVENT_KINDS);
 	return materialiseEvent(kind, prng, distort);
-}
-
-function generateExternalConnectionCycleEvent(prng: FuzzPrng): VoiceEngineV2Event {
-	assert.ok(EXTERNAL_CONNECTION_CYCLE_KIND_POOL.length >= 1, 'external connection kind pool must not be empty');
-	const kind = prng.nextChoice(EXTERNAL_CONNECTION_CYCLE_KIND_POOL);
-	return materialiseEvent(kind, prng, false);
 }
 
 interface MaterialiseContext {
@@ -499,8 +442,6 @@ function tryMaterialiseControlEvent(
 	if (kind === 'devices.selectCameraRequested') return {type: 'devices.selectCameraRequested', deviceId: ctx.identity};
 	if (kind === 'permissions.checkRequested') return {type: 'permissions.checkRequested', name: 'microphone'};
 	if (kind === 'permissions.requestRequested') return {type: 'permissions.requestRequested', name: 'microphone'};
-	if (kind === 'capabilities.hardwareEncoderQueryRequested')
-		return {type: 'capabilities.hardwareEncoderQueryRequested'};
 	if (kind === 'localAudio.muteRequested') return {type: 'localAudio.muteRequested', muted: ctx.enabled};
 	if (kind === 'localAudio.deafenRequested') return {type: 'localAudio.deafenRequested', deafened: ctx.enabled};
 	if (kind === 'lifecycle.teardownRequested') {

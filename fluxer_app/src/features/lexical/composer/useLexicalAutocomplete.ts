@@ -50,12 +50,11 @@ import {
 	useAutocompleteGifSearch,
 } from '@app/features/lexical/composer/useAutocompleteGifSearch';
 import {
-	useAutocompleteMemberSearch,
-	useAutocompleteSlotMemberSearch,
+	isMemberSearchTrigger,
+	useGuildMemberAutocompleteSearch,
 } from '@app/features/lexical/composer/useAutocompleteMemberSearch';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
 import GuildMembers from '@app/features/member/state/GuildMembers';
-import type {SearchContext} from '@app/features/member/state/MemberSearch';
 import * as HighlightCommands from '@app/features/messaging/commands/HighlightCommands';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import * as ReactionCommands from '@app/features/messaging/commands/ReactionCommands';
@@ -77,11 +76,11 @@ import {
 	SPECIAL_MENTIONS,
 } from '@app/features/messaging/utils/AutocompleteOptionBuilders';
 import {isAutocompleteTriggerAllowed, type TriggerType} from '@app/features/messaging/utils/AutocompleteTriggerPolicy';
-import {toReactionEmoji} from '@app/features/messaging/utils/MessageReactionUtils';
 import {
 	getReactionShortcodeName,
 	getReactionShorthandTargetId,
 } from '@app/features/messaging/utils/ReactionShorthandUtils';
+import {toReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
 import {
 	type AutocompleteTrigger,
 	detectAutocompleteTrigger,
@@ -91,9 +90,11 @@ import MentionFrecency from '@app/features/notification/state/MentionFrecency';
 import Permission from '@app/features/permissions/state/Permission';
 import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
+import ChannelThreads from '@app/features/threads/state/ChannelThreads';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
-import {formatUserTagForStreamerMode} from '@app/features/user/utils/DisplayNameUtils';
+import {formatUserTagForStreamerMode} from '@app/features/user/utils/NicknameUtils';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {UserId} from '@fluxer/schema/src/branded/WireIds';
 import type {I18n} from '@lingui/core';
@@ -169,6 +170,18 @@ function buildRecentSpeakerOptions(
 
 export type {TriggerType} from '@app/features/messaging/utils/AutocompleteTriggerPolicy';
 
+function getMentionableGuildChannels(guildId: string): ReadonlyArray<Channel> {
+	const channels = Channels.getGuildChannels(guildId);
+	if (!ThreadGuilds.isActive(guildId)) return channels;
+	const threads = ChannelThreads.getGuildThreads(guildId).filter((thread) => !thread.isArchived);
+	return threads.length === 0 ? channels : [...channels, ...threads];
+}
+
+function mentionSortPosition(channel: Channel): number {
+	if (channel.isThread()) return Number.MAX_SAFE_INTEGER;
+	return channel.position == null ? 0 : channel.position;
+}
+
 export function useLexicalAutocomplete({
 	channel,
 	handleRef,
@@ -192,9 +205,7 @@ export function useLexicalAutocomplete({
 	const gifCacheRef = useRef<Map<string, Array<Gif>>>(new Map());
 	const currentGifSearchRef = useRef<string | null>(null);
 	const gifDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const memberSearchContextRef = useRef<SearchContext | null>(null);
-	const currentGuildIdRef = useRef<string | null>(null);
-	const memberFetchDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
 	const [slotAutocompleteContext, setSlotAutocompleteContext] = useState<SlashSlotAutocompleteContext | null>(null);
 	const slotAutocompleteContextRef = useRef<SlashSlotAutocompleteContext | null>(null);
 	slotAutocompleteContextRef.current = slotAutocompleteContext;
@@ -202,9 +213,6 @@ export function useLexicalAutocomplete({
 	const slotOptionalContextRef = useRef<SlashOptionalContext | null>(null);
 	slotOptionalContextRef.current = slotOptionalContext;
 	const [slotMemberSearchResults, setSlotMemberSearchResults] = useState<Array<GuildMember>>([]);
-	const slotSearchContextRef = useRef<SearchContext | null>(null);
-	const slotCurrentGuildIdRef = useRef<string | null>(null);
-	const slotMemberFetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	const refreshTextUpToCursor = useCallback(() => {
 		const handle = handleRef.current;
@@ -271,22 +279,14 @@ export function useLexicalAutocomplete({
 	const memberSearchRank = useMemo(() => buildMemberSearchRank(memberSearchResults), [memberSearchResults]);
 	const slotMemberSearchRank = useMemo(() => buildMemberSearchRank(slotMemberSearchResults), [slotMemberSearchResults]);
 
-	useAutocompleteMemberSearch({
-		triggerType: autocompleteTriggerType,
-		matchedText: autocompleteTriggerMatchedText,
+	useGuildMemberAutocompleteSearch({
 		guildId: channel == null ? undefined : channel.guildId,
-		searchContextRef: memberSearchContextRef,
-		currentGuildIdRef,
-		debounceTimerRef: memberFetchDebounceTimerRef,
+		query: isMemberSearchTrigger(autocompleteTriggerType) ? autocompleteTriggerMatchedText : null,
 		setResults: setMemberSearchResults,
 	});
 
 	const autocompleteTriggerGifQuery =
-		autocompleteTriggerType === 'gif'
-			? autocompleteTrigger == null || autocompleteTrigger.match[3] == null
-				? ''
-				: autocompleteTrigger.match[3].trim()
-			: '';
+		autocompleteTriggerType === 'gif' ? (autocompleteTrigger?.match[3]?.trim() ?? '') : '';
 	useAutocompleteGifSearch({
 		triggerType: autocompleteTriggerType,
 		query: autocompleteTriggerGifQuery,
@@ -429,19 +429,19 @@ export function useLexicalAutocomplete({
 				if (channel == null) {
 					break;
 				}
-				options = matchSorter(Channels.getGuildChannels(channel.guildId == null ? '' : channel.guildId), matchedText, {
-					keys: ['name'],
-				})
+				options = matchSorter(
+					getMentionableGuildChannels(channel.guildId == null ? '' : channel.guildId),
+					matchedText,
+					{
+						keys: ['name'],
+					},
+				)
 					.filter((candidate) => !candidate.isGuildCategory())
 					.map((candidate) => ({
 						type: 'channel' as const,
 						channel: candidate,
 					}))
-					.sort(
-						(a, b) =>
-							(a.channel.position == null ? 0 : a.channel.position) -
-							(b.channel.position == null ? 0 : b.channel.position),
-					)
+					.sort((a, b) => mentionSortPosition(a.channel) - mentionSortPosition(b.channel))
 					.slice(0, MENTION_RESULT_LIMIT);
 				break;
 			}
@@ -568,12 +568,9 @@ export function useLexicalAutocomplete({
 		};
 	}, [autocompleteTriggerType, baseAutocompleteMenu.options]);
 
-	useAutocompleteSlotMemberSearch({
+	useGuildMemberAutocompleteSearch({
 		guildId: channel == null ? undefined : channel.guildId,
-		context: slotAutocompleteContext,
-		searchContextRef: slotSearchContextRef,
-		currentGuildIdRef: slotCurrentGuildIdRef,
-		debounceTimerRef: slotMemberFetchTimerRef,
+		query: slotAutocompleteContext?.optionType === 'user' ? normalizeSlotQuery(slotAutocompleteContext) : null,
 		setResults: setSlotMemberSearchResults,
 	});
 
@@ -640,20 +637,21 @@ export function useLexicalAutocomplete({
 				return 'mention';
 		}
 	}, [slotAutocompleteContext == null ? undefined : slotAutocompleteContext.optionType]);
-	const activeSlotMenu =
-		slotAutocompleteContext != null
-			? {
-					type: slotAutocompleteType,
-					options: slotAutocompleteOptions,
-					query: normalizeSlotQuery(slotAutocompleteContext),
-				}
-			: slotOptionalContext != null
-				? {type: 'commandOptionalAdd' as const, options: slotOptionalOptions, query: slotOptionalContext.query}
-				: null;
+	let activeSlotMenu: AutocompleteMenuState | null = null;
+	if (slotAutocompleteContext != null) {
+		activeSlotMenu = {
+			type: slotAutocompleteType,
+			options: slotAutocompleteOptions,
+			query: normalizeSlotQuery(slotAutocompleteContext),
+		};
+	} else if (slotOptionalContext != null) {
+		activeSlotMenu = {type: 'commandOptionalAdd', options: slotOptionalOptions, query: slotOptionalContext.query};
+	}
 	const isSlotMenu = activeSlotMenu != null;
-	const autocompleteOptions = isSlotMenu ? activeSlotMenu.options : baseAutocompleteMenu.options;
-	const autocompleteType = isSlotMenu ? activeSlotMenu.type : baseAutocompleteMenu.type;
-	const resolvedAutocompleteQuery = isSlotMenu ? activeSlotMenu.query : baseAutocompleteMenu.query;
+	const autocompleteMenu = activeSlotMenu ?? baseAutocompleteMenu;
+	const autocompleteOptions = autocompleteMenu.options;
+	const autocompleteType = autocompleteMenu.type;
+	const resolvedAutocompleteQuery = autocompleteMenu.query;
 	const isAutocompleteAttached = autocompleteOptions.length > 0;
 
 	const handleSelect = useCallback(

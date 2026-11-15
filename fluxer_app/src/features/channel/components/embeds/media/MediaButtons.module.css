@@ -10,7 +10,7 @@
 	--action-toolbar-item-size: 2rem;
 	--action-toolbar-item-border-width: 0px;
 	--action-toolbar-item-background: rgba(0, 0, 0, 0.75);
-	--action-toolbar-item-color: var(--text-on-brand-primary);
+	--action-toolbar-item-color: var(--text-on-dark);
 }
 
 .overlayButton svg {
@@ -25,5 +25,5 @@
 :global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
 	.overlayButton.overlayButtonHover:hover
 	svg {
-	color: color-mix(in srgb, var(--text-on-brand-primary) 95%, transparent);
+	color: color-mix(in srgb, var(--text-on-dark) 95%, transparent);
 }

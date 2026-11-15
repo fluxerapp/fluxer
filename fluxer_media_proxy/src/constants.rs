@@ -1,20 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 pub const MAX_MEDIA_PROXY_BYTES: usize = 500 * 1024 * 1024;
+pub const DESKTOP_APP_ORIGIN: &str = "fluxer-app://app";
+pub(crate) const OPERATOR_WALL_PATH_PREFIX: &str = "/operator-wall/";
 
 pub const OUTBOUND_USER_AGENT: &str =
-    "Mozilla/5.0 (compatible; Fluxerbot/1.0; +https://fluxer.app)";
+    "Mozilla/5.0 (compatible; Fluxerbot/1.0; +https://fluxer.com)";
 pub const MAX_MEDIA_IMAGE_DIMENSION_DEFAULT: u32 = 16_384;
 pub const MAX_MEDIA_IMAGE_PIXELS_DEFAULT: usize =
     MAX_MEDIA_IMAGE_DIMENSION_DEFAULT as usize * MAX_MEDIA_IMAGE_DIMENSION_DEFAULT as usize;
 pub const MAX_INTERNAL_REQUEST_BODY_BYTES: usize =
     MAX_MEDIA_PROXY_BYTES.div_ceil(3) * 4 + 1024 * 1024;
 pub const MAX_VIDEO_PACKETS_FOR_THUMBNAIL: usize = 512;
-pub const MAX_VIDEO_FRAME_BYTES: usize = 128 * 1024 * 1024;
-pub const MAX_S3_ATTEMPTS: u8 = 3;
 pub const DEFAULT_IMAGE_SIZE: u32 = 128;
 pub const MAX_ANIMATED_FRAMES_DEFAULT: u32 = 20_000;
 pub const MAX_ANIMATED_TOTAL_PIXELS_DEFAULT: usize = 4 * MAX_MEDIA_IMAGE_PIXELS_DEFAULT;
+pub const MAX_JXL_DECODE_PIXELS: usize = 4096 * 4096;
+pub const MAX_JXL_SIMPLE_DECODE_PIXELS: usize = 8192 * 6144;
+pub const MAX_STATIC_OUTPUT_PIXELS: usize = 6144 * 4096;
+pub const MAX_ANIMATED_OUTPUT_PIXELS: usize = 16 << 20;
+pub const SVG_RASTER_MAX_DIMENSION: u32 = 4096;
+pub const LARGE_SOURCE_LOG_PIXELS: usize = 4096 * 4096;
 const _: () = assert!(MAX_ANIMATED_FRAMES_DEFAULT >= 20_000);
 
 pub const IMAGE_SIZES: &[u32] = &[
@@ -50,7 +56,8 @@ pub enum AssetKind {
     EmbedSplash,
     Emoji,
     Sticker,
-    Attachment,
+    Branding,
+    RoleIcon,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
@@ -68,6 +75,18 @@ pub enum AssetExtension {
 }
 
 impl AssetExtension {
+    pub const ALL: [Self; 10] = [
+        Self::Png,
+        Self::Jpeg,
+        Self::Webp,
+        Self::Gif,
+        Self::Apng,
+        Self::Avif,
+        Self::Heic,
+        Self::Heif,
+        Self::Jxl,
+        Self::Svg,
+    ];
     pub fn parse(raw: &str) -> Option<Self> {
         match raw.to_ascii_lowercase().as_str() {
             "png" => Some(Self::Png),
@@ -121,113 +140,25 @@ pub struct Dims {
     pub max: u32,
 }
 
-pub fn dims_for(kind: AssetKind) -> Option<Dims> {
+pub fn dims_for(kind: AssetKind) -> Dims {
     match kind {
-        AssetKind::Avatar | AssetKind::GuildIcon => Some(Dims {
+        AssetKind::Avatar | AssetKind::GuildIcon => Dims {
             min: 128,
             max: 1024,
-        }),
-        AssetKind::Banner | AssetKind::Splash | AssetKind::EmbedSplash => Some(Dims {
+        },
+        AssetKind::Banner | AssetKind::Splash | AssetKind::EmbedSplash => Dims {
             min: 480,
             max: 2400,
-        }),
-        AssetKind::Emoji => Some(Dims { min: 32, max: 512 }),
-        AssetKind::Sticker => Some(Dims { min: 128, max: 512 }),
-        AssetKind::Attachment => None,
+        },
+        AssetKind::Emoji => Dims { min: 32, max: 512 },
+        AssetKind::Sticker => Dims { min: 128, max: 512 },
+        AssetKind::Branding => Dims { min: 16, max: 4096 },
+        AssetKind::RoleIcon => Dims { min: 16, max: 512 },
     }
 }
 
 pub fn clamp_size(raw_target: u32, kind: AssetKind) -> u32 {
     let value = raw_target.max(1);
-    dims_for(kind).map_or(value, |dims| value.clamp(dims.min, dims.max))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::media_limits::MediaLimits;
-
-    fn asset_cache_key(raw: Option<&str>, kind: AssetKind) -> u32 {
-        clamp_size(parse_image_size(raw), kind)
-    }
-
-    #[test]
-    fn image_size_snaps_up_to_the_next_rung() {
-        assert_eq!(128, parse_image_size(None));
-        assert_eq!(640, parse_image_size(Some("640")));
-        assert_eq!(1024, parse_image_size(Some("641")));
-        assert_eq!(1024, parse_image_size(Some("1000")));
-        assert_eq!(16, parse_image_size(Some("0")));
-        assert_eq!(16384, parse_image_size(Some("99999")));
-        assert_eq!(128, parse_image_size(Some("not-a-number")));
-    }
-
-    #[test]
-    fn off_ladder_size_never_serves_fewer_pixels_than_requested() {
-        for requested in 1..=4096u32 {
-            let served = parse_image_size(Some(&requested.to_string()));
-            assert!(
-                served >= requested,
-                "size={requested} served {served}, a silent downscale"
-            );
-        }
-    }
-
-    #[test]
-    fn every_rung_snaps_to_itself() {
-        for rung in IMAGE_SIZES {
-            assert_eq!(*rung, parse_image_size(Some(&rung.to_string())));
-        }
-    }
-
-    #[test]
-    fn snapping_is_idempotent() {
-        for raw in [0u32, 1, 17, 641, 1000, 4097, 99999] {
-            let once = parse_image_size(Some(&raw.to_string()));
-            let twice = parse_image_size(Some(&once.to_string()));
-            assert_eq!(once, twice, "size={raw} did not settle");
-        }
-    }
-
-    #[test]
-    fn sub_minimum_sizes_collapse_to_one_avatar_cache_key() {
-        let canonical = asset_cache_key(Some("128"), AssetKind::Avatar);
-        assert_eq!(128, canonical);
-        for below in IMAGE_SIZES.iter().take_while(|rung| **rung < 128) {
-            assert_eq!(
-                canonical,
-                asset_cache_key(Some(&below.to_string()), AssetKind::Avatar),
-                "size={below} minted a second avatar cache key"
-            );
-        }
-    }
-
-    #[test]
-    fn sub_minimum_sizes_collapse_to_one_banner_cache_key() {
-        let canonical = asset_cache_key(Some("480"), AssetKind::Banner);
-        assert_eq!(480, canonical);
-        for below in IMAGE_SIZES.iter().take_while(|rung| **rung < 480) {
-            assert_eq!(
-                canonical,
-                asset_cache_key(Some(&below.to_string()), AssetKind::Banner),
-                "size={below} minted a second banner cache key"
-            );
-        }
-    }
-
-    #[test]
-    fn oversize_requests_collapse_onto_the_kind_maximum() {
-        assert_eq!(1024, asset_cache_key(Some("99999"), AssetKind::Avatar));
-        assert_eq!(1024, asset_cache_key(Some("1024"), AssetKind::Avatar));
-        assert_eq!(512, asset_cache_key(Some("99999"), AssetKind::Emoji));
-        assert_eq!(512, asset_cache_key(Some("99999"), AssetKind::Sticker));
-    }
-
-    #[test]
-    fn animated_frame_default_allows_dense_short_clips() {
-        assert_eq!(
-            MAX_ANIMATED_FRAMES_DEFAULT,
-            MediaLimits::default_from_config().animated_frames()
-        );
-    }
+    let dims = dims_for(kind);
+    value.clamp(dims.min, dims.max)
 }

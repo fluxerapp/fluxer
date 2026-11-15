@@ -74,12 +74,10 @@
 	margin-left: calc(-1 * var(--tooltip-pointer-half-size));
 }
 
-.tooltipCenter,
 .tooltipBottom {
 	transform-origin: 50% 0%;
 }
 
-.tooltipCenter .tooltipPointer,
 .tooltipBottom .tooltipPointer {
 	position: absolute;
 	bottom: calc(100% - var(--tooltip-pointer-half-size));
@@ -128,25 +126,28 @@
 	border-right: var(--tooltip-border-width) solid var(--tooltip-pointer-border);
 	border-bottom: var(--tooltip-border-width) solid var(--tooltip-pointer-border);
 	background: var(--tooltip-pointer-surface);
+	clip-path: polygon(100% 0, 100% 100%, 0 100%);
 }
 
-.tooltipBottom .tooltipPointer.tooltipPointerBg,
-.tooltipCenter .tooltipPointer.tooltipPointerBg {
+.tooltipBottom .tooltipPointer.tooltipPointerBg {
 	border-top: var(--tooltip-border-width) solid var(--tooltip-pointer-border);
 	border-left: var(--tooltip-border-width) solid var(--tooltip-pointer-border);
 	background: var(--tooltip-pointer-surface);
+	clip-path: polygon(0 0, 100% 0, 0 100%);
 }
 
 .tooltipLeft .tooltipPointer.tooltipPointerBg {
 	border-top: var(--tooltip-border-width) solid var(--tooltip-pointer-border);
 	border-right: var(--tooltip-border-width) solid var(--tooltip-pointer-border);
 	background: var(--tooltip-pointer-surface);
+	clip-path: polygon(0 0, 100% 0, 100% 100%);
 }
 
 .tooltipRight .tooltipPointer.tooltipPointerBg {
 	border-bottom: var(--tooltip-border-width) solid var(--tooltip-pointer-border);
 	border-left: var(--tooltip-border-width) solid var(--tooltip-pointer-border);
 	background: var(--tooltip-pointer-surface);
+	clip-path: polygon(0 0, 100% 100%, 0 100%);
 }
 
 .tooltipRed {

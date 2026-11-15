@@ -3,8 +3,8 @@
 .topDragRegion {
 	position: fixed;
 	top: 0;
-	left: 0;
-	right: 0;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
 	height: var(--layout-header-height);
 	z-index: var(--z-index-titlebar);
 	pointer-events: none;
@@ -17,8 +17,8 @@
 .nagbarHost {
 	position: fixed;
 	top: 0;
-	left: 0;
-	right: 0;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
 	z-index: var(--z-index-titlebar);
 }
 
@@ -26,14 +26,14 @@
 	position: fixed;
 	inset: 0;
 	display: flex;
-	background-color: var(--background-secondary);
+	background: linear-gradient(145deg, #05040d 0%, #080616 48%, #0d0a1c 100%);
 }
 
 .container {
 	position: relative;
 	min-height: 100svh;
 	width: 100%;
-	background-color: var(--brand-primary);
+	background-color: #080616;
 }
 
 :global(.auth-page),
@@ -45,21 +45,11 @@
 }
 
 .characterBackground {
+	composes: spaceBackground from '@app/features/ui/space_background/SpaceBackground.module.css';
+	--starfield-position: fixed;
 	min-height: 100svh;
 	overflow: auto;
-	position: relative;
 	width: 100%;
-}
-
-.rightSplit {
-	bottom: 0;
-	inset-inline-end: 0;
-	opacity: 1;
-	pointer-events: none;
-	position: fixed;
-	transition: opacity 0.4s ease;
-	width: auto;
-	z-index: 0;
 }
 
 .leftSplit {
@@ -70,6 +60,7 @@
 	min-height: 100svh;
 	position: relative;
 	width: 100%;
+	z-index: 1;
 }
 
 .leftSplitWrapper {
@@ -87,10 +78,44 @@
 	justify-content: center;
 }
 
-.splashImage {
+.cardMotionWrap {
+	box-sizing: border-box;
+	display: grid;
+	place-items: center;
+	min-height: 100svh;
+	width: 100%;
+	padding: clamp(1.5rem, 4vw, 3rem);
+	overflow: hidden;
+	transform-origin: center;
+}
+
+.fullscreenContent {
+	position: relative;
+	z-index: 10;
+	display: flex;
+	width: 100%;
+	min-height: 100svh;
+	align-items: center;
+	justify-content: center;
+}
+
+.fullscreenPassthrough {
+	display: contents;
+}
+
+.presentationProbe {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	min-height: 100svh;
+	overflow: hidden;
+	pointer-events: none;
+	visibility: hidden;
+}
+
+.splashBackdrop {
 	position: fixed;
-	right: 0;
-	bottom: 0;
+	inset: 0;
 	pointer-events: none;
 	overflow: hidden;
 	z-index: 0;
@@ -102,15 +127,47 @@
 	inset: 0;
 }
 
-.patternHost {
-	position: fixed;
+.operatorBackdrop {
+	z-index: 1;
+}
+
+.backdropLayer {
+	position: absolute;
 	inset: 0;
-	opacity: 0.06;
-	pointer-events: none;
-	z-index: 0;
-	background-repeat: repeat;
-	background-size: 16.25rem 16.25rem;
-	filter: invert(1);
+	opacity: 0;
+	transition: opacity 240ms ease;
+}
+
+.backdropLayerReady {
+	opacity: 1;
+}
+
+.backdropImage {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.backdropScrim {
+	position: absolute;
+	inset: 0;
+	background-color: rgb(5 4 13 / 0.55);
+}
+
+.backdropScrimMobile {
+	background-color: rgb(5 4 13 / 0.75);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.backdropLayer {
+		transition: none;
+	}
+}
+
+:global(html.reduced-motion) .backdropLayer {
+	transition: none;
 }
 
 .cardContainer {
@@ -122,89 +179,88 @@
 	width: 100%;
 	align-items: center;
 	justify-content: center;
-	padding: clamp(2rem, 6vw, 4rem);
+	padding: clamp(1.5rem, 4vw, 3rem);
 	box-sizing: border-box;
 }
 
+.cardContainerInMotion {
+	flex: 0 1 auto;
+	min-height: 0;
+	padding: 0;
+	width: min(100%, 50rem);
+	max-width: 100%;
+}
+
 .card {
+	--auth-card-padding: clamp(2rem, 4vw, 2.75rem);
+	position: relative;
 	margin: 0;
 	display: flex;
 	height: auto;
-	min-height: 31.25rem;
+	min-height: auto;
 	width: 100%;
-	max-width: 56rem;
+	max-width: 32rem;
 	overflow: hidden;
-	border-radius: 1rem;
+	border: 0.0625rem solid rgb(255 255 255 / 0.08);
+	border-radius: 0.5rem;
 	background-color: var(--background-secondary);
-	box-shadow: 0 1.5625rem 3.125rem -0.75rem rgb(0 0 0 / 0.25);
+	box-shadow: 0 1.25rem 4rem -1.5rem rgb(0 0 0 / 0.7);
 	transition:
 		max-width 180ms ease,
-		min-height 180ms ease;
-}
-
-.cardSingle {
-	max-width: 42rem;
+		box-shadow 180ms ease;
 }
 
 .cardStandard {
+	--auth-card-padding: 2.5rem;
 	max-width: 32rem;
-	min-height: auto;
 }
 
 .cardCompact {
+	--auth-card-padding: 2rem;
 	max-width: 27rem;
-	min-height: auto;
 }
 
-.cardWide {
-	max-width: 38rem;
-	min-height: auto;
-}
-
-.logoSide {
-	display: flex;
-	width: 33.333333%;
+.cardBranded {
 	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	padding: 3rem 2rem;
-	border-right: 0.0625rem solid var(--background-modifier-accent);
-	background-color: var(--background-secondary);
-}
-
-.logo {
-	margin-bottom: 1.5rem;
-	height: 8rem;
-	width: 8rem;
-}
-
-.wordmark {
-	height: 2rem;
 }
 
 .formSide {
 	display: flex;
-	width: 66.666667%;
+	width: 100%;
+	min-width: 0;
+	flex: 1 1 auto;
 	flex-direction: column;
 	justify-content: center;
-	padding: 3rem;
+	padding: var(--auth-card-padding);
 	background: var(--background-secondary);
 }
 
-.formSideSingle {
-	width: 100%;
+.cardBranded .formSide {
+	padding-block-start: 1.25rem;
 }
 
-.formSideStandard {
-	padding: 2.5rem;
+@media (min-width: 55rem) {
+	.cardSplit {
+		flex-direction: row;
+		max-width: 50rem;
+		min-height: 28rem;
+	}
+
+	.cardSplit.cardCompact {
+		max-width: 45rem;
+	}
+
+	.cardSplit .formSide {
+		position: relative;
+		width: auto;
+		padding-block-start: var(--auth-card-padding);
+	}
 }
 
-.formSideCompact {
-	padding: 2rem;
-}
-
-.formSideWide {
-	padding: 2.5rem;
+@media (min-width: 55rem) and (max-height: 40rem) {
+	.cardSplit {
+		min-height: auto;
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -214,20 +270,24 @@
 }
 
 @media (max-width: 640px) {
-	.cardContainer {
-		padding: 1.5rem;
+	.cardMotionWrap {
+		padding: 1rem;
 	}
 
-	.formSideStandard,
-	.formSideCompact,
-	.formSideWide {
-		padding: 1.5rem;
+	.cardContainer {
+		padding: 1rem;
+	}
+
+	.card {
+		--auth-card-padding: 1.5rem;
 	}
 }
 
 .mobileContainer {
+	composes: starfield from '@app/features/ui/space_background/SpaceBackground.module.css';
+	--starfield-position: fixed;
 	min-height: 100dvh;
-	background-color: var(--background-secondary);
+	background: linear-gradient(145deg, #05040d 0%, #080616 46%, #0d0a1c 100%);
 	padding: calc(2rem + env(safe-area-inset-top, 0px)) 1.5rem calc(2.5rem + env(safe-area-inset-bottom, 0px));
 	overflow-y: auto;
 	overflow-x: hidden;
@@ -235,22 +295,22 @@
 }
 
 .mobileContent {
-	margin-left: auto;
-	margin-right: auto;
+	position: relative;
+	z-index: 1;
+	margin-inline-start: auto;
+	margin-inline-end: auto;
 	width: 100%;
 	max-width: 28rem;
 }
 
-.mobileLogoContainer {
-	margin-bottom: 2rem;
-	text-align: center;
-}
-
-.mobileWordmark {
-	margin-left: auto;
-	margin-right: auto;
-	height: 2rem;
-	color: var(--text-primary);
+.mobileFullscreenContent {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	width: 100%;
+	min-height: calc(100dvh - 4.5rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+	align-items: center;
+	justify-content: center;
 }
 
 @media (min-width: 1600px) {
@@ -275,6 +335,26 @@
 	.alignRight .cardContainer {
 		justify-content: flex-end;
 	}
+
+	:global(html[dir='rtl']) .leftSplit.alignLeft {
+		align-items: flex-end;
+	}
+
+	:global(html[dir='rtl']) .alignLeft .leftSplitWrapper,
+	:global(html[dir='rtl']) .alignLeft .leftSplitAnimated,
+	:global(html[dir='rtl']) .alignLeft .cardContainer {
+		justify-content: flex-end;
+	}
+
+	:global(html[dir='rtl']) .leftSplit.alignRight {
+		align-items: flex-start;
+	}
+
+	:global(html[dir='rtl']) .alignRight .leftSplitWrapper,
+	:global(html[dir='rtl']) .alignRight .leftSplitAnimated,
+	:global(html[dir='rtl']) .alignRight .cardContainer {
+		justify-content: flex-start;
+	}
 }
 
 :global(html:not(.auth-page) body),
@@ -285,7 +365,7 @@
 :global(html.auth-page),
 :global(html.auth-page body) {
 	height: 100%;
-	background-color: var(--background-secondary);
+	background-color: #080616;
 }
 
 @supports (padding: env(safe-area-inset-top)) {

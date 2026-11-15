@@ -2,20 +2,9 @@
 
 -module(guild_member_list_oset).
 -typing([eqwalizer]).
--compile({no_auto_import, [size/1]}).
 
 -export([
-    new/0,
-    from_sorted/2,
-    destroy/1,
-    size/1,
-    memory_bytes/1,
-    insert/2,
-    delete/2,
-    rank/2,
-    at/2,
-    range/3,
-    to_list/1
+    new/0, from_sorted/2, destroy/1, insert/2, delete/2, range/3, to_list/1
 ]).
 
 -type oset() :: reference().
@@ -41,14 +30,6 @@ destroy(OSet) ->
         _:_ -> ok
     end.
 
--spec size(oset()) -> non_neg_integer().
-size(OSet) ->
-    guild_member_list_oset_nif:size(OSet).
-
--spec memory_bytes(oset()) -> non_neg_integer().
-memory_bytes(OSet) ->
-    guild_member_list_oset_nif:memory_bytes(OSet).
-
 -spec insert(oset(), key()) -> non_neg_integer().
 insert(OSet, Key) ->
     guild_member_list_oset_nif:insert(OSet, Key).
@@ -56,16 +37,6 @@ insert(OSet, Key) ->
 -spec delete(oset(), key()) -> non_neg_integer() | not_found.
 delete(OSet, Key) ->
     guild_member_list_oset_nif:delete(OSet, Key).
-
--spec rank(oset(), key()) -> non_neg_integer() | not_found.
-rank(OSet, Key) ->
-    guild_member_list_oset_nif:rank(OSet, Key).
-
--spec at(oset(), integer()) -> key() | none.
-at(_OSet, Index) when Index < 0 ->
-    none;
-at(OSet, Index) ->
-    guild_member_list_oset_nif:at(OSet, Index).
 
 -spec range(oset(), integer(), non_neg_integer()) -> [key()].
 range(_OSet, _Start, 0) ->

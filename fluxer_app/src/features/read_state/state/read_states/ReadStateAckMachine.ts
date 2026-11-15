@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {compareMessageIds} from '@app/features/read_state/state/read_states/shared';
-import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup} from 'xstate';
 
 export interface ReadStateAckInput {
 	requestedMessageId?: string | null;
@@ -19,12 +19,7 @@ export interface ReadStateAckInput {
 	preserveStickyUnread: boolean;
 }
 
-export type ReadStateAckIgnoredReason =
-	| 'manualAck'
-	| 'notLoaded'
-	| 'untracked'
-	| 'missingMessage'
-	| 'olderThanCurrentAck';
+type ReadStateAckIgnoredReason = 'manualAck' | 'notLoaded' | 'untracked' | 'missingMessage' | 'olderThanCurrentAck';
 
 export type ReadStateAckDecision =
 	| {
@@ -39,7 +34,7 @@ export type ReadStateAckDecision =
 			shouldClearManualAck: boolean;
 	  };
 
-export type ReadStateAckEvent = {
+type ReadStateAckEvent = {
 	type: 'readStateAck.updated';
 	input: ReadStateAckInput;
 };
@@ -67,7 +62,7 @@ function getIgnoredReason(snapshot: ReadStateAckSnapshot): ReadStateAckIgnoredRe
 	}
 }
 
-export const readStateAckMachine = setup({
+const readStateAckMachine = setup({
 	types: {} as {
 		context: ReadStateAckInput;
 		events: ReadStateAckEvent;
@@ -125,20 +120,13 @@ export const readStateAckMachine = setup({
 	},
 });
 
-export type ReadStateAckSnapshot = SnapshotFrom<typeof readStateAckMachine>;
+type ReadStateAckSnapshot = SnapshotFrom<typeof readStateAckMachine>;
 
-export function createReadStateAckSnapshot(input: ReadStateAckInput): ReadStateAckSnapshot {
+function createReadStateAckSnapshot(input: ReadStateAckInput): ReadStateAckSnapshot {
 	return initialTransition(readStateAckMachine, input)[0];
 }
 
-export function transitionReadStateAckSnapshot(
-	snapshot: ReadStateAckSnapshot,
-	event: ReadStateAckEvent,
-): ReadStateAckSnapshot {
-	return transition(readStateAckMachine, snapshot, event)[0] as ReadStateAckSnapshot;
-}
-
-export function selectReadStateAckDecision(snapshot: ReadStateAckSnapshot): ReadStateAckDecision {
+function selectReadStateAckDecision(snapshot: ReadStateAckSnapshot): ReadStateAckDecision {
 	if (snapshot.value !== 'ack') {
 		return {type: 'ignored', reason: getIgnoredReason(snapshot)};
 	}

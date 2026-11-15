@@ -11,7 +11,7 @@ import {
 import {VOICE_MEDIA_GRAPH_FIRST_FRAME_TIMEOUT_FAILURE} from '@app/features/voice/engine/VoiceMediaGraphDeadlines';
 import type {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 
-export const VOICE_MEDIA_GRAPH_FIRST_FRAME_RECOVERY_VISIBLE_MS = 30_000;
+const VOICE_MEDIA_GRAPH_FIRST_FRAME_RECOVERY_VISIBLE_MS = 30_000;
 
 export type VoiceMediaGraphStreamTileState =
 	| 'idle'

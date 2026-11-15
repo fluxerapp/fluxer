@@ -7,10 +7,6 @@ fn main() {
 
     match target_os.as_str() {
         "macos" => {}
-        "windows" => {
-            println!("cargo:rustc-link-arg-cdylib=/DELAYLOAD:webauthn.dll");
-            println!("cargo:rustc-link-arg-cdylib=delayimp.lib");
-        }
         "linux" => {
             println!("cargo:rustc-link-arg-cdylib=-Wl,--disable-new-dtags");
             println!("cargo:rustc-link-arg-cdylib=-Wl,-rpath,$ORIGIN");

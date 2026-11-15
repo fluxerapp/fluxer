@@ -27,7 +27,7 @@ import {
 
 const logger = new Logger('ScreenSharePublicationMigration');
 
-export const SCREEN_SHARE_PUBLICATION_MIGRATION_TOPIC = 'fluxer.rtc.screen-share-migration.v1';
+const SCREEN_SHARE_PUBLICATION_MIGRATION_TOPIC = 'fluxer.rtc.screen-share-migration.v1';
 
 const CANDIDATE_OP = 1;
 const READY_OP = 2;
@@ -44,10 +44,10 @@ const REMOTE_READY_PROBE_TIMEOUT_MS = 6500;
 const REMOTE_MIGRATION_STATE_TIMEOUT_MS = 10000;
 const REMOTE_READY_PROBE_STATS_INTERVAL_MS = 200;
 const CANDIDATE_TRACK_NAME_MARKER = '.candidate.';
-export const REMOTE_MIGRATION_STATES_MAX = 256;
-export const READY_PROBES_MAX = 64;
+const REMOTE_MIGRATION_STATES_MAX = 256;
+const READY_PROBES_MAX = 64;
 
-export interface ScreenShareMigrationCandidateMessage {
+interface ScreenShareMigrationCandidateMessage {
 	op: typeof CANDIDATE_OP;
 	d: {
 		migration_id: string;
@@ -59,7 +59,7 @@ export interface ScreenShareMigrationCandidateMessage {
 	};
 }
 
-export interface ScreenShareMigrationBreakMessage {
+interface ScreenShareMigrationBreakMessage {
 	op: typeof BREAK_OP;
 	d: {
 		migration_id: string;
@@ -70,7 +70,7 @@ export interface ScreenShareMigrationBreakMessage {
 	};
 }
 
-export interface ScreenShareMigrationReadyMessage {
+interface ScreenShareMigrationReadyMessage {
 	op: typeof READY_OP;
 	d: {
 		migration_id: string;
@@ -79,7 +79,7 @@ export interface ScreenShareMigrationReadyMessage {
 	};
 }
 
-export interface ScreenShareMigrationCommitMessage {
+interface ScreenShareMigrationCommitMessage {
 	op: typeof COMMIT_OP;
 	d: {
 		migration_id: string;
@@ -89,7 +89,7 @@ export interface ScreenShareMigrationCommitMessage {
 	};
 }
 
-export interface ScreenShareMigrationAbortMessage {
+interface ScreenShareMigrationAbortMessage {
 	op: typeof ABORT_OP;
 	d: {
 		migration_id: string;
@@ -99,7 +99,7 @@ export interface ScreenShareMigrationAbortMessage {
 	};
 }
 
-export type ScreenShareMigrationMessage =
+type ScreenShareMigrationMessage =
 	| ScreenShareMigrationCandidateMessage
 	| ScreenShareMigrationBreakMessage
 	| ScreenShareMigrationReadyMessage
@@ -183,7 +183,7 @@ function isAbortMessage(message: unknown): message is ScreenShareMigrationAbortM
 	);
 }
 
-export function parseScreenShareMigrationMessage(payload: Uint8Array): ScreenShareMigrationMessage | null {
+function parseScreenShareMigrationMessage(payload: Uint8Array): ScreenShareMigrationMessage | null {
 	if (payload.byteLength === 0 || payload.byteLength > MIGRATION_MESSAGE_BYTES_MAX) return null;
 	try {
 		const parsed = JSON.parse(TEXT_DECODER.decode(payload)) as unknown;
@@ -199,7 +199,7 @@ export function parseScreenShareMigrationMessage(payload: Uint8Array): ScreenSha
 	}
 }
 
-export function encodeScreenShareMigrationMessage(message: ScreenShareMigrationMessage): Uint8Array<ArrayBuffer> {
+function encodeScreenShareMigrationMessage(message: ScreenShareMigrationMessage): Uint8Array<ArrayBuffer> {
 	return TEXT_ENCODER.encode(JSON.stringify(message));
 }
 
@@ -320,10 +320,6 @@ class ScreenSharePublicationMigration extends Store {
 	private readyProbesByKey = new Map<string, ReadyProbe>();
 	private remoteStateExpiryTimersByIdentity = new Map<string, NodeJS.Timeout>();
 	version = 0;
-
-	getRemoteMigrationStateTimeoutMs(): number {
-		return REMOTE_MIGRATION_STATE_TIMEOUT_MS;
-	}
 
 	bind(room: Room, options: {guildId?: string | null; channelId?: string | null} = {}): () => void {
 		this.dispose();

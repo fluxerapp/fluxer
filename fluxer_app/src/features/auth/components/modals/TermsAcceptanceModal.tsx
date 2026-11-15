@@ -2,7 +2,7 @@
 
 import {Routes} from '@app/app/Routes';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {CLOSE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {acceptTerms} from '@app/features/terms/commands/TermsAcceptanceCommands';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -24,17 +24,15 @@ const I_AGREE_TO_THE_UPDATED_TERMS_DESCRIPTOR = msg({
 	message: 'I agree to the updated terms',
 	comment: 'Primary button label for accepting updated Terms of service.',
 });
-const I_AGREE_TO_THE_UPDATED_PRIVACY_POLICY_DESCRIPTOR = msg({
-	message: 'I agree to the updated privacy policy',
-	comment: 'Primary button label for accepting the updated Privacy policy.',
+const GOT_IT_DESCRIPTOR = msg({
+	message: 'Got it',
+	comment:
+		'Primary button label after reading that the Privacy policy changed. People never agree to the Privacy policy, they only read it.',
 });
-const I_AGREE_TO_THE_UPDATED_POLICIES_DESCRIPTOR = msg({
-	message: 'I agree to the updated policies',
-	comment: 'Primary button label for accepting both updated Terms of service and Privacy policy.',
-});
-const UPDATED_POLICIES_AGREEMENT_DESCRIPTOR = msg({
-	message: 'By using {productName}, you agree to the updated policies.',
-	comment: 'Legal notice in the updated policies modal. productName is the Fluxer product name.',
+const UPDATED_TERMS_AGREEMENT_DESCRIPTOR = msg({
+	message: 'By using {productName}, you agree to the updated terms.',
+	comment:
+		'Legal notice in the updated policies modal when the Terms of service changed. productName is the Fluxer product name.',
 });
 
 type UpdateKind = 'terms' | 'privacy' | 'both';
@@ -70,9 +68,9 @@ export const TermsAcceptanceModal = observer(() => {
 	}, []);
 	if (!user) return null;
 	const kind = getUpdateKind(user.termsAgreedAt, user.privacyAgreedAt);
-	const termsUrl = Routes.terms();
-	const privacyUrl = Routes.privacy();
-	const productName = PRODUCT_NAME;
+	const termsUrl = Routes.terms() ?? undefined;
+	const privacyUrl = Routes.privacy() ?? undefined;
+	const productName = RuntimeConfig.productName;
 	return (
 		<Modal.Root
 			size="small"
@@ -90,7 +88,7 @@ export const TermsAcceptanceModal = observer(() => {
 				<Modal.ContentLayout data-flx="auth.terms-acceptance-modal.modal-content-layout">
 					<Modal.Description className={markupStyles.markup} data-flx="auth.terms-acceptance-modal.modal-description">
 						{kind === 'terms' && (
-							<Trans>
+							<Trans comment="Shown when the terms of service changed and the person must review them. The tag wraps a link to the terms of service.">
 								We've made significant changes to our{' '}
 								<a
 									href={termsUrl}
@@ -99,13 +97,13 @@ export const TermsAcceptanceModal = observer(() => {
 									className={markupStyles.link}
 									data-flx="auth.terms-acceptance-modal.a"
 								>
-									Terms of service
+									terms of service
 								</a>
-								. Review it before continuing to use {productName}.
+								. Review them before continuing to use {productName}.
 							</Trans>
 						)}
 						{kind === 'privacy' && (
-							<Trans>
+							<Trans comment="Shown when the privacy policy changed and the person must review it. The tag wraps a link to the privacy policy.">
 								We've made significant changes to our{' '}
 								<a
 									href={privacyUrl}
@@ -114,13 +112,13 @@ export const TermsAcceptanceModal = observer(() => {
 									className={markupStyles.link}
 									data-flx="auth.terms-acceptance-modal.a--2"
 								>
-									Privacy policy
+									privacy policy
 								</a>
 								. Review it before continuing to use {productName}.
 							</Trans>
 						)}
 						{kind === 'both' && (
-							<Trans>
+							<Trans comment="Shown when both the terms of service and the privacy policy changed. The first tag wraps a link to the terms of service and the second a link to the privacy policy.">
 								We've made significant changes to our{' '}
 								<a
 									href={termsUrl}
@@ -129,7 +127,7 @@ export const TermsAcceptanceModal = observer(() => {
 									className={markupStyles.link}
 									data-flx="auth.terms-acceptance-modal.a--3"
 								>
-									Terms of service
+									terms of service
 								</a>{' '}
 								and{' '}
 								<a
@@ -139,19 +137,21 @@ export const TermsAcceptanceModal = observer(() => {
 									className={markupStyles.link}
 									data-flx="auth.terms-acceptance-modal.a--4"
 								>
-									Privacy policy
+									privacy policy
 								</a>
 								. Review them before continuing to use {productName}.
 							</Trans>
 						)}
 					</Modal.Description>
-					<Modal.Description
-						className={markupStyles.markup}
-						style={{marginTop: remFromPx(12), opacity: 0.7, fontSize: '0.85em'}}
-						data-flx="auth.terms-acceptance-modal.modal-description--2"
-					>
-						{i18n._(UPDATED_POLICIES_AGREEMENT_DESCRIPTOR, {productName})}
-					</Modal.Description>
+					{kind === 'privacy' ? null : (
+						<Modal.Description
+							className={markupStyles.markup}
+							style={{marginTop: remFromPx(12), opacity: 0.7, fontSize: '0.85em'}}
+							data-flx="auth.terms-acceptance-modal.modal-description--2"
+						>
+							{i18n._(UPDATED_TERMS_AGREEMENT_DESCRIPTOR, {productName})}
+						</Modal.Description>
+					)}
 				</Modal.ContentLayout>
 			</Modal.Content>
 			<Modal.Footer data-flx="auth.terms-acceptance-modal.modal-footer">
@@ -165,11 +165,7 @@ export const TermsAcceptanceModal = observer(() => {
 					ref={primaryRef}
 					data-flx="auth.terms-acceptance-modal.button.accept"
 				>
-					{kind === 'terms'
-						? i18n._(I_AGREE_TO_THE_UPDATED_TERMS_DESCRIPTOR)
-						: kind === 'privacy'
-							? i18n._(I_AGREE_TO_THE_UPDATED_PRIVACY_POLICY_DESCRIPTOR)
-							: i18n._(I_AGREE_TO_THE_UPDATED_POLICIES_DESCRIPTOR)}
+					{kind === 'privacy' ? i18n._(GOT_IT_DESCRIPTOR) : i18n._(I_AGREE_TO_THE_UPDATED_TERMS_DESCRIPTOR)}
 				</Button>
 			</Modal.Footer>
 		</Modal.Root>

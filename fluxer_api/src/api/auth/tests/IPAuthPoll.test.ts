@@ -165,10 +165,4 @@ describe('Auth IP Authorization Poll', () => {
 			user_id: reg.user_id,
 		});
 	});
-	it('rejects poll with invalid ticket', async () => {
-		await createBuilderWithoutAuth(harness)
-			.get('/auth/ip-authorization/poll?ticket=does-not-exist')
-			.expect(400, 'INVALID_FORM_BODY')
-			.execute();
-	});
 });

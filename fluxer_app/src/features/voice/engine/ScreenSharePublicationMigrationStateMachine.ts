@@ -2,7 +2,7 @@
 
 import type {VideoCodec} from 'livekit-client';
 
-export type ScreenShareRemoteMigrationPhase = 'breaking' | 'candidate' | 'committed';
+type ScreenShareRemoteMigrationPhase = 'breaking' | 'candidate' | 'committed';
 
 export interface ScreenShareRemoteMigrationState {
 	migrationId: string;

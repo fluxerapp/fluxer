@@ -40,7 +40,7 @@ export type VoiceGatewayStateEvent =
 	| {type: 'guild.delete'; guildId: string}
 	| {type: 'clear.all'};
 
-export function createEmptyVoiceGatewayStateContext(): VoiceGatewayStateContext {
+function createEmptyVoiceGatewayStateContext(): VoiceGatewayStateContext {
 	return {
 		voiceStates: {},
 		userVoiceStates: {},
@@ -311,7 +311,7 @@ function replaceGuild(context: VoiceGatewayStateContext, guild: GuildReadyData):
 	};
 }
 
-export const voiceGatewayStateMachine = setup({
+const voiceGatewayStateMachine = setup({
 	types: {} as {
 		context: VoiceGatewayStateContext;
 		events: VoiceGatewayStateEvent;

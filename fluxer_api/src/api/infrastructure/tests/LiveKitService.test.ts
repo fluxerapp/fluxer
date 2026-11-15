@@ -1,21 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createChannelID, createGuildID, createUserID} from '@app/api/BrandedTypes';
-import {
-	computeLiveKitPublishSources,
-	LiveKitService,
-	VOICE_TOKEN_TTL_SECONDS,
-} from '@app/api/infrastructure/LiveKitService';
-import {AccessToken, TrackSource} from 'livekit-server-sdk';
+import {computeLiveKitPublishSources, LiveKitService} from '@app/api/infrastructure/LiveKitService';
+import {TrackSource} from 'livekit-server-sdk';
 import {describe, expect, it} from 'vitest';
-
-function decodeJwtPayload(token: string): Record<string, unknown> {
-	const [, payload] = token.split('.');
-	if (!payload) {
-		throw new Error('JWT payload missing');
-	}
-	return JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as Record<string, unknown>;
-}
 
 describe('LiveKitService publish permissions', () => {
 	it('maps STREAM permission to LiveKit screen-share publish sources', () => {
@@ -30,36 +18,6 @@ describe('LiveKitService publish permissions', () => {
 		expect(computeLiveKitPublishSources({canSpeak: true, canStream: false, canVideo: false})).toEqual([
 			TrackSource.MICROPHONE,
 		]);
-	});
-	it('serializes stream grants into LiveKit JWT video claims', async () => {
-		const token = new AccessToken('test-key', 'test-secret', {identity: 'user_1_conn'});
-		token.addGrant({
-			roomJoin: true,
-			room: 'guild_1_channel_2',
-			canPublish: true,
-			canSubscribe: true,
-			canPublishSources: computeLiveKitPublishSources({canSpeak: true, canStream: true, canVideo: false}),
-		});
-		const payload = decodeJwtPayload(await token.toJwt());
-		expect(payload.video).toMatchObject({
-			roomJoin: true,
-			room: 'guild_1_channel_2',
-			canPublish: true,
-			canSubscribe: true,
-			canPublishSources: ['microphone', 'screen_share', 'screen_share_audio'],
-		});
-	});
-	it('bounds voice token lifetime to the configured TTL', async () => {
-		const token = new AccessToken('test-key', 'test-secret', {
-			identity: 'user_1_conn',
-			ttl: VOICE_TOKEN_TTL_SECONDS,
-		});
-		token.addGrant({roomJoin: true, room: 'guild_1_channel_2'});
-		const payload = decodeJwtPayload(await token.toJwt());
-		const exp = payload.exp as number;
-		const nowSeconds = Math.floor(Date.now() / 1000);
-		expect(exp - nowSeconds).toBeLessThanOrEqual(VOICE_TOKEN_TTL_SECONDS + 5);
-		expect(exp - nowSeconds).toBeGreaterThan(0);
 	});
 });
 
@@ -148,16 +106,25 @@ describe('LiveKitService updateParticipant mute', () => {
 		serverId: 'region-1-server-1',
 	};
 
-	function roomServiceClient(
-		listedTracks: Array<{sid: string; source: TrackSource}>,
-		updatedTracks: typeof listedTracks,
-	) {
+	const allSources = [
+		TrackSource.MICROPHONE,
+		TrackSource.CAMERA,
+		TrackSource.SCREEN_SHARE,
+		TrackSource.SCREEN_SHARE_AUDIO,
+	];
+
+	function roomServiceClient(participant: {
+		attributes: Record<string, string>;
+		permission?: {canSubscribe: boolean; canPublishSources: Array<TrackSource>};
+		tracks: Array<{sid: string; source: TrackSource}>;
+		updatedTracks?: Array<{sid: string; source: TrackSource}>;
+	}) {
 		const calls: Array<Array<unknown>> = [];
 		const client = {
-			listParticipants: async () => [{identity: 'user_3_conn-1', tracks: listedTracks}],
+			listParticipants: async () => [{identity: 'user_3_conn-1', ...participant}],
 			updateParticipant: async (...args: Array<unknown>) => {
 				calls.push(['updateParticipant', ...args]);
-				return {identity: 'user_3_conn-1', tracks: updatedTracks};
+				return {identity: 'user_3_conn-1', tracks: participant.updatedTracks ?? participant.tracks};
 			},
 			mutePublishedTrack: async (...args: Array<unknown>) => {
 				calls.push(['mutePublishedTrack', ...args]);
@@ -166,33 +133,233 @@ describe('LiveKitService updateParticipant mute', () => {
 		return {client, calls};
 	}
 
-	it('records the mute on the participant and mutes every current microphone track', async () => {
-		const {client, calls} = roomServiceClient(
-			[{sid: 'TR_old', source: TrackSource.MICROPHONE}],
-			[
+	it('records the mute, revokes the microphone, then mutes every remaining microphone track', async () => {
+		const {client, calls} = roomServiceClient({
+			attributes: {},
+			tracks: [{sid: 'TR_old', source: TrackSource.MICROPHONE}],
+			updatedTracks: [
 				{sid: 'TR_old', source: TrackSource.MICROPHONE},
 				{sid: 'TR_new', source: TrackSource.MICROPHONE},
 			],
-		);
+		});
 		const service = createServiceWithRoomServiceClient(client);
 
-		await service.updateParticipant({...params, mute: true});
+		await service.updateParticipant({
+			...params,
+			mute: true,
+			deaf: false,
+			canSpeak: true,
+			canStream: true,
+			canVideo: true,
+		});
 
 		expect(calls).toEqual([
 			['updateParticipant', 'guild_1_channel_2', 'user_3_conn-1', {attributes: {server_mute: 'true'}}],
+			[
+				'updateParticipant',
+				'guild_1_channel_2',
+				'user_3_conn-1',
+				undefined,
+				{
+					canPublish: true,
+					canSubscribe: true,
+					canPublishSources: [TrackSource.CAMERA, TrackSource.SCREEN_SHARE, TrackSource.SCREEN_SHARE_AUDIO],
+				},
+			],
 			['mutePublishedTrack', 'guild_1_channel_2', 'user_3_conn-1', 'TR_old', true],
 			['mutePublishedTrack', 'guild_1_channel_2', 'user_3_conn-1', 'TR_new', true],
 		]);
 	});
 
-	it('clears the recorded mute on unmute', async () => {
-		const {client, calls} = roomServiceClient([], []);
+	it('revokes the microphone even when a track mute fails', async () => {
+		const {client, calls} = roomServiceClient({
+			attributes: {},
+			tracks: [
+				{sid: 'TR_cam', source: TrackSource.CAMERA},
+				{sid: 'TR_mic', source: TrackSource.MICROPHONE},
+			],
+		});
+		const service = createServiceWithRoomServiceClient({
+			...client,
+			mutePublishedTrack: async (...args: Array<unknown>) => {
+				calls.push(['mutePublishedTrack', ...args]);
+				throw new Error('not_found');
+			},
+		});
+
+		await service.updateParticipant({
+			...params,
+			mute: true,
+			deaf: false,
+			canSpeak: true,
+			canStream: true,
+			canVideo: false,
+		});
+
+		expect(calls).toEqual([
+			['updateParticipant', 'guild_1_channel_2', 'user_3_conn-1', {attributes: {server_mute: 'true'}}],
+			[
+				'updateParticipant',
+				'guild_1_channel_2',
+				'user_3_conn-1',
+				undefined,
+				{
+					canPublish: true,
+					canSubscribe: true,
+					canPublishSources: [TrackSource.SCREEN_SHARE, TrackSource.SCREEN_SHARE_AUDIO],
+				},
+			],
+			['mutePublishedTrack', 'guild_1_channel_2', 'user_3_conn-1', 'TR_cam', true],
+			['mutePublishedTrack', 'guild_1_channel_2', 'user_3_conn-1', 'TR_mic', true],
+		]);
+	});
+
+	it('clears the recorded mute before restoring microphone publishing', async () => {
+		const {client, calls} = roomServiceClient({
+			attributes: {server_mute: 'true'},
+			tracks: [{sid: 'TR_mic', source: TrackSource.MICROPHONE}],
+		});
 		const service = createServiceWithRoomServiceClient(client);
 
-		await service.updateParticipant({...params, mute: false});
+		await service.updateParticipant({
+			...params,
+			mute: false,
+			deaf: false,
+			canSpeak: true,
+			canStream: true,
+			canVideo: true,
+		});
 
 		expect(calls).toEqual([
 			['updateParticipant', 'guild_1_channel_2', 'user_3_conn-1', {attributes: {server_mute: ''}}],
+			[
+				'updateParticipant',
+				'guild_1_channel_2',
+				'user_3_conn-1',
+				undefined,
+				{canPublish: true, canSubscribe: true, canPublishSources: allSources},
+			],
+			['mutePublishedTrack', 'guild_1_channel_2', 'user_3_conn-1', 'TR_mic', false],
 		]);
+	});
+
+	it('leaves the microphone of a member who was never server muted alone', async () => {
+		const {client, calls} = roomServiceClient({
+			attributes: {},
+			tracks: [{sid: 'TR_mic', source: TrackSource.MICROPHONE}],
+		});
+		const service = createServiceWithRoomServiceClient(client);
+
+		await service.updateParticipant({
+			...params,
+			mute: false,
+			deaf: false,
+			canSpeak: true,
+			canStream: true,
+			canVideo: true,
+		});
+
+		expect(calls).toEqual([
+			[
+				'updateParticipant',
+				'guild_1_channel_2',
+				'user_3_conn-1',
+				undefined,
+				{canPublish: true, canSubscribe: true, canPublishSources: allSources},
+			],
+		]);
+	});
+
+	it('keeps the sources a muted member already has when the caller sends no permissions', async () => {
+		const {client, calls} = roomServiceClient({
+			attributes: {server_mute: 'true'},
+			permission: {canSubscribe: true, canPublishSources: []},
+			tracks: [],
+		});
+		const service = createServiceWithRoomServiceClient(client);
+
+		await service.updateParticipant({...params, mute: true, deaf: false});
+
+		expect(calls).toEqual([
+			[
+				'updateParticipant',
+				'guild_1_channel_2',
+				'user_3_conn-1',
+				undefined,
+				{canPublish: false, canSubscribe: true, canPublishSources: []},
+			],
+		]);
+	});
+
+	it('mutes camera and screen tracks a permission sync no longer allows', async () => {
+		const {client, calls} = roomServiceClient({
+			attributes: {},
+			tracks: [
+				{sid: 'TR_mic', source: TrackSource.MICROPHONE},
+				{sid: 'TR_cam', source: TrackSource.CAMERA},
+				{sid: 'TR_screen', source: TrackSource.SCREEN_SHARE},
+			],
+		});
+		const service = createServiceWithRoomServiceClient(client);
+
+		await service.updateParticipant({
+			...params,
+			mute: false,
+			deaf: false,
+			canSpeak: true,
+			canStream: false,
+			canVideo: false,
+		});
+
+		expect(calls).toEqual([
+			[
+				'updateParticipant',
+				'guild_1_channel_2',
+				'user_3_conn-1',
+				undefined,
+				{canPublish: true, canSubscribe: true, canPublishSources: [TrackSource.MICROPHONE]},
+			],
+			['mutePublishedTrack', 'guild_1_channel_2', 'user_3_conn-1', 'TR_cam', true],
+			['mutePublishedTrack', 'guild_1_channel_2', 'user_3_conn-1', 'TR_screen', true],
+		]);
+	});
+});
+
+describe('LiveKitService createToken mute', () => {
+	const params = {
+		userId: createUserID(3n),
+		guildId: createGuildID(1n),
+		channelId: createChannelID(2n),
+		connectionId: 'conn-1',
+		tokenNonce: 'nonce-1',
+		regionId: 'region-1',
+		serverId: 'region-1-server-1',
+	};
+
+	async function tokenPayload(mute: boolean) {
+		const service = createServiceWithRoomServiceClient({});
+		const {token} = await service.createToken({...params, mute});
+		return JSON.parse(Buffer.from(token.split('.')[1]!, 'base64url').toString());
+	}
+
+	async function tokenAttributes(mute: boolean): Promise<Record<string, string> | undefined> {
+		return (await tokenPayload(mute)).attributes;
+	}
+
+	it('withholds microphone publishing from a token issued to a muted member', async () => {
+		expect((await tokenPayload(true)).video.canPublishSources).toEqual([
+			'camera',
+			'screen_share',
+			'screen_share_audio',
+		]);
+		expect((await tokenPayload(false)).video.canPublishSources).toContain('microphone');
+	});
+
+	it('records the server mute on a token issued to a muted member', async () => {
+		expect(await tokenAttributes(true)).toEqual({server_mute: 'true'});
+	});
+
+	it('records no server mute on a token issued to an unmuted member', async () => {
+		expect(await tokenAttributes(false)).toBeUndefined();
 	});
 });

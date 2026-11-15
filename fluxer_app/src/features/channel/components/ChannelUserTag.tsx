@@ -8,12 +8,18 @@ import React from 'react';
 interface UserTagProps extends React.ComponentPropsWithoutRef<'span'> {
 	className?: string;
 	system?: boolean;
-	variant?: 'bot' | 'system' | 'community';
+	variant?: 'bot' | 'system' | 'community' | 'op';
 	size?: 'sm' | 'lg';
 }
 
-function renderTagLabel(variant: 'bot' | 'system' | 'community') {
+function renderTagLabel(variant: 'bot' | 'system' | 'community' | 'op') {
 	switch (variant) {
+		case 'op':
+			return (
+				<Trans comment="Tag next to the author of a forum post on their own messages in that post. Short for original poster, keep it to two or three letters.">
+					OP
+				</Trans>
+			);
 		case 'system':
 			return <Trans>System</Trans>;
 		case 'community':

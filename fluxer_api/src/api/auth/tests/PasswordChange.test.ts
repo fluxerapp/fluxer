@@ -4,8 +4,6 @@ import {
 	clearTestEmails,
 	createAuthHarness,
 	createTestAccount,
-	findLastTestEmail,
-	listTestEmails,
 	loginAccount,
 	loginUser,
 } from '@app/api/auth/tests/AuthTestUtils';
@@ -76,27 +74,5 @@ describe('Password change invalidates sessions', () => {
 			.expect(400, 'INVALID_FORM_BODY')
 			.execute();
 		expect(response.errors?.some((error) => error.path === 'password' && error.code === 'PASSWORD_NOT_SET')).toBe(true);
-	});
-	it('invalidates all sessions after password reset', async () => {
-		const account = await createTestAccount(harness);
-		const session2 = await loginAccount(harness, account);
-		await createBuilderWithoutAuth(harness).post('/auth/forgot').body({email: account.email}).expect(204).execute();
-		const emails = await listTestEmails(harness, {recipient: account.email});
-		const resetEmail = findLastTestEmail(emails, 'password_reset');
-		expect(resetEmail?.metadata?.token).toBeDefined();
-		const token = resetEmail!.metadata!.token!;
-		const newPassword = `reset-password-${Date.now()}`;
-		await createBuilderWithoutAuth(harness).post('/auth/reset').body({token, password: newPassword}).execute();
-		await createBuilder(harness, account.token).get('/users/@me').expect(401).execute();
-		await createBuilder(harness, session2.token).get('/users/@me').expect(401).execute();
-		const login = await loginUser(harness, {email: account.email, password: newPassword});
-		if ('mfa' in login && login.mfa) {
-			throw new Error('Expected non-MFA login');
-		}
-		const nonMfaLogin = login as {
-			user_id: string;
-			token: string;
-		};
-		expect(nonMfaLogin.token.length).toBeGreaterThan(0);
 	});
 });

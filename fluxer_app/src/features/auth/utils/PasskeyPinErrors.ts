@@ -8,7 +8,12 @@ export type PasskeyPinFailure =
 	| {kind: 'not-set'};
 
 export function parsePasskeyPinFailure(error: unknown): PasskeyPinFailure | null {
-	const message = error instanceof Error ? error.message : typeof error === 'string' ? error : '';
+	let message = '';
+	if (error instanceof Error) {
+		message = error.message;
+	} else if (typeof error === 'string') {
+		message = error;
+	}
 	if (!message) {
 		return null;
 	}

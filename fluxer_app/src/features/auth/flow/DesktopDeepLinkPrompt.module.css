@@ -2,6 +2,7 @@
 
 .banner {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	gap: 0.75rem;
 	padding: 0.9rem 1rem;
@@ -12,7 +13,9 @@
 }
 
 .copy {
-	flex: 1 1 0%;
+	flex: 999 1 14rem;
+	min-width: 0;
+	overflow-wrap: anywhere;
 	display: flex;
 	flex-direction: column;
 	gap: 0.15rem;
@@ -30,11 +33,14 @@
 	font-size: 0.95rem;
 }
 
-.cta {
-	display: inline-flex;
-	gap: 0.4rem;
-	align-items: center;
-	white-space: nowrap;
+.banner .cta {
+	flex: 1 1 auto;
+	height: auto;
+}
+
+.ctaLabel {
+	white-space: normal;
+	overflow-wrap: anywhere;
 }
 
 .notInstalled {

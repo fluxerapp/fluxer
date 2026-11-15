@@ -3,6 +3,7 @@
 import type {Channel} from '@app/features/channel/models/Channel';
 import Relationships from '@app/features/relationship/state/Relationships';
 import UserPinnedDM from '@app/features/user/state/UserPinnedDM';
+import {compareStrings} from '@app/lib/list/CompareStrings';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {compare, fromTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
@@ -30,7 +31,6 @@ const getChannelSortSnowflake = (channel: Channel): string => {
 
 export function getSortedDmChannels(dmChannels: ReadonlyArray<Channel>, currentUserId?: string | null): Array<Channel> {
 	const pinnedOrder = new Map(UserPinnedDM.pinnedDMs.map((id, index) => [id, index]));
-	const compareChannelIds = (a: Channel, b: Channel): number => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 	return dmChannels
 		.filter((channel) => !(channel.type === ChannelTypes.DM_PERSONAL_NOTES || channel.id === currentUserId))
 		.sort((a, b) => {
@@ -43,7 +43,7 @@ export function getSortedDmChannels(dmChannels: ReadonlyArray<Channel>, currentU
 				if (diff !== 0) {
 					return diff;
 				}
-				return compareChannelIds(a, b);
+				return compareStrings(a.id, b.id);
 			}
 			if (aIsPinned !== bIsPinned) {
 				return aIsPinned ? -1 : 1;
@@ -54,6 +54,6 @@ export function getSortedDmChannels(dmChannels: ReadonlyArray<Channel>, currentU
 			if (sortDiff !== 0) {
 				return sortDiff;
 			}
-			return compareChannelIds(a, b);
+			return compareStrings(a.id, b.id);
 		});
 }
