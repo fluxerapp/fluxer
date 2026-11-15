@@ -187,15 +187,17 @@ export const UserProfileModal: UserProfileModalComponent = observer(
 			};
 		}, [guildId, userId, isPreview]);
 		const hasGuildProfile = !!(profile?.guildId && profile?.guildMemberProfile);
+		const isGlobalView = showGlobalProfile && hasGuildProfile;
+		const displayGuildId = isGlobalView ? undefined : guildId;
 		const shouldShowProfileDataWarning =
 			!showProfileSkeleton && (profileLoadError || DeveloperOptions.forceProfileDataWarning);
 		const displayProfile = useMemo((): Profile | null => {
 			if (!profile) return null;
-			if (showGlobalProfile && hasGuildProfile) {
+			if (isGlobalView) {
 				return profile.withUpdates({guild_member_profile: null}).withGuildId(null);
 			}
 			return profile;
-		}, [profile, showGlobalProfile, hasGuildProfile]);
+		}, [profile, isGlobalView]);
 		const screenReaderLabel = useMemo(() => {
 			if (!displayUser) return i18n._(USER_PROFILE_DESCRIPTOR);
 			const tag = NicknameUtils.formatTagForStreamerMode(displayUser.tag);
@@ -204,14 +206,14 @@ export const UserProfileModal: UserProfileModalComponent = observer(
 		const effectiveProfile: Profile | null = displayProfile ?? profile ?? profileFallback;
 		const resolvedProfile: Profile = effectiveProfile ?? fallbackProfile;
 		const displayMembership = resolveProfileGuildMembership(displayProfile, {
-			fallbackGuildId: guildId,
+			fallbackGuildId: displayGuildId,
 			userId,
 			allowStoreFallback: Boolean(displayProfile),
 		});
 		const displayUserName = getProfileMembershipDisplayName(
 			displayUser,
 			displayMembership,
-			displayProfile?.guildId ?? guildId,
+			displayProfile?.guildId ?? displayGuildId,
 		);
 		const displayProfileContext = useMemo<ProfileDisplayUtils.ProfileDisplayContext>(
 			() =>

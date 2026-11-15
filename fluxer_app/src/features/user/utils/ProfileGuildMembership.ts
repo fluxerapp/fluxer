@@ -90,7 +90,7 @@ export function getProfileMembershipDisplayName(
 	if (membership.kind === 'guildMember') {
 		return NicknameUtils.formatNameForStreamerMode(membership.member.nick ?? user.displayName);
 	}
-	return NicknameUtils.getNickname(user, fallbackGuildId);
+	return NicknameUtils.getNickname(user, fallbackGuildId ?? null);
 }
 
 export function toProfileDisplayContext({
