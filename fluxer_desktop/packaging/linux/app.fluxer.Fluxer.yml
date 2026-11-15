@@ -20,6 +20,9 @@ finish-args:
   - --filesystem=xdg-run/pipewire-0:ro
   - --filesystem=xdg-run/speech-dispatcher:ro
   - --talk-name=org.freedesktop.Notifications
+  - --talk-name=org.freedesktop.secrets
+  - --talk-name=org.kde.kwalletd5
+  - --talk-name=org.kde.kwalletd6
   - --talk-name=org.kde.StatusNotifierWatcher
   - --talk-name=org.ayatana.indicator.application
   - --talk-name=com.canonical.indicator.application
