@@ -1,11 +1,7 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 .noteTextarea {
-	scrollbar-width: none;
-}
-
-.noteTextarea::-webkit-scrollbar {
-	display: none;
+	scrollbar-width: thin;
 }
 
 .modalRoot.modalRoot {
