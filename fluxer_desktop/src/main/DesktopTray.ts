@@ -102,8 +102,11 @@ export function updateTrayRuntimeState(update: Partial<TrayRuntimeStatePayload>,
 	const privacyChanged =
 		typeof update.hidePersonalInformation === 'boolean' &&
 		update.hidePersonalInformation !== trayState.hidePersonalInformation;
+	const changed = (Object.keys(update) as Array<keyof TrayRuntimeStatePayload>).some(
+		(key) => update[key] !== trayState[key],
+	);
 	Object.assign(trayState, update);
-	refreshDesktopTrayMenu();
+	if (changed) refreshDesktopTrayMenu();
 	if (privacyChanged) {
 		for (const listener of Array.from(privacyListeners)) listener();
 	}
