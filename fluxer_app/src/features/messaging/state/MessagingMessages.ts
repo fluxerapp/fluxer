@@ -793,6 +793,7 @@ class Messages {
 				this.pendingJumpDispatches.set(channelId, dispatch);
 				return true;
 			}
+			this.commitMessages(messages.withPatch({loadingMore: true}));
 			MessageCommands.jumpToMessage({channelId, ...dispatch});
 			return false;
 		}
