@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {HdrDisplayMode} from '@app/features/accessibility/state/Accessibility';
+import {syncThemeColorMeta} from '@app/features/app/state/RuntimeDocumentBranding';
 import {readRawStorageItem, writeRawStorageItem} from '@app/features/platform/state/PrebootMirror';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {getInstanceBrandVariables, INSTANCE_BRAND_VARIABLES} from '@app/features/theme/utils/InstanceBrandColors';
@@ -131,6 +132,7 @@ export function useThemeCssVariables({
 			}
 		};
 	}, [instanceThemeColor, effectiveTheme, saturationFactor]);
+	useLayoutEffect(syncThemeColorMeta, [instanceThemeColor, effectiveTheme, saturationFactor]);
 	useLayoutEffect(() => {
 		const htmlNode = document.documentElement;
 		return () => {

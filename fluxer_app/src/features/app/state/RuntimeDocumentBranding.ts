@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {DEFAULT_APP_SHELL_BRANDING} from '@app/features/app/state/AppShellBranding';
+import {getInstanceBrandStyle} from '@app/features/app/state/InstanceBrandStyle';
 import {getServedDocumentBranding} from '@app/features/app/state/ServedDocumentBranding';
 import {setDocumentTitleProductName} from '@app/features/window/state/DocumentTitle';
 import type {InstanceAppPublic} from '@fluxer/instance_bootstrap/src/Types';
@@ -119,6 +120,12 @@ function setMeta(name: string, content: string): void {
 
 function removeMeta(name: string): void {
 	brandedMeta(name)?.remove();
+}
+
+export function syncThemeColorMeta(): void {
+	if (typeof document === 'undefined' || getInstanceBrandStyle().themeColor !== null) return;
+	const meta = document.head.querySelector<HTMLMetaElement>('meta[name="theme-color"]:not([data-fluxer-branding])');
+	if (meta !== null) meta.content = getComputedStyle(document.documentElement).backgroundColor;
 }
 
 export function getDocumentFavicons(appPublic: InstanceAppPublic | null): DocumentFavicons {
