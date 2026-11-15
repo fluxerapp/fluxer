@@ -32,6 +32,7 @@ import {
 	type ReadStateAckRequestEntry,
 } from '@app/features/read_state/state/read_states/shared';
 import Relationships from '@app/features/relationship/state/Relationships';
+import ChannelThreads from '@app/features/threads/state/ChannelThreads';
 import Dimension from '@app/features/ui/state/Dimension';
 import Users from '@app/features/user/state/Users';
 import {
@@ -43,6 +44,7 @@ import {THREAD_FEATURE_CHANNEL_TYPES, THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/c
 import type {ChannelId, GuildId} from '@fluxer/schema/src/branded/WireIds';
 import type {ReadStateAckResponse} from '@fluxer/schema/src/domains/channel/ChannelRequestSchemas';
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
 import {observable, runInAction} from 'mobx';
 
 export type {GatewayReadState};
@@ -1030,6 +1032,20 @@ class ReadStates {
 	): void {
 		if (!result.acked || result.messageId == null) return;
 		this.ackQueue.enqueue(channelId, result.messageId, {immediate: options.immediate, hadMentions: result.hadMentions});
+		this.ackForumOfNewestPost(channelId, options.immediate);
+	}
+
+	private ackForumOfNewestPost(postId: string, immediate?: boolean): void {
+		const forumId = Channels.getChannel(postId)?.parentId;
+		const forum = forumId ? Channels.getChannel(forumId) : undefined;
+		if (forum == null || !THREAD_ONLY_CHANNEL_TYPES.has(forum.type)) return;
+		if (this.lastMessageId(forum.id) !== postId || !this.hasUnread(forum.id)) return;
+		const forumAckId = this.ackMessageId(forum.id);
+		const hasOtherNewPost = ChannelThreads.getThreadIdsForParent(forum.id).some(
+			(id) => id !== postId && (forumAckId == null || SnowflakeUtils.compare(id, forumAckId) > 0),
+		);
+		if (hasOtherNewPost) return;
+		this.handleChannelAck({channelId: forum.id, messageId: postId, immediate});
 	}
 
 	private async postAckEntries(entries: Array<ReadStateAckRequestEntry>): Promise<ReadStateAckResponse | null> {
