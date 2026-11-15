@@ -221,6 +221,7 @@ function getMessagePermissionsForChannel(message: Message, channel: Channel): Me
 				passesVerification));
 	const canAddReactions =
 		!isClientSystem &&
+		message.type !== MessageTypes.THREAD_STARTER_MESSAGE &&
 		!interactionsBlocked &&
 		!isAuthorBlocked &&
 		(isDM ||
