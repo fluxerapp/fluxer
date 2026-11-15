@@ -6,6 +6,8 @@ import {
 } from '@app/features/channel/components/LexicalChannelTextareaContent';
 import type {Channel} from '@app/features/channel/models/Channel';
 import {EmojiPickerPopout} from '@app/features/emoji/components/popouts/EmojiPickerPopout';
+import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
+import {getSkinTonedSurrogate} from '@app/features/expressions/utils/SkinToneUtils';
 import * as ForumCommands from '@app/features/forum/commands/ForumCommands';
 import styles from '@app/features/forum/components/Forum.module.css';
 import {ForumComposerTags} from '@app/features/forum/components/ForumTagPicker';
@@ -41,6 +43,7 @@ import {EyeIcon, ImageSquareIcon, SmileyIcon, XIcon} from '@phosphor-icons/react
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useEffect, useRef, useState} from 'react';
+import {flushSync} from 'react-dom';
 
 interface ForumPostComposerProps {
 	forum: Channel;
@@ -57,6 +60,7 @@ export const ForumPostComposer = observer(({forum, onClose}: ForumPostComposerPr
 	const [preview, setPreview] = useState(false);
 	const controlsRef = useRef<ChannelTextareaControls | null>(null);
 	const titleRef = useRef<HTMLInputElement>(null);
+	const emojiTargetRef = useRef<'title' | 'body'>('title');
 	useEffect(() => {
 		titleRef.current?.focus();
 	}, []);
@@ -122,6 +126,23 @@ export const ForumPostComposer = observer(({forum, onClose}: ForumPostComposerPr
 		(media ? attachments.length > 0 : hasVisibleMessageContent(body) || attachments.length > 0) &&
 		(!isTagRequired(forum) || tags.length > 0);
 	const mobile = MobileLayout.enabled;
+	const handleEmojiSelect = (emoji: FlatEmoji) => {
+		const input = titleRef.current;
+		if (emojiTargetRef.current === 'body' || input == null) {
+			controlsRef.current?.insertEmoji(emoji);
+			return;
+		}
+		const text = getSkinTonedSurrogate(emoji) || `:${emoji.name}:`;
+		const start = input.selectionStart ?? input.value.length;
+		const end = input.selectionEnd ?? start;
+		const next = `${input.value.slice(0, start)}${text}${input.value.slice(end)}`;
+		if (next.length > THREAD_NAME_MAX_LENGTH) return;
+		flushSync(() => {
+			ForumPostDrafts.update(forum.id, {title: next});
+			setError(undefined);
+		});
+		input.setSelectionRange(start + text.length, start + text.length);
+	};
 	return (
 		<div className={styles.composerCard} data-flx="forum.forum-post-composer.composer">
 			<div className={styles.composerHead} data-flx="forum.forum-post-composer.composer-head">
@@ -131,6 +152,9 @@ export const ForumPostComposer = observer(({forum, onClose}: ForumPostComposerPr
 					onChange={(event) => {
 						ForumPostDrafts.update(forum.id, {title: event.target.value});
 						setError(undefined);
+					}}
+					onFocus={() => {
+						emojiTargetRef.current = 'title';
 					}}
 					onKeyDown={(event) => {
 						if (event.key !== 'Enter') return;
@@ -177,6 +201,9 @@ export const ForumPostComposer = observer(({forum, onClose}: ForumPostComposerPr
 					bare
 					controlsRef={controlsRef}
 					onValueChange={setBody}
+					onFocus={() => {
+						emojiTargetRef.current = 'body';
+					}}
 					data-flx="forum.forum-post-composer.lexical-channel-textarea-content.submit"
 				/>
 			</div>
@@ -231,7 +258,7 @@ export const ForumPostComposer = observer(({forum, onClose}: ForumPostComposerPr
 							render={({onClose: closePicker}) => (
 								<EmojiPickerPopout
 									channelId={forum.id}
-									handleSelect={(emoji) => controlsRef.current?.insertEmoji(emoji)}
+									handleSelect={handleEmojiSelect}
 									onClose={closePicker}
 									data-flx="forum.forum-post-composer.emoji-picker-popout"
 								/>
