@@ -1763,7 +1763,7 @@ export const AdminMessageSchema = z.object({
 	author_avatar: z.string().nullable(),
 	author_bot: z.boolean().optional(),
 	webhook_id: SnowflakeStringType.nullable().optional(),
-	content: createStringType(0, 4000),
+	content: z.string(),
 	timestamp: z.string(),
 	attachments: z.array(AdminMessageAttachmentSchema).max(10),
 	embeds: z.array(MessageEmbedResponse).optional(),
