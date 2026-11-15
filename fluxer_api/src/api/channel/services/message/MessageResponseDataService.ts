@@ -223,6 +223,7 @@ export class MessageResponseDataService {
 		nonce?: string;
 		tts?: boolean;
 		sourceGuildId?: GuildID | null;
+		personaFallbackBehavior?: boolean;
 	}): Promise<MessageResponse> {
 		return this.buildMessage({
 			userId: messageResponseViewerId(params.message, params.userId),
@@ -234,6 +235,7 @@ export class MessageResponseDataService {
 			nonce: params.nonce,
 			tts: params.tts,
 			includeReactions: false,
+			personaFallbackBehavior: true, // Gateway responses always use fallback behavior for now
 		});
 	}
 
