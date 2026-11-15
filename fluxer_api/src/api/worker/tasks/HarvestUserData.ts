@@ -73,6 +73,8 @@ import {
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import {ms} from 'itty-time';
 import {z} from 'zod';
+import type { PersonaTriggerRow } from '@app/api/database/types/PersonaTypes';
+import type { Persona } from '@app/api/models/Persona';
 
 const PayloadSchema = z.object({
 	userId: z.string(),
@@ -150,6 +152,8 @@ interface UserDataJsonParams {
 		last_active_at: Date | null;
 		last_active_ip: string | null;
 	};
+	personas: Array<Persona>;
+	personaTriggers: Array<PersonaTriggerRow>;
 }
 
 interface ArchiveParams {
@@ -438,6 +442,8 @@ export function buildUserDataJson(params: UserDataJsonParams) {
 		pinnedDms,
 		authorizedIps,
 		activityData,
+		personas,
+		personaTriggers,
 	} = params;
 	return {
 		user: {
@@ -655,6 +661,21 @@ export function buildUserDataJson(params: UserDataJsonParams) {
 			channel_id: pin.channel_id.toString(),
 			sort_order: pin.sort_order,
 		})),
+		personas: personas.map((persona) => ({
+			id: persona.id.toString(),
+			accent_color: persona.accentColor,
+			avatar_hash: persona.avatarHash,
+			banner_hash: persona.bannerHash,
+			bio: persona.bio,
+			display_name: persona.displayName,
+			internal_name: persona.internalName,
+			pronouns: persona.pronouns,
+			tags: persona.tags ?? [],
+			triggers: personaTriggers.filter((trigger) => trigger.persona_id === persona.id).map((trigger) => ({
+				prefix: trigger.prefix,
+				suffix: trigger.suffix,
+			}))
+		})),
 		...mapSecurityData({authorizedIps, activityData}),
 	};
 }
@@ -784,6 +805,7 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 		emailService,
 		instanceConfigRepository,
 		storeEntitlementService,
+		personaRepository,
 	} = dependencies;
 	const adminRequestedBy = validated.adminRequestedBy ? BigInt(validated.adminRequestedBy) : null;
 	const isAdminArchive = adminRequestedBy !== null;
@@ -862,6 +884,7 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 			pinnedDms,
 			authorizedIps,
 			activityData,
+			personas,
 		] = await Promise.all([
 			userRepository.listAuthSessions(userId),
 			userRepository.listRelationships(userId),
@@ -883,7 +906,9 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 			userRepository.getPinnedDmsWithDetails(userId),
 			userRepository.getAuthorizedIps(userId),
 			userRepository.getActivityTracking(userId),
+			personaRepository.listUserPersonas(userId),
 		]);
+		const personaTriggers = (await Promise.all(personas.map((p) => personaRepository.getPersonaTriggers(userId, p.id).then((v) => v.map((q) => q.toRow(userId, p.id)))))).flat();
 		const guilds = await guildRepository.listGuilds(guildIds);
 		const guildsMap = new Map(guilds.map((guild) => [guild.id.toString(), guild]));
 		const guildMemberships = await mapWithConcurrency(guildIds, HARVEST_READ_CONCURRENCY, async (guildId) => {
@@ -920,6 +945,8 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 			pinnedDms,
 			authorizedIps,
 			activityData,
+			personas,
+			personaTriggers,
 		});
 		const userDataJsonBuffer = createArchiveJsonBuffer(userData);
 		Logger.debug({userId, harvestId, elapsed: Date.now() - startTime}, 'Collected user metadata');
