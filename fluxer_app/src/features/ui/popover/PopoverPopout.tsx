@@ -461,7 +461,7 @@ export const Popout = React.forwardRef<HTMLElement, PopoutProps>((props, ref) =>
 		onClick: (event: React.MouseEvent<HTMLElement>) => {
 			const shouldOpen =
 				!consumeDragClick(event) &&
-				!hasActiveTextSelectionInsideTarget(event.currentTarget) &&
+				(event.detail > 1 || !hasActiveTextSelectionInsideTarget(event.currentTarget)) &&
 				(props.shouldOpenOnClick?.(event) ?? true);
 			if (shouldOpen) {
 				const clickPos = event.pageX - event.currentTarget.getBoundingClientRect().left;
