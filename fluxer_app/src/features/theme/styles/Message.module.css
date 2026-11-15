@@ -1144,14 +1144,12 @@
 .userTagOffset {
 	margin-inline-start: 0.35rem;
 	vertical-align: middle;
-	display: inline-flex;
 }
 
 .userTagCompact {
 	margin-inline-end: var(--message-compact-gap);
 	flex-shrink: 0;
 	vertical-align: middle;
-	display: inline-flex;
 }
 
 .messageAuthorName {
