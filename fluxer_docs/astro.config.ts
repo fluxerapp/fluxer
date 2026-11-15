@@ -168,6 +168,7 @@ export default defineConfig({
 						'operator/reverse-proxy',
 						'operator/upload-limits',
 						'operator/sign-in',
+						'operator/bluesky',
 						'operator/kubernetes',
 						'operator/docker-compose',
 						'operator/build-from-source',
