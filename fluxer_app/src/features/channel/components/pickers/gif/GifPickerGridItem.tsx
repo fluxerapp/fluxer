@@ -65,6 +65,7 @@ export const GifPickerGridItem = observer(function GifPickerGridItem({
 	onShowTrending,
 	onSearchCategory,
 	isFocused = false,
+	isInViewport,
 	itemKey,
 }: {
 	item: GifPickerGridItemData;
@@ -84,6 +85,7 @@ export const GifPickerGridItem = observer(function GifPickerGridItem({
 	onShowTrending: () => void;
 	onSearchCategory: (term: string) => void;
 	isFocused?: boolean;
+	isInViewport: boolean;
 	itemKey?: string;
 }) {
 	const {i18n} = useLingui();
@@ -124,7 +126,7 @@ export const GifPickerGridItem = observer(function GifPickerGridItem({
 		containerRef: videoContainerRef,
 		videoPool,
 		autoPlay: true,
-		enabled: usesVideoElement,
+		enabled: usesVideoElement && isInViewport,
 		wholeFile: true,
 	});
 	const handleClick = useCallback(

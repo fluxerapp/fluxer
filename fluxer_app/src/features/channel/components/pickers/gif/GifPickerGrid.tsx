@@ -190,6 +190,9 @@ export const GifPickerGrid = observer(
 						itemKey={itemKey}
 						coords={coords}
 						isFocused={isFocused}
+						isInViewport={
+							(coords.top ?? 0) + coords.height > scrollTop && (coords.top ?? 0) < scrollTop + viewportHeight
+						}
 						onClose={onClose}
 						selectGif={selectGif}
 						autoSendKlipyGifs={autoSendKlipyGifs}
