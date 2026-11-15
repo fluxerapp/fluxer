@@ -239,6 +239,7 @@ function buildCameraCommandOptions(options?: {deviceId?: string; sendUpdate?: bo
 }
 
 function buildRoomEventDependencies(facade: {
+	disableCamera: () => Promise<void>;
 	resetStreamTracking: () => void;
 	participants: VoiceEngineV2AppParticipantAdapter;
 	sourceLifecycleBridge: VoiceEngineV2AppSourceLifecycleBridge | null;
@@ -262,6 +263,7 @@ function buildRoomEventDependencies(facade: {
 		media: {
 			applyAllLocalAudioPreferences: (activeRoom) =>
 				voiceEngineV2AppMediaExecutionAdapter.applyAllLocalAudioPreferences(activeRoom),
+			disableCamera: () => facade.disableCamera(),
 			ensureMicrophone: (activeRoom, activeChannelId) =>
 				voiceEngineV2AppMediaExecutionAdapter.ensureMicrophone(activeRoom, activeChannelId),
 			playEntranceSound: () => voiceEngineV2AppMediaExecutionAdapter.playEntranceSound(),
@@ -270,6 +272,7 @@ function buildRoomEventDependencies(facade: {
 		mediaState: {
 			handleLocalTrackStateChange: (source, isPublished) =>
 				voiceEngineV2AppMediaStateAdapter.handleLocalTrackStateChange(source, isPublished),
+			isLocalCameraOn: () => LocalVoiceState.getSelfVideo(),
 			resetLocalMediaState: (reason) => voiceEngineV2AppMediaStateAdapter.resetLocalMediaState(reason),
 		},
 		participants: {
@@ -1629,6 +1632,7 @@ class MediaEngineFacade extends Store {
 			raw,
 			(room, attemptId, guildId, channelId) => {
 				const roomEventDependencies = buildRoomEventDependencies({
+					disableCamera: () => this.setCameraEnabled(false),
 					resetStreamTracking: () => this.resetLocalMediaAndScreenShareTracking(),
 					participants: this.voiceEngineV2Participants,
 					sourceLifecycleBridge: this.voiceEngineV2SourceLifecycleBridge,
