@@ -150,7 +150,10 @@ export const AddFavoriteChannelModal = observer(({categoryId}: {categoryId?: str
 				</div>
 			</Modal.Header>
 			<Modal.Content data-flx="expressions.add-favorite-channel-modal.modal-content">
-				<Modal.ContentLayout data-flx="expressions.add-favorite-channel-modal.modal-content-layout">
+				<Modal.ContentLayout
+					className={styles.pickerLayout}
+					data-flx="expressions.add-favorite-channel-modal.modal-content-layout"
+				>
 					<div className={styles.selectContainer} data-flx="expressions.add-favorite-channel-modal.select-container">
 						<Combobox
 							label={i18n._(SELECT_A_COMMUNITY_DESCRIPTOR)}
