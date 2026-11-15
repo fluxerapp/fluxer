@@ -152,7 +152,7 @@ class Sound {
 	private pendingAutoplayBlockedOneShot: PendingAutoplayBlockedOneShot | null = null;
 	private autoplayBlockedWarnedThisSession = false;
 	currentlyPlaying = new Set<SoundType>();
-	volume = 0.4;
+	volume = SoundUtils.BASE_SOUND_VOLUME;
 	incomingCallActive = false;
 	settings: SoundSettings = {
 		allSoundsDisabled: false,
