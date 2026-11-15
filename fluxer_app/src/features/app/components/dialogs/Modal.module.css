@@ -11,6 +11,7 @@
 .layer {
 	position: fixed;
 	inset: 0 var(--quick-css-dock-right, 0px) 0 var(--quick-css-dock-left, 0px);
+	--modal-layer-width: calc(100vw - var(--quick-css-dock-left, 0px) - var(--quick-css-dock-right, 0px));
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -58,7 +59,7 @@
 	position: absolute;
 	inset: 0 var(--quick-css-dock-right, 0px) 0 var(--quick-css-dock-left, 0px);
 	--fullscreen-pad-y: clamp(0.5rem, 1.5vh, 1rem);
-	--fullscreen-pad-x: clamp(0.75rem, 2vw, 1.5rem);
+	--fullscreen-pad-x: clamp(0.75rem, calc(var(--modal-layer-width) * 0.02), 1.5rem);
 	--fullscreen-view-height: min(100dvh, 100svh, 100vh);
 	--fullscreen-available-height: calc(var(--fullscreen-view-height) - 2 * var(--fullscreen-pad-y));
 	display: flex;
@@ -202,7 +203,7 @@
 @media screen and (min-width: 768px) {
 	.layer.layerFullscreen {
 		--fullscreen-pad-y: clamp(0.75rem, 2vh, 1.5rem);
-		--fullscreen-pad-x: clamp(1.5rem, 4vw, 4rem);
+		--fullscreen-pad-x: clamp(1.5rem, calc(var(--modal-layer-width) * 0.04), 4rem);
 		padding: var(--fullscreen-pad-y) var(--fullscreen-pad-x);
 	}
 }
@@ -210,7 +211,7 @@
 @media screen and (min-width: 1024px) {
 	.layer.layerFullscreen {
 		--fullscreen-pad-y: clamp(1rem, 2.5vh, 2rem);
-		--fullscreen-pad-x: clamp(2rem, 6vw, 6rem);
+		--fullscreen-pad-x: clamp(2rem, calc(var(--modal-layer-width) * 0.06), 6rem);
 		padding: var(--fullscreen-pad-y) var(--fullscreen-pad-x);
 	}
 }
@@ -218,7 +219,7 @@
 @media screen and (min-width: 1440px) {
 	.layer.layerFullscreen {
 		--fullscreen-pad-y: clamp(1.25rem, 3vh, 2.5rem);
-		--fullscreen-pad-x: clamp(3rem, 8vw, 8rem);
+		--fullscreen-pad-x: clamp(3rem, calc(var(--modal-layer-width) * 0.08), 8rem);
 		padding: var(--fullscreen-pad-y) var(--fullscreen-pad-x);
 	}
 }
@@ -226,7 +227,7 @@
 @media screen and (min-width: 1920px) {
 	.layer.layerFullscreen {
 		--fullscreen-pad-y: clamp(1.5rem, 3.5vh, 3rem);
-		--fullscreen-pad-x: clamp(4rem, 10vw, 12.5rem);
+		--fullscreen-pad-x: clamp(4rem, calc(var(--modal-layer-width) * 0.1), 12.5rem);
 		padding: var(--fullscreen-pad-y) var(--fullscreen-pad-x);
 	}
 }
@@ -234,7 +235,7 @@
 @media screen and (min-width: 2560px) {
 	.layer.layerFullscreen {
 		--fullscreen-pad-y: clamp(1.75rem, 4vh, 3.5rem);
-		--fullscreen-pad-x: clamp(6rem, 12vw, 20rem);
+		--fullscreen-pad-x: clamp(6rem, calc(var(--modal-layer-width) * 0.12), 20rem);
 		padding: var(--fullscreen-pad-y) var(--fullscreen-pad-x);
 	}
 }
