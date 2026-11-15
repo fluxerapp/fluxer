@@ -11,7 +11,7 @@ import {
 import {z} from 'zod';
 
 const WHITESPACE_REGEX = /\s+/g;
-const NON_FILENAME_CHARS_REGEX = /[^\p{L}\p{N}\p{M}_.-]/gu;
+const NON_FILENAME_CHARS_REGEX = /[^\p{L}\p{N}\p{M}_.\-!$&'()+,;=@[\]~]/gu;
 const WINDOWS_RESERVED_NAMES = /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\.|$)/i;
 const BASE64_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
