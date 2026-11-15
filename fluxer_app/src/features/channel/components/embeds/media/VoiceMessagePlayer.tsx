@@ -389,7 +389,7 @@ const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = observer(
 					aria-valuemax={100}
 					aria-valuetext={
 						displayDuration > 0
-							? `${formatTime(displayCurrentTime, getFormattingLocale())} / ${formatTime(displayDuration, getFormattingLocale())}`
+							? `${formatTime(displayCurrentTime, getFormattingLocale())} / ${formatTime(Math.ceil(displayDuration), getFormattingLocale())}`
 							: undefined
 					}
 					data-flx="channel.embeds.media.voice-message-player.waveform-container.waveform-click"
