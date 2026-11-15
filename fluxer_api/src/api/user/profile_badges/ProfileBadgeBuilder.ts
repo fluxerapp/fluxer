@@ -44,6 +44,7 @@ export interface ProfileBadgeInput {
 	operatorPass: OperatorPassHolder | null;
 	operatorPassQuote?: string | null;
 	locale: string | null | undefined;
+	timeZone?: string | null;
 	environment: ProfileBadgeEnvironment;
 	restricted?: boolean;
 	profileHidden?: boolean;
@@ -83,6 +84,7 @@ function publicViewSource(input: ProfileBadgeInput): ViewSource | null {
 		operatorPass: restricted ? null : publicOperatorPass(input),
 		environment,
 		locale: resolveContentLocale(input.locale),
+		timeZone: input.timeZone ?? 'UTC',
 		customBadgeIds: new Set([...user.badgeIds].filter((id) => !hidden.has(customProfileBadgeKey(id.toString())))),
 	};
 }
@@ -100,6 +102,7 @@ function heldViewSource(input: ProfileBadgeInput, premiumFlags: number): ViewSou
 		operatorPass: input.operatorPass ? visibleOperatorPass(input.operatorPass, input) : null,
 		environment,
 		locale: resolveContentLocale(input.locale),
+		timeZone: input.timeZone ?? 'UTC',
 		customBadgeIds: user.badgeIds,
 	};
 }

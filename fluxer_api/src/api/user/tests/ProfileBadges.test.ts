@@ -162,6 +162,24 @@ describe('profile badges', () => {
 		expect(await visionaryLabel('de')).toContain('2026年10月');
 	});
 
+	test('badge dates use the saved time zone of the viewer', async () => {
+		const target = await createTestAccount(harness);
+		const viewer = await createTestAccount(harness);
+		await shareGuild(target, viewer);
+		await makeVisionary(target);
+		await setPremium(target, {premium_since: '2026-10-15T05:00:00.000Z'});
+		const visionaryLabel = async () =>
+			(await profile(viewer, target)).profile_badges.find((badge) => badge.kind === 'visionary')?.label;
+		expect(await visionaryLabel()).toBe('Fluxer Visionary since October 15, 2026');
+		await createBuilder(harness, viewer.token).patch('/users/@me').body({timezone: 'Pacific/Honolulu'}).execute();
+		expect(await visionaryLabel()).toBe('Fluxer Visionary since October 14, 2026');
+		await createBuilder(harness, target.token).patch('/users/@me').body({timezone: 'Pacific/Honolulu'}).execute();
+		const ownPreview = await preview(target, {});
+		expect(ownPreview.profile_badges.find((badge) => badge.kind === 'visionary')?.label).toBe(
+			'Fluxer Visionary since October 14, 2026',
+		);
+	});
+
 	test('legacy premium fields keep their current shape', async () => {
 		const target = await createTestAccount(harness);
 		const viewer = await createTestAccount(harness);
