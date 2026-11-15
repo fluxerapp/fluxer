@@ -107,6 +107,7 @@ export function InlineAudioPlayer({
 	});
 	const {escalateToMetadata, sourceAttribute, preloadAttribute} = useMetadataPreload(src, hasStarted);
 	const displayDuration = duration > 0 ? duration : (initialDuration ?? 0);
+	const durationLabel = formatDuration(Math.ceil(displayDuration));
 	useLayoutEffect(() => {
 		const media = mediaRef.current;
 		return () => {
@@ -309,7 +310,7 @@ export function InlineAudioPlayer({
 					transition={{duration: Accessibility.useReducedMotion ? 0 : 0.2, ease: 'easeOut'}}
 					data-flx="voice.media-player.inline-audio-player.mobile-timestamp"
 				>
-					{state.isPlaying ? formatDuration(currentTime) : formatDuration(displayDuration)}
+					{state.isPlaying ? formatDuration(currentTime) : durationLabel}
 				</motion.span>
 			</motion.div>
 		);
@@ -374,7 +375,7 @@ export function InlineAudioPlayer({
 						</span>
 					</p>
 					<p className={styles.fileMeta} data-flx="voice.media-player.inline-audio-player.file-meta">
-						{`${fileSizeString}${fileSizeString && displayDuration > 0 ? ' · ' : ''}${displayDuration > 0 ? formatDuration(displayDuration) : ''}`}
+						{`${fileSizeString}${fileSizeString && displayDuration > 0 ? ' · ' : ''}${displayDuration > 0 ? durationLabel : ''}`}
 					</p>
 				</div>
 			</div>
@@ -395,7 +396,7 @@ export function InlineAudioPlayer({
 					data-flx="voice.media-player.inline-audio-player.progress-bar"
 				/>
 				<span className={styles.time} data-flx="voice.media-player.inline-audio-player.time">
-					{formatDuration(currentTime)} / {formatDuration(displayDuration)}
+					{formatDuration(currentTime)} / {durationLabel}
 				</span>
 			</div>
 			<div className={styles.controls} data-flx="voice.media-player.inline-audio-player.controls">
