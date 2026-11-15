@@ -6,6 +6,7 @@ import {
 	stopMediaTrack,
 	stopUnselectedStreamTracks,
 } from '@app/features/voice/engine/voice_screen_share_manager/shared';
+import {SCREEN_SHARE_AUDIO_CAPTURE_CONSTRAINTS} from '@app/features/voice/utils/AudioPublishOptions';
 import {rememberCapturedDisplayAudioTrack} from '@app/features/voice/utils/NativeAudioCaptureBridge';
 import {ScreenShareAudioCaptureError} from '@app/features/voice/utils/ScreenShareAudioCaptureError';
 import type {ScreenShareCaptureOptions} from 'livekit-client';
@@ -46,11 +47,7 @@ export function getDisplayMediaOptions(options?: ScreenShareCaptureOptions): Dis
 		const baseAudio = typeof audioConstraints === 'object' ? audioConstraints : {};
 		audioConstraints = {
 			...baseAudio,
-			channelCount: 2,
-			sampleRate: 48000,
-			echoCancellation: false,
-			noiseSuppression: false,
-			autoGainControl: false,
+			...SCREEN_SHARE_AUDIO_CAPTURE_CONSTRAINTS,
 			...(options?.restrictOwnAudio === true ? {restrictOwnAudio: true} : {}),
 			...(options?.suppressLocalAudioPlayback === true ? {suppressLocalAudioPlayback: true} : {}),
 		} as DisplayMediaAudioConstraints;
