@@ -175,7 +175,7 @@ describe('thread limits and timeouts', () => {
 			await timeOut(s, s.member.userId);
 			await threadsRequest(harness, s.member.token)
 				.put(`/channels/${thread.id}/thread-members/@me`)
-				.expect(403, APIErrorCodes.MISSING_ACCESS)
+				.expect(404, APIErrorCodes.UNKNOWN_CHANNEL)
 				.execute();
 		});
 	});

@@ -498,7 +498,7 @@ describe('thread routes', () => {
 			const thread = await startThread(s.owner.token, s.channelId, {name: 'p', type: ChannelTypes.PRIVATE_THREAD});
 			await threadsRequest(harness, s.member.token)
 				.put(`/channels/${thread.id}/thread-members/@me`)
-				.expect(403, APIErrorCodes.MISSING_ACCESS)
+				.expect(404, APIErrorCodes.UNKNOWN_CHANNEL)
 				.execute();
 		});
 

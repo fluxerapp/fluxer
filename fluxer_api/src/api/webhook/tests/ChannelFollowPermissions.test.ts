@@ -111,7 +111,7 @@ describe('Channel follow permissions and content rules', () => {
 			deny: Permissions.VIEW_CHANNEL.toString(),
 		});
 		await followRequest(harness, b.owner.token, a.ann.id, b.t1.id)
-			.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.MISSING_PERMISSIONS)
+			.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.UNKNOWN_CHANNEL)
 			.execute();
 	});
 
