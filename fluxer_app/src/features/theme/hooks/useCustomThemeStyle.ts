@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {syncThemeColorMeta} from '@app/features/app/state/RuntimeDocumentBranding';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {
 	ATTACHMENT_URL_REFRESH_MARGIN_MS,
@@ -38,6 +39,7 @@ export function excludeUserStylesheets(node: Element): boolean {
 function syncUserStylesheetsClass(): void {
 	const applied = [...USER_STYLE_ELEMENT_IDS].some((id) => document.getElementById(id) !== null);
 	document.documentElement.classList.toggle(USER_STYLESHEETS_CLASS, applied);
+	syncThemeColorMeta();
 }
 
 interface CustomThemeStyleOptions {
