@@ -5,6 +5,7 @@ import Keybind from '@app/features/input/state/InputKeybind';
 import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePermissionState';
 import {
 	createVoiceEngineV2AppAudioSettingsSnapshot,
+	hasVoiceEngineV2DefaultInputEndpointChanged,
 	hasVoiceEngineV2InputProcessorSettingsChanged,
 	hasVoiceEngineV2MicrophoneCaptureSettingsChanged,
 	hasVoiceEngineV2MicrophonePublishSettingsChanged,
@@ -97,7 +98,9 @@ function syncVoiceEngineV2AppAudioPreferences(
 	if (previous.pushToMuteActive !== current.pushToMuteActive) {
 		adapter.handleInputKeybindChange(room);
 	}
-	const republish = hasVoiceEngineV2MicrophonePublishSettingsChanged(previous.audioSettings, current.audioSettings);
+	const republish =
+		hasVoiceEngineV2MicrophonePublishSettingsChanged(previous.audioSettings, current.audioSettings) ||
+		hasVoiceEngineV2DefaultInputEndpointChanged(previous.audioSettings, current.audioSettings);
 	if (republish || hasVoiceEngineV2MicrophoneCaptureSettingsChanged(previous.audioSettings, current.audioSettings)) {
 		refreshMicrophone(room, adapter, logger, republish);
 	} else if (hasVoiceEngineV2InputProcessorSettingsChanged(previous.audioSettings, current.audioSettings)) {
