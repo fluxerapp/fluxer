@@ -600,6 +600,33 @@ async function repairLinuxAutostartEntry(): Promise<void> {
 	}
 }
 
+function windowsLaunchItemMissesAutostartArg(item: Electron.LaunchItems): boolean {
+	return (
+		item.enabled &&
+		item.scope === 'user' &&
+		getWindowsLoginItemNames().includes(item.name) &&
+		!(item.args ?? []).includes(AUTOSTART_LAUNCH_ARG)
+	);
+}
+
+async function repairWindowsAutostartEntry(): Promise<void> {
+	if (!isWindows || isPortableMode()) return;
+	const launchPaths = new Set(getWindowsAutoLaunchConfigs().map((config) => config.path));
+	const staleItem = [...launchPaths]
+		.flatMap((launchPath) => app.getLoginItemSettings({path: launchPath}).launchItems ?? [])
+		.find(windowsLaunchItemMissesAutostartArg);
+	if (!staleItem) return;
+	try {
+		await enableAutostart();
+		log.info('[Autostart] Rewrote a Windows autostart entry that was missing the autostart argument', {
+			name: staleItem.name,
+			path: staleItem.path,
+		});
+	} catch (error) {
+		log.warn('[Autostart] Failed to rewrite the stale Windows autostart entry:', error);
+	}
+}
+
 function isLegacyGeneratedLinuxAutostartEntry(contents: string, entry: Map<string, string>): boolean {
 	return contents.includes(GENERATED_MARKER) || entry.get('StartupWMClass')?.trim() === LEGACY_LINUX_DESKTOP_ENTRY_ID;
 }
@@ -657,6 +684,7 @@ async function migrateLegacyLinuxAutostartEntry(): Promise<void> {
 
 export function registerAutostartHandlers(): void {
 	void migrateLegacyLinuxAutostartEntry().then(repairLinuxAutostartEntry);
+	void repairWindowsAutostartEntry();
 	ipcMain.handle('autostart-enable', async (): Promise<void> => {
 		await enableAutostart();
 	});
