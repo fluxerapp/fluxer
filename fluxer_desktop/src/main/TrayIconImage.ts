@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {LinuxDesktopKind} from '@electron/common/Types';
 import {type NativeImage, nativeImage} from 'electron';
 
 export type TrayIconAppearance = 'colored' | 'template' | 'white' | 'black';
@@ -27,14 +28,19 @@ const GLYPH_BGR: Readonly<Record<'white' | 'black', Bgr>> = {
 	black: [0x1c, 0x1c, 0x1c],
 };
 
+export function trayIconFollowsSystemTheme(platform: NodeJS.Platform, linuxDesktop: LinuxDesktopKind): boolean {
+	return platform === 'win32' || (platform === 'linux' && linuxDesktop === 'kde');
+}
+
 export function resolveTrayIconAppearance(options: {
 	platform: NodeJS.Platform;
+	linuxDesktop: LinuxDesktopKind;
 	coloredTrayIcon: boolean;
 	darkSystemUI: boolean;
 }): TrayIconAppearance {
 	if (options.platform === 'darwin') return 'template';
 	if (options.coloredTrayIcon) return 'colored';
-	if (options.platform === 'win32' && !options.darkSystemUI) return 'black';
+	if (trayIconFollowsSystemTheme(options.platform, options.linuxDesktop) && !options.darkSystemUI) return 'black';
 	return 'white';
 }
 
