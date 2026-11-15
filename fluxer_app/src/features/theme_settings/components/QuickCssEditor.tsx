@@ -637,7 +637,9 @@ const QuickCssEditor: React.FC<QuickCssEditorProps> = observer(
 					const immediate = update.transactions.some((transaction) =>
 						IMMEDIATE_WRITE_EVENTS.some((event) => transaction.isUserEvent(event)),
 					);
-					onChangeRef.current(update.state.doc.toString(), immediate);
+					if (!update.transactions.every((transaction) => transaction.annotation(Transaction.remote))) {
+						onChangeRef.current(update.state.doc.toString(), immediate);
+					}
 					if (historyTimer !== null) clearTimeout(historyTimer);
 					historyTimer = setTimeout(capture, HISTORY_SAVE_DELAY_MS);
 				}
@@ -806,7 +808,7 @@ const QuickCssEditor: React.FC<QuickCssEditorProps> = observer(
 			if (current === value) return;
 			view.dispatch({
 				changes: {from: 0, to: current.length, insert: value},
-				annotations: Transaction.addToHistory.of(false),
+				annotations: [Transaction.addToHistory.of(false), Transaction.remote.of(true)],
 			});
 		}, [view, value]);
 
