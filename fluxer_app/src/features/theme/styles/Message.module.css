@@ -1130,6 +1130,7 @@
 	font-weight: 500;
 	color: var(--text-primary);
 	line-height: var(--message-line-height);
+	text-align: start;
 	user-select: text;
 	-webkit-user-select: text;
 }
