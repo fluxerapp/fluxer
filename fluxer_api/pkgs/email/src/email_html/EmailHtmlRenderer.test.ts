@@ -46,6 +46,7 @@ const MANAGE_URL = 'https://example.com/donate/manage#token=abc';
 const REPORT_ID = '1290874512349872128';
 const REPORT_REFERENCE = {
 	target: 'user',
+	concern: 'other',
 	reportedAt: new Date('2026-10-24T18:12:00Z'),
 	username: 'example',
 	communityName: '',
@@ -769,6 +770,7 @@ describe('email text renderer', () => {
 			'en-US',
 			{
 				target: 'community',
+				concern: 'other',
 				reportedAt: new Date('2026-11-01T00:00:00Z'),
 				username: '',
 				communityName: '[Join](https://example.com/x) <b> \\[Open\\](https://example.com/y)',
@@ -789,6 +791,54 @@ describe('email text renderer', () => {
 
 	it('keeps names literal in plain text', () => {
 		expect(render('plain')).toContain('[Join](https://example.com/x) <b> \\[Open\\](https://example.com/y)');
+	});
+
+	it('tells self-harm reporters about support resources when nothing broke the rules', () => {
+		const text = (concern: 'self_harm' | 'other') =>
+			renderEmailTemplateText(
+				'report_resolved',
+				'en-US',
+				{
+					target: 'message',
+					concern,
+					reportedAt: new Date('2026-11-01T00:00:00Z'),
+					username: '',
+					communityName: '',
+					channelName: '',
+					outcome: 'no_violation',
+					appeals_email: null,
+				},
+				'Fluxer',
+				(template) => reportResolvedSlots(template, '123', ''),
+				{format: 'plain'},
+			);
+		expect(text('self_harm')).toContain('Thanks for looking out for them.');
+		expect(text('self_harm')).toContain('contact your local emergency number');
+		expect(text('other')).not.toContain('Thanks for looking out for them.');
+		expect(text('other')).toContain('Please keep reporting anything that worries you');
+	});
+
+	it('wraps email addresses in angle brackets in markdown text so the client links them', () => {
+		const withAppeals = (format: 'plain' | 'markdown') =>
+			renderEmailTemplateText(
+				'report_resolved',
+				'en-US',
+				{
+					target: 'other',
+					concern: 'other',
+					reportedAt: new Date('2026-11-01T00:00:00Z'),
+					username: '',
+					communityName: '',
+					channelName: '',
+					outcome: 'no_violation',
+					appeals_email: 'appeals@example.com',
+				},
+				'Fluxer',
+				(template) => reportResolvedSlots(template, '123', ''),
+				{format},
+			);
+		expect(withAppeals('markdown')).toContain('email <appeals@example.com> within 60 days');
+		expect(withAppeals('plain')).toContain('email appeals@example.com within 60 days');
 	});
 });
 

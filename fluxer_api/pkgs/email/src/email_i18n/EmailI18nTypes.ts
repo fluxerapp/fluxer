@@ -53,8 +53,11 @@ export type ReporterOutcome = 'removed' | 'restricted' | 'action_taken' | 'no_vi
 
 export type ReportReferenceTarget = 'message_community' | 'message_dm' | 'message' | 'user' | 'community' | 'other';
 
+export type ReportConcern = 'self_harm' | 'other';
+
 export interface ReportReference {
 	target: ReportReferenceTarget;
+	concern: ReportConcern;
 	reportedAt: Date;
 	username: string;
 	communityName: string;
