@@ -14,7 +14,6 @@ export function isPushToTalkActiveFromAppState(): boolean {
 }
 
 export function isPushToMuteActiveFromAppState(): boolean {
-	if (getActiveVoiceProcessingMode(VoiceSettings) === 'studio') return false;
 	return Keybind.isPushToMuteEffective();
 }
 

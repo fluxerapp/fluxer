@@ -1495,7 +1495,6 @@ class MediaEngineFacade extends Store {
 	}
 
 	private isPushToMuteActive(): boolean {
-		if (getActiveVoiceProcessingMode(VoiceSettings) === 'studio') return false;
 		return Keybind.isPushToMuteEffective();
 	}
 
