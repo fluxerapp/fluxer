@@ -15,10 +15,17 @@ export function getCachedDesktopWindowBehaviorSettings(): DesktopWindowBehaviorS
 	return cachedSettings;
 }
 
+const EDITABLE_SELECTOR = 'input, textarea, [contenteditable]:not([contenteditable="false"])';
+
+function isEditableTarget(target: EventTarget | null): boolean {
+	const element = target as Element | null;
+	return typeof element?.closest === 'function' && element.closest(EDITABLE_SELECTOR) !== null;
+}
+
 export function attachMiddleClickAutoscrollPasteGuard(target: Window): () => void {
 	const handler = (event: PointerEvent) => {
 		if (event.button !== MIDDLE_MOUSE_BUTTON || (event.buttons & MIDDLE_MOUSE_BUTTONS_FLAG) !== 0) return;
-		if (!cachedSettings?.activeMiddleClickAutoscroll) return;
+		if (!cachedSettings?.activeMiddleClickAutoscroll && isEditableTarget(event.target)) return;
 		event.preventDefault();
 	};
 	target.addEventListener('pointerup', handler, true);
