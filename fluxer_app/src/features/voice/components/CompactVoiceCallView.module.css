@@ -332,7 +332,8 @@
 	display: none;
 }
 
-.container[data-voice-call-popped-out='true'] .resizeHandle {
+.container[data-voice-call-popped-out='true'] .resizeHandle,
+.container[data-voice-call-popped-out='true'] .heightToggleButtonWrap {
 	z-index: 31;
 }
 
