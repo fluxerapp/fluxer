@@ -57,6 +57,10 @@
 	transition: box-shadow 120ms ease;
 }
 
+.sliderTrack .colorThumb {
+	top: 50%;
+}
+
 .colorThumb[data-focus-visible] {
 	box-shadow:
 		0 0 0 0.0625rem rgba(0, 0, 0, 0.3),
