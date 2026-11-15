@@ -239,12 +239,12 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 		<LayoutVariantProvider value={layoutVariantContextValue} data-flx="app.app.app-wrapper.layout-variant-provider">
 			<SVGMasks data-flx="app.app.app-wrapper.svg-masks" />
 			<VoiceLiveKitRoot data-flx="app.app.app-wrapper.voice-live-kit-root">
+				{isNative && !useSystemTitleBar && !isRootDocumentFullscreen && (
+					<NativeTitlebar platform={platform} data-flx="app.app.app-wrapper.native-titlebar" />
+				)}
 				<div ref={ringsContainerRef} className={styles.appContainer} data-flx="app.app.app-wrapper.app-container">
 					<FocusRingScope containerRef={ringsContainerRef} data-flx="app.app.app-wrapper.focus-ring-scope">
 						<SkipToContentLink data-flx="app.app.app-wrapper.skip-to-content-link" />
-						{isNative && !useSystemTitleBar && !isRootDocumentFullscreen && (
-							<NativeTitlebar platform={platform} data-flx="app.app.app-wrapper.native-titlebar" />
-						)}
 						{children}
 					</FocusRingScope>
 				</div>
