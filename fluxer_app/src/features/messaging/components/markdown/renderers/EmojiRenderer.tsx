@@ -190,12 +190,16 @@ export const EmojiRenderer = observer(function EmojiRenderer({
 		'data-emoji-id': emojiData.id,
 		'data-animated': emojiData.isAnimated,
 	};
+	const emojiCopyText =
+		node.kind.kind === EmojiKind.Custom
+			? `<${node.kind.animated ? 'a' : ''}:${node.kind.name}:${node.kind.id}>`
+			: node.kind.raw;
 	const renderEmojiElement = (contextMenu: boolean, dataFlx: string) =>
 		emojiUrl ? (
 			<img
 				draggable={false}
 				className={className}
-				alt={accessibleName}
+				alt={emojiCopyText}
 				aria-label={accessibleName}
 				src={emojiUrl}
 				style={hasFailed ? FAILED_EMOJI_STYLE : undefined}
