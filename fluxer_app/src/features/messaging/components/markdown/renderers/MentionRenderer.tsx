@@ -16,7 +16,11 @@ import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import mentionRendererStyles from '@app/features/theme/styles/MentionRenderer.module.css';
 import * as ColorUtils from '@app/features/theme/utils/ColorUtils';
-import {openThreadFromEvent, type ThreadOpenEvent} from '@app/features/threads/commands/ThreadNavigation';
+import {
+	openThreadFromEvent,
+	preventShiftSelection,
+	type ThreadOpenEvent,
+} from '@app/features/threads/commands/ThreadNavigation';
 import {ThreadContextMenu} from '@app/features/threads/components/ThreadContextMenu';
 import ChannelThreads from '@app/features/threads/state/ChannelThreads';
 import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
@@ -82,6 +86,7 @@ function InteractiveChannelMention({channel, roleDescription}: InteractiveChanne
 				aria-haspopup="menu"
 				aria-expanded={isOpen}
 				aria-roledescription={roleDescription}
+				onMouseDown={channel.isThread() ? preventShiftSelection : undefined}
 				onClick={(event) => {
 					event.stopPropagation();
 					activate(event);
