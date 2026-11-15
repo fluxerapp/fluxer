@@ -8,8 +8,8 @@ use crate::links::{has_open_inline_code, has_valid_code_fence_language};
 use crate::normalize::{normalize_nodes, replace_trailing_whitespace_with_newline};
 use crate::parser::{MarkdownParser, ParseError, RuntimeState};
 use crate::text::{
-    Line, bounded_line_text, byte_at, concat, has_visible_content, line_as_text, lines_to_text,
-    starts_with, trim, trim_line_window, trim_right, trim_start, trim_start_newline_whitespace,
+    Line, byte_at, concat, has_visible_content, line_as_text, lines_to_text, starts_with, trim,
+    trim_line_window, trim_right, trim_start, trim_start_newline_whitespace,
 };
 
 #[derive(Clone, Debug)]
@@ -387,7 +387,7 @@ fn parse_blockquote(
             break;
         }
         child_lines.push(Line {
-            text: bounded_line_text(child_text).to_owned(),
+            text: child_text.to_owned(),
             offset: child_offset,
         });
         content_len += child_text.len() + 1;
@@ -450,7 +450,7 @@ fn parse_multiline_blockquote(
     }
     let trimmed_offset = lines[current].text.len() - trimmed_line.len();
     let mut child_lines = vec![Line {
-        text: bounded_line_text(&trimmed_line[4..]).to_owned(),
+        text: trimmed_line[4..].to_owned(),
         offset: lines[current].offset + trimmed_offset + 4,
     }];
     let mut content_len = trimmed_line[4..].len();
@@ -748,7 +748,7 @@ fn parse_block_spoiler(
             if let Some(start) = line.find("||") {
                 let child_text = &line[start + 2..];
                 child_lines.push(Line {
-                    text: bounded_line_text(child_text).to_owned(),
+                    text: child_text.to_owned(),
                     offset: lines[index].offset + start + 2,
                 });
                 content_len += child_text.len() + 1;
@@ -756,7 +756,7 @@ fn parse_block_spoiler(
         } else if let Some(end) = line.find("||") {
             let child_text = &line[..end];
             child_lines.push(Line {
-                text: bounded_line_text(child_text).to_owned(),
+                text: child_text.to_owned(),
                 offset: lines[index].offset,
             });
             found_end = true;
@@ -839,7 +839,7 @@ fn parse_alert_lines(
     let after_trimmed = trim_start_newline_whitespace(after_label);
     if !after_trimmed.is_empty() {
         content_lines.push(Line {
-            text: bounded_line_text(after_trimmed).to_owned(),
+            text: after_trimmed.to_owned(),
             offset: lines[0].offset + close + 1 + (after_label.len() - after_trimmed.len()),
         });
     }
@@ -870,13 +870,11 @@ fn prepare_alert_content_lines(mut lines: Vec<Line>) -> Vec<Line> {
     for line in lines.drain(..) {
         let is_list_like = is_alert_list_like_line(trim(&line.text));
         let mut prepared = line;
-        if is_list_like {
-            prepared.text = bounded_line_text(&prepared.text).to_owned();
-        } else {
+        if !is_list_like {
             let left_trimmed = trim_start(&prepared.text);
             let leading_bytes = prepared.text.len() - left_trimmed.len();
             prepared.offset += leading_bytes;
-            prepared.text = bounded_line_text(trim_right(left_trimmed)).to_owned();
+            prepared.text = trim_right(left_trimmed).to_owned();
         }
         if trim(&prepared.text).is_empty() {
             blank_run += 1;

@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use crate::ast::Node;
 use crate::block::ClosingFenceLines;
-use crate::constants::{MAX_AST_NODES, MAX_LINE_LENGTH};
+use crate::constants::MAX_AST_NODES;
 use crate::emoji::EmojiContext;
 use crate::normalize::{
     apply_text_presentation_node, combine_adjacent_text, compact_empty_text_nodes,
@@ -106,10 +106,6 @@ impl RuntimeState<'_> {
         }
 
         while self.current_line < self.lines.len() && self.parser.node_count <= MAX_AST_NODES {
-            if self.lines[self.current_line].text.len() > MAX_LINE_LENGTH {
-                self.lines[self.current_line].text =
-                    text::bounded_line_text(&self.lines[self.current_line].text).to_owned();
-            }
             if trim(&self.lines[self.current_line].text).is_empty() {
                 let blank_count = self.count_blank_lines();
                 if !ast.is_empty() && self.current_line + blank_count < self.lines.len() {

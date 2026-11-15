@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::ast::Node;
-use crate::constants::MAX_LINE_LENGTH;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Line {
@@ -21,14 +20,14 @@ pub fn split_lines(input: &str) -> Vec<Line> {
         }
         let text = segment.strip_suffix('\n').unwrap_or(segment);
         out.push(Line {
-            text: bounded_line_text(text).to_owned(),
+            text: text.to_owned(),
             offset: start,
         });
         start += segment.len();
     }
     if start < input.len() && out.len() < crate::constants::MAX_LINES {
         out.push(Line {
-            text: bounded_line_text(&input[start..]).to_owned(),
+            text: input[start..].to_owned(),
             offset: start,
         });
     }
@@ -56,10 +55,6 @@ pub fn bounded_utf8_prefix_length(value: &str, max_len: usize) -> usize {
         end -= 1;
     }
     end
-}
-
-pub fn bounded_line_text(value: &str) -> &str {
-    &value[..bounded_utf8_prefix_length(value, MAX_LINE_LENGTH)]
 }
 
 pub fn concat(left: &str, right: &str) -> String {

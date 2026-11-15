@@ -133,16 +133,8 @@ fn parse_inline_with_context(
                     .iter()
                     .position(|byte| !is_plain_text_byte(*byte))
                     .map_or(run_limit, |offset| position + offset);
-                let room = (MAX_LINE_LENGTH + 1)
-                    .saturating_sub(accumulated.len())
-                    .max(1);
-                let end = run_end.min(position + room);
-                accumulated.push_str(&text[position..end]);
-                position = end;
-                if accumulated.len() > MAX_LINE_LENGTH {
-                    flush_bounded_accumulated_text(&mut nodes, &mut accumulated, MAX_LINE_LENGTH);
-                    break;
-                }
+                accumulated.push_str(&text[position..run_end]);
+                position = run_end;
                 continue;
             }
         }
@@ -316,10 +308,6 @@ fn parse_inline_with_context(
 
         accumulated.push(char::from(current));
         position += 1;
-        if accumulated.len() > MAX_LINE_LENGTH {
-            flush_bounded_accumulated_text(&mut nodes, &mut accumulated, MAX_LINE_LENGTH);
-            break;
-        }
     }
     flush_accumulated_text(&mut nodes, &mut accumulated);
     if nodes.len() > 1 {
@@ -731,15 +719,6 @@ fn unescape_inline_code(content: &str) -> String {
 fn flush_accumulated_text(nodes: &mut Vec<Node>, accumulated: &mut String) {
     append_text(nodes, accumulated);
     accumulated.clear();
-}
-
-fn flush_bounded_accumulated_text(nodes: &mut Vec<Node>, accumulated: &mut String, max_len: usize) {
-    let mut prefix_len = accumulated.len().min(max_len);
-    while !accumulated.is_char_boundary(prefix_len) {
-        prefix_len -= 1;
-    }
-    accumulated.truncate(prefix_len);
-    flush_accumulated_text(nodes, accumulated);
 }
 
 fn is_plain_text_byte(byte: u8) -> bool {
