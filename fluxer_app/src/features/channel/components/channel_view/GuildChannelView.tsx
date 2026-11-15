@@ -366,7 +366,7 @@ export const GuildChannelView = observer(({channelId, guildId}: GuildChannelView
 		if (channel.type === ChannelTypes.GUILD_ANNOUNCEMENT && !Permission.can(Permissions.SEND_MESSAGES, channel)) {
 			return (
 				<AnnouncementFollowBarrier
-					channelId={channel.id}
+					channel={channel}
 					data-flx="channel.channel-view.guild-channel-view.render-composer.announcement-follow-barrier"
 				/>
 			);

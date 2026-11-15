@@ -4,8 +4,10 @@ import {getActiveInstanceProductName} from '@app/features/app/state/ActiveInstan
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import styles from '@app/features/channel/components/barriers/BarrierComponents.module.css';
 import {openChannelFollowModal} from '@app/features/channel/components/modals/ChannelFollowModal';
+import {TypingAnnouncer, TypingUsers} from '@app/features/channel/components/TypingUsers';
 import wrapperStyles from '@app/features/channel/components/textarea/InputWrapper.module.css';
 import textareaStyles from '@app/features/channel/components/textarea/TextareaInput.module.css';
+import type {Channel} from '@app/features/channel/models/Channel';
 import {FOLLOW_DESCRIPTOR} from '@app/features/channel/utils/ChannelFollowUtils';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {unblockUser} from '@app/features/relationship/utils/RelationshipActionUtils';
@@ -32,7 +34,7 @@ import {
 } from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
-import {useEffect, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 
 interface BarrierProps {
 	onAction?: () => void;
@@ -46,14 +48,16 @@ interface BarrierBaseProps {
 	message: React.ReactNode;
 	action?: React.ReactNode;
 	icon: React.ReactElement;
+	channel?: Channel;
 }
 
 const SYSTEM_ANNOUNCEMENTS_FROM_STAFF_DESCRIPTOR = msg({
 	message: "System announcements from {productName} staff. You can't reply here.",
 	comment: 'Read-only system DM barrier message. productName is the Fluxer product name.',
 });
-export const BarrierBase = observer(({message, action, icon}: BarrierBaseProps) => {
+export const BarrierBase = observer(({message, action, icon, channel}: BarrierBaseProps) => {
 	const hasAction = Boolean(action);
+	const typingStatusRailLeftRef = useRef<HTMLDivElement>(null);
 	return (
 		<div
 			className={clsx(
@@ -65,6 +69,33 @@ export const BarrierBase = observer(({message, action, icon}: BarrierBaseProps) 
 			)}
 			data-flx="channel.barriers.barrier-components.barrier-base.div"
 		>
+			{channel && (
+				<div
+					className={wrapperStyles.statusRail}
+					data-flx="channel.barriers.barrier-components.barrier-base.status-rail"
+				>
+					<div
+						ref={typingStatusRailLeftRef}
+						className={wrapperStyles.statusRailLeft}
+						data-flx="channel.barriers.barrier-components.barrier-base.status-rail-left"
+					>
+						<div
+							className={wrapperStyles.statusTypingSlot}
+							data-flx="channel.barriers.barrier-components.barrier-base.typing-slot"
+						>
+							<TypingUsers
+								channel={channel}
+								overflowContainerRef={typingStatusRailLeftRef}
+								data-flx="channel.barriers.barrier-components.barrier-base.typing-users"
+							/>
+						</div>
+						<TypingAnnouncer
+							channel={channel}
+							data-flx="channel.barriers.barrier-components.barrier-base.typing-announcer"
+						/>
+					</div>
+				</div>
+			)}
 			<div
 				className={clsx(styles.barrierLayout, !hasAction && styles.barrierLayoutNoAction)}
 				data-flx="channel.barriers.barrier-components.barrier-base.barrier-layout"
@@ -277,7 +308,7 @@ export const TimeoutBarrier = observer(({initialTimeRemaining = 0}: TimedBarrier
 		/>
 	);
 });
-export const AnnouncementFollowBarrier = observer(({channelId}: {channelId: string}) => {
+export const AnnouncementFollowBarrier = observer(({channel}: {channel: Channel}) => {
 	const {i18n} = useLingui();
 	return (
 		<BarrierBase
@@ -297,12 +328,13 @@ export const AnnouncementFollowBarrier = observer(({channelId}: {channelId: stri
 				<Button
 					variant="secondary"
 					small={true}
-					onClick={() => openChannelFollowModal(channelId)}
+					onClick={() => openChannelFollowModal(channel.id)}
 					data-flx="channel.barriers.barrier-components.announcement-follow-barrier.button.follow"
 				>
 					{i18n._(FOLLOW_DESCRIPTOR)}
 				</Button>
 			}
+			channel={channel}
 			data-flx="channel.barriers.barrier-components.announcement-follow-barrier.barrier-base"
 		/>
 	);
