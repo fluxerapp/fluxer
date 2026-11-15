@@ -6,7 +6,7 @@ import {
 	MUTE_STORAGE_KEY,
 	VOLUME_STORAGE_KEY,
 } from '@app/features/voice/components/media_player/utils/MediaConstants';
-import {useCallback, useEffect, useRef, useState, useSyncExternalStore} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 
 const VOLUME_CURVE_EXPONENT = 2.8;
 const VOLUME_SETTING_EPSILON = 1e-6;
@@ -73,61 +73,21 @@ function storeMuted(muted: boolean): void {
 	} catch {}
 }
 
-interface StoredVolumeSetting {
-	volume: number;
-	muted: boolean;
-}
-
-let storedVolumeSetting: StoredVolumeSetting | null = null;
-const storedVolumeListeners = new Set<() => void>();
-
-function readStoredVolumeSetting(): StoredVolumeSetting {
-	storedVolumeSetting ??= {volume: getStoredVolume(), muted: getStoredMuted()};
-	return storedVolumeSetting;
-}
-
-function subscribeStoredVolumeSetting(listener: () => void): () => void {
-	storedVolumeListeners.add(listener);
-	return () => {
-		storedVolumeListeners.delete(listener);
-	};
-}
-
-function publishStoredVolumeSetting(next: StoredVolumeSetting): void {
-	const current = readStoredVolumeSetting();
-	if (Math.abs(current.volume - next.volume) < VOLUME_SETTING_EPSILON && current.muted === next.muted) {
-		return;
-	}
-	storedVolumeSetting = next;
-	storeVolume(next.volume);
-	storeMuted(next.muted);
-	for (const listener of Array.from(storedVolumeListeners)) {
-		listener();
-	}
-}
-
 export function useMediaVolume(options: UseMediaVolumeOptions): UseMediaVolumeReturn {
 	const {mediaRef, persist = true, onVolumeChange} = options;
-	const sharedSetting = useSyncExternalStore(
-		subscribeStoredVolumeSetting,
-		readStoredVolumeSetting,
-		readStoredVolumeSetting,
-	);
-	const [ownVolume, setOwnVolume] = useState(() => (persist ? getStoredVolume() : DEFAULT_VOLUME));
-	const [ownMuted, setOwnMuted] = useState(() => (persist ? getStoredMuted() : false));
-	const volume = persist ? sharedSetting.volume : ownVolume;
-	const isMuted = persist ? sharedSetting.muted : ownMuted;
+	const [volume, setVolumeState] = useState(() => (persist ? getStoredVolume() : DEFAULT_VOLUME));
+	const [isMuted, setMutedState] = useState(() => (persist ? getStoredMuted() : false));
 	const previousVolumeRef = useRef(volume > 0 ? volume : DEFAULT_VOLUME);
 	const settingRef = useRef({volume, isMuted});
 	settingRef.current = {volume, isMuted};
 	const commitSetting = useCallback(
 		(nextVolume: number, nextMuted: boolean) => {
+			setVolumeState(nextVolume);
+			setMutedState(nextMuted);
 			if (persist) {
-				publishStoredVolumeSetting({volume: nextVolume, muted: nextMuted});
-				return;
+				storeVolume(nextVolume);
+				storeMuted(nextMuted);
 			}
-			setOwnVolume(nextVolume);
-			setOwnMuted(nextMuted);
 		},
 		[persist],
 	);
