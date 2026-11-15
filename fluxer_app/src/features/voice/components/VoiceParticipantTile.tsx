@@ -777,8 +777,20 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 	const isFocusedOnThisTile =
 		VoiceCallLayout.pinnedParticipantIdentity === identity &&
 		(pinnedParticipantSource == null || pinnedParticipantSource === trackRef.source);
+	const handleWatch = useCallback(
+		(e?: React.SyntheticEvent) => {
+			e?.stopPropagation();
+			startWatching();
+			VoiceCallLayoutCommands.setPinnedParticipant(identity, VoiceTrackSource.ScreenShare);
+		},
+		[identity, startWatching],
+	);
 	const handleTileClick = useCallback(() => {
 		if (isInsideTilePopout) return;
+		if (showWatchStreamOverlay) {
+			handleWatch();
+			return;
+		}
 		const wasFocused =
 			VoiceCallLayout.pinnedParticipantIdentity === identity &&
 			(pinnedParticipantSource == null || pinnedParticipantSource === trackRef.source);
@@ -788,7 +800,15 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 			VoiceCallLayoutCommands.setPinnedParticipant(identity, asPinnableVoiceTrackSource(trackRef.source));
 			onClick?.(identity);
 		}
-	}, [identity, isInsideTilePopout, onClick, pinnedParticipantSource, trackRef.source]);
+	}, [
+		handleWatch,
+		identity,
+		isInsideTilePopout,
+		onClick,
+		pinnedParticipantSource,
+		showWatchStreamOverlay,
+		trackRef.source,
+	]);
 	const handleTileKeyDown = useCallback(
 		(event: React.KeyboardEvent<HTMLDivElement>) => {
 			if (!isKeyboardActivationKey(event.key)) return;
@@ -830,14 +850,6 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 			MediaEngine.applyLocalAudioPreferencesForUser(userId);
 		},
 		[streamKey, userId],
-	);
-	const handleWatch = useCallback(
-		(e?: React.SyntheticEvent) => {
-			e?.stopPropagation();
-			startWatching();
-			VoiceCallLayoutCommands.setPinnedParticipant(identity, VoiceTrackSource.ScreenShare);
-		},
-		[identity, startWatching],
 	);
 	const handleAddStream = useCallback(
 		(event: React.SyntheticEvent) => {
