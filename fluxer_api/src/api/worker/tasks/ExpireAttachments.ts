@@ -58,7 +58,7 @@ export async function processExpiredAttachments(now = new Date()): Promise<void>
 					cdnUrl,
 					reason: 'attachment-decay-expired',
 				});
-				await repo.deleteRecords({
+				await repo.deleteExpiryRecord({
 					expiry_bucket: row.expiry_bucket,
 					expires_at: row.expires_at,
 					attachment_id: row.attachment_id,

@@ -46,7 +46,7 @@ interface AttachmentDecayRow {
 
 interface ListedMessage {
 	id: string;
-	attachments?: Array<{id: string; url?: string | null; expires_at?: string | null}>;
+	attachments?: Array<{id: string; url?: string | null; expires_at?: string | null; expired?: boolean}>;
 }
 
 describe('Attachment Decay', () => {
@@ -355,6 +355,42 @@ describe('Attachment Decay', () => {
 		expect(new Date((await fetchDecayRow(attachmentId))!.expires_at).getTime()).toBeGreaterThan(Date.now());
 		const key = `attachments/${channelId}/${attachmentId}/lapsed.png`;
 		expect(harness.storageService.hasObject(Config.s3.buckets.cdn, key)).toBe(true);
+	});
+	test('should keep reporting the original expiry date once an expired attachment is purged', async () => {
+		const admin = await createInstanceAdmin();
+		const guild = await createGuild(harness, admin.token, 'Purged Expiry Guild');
+		const channelId = guild.system_channel_id!;
+		await setAttachmentExpiry(admin, {enabled: true});
+		const {json} = await sendMessageWithAttachments(
+			harness,
+			admin.token,
+			channelId,
+			{content: 'Expired a while ago', attachments: [{id: 0, filename: 'expired.png'}]},
+			[{index: 0, filename: 'expired.png', data: loadFixture('yeah.png')}],
+		);
+		const attachmentId = json.attachments![0].id;
+		const expiresAt = new Date(Date.now() - 2 * 86_400_000);
+		await new AttachmentDecayRepository().upsert({
+			attachment_id: createAttachmentID(BigInt(attachmentId)),
+			channel_id: createChannelID(BigInt(channelId)),
+			message_id: createMessageID(BigInt(json.id)),
+			filename: 'expired.png',
+			size_bytes: 1024n,
+			uploaded_at: expiresAt,
+			expires_at: expiresAt,
+			last_accessed_at: expiresAt,
+			cost: 1,
+			lifetime_days: 1,
+			status: null,
+			expiry_bucket: getExpiryBucket(expiresAt),
+		});
+		installWorkerDependencies();
+
+		await processExpiredAttachments();
+
+		const listed = await listedAttachment(admin.token, channelId, json.id);
+		expect(listed?.expired).toBe(true);
+		expect(listed?.expires_at).toBe(expiresAt.toISOString());
 	});
 	test('should create decay metadata when uploading attachment', async () => {
 		const account = await createTestAccount(harness);
