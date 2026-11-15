@@ -33,6 +33,7 @@ import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {failureMessage} from '@app/features/platform/utils/ResponseInspection';
 import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
+import {OAuth2Scopes} from '@fluxer/constants/src/OAuth2Constants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
@@ -53,6 +54,11 @@ const UNKNOWN_APPLICATION_DESCRIPTOR = msg({
 const THE_PROVIDED_REDIRECT_URI_MUST_USE_HTTP_OR_DESCRIPTOR = msg({
 	message: 'The provided redirect_uri must use HTTP or HTTPS.',
 	comment: 'Body text in the authentication authorize flow. Keep the tone plain and specific.',
+});
+const UNSUPPORTED_SCOPE_DESCRIPTOR = msg({
+	message: '{scope} is not a supported scope.',
+	comment:
+		'OAuth authorize page error shown when the authorization link asks for a scope this app does not offer. Preserve {scope}, it is the technical scope name inserted by code.',
 });
 const A_REDIRECT_URI_IS_REQUIRED_WHEN_THE_BOT_DESCRIPTOR = msg({
 	message: 'A redirect_uri is required when the bot scope is not the only scope.',
@@ -209,6 +215,10 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 		if (params.redirectUri && !isSafeRedirectUri(params.redirectUri)) {
 			return i18n._(THE_PROVIDED_REDIRECT_URI_MUST_USE_HTTP_OR_DESCRIPTOR);
 		}
+		const unsupportedScope = scopes.find((scope) => !(OAuth2Scopes as ReadonlyArray<string>).includes(scope));
+		if (unsupportedScope) {
+			return i18n._(UNSUPPORTED_SCOPE_DESCRIPTOR, {scope: unsupportedScope});
+		}
 		if (!isBotOnly && !params.redirectUri) {
 			return i18n._(A_REDIRECT_URI_IS_REQUIRED_WHEN_THE_BOT_DESCRIPTOR);
 		}
@@ -222,7 +232,7 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 			}
 		}
 		return null;
-	}, [params, isBotOnly, i18n.locale]);
+	}, [params, scopes, isBotOnly, i18n.locale]);
 	const postFetchValidationError = useMemo(() => {
 		if (!publicAppState.data || !params) return null;
 		if (params.redirectUri && !publicAppState.data.redirect_uris?.includes(params.redirectUri)) {
