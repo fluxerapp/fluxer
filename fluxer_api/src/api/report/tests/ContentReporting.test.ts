@@ -38,7 +38,7 @@ import {HTTP_STATUS, TEST_IDS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {systemDmBody} from '@app/api/user/services/SystemDmMessage';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {MessageFlags, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {DELETED_USER_USERNAME} from '@fluxer/constants/src/UserConstants';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {compareSnowflakes} from '@fluxer/snowflake/src/SnowflakeComparison';
@@ -60,6 +60,7 @@ interface PrivateChannelResponse {
 }
 
 interface DmMessageResponse {
+	flags: number;
 	id: string;
 	content: string | null;
 }
@@ -236,6 +237,7 @@ describe('Content Reporting', () => {
 			);
 			expect(text).not.toBeNull();
 			expect(systemMessages[0]?.content).toBe(systemDmBody(text ?? ''));
+			expect((systemMessages[0]?.flags ?? 0) & MessageFlags.SUPPRESS_EMBEDS).toBe(MessageFlags.SUPPRESS_EMBEDS);
 			expect(systemMessages[0]?.content).not.toContain(reporter.username!);
 			const systemDmChannel = (await listSystemDmChannels(harness, reporter.token))[0];
 			expect(systemDmChannel?.id).toBeTruthy();

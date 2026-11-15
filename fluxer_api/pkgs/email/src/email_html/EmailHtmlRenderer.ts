@@ -292,8 +292,12 @@ function textInline(text: string, slots: Slots, links: EmailTextLinks): {line: s
 			if (typeof part === 'string') {
 				return part;
 			}
-			if (!part.url || part.url.startsWith('mailto:')) {
+			if (!part.url) {
 				return part.anchor;
+			}
+			if (part.url.startsWith('mailto:')) {
+				const address = part.url.slice('mailto:'.length);
+				return links === 'markdown' && EMAIL_PATTERN.test(address) ? `<${address}>` : part.anchor;
 			}
 			if (links === 'markdown') {
 				return `[${part.anchor}](${part.url})`;

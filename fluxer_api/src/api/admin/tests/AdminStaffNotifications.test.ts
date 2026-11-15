@@ -349,7 +349,7 @@ describe('Admin staff notifications', () => {
 				{report_id: reportId, public_comment: '', outcome: 'action_taken'},
 			]);
 			const [dm] = await systemDmMessages(reporter);
-			expect(dm?.content).toContain('What you reported broke our rules, and we took action.');
+			expect(dm?.content).toContain('It broke our rules, and we took action.');
 			expect(dm?.content).not.toMatch(/warn|restricted|suspend/i);
 			const metadata = await auditMetadata('resolve_report', reportId);
 			expect(metadata?.get('outcome')).toBe('warned');

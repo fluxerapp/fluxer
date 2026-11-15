@@ -142,15 +142,15 @@
 		"subject": "{product_name}への毎年のご寄付は{chargeAt, date, long}に更新されます"
 	},
 	"dsa_report_resolved": {
-		"about": "{target, select, message_community {{reportedAt, date, long}に送信された、「{communityName}」の#{channelName}にあるメッセージについての報告に関するお知らせです。} message_dm {{reportedAt, date, long}に送信された、ダイレクトメッセージ内のメッセージについての報告に関するお知らせです。} message {{reportedAt, date, long}に送信された、メッセージについての報告に関するお知らせです。} user {{reportedAt, date, long}に送信された、アカウント「{username}」についての報告に関するお知らせです。} community {{reportedAt, date, long}に送信された、コミュニティ「{communityName}」についての報告に関するお知らせです。} other {{reportedAt, date, long}に送信された報告に関するお知らせです。}}",
+		"about": "{target, select, message_community {{reportedAt, date, long}に、「{communityName}」の#{channelName}にあるメッセージについてご報告いただきました。} message_dm {{reportedAt, date, long}に、ダイレクトメッセージ内のメッセージについてご報告いただきました。} message {{reportedAt, date, long}に、メッセージについてご報告いただきました。} user {{reportedAt, date, long}に、アカウント「{username}」についてご報告いただきました。} community {{reportedAt, date, long}に、コミュニティ「{communityName}」についてご報告いただきました。} other {{reportedAt, date, long}にご報告をいただきました。}}",
 		"comment_label": "チームからのコメント",
 		"footer_reason": "このメールは、{product_name}でデジタルサービス法に基づく報告を送信されたため送信されました。",
-		"intro": "{outcome, select, removed {報告されたコンテンツはルールに違反していたため、削除しました。} restricted {報告されたアカウントはルールに違反していたため、措置を取りました。どのような措置を取ったかはお伝えしていません。} action_taken {報告された内容はルールに違反していたため、措置を取りました。どのような措置を取ったかはお伝えしていません。} no_violation {報告された内容はルールに違反していないため、そのままにしています。} other {報告への対応を終了しました。}}",
+		"intro": "{outcome, select, removed {ルールに違反していたため、削除しました。} restricted {このアカウントはルールに違反していたため、措置を取りました。皆さまのプライバシーを守るため、どのような措置かはお伝えしていません。} action_taken {ルールに違反していたため、措置を取りました。皆さまのプライバシーを守るため、どのような措置かはお伝えしていません。} no_violation {{concern, select, self_harm {その方を気にかけてくださり、ありがとうございます。チームが内容を確認しました。気分が落ち込んでいることや、安心できないと感じていることを話すのはルール違反ではないため、何も削除していませんが、ご本人にサポート窓口などの情報をお送りすることがあります。誰が報告したかを伝えることは決してありません。誰かが差し迫った危険にさらされていると思われる場合は、お住まいの地域の緊急通報番号に連絡してください。} other {チームが内容を確認しましたが、ルールに違反していなかったため、措置は取っていません。ただし、ご本人にサポート窓口などの情報をお送りするなど、報告をきっかけに別の対応をとることもあります。誰が報告したかを伝えることは決してありません。}}} other {報告への対応を終了しました。}}",
 		"note": "{reply, select, yes {この結果に同意できない場合は、60日以内にこのメールに返信してください。} other {{appeals_email, select, null {} other {この結果に同意できない場合は、60日以内に報告IDを添えて<mail>{appeals_email}</mail>までメールでご連絡ください。}}}}{appeals_email, select, null {} other {EU域内の方は、認定を受けた<dsa>裁判外紛争解決機関</dsa>を利用することや、お住まいの国のデジタルサービス調整官に苦情を申し立てることもできます。}}",
 		"report_label": "報告ID",
 		"signoff": "{product_name}チーム",
-		"subject": "{product_name}への報告について決定しました",
-		"thanks": "{outcome, select, removed {ご報告ありがとうございました。皆さまからの報告が、{product_name}をすべての人にとって安全な場所に保つ助けになっています。} restricted {ご報告ありがとうございました。皆さまからの報告が、{product_name}をすべての人にとって安全な場所に保つ助けになっています。} action_taken {ご報告ありがとうございました。皆さまからの報告が、{product_name}をすべての人にとって安全な場所に保つ助けになっています。} other {お知らせいただきありがとうございました。}}"
+		"subject": "{product_name}へのご報告を確認しました",
+		"thanks": "{outcome, select, removed {ご報告ありがとうございました。皆さまからの報告が、{product_name}をすべての人にとって安全な場所に保つ助けになっています。} restricted {ご報告ありがとうございました。皆さまからの報告が、{product_name}をすべての人にとって安全な場所に保つ助けになっています。} action_taken {ご報告ありがとうございました。皆さまからの報告が、{product_name}をすべての人にとって安全な場所に保つ助けになっています。} other {お知らせいただきありがとうございました。結果的にルールの範囲内だったとしても、気になることがあれば引き続き報告してください。}}"
 	},
 	"dsa_report_verification": {
 		"expiry": "このコードは{minutes, plural, other {#分}}後に期限切れになります。",
@@ -713,15 +713,15 @@
 		"subject": "{product_name}への報告を受け付けました"
 	},
 	"report_resolved": {
-		"about": "{target, select, message_community {{reportedAt, date, long}に送信された、「{communityName}」の#{channelName}にあるメッセージについての報告に関するお知らせです。} message_dm {{reportedAt, date, long}に送信された、ダイレクトメッセージ内のメッセージについての報告に関するお知らせです。} message {{reportedAt, date, long}に送信された、メッセージについての報告に関するお知らせです。} user {{reportedAt, date, long}に送信された、アカウント「{username}」についての報告に関するお知らせです。} community {{reportedAt, date, long}に送信された、コミュニティ「{communityName}」についての報告に関するお知らせです。} other {{reportedAt, date, long}に送信された報告に関するお知らせです。}}",
+		"about": "{target, select, message_community {{reportedAt, date, long}に、「{communityName}」の#{channelName}にあるメッセージについてご報告いただきました。} message_dm {{reportedAt, date, long}に、ダイレクトメッセージ内のメッセージについてご報告いただきました。} message {{reportedAt, date, long}に、メッセージについてご報告いただきました。} user {{reportedAt, date, long}に、アカウント「{username}」についてご報告いただきました。} community {{reportedAt, date, long}に、コミュニティ「{communityName}」についてご報告いただきました。} other {{reportedAt, date, long}にご報告をいただきました。}}",
 		"comment_label": "チームからのコメント",
 		"footer_reason": "このメールは、{product_name}で報告を送信されたため送信されました。",
-		"intro": "{outcome, select, removed {報告されたコンテンツはルールに違反していたため、削除しました。} restricted {報告されたアカウントはルールに違反していたため、措置を取りました。どのような措置を取ったかはお伝えしていません。} action_taken {報告された内容はルールに違反していたため、措置を取りました。どのような措置を取ったかはお伝えしていません。} no_violation {報告された内容はルールに違反していないため、そのままにしています。} other {報告への対応を終了しました。}}",
+		"intro": "{outcome, select, removed {ルールに違反していたため、削除しました。} restricted {このアカウントはルールに違反していたため、措置を取りました。皆さまのプライバシーを守るため、どのような措置かはお伝えしていません。} action_taken {ルールに違反していたため、措置を取りました。皆さまのプライバシーを守るため、どのような措置かはお伝えしていません。} no_violation {{concern, select, self_harm {その方を気にかけてくださり、ありがとうございます。チームが内容を確認しました。気分が落ち込んでいることや、安心できないと感じていることを話すのはルール違反ではないため、何も削除していませんが、ご本人にサポート窓口などの情報をお送りすることがあります。誰が報告したかを伝えることは決してありません。誰かが差し迫った危険にさらされていると思われる場合は、お住まいの地域の緊急通報番号に連絡してください。} other {チームが内容を確認しましたが、ルールに違反していなかったため、措置は取っていません。ただし、ご本人にサポート窓口などの情報をお送りするなど、報告をきっかけに別の対応をとることもあります。誰が報告したかを伝えることは決してありません。}}} other {報告への対応を終了しました。}}",
 		"note": "{reply, select, yes {この結果に同意できない場合は、60日以内にこのメールに返信してください。} other {{appeals_email, select, null {} other {この結果に同意できない場合は、60日以内に報告IDを添えて<mail>{appeals_email}</mail>までメールでご連絡ください。}}}}{appeals_email, select, null {} other {EU域内の方は、認定を受けた<dsa>裁判外紛争解決機関</dsa>を利用することや、お住まいの国のデジタルサービス調整官に苦情を申し立てることもできます。}}",
 		"report_label": "報告ID",
 		"signoff": "{product_name}チーム",
-		"subject": "{product_name}への報告の審査が完了しました",
-		"thanks": "{outcome, select, removed {ご報告ありがとうございました。皆さまからの報告が、{product_name}をすべての人にとって安全な場所に保つ助けになっています。} restricted {ご報告ありがとうございました。皆さまからの報告が、{product_name}をすべての人にとって安全な場所に保つ助けになっています。} action_taken {ご報告ありがとうございました。皆さまからの報告が、{product_name}をすべての人にとって安全な場所に保つ助けになっています。} other {お知らせいただきありがとうございました。}}"
+		"subject": "{product_name}へのご報告を確認しました",
+		"thanks": "{outcome, select, removed {ご報告ありがとうございました。皆さまからの報告が、{product_name}をすべての人にとって安全な場所に保つ助けになっています。} restricted {ご報告ありがとうございました。皆さまからの報告が、{product_name}をすべての人にとって安全な場所に保つ助けになっています。} action_taken {ご報告ありがとうございました。皆さまからの報告が、{product_name}をすべての人にとって安全な場所に保つ助けになっています。} other {お知らせいただきありがとうございました。結果的にルールの範囲内だったとしても、気になることがあれば引き続き報告してください。}}"
 	},
 	"self_deletion_scheduled": {
 		"footer_reason": "このメールは、お客様の{product_name}アカウントの削除リクエストを受け付けたため送信されました。",
