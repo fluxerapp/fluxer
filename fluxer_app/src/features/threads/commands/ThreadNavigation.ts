@@ -42,6 +42,10 @@ export function openThreadFromEvent(thread: Channel, event: ThreadOpenEvent): vo
 	openThread(thread);
 }
 
+export function preventShiftSelection(event: {readonly shiftKey: boolean; preventDefault(): void}): void {
+	if (event.shiftKey) event.preventDefault();
+}
+
 export function closeThreadPanel(): void {
 	ThreadPanel.closeCreate();
 	const guildId = Navigation.guildId;

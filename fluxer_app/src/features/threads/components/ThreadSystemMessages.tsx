@@ -10,7 +10,7 @@ import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import MessageReferences, {MessageReferenceState} from '@app/features/messaging/state/MessageReferences';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import messageStyles from '@app/features/theme/styles/Message.module.css';
-import {openThreadFromEvent} from '@app/features/threads/commands/ThreadNavigation';
+import {openThreadFromEvent, preventShiftSelection} from '@app/features/threads/commands/ThreadNavigation';
 import styles from '@app/features/threads/components/ThreadSystemMessages.module.css';
 import ChannelThreads from '@app/features/threads/state/ChannelThreads';
 import * as D from '@app/features/threads/utils/ThreadMessageDescriptors';
@@ -44,6 +44,7 @@ export const ThreadCreatedMessage = observer(({message}: {message: Message}) => 
 				<button
 					type="button"
 					className={messageStyles.systemMessageLink}
+					onMouseDown={preventShiftSelection}
 					onClick={(event) => openThreadFromEvent(thread, event)}
 					data-flx="threads.thread-created-message.system-message-link.open"
 				>

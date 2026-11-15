@@ -38,7 +38,11 @@ import Permission from '@app/features/permissions/state/Permission';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import Relationships from '@app/features/relationship/state/Relationships';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
-import {openThreadFromEvent, type ThreadOpenEvent} from '@app/features/threads/commands/ThreadNavigation';
+import {
+	openThreadFromEvent,
+	preventShiftSelection,
+	type ThreadOpenEvent,
+} from '@app/features/threads/commands/ThreadNavigation';
 import {lastActivityId} from '@app/features/threads/state/ChannelThreads';
 import ThreadMemberships from '@app/features/threads/state/ThreadMemberships';
 import * as MediaViewerCommands from '@app/features/ui/commands/MediaViewerCommands';
@@ -282,6 +286,7 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 						tabIndex={0}
 						className={styles.cardOpenTarget}
 						aria-current={open ? 'true' : undefined}
+						onMouseDown={preventShiftSelection}
 						onClick={handleOpen}
 						onKeyDown={(event) => {
 							if (event.key === 'Enter' || event.key === ' ') {
