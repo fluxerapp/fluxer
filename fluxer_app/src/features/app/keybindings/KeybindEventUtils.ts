@@ -36,7 +36,21 @@ const keyboardEventIsModifierKey = (
 			return event.key === 'Meta' || event.key === 'OS' || event.code === 'MetaLeft' || event.code === 'MetaRight';
 	}
 };
-export const keyboardEventTriggerMatchesCombo = (combo: KeyCombo, event: KeyboardShortcutEvent): boolean => {
+const keyboardEventIsComboModifierKey = (combo: KeyCombo, event: KeyboardShortcutEvent, isMacOS: boolean): boolean => {
+	const expectsCtrl = Boolean(combo.ctrl || (combo.ctrlOrMeta && !isMacOS));
+	const expectsMeta = Boolean(combo.meta || (combo.ctrlOrMeta && isMacOS));
+	if (expectsCtrl && keyboardEventIsModifierKey(event, 'ctrl')) return true;
+	if (expectsMeta && keyboardEventIsModifierKey(event, 'meta')) return true;
+	if (combo.alt && keyboardEventIsModifierKey(event, 'alt')) return true;
+	if (combo.shift && keyboardEventIsModifierKey(event, 'shift')) return true;
+	return false;
+};
+export const keyboardEventTriggerMatchesCombo = (
+	combo: KeyCombo,
+	event: KeyboardShortcutEvent,
+	options: {isMacOS?: boolean} = {},
+): boolean => {
+	if (combo.modifierOnly) return keyboardEventIsComboModifierKey(combo, event, options.isMacOS ?? false);
 	const expectedLayoutKey = combo.key || combo.code;
 	if (shouldPreferLayoutKey(combo) && expectedLayoutKey) {
 		if (normalizeKeyboardShortcutKey(event.key) === normalizeKeyboardShortcutKey(expectedLayoutKey)) return true;
@@ -59,14 +73,14 @@ export const keyboardEventMatchesCombo = (
 	event: KeyboardShortcutEvent,
 	options: {isMacOS?: boolean} = {},
 ): boolean => {
-	if (combo.modifierOnly || !hasTriggerKey(combo)) return false;
+	if (combo.bothSides || !hasTriggerKey(combo)) return false;
 	const isMacOS = options.isMacOS ?? false;
 	const expectsCtrl = Boolean(combo.ctrl || (combo.ctrlOrMeta && !isMacOS));
 	const expectsMeta = Boolean(combo.meta || (combo.ctrlOrMeta && isMacOS));
 	if (event.ctrlKey !== expectsCtrl) return false;
 	if (event.metaKey !== expectsMeta) return false;
 	if (event.altKey !== Boolean(combo.alt)) return false;
-	const triggerMatches = keyboardEventTriggerMatchesCombo(combo, event);
+	const triggerMatches = keyboardEventTriggerMatchesCombo(combo, event, options);
 	if (!triggerMatches) return false;
 	if (event.shiftKey !== Boolean(combo.shift)) {
 		if (combo.shift || !event.shiftKey || !isPrintableNonLetterShortcutKey(combo.key)) return false;
@@ -92,14 +106,7 @@ export const keyboardEventReleasesComboModifier = (
 	options: {isMacOS?: boolean} = {},
 ): boolean => {
 	if (combo.modifierOnly || !hasTriggerKey(combo)) return false;
-	const isMacOS = options.isMacOS ?? false;
-	const expectsCtrl = Boolean(combo.ctrl || (combo.ctrlOrMeta && !isMacOS));
-	const expectsMeta = Boolean(combo.meta || (combo.ctrlOrMeta && isMacOS));
-	if (expectsCtrl && keyboardEventIsModifierKey(event, 'ctrl')) return true;
-	if (expectsMeta && keyboardEventIsModifierKey(event, 'meta')) return true;
-	if (combo.alt && keyboardEventIsModifierKey(event, 'alt')) return true;
-	if (combo.shift && keyboardEventIsModifierKey(event, 'shift')) return true;
-	return false;
+	return keyboardEventIsComboModifierKey(combo, event, options.isMacOS ?? false);
 };
 const TEXT_EDITING_KEY_CODES: ReadonlySet<string> = new Set(['KeyV', 'KeyC', 'KeyX', 'KeyA', 'KeyZ', 'KeyY']);
 const TEXT_NAVIGATION_KEYS: ReadonlySet<string> = new Set(['ArrowLeft', 'ArrowRight', 'Backspace', 'Delete']);
