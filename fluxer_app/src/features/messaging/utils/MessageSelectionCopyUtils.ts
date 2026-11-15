@@ -9,6 +9,7 @@ const MESSAGE_ROW_SELECTOR = '[data-message-id][data-is-group-start]';
 const MESSAGE_SELECTION_ROOT_SELECTOR = '[data-message-selection-root="true"]';
 const COPY_HIDDEN_SELECTOR = '[data-message-copy-hidden="true"]';
 const COPY_TEXT_BLOCK_SELECTOR = '[data-message-copy-block="true"][data-message-copy-text]';
+const EMOJI_IMAGE_SELECTOR = 'img[data-message-emoji="true"]';
 
 interface MessageSelectionCopyOptions {
 	rootElement: HTMLElement;
@@ -295,7 +296,7 @@ function getCopyableRangeText(range: Range, metadata = getSelectedCopyMetadata(r
 	if (selectedCopyBlocks.length > 0 && !hasSelectedVisibleTextOutsideElements(range, selectedCopyBlocks)) {
 		return selectedCopyBlocks.map(getCopyBlockText).filter(Boolean).join('\n\n');
 	}
-	let text = range.toString();
+	let text = getRangeText(range);
 	for (const element of hiddenElements) {
 		text = removeHiddenCopyText(text, getSelectedTextForNode(range, element));
 	}
@@ -303,6 +304,14 @@ function getCopyableRangeText(range: Range, metadata = getSelectedCopyMetadata(r
 		text = replaceSelectedCopyText(text, getSelectedTextForNode(range, element), getCopyBlockText(element));
 	}
 	return text;
+}
+
+function getRangeText(range: Range): string {
+	const fragment = range.cloneContents();
+	for (const emoji of fragment.querySelectorAll<HTMLImageElement>(EMOJI_IMAGE_SELECTOR)) {
+		emoji.replaceWith(emoji.alt);
+	}
+	return fragment.textContent ?? '';
 }
 
 function removeHiddenCopyText(text: string, hiddenText: string): string {
@@ -432,7 +441,7 @@ function isNodeEntirelySelected(range: Range, node: Node): boolean {
 
 function getSelectedTextForNode(range: Range, node: Node): string {
 	const intersectionRange = getIntersectionRange(range, node);
-	return intersectionRange?.toString() ?? '';
+	return intersectionRange ? getRangeText(intersectionRange) : '';
 }
 
 function getIntersectionRange(range: Range, node: Node): Range | null {
@@ -636,7 +645,9 @@ function getTextContentWithoutAriaHidden(element: HTMLElement): string {
 		if (childElement.getAttribute('aria-hidden') === 'true') {
 			continue;
 		}
-		text += getTextContentWithoutAriaHidden(childElement);
+		text += childElement.matches(EMOJI_IMAGE_SELECTOR)
+			? (childElement as HTMLImageElement).alt
+			: getTextContentWithoutAriaHidden(childElement);
 	}
 	return text;
 }
