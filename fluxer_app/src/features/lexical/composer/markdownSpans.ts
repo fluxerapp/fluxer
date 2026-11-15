@@ -397,7 +397,7 @@ function alignNode(node: Node, format: MarkdownHlFormat, ctx: AlignContext): voi
 			return;
 		}
 		case 'Blockquote': {
-			alignBlockquote(node.children, format | MarkdownHl.blockquote, ctx);
+			alignBlockquote(node.children, format | MarkdownHl.blockquote, ctx, false);
 			return;
 		}
 		case 'Sequence': {
@@ -429,7 +429,7 @@ function alignNode(node: Node, format: MarkdownHlFormat, ctx: AlignContext): voi
 			return;
 		}
 		case 'Alert': {
-			alignAlert(format, ctx);
+			alignBlockquote(node.children, format | MarkdownHl.blockquote, ctx, true);
 			return;
 		}
 		case 'Table': {
@@ -838,7 +838,9 @@ function alignLinePrefixed(children: Array<Node>, format: MarkdownHlFormat, ctx:
 	alignChildren(children, format, ctx);
 }
 
-function alignBlockquote(children: Array<Node>, format: MarkdownHlFormat, ctx: AlignContext): void {
+const ALERT_HEADER_RE = /^\[![^\]\n]*\][ \t\r]*/;
+
+function alignBlockquote(children: Array<Node>, format: MarkdownHlFormat, ctx: AlignContext, alert: boolean): void {
 	const start = ctx.pos;
 	let trimmedStart = start;
 	while (ctx.source[trimmedStart] === ' ' || ctx.source[trimmedStart] === '\t' || ctx.source[trimmedStart] === '\r') {
@@ -849,7 +851,7 @@ function alignBlockquote(children: Array<Node>, format: MarkdownHlFormat, ctx: A
 	const sourceOffsets: Array<number> = [];
 	let virtualSource = '';
 	let blockEnd = start;
-	if (ctx.source.startsWith('>>> ', trimmedStart)) {
+	if (!alert && ctx.source.startsWith('>>> ', trimmedStart)) {
 		const contentStart = trimmedStart + 4;
 		markerRanges.push({start, end: contentStart, quote: true});
 		virtualSource = ctx.source.slice(contentStart);
@@ -858,7 +860,7 @@ function alignBlockquote(children: Array<Node>, format: MarkdownHlFormat, ctx: A
 		}
 		blockEnd = ctx.source.length;
 	} else {
-		const lines: Array<{start: number; end: number; prefixEnd: number; contentStart: number}> = [];
+		const lines: Array<{start: number; end: number; prefixEnd: number; headerEnd: number; contentStart: number}> = [];
 		let lineStart = start;
 		while (lineStart <= ctx.source.length) {
 			const newline = ctx.source.indexOf('\n', lineStart);
@@ -870,9 +872,18 @@ function alignBlockquote(children: Array<Node>, format: MarkdownHlFormat, ctx: A
 			if (!ctx.source.startsWith('> ', quoteStart)) {
 				break;
 			}
-			const rest = ctx.source.slice(quoteStart + 2, lineEnd);
-			const contentStart = /^[ \t\r]*$/.test(rest) ? lineEnd : quoteStart + 2;
-			lines.push({start: lineStart, end: lineEnd, prefixEnd: quoteStart + 2, contentStart});
+			let headerEnd = quoteStart + 2;
+			if (alert && lines.length === 0) {
+				const header = ALERT_HEADER_RE.exec(ctx.source.slice(headerEnd, lineEnd));
+				if (header == null) {
+					ctx.failed = true;
+					return;
+				}
+				headerEnd += header[0].length;
+			}
+			const rest = ctx.source.slice(headerEnd, lineEnd);
+			const contentStart = /^[ \t\r]*$/.test(rest) ? lineEnd : headerEnd;
+			lines.push({start: lineStart, end: lineEnd, prefixEnd: quoteStart + 2, headerEnd, contentStart});
 			if (newline < 0) {
 				break;
 			}
@@ -885,8 +896,11 @@ function alignBlockquote(children: Array<Node>, format: MarkdownHlFormat, ctx: A
 		for (let index = 0; index < lines.length; index += 1) {
 			const line = lines[index]!;
 			markerRanges.push({start: line.start, end: line.prefixEnd, quote: true});
-			if (line.contentStart > line.prefixEnd) {
-				blankRanges.push({start: line.prefixEnd, end: line.contentStart});
+			if (line.headerEnd > line.prefixEnd) {
+				markerRanges.push({start: line.prefixEnd, end: line.headerEnd, quote: false});
+			}
+			if (line.contentStart > line.headerEnd) {
+				blankRanges.push({start: line.headerEnd, end: line.contentStart});
 			}
 			let repeatedPrefix = line.contentStart;
 			while (ctx.source.startsWith('> ', repeatedPrefix) && repeatedPrefix < line.end) {
@@ -978,45 +992,6 @@ function alignBlockquote(children: Array<Node>, format: MarkdownHlFormat, ctx: A
 		runStart = position;
 	}
 	ctx.pos = blockEnd;
-}
-
-function alignAlert(format: MarkdownHlFormat, ctx: AlignContext): void {
-	const bodyFormat = format | MarkdownHl.blockquote;
-	let firstLine = true;
-	while (true) {
-		let quoteStart = ctx.pos;
-		while (ctx.source[quoteStart] === ' ' || ctx.source[quoteStart] === '\t' || ctx.source[quoteStart] === '\r') {
-			quoteStart += 1;
-		}
-		if (!ctx.source.startsWith('> ', quoteStart)) {
-			ctx.failed = true;
-			return;
-		}
-		const newline = ctx.source.indexOf('\n', ctx.pos);
-		const lineEnd = newline < 0 ? ctx.source.length : newline;
-		pushMarker(ctx, quoteStart + 2 - ctx.pos, bodyFormat | MarkdownHl.blockquoteMarker);
-		if (firstLine) {
-			const close = ctx.source.indexOf(']', ctx.pos);
-			if (!ctx.source.startsWith('[!', ctx.pos) || close < 0 || close >= lineEnd) {
-				ctx.failed = true;
-				return;
-			}
-			pushMarker(ctx, close + 1 - ctx.pos, bodyFormat);
-			firstLine = false;
-		}
-		pushContent(ctx, lineEnd, bodyFormat);
-		if (newline < 0) {
-			return;
-		}
-		let nextQuote = newline + 1;
-		while (ctx.source[nextQuote] === ' ' || ctx.source[nextQuote] === '\t' || ctx.source[nextQuote] === '\r') {
-			nextQuote += 1;
-		}
-		if (!ctx.source.startsWith('> ', nextQuote)) {
-			return;
-		}
-		pushContent(ctx, newline + 1, bodyFormat);
-	}
 }
 
 function alignTable(node: Extract<Node, {type: 'Table'}>, format: MarkdownHlFormat, ctx: AlignContext): void {
