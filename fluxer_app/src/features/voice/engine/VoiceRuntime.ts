@@ -3,6 +3,7 @@
 import type {GatewayErrorData} from '@app/features/gateway/transport/GatewaySocket';
 import type {GuildReadyData} from '@app/features/gateway/types/GatewayGuildTypes';
 import type {VoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
+import Keybind from '@app/features/input/state/InputKeybind';
 import {setSoundOutputDeviceIdResolver} from '@app/features/notification/utils/SoundUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {loadLazyModule} from '@app/features/platform/utils/LazyModuleLoader';
@@ -21,7 +22,10 @@ import {
 import voiceStates from '@app/features/voice/engine/v2/VoiceEngineV2AppVoiceStateAdapter';
 import VoiceSessionRestore from '@app/features/voice/state/VoiceSessionRestore';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
-import {isVoicePermissionMuteActive} from '@app/features/voice/utils/VoicePermissionUtils';
+import {
+	isVoiceActivityPermissionDenied,
+	isVoicePermissionMuteActive,
+} from '@app/features/voice/utils/VoicePermissionUtils';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import type {VoiceEngineV2Model} from '@fluxer/voice_engine_v2/src/protocol/types';
 import type {Room} from 'livekit-client';
@@ -91,6 +95,7 @@ class VoiceRuntime extends Store {
 		makeObservable<this, 'loaded' | 'registeredEngine'>(this, {loaded: observableRef, registeredEngine: observableRef});
 		Sound.setSelfDeafenedResolver(() => getEffectiveAudioState().effectiveDeaf);
 		setSoundOutputDeviceIdResolver(() => VoiceSettings.getOutputDeviceId());
+		Keybind.setVoiceActivityDeniedResolver(() => isVoiceActivityPermissionDenied(this.guildId, this.channelId));
 	}
 
 	get module(): LoadedVoiceRuntime | null {
