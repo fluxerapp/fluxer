@@ -437,11 +437,7 @@ class Channels {
 		} else {
 			const guildChannels = this.getGuildChannels(guildId);
 			const selectableChannel = filterViewableChannels(guildChannels)[0];
-			if (selectableChannel) {
-				NavigationCommands.selectChannel(guildId, selectableChannel.id);
-			} else {
-				NavigationCommands.selectChannel(ME);
-			}
+			NavigationCommands.selectChannel(guildId, selectableChannel?.id);
 		}
 	}
 
