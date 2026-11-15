@@ -1387,6 +1387,7 @@ export class MessageSendService {
 						messageSnapshots,
 						guildId: null,
 						channel,
+						persona: data.persona ?? undefined,
 					});
 					await recordNonce(messageId);
 					await dispatchMessageCreateBroadcast({
