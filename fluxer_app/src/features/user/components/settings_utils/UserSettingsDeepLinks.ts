@@ -47,7 +47,7 @@ const USER_SETTINGS_TAB_TYPES = new Set<UserSettingsTabType>([
 const SAFE_SETTINGS_PARAM_REGEX = /^[A-Za-z0-9_-]+$/;
 
 export interface UserSettingsDeepLinkTarget {
-	tab: UserSettingsTabType;
+	tab?: UserSettingsTabType;
 	section?: string;
 }
 
@@ -64,7 +64,7 @@ function isUserSettingsSectionTarget(tabType: UserSettingsTabType, sectionId: st
 export function getUserSettingsSectionDeepLinkTarget(
 	sectionId: string,
 	tabType?: UserSettingsTabType,
-): UserSettingsDeepLinkTarget | null {
+): {tab: UserSettingsTabType; section: string} | null {
 	if (tabType) {
 		return isUserSettingsSectionTarget(tabType, sectionId) ? {tab: tabType, section: sectionId} : null;
 	}
@@ -93,13 +93,14 @@ export function parseUserSettingsDeepLinkPath(path: string): UserSettingsDeepLin
 		const normalizedPath = parsed.pathname.replace(/\/+$/, '') || '/';
 		if (normalizedPath !== USER_SETTINGS_DEEP_LINK_PATH) return null;
 		const tab = parsed.searchParams.get('tab');
-		if (!isUserSettingsTabType(tab)) return null;
+		if (!tab || !SAFE_SETTINGS_PARAM_REGEX.test(tab)) return null;
+		if (!isUserSettingsTabType(tab)) return {};
 		const sectionParam = parsed.searchParams.get('section') ?? undefined;
 		const rawSection = sectionParam && sectionParam.trim().length > 0 ? sectionParam : undefined;
 		const accountSection = getAccountSectionForNestedTab(tab) ?? getAccountSectionForLegacySection(rawSection);
 		const resolvedTab = accountSection ? ACCOUNT_SETTINGS_TAB : tab;
 		const section = accountSection ?? rawSection;
-		if (section && !isUserSettingsSectionTarget(resolvedTab, section)) return null;
+		if (section && !isUserSettingsSectionTarget(resolvedTab, section)) return {tab: resolvedTab};
 		return {tab: resolvedTab, section};
 	} catch {
 		return null;
