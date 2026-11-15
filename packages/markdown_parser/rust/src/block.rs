@@ -919,7 +919,7 @@ fn post_process_alert_nodes(nodes: Vec<Node>) -> Vec<Node> {
                 out.push(node);
                 let trailing = match nodes.peek() {
                     Some(Node::Text { content }) if !trim(content).is_empty() => {
-                        Some(concat("\n", trim(content)))
+                        Some(concat("\n", trim_start(content)))
                     }
                     _ => None,
                 };
