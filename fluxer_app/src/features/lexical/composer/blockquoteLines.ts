@@ -339,6 +339,19 @@ export function planBlockquoteMove(
 	return line.start > 0 ? line.start - 1 : line.contentStart;
 }
 
+export function planBlockquoteLineDown(
+	lines: ReadonlyArray<BlockquoteLine>,
+	offset: number,
+	textLength: number,
+): number | null {
+	const line = lines.find((candidate) => candidate.contentStart === offset && isEmptyLine(candidate));
+	if (line == null || line.end >= textLength) {
+		return null;
+	}
+	const below = lines.find((candidate) => isDirectlyAbove(line, candidate));
+	return below == null ? line.end + 1 : below.contentStart;
+}
+
 export function dropTrailingEmptyBlockquoteLines(
 	content: string,
 	parserFlags = DEFAULT_COMPOSER_MARKDOWN_FLAGS,
