@@ -9,6 +9,7 @@ import {EmojiPickerPopout} from '@app/features/emoji/components/popouts/EmojiPic
 import * as ForumCommands from '@app/features/forum/commands/ForumCommands';
 import styles from '@app/features/forum/components/Forum.module.css';
 import {ForumComposerTags} from '@app/features/forum/components/ForumTagPicker';
+import ForumPostDrafts from '@app/features/forum/state/ForumPostDrafts';
 import {isMediaChannel, isTagRequired} from '@app/features/forum/utils/ForumChannelUtils';
 import {reportForumError} from '@app/features/forum/utils/ForumErrors';
 import * as D from '@app/features/forum/utils/ForumMessageDescriptors';
@@ -43,14 +44,14 @@ import {useCallback, useEffect, useRef, useState} from 'react';
 
 interface ForumPostComposerProps {
 	forum: Channel;
-	initialTitle: string;
 	onClose: () => void;
 }
 
-export const ForumPostComposer = observer(({forum, initialTitle, onClose}: ForumPostComposerProps) => {
+export const ForumPostComposer = observer(({forum, onClose}: ForumPostComposerProps) => {
 	const {i18n} = useLingui();
-	const [title, setTitle] = useState(initialTitle.slice(0, THREAD_NAME_MAX_LENGTH));
-	const [tags, setTags] = useState<Array<string>>([]);
+	const draft = ForumPostDrafts.get(forum.id);
+	const title = draft?.title ?? '';
+	const tags = draft?.tags ?? [];
 	const [error, setError] = useState<string | undefined>(undefined);
 	const [body, setBody] = useState('');
 	const [preview, setPreview] = useState(false);
@@ -59,8 +60,6 @@ export const ForumPostComposer = observer(({forum, initialTitle, onClose}: Forum
 	useEffect(() => {
 		titleRef.current?.focus();
 	}, []);
-	const stateRef = useRef({title, tags});
-	stateRef.current = {title, tags};
 	const draftKey = `forum-post:${forum.id}`;
 	const accountKey = Users.viewAccountKey;
 	const media = isMediaChannel(forum);
@@ -78,12 +77,13 @@ export const ForumPostComposer = observer(({forum, initialTitle, onClose}: Forum
 				setError(i18n._(D.POST_FAVORITE_MEDIA_UNSUPPORTED_DESCRIPTOR));
 				return false;
 			}
-			const name = stateRef.current.title.trim();
+			const current = ForumPostDrafts.get(forum.id);
+			const name = current?.title.trim() ?? '';
 			if (!name) {
 				setError(i18n._(D.POST_TITLE_REQUIRED_DESCRIPTOR));
 				return false;
 			}
-			if (isTagRequired(forum) && stateRef.current.tags.length === 0) {
+			if (isTagRequired(forum) && !current?.tags.length) {
 				setError(i18n._(D.POST_TAG_REQUIRED_DESCRIPTOR));
 				return false;
 			}
@@ -96,7 +96,7 @@ export const ForumPostComposer = observer(({forum, initialTitle, onClose}: Forum
 			const claimed = hasAttachments ? MessageSubmitUtils.claimMessageAttachments(draftKey, nonce, content) : [];
 			void ForumCommands.createForumPost(forum, {
 				name,
-				appliedTags: stateRef.current.tags,
+				appliedTags: current?.tags ?? [],
 				content,
 				nonce,
 				hasAttachments: claimed.length > 0,
@@ -129,7 +129,7 @@ export const ForumPostComposer = observer(({forum, initialTitle, onClose}: Forum
 					className={styles.composerTitle}
 					value={title}
 					onChange={(event) => {
-						setTitle(event.target.value);
+						ForumPostDrafts.update(forum.id, {title: event.target.value});
 						setError(undefined);
 					}}
 					onKeyDown={(event) => {
@@ -256,7 +256,7 @@ export const ForumPostComposer = observer(({forum, initialTitle, onClose}: Forum
 							forum={forum}
 							selected={tags}
 							onChange={(next) => {
-								setTags(next);
+								ForumPostDrafts.update(forum.id, {tags: next});
 								setError(undefined);
 							}}
 							data-flx="forum.forum-post-composer.forum-tag-picker.set-tags"
