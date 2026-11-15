@@ -12,6 +12,8 @@ const SPECIAL_PROTOCOLS_REGEX = /^(mailto:|tel:|sms:)/;
 const PROTOCOL_REGEX = /:\/\//;
 const TRAILING_SLASH_REGEX = /\/+$/;
 const NORMALIZE_PHONE_REGEX = /[\s\-()]/g;
+const PERCENT_ENCODED_NON_ASCII_RUN_REGEX = /(?:%[89a-f][\da-f])+/gi;
+const UNSAFE_DISPLAY_CHARACTER_REGEX = /[\p{C}\p{Z}]/u;
 
 function createUrlObject(url: string): URL | null {
 	if (typeof url !== 'string') return null;
@@ -56,6 +58,17 @@ export function convertToAsciiUrl(url: string): string {
 	if (url.startsWith(`${APP_PROTOCOL}//`)) return url;
 	const urlObj = createUrlObject(url);
 	return urlObj ? idnaEncodeURL(url) : url;
+}
+
+export function decodeNonAsciiForDisplay(url: string): string {
+	return url.replace(PERCENT_ENCODED_NON_ASCII_RUN_REGEX, (run) => {
+		try {
+			const decoded = decodeURIComponent(run);
+			return UNSAFE_DISPLAY_CHARACTER_REGEX.test(decoded) ? run : decoded;
+		} catch {
+			return run;
+		}
+	});
 }
 
 export function isValidUrl(urlStr: string): boolean {

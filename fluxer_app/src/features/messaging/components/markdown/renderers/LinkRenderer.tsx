@@ -29,6 +29,7 @@ import {
 } from '@app/features/messaging/utils/InAppLinkUtils';
 import {goToMessage} from '@app/features/messaging/utils/MessageNavigator';
 import type {LinkNode} from '@app/features/messaging/utils/markdown/parser/Nodes';
+import {decodeNonAsciiForDisplay} from '@app/features/messaging/utils/markdown/parser/UrlUtils';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import {
 	type AppPageId,
@@ -731,7 +732,7 @@ export const LinkRenderer = observer(function LinkRenderer({
 	const i18n = options.i18n!;
 	const {url, text} = node;
 	const openInBrowser = useOpenInBrowserOnMiddleClick(url);
-	const content = text ? renderChildren([text], LINK_CONTENT_OPTION_OVERRIDES) : url;
+	const content = text ? renderChildren([text], LINK_CONTENT_OPTION_OVERRIDES) : decodeNonAsciiForDisplay(url);
 	const messageJumpTarget = parseMessageJumpLink(url);
 	const channelJumpTarget = messageJumpTarget ? null : parseChannelJumpLink(url);
 	const jumpTarget = messageJumpTarget ?? channelJumpTarget;
