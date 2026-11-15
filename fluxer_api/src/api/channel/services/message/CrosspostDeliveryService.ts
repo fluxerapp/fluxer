@@ -2,7 +2,7 @@
 
 import {createHash} from 'node:crypto';
 import type {ChannelID, GuildID, MessageID, UserID, WebhookID} from '@app/api/BrandedTypes';
-import {createMessageID, createUserID} from '@app/api/BrandedTypes';
+import {createMessageID, createRoleID, createUserID} from '@app/api/BrandedTypes';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {CrosspostedMessageKey} from '@app/api/channel/repositories/CrosspostedMessageRepository';
 import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
@@ -190,6 +190,14 @@ function crosspostSourceFingerprint(source: Message): string {
 	return createHash('sha256')
 		.update(JSON.stringify(toStableValue(state)))
 		.digest('hex');
+}
+
+const ROLE_MENTION_PATTERN = /<@&(\d+)>/g;
+const MARKDOWN_ESCAPABLE_PATTERN = /[[\]()\\*_~`@#|:<>-]/g;
+
+function plainRoleMention(name: string): string {
+	const label = name.startsWith('@') ? name : `@${name}`;
+	return label.replace(MARKDOWN_ESCAPABLE_PATTERN, '\\$&');
 }
 
 function isGuildUnavailable(guild: GuildResponse): boolean {
@@ -785,13 +793,29 @@ export class CrosspostDeliveryService {
 		return {
 			kind: 'ready',
 			payload: {
-				content: message.content,
+				content: await this.contentWithPlainRoleMentions(source),
 				flags: MessageFlags.IS_CROSSPOST | (message.flags & SENDABLE_MESSAGE_FLAGS),
 				attachments,
 				embeds,
 				stickerItems: message.stickers.map((sticker) => sticker.toMessageStickerItem()),
 			},
 		};
+	}
+
+	private async contentWithPlainRoleMentions(source: CrosspostSourceContext): Promise<string | null> {
+		const content = source.message.content;
+		if (!content || !source.channel.guildId) return content;
+		const roleIds = new Set(Array.from(content.matchAll(ROLE_MENTION_PATTERN), (match) => match[1]!));
+		if (roleIds.size === 0) return content;
+		const roles = await this.deps.guildRepository.listRolesByIds(
+			Array.from(roleIds, (id) => createRoleID(BigInt(id))),
+			source.channel.guildId,
+		);
+		const names = new Map(roles.map((role) => [role.id.toString(), role.name]));
+		return content.replace(ROLE_MENTION_PATTERN, (token, id: string) => {
+			const name = names.get(id);
+			return name === undefined ? token : plainRoleMention(name);
+		});
 	}
 
 	private isBlocked(source: CrosspostSourceContext): boolean {
