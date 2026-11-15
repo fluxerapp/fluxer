@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {DEFAULT_APP_SHELL_BRANDING} from '@app/features/app/state/AppShellBranding';
-import {getInstanceBrandStyle} from '@app/features/app/state/InstanceBrandStyle';
 import {getServedDocumentBranding} from '@app/features/app/state/ServedDocumentBranding';
 import {setDocumentTitleProductName} from '@app/features/window/state/DocumentTitle';
 import type {InstanceAppPublic} from '@fluxer/instance_bootstrap/src/Types';
@@ -123,7 +122,7 @@ function removeMeta(name: string): void {
 }
 
 export function syncThemeColorMeta(): void {
-	if (typeof document === 'undefined' || getInstanceBrandStyle().themeColor !== null) return;
+	if (typeof document === 'undefined') return;
 	const meta = document.head.querySelector<HTMLMetaElement>('meta[name="theme-color"]:not([data-fluxer-branding])');
 	if (meta !== null) meta.content = getComputedStyle(document.documentElement).backgroundColor;
 }
@@ -143,11 +142,7 @@ export function applyRuntimeDocumentBranding(appPublic: InstanceAppPublic): void
 	setMeta('application-name', productName);
 	setMeta('apple-mobile-web-app-title', productName);
 	applyFavicons(getDocumentFavicons(appPublic));
-	if (appPublic.branding.theme_color === null) {
-		removeMeta('theme-color');
-	} else {
-		setMeta('theme-color', appPublic.branding.theme_color);
-	}
+	removeMeta('theme-color');
 }
 
 export function applyServedDocumentBranding(): void {
