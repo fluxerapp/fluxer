@@ -191,8 +191,7 @@ const VoiceCallViewInner = observer(
 		}, [ContextMenu.contextMenu]);
 		const isPoppedOut = !inPopout && PopoutWindowManager.isCallPopoutOpenForChannel(channel.id);
 		const poppedOutTransition = usePoppedOutTransition(isPoppedOut);
-		const wantsChromePinned =
-			inPopout || isAnyContextMenuOpen || isInboxPopoutOpen || isStatsOpen || isSpectatorsPopoutOpen;
+		const wantsChromePinned = isAnyContextMenuOpen || isInboxPopoutOpen || isStatsOpen || isSpectatorsPopoutOpen;
 		const [isChromePinned, setIsChromePinned] = useState(wantsChromePinned);
 		const [expandedUserIds, setExpandedUserIds] = useState<Set<string>>(() => new Set());
 		const handleExpandUser = useCallback((userId: string) => {
