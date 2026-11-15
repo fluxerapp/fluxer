@@ -164,6 +164,11 @@ maybe_clear_self_stream(_ChId, _VoiceState, _VoicePermissions, _State) ->
 
 -spec user_has_base_voice_access(user_id(), channel_id(), guild_state()) -> boolean().
 user_has_base_voice_access(UserId, ChannelId, State) ->
+    not guild_voice_permissions:is_member_timed_out(UserId, State) andalso
+        user_has_channel_voice_access(UserId, ChannelId, State).
+
+-spec user_has_channel_voice_access(user_id(), channel_id(), guild_state()) -> boolean().
+user_has_channel_voice_access(UserId, ChannelId, State) ->
     case guild_virtual_channel_access:has_voice_access(UserId, ChannelId, State) of
         true ->
             true;
