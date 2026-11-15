@@ -444,8 +444,22 @@ impl std::fmt::Display for ApiError {
 }
 
 fn audit_log_reason_header(reason: &str) -> ApiResult<HeaderValue> {
-    let mut value = HeaderValue::from_bytes(reason.as_bytes())
+    let mut value = HeaderValue::from_str(&urlencoding::encode(reason))
         .map_err(|_| ApiError::Parse("invalid audit log reason header".to_owned()))?;
     value.set_sensitive(true);
     Ok(value)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn audit_log_reason_header_percent_encodes_the_note() {
+        let note = "evidence https://example.test/search?q=a%26b 50% ok \u{e5}";
+        let value = audit_log_reason_header(note).unwrap();
+        let sent = value.to_str().unwrap();
+        assert!(sent.is_ascii());
+        assert_eq!(urlencoding::decode(sent).unwrap(), note);
+    }
 }
