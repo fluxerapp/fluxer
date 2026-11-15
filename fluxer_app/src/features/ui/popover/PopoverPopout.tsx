@@ -54,6 +54,7 @@ interface PopoutProps {
 	hoverDelay?: number;
 	hoverCloseDelay?: number;
 	subscribeTo?: ComponentActionType;
+	subscribeFilter?: (args: unknown) => boolean;
 	onOpen?: () => void;
 	onClose?: () => void;
 	onCloseRequest?: (event?: Event) => boolean;
@@ -368,10 +369,14 @@ export const Popout = React.forwardRef<HTMLElement, PopoutProps>((props, ref) =>
 	}, [props.hoverDelay, clearTimers, close]);
 	useEffect(() => {
 		if (!props.subscribeTo) return;
-		const handler = () => toggle();
+		const filter = props.subscribeFilter;
+		const handler = (args: unknown) => {
+			if (filter && !filter(args)) return;
+			toggle();
+		};
 		ComponentBus.subscribe(props.subscribeTo, handler);
 		return () => ComponentBus.unsubscribe(props.subscribeTo!, handler);
-	}, [props.subscribeTo, toggle]);
+	}, [props.subscribeTo, props.subscribeFilter, toggle]);
 	const childToRender = (props.children as React.ReactNode) || state.lastValidChildren;
 	type PopoutChildProps = React.HTMLAttributes<HTMLElement> & {ref?: React.Ref<HTMLElement>};
 	const child =

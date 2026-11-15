@@ -4,6 +4,7 @@ import {ChannelChatLayout} from '@app/features/channel/components/ChannelChatLay
 import headerStyles from '@app/features/channel/components/ChannelHeader.module.css';
 import {Messages} from '@app/features/channel/components/ChannelMessages';
 import {ChannelHeaderIcon} from '@app/features/channel/components/channel_header_components/ChannelHeaderIcon';
+import {ChannelPinsButton} from '@app/features/channel/components/channel_header_components/ChannelPinsButton';
 import {MemberListContainer} from '@app/features/channel/components/MemberListContainer';
 import type {Channel} from '@app/features/channel/models/Channel';
 import {getPostForum} from '@app/features/forum/utils/ForumChannelUtils';
@@ -142,6 +143,9 @@ const PanelHeader = observer(({thread, title}: {thread?: Channel; title: string}
 							data-flx="threads.thread-side-panel.panel-header.channel-header-icon.full-view"
 						/>
 					</>
+				)}
+				{thread && !mobile && (
+					<ChannelPinsButton channel={thread} data-flx="threads.thread-side-panel.panel-header.channel-pins-button" />
 				)}
 				{thread && (
 					<ChannelHeaderIcon

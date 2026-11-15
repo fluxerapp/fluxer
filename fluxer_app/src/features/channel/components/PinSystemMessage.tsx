@@ -34,9 +34,9 @@ export const PinSystemMessage = observer(({message}: PinSystemMessageProps) => {
 				initialTab: 'pins',
 			});
 		} else {
-			ComponentBus.dispatch('CHANNEL_PINS_OPEN');
+			ComponentBus.dispatch('CHANNEL_PINS_OPEN', {channelId: message.channelId});
 		}
-	}, [mobileLayout.enabled]);
+	}, [mobileLayout.enabled, message.channelId]);
 	if (!channel) {
 		return null;
 	}

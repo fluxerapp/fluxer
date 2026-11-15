@@ -467,7 +467,7 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 	});
 	host.register('chat_toggle_pins', ({type}) => {
 		if (type !== 'press') return;
-		ComponentBus.dispatch('CHANNEL_PINS_OPEN');
+		ComponentBus.dispatch('CHANNEL_PINS_OPEN', {channelId: host.currentChannelId});
 	});
 	host.register('chat_toggle_inbox', ({type}) => {
 		if (type !== 'press') return;
