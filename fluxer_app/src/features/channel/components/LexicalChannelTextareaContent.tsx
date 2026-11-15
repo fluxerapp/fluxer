@@ -173,6 +173,7 @@ export const LexicalChannelTextareaContent = observer(
 		bare = false,
 		controlsRef,
 		onValueChange,
+		onFocus,
 	}: {
 		accountKey: string | null;
 		channel: Channel;
@@ -191,6 +192,7 @@ export const LexicalChannelTextareaContent = observer(
 		bare?: boolean;
 		controlsRef?: React.MutableRefObject<ChannelTextareaControls | null>;
 		onValueChange?: (value: string) => void;
+		onFocus?: () => void;
 	}) => {
 		const {i18n} = useLingui();
 		const composerKey = draftChannelId ?? channel.id;
@@ -1451,6 +1453,7 @@ export const LexicalChannelTextareaContent = observer(
 											setIsFocused(true);
 											setIsInputAreaFocused(true);
 											ChannelSearch.setInputFocused(channel.id, false);
+											onFocus?.();
 										}}
 										onBlur={() => {
 											setIsFocused(false);
