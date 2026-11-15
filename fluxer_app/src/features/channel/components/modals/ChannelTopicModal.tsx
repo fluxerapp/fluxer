@@ -5,11 +5,23 @@ import styles from '@app/features/channel/components/modals/ChannelTopicModal.mo
 import {type ChannelTopicModalProps, getChannelTopicInfo} from '@app/features/channel/utils/ChannelTopicModalUtils';
 import {SafeMarkdown} from '@app/features/messaging/components/markdown';
 import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
+import Navigation from '@app/features/navigation/state/Navigation';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
+import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {clsx} from 'clsx';
+import {reaction} from 'mobx';
 import {observer} from 'mobx-react-lite';
+import {useEffect} from 'react';
 
 export const ChannelTopicModal = observer(({channelId}: ChannelTopicModalProps) => {
+	useEffect(
+		() =>
+			reaction(
+				() => Navigation.pathname,
+				() => ModalCommands.popByType(ChannelTopicModal),
+			),
+		[],
+	);
 	const topicInfo = getChannelTopicInfo(channelId);
 	if (!topicInfo) {
 		return null;
