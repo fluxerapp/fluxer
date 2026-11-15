@@ -53,7 +53,6 @@ import {useScrollManager} from '@app/features/platform/utils/ScrollManager';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import {shouldAutoAck} from '@app/features/read_state/utils/AutoAckPredicate';
-import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import ActiveComposer from '@app/features/threads/state/ActiveComposer';
 import {Button} from '@app/features/ui/button/Button';
 import {Scroller} from '@app/features/ui/components/Scroller';
@@ -131,8 +130,6 @@ interface MessagesProps {
 	channel: Channel;
 	allowAutoAck?: boolean;
 }
-
-type MessagesWrapperStyle = React.CSSProperties & {'--message-group-spacing': string};
 
 const readFromState = (channelId: string): MessagesStateSnapshot => {
 	const messages = MessagesState.getMessages(channelId);
@@ -687,12 +684,6 @@ const CachedMessages = observer(function CachedMessages({channel, allowAutoAck =
 			data-flx="channel.messages.new-messages-bar"
 		/>
 	) : null;
-	const messagesWrapperStyle = useMemo<MessagesWrapperStyle>(
-		() => ({
-			'--message-group-spacing': remFromPx(state.messageGroupSpacing),
-		}),
-		[state.messageGroupSpacing],
-	);
 	const compactAvatarsVisible = Accessibility.showUserAvatarsInCompactMode;
 	const messageGutter = Accessibility.messageGutter;
 	useSkeletonLayoutReport(
@@ -757,7 +748,7 @@ const CachedMessages = observer(function CachedMessages({channel, allowAutoAck =
 		</>
 	);
 	return (
-		<div className={styles.messagesWrapper} style={messagesWrapperStyle} data-flx="channel.messages.messages-wrapper">
+		<div className={styles.messagesWrapper} data-flx="channel.messages.messages-wrapper">
 			<UploadManager
 				channel={channel}
 				canAttachFiles={canAttachFiles}

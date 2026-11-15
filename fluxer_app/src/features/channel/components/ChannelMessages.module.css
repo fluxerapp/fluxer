@@ -10,7 +10,6 @@
 	height: 100%;
 	font-size: var(--font-size, 1rem);
 	--scrollbar-track-bg: var(--background-secondary-lighter);
-	--message-group-spacing: 1rem;
 }
 
 .scrollerContainer {
