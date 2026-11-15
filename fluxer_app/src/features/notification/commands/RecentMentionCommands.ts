@@ -26,6 +26,7 @@ function mentionQuery(
 		everyone: filters.includeEveryone,
 		roles: filters.includeRoles,
 		guilds: filters.includeGuilds,
+		guild_id: MentionFeed.scopedGuildId ?? undefined,
 		limit: MAX_MESSAGES_PER_CHANNEL,
 		...options,
 	};

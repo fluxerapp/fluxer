@@ -590,6 +590,7 @@ export class UserRepository {
 		includeGuilds: boolean,
 		limit: number,
 		before?: MessageID,
+		guildId?: GuildID,
 	): Promise<Array<RecentMention>> {
 		return this.recentMentionRepository.listRecentMentions(
 			userId,
@@ -598,6 +599,7 @@ export class UserRepository {
 			includeGuilds,
 			limit,
 			before,
+			guildId,
 		);
 	}
 
