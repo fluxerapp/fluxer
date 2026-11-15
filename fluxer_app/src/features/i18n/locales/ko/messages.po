@@ -44931,6 +44931,11 @@ msgstr "{requestedAt}에 요청하신 내보내기가 준비되었습니다. 다
 msgid "Your fallback entrance sound for all communities and direct messages. More specific settings override it."
 msgstr "모든 커뮤니티와 DM에 기본으로 적용되는 입장음입니다. 더 구체적인 설정이 있는 경우 해당 설정이 우선 적용됩니다."
 
+#. Shown in the invite modal when every friend is already a member of this community.
+#: src/features/invite/components/modals/InviteModal.tsx
+msgid "Your friends are already in this community."
+msgstr ""
+
 #. Empty state title in the friends list Online tab when no friends are online. Tone can be friendly.
 #: src/features/channel/components/friends/views/FriendsList.tsx
 msgid "Your friends are stuck in another timeline"
