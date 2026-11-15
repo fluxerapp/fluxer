@@ -7,6 +7,8 @@ use crate::play_integrity::PlayIntegrityConfig;
 use crate::play_integrity::service::PlayIntegrityService;
 use crate::types::{ApiUserPartial, PersonaPartial, UserPartial, UserRequest, UserResponse};
 #[cfg(feature = "scylla")]
+use crate::types::{PersonaPartialScyllaRow};
+#[cfg(feature = "scylla")]
 use chrono::{DateTime, Utc};
 use fluxer_common::time::unix_millis;
 use fluxer_common::user_flags::{AccountStanding, USER_FLAG_STAFF};
@@ -550,7 +552,7 @@ impl ScyllaUsersStorage {
             .collect::<Vec<_>>())
     }
 
-		async fn fetch_partial_persona(&self, user_id: i64) -> anyhow::Result<Option<PersonaPartial>> {
+	async fn fetch_partial_persona(&self, user_id: i64) -> anyhow::Result<Option<PersonaPartial>> {
         let result = self
             .db
             .execute_unpaged(&self.stmt_partial_persona, (user_id,))
