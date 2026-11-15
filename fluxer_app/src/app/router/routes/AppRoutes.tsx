@@ -113,6 +113,16 @@ const StatusChangeBottomSheet = createNamedLoadableComponent<AppRouteComponentPr
 		(await import('@app/features/user/components/modals/StatusChangeBottomSheet')).StatusChangeBottomSheet,
 });
 
+function useMobileLayoutOnlyRoute(): boolean {
+	const isMobileLayout = MobileLayout.enabled;
+	useEffect(() => {
+		if (!isMobileLayout) {
+			RouterUtils.replaceWith(Routes.ME);
+		}
+	}, [isMobileLayout]);
+	return isMobileLayout;
+}
+
 const ProtectedAppLayout = observer(({children}: {children: ReactNode}) => {
 	if (readAuthenticatedRuntimeContext() === null && !SessionManager.isSwitching) {
 		return null;
@@ -143,9 +153,13 @@ const notificationsRoute = createRoute({
 	id: 'notifications',
 	path: Routes.NOTIFICATIONS,
 	preload: NotificationsPage.preload,
-	component: () => {
+	component: observer(() => {
 		const [bookmarksSheetOpen, setBookmarksSheetOpen] = useState(false);
 		const [bookmarksSheetLoaded, setBookmarksSheetLoaded] = useState(false);
+		const isMobileLayout = useMobileLayoutOnlyRoute();
+		if (!isMobileLayout) {
+			return null;
+		}
 		return (
 			<>
 				<NotificationsPage
@@ -164,16 +178,20 @@ const notificationsRoute = createRoute({
 				)}
 			</>
 		);
-	},
+	}),
 });
 const youRoute = createRoute({
 	getParentRoute: () => appLayoutRoute,
 	id: 'you',
 	path: Routes.YOU,
 	preload: YouPage.preload,
-	component: () => {
+	component: observer(() => {
 		const [statusSheetOpen, setStatusSheetOpen] = useState(false);
 		const [statusSheetLoaded, setStatusSheetLoaded] = useState(false);
+		const isMobileLayout = useMobileLayoutOnlyRoute();
+		if (!isMobileLayout) {
+			return null;
+		}
 		return (
 			<>
 				<YouPage
@@ -192,7 +210,7 @@ const youRoute = createRoute({
 				)}
 			</>
 		);
-	},
+	}),
 });
 const bookmarksRoute = createRoute({
 	getParentRoute: () => guildsLayoutRoute,
