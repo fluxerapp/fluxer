@@ -63,6 +63,7 @@ function renderMarkdownPreview(content: string | null | undefined, options: Mark
 	return parseAndRenderToPlaintext(content, MESSAGE_NOTIFICATION_PARSER_FLAGS, {
 		channelId: options.channelId,
 		preserveMarkdown: true,
+		hideSpoilers: true,
 		includeEmojiNames: true,
 		mentionChannels: options.mentionChannels,
 		resolveFromStores: options.resolveFromStores,
