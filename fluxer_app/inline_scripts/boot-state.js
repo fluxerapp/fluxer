@@ -90,19 +90,21 @@
 		};
 		const loaded = (link) =>
 			new Promise((resolve, reject) => {
-				const cleanup = () => {
-					link.onload = null;
-					link.onerror = null;
-					cleanups.delete(cleanup);
-				};
-				link.onload = () => {
+				const onLoad = () => {
 					cleanup();
 					resolve();
 				};
-				link.onerror = () => {
+				const onError = () => {
 					cleanup();
 					reject();
 				};
+				const cleanup = () => {
+					link.removeEventListener('load', onLoad);
+					link.removeEventListener('error', onError);
+					cleanups.delete(cleanup);
+				};
+				link.addEventListener('load', onLoad);
+				link.addEventListener('error', onError);
 				cleanups.add(cleanup);
 			});
 		const whenRoot = () =>
@@ -507,6 +509,16 @@
 					link.rel = 'stylesheet';
 					link.crossOrigin = 'anonymous';
 					if (sheet.integrity) link.integrity = sheet.integrity;
+					link.setAttribute('data-rspack-loading', '1');
+					const prewarmed = link;
+					const settle = (event) => {
+						prewarmed.removeEventListener('load', settle);
+						prewarmed.removeEventListener('error', settle);
+						prewarmed.removeAttribute('data-rspack-loading');
+						if (event.type !== 'load') prewarmed.remove();
+					};
+					prewarmed.addEventListener('load', settle);
+					prewarmed.addEventListener('error', settle);
 					link.href = sheet.href;
 					place(link);
 				}
