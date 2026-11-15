@@ -44931,6 +44931,11 @@ msgstr "Your export from {requestedAt} is ready. The download expires on {expire
 msgid "Your fallback entrance sound for all communities and direct messages. More specific settings override it."
 msgstr "Your fallback entrance sound for all communities and direct messages. More specific settings override it."
 
+#. Shown in the invite modal when every friend is already a member of this community.
+#: src/features/invite/components/modals/InviteModal.tsx
+msgid "Your friends are already in this community."
+msgstr "Your friends are already in this community."
+
 #. Empty state title in the friends list Online tab when no friends are online. Tone can be friendly.
 #: src/features/channel/components/friends/views/FriendsList.tsx
 msgid "Your friends are stuck in another timeline"

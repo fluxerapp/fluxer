@@ -34,6 +34,8 @@ import {
 import * as InviteCommands from '@app/features/invite/commands/InviteCommands';
 import styles from '@app/features/invite/components/modals/InviteModal.module.css';
 import * as InviteUtils from '@app/features/invite/utils/InviteUtils';
+import GuildMembers from '@app/features/member/state/GuildMembers';
+import {Logger} from '@app/features/platform/utils/AppLogger';
 import {failureCode} from '@app/features/platform/utils/ResponseInspection';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -55,6 +57,8 @@ import {MagnifyingGlassIcon, WarningCircleIcon, WarningIcon} from '@phosphor-ico
 import clsx from 'clsx';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useEffect, useMemo, useState} from 'react';
+
+const logger = new Logger('InviteModal');
 
 const NO_LIMIT_DESCRIPTOR = msg({
 	message: 'No limit',
@@ -216,7 +220,22 @@ const InviteModalContent = observer(function InviteModalContent({
 	const [temporary, setTemporary] = useState(false);
 	const [isMaxAgeCustom, setIsMaxAgeCustom] = useState(false);
 	const [isMaxUsesCustom, setIsMaxUsesCustom] = useState(false);
-	const recipients = useRecipientItems();
+	const allRecipients = useRecipientItems();
+	const recipients = allRecipients.filter(
+		(item) => item.type === 'group_dm' || GuildMembers.getMember(guild.id, item.user.id) === null,
+	);
+	const friendIdsKey = allRecipients
+		.filter((item) => item.type !== 'group_dm')
+		.map((item) => item.user.id)
+		.join(',');
+	useEffect(() => {
+		if (!friendIdsKey) {
+			return;
+		}
+		GuildMembers.ensureMembersLoaded(guild.id, friendIdsKey.split(',')).catch((error) => {
+			logger.error('Failed to load friend memberships', error);
+		});
+	}, [guild.id, friendIdsKey]);
 	const [searchQuery, setSearchQuery] = useState('');
 	const CUSTOM_OPTION = '__custom__';
 	const maxAgeOptions = useMemo(
@@ -416,6 +435,13 @@ const InviteModalContent = observer(function InviteModalContent({
 								searchQuery={searchQuery}
 								onSearchQueryChange={setSearchQuery}
 								showSearchInput={false}
+								emptyText={
+									allRecipients.length > 0 ? (
+										<Trans comment="Shown in the invite modal when every friend is already a member of this community.">
+											Your friends are already in this community.
+										</Trans>
+									) : undefined
+								}
 								data-flx="invite.invite-modal.recipient-list"
 							/>
 						) : (
