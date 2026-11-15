@@ -241,7 +241,7 @@ export const MediaVolumeControl = observer(function MediaVolumeControl({
 			</div>
 			<div
 				className={styles.sliderThumb}
-				style={{left: `calc(6px + ${displayVolume * 100}% - ${displayVolume * 12}px)`}}
+				style={{left: `calc(${remFromPx(6)} + ${displayVolume * 100}% - ${remFromPx(displayVolume * 12)})`}}
 				data-flx="voice.media-player.media-volume-control.slider-thumb"
 			/>
 		</div>
@@ -303,7 +303,7 @@ export const MediaVolumeControl = observer(function MediaVolumeControl({
 					className={styles.sliderWrapper}
 					initial={false}
 					animate={{
-						width: isExpanded ? sliderWidth : 0,
+						width: remFromPx(isExpanded ? sliderWidth : 0),
 						opacity: isExpanded ? 1 : 0,
 					}}
 					transition={{
