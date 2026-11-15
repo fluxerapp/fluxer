@@ -696,7 +696,7 @@
 	pointer-events: auto;
 }
 
-@media (pointer: coarse) {
+@media (any-hover: none) {
 	:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
 		.message:hover
 		.hoverAction,
