@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import AccountEngine from '@app/features/account_engine/state/AccountEngine';
-import {useAccountAvatarURL} from '@app/features/auth/AccountAvatarUtils';
+import {useAccountHoverAvatarURL} from '@app/features/auth/AccountAvatarUtils';
 import {resolveAccountInstanceKey, resolveAccountInstanceLabel} from '@app/features/auth/AccountDisplayUtils';
 import {
 	AccountIdentityText,
@@ -147,7 +147,7 @@ const AccountListRow = observer(function AccountListRow({
 	onConfirmSignOut,
 }: AccountListRowProps): React.ReactElement {
 	const {i18n} = useLingui();
-	const avatarUrl = useAccountAvatarURL(account);
+	const [avatarHoverRef, avatarUrl] = useAccountHoverAvatarURL(account);
 	const identityView = useAccountDisplayIdentityView(account);
 	const displayName = identityView.displayLabel;
 	const isExpired = account.isValid === false;
@@ -293,6 +293,7 @@ const AccountListRow = observer(function AccountListRow({
 	};
 	return (
 		<li
+			ref={avatarHoverRef}
 			className={clsx(
 				styles.row,
 				isSelected && styles.rowSelected,
