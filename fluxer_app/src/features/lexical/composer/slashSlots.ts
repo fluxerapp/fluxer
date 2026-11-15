@@ -57,6 +57,8 @@ import {
 	COMMAND_PRIORITY_HIGH,
 	type ElementNode,
 	HISTORY_MERGE_TAG,
+	INSERT_LINE_BREAK_COMMAND,
+	INSERT_PARAGRAPH_COMMAND,
 	KEY_ARROW_LEFT_COMMAND,
 	KEY_ARROW_RIGHT_COMMAND,
 	KEY_BACKSPACE_COMMAND,
@@ -543,6 +545,11 @@ function $collapsedSlotAtBoundary(event: KeyboardEvent | null, boundary: 'start'
 	return slot;
 }
 
+function $refuseLineBreakInSlashCommand(): boolean {
+	const selection = $getSelection();
+	return $isRangeSelection(selection) && $slashCommandParagraph(selection.anchor.getNode()) != null;
+}
+
 export function registerSlashSlotPlugin(
 	editor: LexicalEditor,
 	getResolvers: () => SlashSlotResolvers,
@@ -704,6 +711,8 @@ export function registerSlashSlotPlugin(
 			},
 			COMMAND_PRIORITY_HIGH,
 		),
+		editor.registerCommand(INSERT_LINE_BREAK_COMMAND, $refuseLineBreakInSlashCommand, COMMAND_PRIORITY_HIGH),
+		editor.registerCommand(INSERT_PARAGRAPH_COMMAND, $refuseLineBreakInSlashCommand, COMMAND_PRIORITY_HIGH),
 		editor.registerCommand(
 			KEY_BACKSPACE_COMMAND,
 			(event: KeyboardEvent) => $handleSlashStructuralDelete(event, true),
