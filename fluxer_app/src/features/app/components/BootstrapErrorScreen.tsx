@@ -29,6 +29,7 @@ export interface BootstrapAccounts {
 	readonly restoring: Account | null;
 	readonly others: ReadonlyArray<Account>;
 	readonly restoreOnNextStart: (accountKey: string) => Promise<void>;
+	readonly addAccountOnNextStart: () => Promise<void>;
 }
 
 interface BootstrapErrorScreenProps {
@@ -123,6 +124,17 @@ export const BootstrapErrorScreen: React.FC<BootstrapErrorScreenProps> = ({error
 				setCopied(false);
 			});
 	}, [error, i18n]);
+	const [addingAccount, setAddingAccount] = useState(false);
+	const handleAddAccount = useCallback(() => {
+		if (accounts === null) {
+			return;
+		}
+		setAddingAccount(true);
+		accounts.addAccountOnNextStart().then(reloadApp, (error: unknown) => {
+			logger.error('Failed to start signed out from the bootstrap error screen', error);
+			setAddingAccount(false);
+		});
+	}, [accounts]);
 	const handleReset = useCallback(() => {
 		void resetClientState({reason: ResetClientStateReason.RESET_APP_DATA, keepDrafts: true}).finally(() =>
 			window.location.reload(),
@@ -225,6 +237,18 @@ export const BootstrapErrorScreen: React.FC<BootstrapErrorScreenProps> = ({error
 								Copy stack trace
 							</Trans>
 						)}
+					</Button>
+				)}
+				{unreachable && accounts !== null && (
+					<Button
+						onClick={handleAddAccount}
+						variant="secondary"
+						submitting={addingAccount}
+						data-flx="app.bootstrap-error-screen.button.add-account"
+					>
+						<Trans comment="Button on the startup screen shown when the current account's instance is offline or not responding. Restarts the app signed out so the person can sign in to an account on any instance. The current account stays saved.">
+							Add an account
+						</Trans>
 					</Button>
 				)}
 				{!unreachable && (
