@@ -33,6 +33,7 @@ import {
 import {ComposerTypeaheadPlugin} from '@app/features/lexical/composer/ComposerTypeaheadPlugin';
 import {
 	$captureSelectionOffsets,
+	$expandComposerSelectionToLines,
 	$getComposerDisplayText,
 	$getComposerSelectionRange,
 	$getTextUpToCursor,
@@ -705,6 +706,20 @@ const ComposerInner = ({
 		},
 		[editor],
 	);
+	const handleEditableClick = useCallback(
+		(event: React.MouseEvent<HTMLElement>) => {
+			if (event.detail !== 3 || event.button !== 0) {
+				return;
+			}
+			editor.update(
+				() => {
+					$expandComposerSelectionToLines();
+				},
+				{discrete: true},
+			);
+		},
+		[editor],
+	);
 	const handleEditableContextMenu = useCallback(
 		(event: React.MouseEvent<HTMLElement>) => {
 			const target = event.target instanceof Element ? event.target : null;
@@ -754,6 +769,7 @@ const ComposerInner = ({
 							spellCheck
 							onKeyDown={handleEditableKeyDown}
 							onPointerDown={handleEditablePointerDown}
+							onClick={handleEditableClick}
 							onContextMenu={handleEditableContextMenu}
 							onFocus={onFocus}
 							onBlur={onBlur}
