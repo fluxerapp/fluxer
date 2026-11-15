@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import UnicodeEmojis from '@app/features/expressions/utils/UnicodeEmojis';
+import {$isInsideMarkdownCode} from '@app/features/lexical/composer/ComposerMarkdownHighlight';
 import {
 	$captureSelectionOffsets,
 	$getComposerNodeDisplayStart,
@@ -21,10 +22,14 @@ import {$getRoot, type LexicalEditor, TextNode} from 'lexical';
 
 export type ComposerEmojiResolver = (shortcodeName: string) => ResolvedTypedEmoji | null;
 
-export function registerComposerEmojiShortcode(editor: LexicalEditor, resolve: ComposerEmojiResolver): () => void {
+export function registerComposerEmojiShortcode(
+	editor: LexicalEditor,
+	resolve: ComposerEmojiResolver,
+	parserFlags?: number,
+): () => void {
 	return editor.registerNodeTransform(TextNode, (node) => {
 		if (!editor.isComposing()) {
-			$convertEmojiShortcode(node, resolve);
+			$convertEmojiShortcode(node, resolve, parserFlags);
 		}
 	});
 }
@@ -77,7 +82,7 @@ function isEscapedAt(text: string, index: number): boolean {
 	return backslashes % 2 === 1;
 }
 
-function $convertEmojiShortcode(node: TextNode, resolve: ComposerEmojiResolver): void {
+function $convertEmojiShortcode(node: TextNode, resolve: ComposerEmojiResolver, parserFlags?: number): void {
 	if ($isSyntaxMarkerNode(node) || node.hasFormat('code') || isReactionShorthandText($getRoot().getTextContent())) {
 		return;
 	}
@@ -100,7 +105,7 @@ function $convertEmojiShortcode(node: TextNode, resolve: ComposerEmojiResolver):
 			}
 		}
 		searchFrom = match.end;
-		if (backticks % 2 === 1) {
+		if (backticks % 2 === 1 || $isInsideMarkdownCode(node, match.start, match.end, parserFlags)) {
 			continue;
 		}
 		if (isEscapedAt(text, match.start)) {
