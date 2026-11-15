@@ -246,6 +246,26 @@ int fluxer_vips_srgb_without_alpha(VipsImage *in, VipsImage **out) {
     return fluxer_vips_operation_status(rc, out);
 }
 
+int fluxer_vips_embedded_icc_to_srgb(VipsImage *in, VipsImage **out) {
+    if (out == NULL) return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
+    *out = NULL;
+    if (in == NULL) return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
+    VipsBandFormat format = vips_image_get_format(in);
+    if (vips_image_get_typeof(in, VIPS_META_ICC_NAME) == 0 ||
+        (format != VIPS_FORMAT_UCHAR && format != VIPS_FORMAT_USHORT)) {
+        g_object_ref(in);
+        *out = in;
+        return FLUXER_NATIVE_STATUS_OK;
+    }
+    int rc = vips_icc_transform(
+        in, out, "srgb",
+        "embedded", TRUE,
+        "intent", VIPS_INTENT_RELATIVE,
+        "depth", 8,
+        NULL);
+    return fluxer_vips_operation_status(rc, out);
+}
+
 int fluxer_vips_extract_area(VipsImage *in, VipsImage **out, int left, int top, int width, int height) {
     if (out == NULL) return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
     *out = NULL;

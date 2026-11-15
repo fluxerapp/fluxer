@@ -211,6 +211,10 @@ unsafe extern "C" {
     ) -> c_int;
     pub fn fluxer_vips_srgb_without_alpha(input: *mut VipsImage, out: *mut *mut VipsImage)
     -> c_int;
+    pub fn fluxer_vips_embedded_icc_to_srgb(
+        input: *mut VipsImage,
+        out: *mut *mut VipsImage,
+    ) -> c_int;
     pub fn fluxer_vips_extract_area(
         input: *mut VipsImage,
         out: *mut *mut VipsImage,

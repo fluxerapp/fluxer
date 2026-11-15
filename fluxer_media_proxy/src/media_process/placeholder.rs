@@ -73,3 +73,25 @@ pub(super) fn optional_thumbhash(
 pub(super) fn encoded_placeholder(hash: Option<Vec<u8>>) -> Option<String> {
     hash.map(|hash| general_purpose::STANDARD.encode(hash))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::encode_thumbhash;
+    use crate::{
+        media_limits::MediaLimits,
+        test_fixtures::red_jpeg_tagged_with_swapped_red_and_blue_primaries,
+    };
+
+    #[test]
+    fn thumbhash_reads_colours_through_the_embedded_icc_profile() {
+        let input = red_jpeg_tagged_with_swapped_red_and_blue_primaries(64, 48);
+        let hash = encode_thumbhash(&MediaLimits::default_from_config(), &input, None)
+            .expect("the thumbhash encodes");
+        let header = u32::from(hash[0]) | (u32::from(hash[1]) << 8) | (u32::from(hash[2]) << 16);
+        let yellow_minus_blue = (header >> 6) & 63;
+        assert!(
+            yellow_minus_blue < 8,
+            "the average colour is blue, got p {yellow_minus_blue}"
+        );
+    }
+}

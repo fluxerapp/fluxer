@@ -178,11 +178,32 @@ pub(crate) fn validate_vips_image(
     Ok(())
 }
 
+fn embedded_icc_to_srgb<'source>(
+    image: native::VipsImageHandle<'source>,
+) -> Result<native::VipsImageHandle<'source>, MediaError> {
+    let mut converted_raw = ptr::null_mut();
+    let rc =
+        unsafe { native::fluxer_vips_embedded_icc_to_srgb(image.as_ptr(), &mut converted_raw) };
+    let converted = unsafe { image.adopt_derived_raw(converted_raw) };
+    if let Some(error) = native_status_error(
+        native::NativeStatus::from_code(rc),
+        MediaError::MediaTransformFailed,
+    ) {
+        clear_vips_error();
+        return Err(error);
+    }
+    converted.ok_or_else(|| {
+        clear_vips_error();
+        MediaError::MediaTransformFailed
+    })
+}
+
 pub(crate) fn normalize_vips_image_to_uchar<'source>(
     media_limits: &MediaLimits,
     image: native::VipsImageHandle<'source>,
 ) -> Result<native::VipsImageHandle<'source>, MediaError> {
     validate_vips_image(media_limits, &image)?;
+    let image = embedded_icc_to_srgb(image)?;
     let format = unsafe { native::fluxer_vips_image_get_format(image.as_ptr()) };
     if format == unsafe { native::fluxer_vips_format_uchar } {
         return Ok(image);
