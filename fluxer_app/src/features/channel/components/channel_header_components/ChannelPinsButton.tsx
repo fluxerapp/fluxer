@@ -31,7 +31,7 @@ interface ChannelPinsButtonProps {
 
 export const ChannelPinsButton = observer(({channel}: ChannelPinsButtonProps) => {
 	const {i18n} = useLingui();
-	const {isOpen, openProps} = usePopout('channel-pins');
+	const {isOpen, openProps} = usePopout(`channel-pins-${channel.id}`);
 	const isMobile = MobileLayout.isMobileLayout();
 	const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
 	const hasUnreadPins = ReadStates.hasUnreadPins(channel.id);
@@ -43,6 +43,10 @@ export const ChannelPinsButton = observer(({channel}: ChannelPinsButtonProps) =>
 			setIsBottomSheetOpen(true);
 		}
 	}, [isMobile]);
+	const isOwnPinsOpen = useCallback(
+		(args: unknown) => (args as {channelId?: string} | undefined)?.channelId === channel.id,
+		[channel.id],
+	);
 	const indicator = hasUnreadPins ? (
 		<NotificationDot
 			className={styles.unreadPinIndicator}
@@ -94,6 +98,7 @@ export const ChannelPinsButton = observer(({channel}: ChannelPinsButtonProps) =>
 				)}
 				position="bottom-end"
 				subscribeTo="CHANNEL_PINS_OPEN"
+				subscribeFilter={isOwnPinsOpen}
 			>
 				<ChannelHeaderIcon
 					icon={PushPinIcon}
