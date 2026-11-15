@@ -127,6 +127,11 @@ export const ReplyPreview = observer(
 			referencedMessage.author.id !== Authentication.currentUserId &&
 			LocalUserSpamOverride.isUserMarkedAsSpammer(referencedMessage.author.id, referencedMessage.author.flags);
 		const isCollapsedReferenceRevealed = isMessageRevealed(referencedMessage);
+		const forwardedSnapshot = referencedMessage.content ? undefined : referencedMessage.messageSnapshots?.[0];
+		const previewContent = forwardedSnapshot?.content ?? referencedMessage.content;
+		const previewMentionChannels = forwardedSnapshot
+			? (forwardedSnapshot.mention_channels ?? [])
+			: referencedMessage.mentionChannels;
 		let hiddenReplyReason: string | null = null;
 		if (referencedMessage.blocked && !isCollapsedReferenceRevealed) {
 			hiddenReplyReason = i18n._(REPLY_HIDDEN_BECAUSE_THE_ORIGINAL_AUTHOR_IS_BLOCKED_DESCRIPTOR);
@@ -242,19 +247,19 @@ export const ReplyPreview = observer(
 						}}
 						data-flx="channel.reply-preview.replied-text-preview.jump-to-replied-message.button"
 					>
-						{referencedMessage.content ? (
+						{previewContent ? (
 							<span
 								className={clsx(styles.repliedTextContent, markupStyles.markup)}
 								data-flx="channel.reply-preview.replied-text-content--2"
 							>
 								<SafeMarkdown
-									content={referencedMessage.content}
+									content={previewContent}
 									options={{
 										context: MarkdownContext.RESTRICTED_INLINE_REPLY,
 										messageId: referencedMessage.id,
 										channelId,
 										disableInteractions: true,
-										mentionChannels: referencedMessage.mentionChannels,
+										mentionChannels: previewMentionChannels,
 									}}
 									data-flx="channel.reply-preview.safe-markdown"
 								/>
