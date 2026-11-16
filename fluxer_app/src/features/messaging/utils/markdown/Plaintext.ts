@@ -472,10 +472,8 @@ function renderNodesToPlaintext(nodes: Array<Node>, options: PlaintextRenderOpti
 		}
 		const needsBlockSeparator =
 			result.length > 0 &&
-			previousNode != null &&
-			(isBlockNode(previousNode) || isBlockNode(node)) &&
 			!result.endsWith('\n') &&
-			!rendered.startsWith('\n');
+			((previousNode != null && isBlockNode(previousNode)) || (isBlockNode(node) && !rendered.startsWith('\n')));
 		if (needsBlockSeparator) {
 			const lastLine = result.slice(result.lastIndexOf('\n') + 1);
 			if (!(options.preserveMarkdown && lastLine === '> ')) {

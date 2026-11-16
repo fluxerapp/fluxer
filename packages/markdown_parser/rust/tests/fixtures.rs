@@ -251,7 +251,7 @@ fn alert_text_after_list_keeps_space_before_inline_node() {
                 {"type":"List","ordered":false,"items":[
                     {"children":[{"type":"Text","content":"Bullet point"}]}
                 ]},
-                {"type":"Text","content":"\nString with "},
+                {"type":"Text","content":"String with "},
                 {"type":"Link","text":{"type":"Text","content":"link"},"url":"https://example.com","escaped":false,"rawUrl":"https://example.com","source":"[link](https://example.com)"}
             ]}
         ]})

@@ -220,7 +220,7 @@ fn render_list(ordered: bool, items: &[ListItem], options: &PlaintextOptions) ->
             };
             format!(
                 "{prefix}{}",
-                indent_continuation_lines(&content, prefix.len())
+                indent_continuation_lines(&content, prefix.chars().count())
             )
         })
         .collect::<Vec<_>>()
@@ -430,10 +430,9 @@ fn render_nodes_to_plaintext(nodes: &[Node], options: &PlaintextOptions) -> Stri
             continue;
         }
         let needs_block_separator = !result.is_empty()
-            && previous_node.is_some()
-            && (previous_node.is_some_and(is_block_node) || is_block_node(node))
             && !result.ends_with('\n')
-            && !rendered.starts_with('\n');
+            && (previous_node.is_some_and(is_block_node)
+                || (is_block_node(node) && !rendered.starts_with('\n')));
         if needs_block_separator {
             trim_trailing_horizontal_whitespace_for_block_separator(
                 &mut result,
