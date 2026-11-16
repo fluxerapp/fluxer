@@ -6455,6 +6455,11 @@ msgstr "Біометрія"
 msgid "Bitrate"
 msgstr "Бітрейт"
 
+#. Tray icon color option for a black monochrome tray icon, for light taskbars and panels.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Black"
+msgstr ""
+
 #. Generic destructive action label that blocks a user.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/moderation/utils/ModerationMessageDescriptors.ts
@@ -22374,6 +22379,11 @@ msgctxt "code-editor"
 msgid "Match case"
 msgstr "Враховувати регістр"
 
+#. Tray icon color option. The app picks white or black from the taskbar or panel color.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Match the taskbar"
+msgstr ""
+
 #: src/features/channel/components/MatureContentChannelGate.tsx
 msgid "Mature category"
 msgstr "Категорія для дорослих"
@@ -27701,6 +27711,11 @@ msgstr "Виберіть, які кнопки відображатимуться
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx
 msgid "Pick which kinds of conversations to clean up."
 msgstr "Виберіть, які типи розмов потрібно очистити."
+
+#. Description under the automatic tray icon color option.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Pick white or black from the color of your taskbar or panel."
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
@@ -39216,6 +39231,11 @@ msgstr "Іконка в треї"
 msgid "Tray icon changes only apply after a restart on Linux because the system tray protocol doesn't reliably let apps add or remove icons at runtime. Restart now to apply your change."
 msgstr "Зміни іконки в треї застосовуються лише після перезапуску в Linux, оскільки протокол системного трея не дозволяє застосункам надійно додавати або видаляти іконки під час роботи. Перезапустіть зараз, щоб застосувати зміни."
 
+#. Desktop settings section title on Windows and Linux for choosing the color of the monochrome system tray icon.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Tray icon color"
+msgstr ""
+
 #. Short label in the channel and chat gif picker grid. Keep it concise.
 #. Short label in the channel and chat gif picker header. Keep it concise.
 #: src/features/channel/components/pickers/gif/GifPickerGrid.tsx
@@ -39524,6 +39544,11 @@ msgstr "Вимкнути трансляцію"
 #: src/features/streamer_mode/components/StreamerModeGate.tsx
 msgid "Turn off streaming privacy before viewing login or account security details."
 msgstr "Вимкніть конфіденційність трансляції, перш ніж переглядати дані для входу або відомості про безпеку облікового запису."
+
+#. Section description shown when the colored tray icon is on, so the monochrome color choice has no effect.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Turn off the colored tray icon to choose a color here."
+msgstr ""
 
 #. Button that turns on the Operator Pass that comes with Visionary, in profile settings and at the bottom of its dialog. Nothing is bought.
 #. Nagbar button that applies quick CSS and saved themes again.
@@ -43199,6 +43224,11 @@ msgstr "Поки цей значок приховано або замасков�
 #: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
 msgid "While this badge is hidden, {labsName} shows you without the Operator role, and you keep #operators."
 msgstr "Поки цей значок приховано, {labsName} показує тебе без ролі Operator, а доступ до #operators залишається."
+
+#. Tray icon color option for a white monochrome tray icon, for dark taskbars and panels.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "White"
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts

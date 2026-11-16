@@ -9,7 +9,11 @@ import {
 	type GlobalShortcutAction,
 	isGlobalShortcutAction,
 } from '@electron/common/GlobalShortcutActions';
-import type {DesktopTroubleshootingSettings, DesktopWindowBehaviorSettings} from '@electron/common/Types';
+import type {
+	DesktopTroubleshootingSettings,
+	DesktopWindowBehaviorSettings,
+	MonochromeTrayIconTone,
+} from '@electron/common/Types';
 import {readInstanceProductNameReport} from '@fluxer/desktop_ipc/src/InstanceProductNameContract';
 import {InstanceEndpointKind, normalizeInstanceEndpoint} from '@fluxer/instance_bootstrap/src/EndpointNormalization';
 import {isObjectLike as isRecord} from '@fluxer/record_utils/src/RecordGuards';
@@ -67,6 +71,7 @@ export type ChromiumSwitchesSetting = ReadonlyArray<string> | Record<string, unk
 interface PersistedDesktopWindowBehaviorSettings {
 	showTrayIcon?: boolean;
 	coloredTrayIcon?: boolean;
+	monochromeTrayIconTone?: MonochromeTrayIconTone;
 	darkTaskbarBadge?: boolean;
 	useNativeTitleBar?: boolean;
 	minimizeToTrayV2?: boolean;
@@ -81,6 +86,10 @@ interface PersistedDesktopWindowBehaviorSettings {
 interface PersistedDesktopTroubleshootingSettings {
 	disableHardwareAcceleration?: boolean;
 	disableModuleUpdates?: boolean;
+}
+
+export function isMonochromeTrayIconTone(value: unknown): value is MonochromeTrayIconTone {
+	return value === 'auto' || value === 'white' || value === 'black';
 }
 
 const INSTANCE_ENDPOINT_ARGS = ['--fluxer-instance'];
@@ -102,6 +111,7 @@ function getDefaultDesktopWindowBehaviorSettings(): DesktopWindowBehaviorSetting
 	return {
 		showTrayIcon: true,
 		coloredTrayIcon: false,
+		monochromeTrayIconTone: 'auto',
 		darkTaskbarBadge: false,
 		minimizeToTray: false,
 		closeToTray: true,
@@ -130,6 +140,9 @@ function sanitizePersistedDesktopWindowBehaviorSettings(
 	}
 	if (typeof value.coloredTrayIcon === 'boolean') {
 		settings.coloredTrayIcon = value.coloredTrayIcon;
+	}
+	if (isMonochromeTrayIconTone(value.monochromeTrayIconTone)) {
+		settings.monochromeTrayIconTone = value.monochromeTrayIconTone;
 	}
 	if (typeof value.darkTaskbarBadge === 'boolean') {
 		settings.darkTaskbarBadge = value.darkTaskbarBadge;
@@ -382,6 +395,9 @@ function normalizeDesktopWindowBehaviorSettings(
 	const normalized = {
 		showTrayIcon: firstBoolean(defaults.showTrayIcon, settings?.showTrayIcon),
 		coloredTrayIcon: firstBoolean(defaults.coloredTrayIcon, settings?.coloredTrayIcon),
+		monochromeTrayIconTone: isMonochromeTrayIconTone(settings?.monochromeTrayIconTone)
+			? settings.monochromeTrayIconTone
+			: defaults.monochromeTrayIconTone,
 		darkTaskbarBadge: firstBoolean(defaults.darkTaskbarBadge, settings?.darkTaskbarBadge),
 		minimizeToTray: firstBoolean(defaults.minimizeToTray, settings?.minimizeToTray, settings?.minimizeToTrayV2),
 		closeToTray: firstBoolean(defaults.closeToTray, settings?.closeToTray, settings?.closeToTrayV2),
@@ -426,6 +442,7 @@ function serializeDesktopWindowBehaviorSettings(
 	return {
 		showTrayIcon: settings.showTrayIcon,
 		coloredTrayIcon: settings.coloredTrayIcon,
+		monochromeTrayIconTone: settings.monochromeTrayIconTone,
 		darkTaskbarBadge: settings.darkTaskbarBadge,
 		useNativeTitleBar: settings.useNativeTitleBar,
 		rememberWindowState: settings.rememberWindowState,
