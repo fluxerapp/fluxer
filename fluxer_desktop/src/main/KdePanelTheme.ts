@@ -20,7 +20,7 @@ const KNOWN_STYLE_DARKNESS: Readonly<Record<string, boolean>> = {
 type IniSections = Map<string, Map<string, string>>;
 type Env = Readonly<Record<string, string | undefined>>;
 
-export function parseIni(text: string): IniSections {
+function parseIni(text: string): IniSections {
 	const sections: IniSections = new Map();
 	let current: Map<string, string> | null = null;
 	for (const rawLine of text.split(/\r?\n/u)) {
@@ -45,7 +45,7 @@ export function parseIni(text: string): IniSections {
 	return sections;
 }
 
-export function isDarkRgb(value: string | undefined): boolean | null {
+function isDarkRgb(value: string | undefined): boolean | null {
 	if (!value) return null;
 	const parts = value.split(',').map((part) => Number.parseInt(part.trim(), 10));
 	if (parts.length < 3 || parts.slice(0, 3).some((part) => !Number.isFinite(part) || part < 0 || part > 255)) {
@@ -68,13 +68,13 @@ function colourSchemeNameIsDark(sections: IniSections): boolean | null {
 	return /dark|night|black/iu.test(name);
 }
 
-export interface KdePanelSources {
+interface KdePanelSources {
 	plasmarc: string | null;
 	kdeglobals: string | null;
 	styleColors: (style: string) => string | null;
 }
 
-export function resolveKdePanelDark(sources: KdePanelSources): boolean | null {
+function resolveKdePanelDark(sources: KdePanelSources): boolean | null {
 	const style = (sources.plasmarc ? parseIni(sources.plasmarc).get('Theme')?.get('name') : undefined) ?? 'default';
 	if (!STYLE_FOLLOWS_COLOUR_SCHEME.has(style)) {
 		const known = KNOWN_STYLE_DARKNESS[style];
@@ -91,7 +91,7 @@ export function resolveKdePanelDark(sources: KdePanelSources): boolean | null {
 	return windowBackgroundIsDark(globals) ?? colourSchemeNameIsDark(globals);
 }
 
-export function kdeConfigDir(env: Env, flatpak: boolean): string {
+function kdeConfigDir(env: Env, flatpak: boolean): string {
 	const home = env.HOME?.trim() || os.homedir();
 	const configured = (flatpak ? env.HOST_XDG_CONFIG_HOME : env.XDG_CONFIG_HOME)?.trim();
 	return configured && path.isAbsolute(configured) ? configured : path.join(home, '.config');
