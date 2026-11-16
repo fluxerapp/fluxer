@@ -100,6 +100,7 @@ export interface DesktopWindowBehaviorSettings {
 	coloredTrayIcon: boolean;
 	monochromeTrayIconTone: MonochromeTrayIconTone;
 	darkTaskbarBadge: boolean;
+	unreadLauncherBadge: boolean;
 	minimizeToTray: boolean;
 	closeToTray: boolean;
 	startMinimized: boolean;

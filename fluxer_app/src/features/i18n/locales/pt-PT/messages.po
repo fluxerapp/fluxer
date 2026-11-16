@@ -6214,6 +6214,11 @@ msgstr ""
 msgid "Badge and wall count: {count}"
 msgstr ""
 
+#. Desktop setting toggle label on Linux. Controls whether unread messages without mentions put a badge on the app icon in the taskbar or dock.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Badge the app icon for unread messages"
+msgstr ""
+
 #. Title of the profile settings section that lists the badges you hold and lets you hide each one.
 #. Title of the window that lists every badge of a person or community.
 #: src/features/user/components/modals/BadgeListModal.tsx
@@ -21692,6 +21697,11 @@ msgstr ""
 #. Audio device label prefix for the operating system default audio device on Linux.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Linux default"
+msgstr ""
+
+#. Desktop setting description under the Linux unread app icon badge toggle.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Linux taskbars can only show a number, so unread messages without mentions show as 1. Mentions always show their count."
 msgstr ""
 
 #. Forum layout name shown inside an activity log row.

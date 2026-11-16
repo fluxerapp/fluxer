@@ -69,6 +69,18 @@ const USE_DARK_TASKBAR_BADGE_DESCRIPTION_DESCRIPTOR = msg({
 	comment: 'Desktop setting description under the dark taskbar badge toggle on Windows.',
 });
 
+const SHOW_UNREAD_LAUNCHER_BADGE_DESCRIPTOR = msg({
+	message: 'Badge the app icon for unread messages',
+	comment:
+		'Desktop setting toggle label on Linux. Controls whether unread messages without mentions put a badge on the app icon in the taskbar or dock.',
+});
+
+const SHOW_UNREAD_LAUNCHER_BADGE_DESCRIPTION_DESCRIPTOR = msg({
+	message:
+		'Linux taskbars can only show a number, so unread messages without mentions show as 1. Mentions always show their count.',
+	comment: 'Desktop setting description under the Linux unread app icon badge toggle.',
+});
+
 const TRAY_ICON_COLOR_DESCRIPTOR = msg({
 	message: 'Tray icon color',
 	comment:
@@ -268,6 +280,16 @@ const DesktopSettingsTab: React.FC = observer(() => {
 								disabled={desktopWindowBehaviorBusy || !desktopWindowBehavior.showTrayIcon}
 								onChange={(value) => handleDesktopWindowBehaviorChange({coloredTrayIcon: value})}
 								data-flx="user.desktop-settings-tab.switch.colored-tray-icon-change"
+							/>
+						)}
+						{isLinux && desktopWindowBehavior.unreadLauncherBadge !== undefined && (
+							<Switch
+								label={i18n._(SHOW_UNREAD_LAUNCHER_BADGE_DESCRIPTOR)}
+								description={i18n._(SHOW_UNREAD_LAUNCHER_BADGE_DESCRIPTION_DESCRIPTOR)}
+								value={desktopWindowBehavior.unreadLauncherBadge}
+								disabled={desktopWindowBehaviorBusy}
+								onChange={(value) => handleDesktopWindowBehaviorChange({unreadLauncherBadge: value})}
+								data-flx="user.desktop-settings-tab.switch.unread-launcher-badge-change"
 							/>
 						)}
 						{isWindows && desktopWindowBehavior.darkTaskbarBadge !== undefined && (

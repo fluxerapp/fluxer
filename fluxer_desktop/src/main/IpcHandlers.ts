@@ -139,6 +139,9 @@ function normalizeDesktopWindowBehaviorUpdate(value: unknown): Partial<DesktopWi
 	if (typeof value.darkTaskbarBadge === 'boolean') {
 		update.darkTaskbarBadge = value.darkTaskbarBadge;
 	}
+	if (typeof value.unreadLauncherBadge === 'boolean') {
+		update.unreadLauncherBadge = value.unreadLauncherBadge;
+	}
 	if (typeof value.minimizeToTray === 'boolean') {
 		update.minimizeToTray = value.minimizeToTray;
 	}
@@ -174,13 +177,21 @@ function getActiveMiddleClickAutoscroll(): boolean {
 	return process.platform === 'linux' && hasEnabledBlinkFeature(MIDDLE_CLICK_AUTOSCROLL_BLINK_FEATURE);
 }
 
+let lastUnreadBadge = 0;
+
+function launcherBadgeCount(badge: number): number {
+	if (badge !== UNREAD_BADGE_DOT) return badge;
+	return getDesktopWindowBehaviorSettings().unreadLauncherBadge ? 1 : 0;
+}
+
 function applyUnreadBadge(badge: number): void {
+	lastUnreadBadge = badge;
 	if (process.platform === 'win32') {
 		setWindowsBadgeOverlay(getMainWindow(), badge);
 	} else if (process.platform === 'darwin' && badge === UNREAD_BADGE_DOT) {
 		app.dock?.setBadge('•');
 	} else {
-		app.setBadgeCount(badge === UNREAD_BADGE_DOT ? 1 : badge);
+		app.setBadgeCount(launcherBadgeCount(badge));
 	}
 	setDesktopTrayUnreadBadge(badge);
 }
@@ -340,6 +351,7 @@ export function registerIpcHandlers(): void {
 		const nextSettings = setDesktopWindowBehaviorSettings(normalizeDesktopWindowBehaviorUpdate(settings));
 		applyDesktopWindowBehaviorSettings();
 		refreshWindowsBadgeOverlay(getMainWindow());
+		if (process.platform === 'linux') app.setBadgeCount(launcherBadgeCount(lastUnreadBadge));
 		if (!nextSettings.showTrayIcon) {
 			const mainWindow = getMainWindow();
 			if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isVisible()) {
