@@ -2788,6 +2788,14 @@ How many proxies in front of the push relay it trusts.
 
 The stack runs Postgres only.
 
+#### `FLUXER_CASSANDRA_ADDRESS_TRANSLATION`
+
+How the Rust services reach the Cassandra nodes the driver discovers. `auto` sends every connection to the contact point when `FLUXER_CASSANDRA_HOSTS` lists one host, and uses the nodes' own addresses otherwise. `contact_point` always sends every connection to the first host. `none` always uses the nodes' own addresses, so each request can go to a node that holds the data. Use `none` when every node's address is reachable, such as inside Kubernetes. Defaults to `auto`.
+
+#### `FLUXER_CASSANDRA_CONSISTENCY`
+
+The consistency level for Cassandra reads and writes that don't set their own: `one`, `local_one`, `quorum`, `local_quorum`, `each_quorum` or `all`. Defaults to `local_quorum`.
+
 #### `FLUXER_CASSANDRA_HOSTS`
 
 The Cassandra hosts.
@@ -2798,7 +2806,7 @@ The Cassandra keyspace.
 
 #### `FLUXER_CASSANDRA_LOCAL_DC`
 
-The local Cassandra data centre.
+The local Cassandra data centre. Requests go only to nodes in it, and `local_quorum` and `local_serial` count the replicas in it. When it's empty, the Rust services send requests to any data centre.
 
 #### `FLUXER_CASSANDRA_PASSWORD`
 
@@ -2807,6 +2815,10 @@ The Cassandra password.
 #### `FLUXER_CASSANDRA_PORT`
 
 The Cassandra port.
+
+#### `FLUXER_CASSANDRA_SERIAL_CONSISTENCY`
+
+The consistency level for Cassandra lightweight transactions and the reads that check them: `serial` or `local_serial`. Defaults to `local_serial`.
 
 #### `FLUXER_CASSANDRA_USERNAME`
 

@@ -455,6 +455,8 @@ export async function startWorkerMain(): Promise<void> {
 				port: Config.cassandra.port,
 				keyspace: Config.cassandra.keyspace,
 				localDc: Config.cassandra.localDc,
+				consistency: Config.cassandra.consistency,
+				serialConsistency: Config.cassandra.serialConsistency,
 				username: Config.cassandra.username || undefined,
 				password: Config.cassandra.password || undefined,
 				readTimeoutMs: BACKGROUND_READ_TIMEOUT_MS,

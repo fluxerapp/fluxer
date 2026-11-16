@@ -107,6 +107,8 @@ function defaultConfig(): MasterConfig {
 				port: 9042,
 				keyspace: 'fluxer',
 				local_dc: 'datacenter1',
+				consistency: 'local_quorum',
+				serial_consistency: 'local_serial',
 				username: '',
 				password: '',
 			},

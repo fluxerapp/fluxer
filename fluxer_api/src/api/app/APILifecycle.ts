@@ -230,6 +230,8 @@ export function createInitializer(
 					port: config.cassandra.port,
 					keyspace: config.cassandra.keyspace,
 					localDc: config.cassandra.localDc,
+					consistency: config.cassandra.consistency,
+					serialConsistency: config.cassandra.serialConsistency,
 					username: config.cassandra.username || undefined,
 					password: config.cassandra.password || undefined,
 				}).catch((error: unknown) => {
