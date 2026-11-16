@@ -38,6 +38,8 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 	FLUXER_CASSANDRA_PORT: {path: ['database', 'cassandra', 'port'], parse: parseInteger},
 	FLUXER_CASSANDRA_KEYSPACE: {path: ['database', 'cassandra', 'keyspace']},
 	FLUXER_CASSANDRA_LOCAL_DC: {path: ['database', 'cassandra', 'local_dc']},
+	FLUXER_CASSANDRA_CONSISTENCY: {path: ['database', 'cassandra', 'consistency']},
+	FLUXER_CASSANDRA_SERIAL_CONSISTENCY: {path: ['database', 'cassandra', 'serial_consistency']},
 	FLUXER_CASSANDRA_USERNAME: {path: ['database', 'cassandra', 'username']},
 	FLUXER_CASSANDRA_PASSWORD: {path: ['database', 'cassandra', 'password']},
 	FLUXER_POSTGRES_URL: {path: ['database', 'postgres', 'url']},

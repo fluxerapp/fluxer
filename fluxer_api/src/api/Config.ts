@@ -28,6 +28,7 @@ import {smtpTlsModeFromSecure} from '@fluxer/constants/src/SmtpConstants';
 import {parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
 import type {GeoEntry} from '@fluxer/schema/src/domains/geolocation/GeolocationSchemas';
 import {normalizeString} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {parseCassandraConsistency, parseCassandraSerialConsistency} from '@pkgs/cassandra/src/Client';
 import {parseGeoipSourceConfig, resolveGeoipRuntimeSourceConfig} from '@pkgs/geoip/src/GeoipStartup';
 
 function extractHostname(url: string): string {
@@ -379,6 +380,8 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			port: cassandraSource?.port ?? 9042,
 			keyspace: cassandraSource?.keyspace ?? '',
 			localDc: cassandraSource?.local_dc ?? '',
+			consistency: parseCassandraConsistency(cassandraSource?.consistency),
+			serialConsistency: parseCassandraSerialConsistency(cassandraSource?.serial_consistency),
 			username: cassandraSource?.username ?? '',
 			password: cassandraSource?.password ?? '',
 		},

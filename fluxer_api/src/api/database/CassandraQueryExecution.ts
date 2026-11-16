@@ -21,7 +21,7 @@ import {LocalDate} from '@app/api/database/LocalDate';
 import {Logger} from '@app/api/Logger';
 import {chunkArray} from '@app/api/utils/ArrayUtils';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
-import {getClient, getLoadedCassandraDriver} from '@pkgs/cassandra/src/Client';
+import {getClient, getLoadedCassandraDriver, getSerialConsistency} from '@pkgs/cassandra/src/Client';
 import type cassandra from 'cassandra-driver';
 
 const DEFAULT_MAX_PARTITION_KEYS_PER_QUERY = 100;
@@ -106,6 +106,13 @@ interface CassandraReadOptions {
 	consistency: 'all' | 'serial' | 'localQuorum';
 }
 
+function driverConsistencyOption(consistency: CassandraReadOptions['consistency'] | undefined): {consistency?: number} {
+	if (!consistency) return {};
+	const name = consistency === 'serial' ? getSerialConsistency() : consistency;
+	const value = getLoadedCassandraDriver()?.types.consistencies[name];
+	return value === undefined ? {} : {consistency: value};
+}
+
 async function collectSelectRows<T>(queryType: string, result: cassandra.types.ResultSet): Promise<Array<T>> {
 	if (queryType !== 'SELECT' || !result.pageState) {
 		return (result.rows ?? []) as Array<T>;
@@ -145,7 +152,7 @@ export async function executeQuery<T = Record<string, unknown>, P extends Cassan
 	try {
 		const result = await getClient().execute(cql, driverParams(bound), {
 			prepare: true,
-			...(readOptions ? {consistency: getLoadedCassandraDriver()?.types.consistencies[readOptions.consistency]} : {}),
+			...driverConsistencyOption(readOptions?.consistency),
 		});
 		const rows = await collectSelectRows<T>(meta.type, result);
 		if (isDev) {
@@ -344,7 +351,7 @@ async function executeBatch(
 		prepare: true,
 		logged: atomic,
 		counter: false,
-		...(consistency ? {consistency: getLoadedCassandraDriver()?.types.consistencies[consistency]} : {}),
+		...driverConsistencyOption(consistency),
 	};
 	const isDev = getIsDev();
 	const startTime = isDev ? performance.now() : 0;
