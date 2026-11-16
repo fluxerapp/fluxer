@@ -361,6 +361,17 @@ export class AdminRepository {
 		return rows.length > 0;
 	}
 
+	async isMailHostBanned(host: string): Promise<boolean> {
+		const domainKeys = getEmailBlocklistKeys(`postmaster@${host.trim()}`).filter((key) => key.startsWith('@'));
+		if (domainKeys.length === 0) {
+			return false;
+		}
+		const rows = await fetchManyInChunks<{email_lower: string}, string>(IS_EMAIL_BANNED_QUERY, domainKeys, (chunk) => ({
+			email_lowers: chunk,
+		}));
+		return rows.length > 0;
+	}
+
 	async banEmail(email: string): Promise<void> {
 		const emailLower = email.toLowerCase();
 		await upsertOne(BannedEmails.insert({email_lower: emailLower}));

@@ -12,7 +12,7 @@ import {sendVerificationEmail} from '@app/api/auth/AuthEmail';
 import * as AuthPassword from '@app/api/auth/AuthPassword';
 import * as AuthSession from '@app/api/auth/AuthSession';
 import * as AuthUtility from '@app/api/auth/AuthUtility';
-import {assertEmailNotBlocklisted} from '@app/api/auth/EmailBlocklist';
+import {assertEmailNotBlocklisted, assertMailHostsNotBlocklisted} from '@app/api/auth/EmailBlocklist';
 import {
 	getLocalPartAtInstance,
 	getPrimaryInstanceHost,
@@ -576,6 +576,7 @@ export async function assertRegistrationEmailDeliverable(
 	if (!(await emailDnsValidation.hasValidDnsRecords(email))) {
 		throw InputValidationError.fromCode('email', ValidationErrorCodes.EMAIL_DOMAIN_CANNOT_RECEIVE_MAIL);
 	}
+	await assertMailHostsNotBlocklisted(email, 'email', emailDnsValidation);
 }
 
 export async function assertInstanceAcceptsEmailDomain(email: string, field: string): Promise<void> {
