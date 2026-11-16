@@ -19,6 +19,9 @@ on:
       - fluxer_docs/src/content/docs/operator/environment.mdx
       - .github/workflows/rexctl.yaml
 
+env:
+  GOPROXY: https://proxy.golang.org|direct
+
 permissions:
   contents: read
 
