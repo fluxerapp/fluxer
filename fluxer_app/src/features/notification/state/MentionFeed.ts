@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ResettableStates} from '@app/features/app/state/ResettableStates';
+import Authentication from '@app/features/auth/state/Authentication';
 import Channels from '@app/features/channel/state/Channels';
 import GuildMatureContentAgree from '@app/features/guild/state/GuildMatureContentAgree';
 import Guilds from '@app/features/guild/state/Guilds';
@@ -194,6 +195,7 @@ class MentionFeed {
 	}
 
 	handleMessageCreate(message: WireMessage): void {
+		if (message.author.id === Authentication.currentUserId) return;
 		const channel = Channels.getChannel(message.channel_id);
 		if (!channel) return;
 		const guildId = channel.guildId ?? null;
