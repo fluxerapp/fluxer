@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomUUID} from 'node:crypto';
+import {assertMailHostsNotBlocklisted} from '@app/api/auth/EmailBlocklist';
 import {
 	clearTestEmails,
 	createAuthHarness,
@@ -41,6 +42,7 @@ describe('Email blocklist at signup and email change', () => {
 			'admin:authenticate',
 			'ban:email:add',
 			'ban:email:check',
+			'ban:ip:add',
 		]);
 	});
 	afterAll(async () => {
@@ -60,6 +62,42 @@ describe('Email blocklist at signup and email change', () => {
 			{path, code: 'INVALID_EMAIL_ADDRESS'},
 		]);
 	}
+
+	it('refuses an address whose mail servers belong to a blocklisted domain', async () => {
+		await blocklist('@mail-rotator.test');
+		const rotated = {mailHosts: async () => ['in.mail-rotator.test'], mailHostAddresses: async () => ['192.0.2.10']};
+		const unrelated = {mailHosts: async () => ['mx.example.com'], mailHostAddresses: async () => ['192.0.2.11']};
+		await expect(assertMailHostsNotBlocklisted('someone@fresh-domain.test', 'email', rotated)).rejects.toMatchObject({
+			code: 'INVALID_FORM_BODY',
+		});
+		await expect(
+			assertMailHostsNotBlocklisted('someone@fresh-domain.test', 'email', unrelated),
+		).resolves.toBeUndefined();
+	});
+
+	it('refuses an address whose mail server runs on a blocklisted IP address', async () => {
+		await createBuilder(harness, admin.token)
+			.post('/admin/blocklists/ip/entries')
+			.body({ip: '198.51.100.25'})
+			.expect(HTTP_STATUS.NO_CONTENT)
+			.execute();
+		const ownMailServer = {
+			mailHosts: async () => ['mx.fresh-domain.test'],
+			mailHostAddresses: async () => ['198.51.100.25'],
+		};
+		const elsewhere = {
+			mailHosts: async () => ['mx.other-domain.test'],
+			mailHostAddresses: async () => ['198.51.100.26'],
+		};
+		await expect(
+			assertMailHostsNotBlocklisted('someone@fresh-domain.test', 'email', ownMailServer),
+		).rejects.toMatchObject({
+			code: 'INVALID_FORM_BODY',
+		});
+		await expect(
+			assertMailHostsNotBlocklisted('someone@other-domain.test', 'email', elsewhere),
+		).resolves.toBeUndefined();
+	});
 
 	it('refuses registration with a blocklisted address in any letter case', async () => {
 		const email = createUniqueEmail('blocked-signup');
