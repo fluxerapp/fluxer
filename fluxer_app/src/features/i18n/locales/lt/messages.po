@@ -6455,6 +6455,11 @@ msgstr "Biometriniai duomenys"
 msgid "Bitrate"
 msgstr "Bitų srautas"
 
+#. Tray icon color option for a black monochrome tray icon, for light taskbars and panels.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Black"
+msgstr ""
+
 #. Generic destructive action label that blocks a user.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/moderation/utils/ModerationMessageDescriptors.ts
@@ -22375,6 +22380,11 @@ msgctxt "code-editor"
 msgid "Match case"
 msgstr "Skirti didžiąsias ir mažąsias"
 
+#. Tray icon color option. The app picks white or black from the taskbar or panel color.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Match the taskbar"
+msgstr ""
+
 #: src/features/channel/components/MatureContentChannelGate.tsx
 msgid "Mature category"
 msgstr "Brandaus turinio kategorija"
@@ -27702,6 +27712,11 @@ msgstr "Pasirinkite, kurie mygtukai rodomi žinutės įvesties lauke"
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx
 msgid "Pick which kinds of conversations to clean up."
 msgstr "Pasirinkite, kokių tipų pokalbius išvalyti."
+
+#. Description under the automatic tray icon color option.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Pick white or black from the color of your taskbar or panel."
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
@@ -39217,6 +39232,11 @@ msgstr "Dėklo piktograma"
 msgid "Tray icon changes only apply after a restart on Linux because the system tray protocol doesn't reliably let apps add or remove icons at runtime. Restart now to apply your change."
 msgstr "Dėklo piktogramos pakeitimai „Linux“ sistemoje įsigalioja tik iš naujo paleidus, nes sistemos dėklo protokolas neleidžia programoms patikimai pridėti ar pašalinti piktogramų vykdymo metu. Paleiskite iš naujo dabar, kad pritaikytumėte pakeitimą."
 
+#. Desktop settings section title on Windows and Linux for choosing the color of the monochrome system tray icon.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Tray icon color"
+msgstr ""
+
 #. Short label in the channel and chat gif picker grid. Keep it concise.
 #. Short label in the channel and chat gif picker header. Keep it concise.
 #: src/features/channel/components/pickers/gif/GifPickerGrid.tsx
@@ -39525,6 +39545,11 @@ msgstr "Išjungti srautą"
 #: src/features/streamer_mode/components/StreamerModeGate.tsx
 msgid "Turn off streaming privacy before viewing login or account security details."
 msgstr "Išjunkite srautinio perdavimo privatumą prieš peržiūrėdami prisijungimo ar paskyros saugos duomenis."
+
+#. Section description shown when the colored tray icon is on, so the monochrome color choice has no effect.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Turn off the colored tray icon to choose a color here."
+msgstr ""
 
 #. Button that turns on the Operator Pass that comes with Visionary, in profile settings and at the bottom of its dialog. Nothing is bought.
 #. Nagbar button that applies quick CSS and saved themes again.
@@ -43200,6 +43225,11 @@ msgstr "Kol šis ženklelis paslėptas arba rodomas kaip prenumerata, „{labsNa
 #: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
 msgid "While this badge is hidden, {labsName} shows you without the Operator role, and you keep #operators."
 msgstr "Kol šis ženklelis paslėptas, „{labsName}“ rodo jus be Operator vaidmens, o #operators jums lieka."
+
+#. Tray icon color option for a white monochrome tray icon, for dark taskbars and panels.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "White"
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts

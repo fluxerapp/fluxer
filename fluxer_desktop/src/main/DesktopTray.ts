@@ -21,6 +21,7 @@ import {buildAccountMenuEntries, buildAccountMenuItems, createRefreshThrottle} f
 import {getAppResourcesPath} from '@electron/main/DesktopDistributionPath';
 import {getDesktopUpdateState, observeDesktopUpdateState} from '@electron/main/DesktopUpdateGate';
 import {checkForUpdatesFromShell, startDesktopUpdateFromShell} from '@electron/main/DesktopUpdatePrompt';
+import {readKdePanelDark, readKdePanelDarkSync, watchKdePanelTheme} from '@electron/main/KdePanelTheme';
 import {shouldDisableModuleUpdatesForLaunch} from '@electron/main/LaunchOptions';
 import {relaunchStableLaunchPath} from '@electron/main/LinuxLaunchPath';
 import {getLinuxDesktop} from '@electron/main/LinuxSession';
@@ -295,17 +296,42 @@ function createTrayIcon(): Electron.NativeImage | null {
 	return createTrayImage(['256x256.png', '512x512.png', '128x128.png', '64x64.png', '48x48.png', 'icon.png']);
 }
 
+let darkKdePanel: boolean | null | undefined;
+let kdePanelReadGeneration = 0;
+
+function isKdeSession(): boolean {
+	return process.platform === 'linux' && getLinuxDesktop() === 'kde';
+}
+
+function getDarkKdePanel(): boolean | null {
+	if (!isKdeSession()) return null;
+	if (darkKdePanel === undefined) darkKdePanel = readKdePanelDarkSync();
+	return darkKdePanel;
+}
+
+function refreshKdePanelTheme(): void {
+	if (!isKdeSession()) return;
+	const generation = ++kdePanelReadGeneration;
+	void readKdePanelDark()
+		.then((dark) => {
+			if (generation !== kdePanelReadGeneration) return;
+			darkKdePanel = dark;
+			syncTrayIcon(false);
+		})
+		.catch((error: unknown) => logger.warn('Could not read the KDE panel colours', {error}));
+}
+
 function resolveTrayIcon(): {key: string; image: Electron.NativeImage} | null {
 	trayBaseIcon ??= createTrayIcon();
 	if (!trayBaseIcon) return null;
+	const settings = getDesktopWindowBehaviorSettings();
 	const appearance = resolveTrayIconAppearance({
 		platform: process.platform,
 		linuxDesktop: getLinuxDesktop(),
-		coloredTrayIcon: getDesktopWindowBehaviorSettings().coloredTrayIcon,
-		darkSystemUI:
-			process.platform === 'linux'
-				? nativeTheme.shouldUseDarkColors
-				: nativeTheme.shouldUseDarkColorsForSystemIntegratedUI,
+		coloredTrayIcon: settings.coloredTrayIcon,
+		monochromeTone: settings.monochromeTrayIconTone,
+		darkWindowsTaskbar: nativeTheme.shouldUseDarkColorsForSystemIntegratedUI,
+		darkKdePanel: getDarkKdePanel(),
 	});
 	const indicator = trayUnreadBadge !== 0;
 	const key = `${appearance}:${indicator}`;
@@ -657,7 +683,14 @@ export function initializeDesktopTray(nextController: DesktopTrayController): vo
 			refreshDesktopTrayMenu();
 		});
 		if (trayIconFollowsSystemTheme(process.platform, getLinuxDesktop())) {
-			nativeTheme.on('updated', () => syncTrayIcon(false));
+			nativeTheme.on('updated', () => {
+				syncTrayIcon(false);
+				refreshKdePanelTheme();
+			});
+		}
+		if (isKdeSession()) {
+			watchKdePanelTheme(refreshKdePanelTheme);
+			refreshKdePanelTheme();
 		}
 		observeDesktopUpdateState(refreshDesktopTrayMenu);
 		onAccountEngineSummaries(accountMenuRefresh.schedule);

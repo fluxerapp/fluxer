@@ -240,6 +240,7 @@ function formatWindowBehavior(settings: DesktopWindowBehaviorSettings): string {
 	return [
 		`showTrayIcon=${settings.showTrayIcon}`,
 		`coloredTrayIcon=${settings.coloredTrayIcon}`,
+		`monochromeTrayIconTone=${settings.monochromeTrayIconTone}`,
 		`darkTaskbarBadge=${settings.darkTaskbarBadge}`,
 		`minimizeToTray=${settings.minimizeToTray}`,
 		`closeToTray=${settings.closeToTray}`,

@@ -19,6 +19,9 @@ finish-args:
   - --filesystem=xdg-download
   - --filesystem=xdg-run/pipewire-0:ro
   - --filesystem=xdg-run/speech-dispatcher:ro
+  - --filesystem=xdg-config/kdeglobals:ro
+  - --filesystem=xdg-config/plasmarc:ro
+  - --filesystem=xdg-data/plasma/desktoptheme:ro
   - --talk-name=org.freedesktop.Notifications
   - --talk-name=org.freedesktop.secrets
   - --talk-name=org.kde.kwalletd5

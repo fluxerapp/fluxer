@@ -101,9 +101,12 @@ export interface DesktopInfo {
 	chromiumRuntime: ChromiumRuntimeInfo;
 }
 
+export type MonochromeTrayIconTone = 'auto' | 'white' | 'black';
+
 export interface DesktopWindowBehaviorSettings {
 	showTrayIcon: boolean;
 	coloredTrayIcon?: boolean;
+	monochromeTrayIconTone?: MonochromeTrayIconTone;
 	darkTaskbarBadge?: boolean;
 	minimizeToTray: boolean;
 	closeToTray: boolean;

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {LinuxDesktopKind} from '@electron/common/Types';
+import type {LinuxDesktopKind, MonochromeTrayIconTone} from '@electron/common/Types';
 import {type NativeImage, nativeImage} from 'electron';
 
 export type TrayIconAppearance = 'colored' | 'template' | 'white' | 'black';
@@ -35,11 +35,15 @@ export function resolveTrayIconAppearance(options: {
 	platform: NodeJS.Platform;
 	linuxDesktop: LinuxDesktopKind;
 	coloredTrayIcon: boolean;
-	darkSystemUI: boolean;
+	monochromeTone: MonochromeTrayIconTone;
+	darkWindowsTaskbar: boolean;
+	darkKdePanel: boolean | null;
 }): TrayIconAppearance {
 	if (options.platform === 'darwin') return 'template';
 	if (options.coloredTrayIcon) return 'colored';
-	if (trayIconFollowsSystemTheme(options.platform, options.linuxDesktop) && !options.darkSystemUI) return 'black';
+	if (options.monochromeTone !== 'auto') return options.monochromeTone;
+	if (options.platform === 'win32') return options.darkWindowsTaskbar ? 'white' : 'black';
+	if (options.platform === 'linux' && options.linuxDesktop === 'kde' && options.darkKdePanel === false) return 'black';
 	return 'white';
 }
 

@@ -5,6 +5,7 @@ import {
 	type DesktopTroubleshootingSettings,
 	type DesktopWindowBehaviorSettings,
 	getDesktopWindowBehaviorSettings,
+	isMonochromeTrayIconTone,
 	rememberInstanceProductName,
 	setDesktopWindowBehaviorSettings,
 	setPrebootTheme,
@@ -131,6 +132,9 @@ function normalizeDesktopWindowBehaviorUpdate(value: unknown): Partial<DesktopWi
 	}
 	if (typeof value.coloredTrayIcon === 'boolean') {
 		update.coloredTrayIcon = value.coloredTrayIcon;
+	}
+	if (isMonochromeTrayIconTone(value.monochromeTrayIconTone)) {
+		update.monochromeTrayIconTone = value.monochromeTrayIconTone;
 	}
 	if (typeof value.darkTaskbarBadge === 'boolean') {
 		update.darkTaskbarBadge = value.darkTaskbarBadge;
