@@ -63,8 +63,15 @@ impl MarkdownParser {
     }
 
     pub fn parse(&mut self, input: &str) -> Result<Vec<Node>, ParseError> {
-        let lines = text::split_lines(input);
-        self.parse_lines(lines)
+        if !input.contains("\r\n") {
+            return self.parse_lines(text::split_lines(input));
+        }
+        let removed: Vec<usize> = input.match_indices("\r\n").map(|(at, _)| at).collect();
+        let original = Arc::clone(&self.emoji_context);
+        self.emoji_context = Arc::new(original.without_bytes_at(&removed));
+        let result = self.parse_lines(text::split_lines(&input.replace("\r\n", "\n")));
+        self.emoji_context = original;
+        result
     }
 
     pub(crate) fn parse_lines(&mut self, lines: Vec<Line>) -> Result<Vec<Node>, ParseError> {
