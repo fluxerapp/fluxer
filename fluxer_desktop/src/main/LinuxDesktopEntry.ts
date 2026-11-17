@@ -162,7 +162,7 @@ function buildDesktopFileBody(execPath: string, hidden: boolean): string {
 		'Terminal=false',
 		'Categories=Network;InstantMessaging;Chat;',
 		`MimeType=x-scheme-handler/${APP_PROTOCOL};`,
-		`StartupWMClass=${WM_CLASS}`,
+		...(hidden ? [] : [`StartupWMClass=${WM_CLASS}`]),
 		'SingleMainWindow=true',
 		'StartupNotify=true',
 		...(hidden ? ['NoDisplay=true'] : []),
