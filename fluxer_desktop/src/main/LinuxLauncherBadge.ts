@@ -3,10 +3,15 @@
 import fs from 'node:fs';
 import {createRequire} from 'node:module';
 import path from 'node:path';
-import {LINUX_DESKTOP_ENTRY_ID} from '@electron/common/DesktopIdentity';
+import {
+	LEGACY_LINUX_DESKTOP_ENTRY_ID,
+	LINUX_DESKTOP_ENTRY_ID,
+	OTHER_CHANNEL_LINUX_DESKTOP_FILES,
+} from '@electron/common/DesktopIdentity';
 import {createChildLogger} from '@electron/common/Logger';
+import {isWindowDesktopEntry} from '@electron/main/DesktopEntryText';
 import {getLinuxPortalsMode} from '@electron/main/LaunchOptions';
-import {getLinuxApplicationsDirs, readDesktopEntryValue} from '@electron/main/LinuxDesktopEntry';
+import {getLinuxApplicationsDirs} from '@electron/main/LinuxDesktopEntry';
 import {getStableLinuxLaunchPath} from '@electron/main/LinuxLaunchPath';
 import {loadOptionalNativeAddon} from '@electron/main/NativeAddon';
 import {app} from 'electron';
@@ -40,8 +45,10 @@ let windowDesktopIds: ReadonlyArray<string> = [];
 let started = false;
 
 function findWindowDesktopIds(): Array<string> {
-	const wmClasses = new Set([path.basename(process.execPath), LINUX_DESKTOP_ENTRY_ID].map((id) => id.toLowerCase()));
-	const launchPath = getStableLinuxLaunchPath();
+	const identity = {
+		wmClasses: [LINUX_DESKTOP_ENTRY_ID, LEGACY_LINUX_DESKTOP_ENTRY_ID],
+		launchPath: getStableLinuxLaunchPath(),
+	};
 	const primaryDesktopId = process.env.CHROME_DESKTOP;
 	const seen = new Set<string>();
 	const ids: Array<string> = [];
@@ -55,17 +62,14 @@ function findWindowDesktopIds(): Array<string> {
 		for (const entry of entries) {
 			if (!entry.endsWith('.desktop') || seen.has(entry)) continue;
 			seen.add(entry);
-			if (entry === primaryDesktopId) continue;
+			if (entry === primaryDesktopId || OTHER_CHANNEL_LINUX_DESKTOP_FILES.has(entry)) continue;
 			let contents: string;
 			try {
 				contents = fs.readFileSync(path.join(dir, entry), 'utf8');
 			} catch {
 				continue;
 			}
-			if (readDesktopEntryValue(contents, 'Hidden') === 'true') continue;
-			const wmClass = readDesktopEntryValue(contents, 'StartupWMClass')?.toLowerCase();
-			const exec = readDesktopEntryValue(contents, 'Exec') ?? '';
-			if ((wmClass !== undefined && wmClasses.has(wmClass)) || exec.includes(launchPath)) ids.push(entry);
+			if (isWindowDesktopEntry(contents, identity)) ids.push(entry);
 		}
 	}
 	return ids;

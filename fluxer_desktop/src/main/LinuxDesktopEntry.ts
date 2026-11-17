@@ -11,10 +11,17 @@ import {
 	LEGACY_LINUX_DESKTOP_ENTRY_ID,
 	LINUX_DESKTOP_ENTRY_ID,
 	LINUX_ICON_NAME,
+	OTHER_CHANNEL_LINUX_DESKTOP_FILES,
 } from '@electron/common/DesktopIdentity';
 import {createChildLogger} from '@electron/common/Logger';
 import {IS_OFFLINE_BUILD} from '@electron/common/OfflineBuild';
 import {getAppResourcesPath} from '@electron/main/DesktopDistributionPath';
+import {
+	desktopExecRunsPath,
+	isAppImageIntegratorEntry,
+	readDesktopEntryValue,
+	setDesktopEntryValue,
+} from '@electron/main/DesktopEntryText';
 import {isDirectMessagesAvailable, onDirectMessagesAvailabilityChange, TASK_ARG_PREFIX} from '@electron/main/JumpList';
 import {getStableLinuxLaunchPath} from '@electron/main/LinuxLaunchPath';
 import {isFlatpakRuntime} from '@electron/main/LinuxSandbox';
@@ -87,11 +94,17 @@ function findThirdPartyDesktopEntry(execPath: string): string | null {
 		return null;
 	}
 	for (const entry of entries) {
-		if (!entry.endsWith('.desktop') || entry === DESKTOP_FILE_BASENAME) continue;
+		if (
+			!entry.endsWith('.desktop') ||
+			entry === DESKTOP_FILE_BASENAME ||
+			OTHER_CHANNEL_LINUX_DESKTOP_FILES.has(entry)
+		) {
+			continue;
+		}
 		const candidate = path.join(applicationsDir, entry);
-		try {
-			if (fs.readFileSync(candidate, 'utf8').includes(execPath)) return candidate;
-		} catch {}
+		const contents = readExistingDesktopFile(candidate);
+		if (contents === null || contents.includes(GENERATED_MARKER)) continue;
+		if (desktopExecRunsPath(readDesktopEntryValue(contents, 'Exec'), execPath)) return candidate;
 	}
 	return null;
 }
@@ -181,15 +194,6 @@ function buildDesktopFileContents(execPath: string, hidden: boolean): string {
 		`${GENERATED_MARKER}\n`,
 		`${GENERATED_MARKER}\n${GENERATED_DIGEST_PREFIX}${digestDesktopFileBody(body)}\n`,
 	);
-}
-
-export function readDesktopEntryValue(contents: string, key: string): string | null {
-	for (const line of contents.split('\n')) {
-		const trimmed = line.trim();
-		if (trimmed.startsWith('[Desktop Action ')) break;
-		if (trimmed.startsWith(`${key}=`)) return trimmed.slice(key.length + 1).trim();
-	}
-	return null;
 }
 
 function isExecutableFile(candidate: string): boolean {
@@ -309,31 +313,11 @@ function writeDesktopFileAtomically(filePath: string, contents: string, mode = 0
 	}
 }
 
-function setDesktopEntryValue(contents: string, key: string, value: string): string {
-	const lines = contents.split('\n');
-	const groupStart = lines.findIndex((line) => line.trim() === '[Desktop Entry]');
-	if (groupStart === -1) return contents;
-	let groupEnd = lines.length;
-	for (let index = groupStart + 1; index < lines.length; index++) {
-		const trimmed = lines[index].trim();
-		if (trimmed.startsWith('[')) {
-			groupEnd = index;
-			break;
-		}
-		if (trimmed.startsWith(`${key}=`)) {
-			lines[index] = `${key}=${value}`;
-			return lines.join('\n');
-		}
-	}
-	while (groupEnd > groupStart + 1 && lines[groupEnd - 1].trim() === '') groupEnd--;
-	lines.splice(groupEnd, 0, `${key}=${value}`);
-	return lines.join('\n');
-}
-
-function claimThirdPartyWindowClass(filePath: string): boolean {
+function claimThirdPartyWindowClass(filePath: string, execPath: string): boolean {
 	if (path.dirname(filePath) !== getUserApplicationsDir()) return false;
 	const contents = readExistingDesktopFile(filePath);
-	if (contents === null || readDesktopEntryValue(contents, 'StartupWMClass') === WM_CLASS) return false;
+	if (contents === null || !isAppImageIntegratorEntry(contents, execPath)) return false;
+	if (readDesktopEntryValue(contents, 'StartupWMClass') === WM_CLASS) return false;
 	const updated = setDesktopEntryValue(contents, 'StartupWMClass', WM_CLASS);
 	if (updated === contents) return false;
 	try {
@@ -370,7 +354,7 @@ function syncUserDesktopEntry(): boolean {
 	if (thirdPartyEntry) {
 		logger.debug('Another .desktop entry manages the app menu entry; keeping ours hidden', {thirdPartyEntry});
 	}
-	const claimed = thirdPartyEntry !== null && claimThirdPartyWindowClass(thirdPartyEntry);
+	const claimed = thirdPartyEntry !== null && claimThirdPartyWindowClass(thirdPartyEntry, execPath);
 	const desired = buildDesktopFileContents(execPath, thirdPartyEntry !== null);
 	if (existing === desired) {
 		logger.debug('Linux .desktop entry already up to date', {filePath});
