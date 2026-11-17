@@ -325,9 +325,10 @@ function resolveTrayIcon(): {key: string; image: Electron.NativeImage} | null {
 	trayBaseIcon ??= createTrayIcon();
 	if (!trayBaseIcon) return null;
 	const settings = getDesktopWindowBehaviorSettings();
+	const linuxDesktop = getLinuxDesktop();
 	const appearance = resolveTrayIconAppearance({
 		platform: process.platform,
-		linuxDesktop: getLinuxDesktop(),
+		linuxDesktop,
 		coloredTrayIcon: settings.coloredTrayIcon,
 		monochromeTone: settings.monochromeTrayIconTone,
 		darkWindowsTaskbar: nativeTheme.shouldUseDarkColorsForSystemIntegratedUI,
@@ -337,7 +338,7 @@ function resolveTrayIcon(): {key: string; image: Electron.NativeImage} | null {
 	const key = `${appearance}:${indicator}`;
 	let image = trayIconCache.get(key);
 	if (!image) {
-		image = renderTrayIcon(trayBaseIcon, appearance, indicator, process.platform);
+		image = renderTrayIcon(trayBaseIcon, appearance, indicator, process.platform, linuxDesktop);
 		trayIconCache.set(key, image);
 	}
 	return {key, image};
