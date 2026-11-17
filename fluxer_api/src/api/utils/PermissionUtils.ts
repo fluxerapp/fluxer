@@ -48,10 +48,29 @@ export async function requirePermission(
 	}
 }
 
+interface OverwriteBits {
+	type?: number;
+	allow: bigint;
+	deny: bigint;
+}
+
+export function overwriteAppliesToTarget(
+	overwrite: {id: bigint; type: number},
+	guildId: bigint,
+	roleIds: ReadonlySet<bigint>,
+): boolean {
+	const isRole = overwrite.id === guildId || roleIds.has(overwrite.id);
+	return overwrite.type === 0 ? isRole : !isRole;
+}
+
 export function overwriteGrantedBits(
-	before: {allow: bigint; deny: bigint} | null | undefined,
-	after: {allow: bigint; deny: bigint} | null | undefined,
+	before: OverwriteBits | null | undefined,
+	after: OverwriteBits | null | undefined,
+	beforeApplies = true,
 ): bigint {
+	if (before && after && before.type !== undefined && after.type !== undefined && before.type !== after.type) {
+		return after.allow | (beforeApplies ? before.deny : 0n);
+	}
 	const beforeAllow = before?.allow ?? 0n;
 	const beforeDeny = before?.deny ?? 0n;
 	const afterAllow = after?.allow ?? 0n;
