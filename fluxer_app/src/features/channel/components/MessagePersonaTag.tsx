@@ -25,7 +25,7 @@ export const PersonaTag = observer(({className} : React.HTMLProps<void>) => {
 		/> */}
 		<div className={clsx(styles.messagePersonaTag, className)}>
 			{/* TODO: custom user field */}
-			{userNickname || message.author.displayName}
+			{message.author.personaTag || userNickname || message.author.displayName}
 		</div>
 	</Tooltip>;
 });

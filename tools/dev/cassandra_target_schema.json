@@ -10524,6 +10524,10 @@
 				{
 					"name": "age_attested_at",
 					"type": "timestamp"
+				},
+				{
+					"name": "persona_tag",
+					"type": "text"
 				}
 			],
 			"primary_key": "((user_id))",

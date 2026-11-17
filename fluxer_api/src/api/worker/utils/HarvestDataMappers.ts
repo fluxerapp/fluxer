@@ -321,6 +321,7 @@ export function buildUserDataJson(params: UserDataJsonParams) {
 			last_active_at: user.lastActiveAt?.toISOString() ?? null,
 			created_at: snowflakeToDate(user.id).toISOString(),
 			mfa_enabled: user.authenticatorTypes.size > 0,
+			persona_tag: user.personaTag,
 			authenticator_types: Array.from(user.authenticatorTypes),
 		},
 		auth_sessions: authSessions.map((session) => {

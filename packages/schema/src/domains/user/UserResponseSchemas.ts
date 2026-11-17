@@ -71,6 +71,7 @@ export const UserPartialResponse = z.object({
 		.describe(
 			"The user's account-wide reply mention preference. Omitted when the user has no preference set (treated as NO_PREFERENCE).",
 		),
+	persona_tag: z.string().nullish().describe('A tag to display after this user\'s personas to visually associate them.'),
 });
 
 export type UserPartialResponse = z.infer<typeof UserPartialResponse>;
@@ -227,6 +228,7 @@ export const UserPrivateResponse = UserPartialResponse.extend({
 		.describe(
 			'Whether Fluxer keeps an age range for the account that the iOS or Android app sent from the Apple or Google account. The range itself is not included',
 		),
+	persona_tag: z.string().nullish().describe('A tag to display after this user\'s personas to visually associate them.'),
 	profile_restricted: z
 		.boolean()
 		.optional()
@@ -343,6 +345,7 @@ export interface UserProfileResponse {
 	banner: string | null;
 	banner_color?: number | null;
 	accent_color: number | null;
+	persona_tag?: string | null;
 }
 
 export const CustomStatusResponse = z.object({
@@ -557,6 +560,7 @@ export interface UserPartial {
 	readonly system?: boolean;
 	readonly flags: number;
 	readonly mention_flags?: MentionReplyPreference;
+	readonly persona_tag?: string | null;
 }
 
 export interface UserPrivate extends UserPartial, UserProfile {
@@ -610,6 +614,7 @@ export interface UserPrivate extends UserPartial, UserProfile {
 	readonly date_of_birth_required?: boolean;
 	readonly has_age_range?: boolean;
 	readonly profile_restricted?: boolean;
+	readonly persona_tag?: string | null;
 }
 
 export type User = UserPartial & Partial<UserPrivate>;
@@ -662,6 +667,7 @@ const UserProfileDataResponse = z.object({
 	banner: z.string().nullable().describe('Hash of the profile banner image'),
 	banner_color: Int32Type.nullable().optional().describe('Default banner color if no custom banner'),
 	accent_color: Int32Type.nullable().describe('User-selected accent color'),
+	persona_tag: z.string().nullish().describe('A tag to display after this user\'s personas to visually associate them.'),
 });
 
 const GuildMemberProfileDataResponse = z
@@ -724,6 +730,7 @@ export const UserProfileFullResponse = z.object({
 		.describe(
 			'True when the target user has restricted their profile and the viewer does not meet the visibility tier. Bio, pronouns, connected accounts, and the premium and Operator Pass badges have been stripped. Staff, partner, and bug hunter badges remain.',
 		),
+	persona_tag: z.string().nullish().describe('A tag to display after this user\'s personas to visually associate them.'),
 });
 
 export type UserProfileFullResponse = z.infer<typeof UserProfileFullResponse>;

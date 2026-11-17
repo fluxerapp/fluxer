@@ -665,6 +665,8 @@ export const ERROR_I18N_MESSAGES = {
 	'rate_limits.slowmode_rate_limited': 'Slowmode rate limited.',
 	'rate_limits.username_changed_too_often':
 		"You've changed your username too often recently. Please try again in {minutes, plural, one {# minute} other {# minutes}}.",
+		'rate_limits.persona_tag_changed_too_often':
+		"You've changed your persona tag too often recently. Please try again in {minutes, plural, one {# minute} other {# minutes}}.",
 	'rate_limits.voice_activity_sharing_on_cooldown':
 		'You can only update your voice activity sharing default once every 24 hours. Please try again in {retry_after, plural, one {# second} other {# seconds}}.',
 	'roles.cannot_reorder_everyone_role': "You can't reorder the @everyone role.",

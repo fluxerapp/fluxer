@@ -79,6 +79,16 @@ export class UserAccountProfileService {
 			});
 			await this.processPronounsUpdate({user, pronouns: data.pronouns, updates});
 		}
+		if (data.persona_tag !== undefined) {
+			contentModerationService.scanText(data.persona_tag, {
+				userId: user.id,
+				guildId: null,
+				channelId: null,
+				messageId: null,
+				surface: 'profile_field',
+			});
+			await this.processPersonaTagUpdate({user, personaTag: data.persona_tag, updates});
+		}
 		if (data.accent_color !== undefined) {
 			await this.processAccentColorUpdate({user, accentColor: data.accent_color, updates});
 		}
@@ -421,6 +431,35 @@ export class UserAccountProfileService {
 		const {user, data, updates} = params;
 		if (data.has_unread_gift_inventory === false) {
 			updates.gift_inventory_client_seq = user.giftInventoryServerSeq;
+		}
+	}
+
+	private async processPersonaTagUpdate(params: {
+		user: User;
+		personaTag: string | null;
+		updates: UserFieldUpdates;
+	}): Promise<void> {
+		const {user, personaTag, updates} = params;
+		if (personaTag !== user.personaTag) {
+			const personaTagRateLimit = await this.deps.rateLimitService.checkLimit({
+				identifier: `persona_tag_change:${user.id}`,
+				maxAttempts: 25,
+				windowMs: ms('30 minutes'),
+			});
+			if (!personaTagRateLimit.allowed) {
+				const minutes = Math.ceil((personaTagRateLimit.retryAfter || 0) / 60);
+				throw InputValidationError.fromCode('persona_tag', ValidationErrorCodes.PERSONA_TAG_CHANGED_TOO_MANY_TIMES, {
+					minutes,
+				});
+			}
+			if (
+				personaTag &&
+				!isProfileSubstringExempt(user) &&
+				profileSubstringBlocklistCache.containsBannedSubstring('persona_tag', personaTag)
+			) {
+				throw new ContentBlockedError();
+			}
+			updates.persona_tag = personaTag;
 		}
 	}
 }

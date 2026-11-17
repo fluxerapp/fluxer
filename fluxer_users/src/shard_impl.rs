@@ -43,7 +43,7 @@ const PARTIAL_USER_COLUMNS: &str = "\
     avatar_hash, bot, system, flags, \
     banner_hash, banner_color, accent_color, avatar_color, \
     mention_flags, temp_banned_until, pending_deletion_at, deletion_reason_code, \
-    content_hidden_since, hidden_profile_badges";
+    content_hidden_since, hidden_profile_badges, persona_tag";
 #[cfg(feature = "scylla")]
 const PARTIAL_PERSONA_COLUMNS: &str = "\
     persona_id, owner_id, internal_name, display_name, \
@@ -120,6 +120,7 @@ struct PartialUserDbRow {
     content_hidden_since: Option<i64>,
     #[serde(default)]
     hidden_profile_badges: Option<Vec<String>>,
+    persona_tag: Option<String>,
 }
 
 #[cfg(feature = "scylla")]
@@ -143,6 +144,7 @@ struct PartialUserScyllaRow {
     deletion_reason_code: Option<i32>,
     content_hidden_since: OptionalTimestamp,
     hidden_profile_badges: Option<Vec<String>>,
+    persona_tag: Option<String>,
 }
 
 #[cfg(feature = "scylla")]
@@ -167,6 +169,7 @@ impl From<PartialUserScyllaRow> for PartialUserDbRow {
             deletion_reason_code: row.deletion_reason_code,
             content_hidden_since: optional_timestamp_millis(row.content_hidden_since),
             hidden_profile_badges: row.hidden_profile_badges,
+            persona_tag: row.persona_tag,
         }
     }
 }
@@ -595,6 +598,7 @@ fn system_user_partial(instance_name: &str) -> UserPartial {
         mention_flags: None,
         content_hidden_since: None,
         hidden_profile_badges: Vec::new(),
+        persona_tag: None,
     }
 }
 
@@ -768,6 +772,7 @@ impl From<PartialUserDbRow> for UserPartial {
             mention_flags: row.mention_flags,
             content_hidden_since: row.content_hidden_since,
             hidden_profile_badges: row.hidden_profile_badges.unwrap_or_default(),
+            persona_tag: row.persona_tag,
         }
         .visible_to_others(&standing, unix_millis())
     }

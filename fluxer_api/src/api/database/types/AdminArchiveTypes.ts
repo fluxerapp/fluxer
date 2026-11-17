@@ -185,7 +185,7 @@ export const BANNED_AVATAR_HASH_COLUMNS = [
 	'notes',
 ] as const satisfies ReadonlyArray<keyof BannedAvatarHashRow>;
 
-export type BannedProfileSubstringScope = 'username' | 'global_name' | 'nickname' | 'bio' | 'pronouns';
+export type BannedProfileSubstringScope = 'username' | 'global_name' | 'nickname' | 'bio' | 'pronouns' | 'persona_tag';
 
 export interface BannedProfileSubstringRow {
 	scope: BannedProfileSubstringScope;

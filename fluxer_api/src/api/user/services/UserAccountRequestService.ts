@@ -96,6 +96,7 @@ const PROFILE_CUSTOMIZATION_FIELDS: ReadonlyArray<keyof UserUpdatePayload> = [
 	'operator_pass_badge_hidden',
 	'operator_pass_badge_timestamp_hidden',
 	'operator_pass_badge_count_hidden',
+	'persona_tag',
 ];
 
 function hasProfileCustomizationUpdate(data: UserUpdatePayload): boolean {
@@ -112,7 +113,8 @@ function profileFieldsChanged(before: User, after: User): boolean {
 		before.globalName !== after.globalName ||
 		before.bio !== after.bio ||
 		before.avatarHash !== after.avatarHash ||
-		before.pronouns !== after.pronouns
+		before.pronouns !== after.pronouns ||
+		before.personaTag !== after.personaTag
 	);
 }
 
@@ -277,6 +279,7 @@ export class UserAccountRequestService {
 				bio: updatedUser.bio,
 				avatar_hash: updatedUser.avatarHash,
 				pronouns: updatedUser.pronouns,
+				persona_tag: updatedUser.personaTag,
 			});
 		}
 		if (emailActuallyChanged && oldEmail) {

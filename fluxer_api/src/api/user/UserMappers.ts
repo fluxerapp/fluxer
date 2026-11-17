@@ -105,6 +105,7 @@ function mapUserToOwnPartialResponse(user: User): UserPartialResponse {
 			system: user.isSystem || undefined,
 			flags: 0,
 			mention_flags: undefined,
+			persona_tag: undefined,
 		};
 	}
 	return {
@@ -118,6 +119,7 @@ function mapUserToOwnPartialResponse(user: User): UserPartialResponse {
 		system: user.isSystem || undefined,
 		flags: mapUserFlagsToPublicBitfield(user),
 		mention_flags: user.mentionFlags ? user.mentionFlags : undefined,
+		persona_tag: user.personaTag || undefined,
 	};
 }
 
@@ -133,7 +135,8 @@ export function hasPartialUserFieldsChanged(oldUser: User, newUser: User): boole
 		oldPartial.bot !== newPartial.bot ||
 		oldPartial.system !== newPartial.system ||
 		oldPartial.flags !== newPartial.flags ||
-		oldPartial.mention_flags !== newPartial.mention_flags
+		oldPartial.mention_flags !== newPartial.mention_flags ||
+		oldPartial.persona_tag !== newPartial.persona_tag
 	);
 }
 
@@ -202,6 +205,7 @@ export function mapUserToPrivateResponse(user: User): UserPrivateResponse {
 		date_of_birth_required: isDateOfBirthMissing(user),
 		has_age_range: user.attestedAgeFloor !== null,
 		profile_restricted: isProfileRestricted(user),
+		persona_tag: user.personaTag || undefined,
 		pending_bulk_message_deletion:
 			user.pendingBulkMessageDeletionAt != null
 				? {
@@ -235,6 +239,7 @@ export function mapUserToProfileResponse(
 		banner: stripBannerForUser(user),
 		banner_color: user.bannerColor,
 		accent_color: user.accentColor,
+		persona_tag: user.personaTag || undefined,
 	};
 }
 

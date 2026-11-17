@@ -8,8 +8,8 @@ import {PhraseMatcherSet} from '@app/api/utils/PhraseMatcherSet';
 import {RefreshedCache} from '@app/api/utils/RefreshedCache';
 
 type ProfileScope = BannedProfileSubstringScope;
-const PROFILE_SCOPES: ReadonlyArray<ProfileScope> = ['username', 'global_name', 'nickname', 'bio', 'pronouns'];
-const PROFILE_NAME_SCOPES = new Set<ProfileScope>(['username', 'global_name', 'nickname']);
+const PROFILE_SCOPES: ReadonlyArray<ProfileScope> = ['username', 'global_name', 'nickname', 'bio', 'pronouns', 'persona_tag'];
+const PROFILE_NAME_SCOPES = new Set<ProfileScope>(['username', 'global_name', 'nickname', 'persona_tag']);
 
 export class ProfileSubstringBlocklistCache extends RefreshedCache {
 	private byScope = new Map<ProfileScope, PhraseMatcherSet>();

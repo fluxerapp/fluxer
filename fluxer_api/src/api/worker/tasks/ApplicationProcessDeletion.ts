@@ -51,6 +51,7 @@ const applicationProcessDeletion: WorkerTaskHandler = async (payload, helpers) =
 				banner_hash: null,
 				bio: null,
 				pronouns: null,
+				persona_tag: null,
 				accent_color: null,
 			},
 			botUser.toRow(),

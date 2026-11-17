@@ -274,6 +274,16 @@ export const DISPLAY_NAME_DESCRIPTOR = msg({
 	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
 });
 
+export const PERSONA_TAG_DESCRIPTOR = msg({
+	message: 'Persona tag',
+	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
+});
+
+export const PERSONA_TAG_DESCRIPTION_DESCRIPTOR = msg({
+	message: 'Persona tags display next to your personas to tie them together.',
+	comment: 'Explanation for persona tags.',
+});
+
 export const MENTION_PREFERENCE_SECTION_TITLE_DESCRIPTOR = msg({
 	message: 'Mention preference',
 	comment: 'Notifications settings: section heading for the default reply-mention behavior.',

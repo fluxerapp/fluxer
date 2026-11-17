@@ -118,6 +118,7 @@ export const UserUpdateRequest = z
 			MentionReplyPreferencesSchema,
 			'Account-wide reply mention preference (NO_PREFERENCE, PREFER_MENTION, PREFER_NO_MENTION)',
 		),
+		persona_tag: createStringType(1, 20).nullish().describe('A tag to display after this user\'s personas to visually associate them.'),
 	})
 	.partial();
 

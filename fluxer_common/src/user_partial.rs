@@ -26,6 +26,7 @@ pub struct ApiUserPartial {
     pub flags: i32,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mention_flags: Option<i32>,
+    pub persona_tag: Option<String>,
 }
 
 pub struct UserPartialFields {
@@ -40,6 +41,7 @@ pub struct UserPartialFields {
     pub flags: Option<i64>,
     pub hidden_profile_badges: Vec<String>,
     pub mention_flags: Option<i32>,
+    pub persona_tag: Option<String>,
 }
 
 impl From<UserPartialFields> for ApiUserPartial {
@@ -61,6 +63,7 @@ impl From<UserPartialFields> for ApiUserPartial {
                 &partial.hidden_profile_badges,
             ),
             mention_flags: partial.mention_flags.filter(|flags| *flags != 0),
+            persona_tag: partial.persona_tag,
         }
     }
 }
@@ -77,5 +80,6 @@ pub fn fluxer_system_user(instance_name: String) -> ApiUserPartial {
         system: Some(true),
         flags: USER_FLAG_STAFF as i32,
         mention_flags: None,
+        persona_tag: None
     }
 }

@@ -114,6 +114,7 @@ pub struct UserPartial {
     pub content_hidden_since: Option<i64>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub hidden_profile_badges: Vec<String>,
+    pub persona_tag: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -154,6 +155,7 @@ impl UserPartial {
             banner_color: None,
             accent_color: None,
             avatar_color: None,
+            persona_tag: None,
             ..self
         }
     }
@@ -171,6 +173,7 @@ impl UserPartial {
             flags: self.flags,
             hidden_profile_badges: self.hidden_profile_badges.clone(),
             mention_flags: self.mention_flags,
+            persona_tag: self.persona_tag.clone(),
         })
     }
 }
@@ -229,6 +232,7 @@ mod tests {
             mention_flags: Some(0),
             content_hidden_since: None,
             hidden_profile_badges: Vec::new(),
+            persona_tag: None,
         }
     }
 

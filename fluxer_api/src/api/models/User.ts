@@ -82,6 +82,7 @@ export class User {
 	readonly lastVoiceActivitySharingChangeAt: Date | null;
 	readonly attestedAgeFloor: AttestedAgeFloor | null;
 	readonly ageAttestedAt: Date | null;
+	readonly personaTag: string | null;
 	readonly version: number;
 
 	constructor(row: UserRow) {
@@ -155,6 +156,7 @@ export class User {
 		this.lastVoiceActivitySharingChangeAt = row.last_voice_activity_sharing_change_at ?? null;
 		this.attestedAgeFloor = isAttestedAgeFloor(row.attested_age_floor) ? row.attested_age_floor : null;
 		this.ageAttestedAt = row.age_attested_at ?? null;
+		this.personaTag = row.persona_tag ?? null;
 		this.version = row.version;
 	}
 
@@ -242,6 +244,7 @@ export class User {
 			last_voice_activity_sharing_change_at: this.lastVoiceActivitySharingChangeAt,
 			attested_age_floor: this.attestedAgeFloor,
 			age_attested_at: this.ageAttestedAt,
+			persona_tag: this.personaTag,
 			version: this.version,
 		};
 	}

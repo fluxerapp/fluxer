@@ -255,6 +255,7 @@ struct UserPartialServiceResponse {
     content_hidden_since: Option<i64>,
     #[serde(default)]
     hidden_profile_badges: Vec<String>,
+    persona_tag: Option<String>,
 }
 
 #[derive(Debug, Default)]
@@ -1504,6 +1505,7 @@ impl<T: Transport> MessagesShard<T> {
 								global_name: None,
 								mention_flags: None,
 								system: Some(false),
+                                persona_tag: None,
 							},
 							webhook_id: Some(persona_id),
 							message_type: message.message_type,
@@ -1640,6 +1642,7 @@ impl<T: Transport> MessagesShard<T> {
                 system: None,
                 flags: 0,
                 mention_flags: None,
+                persona_tag: None,
             };
         }
         deleted_user(0, &options.instance_name)
@@ -3140,6 +3143,7 @@ fn map_user_partial(partial: UserPartialServiceResponse) -> ApiUserPartial {
         flags: partial.flags,
         hidden_profile_badges: partial.hidden_profile_badges,
         mention_flags: partial.mention_flags,
+        persona_tag: partial.persona_tag,
     })
 }
 
@@ -3158,6 +3162,7 @@ fn deleted_user(user_id: i64, instance_name: &str) -> ApiUserPartial {
         system: None,
         flags: 0,
         mention_flags: None,
+        persona_tag: None,
     }
 }
 
