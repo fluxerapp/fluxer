@@ -93,7 +93,8 @@ function findThirdPartyDesktopEntry(execPath: string): string | null {
 	} catch {
 		return null;
 	}
-	for (const entry of entries) {
+	let firstMatch: string | null = null;
+	for (const entry of entries.sort()) {
 		if (
 			!entry.endsWith('.desktop') ||
 			entry === DESKTOP_FILE_BASENAME ||
@@ -104,9 +105,11 @@ function findThirdPartyDesktopEntry(execPath: string): string | null {
 		const candidate = path.join(applicationsDir, entry);
 		const contents = readExistingDesktopFile(candidate);
 		if (contents === null || contents.includes(GENERATED_MARKER)) continue;
-		if (desktopExecRunsPath(readDesktopEntryValue(contents, 'Exec'), execPath)) return candidate;
+		if (!desktopExecRunsPath(readDesktopEntryValue(contents, 'Exec'), execPath)) continue;
+		if (isAppImageIntegratorEntry(contents, execPath)) return candidate;
+		firstMatch ??= candidate;
 	}
-	return null;
+	return firstMatch;
 }
 
 export function escapeDesktopValue(value: string): string {
