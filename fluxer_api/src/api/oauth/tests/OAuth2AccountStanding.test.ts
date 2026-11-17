@@ -82,7 +82,7 @@ describe('OAuth2 grants follow the account standing', () => {
 		await setStanding(endUser.userId, {addFlags: UserFlags.DELETED});
 		expect(await bearerStatus('/oauth2/userinfo', tokens.access_token)).toBe(HTTP_STATUS.UNAUTHORIZED);
 		expect(await bearerStatus('/oauth2/@me', tokens.access_token)).toBe(HTTP_STATUS.UNAUTHORIZED);
-		expect(await refreshStatus(application, tokens.refresh_token)).toBe(HTTP_STATUS.BAD_REQUEST);
+		expect(await refreshStatus(application, tokens.refresh_token!)).toBe(HTTP_STATUS.BAD_REQUEST);
 		const introspected = await introspectOAuth2Token(harness, {
 			client_id: application.id,
 			client_secret: application.client_secret,
@@ -92,7 +92,7 @@ describe('OAuth2 grants follow the account standing', () => {
 		const introspectedRefresh = await introspectOAuth2Token(harness, {
 			client_id: application.id,
 			client_secret: application.client_secret,
-			token: tokens.refresh_token,
+			token: tokens.refresh_token!,
 		});
 		expect(introspectedRefresh.active).toBe(false);
 	});
@@ -122,12 +122,12 @@ describe('OAuth2 grants follow the account standing', () => {
 			tempBannedUntil: new Date(Date.now() + HOUR_MS),
 		});
 		expect(await bearerStatus('/oauth2/userinfo', tokens.access_token)).toBe(HTTP_STATUS.UNAUTHORIZED);
-		expect(await refreshStatus(application, tokens.refresh_token)).toBe(HTTP_STATUS.BAD_REQUEST);
+		expect(await refreshStatus(application, tokens.refresh_token!)).toBe(HTTP_STATUS.BAD_REQUEST);
 		await setStanding(endUser.userId, {tempBannedUntil: new Date(Date.now() - HOUR_MS)});
 		const refreshed = await refreshOAuth2Token(harness, {
 			client_id: application.id,
 			client_secret: application.client_secret,
-			refresh_token: tokens.refresh_token,
+			refresh_token: tokens.refresh_token!,
 		});
 		expect(await bearerStatus('/oauth2/userinfo', refreshed.access_token)).toBe(HTTP_STATUS.OK);
 	});

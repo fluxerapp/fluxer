@@ -16,13 +16,15 @@ pub struct UserInfo {
     pub id: String,
 }
 
-pub fn authorize_url(config: &AdminConfig, state: &str) -> String {
+pub fn authorize_url(config: &AdminConfig, state: &str, code_challenge: &str) -> String {
     let params = [
         ("client_id", config.oauth_client_id.as_str()),
         ("redirect_uri", config.oauth_redirect_uri.as_str()),
         ("response_type", "code"),
         ("scope", ADMIN_OAUTH_SCOPE),
         ("state", state),
+        ("code_challenge", code_challenge),
+        ("code_challenge_method", "S256"),
     ];
     let query = params
         .iter()
@@ -36,6 +38,7 @@ pub async fn exchange_code(
     http_client: &reqwest::Client,
     config: &AdminConfig,
     code: &str,
+    code_verifier: &str,
 ) -> anyhow::Result<TokenResponse> {
     let response = with_proxy_client_ip_header(
         http_client.post(format!("{}/oauth2/token", config.api_endpoint)),
@@ -49,6 +52,7 @@ pub async fn exchange_code(
             ("redirect_uri", config.oauth_redirect_uri.as_str()),
             ("client_id", config.oauth_client_id.as_str()),
             ("client_secret", config.oauth_client_secret.as_str()),
+            ("code_verifier", code_verifier),
         ]
         .iter()
         .map(|(k, v)| format!("{}={}", k, urlencoding::encode(v)))

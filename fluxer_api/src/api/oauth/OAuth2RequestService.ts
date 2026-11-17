@@ -136,7 +136,7 @@ export class OAuth2RequestService {
 		token_type: string;
 		expires_in: number;
 		scope?: string;
-		refresh_token: string;
+		refresh_token?: string;
 	}): OAuth2TokenResponse {
 		if (!response.scope) {
 			throw new InvalidGrantError();
@@ -145,7 +145,7 @@ export class OAuth2RequestService {
 			access_token: response.access_token,
 			token_type: response.token_type,
 			expires_in: response.expires_in,
-			refresh_token: response.refresh_token,
+			...(response.refresh_token ? {refresh_token: response.refresh_token} : {}),
 			scope: response.scope,
 		};
 	}
@@ -245,7 +245,7 @@ export class OAuth2RequestService {
 			scope: params.body.scope,
 			state: params.body.state ?? undefined,
 			codeChallenge: params.body.code_challenge,
-			codeChallengeMethod: params.body.code_challenge_method as 'S256' | 'plain' | undefined,
+			codeChallengeMethod: params.body.code_challenge_method,
 			userId: params.userId,
 		});
 		const authCode = (() => {
