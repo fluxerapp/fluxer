@@ -81,6 +81,7 @@ import {cleanupLegacyHarvestHandlers, registerLegacyHarvestHandlers} from '@elec
 import {initializeLegacyOriginHarvest} from '@electron/main/LegacyOriginHarvest';
 import {cleanupVirtmic, registerVirtmicHandlers} from '@electron/main/LinuxAudioCapture';
 import {ensureLinuxDesktopEntry} from '@electron/main/LinuxDesktopEntry';
+import {startLinuxLauncherBadge} from '@electron/main/LinuxLauncherBadge';
 import {cleanupDesktopLocalAppProtocol} from '@electron/main/LocalAppProtocol';
 import {initializeMainI18n, t} from '@electron/main/MainI18n';
 import {createApplicationMenu} from '@electron/main/Menu';
@@ -824,6 +825,11 @@ export async function finishMainAppStartup(): Promise<void> {
 		runStartupPhase('linux-desktop-entry', ensureLinuxDesktopEntry);
 	} catch (error) {
 		log.error('[Init] Failed to ensure the Linux desktop entry:', error);
+	}
+	try {
+		runStartupPhase('linux-launcher-badge', startLinuxLauncherBadge);
+	} catch (error) {
+		log.error('[Init] Failed to start the Linux launcher badge:', error);
 	}
 	try {
 		runStartupPhase('jump-list', initializeJumpList);

@@ -60,6 +60,10 @@ function getUserApplicationsDir(): string {
 	return path.join(getXdgDataHome(), 'applications');
 }
 
+export function getLinuxApplicationsDirs(): Array<string> {
+	return [getUserApplicationsDir(), ...getXdgDataDirs().map((dataDir) => path.join(dataDir, 'applications'))];
+}
+
 function getDesktopFilePath(): string {
 	return path.join(getUserApplicationsDir(), DESKTOP_FILE_BASENAME);
 }
@@ -179,7 +183,7 @@ function buildDesktopFileContents(execPath: string, hidden: boolean): string {
 	);
 }
 
-function readDesktopEntryValue(contents: string, key: string): string | null {
+export function readDesktopEntryValue(contents: string, key: string): string | null {
 	for (const line of contents.split('\n')) {
 		const trimmed = line.trim();
 		if (trimmed.startsWith('[Desktop Action ')) break;

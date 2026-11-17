@@ -41,6 +41,7 @@ import {
 	readLinuxAppearance,
 	subscribeLinuxAppearance,
 } from '@electron/main/LinuxAppearance';
+import {setLinuxLauncherBadge} from '@electron/main/LinuxLauncherBadge';
 import {refreshTccStatus, registerMacTccIpcHandlers} from '@electron/main/MacTcc';
 import {setNativeStrings} from '@electron/main/MainI18n';
 import {copyRemoteFileToClipboard, parseClipboardWriteFileOptions} from '@electron/main/MediaClipboard';
@@ -190,6 +191,8 @@ function applyUnreadBadge(badge: number): void {
 		setWindowsBadgeOverlay(getMainWindow(), badge);
 	} else if (process.platform === 'darwin' && badge === UNREAD_BADGE_DOT) {
 		app.dock?.setBadge('•');
+	} else if (process.platform === 'linux') {
+		setLinuxLauncherBadge(launcherBadgeCount(badge));
 	} else {
 		app.setBadgeCount(launcherBadgeCount(badge));
 	}
@@ -351,7 +354,7 @@ export function registerIpcHandlers(): void {
 		const nextSettings = setDesktopWindowBehaviorSettings(normalizeDesktopWindowBehaviorUpdate(settings));
 		applyDesktopWindowBehaviorSettings();
 		refreshWindowsBadgeOverlay(getMainWindow());
-		if (process.platform === 'linux') app.setBadgeCount(launcherBadgeCount(lastUnreadBadge));
+		if (process.platform === 'linux') setLinuxLauncherBadge(launcherBadgeCount(lastUnreadBadge));
 		if (!nextSettings.showTrayIcon) {
 			const mainWindow = getMainWindow();
 			if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isVisible()) {
