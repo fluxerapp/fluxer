@@ -27,6 +27,7 @@ finish-args:
   - --talk-name=org.kde.kwalletd5
   - --talk-name=org.kde.kwalletd6
   - --talk-name=org.kde.StatusNotifierWatcher
+  - --talk-name=com.canonical.Unity
   - --talk-name=org.ayatana.indicator.application
   - --talk-name=com.canonical.indicator.application
   - --talk-name=org.gnome.Mutter.IdleMonitor
