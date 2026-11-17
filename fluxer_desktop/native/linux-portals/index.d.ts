@@ -88,6 +88,12 @@ export declare class SessionStateMonitor {
 	close(): void;
 }
 
+export declare class LauncherEntry {
+	constructor(onShellStarted: () => void);
+
+	update(uri: string, count: number, countVisible: boolean): void;
+}
+
 export declare function readColorScheme(): 'no-preference' | 'prefer-dark' | 'prefer-light';
 
 export declare function readContrast(): 'no-preference' | 'high';

@@ -18,6 +18,7 @@ const SUBSAMPLES = 4;
 const MIN_GLYPH_CONTRAST = 32;
 const GLYPH_CUTOUT_START = 0.1;
 const GLYPH_CUTOUT_END = 0.5;
+const KDE_MONOCHROME_CANVAS_RATIO = 22 / 16;
 const LINUX_MAX_PIXMAP_SIZE = 256;
 const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 const DOT_BGR: Bgr = [0x00, 0x00, 0xdd];
@@ -189,11 +190,21 @@ function downscaleTrayBitmap(bitmap: TrayBitmap, size: number): TrayBitmap {
 	return {buffer, width: size, height: size};
 }
 
+function addMonochromeTrayMargins(bitmap: TrayBitmap, size: number): TrayBitmap {
+	const inset = Math.floor((size - bitmap.width) / 2);
+	const buffer = Buffer.alloc(size * size * 4);
+	for (let y = 0; y < bitmap.height; y++) {
+		bitmap.buffer.copy(buffer, ((inset + y) * size + inset) * 4, y * bitmap.width * 4, (y + 1) * bitmap.width * 4);
+	}
+	return {buffer, width: size, height: size};
+}
+
 export function renderTrayIcon(
 	base: NativeImage,
 	appearance: TrayIconAppearance,
 	indicator: boolean,
 	platform: NodeJS.Platform,
+	linuxDesktop: LinuxDesktopKind,
 ): NativeImage {
 	const monochrome = appearance === 'white' || appearance === 'black';
 	if (!monochrome && !indicator) {
@@ -202,6 +213,7 @@ export function renderTrayIcon(
 	const result = nativeImage.createEmpty();
 	const scaleFactors = base.getScaleFactors();
 	const linuxMonochrome = platform === 'linux' && monochrome;
+	const kdeMargins = linuxMonochrome && linuxDesktop === 'kde';
 	const representations: Array<{scaleFactor: number; bitmap: TrayBitmap}> = [];
 	for (const scaleFactor of scaleFactors.length > 0 ? scaleFactors : [1]) {
 		if (!Number.isFinite(scaleFactor) || scaleFactor <= 0) continue;
@@ -224,6 +236,10 @@ export function renderTrayIcon(
 		representations.push({scaleFactor, bitmap});
 	}
 	if (representations.length === 0) return base;
+	const kdeLogicalCanvasSize = Math.ceil(
+		Math.max(...representations.map(({scaleFactor, bitmap}) => bitmap.width / scaleFactor)) *
+			KDE_MONOCHROME_CANVAS_RATIO,
+	);
 	for (const {scaleFactor, bitmap: source} of representations) {
 		let bitmap = source;
 		if (monochrome) {
@@ -237,7 +253,13 @@ export function renderTrayIcon(
 				appearance === 'template' ? TEMPLATE_DOT_BGR : DOT_BGR,
 			);
 		}
-		if (linuxMonochrome) {
+		if (kdeMargins) {
+			const canvasSize = Math.min(Math.ceil(kdeLogicalCanvasSize * scaleFactor), LINUX_MAX_PIXMAP_SIZE);
+			bitmap = addMonochromeTrayMargins(
+				downscaleTrayBitmap(bitmap, Math.floor(canvasSize / KDE_MONOCHROME_CANVAS_RATIO)),
+				canvasSize,
+			);
+		} else if (linuxMonochrome) {
 			bitmap = downscaleTrayBitmap(bitmap, LINUX_MAX_PIXMAP_SIZE);
 		}
 		result.addRepresentation({scaleFactor, ...bitmap});

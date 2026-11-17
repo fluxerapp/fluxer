@@ -49,6 +49,12 @@ export const LINUX_DESKTOP_ENTRY_ID = LINUX_DESKTOP_ENTRY_IDS[BUILD_CHANNEL];
 export const LINUX_PORTAL_SESSION_TOKEN = LINUX_PORTAL_SESSION_TOKENS[BUILD_CHANNEL];
 export const LEGACY_LINUX_DESKTOP_ENTRY_ID = LEGACY_LINUX_DESKTOP_ENTRY_IDS[BUILD_CHANNEL];
 export const LINUX_ICON_NAME = LEGACY_LINUX_DESKTOP_ENTRY_IDS[BUILD_CHANNEL];
+export const OTHER_CHANNEL_LINUX_DESKTOP_FILES: ReadonlySet<string> = new Set(
+	(Object.keys(LINUX_DESKTOP_ENTRY_IDS) as Array<BuildChannel>)
+		.filter((channel) => channel !== BUILD_CHANNEL)
+		.flatMap((channel) => [LINUX_DESKTOP_ENTRY_IDS[channel], LEGACY_LINUX_DESKTOP_ENTRY_IDS[channel]])
+		.map((id) => `${id}.desktop`),
+);
 export const WINDOWS_SHORTCUT_AUTHOR = 'Fluxer Platform AB';
 export const WINDOWS_VELOPACK_ID = WINDOWS_VELOPACK_IDS[BUILD_CHANNEL];
 export const WINDOWS_LEGACY_SQUIRREL_ID = 'fluxer_app';

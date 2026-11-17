@@ -64,6 +64,7 @@ module.exports = {
 	requestBackground: binding ? binding.requestBackground : null,
 	GlobalShortcutsPortal: binding ? binding.GlobalShortcutsPortal : null,
 	SessionStateMonitor: binding ? binding.SessionStateMonitor : null,
+	LauncherEntry: binding ? binding.LauncherEntry : null,
 	readColorScheme: binding ? binding.readColorScheme : () => 'no-preference',
 	readContrast: binding ? binding.readContrast : () => 'no-preference',
 	readAccentColor: binding ? binding.readAccentColor : () => null,

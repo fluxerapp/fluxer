@@ -12,6 +12,7 @@
 		"build": "node scripts/build.mjs",
 		"generate:windows-badges": "electron scripts/generate-windows-badges.mjs",
 		"package:dir": "node scripts/build.mjs && electron-builder --config electron-builder.config.cjs --dir",
+		"test": "vitest run",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
@@ -32,7 +33,8 @@
 		"electron": "44.10.0",
 		"electron-builder": "27.0.0-alpha.8",
 		"esbuild": "catalog:",
-		"typescript": "catalog:ts7"
+		"typescript": "catalog:ts7",
+		"vitest": "catalog:"
 	},
 	"optionalDependencies": {
 		"@fluxer/app-store": "file:./native/app-store",

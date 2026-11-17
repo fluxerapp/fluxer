@@ -4,6 +4,7 @@ pub mod background;
 pub mod global_shortcuts;
 pub mod gnome_shell;
 pub mod kwin;
+pub mod launcher_entry;
 #[cfg(target_os = "linux")]
 pub mod portal;
 pub mod session_monitor;
@@ -33,6 +34,7 @@ mod napi_bindings {
             is_valid_token, validate_definitions,
         },
         gnome_shell, kwin,
+        launcher_entry::{self, LauncherEntryEmitter},
         session_monitor::{MonitorEvent, SessionMonitor},
         settings::{self, ChangeEvent, ChangePayload},
         x11,
@@ -438,6 +440,51 @@ mod napi_bindings {
         #[napi]
         pub fn close(&self) {
             self.monitor.close();
+        }
+    }
+
+    type ShellStartedTsfn = ThreadsafeFunction<(), UnknownReturnValue, (), Status, false, true, 0>;
+
+    #[napi]
+    pub struct LauncherEntry {
+        emitter: LauncherEntryEmitter,
+    }
+
+    #[napi]
+    impl LauncherEntry {
+        #[napi(constructor)]
+        pub fn new(on_shell_started: Function<(), UnknownReturnValue>) -> Result<Self> {
+            let callback: ShellStartedTsfn = on_shell_started
+                .build_threadsafe_function::<()>()
+                .weak::<true>()
+                .callee_handled::<false>()
+                .build()
+                .map_err(|err| {
+                    generic_error(format!(
+                        "failed to create launcher entry callback: {}",
+                        err.reason
+                    ))
+                })?;
+            let emitter = LauncherEntryEmitter::connect()
+                .map_err(|err| generic_error(format!("failed to open the session bus: {err}")))?;
+            emitter
+                .watch_shell(move || {
+                    let _ = callback.call((), ThreadsafeFunctionCallMode::NonBlocking);
+                })
+                .map_err(|err| {
+                    generic_error(format!(
+                        "failed to watch {}: {err}",
+                        launcher_entry::UNITY_SERVICE
+                    ))
+                })?;
+            Ok(Self { emitter })
+        }
+
+        #[napi]
+        pub fn update(&self, uri: String, count: i64, count_visible: bool) -> Result<()> {
+            self.emitter
+                .update(&uri, count, count_visible)
+                .map_err(|err| generic_error(format!("LauncherEntry Update failed: {err}")))
         }
     }
 
