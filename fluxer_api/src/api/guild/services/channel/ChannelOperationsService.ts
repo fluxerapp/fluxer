@@ -36,6 +36,7 @@ import type {Channel} from '@app/api/models/Channel';
 import {ChannelPermissionOverwrite} from '@app/api/models/ChannelPermissionOverwrite';
 import {serializeChannelForAudit} from '@app/api/utils/AuditSerializationUtils';
 import {applyProtectedOverwriteBits, permissionWriteMask, protectedThreadBits} from '@app/api/utils/featureUtils';
+import {overwriteAppliesToTarget, overwriteGrantedBits} from '@app/api/utils/PermissionUtils';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {ALL_PERMISSIONS, ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {ContentWarningLevel, GuildFeatures, resolveVoiceChannelBitrate} from '@fluxer/constants/src/GuildConstants';
@@ -95,7 +96,11 @@ export class ChannelOperationsService {
 		}
 		const newPosition = ChannelHelpers.getNextGlobalChannelPosition(params.data.type, parentId, channels);
 		let permissionOverwrites: Map<RoleID | UserID, PermissionOverwrite> | null = null;
-		const requestedOverwrites = params.data.permission_overwrites ?? null;
+		const requestedOverwrites =
+			params.data.permission_overwrites?.map((overwrite) => ({
+				...overwrite,
+				type: overwrite.id === params.guildId ? 0 : overwrite.type,
+			})) ?? null;
 		if (requestedOverwrites) {
 			const canManageRoles = await this.gatewayService.checkPermission({
 				guildId: params.guildId,
@@ -104,6 +109,17 @@ export class ChannelOperationsService {
 				channelId: parentId ?? undefined,
 			});
 			if (!canManageRoles) throw new MissingPermissionsError();
+			const roles = await this.guildRepository.listRoles(params.guildId);
+			const roleIds = new Set(roles.map((role) => role.id));
+			for (const [index, overwrite] of requestedOverwrites.entries()) {
+				if (overwrite.type === 1 && !overwriteAppliesToTarget(overwrite, params.guildId, roleIds)) {
+					throw InputValidationError.fromCode(
+						`permission_overwrites.${index}.id`,
+						ValidationErrorCodes.INVALID_ROLE_ID,
+						{roleId: overwrite.id.toString()},
+					);
+				}
+			}
 			const basePermissions = await this.gatewayService.getUserPermissions({
 				guildId: params.guildId,
 				userId: params.userId,
@@ -501,13 +517,16 @@ export class ChannelOperationsService {
 					}),
 				)
 			: parent.permissionOverwrites;
-		for (const [targetId, existing] of child.permissionOverwrites) {
-			const incomingDeny = incomingOverwrites.get(targetId)?.deny ?? 0n;
-			if ((existing.deny & ~incomingDeny & ~userPermissions) !== 0n) throw new MissingPermissionsError();
-		}
-		for (const [targetId, incoming] of incomingOverwrites) {
-			const existingAllow = child.permissionOverwrites.get(targetId)?.allow ?? 0n;
-			if ((incoming.allow & ~existingAllow & ~userPermissions) !== 0n) throw new MissingPermissionsError();
+		const roleIds = new Set((await this.guildRepository.listRoles(params.guildId)).map((role) => role.id));
+		const targetIds = new Set([...child.permissionOverwrites.keys(), ...incomingOverwrites.keys()]);
+		for (const targetId of targetIds) {
+			const existing = child.permissionOverwrites.get(targetId);
+			const grantedBits = overwriteGrantedBits(
+				existing,
+				incomingOverwrites.get(targetId),
+				existing ? overwriteAppliesToTarget({id: targetId, type: existing.type}, params.guildId, roleIds) : true,
+			);
+			if ((grantedBits & ~userPermissions) !== 0n) throw new MissingPermissionsError();
 		}
 		await this.channelRepository.channelData.upsert({
 			...child.toRow(),
