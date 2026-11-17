@@ -70,12 +70,13 @@ export class PersonaRepository {
 		for (const trigger of addedTriggers) {
 			// is this the best place to throw such an error?
 			if (!trigger.prefix && !trigger.suffix) throw new Error("Prefix and suffix cannot both be empty");
-			batch.add(PersonaTriggers.insertCql(), {
+			const data: PersonaTriggerRow = {
 				owner_id: userId,
 				persona_id: personaId,
 				prefix: trigger.prefix || null,
 				suffix: trigger.suffix || null
-			})
+			};
+			batch.addPrepared(PersonaTriggers.insert(data));
 		}
 		await batch.execute(true);
 	}
