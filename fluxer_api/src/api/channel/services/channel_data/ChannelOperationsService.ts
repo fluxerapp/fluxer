@@ -70,7 +70,7 @@ import {deleteChannelMessageSearchDocuments} from '@app/api/search/MessageSearch
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {serializeChannelForAudit} from '@app/api/utils/AuditSerializationUtils';
 import {applyProtectedOverwriteBits, permissionWriteMask, protectedThreadBits} from '@app/api/utils/featureUtils';
-import {overwriteGrantedBits} from '@app/api/utils/PermissionUtils';
+import {overwriteAppliesToTarget, overwriteGrantedBits} from '@app/api/utils/PermissionUtils';
 import {isRegionPickable, type VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
 import type {VoiceRegionAvailability} from '@app/api/voice/VoiceModel';
 import type {WebhookRepository} from '@app/api/webhook/WebhookRepository';
@@ -365,25 +365,35 @@ export class ChannelOperationsService {
 			});
 			const writeMask = permissionWriteMask(actor);
 			const channelPermissions = actor.threadBits ? withImplicitThreadBits(gatewayPermissions) : gatewayPermissions;
+			const roleIds = await this.listRoleIds(guildId);
 			permissionOverwrites = new Map();
-			for (const overwrite of data.permission_overwrites ?? []) {
-				const targetId = overwrite.type === 0 ? createRoleID(overwrite.id) : createUserID(overwrite.id);
+			for (const [index, overwrite] of (data.permission_overwrites ?? []).entries()) {
+				const type = overwrite.id === guildId ? 0 : overwrite.type;
+				const targetId = type === 0 ? createRoleID(overwrite.id) : createUserID(overwrite.id);
 				const existing = previousPermissionOverwrites?.get(targetId);
+				const sameType = existing?.type === type;
+				if (!sameType && !overwriteAppliesToTarget({id: overwrite.id, type}, guildId, roleIds)) {
+					throw InputValidationError.fromCode(
+						`permission_overwrites.${index}.id`,
+						ValidationErrorCodes.INVALID_ROLE_ID,
+						{roleId: overwrite.id.toString()},
+					);
+				}
 				const protectedBits = applyProtectedOverwriteBits(
 					{
 						allow: (overwrite.allow ? BigInt(overwrite.allow) : 0n) & writeMask,
 						deny: (overwrite.deny ? BigInt(overwrite.deny) : 0n) & writeMask,
 					},
 					{
-						allow: existing?.allow ?? 0n,
-						deny: existing?.deny ?? 0n,
+						allow: sameType ? existing.allow : 0n,
+						deny: sameType ? existing.deny : 0n,
 					},
 					actor,
 				);
 				permissionOverwrites.set(
 					targetId,
 					new ChannelPermissionOverwrite({
-						type: overwrite.type,
+						type,
 						allow_: protectedBits.allow,
 						deny_: protectedBits.deny,
 					}),
@@ -405,9 +415,11 @@ export class ChannelOperationsService {
 			if (!isOwner) {
 				const targetIds = new Set([...(previousPermissionOverwrites?.keys() ?? []), ...permissionOverwrites.keys()]);
 				for (const targetId of targetIds) {
+					const previous = previousPermissionOverwrites?.get(targetId);
 					const grantedBits = overwriteGrantedBits(
-						previousPermissionOverwrites?.get(targetId),
+						previous,
 						permissionOverwrites.get(targetId),
+						previous ? overwriteAppliesToTarget({id: targetId, type: previous.type}, guildId, roleIds) : true,
 					);
 					if ((grantedBits & ~keptBits & ~channelPermissions) !== 0n) {
 						throw new MissingPermissionsError();
@@ -855,6 +867,11 @@ export class ChannelOperationsService {
 		}
 	}
 
+	private async listRoleIds(guildId: GuildID): Promise<Set<bigint>> {
+		const roles = await this.guildRepository.listRoles(guildId);
+		return new Set(roles.map((role) => role.id));
+	}
+
 	private async checkOverwritePermission(params: {
 		guildId: GuildID;
 		userId: UserID;
@@ -889,8 +906,16 @@ export class ChannelOperationsService {
 			userId: params.userId,
 			channelId: channel.id,
 		});
-		const targetId = params.overwrite.type === 0 ? createRoleID(params.overwriteId) : createUserID(params.overwriteId);
+		const type = params.overwriteId === channel.guildId ? 0 : params.overwrite.type;
+		const targetId = type === 0 ? createRoleID(params.overwriteId) : createUserID(params.overwriteId);
 		const existing = channel.permissionOverwrites?.get(targetId);
+		const sameType = existing?.type === type;
+		const roleIds = await this.listRoleIds(channel.guildId);
+		if (!sameType && !overwriteAppliesToTarget({id: params.overwriteId, type}, channel.guildId, roleIds)) {
+			throw InputValidationError.fromCode('overwrite_id', ValidationErrorCodes.INVALID_ROLE_ID, {
+				roleId: params.overwriteId.toString(),
+			});
+		}
 		const actor = await resolveProtectedBitActor({
 			guildId: channel.guildId,
 			userId: params.userId,
@@ -905,19 +930,25 @@ export class ChannelOperationsService {
 				deny: params.overwrite.deny_ & writeMask,
 			},
 			{
-				allow: existing?.allow ?? 0n,
-				deny: existing?.deny ?? 0n,
+				allow: sameType ? existing.allow : 0n,
+				deny: sameType ? existing.deny : 0n,
 			},
 			actor,
 		);
 		const sanitizedAllow = protectedBits.allow;
 		const sanitizedDeny = protectedBits.deny;
 		const hasAdministrator = (userPermissions & Permissions.ADMINISTRATOR) !== 0n;
-		const grantedBits = overwriteGrantedBits(existing, {allow: sanitizedAllow, deny: sanitizedDeny});
+		const grantedBits = overwriteGrantedBits(
+			existing,
+			{type, allow: sanitizedAllow, deny: sanitizedDeny},
+			existing
+				? overwriteAppliesToTarget({id: params.overwriteId, type: existing.type}, channel.guildId, roleIds)
+				: true,
+		);
 		const effectivePermissions = actor.threadBits ? withImplicitThreadBits(userPermissions) : userPermissions;
 		if (!hasAdministrator && (grantedBits & ~effectivePermissions) !== 0n) throw new MissingPermissionsError();
 		const nextOverwrite = new ChannelPermissionOverwrite({
-			type: params.overwrite.type,
+			type,
 			allow_: sanitizedAllow,
 			deny_: sanitizedDeny,
 		});
