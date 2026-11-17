@@ -294,17 +294,57 @@ function removeLegacyGeneratedDesktopEntry(): boolean {
 	return removeFile(legacyPath, 'Removed the generated .desktop entry for the previous desktop id');
 }
 
-function writeDesktopFileAtomically(filePath: string, contents: string): void {
+function writeDesktopFileAtomically(filePath: string, contents: string, mode = 0o644): void {
 	const tempPath = `${filePath}.${crypto.randomBytes(8).toString('hex')}.tmp`;
 	try {
 		fs.mkdirSync(path.dirname(filePath), {recursive: true});
-		fs.writeFileSync(tempPath, contents, {encoding: 'utf8', mode: 0o644, flag: 'wx'});
+		fs.writeFileSync(tempPath, contents, {encoding: 'utf8', mode, flag: 'wx'});
+		fs.chmodSync(tempPath, mode);
 		fs.renameSync(tempPath, filePath);
 	} catch (error) {
 		try {
 			fs.rmSync(tempPath, {force: true});
 		} catch {}
 		throw error;
+	}
+}
+
+function setDesktopEntryValue(contents: string, key: string, value: string): string {
+	const lines = contents.split('\n');
+	const groupStart = lines.findIndex((line) => line.trim() === '[Desktop Entry]');
+	if (groupStart === -1) return contents;
+	let groupEnd = lines.length;
+	for (let index = groupStart + 1; index < lines.length; index++) {
+		const trimmed = lines[index].trim();
+		if (trimmed.startsWith('[')) {
+			groupEnd = index;
+			break;
+		}
+		if (trimmed.startsWith(`${key}=`)) {
+			lines[index] = `${key}=${value}`;
+			return lines.join('\n');
+		}
+	}
+	while (groupEnd > groupStart + 1 && lines[groupEnd - 1].trim() === '') groupEnd--;
+	lines.splice(groupEnd, 0, `${key}=${value}`);
+	return lines.join('\n');
+}
+
+function claimThirdPartyWindowClass(filePath: string): boolean {
+	if (path.dirname(filePath) !== getUserApplicationsDir()) return false;
+	const contents = readExistingDesktopFile(filePath);
+	if (contents === null || readDesktopEntryValue(contents, 'StartupWMClass') === WM_CLASS) return false;
+	const updated = setDesktopEntryValue(contents, 'StartupWMClass', WM_CLASS);
+	if (updated === contents) return false;
+	try {
+		const stat = fs.lstatSync(filePath);
+		if (!stat.isFile()) return false;
+		writeDesktopFileAtomically(filePath, updated, stat.mode & 0o777);
+		logger.info('Set our window class on the integrator .desktop entry so the window groups with it', {filePath});
+		return true;
+	} catch (error) {
+		logger.warn('Failed to set the window class on the integrator .desktop entry', {filePath, error});
+		return false;
 	}
 }
 
@@ -330,10 +370,11 @@ function syncUserDesktopEntry(): boolean {
 	if (thirdPartyEntry) {
 		logger.debug('Another .desktop entry manages the app menu entry; keeping ours hidden', {thirdPartyEntry});
 	}
+	const claimed = thirdPartyEntry !== null && claimThirdPartyWindowClass(thirdPartyEntry);
 	const desired = buildDesktopFileContents(execPath, thirdPartyEntry !== null);
 	if (existing === desired) {
 		logger.debug('Linux .desktop entry already up to date', {filePath});
-		return false;
+		return claimed;
 	}
 	writeDesktopFileAtomically(filePath, desired);
 	logger.info('Wrote Linux .desktop entry', {filePath, execPath});
