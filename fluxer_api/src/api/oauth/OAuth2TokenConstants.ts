@@ -4,3 +4,4 @@ import {seconds} from 'itty-time';
 
 export const ACCESS_TOKEN_TTL_SECONDS = seconds('7 days');
 export const AUTHORIZATION_CODE_TTL_SECONDS = seconds('10 minutes');
+export const REFRESH_TOKEN_TTL_SECONDS = seconds('30 days');

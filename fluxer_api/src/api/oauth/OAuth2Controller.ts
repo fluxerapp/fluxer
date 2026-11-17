@@ -9,7 +9,7 @@ import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
 import {parseOAuth2Scope} from '@app/api/oauth/OAuth2ScopeUtils';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
-import type {HonoApp} from '@app/api/types/HonoEnv';
+import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
 import {SudoVerificationSchema} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {
@@ -34,6 +34,13 @@ import {
 	RevokeRequestForm,
 	TokenRequest,
 } from '@fluxer/schema/src/domains/oauth/OAuthSchemas';
+import type {Context} from 'hono';
+
+function sessionUserFromCtx(ctx: Context<HonoEnv>) {
+	if (ctx.get('authTokenType') !== 'session') return null;
+	const user = ctx.get('user');
+	return user && !user.isBot ? user : null;
+}
 
 export function OAuth2Controller(app: HonoApp) {
 	app.get(
@@ -43,7 +50,7 @@ export function OAuth2Controller(app: HonoApp) {
 		async (ctx) => {
 			const q = ctx.req.valid('query');
 			if (q.prompt === 'none') {
-				const user = ctx.get('user');
+				const user = sessionUserFromCtx(ctx);
 				const errorRedirectBase = await ctx
 					.get('oauth2Service')
 					.resolveErrorRedirectBase(q.client_id.toString(), q.redirect_uri ?? undefined);
@@ -53,11 +60,10 @@ export function OAuth2Controller(app: HonoApp) {
 					errorUrl.searchParams.set('error', 'login_required');
 					return ctx.redirect(errorUrl.toString(), 302);
 				}
-				const requestedScopes = new Set(parseOAuth2Scope(q.scope));
-				const nonBotScopes = [...requestedScopes].filter((s) => s !== 'bot');
-				if (nonBotScopes.length > 0) {
+				const requestedScopes = parseOAuth2Scope(q.scope);
+				const authorizedScopes = new Set<string>();
+				if (!requestedScopes.includes('bot')) {
 					const refreshTokens = await ctx.get('oauth2TokenRepository').listRefreshTokensForUser(user.id);
-					const authorizedScopes = new Set<string>();
 					for (const token of refreshTokens) {
 						if (token.applicationId.toString() === q.client_id.toString()) {
 							for (const scope of token.scope) {
@@ -65,10 +71,10 @@ export function OAuth2Controller(app: HonoApp) {
 							}
 						}
 					}
-					if (!nonBotScopes.every((s) => authorizedScopes.has(s))) {
-						errorUrl.searchParams.set('error', 'consent_required');
-						return ctx.redirect(errorUrl.toString(), 302);
-					}
+				}
+				if (!requestedScopes.every((s) => authorizedScopes.has(s))) {
+					errorUrl.searchParams.set('error', 'consent_required');
+					return ctx.redirect(errorUrl.toString(), 302);
 				}
 				try {
 					const {redirectTo} = await ctx.get('oauth2Service').authorizeAndConsent({
@@ -77,7 +83,7 @@ export function OAuth2Controller(app: HonoApp) {
 						scope: q.scope,
 						state: q.state ?? undefined,
 						codeChallenge: q.code_challenge,
-						codeChallengeMethod: q.code_challenge_method as 'S256' | 'plain' | undefined,
+						codeChallengeMethod: q.code_challenge_method,
 						userId: user.id,
 					});
 					return ctx.redirect(redirectTo, 302);
@@ -254,7 +260,7 @@ export function OAuth2Controller(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const appId = ctx.req.valid('param').id;
-			const user = ctx.get('user');
+			const user = sessionUserFromCtx(ctx);
 			const response = await ctx.get('oauth2RequestService').getApplicationPublic(appId, user?.id);
 			return ctx.json(response);
 		},

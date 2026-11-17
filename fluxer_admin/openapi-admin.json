@@ -16190,14 +16190,17 @@
 						"description": "The number of seconds until the access token expires",
 						"allOf": [{"$ref": "#/components/schemas/Int32Type"}]
 					},
-					"refresh_token": {"type": "string", "description": "The refresh token for obtaining new access tokens"},
+					"refresh_token": {
+						"description": "The refresh token for obtaining new access tokens. Not issued to every client",
+						"type": "string"
+					},
 					"scope": {"type": "string", "description": "The space-separated list of granted scopes"},
 					"user_id": {
 						"description": "The account the admin signed in as",
 						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
 					}
 				},
-				"required": ["access_token", "token_type", "expires_in", "refresh_token", "scope", "user_id"],
+				"required": ["access_token", "token_type", "expires_in", "scope", "user_id"],
 				"additionalProperties": false
 			},
 			"AdminSsoIdentityMigrateRequest": {
