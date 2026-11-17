@@ -342,6 +342,17 @@
 	margin-inline-start: 0.3rem;
 }
 
+.messagePersonaTag {
+	border-color: color-mix(in hsl, var(--bg-secondary), var(--text-chat) 20%);
+	border-width: 1px;
+	border-style: solid;
+	border-radius: var(--radius-md);
+	color: var(--text-tertiary);
+	font-size: 0.75rem;
+	padding: 0 0.25rem;
+	box-sizing: border-box;
+}
+
 .messageAvatarEmbedded {
 	display: inline-block;
 	margin-block-start: 0;
