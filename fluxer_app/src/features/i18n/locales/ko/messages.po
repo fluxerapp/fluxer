@@ -8238,10 +8238,6 @@ msgstr "업데이트 확인"
 msgid "Check for updates..."
 msgstr "업데이트 확인 중..."
 
-#: src/features/app/components/BootstrapErrorScreen.tsx
-msgid "Check our <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0> for status updates."
-msgstr "상태 업데이트는 <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0>에서 확인하세요."
-
 #. Description text in the share theme modal.
 #: src/features/theme/components/modals/ShareThemeModal.tsx
 msgid "Check out my custom theme!"

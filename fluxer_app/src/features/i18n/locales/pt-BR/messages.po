@@ -8238,10 +8238,6 @@ msgstr "Verificar atualizações"
 msgid "Check for updates..."
 msgstr "Verificar atualizações..."
 
-#: src/features/app/components/BootstrapErrorScreen.tsx
-msgid "Check our <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0> for status updates."
-msgstr "Confira nosso <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0> para atualizações de status."
-
 #. Description text in the share theme modal.
 #: src/features/theme/components/modals/ShareThemeModal.tsx
 msgid "Check out my custom theme!"

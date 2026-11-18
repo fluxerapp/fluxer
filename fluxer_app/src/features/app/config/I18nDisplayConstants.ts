@@ -50,7 +50,6 @@ export const DESKTOP_DOWNLOAD_URL = DESKTOP_DOWNLOAD_URLS[Config.RELEASE_CHANNEL
 export const GOOGLE_PLAY_URL = 'https://play.google.com/store/apps/details?id=com.fluxer';
 export const FLUXER_DOCS_DOMAIN = 'fluxer.dev';
 export const FLUXER_DOCS_URL = `https://${FLUXER_DOCS_DOMAIN}`;
-export const FLUXER_BLUESKY_HANDLE = '@fluxer.app';
 export const YOUTUBE_PROVIDER_NAME = 'YouTube';
 export const EVERYONE_MENTION = '@everyone';
 export const HERE_MENTION = '@here';
