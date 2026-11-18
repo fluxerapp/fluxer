@@ -2,7 +2,6 @@
 
 import {BootstrapErrorKind, classifyBootstrapError} from '@app/features/app/components/BootstrapErrorKind';
 import styles from '@app/features/app/components/ErrorFallback.module.css';
-import {BLUESKY_PROVIDER_NAME, FLUXER_BLUESKY_HANDLE} from '@app/features/app/config/I18nDisplayConstants';
 import {resolveAppShellBranding} from '@app/features/app/state/AppShellBranding';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {
@@ -16,7 +15,6 @@ import {ResetClientStateReason, resetClientState} from '@app/features/platform/s
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {Button} from '@app/features/ui/button/Button';
 import {FluxerIcon} from '@app/features/ui/components/icons/FluxerIcon';
-import {ExternalUrls} from '@fluxer/constants/src/ExternalUrls';
 import {MS_PER_SECOND} from '@fluxer/date_utils/src/DateConstants';
 import {Trans, useLingui} from '@lingui/react/macro';
 import type React from 'react';
@@ -144,8 +142,6 @@ export const BootstrapErrorScreen: React.FC<BootstrapErrorScreenProps> = ({error
 	const storedInstance = accounts?.restoring?.instance ?? null;
 	const productName = resolveAppShellBranding(runtimeSnapshot ?? storedInstance).productName;
 	const statusPageUrl = RuntimeConfig.statusPageUrl;
-	const selfHosted =
-		runtimeSnapshot !== null ? RuntimeConfig.isSelfHosted() : storedInstance?.features.self_hosted === true;
 	const instanceHost = accounts?.restoring ? resolveAccountInstanceLabel(accounts.restoring) : null;
 	const otherAccounts = unreachable && accounts !== null && accounts.others.length > 0 ? accounts : null;
 	let description: React.ReactNode;
@@ -197,25 +193,6 @@ export const BootstrapErrorScreen: React.FC<BootstrapErrorScreenProps> = ({error
 								status page
 							</a>{' '}
 							for updates.
-						</Trans>
-					</p>
-				)}
-				{!selfHosted && (
-					<p
-						className={styles.errorFallbackDescription}
-						data-flx="app.bootstrap-error-screen.error-fallback-description--3"
-					>
-						<Trans>
-							Check our{' '}
-							<a
-								href={ExternalUrls.BLUESKY}
-								target="_blank"
-								rel="noopener noreferrer"
-								data-flx="app.bootstrap-error-screen.a"
-							>
-								{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})
-							</a>{' '}
-							for status updates.
 						</Trans>
 					</p>
 				)}
