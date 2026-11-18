@@ -600,6 +600,8 @@ export const ERROR_I18N_MESSAGES = {
 		"You can't have more than {count, plural, one {# category channel} other {# category channels}}.",
 	'misc_limits.max_friends_reached': "You can't have more than {count, plural, one {# friend} other {# friends}}.",
 	'misc_limits.max_invites_reached': "You can't have more than {count, plural, one {# invite} other {# invites}}.",
+	'misc_limits.max_personas_reached':
+		"You can't have more than {count, plural, one {# persona} other {# personas}}.",
 	'moderation_and_reports.cannot_report_own_message': "You can't report your own message.",
 	'moderation_and_reports.cannot_report_yourself': "You can't report yourself.",
 	'moderation_and_reports.invalid_dsa_report_target': 'Invalid DSA report target.',

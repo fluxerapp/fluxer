@@ -1,11 +1,8 @@
 import { Logger } from "@app/features/platform/utils/AppLogger";
 import type { PersonaCreateRequest as NewPersona } from "@fluxer/schema/src/domains/persona/PersonaSchemas.js";
 import type { FishingBucketExport, PluralkitSystem, TupperboxExport } from "../models/PersonaImports";
-import { fileToBase64 } from "@app/features/user/utils/AvatarSourceUtils";
 import { http } from "@app/features/platform/transport/RestTransport";
 import { Endpoints } from "@app/features/app/constants/Endpoints";
-import { isUint8Array } from "uint8array-extras";
-import { readStateServerAckMachine } from "@app/features/read_state/state/read_states/ReadStateServerAckMachine";
 import { AVATAR_MAX_SIZE } from "@fluxer/constants/src/LimitConstants.js";
 import type { PersonaImportModalProps } from "../components/modals/PersonaImportModal";
 
@@ -212,15 +209,25 @@ export async function processImport(
 			value: filtered.length,
 		}));
 		markUpdated() // setImportEpoch((v) => v+1);
-	} catch(e) {
+	} catch(e: any) {
 		console.error("Could not import personas", e);
-		setImportState((state) => ({...state,
-			stage: "ERROR",
-			error: {
-				code: "UPLOAD_FAILED",
-				message: String(e)
-			}
-		}));
+		if ("body" in e && "message" in e.body) {
+			setImportState((state) => ({...state,
+				stage: "ERROR",
+				error: {
+					code: "UPLOAD_FAILED",
+					message: String(e.body.message)
+				}
+			}));
+		} else {
+			setImportState((state) => ({...state,
+				stage: "ERROR",
+				error: {
+					code: "UPLOAD_FAILED",
+					message: String(e)
+				}
+			}));
+		}
 	} finally {
 		stopUpdating(); // setImporting(false);
 	};

@@ -137,7 +137,6 @@ export const PersonaEditorModal: React.FC<PersonaEditorModalProps> = observer(
 
 		const setTriggers = useCallback((f: (oldValue: Persona['triggers']) => Persona['triggers']) => {
 			const newTriggers = f(triggers);
-			console.log("jidfusjis", triggers, newTriggers);
 			form.setValue("triggers", newTriggers, {
 				shouldDirty: true,
 				shouldTouch: true
@@ -189,10 +188,28 @@ export const PersonaEditorModal: React.FC<PersonaEditorModalProps> = observer(
 					setSavedPersona(new Persona(newPersona));
 				} else {
 					// Create a persona
-					const newPersona = await PersonaCommands.create({
-						...form.getValues(),
-						internal_name: form.getValues().internal_name!,
-					});
+					let newPersona: OwnPersonaResponse;
+					try {
+						newPersona = await PersonaCommands.create({
+							...form.getValues(),
+							internal_name: form.getValues().internal_name!,
+						});
+					} catch(error: any) {
+						console.warn("Could not update persona", error);
+						if ('body' in error && 'errors' in error.body && 'path' in error.body.errors[0]) {
+							form.clearErrors();
+							for (const ferr of error.body.errors) {
+								form.setError(ferr.path, {message: ferr.message || "Invalid value"});
+							}
+						} else if ('body' in error && 'message' in error.body) {
+							form.setError("root", {message: error.body.message});
+						} else if ('message' in error) {
+							form.setError("root", {message: error.message});
+						} else {
+							form.setError("root", {message: "Something went wrong."});
+						}
+						return;
+					}
 					//form.reset({...newPersona, avatar: null, banner: null});
 					Personas.cachePersonas([newPersona]);
 					ModalCommands.pop();

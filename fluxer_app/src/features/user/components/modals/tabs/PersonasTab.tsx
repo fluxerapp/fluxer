@@ -256,6 +256,9 @@ const PersonasTabComponent = observer(function PersonasTabComponent() {
 				><Trans>Create Persona</Trans></Button>
 			</div>
 			{isMobile && allPersonas && <FilterInput filter={filter} />}
+			{(user?.maxPersonas??0) > 0 && <div className={styles.personaLimitRow}>
+				{personas.length}/{user?.maxPersonas}
+			</div>}
 			{personas.map((v) => (<div key={v.id}><PersonaTile
 				persona={v}
 				user={user!}

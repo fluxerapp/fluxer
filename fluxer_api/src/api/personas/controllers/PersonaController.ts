@@ -1,6 +1,8 @@
 import { createPersonaID, createUserID, type PersonaID } from "@app/api/BrandedTypes";
 import { getPngDataUrl } from "@app/api/emoji/tests/EmojiTestUtils";
 import { LimitConfigService } from "@app/api/limits/LimitConfigService";
+import { resolveLimitSafe } from "@app/api/limits/LimitConfigUtils";
+import { createLimitMatchContext } from "@app/api/limits/LimitMatchContextBuilder";
 import { Logger } from "@app/api/Logger";
 import { LoginRequired } from "@app/api/middleware/AuthMiddleware";
 import { RateLimitMiddleware } from "@app/api/middleware/RateLimitMiddleware";
@@ -12,7 +14,10 @@ import { Validator } from "@app/api/Validator";
 import { HttpStatus } from "@fluxer/constants/src/HttpConstants.js";
 import { AVATAR_MAX_SIZE } from "@fluxer/constants/src/LimitConstants.js";
 import { RelationshipTypes } from "@fluxer/constants/src/UserConstants.js";
+import { MaxBookmarksError } from "@fluxer/errors/src/domains/core/MaxBookmarksError.js";
+import { MaxPersonasError } from "@fluxer/errors/src/domains/core/MaxPersonasError.js";
 import { createJsonErrorResponse } from "@fluxer/errors/src/error_handling/ErrorResponse.js";
+import { resolveLimit } from "@fluxer/limits/src/LimitResolver.js";
 import { PersonaIdParam, UserPersonaIdParam } from "@fluxer/schema/src/domains/common/CommonParamSchemas.js";
 import { ErrorResponse } from "@fluxer/schema/src/domains/common/ErrorSchemas.js";
 import { OwnPersonaResponse, PersonaCreateRequest, PersonaPatchRequest, PersonaResponse } from "@fluxer/schema/src/domains/persona/PersonaSchemas.js";
@@ -106,6 +111,12 @@ export function PersonaController(app: HonoApp) {
 			const user = ctx.get('user');
 			const data = ctx.req.valid('json');
 			const personaService = ctx.get('personaService');
+			const limits = ctx.get('limitConfigService');
+			const limit = resolveLimitSafe(limits.getConfigSnapshot(), createLimitMatchContext({user}), "max_personas", 0);
+			const count = (await personaService.getUserPersonas(user.id)).length + 1;
+			if (count > limit) {
+				throw new MaxPersonasError({maxPersonas: limit});
+			}
 			const persona = await personaService.createPersona(user, data);
 			return ctx.json(await personaService.getOwnPersona(user.id, persona));
 		}
@@ -204,6 +215,11 @@ export function PersonaController(app: HonoApp) {
 			const data = ctx.req.valid('json');
 			const personaService = ctx.get('personaService');
 			// TODO: pre-flight checks; i.e. make sure the length would not exceed this user's global persona limit, banners, etc
+			const limits = ctx.get('limitConfigService');
+			const limit = resolveLimitSafe(limits.getConfigSnapshot(), createLimitMatchContext({user}), "max_personas", 0);
+			if ((await personaService.getUserPersonas(user.id)).length + data.length > limit) {
+				throw new MaxPersonasError({maxPersonas: limit});
+			}
 			return stream(ctx, async (str) => {
 				str.writeln(JSON.stringify({"event": "Start", "length": data.length}));
 				const personaFutures: Array<Promise<PersonaID>> = [];

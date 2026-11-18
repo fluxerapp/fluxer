@@ -249,6 +249,7 @@ export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.MAX_GUILD_ROLES]: 'channels_and_guilds.max_guild_roles_reached',
 	[APIErrorCodes.MAX_GUILDS]: 'channels_and_guilds.max_guilds_reached',
 	[APIErrorCodes.MAX_INVITES]: 'misc_limits.max_invites_reached',
+	[APIErrorCodes.MAX_PERSONAS]: 'misc_limits.max_personas_reached',
 	[APIErrorCodes.MAX_REACTIONS]: 'stickers_and_emojis.max_reactions_reached',
 	[APIErrorCodes.MAX_STICKERS]: 'stickers_and_emojis.max_stickers_reached',
 	[APIErrorCodes.MAX_WEBHOOKS_PER_CHANNEL]: 'webhooks.max_webhooks_per_channel_reached',

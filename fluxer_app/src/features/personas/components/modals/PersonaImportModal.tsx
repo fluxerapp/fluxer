@@ -87,14 +87,17 @@ export const PersonaImportModal = observer(({stage = "UNKNOWN", ...props}: Perso
 	}
 
 	if (stage === "ERROR") {
-		return <GenericErrorModal
+		const modal = ModalCommands.modal(() => <GenericErrorModal
 			title={props.error?.code === "FETCH_AVATAR_FAILED" ? i18n._(FETCH_AVATAR_FAILED_DESCRIPTOR)
 				: props.error?.code === "UPLOAD_FAILED" ? i18n._(UPLOAD_FAILED_DESCRIPTOR)
 				: props.error?.code === "INVALID_FORMAT" ? i18n._(INVALID_FORMAT_DESCRIPTOR)
 				: i18n._(ERROR_GENERIC_DESCRIPTOR) //
 			}
 			message={props.error?.message || i18n._(ERROR_GENERIC_DESCRIPTOR)}
-		/>
+		/>);
+		setIsVisible(false);
+		ModalCommands.push(modal);
+		return;
 	}
 
 	return <Modal.Root size="small" onClose={onClose}>

@@ -71,3 +71,9 @@
 .hiddenInput {
 	display: none;
 }
+
+.personaLimitRow {
+	color: var(--text-muted);
+	font-size: 0.75rem;
+	text-align: end;
+}

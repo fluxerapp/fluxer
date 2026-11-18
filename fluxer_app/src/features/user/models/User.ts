@@ -694,6 +694,10 @@ export class User {
 		return this._hasAgeRange === true;
 	}
 
+	get maxPersonas(): number {
+		return this.resolveRuntimeLimit('max_personas', DEFAULT_STOCK_LIMITS.max_personas);
+	}
+
 	equals(other: User): boolean {
 		if (this === other) return true;
 		return (
