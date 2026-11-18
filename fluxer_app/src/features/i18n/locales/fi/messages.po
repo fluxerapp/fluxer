@@ -27900,6 +27900,11 @@ msgstr "Toista"
 msgid "Play animated emojis"
 msgstr "Toista animoituja emojeita"
 
+#. Short label for a toggle in the animation tab. Keep it concise.
+#: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
+msgid "Play GIFs in the GIF picker"
+msgstr "Toista GIF-kuvat GIF-valitsimessa"
+
 #. Short label in the accessibility tab. Keep it concise.
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx
 msgid "Play sample"
@@ -43151,6 +43156,16 @@ msgstr "Kun käynnistetään kirjautumisen yhteydessä, avaa valikkopalkkiin ikk
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
 msgid "When launched at login, start in the system tray instead of opening the window"
 msgstr "Kun käynnistetään kirjautumisen yhteydessä, avaa sovellus ilmoitusalueelle sen sijaan, että avaisit ikkunan"
+
+#. Description for the GIF picker animation toggle in the animation tab on desktop.
+#: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
+msgid "When off, GIFs in the picker show a still frame until you hover over them."
+msgstr "Kun asetus on pois päältä, valitsimen GIF-kuvat näyttävät pysäytyskuvan, kunnes viet osoittimen niiden päälle."
+
+#. Description for the GIF picker animation toggle in the animation tab on mobile.
+#: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
+msgid "When off, GIFs in the picker show a still frame."
+msgstr "Kun asetus on pois päältä, valitsimen GIF-kuvat näyttävät pysäytyskuvan."
 
 #. Label in the display tab.
 #: src/features/user/components/modals/tabs/chat_settings_tab/DisplayTab.tsx

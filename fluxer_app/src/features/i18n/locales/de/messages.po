@@ -27900,6 +27900,11 @@ msgstr "Wiedergabe"
 msgid "Play animated emojis"
 msgstr "Animierte Emojis abspielen"
 
+#. Short label for a toggle in the animation tab. Keep it concise.
+#: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
+msgid "Play GIFs in the GIF picker"
+msgstr "GIFs in der GIF-Auswahl abspielen"
+
 #. Short label in the accessibility tab. Keep it concise.
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx
 msgid "Play sample"
@@ -43151,6 +43156,16 @@ msgstr "Beim Start mit der Anmeldung im Menü statt im Fenster starten"
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
 msgid "When launched at login, start in the system tray instead of opening the window"
 msgstr "Beim Start mit der Anmeldung im System-Tray starten, anstatt das Fenster zu öffnen"
+
+#. Description for the GIF picker animation toggle in the animation tab on desktop.
+#: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
+msgid "When off, GIFs in the picker show a still frame until you hover over them."
+msgstr "Wenn aus, zeigen GIFs in der Auswahl ein Standbild, bis du mit der Maus darüberfährst."
+
+#. Description for the GIF picker animation toggle in the animation tab on mobile.
+#: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
+msgid "When off, GIFs in the picker show a still frame."
+msgstr "Wenn aus, zeigen GIFs in der Auswahl ein Standbild."
 
 #. Label in the display tab.
 #: src/features/user/components/modals/tabs/chat_settings_tab/DisplayTab.tsx
