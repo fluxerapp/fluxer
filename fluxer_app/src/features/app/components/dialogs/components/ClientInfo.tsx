@@ -2,11 +2,9 @@
 
 import styles from '@app/features/app/components/dialogs/components/ClientInfo.module.css';
 import Config from '@app/features/app/config/Config';
-import DeveloperMode from '@app/features/devtools/state/DeveloperMode';
 import {UNKNOWN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {formatClientBuildInfo, getClientInfo, getClientInfoSync} from '@app/features/platform/utils/ClientInfo';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
-import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {isDesktop} from '@app/features/ui/utils/NativeUtils';
@@ -33,10 +31,6 @@ const WEB_BUILD_SECONDARY_WITH_CHANNEL_DESCRIPTOR = msg({
 const DESKTOP_BUILD_DESCRIPTOR = msg({
 	message: '{desktopChannel} Desktop {desktopVersion}',
 	comment: 'Client info desktop build identifier line. Example: "Canary Desktop 2026.419.3". Preserve placeholders.',
-});
-const YOU_ARE_NOW_A_DEVELOPER_DESCRIPTOR = msg({
-	message: 'You are now a developer!',
-	comment: 'Body text in the settings dialog client info.',
 });
 const CLICK_TO_COPY_DESCRIPTOR = msg({
 	message: 'Click to copy',
@@ -95,10 +89,6 @@ export const ClientInfo = observer(() => {
 		buildLabel = i18n._(WEB_BUILD_SECONDARY_WITH_CHANNEL_DESCRIPTOR, {releaseChannel, buildVersion});
 	}
 	const onClick = () => {
-		const justUnlocked = DeveloperMode.registerBuildTap();
-		if (justUnlocked) {
-			ToastCommands.success(i18n._(YOU_ARE_NOW_A_DEVELOPER_DESCRIPTOR));
-		}
 		TextCopyCommands.copy(i18n, formatClientBuildInfo(clientInfo, {unknownLabel}));
 	};
 	return (

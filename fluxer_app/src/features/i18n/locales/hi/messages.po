@@ -43667,11 +43667,6 @@ msgstr "आप डीफ़ेन किए गए हैं"
 msgid "You are editing your per-community profile. This profile will only be visible in this community and will override your global profile."
 msgstr "आप अपनी कम्युनिटी-विशिष्ट प्रोफ़ाइल एडिट कर रहे हैं। यह प्रोफ़ाइल सिर्फ़ इसी कम्युनिटी में दिखेगी और आपकी ग्लोबल प्रोफ़ाइल को ओवरराइड कर देगी।"
 
-#. Body text in the settings dialog client info.
-#: src/features/app/components/dialogs/components/ClientInfo.tsx
-msgid "You are now a developer!"
-msgstr "अब आप एक डेवलपर हैं!"
-
 #. Modal body for the mobile checkout confirmation. Explains that the user is leaving the app to pay.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx
 msgid "You are now navigating to {paymentProviderName} to complete the payment. Return to {productName} once you've completed it."

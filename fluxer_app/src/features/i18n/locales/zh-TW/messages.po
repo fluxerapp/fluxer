@@ -43667,11 +43667,6 @@ msgstr "您已耳機靜音"
 msgid "You are editing your per-community profile. This profile will only be visible in this community and will override your global profile."
 msgstr "您正在編輯您的社群專屬個人檔案。此個人檔案只會在此社群中顯示，並會覆寫您的全域個人檔案。"
 
-#. Body text in the settings dialog client info.
-#: src/features/app/components/dialogs/components/ClientInfo.tsx
-msgid "You are now a developer!"
-msgstr "您現在是開發人員了！"
-
 #. Modal body for the mobile checkout confirmation. Explains that the user is leaving the app to pay.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx
 msgid "You are now navigating to {paymentProviderName} to complete the payment. Return to {productName} once you've completed it."

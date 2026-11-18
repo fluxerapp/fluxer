@@ -2,7 +2,6 @@
 
 import type {Channel} from '@app/features/channel/models/Channel';
 import {clearAllAttachmentMocks, setAttachmentMock} from '@app/features/devtools/commands/DeveloperOptionsCommands';
-import DeveloperMode from '@app/features/devtools/state/DeveloperMode';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
@@ -154,7 +153,6 @@ export const MediaContextMenu: React.FC<MediaContextMenuProps> = observer(
 				.filter((group) => group.items.length > 0);
 			return {submenuGroups: submenu, inlineCopyItem: copy, inlineDownloadItem: download};
 		}, [mediaGroupsRaw]);
-		const isDev = DeveloperMode.isDeveloper;
 		const currentMock = attachmentId ? DeveloperOptions.mockAttachmentStates[attachmentId] : undefined;
 		const mockExpiresSoon = () =>
 			setAttachmentMock(attachmentId!, {
@@ -213,7 +211,7 @@ export const MediaContextMenu: React.FC<MediaContextMenuProps> = observer(
 					hideReply={hideReply}
 					data-flx="ui.action-menu.media-context-menu.message-context-menu"
 				/>
-				{isDev && attachmentId && (
+				{import.meta.env.DEV && attachmentId && (
 					<MenuGroup data-flx="ui.action-menu.media-context-menu.menu-group">
 						<MenuItemSubmenu
 							label={i18n._(ATTACHMENT_MOCK_DESCRIPTOR)}
