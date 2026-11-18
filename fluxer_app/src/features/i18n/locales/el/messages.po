@@ -27900,6 +27900,11 @@ msgstr "Αναπαραγωγή"
 msgid "Play animated emojis"
 msgstr "Αναπαραγωγή κινούμενων emoji"
 
+#. Short label for a toggle in the animation tab. Keep it concise.
+#: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
+msgid "Play GIFs in the GIF picker"
+msgstr "Αναπαραγωγή GIF στον επιλογέα GIF"
+
 #. Short label in the accessibility tab. Keep it concise.
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx
 msgid "Play sample"
@@ -43151,6 +43156,16 @@ msgstr "Όταν ξεκινά κατά τη σύνδεση, εμφάνιση σ�
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
 msgid "When launched at login, start in the system tray instead of opening the window"
 msgstr "Όταν ξεκινά κατά τη σύνδεση, ξεκίνα στη γραμμή συστήματος αντί να ανοίξεις το παράθυρο"
+
+#. Description for the GIF picker animation toggle in the animation tab on desktop.
+#: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
+msgid "When off, GIFs in the picker show a still frame until you hover over them."
+msgstr "Όταν είναι απενεργοποιημένο, τα GIF στον επιλογέα δείχνουν ένα στατικό καρέ μέχρι να περάσεις τον δείκτη από πάνω τους."
+
+#. Description for the GIF picker animation toggle in the animation tab on mobile.
+#: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
+msgid "When off, GIFs in the picker show a still frame."
+msgstr "Όταν είναι απενεργοποιημένο, τα GIF στον επιλογέα δείχνουν ένα στατικό καρέ."
 
 #. Label in the display tab.
 #: src/features/user/components/modals/tabs/chat_settings_tab/DisplayTab.tsx

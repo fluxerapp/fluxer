@@ -27900,6 +27900,11 @@ msgstr "הפעל"
 msgid "Play animated emojis"
 msgstr "הפעלת אימוג'י מונפשים"
 
+#. Short label for a toggle in the animation tab. Keep it concise.
+#: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
+msgid "Play GIFs in the GIF picker"
+msgstr "הפעלת קובצי GIF בבורר ה-GIF"
+
 #. Short label in the accessibility tab. Keep it concise.
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx
 msgid "Play sample"
@@ -43151,6 +43156,16 @@ msgstr "כאשר מופעל בכניסה, התחל בשורת התפריטים �
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
 msgid "When launched at login, start in the system tray instead of opening the window"
 msgstr "כאשר מופעל בכניסה למערכת, התחל בתיקיית המערכת במקום לפתוח את החלון"
+
+#. Description for the GIF picker animation toggle in the animation tab on desktop.
+#: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
+msgid "When off, GIFs in the picker show a still frame until you hover over them."
+msgstr "כשהאפשרות כבויה, קובצי GIF בבורר מציגים תמונה סטטית עד שמעבירים את העכבר מעליהם."
+
+#. Description for the GIF picker animation toggle in the animation tab on mobile.
+#: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
+msgid "When off, GIFs in the picker show a still frame."
+msgstr "כשהאפשרות כבויה, קובצי GIF בבורר מציגים תמונה סטטית."
 
 #. Label in the display tab.
 #: src/features/user/components/modals/tabs/chat_settings_tab/DisplayTab.tsx

@@ -79,6 +79,7 @@ message AccessibilitySettings {
   optional bool mobile_splash_zoom_animation = 64;
   optional bool message_double_click_actions = 66;
   optional bool announce_call_joins_and_leaves = 67;
+  optional bool animate_gif_picker = 68;
 }
 
 message AccessibilityOverrides {

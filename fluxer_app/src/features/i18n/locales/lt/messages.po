@@ -27901,6 +27901,11 @@ msgstr "Leisti"
 msgid "Play animated emojis"
 msgstr "Leisti animuotus jaustukus"
 
+#. Short label for a toggle in the animation tab. Keep it concise.
+#: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
+msgid "Play GIFs in the GIF picker"
+msgstr "Leisti GIF GIF parinkiklyje"
+
 #. Short label in the accessibility tab. Keep it concise.
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx
 msgid "Play sample"
@@ -43152,6 +43157,16 @@ msgstr "Paleidžiant prisijungus, pradėti meniu juostoje, o ne atidarant langą
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
 msgid "When launched at login, start in the system tray instead of opening the window"
 msgstr "Paleidžiant prisijungus, pradėti sistemos dėkle, o ne atidarant langą"
+
+#. Description for the GIF picker animation toggle in the animation tab on desktop.
+#: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
+msgid "When off, GIFs in the picker show a still frame until you hover over them."
+msgstr "Išjungus, parinkiklio GIF rodo nejudantį kadrą, kol užvedate ant jų pelę."
+
+#. Description for the GIF picker animation toggle in the animation tab on mobile.
+#: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
+msgid "When off, GIFs in the picker show a still frame."
+msgstr "Išjungus, parinkiklio GIF rodo nejudantį kadrą."
 
 #. Label in the display tab.
 #: src/features/user/components/modals/tabs/chat_settings_tab/DisplayTab.tsx

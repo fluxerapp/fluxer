@@ -65,6 +65,18 @@ const DEFAULTS_TO_ANIMATE_ON_INTERACTION_ON_MOBILE_TO_DESCRIPTOR = msg({
 	message: 'Defaults to animating on interaction on mobile to preserve battery life.',
 	comment: 'Description text in the animation tab.',
 });
+const PLAY_GIFS_IN_GIF_PICKER_DESCRIPTOR = msg({
+	message: 'Play GIFs in the GIF picker',
+	comment: 'Short label for a toggle in the animation tab. Keep it concise.',
+});
+const GIF_PICKER_STILL_FRAMES_HOVER_DESCRIPTOR = msg({
+	message: 'When off, GIFs in the picker show a still frame until you hover over them.',
+	comment: 'Description for the GIF picker animation toggle in the animation tab on desktop.',
+});
+const GIF_PICKER_STILL_FRAMES_DESCRIPTOR = msg({
+	message: 'When off, GIFs in the picker show a still frame.',
+	comment: 'Description for the GIF picker animation toggle in the animation tab on mobile.',
+});
 const STICKER_ANIMATION_PREFERENCE_DESCRIPTOR = msg({
 	message: 'Sticker animation preference',
 	comment: 'Short label in the animation tab. Keep it concise.',
@@ -171,6 +183,17 @@ export const AnimationTabContent: React.FC = observer(() => {
 				value={motion.effectiveGifAutoPlay}
 				onChange={(value) => AccessibilityCommands.requestGifAutoPlay(value)}
 				data-flx="user.accessibility-tab.animation-tab.animation-tab-content.switch--2"
+			/>
+			<Switch
+				label={i18n._(PLAY_GIFS_IN_GIF_PICKER_DESCRIPTOR)}
+				description={
+					mobileLayout.enabled
+						? i18n._(GIF_PICKER_STILL_FRAMES_DESCRIPTOR)
+						: i18n._(GIF_PICKER_STILL_FRAMES_HOVER_DESCRIPTOR)
+				}
+				value={Accessibility.animateGifPicker}
+				onChange={(value) => AccessibilityCommands.update({animateGifPicker: value})}
+				data-flx="user.accessibility-tab.animation-tab.animation-tab-content.switch--gif-picker"
 			/>
 			<div
 				className={styles.radioSection}

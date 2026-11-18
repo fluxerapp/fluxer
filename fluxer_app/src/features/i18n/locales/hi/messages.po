@@ -27900,6 +27900,11 @@ msgstr "चलाएँ"
 msgid "Play animated emojis"
 msgstr "एनिमेटेड इमोजी चलाएं"
 
+#. Short label for a toggle in the animation tab. Keep it concise.
+#: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
+msgid "Play GIFs in the GIF picker"
+msgstr "GIF पिकर में GIF चलाएँ"
+
 #. Short label in the accessibility tab. Keep it concise.
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx
 msgid "Play sample"
@@ -43151,6 +43156,16 @@ msgstr "लॉगिन पर लॉन्च होने पर, विंड
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
 msgid "When launched at login, start in the system tray instead of opening the window"
 msgstr "लॉगिन पर लॉन्च होने पर, विंडो खोलने के बजाय सिस्टम ट्रे में शुरू करें"
+
+#. Description for the GIF picker animation toggle in the animation tab on desktop.
+#: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
+msgid "When off, GIFs in the picker show a still frame until you hover over them."
+msgstr "बंद होने पर, पिकर में GIF तब तक स्थिर फ़्रेम दिखाते हैं जब तक आप उन पर होवर नहीं करते।"
+
+#. Description for the GIF picker animation toggle in the animation tab on mobile.
+#: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
+msgid "When off, GIFs in the picker show a still frame."
+msgstr "बंद होने पर, पिकर में GIF स्थिर फ़्रेम दिखाते हैं।"
 
 #. Label in the display tab.
 #: src/features/user/components/modals/tabs/chat_settings_tab/DisplayTab.tsx
