@@ -43667,11 +43667,6 @@ msgstr "スピーカーミュート中です"
 msgid "You are editing your per-community profile. This profile will only be visible in this community and will override your global profile."
 msgstr "コミュニティごとのプロフィールを編集中です。このプロフィールはこのコミュニティ内でのみ表示され、グローバルプロフィールよりも優先されます。"
 
-#. Body text in the settings dialog client info.
-#: src/features/app/components/dialogs/components/ClientInfo.tsx
-msgid "You are now a developer!"
-msgstr "開発者になりました！"
-
 #. Modal body for the mobile checkout confirmation. Explains that the user is leaving the app to pay.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx
 msgid "You are now navigating to {paymentProviderName} to complete the payment. Return to {productName} once you've completed it."

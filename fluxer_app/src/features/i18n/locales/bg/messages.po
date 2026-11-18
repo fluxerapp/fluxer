@@ -43667,11 +43667,6 @@ msgstr "Звукът ти е изключен"
 msgid "You are editing your per-community profile. This profile will only be visible in this community and will override your global profile."
 msgstr "Редактираш профила си за тази общност. Той ще е видим само в нея и ще замени глобалния ти профил."
 
-#. Body text in the settings dialog client info.
-#: src/features/app/components/dialogs/components/ClientInfo.tsx
-msgid "You are now a developer!"
-msgstr "Вече си разработчик!"
-
 #. Modal body for the mobile checkout confirmation. Explains that the user is leaving the app to pay.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx
 msgid "You are now navigating to {paymentProviderName} to complete the payment. Return to {productName} once you've completed it."
