@@ -18,6 +18,7 @@ const SCOPES: &[(&str, &str)] = &[
     ("global_name", "Display Name (global_name)"),
     ("bio", "Bio"),
     ("pronouns", "Pronouns"),
+    ("persona_tag", "Persona Tag"),
 ];
 
 pub fn profile_substring_bans_page(

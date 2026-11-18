@@ -63,6 +63,7 @@ import {
 	EmailType,
 	GlobalNameType,
 	PasswordType,
+	PersonaTagType,
 	UsernameType,
 } from '@fluxer/schema/src/primitives/UserValidators';
 import {z} from 'zod';
@@ -118,7 +119,7 @@ export const UserUpdateRequest = z
 			MentionReplyPreferencesSchema,
 			'Account-wide reply mention preference (NO_PREFERENCE, PREFER_MENTION, PREFER_NO_MENTION)',
 		),
-		persona_tag: createStringType(1, 20).nullish().describe('A tag to display after this user\'s personas to visually associate them.'),
+		persona_tag: PersonaTagType.nullish().describe('A tag to display after this user\'s personas to visually associate them.'),
 	})
 	.partial();
 

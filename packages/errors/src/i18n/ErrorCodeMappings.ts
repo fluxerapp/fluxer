@@ -506,6 +506,9 @@ export const ErrorCodeToI18nKey = {
 	[ValidationErrorCodes.PRONOUNS_CHANGED_TOO_MANY_TIMES]: 'rate_limits.pronouns_changed_too_often',
 	[ValidationErrorCodes.USERNAME_CHANGED_TOO_MANY_TIMES]: 'rate_limits.username_changed_too_often',
 	[ValidationErrorCodes.PERSONA_TAG_CHANGED_TOO_MANY_TIMES]: 'rate_limits.persona_tag_changed_too_often',
+	[ValidationErrorCodes.PERSONA_TAG_CANNOT_CONTAIN_RESERVED_TERMS]: 'usernames_and_tags.persona_tag_reserved_terms',
+	[ValidationErrorCodes.PERSONA_TAG_LENGTH_INVALID]: 'usernames_and_tags.persona_tag_length_invalid',
+	[ValidationErrorCodes.PERSONA_TAG_RESERVED_VALUE]: 'usernames_and_tags.persona_tag_reserved_value',
 	[ValidationErrorCodes.VOICE_ACTIVITY_SHARING_ON_COOLDOWN]: 'rate_limits.voice_activity_sharing_on_cooldown',
 	[ValidationErrorCodes.CHANGING_DISCRIMINATOR_REQUIRES_PREMIUM]:
 		'premium_and_plans.discriminator_change_requires_premium',

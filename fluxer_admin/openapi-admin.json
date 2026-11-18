@@ -2287,7 +2287,7 @@
 						"schema": {
 							"description": "Profile field to list. Required on the profile-substring blocklist and rejected on every other blocklist.",
 							"type": "string",
-							"enum": ["username", "global_name", "nickname", "bio", "pronouns"]
+							"enum": ["username", "global_name", "nickname", "bio", "pronouns", "persona_tag"]
 						},
 						"description": "Profile field to list. Required on the profile-substring blocklist and rejected on every other blocklist."
 					}
@@ -2565,7 +2565,7 @@
 						"schema": {
 							"description": "Profile field the entry is scoped to. Required on the profile-substring blocklist and rejected on every other blocklist.",
 							"type": "string",
-							"enum": ["username", "global_name", "nickname", "bio", "pronouns"]
+							"enum": ["username", "global_name", "nickname", "bio", "pronouns", "persona_tag"]
 						},
 						"description": "Profile field the entry is scoped to. Required on the profile-substring blocklist and rejected on every other blocklist."
 					}
@@ -2714,7 +2714,7 @@
 						"schema": {
 							"description": "Profile field the entry is scoped to. Required on the profile-substring blocklist and rejected on every other blocklist.",
 							"type": "string",
-							"enum": ["username", "global_name", "nickname", "bio", "pronouns"]
+							"enum": ["username", "global_name", "nickname", "bio", "pronouns", "persona_tag"]
 						},
 						"description": "Profile field the entry is scoped to. Required on the profile-substring blocklist and rejected on every other blocklist."
 					}
@@ -14949,7 +14949,7 @@
 						"type": "array",
 						"items": {
 							"description": "User profile field that can be cleared",
-							"x-enumNames": ["avatar", "banner", "bio", "pronouns", "global_name"],
+							"x-enumNames": ["avatar", "banner", "bio", "pronouns", "global_name", "persona_tag"],
 							"x-enumDescriptions": [
 								"User profile avatar image",
 								"User profile banner image",
@@ -14957,7 +14957,7 @@
 								"User pronouns",
 								"User display name"
 							],
-							"enum": ["avatar", "banner", "bio", "pronouns", "global_name"],
+							"enum": ["avatar", "banner", "bio", "pronouns", "global_name", "persona_tag"],
 							"type": "string"
 						},
 						"description": "List of profile fields to clear"
@@ -21540,7 +21540,7 @@
 			"BanProfileSubstringRequest": {
 				"type": "object",
 				"properties": {
-					"scope": {"type": "string", "enum": ["username", "global_name", "nickname", "bio", "pronouns"]},
+					"scope": {"type": "string", "enum": ["username", "global_name", "nickname", "bio", "pronouns", "persona_tag"]},
 					"substrings": {"minItems": 1, "maxItems": 1000, "type": "array", "items": {"type": "string"}},
 					"reason": {"type": "string"},
 					"notes": {"type": "string"}
@@ -21663,7 +21663,7 @@
 			"AdminBlocklistProfileSubstringUpdateRequest": {
 				"type": "object",
 				"properties": {
-					"scope": {"type": "string", "enum": ["username", "global_name", "nickname", "bio", "pronouns"]},
+					"scope": {"type": "string", "enum": ["username", "global_name", "nickname", "bio", "pronouns", "persona_tag"]},
 					"reason": {"type": "string"},
 					"notes": {"type": "string"}
 				},
