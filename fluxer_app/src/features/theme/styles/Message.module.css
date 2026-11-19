@@ -351,6 +351,7 @@
 	font-size: 0.75rem;
 	padding: 0 0.25rem;
 	box-sizing: border-box;
+	margin-block-end: -2px;
 }
 
 .messageAvatarEmbedded {
