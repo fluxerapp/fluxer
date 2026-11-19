@@ -112,7 +112,7 @@ const MESSAGE_COLUMNS: &str = "\
     webhook_id, webhook_name, webhook_avatar_hash, \
     content, edited_timestamp, pinned_timestamp, flags, mention_everyone, \
     mention_users, mention_roles, mention_channels, \
-    has_reaction, version, \
+    has_reaction, version, persona, \
     attachments, embeds, sticker_items, message_reference, call, message_snapshots";
 
 pub struct MessagesShard<T> {
@@ -181,7 +181,7 @@ struct MessageDbRow {
     message_reference: Option<udt::MessageReferenceUdt>,
     call: Option<udt::MessageCallUdt>,
     message_snapshots: Option<Vec<udt::MessageSnapshotUdt>>,
-		persona: Option<udt::MessagePersonaSnapshotUdt>,
+	persona: Option<udt::MessagePersonaSnapshotUdt>,
 }
 
 #[cfg_attr(feature = "scylla", derive(DeserializeRow))]
@@ -413,7 +413,7 @@ struct ResponseContext {
     attachment_decay: HashMap<i64, DateTime<Utc>>,
     channel_mentions: HashMap<String, ApiChannelMentionResponse>,
     mention_context: HashMap<i64, MessageMentionContext>,
-		personas: HashMap<i64, ApiPersonaResponse>,
+	personas: HashMap<i64, ApiPersonaResponse>,
 }
 
 #[derive(Debug, Default)]
@@ -1076,7 +1076,7 @@ impl<T: Transport> MessagesShard<T> {
         let attachment_ids = options.expiring_attachment_ids(&all_messages);
         let channel_ids = collect_channel_mention_ids(&all_messages, &mention_context);
         let user_ids = collect_user_ids(&all_messages, &mention_context);
-				let persona_ids = collect_persona_ids(&all_messages);
+		let persona_ids = collect_persona_ids(&all_messages);
         let reactions_future = self.fetch_reactions_for_messages(messages, options);
         let attachment_decay_future = self.fetch_attachment_decay(attachment_ids);
         let channel_mentions_future = self.resolve_channel_mentions(channel_ids, options);
@@ -1101,7 +1101,7 @@ impl<T: Transport> MessagesShard<T> {
             .collect();
         Ok(ResponseContext {
             users,
-						personas,
+			personas,
             reactions,
             referenced_messages,
             attachment_decay,
@@ -1281,14 +1281,14 @@ impl<T: Transport> MessagesShard<T> {
         );
     }
 
-		async fn fetch_personas(
+	async fn fetch_personas(
         &self,
-        persona_ids: HashSet<i64>,
+        persona_ids: HashSet<(i64, i64)>,
     ) -> HashMap<i64, ApiPersonaResponse> {
         if persona_ids.is_empty() {
             return HashMap::new();
         }
-        let mut persona_ids: Vec<i64> = persona_ids.into_iter().collect();
+        let mut persona_ids: Vec<(i64, i64)> = persona_ids.into_iter().collect();
         persona_ids.sort_unstable();
         persona_ids.dedup();
         let payload = serde_json::json!({
@@ -1596,22 +1596,22 @@ impl<T: Transport> MessagesShard<T> {
             nonce: options.nonce.clone(),
             call: message.call.as_ref().map(map_call),
             referenced_message,
-						persona: persona.or(message.persona.as_ref().and_then(|v| match v.name.as_ref().is_some() {
-							true => Some(ApiMessagePersonaSnapshotResponse {
-								id: v.id.clone(),
-								owner_id: None, // won't be returned from the API
-								name: v.name.clone(),
-								avatar: v.avatar.clone(),
-								pronouns: v.pronouns.clone(),
-							}),
-							false => Some(ApiMessagePersonaSnapshotResponse {
-								id: Some("0".to_string()),
-								owner_id: None, // won't be returned from the API
-								name: Some(DELETED_PERSONA_GLOBAL_NAME.to_string()),
-								avatar: None,
-								pronouns: None,
-							}),
-						}))
+            persona: persona.or(message.persona.as_ref().and_then(|v| match v.name.as_ref().is_some() {
+                true => Some(ApiMessagePersonaSnapshotResponse {
+                    id: v.id.clone(),
+                    owner_id: None, // won't be returned from the API
+                    name: v.name.clone(),
+                    avatar: v.avatar.clone(),
+                    pronouns: v.pronouns.clone(),
+                }),
+                false => Some(ApiMessagePersonaSnapshotResponse {
+                    id: Some("0".to_string()),
+                    owner_id: None, // won't be returned from the API
+                    name: Some(DELETED_PERSONA_GLOBAL_NAME.to_string()),
+                    avatar: None,
+                    pronouns: None,
+                }),
+            }))
         }
     }
 
@@ -1932,29 +1932,31 @@ impl<T: Transport> MessagesShard<T> {
         }
     }
 
-		fn resolve_persona(&self, message: &Message, context: &ResponseContext) -> Option<ApiMessagePersonaSnapshotResponse> {
-				if let Some(Some(persona_id)) = message.persona.as_ref().map(|v| &v.id) {
-						let id = parse_i64(&persona_id, "persona_id").expect("Could not parse persona ID");
-						let persona = context
-								.personas
-								.get(&id)
-								.cloned()
-								.map(|f| Into::<ApiMessagePersonaSnapshotResponse>::into(f));
-						if let Some(persona) = persona && persona.owner_id.as_ref().is_some_and(|v| v.clone() == message.author_id.unwrap_or_default().to_string()) {
-								return Some(persona)
-						}
-				}
-				None
-		}
+    fn resolve_persona(&self, message: &Message, context: &ResponseContext) -> Option<ApiMessagePersonaSnapshotResponse> {
+        if let Some(Some(persona_id)) = message.persona.as_ref().map(|v| &v.id) {
+            let id = parse_i64(&persona_id, "persona_id").expect("Could not parse persona ID");
+            let persona = context
+                .personas
+                .get(&id)
+                .cloned()
+                .map(|f| Into::<ApiMessagePersonaSnapshotResponse>::into(f));
+            if let Some(persona) = persona && persona.owner_id.as_ref().is_some_and(|v| v.clone() == message.author_id.unwrap_or_default().to_string()) {
+                return Some(persona)
+            }
+        }
+        None
+    }
 }
 
-fn collect_persona_ids(all_messages: &[&Message]) -> HashSet<i64> {
+fn collect_persona_ids(all_messages: &[&Message]) -> HashSet<(i64, i64)> {
 		let mut ids = HashSet::new();
 		all_messages.iter().for_each(|f| {
 			if let Some(persona) = &f.persona {
 					if let Some(id) = &persona.id {
 							if let Some(num) = parse_i64(&id, "persona_id").ok() {
-								ids.insert(num);
+                                if let Some(author_id) = f.author_id {
+								    ids.insert((num, author_id));
+                                }
 							}
 					}
 			}

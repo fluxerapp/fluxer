@@ -63,8 +63,8 @@ export class PersonaRepository {
 			batch.add(DELETE_EXACT_PERSONA_TRIGGER_CQL, {
 				owner_id: userId,
 				persona_id: personaId,
-				prefix: trigger.prefix,
-				suffix: trigger.suffix
+				prefix: trigger.prefix || "",
+				suffix: trigger.suffix || ""
 			});
 		}
 		for (const trigger of addedTriggers) {
@@ -73,8 +73,8 @@ export class PersonaRepository {
 			const data: PersonaTriggerRow = {
 				owner_id: userId,
 				persona_id: personaId,
-				prefix: trigger.prefix || null,
-				suffix: trigger.suffix || null
+				prefix: trigger.prefix || "",
+				suffix: trigger.suffix || ""
 			};
 			batch.addPrepared(PersonaTriggers.insert(data));
 		}

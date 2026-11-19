@@ -654,6 +654,27 @@
 					"type": "bigint"
 				}
 			]
+		},
+		{
+			"name": "persona_snapshot",
+			"fields": [
+				{
+					"name": "id",
+					"type": "text"
+				},
+				{
+					"name": "name",
+					"type": "text"
+				},
+				{
+					"name": "avatar",
+					"type": "text"
+				},
+				{
+					"name": "pronouns",
+					"type": "text"
+				}
+			]
 		}
 	],
 	"tables": [
@@ -7121,6 +7142,10 @@
 				{
 					"name": "version",
 					"type": "int"
+				},
+				{
+					"name": "persona",
+					"type": "frozen<persona_snapshot>"
 				}
 			],
 			"primary_key": "((channel_id, bucket), message_id)",
@@ -8853,6 +8878,92 @@
 			],
 			"primary_key": "((user_id), created_at)",
 			"options": "CLUSTERING ORDER BY (created_at DESC)"
+		},
+		{
+			"name": "personas",
+			"columns": [
+				{
+					"name": "persona_id",
+					"type": "bigint"
+				},
+				{
+					"name": "owner_id",
+					"type": "bigint"
+				},
+				{
+					"name": "internal_name",
+					"type": "text"
+				},
+				{
+					"name": "display_name",
+					"type": "text"
+				},
+				{
+					"name": "group",
+					"type": "bigint"
+				},
+				{
+					"name": "tags",
+					"type": "list<text>"
+				},
+				{
+					"name": "avatar_hash",
+					"type": "text"
+				},
+				{
+					"name": "avatar_color",
+					"type": "int"
+				},
+				{
+					"name": "banner_hash",
+					"type": "text"
+				},
+				{
+					"name": "banner_color",
+					"type": "int"
+				},
+				{
+					"name": "bio",
+					"type": "text"
+				},
+				{
+					"name": "pronouns",
+					"type": "text"
+				},
+				{
+					"name": "accent_color",
+					"type": "int"
+				},
+				{
+					"name": "last_used_at",
+					"type": "date"
+				}
+			],
+			"primary_key": "((owner_id), persona_id)",
+			"options": ""
+		},
+		{
+			"name": "persona_triggers",
+			"columns": [
+				{
+					"name": "persona_id",
+					"type": "bigint"
+				},
+				{
+					"name": "owner_id",
+					"type": "bigint"
+				},
+				{
+					"name": "prefix",
+					"type": "text"
+				},
+				{
+					"name": "suffix",
+					"type": "text"
+				}
+			],
+			"primary_key": "((owner_id), prefix, suffix)",
+			"options": ""
 		},
 		{
 			"name": "pinned_dms",

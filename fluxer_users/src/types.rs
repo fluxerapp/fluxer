@@ -27,11 +27,12 @@ pub enum UserRequest {
         #[serde(default = "default_instance_name")]
         instance_name: String,
     },
-		GetPersonaPartialById {
+	GetPersonaPartialById {
         persona_id: i64,
+        user_id: i64,
     },
     GetPersonaPartialsByIds {
-        persona_ids: Vec<i64>,
+        persona_ids: Vec<(i64, i64)>,
     },
     Invalidate {
         #[serde(deserialize_with = "deserialize_i64_from_number_or_string")]
@@ -198,15 +199,15 @@ where
 #[cfg(feature = "scylla")]
 impl From<PersonaPartialScyllaRow> for PersonaPartial {
 	fn from(value: PersonaPartialScyllaRow) -> Self {
-			PersonaPartial {
-					persona_id: value.persona_id,
-					owner_id: value.owner_id,
-					internal_name: value.internal_name,
-					display_name: value.display_name,
-					avatar_hash: value.avatar_hash,
-					pronouns: value.pronouns,
-					accent_color: value.accent_color
-			}
+        PersonaPartial {
+            persona_id: value.persona_id,
+            owner_id: value.owner_id,
+            internal_name: value.internal_name,
+            display_name: value.display_name,
+            avatar_hash: value.avatar_hash,
+            pronouns: value.pronouns,
+            accent_color: value.accent_color
+        }
 	}
 }
 

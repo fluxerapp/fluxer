@@ -47,7 +47,7 @@ const PARTIAL_USER_COLUMNS: &str = "\
 #[cfg(feature = "scylla")]
 const PARTIAL_PERSONA_COLUMNS: &str = "\
     persona_id, owner_id, internal_name, display_name, \
-	avatar_hash, banner_hash, pronouns, accent_color";
+	avatar_hash, pronouns, accent_color";
 const USER_BATCH_SIZE: usize = 128;
 const USER_BATCH_CONCURRENCY: usize = 8;
 const USER_CACHE_MIN_GENERATION_STRIPES: usize = 4096;
@@ -302,14 +302,14 @@ impl UsersShard {
                 "SELECT {PARTIAL_USER_COLUMNS} FROM users WHERE user_id IN ?"
             ))
             .await?;
-				let stmt_partial_persona = db
+		let stmt_partial_persona = db
             .prepare(format!(
-                "SELECT {PARTIAL_PERSONA_COLUMNS} FROM personas WHERE persona_id = ? LIMIT 1"
+                "SELECT {PARTIAL_PERSONA_COLUMNS} FROM personas WHERE persona_id = ? AND owner_id = ? LIMIT 1"
             ))
             .await?;
         let stmt_partial_persona_batch = db
             .prepare(format!(
-                "SELECT {PARTIAL_PERSONA_COLUMNS} FROM personas WHERE persona_id IN ?"
+                "SELECT {PARTIAL_PERSONA_COLUMNS} FROM personas WHERE persona_id IN ? AND owner_id = ?"
             ))
             .await?;
 
@@ -323,8 +323,8 @@ impl UsersShard {
                 db,
                 stmt_partial,
                 stmt_partial_batch,
-								stmt_partial_persona,
-								stmt_partial_persona_batch
+                stmt_partial_persona,
+                stmt_partial_persona_batch
             })),
             caches: UserCaches::new(max_entries, ttl),
         })
@@ -336,13 +336,13 @@ impl UsersShard {
             .await
     }
 
-	async fn get_partial_persona(&self, persona_id: i64) -> anyhow::Result<Option<PersonaPartial>> {
+	async fn get_partial_persona(&self, persona_id: i64, user_id: i64) -> anyhow::Result<Option<PersonaPartial>> {
         let storage = self.storage.clone();
         match self.caches
             .get_or_fetch_partial_persona(
                 persona_id,
                 async move {
-                    storage.fetch_partial_persona(persona_id).await
+                    storage.fetch_partial_persona(persona_id, user_id).await
                 },
             )
             .await {
@@ -476,11 +476,11 @@ impl UsersStorage {
         }
     }
 
-		async fn fetch_partial_persona(&self, persona_id: i64) -> anyhow::Result<Option<PersonaPartial>> {
+		async fn fetch_partial_persona(&self, persona_id: i64, user_id: i64) -> anyhow::Result<Option<PersonaPartial>> {
         match self {
             UsersStorage::Postgres(storage) => storage.fetch_partial_persona(persona_id).await,
             #[cfg(feature = "scylla")]
-            UsersStorage::Scylla(storage) => storage.fetch_partial_persona(persona_id).await,
+            UsersStorage::Scylla(storage) => storage.fetch_partial_persona(persona_id, user_id).await,
         }
     }
 
@@ -555,14 +555,14 @@ impl ScyllaUsersStorage {
             .collect::<Vec<_>>())
     }
 
-	async fn fetch_partial_persona(&self, user_id: i64) -> anyhow::Result<Option<PersonaPartial>> {
+	async fn fetch_partial_persona(&self, persona_id: i64, user_id: i64) -> anyhow::Result<Option<PersonaPartial>> {
         let result = self
             .db
-            .execute_unpaged(&self.stmt_partial_persona, (user_id,))
+            .execute_unpaged(&self.stmt_partial_persona, (persona_id, user_id,))
             .await?;
         let rows = result.into_rows_result()?;
         //let partial = rows.maybe_first_row::<PersonaPartial>()?.map(Into::into);
-				let partial = rows
+		let partial = rows
             .maybe_first_row::<PersonaPartialScyllaRow>()?
             .map(|row| PersonaPartial::from(row));
         Ok(partial)
@@ -661,14 +661,14 @@ impl ShardService for UsersShard {
                 self.caches.invalidate(user_id).await;
                 Ok(UserResponse::Invalidated)
             }
-            UserRequest::GetPersonaPartialById { persona_id } => {
-                match self.get_partial_persona(persona_id).await? {
+            UserRequest::GetPersonaPartialById { persona_id, user_id } => {
+                match self.get_partial_persona(persona_id, user_id).await? {
                     Some(partial) => Ok(UserResponse::FoundPersonaPartial(partial)),
                     None => Ok(UserResponse::NotFound),
                 }
             },
             UserRequest::GetPersonaPartialsByIds { persona_ids } => {
-                let pdfs = persona_ids.iter().map(|v| self.get_partial_persona(*v));
+                let pdfs = persona_ids.iter().map(|v| self.get_partial_persona((*v).0, (*v).1));
                 let personas = Vec::from_iter(futures::future::try_join_all(pdfs).await?.iter().filter_map(|v| v.clone()));
                 Ok(UserResponse::FoundPersonaPartials(personas))
             },
@@ -802,6 +802,7 @@ mod tests {
             deletion_reason_code: None,
             content_hidden_since: None,
             hidden_profile_badges: None,
+            persona_tag: None,
         }
     }
 

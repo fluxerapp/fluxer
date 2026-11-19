@@ -33,8 +33,14 @@ export const OwnPersonaResponse = z.object({
 	internal_name: z.string().describe('A name to use for the persona in the persona picker. Also used as the default display name if one is not set.'),
 	tags: z.array(z.string()).default([]).describe('A list of arbitrary string tags used for search and categorization'),
 	triggers: z.array(z.object({
-		prefix: z.string().min(1).nullable().describe('A prefix that, with the paired suffix, should activate a persona for a message'),
-		suffix: z.string().min(1).nullable().describe('A suffix that, with the paired prefix, should activate a persona for a message'),
+		prefix: z.preprocess(
+			(arg) => (arg === '' ? null : arg),
+			z.string().nullable().describe('A prefix that, with the paired suffix, should activate a persona for a message'),
+		),
+		suffix: z.preprocess(
+			(arg) => (arg === '' ? null : arg),
+			z.string().nullable().describe('A suffix that, with the paired prefix, should activate a persona for a message'),
+		),
 	})).default([]).describe('Pairs of prefixes and suffixes that can activate a persona'),
 });
 

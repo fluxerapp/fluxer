@@ -1562,6 +1562,7 @@ export const Personas = defineTable<PersonaRow, 'owner_id' | 'persona_id'>({
 	name: 'personas',
 	columns: PERSONA_COLUMNS,
 	primaryKey: ['owner_id', 'persona_id'],
+	partitionKey: ['owner_id']
 });
 export const PersonaTriggers = defineTable<PersonaTriggerRow, 'owner_id' | 'prefix' | 'suffix'>({
 	name: 'persona_triggers',
