@@ -272,6 +272,7 @@ const authSessionStateMachine = setup({
 				'connection.ready': {target: 'connected'},
 				'connection.failed': {target: 'authenticated'},
 				'connection.closed': {target: 'authenticated'},
+				'account.switch.start': {target: 'switching'},
 				'logout.start': {target: 'logging_out'},
 				'session.invalidated': {target: 'idle', actions: 'invalidateSession'},
 			},
@@ -333,5 +334,5 @@ export function selectAuthSessionAccountKey(snapshot: AuthSessionSnapshot): stri
 
 export function selectAuthSessionCanSwitch(snapshot: AuthSessionSnapshot): boolean {
 	const state = getAuthSessionStateValue(snapshot);
-	return state === SessionState.Authenticated || state === SessionState.Connected;
+	return state === SessionState.Authenticated || state === SessionState.Connecting || state === SessionState.Connected;
 }
