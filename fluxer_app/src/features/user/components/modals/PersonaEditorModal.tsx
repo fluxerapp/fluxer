@@ -439,6 +439,7 @@ export const PersonaEditorModal: React.FC<PersonaEditorModalProps> = observer(
 								footer={<span className={styles.footerHintText}><Trans>This name stays private, and only appears in lists of your own personas.</Trans></span>}
 								{...form.register('internal_name')}
 								value={form.watch('internal_name') || ''}
+								error={form.getErrors("internal_name")?.message}
 								required
 							/>
 							<Input
@@ -446,12 +447,14 @@ export const PersonaEditorModal: React.FC<PersonaEditorModalProps> = observer(
 								label={i18n._(DISPLAY_NAME_DESCRIPTOR)}
 								{...form.register('display_name')}
 								value={form.watch('display_name') || ''}
+								error={form.getErrors("display_name")?.message}
 							/>
 							<Input
 								data-flx="user.persona-editor-modal.input--pronouns"
 								label={i18n._(PRONOUNS_DESCRIPTOR)}
 								{...form.register('pronouns')}
 								value={form.watch('pronouns') || ''}
+								error={form.getErrors("pronouns")?.message}
 							/>
 							<div data-flx="user.persona-editor-modal.avatar-uploader-outer">
 								<AvatarUploader

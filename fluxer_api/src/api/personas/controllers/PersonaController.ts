@@ -44,10 +44,10 @@ export function PersonaController(app: HonoApp) {
 				'List personas for the current user. Returns a list of all personas that belong to the signed-in user.',
 		}),
 		async (ctx) => {
-			const userId = ctx.get('user').id;
+			const user = ctx.get('user');
 			//const requestCache = ctx.get('requestCache');
 			const personaService = ctx.get('personaService');
-			return ctx.json(await personaService.getUserPersonas(userId));
+			return ctx.json(await personaService.getUserPersonas(user));
 			//return ctx.json([]);
 		}
 	);
@@ -70,7 +70,8 @@ export function PersonaController(app: HonoApp) {
 				'Retrieves the profile of a persona by its ID.',
 		}),
 		async (ctx) => {
-			const userId = ctx.get('user').id;
+			const user = ctx.get('user');
+			const userId = user.id;
 			const {user_id, persona_id} = ctx.req.valid('param');
 			const userService = ctx.get('userService');
 			if (userId.toString() !== user_id.toString() && user_id !== "@me") {
@@ -82,8 +83,7 @@ export function PersonaController(app: HonoApp) {
 			const targetUser = targetId && await userService.accountService.lookupService.findUnique(targetId)
 			targetId && user_id.valueOf() !== userId.valueOf() && targetUser && await userService.accountService.lookupService.validateProfileAccess(userId, targetId, targetUser);
 			const personaService = ctx.get('personaService');
-			const uid = user_id === "@me" ? userId : user_id;
-			const response = await personaService.getPersona(createUserID(uid), createPersonaID(persona_id));
+			const response = await personaService.getPersona(targetUser || user, createPersonaID(persona_id));
 			if (!response) return ctx.notFound();
 			console.log(response);
 			return ctx.json(response);
@@ -113,12 +113,12 @@ export function PersonaController(app: HonoApp) {
 			const personaService = ctx.get('personaService');
 			const limits = ctx.get('limitConfigService');
 			const limit = resolveLimitSafe(limits.getConfigSnapshot(), createLimitMatchContext({user}), "max_personas", 0);
-			const count = (await personaService.getUserPersonas(user.id)).length + 1;
+			const count = (await personaService.getUserPersonas(user)).length + 1;
 			if (count > limit) {
 				throw new MaxPersonasError({maxPersonas: limit});
 			}
 			const persona = await personaService.createPersona(user, data);
-			return ctx.json(await personaService.getOwnPersona(user.id, persona));
+			return ctx.json(await personaService.getOwnPersona(user, persona));
 		}
 	);
 
@@ -140,17 +140,17 @@ export function PersonaController(app: HonoApp) {
 				'Updates a persona by its ID. Included fields will be patched onto the existing data.',
 		}),
 		async (ctx) => {
-			const userId = ctx.get('user').id;
+			const user = ctx.get('user');
 			const {persona_id} = ctx.req.valid('param');
 			const data = ctx.req.valid('json');
 			//const requestCache = ctx.get('requestCache');
 			const personaService = ctx.get('personaService');
 			const personaId = createPersonaID(persona_id);
-			const response = await personaService.checkPersonaExists(userId, personaId);
+			const response = await personaService.checkPersonaExists(user.id, personaId);
 			if (!response) return ctx.notFound();
 			console.log(data);
-			await personaService.updatePersona(userId, personaId, data);
-			const finalResponse = await personaService.getOwnPersona(userId, personaId);
+			await personaService.updatePersona(user, personaId, data);
+			const finalResponse = await personaService.getOwnPersona(user, personaId);
 			return ctx.json(finalResponse);
 		}
 	);
@@ -178,7 +178,7 @@ export function PersonaController(app: HonoApp) {
 			// return ctx.json(await personaService.getPersona(user.id, persona));
 			const persona = createPersonaID(persona_id);
 			await personaService.deletePersona(user.id, persona);
-			const check = await personaService.getPersona(user.id, persona);
+			const check = await personaService.getPersona(user, persona);
 			if (check) throw new Error("Persona deletion failed");
 			return ctx.body(null, 204);
 		}
@@ -217,7 +217,7 @@ export function PersonaController(app: HonoApp) {
 			// TODO: pre-flight checks; i.e. make sure the length would not exceed this user's global persona limit, banners, etc
 			const limits = ctx.get('limitConfigService');
 			const limit = resolveLimitSafe(limits.getConfigSnapshot(), createLimitMatchContext({user}), "max_personas", 0);
-			if ((await personaService.getUserPersonas(user.id)).length + data.length > limit) {
+			if ((await personaService.getUserPersonas(user)).length + data.length > limit) {
 				throw new MaxPersonasError({maxPersonas: limit});
 			}
 			return stream(ctx, async (str) => {
