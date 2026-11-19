@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {retryStalledConnection, switchAccountFromStalledConnection} from '@app/features/app/ConnectionRecovery';
+import {retryStalledConnection} from '@app/features/app/ConnectionRecovery';
 import styles from '@app/features/app/components/layout/app_layout/nagbars/ConnectionNagbar.module.css';
 import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
@@ -70,7 +70,6 @@ export const ConnectionNagbar = observer(({isMobile, rememberedRows}: Connection
 				closeCurrentAccountOnSelect: true,
 				initialReloginAccount: null,
 				redirectAfterLogin: null,
-				switchAccount: switchAccountFromStalledConnection,
 				'data-flx': 'app.app-layout.nagbars.connection-nagbar.handle-switch-account.account-switcher-modal',
 			},
 			CONNECTION_ACCOUNT_SWITCHER_MODAL_KEY,
