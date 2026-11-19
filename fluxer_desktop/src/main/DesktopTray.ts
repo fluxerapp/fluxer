@@ -20,9 +20,12 @@ import {
 import {buildAccountMenuEntries, buildAccountMenuItems, createRefreshThrottle} from '@electron/main/AccountMenu';
 import {getAppResourcesPath} from '@electron/main/DesktopDistributionPath';
 import {getDesktopUpdateState, observeDesktopUpdateState} from '@electron/main/DesktopUpdateGate';
-import {checkForUpdatesFromShell, startDesktopUpdateFromShell} from '@electron/main/DesktopUpdatePrompt';
+import {
+	canCheckForUpdatesFromShell,
+	checkForUpdatesFromShell,
+	startDesktopUpdateFromShell,
+} from '@electron/main/DesktopUpdatePrompt';
 import {readKdePanelDark, readKdePanelDarkSync, watchKdePanelTheme} from '@electron/main/KdePanelTheme';
-import {shouldDisableModuleUpdatesForLaunch} from '@electron/main/LaunchOptions';
 import {relaunchStableLaunchPath} from '@electron/main/LinuxLaunchPath';
 import {getLinuxDesktop} from '@electron/main/LinuxSession';
 import {onLocaleChange, t} from '@electron/main/MainI18n';
@@ -536,7 +539,7 @@ function buildTrayMenu(): Menu {
 			click: () => runTrayMenuAction(startDesktopUpdateFromShell),
 		});
 	}
-	if (!shouldDisableModuleUpdatesForLaunch()) {
+	if (canCheckForUpdatesFromShell()) {
 		menuTemplate.push({
 			label: t('desktop.tray.checkForUpdates'),
 			click: () =>
