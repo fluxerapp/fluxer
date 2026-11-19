@@ -21,6 +21,7 @@ import type {MessagePreviewContext} from '@fluxer/constants/src/ChannelConstants
 import {clsx} from 'clsx';
 import type React from 'react';
 import {useCallback, useLayoutEffect, useRef} from 'react';
+import { PersonaTag } from './MessagePersonaTag';
 
 const COMPACT_TIMESTAMP_WIDTH_CSS_VARIABLE = '--message-compact-measured-timestamp-width';
 const COMPACT_MESSAGE_SELECTOR = '[data-flx-compact="true"]';
@@ -196,6 +197,7 @@ export function CompactAuthorPrefix({
 					data-flx="channel.compact-message-layout.compact-author-prefix.user-tag-compact--op"
 				/>
 			)}
+			{message.persona && <PersonaTag className={styles.messagePersonaTagBase} />}
 			{showAvatar && (
 				<MessageAvatar
 					user={author}

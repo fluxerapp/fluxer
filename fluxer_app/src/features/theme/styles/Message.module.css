@@ -341,6 +341,10 @@
 .messagePersonaTagBase {
 	margin-inline-start: 0.3rem;
 }
+.messageCompact .messagePersonaTagBase {
+	display: inline-block;
+	margin-inline-end: 0.3rem;
+}
 
 .messagePersonaTag {
 	border-color: color-mix(in hsl, var(--bg-secondary), var(--text-chat) 20%);
@@ -351,6 +355,8 @@
 	font-size: 0.75rem;
 	padding: 0 0.25rem;
 	box-sizing: border-box;
+}
+.message .messagePersonaTag {
 	margin-block-end: -2px;
 }
 
