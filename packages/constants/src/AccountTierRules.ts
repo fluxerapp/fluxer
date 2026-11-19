@@ -107,6 +107,10 @@ const SHARED_RULES = {
 		unclaimed: TierDenialErrors.UNCLAIMED_ACCOUNT_CANNOT_ADD_REACTIONS,
 		unverified: TierDenialErrors.REACTION_EMAIL_VERIFICATION_REQUIRED,
 	},
+	[TierGatedActions.POLL_VOTE]: {
+		unclaimed: TierDenialErrors.POLL_VOTE_EMAIL_VERIFICATION_REQUIRED,
+		unverified: TierDenialErrors.POLL_VOTE_EMAIL_VERIFICATION_REQUIRED,
+	},
 	[TierGatedActions.FRIEND_REQUEST]: {
 		unclaimed: TierDenialErrors.UNCLAIMED_ACCOUNT_CANNOT_SEND_FRIEND_REQUESTS,
 		unverified: TierDenialErrors.FRIEND_REQUEST_EMAIL_VERIFICATION_REQUIRED,

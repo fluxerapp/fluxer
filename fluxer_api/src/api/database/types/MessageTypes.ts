@@ -11,6 +11,7 @@ import type {
 	UserID,
 	WebhookID,
 } from '@app/api/BrandedTypes';
+import type {MessagePollDb} from '@app/api/database/types/PollTypes';
 
 export interface MessageAttachment {
 	attachment_id: AttachmentID;
@@ -112,6 +113,7 @@ export interface MessageSnapshot {
 	mention_channels: Set<ChannelID> | null;
 	attachments: Array<MessageAttachment> | null;
 	embeds: Array<MessageEmbed> | null;
+	poll: MessagePollDb | null;
 	sticker_items: Array<MessageStickerItem> | null;
 	type: number;
 	flags: number;
@@ -141,6 +143,7 @@ export interface MessageRow {
 	mention_channels: Set<ChannelID> | null;
 	attachments: Array<MessageAttachment> | null;
 	embeds: Array<MessageEmbed> | null;
+	poll: MessagePollDb | null;
 	sticker_items: Array<MessageStickerItem> | null;
 	message_reference: MessageReference | null;
 	message_snapshots: Array<MessageSnapshot> | null;
@@ -168,6 +171,7 @@ export const MESSAGE_COLUMNS = [
 	'mention_channels',
 	'attachments',
 	'embeds',
+	'poll',
 	'sticker_items',
 	'message_reference',
 	'message_snapshots',

@@ -287,7 +287,7 @@ const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observer(
 			canForwardMessage,
 			canCrosspostMessage,
 		} = permissions;
-		const showsEditInTail = message.isUserMessage() && !message.messageSnapshots && canEditMessage;
+		const showsEditInTail = message.isUserMessage() && !message.messageSnapshots && canEditMessage && !message.poll;
 		const supportsInteractiveActions = useMemo(() => !isClientSystemMessage(message), [message]);
 		const handlers = useMemo(
 			() => createMessageActionHandlers(message, {i18n, channel: permissions.channel}),
@@ -624,7 +624,7 @@ const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observer(
 										data-flx="channel.message-action-bar.message-action-bar-core.message-action-bar-button.reply"
 									/>
 								)}
-								{message.isUserMessage() && supportsInteractiveActions && canForwardMessage && (
+								{message.isUserMessage() && supportsInteractiveActions && !message.poll && canForwardMessage && (
 									<MessageActionBarButton
 										icon={
 											<ForwardIcon

@@ -63,6 +63,8 @@ is_message_event(_) -> false.
 is_user_event(typing_start) -> true;
 is_user_event(message_reaction_add) -> true;
 is_user_event(message_reaction_remove) -> true;
+is_user_event(message_poll_vote_add) -> true;
+is_user_event(message_poll_vote_remove) -> true;
 is_user_event(_) -> false.
 
 -spec extract_member_for_event(event(), event_data(), guild_state()) -> map() | undefined.

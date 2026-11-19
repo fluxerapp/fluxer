@@ -1,0 +1,14 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.deleteAnswerButton {
+	color: color-mix(in srgb, var(--status-danger), var(--text-primary) 22%) !important;
+}
+
+.emojiValueButton {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 36px;
+	height: 36px;
+	cursor: pointer;
+}

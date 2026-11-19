@@ -374,6 +374,7 @@ export type ThemeVariableName =
 	| "--plutonium-hover"
 	| "--plutonium-icon"
 	| "--plutonium-text"
+	| "--poll-answer-bar-accent"
 	| "--radius-2xl"
 	| "--radius-full"
 	| "--radius-lg"
@@ -848,6 +849,7 @@ export const THEME_VARIABLES: ReadonlyArray<ThemeVariableDefinition> = [
 	{name: "--plutonium-hover", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
 	{name: "--plutonium-icon", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
 	{name: "--plutonium-text", kind: "color", groupId: "brand", groupLabel: "Brand & accents", source: "color-system"},
+	{name: "--poll-answer-bar-accent", kind: "color", groupId: "other", groupLabel: "Other", source: "color-system"},
 	{name: "--radius-2xl", kind: "dimension", groupId: "borders", groupLabel: "Borders & focus", source: "globals"},
 	{name: "--radius-full", kind: "dimension", groupId: "borders", groupLabel: "Borders & focus", source: "globals"},
 	{name: "--radius-lg", kind: "dimension", groupId: "borders", groupLabel: "Borders & focus", source: "globals"},
@@ -1323,6 +1325,7 @@ export const THEME_VARIABLE_NAMES: ReadonlyArray<string> = [
 	"--plutonium-hover",
 	"--plutonium-icon",
 	"--plutonium-text",
+	"--poll-answer-bar-accent",
 	"--radius-2xl",
 	"--radius-full",
 	"--radius-lg",
@@ -1798,6 +1801,7 @@ export const THEME_DARK_DEFAULT_VARIABLE_VALUES: Readonly<Record<string, string>
 	"--plutonium-hover": "hsl(242, calc(60% * var(--saturation-factor)), 49%)",
 	"--plutonium-icon": "hsl(38, calc(92% * var(--saturation-factor)), 50%)",
 	"--plutonium-text": "hsl(0, 0%, 98%)",
+	"--poll-answer-bar-accent": "hsl(242, calc(70% * var(--saturation-factor)), 60%)",
 	"--radius-2xl": "1rem",
 	"--radius-full": "624.9375rem",
 	"--radius-lg": "0.5rem",
@@ -2273,6 +2277,7 @@ export const THEME_LIGHT_DEFAULT_VARIABLE_VALUES: Readonly<Record<string, string
 	"--plutonium-hover": "hsl(242, calc(60% * var(--saturation-factor)), 49%)",
 	"--plutonium-icon": "hsl(38, calc(92% * var(--saturation-factor)), 45%)",
 	"--plutonium-text": "hsl(0, 0%, 98%)",
+	"--poll-answer-bar-accent": "hsl(242, calc(70% * var(--saturation-factor)), 70%)",
 	"--radius-2xl": "1rem",
 	"--radius-full": "624.9375rem",
 	"--radius-lg": "0.5rem",

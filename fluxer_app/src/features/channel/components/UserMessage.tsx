@@ -13,6 +13,7 @@ import {MessageAvatar} from '@app/features/channel/components/MessageAvatar';
 import {MessageTimeoutIndicator} from '@app/features/channel/components/MessageTimeoutIndicator';
 import {MessageUsername} from '@app/features/channel/components/MessageUsername';
 import {useMessageViewContext} from '@app/features/channel/components/MessageViewContext';
+import {Poll} from '@app/features/channel/components/Poll';
 import {ReplyPreview} from '@app/features/channel/components/ReplyPreview';
 import {TimestampWithTooltip} from '@app/features/channel/components/TimestampWithTooltip';
 import {createSystemMessage} from '@app/features/devtools/utils/CommandUtils';
@@ -25,6 +26,7 @@ import {TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescri
 import {dropTrailingEmptyBlockquoteLines} from '@app/features/lexical/composer/blockquoteLines';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
+import * as PollCommands from '@app/features/messaging/commands/PollCommands';
 import {SafeMarkdown} from '@app/features/messaging/components/markdown';
 import {parse} from '@app/features/messaging/components/markdown/renderers';
 import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
@@ -281,7 +283,18 @@ export const UserMessage = observer(() => {
 		},
 		[message],
 	);
+	const handlePollVote = useCallback(
+		(add: boolean, selectedAnswers: Array<number>) => {
+			if (add) {
+				PollCommands.addVote(i18n, message.channelId, message.id, selectedAnswers);
+			} else {
+				PollCommands.removeVote(i18n, message.channelId, message.id);
+			}
+		},
+		[message],
+	);
 	const shouldShowEditingInput = isEditing && !previewContext && !mobileLayout.enabled;
+
 	const compactAuthorPrefix = (
 		<CompactAuthorPrefix
 			message={message}
@@ -643,6 +656,18 @@ export const UserMessage = observer(() => {
 					}
 				</CompactMessageLayout>
 				<div className={styles.container} data-flx="channel.user-message.container--2">
+					{message.poll ? (
+						<Poll
+							guild={guild}
+							channelId={channel.id}
+							messageId={message.id}
+							poll={message.poll}
+							isMobile={mobileLayout.enabled}
+							messageState={message.state}
+							onVote={handlePollVote}
+							data-flx="channel.user-message.poll"
+						/>
+					) : undefined}
 					<MessageAttachments data-flx="channel.user-message.message-attachments--2" />
 					{!previewContext && (
 						<CrosspostPublishNudge
@@ -726,6 +751,18 @@ export const UserMessage = observer(() => {
 							</span>
 						</TimestampWithTooltip>
 					))}
+				{message.poll ? (
+					<Poll
+						guild={guild}
+						channelId={channel.id}
+						messageId={message.id}
+						poll={message.poll}
+						isMobile={mobileLayout.enabled}
+						messageState={message.state}
+						onVote={handlePollVote}
+						data-flx="channel.user-message.poll--2"
+					/>
+				) : undefined}
 				<MessageAttachments data-flx="channel.user-message.message-attachments--3" />
 				{message.content.length === 0 &&
 					!isEditing &&

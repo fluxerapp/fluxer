@@ -160,7 +160,12 @@ export class MessageCrosspostService {
 	}
 
 	private assertCrosspostable(message: Message): void {
-		if (isCrosspostCopy(message) || message.type !== MessageTypes.DEFAULT || message.messageSnapshots.length > 0) {
+		if (
+			isCrosspostCopy(message) ||
+			message.type !== MessageTypes.DEFAULT ||
+			message.messageSnapshots.length > 0 ||
+			message.poll
+		) {
 			throw new MessageNotCrosspostableError();
 		}
 		if (isCrosspostedMessage(message)) {

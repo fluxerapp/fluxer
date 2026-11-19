@@ -15,8 +15,7 @@ use crate::{
             message_list::{message_delete_prefill_script, message_list},
             page_container::{card, page_header},
         },
-        layout::LayoutOptions,
-        layout::admin_layout_ext,
+        layout::{LayoutOptions, admin_layout_ext},
     },
 };
 use maud::{Markup, html};

@@ -2,6 +2,7 @@
 
 import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
 import type {MessageDataRepository} from '@app/api/channel/repositories/message/MessageDataRepository';
+import {getExpiryBucket} from '@app/api/channel/repositories/PollMessageExpiryRepository';
 import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import {Db} from '@app/api/database/CassandraTypes';
 import type {ChannelMessageBucketRow, ChannelStateRow} from '@app/api/database/types/MessageTypes';
@@ -12,9 +13,12 @@ import {
 	ChannelMessageBuckets,
 	ChannelPins,
 	ChannelState,
+	MessagePollVotes,
 	MessageReactions,
 	Messages,
 	MessagesByAuthorV2,
+	PollMessageById,
+	PollMessageExpiry,
 } from '@app/api/Tables';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
 
@@ -78,6 +82,36 @@ export class MessageDeletionRepository {
 					channel_id: channelId,
 					message_id: messageId,
 					pinned_timestamp: effectivePinned,
+				}),
+			);
+		}
+		if (message?.poll) {
+			if (message.poll.expiry) {
+				const expiryDate = new Date(message.poll.expiry);
+				batch.addPrepared(
+					PollMessageExpiry.deleteByPk({
+						expiry_bucket: getExpiryBucket(expiryDate),
+						expires_at: expiryDate,
+						message_id: messageId,
+					}),
+				);
+			}
+			batch.addPrepared(
+				PollMessageById.deleteByPk({
+					message_id: messageId,
+				}),
+			);
+			batch.addPrepared(
+				MessagePollVotes.delete({
+					where: [
+						MessagePollVotes.where.eq('channel_id'),
+						MessagePollVotes.where.eq('bucket'),
+						MessagePollVotes.where.eq('message_id'),
+					],
+				}).bind({
+					channel_id: channelId,
+					bucket,
+					message_id: messageId,
 				}),
 			);
 		}
