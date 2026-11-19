@@ -5,6 +5,7 @@ package engine
 import (
 	"context"
 	"path/filepath"
+	"strings"
 
 	"github.com/compose-spec/compose-go/v2/cli"
 	"github.com/compose-spec/compose-go/v2/types"
@@ -28,4 +29,22 @@ func BindSources(ctx context.Context, s Spec) ([]string, error) {
 		}
 	}
 	return out, nil
+}
+
+func bindSELinux(v types.ServiceVolumeConfig) string {
+	if v.Bind == nil {
+		return ""
+	}
+	return v.Bind.SELinux
+}
+
+func bindSpec(m Mount) string {
+	opts := []string{"rw"}
+	if m.ReadOnly {
+		opts[0] = "ro"
+	}
+	if m.SELinux != "" {
+		opts = append(opts, m.SELinux)
+	}
+	return m.Bind + ":" + m.Target + ":" + strings.Join(opts, ",")
 }

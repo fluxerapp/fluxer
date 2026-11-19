@@ -213,7 +213,7 @@ func (p *Project) HelperFor(service string) HelperOptions {
 	}
 	for _, v := range svc.Volumes {
 		if v.Type == types.VolumeTypeBind && v.Source != "" {
-			o.Mounts = append(o.Mounts, Mount{Bind: v.Source, Target: v.Target, ReadOnly: v.ReadOnly})
+			o.Mounts = append(o.Mounts, Mount{Bind: v.Source, Target: v.Target, ReadOnly: v.ReadOnly, SELinux: bindSELinux(v)})
 		}
 	}
 	return o
