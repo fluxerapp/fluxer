@@ -12,12 +12,12 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 
 const DELETE_ROLE_DESCRIPTOR = msg({
-	message: 'Delete role',
+	message: 'Remove role',
 	comment:
 		'Danger action in the channel permissions overwrite context menu that removes a role permission override from the channel.',
 });
 const DELETE_USER_DESCRIPTOR = msg({
-	message: 'Delete user',
+	message: 'Remove user',
 	comment:
 		'Danger action in the channel permissions overwrite context menu that removes a member permission override from the channel.',
 });

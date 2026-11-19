@@ -13012,10 +13012,8 @@ msgstr "मिटाने की पुष्टि"
 msgid "Delete redirect URI"
 msgstr "रीडायरेक्ट यूआरआई मिटाएँ"
 
-#. Danger action in the channel permissions overwrite context menu that removes a role permission override from the channel.
 #. Destructive button in the role editor that removes the selected role. Removes the role from every member; keep tone plain.
 #. Destructive context menu action in the community roles settings tab that immediately removes the right-clicked role from every member. Keep it short.
-#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/OverwriteContextMenu.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx
 #: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx
 #: src/features/ui/action_menu/RoleContextMenu.tsx
@@ -13078,11 +13076,6 @@ msgstr "इस संदेश को हटा दें? इसे वाप�
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "Delete thread"
 msgstr "थ्रेड हटाएं"
-
-#. Danger action in the channel permissions overwrite context menu that removes a member permission override from the channel.
-#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/OverwriteContextMenu.tsx
-msgid "Delete user"
-msgstr "यूज़र मिटाएँ"
 
 #. Danger button label that deletes a webhook.
 #: src/features/webhook/components/WebhookListItem.tsx
@@ -29837,6 +29830,11 @@ msgstr "रिएक्शन हटाएँ"
 msgid "Remove reverse image search"
 msgstr "रिवर्स इमेज सर्च हटाएँ"
 
+#. Danger action in the channel permissions overwrite context menu that removes a role permission override from the channel.
+#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/OverwriteContextMenu.tsx
+msgid "Remove role"
+msgstr "रोल हटाएँ"
+
 #. Button or menu action label in the community role management. Keep it concise. Preserve {roleName}; it is inserted by code. Keep the tone plain and specific.
 #: src/features/guild/components/RoleManagement.tsx
 msgid "Remove role {roleName}"
@@ -29882,6 +29880,11 @@ msgstr "टाइमआउट हटाएँ"
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx
 msgid "Remove translator"
 msgstr "अनुवादक हटाएँ"
+
+#. Danger action in the channel permissions overwrite context menu that removes a member permission override from the channel.
+#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/OverwriteContextMenu.tsx
+msgid "Remove user"
+msgstr "यूज़र हटाएँ"
 
 #. Description of the switch that hides the purchase date, under the premium badge row in the "Badges" profile settings. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
