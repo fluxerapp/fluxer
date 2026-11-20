@@ -4,7 +4,7 @@ import {AttachmentDecayRepository} from '@app/api/attachment/AttachmentDecayRepo
 import {AttachmentDecayService, resolveDefaultAttachmentDecayConfig} from '@app/api/attachment/AttachmentDecayService';
 import {apiFormOfMediaUrl, makeApiAttachmentUrl, parseApiAttachmentUrl} from '@app/api/attachment/AttachmentPublicUrl';
 import {makeSignedAttachmentCdnUrl, signAttachmentUrl} from '@app/api/attachment/AttachmentUrls';
-import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {createPersonaID, type ChannelID, type GuildID, type MessageID, type UserID} from '@app/api/BrandedTypes';
 import {
 	attachmentStorageChannelId,
 	EMBED_MEDIA_OWNED_ATTACHMENT_FLAG,
@@ -16,7 +16,7 @@ import {
 	MessageResponseDataService,
 } from '@app/api/channel/services/message/MessageResponseDataService';
 import {isApiProxiedAttachments} from '@app/api/instance/AttachmentAccessMode';
-import {getChannelRepository, getUserRepository} from '@app/api/middleware/ServiceSingletons';
+import {getChannelRepository, getPersonaRepository, getUserRepository} from '@app/api/middleware/ServiceSingletons';
 import type {Attachment} from '@app/api/models/Attachment';
 import type {CallInfo} from '@app/api/models/CallInfo';
 import type {Embed} from '@app/api/models/Embed';
@@ -45,6 +45,7 @@ import type {
 	MessageSnapshotResponse,
 	MessageStickerResponse,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type { PersonaSnapshot } from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import type {NatsConnection} from '@nats-io/transport-node';
@@ -230,6 +231,24 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 		return messages.filter((message) => snowflakeToDate(message.id).getTime() >= cutoff);
 	}
 
+	private async resolvePersona(message: Message): Promise<PersonaSnapshot | null> {
+		if (!message.authorId) return null;
+		if (!message.persona?.id) return message.persona;
+		const persona = await getPersonaRepository().getPersona(message.authorId, createPersonaID(BigInt(message.persona!.id)));
+		if (!persona) return {
+			id: null,
+			name: message.persona.name || "Deleted Persona",
+			avatar: message.persona.avatar,
+			pronouns: message.persona.pronouns
+		}
+		return {
+			id: persona.id.toString(),
+			name: persona.displayName,
+			avatar: persona.avatarHash,
+			pronouns: persona.pronouns,
+		}
+	}
+
 	private async mapMessage(
 		message: Message,
 		options: {
@@ -240,12 +259,13 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 			depth: number;
 		},
 	): Promise<MessageResponse> {
-		const [author, mentions, mentionChannels, reactions, referencedMessage] = await Promise.all([
+		const [author, mentions, mentionChannels, reactions, referencedMessage, persona] = await Promise.all([
 			this.resolveAuthor(message),
 			this.resolveUserPartials([...message.mentionedUserIds]),
 			this.resolveMentionChannels([...message.mentionedChannelIds]),
 			options.includeReactions ? this.mapReactions(message, options.currentUserId) : Promise.resolve(null),
 			this.resolveReferencedMessage(message, options),
+			this.resolvePersona(message),
 		]);
 		const responseFields = {
 			id: message.id.toString(),
@@ -267,7 +287,6 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 			attachments: await this.mapAttachments(message.attachments, message),
 			stickers: this.mapStickers(message.stickers),
 			reactions,
-			persona: message.persona,
 		};
 		let messageReference: MessageResponse['message_reference'] = null;
 		if (message.reference) {
@@ -285,6 +304,7 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 			nonce: options.nonce ?? null,
 			call: this.mapCall(message.call),
 			referenced_message: referencedMessage,
+			persona,
 		};
 	}
 
