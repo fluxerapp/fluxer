@@ -75,6 +75,7 @@ function makeMessage(messageId: bigint = 2n, content: string = '', channelId: bi
 		message_snapshots: null,
 		call: null,
 		has_reaction: null,
+		persona: null,
 		version: 1,
 	});
 }

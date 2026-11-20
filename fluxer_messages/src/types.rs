@@ -829,6 +829,7 @@ mod tests {
             system: None,
             flags: 0,
             mention_flags: None,
+            persona_tag: None,
         };
         ApiMessageResponse {
             id: "2".to_string(),
