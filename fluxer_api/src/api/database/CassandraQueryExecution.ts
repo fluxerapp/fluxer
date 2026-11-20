@@ -103,7 +103,7 @@ export interface PagedQueryResult<T> {
 }
 
 interface CassandraReadOptions {
-	consistency: 'all' | 'serial' | 'localQuorum';
+	consistency: 'serial' | 'localQuorum';
 }
 
 function driverConsistencyOption(consistency: CassandraReadOptions['consistency'] | undefined): {consistency?: number} {
