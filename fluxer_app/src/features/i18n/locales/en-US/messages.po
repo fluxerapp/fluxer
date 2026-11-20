@@ -13131,6 +13131,10 @@ msgstr "Delete this message? Can't be undone."
 msgid "Delete this message? Can't be undone. This message is also removed from every community that follows this channel."
 msgstr "Delete this message? Can't be undone. This message is also removed from every community that follows this channel."
 
+#: src/features/user/components/modals/PersonaEditorModal.tsx
+msgid "Delete this persona?"
+msgstr "Delete this persona?"
+
 #. Destructive moderator action that deletes a thread and all its messages.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "Delete thread"
@@ -22257,6 +22261,10 @@ msgstr "Manage payment methods"
 msgid "Manage permissions"
 msgstr "Manage permissions"
 
+#: src/features/personas/components/popouts/PersonaPickerPopout.tsx
+msgid "Manage Personas"
+msgstr "Manage Personas"
+
 #. Permission name in forum and media channel permissions. Lets members moderate posts.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "Manage posts"
@@ -27727,6 +27735,16 @@ msgstr "Persona created"
 #: src/features/user/components/modals/PersonaEditorModal.tsx
 msgid "Persona deleted"
 msgstr "Persona deleted"
+
+#. Settings search entry label. Also used as a search synonym in the settings search bar.
+#: src/features/user/utils/UserMessageDescriptors.ts
+msgid "Persona tag"
+msgstr "Persona tag"
+
+#. Explanation for persona tags.
+#: src/features/user/utils/UserMessageDescriptors.ts
+msgid "Persona tags display next to your personas to tie them together."
+msgstr "Persona tags display next to your personas to tie them together."
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
@@ -43872,6 +43890,11 @@ msgstr "You already have the most connections an account can have. Remove one an
 #: src/features/connection/components/modals/AddConnectionModal.tsx
 msgid "You already have this connection."
 msgstr "You already have this connection."
+
+#. placeholder {0}: savedPersona.internal_name
+#: src/features/user/components/modals/PersonaEditorModal.tsx
+msgid "You are about to delete {0}. Are you sure this is what you want to do?"
+msgstr "You are about to delete {0}. Are you sure this is what you want to do?"
 
 #. External link warning title. productName is the Fluxer product name.
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx

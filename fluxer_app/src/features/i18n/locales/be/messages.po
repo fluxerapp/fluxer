@@ -13124,6 +13124,10 @@ msgstr ""
 msgid "Delete this message? Can't be undone. This message is also removed from every community that follows this channel."
 msgstr ""
 
+#: src/features/user/components/modals/PersonaEditorModal.tsx
+msgid "Delete this persona?"
+msgstr ""
+
 #. Destructive moderator action that deletes a thread and all its messages.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "Delete thread"
@@ -22250,6 +22254,10 @@ msgstr ""
 msgid "Manage permissions"
 msgstr ""
 
+#: src/features/personas/components/popouts/PersonaPickerPopout.tsx
+msgid "Manage Personas"
+msgstr ""
+
 #. Permission name in forum and media channel permissions. Lets members moderate posts.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "Manage posts"
@@ -27719,6 +27727,16 @@ msgstr ""
 #. Short label in the persona editor. Keep it concise.
 #: src/features/user/components/modals/PersonaEditorModal.tsx
 msgid "Persona deleted"
+msgstr ""
+
+#. Settings search entry label. Also used as a search synonym in the settings search bar.
+#: src/features/user/utils/UserMessageDescriptors.ts
+msgid "Persona tag"
+msgstr ""
+
+#. Explanation for persona tags.
+#: src/features/user/utils/UserMessageDescriptors.ts
+msgid "Persona tags display next to your personas to tie them together."
 msgstr ""
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
@@ -43864,6 +43882,11 @@ msgstr ""
 #. Body text in the connection add connection modal.
 #: src/features/connection/components/modals/AddConnectionModal.tsx
 msgid "You already have this connection."
+msgstr ""
+
+#. placeholder {0}: savedPersona.internal_name
+#: src/features/user/components/modals/PersonaEditorModal.tsx
+msgid "You are about to delete {0}. Are you sure this is what you want to do?"
 msgstr ""
 
 #. External link warning title. productName is the Fluxer product name.

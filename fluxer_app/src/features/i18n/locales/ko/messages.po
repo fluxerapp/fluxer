@@ -64,7 +64,7 @@ msgstr "{0, plural, one {#명} other {#명}}"
 #. placeholder {0}: props.value
 #: src/features/personas/components/modals/PersonaImportModal.tsx
 msgid "{0} personas imported successfully"
-msgstr "{0}개의 Persona가 성공적으로 가져워졌습니다"
+msgstr ""
 
 #. Screen reader announcement in the composer when two people are typing. {a} and {b} are their display names.
 #: src/features/typing/rolling/RollingTypingText.tsx
@@ -2991,12 +2991,12 @@ msgstr "스티커"
 #. A label for the latching modes (trigger behavior) setting.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
 msgid "A trigger sends a message with its persona, but the active persona doesn't change."
-msgstr "트리거가 자신의 Persona 로 메시지를 보내지만 활성 Persona 는 변경되지 않습니다."
+msgstr ""
 
 #. A label for the latching modes (trigger behavior) setting.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
 msgid "A trigger sets its persona as active until the active persona is changed. This may also be called \"latching\"."
-msgstr "트리거는 활성 Persona 가 변경될 때까지 자신의 Persona 를 활성으로 설정합니다. 이를 \"latching\"이라고도 합니다."
+msgstr ""
 
 #. Description for has:link. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts
@@ -4004,7 +4004,7 @@ msgstr "번역기 추가"
 
 #: src/features/user/components/modals/PersonaEditorModal.tsx
 msgid "Add trigger"
-msgstr "트리거 추가"
+msgstr ""
 
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx
 msgid "Add your own reverse image search providers with a custom URL pattern. Use <0>{url}</0> as a placeholder for the image URL."
@@ -4787,7 +4787,7 @@ msgstr "금액"
 #. Title of the import progress modal.
 #: src/features/personas/components/modals/PersonaImportModal.tsx
 msgid "An error occurred"
-msgstr "오류가 발생했습니다"
+msgstr ""
 
 #. Fallback error message shown when the channel search request fails for an unknown reason.
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx
@@ -7665,7 +7665,7 @@ msgstr "비밀번호 변경 양식"
 #. Generic action label that opens the persona picker.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Change persona"
-msgstr "Persona 변경"
+msgstr ""
 
 #. Description of the "Colors and fonts" section in Settings > Themes. Quick CSS is custom CSS the user writes.
 #: src/features/theme_settings/components/ColorsAndFontsSection.tsx
@@ -8624,7 +8624,7 @@ msgstr "민감한 콘텐츠로 표시된 이미지 및 동영상을 어떻게 �
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
 msgid "Choose what happens when you use a persona trigger"
-msgstr "Persona 트리거 사용 시 발생하는 상황을 선택하세요"
+msgstr ""
 
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
 msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
@@ -10916,12 +10916,12 @@ msgstr "데이터 내보내기 다운로드에 실패했습니다"
 #. Title of the import progress modal.
 #: src/features/personas/components/modals/PersonaImportModal.tsx
 msgid "Could not get avatars"
-msgstr "아바타를 가져올 수 없습니다"
+msgstr ""
 
 #. Title of the import progress modal.
 #: src/features/personas/components/modals/PersonaImportModal.tsx
 msgid "Could not import personas"
-msgstr "Persona를 가져올 수 없습니다"
+msgstr ""
 
 #. Error shown when the setup wizard fails to load the instance configuration.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx
@@ -10936,7 +10936,7 @@ msgstr "이 페이지를 불러올 수 없습니다"
 #. Title of the import progress modal.
 #: src/features/personas/components/modals/PersonaImportModal.tsx
 msgid "Could not read file"
-msgstr "파일을 읽을 수 없습니다"
+msgstr ""
 
 #. Body of the modal shown when a screen share attempt fails. Advises the user to try sharing the full screen.
 #: src/features/voice/components/alerts/ScreenShareFailedModal.tsx
@@ -11858,7 +11858,7 @@ msgstr "커뮤니티 만들기 또는 참여하기"
 
 #: src/features/user/components/modals/tabs/PersonasTab.tsx
 msgid "Create Persona"
-msgstr "Persona 생성"
+msgstr ""
 
 #. Permission name in forum and media channel permissions. Lets members create posts.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
@@ -13131,6 +13131,10 @@ msgstr "이 메시지를 삭제할까요? 이 작업은 되돌릴 수 없습니�
 msgid "Delete this message? Can't be undone. This message is also removed from every community that follows this channel."
 msgstr "이 메시지를 삭제하시겠어요? 삭제하면 복구할 수 없습니다. 이 메시지는 팔로우하는 모든 커뮤니티에서도 삭제됩니다."
 
+#: src/features/user/components/modals/PersonaEditorModal.tsx
+msgid "Delete this persona?"
+msgstr ""
+
 #. Destructive moderator action that deletes a thread and all its messages.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "Delete thread"
@@ -13325,7 +13329,7 @@ msgstr "설명은 {discoveryDescriptionMaxLength}자를 초과할 수 없습니�
 
 #: src/features/personas/components/modals/PersonaImportModal.tsx
 msgid "Deselect all"
-msgstr "모두 해제"
+msgstr ""
 
 #. Developer settings tab showing UI component examples.
 #: src/features/user/components/settings_utils/SettingsConstants.tsx
@@ -14251,7 +14255,7 @@ msgstr "{deviceName} 다시 추천 안 함"
 #. Button or menu action label in the channel and chat persona bar. Keep it concise.
 #: src/features/channel/components/ChannelPersonaBar.tsx
 msgid "Don't use this persona"
-msgstr "이 Persona 사용 안 함"
+msgstr ""
 
 #. Settings menu entry that opens the donation page on the website, where people can give money to support Fluxer.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
@@ -14808,7 +14812,7 @@ msgstr "이 채널의 역할 및 멤버 권한을 수정합니다."
 #. The title of the persona editor modal.
 #: src/features/user/components/modals/PersonaEditorModal.tsx
 msgid "Edit Persona"
-msgstr "Persona 편집"
+msgstr ""
 
 #: src/features/app/components/floating/UserAreaPopout.tsx
 #: src/features/app/components/pages/YouPage.tsx
@@ -16949,7 +16953,7 @@ msgstr "멘션 필터링"
 #: src/features/personas/components/popouts/PersonaPickerPopout.tsx
 #: src/features/user/components/modals/tabs/PersonasTab.tsx
 msgid "Filter personas"
-msgstr "Personas 필터"
+msgstr ""
 
 #. Placeholder of the filter field in the outline of the quick CSS editor, which lists the CSS rules.
 #: src/features/theme_settings/components/QuickCssOutline.tsx
@@ -19776,7 +19780,7 @@ msgstr "더 가져오기"
 #. Title of the import progress modal.
 #: src/features/personas/components/modals/PersonaImportModal.tsx
 msgid "Import progress"
-msgstr "가져오기 진행 중"
+msgstr ""
 
 #. Accessible label for the import-template form element. Used by assistive tech only.
 #: src/features/guild/components/modals/add_guild_modal/shared.ts
@@ -19801,7 +19805,7 @@ msgstr "가져올 수 없음"
 
 #: src/features/user/components/modals/tabs/PersonasTab.tsx
 msgid "Import..."
-msgstr "가져오기..."
+msgstr ""
 
 #. Markdown alert label for an important callout when copied as plaintext.
 #. Short label in the messaging block elements. Keep it concise. Keep the tone plain and specific.
@@ -20286,7 +20290,7 @@ msgstr "인터페이스 크기"
 #. Label in the persona editor for a private name for a persona.
 #: src/features/user/components/modals/PersonaEditorModal.tsx
 msgid "Internal Name"
-msgstr "내부 이름"
+msgstr ""
 
 #. Error message in the use entrance sound.
 #: src/features/user/utils/UserMessageDescriptors.ts
@@ -21248,7 +21252,7 @@ msgstr "최근 사용"
 #. A label for the latching modes (trigger behavior) setting.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
 msgid "Last Used"
-msgstr "마지막 사용"
+msgstr ""
 
 #. Aria label on the signal-strength icon. {latency} is the integer millisecond latency.
 #: src/features/voice/components/SignalStrengthIcon.tsx
@@ -22147,12 +22151,12 @@ msgstr "나만의 스타일로 꾸미기"
 #. A tooltip for the button that activates a persona.
 #: src/features/user/components/modals/tabs/PersonasTab.tsx
 msgid "Make persona active"
-msgstr "Persona 활성화"
+msgstr ""
 
 #. A tooltip for the button that deactivates a persona.
 #: src/features/user/components/modals/tabs/PersonasTab.tsx
 msgid "Make persona not active"
-msgstr "Persona 비활성화"
+msgstr ""
 
 #. Shown above the code on the browser approval page when the app cannot be signed in automatically. PRODUCT_NAME is the app name, such as Fluxer.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx
@@ -22257,6 +22261,10 @@ msgstr "결제 수단 관리"
 msgid "Manage permissions"
 msgstr "권한 관리"
 
+#: src/features/personas/components/popouts/PersonaPickerPopout.tsx
+msgid "Manage Personas"
+msgstr ""
+
 #. Permission name in forum and media channel permissions. Lets members moderate posts.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "Manage posts"
@@ -22299,7 +22307,7 @@ msgstr "구독 관리"
 #. A label for the latching modes (trigger behavior) setting.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
 msgid "Manual"
-msgstr "수동"
+msgstr ""
 
 #. Modal title when automatic in-app desktop updates cannot be used.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -24171,7 +24179,7 @@ msgstr "내 그룹"
 #. Slate message that shows in the Personas tab when there are no personas.
 #: src/features/user/components/modals/tabs/PersonasTab.tsx
 msgid "My name is Darth Vader. I am an extra-terrestrial from the planet Vulcan!"
-msgstr "제 이름은 다스 베이더입니다. 저는 행성 벌컨 출신의 외계인입니다!"
+msgstr ""
 
 #. Label in the add custom search engine modal.
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx
@@ -24289,7 +24297,7 @@ msgstr "인스턴스 이름 짓기"
 #. Placeholder text to hint at what can be used to filter personas in the list.
 #: src/features/personas/components/popouts/PersonaPickerPopout.tsx
 msgid "Names, pronouns, or triggers"
-msgstr "이름, 대명사, 또는 트리거"
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
@@ -24547,7 +24555,7 @@ msgstr "새 비밀번호"
 #. The title of the persona editor modal when it's being used to create a new persona.
 #: src/features/user/components/modals/PersonaEditorModal.tsx
 msgid "New Persona"
-msgstr "새 Persona\","
+msgstr ""
 
 #. Button in a forum channel that opens the composer for a new post.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
@@ -25076,17 +25084,17 @@ msgstr "일치하는 권한이 없습니다"
 
 #: src/features/user/components/modals/tabs/LanguageTab.tsx
 msgid "No personal words yet."
-msgstr "아직 나만의 단어가 없어요."
+msgstr "아직 추가한 단어가 없어요."
 
 #. Slate title that shows in the Personas tab when there are no personas when filtered.
 #: src/features/user/components/modals/tabs/PersonasTab.tsx
 msgid "No personas found"
-msgstr "찾은 Persona가 없습니다"
+msgstr ""
 
 #. Slate title that shows in the Personas tab when there are no personas.
 #: src/features/user/components/modals/tabs/PersonasTab.tsx
 msgid "No personas yet"
-msgstr "아직 Personas가 없습니다\","
+msgstr ""
 
 #. Short label in the shared app channel pins content.
 #: src/features/app/components/shared/ChannelPinsContent.tsx
@@ -27721,22 +27729,32 @@ msgstr "신고하려는 사람"
 #. Short label in the persona editor. Keep it concise.
 #: src/features/user/components/modals/PersonaEditorModal.tsx
 msgid "Persona created"
-msgstr "Persona 생성됨\","
+msgstr ""
 
 #. Short label in the persona editor. Keep it concise.
 #: src/features/user/components/modals/PersonaEditorModal.tsx
 msgid "Persona deleted"
-msgstr "Persona 삭제됨\","
+msgstr ""
+
+#. Settings search entry label. Also used as a search synonym in the settings search bar.
+#: src/features/user/utils/UserMessageDescriptors.ts
+msgid "Persona tag"
+msgstr ""
+
+#. Explanation for persona tags.
+#: src/features/user/utils/UserMessageDescriptors.ts
+msgid "Persona tags display next to your personas to tie them together."
+msgstr ""
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
 msgid "Persona trigger behavior"
-msgstr "Persona 트리거 동작"
+msgstr ""
 
 #. Short label in the persona editor. Keep it concise.
 #: src/features/user/components/modals/PersonaEditorModal.tsx
 msgid "Persona updated"
-msgstr "Persona 업데이트됨\","
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/utils/UserMessageDescriptors.ts
@@ -27760,11 +27778,11 @@ msgstr "개인 노트가 이미 비어 있습니다"
 #: src/features/user/components/settings_utils/SettingsConstants.tsx
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Personas"
-msgstr "Personas"
+msgstr ""
 
 #: src/features/user/components/modals/tabs/PersonasTab.tsx
 msgid "Personas are reusable profiles that you can attach to messages."
-msgstr "Personas는 메시지에 첨부할 수 있는 재사용 가능한 프로필입니다."
+msgstr ""
 
 #. Keyboard shortcut keycap label for Page Down. Keep the abbreviation compact.
 #: src/features/ui/keybind_hint/KeybindHint.tsx
@@ -28310,7 +28328,7 @@ msgstr "동작 줄이기 선호"
 #. Label in the persona editor for the message prefixes and suffixes that trigger a persona for a message.
 #: src/features/user/components/modals/PersonaEditorModal.tsx
 msgid "Prefix"
-msgstr "접두사"
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts
@@ -28364,7 +28382,7 @@ msgstr "준비 중"
 
 #: src/features/personas/components/modals/PersonaImportModal.tsx
 msgid "Preparing avatars and banners..."
-msgstr "아바타 및 배너 준비 중..."
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts
@@ -29287,7 +29305,7 @@ msgstr "푸시 릴레이 개인정보 고지 읽기"
 
 #: src/features/personas/components/modals/PersonaImportModal.tsx
 msgid "Reading file..."
-msgstr "파일 읽는 중..."
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts
@@ -32497,11 +32515,11 @@ msgstr "CSS에 규칙을 추가할 항목을 선택하세요."
 #. Tooltip for the persona selection button
 #: src/features/personas/components/PersonaPickerComposerButton.tsx
 msgid "Select persona"
-msgstr "Persona 선택"
+msgstr ""
 
 #: src/features/personas/components/modals/PersonaImportModal.tsx
 msgid "Select personas to import"
-msgstr "가져올 Persona 선택"
+msgstr ""
 
 #. Accessible label for the regional format picker in the language settings. Keep it concise.
 #: src/features/user/components/modals/tabs/LanguageTab.tsx
@@ -32871,7 +32889,7 @@ msgstr "이 커뮤니티에서는 메시지 전송이 비활성화되어 있습�
 #. placeholder {0}: persona.display_name || persona.internal_name
 #: src/features/channel/components/ChannelPersonaBar.tsx
 msgid "Sending this message as <0/> <1>{0}</1>"
-msgstr "이 메시지를 <0/> <1>{0}</1>로(으로) 전송합니다"
+msgstr ""
 
 #. Description for the stereo microphone switch in the voice settings.
 #: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts
@@ -34106,7 +34124,7 @@ msgstr "음성 메뉴에서 기기별 참여자 볼륨 슬라이더 표시"
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
 msgid "Show persona button"
-msgstr "Persona 버튼 표시"
+msgstr ""
 
 #. Toggle label and settings search entry for showing the Plutonium button in the direct messages list. Plutonium is the product name.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
@@ -34210,7 +34228,7 @@ msgstr "트레이 아이콘 표시"
 #. A label for the latching modes (trigger behavior) setting.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
 msgid "Show trigger behavior slider in persona picker"
-msgstr "Persona 선택 창에서 트리거 동작 슬라이더 표시"
+msgstr ""
 
 #. Label in the interface tab.
 #: src/features/user/components/modals/tabs/appearance_tab/InterfaceTab.tsx
@@ -36193,7 +36211,7 @@ msgstr "성공"
 #. Label in the persona editor for the message prefixes and suffixes that trigger a persona for a message.
 #: src/features/user/components/modals/PersonaEditorModal.tsx
 msgid "Suffix"
-msgstr "접미사"
+msgstr ""
 
 #. Accessible label for the row of suggested theme colors in the setup wizard branding step.
 #: src/features/app/components/setup/SetupBrandingFields.tsx
@@ -38423,7 +38441,7 @@ msgstr "세 번째 옵션 설명입니다"
 #. Tooltip on the crown icon on the persona entry that represents your main account.
 #: src/features/personas/components/popouts/PersonaPickerPopout.tsx
 msgid "This is your account."
-msgstr "이 계정은 귀하의 계정입니다."
+msgstr ""
 
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
 msgid "This is your last passkey and passkeys are your second factor. Deleting it turns off two-factor authentication for your account, and your current backup codes will stop working."
@@ -38549,7 +38567,7 @@ msgstr "이 메시지는 더 이상 존재하지 않습니다."
 
 #: src/features/user/components/modals/PersonaEditorModal.tsx
 msgid "This name stays private, and only appears in lists of your own personas."
-msgstr "이 이름은 비공개로 유지되며 자신의 Persona 목록에만 표시됩니다."
+msgstr ""
 
 #. Label in the my profile tab.
 #: src/features/user/components/modals/tabs/MyProfileTab.tsx
@@ -39475,12 +39493,12 @@ msgstr "React 충돌 유발"
 #. Label in the persona editor for the message prefixes and suffixes that trigger a persona for a message.
 #: src/features/user/components/modals/PersonaEditorModal.tsx
 msgid "Triggers"
-msgstr "트리거"
+msgstr ""
 
 #. A label for the latching modes (trigger behavior) setting.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
 msgid "Triggers don't do anything."
-msgstr "트리거는 아무 동작도 하지 않습니다."
+msgstr ""
 
 #. Title of the modal that lets the user crop a long audio file down to the entrance sound length cap.
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx
@@ -39593,7 +39611,7 @@ msgstr "다른 검색어 또는 필터를 사용해 보세요"
 #. Slate message that shows in the Personas tab when there are no personas when filtered.
 #: src/features/user/components/modals/tabs/PersonasTab.tsx
 msgid "Try a different search, or check your spelling."
-msgstr "다른 검색어를 시도하거나 철자를 확인해 보세요."
+msgstr ""
 
 #. Label in the channel and chat mobile stickers picker.
 #: src/features/channel/components/MobileStickersPicker.tsx
@@ -41166,7 +41184,7 @@ msgstr "이모티콘 업로드 중"
 
 #: src/features/personas/components/modals/PersonaImportModal.tsx
 msgid "Uploading to server..."
-msgstr "서버에 업로드 중..."
+msgstr ""
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -42272,7 +42290,7 @@ msgstr "수신 전화 보기"
 #: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx
 #: src/features/user/components/profile/PersonaProfile.tsx
 msgid "View main profile"
-msgstr "기본 프로필 보기"
+msgstr ""
 
 #. Button on the connection banner when maintenance is ongoing. Opens that maintenance on the status page.
 #: src/features/app/hooks/useConnectionNotice.ts
@@ -43873,6 +43891,11 @@ msgstr "계정 하나에 둘 수 있는 연결 수가 이미 최대입니다. �
 msgid "You already have this connection."
 msgstr "이미 연결된 계정입니다."
 
+#. placeholder {0}: savedPersona.internal_name
+#: src/features/user/components/modals/PersonaEditorModal.tsx
+msgid "You are about to delete {0}. Are you sure this is what you want to do?"
+msgstr ""
+
 #. External link warning title. productName is the Fluxer product name.
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx
 msgid "You are about to leave {productName}"
@@ -44002,7 +44025,7 @@ msgstr "{date}까지 {amount}을(를) 전액 돌려받을 수 있으며, 구독�
 #. A list of supported import formats. The names of each format should remain untranslated since they are proper nouns.
 #: src/features/user/components/modals/tabs/PersonasTab.tsx
 msgid "You can import JSON files exported from Pluralkit, Tupperbox, /plu/ral, Fishing Bucket, or anything that exports to a compatible format."
-msgstr "Pluralkit, Tupperbox, /plu/ral, Fishing Bucket 또는 호환 가능한 형식으로 내보낸 모든 것에서 내보낸 JSON 파일을 가져올 수 있습니다."
+msgstr ""
 
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx
 msgid "You can now close this tab and return to the app."

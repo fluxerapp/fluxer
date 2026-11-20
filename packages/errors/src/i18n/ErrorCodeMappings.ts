@@ -249,7 +249,6 @@ export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.MAX_GUILD_ROLES]: 'channels_and_guilds.max_guild_roles_reached',
 	[APIErrorCodes.MAX_GUILDS]: 'channels_and_guilds.max_guilds_reached',
 	[APIErrorCodes.MAX_INVITES]: 'misc_limits.max_invites_reached',
-	[APIErrorCodes.MAX_PERSONAS]: 'misc_limits.max_personas_reached',
 	[APIErrorCodes.MAX_REACTIONS]: 'stickers_and_emojis.max_reactions_reached',
 	[APIErrorCodes.MAX_STICKERS]: 'stickers_and_emojis.max_stickers_reached',
 	[APIErrorCodes.MAX_WEBHOOKS_PER_CHANNEL]: 'webhooks.max_webhooks_per_channel_reached',
@@ -506,10 +505,6 @@ export const ErrorCodeToI18nKey = {
 	[ValidationErrorCodes.BIO_CHANGED_TOO_MANY_TIMES]: 'rate_limits.bio_changed_too_often',
 	[ValidationErrorCodes.PRONOUNS_CHANGED_TOO_MANY_TIMES]: 'rate_limits.pronouns_changed_too_often',
 	[ValidationErrorCodes.USERNAME_CHANGED_TOO_MANY_TIMES]: 'rate_limits.username_changed_too_often',
-	[ValidationErrorCodes.PERSONA_TAG_CHANGED_TOO_MANY_TIMES]: 'rate_limits.persona_tag_changed_too_often',
-	[ValidationErrorCodes.PERSONA_TAG_CANNOT_CONTAIN_RESERVED_TERMS]: 'usernames_and_tags.persona_tag_reserved_terms',
-	[ValidationErrorCodes.PERSONA_TAG_LENGTH_INVALID]: 'usernames_and_tags.persona_tag_length_invalid',
-	[ValidationErrorCodes.PERSONA_TAG_RESERVED_VALUE]: 'usernames_and_tags.persona_tag_reserved_value',
 	[ValidationErrorCodes.VOICE_ACTIVITY_SHARING_ON_COOLDOWN]: 'rate_limits.voice_activity_sharing_on_cooldown',
 	[ValidationErrorCodes.CHANGING_DISCRIMINATOR_REQUIRES_PREMIUM]:
 		'premium_and_plans.discriminator_change_requires_premium',

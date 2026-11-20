@@ -64,7 +64,7 @@ msgstr "{0, plural, one {# thành viên} other {# thành viên}}"
 #. placeholder {0}: props.value
 #: src/features/personas/components/modals/PersonaImportModal.tsx
 msgid "{0} personas imported successfully"
-msgstr "{0} Personas được nhập thành công"
+msgstr ""
 
 #. Screen reader announcement in the composer when two people are typing. {a} and {b} are their display names.
 #: src/features/typing/rolling/RollingTypingText.tsx
@@ -2902,7 +2902,7 @@ msgstr "một phần mở rộng tệp, ví dụ: png"
 #. Description for has:forward. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts
 msgid "a forwarded message"
-msgstr "một tin nhắn đã chuyển tiếp"
+msgstr "một tin nhắn được chuyển tiếp"
 
 #. Description text in the bot profile section.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/BotProfileSection.tsx
@@ -2991,12 +2991,12 @@ msgstr "một nhãn dán"
 #. A label for the latching modes (trigger behavior) setting.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
 msgid "A trigger sends a message with its persona, but the active persona doesn't change."
-msgstr "Một trình kích hoạt gửi một tin nhắn hiển thị Persona, nhưng Persona đang hoạt động không thay đổi."
+msgstr ""
 
 #. A label for the latching modes (trigger behavior) setting.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
 msgid "A trigger sets its persona as active until the active persona is changed. This may also be called \"latching\"."
-msgstr "Một trình kích hoạt đặt Persona của nó thành đang hoạt động cho đến khi Persona đang hoạt động bị thay đổi. Điều này cũng có thể được gọi là \"latching\"."
+msgstr ""
 
 #. Description for has:link. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts
@@ -4004,7 +4004,7 @@ msgstr "Thêm trình dịch"
 
 #: src/features/user/components/modals/PersonaEditorModal.tsx
 msgid "Add trigger"
-msgstr "Thêm trigger"
+msgstr ""
 
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx
 msgid "Add your own reverse image search providers with a custom URL pattern. Use <0>{url}</0> as a placeholder for the image URL."
@@ -4787,7 +4787,7 @@ msgstr "Số tiền"
 #. Title of the import progress modal.
 #: src/features/personas/components/modals/PersonaImportModal.tsx
 msgid "An error occurred"
-msgstr "Đã xảy ra lỗi"
+msgstr ""
 
 #. Fallback error message shown when the channel search request fails for an unknown reason.
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx
@@ -7665,7 +7665,7 @@ msgstr "Biểu mẫu đổi mật khẩu"
 #. Generic action label that opens the persona picker.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Change persona"
-msgstr "Thay đổi Persona"
+msgstr ""
 
 #. Description of the "Colors and fonts" section in Settings > Themes. Quick CSS is custom CSS the user writes.
 #: src/features/theme_settings/components/ColorsAndFontsSection.tsx
@@ -8624,7 +8624,7 @@ msgstr "Chọn những gì xảy ra với ảnh và video bị gắn cờ là nh
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
 msgid "Choose what happens when you use a persona trigger"
-msgstr "Chọn những gì xảy ra khi bạn sử dụng trình kích hoạt Persona"
+msgstr ""
 
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
 msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
@@ -10916,12 +10916,12 @@ msgstr "Không thể tải xuống dữ liệu đã xuất của bạn"
 #. Title of the import progress modal.
 #: src/features/personas/components/modals/PersonaImportModal.tsx
 msgid "Could not get avatars"
-msgstr "Không thể lấy hình đại diện"
+msgstr ""
 
 #. Title of the import progress modal.
 #: src/features/personas/components/modals/PersonaImportModal.tsx
 msgid "Could not import personas"
-msgstr "Không thể nhập Personas"
+msgstr ""
 
 #. Error shown when the setup wizard fails to load the instance configuration.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx
@@ -10936,7 +10936,7 @@ msgstr "Không thể tải trang này"
 #. Title of the import progress modal.
 #: src/features/personas/components/modals/PersonaImportModal.tsx
 msgid "Could not read file"
-msgstr "Không thể đọc tệp"
+msgstr ""
 
 #. Body of the modal shown when a screen share attempt fails. Advises the user to try sharing the full screen.
 #: src/features/voice/components/alerts/ScreenShareFailedModal.tsx
@@ -11858,7 +11858,7 @@ msgstr "Tạo hoặc tham gia cộng đồng"
 
 #: src/features/user/components/modals/tabs/PersonasTab.tsx
 msgid "Create Persona"
-msgstr "Tạo Persona"
+msgstr ""
 
 #. Permission name in forum and media channel permissions. Lets members create posts.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
@@ -13131,6 +13131,10 @@ msgstr "Xóa tin nhắn này? Không thể hoàn tác."
 msgid "Delete this message? Can't be undone. This message is also removed from every community that follows this channel."
 msgstr "Xóa tin nhắn này? Không thể hoàn tác. Tin nhắn này cũng sẽ bị xóa khỏi mọi cộng đồng đang theo dõi kênh này."
 
+#: src/features/user/components/modals/PersonaEditorModal.tsx
+msgid "Delete this persona?"
+msgstr ""
+
 #. Destructive moderator action that deletes a thread and all its messages.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "Delete thread"
@@ -13325,7 +13329,7 @@ msgstr "Mô tả không được dài quá {discoveryDescriptionMaxLength} ký t
 
 #: src/features/personas/components/modals/PersonaImportModal.tsx
 msgid "Deselect all"
-msgstr "Bỏ chọn tất cả"
+msgstr ""
 
 #. Developer settings tab showing UI component examples.
 #: src/features/user/components/settings_utils/SettingsConstants.tsx
@@ -14251,7 +14255,7 @@ msgstr "Không gợi ý {deviceName} nữa"
 #. Button or menu action label in the channel and chat persona bar. Keep it concise.
 #: src/features/channel/components/ChannelPersonaBar.tsx
 msgid "Don't use this persona"
-msgstr "Không sử dụng Persona này"
+msgstr ""
 
 #. Settings menu entry that opens the donation page on the website, where people can give money to support Fluxer.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
@@ -14808,7 +14812,7 @@ msgstr "Chỉnh sửa quyền ghi đè cho vai trò và thành viên trong kênh
 #. The title of the persona editor modal.
 #: src/features/user/components/modals/PersonaEditorModal.tsx
 msgid "Edit Persona"
-msgstr "Chỉnh sửa Persona"
+msgstr ""
 
 #: src/features/app/components/floating/UserAreaPopout.tsx
 #: src/features/app/components/pages/YouPage.tsx
@@ -16949,7 +16953,7 @@ msgstr "Lọc lượt nhắc đến"
 #: src/features/personas/components/popouts/PersonaPickerPopout.tsx
 #: src/features/user/components/modals/tabs/PersonasTab.tsx
 msgid "Filter personas"
-msgstr "Lọc Personas"
+msgstr ""
 
 #. Placeholder of the filter field in the outline of the quick CSS editor, which lists the CSS rules.
 #: src/features/theme_settings/components/QuickCssOutline.tsx
@@ -19776,7 +19780,7 @@ msgstr "Nhập thêm"
 #. Title of the import progress modal.
 #: src/features/personas/components/modals/PersonaImportModal.tsx
 msgid "Import progress"
-msgstr "Tiến độ nhập"
+msgstr ""
 
 #. Accessible label for the import-template form element. Used by assistive tech only.
 #: src/features/guild/components/modals/add_guild_modal/shared.ts
@@ -19801,7 +19805,7 @@ msgstr "Không thể nhập"
 
 #: src/features/user/components/modals/tabs/PersonasTab.tsx
 msgid "Import..."
-msgstr "Nhập..."
+msgstr ""
 
 #. Markdown alert label for an important callout when copied as plaintext.
 #. Short label in the messaging block elements. Keep it concise. Keep the tone plain and specific.
@@ -20286,7 +20290,7 @@ msgstr "Cỡ giao diện"
 #. Label in the persona editor for a private name for a persona.
 #: src/features/user/components/modals/PersonaEditorModal.tsx
 msgid "Internal Name"
-msgstr "Tên nội bộ"
+msgstr ""
 
 #. Error message in the use entrance sound.
 #: src/features/user/utils/UserMessageDescriptors.ts
@@ -21248,7 +21252,7 @@ msgstr "Lần sử dụng cuối cùng"
 #. A label for the latching modes (trigger behavior) setting.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
 msgid "Last Used"
-msgstr "Lần sử dụng cuối"
+msgstr ""
 
 #. Aria label on the signal-strength icon. {latency} is the integer millisecond latency.
 #: src/features/voice/components/SignalStrengthIcon.tsx
@@ -22147,12 +22151,12 @@ msgstr "Làm cho nó mang phong cách của bạn"
 #. A tooltip for the button that activates a persona.
 #: src/features/user/components/modals/tabs/PersonasTab.tsx
 msgid "Make persona active"
-msgstr "Kích hoạt Persona"
+msgstr ""
 
 #. A tooltip for the button that deactivates a persona.
 #: src/features/user/components/modals/tabs/PersonasTab.tsx
 msgid "Make persona not active"
-msgstr "Hủy kích hoạt Persona"
+msgstr ""
 
 #. Shown above the code on the browser approval page when the app cannot be signed in automatically. PRODUCT_NAME is the app name, such as Fluxer.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx
@@ -22257,6 +22261,10 @@ msgstr "Quản lý phương thức thanh toán"
 msgid "Manage permissions"
 msgstr "Quản lý quyền"
 
+#: src/features/personas/components/popouts/PersonaPickerPopout.tsx
+msgid "Manage Personas"
+msgstr ""
+
 #. Permission name in forum and media channel permissions. Lets members moderate posts.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "Manage posts"
@@ -22299,7 +22307,7 @@ msgstr "Quản lý gói đăng ký của bạn"
 #. A label for the latching modes (trigger behavior) setting.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
 msgid "Manual"
-msgstr "Thủ công"
+msgstr ""
 
 #. Modal title when automatic in-app desktop updates cannot be used.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -24171,7 +24179,7 @@ msgstr "Nhóm của tôi"
 #. Slate message that shows in the Personas tab when there are no personas.
 #: src/features/user/components/modals/tabs/PersonasTab.tsx
 msgid "My name is Darth Vader. I am an extra-terrestrial from the planet Vulcan!"
-msgstr "Tên tôi là Darth Vader. Tôi là một sinh vật ngoài hành tinh từ hành tinh Vulcan!"
+msgstr ""
 
 #. Label in the add custom search engine modal.
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx
@@ -24289,7 +24297,7 @@ msgstr "Đặt tên cho máy chủ của bạn"
 #. Placeholder text to hint at what can be used to filter personas in the list.
 #: src/features/personas/components/popouts/PersonaPickerPopout.tsx
 msgid "Names, pronouns, or triggers"
-msgstr "Tên, đại từ hoặc kích hoạt"
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
@@ -24547,7 +24555,7 @@ msgstr "Mật khẩu mới"
 #. The title of the persona editor modal when it's being used to create a new persona.
 #: src/features/user/components/modals/PersonaEditorModal.tsx
 msgid "New Persona"
-msgstr "Persona mới"
+msgstr ""
 
 #. Button in a forum channel that opens the composer for a new post.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
@@ -25081,12 +25089,12 @@ msgstr "Chưa có từ cá nhân nào."
 #. Slate title that shows in the Personas tab when there are no personas when filtered.
 #: src/features/user/components/modals/tabs/PersonasTab.tsx
 msgid "No personas found"
-msgstr "Không tìm thấy Personas nào"
+msgstr ""
 
 #. Slate title that shows in the Personas tab when there are no personas.
 #: src/features/user/components/modals/tabs/PersonasTab.tsx
 msgid "No personas yet"
-msgstr "Chưa có Personas nào"
+msgstr ""
 
 #. Short label in the shared app channel pins content.
 #: src/features/app/components/shared/ChannelPinsContent.tsx
@@ -27721,22 +27729,32 @@ msgstr "Người bạn đang báo cáo"
 #. Short label in the persona editor. Keep it concise.
 #: src/features/user/components/modals/PersonaEditorModal.tsx
 msgid "Persona created"
-msgstr "Đã tạo Persona"
+msgstr ""
 
 #. Short label in the persona editor. Keep it concise.
 #: src/features/user/components/modals/PersonaEditorModal.tsx
 msgid "Persona deleted"
-msgstr "Đã xóa Persona"
+msgstr ""
+
+#. Settings search entry label. Also used as a search synonym in the settings search bar.
+#: src/features/user/utils/UserMessageDescriptors.ts
+msgid "Persona tag"
+msgstr ""
+
+#. Explanation for persona tags.
+#: src/features/user/utils/UserMessageDescriptors.ts
+msgid "Persona tags display next to your personas to tie them together."
+msgstr ""
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
 msgid "Persona trigger behavior"
-msgstr "Hành vi trình kích hoạt Persona"
+msgstr ""
 
 #. Short label in the persona editor. Keep it concise.
 #: src/features/user/components/modals/PersonaEditorModal.tsx
 msgid "Persona updated"
-msgstr "Persona đã cập nhật"
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/utils/UserMessageDescriptors.ts
@@ -27760,11 +27778,11 @@ msgstr "Ghi chú cá nhân vốn đã trống"
 #: src/features/user/components/settings_utils/SettingsConstants.tsx
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Personas"
-msgstr "Personas"
+msgstr ""
 
 #: src/features/user/components/modals/tabs/PersonasTab.tsx
 msgid "Personas are reusable profiles that you can attach to messages."
-msgstr "Personas là các danh tính có thể tái sử dụng mà bạn có thể đính kèm vào tin nhắn."
+msgstr ""
 
 #. Keyboard shortcut keycap label for Page Down. Keep the abbreviation compact.
 #: src/features/ui/keybind_hint/KeybindHint.tsx
@@ -28310,7 +28328,7 @@ msgstr "Ưu tiên giảm chuyển động"
 #. Label in the persona editor for the message prefixes and suffixes that trigger a persona for a message.
 #: src/features/user/components/modals/PersonaEditorModal.tsx
 msgid "Prefix"
-msgstr "Tiền tố"
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts
@@ -28364,7 +28382,7 @@ msgstr "Đang chuẩn bị"
 
 #: src/features/personas/components/modals/PersonaImportModal.tsx
 msgid "Preparing avatars and banners..."
-msgstr "Đang chuẩn bị hình đại diện và biểu ngữ..."
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts
@@ -29287,7 +29305,7 @@ msgstr "Đọc thông báo quyền riêng tư của bộ chuyển tiếp thông 
 
 #: src/features/personas/components/modals/PersonaImportModal.tsx
 msgid "Reading file..."
-msgstr "Đang đọc tệp..."
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts
@@ -32497,11 +32515,11 @@ msgstr "Chọn một để thêm quy tắc cho nó vào CSS của bạn."
 #. Tooltip for the persona selection button
 #: src/features/personas/components/PersonaPickerComposerButton.tsx
 msgid "Select persona"
-msgstr "Chọn Persona"
+msgstr ""
 
 #: src/features/personas/components/modals/PersonaImportModal.tsx
 msgid "Select personas to import"
-msgstr "Chọn Personas để nhập"
+msgstr ""
 
 #. Accessible label for the regional format picker in the language settings. Keep it concise.
 #: src/features/user/components/modals/tabs/LanguageTab.tsx
@@ -32871,7 +32889,7 @@ msgstr "Đã tắt tính năng gửi tin nhắn trong cộng đồng này"
 #. placeholder {0}: persona.display_name || persona.internal_name
 #: src/features/channel/components/ChannelPersonaBar.tsx
 msgid "Sending this message as <0/> <1>{0}</1>"
-msgstr "Đang gửi tin nhắn này với tư cách <0/> <1>{0}</1>"
+msgstr ""
 
 #. Description for the stereo microphone switch in the voice settings.
 #: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts
@@ -34106,7 +34124,7 @@ msgstr "Hiển thị thanh trượt âm lượng người tham gia theo từng t
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
 msgid "Show persona button"
-msgstr "Hiện nút Persona"
+msgstr ""
 
 #. Toggle label and settings search entry for showing the Plutonium button in the direct messages list. Plutonium is the product name.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
@@ -34210,7 +34228,7 @@ msgstr "Hiện biểu tượng trên khay hệ thống"
 #. A label for the latching modes (trigger behavior) setting.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
 msgid "Show trigger behavior slider in persona picker"
-msgstr "Hiển thị thanh trượt hành vi trình kích hoạt trong bộ chọn Persona"
+msgstr ""
 
 #. Label in the interface tab.
 #: src/features/user/components/modals/tabs/appearance_tab/InterfaceTab.tsx
@@ -36193,7 +36211,7 @@ msgstr "Thành công"
 #. Label in the persona editor for the message prefixes and suffixes that trigger a persona for a message.
 #: src/features/user/components/modals/PersonaEditorModal.tsx
 msgid "Suffix"
-msgstr "Hậu tố"
+msgstr ""
 
 #. Accessible label for the row of suggested theme colors in the setup wizard branding step.
 #: src/features/app/components/setup/SetupBrandingFields.tsx
@@ -38423,7 +38441,7 @@ msgstr "Đây là mô tả của lựa chọn thứ ba"
 #. Tooltip on the crown icon on the persona entry that represents your main account.
 #: src/features/personas/components/popouts/PersonaPickerPopout.tsx
 msgid "This is your account."
-msgstr "Đây là tài khoản của bạn."
+msgstr ""
 
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
 msgid "This is your last passkey and passkeys are your second factor. Deleting it turns off two-factor authentication for your account, and your current backup codes will stop working."
@@ -38549,7 +38567,7 @@ msgstr "Tin nhắn này không còn tồn tại."
 
 #: src/features/user/components/modals/PersonaEditorModal.tsx
 msgid "This name stays private, and only appears in lists of your own personas."
-msgstr "Tên này được giữ riêng tư và chỉ xuất hiện trong danh sách Personas của bạn."
+msgstr ""
 
 #. Label in the my profile tab.
 #: src/features/user/components/modals/tabs/MyProfileTab.tsx
@@ -39475,12 +39493,12 @@ msgstr "Kích hoạt lỗi React"
 #. Label in the persona editor for the message prefixes and suffixes that trigger a persona for a message.
 #: src/features/user/components/modals/PersonaEditorModal.tsx
 msgid "Triggers"
-msgstr "Trình kích hoạt"
+msgstr ""
 
 #. A label for the latching modes (trigger behavior) setting.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
 msgid "Triggers don't do anything."
-msgstr "Trình kích hoạt không làm gì."
+msgstr ""
 
 #. Title of the modal that lets the user crop a long audio file down to the entrance sound length cap.
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx
@@ -39593,7 +39611,7 @@ msgstr "Thử từ khóa hoặc bộ lọc khác"
 #. Slate message that shows in the Personas tab when there are no personas when filtered.
 #: src/features/user/components/modals/tabs/PersonasTab.tsx
 msgid "Try a different search, or check your spelling."
-msgstr "Thử tìm kiếm khác hoặc kiểm tra chính tả của bạn."
+msgstr ""
 
 #. Label in the channel and chat mobile stickers picker.
 #: src/features/channel/components/MobileStickersPicker.tsx
@@ -41166,7 +41184,7 @@ msgstr "Đang tải biểu tượng cảm xúc lên"
 
 #: src/features/personas/components/modals/PersonaImportModal.tsx
 msgid "Uploading to server..."
-msgstr "Đang tải lên máy chủ..."
+msgstr ""
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -42272,7 +42290,7 @@ msgstr "Xem cuộc gọi đến"
 #: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx
 #: src/features/user/components/profile/PersonaProfile.tsx
 msgid "View main profile"
-msgstr "Xem hồ sơ chính"
+msgstr ""
 
 #. Button on the connection banner when maintenance is ongoing. Opens that maintenance on the status page.
 #: src/features/app/hooks/useConnectionNotice.ts
@@ -43873,6 +43891,11 @@ msgstr "Bạn đã có số kết nối tối đa mà một tài khoản có th�
 msgid "You already have this connection."
 msgstr "Bạn đã có kết nối này rồi."
 
+#. placeholder {0}: savedPersona.internal_name
+#: src/features/user/components/modals/PersonaEditorModal.tsx
+msgid "You are about to delete {0}. Are you sure this is what you want to do?"
+msgstr ""
+
 #. External link warning title. productName is the Fluxer product name.
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx
 msgid "You are about to leave {productName}"
@@ -44002,7 +44025,7 @@ msgstr "Bạn có thể nhận lại toàn bộ {amount} đến hết {date}. Vi
 #. A list of supported import formats. The names of each format should remain untranslated since they are proper nouns.
 #: src/features/user/components/modals/tabs/PersonasTab.tsx
 msgid "You can import JSON files exported from Pluralkit, Tupperbox, /plu/ral, Fishing Bucket, or anything that exports to a compatible format."
-msgstr "Bạn có thể nhập các tệp JSON được xuất từ Pluralkit, Tupperbox, /plu/ral, Fishing Bucket hoặc bất kỳ thứ gì xuất sang định dạng tương thích."
+msgstr ""
 
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx
 msgid "You can now close this tab and return to the app."
