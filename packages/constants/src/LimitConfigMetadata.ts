@@ -383,7 +383,7 @@ export const LIMIT_KEY_METADATA: Record<LimitKey, LimitKeyMetadata> = {
 		key: 'max_attachment_file_size',
 		label: 'Max Attachment File Size',
 		description:
-			'Maximum size of each attachment file. The upload relay limit FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES applies to each upload part, so it only matters for files above about 10 GB',
+			'Maximum size of each attachment file. The upload relay limit FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES applies to each upload part. Parts are at most 64 MiB until a file needs more than 10,000 parts, so with the default limit it only matters for files above about 4.8 TiB',
 		category: 'files',
 		scope: 'both',
 		isToggle: false,
