@@ -11,6 +11,7 @@ import {
 	CollapsedCategoryVoiceParticipants,
 	CollapsedChannelAvatarStack,
 } from '@app/features/app/components/layout/CollapsedCategoryVoiceParticipants';
+import {useStaleDragRecovery} from '@app/features/app/components/layout/dnd/useStaleDragRecovery';
 import {GenericChannelItem} from '@app/features/app/components/layout/GenericChannelItem';
 import {GuildDetachedBanner} from '@app/features/app/components/layout/GuildDetachedBanner';
 import {NullSpaceDropIndicator} from '@app/features/app/components/layout/NullSpaceDropIndicator';
@@ -190,6 +191,8 @@ export const ChannelListContent = observer(({guild, scrollY, banner}: ChannelLis
 		);
 	});
 	const [activeDragItem, setActiveDragItem] = useState<DragItem | null>(null);
+	const clearActiveDragItem = useCallback(() => setActiveDragItem(null), []);
+	useStaleDragRecovery(isDraggingAnything || activeDragItem != null, clearActiveDragItem);
 	const scrollerRef = useRef<ScrollerHandle>(null);
 	const showIntegratedBanner = banner.collapsible;
 	const channelGroupsContainerRef = useRef<HTMLDivElement | null>(null);

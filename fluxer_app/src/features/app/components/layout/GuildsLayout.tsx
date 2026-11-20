@@ -11,6 +11,7 @@ import {
 	consumeDirectSelection,
 	DirectSelectionSurface,
 } from '@app/features/app/components/layout/DirectSelectionOrigin';
+import {useStaleDragRecovery} from '@app/features/app/components/layout/dnd/useStaleDragRecovery';
 import type {
 	FloatingUnreadTarget,
 	FloatingUnreadTargetBounds,
@@ -1732,9 +1733,29 @@ const GuildList = observer(() => {
 		},
 		[organizedItems],
 	);
-	const handleDragStateChange = useCallback((item: GuildDragItem | null) => {
-		setActiveDragItem(item);
+	const dragStartFrameRef = useRef<number | null>(null);
+	const cancelDragStartFrame = useCallback(() => {
+		if (dragStartFrameRef.current == null) return;
+		window.cancelAnimationFrame(dragStartFrameRef.current);
+		dragStartFrameRef.current = null;
 	}, []);
+	const handleDragStateChange = useCallback(
+		(item: GuildDragItem | null) => {
+			cancelDragStartFrame();
+			if (item == null) {
+				setActiveDragItem(null);
+				return;
+			}
+			dragStartFrameRef.current = window.requestAnimationFrame(() => {
+				dragStartFrameRef.current = null;
+				setActiveDragItem(item);
+			});
+		},
+		[cancelDragStartFrame],
+	);
+	useEffect(() => cancelDragStartFrame, [cancelDragStartFrame]);
+	const clearActiveDragItem = useCallback(() => handleDragStateChange(null), [handleDragStateChange]);
+	useStaleDragRecovery(isDragging, clearActiveDragItem);
 	const guildNavigationRows = useMemo(
 		() =>
 			createGuildNavigationRows({
