@@ -13,6 +13,7 @@ import {
 } from '@app/features/moderation/constants/BanDeleteMessageOptions';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {User} from '@app/features/user/models/User';
+import Personas from '@app/features/user/state/Personas';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {FLUXERBOT_ID} from '@fluxer/constants/src/AppConstants';
@@ -22,6 +23,7 @@ import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
 const USER_MENTION_REGEX = /<@!?(\d+)>/;
+const MARKDOWN_FORMATTING_REGEX = /([*_~`])/g;
 const logger = new Logger('CommandUtils');
 const localCurrentUserNicknames = new Map<string, string | null>();
 const UNKNOWN_USER_DESCRIPTOR = msg({
@@ -32,6 +34,17 @@ const NICKNAME_CHANGED_DESCRIPTOR = msg({
 	message: 'You changed your nickname in this community from **{previousNickname}** to **{newNickname}**.',
 	comment:
 		'Local system message after the user changes their community nickname with a slash command. The bold markdown markers should remain around the two names.',
+});
+
+const PERSONA_ACTIVATED_DESCRIPTOR = msg({
+	message: 'Active persona set to **{persona}**.',
+	comment:
+		'Local system message after the user changes their active persona with a slash command. The bold markdown markers should remain around the name.',
+});
+const PERSONA_DEACTIVATED_DESCRIPTOR = msg({
+	message: 'All personas deactivated.',
+	comment:
+		'Local system message after the user changes their active persona with a slash command. The bold markdown markers should remain around the name.',
 });
 
 export type ParsedCommand =
@@ -71,6 +84,10 @@ export type ParsedCommand =
 	| {
 			type: 'saved' | 'sticker' | 'gif';
 			query: string;
+	  }
+	| {
+			type: 'persona';
+			persona: string;
 	  }
 	| {
 			type: 'unknown';
@@ -161,6 +178,13 @@ export function parseCommand(content: string): ParsedCommand {
 			return {type, query};
 		}
 	}
+	if (trimmed === '/persona') {
+		return {type: 'persona', persona: ''};
+	}
+	if (trimmed.startsWith('/persona ')) {
+		const persona = trimmed.slice(12).trim();
+		return {type: 'persona', persona};
+	}
 	return {type: 'unknown'};
 }
 
@@ -198,6 +222,7 @@ export function isCommand(content: string): boolean {
 		trimmed.startsWith('/sticker ') ||
 		trimmed === '/gif' ||
 		trimmed.startsWith('/gif ') ||
+		trimmed.startsWith('/subprofile ') ||
 		(trimmed.startsWith('_') && trimmed.endsWith('_') && trimmed.length > 2)
 	);
 }
@@ -363,6 +388,26 @@ export async function executeCommand(
 		case 'gif': {
 			throw new Error(`Select a ${command.type} result before submitting the command`);
 		}
+		case 'persona':
+			if (!command.persona) {
+				const systemMessage = createSystemMessage(channelId, i18n._(PERSONA_DEACTIVATED_DESCRIPTOR));
+				Personas.setGlobalActivePersona('');
+				MessageCommands.createOptimistic(channelId, systemMessage.toJSON());
+			} else if (Personas.getPersona(command.persona)) {
+				const persona = Personas.getPersona(command.persona);
+				const systemMessage = createSystemMessage(
+					channelId,
+					i18n._(PERSONA_ACTIVATED_DESCRIPTOR, {
+						persona: (persona?.internal_name ?? persona?.display_name ?? 'undefined').replaceAll(
+							MARKDOWN_FORMATTING_REGEX,
+							'\\$1',
+						),
+					}),
+				);
+				Personas.setGlobalActivePersona(command.persona);
+				MessageCommands.createOptimistic(channelId, systemMessage.toJSON());
+			}
+			break;
 		default:
 			break;
 	}

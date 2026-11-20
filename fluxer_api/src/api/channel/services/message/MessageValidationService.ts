@@ -49,6 +49,9 @@ export class MessageValidationService {
 		const hasAttachments = Boolean(data.attachments && data.attachments.length > 0);
 		const hasFavoriteMeme = Boolean('favorite_meme_id' in data && data.favorite_meme_id != null);
 		const hasStickers = Boolean('sticker_ids' in data && data.sticker_ids != null && data.sticker_ids.length > 0);
+		const hasPersona =
+			Boolean('persona' in data && (data.persona?.name != null || data.persona?.id != null)) ||
+			Boolean(isUpdate && 'persona' in data && data.persona === null);
 		const hasFlags = data.flags !== undefined && data.flags !== null;
 		const guildFeatures = options?.guildFeatures ?? null;
 		const hasVoiceMessageFlag = !!(data.flags && data.flags & MessageFlags.VOICE_MESSAGE);
@@ -63,7 +66,15 @@ export class MessageValidationService {
 				guildFeatures,
 			);
 		}
-		if (!hasContent && !hasEmbeds && !hasAttachments && !hasFavoriteMeme && !hasStickers && (!isUpdate || !hasFlags)) {
+		if (
+			!hasContent &&
+			!hasEmbeds &&
+			!hasAttachments &&
+			!hasFavoriteMeme &&
+			!hasStickers &&
+			!hasPersona &&
+			(!isUpdate || !hasFlags)
+		) {
 			throw new CannotSendEmptyMessageError();
 		}
 		this.validateContentLength(data.content, user, guildFeatures, options?.messageAuthorType);

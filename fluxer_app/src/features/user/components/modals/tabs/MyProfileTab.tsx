@@ -69,6 +69,8 @@ import {
 	COMMUNITY_NICKNAME_DESCRIPTOR,
 	DISPLAY_NAME_DESCRIPTOR,
 	DOC_I_M_FROM_THE_FUTURE_I_CAME_DESCRIPTOR,
+	PERSONA_TAG_DESCRIPTION_DESCRIPTOR,
+	PERSONA_TAG_DESCRIPTOR,
 	PROFILE_CUSTOMIZATION_DESCRIPTOR,
 } from '@app/features/user/utils/UserMessageDescriptors';
 import {setMeaningfulFormValue} from '@app/lib/forms/MeaningfulFormValue';
@@ -95,7 +97,7 @@ const PROFILE_UPDATED_DESCRIPTOR = msg({
 	message: 'Profile updated',
 	comment: 'Short label in the my profile tab. Keep it concise.',
 });
-const WARNING_YOU_HAVE_UNSAVED_CHANGES_PLEASE_SAVE_YOUR_DESCRIPTOR = msg({
+export const WARNING_YOU_HAVE_UNSAVED_CHANGES_PLEASE_SAVE_YOUR_DESCRIPTOR = msg({
 	message: 'You have unsaved changes. Save or reset before leaving.',
 	comment: 'Warning text in the my profile tab. Keep the tone plain and specific.',
 });
@@ -107,7 +109,7 @@ const VERIFY_YOUR_EMAIL_BEFORE_EDITING_YOUR_PROFILE_YOU_DESCRIPTOR = msg({
 	message: 'Confirm your email before editing your profile. You can still preview it here.',
 	comment: 'Description text in the my profile tab.',
 });
-const EDIT_YOUR_PROFILE_APPEARANCE_AND_SEE_A_LIVE_DESCRIPTOR = msg({
+export const EDIT_YOUR_PROFILE_APPEARANCE_AND_SEE_A_LIVE_DESCRIPTOR = msg({
 	message: 'Edit your profile appearance and see a live preview',
 	comment: 'Button or menu action label in the my profile tab. Keep it concise.',
 });
@@ -147,7 +149,6 @@ const YOU_DON_T_HAVE_PERMISSION_TO_CHANGE_YOUR_DESCRIPTOR = msg({
 	message: "You can't change your nickname here",
 	comment: 'Label in the my profile tab. Keep the tone plain and specific.',
 });
-
 const logger = new Logger('MyProfileTab');
 
 function sameBadgeKeys(a: ReadonlyArray<string>, b: ReadonlyArray<string>): boolean {
@@ -194,6 +195,7 @@ interface FormInputs {
 	timezone: string | null;
 	timezone_privacy_flags: number;
 	nick?: string | null;
+	persona_tag?: string | null;
 	hidden_profile_badges?: Array<string>;
 	premium_badge_timestamp_hidden?: boolean;
 	premium_badge_masked?: boolean;
@@ -269,6 +271,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 			timezone: user?.timezone ?? null,
 			timezone_privacy_flags: user?.timezonePrivacyFlags ?? ProfileFieldPrivacyFlags.EVERYONE,
 			nick: null,
+			persona_tag: user?.personaTag || null,
 			hidden_profile_badges: [...(user?.hiddenProfileBadges ?? [])],
 			premium_badge_timestamp_hidden: user?.premiumBadgeTimestampHidden ?? false,
 			premium_badge_masked: user?.premiumBadgeMasked ?? false,
@@ -363,6 +366,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 				bio: markdownBio,
 				global_name: user.globalName || null,
 				pronouns: user.pronouns || null,
+				persona_tag: user.personaTag || null,
 				accent_color: typeof user.accentColor === 'number' ? user.accentColor : null,
 				nick: null,
 			},
@@ -480,12 +484,14 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 					accent_color?: number | null;
 					nick?: string | null;
 					profile_flags?: number | null;
+					persona_tag?: string | null;
 				} = {
 					bio: data.bio,
 					pronouns: data.pronouns,
 					accent_color: storedAccentColor,
 					nick: data.nick,
 					profile_flags: profileFlags || null,
+					persona_tag: data.persona_tag || null,
 				};
 				assignProfileAssetUploadPatch(updateData, 'avatar', avatarAsset);
 				assignProfileAssetUploadPatch(updateData, 'banner', bannerAsset);
@@ -526,6 +532,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 						timezone: user.timezone ?? null,
 						timezone_privacy_flags: user.timezonePrivacyFlags ?? ProfileFieldPrivacyFlags.EVERYONE,
 						nick: data.nick,
+						persona_tag: data.persona_tag,
 						hidden_profile_badges: [...(user.hiddenProfileBadges ?? [])],
 						premium_badge_timestamp_hidden: user.premiumBadgeTimestampHidden ?? false,
 						premium_badge_masked: user.premiumBadgeMasked ?? false,
@@ -541,6 +548,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 					global_name: data.global_name,
 					pronouns: data.pronouns,
 					accent_color: data.accent_color,
+					persona_tag: data.persona_tag,
 				};
 				assignProfileAssetUploadPatch(updateData, 'avatar', avatarAsset);
 				assignProfileAssetUploadPatch(updateData, 'banner', bannerAsset);
@@ -584,6 +592,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 						timezone: newUser.timezone ?? null,
 						timezone_privacy_flags: newUser.timezone_privacy_flags ?? ProfileFieldPrivacyFlags.EVERYONE,
 						nick: null,
+						persona_tag: newUser.persona_tag || null,
 						hidden_profile_badges: [...(newUser.hidden_profile_badges ?? user?.hiddenProfileBadges ?? [])],
 						premium_badge_timestamp_hidden: newUser.premium_badge_timestamp_hidden ?? false,
 						premium_badge_masked: newUser.premium_badge_masked ?? false,
@@ -970,6 +979,28 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 											data-flx="user.my-profile-tab.my-profile-tab-component.bio-editor.bio-change"
 										/>
 									</div>
+									{!isPerGuildProfile && (
+										<div data-flx="user.my-profile-tab.my-profile-tab-component.div--6">
+											<Input
+												data-flx="user.my-profile-tab.my-profile-tab-component.input--3"
+												{...form.register('persona_tag')}
+												label={i18n._(PERSONA_TAG_DESCRIPTOR)}
+												placeholder={user.displayName || user.username}
+												maxLength={20}
+												value={form.watch('persona_tag') || ''}
+												error={form.formState.errors.persona_tag?.message}
+												disabled={isProfileCustomizationLocked}
+												footer={
+													<div
+														className={styles.inputFooter}
+														data-flx="user.my-profile-tab.my-profile-tab-component.input-footer"
+													>
+														{i18n._(PERSONA_TAG_DESCRIPTION_DESCRIPTOR)}
+													</div>
+												}
+											/>
+										</div>
+									)}
 								</div>
 								<div
 									className={styles.previewColumn}

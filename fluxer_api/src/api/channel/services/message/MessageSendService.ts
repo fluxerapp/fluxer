@@ -877,6 +877,7 @@ export class MessageSendService {
 						allowEmbeds: canEmbedLinks,
 						dmNsfwContext,
 						threadInsert: authChannel.thread !== undefined,
+						persona: data.persona ?? undefined,
 					});
 					await recordNonce(messageId);
 					this.cacheMentionChannels({
@@ -1386,6 +1387,7 @@ export class MessageSendService {
 						messageSnapshots,
 						guildId: null,
 						channel,
+						persona: data.persona ?? undefined,
 					});
 					await recordNonce(messageId);
 					await dispatchMessageCreateBroadcast({

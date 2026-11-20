@@ -94,7 +94,7 @@ export const ThreadCreatePane = observer(({parent, messageId}: ThreadCreatePaneP
 	const privateSelected = canPrivate && (isPrivate || !canPublic);
 	const disabled = cooldownSeconds > 0 || (!canPublic && !canPrivate);
 	const handleSubmit: SendMessageFunction = useCallback(
-		(content, hasAttachments, stickersOrTts, favoriteMemeIdOrStickers, maybeFavoriteMemeId) => {
+		(content, hasAttachments, stickersOrTts, favoriteMemeIdOrStickers, maybeFavoriteMemeId, persona) => {
 			const threadName = (nameRef.current.trim() || suggestedName).slice(0, THREAD_NAME_MAX_LENGTH);
 			if (!threadName) {
 				setNameError(i18n._(D.THREAD_NAME_REQUIRED_DESCRIPTOR));
@@ -122,7 +122,7 @@ export const ThreadCreatePane = observer(({parent, messageId}: ThreadCreatePaneP
 					ThreadPanel.startCreateCooldown(parent.id, parent.rateLimitPerUser);
 					setName('');
 					if (content.trim() || attachments.length > 0 || stickers.length > 0 || favoriteMemeId) {
-						sendThreadStarter(thread, {content, nonce, attachments, hasAttachments, stickers, favoriteMemeId});
+						sendThreadStarter(thread, {content, nonce, attachments, hasAttachments, stickers, favoriteMemeId, persona});
 					}
 					openThread(thread);
 				})

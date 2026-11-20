@@ -31,6 +31,7 @@ import {OAuth2Controller} from '@app/api/oauth/OAuth2Controller';
 import {OpenAPIController} from '@app/api/openapi/OpenAPIController';
 import {OperatorPassController} from '@app/api/operator_pass/OperatorPassController';
 import {OperatorPassInternalController} from '@app/api/operator_pass/OperatorPassInternalController';
+import {PersonaController} from '@app/api/personas/controllers/PersonaController';
 import {PremiumController} from '@app/api/premium/PremiumController';
 import {ReadStateController} from '@app/api/read_state/ReadStateController';
 import {ReportController} from '@app/api/report/ReportController';
@@ -95,5 +96,6 @@ export function registerControllers(routes: HonoApp, config: APIConfig): void {
 		BillingDocumentController(routes);
 	}
 	StripeController(routes);
+	PersonaController(routes);
 	AttachmentMediaController(routes);
 }

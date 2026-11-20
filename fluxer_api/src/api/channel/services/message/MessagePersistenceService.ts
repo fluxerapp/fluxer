@@ -61,6 +61,7 @@ import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMe
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {RichEmbedRequest} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import type {AllowedMentionsRequest} from '@fluxer/schema/src/domains/message/SharedMessageSchemas';
+import type {PersonaSnapshot} from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
 import {hasVisibleContent} from '@fluxer/schema/src/primitives/MessageValidators';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
@@ -144,6 +145,7 @@ interface CreateMessageParams {
 	};
 	allowEmbeds?: boolean;
 	dmNsfwContext?: DmNsfwContext;
+	persona?: PersonaSnapshot;
 	processedEmbeds?: Array<MessageEmbed>;
 	processedStickerItems?: Array<MessageStickerItem>;
 	skipDeferredEmbeds?: boolean;
@@ -432,6 +434,7 @@ export class MessagePersistenceService {
 					: null,
 			call: null,
 			has_reaction: false,
+			persona: params.persona || null,
 			version: 1,
 		};
 		const message = await this.channelRepository.messages.upsertMessage(
@@ -727,6 +730,10 @@ export class MessagePersistenceService {
 				updatedRowData.embeds = nextEmbeds.length > 0 ? nextEmbeds : null;
 			}
 			hasUncachedUrls = embedUrls;
+			hasChanges = true;
+		}
+		if (data.persona !== undefined) {
+			updatedRowData.persona = data.persona;
 			hasChanges = true;
 		}
 		let updatedMessage = message;

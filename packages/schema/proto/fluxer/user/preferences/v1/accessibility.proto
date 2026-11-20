@@ -80,6 +80,8 @@ message AccessibilitySettings {
   optional bool message_double_click_actions = 66;
   optional bool announce_call_joins_and_leaves = 67;
   optional bool animate_gif_picker = 68;
+	optional bool show_persona_picker_button = 90101;
+	optional bool show_latch_in_persona_picker = 90102;
 }
 
 message AccessibilityOverrides {

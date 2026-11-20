@@ -68,6 +68,12 @@ export function isNewMessageGroup(
 	if (currentMessage.webhookId && prevMessage.author.username !== currentMessage.author.username) {
 		return true;
 	}
+	if (prevMessage.persona?.id !== currentMessage.persona?.id) {
+		return true;
+	}
+	if (prevMessage.persona?.name !== currentMessage.persona?.name) {
+		return true;
+	}
 	if (!prevMessage.timestamp || !currentMessage.timestamp) {
 		return true;
 	}

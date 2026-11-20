@@ -174,12 +174,14 @@ export class MessageRetrievalService {
 		channelId,
 		searchParams,
 		requestCache,
+		...params
 	}: {
 		userId: UserID;
 		viewer: ThreadViewer;
 		channelId: ChannelID;
 		searchParams: MessageSearchRequest;
 		requestCache: RequestCache;
+		personaFallbackBehavior?: boolean;
 	}): Promise<MessageSearchResponse> {
 		const authChannel = await this.channelAuthService.getChannelAuthenticated({
 			userId,
@@ -258,6 +260,7 @@ export class MessageRetrievalService {
 			userId,
 			messages: visibleMessages,
 			access,
+			personaFallbackBehavior: params.personaFallbackBehavior,
 		});
 		const messageResponses = maskThreadArtifactsFor(viewer, channel.guildId, builtMessages).map(
 			({referenced_message: _referencedMessage, ...searchMessage}) => searchMessage,

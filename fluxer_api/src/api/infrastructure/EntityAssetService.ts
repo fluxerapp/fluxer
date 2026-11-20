@@ -31,7 +31,7 @@ type AssetType =
 	| 'branding_backdrop'
 	| 'custom_badge'
 	| 'role_icon';
-type EntityType = 'user' | 'guild' | 'guild_member' | 'instance' | 'role';
+type EntityType = 'user' | 'persona' | 'guild' | 'guild_member' | 'instance' | 'role';
 
 const ASSET_TYPE_TO_PREFIX: Record<AssetType, string> = {
 	avatar: 'avatars',

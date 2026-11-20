@@ -633,6 +633,7 @@ export class ThreadCreationService {
 			call: null,
 			has_reaction: false,
 			version: 1,
+			persona: null,
 		};
 		const message: Message = await this.ctx.channelRepository.messages.upsertMessage(row, null, {
 			skipParentLastMessageId: true,

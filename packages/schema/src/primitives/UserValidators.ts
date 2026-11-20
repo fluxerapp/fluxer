@@ -123,3 +123,39 @@ export const WebhookNameType = z
 	.string()
 	.overwrite(normalizeString)
 	.pipe(withStringLengthRangeValidation(z.string(), 1, 80, ValidationErrorCodes.WEBHOOK_NAME_LENGTH_INVALID));
+/** These tags are universally forbidden for personas due to a high risk of abuse.
+    "Bot" is not forbidden because why would you want to pretend to be a bot? */
+const FORBIDDEN_PERSONA_TAGS = [
+	'system',
+	'system message',
+	'official',
+	'official message',
+	'staff',
+	'mod',
+	'moderator',
+	'admin',
+	'administrator',
+	'owner',
+];
+export const PersonaTagType = z
+	.string()
+	.superRefine((value, ctx) => {
+		if (value.length > MAX_STRING_PROCESSING_LENGTH) {
+			ctx.addIssue({
+				code: 'custom',
+				message: ValidationErrorCodes.GLOBAL_NAME_LENGTH_INVALID,
+				params: {min: 1, max: 20},
+			});
+			return z.NEVER;
+		}
+	})
+	.transform(sanitizeUsername)
+	.pipe(withStringLengthRangeValidation(z.string(), 1, 20, ValidationErrorCodes.PERSONA_TAG_LENGTH_INVALID))
+	.refine((value) => {
+		const lowerValue = value.toLowerCase();
+		return !FORBIDDEN_PERSONA_TAGS.includes(lowerValue);
+	}, ValidationErrorCodes.PERSONA_TAG_RESERVED_VALUE)
+	.refine((value) => {
+		const lowerValue = value.toLowerCase();
+		return !lowerValue.includes('fluxer');
+	}, ValidationErrorCodes.PERSONA_TAG_CANNOT_CONTAIN_RESERVED_TERMS);

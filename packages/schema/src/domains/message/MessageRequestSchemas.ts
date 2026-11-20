@@ -26,6 +26,7 @@ import {
 import {AttachmentURLType, URLType} from '@fluxer/schema/src/primitives/UrlValidators';
 import {schemaMetadata} from '@fluxer/schema/src/SchemaMetadata';
 import {z} from 'zod';
+import {PersonaSnapshot} from '../persona/PersonaSchemas';
 
 const RICH_EMBED_AUTHOR_NAME_MAX_LENGTH = 256 as const;
 const RICH_EMBED_MEDIA_DESCRIPTION_MAX_LENGTH = 4096 as const;
@@ -357,6 +358,7 @@ export const MessageRequestSchema = z
 		favorite_meme_id: SnowflakeType.nullish().describe('ID of a favorite meme to attach'),
 		sticker_ids: z.array(SnowflakeType).max(3).nullish().describe('Array of sticker IDs to include (max 3)'),
 		tts: z.boolean().optional().describe('Whether this is a text-to-speech message'),
+		persona: PersonaSnapshot.nullish().describe('The persona to use for this message'),
 	})
 	.partial();
 
@@ -376,6 +378,7 @@ export const MessageUpdateRequestSchema = MessageRequestSchema.pick({
 	content: true,
 	embeds: true,
 	allowed_mentions: true,
+	persona: true,
 }).extend({
 	flags: createBitflagInt32Type(
 		MessageFlags,

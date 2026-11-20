@@ -50,6 +50,7 @@ import {resolveRetryAfterMs} from '@app/features/messaging/utils/RetryAfterUtils
 import {openReportMessageModal} from '@app/features/moderation/utils/ReportActionUtils';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import Permission from '@app/features/permissions/state/Permission';
+import type {Persona} from '@app/features/personas/models/Persona';
 import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
 import {isAccountTransitionAbortError} from '@app/features/platform/state/AccountTransitionAbort';
 import SessionManager from '@app/features/platform/state/AuthSession';
@@ -68,6 +69,7 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
+import Personas from '@app/features/user/state/Personas';
 import {blockIfAccountLimited, handleAccountLimitedError} from '@app/features/user/utils/AccountLimitUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {MessageFlags, Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -80,6 +82,8 @@ import type {
 	MessageStickerItem,
 	Message as WireMessage,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {PersonaSnapshot} from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
+import {PersonaSettings_LatchMode} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb.js';
 import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -414,6 +418,7 @@ interface SendMessageParams {
 	favoriteMemeId?: string;
 	stickers?: Array<MessageStickerItem>;
 	tts?: boolean;
+	persona?: PersonaSnapshot;
 }
 
 export function jumpToLiveEdge(channelId: string, limit = MAX_MESSAGES_PER_CHANNEL): void {
@@ -727,6 +732,7 @@ export async function send(channelId: string, params: SendMessageParams): Promis
 		favoriteMemeId: params.favoriteMemeId,
 		stickers: params.stickers,
 		tts: params.tts,
+		persona: params.persona,
 	};
 	if (params.hasAttachments) {
 		logger.debug(`Sending attachment message immediately for channel ${channelId}`);
@@ -865,12 +871,47 @@ export async function edit(
 	flags?: number,
 	allowedMentions?: AllowedMentions,
 	attachments?: Array<ApiMessageEditAttachmentMetadata>,
+	persona?: PersonaSnapshot | null,
 ): Promise<WireMessage | null> {
 	logger.debug(`Editing message ${messageId} in channel ${channelId}`);
+	if (content && persona === undefined && Personas.latchMode !== PersonaSettings_LatchMode.OFF) {
+		logger.debug(`Searching for matching persona triggers on ${messageId}`);
+		// Find matching triggers
+		const matchesTrigger = (value: string) => (t: Persona['triggers'][0]) => {
+			const prefix = t.prefix?.toLowerCase().trim();
+			const suffix = t.suffix?.toLowerCase().trim();
+			if (!prefix && !suffix) return false;
+			if (prefix && !value.startsWith(prefix)) return false;
+			if (suffix && !value.endsWith(suffix)) return false;
+			return true;
+		};
+		const value = content.toLowerCase();
+		const matchingPersona = Personas.getOwnPersonas().find((p) => p.triggers.find(matchesTrigger(value)));
+		// Strip prefix and suffix from applied persona
+		if (matchingPersona) {
+			logger.debug(`Found matching persona ${matchingPersona.id} while editing ${messageId}`);
+			const matchingTrigger = matchingPersona.triggers.find(matchesTrigger(value));
+			const original = Messages.getMessage(channelId, messageId);
+			// Don't change personas if the trigger was already on the message
+			if (
+				(original
+					? matchingTrigger && !matchesTrigger(original.content.toLowerCase())(matchingTrigger)
+					: matchingTrigger) &&
+				original?.persona?.id !== matchingPersona?.id
+			) {
+				logger.debug(`Applying persona ${matchingPersona.id} to edit ${messageId}`);
+				let ival = content;
+				if (matchingTrigger?.prefix) ival = ival.substring(matchingTrigger.prefix?.length ?? 0);
+				if (matchingTrigger?.suffix) ival = ival.substring(0, ival.length - matchingTrigger.suffix.length);
+				content = ival;
+				persona = matchingPersona.toSnapshot();
+			}
+		}
+	}
 	const isPublished = Messages.getMessage(channelId, messageId)?.isCrossposted === true;
 	try {
 		const response = await http.patch<WireMessage>(Endpoints.CHANNEL_MESSAGE(channelId, messageId), {
-			body: buildMessageEditRequest({content, flags, allowedMentions, attachments}),
+			body: buildMessageEditRequest({content, flags, allowedMentions, attachments, persona}),
 			mode: isPublished ? 'strict' : 'auto-retry',
 			retries: MESSAGE_EDIT_MAX_RETRIES,
 			timeoutMs: MESSAGE_EDIT_TIMEOUT_MS,
@@ -1147,6 +1188,7 @@ export async function forward(
 ): Promise<boolean> {
 	logger.debug(`Forwarding message ${messageReference.message_id} to ${channelIds.length} channels`);
 	const normalizedComment = optionalMessage == null ? null : normalizeMessageContent(optionalMessage);
+	const persona = Personas.getGlobalActivePersona();
 	try {
 		for (const channelId of channelIds) {
 			const nonce = SnowflakeUtils.fromTimestamp(Date.now());
@@ -1161,6 +1203,7 @@ export async function forward(
 					embed_indices: messageReference.embed_indices,
 					type: 1,
 				},
+				persona: persona?.toSnapshot(),
 				flags: normalizedComment?.flags ?? 0,
 			});
 			if (!forwardedMessage) {
@@ -1174,6 +1217,7 @@ export async function forward(
 					content: normalizedComment.content,
 					nonce: commentNonce,
 					flags: normalizedComment.flags,
+					persona: persona?.toSnapshot(),
 				});
 				if (!commentMessage) {
 					logger.warn(`Forward comment send failed in channel ${channelId}`);

@@ -34,6 +34,8 @@ interface AvatarProps {
 	avatarUrl?: string | null;
 	hoverAvatarUrl?: string | null;
 	guildId?: string | null;
+	personaId?: string | null;
+	personaAvatar?: string | null;
 	mediaSize?: MediaProxyImageSize;
 	animateStatusCutout?: boolean;
 	title?: never;
@@ -58,6 +60,8 @@ const AvatarComponent = React.forwardRef<HTMLDivElement, AvatarProps>(
 			guildId,
 			mediaSize,
 			animateStatusCutout = false,
+			personaId,
+			personaAvatar,
 			...props
 		},
 		ref,
@@ -73,6 +77,9 @@ const AvatarComponent = React.forwardRef<HTMLDivElement, AvatarProps>(
 		const requestSize = mediaSize ?? size * getAppRemScale();
 		const avatarUrl = useMemo(() => {
 			if (customAvatarUrl !== undefined) return customAvatarUrl;
+			if (personaId || personaAvatar) {
+				return AvatarUtils.getUserAvatarURL({id: personaId ?? '0', avatar: personaAvatar || null}, false, mediaSize);
+			}
 			if (systemAvatarUrl !== null) return systemAvatarUrl;
 			if (guildId && hasGuildMemberAvatarSource) {
 				return AvatarUtils.getGuildMemberDisplayAvatarURL({
@@ -95,9 +102,14 @@ const AvatarComponent = React.forwardRef<HTMLDivElement, AvatarProps>(
 			systemAvatarUrl,
 			userAvatar,
 			userId,
+			personaId,
+			personaAvatar,
 		]);
 		const hoverAvatarUrl = useMemo(() => {
 			if (customHoverAvatarUrl !== undefined) return customHoverAvatarUrl;
+			if (personaId || personaAvatar) {
+				return AvatarUtils.getUserAvatarURL({id: personaId ?? '0', avatar: personaAvatar || null}, true, mediaSize);
+			}
 			if (systemAvatarUrl !== null) return systemAvatarUrl;
 			if (guildId && hasGuildMemberAvatarSource) {
 				return AvatarUtils.getGuildMemberDisplayAvatarURL({
@@ -120,6 +132,8 @@ const AvatarComponent = React.forwardRef<HTMLDivElement, AvatarProps>(
 			systemAvatarUrl,
 			userAvatar,
 			userId,
+			personaId,
+			personaAvatar,
 		]);
 		const statusLabel = status != null ? getStatusTypeLabel(i18n, status) : null;
 		const hasDistinctHoverAvatar = Boolean(hoverAvatarUrl && hoverAvatarUrl !== avatarUrl);
@@ -165,7 +179,10 @@ const AvatarComponent = React.forwardRef<HTMLDivElement, AvatarProps>(
 			};
 		}, [hoverAvatarUrl, isAnimatedNeeded, rendersAnimatedInline]);
 		const shouldPlayAnimated = hasDistinctHoverAvatar && animationAllowed && isAnimatedLoaded;
-		const fallbackAvatarUrl = useMemo(() => AvatarUtils.getUserAvatarURL({id: userId, avatar: null}, false), [userId]);
+		const fallbackAvatarUrl = useMemo(
+			() => AvatarUtils.getUserAvatarURL({id: personaId || userId, avatar: null}, false),
+			[personaId, userId],
+		);
 		const resolvedAvatarUrl = avatarUrl ?? fallbackAvatarUrl;
 		const safeHoverAvatarUrl = isAnimatedNeeded ? hoverAvatarUrl || undefined : undefined;
 		const normalizedStatusAttr = status != null ? normalizeStatus(status) : undefined;

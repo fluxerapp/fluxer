@@ -736,6 +736,10 @@ export const EDIT_MESSAGE_DESCRIPTOR = msg({
 	message: 'Edit message',
 	comment: 'Generic action label that opens the message edit composer.',
 });
+export const CHANGE_PERSONA_DESCRIPTOR = msg({
+	message: 'Change persona',
+	comment: 'Generic action label that opens the persona picker.',
+});
 export const CONTINUE_DESCRIPTOR = msg({
 	message: 'Continue',
 	comment: 'Generic primary button label that advances a multi-step flow.',

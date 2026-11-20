@@ -40,6 +40,7 @@ function buildMessageRow(messageId: MessageID, hasReaction: boolean | null): Mes
 		message_snapshots: null,
 		call: null,
 		has_reaction: hasReaction,
+		persona: null,
 		version: 1,
 	};
 }

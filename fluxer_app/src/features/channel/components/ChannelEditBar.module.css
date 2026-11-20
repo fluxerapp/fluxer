@@ -39,3 +39,14 @@
 	height: 1rem;
 	width: 1rem;
 }
+
+.personaName {
+	font-weight: bold;
+}
+.personaAvatar {
+	max-height: 1lh;
+	max-width: 1lh;
+	aspect-ratio: 1 / 1;
+	display: inline-block;
+	vertical-align: middle;
+}

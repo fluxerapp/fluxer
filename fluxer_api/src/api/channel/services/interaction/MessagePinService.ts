@@ -45,11 +45,13 @@ export class MessagePinService {
 		userId,
 		beforeTimestamp,
 		limit,
+		...props
 	}: {
 		authChannel: AuthenticatedChannel;
 		userId: UserID;
 		beforeTimestamp?: Date;
 		limit?: number;
+		personaFallbackBehavior?: boolean;
 	}): Promise<{
 		items: Array<ChannelPinResponse>;
 		has_more: boolean;
@@ -97,6 +99,7 @@ export class MessagePinService {
 			userId,
 			messages: trimmed,
 			access,
+			personaFallbackBehavior: props.personaFallbackBehavior ?? true,
 		});
 		const responseByMessageId = new Map(messageResponses.map((response) => [response.id, response]));
 		const items = trimmed.flatMap((message: Message) => {

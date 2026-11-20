@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {ChannelID, MessageID, PersonaID, UserID} from '@app/api/BrandedTypes';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
 import {MessageInteractionAuthService} from '@app/api/channel/services/interaction/MessageInteractionAuthService';
@@ -83,10 +83,12 @@ export class MessageInteractionService {
 		userId,
 		channelId,
 		viewer,
+		personaId,
 	}: {
 		userId: UserID;
 		viewer: ThreadViewer;
 		channelId: ChannelID;
+		personaId?: PersonaID;
 	}): Promise<AuthenticatedChannel> {
 		const authChannel = await this.authService.getChannelAuthenticated({userId, channelId, viewer});
 		if (authChannel.channel.isThreadOnly()) throw new InvalidChannelTypeError();
@@ -96,7 +98,7 @@ export class MessageInteractionService {
 			assertThreadAllowed(threadWriteBlock('send', authChannel.thread.actor));
 		}
 		if (!authChannel.guild && (await this.startsNewConversation(authChannel.channel, userId))) return authChannel;
-		await this.readStateService.startTyping({authChannel, userId});
+		await this.readStateService.startTyping({authChannel, userId, personaId});
 		return authChannel;
 	}
 
@@ -106,12 +108,14 @@ export class MessageInteractionService {
 		channelId,
 		beforeTimestamp,
 		limit,
+		personaFallbackBehavior,
 	}: {
 		userId: UserID;
 		viewer: ThreadViewer;
 		channelId: ChannelID;
 		beforeTimestamp?: Date;
 		limit?: number;
+		personaFallbackBehavior?: boolean;
 	}): Promise<{
 		items: Array<ChannelPinResponse>;
 		has_more: boolean;
@@ -122,7 +126,13 @@ export class MessageInteractionService {
 			viewer,
 			access: 'visitor_read',
 		});
-		const pins = await this.pinService.getChannelPins({authChannel, userId, beforeTimestamp, limit});
+		const pins = await this.pinService.getChannelPins({
+			authChannel,
+			userId,
+			beforeTimestamp,
+			limit,
+			personaFallbackBehavior,
+		});
 		const original = pins.items.map((item) => item.message as MessageResponse);
 		const messages = maskThreadArtifactsFor(viewer, authChannel.channel.guildId, original);
 		if (messages === original) return pins;

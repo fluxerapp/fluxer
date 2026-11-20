@@ -467,6 +467,7 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 		emailService,
 		instanceConfigRepository,
 		storeEntitlementService,
+		personaRepository,
 	} = dependencies;
 	const adminRequestedBy = validated.adminRequestedBy ? BigInt(validated.adminRequestedBy) : null;
 	const isAdminArchive = adminRequestedBy !== null;
@@ -543,6 +544,7 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 			pinnedDms,
 			authorizedIps,
 			activityData,
+			personas,
 		] = await Promise.all([
 			userRepository.listAuthSessions(userId),
 			userRepository.listRelationships(userId),
@@ -570,7 +572,15 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 			userRepository.getPinnedDmsWithDetails(userId),
 			userRepository.getAuthorizedIps(userId),
 			userRepository.getActivityTracking(userId),
+			personaRepository.listUserPersonas(userId),
 		]);
+		const personaTriggers = (
+			await Promise.all(
+				personas.map((p) =>
+					personaRepository.getPersonaTriggers(userId, p.id).then((v) => v.map((q) => q.toRow(userId, p.id))),
+				),
+			)
+		).flat();
 		const operatorPassRepository = getOperatorPassRepository();
 		const operatorPassUnitRows = new Map<string, OperatorPassUnitRow>();
 		for (const unit of await operatorPassRepository.listUnitsByHolder(userId)) {
@@ -648,6 +658,8 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 			pinnedDms,
 			authorizedIps,
 			activityData,
+			personas,
+			personaTriggers,
 		});
 		const userDataJsonBuffer = createArchiveJsonBuffer(userData);
 		Logger.debug({userId, harvestId, elapsed: Date.now() - startTime}, 'Collected user metadata');

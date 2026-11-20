@@ -30,6 +30,7 @@ import type {
 	ReactionEmoji,
 	Message as WireMessage,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {PersonaSnapshot} from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
 
 type MessageInput = Omit<WireMessage, 'mentions' | 'mention_roles' | 'tts'> &
 	Partial<Pick<WireMessage, 'mentions' | 'mention_roles' | 'tts'>>;
@@ -175,6 +176,7 @@ export class Message {
 	readonly _allowedMentions?: AllowedMentions;
 	readonly _favoriteMemeId?: string;
 	readonly stickers?: ReadonlyArray<MessageStickerItem>;
+	readonly persona?: PersonaSnapshot | null;
 
 	constructor(message: MessageInput, options?: MessageRecordOptions) {
 		this.instanceId = options?.instanceId ?? RuntimeConfig.localInstanceDomain;
@@ -238,6 +240,7 @@ export class Message {
 			: undefined;
 		this.messageSnapshots = message.message_snapshots ? Object.freeze(message.message_snapshots) : undefined;
 		this.call = transformMessageCall(message.call);
+		this.persona = message.persona;
 		const embeddableCodeLinkContent = extractEmbeddableCodeLinkContent(message.content);
 		this.invites = Object.freeze(InviteUtils.findInvites(embeddableCodeLinkContent));
 		this.gifts = Object.freeze(GiftCodeUtils.findGifts(embeddableCodeLinkContent));
@@ -342,6 +345,7 @@ export class Message {
 				state: updates.state ?? this.state,
 				nonce: updates.nonce ?? this.nonce,
 				blocked: updates.blocked ?? this.blocked,
+				persona: updates.persona === undefined ? this.persona : updates.persona,
 				_allowedMentions: updates._allowedMentions ?? this._allowedMentions,
 				_favoriteMemeId: updates._favoriteMemeId ?? this._favoriteMemeId,
 			},
@@ -489,6 +493,13 @@ export class Message {
 				if (this.call.participants[i] !== other.call.participants[i]) return false;
 			}
 		}
+		if (this.persona !== other.persona) {
+			if (!this.persona || !other.persona) return false;
+			if (this.persona.id !== other.persona.id) return false;
+			if (this.persona.name !== other.persona.name) return false;
+			if (this.persona.avatar !== other.persona.avatar) return false;
+			if (this.persona.pronouns !== other.persona.pronouns) return false;
+		}
 		return true;
 	}
 
@@ -518,6 +529,7 @@ export class Message {
 			referenced_message: this.referencedMessage?.toJSON(),
 			message_snapshots: this.messageSnapshots,
 			call: this.call,
+			persona: this.persona,
 			state: this.state,
 			nonce: this.nonce,
 			blocked: this.blocked,

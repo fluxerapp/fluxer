@@ -2,6 +2,7 @@
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {BAN_DELETE_MESSAGE_OPTIONS} from '@app/features/moderation/constants/BanDeleteMessageOptions';
+import Personas from '@app/features/user/state/Personas';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -84,6 +85,18 @@ const COMMAND_NICKNAME_OPTION_DESCRIPTOR = msg({
 const COMMAND_DELETE_MESSAGES_OPTION_DESCRIPTOR = msg({
 	message: "How much of the member's recent message history to delete.",
 	comment: 'Description for the /ban delete_messages option.',
+});
+const CHANGE_ACTIVE_PERSONA_DESCRIPTOR = msg({
+	message: 'Change the active persona.',
+	comment: "Slash-command description for /persona. Changes the user's active persona.",
+});
+const CHANGE_ACTIVE_PERSONA_TARGET_DESCRIPTOR = msg({
+	message: 'The persona to activate, or empty for none.',
+	comment: 'Description for the /persona option.',
+});
+const CHANGE_ACTIVE_PERSONA_MAIN_ACCOUNT_DESCRIPTOR = msg({
+	message: 'Main account (deactivate persona)',
+	comment: 'Description for a /persona choice that turns off.',
 });
 interface SimpleCommand {
 	type: 'simple';
@@ -324,7 +337,32 @@ export function useCommands(): Array<Command> {
 					},
 				],
 			},
+			{
+				type: 'action',
+				name: '/persona',
+				description: i18n._(CHANGE_ACTIVE_PERSONA_DESCRIPTOR),
+				requiresGuild: false,
+				options: [
+					{
+						name: 'persona',
+						description: i18n._(CHANGE_ACTIVE_PERSONA_TARGET_DESCRIPTOR),
+						type: 'choice',
+						required: true,
+						allowEmpty: true,
+						choices: [
+							{
+								name: i18n._(CHANGE_ACTIVE_PERSONA_MAIN_ACCOUNT_DESCRIPTOR),
+								value: '',
+							},
+							...Personas.getOwnPersonas().map((v) => ({
+								name: v.internal_name ?? v.display_name ?? '',
+								value: v.id,
+							})),
+						],
+					},
+				],
+			},
 		];
 		return directMessagesDisabled ? commands.filter((command) => command.name !== '/msg') : commands;
-	}, [i18n.locale, directMessagesDisabled]);
+	}, [i18n.locale, Personas.ownPersonas.size, directMessagesDisabled]);
 }

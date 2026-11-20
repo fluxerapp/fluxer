@@ -17,6 +17,7 @@ import type {
 	OperatorPassWallEntryRow,
 	OperatorPassWallEventRow,
 } from '@app/api/database/types/OperatorPassTypes';
+import type {PersonaTriggerRow} from '@app/api/database/types/PersonaTypes';
 import type {StorePurchaseRow} from '@app/api/database/types/StoreBillingTypes';
 import type {Application} from '@app/api/models/Application';
 import type {AuthSession} from '@app/api/models/AuthSession';
@@ -27,6 +28,7 @@ import type {Guild} from '@app/api/models/Guild';
 import type {GuildMember} from '@app/api/models/GuildMember';
 import type {MfaBackupCode} from '@app/api/models/MfaBackupCode';
 import type {Payment} from '@app/api/models/Payment';
+import type {Persona} from '@app/api/models/Persona';
 import type {PushSubscription} from '@app/api/models/PushSubscription';
 import type {Relationship} from '@app/api/models/Relationship';
 import type {SavedMessage} from '@app/api/models/SavedMessage';
@@ -148,6 +150,8 @@ interface UserDataJsonParams {
 		last_active_at: Date | null;
 		last_active_ip: string | null;
 	};
+	personas: Array<Persona>;
+	personaTriggers: Array<PersonaTriggerRow>;
 }
 
 function mapOperatorPassUnit(unit: OperatorPassUnitRow, events: Array<OperatorPassUnitEventRow>, userId: UserID) {
@@ -276,6 +280,8 @@ export function buildUserDataJson(params: UserDataJsonParams) {
 		pinnedDms,
 		authorizedIps,
 		activityData,
+		personas,
+		personaTriggers,
 	} = params;
 	const responseFields = {
 		user: {
@@ -315,6 +321,7 @@ export function buildUserDataJson(params: UserDataJsonParams) {
 			last_active_at: user.lastActiveAt?.toISOString() ?? null,
 			created_at: snowflakeToDate(user.id).toISOString(),
 			mfa_enabled: user.authenticatorTypes.size > 0,
+			persona_tag: user.personaTag,
 			authenticator_types: Array.from(user.authenticatorTypes),
 		},
 		auth_sessions: authSessions.map((session) => {
@@ -704,6 +711,23 @@ export function buildUserDataJson(params: UserDataJsonParams) {
 		pinned_dms: pinnedDms.map((pin) => ({
 			channel_id: pin.channel_id.toString(),
 			sort_order: pin.sort_order,
+		})),
+		personas: personas.map((persona) => ({
+			id: persona.id.toString(),
+			accent_color: persona.accentColor,
+			avatar_hash: persona.avatarHash,
+			banner_hash: persona.bannerHash,
+			bio: persona.bio,
+			display_name: persona.displayName,
+			internal_name: persona.internalName,
+			pronouns: persona.pronouns,
+			tags: persona.tags ?? [],
+			triggers: personaTriggers
+				.filter((trigger) => trigger.persona_id === persona.id)
+				.map((trigger) => ({
+					prefix: trigger.prefix,
+					suffix: trigger.suffix,
+				})),
 		})),
 		...mapSecurityData({authorizedIps, activityData}),
 	};

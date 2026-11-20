@@ -18,6 +18,7 @@ export function retryFailedMessage(message: Message): boolean {
 		edited_timestamp: undefined,
 		attachments: [...message.attachments],
 		reactions: [],
+		persona: message.persona || undefined,
 	};
 	MessageCommands.retryLocal(message.channelId, message.id);
 	MessageCommands.createOptimistic(message.channelId, optimisticMessage);
@@ -30,6 +31,7 @@ export function retryFailedMessage(message: Message): boolean {
 		flags: message.flags,
 		favoriteMemeId: message._favoriteMemeId,
 		stickers: [...(message.stickers ?? [])],
+		persona: message.persona || undefined,
 	});
 	return true;
 }

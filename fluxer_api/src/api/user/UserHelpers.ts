@@ -84,6 +84,7 @@ const FIELDS_CLEARED_ON_DELETION = [
 	'gift_inventory_client_seq',
 	'premium_onboarding_dismissed_at',
 	'mention_flags',
+	'persona_tag',
 	'last_voice_activity_sharing_change_at',
 ] as const satisfies ReadonlyArray<keyof UserRow>;
 

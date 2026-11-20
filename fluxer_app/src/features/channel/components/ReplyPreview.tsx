@@ -10,6 +10,7 @@ import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import MessageReferences, {MessageReferenceState} from '@app/features/messaging/state/MessageReferences';
 import {goToMessage} from '@app/features/messaging/utils/MessageNavigator';
 import LocalUserSpamOverride from '@app/features/moderation/state/LocalUserSpamOverride';
+import {makeFallbackPersona} from '@app/features/personas/models/Persona';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import styles from '@app/features/theme/styles/Message.module.css';
 import {Avatar} from '@app/features/ui/components/Avatar';
@@ -182,6 +183,7 @@ export const ReplyPreview = observer(
 						webhookId={referencedMessage.webhookId ?? undefined}
 						guildId={resolvedGuildId}
 						channelId={channelId}
+						persona={referencedMessage.persona ? makeFallbackPersona(referencedMessage.persona) : undefined}
 						message={referencedMessage}
 						enableLongPressActions={true}
 						data-flx="channel.reply-preview.preloadable-user-popout"
@@ -193,6 +195,8 @@ export const ReplyPreview = observer(
 							guildId={resolvedGuildId}
 							data-user-id={referencedMessage.author.id}
 							data-guild-id={resolvedGuildId}
+							personaId={referencedMessage.persona?.id}
+							personaAvatar={referencedMessage.persona?.avatar}
 							data-flx="channel.reply-preview.replied-avatar"
 						/>
 					</PreloadableUserPopout>
@@ -211,6 +215,7 @@ export const ReplyPreview = observer(
 					webhookId={referencedMessage.webhookId ?? undefined}
 					guildId={resolvedGuildId}
 					channelId={channelId}
+					persona={referencedMessage.persona ? makeFallbackPersona(referencedMessage.persona) : undefined}
 					message={referencedMessage}
 					enableLongPressActions={true}
 					longPressWrapperElement="span"
@@ -230,7 +235,7 @@ export const ReplyPreview = observer(
 						data-guild-id={resolvedGuildId}
 						data-flx="channel.reply-preview.replied-username"
 					>
-						{`${message.mentions.some((mention) => mention.id === referencedMessage.author.id) ? '@' : ''}${NicknameUtils.getNickname(referencedMessage.author, resolvedGuildId)}`}
+						{`${message.mentions.some((mention) => mention.id === referencedMessage.author.id) ? '@' : ''}${referencedMessage.persona?.name || NicknameUtils.getNickname(referencedMessage.author, resolvedGuildId)}`}
 					</span>
 				</PreloadableUserPopout>
 				<FocusRing offset={-2} data-flx="channel.reply-preview.focus-ring">

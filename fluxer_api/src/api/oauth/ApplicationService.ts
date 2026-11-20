@@ -303,6 +303,7 @@ export class ApplicationService {
 					deletion_reason_code: null,
 					deletion_public_reason: null,
 					deletion_audit_log_reason: null,
+					persona_tag: null,
 				},
 				botUser.toRow(),
 			);

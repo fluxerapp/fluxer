@@ -90,6 +90,7 @@ function makeMessageWithMedia(
 		message_snapshots: null,
 		call: null,
 		has_reaction: null,
+		persona: null,
 		version: 1,
 	});
 }

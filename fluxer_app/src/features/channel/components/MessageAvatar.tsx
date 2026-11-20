@@ -4,9 +4,11 @@ import {CrosspostCommunityPopout} from '@app/features/channel/components/Crosspo
 import {useMaybeMessageViewContext} from '@app/features/channel/components/MessageViewContext';
 import {PreloadableUserPopout} from '@app/features/channel/components/PreloadableUserPopout';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
+import {makeFallbackPersona} from '@app/features/personas/models/Persona';
 import {Avatar} from '@app/features/ui/components/Avatar';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import type {User} from '@app/features/user/models/User';
+import Personas from '@app/features/user/state/Personas';
 import {observer} from 'mobx-react-lite';
 import {useCallback} from 'react';
 
@@ -30,6 +32,7 @@ export const MessageAvatar = observer(
 		const onPopoutToggle = useMaybeMessageViewContext()?.onPopoutToggle;
 		const handlePopoutOpen = useCallback(() => onPopoutToggle?.(true), [onPopoutToggle]);
 		const handlePopoutClose = useCallback(() => onPopoutToggle?.(false), [onPopoutToggle]);
+		const storedPersona = message.persona?.id ? Personas.getPersona(message.persona.id) : null;
 		if (message.isCrosspostCopy) {
 			return (
 				<CrosspostCommunityPopout
@@ -56,6 +59,7 @@ export const MessageAvatar = observer(
 		return (
 			<PreloadableUserPopout
 				user={user}
+				persona={message.persona?.id ? makeFallbackPersona(message.persona) : undefined}
 				isWebhook={message.webhookId != null}
 				webhookId={message.webhookId ?? undefined}
 				guildId={guildId}
@@ -73,8 +77,11 @@ export const MessageAvatar = observer(
 						className={className}
 						forceAnimate={isHovering}
 						guildId={guildId}
+						personaId={message.persona?.id}
+						personaAvatar={storedPersona?.avatar || message.persona?.avatar}
 						data-user-id={user.id}
 						data-guild-id={guildId}
+						data-persona-id={message.persona?.id}
 						data-flx="channel.message-avatar.avatar"
 					/>
 				</FocusRing>

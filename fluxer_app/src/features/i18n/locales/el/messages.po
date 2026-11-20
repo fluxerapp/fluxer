@@ -61,6 +61,11 @@ msgstr "[Αρχικό μήνυμα διαγράφηκε]"
 msgid "{0, plural, one {# member} other {# members}}"
 msgstr "{0, plural, one {# μέλος} other {# μέλη}}"
 
+#. placeholder {0}: props.value
+#: src/features/personas/components/modals/PersonaImportModal.tsx
+msgid "{0} personas imported successfully"
+msgstr ""
+
 #. Screen reader announcement in the composer when two people are typing. {a} and {b} are their display names.
 #: src/features/typing/rolling/RollingTypingText.tsx
 msgid "{a} and {b} are typing..."
@@ -2988,6 +2993,16 @@ msgstr "Μια κανονική κλήση περνάει μέσω ενός δι
 msgid "a sticker"
 msgstr "ένα αυτοκόλλητο"
 
+#. A label for the latching modes (trigger behavior) setting.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
+msgid "A trigger sends a message with its persona, but the active persona doesn't change."
+msgstr ""
+
+#. A label for the latching modes (trigger behavior) setting.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
+msgid "A trigger sets its persona as active until the active persona is changed. This may also be called \"latching\"."
+msgstr ""
+
 #. Description for has:link. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts
 msgid "a URL typed in the message text"
@@ -3015,6 +3030,7 @@ msgstr "Σχετικά με το {appName}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/pages/YouPage.tsx
+#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "About me"
@@ -3299,6 +3315,11 @@ msgstr "Ενεργός μηνιαίος συνδρομητής (προγραμμ
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
 msgid "Active now"
 msgstr "Ενεργοί τώρα"
+
+#. Local system message after the user changes their active persona with a slash command. The bold markdown markers should remain around the name.
+#: src/features/devtools/utils/CommandUtils.ts
+msgid "Active persona set to **{persona}**."
+msgstr ""
 
 #. Developer premium-state scenario label.
 #: src/features/devtools/components/PremiumScenarioOptions.ts
@@ -3988,6 +4009,10 @@ msgstr "Προσθήκη παρόχου μετάφρασης"
 msgid "Add translator"
 msgstr "Προσθήκη μεταφραστή"
 
+#: src/features/user/components/modals/PersonaEditorModal.tsx
+msgid "Add trigger"
+msgstr ""
+
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx
 msgid "Add your own reverse image search providers with a custom URL pattern. Use <0>{url}</0> as a placeholder for the image URL."
 msgstr "Προσθέστε τους δικούς σας παρόχους αντίστροφης αναζήτησης εικόνων με ένα προσαρμοσμένο μοτίβο URL. Χρησιμοποιήστε το <0>{url}</0> ως σύμβολο κράτησης θέσης για το URL της εικόνας."
@@ -4332,6 +4357,11 @@ msgstr "Όλες οι γλώσσες"
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx
 msgid "All messages"
 msgstr "Όλα τα μηνύματα"
+
+#. Local system message after the user changes their active persona with a slash command. The bold markdown markers should remain around the name.
+#: src/features/devtools/utils/CommandUtils.ts
+msgid "All personas deactivated."
+msgstr ""
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/IndicatorsTab.tsx
 msgid "All status types"
@@ -4760,6 +4790,11 @@ msgstr "Κεχριμπάρι"
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx
 msgid "Amount"
 msgstr "Ποσό"
+
+#. Title of the import progress modal.
+#: src/features/personas/components/modals/PersonaImportModal.tsx
+msgid "An error occurred"
+msgstr ""
 
 #. Fallback error message shown when the channel search request fails for an unknown reason.
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx
@@ -7644,6 +7679,11 @@ msgstr "Αλλαγή κωδικού πρόσβασης"
 msgid "Change password form"
 msgstr "Φόρμα αλλαγής κωδικού πρόσβασης"
 
+#. Generic action label that opens the persona picker.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts
+msgid "Change persona"
+msgstr ""
+
 #. Description of the "Colors and fonts" section in Settings > Themes. Quick CSS is custom CSS the user writes.
 #: src/features/theme_settings/components/ColorsAndFontsSection.tsx
 msgid "Change single colors and fonts of the base theme. Your changes are saved in the quick CSS of the theme you're editing."
@@ -7660,6 +7700,11 @@ msgstr "Αλλαγή ροής"
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx
 msgid "Change stream source"
 msgstr "Αλλαγή πηγής ροής"
+
+#. Slash-command description for /persona. Changes the user's active persona.
+#: src/features/devtools/hooks/useCommands.ts
+msgid "Change the active persona."
+msgstr ""
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
@@ -8588,6 +8633,11 @@ msgstr "Επιλέξτε τι βλέπουν οι φίλοι στην ενότη
 #: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx
 msgid "Choose what happens to images and videos flagged as sensitive. Show displays them as usual, Blur hides them until you click, and Block hides them completely."
 msgstr "Επιλέξτε τι συμβαίνει με τις εικόνες και τα βίντεο που επισημαίνονται ως ευαίσθητα. Η Εμφάνιση τα προβάλλει κανονικά, η Θόλωση τα κρύβει μέχρι να κάνετε κλικ και το Μπλοκάρισμα τα κρύβει εντελώς."
+
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
+msgid "Choose what happens when you use a persona trigger"
+msgstr ""
 
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
 msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
@@ -10876,6 +10926,16 @@ msgstr "Δεν ήταν δυνατή η αποκωδικοποίηση αυτο�
 msgid "Could not download your data export"
 msgstr "Δεν ήταν δυνατή η λήψη της εξαγωγής δεδομένων σας"
 
+#. Title of the import progress modal.
+#: src/features/personas/components/modals/PersonaImportModal.tsx
+msgid "Could not get avatars"
+msgstr ""
+
+#. Title of the import progress modal.
+#: src/features/personas/components/modals/PersonaImportModal.tsx
+msgid "Could not import personas"
+msgstr ""
+
 #. Error shown when the setup wizard fails to load the instance configuration.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx
 msgid "Could not load the instance configuration. Try reloading the page."
@@ -10885,6 +10945,11 @@ msgstr "Δεν ήταν δυνατή η φόρτωση της διαμόρφωσ
 #: src/features/auth/flow/AuthRuntimeTargetBoundary.tsx
 msgid "Could not load this page"
 msgstr "Δεν ήταν δυνατή η φόρτωση αυτής της σελίδας"
+
+#. Title of the import progress modal.
+#: src/features/personas/components/modals/PersonaImportModal.tsx
+msgid "Could not read file"
+msgstr ""
 
 #. Body of the modal shown when a screen share attempt fails. Advises the user to try sharing the full screen.
 #: src/features/voice/components/alerts/ScreenShareFailedModal.tsx
@@ -11803,6 +11868,10 @@ msgstr "Δημιουργία νέου συνδέσμου"
 #: src/features/input/state/input_keybind/shared.ts
 msgid "Create or join a community"
 msgstr "Δημιουργία ή συμμετοχή σε κοινότητα"
+
+#: src/features/user/components/modals/tabs/PersonasTab.tsx
+msgid "Create Persona"
+msgstr ""
 
 #. Permission name in forum and media channel permissions. Lets members create posts.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
@@ -12822,6 +12891,7 @@ msgstr "Ντέλαγουερ"
 #: src/features/emoji/components/stickers/StickerGridItem.tsx
 #: src/features/messaging/commands/MessageCommands.tsx
 #: src/features/platform/utils/DesktopLocaleBridge.ts
+#: src/features/user/components/modals/PersonaEditorModal.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx
@@ -13072,6 +13142,10 @@ msgstr "Διαγραφή αυτού του μηνύματος; Δεν μπορε
 msgid "Delete this message? Can't be undone. This message is also removed from every community that follows this channel."
 msgstr "Διαγραφή αυτού του μηνύματος; Δεν αναιρείται. Το μήνυμα θα αφαιρεθεί επίσης από κάθε κοινότητα που ακολουθεί αυτό το κανάλι."
 
+#: src/features/user/components/modals/PersonaEditorModal.tsx
+msgid "Delete this persona?"
+msgstr ""
+
 #. Destructive moderator action that deletes a thread and all its messages.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "Delete thread"
@@ -13258,6 +13332,10 @@ msgstr "Η περιγραφή πρέπει να έχει τουλάχιστον 
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
 msgid "Description must be no more than {discoveryDescriptionMaxLength} characters."
 msgstr "Η περιγραφή δεν πρέπει να υπερβαίνει τους {discoveryDescriptionMaxLength} χαρακτήρες."
+
+#: src/features/personas/components/modals/PersonaImportModal.tsx
+msgid "Deselect all"
+msgstr ""
 
 #. Developer settings tab showing UI component examples.
 #: src/features/user/components/settings_utils/SettingsConstants.tsx
@@ -14180,6 +14258,11 @@ msgstr "Να μην εμφανίζονται οι ενδείξεις πληκτ�
 msgid "Don't suggest {deviceName} again"
 msgstr "Να μην προταθεί ξανά η συσκευή {deviceName}"
 
+#. Button or menu action label in the channel and chat persona bar. Keep it concise.
+#: src/features/channel/components/ChannelPersonaBar.tsx
+msgid "Don't use this persona"
+msgstr ""
+
 #. Settings menu entry that opens the donation page on the website, where people can give money to support Fluxer.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Donate"
@@ -14732,8 +14815,14 @@ msgstr "Επεξεργασία ή διαγραφή emoji και αυτοκόλλ
 msgid "Edit overwrites for roles and members in this channel."
 msgstr "Επεξεργασία παρακάμψεων για ρόλους και μέλη σε αυτό το κανάλι."
 
+#. The title of the persona editor modal.
+#: src/features/user/components/modals/PersonaEditorModal.tsx
+msgid "Edit Persona"
+msgstr ""
+
 #: src/features/app/components/floating/UserAreaPopout.tsx
 #: src/features/app/components/pages/YouPage.tsx
+#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx
 #: src/features/user/components/modals/UserProfileModal.tsx
 #: src/features/user/components/popouts/UserProfilePopout.tsx
@@ -16866,6 +16955,11 @@ msgstr "Φιλτράρισμα μελών χωρίς ρόλους"
 #: src/features/messaging/components/popouts/RecentMentionsContent.tsx
 msgid "Filter mentions"
 msgstr "Φιλτράρισμα αναφορών"
+
+#: src/features/personas/components/popouts/PersonaPickerPopout.tsx
+#: src/features/user/components/modals/tabs/PersonasTab.tsx
+msgid "Filter personas"
+msgstr ""
 
 #. Placeholder of the filter field in the outline of the quick CSS editor, which lists the CSS rules.
 #: src/features/theme_settings/components/QuickCssOutline.tsx
@@ -19632,6 +19726,7 @@ msgstr "Οι εικόνες που επικολλάτε από το πρόχει
 
 #. Primary button in the favorite GIF import modal. Starts importing pasted GIF URLs.
 #: src/features/channel/components/pickers/gif/ImportFavoriteGifsModal.tsx
+#: src/features/personas/components/modals/PersonaImportModal.tsx
 msgid "Import"
 msgstr "Εισαγωγή"
 
@@ -19688,6 +19783,11 @@ msgstr "Εισαγωγή βιβλιοθήκης"
 msgid "Import more"
 msgstr "Εισαγωγή κι άλλων"
 
+#. Title of the import progress modal.
+#: src/features/personas/components/modals/PersonaImportModal.tsx
+msgid "Import progress"
+msgstr ""
+
 #. Accessible label for the import-template form element. Used by assistive tech only.
 #: src/features/guild/components/modals/add_guild_modal/shared.ts
 msgid "Import template form"
@@ -19708,6 +19808,10 @@ msgstr "Εισαγωγή θεμάτων"
 #: src/features/channel/components/ThemeEmbed.tsx
 msgid "Import unavailable"
 msgstr "Η εισαγωγή δεν είναι διαθέσιμη"
+
+#: src/features/user/components/modals/tabs/PersonasTab.tsx
+msgid "Import..."
+msgstr ""
 
 #. Markdown alert label for an important callout when copied as plaintext.
 #. Short label in the messaging block elements. Keep it concise. Keep the tone plain and specific.
@@ -20188,6 +20292,11 @@ msgstr "Γλώσσα διεπαφής"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts
 msgid "Interface size"
 msgstr "Μέγεθος διεπαφής"
+
+#. Label in the persona editor for a private name for a persona.
+#: src/features/user/components/modals/PersonaEditorModal.tsx
+msgid "Internal Name"
+msgstr ""
 
 #. Error message in the use entrance sound.
 #: src/features/user/utils/UserMessageDescriptors.ts
@@ -21146,6 +21255,11 @@ msgstr "Τελευταία αλλαγή: ποτέ"
 msgid "Last used"
 msgstr "Τελευταία χρήση"
 
+#. A label for the latching modes (trigger behavior) setting.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
+msgid "Last Used"
+msgstr ""
+
 #. Aria label on the signal-strength icon. {latency} is the integer millisecond latency.
 #: src/features/voice/components/SignalStrengthIcon.tsx
 msgid "Latency {latency} milliseconds"
@@ -21997,6 +22111,11 @@ msgstr "Το κανάλι ορίστηκε να κληρονομεί τη ρύθ
 msgid "Mail"
 msgstr "Email"
 
+#. Description for a /persona choice that turns off.
+#: src/features/devtools/hooks/useCommands.ts
+msgid "Main account (deactivate persona)"
+msgstr ""
+
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts
 msgctxt "us-state"
@@ -22039,6 +22158,16 @@ msgstr "Ορισμός ως κατόχου ομάδας"
 #: src/features/app/components/setup/SetupBrandingFields.tsx
 msgid "Make it look like yours"
 msgstr "Δώστε της το δικό σας στυλ"
+
+#. A tooltip for the button that activates a persona.
+#: src/features/user/components/modals/tabs/PersonasTab.tsx
+msgid "Make persona active"
+msgstr ""
+
+#. A tooltip for the button that deactivates a persona.
+#: src/features/user/components/modals/tabs/PersonasTab.tsx
+msgid "Make persona not active"
+msgstr ""
 
 #. Shown above the code on the browser approval page when the app cannot be signed in automatically. PRODUCT_NAME is the app name, such as Fluxer.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx
@@ -22143,6 +22272,10 @@ msgstr "Διαχείριση τρόπων πληρωμής"
 msgid "Manage permissions"
 msgstr "Διαχείριση δικαιωμάτων"
 
+#: src/features/personas/components/popouts/PersonaPickerPopout.tsx
+msgid "Manage Personas"
+msgstr ""
+
 #. Permission name in forum and media channel permissions. Lets members moderate posts.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "Manage posts"
@@ -22181,6 +22314,11 @@ msgstr "Διαχειριστείτε τους κωδικούς δώρου {PREMI
 #: src/features/user/components/settings_utils/search_index/SubscriptionsIndex.ts
 msgid "Manage your subscription"
 msgstr "Διαχείριση συνδρομής"
+
+#. A label for the latching modes (trigger behavior) setting.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
+msgid "Manual"
+msgstr ""
 
 #. Modal title when automatic in-app desktop updates cannot be used.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -22856,7 +22994,9 @@ msgstr "Συντομεύσεις μενού"
 msgid "message"
 msgstr "μήνυμα"
 
+#. Label in the persona editor for the message prefixes and suffixes that trigger a persona for a message.
 #. Short label in the inputs tab. Keep it concise.
+#: src/features/user/components/modals/PersonaEditorModal.tsx
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx
 msgid "Message"
 msgstr "Μήνυμα"
@@ -24052,6 +24192,11 @@ msgstr "Οι φίλοι μου"
 msgid "My group"
 msgstr "Η ομάδα μου"
 
+#. Slate message that shows in the Personas tab when there are no personas.
+#: src/features/user/components/modals/tabs/PersonasTab.tsx
+msgid "My name is Darth Vader. I am an extra-terrestrial from the planet Vulcan!"
+msgstr ""
+
 #. Label in the add custom search engine modal.
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx
 msgid "My reverse image search"
@@ -24164,6 +24309,11 @@ msgstr "Φόρμα ονομασίας κλειδιού πρόσβασης"
 #: src/features/app/components/setup/SetupNameStep.tsx
 msgid "Name your instance"
 msgstr "Δώστε όνομα στην παρουσία σας"
+
+#. Placeholder text to hint at what can be used to filter personas in the list.
+#: src/features/personas/components/popouts/PersonaPickerPopout.tsx
+msgid "Names, pronouns, or triggers"
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
@@ -24417,6 +24567,11 @@ msgstr "Νέο μικρόφωνο"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "New password"
 msgstr "Νέος κωδικός πρόσβασης"
+
+#. The title of the persona editor modal when it's being used to create a new persona.
+#: src/features/user/components/modals/PersonaEditorModal.tsx
+msgid "New Persona"
+msgstr ""
 
 #. Button in a forum channel that opens the composer for a new post.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
@@ -24946,6 +25101,16 @@ msgstr "Δεν βρέθηκαν δικαιώματα"
 #: src/features/user/components/modals/tabs/LanguageTab.tsx
 msgid "No personal words yet."
 msgstr "Δεν υπάρχουν ακόμα προσωπικές λέξεις."
+
+#. Slate title that shows in the Personas tab when there are no personas when filtered.
+#: src/features/user/components/modals/tabs/PersonasTab.tsx
+msgid "No personas found"
+msgstr ""
+
+#. Slate title that shows in the Personas tab when there are no personas.
+#: src/features/user/components/modals/tabs/PersonasTab.tsx
+msgid "No personas yet"
+msgstr ""
 
 #. Short label in the shared app channel pins content.
 #: src/features/app/components/shared/ChannelPinsContent.tsx
@@ -25588,6 +25753,7 @@ msgstr "Δημιουργία URL OAuth2"
 msgid "Objects"
 msgstr "Αντικείμενα"
 
+#. A label for the latching modes (trigger behavior) setting.
 #. Activity log value meaning the explicit content filter of a community is turned off.
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #. Explicit content filter option in the community moderation settings tab. Short standalone label meaning disabled.
@@ -25601,6 +25767,7 @@ msgstr "Αντικείμενα"
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
 msgid "Off"
 msgstr "Ανενεργό"
 
@@ -25643,6 +25810,7 @@ msgid "Ohio"
 msgstr "Οχάιο"
 
 #. Native desktop dialog button that closes the dialog saying the app is up to date.
+#: src/features/personas/components/modals/PersonaImportModal.tsx
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "OK"
 msgstr "OK"
@@ -27574,6 +27742,36 @@ msgstr "Δικαιώματα για {0}"
 msgid "Person you're reporting"
 msgstr "Άτομο που αναφέρετε"
 
+#. Short label in the persona editor. Keep it concise.
+#: src/features/user/components/modals/PersonaEditorModal.tsx
+msgid "Persona created"
+msgstr ""
+
+#. Short label in the persona editor. Keep it concise.
+#: src/features/user/components/modals/PersonaEditorModal.tsx
+msgid "Persona deleted"
+msgstr ""
+
+#. Settings search entry label. Also used as a search synonym in the settings search bar.
+#: src/features/user/utils/UserMessageDescriptors.ts
+msgid "Persona tag"
+msgstr ""
+
+#. Explanation for persona tags.
+#: src/features/user/utils/UserMessageDescriptors.ts
+msgid "Persona tags display next to your personas to tie them together."
+msgstr ""
+
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
+msgid "Persona trigger behavior"
+msgstr ""
+
+#. Short label in the persona editor. Keep it concise.
+#: src/features/user/components/modals/PersonaEditorModal.tsx
+msgid "Persona updated"
+msgstr ""
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Personal dictionary"
@@ -27590,6 +27788,17 @@ msgstr "Προσωπικές σημειώσεις"
 #: src/features/channel/components/direct_message/DirectMessageList.tsx
 msgid "Personal notes were already empty"
 msgstr "Οι προσωπικές σημειώσεις ήταν ήδη κενές"
+
+#. Settings section label for editing personas.
+#. User settings tab for managing the list of available personas.
+#: src/features/user/components/settings_utils/SettingsConstants.tsx
+#: src/features/user/utils/UserMessageDescriptors.ts
+msgid "Personas"
+msgstr ""
+
+#: src/features/user/components/modals/tabs/PersonasTab.tsx
+msgid "Personas are reusable profiles that you can attach to messages."
+msgstr ""
 
 #. Keyboard shortcut keycap label for Page Down. Keep the abbreviation compact.
 #: src/features/ui/keybind_hint/KeybindHint.tsx
@@ -28142,6 +28351,11 @@ msgstr "Προτιμώμενος κωδικοποιητής κοινής χρή�
 msgid "Prefers reduced motion"
 msgstr "Προτιμά μειωμένη κίνηση"
 
+#. Label in the persona editor for the message prefixes and suffixes that trigger a persona for a message.
+#: src/features/user/components/modals/PersonaEditorModal.tsx
+msgid "Prefix"
+msgstr ""
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts
 msgid "Premium"
@@ -28191,6 +28405,10 @@ msgstr "Ημερομηνία λήξης Premium"
 #: src/features/messaging/components/modals/ImageCropModal.tsx
 msgid "Preparing"
 msgstr "Ετοιμασία"
+
+#: src/features/personas/components/modals/PersonaImportModal.tsx
+msgid "Preparing avatars and banners..."
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts
@@ -29110,6 +29328,10 @@ msgstr "Διαβάστε την τεκμηρίωση ({domain})"
 #: src/features/app/components/setup/SetupPolicySteps.tsx
 msgid "Read the push relay privacy notice"
 msgstr "Διαβάστε τη σημείωση απορρήτου του push relay"
+
+#: src/features/personas/components/modals/PersonaImportModal.tsx
+msgid "Reading file..."
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts
@@ -32288,6 +32510,7 @@ msgstr "Επίλεξε μια μεταβλητή για να την προσθέ
 #. Native Edit menu item that selects everything in the focused field. Imperative verb.
 #. Textarea right-click context menu item that selects all text in the textarea.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx
+#: src/features/personas/components/modals/PersonaImportModal.tsx
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "Select all"
 msgstr "Επιλογή όλων"
@@ -32324,6 +32547,15 @@ msgstr "Επιλέξτε γλώσσα διεπαφής"
 #: src/features/theme_settings/components/QuickCssReference.tsx
 msgid "Select one to add a rule for it to your CSS."
 msgstr "Επίλεξε ένα για να προσθέσεις κανόνα στο CSS σου."
+
+#. Tooltip for the persona selection button
+#: src/features/personas/components/PersonaPickerComposerButton.tsx
+msgid "Select persona"
+msgstr ""
+
+#: src/features/personas/components/modals/PersonaImportModal.tsx
+msgid "Select personas to import"
+msgstr ""
 
 #. Accessible label for the regional format picker in the language settings. Keep it concise.
 #: src/features/user/components/modals/tabs/LanguageTab.tsx
@@ -32553,9 +32785,11 @@ msgid "Send files up to {size}"
 msgstr "Στείλτε αρχεία έως {size}"
 
 #. Button or menu action label in the user profile mobile sheet. Keep it concise.
+#. Button or menu action label in the user profile mobile sheet. Keep it concise.
 #. Member actions sheet menu item. Sends a friend request to the target user.
 #: src/features/channel/components/direct_message/DMWelcomeSection.tsx
 #: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx
+#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Send friend request"
 msgstr "Αποστολή αιτήματος φιλίας"
@@ -32687,6 +32921,11 @@ msgstr "Αποστολή:"
 #: src/features/app/components/dialogs/shared/UseForwardDestinations.ts
 msgid "Sending messages is disabled in this community"
 msgstr "Η αποστολή μηνυμάτων έχει απενεργοποιηθεί σε αυτήν την κοινότητα"
+
+#. placeholder {0}: persona.display_name || persona.internal_name
+#: src/features/channel/components/ChannelPersonaBar.tsx
+msgid "Sending this message as <0/> <1>{0}</1>"
+msgstr ""
 
 #. Description for the stereo microphone switch in the voice settings.
 #: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts
@@ -33916,6 +34155,13 @@ msgstr "Εμφάνιση κωδικού"
 msgid "Show per-device participant volume sliders in voice menus"
 msgstr "Εμφάνιση ρυθμιστικών έντασης ήχου συμμετεχόντων ανά συσκευή στα μενού φωνής"
 
+#. Plus menu submenu toggle that shows the persona picker button next to the textarea.
+#. Short label for an advanced message input preference.
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
+msgid "Show persona button"
+msgstr ""
+
 #. Toggle label and settings search entry for showing the Plutonium button in the direct messages list. Plutonium is the product name.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
 msgid "Show Plutonium button"
@@ -34014,6 +34260,11 @@ msgstr "Εμφάνιση αυτού του ρόλου ξεχωριστά"
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
 msgid "Show tray icon"
 msgstr "Εμφάνιση εικονιδίου στην περιοχή ειδοποιήσεων"
+
+#. A label for the latching modes (trigger behavior) setting.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
+msgid "Show trigger behavior slider in persona picker"
+msgstr ""
 
 #. Label in the interface tab.
 #: src/features/user/components/modals/tabs/appearance_tab/InterfaceTab.tsx
@@ -35993,6 +36244,11 @@ msgstr "Δευτερεύον κείμενο"
 msgid "Success"
 msgstr "Επιτυχία"
 
+#. Label in the persona editor for the message prefixes and suffixes that trigger a persona for a message.
+#: src/features/user/components/modals/PersonaEditorModal.tsx
+msgid "Suffix"
+msgstr ""
+
 #. Accessible label for the row of suggested theme colors in the setup wizard branding step.
 #: src/features/app/components/setup/SetupBrandingFields.tsx
 msgid "Suggested colors"
@@ -37153,6 +37409,11 @@ msgstr "Η προτροπή για το κλειδί πρόσβασης ακυρ
 msgid "The passwords don't match."
 msgstr "Οι κωδικοί πρόσβασης δεν ταιριάζουν."
 
+#. Description for the /persona option.
+#: src/features/devtools/hooks/useCommands.ts
+msgid "The persona to activate, or empty for none."
+msgstr ""
+
 #. Notice in the Operator Pass checkout dialog when the price changed before payment, usually because the early bird price ended. {price} is a price with currency.
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "The price is now {price}."
@@ -38213,6 +38474,11 @@ msgstr "Αυτή είναι η αρχή του {channelDisplayName}."
 msgid "This is the third option description"
 msgstr "Αυτή είναι η περιγραφή της τρίτης επιλογής"
 
+#. Tooltip on the crown icon on the persona entry that represents your main account.
+#: src/features/personas/components/popouts/PersonaPickerPopout.tsx
+msgid "This is your account."
+msgstr ""
+
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
 msgid "This is your last passkey and passkeys are your second factor. Deleting it turns off two-factor authentication for your account, and your current backup codes will stop working."
 msgstr "Αυτό είναι το τελευταίο σας κλειδί πρόσβασης και τα κλειδιά πρόσβασης είναι ο δεύτερος παράγοντάς σας. Η διαγραφή του απενεργοποιεί τον έλεγχο ταυτότητας δύο παραγόντων για τον λογαριασμό σας και οι τρέχοντες εφεδρικοί κωδικοί σας θα πάψουν να λειτουργούν."
@@ -38334,6 +38600,10 @@ msgstr "Αυτό το μήνυμα ενδέχεται να περιέχει ευ
 #: src/features/messaging/components/alerts/AltTextUpdateFailedModal.tsx
 msgid "This message no longer exists."
 msgstr "Αυτό το μήνυμα δεν υπάρχει πλέον."
+
+#: src/features/user/components/modals/PersonaEditorModal.tsx
+msgid "This name stays private, and only appears in lists of your own personas."
+msgstr ""
 
 #. Label in the my profile tab.
 #: src/features/user/components/modals/tabs/MyProfileTab.tsx
@@ -39261,6 +39531,16 @@ msgstr "Δημοφιλή GIF"
 msgid "Trigger React crash"
 msgstr "Πρόκληση σφάλματος React"
 
+#. Label in the persona editor for the message prefixes and suffixes that trigger a persona for a message.
+#: src/features/user/components/modals/PersonaEditorModal.tsx
+msgid "Triggers"
+msgstr ""
+
+#. A label for the latching modes (trigger behavior) setting.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
+msgid "Triggers don't do anything."
+msgstr ""
+
 #. Title of the modal that lets the user crop a long audio file down to the entrance sound length cap.
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx
 msgid "Trim entrance sound"
@@ -39368,6 +39648,11 @@ msgstr "Δοκιμάστε ένα διαφορετικό ερώτημα αναζ
 #: src/features/channel/components/pickers/memes/MemesPickerView.tsx
 msgid "Try a different search term or filter"
 msgstr "Δοκιμάστε διαφορετικό όρο αναζήτησης ή φίλτρο"
+
+#. Slate message that shows in the Personas tab when there are no personas when filtered.
+#: src/features/user/components/modals/tabs/PersonasTab.tsx
+msgid "Try a different search, or check your spelling."
+msgstr ""
 
 #. Label in the channel and chat mobile stickers picker.
 #: src/features/channel/components/MobileStickersPicker.tsx
@@ -39924,7 +40209,9 @@ msgid "Unblock them first to send a friend request."
 msgstr "Ξεμπλοκάρετέ τους πρώτα για να στείλετε αίτημα φιλίας."
 
 #. Button or menu action label in the user profile mobile sheet. Keep it concise. Keep the tone plain and specific.
+#. Button or menu action label in the user profile mobile sheet. Keep it concise. Keep the tone plain and specific.
 #. Title of the confirmation modal for unblocking a previously blocked user. Short command title.
+#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx
 #: src/features/relationship/utils/RelationshipActionUtils.tsx
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Unblock user"
@@ -40940,6 +41227,10 @@ msgstr "Αποστολή {count, plural, one {# αρχείου} other {# αρχ�
 #: src/features/emoji/components/modals/EmojiUploadModal.tsx
 msgid "Uploading emojis"
 msgstr "Ανέβασμα emoji"
+
+#: src/features/personas/components/modals/PersonaImportModal.tsx
+msgid "Uploading to server..."
+msgstr ""
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -42041,6 +42332,11 @@ msgstr "Προβολή λεπτομερειών συμβάντος"
 #: src/features/channel/components/channel_view/dm_channel_view/shared.ts
 msgid "View incoming call"
 msgstr "Προβολή εισερχόμενης κλήσης"
+
+#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx
+#: src/features/user/components/profile/PersonaProfile.tsx
+msgid "View main profile"
+msgstr ""
 
 #. Button on the connection banner when maintenance is ongoing. Opens that maintenance on the status page.
 #: src/features/app/hooks/useConnectionNotice.ts
@@ -43656,6 +43952,11 @@ msgstr "Έχετε ήδη τον μέγιστο αριθμό συνδέσεων 
 msgid "You already have this connection."
 msgstr "Έχετε ήδη αυτήν τη σύνδεση."
 
+#. placeholder {0}: savedPersona.internal_name
+#: src/features/user/components/modals/PersonaEditorModal.tsx
+msgid "You are about to delete {0}. Are you sure this is what you want to do?"
+msgstr ""
+
 #. External link warning title. productName is the Fluxer product name.
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx
 msgid "You are about to leave {productName}"
@@ -43776,6 +44077,11 @@ msgstr "Μπορείς να πάρεις πίσω ολόκληρο το ποσό
 #: src/features/app/components/dialogs/components/plutonium/RefundsSection.tsx
 msgid "You can get the full {amount} back until {date}. This also ends your subscription right away."
 msgstr "Μπορείς να πάρεις πίσω ολόκληρο το ποσό των {amount} έως {date}. Αυτό θα τερματίσει άμεσα και τη συνδρομή σου."
+
+#. A list of supported import formats. The names of each format should remain untranslated since they are proper nouns.
+#: src/features/user/components/modals/tabs/PersonasTab.tsx
+msgid "You can import JSON files exported from Pluralkit, Tupperbox, /plu/ral, Fishing Bucket, or anything that exports to a compatible format."
+msgstr ""
 
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx
 msgid "You can now close this tab and return to the app."
@@ -44197,6 +44503,7 @@ msgid "You have refunded recently"
 msgstr "Έχετε κάνει πρόσφατα επιστροφή χρημάτων"
 
 #: src/features/app/components/dialogs/shared/UnsavedChangesBannerContent.tsx
+#: src/features/user/components/modals/PersonaEditorModal.tsx
 msgid "You have unsaved changes."
 msgstr "Έχετε μη αποθηκευμένες αλλαγές."
 

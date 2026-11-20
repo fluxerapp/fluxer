@@ -4,7 +4,6 @@ import {TimestampWithTooltip} from '@app/features/channel/components/TimestampWi
 
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import styles from '@app/features/theme/styles/Message.module.css';
-
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
 
 import {observer} from 'mobx-react-lite';

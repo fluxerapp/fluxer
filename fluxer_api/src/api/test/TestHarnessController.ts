@@ -1475,6 +1475,7 @@ export function TestHarnessController(app: HonoApp) {
 				message_snapshots: null,
 				call: null,
 				has_reaction: false,
+				persona: null,
 				version: 1,
 			};
 			batch.addPrepared(Messages.upsertAll(messageRow));

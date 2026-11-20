@@ -34,6 +34,7 @@ const DEFAULT_MAX_VISIBLE_PAGES = 7;
 export const RESULTS_PER_PAGE = 25;
 export const DETACHED_MESSAGE_BEHAVIOR: MessageBehaviorOverrides = {
 	isEditing: false,
+	isChangingPersona: false,
 	isReplying: false,
 	isHighlight: false,
 	contextMenuOpen: false,

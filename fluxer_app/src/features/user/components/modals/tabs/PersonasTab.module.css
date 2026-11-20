@@ -1,0 +1,81 @@
+.srOnly {
+	position: absolute;
+	width: 0.0625rem;
+	height: 0.0625rem;
+	padding: 0;
+	margin: -0.0625rem;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+.personaTile {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 1rem;
+	background: var(--background-secondary-alt);
+	border-radius: var(--radius-md);
+	padding: 1rem;
+	&:hover {
+		background: color-mix(in oklab, var(--background-secondary-alt), gray 25%);
+		/* biome-ignore lint/suspicious/noDuplicateProperties: contrast-color will invalidate this second rule if it doesn't work,
+			 falling back to the usable but less pretty previous rule.
+			 See also: https://caniuse.com/wf-contrast-color */
+		background: color-mix(
+			in oklab,
+			var(--background-secondary-alt),
+			contrast-color(var(--background-secondary-alt)) 10%
+		);
+	}
+}
+
+.personaTileDetailsContainer {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 0.2lh;
+}
+
+.personaTileName {
+	font-weight: 600;
+}
+.personaTileTriggerRow {
+	display: flex;
+	flex-direction: row;
+	gap: 1rem;
+
+	font-size: var(--font-size-xs);
+	min-height: 1lh;
+}
+
+.personaTileTriggerChip {
+	background: var(--bg-code);
+	border-radius: var(--radius-sm);
+	font-family: var(--font-mono);
+}
+
+.buttonRow {
+	display: flex;
+	flex-direction: row;
+	justify-content: end;
+	align-items: end;
+	gap: 0.7rem;
+	&:not(.mobile) > button {
+		height: 45px;
+	}
+	& > fieldset {
+		flex: 1;
+	}
+}
+
+.hiddenInput {
+	display: none;
+}
+
+.personaLimitRow {
+	color: var(--text-muted);
+	font-size: 0.75rem;
+	text-align: end;
+}

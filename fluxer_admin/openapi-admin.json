@@ -2287,7 +2287,7 @@
 						"schema": {
 							"description": "Profile field to list. Required on the profile-substring blocklist and rejected on every other blocklist.",
 							"type": "string",
-							"enum": ["username", "global_name", "nickname", "bio", "pronouns"]
+							"enum": ["username", "global_name", "nickname", "bio", "pronouns", "persona_tag"]
 						},
 						"description": "Profile field to list. Required on the profile-substring blocklist and rejected on every other blocklist."
 					}
@@ -2565,7 +2565,7 @@
 						"schema": {
 							"description": "Profile field the entry is scoped to. Required on the profile-substring blocklist and rejected on every other blocklist.",
 							"type": "string",
-							"enum": ["username", "global_name", "nickname", "bio", "pronouns"]
+							"enum": ["username", "global_name", "nickname", "bio", "pronouns", "persona_tag"]
 						},
 						"description": "Profile field the entry is scoped to. Required on the profile-substring blocklist and rejected on every other blocklist."
 					}
@@ -2714,7 +2714,7 @@
 						"schema": {
 							"description": "Profile field the entry is scoped to. Required on the profile-substring blocklist and rejected on every other blocklist.",
 							"type": "string",
-							"enum": ["username", "global_name", "nickname", "bio", "pronouns"]
+							"enum": ["username", "global_name", "nickname", "bio", "pronouns", "persona_tag"]
 						},
 						"description": "Profile field the entry is scoped to. Required on the profile-substring blocklist and rejected on every other blocklist."
 					}
@@ -17714,6 +17714,7 @@
 							"max_guilds",
 							"max_attachment_file_size",
 							"max_message_length",
+							"max_personas",
 							"max_private_channels_per_user",
 							"max_reactions_per_message",
 							"max_relationships",
@@ -21543,7 +21544,10 @@
 			"BanProfileSubstringRequest": {
 				"type": "object",
 				"properties": {
-					"scope": {"type": "string", "enum": ["username", "global_name", "nickname", "bio", "pronouns"]},
+					"scope": {
+						"type": "string",
+						"enum": ["username", "global_name", "nickname", "bio", "pronouns", "persona_tag"]
+					},
 					"substrings": {"minItems": 1, "maxItems": 1000, "type": "array", "items": {"type": "string"}},
 					"reason": {"type": "string"},
 					"notes": {"type": "string"}
@@ -21669,7 +21673,10 @@
 			"AdminBlocklistProfileSubstringUpdateRequest": {
 				"type": "object",
 				"properties": {
-					"scope": {"type": "string", "enum": ["username", "global_name", "nickname", "bio", "pronouns"]},
+					"scope": {
+						"type": "string",
+						"enum": ["username", "global_name", "nickname", "bio", "pronouns", "persona_tag"]
+					},
 					"reason": {"type": "string"},
 					"notes": {"type": "string"}
 				},
@@ -22106,6 +22113,12 @@
 						"required": ["participants"],
 						"additionalProperties": false
 					},
+					"persona": {
+						"default": null,
+						"description": "The persona used for this message",
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/PersonaSnapshot"}]
+					},
 					"thread": {
 						"description": "The thread started from this message, when the viewer can see threads",
 						"allOf": [{"$ref": "#/components/schemas/ThreadChannelResponse"}]
@@ -22256,6 +22269,12 @@
 								"required": ["participants"],
 								"additionalProperties": false
 							},
+							"persona": {
+								"default": null,
+								"description": "The persona used for this message",
+								"nullable": true,
+								"allOf": [{"$ref": "#/components/schemas/PersonaSnapshot"}]
+							},
 							"thread": {
 								"description": "The thread started from this message, when the viewer can see threads",
 								"allOf": [{"$ref": "#/components/schemas/ThreadChannelResponse"}]
@@ -22273,7 +22292,8 @@
 							"mention_everyone",
 							"tts",
 							"mentions",
-							"mention_roles"
+							"mention_roles",
+							"persona"
 						],
 						"additionalProperties": false
 					}
@@ -22290,7 +22310,8 @@
 					"mention_everyone",
 					"tts",
 					"mentions",
-					"mention_roles"
+					"mention_roles",
+					"persona"
 				],
 				"additionalProperties": false
 			},
@@ -22882,6 +22903,36 @@
 				"required": ["id", "type"],
 				"additionalProperties": false
 			},
+			"PersonaSnapshot": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"description": "The unique identifier (snowflake) for this persona. THIS CAN BE NULL! In that case, the persona information in the snapshot is used as is.",
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+					},
+					"name": {
+						"description": "The display name of the persona",
+						"nullable": true,
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 100
+					},
+					"avatar": {
+						"description": "The hash of the persona avatar",
+						"nullable": true,
+						"type": "string",
+						"maxLength": 65536
+					},
+					"pronouns": {
+						"description": "The preferred pronouns of the persona",
+						"nullable": true,
+						"type": "string",
+						"maxLength": 40
+					}
+				},
+				"additionalProperties": false
+			},
 			"MessageSnapshotResponse": {
 				"type": "object",
 				"properties": {
@@ -23069,6 +23120,11 @@
 					"mention_flags": {
 						"description": "The user's account-wide reply mention preference. Omitted when the user has no preference set (treated as NO_PREFERENCE).",
 						"allOf": [{"$ref": "#/components/schemas/MentionReplyPreferences"}]
+					},
+					"persona_tag": {
+						"description": "A tag to display after this user's personas to visually associate them.",
+						"nullable": true,
+						"type": "string"
 					}
 				},
 				"required": ["id", "username", "discriminator", "global_name", "avatar", "avatar_color", "flags"],
@@ -27341,6 +27397,7 @@
 					"MAX_GUILDS",
 					"MAX_PINNED_THREADS_IN_FORUM",
 					"MAX_INVITES",
+					"MAX_PERSONAS",
 					"MAX_REACTIONS",
 					"MAX_STICKERS",
 					"MAX_THREAD_MEMBERS",
@@ -27738,6 +27795,7 @@
 					"You can't have more than {count, plural, one {# community} other {# communities}}.",
 					"This channel is at its pinned post limit of {count}.",
 					"You can't have more than {count, plural, one {# invite} other {# invites}}.",
+					"You can't have more than {count, plural, one {# persona} other {# personas}}.",
 					"You can't have more than {count, plural, one {# reaction} other {# reactions}}.",
 					"You can't have more than {count, plural, one {# sticker} other {# stickers}}.",
 					"This thread is at its member limit of {count}.",

@@ -86,6 +86,7 @@ export const DEFAULT_RESTRICTED_LIMITS: Record<LimitKey, number> = {
 	max_guild_visits: 10,
 	max_guilds: 100,
 	max_message_length: MAX_MESSAGE_LENGTH_NON_PREMIUM,
+	max_personas: 250,
 	max_private_channels_per_user: MAX_PRIVATE_CHANNELS_PER_USER,
 	max_reactions_per_message: MAX_REACTIONS_PER_MESSAGE,
 	max_relationships: MAX_RELATIONSHIPS,
@@ -117,4 +118,5 @@ export const DEFAULT_STOCK_LIMITS: Record<LimitKey, number> = {
 	max_favorite_memes: MAX_FAVORITE_MEMES_PREMIUM,
 	max_guilds: 200,
 	max_message_length: MAX_MESSAGE_LENGTH_PREMIUM,
+	max_personas: 1000,
 };

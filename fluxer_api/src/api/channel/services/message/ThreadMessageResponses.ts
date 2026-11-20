@@ -264,6 +264,7 @@ export class ThreadMessageResponses {
 				type: MessageReferenceTypes.DEFAULT,
 			},
 			referenced_message: referenced ?? null,
+			persona: null,
 		};
 	}
 

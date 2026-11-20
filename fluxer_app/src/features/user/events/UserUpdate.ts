@@ -21,6 +21,7 @@ export interface UserUpdatePayload {
 	flags: number;
 	is_staff?: boolean;
 	operator_pass_since?: string | null;
+	persona_tag?: string | null;
 }
 
 function operatorPassSinceChanged(data: UserUpdatePayload): boolean {

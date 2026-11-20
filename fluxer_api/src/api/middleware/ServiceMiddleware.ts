@@ -42,7 +42,7 @@ import {JobLedgerRepository} from '@app/api/jobs/JobLedgerRepository';
 import {createGuildStackServices, type GuildStackServices} from '@app/api/middleware/GuildStackServiceFactory';
 import {installLazyServices, type RequestScopedServices} from '@app/api/middleware/LazyServiceProvider';
 import {createOperatorPassServices, type OperatorPassServices} from '@app/api/middleware/OperatorPassServiceFactory';
-import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {createRequestCache, type RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {
 	ensureVoiceResourcesInitialized,
 	getBillingRepository,
@@ -98,6 +98,7 @@ import {
 	getOperatorPassEntitlementService,
 	getOperatorPassRepository,
 	getPasswordChangeRepository,
+	getPersonaRepository,
 	getPremiumStateReconciliationQueueService,
 	getPurgeQueue,
 	getRateLimitService,
@@ -150,6 +151,8 @@ import {WebhookRequestService} from '@app/api/webhook/WebhookRequestService';
 import {WebhookService} from '@app/api/webhook/WebhookService';
 import {parseAcceptLanguage} from '@fluxer/i18n/src/locale/resolution/AcceptLanguageNegotiation';
 import {createMiddleware} from 'hono/factory';
+import {PersonaService} from '../personas/services/PersonaService';
+import {UserAccountRepository} from '../user/repositories/account/UserAccountRepository';
 
 export {initializeServiceSingletons} from '@app/api/middleware/ServiceSingletons';
 
@@ -241,6 +244,7 @@ class RequestServices implements RequestScopedServices {
 	private cachedOAuth2Service: OAuth2Service | undefined;
 	private cachedOAuth2RequestService: OAuth2RequestService | undefined;
 	private cachedOAuth2ApplicationsRequestService: OAuth2ApplicationsRequestService | undefined;
+	private cachedPersonaService: PersonaService | undefined;
 	private cachedReportRequestService: ReportRequestService | undefined;
 	private cachedRpcService: RpcService | undefined;
 	private cachedSearchService: SearchService | undefined;
@@ -755,6 +759,22 @@ class RequestServices implements RequestScopedServices {
 			getApplicationRepository(),
 		);
 		return this.cachedOAuth2ApplicationsRequestService;
+	}
+
+	get personaService(): PersonaService {
+		this.cachedPersonaService ??= new PersonaService(
+			getPersonaRepository(),
+			getSnowflakeService(),
+			getEntityAssetService(),
+			getUserCacheService(),
+			this.entityCache ?? createRequestCache(),
+			getStorageService(),
+			getRateLimitService(),
+			getLimitConfigService(),
+			new UserAccountRepository(getKVClient()),
+			getGuildRepository(),
+		);
+		return this.cachedPersonaService;
 	}
 
 	get reportRequestService(): ReportRequestService {

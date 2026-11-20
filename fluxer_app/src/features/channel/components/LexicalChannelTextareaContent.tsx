@@ -105,6 +105,8 @@ import {
 	resolveTypedEmojiShortcodes,
 	resolveTypedEmojiToken,
 } from '@app/features/messaging/utils/TypedEmojiShortcodeUtils';
+import {PersonaPickerComposerButton} from '@app/features/personas/components/PersonaPickerComposerButton';
+import type {Persona} from '@app/features/personas/models/Persona';
 import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {awaitHydration} from '@app/features/platform/utils/MobXPersistence';
@@ -112,6 +114,7 @@ import {useSlowmode} from '@app/features/slowmode/hooks/useSlowmode';
 import {openCreateThread} from '@app/features/threads/commands/ThreadNavigation';
 import ActiveComposer from '@app/features/threads/state/ActiveComposer';
 import {canStartThreadIn} from '@app/features/threads/utils/ThreadActionRules';
+import RollingTypingSender from '@app/features/typing/rolling/RollingTypingSender';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -121,15 +124,18 @@ import {openPopout} from '@app/features/ui/popover/PopoverPopout';
 import ContextMenuState from '@app/features/ui/state/ContextMenu';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
+import Personas from '@app/features/user/state/Personas';
 import Users from '@app/features/user/state/Users';
 import {openVoiceMessageComposerModal} from '@app/features/voice/components/VoiceMessageComposerModal';
 import {flxElementClassName} from '@app/lib/react';
+import {PersonaSettings_LatchMode} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb.js';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {PlusIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState} from 'react';
+import {PersonaBar} from './ChannelPersonaBar';
 
 const PLUS_MENU_DOUBLE_CLICK_MS = 500;
 const MESSAGE_SCROLLER_SELECTOR = '[data-flx="channel.messages.scroller"][data-fluxer-scroll-container="true"]';
@@ -215,6 +221,9 @@ export const LexicalChannelTextareaContent = observer(
 			hasSlots: false,
 			activeSlot: null,
 		});
+		const personasWithTriggers = Personas.getOwnPersonas().filter((v) => v.triggers.length); //, [Personas.ownPersonas]
+		const [triggeredPersona, setTriggeredPersona] = useState<Persona | null>(null);
+		const [useTriggeredPersona, setUseTriggeredPersona] = useState(true);
 		const [mentionConfirmationSnapshot, setMentionConfirmationSnapshot] = useState(createMentionConfirmationSnapshot);
 		const mentionConfirmationModel = selectMentionConfirmationModel(mentionConfirmationSnapshot);
 		const pendingMentionConfirmation = mentionConfirmationModel.pending;
@@ -243,6 +252,31 @@ export const LexicalChannelTextareaContent = observer(
 				? containerRef.current.querySelector<HTMLDivElement>('[data-channel-textarea]')
 				: null;
 		}, []);
+		useEffect(() => {
+			if (!personasWithTriggers) return;
+			if (Personas.latchMode === PersonaSettings_LatchMode.OFF) {
+				setTriggeredPersona(null);
+				RollingTypingSender.updatePersona(null);
+				setUseTriggeredPersona(false);
+				return;
+			}
+			// TODO: find longest match, use it
+			const matches = personasWithTriggers.filter((p) =>
+				p.triggers.find(
+					(t) => !t.suffix && t.prefix?.trim() && value.toLowerCase().startsWith(t.prefix.toLowerCase().trim()),
+				),
+			);
+			// Suffixes are matched when the message is sent
+			if (matches.length > 1) return;
+			if (matches.length < 1) {
+				setTriggeredPersona(null);
+				RollingTypingSender.updatePersona(null);
+				if (!value) setUseTriggeredPersona(true);
+				return;
+			}
+			setTriggeredPersona(matches[0]);
+			RollingTypingSender.updatePersona(matches[0].id);
+		}, [setTriggeredPersona, setUseTriggeredPersona, personasWithTriggers, value]);
 		const bootFrameDraftRef = useRef(false);
 		useLayoutEffect(() => {
 			let active = true;
@@ -397,6 +431,51 @@ export const LexicalChannelTextareaContent = observer(
 		});
 		const handleSendMessage: SendMessageFunction = useCallback(
 			(...args) => {
+				let matchingPersona: Persona | null = null;
+				if (Personas.latchMode === PersonaSettings_LatchMode.OFF) {
+					setUseTriggeredPersona(false);
+					setTriggeredPersona(null);
+				}
+				if (useTriggeredPersona && triggeredPersona === null && !args['5']) {
+					// Match by prefix AND suffix
+					const value = args['0'].toLowerCase();
+					const matches = personasWithTriggers.filter((v) =>
+						v.triggers.find((t) => {
+							const prefix = t.prefix?.toLowerCase().trim();
+							const suffix = t.suffix?.toLowerCase().trim();
+							if (!prefix && !suffix) return false;
+							if (prefix && !value.startsWith(prefix)) return false;
+							if (suffix && !value.endsWith(suffix)) return false;
+							return true;
+						}),
+					);
+					if (matches.length === 1) {
+						args['5'] = matches[0].toSnapshot();
+						matchingPersona = matches[0];
+					}
+				}
+				if (useTriggeredPersona && triggeredPersona && !args['5']) {
+					args['5'] = triggeredPersona?.toSnapshot();
+					matchingPersona = triggeredPersona;
+				}
+				// Strip prefix and suffix from applied persona
+				if (useTriggeredPersona && matchingPersona) {
+					const value = args['0'].toLowerCase();
+					const matchingTrigger = matchingPersona.triggers.find((t) => {
+						const prefix = t.prefix?.toLowerCase().trim();
+						const suffix = t.suffix?.toLowerCase().trim();
+						if (!prefix && !suffix) return false;
+						if (prefix && !value.startsWith(prefix)) return false;
+						if (suffix && !value.endsWith(suffix)) return false;
+						return true;
+					});
+					if (matchingTrigger) {
+						let ival = args['0'];
+						if (matchingTrigger?.prefix) ival = ival.substring(matchingTrigger.prefix?.length ?? 0);
+						if (matchingTrigger?.suffix) ival = ival.substring(0, ival.length - matchingTrigger.suffix.length);
+						args['0'] = ival;
+					}
+				}
 				if (!(onSubmitOverride ?? sendMessage)(...args)) {
 					return false;
 				}
@@ -404,11 +483,16 @@ export const LexicalChannelTextareaContent = observer(
 				if (handle !== null) {
 					handle.clear();
 				}
+				if (matchingPersona && Personas.latchMode === PersonaSettings_LatchMode.TRIGGER_SWITCHING) {
+					Personas.setGlobalActivePersona(matchingPersona.id);
+				}
+				setTriggeredPersona(null);
+				setUseTriggeredPersona(true);
 				setValue('');
 				clearSegments();
 				return true;
 			},
-			[onSubmitOverride, sendMessage, clearSegments, value],
+			[triggeredPersona, useTriggeredPersona, onSubmitOverride, sendMessage, clearSegments, value],
 		);
 		const sendExpressionMessage: typeof sendOptimisticMessage = useCallback(
 			(messageData, sendOptions) => {
@@ -462,12 +546,13 @@ export const LexicalChannelTextareaContent = observer(
 			const pendingSticker = ChannelSticker.getPendingSticker(channel.id);
 			const stickerItems = pendingSticker ? [pendingSticker.toJSON()] : undefined;
 			let didSend = false;
+			const persona = useTriggeredPersona ? triggeredPersona?.toSnapshot() : undefined;
 			if (pending.tts) {
-				didSend = handleSendMessageRef.current(pending.content, false, true, stickerItems);
+				didSend = handleSendMessageRef.current(pending.content, false, true, stickerItems, undefined, persona);
 			} else if (stickerItems) {
-				didSend = handleSendMessageRef.current(pending.content, false, stickerItems);
+				didSend = handleSendMessageRef.current(pending.content, false, stickerItems, undefined, undefined, persona);
 			} else {
-				didSend = handleSendMessageRef.current(pending.content, false);
+				didSend = handleSendMessageRef.current(pending.content, false, undefined, undefined, undefined, persona);
 			}
 			if (!didSend) return;
 			sendMentionConfirmationEvent({type: 'mentionConfirmation.confirmed'});
@@ -812,6 +897,7 @@ export const LexicalChannelTextareaContent = observer(
 			onMentionConfirmationNeeded: handleMentionConfirmationNeeded,
 			commandsEnabled: enableSlashCommands,
 			i18n: i18n,
+			persona: useTriggeredPersona ? triggeredPersona?.toSnapshot() : undefined,
 		});
 		const handleClearSlashCommand = useCallback(() => {
 			const handle = handleRef.current;
@@ -988,6 +1074,8 @@ export const LexicalChannelTextareaContent = observer(
 			return true;
 		}, [channel.id, enableEditLast]);
 		useTextareaDraftAndTyping({
+			personaId:
+				(useTriggeredPersona ? triggeredPersona?.id : undefined) || Personas.getGlobalActivePersona()?.id || undefined,
 			bootFrameDraftRef,
 			draftOwner: accountKey,
 			channelId: draftChannelId ?? channel.id,
@@ -1248,7 +1336,11 @@ export const LexicalChannelTextareaContent = observer(
 		const presentableTypingUsers = usePresentableTypingUsers(channel);
 		const isTypingStatusVisible = draftChannelId == null && !isAutocompleteVisible && presentableTypingUsers.length > 0;
 		const isSlowmodeIndicatorVisible = isSlowmodeEnabled;
-		const hasLeadingStatusContent = isMobileEditBarVisible || isReplyBarVisible || isSlashParamBarVisible;
+		const hasLeadingStatusContent =
+			(useTriggeredPersona && triggeredPersona) ||
+			isMobileEditBarVisible ||
+			isReplyBarVisible ||
+			isSlashParamBarVisible;
 		let shouldReplyMention = false;
 		if (replyingMessage !== null && replyingMessage !== undefined) {
 			shouldReplyMention = replyingMessage.mentioning;
@@ -1270,6 +1362,14 @@ export const LexicalChannelTextareaContent = observer(
 					setShouldReplyMention={(mentioning) => MessageCommands.setReplyMentioning(channel.id, mentioning)}
 					channel={channel}
 					data-flx="channel.lexical-channel-textarea-content.reply-bar"
+				/>
+			);
+		} else if (triggeredPersona !== null && triggeredPersona?.id !== null) {
+			topBarContent = (
+				<PersonaBar
+					persona={triggeredPersona}
+					onCancel={() => setUseTriggeredPersona(false)}
+					data-flx="channel.lexical-channel-textarea-content.persona-bar"
 				/>
 			);
 		}
@@ -1393,19 +1493,30 @@ export const LexicalChannelTextareaContent = observer(
 									className={flxElementClassName(styles.uploadButtonColumn, styles.sideButtonPadding)}
 									data-flx="channel.lexical-channel-textarea-content.upload-button-column"
 								>
-									<TextareaButton
-										iconProps={PLUS_ICON_PROPS}
-										icon={slashCommandState.hasSlots ? SlashCommandIcon : PlusIcon}
-										label={slashCommandState.hasSlots ? i18n._(CLEAR_COMMAND_DESCRIPTOR) : i18n._(OPEN_MENU_DESCRIPTOR)}
-										disabled={textareaInputDisabled}
-										aria-hidden={textareaInputDisabled ? true : undefined}
-										onMouseDown={slashCommandState.hasSlots ? undefined : handlePlusMenuMouseDown}
-										onClick={slashCommandState.hasSlots ? handleClearSlashCommand : handlePlusMenuClick}
-										forceHover={!slashCommandState.hasSlots && plusContextMenuOpen}
-										className={plusContextMenuOpen ? styles.plusButtonAboveBackdrop : undefined}
-										ref={plusButtonRef}
-										data-flx="channel.lexical-channel-textarea-content.plus-button-above-backdrop.clear-slash-command"
-									/>
+									<flx-channel-textarea-upload-row
+										className={flxElementClassName(styles.uploadAndPersonasRow)}
+										data-flx="channel.lexical-channel-textarea-content.upload-button-row"
+									>
+										<TextareaButton
+											iconProps={PLUS_ICON_PROPS}
+											icon={slashCommandState.hasSlots ? SlashCommandIcon : PlusIcon}
+											label={
+												slashCommandState.hasSlots ? i18n._(CLEAR_COMMAND_DESCRIPTOR) : i18n._(OPEN_MENU_DESCRIPTOR)
+											}
+											disabled={textareaInputDisabled}
+											aria-hidden={textareaInputDisabled ? true : undefined}
+											onMouseDown={slashCommandState.hasSlots ? undefined : handlePlusMenuMouseDown}
+											onClick={slashCommandState.hasSlots ? handleClearSlashCommand : handlePlusMenuClick}
+											forceHover={!slashCommandState.hasSlots && plusContextMenuOpen}
+											className={plusContextMenuOpen ? styles.plusButtonAboveBackdrop : undefined}
+											ref={plusButtonRef}
+											data-flx="channel.lexical-channel-textarea-content.plus-button-above-backdrop.clear-slash-command"
+										/>
+										<PersonaPickerComposerButton
+											channel={channel}
+											data-flx="channel.lexical-channel-textarea-content.persona-picker-composer-button"
+										/>
+									</flx-channel-textarea-upload-row>
 								</flx-channel-textarea-upload-column>
 							)}
 							<flx-channel-textarea-content

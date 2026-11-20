@@ -16,6 +16,7 @@ import {SlowmodeRateLimitedModal} from '@app/features/slowmode/components/alerts
 import Slowmode from '@app/features/slowmode/state/Slowmode';
 import RollingTypingSender from '@app/features/typing/rolling/RollingTypingSender';
 import {modal, push as pushModal} from '@app/features/ui/commands/ModalCommands';
+import Personas from '@app/features/user/state/Personas';
 import Users from '@app/features/user/state/Users';
 import {MessageStates, MessageTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {CHANNEL_RATE_LIMIT_PER_USER_MAX} from '@fluxer/constants/src/LimitConstants';
@@ -24,6 +25,7 @@ import type {
 	MessageAttachment,
 	MessageStickerItem,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {PersonaSnapshot} from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
 import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
 import {useLingui} from '@lingui/react/macro';
 import {useCallback} from 'react';
@@ -42,6 +44,7 @@ export type SendMessageFunction = (
 	stickersOrTts?: Array<MessageStickerItem> | boolean,
 	favoriteMemeIdOrStickers?: string | Array<MessageStickerItem>,
 	maybeFavoriteMemeId?: string,
+	persona?: PersonaSnapshot,
 ) => boolean;
 
 function isBlockedBySlowmode(channel: Channel): boolean {
@@ -103,7 +106,9 @@ export const useMessageSubmission = ({
 			stickersOrTts: Array<MessageStickerItem> | boolean = [],
 			favoriteMemeIdOrStickers?: string | Array<MessageStickerItem>,
 			maybeFavoriteMemeId?: string,
+			persona?: PersonaSnapshot,
 		) => {
+			const personaSnapshot = persona || Personas.getGlobalActivePersona()?.toSnapshot();
 			const isTtsCall = typeof stickersOrTts === 'boolean';
 			const tts = isTtsCall ? stickersOrTts : undefined;
 			let stickers: Array<MessageStickerItem>;
@@ -154,6 +159,7 @@ export const useMessageSubmission = ({
 					replyMentioning: replyingMessage?.mentioning,
 					stickers,
 					favoriteMemeId,
+					persona: personaSnapshot,
 				},
 				uploadingAttachments,
 			);
@@ -176,6 +182,7 @@ export const useMessageSubmission = ({
 					stickers,
 					favoriteMemeId,
 					tts,
+					persona: personaSnapshot,
 				}),
 			);
 			ComponentBus.dispatch('MESSAGE_SENT', {channelId: channel.id});
@@ -189,6 +196,7 @@ export const useMessageSubmission = ({
 				content: string;
 				stickers?: Array<MessageStickerItem>;
 				attachments?: Array<MessageAttachment>;
+				persona?: PersonaSnapshot;
 			},
 			sendOptions: {
 				hasAttachments: boolean;
@@ -220,6 +228,7 @@ export const useMessageSubmission = ({
 				nonce,
 				attachments: messageData.attachments || [],
 				stickers: messageData.stickers || [],
+				persona: messageData.persona,
 				_allowedMentions: referencedMessage ? {replied_user: replyingMessage?.mentioning ?? true} : undefined,
 			});
 			MessageCommands.createOptimistic(channel.id, {
@@ -243,6 +252,7 @@ export const useMessageSubmission = ({
 					flags: 0,
 					stickers: messageData.stickers || [],
 					favoriteMemeId: sendOptions.favoriteMemeId,
+					persona: messageData.persona,
 				}),
 			);
 			ComponentBus.dispatch('MESSAGE_SENT', {channelId: channel.id});

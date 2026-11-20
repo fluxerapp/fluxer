@@ -89,6 +89,7 @@ interface SensitiveContentOption {
 
 interface SensitiveContentChoiceRowProps {
 	label: string;
+	className?: string;
 	description: string;
 	value: number;
 	options: ReadonlyArray<SensitiveContentOption>;
@@ -97,8 +98,9 @@ interface SensitiveContentChoiceRowProps {
 	dataFlx: string;
 }
 
-const SensitiveContentChoiceRow: React.FC<SensitiveContentChoiceRowProps> = ({
+export const SensitiveContentChoiceRow: React.FC<SensitiveContentChoiceRowProps> = ({
 	label,
+	className,
 	description,
 	value,
 	options,
@@ -127,7 +129,7 @@ const SensitiveContentChoiceRow: React.FC<SensitiveContentChoiceRowProps> = ({
 		window.requestAnimationFrame(() => optionRefs.current.get(nextOption.value)?.focus());
 	};
 	return (
-		<div className={styles.row} data-flx={`${dataFlx}.row`}>
+		<div className={clsx(styles.row, className)} data-flx={`${dataFlx}.row`}>
 			<div className={clsx(styles.text, disabled && styles.textDisabled)} data-flx={`${dataFlx}.text`}>
 				<span id={labelId} className={styles.label} data-flx={`${dataFlx}.label`}>
 					{label}

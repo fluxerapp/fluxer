@@ -8,6 +8,7 @@ import ThreadPanel from '@app/features/threads/state/ThreadPanel';
 import Users from '@app/features/user/state/Users';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {MessageAttachment, MessageStickerItem} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {PersonaSnapshot} from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
 import {useEffect, useState} from 'react';
 
 export interface ThreadStarterPayload {
@@ -17,6 +18,7 @@ export interface ThreadStarterPayload {
 	hasAttachments: boolean;
 	stickers: Array<MessageStickerItem>;
 	favoriteMemeId?: string;
+	persona?: PersonaSnapshot;
 }
 
 export function sendThreadStarter(thread: Channel, payload: ThreadStarterPayload): void {
@@ -30,6 +32,7 @@ export function sendThreadStarter(thread: Channel, payload: ThreadStarterPayload
 			currentUser,
 			stickers: payload.stickers,
 			favoriteMemeId: payload.favoriteMemeId,
+			persona: payload.persona,
 		},
 		payload.attachments,
 	);
@@ -42,6 +45,7 @@ export function sendThreadStarter(thread: Channel, payload: ThreadStarterPayload
 		flags: message.flags,
 		stickers: payload.stickers,
 		favoriteMemeId: payload.favoriteMemeId,
+		persona: payload.persona,
 	});
 }
 

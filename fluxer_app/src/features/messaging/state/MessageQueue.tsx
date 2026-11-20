@@ -65,6 +65,7 @@ import type {
 	MessageReference,
 	MessageStickerItem,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {PersonaSnapshot} from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {reaction} from 'mobx';
@@ -131,6 +132,7 @@ interface SendMessagePayload extends BaseMessagePayload {
 	favoriteMemeId?: string;
 	stickers?: Array<MessageStickerItem>;
 	tts?: boolean;
+	persona?: PersonaSnapshot;
 }
 
 type MessageQueuePayload = SendMessagePayload;
@@ -892,6 +894,7 @@ class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Message> | un
 			favoriteMemeId: payload.favoriteMemeId,
 			stickers: payload.stickers,
 			tts: payload.tts,
+			persona: payload.persona,
 		});
 		logger.debug(`Sending message to channel ${channelId}`);
 		const outcome = await this.attemptMessageSend(channelId, nonce, requestBody, payload.preparedFiles);

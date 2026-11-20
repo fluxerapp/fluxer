@@ -46,6 +46,7 @@ const ACCESSIBILITY_SHOW_NEKO_STORAGE_KEY = 'Accessibility:showNeko';
 const ACCESSIBILITY_KEEP_NEKO_STILL_STORAGE_KEY = 'Accessibility:keepNekoStill';
 const ACCESSIBILITY_PIN_NEKO_TO_TEXTAREA_STORAGE_KEY = 'Accessibility:pinNekoToTextarea';
 const ACCESSIBILITY_VIDEO_SEEK_PREVIEW_THUMBNAILS_STORAGE_KEY = 'Accessibility:videoSeekPreviewThumbnails';
+const ACCESSIBILITY_SHOW_LATCH_IN_PERSONA_PICKER_STORAGE_KEY = 'Accessibility:showLatchInPersonaPicker';
 const SYNCED_PREFERENCES_LOCAL_STORAGE_KEY = 'UserSettings:syncedPreferencesLocal';
 const getShowNekoStorageKey = (userId: string): string => `${ACCESSIBILITY_SHOW_NEKO_STORAGE_KEY}:${userId}`;
 const getKeepNekoStillStorageKey = (userId: string): string => `${ACCESSIBILITY_KEEP_NEKO_STILL_STORAGE_KEY}:${userId}`;
@@ -375,6 +376,12 @@ function persistLocalVideoSeekPreviewThumbnails(value: boolean): void {
 	} catch {}
 }
 
+function persistLocalShowLatchInPersonaPicker(value: boolean): void {
+	try {
+		AppStorage.setItem(ACCESSIBILITY_SHOW_LATCH_IN_PERSONA_PICKER_STORAGE_KEY, JSON.stringify(value));
+	} catch {}
+}
+
 export function readLocalCustomThemeCss(storage: StartupSettingsStorage = AppStorage): string | null {
 	let raw: string | null;
 	try {
@@ -650,6 +657,8 @@ export interface AccessibilitySettings {
 	showNeko: boolean;
 	keepNekoStill: boolean;
 	showVideoSeekPreviewThumbnails: boolean;
+	showPersonaPickerButton: boolean;
+	showLatchInPersonaPicker: boolean;
 }
 
 const getDefaultDmMessagePreviewMode = (): DMMessagePreviewMode =>
@@ -757,6 +766,8 @@ class Accessibility {
 	showNeko = false;
 	keepNekoStill = false;
 	showVideoSeekPreviewThumbnails = false;
+	showPersonaPickerButton = true;
+	showLatchInPersonaPicker = false;
 	mediaQuery: MediaQueryList | null = null;
 	private unsubscribeZoomStorage: (() => void) | null = null;
 	private unsubscribeMotionStorage: (() => void) | null = null;
@@ -858,6 +869,8 @@ class Accessibility {
 				'scrollToBottomOnMessageSend',
 				'messageDoubleClickActions',
 				'sequentialFileSend',
+				'showLatchInPersonaPicker',
+				'showPersonaPickerButton',
 			],
 			toMessage: (s) => ({
 				saturationFactor: s.saturationFactor,
@@ -921,6 +934,8 @@ class Accessibility {
 				scrollToBottomOnMessageSend: s.scrollToBottomOnMessageSend,
 				messageDoubleClickActions: s.messageDoubleClickActions,
 				sequentialFileSend: s.sequentialFileSend,
+				showPersonaPickerButton: s.showPersonaPickerButton,
+				showLatchInPersonaPicker: s.showLatchInPersonaPicker,
 			}),
 			applyMessage: (s, m) => {
 				if (m.saturationFactor !== undefined) s.saturationFactor = m.saturationFactor;
@@ -1013,8 +1028,9 @@ class Accessibility {
 				if (m.stayInteractiveWhenUnfocused !== undefined)
 					s.stayInteractiveWhenUnfocused = m.stayInteractiveWhenUnfocused;
 				if (m.scrollToBottomOnMessageSend !== undefined) s.scrollToBottomOnMessageSend = m.scrollToBottomOnMessageSend;
-				if (m.messageDoubleClickActions !== undefined) s.messageDoubleClickActions = m.messageDoubleClickActions;
 				if (m.sequentialFileSend !== undefined) s.sequentialFileSend = m.sequentialFileSend;
+				if (m.showPersonaPickerButton !== undefined) s.showPersonaPickerButton = m.showPersonaPickerButton;
+				if (m.showLatchInPersonaPicker !== undefined) s.showLatchInPersonaPicker = m.showLatchInPersonaPicker;
 			},
 		});
 		await this.applyStoredZoom();
@@ -1358,6 +1374,15 @@ class Accessibility {
 			this.showVideoSeekPreviewThumbnails = validated.showVideoSeekPreviewThumbnails;
 			persistLocalVideoSeekPreviewThumbnails(validated.showVideoSeekPreviewThumbnails);
 		}
+		if (validated.showPersonaPickerButton !== undefined)
+			this.showPersonaPickerButton = validated.showPersonaPickerButton;
+		if (
+			validated.showLatchInPersonaPicker !== undefined &&
+			validated.showLatchInPersonaPicker !== this.showLatchInPersonaPicker
+		) {
+			this.showLatchInPersonaPicker = validated.showLatchInPersonaPicker;
+			persistLocalShowLatchInPersonaPicker(validated.showLatchInPersonaPicker);
+		}
 	}
 
 	private validateSettings(data: Readonly<Partial<AccessibilitySettings>>): Partial<AccessibilitySettings> {
@@ -1450,6 +1475,8 @@ class Accessibility {
 			showNeko: data.showNeko ?? this.showNeko,
 			keepNekoStill: data.keepNekoStill ?? this.keepNekoStill,
 			showVideoSeekPreviewThumbnails: data.showVideoSeekPreviewThumbnails ?? this.showVideoSeekPreviewThumbnails,
+			showPersonaPickerButton: data.showPersonaPickerButton ?? this.showPersonaPickerButton,
+			showLatchInPersonaPicker: data.showLatchInPersonaPicker ?? this.showLatchInPersonaPicker,
 		};
 	}
 

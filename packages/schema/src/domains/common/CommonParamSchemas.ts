@@ -203,3 +203,18 @@ export const HarvestIdParam = z.object({
 });
 
 export type HarvestIdParam = z.infer<typeof HarvestIdParam>;
+
+export const PersonaIdParam = z.object({
+	persona_id: SnowflakeType.describe('The ID of the persona'),
+});
+
+export const UserPersonaIdParam = z.object({
+	user_id: SnowflakeType.or(z.enum(['@me'])).describe('The ID of the user the persona belongs to'),
+	persona_id: SnowflakeType.describe('The ID of the persona'),
+});
+
+export type PersonaIdParam = z.infer<typeof PersonaIdParam>;
+
+export const OptionalPersonaIdParam = PersonaIdParam.partial();
+
+export type OptionalPersonaIdParam = z.infer<typeof OptionalPersonaIdParam>;

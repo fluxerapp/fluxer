@@ -92,6 +92,8 @@ pub enum MessageRequest {
         #[serde(default)]
         include_hidden: bool,
         #[serde(default)]
+        persona_fallback_behavior: bool,
+        #[serde(default)]
         threads_mask: bool,
         #[serde(default = "default_instance_name")]
         instance_name: String,
@@ -115,6 +117,8 @@ pub enum MessageRequest {
         #[serde(default)]
         include_hidden: bool,
         #[serde(default)]
+        persona_fallback_behavior: bool,
+        #[serde(default)]
         threads_mask: bool,
         #[serde(default = "default_instance_name")]
         instance_name: String,
@@ -135,6 +139,8 @@ pub enum MessageRequest {
         attachment_decay: Option<bool>,
         #[serde(default)]
         include_hidden: bool,
+        #[serde(default)]
+        persona_fallback_behavior: bool,
         #[serde(default)]
         threads_mask: bool,
         #[serde(default = "default_instance_name")]
@@ -160,6 +166,8 @@ pub enum MessageRequest {
         attachment_decay: Option<bool>,
         #[serde(default)]
         include_hidden: bool,
+        #[serde(default)]
+        persona_fallback_behavior: bool,
         #[serde(default)]
         threads_mask: bool,
         #[serde(default)]
@@ -237,6 +245,7 @@ pub struct Message {
     pub call: Option<MessageCall>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub message_snapshots: Option<Vec<MessageSnapshot>>,
+    pub persona: Option<MessagePersonaSnapshot>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -491,6 +500,8 @@ pub struct ApiMessageResponse {
         deserialize_with = "deserialize_double_option"
     )]
     pub referenced_message: Option<Option<Box<ApiMessageResponse>>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub persona: Option<ApiMessagePersonaSnapshotResponse>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -693,6 +704,41 @@ pub struct MessageSnapshot {
     pub flags: Option<i32>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ApiMessagePersonaSnapshotResponse {
+    pub id: Option<String>,
+    pub owner_id: Option<String>,
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub avatar: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pronouns: Option<String>,
+}
+
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+pub struct ApiPersonaResponse {
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub owner_id: Option<String>,
+    pub avatar: Option<String>,
+    pub avatar_color: Option<i32>,
+    pub banner: Option<String>,
+    pub banner_color: Option<i32>,
+    pub accent_color: Option<i32>,
+    pub internal_name: Option<String>,
+    pub display_name: Option<String>,
+    pub bio: Option<String>,
+    pub pronouns: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MessagePersonaSnapshot {
+    pub id: Option<String>,
+    pub name: Option<String>,
+    pub avatar: Option<String>,
+    pub pronouns: Option<String>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -781,6 +827,7 @@ mod tests {
             system: None,
             flags: 0,
             mention_flags: None,
+            persona_tag: None,
         };
         ApiMessageResponse {
             id: "2".to_string(),
@@ -808,6 +855,7 @@ mod tests {
             nonce: None,
             call: None,
             referenced_message: referenced,
+            persona: None,
         }
     }
 

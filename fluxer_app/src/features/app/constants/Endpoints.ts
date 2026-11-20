@@ -298,6 +298,11 @@ export const Endpoints = {
 	BLUESKY_AUTHORIZE: '/users/@me/connections/bluesky/authorize',
 	CONNECTION: (type: string, connectionId: string) => `/users/@me/connections/${type}/${connectionId}`,
 	CONNECTIONS_REORDER: '/users/@me/connections/reorder',
+	USER_PERSONAS: '/users/@me/personas',
+	USER_PERSONAS_BATCH: '/users/@me/personas/import',
+	USER_PERSONA: (personaId: string) => `/users/@me/personas/${personaId}`,
+	USER_PERSONA_OTHER: (userId: string, personaId: string) => `/users/${userId}/personas/${personaId}`,
+	USER_PERSONA_AVATAR: '/import_image_proxy',
 	CONNECTION_OAUTH_AUTHORIZE: (providerId: string) =>
 		`/users/@me/connections/oauth/${encodeURIComponent(providerId)}/authorize`,
 } as const;

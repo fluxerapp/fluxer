@@ -97,6 +97,7 @@ function messageRow(channelId: ChannelID, id: bigint): MessageRow {
 		message_snapshots: null,
 		call: null,
 		has_reaction: false,
+		persona: null,
 		version: 1,
 	};
 }

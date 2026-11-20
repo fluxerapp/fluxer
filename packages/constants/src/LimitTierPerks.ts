@@ -192,4 +192,14 @@ export const LIMIT_TIER_PERKS: ReadonlyArray<LimitTierPerk> = [
 		restrictedValue: true,
 		stockValue: true,
 	},
+	{
+		id: 'max_personas',
+		type: 'numeric',
+		status: 'available',
+		i18nKey: 'max_personas',
+		restrictedValue: 250,
+		stockValue: 1000,
+		limitKey: 'max_personas',
+		unit: 'count',
+	},
 ] as const;

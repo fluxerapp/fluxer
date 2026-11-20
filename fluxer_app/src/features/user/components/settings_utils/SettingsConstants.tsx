@@ -78,6 +78,7 @@ import {
 	TranslateIcon,
 	UserIcon,
 	UserListIcon,
+	UserSwitchIcon,
 } from '@phosphor-icons/react';
 import type React from 'react';
 
@@ -97,7 +98,10 @@ const PROFILE_DESCRIPTOR = msg({
 	message: 'Profile',
 	comment: 'User settings tab for editing the current user profile.',
 });
-
+const PERSONAS_DESCRIPTOR = msg({
+	message: 'Personas',
+	comment: 'User settings tab for managing the list of available personas.',
+});
 const SUBSCRIPTIONS_DESCRIPTOR = msg({
 	message: 'Subscriptions',
 	comment:
@@ -178,6 +182,12 @@ const ALL_TABS_DESCRIPTORS: Array<SettingsTabDescriptor> = [
 		label: PROFILE_DESCRIPTOR,
 		icon: UserIcon,
 		isVisible: shouldShowClaimedAccountSettings,
+	},
+	{
+		type: 'personas',
+		category: 'user_settings',
+		label: PERSONAS_DESCRIPTOR,
+		icon: UserSwitchIcon,
 	},
 	{
 		type: 'account_security',

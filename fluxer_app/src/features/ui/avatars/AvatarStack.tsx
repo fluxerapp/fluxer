@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {PreloadableUserPopout} from '@app/features/channel/components/PreloadableUserPopout';
+import RollingTypingStore from '@app/features/typing/rolling/RollingTypingStore';
 import styles from '@app/features/ui/avatars/AvatarStack.module.css';
 import {
 	AVATAR_STACK_DEFAULT_MAX_VISIBLE,
@@ -11,6 +12,7 @@ import {Avatar} from '@app/features/ui/components/Avatar';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import type {User} from '@app/features/user/models/User';
+import Personas from '@app/features/user/state/Personas';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -36,6 +38,7 @@ export interface AvatarStackProps {
 	enableProfileModal?: boolean;
 	showTooltips?: boolean;
 	remainingContent?: React.ReactNode;
+	personasFromTypingIndicators?: boolean;
 	onUserContextMenu?: (event: React.MouseEvent<HTMLElement>, user: User, index: number) => void;
 }
 
@@ -55,6 +58,7 @@ export const AvatarStack: React.FC<AvatarStackProps> = observer(
 		guildId,
 		channelId,
 		renderAvatar,
+		personasFromTypingIndicators = false,
 		enableProfileModal = true,
 		showTooltips = true,
 		remainingContent,
@@ -84,9 +88,22 @@ export const AvatarStack: React.FC<AvatarStackProps> = observer(
 		const userEntries: Array<AvatarStackEntry> = [];
 		const userKeyCounts = new Map<string, number>();
 		users?.forEach((user, index) => {
-			const displayName = NicknameUtils.getNickname(user, guildId ?? null, channelId ?? undefined);
+			const personaId =
+				channelId && personasFromTypingIndicators
+					? (RollingTypingStore.getPersona(channelId, user.id) ?? undefined)
+					: undefined;
+			const persona = (personaId && Personas.getPersona(personaId)) || undefined;
+			const displayName =
+				persona?.display_name || NicknameUtils.getNickname(user, guildId ?? null, channelId ?? undefined);
 			const avatarNode = renderAvatar?.(user, size, index) ?? (
-				<Avatar user={user} size={size} guildId={guildId ?? undefined} data-flx="ui.avatars.avatar-stack.avatar" />
+				<Avatar
+					user={user}
+					size={size}
+					guildId={guildId ?? undefined}
+					personaId={persona?.id}
+					personaAvatar={persona?.avatar}
+					data-flx="ui.avatars.avatar-stack.avatar"
+				/>
 			);
 			if (!avatarNode) return;
 			let node: React.ReactNode;
@@ -94,6 +111,7 @@ export const AvatarStack: React.FC<AvatarStackProps> = observer(
 				node = (
 					<PreloadableUserPopout
 						user={user}
+						persona={persona}
 						isWebhook={false}
 						guildId={guildId ?? undefined}
 						channelId={channelId ?? undefined}

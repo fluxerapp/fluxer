@@ -105,6 +105,7 @@ export function createHandlerRegistry(): GatewayHandlerRegistry {
 	registry.set('READY', handleReady as GatewayEventHandler);
 	registry.set('AUTH_SESSION_CHANGE', handleAuthSessionChange as GatewayEventHandler);
 	registry.set('USER_UPDATE', handleUserUpdate as GatewayEventHandler);
+
 	registry.set('USER_SETTINGS_UPDATE', handleUserSettingsUpdate as GatewayEventHandler);
 	registry.set('USER_GUILD_SETTINGS_UPDATE', handleUserGuildSettingsUpdate as GatewayEventHandler);
 	registry.set('USER_PINNED_DMS_UPDATE', handleUserPinnedDmsUpdate as GatewayEventHandler);
