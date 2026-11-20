@@ -712,9 +712,8 @@ pub struct ApiMessagePersonaSnapshotResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub avatar: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub pronouns: Option<String>
+    pub pronouns: Option<String>,
 }
-
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct ApiPersonaResponse {
@@ -732,13 +731,12 @@ pub struct ApiPersonaResponse {
     pub pronouns: Option<String>,
 }
 
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MessagePersonaSnapshot {
     pub id: Option<String>,
     pub name: Option<String>,
     pub avatar: Option<String>,
-    pub pronouns: Option<String>
+    pub pronouns: Option<String>,
 }
 
 #[cfg(test)]
@@ -857,7 +855,7 @@ mod tests {
             nonce: None,
             call: None,
             referenced_message: referenced,
-                        persona: None,
+            persona: None,
         }
     }
 

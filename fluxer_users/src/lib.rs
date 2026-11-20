@@ -95,7 +95,7 @@ pub async fn run(config: Config, shutdown: CancellationToken) -> anyhow::Result<
 
     match role {
         Role::Router => {
-            fluxer_svc::router::run_router(&config, UsersRouter{}, transport, shutdown).await
+            fluxer_svc::router::run_router(&config, UsersRouter {}, transport, shutdown).await
         }
         Role::Shard(shard_config) => {
             let shard = build_shard(&config, shard_config).await?;
@@ -103,7 +103,7 @@ pub async fn run(config: Config, shutdown: CancellationToken) -> anyhow::Result<
         }
         Role::Combined(shard_config) => {
             let shard = build_shard(&config, shard_config).await?;
-            fluxer_svc::combined::run_combined(&config, UsersRouter{}, shard, transport, shutdown)
+            fluxer_svc::combined::run_combined(&config, UsersRouter {}, shard, transport, shutdown)
                 .await
         }
     }

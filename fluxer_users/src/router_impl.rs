@@ -33,8 +33,12 @@ impl RouterService for UsersRouter {
                 .min()
                 .cloned()
                 .unwrap_or_else(|| "0".to_owned()),
-            UserRequest::GetPersonaPartialById { persona_id, user_id: _ } => persona_id.to_string(),
-            UserRequest::GetPersonaPartialsByIds { persona_ids } => persona_ids.iter()
+            UserRequest::GetPersonaPartialById {
+                persona_id,
+                user_id: _,
+            } => persona_id.to_string(),
+            UserRequest::GetPersonaPartialsByIds { persona_ids } => persona_ids
+                .iter()
                 .map(|f| &f.0)
                 .min()
                 .map(ToString::to_string)
@@ -68,7 +72,10 @@ impl RouterService for UsersRouter {
                 ids.dedup();
                 Some(format!("api_partials:{instance_name}:{}", ids.join(",")))
             }
-			UserRequest::GetPersonaPartialById { persona_id, user_id: _ } => Some(format!("persona_partial:{persona_id}")),
+            UserRequest::GetPersonaPartialById {
+                persona_id,
+                user_id: _,
+            } => Some(format!("persona_partial:{persona_id}")),
             UserRequest::GetPersonaPartialsByIds { persona_ids } => {
                 let mut ids = persona_ids.clone();
                 ids.sort_unstable();

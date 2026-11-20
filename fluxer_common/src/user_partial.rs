@@ -80,6 +80,6 @@ pub fn fluxer_system_user(instance_name: String) -> ApiUserPartial {
         system: Some(true),
         flags: USER_FLAG_STAFF as i32,
         mention_flags: None,
-        persona_tag: None
+        persona_tag: None,
     }
 }

@@ -10,9 +10,9 @@ pub use fluxer_common::user_partial::ApiUserPartial;
 use fluxer_common::user_partial::{
     FLUXER_SYSTEM_USER_ID, UserPartialFields, default_instance_name,
 };
-use serde::{Deserialize, Deserializer, Serialize};
 #[cfg(feature = "scylla")]
 use scylla::DeserializeRow;
+use serde::{Deserialize, Deserializer, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "op")]
@@ -27,7 +27,7 @@ pub enum UserRequest {
         #[serde(default = "default_instance_name")]
         instance_name: String,
     },
-	GetPersonaPartialById {
+    GetPersonaPartialById {
         persona_id: i64,
         user_id: i64,
     },
@@ -75,7 +75,7 @@ pub enum UserRequest {
 pub enum UserResponse {
     FoundPartials(Vec<UserPartial>),
     FoundApiPartials(Vec<ApiUserPartial>),
-	FoundPersonaPartial(PersonaPartial),
+    FoundPersonaPartial(PersonaPartial),
     FoundPersonaPartials(Vec<PersonaPartial>),
     NotFound,
     Invalidated,
@@ -198,7 +198,7 @@ where
 
 #[cfg(feature = "scylla")]
 impl From<PersonaPartialScyllaRow> for PersonaPartial {
-	fn from(value: PersonaPartialScyllaRow) -> Self {
+    fn from(value: PersonaPartialScyllaRow) -> Self {
         PersonaPartial {
             persona_id: value.persona_id,
             owner_id: value.owner_id,
@@ -206,9 +206,9 @@ impl From<PersonaPartialScyllaRow> for PersonaPartial {
             display_name: value.display_name,
             avatar_hash: value.avatar_hash,
             pronouns: value.pronouns,
-            accent_color: value.accent_color
+            accent_color: value.accent_color,
         }
-	}
+    }
 }
 
 #[cfg(test)]

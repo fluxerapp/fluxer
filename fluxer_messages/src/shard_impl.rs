@@ -4,7 +4,16 @@ use crate::mention_extractor::{
     MessageMentions, extend_mentions_from_markdown, extract_mentions_from_markdown,
 };
 use crate::types::{
-    ApiChannelMentionResponse, ApiEmbedAuthorResponse, ApiEmbedFieldResponse, ApiEmbedFooterResponse, ApiEmbedMediaResponse, ApiEmbedProviderResponse, ApiMessageAttachmentResponse, ApiMessageCallResponse, ApiMessageEmbedChildResponse, ApiMessageEmbedResponse, ApiMessagePersonaSnapshotResponse, ApiMessageReactionResponse, ApiMessageReferenceResponse, ApiMessageResponse, ApiMessageSnapshotResponse, ApiMessageStickerResponse, ApiPersonaResponse, ApiReactionEmojiResponse, ApiUserPartial, Message, MessageAttachment, MessageCall, MessageEmbed, MessageEmbedAuthor, MessageEmbedChild, MessageEmbedField, MessageEmbedFooter, MessageEmbedMedia, MessageEmbedProvider, MessagePersonaSnapshot, MessageReference, MessageRequest, MessageResponse, MessageSnapshot, MessageStickerItem,
+    ApiChannelMentionResponse, ApiEmbedAuthorResponse, ApiEmbedFieldResponse,
+    ApiEmbedFooterResponse, ApiEmbedMediaResponse, ApiEmbedProviderResponse,
+    ApiMessageAttachmentResponse, ApiMessageCallResponse, ApiMessageEmbedChildResponse,
+    ApiMessageEmbedResponse, ApiMessagePersonaSnapshotResponse, ApiMessageReactionResponse,
+    ApiMessageReferenceResponse, ApiMessageResponse, ApiMessageSnapshotResponse,
+    ApiMessageStickerResponse, ApiPersonaResponse, ApiReactionEmojiResponse, ApiUserPartial,
+    Message, MessageAttachment, MessageCall, MessageEmbed, MessageEmbedAuthor, MessageEmbedChild,
+    MessageEmbedField, MessageEmbedFooter, MessageEmbedMedia, MessageEmbedProvider,
+    MessagePersonaSnapshot, MessageReference, MessageRequest, MessageResponse, MessageSnapshot,
+    MessageStickerItem,
 };
 use crate::udt;
 use base64::prelude::{BASE64_STANDARD, Engine};
@@ -316,7 +325,7 @@ struct PartialPersonaUserServiceResponse {
     avatar_hash: Option<String>,
     pronouns: Option<String>,
     #[allow(dead_code)]
-    accent_color: Option<i32>
+    accent_color: Option<i32>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -1316,14 +1325,17 @@ impl<T: Transport> MessagesShard<T> {
             .into_iter()
             .map(|partial| {
                 //let id = parse_i64(&, "persona_id").expect("Cannot find persona ID from response");
-                (partial.persona_id, ApiPersonaResponse {
-                    id: partial.persona_id.to_string(),
-                    owner_id: Some(partial.owner_id.to_string()),
-                    display_name: partial.display_name.or(Some(partial.internal_name)),
-                    avatar: partial.avatar_hash,
-                    pronouns: partial.pronouns,
-                    ..Default::default()
-                })
+                (
+                    partial.persona_id,
+                    ApiPersonaResponse {
+                        id: partial.persona_id.to_string(),
+                        owner_id: Some(partial.owner_id.to_string()),
+                        display_name: partial.display_name.or(Some(partial.internal_name)),
+                        avatar: partial.avatar_hash,
+                        pronouns: partial.pronouns,
+                        ..Default::default()
+                    },
+                )
             })
             .collect()
     }
@@ -1483,22 +1495,35 @@ impl<T: Transport> MessagesShard<T> {
         } else {
             None
         };
-        if options.persona_fallback_behavior && message.webhook_id.is_none() && message.persona.is_some() {
+        if options.persona_fallback_behavior
+            && message.webhook_id.is_none()
+            && message.persona.is_some()
+        {
             let persona_id = {
-                let pid = persona.clone().and_then(|p| p.id).clone().unwrap_or("0".to_string());
-                if pid.len() >= 1 {
-                    pid
-                } else {
-                    "0".to_string()
-                }
+                let pid = persona
+                    .clone()
+                    .and_then(|p| p.id)
+                    .clone()
+                    .unwrap_or("0".to_string());
+                if pid.len() >= 1 { pid } else { "0".to_string() }
             };
             return ApiMessageResponse {
                 id: message.message_id.to_string(),
                 channel_id: message.channel_id.to_string(),
                 author: ApiUserPartial {
                     bot: author.bot,
-                    avatar: persona.clone().and_then(|p| p.avatar).or(message.persona.as_ref().and_then(|p| p.avatar.clone())),
-                    username: format!("{} ~ @{}#{}", persona.and_then(|p| p.name).unwrap_or(DELETED_PERSONA_GLOBAL_NAME.to_string()), author.username, author.discriminator),
+                    avatar: persona
+                        .clone()
+                        .and_then(|p| p.avatar)
+                        .or(message.persona.as_ref().and_then(|p| p.avatar.clone())),
+                    username: format!(
+                        "{} ~ @{}#{}",
+                        persona
+                            .and_then(|p| p.name)
+                            .unwrap_or(DELETED_PERSONA_GLOBAL_NAME.to_string()),
+                        author.username,
+                        author.discriminator
+                    ),
                     discriminator: "0000".to_string(),
                     id: persona_id.clone(),
                     flags: 0,
@@ -1549,8 +1574,8 @@ impl<T: Transport> MessagesShard<T> {
                 nonce: options.nonce.clone(),
                 call: message.call.as_ref().map(map_call),
                 referenced_message,
-                persona: None
-            }
+                persona: None,
+            };
         }
         ApiMessageResponse {
             id: message.message_id.to_string(),
@@ -1597,22 +1622,24 @@ impl<T: Transport> MessagesShard<T> {
             nonce: options.nonce.clone(),
             call: message.call.as_ref().map(map_call),
             referenced_message,
-            persona: persona.or(message.persona.as_ref().and_then(|v| match v.name.as_ref().is_some() {
-                true => Some(ApiMessagePersonaSnapshotResponse {
-                    id: v.id.clone(),
-                    owner_id: None, // won't be returned from the API
-                    name: v.name.clone(),
-                    avatar: v.avatar.clone(),
-                    pronouns: v.pronouns.clone(),
-                }),
-                false => Some(ApiMessagePersonaSnapshotResponse {
-                    id: Some("0".to_string()),
-                    owner_id: None, // won't be returned from the API
-                    name: Some(DELETED_PERSONA_GLOBAL_NAME.to_string()),
-                    avatar: None,
-                    pronouns: None,
-                }),
-            }))
+            persona: persona.or(message.persona.as_ref().and_then(|v| {
+                match v.name.as_ref().is_some() {
+                    true => Some(ApiMessagePersonaSnapshotResponse {
+                        id: v.id.clone(),
+                        owner_id: None, // won't be returned from the API
+                        name: v.name.clone(),
+                        avatar: v.avatar.clone(),
+                        pronouns: v.pronouns.clone(),
+                    }),
+                    false => Some(ApiMessagePersonaSnapshotResponse {
+                        id: Some("0".to_string()),
+                        owner_id: None, // won't be returned from the API
+                        name: Some(DELETED_PERSONA_GLOBAL_NAME.to_string()),
+                        avatar: None,
+                        pronouns: None,
+                    }),
+                }
+            })),
         }
     }
 
@@ -1933,7 +1960,11 @@ impl<T: Transport> MessagesShard<T> {
         }
     }
 
-    fn resolve_persona(&self, message: &Message, context: &ResponseContext) -> Option<ApiMessagePersonaSnapshotResponse> {
+    fn resolve_persona(
+        &self,
+        message: &Message,
+        context: &ResponseContext,
+    ) -> Option<ApiMessagePersonaSnapshotResponse> {
         if let Some(Some(persona_id)) = message.persona.as_ref().map(|v| &v.id) {
             let id = parse_i64(&persona_id, "persona_id").expect("Could not parse persona ID");
             let persona = context
@@ -1941,8 +1972,13 @@ impl<T: Transport> MessagesShard<T> {
                 .get(&id)
                 .cloned()
                 .map(|f| Into::<ApiMessagePersonaSnapshotResponse>::into(f));
-            if let Some(persona) = persona && persona.owner_id.as_ref().is_some_and(|v| v.clone() == message.author_id.unwrap_or_default().to_string()) {
-                return Some(persona)
+            if let Some(persona) = persona
+                && persona
+                    .owner_id
+                    .as_ref()
+                    .is_some_and(|v| v.clone() == message.author_id.unwrap_or_default().to_string())
+            {
+                return Some(persona);
             }
         }
         None
@@ -1950,19 +1986,19 @@ impl<T: Transport> MessagesShard<T> {
 }
 
 fn collect_persona_ids(all_messages: &[&Message]) -> HashSet<(i64, i64)> {
-        let mut ids = HashSet::new();
-        all_messages.iter().for_each(|f| {
-            if let Some(persona) = &f.persona {
-                    if let Some(id) = &persona.id {
-                            if let Some(num) = parse_i64(&id, "persona_id").ok() {
-                                if let Some(author_id) = f.author_id {
-                                    ids.insert((num, author_id));
-                                }
-                            }
+    let mut ids = HashSet::new();
+    all_messages.iter().for_each(|f| {
+        if let Some(persona) = &f.persona {
+            if let Some(id) = &persona.id {
+                if let Some(num) = parse_i64(&id, "persona_id").ok() {
+                    if let Some(author_id) = f.author_id {
+                        ids.insert((num, author_id));
                     }
+                }
             }
-        });
-        ids
+        }
+    });
+    ids
 }
 
 impl MessagesStorage {
@@ -2769,7 +2805,7 @@ impl From<ApiPersonaResponse> for ApiMessagePersonaSnapshotResponse {
             owner_id: value.owner_id,
             name: value.display_name.or(value.internal_name),
             avatar: value.avatar,
-            pronouns: value.pronouns
+            pronouns: value.pronouns,
         }
     }
 }
