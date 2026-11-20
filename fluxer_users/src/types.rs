@@ -214,7 +214,7 @@ impl From<PersonaPartialScyllaRow> for PersonaPartial {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::json;
+    use serde_json::{Value::Null, json};
 
     fn partial_with_flags(user_id: i64, flags: i64) -> UserPartial {
         UserPartial {
@@ -296,6 +296,7 @@ mod tests {
                     "global_name": "Ada Lovelace",
                     "avatar": "avatar_hash",
                     "avatar_color": 0x336699,
+                    "persona_tag": Null,
                     "flags": 1
                 }]
             })
