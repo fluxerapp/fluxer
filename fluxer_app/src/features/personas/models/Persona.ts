@@ -1,7 +1,9 @@
-import type { Message } from "@app/features/messaging/models/MessagingMessage";
-import Users from "@app/features/user/state/Users";
-import type {PersonaSnapshot, OwnPersonaResponse as WireOwnPersona, PersonaResponse as WirePersona} from "@fluxer/schema/src/domains/persona/PersonaSchemas";
-import { PresentationChart } from "@phosphor-icons/react";
+import Users from '@app/features/user/state/Users';
+import type {
+	PersonaSnapshot,
+	OwnPersonaResponse as WireOwnPersona,
+	PersonaResponse as WirePersona,
+} from '@fluxer/schema/src/domains/persona/PersonaSchemas';
 
 export class Persona {
 	readonly id: string;
@@ -16,7 +18,7 @@ export class Persona {
 	readonly bio?: string | null;
 	readonly pronouns?: string | null;
 	readonly tags: Array<string>;
-	readonly triggers: Array<{prefix?: string, suffix?: string}>;
+	readonly triggers: Array<{prefix?: string; suffix?: string}>;
 
 	constructor(persona: WirePersona | WireOwnPersona) {
 		this.id = persona.id;
@@ -57,11 +59,12 @@ export class Persona {
 	}
 
 	private override<T>(val: T | undefined, old: T): T {
-		if (val === undefined) return old; else return val;
+		if (val === undefined) return old;
+		else return val;
 	}
 
 	withUpdates(other: Partial<WirePersona | WireOwnPersona>): Persona {
-		if ((other.id !== this.id && this.id !== "0") || ('user' in other && (other.user?.id !== this.userId))) return this;
+		if ((other.id !== this.id && this.id !== '0') || ('user' in other && other.user?.id !== this.userId)) return this;
 		return new Persona({
 			id: other.id || this.id,
 			avatar: this.override(other.avatar, this.avatar),
@@ -69,26 +72,31 @@ export class Persona {
 			banner: this.override(other.banner, this.banner),
 			banner_color: this.override(other.banner_color, this.banner_color) || null,
 			accent_color: this.override(other.accent_color, this.accent_color),
-			display_name: this.override(other.display_name, this.display_name) || "",
+			display_name: this.override(other.display_name, this.display_name) || '',
 			bio: this.override(other.bio, this.bio) || null,
 			pronouns: this.override(other.pronouns, this.pronouns) || null,
-			...('internal_name' in other ? {
-				internal_name: this.override(other.internal_name, this.internal_name) || "",
-				tags: this.override(other.tags, this.tags),
-				triggers: this.override(other.triggers, this.triggers.map((v) => ({prefix: v.prefix || null, suffix: v.suffix || null}))),
-			} : {
-				user: {
-					id: this.userId,
-					username: "",
-					avatar: null,
-					avatar_color: null,
-					discriminator: "0000",
-					flags: 0,
-					global_name: null,
-					...('user' in other ? other.user : {})
-				}
-			})
-		})
+			...('internal_name' in other
+				? {
+						internal_name: this.override(other.internal_name, this.internal_name) || '',
+						tags: this.override(other.tags, this.tags),
+						triggers: this.override(
+							other.triggers,
+							this.triggers.map((v) => ({prefix: v.prefix || null, suffix: v.suffix || null})),
+						),
+					}
+				: {
+						user: {
+							id: this.userId,
+							username: '',
+							avatar: null,
+							avatar_color: null,
+							discriminator: '0000',
+							flags: 0,
+							global_name: null,
+							...('user' in other ? other.user : {}),
+						},
+					}),
+		});
 	}
 
 	toSnapshot(): PersonaSnapshot {
@@ -98,28 +106,28 @@ export class Persona {
 			// avatar: this.avatar,
 			// pronouns: this.pronouns,
 			// ignore_deleted: false,
-		}
+		};
 	}
 }
 
 export const emptyOwnPersona = new Persona({
-	id: "0",
-	internal_name: "",
-	display_name: "",
+	id: '0',
+	internal_name: '',
+	display_name: '',
 	bio: null,
 	avatar_color: null,
 	banner_color: null,
 	pronouns: null,
 	tags: [],
 	triggers: [],
-} as WireOwnPersona)
+} as WireOwnPersona);
 
 export function makeFallbackPersona(other: PersonaSnapshot): Persona {
 	if (!other) return emptyOwnPersona;
 	return emptyOwnPersona.withUpdates({
 		id: other.id!,
-		display_name: other.name,
+		display_name: other.name || undefined,
 		avatar: other.avatar,
-		pronouns: other.pronouns
-	})
+		pronouns: other.pronouns,
+	});
 }

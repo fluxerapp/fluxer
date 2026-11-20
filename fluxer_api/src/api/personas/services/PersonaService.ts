@@ -1,50 +1,44 @@
-import { createPersonaID, type PersonaID, type UserID } from "@app/api/BrandedTypes";
-import type { OwnPersonaResponse, PersonaCreateRequest, PersonaResponse } from "@fluxer/schema/src/domains/persona/PersonaSchemas.js";
-import type { PersonaRepository } from "../repositories/PersonaRepository";
-import type { User } from "@app/api/models/User";
-import { contentModerationService } from "@app/api/infrastructure/ContentModerationService";
-import type { EntityAssetService, PreparedAssetUpload } from "@app/api/infrastructure/EntityAssetService";
-import { AttachmentProcessingService } from "@app/api/channel/services/message/AttachmentProcessingService";
-import type { AttachmentUploadTraceRepository } from "@app/api/channel/repositories/message/AttachmentUploadTraceRepository";
-import type { VirusScanService } from "@app/api/infrastructure/VirusScanService";
-import { AttachmentDecayService } from "@app/api/attachment/AttachmentDecayService";
-import type { ISnowflakeService } from "@app/api/infrastructure/ISnowflakeService";
-import type { IStorageService } from "@app/api/infrastructure/IStorageService";
-import type { IMediaService } from "@app/api/infrastructure/IMediaService";
-import { PersonaTrigger } from "@app/api/models/PersonaTrigger";
-import { deriveDominantAvatarColor } from "@app/api/utils/AvatarColorUtils";
-import type { UserCacheService } from "@app/api/infrastructure/UserCacheService";
-import type { RequestCache } from "@app/api/middleware/RequestCacheMiddleware";
-import type { StorageService } from "@app/api/infrastructure/StorageService";
-import { isProfileSubstringExempt } from "@app/api/user/UserHelpers";
-import { profileSubstringBlocklistCache } from "@app/api/middleware/ProfileSubstringBlocklistCache";
-import { ContentBlockedError } from "@fluxer/errors/src/domains/content/ContentBlockedError.js";
-import { resolveLimitSafe } from "@app/api/limits/LimitConfigUtils";
-import { createLimitMatchContext } from "@app/api/limits/LimitMatchContextBuilder";
-import { MAX_BIO_LENGTH } from "@fluxer/constants/src/LimitConstants.js";
-import { InputValidationError } from "@fluxer/errors/src/domains/core/InputValidationError.js";
-import { ValidationErrorCodes } from "@fluxer/constants/src/ValidationErrorCodes.js";
-import { ms } from "itty-time/ms";
-import type { LimitConfigService } from "@app/api/limits/LimitConfigService";
+import {createPersonaID, type PersonaID, type UserID} from '@app/api/BrandedTypes';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import {stripAvatarForUser, stripBannerForUser} from '@app/api/infrastructure/AssetEntitlementUtils';
+import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
+import type {EntityAssetService, PreparedAssetUpload} from '@app/api/infrastructure/EntityAssetService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Persona} from '@app/api/models/Persona';
+import {PersonaTrigger} from '@app/api/models/PersonaTrigger';
+import type {User} from '@app/api/models/User';
+import type {UserAccountRepository} from '@app/api/user/repositories/account/UserAccountRepository';
+import {isProfileSubstringExempt} from '@app/api/user/UserHelpers';
+import {deriveDominantAvatarColor} from '@app/api/utils/AvatarColorUtils';
 import * as EmojiUtils from '@app/api/utils/EmojiUtils';
-import type { UserAccountRepository } from "@app/api/user/repositories/account/UserAccountRepository";
-import type { GuildRepository } from "@app/api/guild/repositories/GuildRepository";
-import type { IRateLimitService } from "@pkgs/rate_limit/src/IRateLimitService.js";
-import type { Persona } from "@app/api/models/Persona";
-import { getLimitConfigService } from "@app/api/middleware/ServiceSingletons";
-import { stripAvatarForUser, stripBannerForUser } from "@app/api/infrastructure/AssetEntitlementUtils";
-import type { UserAccountService } from "@app/api/user/services/UserAccountService";
+import {MAX_BIO_LENGTH} from '@fluxer/constants/src/LimitConstants.js';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes.js';
+import {ContentBlockedError} from '@fluxer/errors/src/domains/content/ContentBlockedError.js';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError.js';
+import type {
+	OwnPersonaResponse,
+	PersonaCreateRequest,
+	PersonaResponse,
+} from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
+import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService.js';
+import {ms} from 'itty-time/ms';
+import type {PersonaRepository} from '../repositories/PersonaRepository';
 
 interface PersonaFieldUpdates {
-	avatar_color?: Persona['avatarColor'],
-	avatar_hash?: Persona['avatarHash'],
-	banner_color?: Persona['bannerColor'],
-	banner_hash?: Persona['bannerHash'],
+	avatar_color?: Persona['avatarColor'];
+	avatar_hash?: Persona['avatarHash'];
+	banner_color?: Persona['bannerColor'];
+	banner_hash?: Persona['bannerHash'];
 }
 
 export class PersonaService {
-	private readonly attachmentService: AttachmentProcessingService;
-	private readonly attachmentDecayService: AttachmentDecayService;
 	constructor(
 		private readonly personaRepository: PersonaRepository,
 		private readonly snowflakeService: ISnowflakeService,
@@ -52,28 +46,16 @@ export class PersonaService {
 		private readonly userCacheService: UserCacheService,
 		private readonly requestCache: RequestCache,
 		private readonly storageService: IStorageService,
-		attachmentUploadTraceRepository: AttachmentUploadTraceRepository,
-		mediaService: IMediaService,
-		virusScanService: VirusScanService,
 		private readonly rateLimitService: IRateLimitService,
 		private readonly limitConfigService: LimitConfigService,
 		private readonly userAccountRepository: UserAccountRepository,
 		private readonly guildRepository: GuildRepository,
-	) {
-		this.attachmentService = new AttachmentProcessingService(
-			storageService,
-			attachmentUploadTraceRepository,
-			mediaService,
-			virusScanService,
-			snowflakeService,
-		);
-		this.attachmentDecayService = new AttachmentDecayService();
-	}
+	) {}
 	async getUserPersonas(user: User): Promise<Array<OwnPersonaResponse>> {
 		const results = await this.personaRepository.listUserPersonas(user.id);
 		const personas = new Set<OwnPersonaResponse>();
 		for (const v of results) {
-			const triggers = await this.personaRepository.getPersonaTriggers(user.id, v.id)
+			const triggers = await this.personaRepository.getPersonaTriggers(user.id, v.id);
 			personas.add({
 				id: v.id.toString(),
 				//user: user,
@@ -122,7 +104,7 @@ export class PersonaService {
 	async getOwnPersona(user: User, personaId: PersonaID): Promise<OwnPersonaResponse | null> {
 		const v = await this.personaRepository.getPersona(user.id, personaId);
 		if (v === null) return null;
-		const triggers = await this.personaRepository.getPersonaTriggers(user.id, v.id)
+		const triggers = await this.personaRepository.getPersonaTriggers(user.id, v.id);
 		return {
 			id: v.id.toString(),
 			avatar: stripAvatarForUser(user, v.avatarHash),
@@ -181,11 +163,16 @@ export class PersonaService {
 			});
 		}
 		const newBio = await this.processBioUpdate({user, personaId, initialBio: null, bio: data.bio || null});
-		const newPronouns = await this.processPronounsUpdate({user, personaId, initialPronouns: null, pronouns: data.pronouns || null});
+		const newPronouns = await this.processPronounsUpdate({
+			user,
+			personaId,
+			initialPronouns: null,
+			pronouns: data.pronouns || null,
+		});
 		const avatarHash = preparedAvatar?.newHash ?? null;
 		const bannerHash = preparedBanner?.newHash ?? null;
 		// Write to database via repository
-		await this.personaRepository.createPersona(user.id, {
+		await this.personaRepository.createPersona({
 			persona_id: personaId,
 			owner_id: user.id,
 			accent_color: data.accent_color || null,
@@ -199,37 +186,66 @@ export class PersonaService {
 			banner_hash: bannerHash,
 			avatar_color: preparedAvatar?.imageBuffer ? await deriveDominantAvatarColor(preparedAvatar?.imageBuffer) : null,
 			banner_color: preparedBanner?.imageBuffer ? await deriveDominantAvatarColor(preparedBanner?.imageBuffer) : null,
-			last_used_at: null
+			last_used_at: null,
 		});
-		await this.personaRepository.setPersonaTriggers(user.id, personaId, data.triggers.map((v) => new PersonaTrigger(v.prefix || null, v.suffix || null)))
+		await this.personaRepository.setPersonaTriggers(
+			user.id,
+			personaId,
+			data.triggers.map((v) => new PersonaTrigger(v.prefix || null, v.suffix || null)),
+		);
 		return personaId;
 	}
 
 	async updatePersona(user: User, personaId: PersonaID, data: Partial<PersonaCreateRequest>): Promise<PersonaResponse> {
 		const oldPersona = await this.personaRepository.getPersona(user.id, personaId);
 		if (!oldPersona) {
-			throw new Error("Persona not found");
+			throw new Error('Persona not found');
 		}
 		// TODO: it looks like this is the right place to do data validation, screening, and snowflake generation
-		if (data.internal_name) contentModerationService.scanText(data.internal_name, {
-			userId: user.id,
-			guildId: null,
-			channelId: null,
-			messageId: null,
-			surface: 'profile_field',
-		});
-		if (data.display_name) contentModerationService.scanText(data.display_name, {
-			userId: user.id,
-			guildId: null,
-			channelId: null,
-			messageId: null,
-			surface: 'profile_field',
-		});
+		if (data.internal_name)
+			contentModerationService.scanText(data.internal_name, {
+				userId: user.id,
+				guildId: null,
+				channelId: null,
+				messageId: null,
+				surface: 'profile_field',
+			});
+		if (data.display_name)
+			contentModerationService.scanText(data.display_name, {
+				userId: user.id,
+				guildId: null,
+				channelId: null,
+				messageId: null,
+				surface: 'profile_field',
+			});
 		const updates: PersonaFieldUpdates = {};
 		const newBio = await this.processBioUpdate({user, personaId, initialBio: oldPersona.bio, bio: data.bio || null});
-		const newPronouns = await this.processPronounsUpdate({user, personaId, initialPronouns: oldPersona.pronouns, pronouns: data.pronouns || null});
-		const newAvatar = data.avatar !== undefined ? await this.processAvatarUpdate({user, personaId, initialAvatarHash: oldPersona.avatarHash, avatar: data.avatar, updates}) : undefined;
-		const newBanner = data.banner !== undefined ? await this.processBannerUpdate({user, personaId, initialBannerHash: oldPersona.bannerHash, banner: data.banner, updates}) : undefined;
+		const newPronouns = await this.processPronounsUpdate({
+			user,
+			personaId,
+			initialPronouns: oldPersona.pronouns,
+			pronouns: data.pronouns || null,
+		});
+		const newAvatar =
+			data.avatar !== undefined
+				? await this.processAvatarUpdate({
+						user,
+						personaId,
+						initialAvatarHash: oldPersona.avatarHash,
+						avatar: data.avatar,
+						updates,
+					})
+				: undefined;
+		const newBanner =
+			data.banner !== undefined
+				? await this.processBannerUpdate({
+						user,
+						personaId,
+						initialBannerHash: oldPersona.bannerHash,
+						banner: data.banner,
+						updates,
+					})
+				: undefined;
 		// Write to database via repository
 		await this.personaRepository.updatePersona(user.id, personaId, {
 			accent_color: data.accent_color,
@@ -243,18 +259,33 @@ export class PersonaService {
 			avatar_color: newAvatar !== undefined ? updates.avatar_color : undefined,
 			banner_color: newBanner !== undefined ? updates.banner_color : undefined,
 		});
-		if (data.triggers) await this.personaRepository.setPersonaTriggers(user.id, personaId, data.triggers.map((v) => new PersonaTrigger(v.prefix || null, v.suffix || null)));
+		if (data.triggers)
+			await this.personaRepository.setPersonaTriggers(
+				user.id,
+				personaId,
+				data.triggers.map((v) => new PersonaTrigger(v.prefix || null, v.suffix || null)),
+			);
 		if (data.triggers === null) await this.personaRepository.setPersonaTriggers(user.id, personaId, []);
 		return (await this.getPersona(user, personaId))!;
 	}
 
 	async deletePersona(userId: UserID, personaId: PersonaID): Promise<void> {
 		const oldPersona = await this.personaRepository.getPersona(userId, personaId);
-		if (!oldPersona) throw new Error("Persona not found");
+		if (!oldPersona) throw new Error('Persona not found');
 		await Promise.allSettled([
-			oldPersona?.avatarHash ? this.storageService.deleteAvatar({prefix: `avatars/${personaId}`, key: oldPersona?.avatarHash?.replace(/^a_/,"") || ""}) : Promise.resolve(),
+			oldPersona?.avatarHash
+				? this.storageService.deleteAvatar({
+						prefix: `avatars/${personaId}`,
+						key: oldPersona?.avatarHash?.replace(/^a_/, '') || '',
+					})
+				: Promise.resolve(),
 			//oldPersona?.bannerHash ? this.entityAssetService.queueAssetDeletion("banner", "persona", personaId, oldPersona?.bannerHash, undefined, "Persona deletion") : Promise.resolve(),
-			oldPersona?.avatarHash ? this.storageService.deleteAvatar({prefix: `banners/${personaId}`, key: oldPersona?.bannerHash?.replace(/^a_/,"") || ""}) : Promise.resolve(),
+			oldPersona?.avatarHash
+				? this.storageService.deleteAvatar({
+						prefix: `banners/${personaId}`,
+						key: oldPersona?.bannerHash?.replace(/^a_/, '') || '',
+					})
+				: Promise.resolve(),
 		]);
 		await this.personaRepository.deletePersona(userId, personaId);
 	}
@@ -263,7 +294,7 @@ export class PersonaService {
 		user: User;
 		personaId: PersonaID;
 		initialBio: string | null;
-		bio: string | null
+		bio: string | null;
 	}): Promise<string | null | false> {
 		const {user, personaId, initialBio, bio} = params;
 		if (bio !== initialBio) {
@@ -344,7 +375,7 @@ export class PersonaService {
 	}
 	private async processAvatarUpdate(params: {
 		user: User;
-		personaId: PersonaID,
+		personaId: PersonaID;
 		initialAvatarHash: string | null;
 		avatar: string | null;
 		updates: PersonaFieldUpdates;
@@ -406,7 +437,7 @@ export class PersonaService {
 	}
 	private async processBannerUpdate(params: {
 		user: User;
-		personaId: PersonaID,
+		personaId: PersonaID;
 		initialBannerHash: string | null;
 		banner: string | null;
 		updates: PersonaFieldUpdates;
@@ -452,7 +483,7 @@ export class PersonaService {
 			'feature_animated_banner',
 			0,
 		);
-		console.warn("HELLO");
+		console.warn('HELLO');
 		if (banner !== null && canUseBanner === 0) {
 			await this.entityAssetService.rollbackAssetUpload(prepared);
 			throw InputValidationError.fromCode('banner', ValidationErrorCodes.BANNERS_REQUIRE_PREMIUM);

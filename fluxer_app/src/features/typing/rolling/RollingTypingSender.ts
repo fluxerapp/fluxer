@@ -116,7 +116,7 @@ class RollingTypingSender {
 
 	private async postTyping(channelId: string, personaId: string | null): Promise<void> {
 		try {
-			await http.post(Endpoints.CHANNEL_TYPING(channelId), personaId ? {query: {"persona_id": personaId}} : {});
+			await http.post(Endpoints.CHANNEL_TYPING(channelId), personaId ? {query: {persona_id: personaId}} : {});
 		} catch (error) {
 			logger.error(`Failed to send typing indicator to channel ${channelId}:`, error);
 		}

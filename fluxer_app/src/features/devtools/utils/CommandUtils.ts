@@ -12,8 +12,8 @@ import {
 	DEFAULT_BAN_DELETE_MESSAGE_SECONDS,
 } from '@app/features/moderation/constants/BanDeleteMessageOptions';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import Personas from '@app/features/user/state/Personas';
 import {User} from '@app/features/user/models/User';
+import Personas from '@app/features/user/state/Personas';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {FLUXERBOT_ID} from '@fluxer/constants/src/AppConstants';
@@ -390,17 +390,19 @@ export async function executeCommand(
 		}
 		case 'persona':
 			if (!command.persona) {
-				const systemMessage = createSystemMessage(
-					channelId,
-					i18n._(PERSONA_DEACTIVATED_DESCRIPTOR)
-				);
-				Personas.setGlobalActivePersona("");
+				const systemMessage = createSystemMessage(channelId, i18n._(PERSONA_DEACTIVATED_DESCRIPTOR));
+				Personas.setGlobalActivePersona('');
 				MessageCommands.createOptimistic(channelId, systemMessage.toJSON());
 			} else if (Personas.getPersona(command.persona)) {
 				const persona = Personas.getPersona(command.persona);
 				const systemMessage = createSystemMessage(
 					channelId,
-					i18n._(PERSONA_ACTIVATED_DESCRIPTOR, {persona: (persona?.internal_name ?? persona?.display_name ?? "undefined").replaceAll(MARKDOWN_FORMATTING_REGEX, "\\$1")})
+					i18n._(PERSONA_ACTIVATED_DESCRIPTOR, {
+						persona: (persona?.internal_name ?? persona?.display_name ?? 'undefined').replaceAll(
+							MARKDOWN_FORMATTING_REGEX,
+							'\\$1',
+						),
+					}),
 				);
 				Personas.setGlobalActivePersona(command.persona);
 				MessageCommands.createOptimistic(channelId, systemMessage.toJSON());

@@ -266,9 +266,7 @@ export class User {
 		this.hasDismissedPremiumOnboarding = hasKey(user, 'has_dismissed_premium_onboarding')
 			? user.has_dismissed_premium_onboarding
 			: undefined;
-		this.personaTag = hasKey(user, 'persona_tag')
-			? user.persona_tag
-			: undefined
+		this.personaTag = hasKey(user, 'persona_tag') ? user.persona_tag : undefined;
 		this._hasEverPurchased = hasKey(user, 'has_ever_purchased') ? user.has_ever_purchased : undefined;
 		this._hasUnreadGiftInventory = hasKey(user, 'has_unread_gift_inventory')
 			? user.has_unread_gift_inventory

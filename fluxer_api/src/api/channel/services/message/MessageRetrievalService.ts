@@ -260,7 +260,7 @@ export class MessageRetrievalService {
 			userId,
 			messages: visibleMessages,
 			access,
-			personaFallbackBehavior: params.personaFallbackBehavior
+			personaFallbackBehavior: params.personaFallbackBehavior,
 		});
 		const messageResponses = maskThreadArtifactsFor(viewer, channel.guildId, builtMessages).map(
 			({referenced_message: _referencedMessage, ...searchMessage}) => searchMessage,

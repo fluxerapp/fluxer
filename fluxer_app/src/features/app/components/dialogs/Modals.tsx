@@ -3,8 +3,8 @@
 import {ModalStack} from '@app/features/app/components/dialogs/ModalStack';
 import styles from '@app/features/app/components/dialogs/Modals.module.css';
 import {MediaViewerModal} from '@app/features/messaging/components/modals/MediaViewerModal';
-import { PersonaPickerMobileSheet } from '@app/features/personas/components/modals/PersonaPickerMobileSheet';
-import { PersonaProfileMobileSheet } from '@app/features/personas/components/modals/PersonaProfileMobileSheet';
+import {PersonaPickerMobileSheet} from '@app/features/personas/components/modals/PersonaPickerMobileSheet';
+import {PersonaProfileMobileSheet} from '@app/features/personas/components/modals/PersonaProfileMobileSheet';
 import {UserProfileMobileSheet} from '@app/features/user/components/modals/UserProfileMobileSheet';
 import {observer} from 'mobx-react-lite';
 

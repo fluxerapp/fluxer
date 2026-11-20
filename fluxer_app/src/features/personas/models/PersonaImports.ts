@@ -14,7 +14,7 @@ export interface PluralkitSystemMember {
 	readonly banner?: Nullish<string>;
 	readonly description?: Nullish<string>;
 	readonly bio?: Nullish<string>;
-	readonly proxy_tags?: Array<{prefix?: Nullish<string>, suffix?: Nullish<string>}>;
+	readonly proxy_tags?: Array<{prefix?: Nullish<string>; suffix?: Nullish<string>}>;
 }
 
 export interface TupperboxExport {

@@ -1,30 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::time::Duration;
-
 use crate::types::{UserRequest, UserResponse};
 use fluxer_svc::router::RouterService;
-use moka::future::Cache;
 
-pub struct UsersRouter {
-    //l1: Cache<String, UserResponse>,
-	l1_personas: Cache<String, UserResponse>,
-}
-
-impl UsersRouter {
-    pub fn new(max_entries: u64, ttl: Duration) -> Self {
-        Self {
-            // l1: Cache::builder()
-            //     .max_capacity(max_entries)
-            //     .time_to_live(ttl)
-            //     .build(),
-			l1_personas: Cache::builder()
-                .max_capacity(max_entries)
-                .time_to_live(ttl)
-                .build(),
-        }
-    }
-}
+pub struct UsersRouter {}
 
 impl RouterService for UsersRouter {
     type Request = UserRequest;

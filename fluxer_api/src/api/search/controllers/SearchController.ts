@@ -37,14 +37,23 @@ export function SearchController(app: HonoApp) {
 			}
 			const userId = user.id;
 			const requestCache = ctx.get('requestCache');
-			const personaFallbackBehavior = !(ctx.req.header("x-fluxer-features")?.split(",").map((v) => v.trim().toLowerCase()).includes("personas"));
+			const personaFallbackBehavior = !ctx.req
+				.header('x-fluxer-features')
+				?.split(',')
+				.map((v) => v.trim().toLowerCase())
+				.includes('personas');
 			const iosApp = isFluxerIosAppRequest(
 				ctx.req.header('user-agent') ?? null,
 				ctx.req.header('x-fluxer-client-properties') ?? null,
 			);
-			const result = await ctx
-				.get('searchService')
-				.searchMessages({viewer: viewerFromCtx(ctx), userId, iosApp, requestCache, personaFallbackBehavior, data: params});
+			const result = await ctx.get('searchService').searchMessages({
+				viewer: viewerFromCtx(ctx),
+				userId,
+				iosApp,
+				requestCache,
+				personaFallbackBehavior,
+				data: params,
+			});
 			return ctx.json(result);
 		},
 	);

@@ -15,7 +15,6 @@ import KeybindsTab from '@app/features/user/components/modals/tabs/KeybindsTab';
 import LanguageTab from '@app/features/user/components/modals/tabs/LanguageTab';
 import LinkedAccountsTab from '@app/features/user/components/modals/tabs/LinkedAccountsTab';
 import MyProfileTab from '@app/features/user/components/modals/tabs/MyProfileTab';
-import PersonasTab from '../modals/tabs/PersonasTab';
 import NotificationsTab from '@app/features/user/components/modals/tabs/NotificationsTab';
 import OperatorPassTab from '@app/features/user/components/modals/tabs/OperatorPassTab';
 import PaymentsTab from '@app/features/user/components/modals/tabs/PaymentsTab';
@@ -25,6 +24,7 @@ import SubscriptionsTab from '@app/features/user/components/modals/tabs/Subscrip
 import VoiceVideoTab from '@app/features/user/components/modals/tabs/VoiceVideoTab';
 import type {UserSettingsTabType} from '@app/features/user/components/settings_utils/SettingsSectionRegistry';
 import type React from 'react';
+import PersonasTab from '../modals/tabs/PersonasTab';
 
 const DESKTOP_TAB_COMPONENTS: Partial<Record<UserSettingsTabType, React.ComponentType<Record<string, unknown>>>> = {
 	my_profile: MyProfileTab,

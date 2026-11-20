@@ -233,7 +233,7 @@ function resolveCommand(structure: CommandStructure): Exclude<CommandUtils.Parse
 	if (name === '/persona') {
 		if (!hasOnlySlots(slots, ['persona'])) return null;
 		const persona = readChoiceSlot(slots, 'persona');
-		if (persona == null) return {type: 'persona', persona: ""};
+		if (persona == null) return {type: 'persona', persona: ''};
 		return {type: 'persona', persona};
 	}
 	return null;

@@ -349,7 +349,10 @@ class NotificationState {
 				title,
 				subtitle,
 				body,
-				icon: getNotificationIconURL(message.persona ? {id: message.persona.id || "0", avatar: message.persona.avatar || null} : user, channel.guildId),
+				icon: getNotificationIconURL(
+					message.persona ? {id: message.persona.id || '0', avatar: message.persona.avatar || null} : user,
+					channel.guildId,
+				),
 				url: notificationUrl,
 				playSound: false,
 				accountKey,

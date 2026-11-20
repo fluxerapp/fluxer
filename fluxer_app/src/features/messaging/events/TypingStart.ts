@@ -2,12 +2,10 @@
 
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
 import GuildMembers from '@app/features/member/state/GuildMembers';
-import TypingIndicator from '@app/features/typing/state/TypingIndicator';
-import Personas from '@app/features/user/state/Personas';
-import RollingTypingStore from '@app/features/typing/rolling/RollingTypingStore';
-import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
-import type { PersonaSnapshot } from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
 import * as PersonaCommands from '@app/features/personas/commands/Personas';
+import RollingTypingStore from '@app/features/typing/rolling/RollingTypingStore';
+import Personas from '@app/features/user/state/Personas';
+import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 
 interface TypingStartPayload {
 	channel_id: string;

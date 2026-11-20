@@ -1,9 +1,9 @@
-import { AVATAR_MAX_SIZE, BASE64_IMAGE_MAX_SIZE, MAX_BIO_LENGTH_CEILING } from "@fluxer/constants/src/LimitConstants.js";
-import { createBase64ImageType, createBase64StringType } from "../../primitives/FileValidators";
-import { createStringType, Int32Type, SnowflakeStringType } from "../../primitives/SchemaPrimitives";
-import { UserPartialResponse } from "../user/UserResponseSchemas";
-import { z } from "zod";
-import { GlobalNameType } from "../../primitives/UserValidators";
+import {MAX_BIO_LENGTH_CEILING} from '@fluxer/constants/src/LimitConstants.js';
+import {z} from 'zod';
+import {createBase64ImageType} from '../../primitives/FileValidators';
+import {createStringType, Int32Type, SnowflakeStringType} from '../../primitives/SchemaPrimitives';
+import {GlobalNameType} from '../../primitives/UserValidators';
+import {UserPartialResponse} from '../user/UserResponseSchemas';
 
 export const PersonaResponse = z.object({
 	id: SnowflakeStringType.describe('The unique identifier (snowflake) for this persona'),
@@ -31,18 +31,33 @@ export const OwnPersonaResponse = z.object({
 	bio: z.string().nullable().describe('The persona biography or description text'),
 	pronouns: z.string().nullable().describe('The preferred pronouns of the persona'),
 
-	internal_name: z.string().describe('A name to use for the persona in the persona picker. Also used as the default display name if one is not set.'),
+	internal_name: z
+		.string()
+		.describe(
+			'A name to use for the persona in the persona picker. Also used as the default display name if one is not set.',
+		),
 	tags: z.array(z.string()).default([]).describe('A list of arbitrary string tags used for search and categorization'),
-	triggers: z.array(z.object({
-		prefix: z.preprocess(
-			(arg) => (arg === '' ? null : arg),
-			z.string().nullable().describe('A prefix that, with the paired suffix, should activate a persona for a message'),
-		),
-		suffix: z.preprocess(
-			(arg) => (arg === '' ? null : arg),
-			z.string().nullable().describe('A suffix that, with the paired prefix, should activate a persona for a message'),
-		),
-	})).default([]).describe('Pairs of prefixes and suffixes that can activate a persona'),
+	triggers: z
+		.array(
+			z.object({
+				prefix: z.preprocess(
+					(arg) => (arg === '' ? null : arg),
+					z
+						.string()
+						.nullable()
+						.describe('A prefix that, with the paired suffix, should activate a persona for a message'),
+				),
+				suffix: z.preprocess(
+					(arg) => (arg === '' ? null : arg),
+					z
+						.string()
+						.nullable()
+						.describe('A suffix that, with the paired prefix, should activate a persona for a message'),
+				),
+			}),
+		)
+		.default([])
+		.describe('Pairs of prefixes and suffixes that can activate a persona'),
 });
 
 export type OwnPersonaResponse = z.infer<typeof OwnPersonaResponse>;
@@ -58,11 +73,25 @@ export const PersonaCreateRequest = z.object({
 	accent_color: z.int32().nullish().describe('The accent colour of the persona as an RGB integer'),
 	bio: createStringType(1, MAX_BIO_LENGTH_CEILING).nullish().describe('The persona biography or description text'),
 	pronouns: createStringType(1, 40).nullish().describe('The preferred pronouns of the persona'),
-	tags: z.array(z.string().max(32)).max(10).nullish().describe('A list of arbitrary string tags used for search and categorization'),
-	triggers: z.array(z.object({
-		prefix: createStringType(1, 32).nullish().describe('A prefix that, with the paired suffix, should activate a persona for a message'),
-		suffix: createStringType(1, 32).nullish().describe('A suffix that, with the paired prefix, should activate a persona for a message'),
-	})).max(10).default([]).describe('Pairs of prefixes and suffixes that can activate a persona'),
+	tags: z
+		.array(z.string().max(32))
+		.max(10)
+		.nullish()
+		.describe('A list of arbitrary string tags used for search and categorization'),
+	triggers: z
+		.array(
+			z.object({
+				prefix: createStringType(1, 32)
+					.nullish()
+					.describe('A prefix that, with the paired suffix, should activate a persona for a message'),
+				suffix: createStringType(1, 32)
+					.nullish()
+					.describe('A suffix that, with the paired prefix, should activate a persona for a message'),
+			}),
+		)
+		.max(10)
+		.default([])
+		.describe('Pairs of prefixes and suffixes that can activate a persona'),
 });
 
 export type PersonaCreateRequest = z.infer<typeof PersonaCreateRequest>;
@@ -75,24 +104,28 @@ export const PersonaPatchRequest = PersonaCreateRequest.partial(); // use .omit(
 
 export type PersonaPatchRequest = z.infer<typeof PersonaPatchRequest>;
 
-export const PersonaSnapshot = z.object({
-	id: SnowflakeStringType.nullish().describe('The unique identifier (snowflake) for this persona. THIS CAN BE NULL! In that case, the persona information in the snapshot is used as is.'),
-	name: z.string().min(1).max(100).nullish().describe('The display name of the persona'),
-	avatar: z.string().max(65536).nullish().describe('The hash of the persona avatar'),
-	pronouns: z.string().max(40).nullish().describe('The preferred pronouns of the persona'),
-}).check((ctx) => {
-	if (!(ctx.value.name || ctx.value.id)) {
-		ctx.issues.push({
-			code: "custom",
-			input: null,
-			continue: false,
-			message: "Either an ID or a name for a persona must be specified."
-		})
-	}
-});
+export const PersonaSnapshot = z
+	.object({
+		id: SnowflakeStringType.nullish().describe(
+			'The unique identifier (snowflake) for this persona. THIS CAN BE NULL! In that case, the persona information in the snapshot is used as is.',
+		),
+		name: z.string().min(1).max(100).nullish().describe('The display name of the persona'),
+		avatar: z.string().max(65536).nullish().describe('The hash of the persona avatar'),
+		pronouns: z.string().max(40).nullish().describe('The preferred pronouns of the persona'),
+	})
+	.check((ctx) => {
+		if (!(ctx.value.name || ctx.value.id)) {
+			ctx.issues.push({
+				code: 'custom',
+				input: null,
+				continue: false,
+				message: 'Either an ID or a name for a persona must be specified.',
+			});
+		}
+	});
 
 export type PersonaSnapshot = z.infer<typeof PersonaSnapshot>;
 
-export const ImportMediaUrlQuery = z.object({"url": z.httpUrl()});
+export const ImportMediaUrlQuery = z.object({url: z.httpUrl()});
 
 export type ImportMediaUrlQuery = z.infer<typeof ImportMediaUrlQuery>;

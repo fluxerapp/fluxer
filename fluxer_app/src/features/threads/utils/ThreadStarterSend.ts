@@ -5,11 +5,10 @@ import * as MessageCommands from '@app/features/messaging/commands/MessageComman
 import * as MessageSubmitUtils from '@app/features/messaging/utils/MessageSubmitUtils';
 import Permission from '@app/features/permissions/state/Permission';
 import ThreadPanel from '@app/features/threads/state/ThreadPanel';
-import Personas from '@app/features/user/state/Personas';
 import Users from '@app/features/user/state/Users';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {MessageAttachment, MessageStickerItem} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import type { PersonaSnapshot } from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
+import type {PersonaSnapshot} from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
 import {useEffect, useState} from 'react';
 
 export interface ThreadStarterPayload {

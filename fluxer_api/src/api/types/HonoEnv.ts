@@ -85,7 +85,7 @@ import type {IEmailService} from '@pkgs/email/src/IEmailService';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import type {Hono} from 'hono';
-import type { PersonaService } from '../personas/services/PersonaService';
+import type {PersonaService} from '../personas/services/PersonaService';
 
 export type AuthTokenType = 'session' | 'bearer' | 'bot' | 'admin_api_key' | 'operator' | 'attachment_media';
 

@@ -26,7 +26,7 @@ import {
 import {AttachmentURLType, URLType} from '@fluxer/schema/src/primitives/UrlValidators';
 import {schemaMetadata} from '@fluxer/schema/src/SchemaMetadata';
 import {z} from 'zod';
-import { PersonaSnapshot } from '../persona/PersonaSchemas';
+import {PersonaSnapshot} from '../persona/PersonaSchemas';
 
 const RICH_EMBED_AUTHOR_NAME_MAX_LENGTH = 256 as const;
 const RICH_EMBED_MEDIA_DESCRIPTION_MAX_LENGTH = 4096 as const;

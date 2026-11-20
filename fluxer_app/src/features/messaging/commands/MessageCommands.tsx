@@ -50,7 +50,7 @@ import {resolveRetryAfterMs} from '@app/features/messaging/utils/RetryAfterUtils
 import {openReportMessageModal} from '@app/features/moderation/utils/ReportActionUtils';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import Permission from '@app/features/permissions/state/Permission';
-import type { Persona } from '@app/features/personas/models/Persona';
+import type {Persona} from '@app/features/personas/models/Persona';
 import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
 import {isAccountTransitionAbortError} from '@app/features/platform/state/AccountTransitionAbort';
 import SessionManager from '@app/features/platform/state/AuthSession';
@@ -82,8 +82,8 @@ import type {
 	MessageStickerItem,
 	Message as WireMessage,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import type { PersonaSnapshot } from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
-import { PersonaSettings_LatchMode } from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb.js';
+import type {PersonaSnapshot} from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
+import {PersonaSettings_LatchMode} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb.js';
 import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -418,7 +418,7 @@ interface SendMessageParams {
 	favoriteMemeId?: string;
 	stickers?: Array<MessageStickerItem>;
 	tts?: boolean;
-	persona?: PersonaSnapshot
+	persona?: PersonaSnapshot;
 }
 
 export function jumpToLiveEdge(channelId: string, limit = MAX_MESSAGES_PER_CHANNEL): void {
@@ -893,7 +893,12 @@ export async function edit(
 			const matchingTrigger = matchingPersona.triggers.find(matchesTrigger(value));
 			const original = Messages.getMessage(channelId, messageId);
 			// Don't change personas if the trigger was already on the message
-			if ((original ? matchingTrigger && !matchesTrigger(original.content.toLowerCase())(matchingTrigger) : matchingTrigger) && original?.persona?.id !== matchingPersona?.id) {
+			if (
+				(original
+					? matchingTrigger && !matchesTrigger(original.content.toLowerCase())(matchingTrigger)
+					: matchingTrigger) &&
+				original?.persona?.id !== matchingPersona?.id
+			) {
 				logger.debug(`Applying persona ${matchingPersona.id} to edit ${messageId}`);
 				let ival = content;
 				if (matchingTrigger?.prefix) ival = ival.substring(matchingTrigger.prefix?.length ?? 0);

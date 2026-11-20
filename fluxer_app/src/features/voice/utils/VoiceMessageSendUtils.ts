@@ -4,7 +4,6 @@ import * as MessageCommands from '@app/features/messaging/commands/MessageComman
 import {Message} from '@app/features/messaging/models/MessagingMessage';
 import {UploadingAttachment} from '@app/features/messaging/models/UploadingAttachment';
 import {CloudUpload} from '@app/features/messaging/upload/CloudUpload';
-import { Persona } from '@app/features/personas/models/Persona';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import Personas from '@app/features/user/state/Personas';
 import Users from '@app/features/user/state/Users';

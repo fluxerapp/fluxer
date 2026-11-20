@@ -10,7 +10,7 @@ import type {
 	MessageReference,
 	MessageStickerItem,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import type { PersonaSnapshot } from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
+import type {PersonaSnapshot} from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
 import {hasVisibleContent as hasVisibleMessageContent} from '@fluxer/schema/src/primitives/MessageValidators';
 
 const DEFAULT_ALLOWED_MENTIONS: AllowedMentions = {replied_user: true};
@@ -133,8 +133,18 @@ function normalizeMessageEditContent(content: string): string {
 }
 
 export function buildMessageCreateRequest(payload: MessageCreatePayload): MessageCreateRequest {
-	const {content, nonce, attachments, allowedMentions, messageReference, flags, favoriteMemeId, stickers, tts, persona} =
-		payload;
+	const {
+		content,
+		nonce,
+		attachments,
+		allowedMentions,
+		messageReference,
+		flags,
+		favoriteMemeId,
+		stickers,
+		tts,
+		persona,
+	} = payload;
 	const requestBody: MessageCreateRequest = {};
 	if (content != null && hasVisibleMessageContent(content)) {
 		requestBody.content = content;

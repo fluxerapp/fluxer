@@ -184,6 +184,7 @@ export class GuildSearchService {
 			userId,
 			viewer,
 			requestCache,
+			personaFallbackBehavior: params.personaFallbackBehavior ?? true,
 		});
 	}
 
@@ -249,6 +250,7 @@ export class GuildSearchService {
 			userId,
 			viewer,
 			requestCache,
+			personaFallbackBehavior: params.personaFallbackBehavior ?? true,
 		});
 	}
 

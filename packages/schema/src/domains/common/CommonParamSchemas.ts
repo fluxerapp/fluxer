@@ -209,7 +209,7 @@ export const PersonaIdParam = z.object({
 });
 
 export const UserPersonaIdParam = z.object({
-	user_id: SnowflakeType.or(z.enum(["@me"])).describe('The ID of the user the persona belongs to'),
+	user_id: SnowflakeType.or(z.enum(['@me'])).describe('The ID of the user the persona belongs to'),
 	persona_id: SnowflakeType.describe('The ID of the persona'),
 });
 

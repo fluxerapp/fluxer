@@ -1,4 +1,4 @@
 {
-    "git.alwaysSignOff": true,
-    "git.ignoreLimitWarning": true
+	"git.alwaysSignOff": true,
+	"git.ignoreLimitWarning": true
 }

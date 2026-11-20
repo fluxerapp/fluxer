@@ -72,7 +72,11 @@ export function MessageInteractionController(app: HonoApp) {
 			const userId = ctx.get('user').id;
 			const channelId = createChannelID(ctx.req.valid('param').channel_id);
 			const {limit, before} = ctx.req.valid('query');
-			const personaFallbackBehavior = !(ctx.req.header("x-fluxer-features")?.split(",").map((v) => v.trim().toLowerCase()).includes("personas"));
+			const personaFallbackBehavior = !ctx.req
+				.header('x-fluxer-features')
+				?.split(',')
+				.map((v) => v.trim().toLowerCase())
+				.includes('personas');
 			return ctx.json(
 				await ctx.get('channelService').interactions.getChannelPins({
 					viewer: viewerFromCtx(ctx),

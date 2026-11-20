@@ -867,7 +867,7 @@ class Accessibility {
 				'messageDoubleClickActions',
 				'sequentialFileSend',
 				'showLatchInPersonaPicker',
-				'showPersonaPickerButton'
+				'showPersonaPickerButton',
 			],
 			toMessage: (s) => ({
 				saturationFactor: s.saturationFactor,
@@ -1368,7 +1368,8 @@ class Accessibility {
 			this.showVideoSeekPreviewThumbnails = validated.showVideoSeekPreviewThumbnails;
 			persistLocalVideoSeekPreviewThumbnails(validated.showVideoSeekPreviewThumbnails);
 		}
-		if (validated.showPersonaPickerButton !== undefined) this.showPersonaPickerButton = validated.showPersonaPickerButton;
+		if (validated.showPersonaPickerButton !== undefined)
+			this.showPersonaPickerButton = validated.showPersonaPickerButton;
 		if (
 			validated.showLatchInPersonaPicker !== undefined &&
 			validated.showLatchInPersonaPicker !== this.showLatchInPersonaPicker

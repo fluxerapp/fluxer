@@ -1,6 +1,5 @@
-import type { PersonaID, UserID } from "../BrandedTypes";
-import type { PersonaTriggerRow } from "../database/types/PersonaTypes";
-import { PersonaTriggers } from "../Tables";
+import type {PersonaID, UserID} from '../BrandedTypes';
+import type {PersonaTriggerRow} from '../database/types/PersonaTypes';
 
 export class PersonaTrigger {
 	constructor(
@@ -13,7 +12,7 @@ export class PersonaTrigger {
 			owner_id: userId,
 			persona_id: personaId,
 			prefix: this.prefix,
-			suffix: this.suffix
+			suffix: this.suffix,
 		};
 	}
 }

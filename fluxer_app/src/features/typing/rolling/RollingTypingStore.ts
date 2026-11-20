@@ -9,7 +9,7 @@ import {action, computed, type IComputedValue, makeObservable, type ObservableMa
 
 type RollingTypingOrigin = 'local' | 'gateway';
 
-type RollingTypingEntry = Readonly<{confirmed: boolean, personaId?: string}>;
+type RollingTypingEntry = Readonly<{confirmed: boolean; personaId?: string}>;
 
 const LOCAL_ENTRY: RollingTypingEntry = Object.freeze({confirmed: false});
 const CONFIRMED_ENTRY: RollingTypingEntry = Object.freeze({confirmed: true});
@@ -49,14 +49,17 @@ class RollingTypingStore {
 		const confirmed = origin === 'gateway';
 		const existingEntries = this.entries.get(channelId);
 		const existing = existingEntries?.get(userId);
-		if (existing !== undefined && (existing.confirmed || !confirmed) && (existing.personaId === personaId)) {
+		if (existing !== undefined && (existing.confirmed || !confirmed) && existing.personaId === personaId) {
 			return;
 		}
 		const channelEntries = existingEntries ?? observable.map<string, RollingTypingEntry>(undefined, {deep: false});
 		if (existingEntries === undefined) {
 			this.entries.set(channelId, channelEntries);
 		}
-		channelEntries.set(userId, Object.freeze({...(confirmed ? CONFIRMED_ENTRY : LOCAL_ENTRY), personaId: personaId || undefined}));
+		channelEntries.set(
+			userId,
+			Object.freeze({...(confirmed ? CONFIRMED_ENTRY : LOCAL_ENTRY), personaId: personaId || undefined}),
+		);
 	}
 
 	remove(channelId: string, userId: string): void {

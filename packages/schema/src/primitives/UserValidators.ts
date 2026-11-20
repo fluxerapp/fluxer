@@ -125,7 +125,18 @@ export const WebhookNameType = z
 	.pipe(withStringLengthRangeValidation(z.string(), 1, 80, ValidationErrorCodes.WEBHOOK_NAME_LENGTH_INVALID));
 /** These tags are universally forbidden for personas due to a high risk of abuse.
     "Bot" is not forbidden because why would you want to pretend to be a bot? */
-const FORBIDDEN_PERSONA_TAGS = ['system', 'system message', 'official', 'official message', 'staff', 'mod', 'moderator', 'admin', 'administrator', 'owner']
+const FORBIDDEN_PERSONA_TAGS = [
+	'system',
+	'system message',
+	'official',
+	'official message',
+	'staff',
+	'mod',
+	'moderator',
+	'admin',
+	'administrator',
+	'owner',
+];
 export const PersonaTagType = z
 	.string()
 	.superRefine((value, ctx) => {

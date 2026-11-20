@@ -9,15 +9,15 @@ import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlR
 import {isApiAttachmentUrl} from '@app/features/messaging/utils/ApiAttachmentUrl';
 import {attachmentUrlMayNeedRefresh} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {TextareaSegmentManager} from '@app/features/messaging/utils/TextareaSegmentManager';
+import type {Persona} from '@app/features/personas/models/Persona';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import ActiveComposer from '@app/features/threads/state/ActiveComposer';
+import Personas from '@app/features/user/state/Personas';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import type {MessageAttachment, MessageStickerItem} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import Personas from '@app/features/user/state/Personas';
-import type { PersonaSnapshot } from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
+import type {PersonaSnapshot} from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
 import {useCallback, useEffect} from 'react';
-import type { Persona } from '@app/features/personas/models/Persona';
 
 interface UseTextareaExpressionHandlersOptions {
 	setValue: React.Dispatch<React.SetStateAction<string>>;

@@ -1,8 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
-import {Config} from '@app/api/Config';
-import {createAttachmentID, createChannelID, createMessageID, createPersonaID, type GuildID} from '@app/api/BrandedTypes';
+import {
+	createAttachmentID,
+	createChannelID,
+	createMessageID,
+	createPersonaID,
+	type GuildID,
+} from '@app/api/BrandedTypes';
 import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
 import {parseMessageRequestBody} from '@app/api/channel/services/message/MessageRequestParser';
 import {isPersonalNotesChannelId} from '@app/api/channel/services/PersonalNotesChannelRepair';
@@ -26,8 +31,7 @@ import {
 	ChannelIdMessageIdAttachmentIdParam,
 	ChannelIdMessageIdParam,
 	ChannelIdParam,
-    OptionalPersonaIdParam,
-    PersonaIdParam,
+	OptionalPersonaIdParam,
 } from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {
 	CompleteMultipartAttachmentUploadRequest,
@@ -74,7 +78,11 @@ export function MessageController(app: HonoApp) {
 			const {limit, before, after, around} = ctx.req.valid('query');
 			const requestCache = ctx.get('requestCache');
 			const messageRequestService = ctx.get('messageRequestService');
-			const personaFallbackBehavior = !(ctx.req.header("x-fluxer-features")?.split(",").map((v) => v.trim().toLowerCase()).includes("personas"));
+			const personaFallbackBehavior = !ctx.req
+				.header('x-fluxer-features')
+				?.split(',')
+				.map((v) => v.trim().toLowerCase())
+				.includes('personas');
 			return ctx.json(
 				await messageRequestService.listMessages({
 					viewer: viewerFromCtx(ctx),
@@ -87,7 +95,7 @@ export function MessageController(app: HonoApp) {
 						around: around ? createMessageID(around) : undefined,
 					},
 					requestCache,
-					personaFallbackBehavior
+					personaFallbackBehavior,
 				}),
 			);
 		},
@@ -114,7 +122,11 @@ export function MessageController(app: HonoApp) {
 			const {requests} = ctx.req.valid('json');
 			const requestCache = ctx.get('requestCache');
 			const messageRequestService = ctx.get('messageRequestService');
-			const personaFallbackBehavior = !(ctx.req.header("x-fluxer-features")?.split(",").map((v) => v.trim().toLowerCase()).includes("personas"));
+			const personaFallbackBehavior = !ctx.req
+				.header('x-fluxer-features')
+				?.split(',')
+				.map((v) => v.trim().toLowerCase())
+				.includes('personas');
 			const channelIds = new Set(requests.map((request) => createChannelID(request.channel_id)));
 			const channels = await Promise.all(
 				Array.from(channelIds, async (channelId) => {
@@ -174,7 +186,11 @@ export function MessageController(app: HonoApp) {
 			const messageId = createMessageID(message_id);
 			const requestCache = ctx.get('requestCache');
 			const messageRequestService = ctx.get('messageRequestService');
-			const personaFallbackBehavior = !(ctx.req.header("x-fluxer-features")?.split(",").map((v) => v.trim().toLowerCase()).includes("personas"));
+			const personaFallbackBehavior = !ctx.req
+				.header('x-fluxer-features')
+				?.split(',')
+				.map((v) => v.trim().toLowerCase())
+				.includes('personas');
 			return ctx.json(
 				await messageRequestService.getMessage({
 					viewer: viewerFromCtx(ctx),
@@ -520,8 +536,8 @@ export function MessageController(app: HonoApp) {
 			if (!isPersonalNotesChannelId({userId: user.id, channelId})) {
 				assertTierAllows(user, TierGatedActions.TYPING, NO_TIER_CONTEXT);
 			}
-			const personaIdParam = ctx.req.query("persona_id") || undefined;
-			const personaId = personaIdParam ? createPersonaID(BigInt(personaIdParam)) : undefined ;
+			const personaIdParam = ctx.req.query('persona_id') || undefined;
+			const personaId = personaIdParam ? createPersonaID(BigInt(personaIdParam)) : undefined;
 			const channelService = ctx.get('channelService');
 			const auth = await channelService.interactions.startTyping({viewer, userId: user.id, channelId, personaId});
 			const cooldown = await channelService.getTypingCooldown({user, viewer, auth});

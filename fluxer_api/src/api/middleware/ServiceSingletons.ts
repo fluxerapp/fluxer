@@ -114,9 +114,11 @@ import {TestEmailService} from '@pkgs/email/src/TestEmailService';
 import {NatsConnectionManager} from '@pkgs/nats/src/NatsConnectionManager';
 import {RateLimitService} from '@pkgs/rate_limit/src/RateLimitService';
 import type {IVirusScanService} from '@pkgs/virus_scan/src/IVirusScanService';
+import {PersonaRepository} from '../personas/repositories/PersonaRepository';
 
 export const getUserRepository = singleton(() => new UserRepository(getKVClient()));
 export const getGuildRepository = singleton(() => new GuildRepository());
+export const getPersonaRepository = singleton(() => new PersonaRepository());
 export const getChannelRepository = singleton(() => new ChannelRepository());
 export const getInviteRepository = singleton(() => new InviteRepository());
 export const getWebhookRepository = singleton(() => new WebhookRepository());

@@ -590,7 +590,8 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 			);
 		};
 		const renderInteractionGroup = () => {
-			if (!editItem && !changePersonaItem && !replyItem && !forwardItem && !createThreadItem && !crosspostItem) return null;
+			if (!editItem && !changePersonaItem && !replyItem && !forwardItem && !createThreadItem && !crosspostItem)
+				return null;
 			return (
 				<MenuGroup data-flx="ui.action-menu.message-context-menu.render-interaction-group.menu-group">
 					{editItem && renderDataMenuItem(editItem, 'edit')}

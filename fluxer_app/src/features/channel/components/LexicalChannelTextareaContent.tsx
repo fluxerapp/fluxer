@@ -105,6 +105,8 @@ import {
 	resolveTypedEmojiShortcodes,
 	resolveTypedEmojiToken,
 } from '@app/features/messaging/utils/TypedEmojiShortcodeUtils';
+import {PersonaPickerComposerButton} from '@app/features/personas/components/PersonaPickerComposerButton';
+import type {Persona} from '@app/features/personas/models/Persona';
 import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {awaitHydration} from '@app/features/platform/utils/MobXPersistence';
@@ -112,32 +114,28 @@ import {useSlowmode} from '@app/features/slowmode/hooks/useSlowmode';
 import {openCreateThread} from '@app/features/threads/commands/ThreadNavigation';
 import ActiveComposer from '@app/features/threads/state/ActiveComposer';
 import {canStartThreadIn} from '@app/features/threads/utils/ThreadActionRules';
+import RollingTypingSender from '@app/features/typing/rolling/RollingTypingSender';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
 import {SlashCommandIcon} from '@app/features/ui/components/icons/SlashCommandIcon';
-import {openPopout, Popout} from '@app/features/ui/popover/PopoverPopout';
+import {openPopout} from '@app/features/ui/popover/PopoverPopout';
 import ContextMenuState from '@app/features/ui/state/ContextMenu';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
+import Personas from '@app/features/user/state/Personas';
 import Users from '@app/features/user/state/Users';
 import {openVoiceMessageComposerModal} from '@app/features/voice/components/VoiceMessageComposerModal';
 import {flxElementClassName} from '@app/lib/react';
+import {PersonaSettings_LatchMode} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb.js';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {PlusIcon, UserSwitchIcon} from '@phosphor-icons/react';
+import {PlusIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState} from 'react';
-import { Tooltip } from '@app/features/ui/tooltip/Tooltip';
-import { PersonaPickerComposerButton } from '@app/features/personas/components/PersonaPickerComposerButton';
-import Personas from '@app/features/user/state/Personas';
-import type { Persona } from '@app/features/personas/models/Persona';
-import { PersonaBar } from './ChannelPersonaBar';
-import { value } from 'valibot';
-import { PersonaSettings_LatchMode } from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb.js';
-import RollingTypingSender from '@app/features/typing/rolling/RollingTypingSender';
+import {PersonaBar} from './ChannelPersonaBar';
 
 const PLUS_MENU_DOUBLE_CLICK_MS = 500;
 const MESSAGE_SCROLLER_SELECTOR = '[data-flx="channel.messages.scroller"][data-fluxer-scroll-container="true"]';
@@ -221,7 +219,7 @@ export const LexicalChannelTextareaContent = observer(
 			hasSlots: false,
 			activeSlot: null,
 		});
-		const personasWithTriggers = Personas.getOwnPersonas().filter((v) => v.triggers.length) //, [Personas.ownPersonas]
+		const personasWithTriggers = Personas.getOwnPersonas().filter((v) => v.triggers.length); //, [Personas.ownPersonas]
 		const [triggeredPersona, setTriggeredPersona] = useState<Persona | null>(null);
 		const [useTriggeredPersona, setUseTriggeredPersona] = useState(true);
 		const [mentionConfirmationSnapshot, setMentionConfirmationSnapshot] = useState(createMentionConfirmationSnapshot);
@@ -261,7 +259,11 @@ export const LexicalChannelTextareaContent = observer(
 				return;
 			}
 			// TODO: find longest match, use it
-			const matches = personasWithTriggers.filter((p) => p.triggers.find((t) => !t.suffix && t.prefix?.trim() && value.toLowerCase().startsWith(t.prefix.toLowerCase().trim())));
+			const matches = personasWithTriggers.filter((p) =>
+				p.triggers.find(
+					(t) => !t.suffix && t.prefix?.trim() && value.toLowerCase().startsWith(t.prefix.toLowerCase().trim()),
+				),
+			);
 			// Suffixes are matched when the message is sent
 			if (matches.length > 1) return;
 			if (matches.length < 1) {
@@ -435,14 +437,16 @@ export const LexicalChannelTextareaContent = observer(
 				if (useTriggeredPersona && triggeredPersona === null && !args['5']) {
 					// Match by prefix AND suffix
 					const value = args['0'].toLowerCase();
-					const matches = personasWithTriggers.filter((v) => v.triggers.find((t) => {
-						const prefix = t.prefix?.toLowerCase().trim();
-						const suffix = t.suffix?.toLowerCase().trim();
-						if (!prefix && !suffix) return false;
-						if (prefix && !value.startsWith(prefix)) return false;
-						if (suffix && !value.endsWith(suffix)) return false;
-						return true;
-					}));
+					const matches = personasWithTriggers.filter((v) =>
+						v.triggers.find((t) => {
+							const prefix = t.prefix?.toLowerCase().trim();
+							const suffix = t.suffix?.toLowerCase().trim();
+							if (!prefix && !suffix) return false;
+							if (prefix && !value.startsWith(prefix)) return false;
+							if (suffix && !value.endsWith(suffix)) return false;
+							return true;
+						}),
+					);
 					if (matches.length === 1) {
 						args['5'] = matches[0].toSnapshot();
 						matchingPersona = matches[0];
@@ -1068,7 +1072,8 @@ export const LexicalChannelTextareaContent = observer(
 			return true;
 		}, [channel.id, enableEditLast]);
 		useTextareaDraftAndTyping({
-			personaId: (useTriggeredPersona ? triggeredPersona?.id : undefined) || Personas.getGlobalActivePersona()?.id || undefined,
+			personaId:
+				(useTriggeredPersona ? triggeredPersona?.id : undefined) || Personas.getGlobalActivePersona()?.id || undefined,
 			bootFrameDraftRef,
 			draftOwner: accountKey,
 			channelId: draftChannelId ?? channel.id,
@@ -1329,7 +1334,11 @@ export const LexicalChannelTextareaContent = observer(
 		const presentableTypingUsers = usePresentableTypingUsers(channel);
 		const isTypingStatusVisible = draftChannelId == null && !isAutocompleteVisible && presentableTypingUsers.length > 0;
 		const isSlowmodeIndicatorVisible = isSlowmodeEnabled;
-		const hasLeadingStatusContent = (useTriggeredPersona && triggeredPersona) || isMobileEditBarVisible || isReplyBarVisible || isSlashParamBarVisible;
+		const hasLeadingStatusContent =
+			(useTriggeredPersona && triggeredPersona) ||
+			isMobileEditBarVisible ||
+			isReplyBarVisible ||
+			isSlashParamBarVisible;
 		let shouldReplyMention = false;
 		if (replyingMessage !== null && replyingMessage !== undefined) {
 			shouldReplyMention = replyingMessage.mentioning;
@@ -1484,11 +1493,14 @@ export const LexicalChannelTextareaContent = observer(
 								>
 									<flx-channel-textarea-upload-row
 										className={flxElementClassName(styles.uploadAndPersonasRow)}
-										data-flx="channel.lexical-channel-textarea-content.upload-button-row">
+										data-flx="channel.lexical-channel-textarea-content.upload-button-row"
+									>
 										<TextareaButton
 											iconProps={PLUS_ICON_PROPS}
 											icon={slashCommandState.hasSlots ? SlashCommandIcon : PlusIcon}
-											label={slashCommandState.hasSlots ? i18n._(CLEAR_COMMAND_DESCRIPTOR) : i18n._(OPEN_MENU_DESCRIPTOR)}
+											label={
+												slashCommandState.hasSlots ? i18n._(CLEAR_COMMAND_DESCRIPTOR) : i18n._(OPEN_MENU_DESCRIPTOR)
+											}
 											disabled={textareaInputDisabled}
 											aria-hidden={textareaInputDisabled ? true : undefined}
 											onMouseDown={slashCommandState.hasSlots ? undefined : handlePlusMenuMouseDown}
@@ -1500,6 +1512,7 @@ export const LexicalChannelTextareaContent = observer(
 										/>
 										<PersonaPickerComposerButton
 											channel={channel}
+											data-flx="channel.lexical-channel-textarea-content.persona-picker-composer-button"
 										/>
 									</flx-channel-textarea-upload-row>
 								</flx-channel-textarea-upload-column>

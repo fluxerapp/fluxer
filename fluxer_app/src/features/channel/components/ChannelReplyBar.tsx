@@ -93,7 +93,8 @@ export const ReplyBar = observer(function ReplyBar({
 	const isWebhook = replyingMessageObject.webhookId != null;
 	const canMention = !isOwnMessage && isInGuild && !isWebhook;
 	const shouldMention = initialShouldMention && canMention;
-	const authorNickname = replyingMessageObject.persona?.name || NicknameUtils.getNickname(replyingMessageObject.author, guild?.id);
+	const authorNickname =
+		replyingMessageObject.persona?.name || NicknameUtils.getNickname(replyingMessageObject.author, guild?.id);
 	const handleStopReply = () => {
 		MessageCommands.stopReply(channel.id);
 	};

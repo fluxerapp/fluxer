@@ -17,7 +17,7 @@ import type {
 	OperatorPassWallEntryRow,
 	OperatorPassWallEventRow,
 } from '@app/api/database/types/OperatorPassTypes';
-import type { PersonaTriggerRow } from '@app/api/database/types/PersonaTypes';
+import type {PersonaTriggerRow} from '@app/api/database/types/PersonaTypes';
 import type {StorePurchaseRow} from '@app/api/database/types/StoreBillingTypes';
 import type {Application} from '@app/api/models/Application';
 import type {AuthSession} from '@app/api/models/AuthSession';
@@ -28,7 +28,7 @@ import type {Guild} from '@app/api/models/Guild';
 import type {GuildMember} from '@app/api/models/GuildMember';
 import type {MfaBackupCode} from '@app/api/models/MfaBackupCode';
 import type {Payment} from '@app/api/models/Payment';
-import type { Persona } from '@app/api/models/Persona';
+import type {Persona} from '@app/api/models/Persona';
 import type {PushSubscription} from '@app/api/models/PushSubscription';
 import type {Relationship} from '@app/api/models/Relationship';
 import type {SavedMessage} from '@app/api/models/SavedMessage';
@@ -722,10 +722,12 @@ export function buildUserDataJson(params: UserDataJsonParams) {
 			internal_name: persona.internalName,
 			pronouns: persona.pronouns,
 			tags: persona.tags ?? [],
-			triggers: personaTriggers.filter((trigger) => trigger.persona_id === persona.id).map((trigger) => ({
-				prefix: trigger.prefix,
-				suffix: trigger.suffix,
-			}))
+			triggers: personaTriggers
+				.filter((trigger) => trigger.persona_id === persona.id)
+				.map((trigger) => ({
+					prefix: trigger.prefix,
+					suffix: trigger.suffix,
+				})),
 		})),
 		...mapSecurityData({authorizedIps, activityData}),
 	};

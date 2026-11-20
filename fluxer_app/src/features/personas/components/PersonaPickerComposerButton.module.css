@@ -5,7 +5,7 @@
 
 	&:hover:not(:disabled),
 	&.contextMenuHover:not(:disabled) {
-	/* &.selected:not(:disabled) */
+		/* &.selected:not(:disabled) */
 		color: var(--text-primary);
 		&.buttonMarker {
 			background: var(--background-modifier-hover);
@@ -13,8 +13,8 @@
 	}
 }
 
-.personaAvatar svg[data-flx="ui.base-avatar.overlay"] {
+.personaAvatar svg[data-flx='ui.base-avatar.overlay'] {
 	width: 1.75rem;
-  height: 1.75rem;
-  margin: auto;
+	height: 1.75rem;
+	margin: auto;
 }

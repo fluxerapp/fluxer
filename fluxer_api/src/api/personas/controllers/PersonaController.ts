@@ -1,29 +1,26 @@
-import { createPersonaID, createUserID, type PersonaID } from "@app/api/BrandedTypes";
-import { getPngDataUrl } from "@app/api/emoji/tests/EmojiTestUtils";
-import { LimitConfigService } from "@app/api/limits/LimitConfigService";
-import { resolveLimitSafe } from "@app/api/limits/LimitConfigUtils";
-import { createLimitMatchContext } from "@app/api/limits/LimitMatchContextBuilder";
-import { Logger } from "@app/api/Logger";
-import { LoginRequired } from "@app/api/middleware/AuthMiddleware";
-import { RateLimitMiddleware } from "@app/api/middleware/RateLimitMiddleware";
-import { OpenAPI } from "@app/api/middleware/ResponseTypeMiddleware";
-import { getLimitConfigService } from "@app/api/middleware/ServiceSingletons";
-import { RateLimitConfigs } from "@app/api/RateLimitConfig";
-import type { HonoApp } from "@app/api/types/HonoEnv";
-import { Validator } from "@app/api/Validator";
-import { HttpStatus } from "@fluxer/constants/src/HttpConstants.js";
-import { AVATAR_MAX_SIZE } from "@fluxer/constants/src/LimitConstants.js";
-import { RelationshipTypes } from "@fluxer/constants/src/UserConstants.js";
-import { MaxBookmarksError } from "@fluxer/errors/src/domains/core/MaxBookmarksError.js";
-import { MaxPersonasError } from "@fluxer/errors/src/domains/core/MaxPersonasError.js";
-import { createJsonErrorResponse } from "@fluxer/errors/src/error_handling/ErrorResponse.js";
-import { resolveLimit } from "@fluxer/limits/src/LimitResolver.js";
-import { PersonaIdParam, UserPersonaIdParam } from "@fluxer/schema/src/domains/common/CommonParamSchemas.js";
-import { ErrorResponse } from "@fluxer/schema/src/domains/common/ErrorSchemas.js";
-import { ImportMediaUrlQuery, OwnPersonaListResponse, OwnPersonaResponse, PersonaCreateBatchRequest, PersonaCreateRequest, PersonaPatchRequest, PersonaResponse } from "@fluxer/schema/src/domains/persona/PersonaSchemas.js";
-import { stream } from "hono/streaming";
-import { encodeBase64Url } from "hono/utils/encode";
-import { z } from "zod";
+import {createPersonaID, createUserID, type PersonaID} from '@app/api/BrandedTypes';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
+import {HttpStatus} from '@fluxer/constants/src/HttpConstants.js';
+import {RelationshipTypes} from '@fluxer/constants/src/UserConstants.js';
+import {MaxPersonasError} from '@fluxer/errors/src/domains/core/MaxPersonasError.js';
+import {PersonaIdParam, UserPersonaIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas.js';
+import {
+	ImportMediaUrlQuery,
+	OwnPersonaListResponse,
+	OwnPersonaResponse,
+	PersonaCreateBatchRequest,
+	PersonaCreateRequest,
+	PersonaPatchRequest,
+	PersonaResponse,
+} from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
+import {stream} from 'hono/streaming';
 
 export function PersonaController(app: HonoApp) {
 	app.get(
@@ -49,7 +46,7 @@ export function PersonaController(app: HonoApp) {
 			const personaService = ctx.get('personaService');
 			return ctx.json(await personaService.getUserPersonas(user));
 			//return ctx.json([]);
-		}
+		},
 	);
 
 	app.get(
@@ -74,20 +71,27 @@ export function PersonaController(app: HonoApp) {
 			const userId = user.id;
 			const {user_id, persona_id} = ctx.req.valid('param');
 			const userService = ctx.get('userService');
-			if (userId.toString() !== user_id.toString() && user_id !== "@me") {
+			if (userId.toString() !== user_id.toString() && user_id !== '@me') {
 				// pretend that the persona doesn't exist to people who the persona owner has blocked
-				const relationship = await userService.relationshipService.getRelationship({userId, targetId: createUserID(user_id), type: RelationshipTypes.BLOCKED});
+				const relationship = await userService.relationshipService.getRelationship({
+					userId,
+					targetId: createUserID(user_id),
+					type: RelationshipTypes.BLOCKED,
+				});
 				if (relationship) return ctx.notFound();
 			}
-			const targetId = user_id !== "@me" ? createUserID(user_id) : undefined;
-			const targetUser = targetId && await userService.accountService.lookupService.findUnique(targetId)
-			targetId && user_id.valueOf() !== userId.valueOf() && targetUser && await userService.accountService.lookupService.validateProfileAccess(userId, targetId, targetUser);
+			const targetId = user_id !== '@me' ? createUserID(user_id) : undefined;
+			const targetUser = targetId && (await userService.accountService.lookupService.findUnique(targetId));
+			targetId &&
+				user_id.valueOf() !== userId.valueOf() &&
+				targetUser &&
+				(await userService.accountService.lookupService.validateProfileAccess(userId, targetId, targetUser));
 			const personaService = ctx.get('personaService');
 			const response = await personaService.getPersona(targetUser || user, createPersonaID(persona_id));
 			if (!response) return ctx.notFound();
 			console.log(response);
 			return ctx.json(response);
-		}
+		},
 	);
 
 	app.post(
@@ -112,14 +116,14 @@ export function PersonaController(app: HonoApp) {
 			const data = ctx.req.valid('json');
 			const personaService = ctx.get('personaService');
 			const limits = ctx.get('limitConfigService');
-			const limit = resolveLimitSafe(limits.getConfigSnapshot(), createLimitMatchContext({user}), "max_personas", 0);
+			const limit = resolveLimitSafe(limits.getConfigSnapshot(), createLimitMatchContext({user}), 'max_personas', 0);
 			const count = (await personaService.getUserPersonas(user)).length + 1;
 			if (count > limit) {
 				throw new MaxPersonasError({maxPersonas: limit});
 			}
 			const persona = await personaService.createPersona(user, data);
 			return ctx.json(await personaService.getOwnPersona(user, persona));
-		}
+		},
 	);
 
 	app.patch(
@@ -136,8 +140,7 @@ export function PersonaController(app: HonoApp) {
 			statusCode: 200,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Personas'],
-			description:
-				'Updates a persona by its ID. Included fields will be patched onto the existing data.',
+			description: 'Updates a persona by its ID. Included fields will be patched onto the existing data.',
 		}),
 		async (ctx) => {
 			const user = ctx.get('user');
@@ -152,7 +155,7 @@ export function PersonaController(app: HonoApp) {
 			await personaService.updatePersona(user, personaId, data);
 			const finalResponse = await personaService.getOwnPersona(user, personaId);
 			return ctx.json(finalResponse);
-		}
+		},
 	);
 
 	app.delete(
@@ -167,8 +170,7 @@ export function PersonaController(app: HonoApp) {
 			statusCode: 204,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Personas'],
-			description:
-				'Deletes the persona by its ID.',
+			description: 'Deletes the persona by its ID.',
 		}),
 		async (ctx) => {
 			const {persona_id} = ctx.req.valid('param');
@@ -179,9 +181,9 @@ export function PersonaController(app: HonoApp) {
 			const persona = createPersonaID(persona_id);
 			await personaService.deletePersona(user.id, persona);
 			const check = await personaService.getPersona(user, persona);
-			if (check) throw new Error("Persona deletion failed");
+			if (check) throw new Error('Persona deletion failed');
 			return ctx.body(null, 204);
-		}
+		},
 	);
 
 	app.post(
@@ -200,15 +202,15 @@ export function PersonaController(app: HonoApp) {
 			tags: ['Personas'],
 			description:
 				'Creates several personas at once. This may be useful if you are importing personas from another service.',
-				/**
-				 * This returns NDJSON where each line is a JSON object which always contains the "event" key.
-				 * Progress events that this endpoint returns these, generally in this order for each index:
-				 * * "Start" - also comes with "length", which is a numeric value representing the length
-				 * * "PersonaBuilt" - comes with the "index"
-				 * * "PersonaSaved" - comes with the "index"; the final event for each persona,
-				 * 			indicating it has been written to the database
-				 * * "Done" - comes with nothing, the stream closes immediately after
-				 */
+			/**
+			 * This returns NDJSON where each line is a JSON object which always contains the "event" key.
+			 * Progress events that this endpoint returns these, generally in this order for each index:
+			 * * "Start" - also comes with "length", which is a numeric value representing the length
+			 * * "PersonaBuilt" - comes with the "index"
+			 * * "PersonaSaved" - comes with the "index"; the final event for each persona,
+			 * 			indicating it has been written to the database
+			 * * "Done" - comes with nothing, the stream closes immediately after
+			 */
 		}),
 		async (ctx) => {
 			const user = ctx.get('user');
@@ -216,27 +218,31 @@ export function PersonaController(app: HonoApp) {
 			const personaService = ctx.get('personaService');
 			// TODO: pre-flight checks; i.e. make sure the length would not exceed this user's global persona limit, banners, etc
 			const limits = ctx.get('limitConfigService');
-			const limit = resolveLimitSafe(limits.getConfigSnapshot(), createLimitMatchContext({user}), "max_personas", 0);
+			const limit = resolveLimitSafe(limits.getConfigSnapshot(), createLimitMatchContext({user}), 'max_personas', 0);
 			if ((await personaService.getUserPersonas(user)).length + data.length > limit) {
 				throw new MaxPersonasError({maxPersonas: limit});
 			}
 			return stream(ctx, async (str) => {
-				str.writeln(JSON.stringify({"event": "Start", "length": data.length}));
+				str.writeln(JSON.stringify({event: 'Start', length: data.length}));
 				const personaFutures: Array<Promise<PersonaID>> = [];
 				for (const i in data) {
 					const datum = data[i];
 					const persona = personaService.createPersona(user, datum).finally(async () => {
-						await str.writeln(JSON.stringify({"event": "PersonaSaved", "index": parseInt(i, 10)}));
-					})
+						await str.writeln(JSON.stringify({event: 'PersonaSaved', index: parseInt(i, 10)}));
+					});
 					personaFutures.push(persona);
-					await str.writeln(JSON.stringify({"event": "PersonaBuilt", "index": parseInt(i, 10)}));
+					await str.writeln(JSON.stringify({event: 'PersonaBuilt', index: parseInt(i, 10)}));
 				}
-				await Promise.all(personaFutures.map((v, i) => v.catch(async (e) => {
-					await str.writeln(JSON.stringify({"event": "SaveFailed", "index": i, "message": e.toString(), "error": e}));
-				})));
-				await (await str.writeln(JSON.stringify({"event": "Done"}))).close();
+				await Promise.all(
+					personaFutures.map((v, i) =>
+						v.catch(async (e) => {
+							await str.writeln(JSON.stringify({event: 'SaveFailed', index: i, message: e.toString(), error: e}));
+						}),
+					),
+				);
+				await (await str.writeln(JSON.stringify({event: 'Done'}))).close();
 			});
-		}
+		},
 	);
 
 	app.get(
@@ -260,29 +266,27 @@ export function PersonaController(app: HonoApp) {
 			const user = ctx.get('user');
 			const tokenType = ctx.get('authTokenType');
 			const url = ctx.req.query('url');
-			if (user.isBot || tokenType === "bearer" || tokenType === "bot") {
+			if (user.isBot || tokenType === 'bearer' || tokenType === 'bot') {
 				// Do it yourself, don't hammer the server if you're not the web app.
-				ctx.status(HttpStatus.UNAUTHORIZED)
+				ctx.status(HttpStatus.UNAUTHORIZED);
 				return;
 			}
 			// TODO: only accept connections from web browsers on the same domain(s)
 			// TODO: abort if file is too large
 			const remoteFile = await fetch(String(url), {
-				headers: [
-					["Accept", "image/*"]
-				],
+				headers: [['Accept', 'image/*']],
 			});
-			const type = remoteFile.headers.get("Content-Type");
-			if (!type?.startsWith("image/")) {
+			const type = remoteFile.headers.get('Content-Type');
+			if (!type?.startsWith('image/')) {
 				ctx.status(HttpStatus.BAD_GATEWAY);
 				return;
 			}
 			if (!remoteFile.ok) {
-				ctx.status(remoteFile.status as any || HttpStatus.INTERNAL_SERVER_ERROR);
+				ctx.status((remoteFile.status as any) || HttpStatus.INTERNAL_SERVER_ERROR);
 				return;
 			}
-			ctx.header("Content-Type", type);
+			ctx.header('Content-Type', type);
 			return remoteFile.body ? ctx.body(remoteFile.body!) : ctx.status(HttpStatus.NOT_FOUND);
-		}
-	)
+		},
+	);
 }

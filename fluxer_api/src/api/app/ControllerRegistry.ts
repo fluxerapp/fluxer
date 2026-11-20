@@ -31,6 +31,7 @@ import {OAuth2Controller} from '@app/api/oauth/OAuth2Controller';
 import {OpenAPIController} from '@app/api/openapi/OpenAPIController';
 import {OperatorPassController} from '@app/api/operator_pass/OperatorPassController';
 import {OperatorPassInternalController} from '@app/api/operator_pass/OperatorPassInternalController';
+import {PersonaController} from '@app/api/personas/controllers/PersonaController';
 import {PremiumController} from '@app/api/premium/PremiumController';
 import {ReadStateController} from '@app/api/read_state/ReadStateController';
 import {ReportController} from '@app/api/report/ReportController';
@@ -46,7 +47,6 @@ import {UserController} from '@app/api/user/controllers/UserController';
 import {VoiceNodeController} from '@app/api/voice/VoiceNodeController';
 import {VoiceP2pConnectionReportController} from '@app/api/voice/VoiceP2pConnectionReportController';
 import {WebhookController} from '@app/api/webhook/WebhookController';
-import {PersonaController} from '@app/api/personas/controllers/PersonaController';
 
 export function registerControllers(routes: HonoApp, config: APIConfig): void {
 	InternalRpcController(routes);

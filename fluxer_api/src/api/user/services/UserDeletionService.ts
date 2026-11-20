@@ -34,6 +34,7 @@ import type {User} from '@app/api/models/User';
 import type {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
 import type {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
 import {endOperatorPassesForDeletion} from '@app/api/operator_pass/OperatorPassHoldingService';
+import type {PersonaRepository} from '@app/api/personas/repositories/PersonaRepository';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import {isMissingOrCancelledSubscriptionError} from '@app/api/stripe/StripeUtils';
 import {deleteAllAppAttestKeys} from '@app/api/user/AgeRange';
@@ -56,7 +57,6 @@ import type {IEmailService} from '@pkgs/email/src/IEmailService';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import {ms} from 'itty-time';
 import type Stripe from 'stripe';
-import type { PersonaRepository } from '@app/api/personas/repositories/PersonaRepository';
 
 const CHUNK_SIZE = 100;
 const ssoIdentityRepository = new SsoIdentityRepository();

@@ -4,7 +4,7 @@ import {CrosspostCommunityPopout} from '@app/features/channel/components/Crosspo
 import {useMaybeMessageViewContext} from '@app/features/channel/components/MessageViewContext';
 import {PreloadableUserPopout} from '@app/features/channel/components/PreloadableUserPopout';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
-import { makeFallbackPersona, Persona } from '@app/features/personas/models/Persona';
+import {makeFallbackPersona} from '@app/features/personas/models/Persona';
 import {Avatar} from '@app/features/ui/components/Avatar';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import type {User} from '@app/features/user/models/User';

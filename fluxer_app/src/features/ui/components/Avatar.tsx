@@ -17,7 +17,6 @@ import {normalizeStatus} from '@fluxer/constants/src/StatusConstants';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import React, {type CSSProperties, useCallback, useEffect, useMemo, useState} from 'react';
-import { message } from 'valibot';
 
 interface AvatarProps {
 	user: User;
@@ -79,7 +78,7 @@ const AvatarComponent = React.forwardRef<HTMLDivElement, AvatarProps>(
 		const avatarUrl = useMemo(() => {
 			if (customAvatarUrl !== undefined) return customAvatarUrl;
 			if (personaId || personaAvatar) {
-				return AvatarUtils.getUserAvatarURL({id: personaId ?? "0", avatar: personaAvatar || null}, false, mediaSize);
+				return AvatarUtils.getUserAvatarURL({id: personaId ?? '0', avatar: personaAvatar || null}, false, mediaSize);
 			}
 			if (systemAvatarUrl !== null) return systemAvatarUrl;
 			if (guildId && hasGuildMemberAvatarSource) {
@@ -109,7 +108,7 @@ const AvatarComponent = React.forwardRef<HTMLDivElement, AvatarProps>(
 		const hoverAvatarUrl = useMemo(() => {
 			if (customHoverAvatarUrl !== undefined) return customHoverAvatarUrl;
 			if (personaId || personaAvatar) {
-				return AvatarUtils.getUserAvatarURL({id: personaId ?? "0", avatar: personaAvatar || null}, true, mediaSize);
+				return AvatarUtils.getUserAvatarURL({id: personaId ?? '0', avatar: personaAvatar || null}, true, mediaSize);
 			}
 			if (systemAvatarUrl !== null) return systemAvatarUrl;
 			if (guildId && hasGuildMemberAvatarSource) {
@@ -180,7 +179,10 @@ const AvatarComponent = React.forwardRef<HTMLDivElement, AvatarProps>(
 			};
 		}, [hoverAvatarUrl, isAnimatedNeeded, rendersAnimatedInline]);
 		const shouldPlayAnimated = hasDistinctHoverAvatar && animationAllowed && isAnimatedLoaded;
-		const fallbackAvatarUrl = useMemo(() => AvatarUtils.getUserAvatarURL({id: personaId || userId, avatar: null}, false), [personaId, userId]);
+		const fallbackAvatarUrl = useMemo(
+			() => AvatarUtils.getUserAvatarURL({id: personaId || userId, avatar: null}, false),
+			[personaId, userId],
+		);
 		const resolvedAvatarUrl = avatarUrl ?? fallbackAvatarUrl;
 		const safeHoverAvatarUrl = isAnimatedNeeded ? hoverAvatarUrl || undefined : undefined;
 		const normalizedStatusAttr = status != null ? normalizeStatus(status) : undefined;

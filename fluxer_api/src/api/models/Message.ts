@@ -9,7 +9,7 @@ import {MessageRef} from '@app/api/models/MessageRef';
 import {MessageSnapshot} from '@app/api/models/MessageSnapshot';
 import {StickerItem} from '@app/api/models/StickerItem';
 import type {MessageTypeValue} from '@fluxer/constants/src/ChannelConstants';
-import type { PersonaSnapshot } from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
+import type {PersonaSnapshot} from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
 
 export class Message {
 	readonly channelId: ChannelID;

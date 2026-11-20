@@ -19,7 +19,7 @@ import {
 	SnowflakeStringType,
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
-import { PersonaSnapshot } from '../persona/PersonaSchemas';
+import {PersonaSnapshot} from '../persona/PersonaSchemas';
 
 export const MessageAttachmentResponse = z.object({
 	id: SnowflakeStringType.describe('The unique identifier for this attachment'),
@@ -158,7 +158,11 @@ const MessageBaseResponseSchema = z.object({
 	message_snapshots: z.array(MessageSnapshotResponse).nullish().describe('Snapshots of forwarded messages'),
 	nonce: z.string().nullish().describe('A client-provided value for message deduplication'),
 	call: MessageCallResponse.nullish().describe('Call information if this message represents a call'),
-	persona: z.lazy(() => PersonaSnapshot).nullable().default(null).describe('The persona used for this message'),
+	persona: z
+		.lazy(() => PersonaSnapshot)
+		.nullable()
+		.default(null)
+		.describe('The persona used for this message'),
 	thread: z
 		.lazy(() => ThreadChannelResponse)
 		.optional()

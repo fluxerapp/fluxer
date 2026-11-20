@@ -6,7 +6,8 @@ import {GuildMemberActionsSheet} from '@app/features/guild/components/modals/gui
 import type {GuildMember} from '@app/features/member/models/GuildMember';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
-import type { Persona } from '@app/features/personas/models/Persona';
+import type {Persona} from '@app/features/personas/models/Persona';
+import * as PersonaProfileMobile from '@app/features/personas/state/PersonaProfileMobile';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {GuildMemberContextMenu} from '@app/features/ui/action_menu/GuildMemberContextMenu';
 import {UserContextMenu} from '@app/features/ui/action_menu/UserContextMenu';
@@ -16,7 +17,6 @@ import type {PopoutAnimationType, PopoutPosition} from '@app/features/ui/popover
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import * as UserProfileCommands from '@app/features/user/commands/UserProfileCommands';
-import * as PersonaProfileMobile from '@app/features/personas/state/PersonaProfileMobile';
 import {UserProfileActionsSheet} from '@app/features/user/components/modals/UserProfileActionsSheet';
 import {UserProfilePopout} from '@app/features/user/components/popouts/UserProfilePopout';
 import {useUserProfileHoverPreload} from '@app/features/user/hooks/useUserProfileHoverPreload';

@@ -98,7 +98,7 @@ import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import type {IVirusScanService} from '@pkgs/virus_scan/src/IVirusScanService';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import type Stripe from 'stripe';
-import { PersonaRepository } from '../personas/repositories/PersonaRepository';
+import {PersonaRepository} from '../personas/repositories/PersonaRepository';
 
 export interface WorkerDependencies {
 	kvClient: IKVProvider;

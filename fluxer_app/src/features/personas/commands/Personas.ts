@@ -1,7 +1,13 @@
-import { Endpoints } from "@app/features/app/constants/Endpoints";
-import { http } from "@app/features/platform/transport/RestTransport";
-import { Logger } from "@app/features/platform/utils/AppLogger";
-import type {OwnPersonaResponse, PersonaCreateRequest, PersonaPatchRequest, PersonaResponse, OwnPersonaResponse as WireOwnPersona} from "@fluxer/schema/src/domains/persona/PersonaSchemas";
+import {Endpoints} from '@app/features/app/constants/Endpoints';
+import {http} from '@app/features/platform/transport/RestTransport';
+import {Logger} from '@app/features/platform/utils/AppLogger';
+import type {
+	OwnPersonaResponse,
+	PersonaCreateRequest,
+	PersonaPatchRequest,
+	PersonaResponse,
+	OwnPersonaResponse as WireOwnPersona,
+} from '@fluxer/schema/src/domains/persona/PersonaSchemas';
 
 const logger = new Logger('Personas');
 

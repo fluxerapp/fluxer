@@ -17,11 +17,11 @@ import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {
 	ADD_REACTION_DESCRIPTOR,
 	BOOKMARK_MESSAGE_DESCRIPTOR,
+	CHANGE_PERSONA_DESCRIPTOR,
 	COPY_MESSAGE_ID_DESCRIPTOR,
 	COPY_MESSAGE_LINK_DESCRIPTOR,
 	DELETE_MESSAGE_DESCRIPTOR,
 	EDIT_MESSAGE_DESCRIPTOR,
-	CHANGE_PERSONA_DESCRIPTOR,
 	MARK_AS_UNREAD_DESCRIPTOR,
 	PIN_MESSAGE_DESCRIPTOR,
 	REMOVE_BOOKMARK_DESCRIPTOR,
@@ -72,7 +72,7 @@ import TtsUtils from '@app/features/voice/utils/VoiceTtsUtils';
 import {MessageStates, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import { UserSwitchIcon } from '@phosphor-icons/react';
+import {UserSwitchIcon} from '@phosphor-icons/react';
 import {useCallback, useEffect, useMemo, useState} from 'react';
 
 const MESSAGE_DEBUG_DESCRIPTOR = msg({
@@ -339,13 +339,14 @@ export const useMessageActionMenuData = (
 					onClick: handlers.handleEditMessage,
 					shortcut: <KeybindHint action="message_edit" data-flx="channel.message-action-menu.groups.keybind-hint--5" />,
 				});
-				if (Personas.getOwnPersonas()) interactionActions.push({
-					id: messageActionMenuItemIds.changePersona,
-					icon: <UserSwitchIcon size={20} data-flx="channel.message-action-menu.groups.change-persona-icon" />,
-					label: i18n._(CHANGE_PERSONA_DESCRIPTOR),
-					onClick: handlers.handleChangePersona,
-					//shortcut: <KeybindHint action="message_edit" data-flx="channel.message-action-menu.groups.keybind-hint--change-persona" />,
-				});
+				if (Personas.getOwnPersonas())
+					interactionActions.push({
+						id: messageActionMenuItemIds.changePersona,
+						icon: <UserSwitchIcon size={20} data-flx="channel.message-action-menu.groups.change-persona-icon" />,
+						label: i18n._(CHANGE_PERSONA_DESCRIPTOR),
+						onClick: handlers.handleChangePersona,
+						//shortcut: <KeybindHint action="message_edit" data-flx="channel.message-action-menu.groups.keybind-hint--change-persona" />,
+					});
 			}
 			if (message.isUserMessage() && permissions?.canPinMessage) {
 				managementActions.push({

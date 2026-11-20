@@ -1,4 +1,4 @@
-import type { PersonaGroupID, PersonaID, UserID } from "@app/api/BrandedTypes";
+import type {PersonaGroupID, PersonaID, UserID} from '@app/api/BrandedTypes';
 
 type Nullish<T> = T | null;
 
@@ -44,12 +44,9 @@ export interface PersonaTriggerRow {
 	suffix: Nullish<string>;
 }
 
-export const PERSONA_TRIGGER_COLUMNS = [
-	'persona_id',
-	'owner_id',
-	'prefix',
-	'suffix'
-] as const satisfies ReadonlyArray<keyof PersonaTriggerRow>;
+export const PERSONA_TRIGGER_COLUMNS = ['persona_id', 'owner_id', 'prefix', 'suffix'] as const satisfies ReadonlyArray<
+	keyof PersonaTriggerRow
+>;
 
 export interface PersonaGroupRow {
 	persona_group_id: PersonaGroupID;

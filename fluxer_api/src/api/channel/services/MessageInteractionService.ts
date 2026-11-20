@@ -108,7 +108,7 @@ export class MessageInteractionService {
 		channelId,
 		beforeTimestamp,
 		limit,
-		...props
+		personaFallbackBehavior,
 	}: {
 		userId: UserID;
 		viewer: ThreadViewer;
@@ -126,7 +126,13 @@ export class MessageInteractionService {
 			viewer,
 			access: 'visitor_read',
 		});
-		const pins = await this.pinService.getChannelPins({authChannel, userId, beforeTimestamp, limit});
+		const pins = await this.pinService.getChannelPins({
+			authChannel,
+			userId,
+			beforeTimestamp,
+			limit,
+			personaFallbackBehavior,
+		});
 		const original = pins.items.map((item) => item.message as MessageResponse);
 		const messages = maskThreadArtifactsFor(viewer, authChannel.channel.guildId, original);
 		if (messages === original) return pins;

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type { PersonaSnapshot } from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
 import type {
 	AttachmentID,
 	ChannelID,
@@ -12,6 +11,7 @@ import type {
 	UserID,
 	WebhookID,
 } from '@app/api/BrandedTypes';
+import type {PersonaSnapshot} from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
 
 export interface MessageAttachment {
 	attachment_id: AttachmentID;

@@ -574,7 +574,13 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 			userRepository.getActivityTracking(userId),
 			personaRepository.listUserPersonas(userId),
 		]);
-		const personaTriggers = (await Promise.all(personas.map((p) => personaRepository.getPersonaTriggers(userId, p.id).then((v) => v.map((q) => q.toRow(userId, p.id)))))).flat();
+		const personaTriggers = (
+			await Promise.all(
+				personas.map((p) =>
+					personaRepository.getPersonaTriggers(userId, p.id).then((v) => v.map((q) => q.toRow(userId, p.id))),
+				),
+			)
+		).flat();
 		const operatorPassRepository = getOperatorPassRepository();
 		const operatorPassUnitRows = new Map<string, OperatorPassUnitRow>();
 		for (const unit of await operatorPassRepository.listUnitsByHolder(userId)) {

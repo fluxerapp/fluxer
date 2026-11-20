@@ -267,6 +267,7 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 			attachments: await this.mapAttachments(message.attachments, message),
 			stickers: this.mapStickers(message.stickers),
 			reactions,
+			persona: message.persona,
 		};
 		let messageReference: MessageResponse['message_reference'] = null;
 		if (message.reference) {

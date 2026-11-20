@@ -3,8 +3,8 @@
 import Authentication from '@app/features/auth/state/Authentication';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
-import Personas from '@app/features/user/state/Personas';
 import RollingTypingStore from '@app/features/typing/rolling/RollingTypingStore';
+import Personas from '@app/features/user/state/Personas';
 import {autorun, type IReactionDisposer} from 'mobx';
 
 const SELF_TYPING_REFRESH_MS = 5000;

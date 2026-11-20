@@ -10,7 +10,15 @@ import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
 
 export class MessageReadStateService {
 	constructor(private gatewayService: IGatewayService) {}
-	async startTyping({authChannel, userId, personaId}: {authChannel: AuthenticatedChannel; userId: UserID; personaId?: PersonaID}): Promise<void> {
+	async startTyping({
+		authChannel,
+		userId,
+		personaId,
+	}: {
+		authChannel: AuthenticatedChannel;
+		userId: UserID;
+		personaId?: PersonaID;
+	}): Promise<void> {
 		const {channel, guild} = authChannel;
 		ensureTextChannel(channel);
 		if (isOperationDisabled(guild, GuildOperations.TYPING_EVENTS)) {
@@ -19,7 +27,15 @@ export class MessageReadStateService {
 		await this.dispatchTypingStart({channel, userId, personaId});
 	}
 
-	private async dispatchTypingStart({channel, userId, personaId}: {channel: Channel; userId: UserID; personaId?: PersonaID}): Promise<void> {
+	private async dispatchTypingStart({
+		channel,
+		userId,
+		personaId,
+	}: {
+		channel: Channel;
+		userId: UserID;
+		personaId?: PersonaID;
+	}): Promise<void> {
 		await dispatchChannelEvent({
 			gatewayService: this.gatewayService,
 			channel,

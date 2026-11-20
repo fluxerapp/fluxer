@@ -10,6 +10,7 @@ import {GuildAvailabilityMiddleware} from '@app/api/middleware/GuildAvailability
 import {GuildVisitorRequestContextMiddleware} from '@app/api/middleware/GuildVisitorRequestContextMiddleware';
 import {IpBanMiddleware} from '@app/api/middleware/IpBanMiddleware';
 import {LocaleMiddleware} from '@app/api/middleware/LocaleMiddleware';
+import {PersonaMiddleware} from '@app/api/middleware/PersonaMiddleware';
 import {RequestBodyLimitMiddleware} from '@app/api/middleware/RequestBodyLimitMiddleware';
 import {RequestCacheMiddleware} from '@app/api/middleware/RequestCacheMiddleware';
 import {RequestErrorTelemetry} from '@app/api/middleware/RequestErrorTelemetry';
@@ -26,7 +27,6 @@ import {cors} from '@fluxer/hono/src/middleware/Cors';
 import {applyMiddlewareStack} from '@fluxer/hono/src/middleware/MiddlewareStack';
 import {createInfoRequestLogger, requestLogger} from '@fluxer/hono/src/middleware/RequestLogger';
 import {resolveClientIpHeaderName} from '@fluxer/ip_utils/src/ClientIp';
-import { PersonaMiddleware } from '@app/api/middleware/PersonaMiddleware';
 import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
 
 const WEB_HOST_ALLOWED_ORIGINS: ReadonlyMap<string, ReadonlySet<string>> = new Map([

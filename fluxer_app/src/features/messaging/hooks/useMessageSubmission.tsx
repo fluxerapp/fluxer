@@ -25,7 +25,7 @@ import type {
 	MessageAttachment,
 	MessageStickerItem,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import type { PersonaSnapshot } from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
+import type {PersonaSnapshot} from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
 import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
 import {useLingui} from '@lingui/react/macro';
 import {useCallback} from 'react';
@@ -106,7 +106,7 @@ export const useMessageSubmission = ({
 			stickersOrTts: Array<MessageStickerItem> | boolean = [],
 			favoriteMemeIdOrStickers?: string | Array<MessageStickerItem>,
 			maybeFavoriteMemeId?: string,
-			persona?: PersonaSnapshot
+			persona?: PersonaSnapshot,
 		) => {
 			const personaSnapshot = persona || Personas.getGlobalActivePersona()?.toSnapshot();
 			const isTtsCall = typeof stickersOrTts === 'boolean';

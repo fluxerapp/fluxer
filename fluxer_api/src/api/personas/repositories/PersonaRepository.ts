@@ -1,9 +1,9 @@
-import type { PersonaID, UserID } from "@app/api/BrandedTypes";
-import { BatchBuilder, executeQuery, fetchMany, fetchOne, upsertOne } from "@app/api/database/CassandraQueryExecution";
-import type { PersonaTriggerRow, PersonaRow } from "@app/api/database/types/PersonaTypes";
-import { Persona } from "@app/api/models/Persona";
-import { PersonaTrigger } from "@app/api/models/PersonaTrigger";
-import { Personas, PersonaTriggers } from "@app/api/Tables";
+import type {PersonaID, UserID} from '@app/api/BrandedTypes';
+import {BatchBuilder, executeQuery, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import type {PersonaRow, PersonaTriggerRow} from '@app/api/database/types/PersonaTypes';
+import {Persona} from '@app/api/models/Persona';
+import {PersonaTrigger} from '@app/api/models/PersonaTrigger';
+import {Personas, PersonaTriggers} from '@app/api/Tables';
 
 const FETCH_PERSONAS_BY_USER_CQL = Personas.selectCql({
 	where: Personas.where.eq('owner_id'),
@@ -19,14 +19,19 @@ const FETCH_PERSONA_BY_USER_AND_ID_CQL = Personas.selectCql({
 });
 
 const DELETE_EXACT_PERSONA_TRIGGER_CQL = PersonaTriggers.deleteCql({
-	where: [PersonaTriggers.where.eq('owner_id'), PersonaTriggers.where.eq('persona_id'), PersonaTriggers.where.eq('prefix'), PersonaTriggers.where.eq('suffix')]
+	where: [
+		PersonaTriggers.where.eq('owner_id'),
+		PersonaTriggers.where.eq('persona_id'),
+		PersonaTriggers.where.eq('prefix'),
+		PersonaTriggers.where.eq('suffix'),
+	],
 });
 
 const DELETE_PERSONA_TRIGGERS_BY_PERSONA_CQL = PersonaTriggers.deleteCql({
-	where: [PersonaTriggers.where.eq('owner_id'), PersonaTriggers.where.eq('persona_id')]
+	where: [PersonaTriggers.where.eq('owner_id'), PersonaTriggers.where.eq('persona_id')],
 });
 const DELETE_PERSONA_TRIGGERS_BY_OWNER_CQL = PersonaTriggers.deleteCql({
-	where: [PersonaTriggers.where.eq('owner_id')]
+	where: [PersonaTriggers.where.eq('owner_id')],
 });
 
 export class PersonaRepository {
@@ -44,7 +49,10 @@ export class PersonaRepository {
 	}
 
 	async getPersonaTriggers(userId: UserID, personaId: PersonaID): Promise<Array<PersonaTrigger>> {
-		const triggers = await fetchMany<PersonaTriggerRow>(FETCH_PERSONA_TRIGGERS_BY_PERSONA_CQL, {owner_id: userId, persona_id: personaId});
+		const triggers = await fetchMany<PersonaTriggerRow>(FETCH_PERSONA_TRIGGERS_BY_PERSONA_CQL, {
+			owner_id: userId,
+			persona_id: personaId,
+		});
 		return triggers.map((v) => new PersonaTrigger(v.prefix, v.suffix));
 	}
 
@@ -63,45 +71,48 @@ export class PersonaRepository {
 			batch.add(DELETE_EXACT_PERSONA_TRIGGER_CQL, {
 				owner_id: userId,
 				persona_id: personaId,
-				prefix: trigger.prefix || "",
-				suffix: trigger.suffix || ""
+				prefix: trigger.prefix || '',
+				suffix: trigger.suffix || '',
 			});
 		}
 		for (const trigger of addedTriggers) {
 			// is this the best place to throw such an error?
-			if (!trigger.prefix && !trigger.suffix) throw new Error("Prefix and suffix cannot both be empty");
+			if (!trigger.prefix && !trigger.suffix) throw new Error('Prefix and suffix cannot both be empty');
 			const data: PersonaTriggerRow = {
 				owner_id: userId,
 				persona_id: personaId,
-				prefix: trigger.prefix || "",
-				suffix: trigger.suffix || ""
+				prefix: trigger.prefix || '',
+				suffix: trigger.suffix || '',
 			};
 			batch.addPrepared(PersonaTriggers.insert(data));
 		}
 		await batch.execute(true);
 	}
 
-	async createPersona(userId: UserID, persona: PersonaRow) {
+	async createPersona(persona: PersonaRow) {
 		await upsertOne(Personas.insert(persona));
 	}
 
 	async updatePersona(userId: UserID, personaId: PersonaID, data: Partial<PersonaRow>) {
 		const existing = await this.getPersona(userId, personaId);
 		if (existing) {
-			const definedData = Object.entries(data).filter(item => item[1] !== undefined)
+			const definedData = Object.entries(data).filter((item) => item[1] !== undefined);
 			const newData = {
 				...existing.toRow(),
-				...Object.fromEntries(definedData)
-			}
-			console.log("Data:", newData);
-			await upsertOne(Personas.insert(newData))
+				...Object.fromEntries(definedData),
+			};
+			console.log('Data:', newData);
+			await upsertOne(Personas.insert(newData));
 		} else throw new Error("Persona didn't exist when attempting to update it");
 	}
 
 	async deleteAllPersonasByUserId(userId: UserID) {
-		await executeQuery(Personas.deleteCql({
-			where: Personas.where.eq("owner_id")
-		}), {owner_id: userId});
+		await executeQuery(
+			Personas.deleteCql({
+				where: Personas.where.eq('owner_id'),
+			}),
+			{owner_id: userId},
+		);
 		await executeQuery(DELETE_PERSONA_TRIGGERS_BY_OWNER_CQL, {owner_id: userId});
 	}
 }

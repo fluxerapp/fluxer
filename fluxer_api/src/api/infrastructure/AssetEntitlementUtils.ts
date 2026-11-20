@@ -5,7 +5,6 @@ import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
 import type {User} from '@app/api/models/User';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
-import type { Persona } from '../models/Persona';
 
 const ANIMATED_PREFIX = 'a_';
 
@@ -37,7 +36,10 @@ function userHasAnimatedEntitlement(user: User, key: 'feature_animated_avatar' |
 }
 
 export function stripAvatarForUser(user: User, avatarHash?: string | null | undefined): string | null {
-	return stripAnimationPrefixIfNoEntitlement(avatarHash !== undefined ? avatarHash : user.avatarHash, userHasAnimatedAvatarEntitlement(user));
+	return stripAnimationPrefixIfNoEntitlement(
+		avatarHash !== undefined ? avatarHash : user.avatarHash,
+		userHasAnimatedAvatarEntitlement(user),
+	);
 }
 
 export function stripBannerForUser(user: User, bannerHash?: string | null | undefined): string | null {

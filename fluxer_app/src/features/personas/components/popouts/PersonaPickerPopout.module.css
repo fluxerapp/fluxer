@@ -56,7 +56,9 @@
 	gap: var(--spacing-2);
 	padding: var(--spacing-1) var(--spacing-2);
 	border-radius: var(--radius-sm);
-	transition: var(--transition-fast) ease-in-out color, var(--transition-fast) ease-in-out background;
+	transition:
+		var(--transition-fast) ease-in-out color,
+		var(--transition-fast) ease-in-out background;
 	color: var(--text-secondary);
 
 	&[data-selected] {
@@ -88,8 +90,6 @@
 	margin-block-start: 0.25lh;
 }
 
-.primaryName {}
-
 .secondaryName {
 	font-size: smaller;
 	opacity: 70%;
@@ -99,8 +99,8 @@
 	display: flex !important;
 	flex-direction: column;
 	gap: 0;
-	&>span:first-of-type {
+	& > span:first-of-type {
 		min-height: unset;
-  	margin: 0.25rem 0;
+		margin: 0.25rem 0;
 	}
 }

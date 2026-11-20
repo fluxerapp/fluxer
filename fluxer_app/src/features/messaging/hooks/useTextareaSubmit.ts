@@ -46,7 +46,7 @@ import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
 import {StatusTypes} from '@fluxer/constants/src/StatusConstants';
 import type {MessageStickerItem} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import type { PersonaSnapshot } from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
+import type {PersonaSnapshot} from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import type React from 'react';
@@ -265,7 +265,7 @@ export const useTextareaSubmit = ({
 	onMentionConfirmationNeeded,
 	commandsEnabled = true,
 	i18n,
-	persona
+	persona,
 }: UseTextareaSubmitOptions) => {
 	const checkMentionConfirmation = useCallback(
 		async (content: string, sourceContent: string, tts?: boolean): Promise<boolean> => {
@@ -579,7 +579,12 @@ export const useTextareaSubmit = ({
 			RollingTypingSender.stopTyping(channelId);
 			return;
 		}
-		const sendWithPendingSticker = (content: string, hasAttachments: boolean, tts?: boolean, persona?: PersonaSnapshot): boolean => {
+		const sendWithPendingSticker = (
+			content: string,
+			hasAttachments: boolean,
+			tts?: boolean,
+			persona?: PersonaSnapshot,
+		): boolean => {
 			const pendingSticker = ChannelSticker.getPendingSticker(channelId);
 			const stickerItems = pendingSticker ? [pendingSticker.toJSON()] : undefined;
 			let didSend = false;

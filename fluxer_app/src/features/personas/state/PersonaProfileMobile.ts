@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as PersonaCommands from '@app/features/personas/commands/Personas';
-import {makeAutoObservable} from 'mobx';
+import {Logger} from '@app/features/platform/utils/AppLogger';
 import Personas from '@app/features/user/state/Personas';
-import type { Persona } from '../models/Persona';
+import {makeAutoObservable} from 'mobx';
+import type {Persona} from '../models/Persona';
 
 interface PersonaProfileMobileState {
 	userId: string | null;
@@ -32,9 +32,11 @@ class PersonaProfileMobile {
 		this.userId = userId;
 		this.personaId = personaId;
 		this.autoFocusNote = autoFocusNote;
-		PersonaCommands.getPersona(userId, personaId).then((v) => Personas.cachePersonas([v])).catch((error) => {
-			this.logger.error('Failed to fetch persona:', error);
-		});
+		PersonaCommands.getPersona(userId, personaId)
+			.then((v) => Personas.cachePersonas([v]))
+			.catch((error) => {
+				this.logger.error('Failed to fetch persona:', error);
+			});
 	}
 
 	close(): void {

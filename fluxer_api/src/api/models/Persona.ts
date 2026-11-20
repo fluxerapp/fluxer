@@ -1,5 +1,5 @@
-import type { PersonaGroupID, PersonaID, UserID } from "../BrandedTypes";
-import type { PersonaRow } from "../database/types/PersonaTypes";
+import type {PersonaGroupID, PersonaID, UserID} from '../BrandedTypes';
+import type {PersonaRow} from '../database/types/PersonaTypes';
 
 export class Persona {
 	readonly id: PersonaID;
@@ -51,7 +51,7 @@ export class Persona {
 			bio: this.bio,
 			pronouns: this.pronouns,
 			accent_color: this.accentColor,
-			last_used_at: this.lastUsedAt
+			last_used_at: this.lastUsedAt,
 		};
 	}
 }

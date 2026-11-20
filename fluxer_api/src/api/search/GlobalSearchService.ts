@@ -80,7 +80,14 @@ export class GlobalSearchService {
 		if (needsIndexing) {
 			return {indexing: true};
 		}
-		return this.runSearch(finalChannelIds, params.userId, params.viewer, params.searchParams, params.requestCache, params.personaFallbackBehavior);
+		return this.runSearch(
+			finalChannelIds,
+			params.userId,
+			params.viewer,
+			params.searchParams,
+			params.requestCache,
+			params.personaFallbackBehavior,
+		);
 	}
 
 	async searchAcrossGuildsAndDms(params: {
@@ -145,7 +152,14 @@ export class GlobalSearchService {
 		if (needsIndexing) {
 			return {indexing: true};
 		}
-		return this.runSearch(finalChannelIds, params.userId, params.viewer, params.searchParams, params.requestCache, params.personaFallbackBehavior);
+		return this.runSearch(
+			finalChannelIds,
+			params.userId,
+			params.viewer,
+			params.searchParams,
+			params.requestCache,
+			params.personaFallbackBehavior,
+		);
 	}
 
 	private filterRequestedChannelIds(available: Array<string>, requested?: Array<ChannelID>): Array<string> {

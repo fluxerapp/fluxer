@@ -20,14 +20,16 @@
 	padding: 1rem;
 	&:hover {
 		background: color-mix(in oklab, var(--background-secondary-alt), gray 25%);
-		/* biome-ignore lint/correctness/noUnknownFunction: contrast-color will invalidate this second rule if it doesn't work,
+		/* biome-ignore lint/suspicious/noDuplicateProperties: contrast-color will invalidate this second rule if it doesn't work,
 			 falling back to the usable but less pretty previous rule.
 			 See also: https://caniuse.com/wf-contrast-color */
-		background: color-mix(in oklab, var(--background-secondary-alt), contrast-color(var(--background-secondary-alt)) 10%);
+		background: color-mix(
+			in oklab,
+			var(--background-secondary-alt),
+			contrast-color(var(--background-secondary-alt)) 10%
+		);
 	}
 }
-
-.personaTileAvatarContainer {}
 
 .personaTileDetailsContainer {
 	flex: 1;
@@ -60,10 +62,10 @@
 	justify-content: end;
 	align-items: end;
 	gap: 0.7rem;
-	&:not(.mobile)>button {
+	&:not(.mobile) > button {
 		height: 45px;
 	}
-	&>fieldset {
+	& > fieldset {
 		flex: 1;
 	}
 }

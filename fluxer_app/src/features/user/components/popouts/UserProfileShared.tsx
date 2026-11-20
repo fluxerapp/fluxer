@@ -162,9 +162,15 @@ export const UserProfileBio: React.FC<{
 		>
 			<div
 				ref={bioRef}
-				className={clsx(markupStyles.markup, markupStyles.bio, markupStyles.mutedSpoilerContext, shouldScroll && styles.scrollableBio, {
-					[styles.bioClamped]: shouldTruncate,
-				})}
+				className={clsx(
+					markupStyles.markup,
+					markupStyles.bio,
+					markupStyles.mutedSpoilerContext,
+					shouldScroll && styles.scrollableBio,
+					{
+						[styles.bioClamped]: shouldTruncate,
+					},
+				)}
 				data-flx="user.user-profile-shared.user-profile-bio.bio-clamped"
 			>
 				<SafeMarkdown

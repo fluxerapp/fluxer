@@ -1,7 +1,5 @@
-import type { Channel } from "@app/features/channel/models/Channel";
-import { Logger } from "@app/features/platform/utils/AppLogger";
-import { makeAutoObservable } from "mobx";
-import type { PersonaPickerPopoutProps } from "../components/popouts/PersonaPickerPopout";
+import {makeAutoObservable} from 'mobx';
+import type {PersonaPickerPopoutProps} from '../components/popouts/PersonaPickerPopout';
 
 interface PersonaPickerOpenProps {
 	messageId?: string;
@@ -9,7 +7,7 @@ interface PersonaPickerOpenProps {
 }
 
 class PersonaPickerMobile {
-	private logger = new Logger('PersonaProfileMobile');
+	//private logger = new Logger('PersonaProfileMobile');
 	channel: PersonaPickerPopoutProps['channel'] | undefined = undefined;
 	selectedId: PersonaPickerPopoutProps['selectedId'] | undefined = undefined;
 	onSelect: PersonaPickerPopoutProps['onSelect'] | undefined = undefined;
@@ -24,7 +22,13 @@ class PersonaPickerMobile {
 		return !!this.channel && !!this.onSelect;
 	}
 
-	open({channel, selectedId, onSelect, messageId, onClose} : Omit<PersonaPickerPopoutProps, 'isMobile'> & PersonaPickerOpenProps) {
+	open({
+		channel,
+		selectedId,
+		onSelect,
+		messageId,
+		onClose,
+	}: Omit<PersonaPickerPopoutProps, 'isMobile'> & PersonaPickerOpenProps) {
 		this.channel = channel;
 		this.selectedId = selectedId;
 		this.onSelect = onSelect;

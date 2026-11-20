@@ -352,13 +352,13 @@ export function useCommands(): Array<Command> {
 						choices: [
 							{
 								name: i18n._(CHANGE_ACTIVE_PERSONA_MAIN_ACCOUNT_DESCRIPTOR),
-								value: "",
+								value: '',
 							},
 							...Personas.getOwnPersonas().map((v) => ({
-								name: v.internal_name ?? v.display_name ?? "",
+								name: v.internal_name ?? v.display_name ?? '',
 								value: v.id,
 							})),
-						]
+						],
 					},
 				],
 			},

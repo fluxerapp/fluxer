@@ -58,7 +58,7 @@ export class MessageRequestService {
 			after: params.query.after,
 			around: params.query.around,
 			access,
-			personaFallbackBehavior: params.personaFallbackBehavior
+			personaFallbackBehavior: params.personaFallbackBehavior,
 		};
 		let responses = await this.responseDataService.listMessages(request);
 		if (await this.needsThreadsMask(params.viewer, authChannel.channel.guildId, responses)) {

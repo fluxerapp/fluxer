@@ -91,8 +91,8 @@ struct ScyllaUsersStorage {
     db: Arc<Session>,
     stmt_partial: PreparedStatement,
     stmt_partial_batch: PreparedStatement,
-		stmt_partial_persona: PreparedStatement,
-		stmt_partial_persona_batch: PreparedStatement,
+    stmt_partial_persona: PreparedStatement,
+    //stmt_partial_persona_batch: PreparedStatement,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -307,11 +307,6 @@ impl UsersShard {
                 "SELECT {PARTIAL_PERSONA_COLUMNS} FROM personas WHERE persona_id = ? AND owner_id = ? LIMIT 1"
             ))
             .await?;
-        let stmt_partial_persona_batch = db
-            .prepare(format!(
-                "SELECT {PARTIAL_PERSONA_COLUMNS} FROM personas WHERE persona_id IN ? AND owner_id = ?"
-            ))
-            .await?;
 
         let app_attest_store = AppAttestStore::Scylla(Arc::new(
             crate::app_attest::store::ScyllaAppAttestStore::new(db.clone()),
@@ -323,8 +318,7 @@ impl UsersShard {
                 db,
                 stmt_partial,
                 stmt_partial_batch,
-                stmt_partial_persona,
-                stmt_partial_persona_batch
+                stmt_partial_persona
             })),
             caches: UserCaches::new(max_entries, ttl),
         })

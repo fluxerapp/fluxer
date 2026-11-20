@@ -78,7 +78,7 @@ import {
 	TranslateIcon,
 	UserIcon,
 	UserListIcon,
-    UserSwitchIcon,
+	UserSwitchIcon,
 } from '@phosphor-icons/react';
 import type React from 'react';
 

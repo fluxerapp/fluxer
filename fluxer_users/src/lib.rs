@@ -7,9 +7,6 @@ mod router_impl;
 mod shard_impl;
 mod types;
 
-use std::env;
-use std::time::Duration;
-
 use app_attest::AppAttestConfig;
 use fluxer_common::config::EnvMap;
 use fluxer_svc::config::{DatabaseBackend, Mode, ServiceConfig};
@@ -98,7 +95,7 @@ pub async fn run(config: Config, shutdown: CancellationToken) -> anyhow::Result<
 
     match role {
         Role::Router => {
-            fluxer_svc::router::run_router(&config, UsersRouter::new(1000, Duration::from_secs(3600)), transport, shutdown).await
+            fluxer_svc::router::run_router(&config, UsersRouter{}, transport, shutdown).await
         }
         Role::Shard(shard_config) => {
             let shard = build_shard(&config, shard_config).await?;
@@ -106,7 +103,7 @@ pub async fn run(config: Config, shutdown: CancellationToken) -> anyhow::Result<
         }
         Role::Combined(shard_config) => {
             let shard = build_shard(&config, shard_config).await?;
-            fluxer_svc::combined::run_combined(&config, UsersRouter::new(1000, Duration::from_secs(3600)), shard, transport, shutdown)
+            fluxer_svc::combined::run_combined(&config, UsersRouter{}, shard, transport, shutdown)
                 .await
         }
     }

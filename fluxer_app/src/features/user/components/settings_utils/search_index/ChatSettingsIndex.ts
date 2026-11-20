@@ -37,7 +37,10 @@ import {
 	UPLOAD_ATTACHMENTS_BEFORE_SENDING_DESCRIPTOR,
 } from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
-import { LATCH_MANUAL_DESCRIPTOR, LATCH_OFF_DESCRIPTOR, LATCH_TRIGGER_SWITCHING_DESCRIPTOR } from '../../modals/tabs/advanced_settings_tab/AdvancedChatControls';
+import {
+	LATCH_MANUAL_DESCRIPTOR,
+	LATCH_TRIGGER_SWITCHING_DESCRIPTOR,
+} from '../../modals/tabs/advanced_settings_tab/AdvancedChatControls';
 
 const AUTOMATICALLY_SEND_ANIMATION_DESCRIPTOR = msg({
 	message: 'Automatically send animation',
@@ -467,11 +470,11 @@ const HIDE_CHANNELS_YOU_VE_MUTED_FROM_COMMUNITY_SIDEBARS_DESCRIPTOR = msg({
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
 const PERSONA_TRIGGER_BEHAVIOR_DESCRIPTOR = msg({
-	message: "Persona trigger behavior",
+	message: 'Persona trigger behavior',
 	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
 });
 const CHOOSE_WHAT_HAPPENS_WHEN_YOU_USE_A_PERSONA_TRIGGER_DESCRIPTOR = msg({
-	message: "Choose what happens when you use a persona trigger",
+	message: 'Choose what happens when you use a persona trigger',
 	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
 });
 
@@ -774,10 +777,7 @@ export const chatSettingsIndex: Array<SearchableSettingDescriptor> = [
 		tabType: 'advanced_settings',
 		sectionId: 'chat',
 		label: PERSONA_TRIGGER_BEHAVIOR_DESCRIPTOR,
-		keywords: [
-			LATCH_MANUAL_DESCRIPTOR,
-			LATCH_TRIGGER_SWITCHING_DESCRIPTOR,
-		],
+		keywords: [LATCH_MANUAL_DESCRIPTOR, LATCH_TRIGGER_SWITCHING_DESCRIPTOR],
 		description: CHOOSE_WHAT_HAPPENS_WHEN_YOU_USE_A_PERSONA_TRIGGER_DESCRIPTOR,
 		audience: 'advanced',
 		tags: ['chat', 'accessibility'],

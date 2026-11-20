@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {UserTag} from '@app/features/channel/components/ChannelUserTag';
-import type { Persona } from '@app/features/personas/models/Persona';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {useTextOverflow} from '@app/features/ui/hooks/useTextOverflow';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
@@ -28,7 +27,6 @@ interface ProfileCardUserInfoProps {
 	onUsernameClick?: () => void;
 	actions?: React.ReactNode;
 	usernameActions?: React.ReactNode;
-	persona?: Persona;
 }
 
 export const ProfileCardUserInfo: React.FC<ProfileCardUserInfoProps> = observer(
@@ -36,7 +34,6 @@ export const ProfileCardUserInfo: React.FC<ProfileCardUserInfoProps> = observer(
 		displayName,
 		displayNameClassName,
 		user,
-		persona,
 		pronouns,
 		showUsername = true,
 		isClickable = true,

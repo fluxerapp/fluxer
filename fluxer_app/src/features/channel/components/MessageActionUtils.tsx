@@ -18,10 +18,10 @@ import * as SavedMessageCommands from '@app/features/messaging/commands/SavedMes
 import {ForwardModal, type ForwardModalSuccess} from '@app/features/messaging/components/modals/ForwardModal';
 import {MessageCrosspostConfirmModal} from '@app/features/messaging/components/modals/MessageCrosspostConfirmModal';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
-import PersonaChange from '@app/features/messaging/state/PersonaChange';
 import MessageEdit from '@app/features/messaging/state/MessageEdit';
 import MessageReply from '@app/features/messaging/state/MessageReply';
 import Messages from '@app/features/messaging/state/MessagingMessages';
+import PersonaChange from '@app/features/messaging/state/PersonaChange';
 import SavedMessages from '@app/features/messaging/state/SavedMessages';
 import {refreshAttachmentUrlsInText} from '@app/features/messaging/utils/MessageCopyTextUtils';
 import {buildMessageJumpLink} from '@app/features/messaging/utils/MessageLinkUtils';
