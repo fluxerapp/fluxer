@@ -179,14 +179,14 @@ export const PersonaPickerPopout = observer<PersonaPickerPopoutProps>(({ channel
 					PersonaPickerMobile.close();
 				}}
 				leftIcon={<PencilIcon />}
-			>Manage Personas</Button>
+			><Trans>Manage Personas</Trans></Button>
 		: <div className={styles.footer}>
 			<Button
 				compact
 				variant="ghost"
 				onClick={() => {handleDeepLinkUrl("fluxer://settings/user?tab=personas")}}
 				leftIcon={<PencilIcon />}
-			>Manage Personas</Button>
+			><Trans>Manage Personas</Trans></Button>
 		</div>}
 	</div>
 });

@@ -47,7 +47,7 @@ import { useUnsavedChangesFlash } from '../../hooks/useUnsavedChangesFlash';
 import { useModalBackHandler } from '@app/features/app/hooks/useModalBackHandler';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import { DISPLAY_NAME_DESCRIPTOR, DOC_I_M_FROM_THE_FUTURE_I_CAME_DESCRIPTOR } from '../../utils/UserMessageDescriptors';
-import { PRONOUNS_DESCRIPTOR } from '../settings_utils/section_registry/SharedDescriptors';
+import { DELETE_DESCRIPTOR, PRONOUNS_DESCRIPTOR } from '../settings_utils/section_registry/SharedDescriptors';
 
 const EDIT_PERSONA_DESCRIPTOR = msg({
 	message: 'Edit Persona',
@@ -253,8 +253,8 @@ export const PersonaEditorModal: React.FC<PersonaEditorModalProps> = observer(
 		const handleDelete = useCallback(async () => {
 			if (!savedPersona) return;
 			ModalCommands.push(() => <ConfirmModal
-				title="Delete this persona?"
-				description={`You are about to delete ${savedPersona.internal_name}. Are you sure this is what you want to do?`}
+				title={<Trans>Delete this persona?</Trans>}
+				description={<Trans>You are about to delete {savedPersona.internal_name}. Are you sure this is what you want to do?</Trans>}
 				onPrimary={async () => {
 					await PersonaCommands.deletePersona(savedPersona.id);
 					Personas.removePersona(savedPersona.id);
@@ -370,13 +370,13 @@ export const PersonaEditorModal: React.FC<PersonaEditorModalProps> = observer(
 						value={suffix}
 						onChange={(e) => onSuffixChange(e.target.value)}
 					/>
-					<Tooltip text="Delete">
+					<Tooltip text={i18n._(DELETE_DESCRIPTOR)}>
 						<Button
 							className={styles.triggerDelete}
 							variant="danger"
 							square
 							icon={<DeleteIcon />}
-							aria-label="Delete"
+							aria-label={i18n._(DELETE_DESCRIPTOR)}
 							onClick={onDelete}
 						/>
 					</Tooltip>
