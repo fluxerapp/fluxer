@@ -129,6 +129,7 @@ export async function downloadTrackedFile(
 	let lastReceivedBytes = 0;
 	try {
 		await downloadFile(url, filePath, {
+			maxBytes: null,
 			sha256,
 			signal: download.controller.signal,
 			onProgress: (receivedBytes, totalBytes) => {
