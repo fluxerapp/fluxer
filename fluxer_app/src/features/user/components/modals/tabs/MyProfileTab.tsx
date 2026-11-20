@@ -69,6 +69,7 @@ import {
 	COMMUNITY_NICKNAME_DESCRIPTOR,
 	DISPLAY_NAME_DESCRIPTOR,
 	DOC_I_M_FROM_THE_FUTURE_I_CAME_DESCRIPTOR,
+	PERSONA_TAG_DESCRIPTION_DESCRIPTOR,
 	PERSONA_TAG_DESCRIPTOR,
 	PROFILE_CUSTOMIZATION_DESCRIPTOR,
 } from '@app/features/user/utils/UserMessageDescriptors';
@@ -989,6 +990,14 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 												value={form.watch('persona_tag') || ''}
 												error={form.formState.errors.persona_tag?.message}
 												disabled={isProfileCustomizationLocked}
+												footer={
+													<div
+														className={styles.inputFooter}
+														data-flx="user.my-profile-tab.my-profile-tab-component.input-footer"
+													>
+														{i18n._(PERSONA_TAG_DESCRIPTION_DESCRIPTOR)}
+													</div>
+												}
 											/>
 										</div>
 									)}
