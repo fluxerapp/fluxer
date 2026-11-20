@@ -47,6 +47,9 @@ export const OwnPersonaResponse = z.object({
 
 export type OwnPersonaResponse = z.infer<typeof OwnPersonaResponse>;
 
+export const OwnPersonaListResponse = z.array(OwnPersonaResponse);
+export type OwnPersonaListResponse = z.infer<typeof OwnPersonaListResponse>;
+
 export const PersonaCreateRequest = z.object({
 	internal_name: GlobalNameType.describe('The name to use for the persona in private lists'),
 	display_name: GlobalNameType.nullish().describe('The display name of the persona, defaults to internal_name'),
@@ -63,6 +66,10 @@ export const PersonaCreateRequest = z.object({
 });
 
 export type PersonaCreateRequest = z.infer<typeof PersonaCreateRequest>;
+
+export const PersonaCreateBatchRequest = z.array(PersonaCreateRequest).min(1);
+
+export type PersonaCreateBatchRequest = z.infer<typeof PersonaCreateBatchRequest>;
 
 export const PersonaPatchRequest = PersonaCreateRequest.partial(); // use .omit({field: true}) to omit any field that is in create that shouldn't be in patch
 
@@ -85,3 +92,7 @@ export const PersonaSnapshot = z.object({
 });
 
 export type PersonaSnapshot = z.infer<typeof PersonaSnapshot>;
+
+export const ImportMediaUrlQuery = z.object({"url": z.httpUrl()});
+
+export type ImportMediaUrlQuery = z.infer<typeof ImportMediaUrlQuery>;

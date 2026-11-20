@@ -20,7 +20,7 @@ import { createJsonErrorResponse } from "@fluxer/errors/src/error_handling/Error
 import { resolveLimit } from "@fluxer/limits/src/LimitResolver.js";
 import { PersonaIdParam, UserPersonaIdParam } from "@fluxer/schema/src/domains/common/CommonParamSchemas.js";
 import { ErrorResponse } from "@fluxer/schema/src/domains/common/ErrorSchemas.js";
-import { OwnPersonaResponse, PersonaCreateRequest, PersonaPatchRequest, PersonaResponse } from "@fluxer/schema/src/domains/persona/PersonaSchemas.js";
+import { ImportMediaUrlQuery, OwnPersonaListResponse, OwnPersonaResponse, PersonaCreateBatchRequest, PersonaCreateRequest, PersonaPatchRequest, PersonaResponse } from "@fluxer/schema/src/domains/persona/PersonaSchemas.js";
 import { stream } from "hono/streaming";
 import { encodeBase64Url } from "hono/utils/encode";
 import { z } from "zod";
@@ -35,7 +35,7 @@ export function PersonaController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'list_own_personas',
 			summary: 'List own personas',
-			responseSchema: z.array(OwnPersonaResponse),
+			responseSchema: OwnPersonaListResponse,
 			statusCode: 200,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Personas'],
@@ -190,7 +190,7 @@ export function PersonaController(app: HonoApp) {
 		LoginRequired,
 		//Validator('param', PersonaIdParam),
 		//Validator('query', GuildMemberListQuery), // TODO: query list
-		Validator('json', PersonaCreateRequest.array().min(1)),
+		Validator('json', PersonaCreateBatchRequest),
 		OpenAPI({
 			operationId: 'import_personas',
 			summary: 'Import personas',
@@ -245,7 +245,7 @@ export function PersonaController(app: HonoApp) {
 		LoginRequired,
 		//Validator('param', PersonaIdParam),
 		//Validator('query', GuildMemberListQuery), // TODO: query list
-		Validator('query', z.object({"url": z.httpUrl()})),
+		Validator('query', ImportMediaUrlQuery),
 		OpenAPI({
 			operationId: 'import_persona_avatar',
 			summary: 'Get persona avatar or banner for import',

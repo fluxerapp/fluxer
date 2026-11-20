@@ -7014,6 +7014,13 @@
 						"required": true,
 						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
 						"description": "The ID of the channel"
+					},
+					{
+						"name": "persona_id",
+						"in": "query",
+						"required": false,
+						"schema": {"description": "The ID of the persona", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the persona"
 					}
 				]
 			}
@@ -11830,6 +11837,57 @@
 						"description": "The signed download token from the harvest download URL"
 					}
 				]
+			}
+		},
+		"/import_image_proxy": {
+			"get": {
+				"operationId": "import_persona_avatar",
+				"summary": "Get persona avatar or banner for import",
+				"tags": ["Personas"],
+				"responses": {
+					"200": {"description": "Success"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Gets an avatar for bulk persona imports. Returns an image file. Intended only for use by users in the web-app; you can get the images directly otherwise.",
+				"security": [{"sessionToken": []}],
+				"parameters": [{"name": "url", "in": "query", "required": true, "schema": {"type": "string", "format": "uri"}}]
 			}
 		},
 		"/instance/badges": {
@@ -23755,6 +23813,291 @@
 				}
 			}
 		},
+		"/users/@me/personas": {
+			"get": {
+				"operationId": "list_own_personas",
+				"summary": "List own personas",
+				"tags": ["Personas"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/OwnPersonaListResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "List personas for the current user. Returns a list of all personas that belong to the signed-in user.",
+				"security": [{"botToken": []}, {"sessionToken": []}]
+			},
+			"post": {
+				"operationId": "create_persona",
+				"summary": "Create a new persona",
+				"tags": ["Personas"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/OwnPersonaResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Creates a new persona with the specified properties. Returns a list of all personas that belong to the signed-in user.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PersonaCreateRequest"}}}
+				}
+			}
+		},
+		"/users/@me/personas/import": {
+			"post": {
+				"operationId": "import_personas",
+				"summary": "Import personas",
+				"tags": ["Personas"],
+				"responses": {
+					"200": {"description": "Success"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Creates several personas at once. This may be useful if you are importing personas from another service.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PersonaCreateBatchRequest"}}}
+				}
+			}
+		},
+		"/users/@me/personas/{persona_id}": {
+			"patch": {
+				"operationId": "update_persona",
+				"summary": "Update a persona.",
+				"tags": ["Personas"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/OwnPersonaResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Updates a persona by its ID. Included fields will be patched onto the existing data.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "persona_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the persona", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the persona"
+					}
+				],
+				"requestBody": {
+					"required": false,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PersonaPatchRequest"}}}
+				}
+			},
+			"delete": {
+				"operationId": "delete_persona",
+				"summary": "Delete a persona",
+				"tags": ["Personas"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Deletes the persona by its ID.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "persona_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the persona", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the persona"
+					}
+				]
+			}
+		},
 		"/users/@me/play-integrity/challenge": {
 			"post": {
 				"operationId": "create_play_integrity_challenge",
@@ -25700,6 +26043,78 @@
 				]
 			}
 		},
+		"/users/{user_id}/personas/{persona_id}": {
+			"get": {
+				"operationId": "get_persona",
+				"summary": "Get the profile for a persona.",
+				"tags": ["Personas"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PersonaResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Retrieves the profile of a persona by its ID.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "string", "enum": ["@me"]}],
+							"description": "The ID of the user the persona belongs to"
+						},
+						"description": "The ID of the user the persona belongs to"
+					},
+					{
+						"name": "persona_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the persona", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the persona"
+					}
+				]
+			}
+		},
 		"/voice/channels/{channel_id}/entrance-sound": {
 			"post": {
 				"operationId": "play_entrance_sound",
@@ -27312,6 +27727,11 @@
 							{"type": "null"}
 						]
 					},
+					"persona": {
+						"default": null,
+						"description": "The persona used for this message",
+						"anyOf": [{"$ref": "#/components/schemas/PersonaSnapshot"}, {"type": "null"}]
+					},
 					"thread": {
 						"description": "The thread started from this message, when the viewer can see threads",
 						"$ref": "#/components/schemas/ThreadChannelResponse"
@@ -27482,6 +27902,11 @@
 											{"type": "null"}
 										]
 									},
+									"persona": {
+										"default": null,
+										"description": "The persona used for this message",
+										"anyOf": [{"$ref": "#/components/schemas/PersonaSnapshot"}, {"type": "null"}]
+									},
 									"thread": {
 										"description": "The thread started from this message, when the viewer can see threads",
 										"$ref": "#/components/schemas/ThreadChannelResponse"
@@ -27499,7 +27924,8 @@
 									"mention_everyone",
 									"tts",
 									"mentions",
-									"mention_roles"
+									"mention_roles",
+									"persona"
 								],
 								"additionalProperties": false
 							},
@@ -27519,7 +27945,8 @@
 					"mention_everyone",
 					"tts",
 					"mentions",
-					"mention_roles"
+					"mention_roles",
+					"persona"
 				],
 				"additionalProperties": false
 			},
@@ -28800,6 +29227,38 @@
 				"properties": {"sound_id": {"$ref": "#/components/schemas/SnowflakeType"}},
 				"required": ["sound_id"]
 			},
+			"PersonaResponse": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"description": "The unique identifier (snowflake) for this persona",
+						"$ref": "#/components/schemas/SnowflakeStringType"
+					},
+					"user": {
+						"description": "The user account that can use and edit this persona",
+						"$ref": "#/components/schemas/UserPartialResponse"
+					},
+					"avatar": {"description": "The hash of the persona avatar", "type": ["string", "null"]},
+					"avatar_color": {
+						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
+						"description": "The dominant avatar color of the persona as an integer"
+					},
+					"banner": {"description": "The hash of the persona banner", "type": ["string", "null"]},
+					"banner_color": {
+						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
+						"description": "The default banner color if no custom banner is set"
+					},
+					"accent_color": {
+						"description": "The accent colour of the persona as an integer",
+						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
+					},
+					"display_name": {"type": "string", "description": "The display name of the persona"},
+					"bio": {"description": "The persona biography or description text", "type": ["string", "null"]},
+					"pronouns": {"description": "The preferred pronouns of the persona", "type": ["string", "null"]}
+				},
+				"required": ["id", "user", "avatar_color", "banner_color", "display_name", "bio", "pronouns"],
+				"additionalProperties": false
+			},
 			"UserPartialResponse": {
 				"type": "object",
 				"properties": {
@@ -28821,6 +29280,10 @@
 					"mention_flags": {
 						"description": "The user's account-wide reply mention preference. Omitted when the user has no preference set (treated as NO_PREFERENCE).",
 						"$ref": "#/components/schemas/MentionReplyPreferences"
+					},
+					"persona_tag": {
+						"description": "A tag to display after this user's personas to visually associate them.",
+						"type": ["string", "null"]
 					}
 				},
 				"required": ["id", "username", "discriminator", "global_name", "avatar", "avatar_color", "flags"],
@@ -28843,6 +29306,10 @@
 							"accent_color": {
 								"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
 								"description": "User-selected accent color"
+							},
+							"persona_tag": {
+								"description": "A tag to display after this user's personas to visually associate them.",
+								"type": ["string", "null"]
 							}
 						},
 						"required": ["bio", "pronouns", "banner", "accent_color"],
@@ -28929,6 +29396,10 @@
 					"profile_limited": {
 						"description": "True when the target user has restricted their profile and the viewer does not meet the visibility tier. Bio, pronouns, connected accounts, and the premium and Operator Pass badges have been stripped. Staff, partner, and bug hunter badges remain.",
 						"type": "boolean"
+					},
+					"persona_tag": {
+						"description": "A tag to display after this user's personas to visually associate them.",
+						"type": ["string", "null"]
 					}
 				},
 				"required": ["user", "user_profile", "timezone_offset"],
@@ -28982,6 +29453,10 @@
 					"mention_flags": {
 						"description": "The user's account-wide reply mention preference. Omitted when the user has no preference set (treated as NO_PREFERENCE).",
 						"$ref": "#/components/schemas/MentionReplyPreferences"
+					},
+					"persona_tag": {
+						"description": "A tag to display after this user's personas to visually associate them.",
+						"type": ["string", "null"]
 					},
 					"is_staff": {"type": "boolean", "description": "Whether the user has staff permissions"},
 					"acls": {
@@ -30051,6 +30526,175 @@
 				"required": ["challenge", "expires_at"],
 				"additionalProperties": false
 			},
+			"PersonaPatchRequest": {
+				"type": "object",
+				"properties": {
+					"internal_name": {"description": "The name to use for the persona in private lists", "type": "string"},
+					"display_name": {
+						"description": "The display name of the persona, defaults to internal_name",
+						"type": ["string", "null"]
+					},
+					"avatar": {
+						"description": "Base64 of the persona avatar file",
+						"anyOf": [{"$ref": "#/components/schemas/Base64ImageType"}, {"type": "null"}]
+					},
+					"banner": {
+						"description": "Base64 of the persona banner file",
+						"anyOf": [{"$ref": "#/components/schemas/Base64ImageType"}, {"type": "null"}]
+					},
+					"accent_color": {
+						"description": "The accent colour of the persona as an RGB integer",
+						"anyOf": [{"type": "integer", "minimum": -2147483648, "maximum": 2147483647}, {"type": "null"}]
+					},
+					"bio": {"description": "The persona biography or description text", "type": ["string", "null"]},
+					"pronouns": {"description": "The preferred pronouns of the persona", "type": ["string", "null"]},
+					"tags": {
+						"description": "A list of arbitrary string tags used for search and categorization",
+						"anyOf": [{"maxItems": 10, "type": "array", "items": {"type": "string", "maxLength": 32}}, {"type": "null"}]
+					},
+					"triggers": {
+						"default": [],
+						"description": "Pairs of prefixes and suffixes that can activate a persona",
+						"maxItems": 10,
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"prefix": {
+									"description": "A prefix that, with the paired suffix, should activate a persona for a message",
+									"type": ["string", "null"]
+								},
+								"suffix": {
+									"description": "A suffix that, with the paired prefix, should activate a persona for a message",
+									"type": ["string", "null"]
+								}
+							}
+						}
+					}
+				}
+			},
+			"OwnPersonaResponse": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"description": "The unique identifier (snowflake) for this persona",
+						"$ref": "#/components/schemas/SnowflakeStringType"
+					},
+					"avatar": {"description": "The hash of the persona avatar", "type": ["string", "null"]},
+					"avatar_color": {
+						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
+						"description": "The dominant avatar color of the persona as an integer"
+					},
+					"banner": {"description": "The hash of the persona banner", "type": ["string", "null"]},
+					"banner_color": {
+						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
+						"description": "The default banner color if no custom banner is set"
+					},
+					"accent_color": {
+						"description": "The accent colour of the persona as an integer",
+						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
+					},
+					"display_name": {"type": "string", "description": "The display name of the persona"},
+					"bio": {"description": "The persona biography or description text", "type": ["string", "null"]},
+					"pronouns": {"description": "The preferred pronouns of the persona", "type": ["string", "null"]},
+					"internal_name": {
+						"type": "string",
+						"description": "A name to use for the persona in the persona picker. Also used as the default display name if one is not set."
+					},
+					"tags": {
+						"default": [],
+						"description": "A list of arbitrary string tags used for search and categorization",
+						"type": "array",
+						"items": {"type": "string"}
+					},
+					"triggers": {
+						"default": [],
+						"description": "Pairs of prefixes and suffixes that can activate a persona",
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"prefix": {
+									"description": "A prefix that, with the paired suffix, should activate a persona for a message",
+									"type": ["string", "null"]
+								},
+								"suffix": {
+									"description": "A suffix that, with the paired prefix, should activate a persona for a message",
+									"type": ["string", "null"]
+								}
+							},
+							"required": ["prefix", "suffix"],
+							"additionalProperties": false
+						}
+					}
+				},
+				"required": [
+					"id",
+					"avatar_color",
+					"banner_color",
+					"display_name",
+					"bio",
+					"pronouns",
+					"internal_name",
+					"tags",
+					"triggers"
+				],
+				"additionalProperties": false
+			},
+			"PersonaCreateBatchRequest": {
+				"minItems": 1,
+				"type": "array",
+				"items": {"$ref": "#/components/schemas/PersonaCreateRequest"}
+			},
+			"PersonaCreateRequest": {
+				"type": "object",
+				"properties": {
+					"internal_name": {"description": "The name to use for the persona in private lists", "type": "string"},
+					"display_name": {
+						"description": "The display name of the persona, defaults to internal_name",
+						"type": ["string", "null"]
+					},
+					"avatar": {
+						"description": "Base64 of the persona avatar file",
+						"anyOf": [{"$ref": "#/components/schemas/Base64ImageType"}, {"type": "null"}]
+					},
+					"banner": {
+						"description": "Base64 of the persona banner file",
+						"anyOf": [{"$ref": "#/components/schemas/Base64ImageType"}, {"type": "null"}]
+					},
+					"accent_color": {
+						"description": "The accent colour of the persona as an RGB integer",
+						"anyOf": [{"type": "integer", "minimum": -2147483648, "maximum": 2147483647}, {"type": "null"}]
+					},
+					"bio": {"description": "The persona biography or description text", "type": ["string", "null"]},
+					"pronouns": {"description": "The preferred pronouns of the persona", "type": ["string", "null"]},
+					"tags": {
+						"description": "A list of arbitrary string tags used for search and categorization",
+						"anyOf": [{"maxItems": 10, "type": "array", "items": {"type": "string", "maxLength": 32}}, {"type": "null"}]
+					},
+					"triggers": {
+						"default": [],
+						"description": "Pairs of prefixes and suffixes that can activate a persona",
+						"maxItems": 10,
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"prefix": {
+									"description": "A prefix that, with the paired suffix, should activate a persona for a message",
+									"type": ["string", "null"]
+								},
+								"suffix": {
+									"description": "A suffix that, with the paired prefix, should activate a persona for a message",
+									"type": ["string", "null"]
+								}
+							}
+						}
+					}
+				},
+				"required": ["internal_name"]
+			},
+			"OwnPersonaListResponse": {"type": "array", "items": {"$ref": "#/components/schemas/OwnPersonaResponse"}},
 			"PasswordChangeVerifyRequest": {
 				"type": "object",
 				"properties": {
@@ -32514,6 +33158,10 @@
 						"$ref": "#/components/schemas/MentionReplyPreferencesInput",
 						"description": "Account-wide reply mention preference (NO_PREFERENCE, PREFER_MENTION, PREFER_NO_MENTION)"
 					},
+					"persona_tag": {
+						"description": "A tag to display after this user's personas to visually associate them.",
+						"type": ["string", "null"]
+					},
 					"email_token": {"description": "Email change token for updating email", "type": "string"},
 					"mfa_method": {
 						"description": "MFA method to use for verification",
@@ -32563,6 +33211,10 @@
 					"mention_flags": {
 						"description": "The user's account-wide reply mention preference. Omitted when the user has no preference set (treated as NO_PREFERENCE).",
 						"$ref": "#/components/schemas/MentionReplyPreferences"
+					},
+					"persona_tag": {
+						"description": "A tag to display after this user's personas to visually associate them.",
+						"type": ["string", "null"]
 					},
 					"is_staff": {"type": "boolean", "description": "Whether the user has staff permissions"},
 					"acls": {
@@ -37626,6 +38278,10 @@
 						"description": "Controls which mentions trigger notifications",
 						"anyOf": [{"$ref": "#/components/schemas/AllowedMentionsRequest"}, {"type": "null"}]
 					},
+					"persona": {
+						"description": "The persona to use for this message",
+						"anyOf": [{"$ref": "#/components/schemas/PersonaSnapshotInput"}, {"type": "null"}]
+					},
 					"flags": {"$ref": "#/components/schemas/MessageFlags", "description": "Message flags bitfield"},
 					"attachments": {
 						"description": "Array of attachment objects to keep or add",
@@ -37753,7 +38409,11 @@
 							{"type": "null"}
 						]
 					},
-					"tts": {"description": "Whether this is a text-to-speech message", "type": "boolean"}
+					"tts": {"description": "Whether this is a text-to-speech message", "type": "boolean"},
+					"persona": {
+						"description": "The persona to use for this message",
+						"anyOf": [{"$ref": "#/components/schemas/PersonaSnapshotInput"}, {"type": "null"}]
+					}
 				}
 			},
 			"ChannelInviteCreateRequest": {
@@ -41620,6 +42280,27 @@
 					"Personal notes DM channel"
 				]
 			},
+			"PersonaSnapshotInput": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"description": "The unique identifier (snowflake) for this persona. THIS CAN BE NULL! In that case, the persona information in the snapshot is used as is.",
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
+					},
+					"name": {
+						"description": "The display name of the persona",
+						"anyOf": [{"type": "string", "minLength": 1, "maxLength": 100}, {"type": "null"}]
+					},
+					"avatar": {
+						"description": "The hash of the persona avatar",
+						"anyOf": [{"type": "string", "maxLength": 65536}, {"type": "null"}]
+					},
+					"pronouns": {
+						"description": "The preferred pronouns of the persona",
+						"anyOf": [{"type": "string", "maxLength": 40}, {"type": "null"}]
+					}
+				}
+			},
 			"MessageNonceRequest": {
 				"description": "Client-generated identifier for the message",
 				"anyOf": [{"type": "string"}, {"type": "integer", "minimum": 0, "maximum": 9007199254740991}]
@@ -42084,6 +42765,11 @@
 									{"type": "null"}
 								]
 							},
+							"persona": {
+								"default": null,
+								"description": "The persona used for this message",
+								"anyOf": [{"$ref": "#/components/schemas/PersonaSnapshot"}, {"type": "null"}]
+							},
 							"thread": {
 								"description": "The thread started from this message, when the viewer can see threads",
 								"$ref": "#/components/schemas/ThreadChannelResponse"
@@ -42101,7 +42787,8 @@
 							"mention_everyone",
 							"tts",
 							"mentions",
-							"mention_roles"
+							"mention_roles",
+							"persona"
 						],
 						"additionalProperties": false,
 						"description": "The pinned message"
@@ -42114,6 +42801,28 @@
 					}
 				},
 				"required": ["message", "pinned_at"],
+				"additionalProperties": false
+			},
+			"PersonaSnapshot": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"description": "The unique identifier (snowflake) for this persona. THIS CAN BE NULL! In that case, the persona information in the snapshot is used as is.",
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
+					},
+					"name": {
+						"description": "The display name of the persona",
+						"anyOf": [{"type": "string", "minLength": 1, "maxLength": 100}, {"type": "null"}]
+					},
+					"avatar": {
+						"description": "The hash of the persona avatar",
+						"anyOf": [{"type": "string", "maxLength": 65536}, {"type": "null"}]
+					},
+					"pronouns": {
+						"description": "The preferred pronouns of the persona",
+						"anyOf": [{"type": "string", "maxLength": 40}, {"type": "null"}]
+					}
+				},
 				"additionalProperties": false
 			},
 			"MessageSnapshotResponse": {
@@ -42863,6 +43572,10 @@
 									{"maxItems": 3, "type": "array", "items": {"$ref": "#/components/schemas/SnowflakeType"}},
 									{"type": "null"}
 								]
+							},
+							"persona": {
+								"description": "The persona to use for this message",
+								"anyOf": [{"$ref": "#/components/schemas/PersonaSnapshotInput"}, {"type": "null"}]
 							}
 						},
 						"description": "The first message of the post",
@@ -42932,6 +43645,10 @@
 							{"maxItems": 3, "type": "array", "items": {"$ref": "#/components/schemas/SnowflakeType"}},
 							{"type": "null"}
 						]
+					},
+					"persona": {
+						"description": "The persona to use for this message",
+						"anyOf": [{"$ref": "#/components/schemas/PersonaSnapshotInput"}, {"type": "null"}]
 					}
 				},
 				"x-fluxer-experiment": "channel_threads"
@@ -46127,6 +46844,11 @@
 										{"type": "null"}
 									]
 								},
+								"persona": {
+									"default": null,
+									"description": "The persona used for this message",
+									"anyOf": [{"$ref": "#/components/schemas/PersonaSnapshot"}, {"type": "null"}]
+								},
 								"thread": {
 									"description": "The thread started from this message, when the viewer can see threads",
 									"$ref": "#/components/schemas/ThreadChannelResponse"
@@ -46144,7 +46866,8 @@
 								"mention_everyone",
 								"tts",
 								"mentions",
-								"mention_roles"
+								"mention_roles",
+								"persona"
 							],
 							"additionalProperties": false
 						},
@@ -47578,6 +48301,7 @@
 					"MAX_GUILDS",
 					"MAX_PINNED_THREADS_IN_FORUM",
 					"MAX_INVITES",
+					"MAX_PERSONAS",
 					"MAX_REACTIONS",
 					"MAX_STICKERS",
 					"MAX_THREAD_MEMBERS",
@@ -47975,6 +48699,7 @@
 					"You can't have more than {count, plural, one {# community} other {# communities}}.",
 					"This channel is at its pinned post limit of {count}.",
 					"You can't have more than {count, plural, one {# invite} other {# invites}}.",
+					"You can't have more than {count, plural, one {# persona} other {# personas}}.",
 					"You can't have more than {count, plural, one {# reaction} other {# reactions}}.",
 					"You can't have more than {count, plural, one {# sticker} other {# stickers}}.",
 					"This thread is at its member limit of {count}.",
@@ -48257,6 +48982,7 @@
 		{"name": "Emojis"},
 		{"name": "Stickers"},
 		{"name": "Operator Pass"},
+		{"name": "Personas"},
 		{"name": "Debug"},
 		{"name": "Voice"}
 	]

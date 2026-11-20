@@ -214,3 +214,7 @@ export const UserPersonaIdParam = z.object({
 });
 
 export type PersonaIdParam = z.infer<typeof PersonaIdParam>;
+
+export const OptionalPersonaIdParam = PersonaIdParam.partial();
+
+export type OptionalPersonaIdParam = z.infer<typeof OptionalPersonaIdParam>;

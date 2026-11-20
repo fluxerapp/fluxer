@@ -26,6 +26,7 @@ import {
 	ChannelIdMessageIdAttachmentIdParam,
 	ChannelIdMessageIdParam,
 	ChannelIdParam,
+    OptionalPersonaIdParam,
     PersonaIdParam,
 } from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {
@@ -501,7 +502,7 @@ export function MessageController(app: HonoApp) {
 		RateLimitMiddleware(RateLimitConfigs.CHANNEL_TYPING),
 		LoginRequired,
 		Validator('param', ChannelIdParam),
-		Validator('query', PersonaIdParam.partial()),
+		Validator('query', OptionalPersonaIdParam),
 		OpenAPI({
 			operationId: 'indicate_typing',
 			summary: 'Indicate typing activity',
