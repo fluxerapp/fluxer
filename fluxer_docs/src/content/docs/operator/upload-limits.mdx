@@ -25,7 +25,7 @@ To raise the bot limit for one bot, give the bot a trait with [Set user traits](
 
 ## Large files and the upload relay
 
-The web and desktop apps upload files to storage before they send the message. Each part is 10 MiB or a twentieth of the file, whichever is larger. When the [upload relay](/media-proxy/upload-relay/) is in use, `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES` limits each part and not the whole file. With the default of 500 MiB, you only need to raise it for files above about 10 GB.
+The web and desktop apps upload files to storage before they send the message. Each part is a twentieth of the file, but never smaller than 10 MiB or larger than 64 MiB. Files above about 625 GiB use larger parts so they stay within 10,000 parts. When the [upload relay](/media-proxy/upload-relay/) is in use, `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES` limits each part and not the whole file. With the default of 500 MiB, you only need to raise it for files above about 4.8 TiB.
 
 ## Multipart messages
 
