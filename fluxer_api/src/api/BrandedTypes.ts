@@ -98,9 +98,9 @@ export function createPersonaID<T extends bigint>(id: T extends BrandedValue ? n
 	return brand<T, 'PersonaID'>(id);
 }
 
-export function createPersonaGroupID<T extends bigint>(id: T extends BrandedValue ? never : T): PersonaGroupID {
-	return brand<T, 'PersonaGroupID'>(id);
-}
+// export function createPersonaGroupID<T extends bigint>(id: T extends BrandedValue ? never : T): PersonaGroupID {
+// 	return brand<T, 'PersonaGroupID'>(id);
+// }
 
 export function createInviteCode<T extends string>(code: T extends BrandedValue ? never : T): InviteCode {
 	return brand<T, 'InviteCode'>(code);
