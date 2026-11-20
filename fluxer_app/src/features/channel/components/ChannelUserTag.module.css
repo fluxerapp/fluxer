@@ -1,7 +1,9 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 .tag {
-	display: inline-block;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
 	background-color: var(--brand-primary);
 	text-indent: 0;
 	text-transform: uppercase;
@@ -23,9 +25,6 @@
 }
 
 .tagLg {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
 	border-radius: 0.375rem;
 	font-size: 0.75rem;
 	--user-tag-min-height: 1.5rem;
@@ -37,6 +36,7 @@
 	font-weight: 600;
 	pointer-events: none;
 	line-height: var(--user-tag-line-height, 1);
+	text-box: trim-both cap alphabetic;
 }
 
 .textSm {

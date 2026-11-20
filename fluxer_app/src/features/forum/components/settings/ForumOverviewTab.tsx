@@ -111,6 +111,7 @@ const DefaultReactionField = observer(({form, forum}: {form: UseFormReturn<Forum
 							render={({onClose}) => (
 								<EmojiPickerPopout
 									channelId={forum.id}
+									roleIconGuildId={forum.guildId}
 									handleSelect={(emoji) => field.onChange(forumEmojiFromPicker(emoji))}
 									onClose={onClose}
 									data-flx="forum.settings.forum-overview-tab.default-reaction-field.emoji-picker-popout"

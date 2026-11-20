@@ -60,7 +60,7 @@ export const FluxerButton = observer(() => {
 	const mergedButtonRef = useMergeRefs([hoverRef, buttonRef]);
 	const contextMenuOpen = useContextMenuHoverState(buttonRef, !MobileLayout.enabled);
 	const location = useLocation();
-	const isSelected = location.pathname.startsWith(Routes.ME) || Routes.isSpecialPage(location.pathname);
+	const isSelected = Routes.isHomeRoute(location.pathname);
 	const selectedChannel = SelectedChannel.selectedChannelIds.get(ME);
 	const inlineDmsCollapsed = SidebarPreferences.inlineDmsCollapsed;
 	const showCollapsedUnreadDmsBadge = SidebarPreferences.showCollapsedUnreadDmsBadge;

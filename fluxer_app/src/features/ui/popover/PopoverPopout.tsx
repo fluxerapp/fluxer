@@ -118,25 +118,11 @@ function getTargetRectSnapshot(target: HTMLElement): PopoutReferenceRect {
 
 function hasActiveTextSelectionInsideTarget(target: HTMLElement): boolean {
 	const selection = target.ownerDocument.getSelection();
-	if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
+	if (!selection || selection.isCollapsed) {
 		return false;
 	}
-	for (let i = 0; i < selection.rangeCount; i++) {
-		const range = selection.getRangeAt(i);
-		if (range.collapsed) {
-			continue;
-		}
-		try {
-			if (range.intersectsNode(target)) {
-				return true;
-			}
-		} catch {
-			const anchorNode = selection.anchorNode;
-			const focusNode = selection.focusNode;
-			return Boolean((anchorNode && target.contains(anchorNode)) || (focusNode && target.contains(focusNode)));
-		}
-	}
-	return false;
+	const {anchorNode, focusNode} = selection;
+	return Boolean((anchorNode && target.contains(anchorNode)) || (focusNode && target.contains(focusNode)));
 }
 
 function focusPopoutMenuItem(popoutId: string, placement: 'first' | 'last', ownerDocument: Document): boolean {
@@ -461,7 +447,7 @@ export const Popout = React.forwardRef<HTMLElement, PopoutProps>((props, ref) =>
 		onClick: (event: React.MouseEvent<HTMLElement>) => {
 			const shouldOpen =
 				!consumeDragClick(event) &&
-				!hasActiveTextSelectionInsideTarget(event.currentTarget) &&
+				(event.detail > 1 || !hasActiveTextSelectionInsideTarget(event.currentTarget)) &&
 				(props.shouldOpenOnClick?.(event) ?? true);
 			if (shouldOpen) {
 				const clickPos = event.pageX - event.currentTarget.getBoundingClientRect().left;

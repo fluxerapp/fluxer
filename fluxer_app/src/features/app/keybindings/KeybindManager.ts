@@ -1120,7 +1120,7 @@ class KeybindManager {
 			const id = this.localKeyboardShortcutId(entry);
 			if (type === 'release') {
 				if (!this.activeLocalShortcutPressIds.has(id)) continue;
-				if (!keyboardEventTriggerMatchesCombo(entry.combo, event)) {
+				if (!keyboardEventTriggerMatchesCombo(entry.combo, event, {isMacOS})) {
 					if (keyboardEventReleasesComboModifier(entry.combo, event, {isMacOS})) {
 						this.clearActiveLocalKeyboardShortcut(entry, id);
 					}
@@ -1961,9 +1961,7 @@ class KeybindManager {
 		const handler = this.handlers.get(action);
 		if (!handler) return false;
 		if (isWebReservedZoomShortcut(action, combo)) return false;
-		const shortcuts = comboToCombokeysStrings(combo);
-		if (shortcuts.length === 0) return false;
-		return true;
+		return combo.modifierOnly === true || comboToCombokeysStrings(combo).length > 0;
 	}
 
 	private orderLocalShortcutGroup(entries: ReadonlyArray<RuntimeKeybind>): Array<RuntimeKeybind> {
@@ -2016,7 +2014,7 @@ class KeybindManager {
 		if (type === 'press' && event.repeat) return false;
 		if (this.suspended) return false;
 		if (!this.isActionAllowedForCurrentView(action)) return false;
-		if (!keyboardEventTriggerMatchesCombo(combo, event)) {
+		if (!keyboardEventTriggerMatchesCombo(combo, event, {isMacOS: isNativeMacOS()})) {
 			return false;
 		}
 		if (this.shouldIgnoreLocalShortcutEvent(entry, event)) return false;

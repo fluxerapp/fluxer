@@ -2,7 +2,6 @@
 
 import {BootstrapErrorKind, classifyBootstrapError} from '@app/features/app/components/BootstrapErrorKind';
 import styles from '@app/features/app/components/ErrorFallback.module.css';
-import {BLUESKY_PROVIDER_NAME, FLUXER_BLUESKY_HANDLE} from '@app/features/app/config/I18nDisplayConstants';
 import {resolveAppShellBranding} from '@app/features/app/state/AppShellBranding';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {
@@ -16,7 +15,6 @@ import {ResetClientStateReason, resetClientState} from '@app/features/platform/s
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {Button} from '@app/features/ui/button/Button';
 import {FluxerIcon} from '@app/features/ui/components/icons/FluxerIcon';
-import {ExternalUrls} from '@fluxer/constants/src/ExternalUrls';
 import {MS_PER_SECOND} from '@fluxer/date_utils/src/DateConstants';
 import {Trans, useLingui} from '@lingui/react/macro';
 import type React from 'react';
@@ -29,6 +27,7 @@ export interface BootstrapAccounts {
 	readonly restoring: Account | null;
 	readonly others: ReadonlyArray<Account>;
 	readonly restoreOnNextStart: (accountKey: string) => Promise<void>;
+	readonly addAccountOnNextStart: () => Promise<void>;
 }
 
 interface BootstrapErrorScreenProps {
@@ -123,6 +122,17 @@ export const BootstrapErrorScreen: React.FC<BootstrapErrorScreenProps> = ({error
 				setCopied(false);
 			});
 	}, [error, i18n]);
+	const [addingAccount, setAddingAccount] = useState(false);
+	const handleAddAccount = useCallback(() => {
+		if (accounts === null) {
+			return;
+		}
+		setAddingAccount(true);
+		accounts.addAccountOnNextStart().then(reloadApp, (error: unknown) => {
+			logger.error('Failed to start signed out from the bootstrap error screen', error);
+			setAddingAccount(false);
+		});
+	}, [accounts]);
 	const handleReset = useCallback(() => {
 		void resetClientState({reason: ResetClientStateReason.RESET_APP_DATA, keepDrafts: true}).finally(() =>
 			window.location.reload(),
@@ -132,8 +142,6 @@ export const BootstrapErrorScreen: React.FC<BootstrapErrorScreenProps> = ({error
 	const storedInstance = accounts?.restoring?.instance ?? null;
 	const productName = resolveAppShellBranding(runtimeSnapshot ?? storedInstance).productName;
 	const statusPageUrl = RuntimeConfig.statusPageUrl;
-	const selfHosted =
-		runtimeSnapshot !== null ? RuntimeConfig.isSelfHosted() : storedInstance?.features.self_hosted === true;
 	const instanceHost = accounts?.restoring ? resolveAccountInstanceLabel(accounts.restoring) : null;
 	const otherAccounts = unreachable && accounts !== null && accounts.others.length > 0 ? accounts : null;
 	let description: React.ReactNode;
@@ -188,25 +196,6 @@ export const BootstrapErrorScreen: React.FC<BootstrapErrorScreenProps> = ({error
 						</Trans>
 					</p>
 				)}
-				{!selfHosted && (
-					<p
-						className={styles.errorFallbackDescription}
-						data-flx="app.bootstrap-error-screen.error-fallback-description--3"
-					>
-						<Trans>
-							Check our{' '}
-							<a
-								href={ExternalUrls.BLUESKY}
-								target="_blank"
-								rel="noopener noreferrer"
-								data-flx="app.bootstrap-error-screen.a"
-							>
-								{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})
-							</a>{' '}
-							for status updates.
-						</Trans>
-					</p>
-				)}
 			</div>
 			<div className={styles.errorFallbackActions} data-flx="app.bootstrap-error-screen.error-fallback-actions">
 				<Button onClick={reloadApp} data-flx="app.bootstrap-error-screen.button.retry">
@@ -225,6 +214,18 @@ export const BootstrapErrorScreen: React.FC<BootstrapErrorScreenProps> = ({error
 								Copy stack trace
 							</Trans>
 						)}
+					</Button>
+				)}
+				{unreachable && accounts !== null && (
+					<Button
+						onClick={handleAddAccount}
+						variant="secondary"
+						submitting={addingAccount}
+						data-flx="app.bootstrap-error-screen.button.add-account"
+					>
+						<Trans comment="Button on the startup screen shown when the current account's instance is offline or not responding. Restarts the app signed out so the person can sign in to an account on any instance. The current account stays saved.">
+							Add an account
+						</Trans>
 					</Button>
 				)}
 				{!unreachable && (

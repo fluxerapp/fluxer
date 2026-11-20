@@ -68,7 +68,7 @@ describe('thread pins ack', () => {
 
 	it('refuses viewers who cannot see the private thread', async () => {
 		const s = await setup();
-		await threadsRequest(harness, s.member.token).post(`/channels/${s.threadId}/pins/ack`).expect(403).execute();
+		await threadsRequest(harness, s.member.token).post(`/channels/${s.threadId}/pins/ack`).expect(404).execute();
 		await threadsRequest(harness, s.outsider.token).post(`/channels/${s.threadId}/pins/ack`).expect(403).execute();
 		expect(await pinAckRow(s.member, s.threadId)).toBeNull();
 		expect(await pinAckRow(s.outsider, s.threadId)).toBeNull();

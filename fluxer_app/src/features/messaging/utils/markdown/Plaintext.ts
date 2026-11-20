@@ -47,6 +47,7 @@ const logger = new Logger('MarkdownPlaintext');
 export interface PlaintextRenderOptions {
 	channelId?: string;
 	preserveMarkdown?: boolean;
+	hideSpoilers?: boolean;
 	includeEmojiNames?: boolean;
 	includeLinkUrls?: boolean;
 	mentionChannels?: ReadonlyArray<ChannelMention>;
@@ -86,6 +87,7 @@ const UNKNOWN_MENTION_LABEL = msg({
 	message: 'unknown-mention',
 	comment: 'Fallback plaintext for an unresolved mention in copied markdown. Keep lowercase and hyphenated.',
 });
+const HIDDEN_SPOILER_PLACEHOLDER = '█████';
 const BLOCK_NODE_TYPES = new Set<NodeType>([
 	NodeType.Alert,
 	NodeType.Blockquote,
@@ -151,6 +153,9 @@ function renderNodeToPlaintext(node: Node, options: PlaintextRenderOptions): str
 			return options.preserveMarkdown ? `~~${strikethroughContent}~~` : strikethroughContent;
 		}
 		case NodeType.Spoiler: {
+			if (options.hideSpoilers) {
+				return HIDDEN_SPOILER_PLACEHOLDER;
+			}
 			const spoilerNode = node as SpoilerNode;
 			const spoilerContent = renderNodesToPlaintext(spoilerNode.children, options);
 			if (spoilerNode.isBlock && options.preserveMarkdown) {
@@ -467,10 +472,8 @@ function renderNodesToPlaintext(nodes: Array<Node>, options: PlaintextRenderOpti
 		}
 		const needsBlockSeparator =
 			result.length > 0 &&
-			previousNode != null &&
-			(isBlockNode(previousNode) || isBlockNode(node)) &&
 			!result.endsWith('\n') &&
-			!rendered.startsWith('\n');
+			((previousNode != null && isBlockNode(previousNode)) || (isBlockNode(node) && !rendered.startsWith('\n')));
 		if (needsBlockSeparator) {
 			const lastLine = result.slice(result.lastIndexOf('\n') + 1);
 			if (!(options.preserveMarkdown && lastLine === '> ')) {

@@ -11,6 +11,7 @@ import {
 	EMPTY_BUFFERED_SPANS,
 	getEffectiveMediaDuration,
 	readPendingSeekTarget,
+	resolveStoredMediaDuration,
 } from '@app/features/voice/components/media_player/utils/MediaSeekUtils';
 import {useCallback, useEffect, useRef, useState} from 'react';
 
@@ -19,6 +20,7 @@ const SEEK_SETTLED_TOLERANCE_SECONDS = 0.5;
 interface UseMediaProgressOptions {
 	mediaRef: React.RefObject<HTMLMediaElement | null>;
 	initialDuration?: number;
+	preferInitialDuration?: boolean;
 }
 
 export interface UseMediaProgressReturn {
@@ -35,7 +37,7 @@ export interface UseMediaProgressReturn {
 }
 
 export function useMediaProgress(options: UseMediaProgressOptions): UseMediaProgressReturn {
-	const {mediaRef, initialDuration} = options;
+	const {mediaRef, initialDuration, preferInitialDuration = false} = options;
 	const [currentTime, setCurrentTime] = useState(0);
 	const [duration, setDuration] = useState(initialDuration ?? 0);
 	const [buffered, setBuffered] = useState<ReadonlyArray<BufferedSpanFraction>>(EMPTY_BUFFERED_SPANS);
@@ -60,23 +62,38 @@ export function useMediaProgress(options: UseMediaProgressOptions): UseMediaProg
 	const setPendingProgressIfChanged = useCallback((nextProgress: number | null) => {
 		setPendingProgress((previousProgress) => (previousProgress === nextProgress ? previousProgress : nextProgress));
 	}, []);
-	const setDurationFromMedia = useCallback((rawDuration: number) => {
-		const hasRealDuration = Number.isFinite(rawDuration) && rawDuration > 0;
-		setDuration((previousDuration) => {
-			let nextDuration = rawDuration;
-			if (!hasRealDuration) {
-				nextDuration = previousDuration > 0 ? previousDuration : fallbackDurationRef.current;
+	const getTimelineDuration = useCallback(
+		(media: HTMLMediaElement | null, fallbackDuration: number) => {
+			const mediaDuration = getEffectiveMediaDuration(media, 0);
+			if (preferInitialDuration && mediaDuration > 0) {
+				return resolveStoredMediaDuration(mediaDuration, fallbackDurationRef.current);
 			}
-			return previousDuration === nextDuration ? previousDuration : nextDuration;
-		});
-	}, []);
+			return getEffectiveMediaDuration(media, fallbackDuration);
+		},
+		[preferInitialDuration],
+	);
+	const setDurationFromMedia = useCallback(
+		(rawDuration: number) => {
+			const hasRealDuration = Number.isFinite(rawDuration) && rawDuration > 0;
+			setDuration((previousDuration) => {
+				let nextDuration = rawDuration;
+				if (!hasRealDuration) {
+					nextDuration = previousDuration > 0 ? previousDuration : fallbackDurationRef.current;
+				} else if (preferInitialDuration) {
+					nextDuration = resolveStoredMediaDuration(rawDuration, fallbackDurationRef.current);
+				}
+				return previousDuration === nextDuration ? previousDuration : nextDuration;
+			});
+		},
+		[preferInitialDuration],
+	);
 	useEffect(() => {
 		const media = mediaRef.current;
 		if (!media) return;
 		const applyDeferredSeek = () => {
 			const deferredPercentage = deferredSeekPercentageRef.current;
 			if (deferredPercentage === null) return;
-			const effectiveDuration = getEffectiveMediaDuration(media, 0);
+			const effectiveDuration = getTimelineDuration(media, 0);
 			if (effectiveDuration <= 0) return;
 			deferredSeekPercentageRef.current = null;
 			const time = (deferredPercentage / 100) * effectiveDuration;
@@ -154,23 +171,30 @@ export function useMediaProgress(options: UseMediaProgressOptions): UseMediaProg
 			media.removeEventListener('ended', handleEnded);
 			media.removeEventListener('emptied', handleEmptied);
 		};
-	}, [mediaRef, setBufferedIfChanged, setCurrentTimeIfChanged, setDurationFromMedia, setPendingProgressIfChanged]);
+	}, [
+		getTimelineDuration,
+		mediaRef,
+		setBufferedIfChanged,
+		setCurrentTimeIfChanged,
+		setDurationFromMedia,
+		setPendingProgressIfChanged,
+	]);
 	const previewSeekToPercentage = useCallback(
 		(percentage: number) => {
 			const clampedPercentage = clampPercentage(percentage);
 			setPendingProgressIfChanged(clampedPercentage);
-			const effectiveDuration = getEffectiveMediaDuration(mediaRef.current, fallbackDurationRef.current);
+			const effectiveDuration = getTimelineDuration(mediaRef.current, fallbackDurationRef.current);
 			if (effectiveDuration > 0) {
 				setCurrentTimeIfChanged((clampedPercentage / 100) * effectiveDuration);
 			}
 		},
-		[mediaRef, setCurrentTimeIfChanged, setPendingProgressIfChanged],
+		[getTimelineDuration, mediaRef, setCurrentTimeIfChanged, setPendingProgressIfChanged],
 	);
 	const seekToPercentage = useCallback(
 		(percentage: number) => {
 			const media = mediaRef.current;
 			const clampedPercentage = clampPercentage(percentage);
-			const effectiveDuration = getEffectiveMediaDuration(media, 0);
+			const effectiveDuration = getTimelineDuration(media, 0);
 			if (media && effectiveDuration > 0) {
 				const time = (clampedPercentage / 100) * effectiveDuration;
 				deferredSeekPercentageRef.current = null;
@@ -187,7 +211,7 @@ export function useMediaProgress(options: UseMediaProgressOptions): UseMediaProg
 				setCurrentTimeIfChanged((clampedPercentage / 100) * fallbackDuration);
 			}
 		},
-		[mediaRef, setCurrentTimeIfChanged, setPendingProgressIfChanged],
+		[getTimelineDuration, mediaRef, setCurrentTimeIfChanged, setPendingProgressIfChanged],
 	);
 	const seekToTime = useCallback(
 		(time: number) => {
@@ -197,12 +221,12 @@ export function useMediaProgress(options: UseMediaProgressOptions): UseMediaProg
 			armPendingSeekTarget(media, clampedTime);
 			media.currentTime = clampedTime;
 			setCurrentTimeIfChanged(clampedTime);
-			const effectiveDuration = getEffectiveMediaDuration(media, fallbackDurationRef.current);
+			const effectiveDuration = getTimelineDuration(media, fallbackDurationRef.current);
 			if (effectiveDuration > 0) {
 				setPendingProgressIfChanged(clampPercentage((clampedTime / effectiveDuration) * 100));
 			}
 		},
-		[mediaRef, setCurrentTimeIfChanged, setPendingProgressIfChanged],
+		[getTimelineDuration, mediaRef, setCurrentTimeIfChanged, setPendingProgressIfChanged],
 	);
 	const startSeeking = useCallback(() => {
 		isDraggingRef.current = true;

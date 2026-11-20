@@ -300,6 +300,7 @@ accept_connect_ok(Idx, Entry, Conn, State) ->
     cleanup_old_conn(maps:get(Idx, Slots, undefined)),
     CleanMon = remove_slot_monitors(Idx, Monitors),
     MRef = nats:monitor(Conn),
+    _ = gateway_nats_pool_conn:watch_liveness(Conn),
     gateway_nats_pool_conn:reset_failure_count(Idx),
     NewState = State#{
         slots => Slots#{Idx => Conn},

@@ -64,12 +64,14 @@ export interface RoomEventDependencies {
 	};
 	media: {
 		applyAllLocalAudioPreferences: (room: Room | null) => void;
+		disableCamera: () => Promise<void>;
 		ensureMicrophone: (room: Room, channelId: string) => Promise<void>;
 		playEntranceSound: () => Promise<void>;
 		resetStreamTracking: () => void;
 	};
 	mediaState: {
 		handleLocalTrackStateChange: (source: unknown, isPublished: boolean) => boolean;
+		isLocalCameraOn: () => boolean;
 		resetLocalMediaState: (reason: 'room_disconnect') => void;
 	};
 	participants: {
@@ -512,6 +514,12 @@ export function bindRoomEvents(
 		guard(attemptId, (pub, p: Participant) => {
 			if (!p.isLocal && pub.source === Track.Source.Microphone) {
 				dependencies.remoteSpeaking.detachIfTrackMatches(p, pub as RemoteTrackPublication);
+			}
+			if (p.isLocal && pub.source === Track.Source.Camera && dependencies.mediaState.isLocalCameraOn()) {
+				logger.info('Local camera capture ended, turning the camera off');
+				void dependencies.media.disableCamera().catch((error) => {
+					logger.warn('Failed to turn the camera off after its capture ended', {error});
+				});
 			}
 			dependencies.participants.upsertParticipant(p);
 		}),

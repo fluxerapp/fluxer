@@ -16,13 +16,16 @@ import {
 	type SelfMessageFilter,
 } from '@app/api/channel/services/message/SelfMessageFilter';
 import {assertMutableUserId} from '@app/api/constants/Core';
+import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import {Logger} from '@app/api/Logger';
+import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
 import {deleteMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
 import {chunkArray} from '@app/api/utils/ArrayUtils';
+import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 
 interface UserMessageDeletionServiceDeps {
@@ -31,6 +34,7 @@ interface UserMessageDeletionServiceDeps {
 	storageService: IStorageService;
 	purgeQueue: IPurgeQueue;
 	workerService: CrosspostWorkerService;
+	guildAuditLogService: GuildAuditLogService;
 }
 
 interface DeleteUserMessagesScope {
@@ -128,7 +132,7 @@ export class UserMessageDeletionService {
 		onProgress?: (deleted: number) => void,
 	): Promise<DeleteSelfMessagesResult> {
 		const pendingByChannel = new Map<string, Array<MessageWithChannel>>();
-		const channelsWithDeletions = new Set<string>();
+		const deletedByChannel = new Map<string, {channel: Channel; count: number}>();
 		let totalDeleted = 0;
 		let lastMessageId: MessageID | undefined;
 		while (true) {
@@ -158,16 +162,32 @@ export class UserMessageDeletionService {
 			}
 			lastMessageId = messageRefs[messageRefs.length - 1]!.messageId;
 			for (const [channelIdStr, messages] of pendingByChannel) {
-				const deleted = await this.deleteMessagesInChannel(channelIdStr, messages);
-				if (deleted > 0) {
-					channelsWithDeletions.add(channelIdStr);
+				const channel = await this.deleteMessagesInChannel(channelIdStr, messages);
+				if (channel) {
+					const count = (deletedByChannel.get(channelIdStr)?.count ?? 0) + messages.length;
+					deletedByChannel.set(channelIdStr, {channel, count});
+					totalDeleted += messages.length;
 				}
-				totalDeleted += deleted;
 				onProgress?.(totalDeleted);
 			}
 			pendingByChannel.clear();
 		}
-		return {totalDeleted, channelCount: channelsWithDeletions.size};
+		for (const {channel, count} of deletedByChannel.values()) {
+			await this.recordBulkDeleteAuditLog(userId, channel, count);
+		}
+		return {totalDeleted, channelCount: deletedByChannel.size};
+	}
+
+	private async recordBulkDeleteAuditLog(userId: UserID, channel: Channel, count: number): Promise<void> {
+		if (!channel.guildId) {
+			return;
+		}
+		await this.deps.guildAuditLogService
+			.createBuilder(channel.guildId, userId)
+			.withAction(AuditLogActionType.MESSAGE_BULK_DELETE, null)
+			.withMetadata({channel_id: channel.id.toString(), count: count.toString()})
+			.withThreadScope(channel.isThread())
+			.commit();
 	}
 
 	private async resolveChannelAllowlist(scope: DeleteUserMessagesScope): Promise<ReadonlySet<string>> {
@@ -202,17 +222,16 @@ export class UserMessageDeletionService {
 		return allowlist;
 	}
 
-	private async deleteMessagesInChannel(channelIdStr: string, messages: Array<MessageWithChannel>): Promise<number> {
-		if (messages.length === 0) {
-			return 0;
-		}
+	private async deleteMessagesInChannel(
+		channelIdStr: string,
+		messages: Array<MessageWithChannel>,
+	): Promise<Channel | null> {
 		const channelId = createChannelID(BigInt(channelIdStr));
 		const channel = await this.deps.channelRepository.channelData.findUnique(channelId);
 		if (!channel) {
 			Logger.debug({channelId: channelIdStr}, 'Channel not found, skipping messages');
-			return 0;
+			return null;
 		}
-		let deleted = 0;
 		const batches = chunkArray(messages, this.DELETE_BATCH_SIZE);
 		for (const batch of batches) {
 			const messageIds = batch.map((m: MessageWithChannel) => m.messageId);
@@ -236,8 +255,7 @@ export class UserMessageDeletionService {
 				channel,
 			});
 			await deleteMessageSearchDocuments(messageIds, {context: {source: 'bulk_user_message_delete'}});
-			deleted += batch.length;
 		}
-		return deleted;
+		return channel;
 	}
 }

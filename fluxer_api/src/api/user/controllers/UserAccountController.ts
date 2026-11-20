@@ -674,18 +674,19 @@ export function UserAccountController(app: HonoApp) {
 		async (ctx) => {
 			const {target_id} = ctx.req.valid('param');
 			const {guild_id, with_mutual_friends, with_mutual_guilds} = ctx.req.valid('query');
-			const currentUserId = ctx.get('user').id;
+			const currentUser = ctx.get('user');
 			const targetUserId = createUserID(target_id);
 			const userAccountRequestService = ctx.get('userAccountRequestService');
 			return ctx.json(
 				await userAccountRequestService.getUserProfile({
-					currentUserId,
+					currentUserId: currentUser.id,
 					targetUserId,
 					guildId: guild_id ?? undefined,
 					withMutualFriends: with_mutual_friends,
 					withMutualGuilds: with_mutual_guilds,
 					requestCache: ctx.get('requestCache'),
 					requestLocale: ctx.get('requestLocale'),
+					viewerTimeZone: currentUser.timezone,
 				}),
 			);
 		},

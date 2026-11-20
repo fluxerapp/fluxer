@@ -140,7 +140,7 @@ async function defaultWaylandPortalSourceProvider(
 	preference: DisplayMediaPortalSurfacePreference | null,
 ): Promise<Array<Electron.DesktopCapturerSource>> {
 	const types: Array<'screen' | 'window'> = preference === 'window' ? ['window'] : ['screen'];
-	return desktopCapturer.getSources({types});
+	return desktopCapturer.getSources({types, thumbnailSize: DESKTOP_SOURCE_LIST_ONLY_THUMBNAIL_SIZE});
 }
 
 async function resolveWaylandPortalDisplayMedia(

@@ -81,6 +81,8 @@ export interface MasterConfig {
 			port: number;
 			keyspace: string;
 			local_dc: string;
+			consistency: string;
+			serial_consistency: string;
 			username: string;
 			password: string;
 		};

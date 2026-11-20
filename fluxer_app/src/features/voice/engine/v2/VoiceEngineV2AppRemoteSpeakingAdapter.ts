@@ -22,7 +22,6 @@ import {
 	computeTimeDomainRms,
 	createSpeakingAnalyser,
 	createSpeakingSamples,
-	readSpeakingThresholdRms,
 	SPEAKING_ANALYSER_INTERVAL_MS,
 } from '@app/features/voice/engine/VoiceSpeakingDetection';
 import {VoiceTrackKind, VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
@@ -271,7 +270,6 @@ class VoiceEngineV2AppRemoteSpeakingAdapter {
 					type: 'remote.tick',
 					identity: handle.identity,
 					rms: 0,
-					threshold: 0,
 					nowMs,
 					trackEnded: true,
 				}),
@@ -284,8 +282,7 @@ class VoiceEngineV2AppRemoteSpeakingAdapter {
 		}
 		handle.analyser.getFloatTimeDomainData(handle.samples);
 		const rms = computeTimeDomainRms(handle.samples);
-		const threshold = readSpeakingThresholdRms();
-		this.applyCommands(this.transition({type: 'remote.tick', identity: handle.identity, rms, threshold, nowMs}));
+		this.applyCommands(this.transition({type: 'remote.tick', identity: handle.identity, rms, nowMs}));
 		handle.nextTickAtMs = nowMs + SPEAKING_ANALYSER_INTERVAL_MS;
 	}
 

@@ -319,7 +319,7 @@ handle_result_internal(GuildId, Attempt, {error, Reason}, State) ->
     guild_id(), attempt(), term(), session_state()
 ) -> session_result().
 handle_result_error(GuildId, Attempt, not_member, State) ->
-    handle_not_member(GuildId, Attempt, State);
+    handle_gone_guild("guild_connect_not_member_removed", GuildId, Attempt, State);
 handle_result_error(GuildId, _Attempt, {visit_rejected, _Reason}, State) ->
     session_visits:handle_rejected(GuildId, State);
 handle_result_error(GuildId, Attempt, {session_connect_failed, Reason}, State) ->
@@ -335,15 +335,17 @@ handle_result_error(GuildId, Attempt, Reason, State) ->
         "guild_connect_failed", GuildId, Attempt, Reason, State
     ).
 
--spec handle_not_member(guild_id(), attempt(), session_state()) -> session_result().
-handle_not_member(GuildId, Attempt, State) when Attempt < ?NOT_MEMBER_MAX_RETRIES ->
+%% Retry a few times, then drop the guild from the session and send GUILD_DELETE.
+%% Used when the user is no longer a member or the guild no longer exists.
+-spec handle_gone_guild(string(), guild_id(), attempt(), session_state()) -> session_result().
+handle_gone_guild(_Event, GuildId, Attempt, State) when Attempt < ?NOT_MEMBER_MAX_RETRIES ->
     Delay = backoff_utils:calculate_with_jitter(Attempt),
     erlang:send_after(Delay, self(), {guild_connect, GuildId, Attempt + 1}),
     {noreply, State};
-handle_not_member(GuildId, Attempt, State) ->
+handle_gone_guild(Event, GuildId, Attempt, State) ->
     UserId = maps:get(user_id, State),
     logger:info(
-        "guild_connect_not_member_removed: guild_id=~p user_id=~p attempt=~p",
+        Event ++ ": guild_id=~p user_id=~p attempt=~p",
         [GuildId, UserId, Attempt]
     ),
     remove_non_member_guild(GuildId, State).
@@ -381,6 +383,28 @@ handle_guild_manager_error(GuildId, Attempt, {error, loading}, State) ->
 handle_guild_manager_error(GuildId, _, {error, not_eligible}, State) ->
     session_ready:mark_guild_unavailable(GuildId, State);
 handle_guild_manager_error(GuildId, Attempt, Reason, State) ->
+    case is_unknown_guild_failure(Reason) of
+        true ->
+            handle_gone_guild("guild_connect_unknown_guild_removed", GuildId, Attempt, State);
+        false ->
+            handle_guild_manager_failure(GuildId, Attempt, Reason, State)
+    end.
+
+%% The API answers 404 once the guild row is gone, so retrying can never succeed.
+-spec is_unknown_guild_failure(term()) -> boolean().
+is_unknown_guild_failure({error, Inner}) ->
+    is_unknown_guild_failure(Inner);
+is_unknown_guild_failure({guild_collection_fetch_failed, _Collection, Inner}) ->
+    is_unknown_guild_failure(Inner);
+is_unknown_guild_failure({rpc_error, 404, _}) ->
+    true;
+is_unknown_guild_failure(_) ->
+    false.
+
+-spec handle_guild_manager_failure(
+    guild_id(), attempt(), term(), session_state()
+) -> session_result().
+handle_guild_manager_failure(GuildId, Attempt, Reason, State) ->
     Nodedown = session_connection_retry:is_guild_manager_nodedown_failure(Reason),
     case Nodedown of
         true ->
@@ -543,3 +567,73 @@ log_stalled_guild_repair(GuildIds, State) ->
 -spec ensure_bool(term()) -> boolean().
 ensure_bool(true) -> true;
 ensure_bool(_) -> false.
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+-define(GONE_GUILD, 1564399299419176960).
+
+unknown_guild_reason(Status) ->
+    {error,
+        {guild_collection_fetch_failed, <<"members">>,
+            {rpc_error, Status, <<"Community wasn't found.">>}}}.
+
+gone_guild_state() ->
+    #{
+        id => <<"session">>,
+        user_id => 1,
+        guilds => #{?GONE_GUILD => undefined},
+        guild_connect_inflight => #{},
+        seq => 0,
+        buffer => [],
+        buffer_bytes => 0,
+        socket_pid => undefined,
+        channels => #{},
+        relationships => #{},
+        suppress_presence_updates => false,
+        pending_presences => [],
+        presence_pid => undefined,
+        ignored_events => #{},
+        debounce_reactions => false,
+        thread_channels_capable => false,
+        reaction_buffer => []
+    }.
+
+flush_mailbox() ->
+    receive
+        _ -> flush_mailbox()
+    after 0 -> ok
+    end.
+
+is_unknown_guild_failure_test() ->
+    ?assert(is_unknown_guild_failure(unknown_guild_reason(404))),
+    ?assert(is_unknown_guild_failure({error, {rpc_error, 404, <<>>}})),
+    ?assertNot(is_unknown_guild_failure(unknown_guild_reason(500))),
+    ?assertNot(is_unknown_guild_failure({error, timeout})),
+    ?assertNot(is_unknown_guild_failure({error, {nodedown, 'n@h'}})).
+
+unknown_guild_retries_before_dropping_test() ->
+    flush_mailbox(),
+    State = gone_guild_state(),
+    ?assertEqual(
+        {noreply, State},
+        handle_guild_manager_error(?GONE_GUILD, 0, unknown_guild_reason(404), State)
+    ),
+    receive
+        {guild_connect, ?GONE_GUILD, 1} -> ok
+    after 5000 -> ?assert(false)
+    end.
+
+unknown_guild_dropped_after_max_retries_test() ->
+    flush_mailbox(),
+    {noreply, State} = handle_guild_manager_error(
+        ?GONE_GUILD, ?NOT_MEMBER_MAX_RETRIES, unknown_guild_reason(404), gone_guild_state()
+    ),
+    ?assertEqual(#{}, maps:get(guilds, State)),
+    ?assertEqual(1, maps:get(seq, State)),
+    receive
+        {guild_connect, ?GONE_GUILD, _} -> ?assert(false)
+    after 300 -> ok
+    end.
+
+-endif.

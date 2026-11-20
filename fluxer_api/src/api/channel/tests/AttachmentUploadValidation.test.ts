@@ -191,6 +191,19 @@ describe('Attachment Upload Validation', () => {
 					}
 				});
 			}
+			it('should keep URL safe punctuation in the stored filename', async () => {
+				const filename = "map_dusk;latte(1)[v2],it's+draft=ok!@~&$.txt";
+				const {response, json} = await sendMessageWithAttachments(
+					harness,
+					accountToken,
+					channelId,
+					{content: 'Punctuation test', attachments: [{id: 0, filename}]},
+					[{index: 0, filename, data: Buffer.from('test content')}],
+				);
+				expect(response.status).toBe(200);
+				expect(json.attachments![0].filename).toBe(filename);
+				expect(new URL(json.attachments![0].url!).pathname.endsWith(`/${filename}`)).toBe(true);
+			});
 		});
 		describe('path traversal', () => {
 			const testCases = [

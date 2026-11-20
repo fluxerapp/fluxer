@@ -55,6 +55,17 @@ const canAutoRevealForModerators = (channelId?: string): boolean => {
 	return channelPermissions ? (channelPermissions & Permissions.MANAGE_MESSAGES) !== 0n : false;
 };
 
+export function spoilersAutoReveal(renderSpoilersSetting: number, channelId?: string): boolean {
+	switch (renderSpoilersSetting) {
+		case RenderSpoilers.ALWAYS:
+			return true;
+		case RenderSpoilers.IF_MODERATOR:
+			return canAutoRevealForModerators(channelId);
+		default:
+			return false;
+	}
+}
+
 function extractSpoileredUrls(content: string | null | undefined): Set<string> {
 	const spoileredUrls = new Set<string>();
 	if (!content) return spoileredUrls;
@@ -144,17 +155,10 @@ export function useSpoilerState(
 	const [manuallyRevealed, setManuallyRevealed] = useState(false);
 	const spoilerSync = useContext(SpoilerSyncContext);
 	const renderSpoilersSetting = getRenderSpoilersSetting();
-	const autoReveal = useMemo(() => {
-		if (!isSpoiler) return true;
-		switch (renderSpoilersSetting) {
-			case RenderSpoilers.ALWAYS:
-				return true;
-			case RenderSpoilers.IF_MODERATOR:
-				return canAutoRevealForModerators(channelId);
-			default:
-				return false;
-		}
-	}, [channelId, isSpoiler, renderSpoilersSetting]);
+	const autoReveal = useMemo(
+		() => !isSpoiler || spoilersAutoReveal(renderSpoilersSetting, channelId),
+		[channelId, isSpoiler, renderSpoilersSetting],
+	);
 	const normalizedKeys = useMemo(() => Array.from(new Set(syncKeys)), [syncKeys]);
 	const sharedRevealed = useMemo(() => spoilerSync?.isRevealed(normalizedKeys) ?? false, [spoilerSync, normalizedKeys]);
 	const hidden = isSpoiler && !autoReveal && !manuallyRevealed && !sharedRevealed;

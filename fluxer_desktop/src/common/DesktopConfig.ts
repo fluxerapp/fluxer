@@ -9,7 +9,11 @@ import {
 	type GlobalShortcutAction,
 	isGlobalShortcutAction,
 } from '@electron/common/GlobalShortcutActions';
-import type {DesktopTroubleshootingSettings, DesktopWindowBehaviorSettings} from '@electron/common/Types';
+import type {
+	DesktopTroubleshootingSettings,
+	DesktopWindowBehaviorSettings,
+	MonochromeTrayIconTone,
+} from '@electron/common/Types';
 import {readInstanceProductNameReport} from '@fluxer/desktop_ipc/src/InstanceProductNameContract';
 import {InstanceEndpointKind, normalizeInstanceEndpoint} from '@fluxer/instance_bootstrap/src/EndpointNormalization';
 import {isObjectLike as isRecord} from '@fluxer/record_utils/src/RecordGuards';
@@ -21,6 +25,7 @@ const CONFIG_FILE_NAME = 'settings.json';
 export const THEME_FOLDERS_MAX = 20;
 const MINIMIZE_TO_TRAY_STORAGE_KEY_V2 = 'minimizeToTrayV2';
 const CLOSE_TO_TRAY_STORAGE_KEY_V2 = 'closeToTrayV2';
+const UNREAD_LAUNCHER_BADGE_STORAGE_KEY_V2 = 'unreadLauncherBadgeV2';
 
 interface DesktopConfig extends Record<string, unknown> {
 	chromiumSwitches?: ChromiumSwitchesSetting;
@@ -67,7 +72,9 @@ export type ChromiumSwitchesSetting = ReadonlyArray<string> | Record<string, unk
 interface PersistedDesktopWindowBehaviorSettings {
 	showTrayIcon?: boolean;
 	coloredTrayIcon?: boolean;
+	monochromeTrayIconTone?: MonochromeTrayIconTone;
 	darkTaskbarBadge?: boolean;
+	unreadLauncherBadgeV2?: boolean;
 	useNativeTitleBar?: boolean;
 	minimizeToTrayV2?: boolean;
 	closeToTrayV2?: boolean;
@@ -81,6 +88,10 @@ interface PersistedDesktopWindowBehaviorSettings {
 interface PersistedDesktopTroubleshootingSettings {
 	disableHardwareAcceleration?: boolean;
 	disableModuleUpdates?: boolean;
+}
+
+export function isMonochromeTrayIconTone(value: unknown): value is MonochromeTrayIconTone {
+	return value === 'auto' || value === 'white' || value === 'black';
 }
 
 const INSTANCE_ENDPOINT_ARGS = ['--fluxer-instance'];
@@ -102,7 +113,9 @@ function getDefaultDesktopWindowBehaviorSettings(): DesktopWindowBehaviorSetting
 	return {
 		showTrayIcon: true,
 		coloredTrayIcon: false,
+		monochromeTrayIconTone: 'auto',
 		darkTaskbarBadge: false,
+		unreadLauncherBadge: false,
 		minimizeToTray: false,
 		closeToTray: true,
 		startMinimized: false,
@@ -131,8 +144,15 @@ function sanitizePersistedDesktopWindowBehaviorSettings(
 	if (typeof value.coloredTrayIcon === 'boolean') {
 		settings.coloredTrayIcon = value.coloredTrayIcon;
 	}
+	if (isMonochromeTrayIconTone(value.monochromeTrayIconTone)) {
+		settings.monochromeTrayIconTone = value.monochromeTrayIconTone;
+	}
 	if (typeof value.darkTaskbarBadge === 'boolean') {
 		settings.darkTaskbarBadge = value.darkTaskbarBadge;
+	}
+	const unreadLauncherBadgeV2 = value[UNREAD_LAUNCHER_BADGE_STORAGE_KEY_V2];
+	if (typeof unreadLauncherBadgeV2 === 'boolean') {
+		settings.unreadLauncherBadgeV2 = unreadLauncherBadgeV2;
 	}
 	if (typeof value.useNativeTitleBar === 'boolean') {
 		settings.useNativeTitleBar = value.useNativeTitleBar;
@@ -382,7 +402,15 @@ function normalizeDesktopWindowBehaviorSettings(
 	const normalized = {
 		showTrayIcon: firstBoolean(defaults.showTrayIcon, settings?.showTrayIcon),
 		coloredTrayIcon: firstBoolean(defaults.coloredTrayIcon, settings?.coloredTrayIcon),
+		monochromeTrayIconTone: isMonochromeTrayIconTone(settings?.monochromeTrayIconTone)
+			? settings.monochromeTrayIconTone
+			: defaults.monochromeTrayIconTone,
 		darkTaskbarBadge: firstBoolean(defaults.darkTaskbarBadge, settings?.darkTaskbarBadge),
+		unreadLauncherBadge: firstBoolean(
+			defaults.unreadLauncherBadge,
+			settings?.unreadLauncherBadge,
+			settings?.unreadLauncherBadgeV2,
+		),
 		minimizeToTray: firstBoolean(defaults.minimizeToTray, settings?.minimizeToTray, settings?.minimizeToTrayV2),
 		closeToTray: firstBoolean(defaults.closeToTray, settings?.closeToTray, settings?.closeToTrayV2),
 		startMinimized: firstBoolean(defaults.startMinimized, settings?.startMinimized),
@@ -426,6 +454,7 @@ function serializeDesktopWindowBehaviorSettings(
 	return {
 		showTrayIcon: settings.showTrayIcon,
 		coloredTrayIcon: settings.coloredTrayIcon,
+		monochromeTrayIconTone: settings.monochromeTrayIconTone,
 		darkTaskbarBadge: settings.darkTaskbarBadge,
 		useNativeTitleBar: settings.useNativeTitleBar,
 		rememberWindowState: settings.rememberWindowState,
@@ -435,6 +464,7 @@ function serializeDesktopWindowBehaviorSettings(
 		startMinimized: settings.startMinimized,
 		[MINIMIZE_TO_TRAY_STORAGE_KEY_V2]: settings.minimizeToTray,
 		[CLOSE_TO_TRAY_STORAGE_KEY_V2]: settings.closeToTray,
+		[UNREAD_LAUNCHER_BADGE_STORAGE_KEY_V2]: settings.unreadLauncherBadge,
 	};
 }
 

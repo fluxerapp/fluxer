@@ -10,12 +10,14 @@ import {usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
 import {getReducedMotionProps} from '@app/features/ui/utils/ReducedMotionAnimation';
 import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {resolveAudioContextConstructor} from '@app/features/voice/engine/VoiceSharedAudioContext';
+import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
 	computeVoiceWaveformFromAudioBuffer,
 	type PreparedVoiceMessage,
 	prepareVoiceMessageWav,
 } from '@app/features/voice/utils/VoiceMessageRecordingUtils';
 import {sendVoiceMessage} from '@app/features/voice/utils/VoiceMessageSendUtils';
+import {buildRecordingAudioConstraints} from '@app/features/voice/utils/VoiceProcessingProfile';
 import {autoUpdate, FloatingPortal, flip, offset, shift, useFloating} from '@floating-ui/react';
 import {
 	VOICE_MESSAGE_HOLD_TOOLTIP_DURATION_MS,
@@ -409,7 +411,7 @@ export default function VoiceMessageRecorder({channelId, disabled, tooltipAnchor
 		}
 		let acquiredStream: MediaStream | null = null;
 		try {
-			const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+			const stream = await navigator.mediaDevices.getUserMedia({audio: buildRecordingAudioConstraints(VoiceSettings)});
 			acquiredStream = stream;
 			const recorder = new MediaRecorder(stream, {mimeType: preferredType});
 			chunksRef.current = [];

@@ -9,12 +9,12 @@
     connect_slot/2,
     handle_conn_down/4,
     find_slot_by_conn/2,
-    update_persistent_term/2,
     schedule_reconnect/2,
     reset_failure_count/1,
     publish_ready_slots/1,
     subscribe_slot/3,
     guarded_sub/3,
+    watch_liveness/1,
     conn_ready/1,
     subscribe_retry_delay/1,
     unsubscribe_slot_sids/2,
@@ -43,7 +43,9 @@
 -define(FAILURE_COUNTS_KEY, {gateway_nats_pool, failure_counts}).
 -define(SUBSCRIBE_RETRY_BASE_MS, 250).
 -define(SUBSCRIBE_RETRY_MAX_MS, 5000).
--define(SUBSCRIBE_TIMEOUT_MS, 5000).
+-define(GUARD_TIMEOUT_MS, 5000).
+-define(LIVENESS_INTERVAL_MS, 15000).
+-define(LIVENESS_SUBJECT, <<"_GATEWAY.liveness">>).
 
 -spec get_pool_conn() -> {ok, nats:conn()} | {error, no_connection}.
 get_pool_conn() ->
@@ -288,8 +290,33 @@ subscribe_retry_delay(_Failures) ->
 
 -spec guarded_sub(nats:conn(), binary(), map()) -> {ok, nats:sid()} | {error, term()}.
 guarded_sub(Conn, Subject, Opts) ->
-    Guard = spawn(fun() -> disconnect_unless_done(Conn) end),
-    try nats:sub(Conn, Subject, Opts) of
+    guarded(Conn, subscribe, fun() -> nats:sub(Conn, Subject, Opts) end).
+
+-spec watch_liveness(nats:conn()) -> pid().
+watch_liveness(Conn) ->
+    spawn(fun() -> liveness_loop(Conn, nats:monitor(Conn)) end).
+
+-spec liveness_loop(nats:conn(), reference()) -> ok.
+liveness_loop(Conn, MRef) ->
+    receive
+        {'DOWN', MRef, process, _Pid, _Reason} -> ok
+    after ?LIVENESS_INTERVAL_MS ->
+        _ = probe_liveness(Conn),
+        liveness_loop(Conn, MRef)
+    end.
+
+-spec probe_liveness(nats:conn()) -> term().
+probe_liveness(Conn) ->
+    guarded(Conn, liveness_check, fun() -> request_liveness(Conn) end).
+
+-spec request_liveness(nats:conn()) -> term().
+request_liveness(Conn) ->
+    nats:request(Conn, ?LIVENESS_SUBJECT, <<>>, #{}).
+
+-spec guarded(nats:conn(), atom(), fun(() -> Result)) -> Result | {error, {exit, term()}}.
+guarded(Conn, Operation, Call) ->
+    Guard = spawn(fun() -> disconnect_unless_done(Conn, Operation) end),
+    try Call() of
         Result -> Result
     catch
         exit:Reason -> {error, {exit, Reason}}
@@ -297,12 +324,14 @@ guarded_sub(Conn, Subject, Opts) ->
         Guard ! done
     end.
 
--spec disconnect_unless_done(nats:conn()) -> ok.
-disconnect_unless_done(Conn) ->
+-spec disconnect_unless_done(nats:conn(), atom()) -> ok.
+disconnect_unless_done(Conn, Operation) ->
     receive
         done -> ok
-    after ?SUBSCRIBE_TIMEOUT_MS ->
-        logger:warning("Gateway NATS subscribe did not finish in time, closing the connection"),
+    after ?GUARD_TIMEOUT_MS ->
+        logger:warning("Gateway NATS call did not finish in time, closing the connection", #{
+            operation => Operation
+        }),
         ignore_disconnect(Conn)
     end.
 

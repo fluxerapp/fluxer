@@ -73,18 +73,8 @@ export const useElectronScreenSharePicker = (): void => {
 		});
 		const unsubscribePortalEmpty = electronApi.onDisplayMediaPortalEmpty?.((requestId) => {
 			logger.warn('Linux screen share portal returned no sources', {requestId});
-			void Promise.all([
-				import('@app/features/ui/commands/ModalCommands'),
-				import('@app/features/voice/components/alerts/ScreenShareUnsupportedModal'),
-			]).then(([ModalCommands, {ScreenShareUnsupportedModal}]) => {
-				ModalCommands.push(
-					ModalCommands.modal(() => (
-						<ScreenShareUnsupportedModal
-							variant="portal-empty"
-							data-flx="voice.use-electron-screen-share-picker.screen-share-unsupported-modal"
-						/>
-					)),
-				);
+			void import('@app/features/voice/utils/ScreenShareUtils').then(({showScreenSharePortalUnavailableModal}) => {
+				showScreenSharePortalUnavailableModal();
 			});
 		});
 		return () => {

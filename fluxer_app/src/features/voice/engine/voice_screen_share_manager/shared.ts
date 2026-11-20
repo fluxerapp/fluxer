@@ -271,6 +271,10 @@ function getScreenShareLayeringForCodec(codec: VideoCodec | undefined): ScreenSh
 	return resolveScreenShareLayering({
 		codec,
 		svcSetting: VoiceSettings.getScreenShareScalabilityModeOverride(),
+		hardwareEncoder:
+			codec !== undefined &&
+			VoiceSettings.getScreenShareEncoderMode() !== 'software' &&
+			getCodecCapabilityReport()[codec].hardwareAccelerated === 'hardware',
 	});
 }
 

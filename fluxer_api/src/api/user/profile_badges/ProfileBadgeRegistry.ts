@@ -39,6 +39,7 @@ export interface ProfileBadgeView {
 	operatorPass: VisibleOperatorPass | null;
 	environment: ProfileBadgeEnvironment;
 	locale: string;
+	timeZone: string;
 	shown: ReadonlySet<ProfileBadgeKind>;
 }
 
@@ -66,8 +67,8 @@ function premiumName(environment: ProfileBadgeEnvironment): string {
 	return `${environment.productName} ${environment.premiumName}`;
 }
 
-function formatSinceDate(date: Date, locale: string): string {
-	return getDateFormatter(locale, {dateStyle: 'long', timeZone: 'UTC'}).format(date);
+function formatSinceDate(date: Date, view: ProfileBadgeView): string {
+	return getDateFormatter(view.locale, {dateStyle: 'long', timeZone: view.timeZone}).format(date);
 }
 
 function premiumLabel(view: ProfileBadgeView): string {
@@ -80,7 +81,7 @@ function premiumLabel(view: ProfileBadgeView): string {
 	if (since) {
 		return getContentMessage('profile_badge.premium_since', view.locale, {
 			premium_name: premiumName(view.environment),
-			since_date: formatSinceDate(since, view.locale),
+			since_date: formatSinceDate(since, view),
 		});
 	}
 	return getContentMessage('profile_badge.premium', view.locale, {premium_name: premiumName(view.environment)});
@@ -129,7 +130,7 @@ export const PROFILE_BADGE_REGISTRY: ReadonlyArray<ProfileBadgeDefinition> = [
 			if (!view.operatorPass) return null;
 			const {since, count, quote} = view.operatorPass;
 			const stacked = count != null && count >= 2;
-			const sinceDate = since ? formatSinceDate(since, view.locale) : null;
+			const sinceDate = since ? formatSinceDate(since, view) : null;
 			const lines: Array<string> = [];
 			if (sinceDate) {
 				lines.push(
@@ -181,7 +182,7 @@ export const PROFILE_BADGE_REGISTRY: ReadonlyArray<ProfileBadgeDefinition> = [
 				label: since
 					? getContentMessage('profile_badge.visionary_since', view.locale, {
 							product_name: productName,
-							since_date: formatSinceDate(since, view.locale),
+							since_date: formatSinceDate(since, view),
 						})
 					: getContentMessage('profile_badge.visionary', view.locale, {product_name: productName}),
 			};

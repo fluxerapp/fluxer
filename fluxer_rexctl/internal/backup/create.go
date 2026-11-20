@@ -262,15 +262,16 @@ type volumeRef struct {
 	short string
 	full  string
 	bind  string
+	label string
 }
 
 func (v volumeRef) mount(target string, readOnly bool) engine.Mount {
-	return engine.Mount{Volume: v.full, Bind: v.bind, Target: target, ReadOnly: readOnly}
+	return engine.Mount{Volume: v.full, Bind: v.bind, Target: target, ReadOnly: readOnly, SELinux: v.label}
 }
 
 func dataVolume(model *types.Project, project string, have []engine.Volume, short string) (volumeRef, bool) {
-	if bind := boundData(model, short); bind != "" {
-		return volumeRef{short: short, bind: bind}, true
+	if bind, label := boundData(model, short); bind != "" {
+		return volumeRef{short: short, bind: bind, label: label}, true
 	}
 	if full, ok := findVolume(have, project, short); ok {
 		return volumeRef{short: short, full: full}, true
@@ -278,17 +279,21 @@ func dataVolume(model *types.Project, project string, have []engine.Volume, shor
 	return volumeRef{}, false
 }
 
-func boundData(model *types.Project, short string) string {
+func boundData(model *types.Project, short string) (string, string) {
 	dm, ok := stack.DataMounts[short]
 	if !ok || model == nil {
-		return ""
+		return "", ""
 	}
 	for _, v := range model.Services[dm.Service].Volumes {
 		if v.Type == types.VolumeTypeBind && v.Target == dm.Target && v.Source != "" {
-			return v.Source
+			label := ""
+			if v.Bind != nil {
+				label = v.Bind.SELinux
+			}
+			return v.Source, label
 		}
 	}
-	return ""
+	return "", ""
 }
 
 func volumesToCopy(ctx context.Context, inst *instance.Instance, values map[string]string, p *engine.Project, model *types.Project, m *Manifest, scope string, mark bool) ([]volumeRef, error) {

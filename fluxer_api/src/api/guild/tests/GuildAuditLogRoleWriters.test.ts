@@ -97,6 +97,24 @@ describe('Guild audit log role writers', () => {
 		});
 	});
 
+	test('percent-decodes the reason header and keeps malformed sequences as sent', async () => {
+		const encoded = await createRole(harness, owner.token, guild.id, {name: 'Encoded'});
+		const malformed = await createRole(harness, owner.token, guild.id, {name: 'Malformed'});
+		await createBuilder(harness, owner.token)
+			.delete(`/guilds/${guild.id}/roles/${encoded.id}`)
+			.header('X-Audit-Log-Reason', '%28example%29 %E2%9C%B0')
+			.expect(HTTP_STATUS.NO_CONTENT)
+			.execute();
+		await createBuilder(harness, owner.token)
+			.delete(`/guilds/${guild.id}/roles/${malformed.id}`)
+			.header('X-Audit-Log-Reason', '100% sure')
+			.expect(HTTP_STATUS.NO_CONTENT)
+			.execute();
+		const entries = await listEntries(harness, owner.token, guild.id, AuditLogActionType.ROLE_DELETE);
+		expect(entries.find((log) => log.target_id === encoded.id)?.reason).toBe('(example) ✰');
+		expect(entries.find((log) => log.target_id === malformed.id)?.reason).toBe('100% sure');
+	});
+
 	test('records the emoji and icon changes when a role icon switches kind', async () => {
 		const role = await createRole(harness, owner.token, guild.id, {name: 'Mods', unicode_emoji: '🛡️'});
 		const created = (await listEntries(harness, owner.token, guild.id, AuditLogActionType.ROLE_CREATE)).find(

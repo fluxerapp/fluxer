@@ -6,6 +6,7 @@ import {
 	$snapSelectionOutOfBlockquoteMarker,
 	$splitComposerLines,
 	$syncComposerBlockquoteLines,
+	type ComposerLine,
 } from '@app/features/lexical/composer/ComposerBlockquote';
 import {$captureSelectionOffsets, $selectComposerRange} from '@app/features/lexical/composer/composerOffsets';
 import {
@@ -115,15 +116,49 @@ type Desired =
 
 type BuildableDesired = Exclude<Desired, {role: 'keep'}>;
 
+function $readParagraphSource(paragraph: ParagraphNode): {
+	lines: Array<ComposerLine>;
+	lineSources: Array<string>;
+	source: string;
+} {
+	const lines = $splitComposerLines(paragraph);
+	const lineSources = lines.map((line) => line.nodes.map($nodeWireText).join(''));
+	return {lines, lineSources, source: lineSources.join('\n')};
+}
+
+function isCoveredByCode(spans: ReadonlyArray<MarkdownSpan>, start: number, end: number): boolean {
+	return spans.some(
+		(span) =>
+			span.role === 'content' && (span.format & MarkdownHl.code) !== 0 && span.start <= start && span.end >= end,
+	);
+}
+
+export function $isInsideMarkdownCode(node: LexicalNode, start: number, end: number, parserFlags?: number): boolean {
+	const paragraph = node.getTopLevelElement();
+	if (!(paragraph instanceof ParagraphNode)) {
+		return false;
+	}
+	const {lines, source} = $readParagraphSource(paragraph);
+	let offset = 0;
+	for (const line of lines) {
+		for (const lineNode of line.nodes) {
+			if (lineNode.is(node)) {
+				return isCoveredByCode(computeMarkdownHighlightSpans(source, parserFlags), offset + start, offset + end);
+			}
+			offset += $nodeWireText(lineNode).length;
+		}
+		offset += 1;
+	}
+	return false;
+}
+
 function $reconcileParagraph(
 	paragraph: ParagraphNode,
 	parserFlags?: number,
 	silentMessagePrefix = false,
 	maxWireLength?: number,
 ): void {
-	const lines = $splitComposerLines(paragraph);
-	const lineSources = lines.map((line) => line.nodes.map($nodeWireText).join(''));
-	const source = lineSources.join('\n');
+	const {lines, lineSources, source} = $readParagraphSource(paragraph);
 	const markdownSpans = computeMarkdownHighlightSpans(source, parserFlags);
 	const {markerEnds: quoteMarkerEnds, multiline} = findBlockquoteMarkers(
 		source,
@@ -176,15 +211,7 @@ function $reconcileLine(
 		const nodeText = $nodeWireText(node);
 		const nodeEnd = sourceOffset + nodeText.length;
 		if ($isComposerMentionNode(node) || $isComposerCustomEmojiNode(node) || $isComposerStandardEmojiNode(node)) {
-			const literal =
-				$isEscapedAtOffset(source, sourceOffset) ||
-				spans.some(
-					(span) =>
-						span.role === 'content' &&
-						(span.format & MarkdownHl.code) !== 0 &&
-						span.start <= sourceOffset &&
-						span.end >= nodeEnd,
-				);
+			const literal = $isEscapedAtOffset(source, sourceOffset) || isCoveredByCode(spans, sourceOffset, nodeEnd);
 			if (node.isLiteral() !== literal) {
 				node.setLiteral(literal);
 			}

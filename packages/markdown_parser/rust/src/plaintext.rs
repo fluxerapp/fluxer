@@ -8,9 +8,12 @@ use crate::ast::{
 use crate::emoji::EmojiContext;
 use crate::parser::{MarkdownParser, ParseError};
 
+const HIDDEN_SPOILER_PLACEHOLDER: &str = "█████";
+
 #[derive(Clone, Debug)]
 pub struct PlaintextOptions {
     pub preserve_markdown: bool,
+    pub hide_spoilers: bool,
     pub include_emoji_names: bool,
     pub include_link_urls: bool,
     pub users: HashMap<String, String>,
@@ -22,6 +25,7 @@ impl Default for PlaintextOptions {
     fn default() -> Self {
         Self {
             preserve_markdown: false,
+            hide_spoilers: false,
             include_emoji_names: true,
             include_link_urls: false,
             users: HashMap::new(),
@@ -92,6 +96,9 @@ fn render_node_to_plaintext(node: &Node, options: &PlaintextOptions) -> String {
         Node::Underline { children } => render_formatting_node(children, "__", options),
         Node::Strikethrough { children } => render_formatting_node(children, "~~", options),
         Node::Spoiler { children, is_block } => {
+            if options.hide_spoilers {
+                return HIDDEN_SPOILER_PLACEHOLDER.to_string();
+            }
             let content = render_nodes_to_plaintext(children, options);
             if options.preserve_markdown {
                 if is_block.unwrap_or(false) {
@@ -213,7 +220,7 @@ fn render_list(ordered: bool, items: &[ListItem], options: &PlaintextOptions) ->
             };
             format!(
                 "{prefix}{}",
-                indent_continuation_lines(&content, prefix.len())
+                indent_continuation_lines(&content, prefix.chars().count())
             )
         })
         .collect::<Vec<_>>()
@@ -423,10 +430,9 @@ fn render_nodes_to_plaintext(nodes: &[Node], options: &PlaintextOptions) -> Stri
             continue;
         }
         let needs_block_separator = !result.is_empty()
-            && previous_node.is_some()
-            && (previous_node.is_some_and(is_block_node) || is_block_node(node))
             && !result.ends_with('\n')
-            && !rendered.starts_with('\n');
+            && (previous_node.is_some_and(is_block_node)
+                || (is_block_node(node) && !rendered.starts_with('\n')));
         if needs_block_separator {
             trim_trailing_horizontal_whitespace_for_block_separator(
                 &mut result,

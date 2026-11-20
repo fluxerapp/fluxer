@@ -2282,6 +2282,11 @@ msgstr "{resultCount, plural, one {Доступен # результат} few {�
 msgid "{resultCount, plural, one {# result} other {# results}}"
 msgstr "{resultCount, plural, one {# результат} few {# результата} many {# результатов} other {# результата}}"
 
+#. OAuth authorize page error shown when the authorization link asks for a scope this app does not offer. Preserve {scope}, it is the technical scope name inserted by code.
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts
+msgid "{scope} is not a supported scope."
+msgstr ""
+
 #. AFK timeout label for a stored custom duration shown in the idle settings section.
 #. Generic duration label for a whole number of seconds.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/IdleSettingsSection.tsx
@@ -3487,7 +3492,9 @@ msgstr "Добавить аккаунт"
 msgid "Add action."
 msgstr "Добавить действие."
 
+#. Button on the startup screen shown when the current account's instance is offline or not responding. Restarts the app signed out so the person can sign in to an account on any instance. The current account stays saved.
 #. Last tile in the account switcher grid, and the title of the step it opens, where another saved account is added by signing in or registering.
+#: src/features/app/components/BootstrapErrorScreen.tsx
 #: src/features/auth/components/accounts/account_switcher_modal/AccountSwitcherAuthFlow.tsx
 msgid "Add an account"
 msgstr "Добавить аккаунт"
@@ -6249,6 +6256,11 @@ msgstr "Резервные коды обновлены"
 msgid "Badge and wall count: {count}"
 msgstr "Количество для значка и стены: {count}"
 
+#. Desktop setting toggle label on Linux. Controls whether unread messages without mentions put a badge on the app icon in the taskbar or dock.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Badge the app icon for unread messages"
+msgstr ""
+
 #. Title of the profile settings section that lists the badges you hold and lets you hide each one.
 #. Title of the window that lists every badge of a person or community.
 #: src/features/user/components/modals/BadgeListModal.tsx
@@ -6482,6 +6494,11 @@ msgstr "Биометрия"
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Bitrate"
 msgstr "Битрейт"
+
+#. Tray icon color option for a black monochrome tray icon, for light taskbars and panels.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Black"
+msgstr ""
 
 #. Generic destructive action label that blocks a user.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -8265,10 +8282,6 @@ msgstr "Проверить обновления"
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "Check for updates..."
 msgstr "Проверить обновления…"
-
-#: src/features/app/components/BootstrapErrorScreen.tsx
-msgid "Check our <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0> for status updates."
-msgstr "Следите за обновлениями статуса в нашем <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0>."
 
 #. Description text in the share theme modal.
 #: src/features/theme/components/modals/ShareThemeModal.tsx
@@ -13069,10 +13082,8 @@ msgstr "Подтверждение удаления"
 msgid "Delete redirect URI"
 msgstr "Удалить URI перенаправления"
 
-#. Danger action in the channel permissions overwrite context menu that removes a role permission override from the channel.
 #. Destructive button in the role editor that removes the selected role. Removes the role from every member; keep tone plain.
 #. Destructive context menu action in the community roles settings tab that immediately removes the right-clicked role from every member. Keep it short.
-#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/OverwriteContextMenu.tsx
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx
 #: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx
 #: src/features/ui/action_menu/RoleContextMenu.tsx
@@ -13139,11 +13150,6 @@ msgstr ""
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "Delete thread"
 msgstr "Удалить тему"
-
-#. Danger action in the channel permissions overwrite context menu that removes a member permission override from the channel.
-#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/OverwriteContextMenu.tsx
-msgid "Delete user"
-msgstr "Удалить пользователя"
 
 #. Danger button label that deletes a webhook.
 #: src/features/webhook/components/WebhookListItem.tsx
@@ -21803,6 +21809,11 @@ msgstr "Приложение Linux"
 msgid "Linux default"
 msgstr "Linux (устройство по умолчанию)"
 
+#. Desktop setting description under the Linux unread app icon badge toggle.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Linux taskbars can only show a number, so unread messages without mentions show as 1. Mentions always show their count."
+msgstr ""
+
 #. Forum layout name shown inside an activity log row.
 #. Forum layout option that shows posts as rows.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
@@ -22504,6 +22515,11 @@ msgstr "Общая громкость"
 msgctxt "code-editor"
 msgid "Match case"
 msgstr "С учётом регистра"
+
+#. Tray icon color option. The app picks white or black from the taskbar or panel color.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Match the taskbar"
+msgstr ""
 
 #: src/features/channel/components/MatureContentChannelGate.tsx
 msgid "Mature category"
@@ -27904,6 +27920,11 @@ msgstr "Выберите, какие кнопки отображаются в п
 msgid "Pick which kinds of conversations to clean up."
 msgstr "Выберите, какие типы бесед нужно удалить."
 
+#. Description under the automatic tray icon color option.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Pick white or black from the color of your taskbar or panel."
+msgstr ""
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
 msgid "Picture"
@@ -28080,6 +28101,11 @@ msgstr "Воспроизвести"
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
 msgid "Play animated emojis"
 msgstr "Воспроизводить анимированные эмодзи"
+
+#. Short label for a toggle in the animation tab. Keep it concise.
+#: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
+msgid "Play GIFs in the GIF picker"
+msgstr "Воспроизводить GIF в панели GIF"
 
 #. Short label in the accessibility tab. Keep it concise.
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx
@@ -30026,6 +30052,11 @@ msgstr "Удалить реакции"
 msgid "Remove reverse image search"
 msgstr "Удалить обратный поиск по изображению"
 
+#. Danger action in the channel permissions overwrite context menu that removes a role permission override from the channel.
+#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/OverwriteContextMenu.tsx
+msgid "Remove role"
+msgstr "Убрать роль"
+
 #. Button or menu action label in the community role management. Keep it concise. Preserve {roleName}; it is inserted by code. Keep the tone plain and specific.
 #: src/features/guild/components/RoleManagement.tsx
 msgid "Remove role {roleName}"
@@ -30071,6 +30102,11 @@ msgstr "Снять тайм-аут"
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx
 msgid "Remove translator"
 msgstr "Удалить переводчик"
+
+#. Danger action in the channel permissions overwrite context menu that removes a member permission override from the channel.
+#: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/OverwriteContextMenu.tsx
+msgid "Remove user"
+msgstr "Убрать пользователя"
 
 #. Description of the switch that hides the purchase date, under the premium badge row in the "Badges" profile settings. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
@@ -39479,6 +39515,11 @@ msgstr "Значок в трее"
 msgid "Tray icon changes only apply after a restart on Linux because the system tray protocol doesn't reliably let apps add or remove icons at runtime. Restart now to apply your change."
 msgstr "Изменения значка в трее применяются только после перезапуска в Linux, потому что протокол системного трея не позволяет приложениям надёжно добавлять или удалять значки во время работы. Перезапустите сейчас, чтобы применить изменения."
 
+#. Desktop settings section title on Windows and Linux for choosing the color of the monochrome system tray icon.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Tray icon color"
+msgstr ""
+
 #. Short label in the channel and chat gif picker grid. Keep it concise.
 #. Short label in the channel and chat gif picker header. Keep it concise.
 #: src/features/channel/components/pickers/gif/GifPickerGrid.tsx
@@ -39802,6 +39843,11 @@ msgstr "Выключить трансляцию"
 #: src/features/streamer_mode/components/StreamerModeGate.tsx
 msgid "Turn off streaming privacy before viewing login or account security details."
 msgstr "Отключите конфиденциальность стрима, прежде чем просматривать данные для входа или сведения о безопасности аккаунта."
+
+#. Section description shown when the colored tray icon is on, so the monochrome color choice has no effect.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "Turn off the colored tray icon to choose a color here."
+msgstr ""
 
 #. Button that turns on the Operator Pass that comes with Visionary, in profile settings and at the bottom of its dialog. Nothing is bought.
 #. Nagbar button that applies quick CSS and saved themes again.
@@ -43410,6 +43456,16 @@ msgstr "При запуске вместе с системой открыват�
 msgid "When launched at login, start in the system tray instead of opening the window"
 msgstr "При запуске вместе с системой, сворачивать в трей вместо открытия окна"
 
+#. Description for the GIF picker animation toggle in the animation tab on desktop.
+#: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
+msgid "When off, GIFs in the picker show a still frame until you hover over them."
+msgstr "Если выключено, GIF в панели показывают неподвижный кадр, пока вы не наведёте на них курсор."
+
+#. Description for the GIF picker animation toggle in the animation tab on mobile.
+#: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx
+msgid "When off, GIFs in the picker show a still frame."
+msgstr "Если выключено, GIF в панели показывают неподвижный кадр."
+
 #. Label in the display tab.
 #: src/features/user/components/modals/tabs/chat_settings_tab/DisplayTab.tsx
 msgid "When posted as links in chat"
@@ -43488,6 +43544,11 @@ msgstr "Пока этот значок скрыт или замаскирова�
 #: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
 msgid "While this badge is hidden, {labsName} shows you without the Operator role, and you keep #operators."
 msgstr "Пока этот значок скрыт, {labsName} показывает вас без роли Operator, а доступ к #operators остаётся."
+
+#. Tray icon color option for a white monochrome tray icon, for dark taskbars and panels.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
+msgid "White"
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts
@@ -43920,11 +43981,6 @@ msgstr "У вас отключён звук"
 #: src/features/user/components/modals/tabs/my_profile_tab/ProfileTypeSelector.tsx
 msgid "You are editing your per-community profile. This profile will only be visible in this community and will override your global profile."
 msgstr "Вы редактируете свой профиль для этого сообщества. Он будет виден только здесь и заменит ваш глобальный профиль."
-
-#. Body text in the settings dialog client info.
-#: src/features/app/components/dialogs/components/ClientInfo.tsx
-msgid "You are now a developer!"
-msgstr "Теперь вы разработчик!"
 
 #. Modal body for the mobile checkout confirmation. Explains that the user is leaving the app to pay.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx

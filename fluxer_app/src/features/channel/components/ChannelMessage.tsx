@@ -40,6 +40,7 @@ import {PersonaPickerPopout} from '@app/features/personas/components/popouts/Per
 import PersonaPickerMobile from '@app/features/personas/state/PersonaPickerMobile';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
 import styles from '@app/features/theme/styles/Message.module.css';
+import {ThreadStarterDivider, ThreadStarterMessage} from '@app/features/threads/components/ThreadSystemMessages';
 import {MessageContextMenu} from '@app/features/ui/action_menu/MessageContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
@@ -670,9 +671,10 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 			onHeadingActivate,
 		],
 	);
+	const messageElement = getMessageComponent(message, channel, forceUnknownMessageType);
 	const messageComponent = (
 		<MessageViewContextProvider value={messageContextValue} data-flx="channel.message.message-view-context-provider">
-			{getMessageComponent(message, channel, forceUnknownMessageType)}
+			{messageElement}
 		</MessageViewContextProvider>
 	);
 	const shouldHideContent =
@@ -846,6 +848,9 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 					)}
 				</div>
 			</FocusRing>
+			{messageElement.type === ThreadStarterMessage && (
+				<ThreadStarterDivider message={message} data-flx="channel.message.thread-starter-divider" />
+			)}
 			{shouldShowBottomSheet && (
 				<MessageActionBottomSheet
 					isOpen={shouldShowBottomSheet}

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {useAccountAvatarURL} from '@app/features/auth/AccountAvatarUtils';
+import {useAccountHoverAvatarURL} from '@app/features/auth/AccountAvatarUtils';
 import {useAccountDisplayIdentityView} from '@app/features/auth/components/accounts/AccountIdentity';
 import {
 	AccountTileConnection,
@@ -180,7 +180,7 @@ const AccountTile = observer(function AccountTile({
 	const accountKey = getAccountKey(account);
 	const isCurrent = accountKey === currentAccountKey;
 	const identity = useAccountDisplayIdentityView(account);
-	const avatarUrl = useAccountAvatarURL(account, mediaSize);
+	const [avatarHoverRef, avatarUrl] = useAccountHoverAvatarURL(account, mediaSize);
 	const instanceBadge = useAccountInstanceBadge(account, knownInstances, showInstance);
 	const activity = getAccountTileActivity(accountKey, isCurrent);
 	const isExpired = account.isValid === false;
@@ -231,6 +231,7 @@ const AccountTile = observer(function AccountTile({
 	return (
 		<AccountSwitcherTileView
 			tile={tile}
+			avatarHoverRef={avatarHoverRef}
 			drag={{
 				isDragging,
 				isReordering: reorder.isReordering,

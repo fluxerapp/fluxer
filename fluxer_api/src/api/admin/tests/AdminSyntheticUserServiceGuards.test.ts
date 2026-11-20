@@ -4,6 +4,7 @@ import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {CrosspostWorkerService} from '@app/api/channel/services/message/CrosspostPropagation';
 import {UserMessageDeletionService} from '@app/api/channel/services/message/UserMessageDeletionService';
+import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
@@ -35,6 +36,7 @@ function createMessageDeletionService(): UserMessageDeletionService {
 		storageService: unusable as IStorageService,
 		purgeQueue: unusable as IPurgeQueue,
 		workerService: unusable as CrosspostWorkerService,
+		guildAuditLogService: unusable as GuildAuditLogService,
 	});
 }
 

@@ -19,7 +19,11 @@ import type {
 import {OAuth2AccessToken} from '@app/api/models/OAuth2AccessToken';
 import {OAuth2AuthorizationCode} from '@app/api/models/OAuth2AuthorizationCode';
 import {OAuth2RefreshToken} from '@app/api/models/OAuth2RefreshToken';
-import {ACCESS_TOKEN_TTL_SECONDS, AUTHORIZATION_CODE_TTL_SECONDS} from '@app/api/oauth/OAuth2TokenConstants';
+import {
+	ACCESS_TOKEN_TTL_SECONDS,
+	AUTHORIZATION_CODE_TTL_SECONDS,
+	REFRESH_TOKEN_TTL_SECONDS,
+} from '@app/api/oauth/OAuth2TokenConstants';
 import {
 	OAuth2AccessTokens,
 	OAuth2AccessTokensByUser,
@@ -30,6 +34,10 @@ import {
 
 function isAccessTokenExpired(createdAt: Date): boolean {
 	return Date.now() - createdAt.getTime() > ACCESS_TOKEN_TTL_SECONDS * 1000;
+}
+
+function isRefreshTokenExpired(createdAt: Date): boolean {
+	return Date.now() - createdAt.getTime() > REFRESH_TOKEN_TTL_SECONDS * 1000;
 }
 
 function isAuthorizationCodeExpired(createdAt: Date): boolean {
@@ -126,8 +134,10 @@ export class OAuth2TokenRepository {
 	}
 
 	async createRefreshToken(data: OAuth2RefreshTokenRow): Promise<OAuth2RefreshToken> {
-		await upsertOne(OAuth2RefreshTokensByUser.insert({user_id: data.user_id, token_: data.token_}));
-		if (!(await executeConditional(OAuth2RefreshTokens.insertIfNotExists(data)))) {
+		await upsertOne(
+			OAuth2RefreshTokensByUser.insertWithTtl({user_id: data.user_id, token_: data.token_}, REFRESH_TOKEN_TTL_SECONDS),
+		);
+		if (!(await executeConditional(OAuth2RefreshTokens.insertIfNotExistsWithTtl(data, REFRESH_TOKEN_TTL_SECONDS)))) {
 			throw new Error('OAuth2 refresh token already exists');
 		}
 		return new OAuth2RefreshToken(data);
@@ -135,7 +145,10 @@ export class OAuth2TokenRepository {
 
 	async getRefreshToken(token: string): Promise<OAuth2RefreshToken | null> {
 		const row = await fetchOne<OAuth2RefreshTokenRow>(SELECT_REFRESH_TOKEN, {token_: token});
-		return row ? new OAuth2RefreshToken(row) : null;
+		if (!row || isRefreshTokenExpired(row.created_at)) {
+			return null;
+		}
+		return new OAuth2RefreshToken(row);
 	}
 
 	async consumeRefreshToken(token: string, applicationId: ApplicationID, userId: UserID): Promise<boolean> {
@@ -174,9 +187,9 @@ export class OAuth2TokenRepository {
 		const staleRefs: Array<string> = [];
 		for (const tokenRef of tokenRefs) {
 			const row = await fetchOne<OAuth2RefreshTokenRow>(SELECT_REFRESH_TOKEN, {token_: tokenRef.token_});
-			if (row) {
+			if (row && !isRefreshTokenExpired(row.created_at)) {
 				tokens.push(new OAuth2RefreshToken(row));
-			} else {
+			} else if (!row) {
 				staleRefs.push(tokenRef.token_);
 			}
 		}

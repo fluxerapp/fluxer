@@ -265,7 +265,7 @@ describe('Channel follow', () => {
 		});
 		await createBuilder(harness, b.owner.token)
 			.get(`/channels/${a.ann.id}/follower-stats`)
-			.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.MISSING_PERMISSIONS)
+			.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.UNKNOWN_CHANNEL)
 			.execute();
 	});
 

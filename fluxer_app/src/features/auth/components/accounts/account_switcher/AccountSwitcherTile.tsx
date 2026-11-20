@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
 import {AccountInstanceBadge} from '@app/features/auth/components/accounts/account_switcher/AccountInstanceBadge';
 import styles from '@app/features/auth/components/accounts/account_switcher/AccountSwitcherTile.module.css';
 import type {AccountInstanceBadgeInfo} from '@app/features/auth/components/accounts/account_switcher/useAccountInstanceBadge';
@@ -63,6 +64,7 @@ const TILE_LAYOUT_TRANSITION = {duration: 0.18, ease: 'easeOut'} as const;
 
 interface AccountSwitcherTileViewProps extends TileInteraction {
 	readonly tile: AccountSwitcherTileModel;
+	readonly avatarHoverRef: React.RefCallback<HTMLElement>;
 	readonly drag: AccountTileDrag;
 	readonly onActivate: (accountKey: string, event: React.MouseEvent<HTMLButtonElement>) => void;
 	readonly onOpenMenu: (accountKey: string, trigger: AccountMenuTrigger) => void;
@@ -191,6 +193,7 @@ function BusyRing(): React.ReactElement {
 
 export function AccountSwitcherTileView({
 	tile,
+	avatarHoverRef,
 	drag,
 	isActive,
 	isManaging,
@@ -205,6 +208,7 @@ export function AccountSwitcherTileView({
 	const frameRef = useRef<HTMLSpanElement | null>(null);
 	const maskId = useId();
 	const cutoutMask = useAvatarBadgeCutouts(frameRef, tileBadgeKey(tile));
+	const buttonRef = useMergeRefs<HTMLElement>([drag.dragRef, avatarHoverRef]);
 	return (
 		<motion.li
 			ref={drag.dropRef}
@@ -216,7 +220,7 @@ export function AccountSwitcherTileView({
 		>
 			<FocusRing offset={-8} data-flx="auth.accounts.account-switcher.tile.focus-ring">
 				<button
-					ref={drag.dragRef}
+					ref={buttonRef}
 					type="button"
 					className={clsx(
 						styles.tile,

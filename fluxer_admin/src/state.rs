@@ -12,7 +12,9 @@ use crate::{
     sso::{self, ProviderMetadata},
 };
 use anyhow::Context as _;
+use sha2::{Digest, Sha256};
 use std::{
+    collections::{HashSet, VecDeque},
     sync::{Arc, Mutex},
     time::{Duration, Instant},
 };
@@ -21,6 +23,8 @@ const PREMIUM_BRANDING_TTL: Duration = Duration::from_secs(60);
 const ACCOUNT_IDENTITY_TTL: Duration = Duration::from_secs(60);
 const ACCOUNT_IDENTITY_RETRY_TTL: Duration = Duration::from_secs(10);
 const SSO_DISCOVERY_TTL: Duration = Duration::from_secs(3600);
+pub const SIGN_IN_FLOW_TTL: Duration = Duration::from_secs(600);
+const MAX_CLAIMED_SIGN_IN_FLOWS: usize = 100_000;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -35,6 +39,34 @@ struct AppStateInner {
     account_identity: Mutex<Option<(Instant, AccountIdentitySettings)>>,
     report_reasons: Mutex<Option<Arc<[ReportReasonEntry]>>>,
     sso_provider: Mutex<Option<(Instant, ProviderMetadata)>>,
+    claimed_sign_in_flows: Mutex<ClaimedSignInFlows>,
+}
+
+#[derive(Default)]
+struct ClaimedSignInFlows {
+    keys: HashSet<[u8; 32]>,
+    by_expiry: VecDeque<(Instant, [u8; 32])>,
+}
+
+impl ClaimedSignInFlows {
+    fn claim(&mut self, key: [u8; 32], now: Instant) -> bool {
+        while let Some(&(expires_at, expired)) = self.by_expiry.front() {
+            if expires_at > now {
+                break;
+            }
+            self.by_expiry.pop_front();
+            self.keys.remove(&expired);
+        }
+        if self.keys.contains(&key) {
+            return false;
+        }
+        if self.keys.len() >= MAX_CLAIMED_SIGN_IN_FLOWS {
+            return true;
+        }
+        self.keys.insert(key);
+        self.by_expiry.push_back((now + SIGN_IN_FLOW_TTL, key));
+        true
+    }
 }
 
 impl AppState {
@@ -57,6 +89,7 @@ impl AppState {
                 account_identity: Mutex::new(None),
                 report_reasons: Mutex::new(None),
                 sso_provider: Mutex::new(None),
+                claimed_sign_in_flows: Mutex::new(ClaimedSignInFlows::default()),
             }),
         })
     }
@@ -71,6 +104,15 @@ impl AppState {
 
     pub fn sso_http_client(&self) -> &reqwest::Client {
         &self.inner.sso_http_client
+    }
+
+    pub fn claim_sign_in_flow(&self, verifier: &str) -> bool {
+        let key: [u8; 32] = Sha256::digest(verifier.as_bytes()).into();
+        self.inner
+            .claimed_sign_in_flows
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .claim(key, Instant::now())
     }
 
     pub fn cached_premium_branding(&self) -> Option<PremiumBranding> {

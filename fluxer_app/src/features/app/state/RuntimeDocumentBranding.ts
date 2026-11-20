@@ -121,6 +121,12 @@ function removeMeta(name: string): void {
 	brandedMeta(name)?.remove();
 }
 
+export function syncThemeColorMeta(): void {
+	if (typeof document === 'undefined') return;
+	const meta = document.head.querySelector<HTMLMetaElement>('meta[name="theme-color"]:not([data-fluxer-branding])');
+	if (meta !== null) meta.content = getComputedStyle(document.documentElement).backgroundColor;
+}
+
 export function getDocumentFavicons(appPublic: InstanceAppPublic | null): DocumentFavicons {
 	if (appPublic === null) return {light: DEFAULT_APP_SHELL_BRANDING.faviconUrl, dark: null};
 	return {
@@ -136,11 +142,7 @@ export function applyRuntimeDocumentBranding(appPublic: InstanceAppPublic): void
 	setMeta('application-name', productName);
 	setMeta('apple-mobile-web-app-title', productName);
 	applyFavicons(getDocumentFavicons(appPublic));
-	if (appPublic.branding.theme_color === null) {
-		removeMeta('theme-color');
-	} else {
-		setMeta('theme-color', appPublic.branding.theme_color);
-	}
+	removeMeta('theme-color');
 }
 
 export function applyServedDocumentBranding(): void {

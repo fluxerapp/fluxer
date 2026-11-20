@@ -21807,6 +21807,16 @@
 							"$ref": "#/components/schemas/SnowflakeType"
 						},
 						"description": "Get mentions before this message ID"
+					},
+					{
+						"name": "guild_id",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Community to list mentions from when guilds is false",
+							"$ref": "#/components/schemas/SnowflakeType"
+						},
+						"description": "Community to list mentions from when guilds is false"
 					}
 				]
 			}
@@ -35609,10 +35619,13 @@
 						"description": "The number of seconds until the access token expires",
 						"$ref": "#/components/schemas/Int32Type"
 					},
-					"refresh_token": {"type": "string", "description": "The refresh token for obtaining new access tokens"},
+					"refresh_token": {
+						"description": "The refresh token for obtaining new access tokens. Not issued to every client",
+						"type": "string"
+					},
 					"scope": {"type": "string", "description": "The space-separated list of granted scopes"}
 				},
-				"required": ["access_token", "token_type", "expires_in", "refresh_token", "scope"],
+				"required": ["access_token", "token_type", "expires_in", "scope"],
 				"additionalProperties": false
 			},
 			"IntrospectRequestForm": {
@@ -35658,11 +35671,9 @@
 					"permissions": {"description": "The bot permissions to request", "type": "string"},
 					"code_challenge": {"description": "The PKCE code challenge", "type": "string"},
 					"code_challenge_method": {
-						"description": "The PKCE code challenge method",
-						"x-enumNames": ["S256", "PLAIN"],
-						"x-enumDescriptions": ["SHA-256 hash of code verifier", "Plain text code verifier"],
-						"enum": ["S256", "plain"],
-						"type": "string"
+						"description": "The PKCE code challenge method, must be \"S256\"",
+						"type": "string",
+						"const": "S256"
 					}
 				},
 				"required": ["client_id", "scope"]

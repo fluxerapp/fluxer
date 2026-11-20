@@ -146,7 +146,7 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 	} | null>(null);
 
 	const currentUser = Users.getCurrentUser();
-	const lastMessage = Messages.getCachedMessages(channel.id)?.last();
+	const lastMessage = Messages.getCachedMessages(channel.id)?.newest();
 	const leaveGroup = useLeaveGroup();
 	const {keyboardModeEnabled} = KeyboardMode;
 	const [isFocused, setIsFocused] = useState(false);

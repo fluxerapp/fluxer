@@ -443,6 +443,11 @@ export class ChannelMessages {
 		return this.messageList[this.messageList.length - 1];
 	}
 
+	newest(): Message | undefined {
+		if (!this.hasMoreAfter) return this.last();
+		return this.afterBuffer.isBoundary ? this.afterBuffer.messages.at(-1) : undefined;
+	}
+
 	get(id: string, checkBuffers = false): Message | undefined {
 		const local = Object.hasOwn(this.messageIndex, id) ? this.messageIndex[id] : undefined;
 		if (local || !checkBuffers) return local;

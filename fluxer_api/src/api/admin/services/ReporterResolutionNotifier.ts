@@ -41,9 +41,14 @@ function skippedNotice(reason: ReporterNoticeSkipReason): ReporterNoticeResult {
 	return {dmSent: false, emailSent: false, dsaEmailSent: false, skipped: reason};
 }
 
+function isWellbeingConcern(report: IARSubmission): boolean {
+	return report.reason === null ? report.category === 'self_harm' : report.reason === 'wellbeing_concern';
+}
+
 export function reportReference(report: IARSubmission): ReportReference {
 	const reference: ReportReference = {
 		target: 'other',
+		concern: isWellbeingConcern(report) ? 'self_harm' : 'other',
 		reportedAt: report.reportedAt,
 		username: '',
 		communityName: '',

@@ -8,9 +8,12 @@ use crate::{
     metrics::transform::TransformMetrics,
     native::{self, NativeStatus},
     output_format::OutputFormat,
-    test_fixtures::{synthetic_png, synthetic_png16},
+    test_fixtures::{
+        red_jpeg_tagged_with_swapped_red_and_blue_primaries, synthetic_png, synthetic_png16,
+    },
 };
-use std::ffi::CString;
+use libc::{c_void, size_t};
+use std::{ffi::CString, ptr};
 
 fn transformed(input: &[u8], options: ImageOptions) -> Vec<u8> {
     transform_image(
@@ -51,6 +54,60 @@ fn sixteen_bit_png_cover_resize_encodes_eight_bit_png() {
     );
     assert_eq!(b"\x89PNG\r\n\x1a\n", &png[..8]);
     assert_eq!(8, png[24]);
+}
+
+fn centre_rgba(encoded: &[u8]) -> [u8; 4] {
+    let options = CString::default();
+    let raw = unsafe {
+        native::fluxer_vips_image_new_from_buffer(
+            encoded.as_ptr().cast(),
+            encoded.len(),
+            options.as_ptr(),
+        )
+    };
+    let image = unsafe { native::VipsImageHandle::from_raw_borrowing(raw, encoded) }
+        .expect("the output decodes");
+    let width = unsafe { native::fluxer_vips_image_get_width(image.as_ptr()) } as usize;
+    let height = unsafe { native::fluxer_vips_image_get_height(image.as_ptr()) } as usize;
+    let mut out_ptr: *mut c_void = ptr::null_mut();
+    let mut out_size: size_t = 0;
+    let rc =
+        unsafe { native::fluxer_vips_extract_rgba(image.as_ptr(), 0, &mut out_ptr, &mut out_size) };
+    assert_eq!(0, rc);
+    let rgba = unsafe { native::buffer::NativeBuffer::from_vips_owned(out_ptr, out_size) }
+        .unwrap()
+        .try_to_vec()
+        .unwrap();
+    let centre = ((height / 2) * width + width / 2) * 4;
+    rgba[centre..centre + 4].try_into().unwrap()
+}
+
+#[test]
+fn embedded_icc_profile_is_converted_to_srgb_in_every_transform_path() {
+    let input = red_jpeg_tagged_with_swapped_red_and_blue_primaries(64, 48);
+    for (width, height, resize_mode) in [
+        (None, None, ResizeMode::Fit),
+        (Some(32), None, ResizeMode::Fit),
+        (Some(32), Some(32), ResizeMode::Cover),
+    ] {
+        for format in [OutputFormat::JPEG, OutputFormat::PNG, OutputFormat::WebP] {
+            let [red, _, blue, _] = centre_rgba(&transformed(
+                &input,
+                ImageOptions {
+                    width,
+                    height,
+                    format,
+                    quality: ImageQuality::High,
+                    resize_mode,
+                    ..Default::default()
+                },
+            ));
+            assert!(
+                blue > 200 && red < 80,
+                "{format:?} {width:?}x{height:?} {resize_mode:?} renders the tagged red as blue, got red {red} blue {blue}"
+            );
+        }
+    }
 }
 
 #[test]

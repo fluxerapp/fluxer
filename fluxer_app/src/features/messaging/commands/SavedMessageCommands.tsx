@@ -8,6 +8,8 @@ import SavedMessages from '@app/features/messaging/state/SavedMessages';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {failureCode} from '@app/features/platform/utils/ResponseInspection';
+import {loadThreadsForMessages} from '@app/features/threads/commands/ThreadCommands';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
@@ -93,7 +95,11 @@ async function runSavedMessagesFetch(
 	const requestId = SavedMessages.handleFetchPending();
 	try {
 		logger.debug(label);
-		const entries = savedMessageEntries(await requestSavedMessages(options));
+		const data = await requestSavedMessages(options);
+		if (ThreadGuilds.anyActive) {
+			await loadThreadsForMessages(data.flatMap((entry) => entry.message ?? []));
+		}
+		const entries = savedMessageEntries(data);
 		SavedMessages.fetchSuccess(requestId, entries, append);
 		logger.debug(`Successfully fetched ${entries.length} saved messages`);
 		return entries;

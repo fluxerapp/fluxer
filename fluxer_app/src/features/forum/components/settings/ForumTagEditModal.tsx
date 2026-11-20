@@ -80,6 +80,7 @@ export const ForumTagEditModal = observer(({forumId, tagId}: {forumId: string; t
 							render={({onClose}) => (
 								<EmojiPickerPopout
 									channelId={forum.id}
+									roleIconGuildId={forum.guildId}
 									handleSelect={(picked) => setEmoji(forumEmojiFromPicker(picked))}
 									onClose={onClose}
 									data-flx="forum.settings.forum-tag-edit-modal.emoji-picker-popout"

@@ -20,6 +20,7 @@ import {MediaVerticalVolumeControl} from '@app/features/voice/components/media_p
 import {useMediaPlayer} from '@app/features/voice/components/media_player/hooks/useMediaPlayer';
 import {useMediaProgress} from '@app/features/voice/components/media_player/hooks/useMediaProgress';
 import {useMediaVolume} from '@app/features/voice/components/media_player/hooks/useMediaVolume';
+import {resolveStoredMediaDuration} from '@app/features/voice/components/media_player/utils/MediaSeekUtils';
 import type {MessageAttachment} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -135,6 +136,7 @@ const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = observer(
 		const {currentTime, duration, progress, seekToPercentage} = useMediaProgress({
 			mediaRef,
 			initialDuration: initialDuration ?? 0,
+			preferInitialDuration: true,
 		});
 		const {volume, isMuted, setVolume, toggleMute} = useMediaVolume({
 			mediaRef,
@@ -205,7 +207,8 @@ const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = observer(
 				if (pendingSeekPercentageRef.current === null || !Number.isFinite(media.duration) || media.duration <= 0) {
 					return;
 				}
-				const seekTime = (pendingSeekPercentageRef.current / 100) * media.duration;
+				const seekTime =
+					(pendingSeekPercentageRef.current / 100) * resolveStoredMediaDuration(media.duration, initialDuration ?? 0);
 				media.currentTime = seekTime;
 				setPrePlayCurrentTime(seekTime);
 				pendingSeekPercentageRef.current = null;
@@ -217,7 +220,7 @@ const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = observer(
 				media.removeEventListener('loadedmetadata', applyPendingSeek);
 				media.removeEventListener('durationchange', applyPendingSeek);
 			};
-		}, [hasStarted, mediaRef]);
+		}, [hasStarted, initialDuration, mediaRef]);
 		const handleContainerMouseEnter = useCallback(() => {
 			setWantsMetadata(true);
 		}, []);

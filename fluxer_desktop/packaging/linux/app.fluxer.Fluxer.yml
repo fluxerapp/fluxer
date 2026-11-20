@@ -19,8 +19,15 @@ finish-args:
   - --filesystem=xdg-download
   - --filesystem=xdg-run/pipewire-0:ro
   - --filesystem=xdg-run/speech-dispatcher:ro
+  - --filesystem=xdg-config/kdeglobals:ro
+  - --filesystem=xdg-config/plasmarc:ro
+  - --filesystem=xdg-data/plasma/desktoptheme:ro
   - --talk-name=org.freedesktop.Notifications
+  - --talk-name=org.freedesktop.secrets
+  - --talk-name=org.kde.kwalletd5
+  - --talk-name=org.kde.kwalletd6
   - --talk-name=org.kde.StatusNotifierWatcher
+  - --talk-name=com.canonical.Unity
   - --talk-name=org.ayatana.indicator.application
   - --talk-name=com.canonical.indicator.application
   - --talk-name=org.gnome.Mutter.IdleMonitor

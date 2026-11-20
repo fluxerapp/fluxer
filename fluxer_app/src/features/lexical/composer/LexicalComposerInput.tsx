@@ -33,6 +33,7 @@ import {
 import {ComposerTypeaheadPlugin} from '@app/features/lexical/composer/ComposerTypeaheadPlugin';
 import {
 	$captureSelectionOffsets,
+	$expandComposerSelectionToLines,
 	$getComposerDisplayText,
 	$getComposerSelectionRange,
 	$getTextUpToCursor,
@@ -149,6 +150,7 @@ export interface LexicalComposerInputProps {
 	focusRingEnabled?: boolean;
 	className?: string;
 	id?: string;
+	tabIndex?: number;
 	ariaLabel?: string;
 	ariaLabelledBy?: string;
 	ariaDescribedBy?: string;
@@ -241,6 +243,7 @@ const ComposerInner = ({
 	focusRingEnabled = false,
 	className,
 	id,
+	tabIndex,
 	ariaLabel,
 	ariaLabelledBy,
 	ariaDescribedBy,
@@ -520,10 +523,14 @@ const ComposerInner = ({
 				cleanups.push(registerComposerBlockquote(editor, markdownParserFlags));
 			}
 			cleanups.push(
-				registerComposerEmojiShortcode(editor, (shortcodeName) => {
-					const resolver = emojiResolverRef.current;
-					return resolver == null ? null : resolver(shortcodeName);
-				}),
+				registerComposerEmojiShortcode(
+					editor,
+					(shortcodeName) => {
+						const resolver = emojiResolverRef.current;
+						return resolver == null ? null : resolver(shortcodeName);
+					},
+					markdownParserFlags,
+				),
 			);
 		}
 		const modeChanged = previousPlainTextRef.current !== plainText;
@@ -705,6 +712,20 @@ const ComposerInner = ({
 		},
 		[editor],
 	);
+	const handleEditableClick = useCallback(
+		(event: React.MouseEvent<HTMLElement>) => {
+			if (event.detail !== 3 || event.button !== 0) {
+				return;
+			}
+			editor.update(
+				() => {
+					$expandComposerSelectionToLines();
+				},
+				{discrete: true},
+			);
+		},
+		[editor],
+	);
 	const handleEditableContextMenu = useCallback(
 		(event: React.MouseEvent<HTMLElement>) => {
 			const target = event.target instanceof Element ? event.target : null;
@@ -752,8 +773,10 @@ const ComposerInner = ({
 							className={clsx(styles.editable, className)}
 							id={id}
 							spellCheck
+							tabIndex={tabIndex}
 							onKeyDown={handleEditableKeyDown}
 							onPointerDown={handleEditablePointerDown}
+							onClick={handleEditableClick}
 							onContextMenu={handleEditableContextMenu}
 							onFocus={onFocus}
 							onBlur={onBlur}

@@ -115,6 +115,19 @@ describe('thread message lifecycle', () => {
 		await threadFromMessage(s, source.id);
 	});
 
+	it('purges thread messages on delete so a new thread on the same message starts empty', async () => {
+		const s = await setup();
+		const source = await sendMessage(harness, s.member.token, s.channelId, 'source');
+		const first = await threadFromMessage(s, source.id);
+		for (const content of ['one', 'two', 'three']) await send(s.member.token, first.id, content);
+		await threadsRequest(harness, s.owner.token).delete(`/channels/${first.id}`).expect(204).execute();
+		expect(await repository.messages.listMessages(createChannelID(BigInt(first.id)))).toHaveLength(0);
+		const second = await threadFromMessage(s, source.id);
+		const messages = await page(s.member.token, second.id, 'limit=50');
+		expect(messages.filter((message) => message.type !== MessageTypes.THREAD_STARTER_MESSAGE)).toHaveLength(0);
+		expect(await messageCount(s.member.token, second.id)).toBe(0);
+	});
+
 	it('keeps the thread message count in step with admin and bulk deletes', async () => {
 		const s = await setup();
 		const source = await sendMessage(harness, s.owner.token, s.channelId, 'source');

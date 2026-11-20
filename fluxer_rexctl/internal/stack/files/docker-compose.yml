@@ -288,9 +288,9 @@ services:
       FLUXER_EDGE_TLS_DIRECTIVE: ${FLUXER_EDGE_TLS:+tls ${FLUXER_EDGE_TLS:-}}
       FLUXER_ADMIN_BASE_PATH: ${FLUXER_ADMIN_BASE_PATH:-/admin}
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./certs:/certs:ro
-      - ./caddy.d:/etc/caddy/conf.d:ro
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro,z
+      - ./certs:/certs:ro,z
+      - ./caddy.d:/etc/caddy/conf.d:ro,z
       - edge-data:/data
       - edge-config:/config
     healthcheck:
@@ -548,7 +548,7 @@ services:
       FLUXER_API_EMBEDDED_WORKER: "${FLUXER_API_EMBEDDED_WORKER:-false}"
       FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64: ${FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64:-}
     volumes:
-      - ./ca:/etc/fluxer/ca:ro
+      - ./ca:/etc/fluxer/ca:ro,z
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080 && printf \"GET /_health HTTP/1.0\\r\\nHost: 127.0.0.1\\r\\n\\r\\n\" >&3 && head -n 1 <&3 | grep -q \" 200 \"'"]
       <<: *fluxer-app-healthcheck
@@ -584,7 +584,7 @@ services:
       FLUXER_WORKER_POSTGRES_SYNCHRONOUS_COMMIT: "${FLUXER_WORKER_POSTGRES_SYNCHRONOUS_COMMIT:-}"
       FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64: ${FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64:-}
     volumes:
-      - ./ca:/etc/fluxer/ca:ro
+      - ./ca:/etc/fluxer/ca:ro,z
     healthcheck:
       test: ["CMD-SHELL", "find /tmp/fluxer-worker-heartbeat -newermt '-30 seconds' | grep -q ."]
       <<: *fluxer-app-healthcheck

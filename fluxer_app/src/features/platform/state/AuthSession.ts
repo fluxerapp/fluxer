@@ -216,6 +216,10 @@ export class AuthSessionManager {
 		await this.deps.credentialMirror.persist(this.accountPersistence.pointer(resolved.account));
 	}
 
+	async startSignedOutOnNextStart(): Promise<void> {
+		await this.deps.credentialMirror.persist(emptyStoredSessionMirror());
+	}
+
 	get currentAccount(): Account | null {
 		const accountKey = this.currentAccountKey;
 		if (accountKey === null) return null;
@@ -228,10 +232,6 @@ export class AuthSessionManager {
 
 	getAccount(accountKey: string): Account | null {
 		return this.accountCatalog.resolve(this.accounts, accountKey)?.account ?? null;
-	}
-
-	requireSwitchableAccount(accountKey: string): Account {
-		return this.accountCatalog.requireSwitchTarget(this.accounts, this.currentAccountKey, accountKey).account;
 	}
 
 	private send(event: AuthSessionMachineEvent): void {

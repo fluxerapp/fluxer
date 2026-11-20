@@ -141,7 +141,9 @@ class DeveloperOptions implements DeveloperOptionsState {
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		initializeStore(this, () => this.initPersistence());
+		if (import.meta.env.DEV) {
+			initializeStore(this, () => this.initPersistence());
+		}
 	}
 
 	private async initPersistence(): Promise<void> {
@@ -195,6 +197,9 @@ class DeveloperOptions implements DeveloperOptionsState {
 		key: K,
 		value: DeveloperOptionsState[K],
 	): void {
+		if (!import.meta.env.DEV) {
+			return;
+		}
 		(this as MutableDeveloperOptionsState)[key] = value;
 	}
 }

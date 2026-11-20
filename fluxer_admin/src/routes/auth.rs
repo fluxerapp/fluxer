@@ -6,11 +6,11 @@ use crate::{
     middleware::csrf,
     oauth2,
     session::{
-        self, SESSION_COOKIE_NAME, SESSION_MAX_AGE, admin_cookie_path, append_cookies,
-        clear_cookie_values,
+        self, SESSION_COOKIE_NAME, SESSION_MAX_AGE, admin_cookie_path, append_cookie,
+        append_cookies, clear_cookie_values,
     },
     sso,
-    state::AppState,
+    state::{AppState, SIGN_IN_FLOW_TTL},
     templates::{layout_scripts::HISTORY_CACHE_CLEAR_SCRIPT, pages::login},
 };
 use axum::{
@@ -29,13 +29,14 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 type HmacSha256 = Hmac<Sha256>;
 
-const OAUTH_STATE_MAX_AGE_SECONDS: u64 = 1800;
 const OAUTH_STATE_NONCE_BYTES: usize = 16;
 const OAUTH_STATE_VERIFIER_HASH_BYTES: usize = 32;
 const OAUTH_STATE_PAYLOAD_BYTES: usize =
     std::mem::size_of::<u64>() + OAUTH_STATE_NONCE_BYTES + OAUTH_STATE_VERIFIER_HASH_BYTES;
 const OAUTH_FLOW_STORAGE_KEY: &str = "fluxer-admin-oauth-flow";
 const SSO_FLOW_STORAGE_KEY: &str = "fluxer-admin-sso-flow";
+const OAUTH_FLOW_COOKIE: &str = "admin_oauth_flow";
+const SSO_FLOW_COOKIE: &str = "admin_sso_flow";
 const OAUTH_FINISH_HEADER: &str = "x-fluxer-admin-oauth";
 const OAUTH_STATE_PURPOSE: &str = "oauth";
 const SSO_STATE_PURPOSE: &str = "sso";
@@ -59,7 +60,6 @@ struct CallbackQuery {
 struct CallbackFinishBody {
     code: String,
     state: String,
-    verifier: String,
     iss: Option<String>,
 }
 
@@ -108,16 +108,21 @@ async fn auth_start(State(state): State<AppState>) -> Response {
     }
     let verifier = random_nonce();
     let oauth_state = generate_oauth_state(&config.secret_key_base, OAUTH_STATE_PURPOSE, &verifier);
-    let authorize_url = oauth2::authorize_url(config, &oauth_state);
-    Html(oauth_start_page(
+    let authorize_url =
+        oauth2::authorize_url(config, &oauth_state, &sso::code_challenge(&verifier));
+    let mut response = Html(oauth_start_page(
         config,
         OAUTH_FLOW_STORAGE_KEY,
         OAUTH_FAILED,
         &authorize_url,
         &oauth_state,
-        &verifier,
     ))
-    .into_response()
+    .into_response();
+    append_cookie(
+        &mut response,
+        &flow_cookie(config, OAUTH_FLOW_COOKIE, OAUTH_STATE_PURPOSE, &verifier),
+    );
+    response
 }
 
 async fn sso_start(State(state): State<AppState>) -> Response {
@@ -144,15 +149,19 @@ async fn sso_start(State(state): State<AppState>) -> Response {
             return Redirect::to(&format!("{base}/login?error={SSO_UNAVAILABLE}")).into_response();
         }
     };
-    Html(oauth_start_page(
+    let mut response = Html(oauth_start_page(
         config,
         SSO_FLOW_STORAGE_KEY,
         SSO_FAILED,
         &authorize_url,
         &sso_state,
-        &verifier,
     ))
-    .into_response()
+    .into_response();
+    append_cookie(
+        &mut response,
+        &flow_cookie(config, SSO_FLOW_COOKIE, SSO_STATE_PURPOSE, &verifier),
+    );
+    response
 }
 
 async fn sso_callback_page(
@@ -179,6 +188,19 @@ async fn sso_callback_finish(
     headers: HeaderMap,
     Json(body): Json<CallbackFinishBody>,
 ) -> Response {
+    let mut response = sso_callback_attempt(&state, &headers, body).await;
+    append_cookies(
+        &mut response,
+        &clear_cookie_values(SSO_FLOW_COOKIE, state.config()),
+    );
+    response
+}
+
+async fn sso_callback_attempt(
+    state: &AppState,
+    headers: &HeaderMap,
+    body: CallbackFinishBody,
+) -> Response {
     let config = state.config();
     let base = &config.base_path;
     let failed = |status: StatusCode, code: &str| {
@@ -188,18 +210,19 @@ async fn sso_callback_finish(
     let Some(sso_config) = config.sso.as_ref() else {
         return failed(StatusCode::NOT_FOUND, SSO_FAILED);
     };
-    if !has_finish_header(&headers) {
+    if !has_finish_header(headers) {
         return failed(StatusCode::FORBIDDEN, SSO_FAILED);
     }
-    if !verify_oauth_state(
-        &config.secret_key_base,
+    let Some(verifier) = claim_sign_in_flow(
+        state,
+        headers,
+        SSO_FLOW_COOKIE,
         SSO_STATE_PURPOSE,
         &body.state,
-        &body.verifier,
-    ) {
-        tracing::error!("SSO state token is invalid, expired, or malformed");
+    ) else {
+        tracing::error!("SSO state token is missing, reused, invalid, expired, or malformed");
         return failed(StatusCode::BAD_REQUEST, SSO_FAILED);
-    }
+    };
     if let Some(iss) = body.iss.as_deref().filter(|iss| !iss.is_empty())
         && iss.trim_end_matches('/') != sso_config.issuer.trim_end_matches('/')
     {
@@ -214,7 +237,7 @@ async fn sso_callback_finish(
         &metadata,
         sso_config,
         &body.code,
-        &body.verifier,
+        &verifier,
     )
     .await
     {
@@ -224,7 +247,7 @@ async fn sso_callback_finish(
             return failed(StatusCode::BAD_REQUEST, SSO_FAILED);
         }
     };
-    let nonce = sso::nonce(&config.secret_key_base, &body.verifier);
+    let nonce = sso::nonce(&config.secret_key_base, &verifier);
     let signed_in = match sso::sign_in(state.http_client(), config, &id_token, &nonce).await {
         Ok(signed_in) => signed_in,
         Err(err) => {
@@ -237,7 +260,7 @@ async fn sso_callback_finish(
             return failed(StatusCode::BAD_GATEWAY, code);
         }
     };
-    finish_admin_sign_in(&state, &signed_in.user_id, &signed_in.access_token).await
+    finish_admin_sign_in(state, &signed_in.user_id, &signed_in.access_token).await
 }
 
 fn has_finish_header(headers: &HeaderMap) -> bool {
@@ -271,6 +294,19 @@ async fn oauth2_callback_finish(
     headers: HeaderMap,
     Json(body): Json<CallbackFinishBody>,
 ) -> Response {
+    let mut response = oauth2_callback_attempt(&state, &headers, body).await;
+    append_cookies(
+        &mut response,
+        &clear_cookie_values(OAUTH_FLOW_COOKIE, state.config()),
+    );
+    response
+}
+
+async fn oauth2_callback_attempt(
+    state: &AppState,
+    headers: &HeaderMap,
+    body: CallbackFinishBody,
+) -> Response {
     let config = state.config();
     let base = &config.base_path;
 
@@ -282,7 +318,7 @@ async fn oauth2_callback_finish(
         );
     }
 
-    if !has_finish_header(&headers) {
+    if !has_finish_header(headers) {
         return oauth_finish_response(
             StatusCode::FORBIDDEN,
             &format!("{base}/login?error=oauth_failed"),
@@ -290,31 +326,33 @@ async fn oauth2_callback_finish(
         );
     }
 
-    if !verify_oauth_state(
-        &config.secret_key_base,
+    let Some(verifier) = claim_sign_in_flow(
+        state,
+        headers,
+        OAUTH_FLOW_COOKIE,
         OAUTH_STATE_PURPOSE,
         &body.state,
-        &body.verifier,
-    ) {
-        tracing::error!("OAuth2 state token is invalid, expired, or malformed");
+    ) else {
+        tracing::error!("OAuth2 state token is missing, reused, invalid, expired, or malformed");
         return oauth_finish_response(
             StatusCode::BAD_REQUEST,
             &format!("{base}/login?error=oauth_failed"),
             &[],
         );
-    }
-
-    let token = match oauth2::exchange_code(state.http_client(), config, &body.code).await {
-        Ok(t) => t,
-        Err(err) => {
-            tracing::error!(%err, "OAuth2 token exchange failed");
-            return oauth_finish_response(
-                StatusCode::BAD_REQUEST,
-                &format!("{base}/login?error=oauth_failed"),
-                &[],
-            );
-        }
     };
+
+    let token =
+        match oauth2::exchange_code(state.http_client(), config, &body.code, &verifier).await {
+            Ok(t) => t,
+            Err(err) => {
+                tracing::error!(%err, "OAuth2 token exchange failed");
+                return oauth_finish_response(
+                    StatusCode::BAD_REQUEST,
+                    &format!("{base}/login?error=oauth_failed"),
+                    &[],
+                );
+            }
+        };
 
     let user = match oauth2::fetch_user_info(state.http_client(), config, &token.access_token).await
     {
@@ -329,7 +367,51 @@ async fn oauth2_callback_finish(
         }
     };
 
-    finish_admin_sign_in(&state, &user.id, &token.access_token).await
+    finish_admin_sign_in(state, &user.id, &token.access_token).await
+}
+
+fn flow_cookie_purpose(purpose: &str) -> String {
+    format!("{purpose}-cookie")
+}
+
+fn flow_cookie_value(secret_key: &str, purpose: &str, verifier: &str) -> String {
+    let signed = generate_oauth_state(secret_key, &flow_cookie_purpose(purpose), verifier);
+    format!("{verifier}.{signed}")
+}
+
+fn issued_flow_verifier(secret_key: &str, purpose: &str, cookie_value: &str) -> Option<String> {
+    let (verifier, signed) = cookie_value.split_once('.')?;
+    verify_oauth_state(secret_key, &flow_cookie_purpose(purpose), signed, verifier)
+        .then(|| verifier.to_owned())
+}
+
+fn flow_cookie(config: &AdminConfig, name: &str, purpose: &str, verifier: &str) -> String {
+    let secure = if config.secure_cookies() {
+        "; Secure"
+    } else {
+        ""
+    };
+    let value = flow_cookie_value(&config.secret_key_base, purpose, verifier);
+    format!(
+        "{name}={value}; Path={}; HttpOnly; SameSite=Lax; Max-Age={}{secure}",
+        admin_cookie_path(config),
+        SIGN_IN_FLOW_TTL.as_secs()
+    )
+}
+
+fn claim_sign_in_flow(
+    state: &AppState,
+    headers: &HeaderMap,
+    cookie_name: &str,
+    purpose: &str,
+    oauth_state: &str,
+) -> Option<String> {
+    let secret_key = &state.config().secret_key_base;
+    let verifier =
+        issued_flow_verifier(secret_key, purpose, &extract_cookie(headers, cookie_name)?)?;
+    (verify_oauth_state(secret_key, purpose, oauth_state, &verifier)
+        && state.claim_sign_in_flow(&verifier))
+    .then_some(verifier)
 }
 
 async fn finish_admin_sign_in(state: &AppState, user_id: &str, access_token: &str) -> Response {
@@ -421,13 +503,11 @@ fn oauth_start_page(
     failure_code: &str,
     authorize_url: &str,
     state: &str,
-    verifier: &str,
 ) -> String {
     let storage_key = json_string(storage_key);
     let authorize_url = json_string(authorize_url);
     let login_url = json_string(&format!("{}/login?error={failure_code}", config.base_path));
     let state = json_string(state);
-    let verifier = json_string(verifier);
     format!(
         r#"<!doctype html>
 <html lang="en">
@@ -441,7 +521,7 @@ fn oauth_start_page(
 <script>
 {HISTORY_CACHE_CLEAR_SCRIPT}
 (function () {{
-	var flow = {{state: {state}, verifier: {verifier}, createdAt: Date.now()}};
+	var flow = {{state: {state}, createdAt: Date.now()}};
 	try {{
 		window.sessionStorage.setItem({storage_key}, JSON.stringify(flow));
 		window.location.replace({authorize_url});
@@ -501,7 +581,7 @@ fn oauth_callback_page(
 	}} catch (error) {{
 		flow = null;
 	}}
-	if (!flow || flow.state !== state || !flow.verifier) {{
+	if (!flow || flow.state !== state) {{
 		fail(false);
 		return;
 	}}
@@ -513,7 +593,7 @@ fn oauth_callback_page(
 			'Content-Type': 'application/json',
 			'X-Fluxer-Admin-OAuth': '1'
 		}},
-		body: JSON.stringify({{code: code, state: state, verifier: flow.verifier, iss: iss}})
+		body: JSON.stringify({{code: code, state: state, iss: iss}})
 	}})
 		.then(function (response) {{
 			return response.json().catch(function () {{ return null; }});
@@ -609,7 +689,7 @@ fn verify_oauth_state(secret_key: &str, purpose: &str, state: &str, verifier: &s
         return false;
     }
     let now = now_seconds();
-    issued_at <= now && now - issued_at <= OAUTH_STATE_MAX_AGE_SECONDS
+    issued_at <= now && now - issued_at <= SIGN_IN_FLOW_TTL.as_secs()
 }
 
 fn encode_oauth_state_payload(

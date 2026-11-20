@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ResettableStates} from '@app/features/app/state/ResettableStates';
+import Authentication from '@app/features/auth/state/Authentication';
 import Channels from '@app/features/channel/state/Channels';
 import GuildMatureContentAgree from '@app/features/guild/state/GuildMatureContentAgree';
 import Guilds from '@app/features/guild/state/Guilds';
 import {Message, messageMentionsCurrentUser} from '@app/features/messaging/models/MessagingMessage';
+import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
 import {
 	DEFAULT_MENTION_FILTERS,
 	type MentionFilters,
@@ -19,7 +21,7 @@ import {MAX_MESSAGES_PER_CHANNEL} from '@fluxer/constants/src/LimitConstants';
 import type {Channel as WireChannel} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {RecentMentionsSettingsSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
-import {makeAutoObservable} from 'mobx';
+import {makeAutoObservable, reaction} from 'mobx';
 
 export type {MentionFilters};
 
@@ -36,6 +38,14 @@ class MentionFeed {
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
 		initializeStore(this, () => this.initPersistence());
+		reaction(
+			() => this.scopedGuildId,
+			() => this.updateFilters({}),
+		);
+	}
+
+	get scopedGuildId(): string | null {
+		return this.filters.includeGuilds ? null : SelectedGuild.selectedGuildId;
 	}
 
 	private async initPersistence(): Promise<void> {
@@ -154,7 +164,7 @@ class MentionFeed {
 	}
 
 	private isMessageIncludedByFilters(message: WireMessage | Message, channel: {guildId?: string | null}): boolean {
-		if (!this.filters.includeGuilds && channel.guildId != null) return false;
+		if (!this.filters.includeGuilds && !(channel.guildId && channel.guildId === this.scopedGuildId)) return false;
 		return messageMatchesMentionTypeFilters(message, this.filters);
 	}
 
@@ -185,6 +195,7 @@ class MentionFeed {
 	}
 
 	handleMessageCreate(message: WireMessage): void {
+		if (message.author.id === Authentication.currentUserId) return;
 		const channel = Channels.getChannel(message.channel_id);
 		if (!channel) return;
 		const guildId = channel.guildId ?? null;

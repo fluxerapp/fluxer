@@ -22,7 +22,9 @@ import voiceDisconnectSound from '@app/media/sounds/voice-disconnect.mp3';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
 
 const logger = new Logger('SoundUtils');
+export const BASE_SOUND_VOLUME = 0.4;
 const MAX_EFFECTIVE_VOLUME = 0.8;
+const MAX_CUSTOM_SOUND_GAIN = 2;
 const MASTER_HEADROOM = 0.8;
 const MIN_GAIN = 0.0001;
 const DEFAULT_FADE_DURATION = 0.08;
@@ -302,6 +304,11 @@ const resumeAudioContextForSound = (type: SoundType): Promise<AudioContext> =>
 	isCallRelatedSound(type) ? resumeCallAudioContextIfNeeded() : resumeIfSuspended(getAudioContext());
 const soundOutputNode = (type: SoundType, ctx: AudioContext): AudioNode =>
 	isCallRelatedSound(type) ? ctx.destination : getMasterGainNode();
+const resolveSoundGain = (type: SoundType, volume: number, isCustom: boolean): number => {
+	if (!isCustom) return clamp(volume, 0, MAX_EFFECTIVE_VOLUME);
+	const gain = clamp(volume / BASE_SOUND_VOLUME, 0, MAX_CUSTOM_SOUND_GAIN);
+	return isCallRelatedSound(type) ? gain : gain / MASTER_HEADROOM;
+};
 
 export async function acquireOutputAudioContext(): Promise<AudioContext> {
 	return resumeCallAudioContextIfNeeded();
@@ -309,7 +316,6 @@ export async function acquireOutputAudioContext(): Promise<AudioContext> {
 
 const fadeIn = (gainNode: GainNode, targetVolume: number, duration = DEFAULT_FADE_DURATION): void => {
 	const now = gainNode.context.currentTime;
-	targetVolume = clamp(targetVolume, 0, MAX_EFFECTIVE_VOLUME);
 	gainNode.gain.cancelScheduledValues(now);
 	gainNode.gain.setValueAtTime(MIN_GAIN, now);
 	gainNode.gain.linearRampToValueAtTime(targetVolume, now + duration);
@@ -329,18 +335,18 @@ const fadeOut = (gainNode: GainNode, duration = DEFAULT_FADE_DURATION): Promise<
 		setTimeout(resolve, duration * 1000);
 	});
 };
-const getSoundUrl = async (type: SoundType): Promise<string> => {
+const getSoundSource = async (type: SoundType): Promise<{url: string; isCustom: boolean}> => {
 	const cachedUrl = customSoundCache.get(type);
 	if (cachedUrl) {
-		return cachedUrl;
+		return {url: cachedUrl, isCustom: true};
 	}
 	const customSound = await CustomSoundDB.getCustomSound(type);
 	if (!customSound) {
-		return SOUND_FILES[type];
+		return {url: SOUND_FILES[type], isCustom: false};
 	}
 	const url = URL.createObjectURL(customSound.blob);
 	customSoundCache.set(type, url);
-	return url;
+	return {url, isCustom: true};
 };
 const createAudioElement = (src: string): HTMLAudioElement => {
 	const audio = new Audio();
@@ -365,16 +371,16 @@ const playOneShotSound = async (
 	signal?: AbortSignal,
 ): Promise<HTMLAudioElement | null> => {
 	if (signal?.aborted) return null;
-	const soundUrl = await getSoundUrl(type);
+	const soundSource = await getSoundSource(type);
 	if (signal?.aborted) return null;
-	const audio = createAudioElement(soundUrl);
+	const audio = createAudioElement(soundSource.url);
 	audio.currentTime = 0;
 	audio.loop = false;
-	const effectiveVolume = clamp(volume, 0, MAX_EFFECTIVE_VOLUME);
+	const effectiveVolume = resolveSoundGain(type, volume, soundSource.isCustom);
 	let sourceNode: MediaElementAudioSourceNode | undefined;
 	let gainNode: GainNode | undefined;
 	const applyElementOutput = (): void => {
-		audio.volume = effectiveVolume;
+		audio.volume = clamp(effectiveVolume);
 		if (isCallRelatedSound(type)) {
 			applyOutputDeviceToAudioElement(audio);
 		}
@@ -452,7 +458,7 @@ const playOneShotSound = async (
 export async function playSound(
 	type: SoundType,
 	loop = false,
-	volume = 0.4,
+	volume = BASE_SOUND_VOLUME,
 	onAutoplayBlocked?: () => void,
 	signal?: AbortSignal,
 ): Promise<HTMLAudioElement | null> {
@@ -470,16 +476,15 @@ export async function playSound(
 			onAutoplayBlocked?.();
 			return null;
 		}
-		const soundUrl = await getSoundUrl(type);
-		const audio = createAudioElement(soundUrl);
+		const soundSource = await getSoundSource(type);
+		const audio = createAudioElement(soundSource.url);
 		audio.currentTime = 0;
 		audio.loop = loop;
 		const sourceNode = ctx.createMediaElementSource(audio);
 		const gainNode = ctx.createGain();
 		sourceNode.connect(gainNode);
 		gainNode.connect(soundOutputNode(type, ctx));
-		const effectiveVolume = clamp(volume, 0, MAX_EFFECTIVE_VOLUME);
-		fadeIn(gainNode, effectiveVolume);
+		fadeIn(gainNode, resolveSoundGain(type, volume, soundSource.isCustom));
 		const instance: AudioInstance = {
 			audio,
 			gainNode,

@@ -217,6 +217,19 @@ export function $getComposerDropOffset(editor: LexicalEditor, clientX: number, c
 	return displayOffsetOfPoint($buildDisplayLayout(), selection.anchor);
 }
 
+export function $expandComposerSelectionToLines(): void {
+	const layout = $buildDisplayLayout();
+	const offsets = $captureSelectionOffsetsFromLayout(layout);
+	if (offsets == null) {
+		return;
+	}
+	const start = Math.min(offsets.anchor, offsets.focus);
+	const end = Math.max(offsets.anchor, offsets.focus);
+	const lineStart = layout.text.slice(0, start).lastIndexOf('\n') + 1;
+	const lineEnd = layout.text.indexOf('\n', Math.max(start, end - 1));
+	$selectComposerRangeWithLayout(layout, lineStart, lineEnd === -1 ? layout.text.length : lineEnd);
+}
+
 export function $getComposerNodeDisplayStart(node: LexicalNode): number | null {
 	const layout = $buildDisplayLayout();
 	const leaf = layout.leaves.find((candidate) => candidate.node.getKey() === node.getKey());

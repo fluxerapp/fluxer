@@ -10,7 +10,7 @@
 	width: 100%;
 	position: relative;
 	overflow: hidden;
-	--settings-edge-gutter: clamp(1rem, 3vw, 1.5rem);
+	--settings-edge-gutter: clamp(1rem, calc(var(--modal-layer-width, 100vw) * 0.03), 1.5rem);
 	--settings-surface-background: var(--form-surface-background);
 	--settings-panel-background: color-mix(in srgb, var(--form-surface-background) 88%, var(--background-primary));
 	--settings-border-color: var(--background-modifier-accent);
@@ -60,7 +60,7 @@
 }
 
 .containerFullscreen {
-	--settings-edge-gutter: clamp(1rem, 3vw, 1.5rem);
+	--settings-edge-gutter: clamp(1rem, calc(var(--modal-layer-width, 100vw) * 0.03), 1.5rem);
 	max-width: 87.5rem;
 	width: 100%;
 	margin: 0 auto;
@@ -68,36 +68,36 @@
 
 @media screen and (min-width: 768px) {
 	.container {
-		--settings-edge-gutter: clamp(1.25rem, 4vw, 2rem);
+		--settings-edge-gutter: clamp(1.25rem, calc(var(--modal-layer-width, 100vw) * 0.04), 2rem);
 	}
 }
 
 @media screen and (min-width: 1024px) {
 	.container {
-		--settings-edge-gutter: clamp(1.5rem, 5vw, 3rem);
+		--settings-edge-gutter: clamp(1.5rem, calc(var(--modal-layer-width, 100vw) * 0.05), 3rem);
 	}
 }
 
 @media screen and (min-width: 1440px) {
 	.container {
-		--settings-edge-gutter: clamp(2rem, 6vw, 4rem);
+		--settings-edge-gutter: clamp(2rem, calc(var(--modal-layer-width, 100vw) * 0.06), 4rem);
 	}
 }
 
 @media screen and (min-width: 1920px) {
 	.container {
-		--settings-edge-gutter: clamp(2.5rem, 7vw, 5rem);
+		--settings-edge-gutter: clamp(2.5rem, calc(var(--modal-layer-width, 100vw) * 0.07), 5rem);
 	}
 }
 
 @media screen and (min-width: 2560px) {
 	.container {
-		--settings-edge-gutter: clamp(3rem, 8vw, 6rem);
+		--settings-edge-gutter: clamp(3rem, calc(var(--modal-layer-width, 100vw) * 0.08), 6rem);
 	}
 }
 
 .desktopSidebar {
-	flex: 0 0 clamp(15.75rem, 24svw, 20rem);
+	flex: 0 0 clamp(15.75rem, calc(var(--modal-layer-width, 100svw) * 0.24), 20rem);
 	display: flex;
 	border-inline-end: 0.0625rem solid var(--settings-border-color);
 	border-start-start-radius: var(--settings-modal-inner-radius, 0);

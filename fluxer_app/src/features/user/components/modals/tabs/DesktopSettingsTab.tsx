@@ -13,6 +13,7 @@ import {
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
+import {RadioGroup, type RadioOption} from '@app/features/ui/radio_group/RadioGroup';
 import {
 	getCachedDesktopWindowBehaviorSettings,
 	getDesktopWindowBehaviorPendingRestart,
@@ -33,7 +34,7 @@ import {
 	RESTART_DESCRIPTOR,
 	RESTART_NOW_DESCRIPTOR,
 } from '@app/features/user/utils/UserMessageDescriptors';
-import type {DesktopWindowBehaviorSettings} from '@app/types/electron.d';
+import type {DesktopWindowBehaviorSettings, MonochromeTrayIconTone} from '@app/types/electron.d';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -66,6 +67,49 @@ const USE_DARK_TASKBAR_BADGE_DESCRIPTOR = msg({
 const USE_DARK_TASKBAR_BADGE_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Draw the unread badge on the {productName} taskbar button in dark gray instead of red.',
 	comment: 'Desktop setting description under the dark taskbar badge toggle on Windows.',
+});
+
+const SHOW_UNREAD_LAUNCHER_BADGE_DESCRIPTOR = msg({
+	message: 'Badge the app icon for unread messages',
+	comment:
+		'Desktop setting toggle label on Linux. Controls whether unread messages without mentions put a badge on the app icon in the taskbar or dock.',
+});
+
+const SHOW_UNREAD_LAUNCHER_BADGE_DESCRIPTION_DESCRIPTOR = msg({
+	message:
+		'Linux taskbars can only show a number, so unread messages without mentions show as 1. Mentions always show their count.',
+	comment: 'Desktop setting description under the Linux unread app icon badge toggle.',
+});
+
+const TRAY_ICON_COLOR_DESCRIPTOR = msg({
+	message: 'Tray icon color',
+	comment:
+		'Desktop settings section title on Windows and Linux for choosing the color of the monochrome system tray icon.',
+});
+
+const TRAY_ICON_COLOR_AUTO_DESCRIPTOR = msg({
+	message: 'Match the taskbar',
+	comment: 'Tray icon color option. The app picks white or black from the taskbar or panel color.',
+});
+
+const TRAY_ICON_COLOR_AUTO_DESCRIPTION_DESCRIPTOR = msg({
+	message: 'Pick white or black from the color of your taskbar or panel.',
+	comment: 'Description under the automatic tray icon color option.',
+});
+
+const TRAY_ICON_COLOR_WHITE_DESCRIPTOR = msg({
+	message: 'White',
+	comment: 'Tray icon color option for a white monochrome tray icon, for dark taskbars and panels.',
+});
+
+const TRAY_ICON_COLOR_BLACK_DESCRIPTOR = msg({
+	message: 'Black',
+	comment: 'Tray icon color option for a black monochrome tray icon, for light taskbars and panels.',
+});
+
+const TRAY_ICON_COLOR_COLORED_NOTICE_DESCRIPTOR = msg({
+	message: 'Turn off the colored tray icon to choose a color here.',
+	comment: 'Section description shown when the colored tray icon is on, so the monochrome color choice has no effect.',
 });
 
 const DesktopSettingsTab: React.FC = observer(() => {
@@ -164,6 +208,15 @@ const DesktopSettingsTab: React.FC = observer(() => {
 			);
 		});
 	};
+	const trayIconToneOptions: Array<RadioOption<MonochromeTrayIconTone>> = [
+		{
+			value: 'auto',
+			name: i18n._(TRAY_ICON_COLOR_AUTO_DESCRIPTOR),
+			desc: i18n._(TRAY_ICON_COLOR_AUTO_DESCRIPTION_DESCRIPTOR),
+		},
+		{value: 'white', name: i18n._(TRAY_ICON_COLOR_WHITE_DESCRIPTOR)},
+		{value: 'black', name: i18n._(TRAY_ICON_COLOR_BLACK_DESCRIPTOR)},
+	];
 	return (
 		<SettingsTabContainer data-flx="user.desktop-settings-tab.settings-tab-container">
 			<SettingsSection
@@ -229,6 +282,16 @@ const DesktopSettingsTab: React.FC = observer(() => {
 								data-flx="user.desktop-settings-tab.switch.colored-tray-icon-change"
 							/>
 						)}
+						{isLinux && desktopWindowBehavior.unreadLauncherBadge !== undefined && (
+							<Switch
+								label={i18n._(SHOW_UNREAD_LAUNCHER_BADGE_DESCRIPTOR)}
+								description={i18n._(SHOW_UNREAD_LAUNCHER_BADGE_DESCRIPTION_DESCRIPTOR)}
+								value={desktopWindowBehavior.unreadLauncherBadge}
+								disabled={desktopWindowBehaviorBusy}
+								onChange={(value) => handleDesktopWindowBehaviorChange({unreadLauncherBadge: value})}
+								data-flx="user.desktop-settings-tab.switch.unread-launcher-badge-change"
+							/>
+						)}
 						{isWindows && desktopWindowBehavior.darkTaskbarBadge !== undefined && (
 							<Switch
 								label={i18n._(USE_DARK_TASKBAR_BADGE_DESCRIPTOR)}
@@ -258,6 +321,29 @@ const DesktopSettingsTab: React.FC = observer(() => {
 					</>
 				)}
 			</SettingsSection>
+			{isDesktop() && !isMac && desktopWindowBehavior?.monochromeTrayIconTone !== undefined && (
+				<SettingsSection
+					id="tray-icon-color"
+					title={i18n._(TRAY_ICON_COLOR_DESCRIPTOR)}
+					description={
+						desktopWindowBehavior.coloredTrayIcon ? i18n._(TRAY_ICON_COLOR_COLORED_NOTICE_DESCRIPTOR) : undefined
+					}
+					data-flx="user.desktop-settings-tab.tray-icon-color-section"
+				>
+					<RadioGroup
+						options={trayIconToneOptions}
+						value={desktopWindowBehavior.monochromeTrayIconTone}
+						disabled={
+							desktopWindowBehaviorBusy ||
+							!desktopWindowBehavior.showTrayIcon ||
+							desktopWindowBehavior.coloredTrayIcon === true
+						}
+						onChange={(value) => handleDesktopWindowBehaviorChange({monochromeTrayIconTone: value})}
+						aria-label={i18n._(TRAY_ICON_COLOR_DESCRIPTOR)}
+						data-flx="user.desktop-settings-tab.radio-group.tray-icon-color-change"
+					/>
+				</SettingsSection>
+			)}
 			{isMac && (
 				<SettingsSection
 					id="macos-permissions"

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {LinuxDesktopKind, MonochromeTrayIconTone} from '@electron/common/Types';
 import {type NativeImage, nativeImage} from 'electron';
 
 export type TrayIconAppearance = 'colored' | 'template' | 'white' | 'black';
@@ -17,7 +18,7 @@ const SUBSAMPLES = 4;
 const MIN_GLYPH_CONTRAST = 32;
 const GLYPH_CUTOUT_START = 0.1;
 const GLYPH_CUTOUT_END = 0.5;
-const LINUX_MONOCHROME_CANVAS_RATIO = 22 / 16;
+const KDE_MONOCHROME_CANVAS_RATIO = 22 / 16;
 const LINUX_MAX_PIXMAP_SIZE = 256;
 const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 const DOT_BGR: Bgr = [0x00, 0x00, 0xdd];
@@ -27,14 +28,23 @@ const GLYPH_BGR: Readonly<Record<'white' | 'black', Bgr>> = {
 	black: [0x1c, 0x1c, 0x1c],
 };
 
+export function trayIconFollowsSystemTheme(platform: NodeJS.Platform, linuxDesktop: LinuxDesktopKind): boolean {
+	return platform === 'win32' || (platform === 'linux' && linuxDesktop === 'kde');
+}
+
 export function resolveTrayIconAppearance(options: {
 	platform: NodeJS.Platform;
+	linuxDesktop: LinuxDesktopKind;
 	coloredTrayIcon: boolean;
-	darkSystemUI: boolean;
+	monochromeTone: MonochromeTrayIconTone;
+	darkWindowsTaskbar: boolean;
+	darkKdePanel: boolean | null;
 }): TrayIconAppearance {
 	if (options.platform === 'darwin') return 'template';
 	if (options.coloredTrayIcon) return 'colored';
-	if (options.platform === 'win32' && !options.darkSystemUI) return 'black';
+	if (options.monochromeTone !== 'auto') return options.monochromeTone;
+	if (options.platform === 'win32') return options.darkWindowsTaskbar ? 'white' : 'black';
+	if (options.platform === 'linux' && options.linuxDesktop === 'kde' && options.darkKdePanel === false) return 'black';
 	return 'white';
 }
 
@@ -194,6 +204,7 @@ export function renderTrayIcon(
 	appearance: TrayIconAppearance,
 	indicator: boolean,
 	platform: NodeJS.Platform,
+	linuxDesktop: LinuxDesktopKind,
 ): NativeImage {
 	const monochrome = appearance === 'white' || appearance === 'black';
 	if (!monochrome && !indicator) {
@@ -202,6 +213,7 @@ export function renderTrayIcon(
 	const result = nativeImage.createEmpty();
 	const scaleFactors = base.getScaleFactors();
 	const linuxMonochrome = platform === 'linux' && monochrome;
+	const kdeMargins = linuxMonochrome && linuxDesktop === 'kde';
 	const representations: Array<{scaleFactor: number; bitmap: TrayBitmap}> = [];
 	for (const scaleFactor of scaleFactors.length > 0 ? scaleFactors : [1]) {
 		if (!Number.isFinite(scaleFactor) || scaleFactor <= 0) continue;
@@ -224,9 +236,9 @@ export function renderTrayIcon(
 		representations.push({scaleFactor, bitmap});
 	}
 	if (representations.length === 0) return base;
-	const logicalCanvasSize = Math.ceil(
+	const kdeLogicalCanvasSize = Math.ceil(
 		Math.max(...representations.map(({scaleFactor, bitmap}) => bitmap.width / scaleFactor)) *
-			LINUX_MONOCHROME_CANVAS_RATIO,
+			KDE_MONOCHROME_CANVAS_RATIO,
 	);
 	for (const {scaleFactor, bitmap: source} of representations) {
 		let bitmap = source;
@@ -241,12 +253,14 @@ export function renderTrayIcon(
 				appearance === 'template' ? TEMPLATE_DOT_BGR : DOT_BGR,
 			);
 		}
-		if (linuxMonochrome) {
-			const canvasSize = Math.min(Math.ceil(logicalCanvasSize * scaleFactor), LINUX_MAX_PIXMAP_SIZE);
+		if (kdeMargins) {
+			const canvasSize = Math.min(Math.ceil(kdeLogicalCanvasSize * scaleFactor), LINUX_MAX_PIXMAP_SIZE);
 			bitmap = addMonochromeTrayMargins(
-				downscaleTrayBitmap(bitmap, Math.floor(canvasSize / LINUX_MONOCHROME_CANVAS_RATIO)),
+				downscaleTrayBitmap(bitmap, Math.floor(canvasSize / KDE_MONOCHROME_CANVAS_RATIO)),
 				canvasSize,
 			);
+		} else if (linuxMonochrome) {
+			bitmap = downscaleTrayBitmap(bitmap, LINUX_MAX_PIXMAP_SIZE);
 		}
 		result.addRepresentation({scaleFactor, ...bitmap});
 	}

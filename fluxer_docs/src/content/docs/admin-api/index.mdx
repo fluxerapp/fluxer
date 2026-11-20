@@ -518,7 +518,7 @@ These entries have `access` set to `write`.
 
 ## Audit reasons
 
-Send `X-Audit-Log-Reason` on any route marked Audit reason, and the API stores it in `audit_log_reason` on each entry the request records. The API trims the value and strips control characters. A blank value or one longer than 512 characters is dropped without failing the request. Routes that require a reason, such as the [enforcement](/admin-api/enforcement/) routes, return 400 when the value is missing or dropped. Send the value as plain UTF-8, because the API doesn't percent-decode it.
+Send `X-Audit-Log-Reason` on any route marked Audit reason, and the API stores it in `audit_log_reason` on each entry the request records. The API trims the value and strips control characters. A blank value or one longer than 512 characters is dropped without failing the request. Routes that require a reason, such as the [enforcement](/admin-api/enforcement/) routes, return 400 when the value is missing or dropped. The API percent-decodes the value first, so you can send UTF-8 text encoded with `encodeURIComponent`. A value that is not valid percent-encoding is stored as sent. Encode a literal `%` as `%25`.
 
 ## Errors and rate limits
 

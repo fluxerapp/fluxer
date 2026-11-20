@@ -24,7 +24,7 @@
 	pointer-events: auto;
 }
 
-@media (pointer: coarse) {
+@media (any-hover: none) {
 	:global([data-flx-action-bar]:not([data-flx-action-bar-forced])) .actionBarContainer:not(:has(:focus-visible)) {
 		opacity: 0;
 		visibility: hidden;

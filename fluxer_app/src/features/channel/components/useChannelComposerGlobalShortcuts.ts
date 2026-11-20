@@ -87,9 +87,6 @@ export function useChannelComposerGlobalShortcuts({
 		};
 	}, [textareaInputDisabled, isFocused, handleArrowUpEmpty]);
 	useEffect(() => {
-		if (textareaInputDisabled) {
-			return;
-		}
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if (event.defaultPrevented || event.isComposing) return;
 			if (event.key !== 'Escape' || event.shiftKey) return;
@@ -105,5 +102,5 @@ export function useChannelComposerGlobalShortcuts({
 		return () => {
 			window.removeEventListener('keydown', handleKeyDown);
 		};
-	}, [channel.id, textareaInputDisabled]);
+	}, [channel.id]);
 }

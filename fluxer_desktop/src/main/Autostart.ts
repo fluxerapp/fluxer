@@ -58,21 +58,34 @@ function getFlatpakAutostartStatePath(): string {
 	return path.join(app.getPath('userData'), FLATPAK_AUTOSTART_STATE_FILE);
 }
 
-function readFlatpakAutostartState(): boolean {
+interface FlatpakAutostartState {
+	enabled?: unknown;
+	commandline?: unknown;
+}
+
+function readFlatpakAutostartStateFile(): FlatpakAutostartState {
 	try {
-		const raw = fs.readFileSync(getFlatpakAutostartStatePath(), 'utf8');
-		const parsed = JSON.parse(raw) as {enabled?: unknown};
-		return parsed.enabled === true;
+		return JSON.parse(fs.readFileSync(getFlatpakAutostartStatePath(), 'utf8')) as FlatpakAutostartState;
 	} catch {
-		return false;
+		return {};
 	}
+}
+
+function readFlatpakAutostartState(): boolean {
+	return readFlatpakAutostartStateFile().enabled === true;
 }
 
 async function writeFlatpakAutostartState(enabled: boolean): Promise<void> {
 	try {
 		const statePath = getFlatpakAutostartStatePath();
 		await fs.promises.mkdir(path.dirname(statePath), {recursive: true});
-		await fs.promises.writeFile(statePath, JSON.stringify({version: 1, enabled, updatedAt: new Date().toISOString()}), {
+		const state = {
+			version: 1,
+			enabled,
+			...(enabled ? {commandline: getFlatpakAutostartCommandline()} : {}),
+			updatedAt: new Date().toISOString(),
+		};
+		await fs.promises.writeFile(statePath, JSON.stringify(state), {
 			encoding: 'utf8',
 			mode: 0o600,
 		});
@@ -600,6 +613,50 @@ async function repairLinuxAutostartEntry(): Promise<void> {
 	}
 }
 
+async function repairFlatpakAutostartEntry(): Promise<void> {
+	if (!isLinux || !isFlatpakRuntime()) return;
+	const state = readFlatpakAutostartStateFile();
+	if (state.enabled !== true) return;
+	const commandline = getFlatpakAutostartCommandline();
+	if (JSON.stringify(state.commandline) === JSON.stringify(commandline)) return;
+	try {
+		await setFlatpakAutostart(true);
+		log.info('[Autostart] Rewrote the Flatpak autostart entry with the current command', {
+			previous: state.commandline,
+			commandline,
+		});
+	} catch (error) {
+		log.warn('[Autostart] Failed to rewrite the stale Flatpak autostart entry:', error);
+	}
+}
+
+function windowsLaunchItemMissesAutostartArg(item: Electron.LaunchItems): boolean {
+	return (
+		item.enabled &&
+		item.scope === 'user' &&
+		getWindowsLoginItemNames().includes(item.name) &&
+		!(item.args ?? []).includes(AUTOSTART_LAUNCH_ARG)
+	);
+}
+
+async function repairWindowsAutostartEntry(): Promise<void> {
+	if (!isWindows || isPortableMode()) return;
+	const launchPaths = new Set(getWindowsAutoLaunchConfigs().map((config) => config.path));
+	const staleItem = [...launchPaths]
+		.flatMap((launchPath) => app.getLoginItemSettings({path: launchPath}).launchItems ?? [])
+		.find(windowsLaunchItemMissesAutostartArg);
+	if (!staleItem) return;
+	try {
+		await enableAutostart();
+		log.info('[Autostart] Rewrote a Windows autostart entry that was missing the autostart argument', {
+			name: staleItem.name,
+			path: staleItem.path,
+		});
+	} catch (error) {
+		log.warn('[Autostart] Failed to rewrite the stale Windows autostart entry:', error);
+	}
+}
+
 function isLegacyGeneratedLinuxAutostartEntry(contents: string, entry: Map<string, string>): boolean {
 	return contents.includes(GENERATED_MARKER) || entry.get('StartupWMClass')?.trim() === LEGACY_LINUX_DESKTOP_ENTRY_ID;
 }
@@ -657,6 +714,8 @@ async function migrateLegacyLinuxAutostartEntry(): Promise<void> {
 
 export function registerAutostartHandlers(): void {
 	void migrateLegacyLinuxAutostartEntry().then(repairLinuxAutostartEntry);
+	void repairFlatpakAutostartEntry();
+	void repairWindowsAutostartEntry();
 	ipcMain.handle('autostart-enable', async (): Promise<void> => {
 		await enableAutostart();
 	});

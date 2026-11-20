@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Readable} from 'node:stream';
-import {createChannelID, createMessageID} from '@app/api/BrandedTypes';
+import {createChannelID, createGuildID, createMessageID} from '@app/api/BrandedTypes';
 import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import {StorageObjectRangeNotSatisfiableError} from '@app/api/infrastructure/IStorageService';
 import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
@@ -47,7 +47,7 @@ export function UserContentController(app: HonoApp) {
 				'Retrieves messages where the current user was mentioned. Supports filtering by role mentions, everyone mentions, and specific guilds. Returns paginated list of messages.',
 		}),
 		async (ctx) => {
-			const {limit, roles, everyone, guilds, before} = ctx.req.valid('query');
+			const {limit, roles, everyone, guilds, before, guild_id} = ctx.req.valid('query');
 			const response = await ctx.get('userContentRequestService').listMentions({
 				viewer: viewerFromCtx(ctx),
 				userId: ctx.get('user').id,
@@ -56,6 +56,7 @@ export function UserContentController(app: HonoApp) {
 				roles,
 				guilds,
 				before: before ? createMessageID(before) : undefined,
+				guildId: guild_id ? createGuildID(guild_id) : undefined,
 			});
 			return ctx.json(response);
 		},

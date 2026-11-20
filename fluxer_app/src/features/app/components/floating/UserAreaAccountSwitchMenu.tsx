@@ -2,7 +2,7 @@
 
 import AccountEngine from '@app/features/account_engine/state/AccountEngine';
 import styles from '@app/features/app/components/floating/UserAreaAccountSwitchMenu.module.css';
-import {useAccountAvatarURL} from '@app/features/auth/AccountAvatarUtils';
+import {useAccountHoverAvatarURL} from '@app/features/auth/AccountAvatarUtils';
 import {resolveAccountInstanceKey, resolveAccountInstanceLabel} from '@app/features/auth/AccountDisplayUtils';
 import {useAccountDisplayIdentityView} from '@app/features/auth/components/accounts/AccountIdentity';
 import {SESSION_EXPIRED_DESCRIPTOR} from '@app/features/auth/components/accounts/account_switcher_modal/AccountPickerShared';
@@ -102,7 +102,7 @@ const SwitchAccountMenuItem = observer(
 		const accountKey = getAccountKey(account);
 		const isCurrent = accountKey === currentAccountKey;
 		const isExpired = account.isValid === false;
-		const avatarUrl = useAccountAvatarURL(account);
+		const [avatarHoverRef, avatarUrl] = useAccountHoverAvatarURL(account);
 		const identityView = useAccountDisplayIdentityView(account);
 		const mentionCount = AccountEngine.getMentionCount(accountKey);
 		let metaLabel: string | null = null;
@@ -114,6 +114,7 @@ const SwitchAccountMenuItem = observer(
 		return (
 			<FocusRing offset={-2} data-flx="app.floating.user-area-account-switch-menu.focus-ring">
 				<button
+					ref={avatarHoverRef}
 					type="button"
 					className={styles.accountMenuItem}
 					onClick={() => {

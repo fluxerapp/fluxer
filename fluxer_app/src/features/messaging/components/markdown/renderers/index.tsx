@@ -45,32 +45,39 @@ const logger = new Logger('MarkdownRenderers');
 export const parse = parseMarkdownContent;
 const MAX_INTERACTIVE_EMOJI_COUNT = 100;
 
-const renderers = {
-	[NodeType.Sequence]: SequenceRenderer,
-	[NodeType.Text]: TextRenderer,
-	[NodeType.Strong]: StrongRenderer,
-	[NodeType.Emphasis]: EmphasisRenderer,
-	[NodeType.Underline]: UnderlineRenderer,
-	[NodeType.Strikethrough]: StrikethroughRenderer,
-	[NodeType.Spoiler]: SpoilerRenderer,
-	[NodeType.Timestamp]: TimestampRenderer,
-	[NodeType.Blockquote]: BlockquoteRenderer,
-	[NodeType.CodeBlock]: CodeBlockRenderer,
-	[NodeType.InlineCode]: InlineCodeRenderer,
-	[NodeType.Link]: LinkRenderer,
-	[NodeType.Mention]: MentionRenderer,
-	[NodeType.Emoji]: EmojiRenderer,
-	[NodeType.List]: ListRenderer,
-	[NodeType.Heading]: HeadingRenderer,
-	[NodeType.Subtext]: SubtextRenderer,
-	[NodeType.Table]: TableRenderer,
-	[NodeType.TableRow]: () => null,
-	[NodeType.TableCell]: () => null,
-	[NodeType.Alert]: AlertRenderer,
-} as Record<NodeType, React.ComponentType<RendererProps>>;
+type RendererMap = Record<NodeType, React.ComponentType<RendererProps>>;
+
+let renderers: RendererMap | null = null;
+
+function getRenderers(): RendererMap {
+	renderers ??= {
+		[NodeType.Sequence]: SequenceRenderer,
+		[NodeType.Text]: TextRenderer,
+		[NodeType.Strong]: StrongRenderer,
+		[NodeType.Emphasis]: EmphasisRenderer,
+		[NodeType.Underline]: UnderlineRenderer,
+		[NodeType.Strikethrough]: StrikethroughRenderer,
+		[NodeType.Spoiler]: SpoilerRenderer,
+		[NodeType.Timestamp]: TimestampRenderer,
+		[NodeType.Blockquote]: BlockquoteRenderer,
+		[NodeType.CodeBlock]: CodeBlockRenderer,
+		[NodeType.InlineCode]: InlineCodeRenderer,
+		[NodeType.Link]: LinkRenderer,
+		[NodeType.Mention]: MentionRenderer,
+		[NodeType.Emoji]: EmojiRenderer,
+		[NodeType.List]: ListRenderer,
+		[NodeType.Heading]: HeadingRenderer,
+		[NodeType.Subtext]: SubtextRenderer,
+		[NodeType.Table]: TableRenderer,
+		[NodeType.TableRow]: () => null,
+		[NodeType.TableCell]: () => null,
+		[NodeType.Alert]: AlertRenderer,
+	} as RendererMap;
+	return renderers;
+}
 
 function renderNode(node: Node, id: string, options: MarkdownRenderOptions): React.ReactNode {
-	const renderer = renderers[node.type];
+	const renderer = getRenderers()[node.type];
 	if (!renderer) {
 		logger.warn(`No renderer found for node type: ${node.type}`);
 		return null;

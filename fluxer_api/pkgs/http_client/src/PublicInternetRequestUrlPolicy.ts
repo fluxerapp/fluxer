@@ -13,7 +13,7 @@ import type {
 	RequestUrlValidationContext,
 } from '@pkgs/http_client/src/HttpClientTypes';
 import {HttpError, type HttpErrorType} from '@pkgs/http_client/src/HttpError';
-import {Agent, Dispatcher1Wrapper} from 'undici';
+import {Dispatcher1Wrapper, EnvHttpProxyAgent} from 'undici';
 
 const DEFAULT_DNS_CACHE_TTL_MS = 60000;
 const DNS_CACHE_MAX_ENTRIES = 10000;
@@ -186,7 +186,7 @@ function createBlocklistDispatcher(allowPrivateAddresses: boolean): FetchDispatc
 		});
 	};
 	return new Dispatcher1Wrapper(
-		new Agent({
+		new EnvHttpProxyAgent({
 			allowH2: false,
 			connect: {
 				lookup,

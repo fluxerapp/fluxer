@@ -142,15 +142,15 @@
 		"subject": "你每年向 {product_name} 的捐赠将于 {chargeAt, date, long} 续期"
 	},
 	"dsa_report_resolved": {
-		"about": "{target, select, message_community {这是关于你在 {reportedAt, date, long} 提交的举报，举报内容是“{communityName}”中 #{channelName} 里的一条消息。} message_dm {这是关于你在 {reportedAt, date, long} 提交的举报，举报内容是私信中的一条消息。} message {这是关于你在 {reportedAt, date, long} 提交的举报，举报内容是一条消息。} user {这是关于你在 {reportedAt, date, long} 提交的举报，举报对象是账号“{username}”。} community {这是关于你在 {reportedAt, date, long} 提交的举报，举报对象是社区“{communityName}”。} other {这是关于你在 {reportedAt, date, long} 提交的举报。}}",
+		"about": "{target, select, message_community {你在 {reportedAt, date, long} 举报了“{communityName}”中 #{channelName} 里的一条消息。} message_dm {你在 {reportedAt, date, long} 举报了私信中的一条消息。} message {你在 {reportedAt, date, long} 举报了一条消息。} user {你在 {reportedAt, date, long} 举报了账号“{username}”。} community {你在 {reportedAt, date, long} 举报了社区“{communityName}”。} other {你在 {reportedAt, date, long} 向我们提交了一份举报。}}",
 		"comment_label": "团队留言",
 		"footer_reason": "你收到此邮件是因为你在 {product_name} 上根据《数字服务法》提交了举报。",
-		"intro": "{outcome, select, removed {你举报的内容违反了我们的规则，我们已将其删除。} restricted {你举报的账号违反了我们的规则，我们已采取措施。我们不会透露具体采取了哪些措施。} action_taken {你举报的内容违反了我们的规则，我们已采取措施。我们不会透露具体采取了哪些措施。} no_violation {你举报的内容没有违反我们的规则，因此我们未作处理。} other {我们已关闭你的举报。}}",
+		"intro": "{outcome, select, removed {该内容违反了我们的规则，我们已将其删除。} restricted {该账号违反了我们的规则，我们已对其采取措施。为了保护每个人的隐私，我们不会透露具体采取了哪种措施。} action_taken {该内容违反了我们的规则，我们已采取措施。为了保护每个人的隐私，我们不会透露具体采取了哪种措施。} no_violation {{concern, select, self_harm {谢谢你对对方的关心。我们的团队已查看了相关内容。谈论情绪低落或感到不安全并不违反我们的规则，所以我们没有删除任何内容，但我们可能会向对方提供一些支持资源。我们绝不会透露举报人是谁。如果你认为有人正处于紧急危险之中，请拨打当地的紧急求助电话。} other {我们的团队已查看了相关内容，发现它没有违反我们的规则，因此没有对其采取措施。举报仍可能促使我们采取其他做法，比如向对方提供支持资源。我们绝不会透露举报人是谁。}}} other {我们已关闭你的举报。}}",
 		"note": "{reply, select, yes {如果你不同意，请在 60 天内回复此邮件。} other {{appeals_email, select, null {} other {如果你不同意，请在 60 天内发送邮件至 <mail>{appeals_email}</mail>，并附上举报 ID。}}}}{appeals_email, select, null {} other {如果你身在欧盟，还可以求助于经认证的<dsa>庭外争议解决机构</dsa>，或向你所在国家的数字服务协调员投诉。}}",
 		"report_label": "举报 ID",
 		"signoff": "{product_name} 团队",
-		"subject": "我们已对你的 {product_name} 举报做出决定",
-		"thanks": "{outcome, select, removed {感谢你的举报。像你这样的举报帮助 {product_name} 对所有人保持安全。} restricted {感谢你的举报。像你这样的举报帮助 {product_name} 对所有人保持安全。} action_taken {感谢你的举报。像你这样的举报帮助 {product_name} 对所有人保持安全。} other {感谢你告诉我们。}}"
+		"subject": "我们已审核你的 {product_name} 举报",
+		"thanks": "{outcome, select, removed {感谢你的举报。像你这样的举报能帮助 {product_name} 保障每个人的安全。} restricted {感谢你的举报。像你这样的举报能帮助 {product_name} 保障每个人的安全。} action_taken {感谢你的举报。像你这样的举报能帮助 {product_name} 保障每个人的安全。} other {感谢你告诉我们。即使最后发现没有违反规则，也请继续举报任何让你担心的内容。}}"
 	},
 	"dsa_report_verification": {
 		"expiry": "此验证码将在 {minutes, plural, other {# 分钟}}后过期。",
@@ -713,15 +713,15 @@
 		"subject": "我们已收到你的 {product_name} 举报"
 	},
 	"report_resolved": {
-		"about": "{target, select, message_community {这是关于你在 {reportedAt, date, long} 提交的举报，举报内容是“{communityName}”中 #{channelName} 里的一条消息。} message_dm {这是关于你在 {reportedAt, date, long} 提交的举报，举报内容是私信中的一条消息。} message {这是关于你在 {reportedAt, date, long} 提交的举报，举报内容是一条消息。} user {这是关于你在 {reportedAt, date, long} 提交的举报，举报对象是账号“{username}”。} community {这是关于你在 {reportedAt, date, long} 提交的举报，举报对象是社区“{communityName}”。} other {这是关于你在 {reportedAt, date, long} 提交的举报。}}",
+		"about": "{target, select, message_community {你在 {reportedAt, date, long} 举报了“{communityName}”中 #{channelName} 里的一条消息。} message_dm {你在 {reportedAt, date, long} 举报了私信中的一条消息。} message {你在 {reportedAt, date, long} 举报了一条消息。} user {你在 {reportedAt, date, long} 举报了账号“{username}”。} community {你在 {reportedAt, date, long} 举报了社区“{communityName}”。} other {你在 {reportedAt, date, long} 向我们提交了一份举报。}}",
 		"comment_label": "团队留言",
 		"footer_reason": "你收到此邮件是因为你在 {product_name} 上提交了一份举报。",
-		"intro": "{outcome, select, removed {你举报的内容违反了我们的规则，我们已将其删除。} restricted {你举报的账号违反了我们的规则，我们已采取措施。我们不会透露具体采取了哪些措施。} action_taken {你举报的内容违反了我们的规则，我们已采取措施。我们不会透露具体采取了哪些措施。} no_violation {你举报的内容没有违反我们的规则，因此我们未作处理。} other {我们已关闭你的举报。}}",
+		"intro": "{outcome, select, removed {该内容违反了我们的规则，我们已将其删除。} restricted {该账号违反了我们的规则，我们已对其采取措施。为了保护每个人的隐私，我们不会透露具体采取了哪种措施。} action_taken {该内容违反了我们的规则，我们已采取措施。为了保护每个人的隐私，我们不会透露具体采取了哪种措施。} no_violation {{concern, select, self_harm {谢谢你对对方的关心。我们的团队已查看了相关内容。谈论情绪低落或感到不安全并不违反我们的规则，所以我们没有删除任何内容，但我们可能会向对方提供一些支持资源。我们绝不会透露举报人是谁。如果你认为有人正处于紧急危险之中，请拨打当地的紧急求助电话。} other {我们的团队已查看了相关内容，发现它没有违反我们的规则，因此没有对其采取措施。举报仍可能促使我们采取其他做法，比如向对方提供支持资源。我们绝不会透露举报人是谁。}}} other {我们已关闭你的举报。}}",
 		"note": "{reply, select, yes {如果你不同意，请在 60 天内回复此邮件。} other {{appeals_email, select, null {} other {如果你不同意，请在 60 天内发送邮件至 <mail>{appeals_email}</mail>，并附上举报 ID。}}}}{appeals_email, select, null {} other {如果你身在欧盟，还可以求助于经认证的<dsa>庭外争议解决机构</dsa>，或向你所在国家的数字服务协调员投诉。}}",
 		"report_label": "举报 ID",
 		"signoff": "{product_name} 团队",
-		"subject": "你的 {product_name} 举报已完成审核",
-		"thanks": "{outcome, select, removed {感谢你的举报。像你这样的举报帮助 {product_name} 对所有人保持安全。} restricted {感谢你的举报。像你这样的举报帮助 {product_name} 对所有人保持安全。} action_taken {感谢你的举报。像你这样的举报帮助 {product_name} 对所有人保持安全。} other {感谢你告诉我们。}}"
+		"subject": "我们已审核你的 {product_name} 举报",
+		"thanks": "{outcome, select, removed {感谢你的举报。像你这样的举报能帮助 {product_name} 保障每个人的安全。} restricted {感谢你的举报。像你这样的举报能帮助 {product_name} 保障每个人的安全。} action_taken {感谢你的举报。像你这样的举报能帮助 {product_name} 保障每个人的安全。} other {感谢你告诉我们。即使最后发现没有违反规则，也请继续举报任何让你担心的内容。}}"
 	},
 	"self_deletion_scheduled": {
 		"footer_reason": "你收到此邮件是因为你曾申请删除你的 {product_name} 账号。",

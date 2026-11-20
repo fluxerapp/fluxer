@@ -31,6 +31,7 @@ import {drainPendingDisplayMediaRequests, registerDisplayMediaRequestHandler} fr
 import {isNativeGatewayPermitted} from '@electron/main/GatewaySocketNativeBoundary';
 import {armHiddenWindowMemoryRelease} from '@electron/main/HiddenWindowMemory';
 import {shouldDisableV8CodeCache} from '@electron/main/LaunchOptions';
+import {reemitLinuxLauncherBadge} from '@electron/main/LinuxLauncherBadge';
 import {getDesktopLocalAppAuthorization} from '@electron/main/LocalAppProtocolAuthorization';
 import {isLocalAppRendererDocumentURL, isLocalAppURL} from '@electron/main/LocalAppURL';
 import {cancelPendingFullScreenHide, hideWindowLeavingFullScreen} from '@electron/main/MacFullScreenHide';
@@ -1009,6 +1010,10 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 		mainWindow.on('show', () => {
 			refreshWindowsBadgeOverlay(mainWindow);
 		});
+	}
+	if (process.platform === 'linux') {
+		mainWindow.on('show', reemitLinuxLauncherBadge);
+		mainWindow.on('focus', reemitLinuxLauncherBadge);
 	}
 	const webContents = mainWindow.webContents;
 	const session = webContents.session;

@@ -122,6 +122,7 @@ type Mount struct {
 	Bind     string
 	Target   string
 	ReadOnly bool
+	SELinux  string
 }
 
 type EventStatus string

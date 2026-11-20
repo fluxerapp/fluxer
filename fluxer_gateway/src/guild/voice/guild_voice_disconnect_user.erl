@@ -204,7 +204,7 @@ disconnect_voice_user_if_in_channel(
             )
     end.
 
--spec force_disconnect_participant(integer(), integer(), integer(), binary()) ->
+-spec force_disconnect_participant(integer() | null, integer(), integer(), binary()) ->
     {ok, map()} | {error, term()}.
 force_disconnect_participant(GuildId, ChannelId, UserId, ConnectionId) ->
     Req = voice_utils:build_force_disconnect_rpc_request(

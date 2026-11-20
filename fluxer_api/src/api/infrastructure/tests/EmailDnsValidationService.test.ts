@@ -64,6 +64,53 @@ describe('EmailDnsValidationService', () => {
 		expect(resolver.lookups).toEqual(['mx:asdf.asdf']);
 	});
 
+	it('returns the mail hosts of a domain from the same cached lookup', async () => {
+		const resolver = new FakeDnsResolver();
+		resolver.mxRecords = [
+			{exchange: 'In.Mail-Rotator.TEST.', priority: 10},
+			{exchange: 'backup.mail-rotator.test', priority: 20},
+		];
+		const service = new EmailDnsValidationService({
+			resolver,
+			enforceInTestMode: true,
+			isEmailEnabled: async () => true,
+		});
+		expect(await service.hasValidDnsRecords('probe@rotating.test')).toBe(true);
+		expect(await service.mailHosts('other@rotating.test')).toEqual([
+			'in.mail-rotator.test',
+			'backup.mail-rotator.test',
+		]);
+		expect(resolver.lookups).toEqual(['mx:rotating.test']);
+	});
+
+	it('resolves the addresses of the mail hosts once per domain', async () => {
+		const resolver = new FakeDnsResolver();
+		resolver.mxRecords = [{exchange: 'mx.operator.test', priority: 10}];
+		resolver.addressErrorCode = null;
+		resolver.addresses = ['203.0.113.40'];
+		const service = new EmailDnsValidationService({
+			resolver,
+			enforceInTestMode: true,
+			isEmailEnabled: async () => true,
+		});
+		expect(await service.mailHostAddresses('a@operator.test')).toEqual(['203.0.113.40']);
+		expect(await service.mailHostAddresses('b@operator.test')).toEqual(['203.0.113.40']);
+		expect(resolver.lookups).toEqual(['mx:operator.test', 'a:mx.operator.test', 'aaaa:mx.operator.test']);
+	});
+
+	it('returns no mail hosts for a domain that only has address records', async () => {
+		const resolver = new FakeDnsResolver();
+		resolver.mxErrorCode = 'ENODATA';
+		resolver.addressErrorCode = null;
+		resolver.addresses = ['198.51.100.10'];
+		const service = new EmailDnsValidationService({
+			resolver,
+			enforceInTestMode: true,
+			isEmailEnabled: async () => true,
+		});
+		expect(await service.mailHosts('probe@mail-less.test')).toEqual([]);
+	});
+
 	it('accepts a domain that publishes address records but no mail records', async () => {
 		const resolver = new FakeDnsResolver();
 		resolver.mxErrorCode = 'ENODATA';
