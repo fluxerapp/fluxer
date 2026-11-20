@@ -111,10 +111,7 @@ const PersonaTile = observer(({persona, user, selected, onSelect}: PersonaTilePr
 			onKeyDown={handleKeyDown}
 			data-flx="user.personas-tab.persona-tile.persona-tile.open"
 		>
-			<div
-				className={styles.personaTileAvatarContainer}
-				data-flx="user.personas-tab.persona-tile.persona-tile-avatar-container"
-			>
+			<div data-flx="user.personas-tab.persona-tile.persona-tile-avatar-container">
 				<Avatar
 					user={user}
 					size={36}
