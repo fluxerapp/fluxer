@@ -51,6 +51,7 @@ await build({
 		join(API_ROOT, 'src/AppEntrypoint.ts'),
 		join(API_ROOT, 'src/WorkerEntrypoint.ts'),
 		join(API_ROOT, 'src/MigrateEntrypoint.ts'),
+		join(API_ROOT, 'src/CaptureEntrypoint.ts'),
 	],
 	outdir: OUT_DIR,
 	bundle: true,
@@ -93,6 +94,6 @@ if (undeclaredDependencies.size > 0) {
 	const names = [...undeclaredDependencies].sort().join(', ');
 	throw new Error(
 		`The bundle imports packages that fluxer_api does not declare as dependencies: ${names}. ` +
-			'Workspace packages keep their own node_modules, so the bundle cannot reach them from fluxer_api.',
+			'Workspace packages keep their own node_modules, so the bundle cannot resolve them from fluxer_api.',
 	);
 }

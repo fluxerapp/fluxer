@@ -85,6 +85,7 @@ export function getLoadedCassandraDriver(): CassandraDriver | null {
 class CassandraClient {
 	private readonly config: CassandraConfig;
 	private client: cassandra.Client | null;
+	private timestampGenerator: cassandra.policies.timestampGeneration.TimestampGenerator | null = null;
 
 	public constructor(config: CassandraConfig) {
 		this.config = {
@@ -108,6 +109,7 @@ class CassandraClient {
 		const {default: driver} = await import('cassandra-driver');
 		loadedDriver = driver;
 		const distance = driver.types.distance;
+		const timestampGenerator = driver.policies.defaultTimestampGenerator();
 		const authProvider = this.config.username
 			? new driver.auth.PlainTextAuthProvider(this.config.username, this.config.password ?? '')
 			: undefined;
@@ -122,6 +124,7 @@ class CassandraClient {
 			protocolOptions: {
 				port: this.config.port ?? 9042,
 			},
+			policies: {timestampGeneration: timestampGenerator},
 			pooling: {
 				maxRequestsPerConnection: MAX_REQUESTS_PER_CONNECTION,
 				coreConnectionsPerHost: {
@@ -143,6 +146,7 @@ class CassandraClient {
 		});
 		await client.connect();
 		this.client = client;
+		this.timestampGenerator = timestampGenerator;
 	}
 
 	public async shutdown(): Promise<void> {
@@ -156,6 +160,15 @@ class CassandraClient {
 
 	public getSerialConsistency(): CassandraSerialConsistencyName {
 		return this.config.serialConsistency ?? 'localSerial';
+	}
+
+	public nextWriteTimestamp(): number {
+		const client = this.getNativeClient();
+		const timestamp = this.timestampGenerator?.next(client);
+		if (typeof timestamp !== 'number') {
+			throw new Error('Cassandra timestamp generator returned no microsecond timestamp');
+		}
+		return timestamp;
 	}
 
 	public getNativeClient(): cassandra.Client {
@@ -196,4 +209,8 @@ export function getClient(): cassandra.Client {
 
 export function getSerialConsistency(): CassandraSerialConsistencyName {
 	return defaultClientState.client?.getSerialConsistency() ?? 'localSerial';
+}
+
+export function nextWriteTimestamp(): number {
+	return getDefaultCassandraClient().nextWriteTimestamp();
 }

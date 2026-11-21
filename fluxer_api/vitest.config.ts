@@ -25,6 +25,7 @@ const configuredMaxConcurrency = parseParallelInteger(process.env.API_TEST_MAX_C
 const MODULE_REGISTRY_TEST_FILES = [
 	'src/api/voice/tests/VoiceAvailabilityService.test.ts',
 	'src/api/billing_documents/BillingDocuments.test.ts',
+	'src/api/database/CassandraDriverPath.test.ts',
 ];
 
 const INSTANCE_POLICY_TEST_FILES = ['src/api/admin/tests/InstanceConfigPendingRegistrationApproval.test.ts'];
