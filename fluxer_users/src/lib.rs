@@ -9,12 +9,17 @@ mod types;
 
 use app_attest::AppAttestConfig;
 use fluxer_common::config::EnvMap;
+use fluxer_svc::cassandra_capture::{CaptureConfig, CaptureMode, CassandraCapture};
 use fluxer_svc::config::{DatabaseBackend, Mode, ServiceConfig};
 use fluxer_svc::transport::NatsTransport;
 use play_integrity::PlayIntegrityConfig;
 use router_impl::UsersRouter;
 use shard_impl::UsersShard;
+use std::sync::Arc;
+use std::time::Duration;
 use tokio_util::sync::CancellationToken;
+
+const CAPTURE_CLOSE_TIMEOUT: Duration = Duration::from_secs(10);
 
 pub struct Config {
     service: ServiceConfig,
@@ -31,22 +36,31 @@ struct ShardConfig {
     pseudonym_secret: Vec<u8>,
     app_attest: AppAttestConfig,
     play_integrity: PlayIntegrityConfig,
+    capture: CaptureConfig,
 }
 
 impl Config {
     pub fn from_env(env: &EnvMap) -> anyhow::Result<Self> {
         let service = ServiceConfig::from_env_map(env)?;
+        let capture = CaptureConfig::from_env(env)?;
+        if capture.mode != CaptureMode::Off
+            && service.database_backend != DatabaseBackend::Cassandra
+        {
+            anyhow::bail!(
+                "FLUXER_SVC_CASSANDRA_CAPTURE_MODE needs FLUXER_DATABASE_BACKEND=cassandra"
+            );
+        }
         let role = match service.mode {
             Mode::Router => Role::Router,
-            Mode::Shard => Role::Shard(ShardConfig::from_env(env)?),
-            Mode::Combined => Role::Combined(ShardConfig::from_env(env)?),
+            Mode::Shard => Role::Shard(ShardConfig::from_env(env, capture)?),
+            Mode::Combined => Role::Combined(ShardConfig::from_env(env, capture)?),
         };
         Ok(Self { service, role })
     }
 }
 
 impl ShardConfig {
-    fn from_env(env: &EnvMap) -> anyhow::Result<Self> {
+    fn from_env(env: &EnvMap, capture: CaptureConfig) -> anyhow::Result<Self> {
         let pseudonym_secret = pseudonym::secret_from_env(env)?;
         let self_hosted = is_self_hosted(env);
         let app_attest = if self_hosted {
@@ -63,6 +77,7 @@ impl ShardConfig {
             pseudonym_secret,
             app_attest,
             play_integrity,
+            capture,
         })
     }
 }
@@ -98,22 +113,39 @@ pub async fn run(config: Config, shutdown: CancellationToken) -> anyhow::Result<
             fluxer_svc::router::run_router(&config, UsersRouter, transport, shutdown).await
         }
         Role::Shard(shard_config) => {
-            let shard = build_shard(&config, shard_config).await?;
-            fluxer_svc::shard::run_shard(&config, shard, transport, shutdown).await
+            let capture = Arc::new(CassandraCapture::start(&shard_config.capture, "users").await?);
+            let shard = build_shard(&config, shard_config, capture.clone()).await?;
+            let result = fluxer_svc::shard::run_shard(&config, shard, transport, shutdown).await;
+            capture.close(CAPTURE_CLOSE_TIMEOUT).await;
+            result
         }
         Role::Combined(shard_config) => {
-            let shard = build_shard(&config, shard_config).await?;
-            fluxer_svc::combined::run_combined(&config, UsersRouter, shard, transport, shutdown)
-                .await
+            let capture = Arc::new(CassandraCapture::start(&shard_config.capture, "users").await?);
+            let shard = build_shard(&config, shard_config, capture.clone()).await?;
+            let result = fluxer_svc::combined::run_combined(
+                &config,
+                UsersRouter,
+                shard,
+                transport,
+                shutdown,
+            )
+            .await;
+            capture.close(CAPTURE_CLOSE_TIMEOUT).await;
+            result
         }
     }
 }
 
-async fn build_shard(config: &ServiceConfig, shard: ShardConfig) -> anyhow::Result<UsersShard> {
+async fn build_shard(
+    config: &ServiceConfig,
+    shard: ShardConfig,
+    capture: Arc<CassandraCapture>,
+) -> anyhow::Result<UsersShard> {
     let ShardConfig {
         pseudonym_secret,
         app_attest,
         play_integrity,
+        ..
     } = shard;
     pseudonym::configure(pseudonym_secret)?;
     tracing::info!(
@@ -138,6 +170,7 @@ async fn build_shard(config: &ServiceConfig, shard: ShardConfig) -> anyhow::Resu
                 config.cache_ttl,
                 app_attest,
                 play_integrity,
+                capture,
             )
         }
         DatabaseBackend::Cassandra => {
@@ -151,6 +184,7 @@ async fn build_shard(config: &ServiceConfig, shard: ShardConfig) -> anyhow::Resu
                     config.cache_ttl,
                     app_attest,
                     play_integrity,
+                    capture,
                 )
                 .await
             }

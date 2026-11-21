@@ -19,6 +19,7 @@ use base64::prelude::{BASE64_STANDARD, Engine};
 use chrono::{DateTime, Utc};
 use fluxer_common::time::{unix_millis, unix_seconds};
 use fluxer_common::user_partial::{FLUXER_SYSTEM_USER_ID, UserPartialFields, fluxer_system_user};
+use fluxer_svc::cassandra_capture::CaptureMode;
 use fluxer_svc::shard::ShardService;
 use fluxer_svc::transport::Transport;
 use fluxer_svc::{postgres, postgres::BigIntBound, postgres::KeyPart};
@@ -125,6 +126,7 @@ const MESSAGE_COLUMNS: &str = "\
 pub struct MessagesShard<T> {
     storage: MessagesStorage,
     transport: T,
+    capture_mode: CaptureMode,
 }
 
 #[cfg(test)]
@@ -409,15 +411,24 @@ struct MessageMentionContext {
 }
 
 impl<T: Transport> MessagesShard<T> {
-    pub fn new_postgres(kv: postgres::KvClient, transport: T) -> anyhow::Result<Self> {
+    pub fn new_postgres(
+        kv: postgres::KvClient,
+        transport: T,
+        capture_mode: CaptureMode,
+    ) -> anyhow::Result<Self> {
         Ok(Self {
             storage: MessagesStorage::Postgres(PostgresMessagesStorage { kv }),
             transport,
+            capture_mode,
         })
     }
 
     #[cfg(feature = "scylla")]
-    pub async fn new_scylla(db: Arc<Session>, transport: T) -> anyhow::Result<Self> {
+    pub async fn new_scylla(
+        db: Arc<Session>,
+        transport: T,
+        capture_mode: CaptureMode,
+    ) -> anyhow::Result<Self> {
         let stmt_get_by_id = db
             .prepare(format!(
                 "SELECT {MESSAGE_COLUMNS} FROM messages WHERE channel_id = ? AND bucket = ? AND message_id = ? LIMIT 1"
@@ -488,6 +499,7 @@ impl<T: Transport> MessagesShard<T> {
                 stmt_delete_message,
             })),
             transport,
+            capture_mode,
         })
     }
 
@@ -705,7 +717,7 @@ impl<T: Transport> MessagesShard<T> {
                 )
                 .await?;
             let exhausted = page.len() < page_size as usize;
-            let reached_floor =
+            let at_floor =
                 floor.is_some_and(|floor| page.iter().any(|message| message.message_id <= floor));
             let next = cursor.next(&page);
             let hidden = self.hidden_message_ids(&page, options, users).await;
@@ -717,7 +729,7 @@ impl<T: Transport> MessagesShard<T> {
             let Some(next) = next else {
                 break;
             };
-            if !refill || exhausted || reached_floor || out.len() >= limit as usize {
+            if !refill || exhausted || at_floor || out.len() >= limit as usize {
                 break;
             }
             cursor = next;
@@ -1011,7 +1023,7 @@ impl<T: Transport> MessagesShard<T> {
     }
 
     async fn cleanup_orphaned_messages(&self, messages: Vec<Message>) {
-        if messages.is_empty() {
+        if messages.is_empty() || self.capture_mode != CaptureMode::Off {
             return;
         }
         let count = messages.len();
@@ -3764,6 +3776,30 @@ mod tests {
         MessagesShard {
             storage: MessagesStorage::Deletions(deleted.clone()),
             transport: InMemoryTransport::new(),
+            capture_mode: CaptureMode::Off,
+        }
+    }
+
+    #[tokio::test]
+    async fn orphan_cleanup_waits_while_cassandra_writes_are_captured() {
+        let orphan: Message = serde_json::from_value(json!({
+            "message_id": 1_509_197_195_776_110_592_i64,
+            "channel_id": 7,
+            "bucket": 0,
+        }))
+        .unwrap();
+        for (mode, expected) in [
+            (CaptureMode::Off, 1),
+            (CaptureMode::Measure, 0),
+            (CaptureMode::On, 0),
+        ] {
+            let deleted = DeletedMessageKeys::default();
+            let shard = MessagesShard {
+                capture_mode: mode,
+                ..recording_shard(&deleted)
+            };
+            shard.cleanup_orphaned_messages(vec![orphan.clone()]).await;
+            assert_eq!(expected, deleted.lock().unwrap().len(), "{mode:?}");
         }
     }
 
@@ -3961,7 +3997,7 @@ mod tests {
         assert_eq!(
             Some("https://example.com/article".to_owned()),
             base.url,
-            "a page link never reaches the media proxy"
+            "a page link never goes to the media proxy"
         );
         assert_eq!(
             Some("https://example.com/author".to_owned()),
