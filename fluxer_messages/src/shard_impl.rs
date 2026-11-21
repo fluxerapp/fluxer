@@ -1023,7 +1023,7 @@ impl<T: Transport> MessagesShard<T> {
     }
 
     async fn cleanup_orphaned_messages(&self, messages: Vec<Message>) {
-        if messages.is_empty() || self.capture_mode != CaptureMode::Off {
+        if messages.is_empty() || self.capture_mode.pauses_orphan_cleanup() {
             return;
         }
         let count = messages.len();
@@ -3781,7 +3781,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn orphan_cleanup_waits_while_cassandra_writes_are_captured() {
+    async fn orphan_cleanup_waits_only_while_the_migration_captures_writes() {
         let orphan: Message = serde_json::from_value(json!({
             "message_id": 1_509_197_195_776_110_592_i64,
             "channel_id": 7,
@@ -3792,6 +3792,7 @@ mod tests {
             (CaptureMode::Off, 1),
             (CaptureMode::Measure, 0),
             (CaptureMode::On, 0),
+            (CaptureMode::Behind, 1),
         ] {
             let deleted = DeletedMessageKeys::default();
             let shard = MessagesShard {

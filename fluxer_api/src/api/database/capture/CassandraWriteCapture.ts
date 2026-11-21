@@ -20,7 +20,7 @@ import {registerCounter, registerHistogram} from '@fluxer/hono/src/middleware/Me
 import type {JetStreamClient} from '@nats-io/jetstream';
 import {JetStreamConnectionManager} from '@pkgs/nats/src/JetStreamConnectionManager';
 
-const PUBLISH_TIMEOUT_MS = 2000;
+export const PUBLISH_TIMEOUT_MS = 2000;
 const MAX_TIMESTAMP_AGE_MS = 5000;
 const OUTCOME_BATCH_SIZE = 512;
 const OUTCOME_FLUSH_DELAY_MS = 5;
@@ -29,14 +29,14 @@ const CLOSE_POLL_MS = 10;
 
 const DEFAULT_LIMITS: WriteCaptureLimits = {maxInFlight: 4096, maxBufferedOutcomes: 50_000, slotWaitMs: 2000};
 
-const recordsTotal = registerCounter('fluxer_cassandra_capture_records_total', 'Capture records built, by kind');
-const bytesTotal = registerCounter('fluxer_cassandra_capture_bytes_total', 'Bytes of capture records built');
-const recordBytes = registerHistogram(
+export const recordsTotal = registerCounter('fluxer_cassandra_capture_records_total', 'Capture records built, by kind');
+export const bytesTotal = registerCounter('fluxer_cassandra_capture_bytes_total', 'Bytes of capture records built');
+export const recordBytes = registerHistogram(
 	'fluxer_cassandra_capture_record_bytes',
 	'Size of each capture record in bytes',
 	[256, 1024, 4096, 16_384, 65_536, 262_144, 1_048_576],
 );
-const unkeyedTotal = registerCounter(
+export const unkeyedTotal = registerCounter(
 	'fluxer_cassandra_capture_unkeyed_total',
 	'Captured writes whose rows capture cannot key, by table',
 );
@@ -53,7 +53,7 @@ const measureFailuresTotal = registerCounter(
 	'fluxer_cassandra_capture_measure_failures_total',
 	'Records measure mode could not build, so the write went ahead uncaptured, by kind',
 );
-const publishFailuresTotal = registerCounter(
+export const publishFailuresTotal = registerCounter(
 	'fluxer_cassandra_capture_publish_failures_total',
 	'Capture publishes that failed, by kind',
 );
@@ -65,6 +65,20 @@ const rejectedWritesTotal = registerCounter(
 export interface CaptureSink {
 	publish(subject: string, body: string, msgID: string, timeoutMs: number): Promise<void>;
 	close(): Promise<void>;
+}
+
+export interface WriteCaptureHook {
+	plain<T>(
+		statements: ReadonlyArray<CapturedStatement>,
+		logged: boolean,
+		send: (timestamp: number) => Promise<T>,
+	): Promise<T>;
+	conditional<T>(
+		statement: CapturedStatement,
+		send: () => Promise<T>,
+		appliedOf: (result: T) => boolean | undefined,
+	): Promise<T>;
+	close(timeoutMs: number): Promise<void>;
 }
 
 export interface CapturedStatement {
@@ -96,7 +110,7 @@ function delay(ms: number): Promise<void> {
 	});
 }
 
-function tableOf(statement: CapturedStatement): string {
+export function tableOf(statement: CapturedStatement): string {
 	return (
 		statement.meta?.table.name ??
 		/^\s*(?:INSERT\s+INTO|UPDATE|DELETE\s+FROM)\s+([A-Za-z0-9_]+)/i.exec(statement.cql)?.[1] ??
@@ -104,7 +118,7 @@ function tableOf(statement: CapturedStatement): string {
 	);
 }
 
-export class WriteCapture {
+export class WriteCapture implements WriteCaptureHook {
 	private readonly process: CaptureProcess;
 	private readonly producer: string;
 	private readonly codec: CaptureCodec;
@@ -399,6 +413,7 @@ export class JetStreamCaptureSink implements CaptureSink {
 	private readonly connection: JetStreamConnectionManager;
 	private readonly stream: string;
 	private client: JetStreamClient | null = null;
+	private connecting: Promise<JetStreamClient> | null = null;
 
 	constructor(options: {url: string; token: string; stream: string}) {
 		this.connection = new JetStreamConnectionManager({
@@ -410,17 +425,28 @@ export class JetStreamCaptureSink implements CaptureSink {
 	}
 
 	async connect(): Promise<void> {
+		await this.jetStream();
+	}
+
+	async publish(subject: string, body: string, msgID: string, timeoutMs: number): Promise<void> {
+		const client = await this.jetStream();
+		await client.publish(subject, body, {msgID, timeout: timeoutMs, expect: {streamName: this.stream}});
+	}
+
+	private jetStream(): Promise<JetStreamClient> {
+		if (this.client !== null) return Promise.resolve(this.client);
+		this.connecting ??= this.openClient().finally(() => {
+			this.connecting = null;
+		});
+		return this.connecting;
+	}
+
+	private async openClient(): Promise<JetStreamClient> {
 		await this.connection.connect();
 		const jsm = await this.connection.getJetStreamManager();
 		await jsm.streams.info(this.stream);
 		this.client = this.connection.getJetStreamClient();
-	}
-
-	async publish(subject: string, body: string, msgID: string, timeoutMs: number): Promise<void> {
-		if (this.client === null) {
-			throw new Error('Cassandra capture sink is not connected');
-		}
-		await this.client.publish(subject, body, {msgID, timeout: timeoutMs, expect: {streamName: this.stream}});
+		return this.client;
 	}
 
 	async close(): Promise<void> {

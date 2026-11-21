@@ -16,7 +16,7 @@ import {
 	normalizeExecuteArgs,
 	normalizeInParams,
 } from '@app/api/database/CassandraTypes';
-import type {CapturedStatement, WriteCapture} from '@app/api/database/capture/CassandraWriteCapture';
+import type {CapturedStatement, WriteCaptureHook} from '@app/api/database/capture/CassandraWriteCapture';
 import {LocalDate} from '@app/api/database/LocalDate';
 import {Logger} from '@app/api/Logger';
 import {chunkArray} from '@app/api/utils/ArrayUtils';
@@ -82,9 +82,9 @@ export interface CassandraQueryExecutorForTesting {
 
 let injectedExecutorForTesting: CassandraQueryExecutorForTesting | null = null;
 let configuredExecutor: CassandraQueryExecutorForTesting | null = null;
-let writeCapture: WriteCapture | null = null;
+let writeCapture: WriteCaptureHook | null = null;
 
-export function setCassandraWriteCapture(capture: WriteCapture | null): void {
+export function setCassandraWriteCapture(capture: WriteCaptureHook | null): void {
 	writeCapture = capture;
 }
 
@@ -135,7 +135,7 @@ function appliedOf(rows: ReadonlyArray<Record<string, unknown>>): boolean | unde
 }
 
 function executeCaptured(
-	capture: WriteCapture,
+	capture: WriteCaptureHook,
 	statement: CapturedStatement,
 	conditional: boolean,
 	options: cassandra.QueryOptions,

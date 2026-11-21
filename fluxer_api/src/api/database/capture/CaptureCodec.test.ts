@@ -93,6 +93,30 @@ describe('capture codec', () => {
 		}
 	});
 
+	it('records an array with an index getter as a tuple and replays it as one', () => {
+		const item = Object.defineProperty(['si_1', 'price_1', 1, 1890n], 'get', {
+			value(index: number) {
+				return item[index];
+			},
+			enumerable: false,
+		});
+		const encoded = codec.encode([item]);
+		expect(encoded).toEqual([{$t: 'tuple', v: ['si_1', 'price_1', 1, {$t: 'i64', v: '1890'}]}]);
+		const decoded = codec.decode(encoded) as Array<cassandra.types.Tuple>;
+		expect(decoded[0]).toBeInstanceOf(cassandra.types.Tuple);
+		expect(decoded[0]?.get(3)).toBe(1890n);
+	});
+
+	it('gives decoded lists an index getter so tuple columns recorded as lists still replay', () => {
+		const decoded = codec.decode([['si_1', 'price_1', 1, {$t: 'i64', v: '1890'}]]) as Array<{
+			get(index: number): unknown;
+		}>;
+		expect(decoded[0]?.get(0)).toBe('si_1');
+		expect(decoded[0]?.get(3)).toBe(1890n);
+		expect(Object.keys(decoded[0] ?? {})).toEqual(['0', '1', '2', '3']);
+		expect(codec.encode(decoded)).toEqual([['si_1', 'price_1', 1, {$t: 'i64', v: '1890'}]]);
+	});
+
 	it('round-trips floats JSON cannot represent', () => {
 		for (const value of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
 			expect(roundTrip(value)).toBe(value);

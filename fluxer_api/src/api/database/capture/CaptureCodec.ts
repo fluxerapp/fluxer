@@ -48,7 +48,10 @@ export class CaptureCodec {
 		if (value === null || typeof value === 'string' || typeof value === 'boolean') return value;
 		if (typeof value === 'number') return encodeNumber(value);
 		if (typeof value === 'bigint') return {$t: 'i64', v: value.toString()};
-		if (Array.isArray(value)) return value.map((entry) => this.encode(entry));
+		if (Array.isArray(value)) {
+			const entries = value.map((entry) => this.encode(entry));
+			return isTupleArray(value) ? {$t: 'tuple', v: entries} : entries;
+		}
 		if (typeof value !== 'object') throw new Error(`Cannot capture a ${typeof value} value`);
 		if (Buffer.isBuffer(value)) return {$t: 'blob', v: value.toString('base64')};
 		if (value instanceof Date) return {$t: 'ts', v: value.getTime()};
@@ -70,7 +73,7 @@ export class CaptureCodec {
 
 	decode(value: CaptureValue): unknown {
 		if (value === null || typeof value !== 'object') return value;
-		if (Array.isArray(value)) return value.map((entry) => this.decode(entry));
+		if (Array.isArray(value)) return withIndexGetter(value.map((entry) => this.decode(entry)));
 		switch (value.$t) {
 			case 'i64':
 				return BigInt(value.v);
@@ -102,4 +105,16 @@ export class CaptureCodec {
 	decodeRecord(values: Readonly<Record<string, CaptureValue>>): Record<string, unknown> {
 		return Object.fromEntries(Object.entries(values).map(([key, value]) => [key, this.decode(value)]));
 	}
+}
+
+const decodedArrays = new WeakSet<Array<unknown>>();
+
+function withIndexGetter(entries: Array<unknown>): Array<unknown> {
+	Object.defineProperty(entries, 'get', {value: (index: number) => entries[index], enumerable: false});
+	decodedArrays.add(entries);
+	return entries;
+}
+
+function isTupleArray(value: Array<unknown>): boolean {
+	return !decodedArrays.has(value) && typeof (value as {get?: unknown}).get === 'function';
 }

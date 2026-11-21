@@ -140,7 +140,7 @@ export interface APIConfig {
 		skipBuckets: Array<string>;
 	};
 	cassandraWriteCapture: {
-		mode: 'off' | 'measure' | 'on';
+		mode: 'off' | 'measure' | 'on' | 'behind';
 		natsUrl: string;
 		authToken: string;
 		stream: string;

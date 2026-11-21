@@ -59,6 +59,68 @@
 		"last_seq": 2
 	},
 	{
+		"kind": "life",
+		"producer": "api-7f9c:2a4f7c1e-93d5-4b0a-8e61-5f2c9d7a3b84",
+		"state": "open",
+		"pod": "api-7f9c"
+	},
+	{
+		"kind": "k",
+		"producer": "api-7f9c:2a4f7c1e-93d5-4b0a-8e61-5f2c9d7a3b84",
+		"seq": 1,
+		"ts": 1763750000000000,
+		"out": "applied",
+		"keys": [
+			{"t": "users", "s": "row", "c": {"user_id": {"$t": "i64", "v": "1309547563201765376"}}},
+			{
+				"t": "user_contact_change_logs",
+				"s": "row",
+				"c": {
+					"user_id": {"$t": "i64", "v": "1309547563201765376"},
+					"event_id": {"$t": "timeuuid", "v": "d8a2f6a0-c71f-11f0-8de9-0242ac120002"}
+				}
+			},
+			{"t": "recent_mentions", "s": "partition", "c": {"user_id": {"$t": "i64", "v": "1309547563201765376"}}},
+			{
+				"t": "relationships",
+				"s": "prefix",
+				"c": {
+					"source_user_id": {"$t": "i64", "v": "1309547563201765376"},
+					"target_user_id": {"$t": "i64", "v": "1309547563201765377"}
+				}
+			}
+		]
+	},
+	{
+		"kind": "k",
+		"producer": "api-7f9c:2a4f7c1e-93d5-4b0a-8e61-5f2c9d7a3b84",
+		"seq": 2,
+		"ts": 1763750000000001,
+		"out": "unknown",
+		"lwt": true,
+		"keys": [{"t": "invites", "s": "row", "c": {"code": "fluxer"}}]
+	},
+	{
+		"kind": "life",
+		"producer": "api-7f9c:2a4f7c1e-93d5-4b0a-8e61-5f2c9d7a3b84",
+		"state": "alive",
+		"last_seq": 2
+	},
+	{
+		"kind": "life",
+		"producer": "api-7f9c:2a4f7c1e-93d5-4b0a-8e61-5f2c9d7a3b84",
+		"state": "lossy",
+		"from_seq": 3,
+		"to_seq": 7
+	},
+	{
+		"kind": "life",
+		"producer": "api-7f9c:2a4f7c1e-93d5-4b0a-8e61-5f2c9d7a3b84",
+		"state": "closed",
+		"last_seq": 9,
+		"dropped": 5
+	},
+	{
 		"kind": "l",
 		"producer": "users-0:00000000-0000-0000-0000-000000000001",
 		"seq": 1,
