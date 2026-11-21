@@ -1505,7 +1505,11 @@ impl<T: Transport> MessagesShard<T> {
                     .and_then(|p| p.id)
                     .clone()
                     .unwrap_or("0".to_string());
-                if pid.len() >= 1 { pid } else { "0".to_string() }
+                if !pid.is_empty() {
+                    pid
+                } else {
+                    "0".to_string()
+                }
             };
             return ApiMessageResponse {
                 id: message.message_id.to_string(),
@@ -1622,22 +1626,22 @@ impl<T: Transport> MessagesShard<T> {
             nonce: options.nonce.clone(),
             call: message.call.as_ref().map(map_call),
             referenced_message,
-            persona: persona.or(message.persona.as_ref().and_then(|v| {
+            persona: persona.or(message.persona.as_ref().map(|v| {
                 match v.name.as_ref().is_some() {
-                    true => Some(ApiMessagePersonaSnapshotResponse {
+                    true => ApiMessagePersonaSnapshotResponse {
                         id: v.id.clone(),
                         owner_id: None, // won't be returned from the API
                         name: v.name.clone(),
                         avatar: v.avatar.clone(),
                         pronouns: v.pronouns.clone(),
-                    }),
-                    false => Some(ApiMessagePersonaSnapshotResponse {
+                    },
+                    false => ApiMessagePersonaSnapshotResponse {
                         id: Some("0".to_string()),
                         owner_id: None, // won't be returned from the API
                         name: Some(DELETED_PERSONA_GLOBAL_NAME.to_string()),
                         avatar: None,
                         pronouns: None,
-                    }),
+                    },
                 }
             })),
         }
@@ -1966,12 +1970,12 @@ impl<T: Transport> MessagesShard<T> {
         context: &ResponseContext,
     ) -> Option<ApiMessagePersonaSnapshotResponse> {
         if let Some(Some(persona_id)) = message.persona.as_ref().map(|v| &v.id) {
-            let id = parse_i64(&persona_id, "persona_id").expect("Could not parse persona ID");
+            let id = parse_i64(persona_id, "persona_id").expect("Could not parse persona ID");
             let persona = context
                 .personas
                 .get(&id)
                 .cloned()
-                .map(|f| Into::<ApiMessagePersonaSnapshotResponse>::into(f));
+                .map(Into::<ApiMessagePersonaSnapshotResponse>::into);
             if let Some(persona) = persona
                 && persona
                     .owner_id
@@ -1988,14 +1992,12 @@ impl<T: Transport> MessagesShard<T> {
 fn collect_persona_ids(all_messages: &[&Message]) -> HashSet<(i64, i64)> {
     let mut ids = HashSet::new();
     all_messages.iter().for_each(|f| {
-        if let Some(persona) = &f.persona {
-            if let Some(id) = &persona.id {
-                if let Some(num) = parse_i64(&id, "persona_id").ok() {
-                    if let Some(author_id) = f.author_id {
-                        ids.insert((num, author_id));
-                    }
-                }
-            }
+        if let Some(persona) = &f.persona
+            && let Some(id) = &persona.id
+            && let Ok(num) = parse_i64(id, "persona_id")
+            && let Some(author_id) = f.author_id
+        {
+            ids.insert((num, author_id));
         }
     });
     ids

@@ -1,19 +1,15 @@
-import { ensureSessionStarted } from "@app/api/message/tests/MessageTestUtils";
-import type { ApiTestHarness } from "@app/api/test/ApiTestHarness";
-import { createBuilder } from "@app/api/test/TestRequestBuilder";
-import type { MessageResponse } from "@fluxer/schema/src/domains/message/MessageResponseSchemas.js";
-import type { OwnPersonaResponse, PersonaSnapshot } from "@fluxer/schema/src/domains/persona/PersonaSchemas.js";
+import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas.js';
+import type {OwnPersonaResponse, PersonaSnapshot} from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
 
-export async function createPersona(
-	harness: ApiTestHarness,
-	token: string,
-	name: string,
-): Promise<OwnPersonaResponse> {
+export async function createPersona(harness: ApiTestHarness, token: string, name: string): Promise<OwnPersonaResponse> {
 	await ensureSessionStarted(harness, token);
 	const msg = await createBuilder<OwnPersonaResponse>(harness, token)
 		.post(`/users/@me/personas`)
 		.body({
-			internal_name: name
+			internal_name: name,
 		})
 		.execute();
 	if (!msg.id) {

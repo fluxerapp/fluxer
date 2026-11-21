@@ -4,7 +4,7 @@ import {AttachmentDecayRepository} from '@app/api/attachment/AttachmentDecayRepo
 import {AttachmentDecayService, resolveDefaultAttachmentDecayConfig} from '@app/api/attachment/AttachmentDecayService';
 import {apiFormOfMediaUrl, makeApiAttachmentUrl, parseApiAttachmentUrl} from '@app/api/attachment/AttachmentPublicUrl';
 import {makeSignedAttachmentCdnUrl, signAttachmentUrl} from '@app/api/attachment/AttachmentUrls';
-import {createPersonaID, type ChannelID, type GuildID, type MessageID, type UserID} from '@app/api/BrandedTypes';
+import {type ChannelID, createPersonaID, type GuildID, type MessageID, type UserID} from '@app/api/BrandedTypes';
 import {
 	attachmentStorageChannelId,
 	EMBED_MEDIA_OWNED_ATTACHMENT_FLAG,
@@ -45,7 +45,7 @@ import type {
 	MessageSnapshotResponse,
 	MessageStickerResponse,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import type { PersonaSnapshot } from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
+import type {PersonaSnapshot} from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import type {NatsConnection} from '@nats-io/transport-node';
@@ -234,19 +234,23 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 	private async resolvePersona(message: Message): Promise<PersonaSnapshot | null> {
 		if (!message.authorId) return null;
 		if (!message.persona?.id) return message.persona;
-		const persona = await getPersonaRepository().getPersona(message.authorId, createPersonaID(BigInt(message.persona!.id)));
-		if (!persona) return {
-			id: null,
-			name: message.persona.name || "Deleted Persona",
-			avatar: message.persona.avatar,
-			pronouns: message.persona.pronouns
-		}
+		const persona = await getPersonaRepository().getPersona(
+			message.authorId,
+			createPersonaID(BigInt(message.persona!.id)),
+		);
+		if (!persona)
+			return {
+				id: null,
+				name: message.persona.name || 'Deleted Persona',
+				avatar: message.persona.avatar,
+				pronouns: message.persona.pronouns,
+			};
 		return {
 			id: persona.id.toString(),
 			name: persona.displayName,
 			avatar: persona.avatarHash,
 			pronouns: persona.pronouns,
-		}
+		};
 	}
 
 	private async mapMessage(

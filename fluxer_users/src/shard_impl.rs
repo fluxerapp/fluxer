@@ -343,12 +343,10 @@ impl UsersShard {
             })
             .await
         {
-            Ok(val) => {
-                return Ok(val);
-            }
+            Ok(val) => Ok(val),
             Err(err) => {
                 eprintln!("Error while getting persona: {:#?}", err);
-                return Err(err);
+                Err(err)
             }
         }
     }
@@ -574,7 +572,7 @@ impl ScyllaUsersStorage {
         //let partial = rows.maybe_first_row::<PersonaPartial>()?.map(Into::into);
         let partial = rows
             .maybe_first_row::<PersonaPartialScyllaRow>()?
-            .map(|row| PersonaPartial::from(row));
+            .map(PersonaPartial::from);
         Ok(partial)
     }
 }
@@ -588,7 +586,7 @@ fn decode_postgres_user_partial(row: serde_json::Value) -> anyhow::Result<UserPa
 fn decode_postgres_persona(row: serde_json::Value) -> anyhow::Result<PersonaPartial> {
     let row = postgres::decode_row_dates_as_millis(row)?;
     let row: PersonaPartial = serde_json::from_value(row)?;
-    Ok(row.into())
+    Ok(row)
 }
 
 fn system_user_partial(instance_name: &str) -> UserPartial {
@@ -615,7 +613,7 @@ fn system_user_partial(instance_name: &str) -> UserPartial {
 fn deleted_persona(user_id: i64, persona_id: i64) -> PersonaPartial {
     PersonaPartial {
         owner_id: user_id,
-        persona_id: persona_id,
+        persona_id,
         display_name: Some(DELETED_PERSONA_GLOBAL_NAME.to_owned()),
         avatar_hash: None,
         accent_color: None,
@@ -681,7 +679,7 @@ impl ShardService for UsersShard {
             UserRequest::GetPersonaPartialsByIds { persona_ids } => {
                 let pdfs = persona_ids
                     .iter()
-                    .map(|v| self.get_partial_persona((*v).0, (*v).1));
+                    .map(|v| self.get_partial_persona(v.0, v.1));
                 let personas = Vec::from_iter(
                     futures::future::try_join_all(pdfs)
                         .await?
