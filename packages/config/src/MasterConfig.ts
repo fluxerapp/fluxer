@@ -163,7 +163,7 @@ export interface MasterConfig {
 				skip_buckets?: Array<string>;
 			};
 			cassandra_write_capture?: {
-				mode?: 'off' | 'measure' | 'on';
+				mode?: 'off' | 'measure' | 'on' | 'behind';
 				nats_url?: string;
 				auth_token?: string;
 				stream?: string;

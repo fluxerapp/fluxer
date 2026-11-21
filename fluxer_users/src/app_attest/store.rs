@@ -661,8 +661,18 @@ mod tests {
     #[test]
     fn key_rows_match_the_shared_capture_fixture() {
         let records: Vec<Value> = serde_json::from_str(FIXTURE).unwrap();
-        let expected = &records.last().unwrap()["rows"][0];
+        let expected = &records
+            .iter()
+            .find(|record| record["kind"] == "l" && record["rows"][0]["t"] == KEYS_TABLE)
+            .unwrap()["rows"][0];
         let row = key_row(1_309_547_563_201_765_376, "a2V5", false);
         assert_eq!(expected, &serde_json::to_value(row).unwrap());
+    }
+
+    #[test]
+    fn every_app_attest_table_has_a_clickhouse_decision() {
+        for table in [CHALLENGES_TABLE, KEY_LOOKUP_TABLE, KEYS_TABLE] {
+            assert!(cassandra_capture::SYNCED_TABLES.contains(&table), "{table}");
+        }
     }
 }

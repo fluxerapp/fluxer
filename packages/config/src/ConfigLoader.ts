@@ -630,15 +630,17 @@ function validateCassandraWriteCaptureConfig(config: MasterConfig): void {
 	if (capture?.mode === undefined) {
 		return;
 	}
-	assertOneOf(capture.mode, ['off', 'measure', 'on'], 'FLUXER_CASSANDRA_CAPTURE_MODE');
+	assertOneOf(capture.mode, ['off', 'measure', 'on', 'behind'], 'FLUXER_CASSANDRA_CAPTURE_MODE');
 	if (capture.mode === 'off') {
 		return;
 	}
 	if (config.database.backend !== 'cassandra') {
 		throw new Error('FLUXER_CASSANDRA_CAPTURE_MODE needs FLUXER_DATABASE_BACKEND=cassandra');
 	}
-	if (capture.mode === 'on' && !capture.nats_url) {
-		throw new Error('FLUXER_CASSANDRA_CAPTURE_NATS_URL is required when FLUXER_CASSANDRA_CAPTURE_MODE is on');
+	if ((capture.mode === 'on' || capture.mode === 'behind') && !capture.nats_url) {
+		throw new Error(
+			`FLUXER_CASSANDRA_CAPTURE_NATS_URL is required when FLUXER_CASSANDRA_CAPTURE_MODE is ${capture.mode}`,
+		);
 	}
 	if (capture.stream !== undefined && !/^[A-Za-z0-9_-]+$/u.test(capture.stream)) {
 		throw new Error('FLUXER_CASSANDRA_CAPTURE_STREAM must be letters, digits, underscores or hyphens');

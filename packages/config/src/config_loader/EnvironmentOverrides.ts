@@ -496,8 +496,8 @@ function parseTagStyle(raw: string): string {
 
 function parseCaptureMode(raw: string): string {
 	const value = raw.trim().toLowerCase();
-	if (value === 'off' || value === 'measure' || value === 'on') return value;
-	throw new Error('must be off, measure or on');
+	if (value === 'off' || value === 'measure' || value === 'on' || value === 'behind') return value;
+	throw new Error('must be off, measure, on or behind');
 }
 
 function parseSmtpTlsMode(raw: string): string {

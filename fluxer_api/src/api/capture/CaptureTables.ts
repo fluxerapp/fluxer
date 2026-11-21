@@ -17,6 +17,8 @@ export class UnreadableKey extends Error {
 	override readonly name = 'UnreadableKey';
 }
 
+export class TooManyRows extends UnreadableKey {}
+
 export async function loadTableLayouts(client: cassandra.Client, keyspace: string): Promise<Map<string, TableLayout>> {
 	const columns = await client.execute(
 		'SELECT table_name, column_name, kind, position, type FROM system_schema.columns WHERE keyspace_name = ?',
@@ -65,13 +67,16 @@ function keyColumns(layout: TableLayout, key: Readonly<Record<string, unknown>>)
 	return columns;
 }
 
-function selectCql(layout: TableLayout, columns: ReadonlyArray<string>): string {
-	const selected = [
+export function selectedColumns(layout: TableLayout): Array<string> {
+	return [
 		...layout.primaryKey,
 		...layout.regular.flatMap((column) => [column, `WRITETIME(${column})`, `TTL(${column})`]),
 	];
+}
+
+function selectCql(layout: TableLayout, columns: ReadonlyArray<string>): string {
 	const where = columns.map((column) => `${column} = :${column}`).join(' AND ');
-	return `SELECT ${selected.join(', ')} FROM ${layout.name} WHERE ${where}`;
+	return `SELECT ${selectedColumns(layout).join(', ')} FROM ${layout.name} WHERE ${where}`;
 }
 
 function firstOrMax(value: unknown, pick: (values: Array<number>) => number): number | null {
@@ -80,7 +85,7 @@ function firstOrMax(value: unknown, pick: (values: Array<number>) => number): nu
 	return Number(value);
 }
 
-function rowState(layout: TableLayout, row: cassandra.types.Row): RowState {
+export function rowState(layout: TableLayout, row: cassandra.types.Row): RowState {
 	const key = Object.fromEntries(layout.primaryKey.map((column) => [column, row.get(column)]));
 	const cells: Record<string, CellState> = {};
 	const selected = row.values();
@@ -99,6 +104,7 @@ export async function readRows(
 	layout: TableLayout,
 	key: Readonly<Record<string, unknown>>,
 	consistency?: number,
+	maxRows = MAX_IMAGE_ROWS,
 ): Promise<Array<RowState>> {
 	const columns = keyColumns(layout, key);
 	const result = await client.execute(
@@ -108,8 +114,8 @@ export async function readRows(
 	);
 	const rows: Array<RowState> = [];
 	for await (const row of result) {
-		if (rows.length === MAX_IMAGE_ROWS) {
-			throw new UnreadableKey(`${layout.name} has more than ${MAX_IMAGE_ROWS} rows under one key`);
+		if (rows.length === maxRows) {
+			throw new TooManyRows(`${layout.name} has more than ${maxRows} rows under one key`);
 		}
 		rows.push(rowState(layout, row));
 	}

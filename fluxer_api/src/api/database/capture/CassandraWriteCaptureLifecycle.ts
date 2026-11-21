@@ -10,13 +10,16 @@ import {
 	announceCaptureDisabled,
 	JetStreamCaptureSink,
 	WriteCapture,
+	type WriteCaptureHook,
 } from '@app/api/database/capture/CassandraWriteCapture';
+import {CdcWriteCapture} from '@app/api/database/capture/CdcWriteCapture';
 import {Logger} from '@app/api/Logger';
 import {getLoadedCassandraDriver, nextWriteTimestamp} from '@pkgs/cassandra/src/Client';
 
 const CLOSE_TIMEOUT_MS = 15_000;
+const CDC_DRAIN_TIMEOUT_MS = 10_000;
 
-let started: WriteCapture | null = null;
+let started: {capture: WriteCaptureHook; closeTimeoutMs: number} | null = null;
 
 function captureSink(config: APIConfig['cassandraWriteCapture']): JetStreamCaptureSink {
 	return new JetStreamCaptureSink({url: config.natsUrl, token: config.authToken, stream: config.stream});
@@ -50,22 +53,32 @@ export async function startCassandraWriteCapture(
 	if (!driver) {
 		throw new Error('Cassandra write capture needs the Cassandra driver');
 	}
+	const codec = new CaptureCodec(driver.types);
+	if (config.mode === 'behind') {
+		const capture = new CdcWriteCapture({
+			process,
+			producer,
+			pod: hostname(),
+			codec,
+			sink: captureSink(config),
+			nextTimestamp: nextWriteTimestamp,
+		});
+		capture.open();
+		setCassandraWriteCapture(capture);
+		started = {capture, closeTimeoutMs: CDC_DRAIN_TIMEOUT_MS};
+		Logger.info({mode: config.mode, producer, stream: config.stream}, 'Cassandra write capture started');
+		return;
+	}
 	const sink = config.mode === 'on' ? captureSink(config) : null;
 	await sink?.connect();
-	const capture = new WriteCapture({
-		process,
-		producer,
-		codec: new CaptureCodec(driver.types),
-		sink,
-		nextTimestamp: nextWriteTimestamp,
-	});
+	const capture = new WriteCapture({process, producer, codec, sink, nextTimestamp: nextWriteTimestamp});
 	await capture.open();
 	setCassandraWriteCapture(capture);
-	started = capture;
+	started = {capture, closeTimeoutMs: CLOSE_TIMEOUT_MS};
 	Logger.info({mode: config.mode, producer, stream: config.stream}, 'Cassandra write capture started');
 }
 
 export async function stopCassandraWriteCapture(): Promise<void> {
-	await started?.close(CLOSE_TIMEOUT_MS);
+	await started?.capture.close(started.closeTimeoutMs);
 	started = null;
 }
