@@ -9,6 +9,7 @@ import {
 } from '@app/api/stripe/BillingConfigCache';
 import {findChannelPrice, type ProductDistribution} from '@app/api/stripe/DistributionPricing';
 import {type Currency, getCurrencyPreferences, getGiftCurrencyPreferences} from '@app/api/utils/CurrencyUtils';
+import type Stripe from 'stripe';
 
 export enum ProductType {
 	MONTHLY_SUBSCRIPTION = 'monthly_subscription',
@@ -151,6 +152,18 @@ export class ProductRegistry {
 
 	getProduct(priceId: string): ProductInfo | null {
 		return this.products.get(priceId) ?? this.getChannelProduct(priceId);
+	}
+
+	getGiftProductForPrice(price: Pick<Stripe.Price, 'id' | 'lookup_key' | 'type'>): ProductInfo | null {
+		const product = this.getProduct(price.id);
+		if (product) {
+			return product.isGift ? product : null;
+		}
+		if (price.type !== 'one_time' || !price.lookup_key) {
+			return null;
+		}
+		const info = parseLegacySlot(price.lookup_key, this.config.catalogMode);
+		return info?.isGift ? info : null;
 	}
 
 	private getChannelProduct(priceId: string): ProductInfo | null {

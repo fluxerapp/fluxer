@@ -561,8 +561,8 @@ export class BillingDocumentService {
 				case 'gift':
 					return descriptions.gift(
 						premium,
-						(item.price ? getProductRegistry().getProduct(item.price.id)?.type : null) === ProductType.GIFT_1_YEAR ||
-							session.metadata?.product_type === ProductType.GIFT_1_YEAR,
+						(item.price ? getProductRegistry().getGiftProductForPrice(item.price)?.type : null) ===
+							ProductType.GIFT_1_YEAR || session.metadata?.product_type === ProductType.GIFT_1_YEAR,
 					);
 				case 'donation':
 					return descriptions.donation('once');

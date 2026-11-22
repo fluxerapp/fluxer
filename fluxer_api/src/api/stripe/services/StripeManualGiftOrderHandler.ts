@@ -45,8 +45,8 @@ export async function readManualGiftOrderLines(
 	const lines: Array<ManualGiftOrderLine> = [];
 	for (const item of items.data) {
 		const priceId = item.price?.id ?? null;
-		const product = priceId ? productRegistry.getProduct(priceId) : null;
-		if (!priceId || !product?.isGift || !item.quantity) {
+		const product = item.price ? productRegistry.getGiftProductForPrice(item.price) : null;
+		if (!priceId || !product || !item.quantity) {
 			Logger.error(
 				{sessionId, priceId, quantity: item.quantity},
 				'Manual gift order has a line that is not a known gift price, so no codes were created',
