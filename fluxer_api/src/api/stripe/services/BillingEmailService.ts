@@ -53,6 +53,7 @@ import {
 	subscriptionNoticeContext,
 	upcomingChargeAmounts,
 } from '@app/api/stripe/services/BillingSubscriptionDetails';
+import {isManualGiftOrderSession} from '@app/api/stripe/services/StripeManualGiftOrderHandler';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {getPaidPremiumAccessEndsAt} from '@app/api/user/UserHelpers';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
@@ -930,12 +931,13 @@ export class BillingEmailService {
 
 	private async giftPaid(sessionId: string): Promise<void> {
 		const session = await this.stripe.checkout.sessions.retrieve(sessionId);
+		const manualOrder = isManualGiftOrderSession(session);
 		const product = session.metadata?.price_id ? this.productRegistry.getProduct(session.metadata.price_id) : null;
 		if (
 			session.mode !== 'payment' ||
 			session.payment_status !== 'paid' ||
 			(session.amount_total ?? 0) <= 0 ||
-			!product?.isGift ||
+			!(manualOrder || product?.isGift) ||
 			session.invoice
 		) {
 			return;
@@ -958,13 +960,13 @@ export class BillingEmailService {
 			'plutonium_payment_receipt',
 			{
 				premiumName,
-				plan: PLAN_BY_PRODUCT_TYPE[product.type],
+				plan: product && !manualOrder ? PLAN_BY_PRODUCT_TYPE[product.type] : 'gift_bundle',
 				invoiceNumber: document?.display_number ?? null,
 				paidAt,
 				period: null,
 				totals: document
 					? billingDocumentTotals(document)
-					: plainTotals(session.amount_total ?? 0, session.currency ?? product.currency),
+					: plainTotals(session.amount_total ?? 0, session.currency ?? product?.currency ?? 'usd'),
 				document: document ? billingDocumentAttachment(document) : null,
 				business: false,
 				purchase: purchaseTermsFromMetadata(session.metadata ?? {}, paidAt, null),
