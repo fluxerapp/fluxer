@@ -28,8 +28,15 @@ import {
 	type PaymentDisputeSubject,
 } from '@app/api/payment_disputes/PaymentDisputeReviews';
 import {getBillingBranding} from '@app/api/stripe/BillingBranding';
+import {getProductRegistry} from '@app/api/stripe/ProductRegistry';
+import {getStripeClient} from '@app/api/stripe/StripeClient';
 import {extractId} from '@app/api/stripe/StripeUtils';
 import type {StripeGiftReversalHandler} from '@app/api/stripe/services/StripeGiftReversalHandler';
+import {
+	MANUAL_GIFT_ORDER_PRODUCT_TYPE,
+	pickGiftCodesCoveringRefund,
+	readManualGiftOrderLines,
+} from '@app/api/stripe/services/StripeManualGiftOrderHandler';
 import type {StripePaymentFraudService} from '@app/api/stripe/services/StripePaymentFraudService';
 import type {StripeSubscriptionService} from '@app/api/stripe/services/StripeSubscriptionService';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
@@ -297,7 +304,11 @@ export class StripeDisputeWebhookHandler {
 		dispute: Stripe.Dispute,
 	): Promise<void> {
 		if (target.kind === 'gift') {
-			await this.takeBackGift(target.giftCode, dispute);
+			const paymentIntentId = extractId(dispute.payment_intent);
+			const giftCodes = paymentIntentId ? await this.userRepository.findGiftCodesByPaymentIntent(paymentIntentId) : [];
+			for (const giftCode of giftCodes.length > 0 ? giftCodes : [target.giftCode]) {
+				await this.takeBackGift(giftCode, dispute);
+			}
 			return;
 		}
 		const payment = target.payment;
@@ -410,6 +421,11 @@ export class StripeDisputeWebhookHandler {
 			await this.operatorPassFulfilment.handleChargeRefunded(operatorPassPurchase, charge);
 			return;
 		}
+		const payment = await this.userRepository.getPaymentByPaymentIntent(paymentIntentId);
+		if (payment?.productType === MANUAL_GIFT_ORDER_PRODUCT_TYPE && !charge.refunded) {
+			await this.refundPartOfManualGiftOrder(payment, paymentIntentId, charge);
+			return;
+		}
 		if (!charge.refunded && !(await hasWithdrawalRefund(paymentIntentId))) {
 			Logger.info(
 				{chargeId: charge.id, paymentIntentId, amountRefunded: charge.amount_refunded, amount: charge.amount},
@@ -417,28 +433,56 @@ export class StripeDisputeWebhookHandler {
 			);
 			return;
 		}
-		const giftCode = await this.userRepository.findGiftCodeByPaymentIntent(paymentIntentId);
-		if (giftCode) {
-			if (giftCode.redeemedByUserId) {
-				const outcome = await this.giftReversalHandler.handleGiftPremiumReversal(giftCode, {
-					reason: 'gift_refund',
-					chargeId: charge.id,
-				});
-				if (outcome.billingResumed) {
-					await this.sendGiftRemoved(giftCode.redeemedByUserId, outcome.billingResumed);
-				}
-			} else if (!giftCode.revokedAt) {
-				await this.userRepository.revokeGiftCode(giftCode.code);
-				Logger.debug({giftCode: giftCode.code, chargeId: charge.id}, 'Revoked unredeemed gift code after refund');
+		const giftCodes = await this.userRepository.findGiftCodesByPaymentIntent(paymentIntentId);
+		if (giftCodes.length > 0) {
+			for (const giftCode of giftCodes) {
+				await this.reverseRefundedGift(giftCode, charge);
 			}
 			return;
 		}
-		const payment = await this.userRepository.getPaymentByPaymentIntent(paymentIntentId);
 		if (payment) {
 			await this.userRepository.updatePayment({
 				...payment.toRow(),
 				status: 'refunded',
 			});
+		}
+	}
+
+	private async refundPartOfManualGiftOrder(
+		payment: Payment,
+		paymentIntentId: string,
+		charge: Stripe.Charge,
+	): Promise<void> {
+		const stripe = getStripeClient();
+		const lines = stripe
+			? await readManualGiftOrderLines(stripe, getProductRegistry(), payment.checkoutSessionId)
+			: null;
+		if (!lines) {
+			throw new StripeError('Could not read the line items of a partly refunded manual gift order');
+		}
+		const giftCodes = await this.userRepository.findGiftCodesByPaymentIntent(paymentIntentId);
+		const reversed = pickGiftCodesCoveringRefund(giftCodes, lines, charge.amount_refunded);
+		for (const giftCode of reversed) {
+			await this.reverseRefundedGift(giftCode, charge);
+		}
+		Logger.info(
+			{chargeId: charge.id, paymentIntentId, amountRefunded: charge.amount_refunded, reversed: reversed.length},
+			'Partial refund took back gift codes of a manual gift order',
+		);
+	}
+
+	private async reverseRefundedGift(giftCode: GiftCode, charge: Stripe.Charge): Promise<void> {
+		if (giftCode.redeemedByUserId) {
+			const outcome = await this.giftReversalHandler.handleGiftPremiumReversal(giftCode, {
+				reason: 'gift_refund',
+				chargeId: charge.id,
+			});
+			if (outcome.billingResumed) {
+				await this.sendGiftRemoved(giftCode.redeemedByUserId, outcome.billingResumed);
+			}
+		} else if (!giftCode.revokedAt) {
+			await this.userRepository.revokeGiftCode(giftCode.code);
+			Logger.debug({giftCode: giftCode.code, chargeId: charge.id}, 'Revoked unredeemed gift code after refund');
 		}
 	}
 }

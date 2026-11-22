@@ -366,7 +366,7 @@ function plutoniumUrl(appBaseUrl: string): string {
 }
 
 function isGiftPlan(plan: string): boolean {
-	return plan === 'gift_1_month' || plan === 'gift_1_year';
+	return plan === 'gift_1_month' || plan === 'gift_1_year' || plan === 'gift_bundle';
 }
 
 function getPaymentDisputeTermsUrl(product: 'operator_pass' | 'plutonium', marketingBaseUrl: string): string {

@@ -29,6 +29,10 @@ import {enqueueBillingEmail} from '@app/api/stripe/services/BillingEmailService'
 import {EU_WITHDRAWAL_WAIVER_TEXT_VERSION} from '@app/api/stripe/services/StripeCheckoutService';
 import {StripeDonationCheckoutFulfilment} from '@app/api/stripe/services/StripeDonationCheckoutFulfilment';
 import type {StripeGiftService} from '@app/api/stripe/services/StripeGiftService';
+import {
+	isManualGiftOrderSession,
+	StripeManualGiftOrderHandler,
+} from '@app/api/stripe/services/StripeManualGiftOrderHandler';
 import type {StripePremiumService} from '@app/api/stripe/services/StripePremiumService';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {dispatchUserUpdate} from '@app/api/user/UserMappers';
@@ -66,6 +70,7 @@ interface CheckoutPremiumGrantContext extends CheckoutFulfilmentContext {
 export class StripeCheckoutWebhookHandler {
 	private static readonly CHECKOUT_EFFECTS_APPLIED_TTL_SECONDS = seconds('365 days');
 	private donationFulfilment: StripeDonationCheckoutFulfilment;
+	private manualGiftOrders: StripeManualGiftOrderHandler;
 
 	constructor(
 		private stripe: Stripe | null,
@@ -85,6 +90,13 @@ export class StripeCheckoutWebhookHandler {
 			emailService,
 			cacheService,
 		);
+		this.manualGiftOrders = new StripeManualGiftOrderHandler(
+			stripe,
+			userRepository,
+			productRegistry,
+			cacheService,
+			gatewayService,
+		);
 	}
 
 	async handleCheckoutSessionCompleted(session: Stripe.Checkout.Session): Promise<void> {
@@ -97,6 +109,10 @@ export class StripeCheckoutWebhookHandler {
 		}
 		if (session.metadata?.is_donation === 'true') {
 			await this.handleDonationCheckoutCompleted(session);
+			return;
+		}
+		if (isManualGiftOrderSession(session)) {
+			await this.manualGiftOrders.fulfil(session);
 			return;
 		}
 		if (session.payment_status === 'unpaid') {
@@ -125,6 +141,10 @@ export class StripeCheckoutWebhookHandler {
 		if (session.metadata?.is_donation === 'true') {
 			Logger.info({sessionId: session.id}, 'Processing async payment succeeded for donation checkout session');
 			await this.handleDonationCheckoutCompleted(session);
+			return;
+		}
+		if (isManualGiftOrderSession(session)) {
+			await this.manualGiftOrders.fulfil(session);
 			return;
 		}
 		Logger.info({sessionId: session.id}, 'Processing async payment succeeded for checkout session');

@@ -24,6 +24,10 @@ const FETCH_GIFT_CODE_BY_PAYMENT_INTENT_QUERY = GiftCodesByPaymentIntent.selectC
 	where: GiftCodesByPaymentIntent.where.eq('stripe_payment_intent_id'),
 	limit: 1,
 });
+const FETCH_GIFT_CODES_BY_PAYMENT_INTENT_QUERY = GiftCodesByPaymentIntent.selectCql({
+	columns: ['code'],
+	where: GiftCodesByPaymentIntent.where.eq('stripe_payment_intent_id'),
+});
 const FETCH_GIFT_CODE_QUERY = GiftCodes.selectCql({
 	where: GiftCodes.where.eq('code'),
 	limit: 1,
@@ -106,6 +110,13 @@ export class GiftCodeRepository {
 			return null;
 		}
 		return this.findGiftCode(row.code);
+	}
+
+	async findGiftCodesByPaymentIntent(paymentIntentId: string): Promise<Array<GiftCode>> {
+		const codes = await fetchMany<{code: string}>(FETCH_GIFT_CODES_BY_PAYMENT_INTENT_QUERY, {
+			stripe_payment_intent_id: paymentIntentId,
+		});
+		return this.loadGiftCodes(codes);
 	}
 
 	async findGiftCodesByCreator(userId: UserID): Promise<Array<GiftCode>> {

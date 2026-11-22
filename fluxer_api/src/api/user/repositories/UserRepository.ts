@@ -651,6 +651,10 @@ export class UserRepository {
 		return this.giftCodeRepository.findGiftCodeByPaymentIntent(paymentIntentId);
 	}
 
+	async findGiftCodesByPaymentIntent(paymentIntentId: string): Promise<Array<GiftCode>> {
+		return this.giftCodeRepository.findGiftCodesByPaymentIntent(paymentIntentId);
+	}
+
 	async findGiftCodesByCreator(userId: UserID): Promise<Array<GiftCode>> {
 		return this.giftCodeRepository.findGiftCodesByCreator(userId);
 	}
