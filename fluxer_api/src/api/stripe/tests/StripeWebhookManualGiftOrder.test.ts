@@ -34,6 +34,7 @@ interface OrderLine {
 	price: string;
 	quantity: number;
 	unit: number;
+	lookupKey?: string;
 }
 
 const ORDER: Array<OrderLine> = [
@@ -93,7 +94,14 @@ describe('Stripe webhook manual gift orders', () => {
 						amount_total: line.quantity * line.unit,
 						amount_tax: 0,
 						amount_discount: 0,
-						price: {id: line.price, object: 'price', currency: 'usd', unit_amount: line.unit},
+						price: {
+							id: line.price,
+							object: 'price',
+							type: 'one_time',
+							currency: 'usd',
+							unit_amount: line.unit,
+							lookup_key: line.lookupKey ?? null,
+						},
 					})),
 				}),
 			),
@@ -264,6 +272,23 @@ describe('Stripe webhook manual gift orders', () => {
 		]);
 		expect(codes).toHaveLength(0);
 		expect(await userRepository.getPaymentByCheckoutSession('cs_pi_manual_unknown')).toBeNull();
+	});
+
+	test('gift prices outside the billing config are recognised by their lookup key', async () => {
+		const buyer = await createTestAccount(harness);
+		const codes = await placeOrder(buyer, 'pi_manual_lookup', [
+			{price: 'price_catalog_month', quantity: 2, unit: MONTH_UNIT, lookupKey: 'gift_1_month_usd'},
+			{price: 'price_catalog_year', quantity: 1, unit: YEAR_UNIT, lookupKey: 'gift_1_year_usd'},
+		]);
+		expect(countByMonths(codes)).toEqual({1: 2, 12: 1});
+	});
+
+	test('a lookup key that is not a gift slot creates nothing', async () => {
+		const buyer = await createTestAccount(harness);
+		const codes = await placeOrder(buyer, 'pi_manual_lookup_monthly', [
+			{price: 'price_catalog_sub', quantity: 1, unit: MONTH_UNIT, lookupKey: 'monthly_usd'},
+		]);
+		expect(codes).toHaveLength(0);
 	});
 
 	test('an order above 200 codes creates nothing', async () => {
