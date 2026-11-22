@@ -124,6 +124,22 @@ describe('differences below the horizon', () => {
 		).toEqual(['codes ["c",1]: note']);
 	});
 
+	it('after a settle, accepts rows and cells a later delete removed but still reports wrong values', () => {
+		expect(differencesBelowHorizon(layout, [row(1, {note: cell('a', 2)})], [], H, canonical, true)).toEqual([]);
+		expect(differencesBelowHorizon(layout, [row(1, {note: cell('a', 2)})], [row(1)], H, canonical, true)).toEqual([]);
+		expect(
+			differencesBelowHorizon(
+				layout,
+				[row(1, {note: cell('a', 2)})],
+				[row(1, {note: cell('b', 2)})],
+				H,
+				canonical,
+				true,
+			),
+		).toEqual(['codes ["c",1]: note']);
+		expect(differencesBelowHorizon(layout, [], [row(1, {note: cell('a', 2)})], H, canonical, true)).toHaveLength(1);
+	});
+
 	it('ignores rows and cells with writes at or above the horizon', () => {
 		expect(differencesBelowHorizon(layout, [], [row(1, {note: cell('a', H)})], H, canonical)).toEqual([]);
 		expect(
