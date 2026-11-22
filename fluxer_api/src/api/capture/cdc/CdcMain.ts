@@ -28,7 +28,6 @@ import {
 } from '@app/api/capture/cdc/CdcMetrics';
 import {PendingKeys} from '@app/api/capture/cdc/CdcPending';
 import {
-	MARKED_ROWS_PER_SECOND,
 	nextRepair,
 	type RepairRecord,
 	ROUTINE_ROWS_PER_SECOND,
@@ -653,7 +652,7 @@ class CdcConsumer {
 					onRows: (name, rows) => rowsWrittenTotal.inc(`table="${name}"`, rows),
 				},
 				table,
-				choice.marked ? MARKED_ROWS_PER_SECOND : ROUTINE_ROWS_PER_SECOND,
+				choice.marked ? this.runtime.config.markedRowsPerSecond : ROUTINE_ROWS_PER_SECOND,
 			);
 			repairFinished.set(choice.table, record.finishedMs / 1000);
 			repairTombstones.set(choice.table, record.tombstones);
