@@ -100,7 +100,10 @@ function selectCql(layout: TableLayout, columns: ReadonlyArray<string>): string 
 
 function firstOrMax(value: unknown, pick: (values: Array<number>) => number): number | null {
 	if (value === null || value === undefined) return null;
-	if (Array.isArray(value)) return value.length === 0 ? null : pick(value.map(Number));
+	if (Array.isArray(value)) {
+		const present = value.filter((entry) => entry !== null && entry !== undefined).map(Number);
+		return present.length === 0 ? null : pick(present);
+	}
 	return Number(value);
 }
 
