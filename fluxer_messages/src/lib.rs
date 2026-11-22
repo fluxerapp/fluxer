@@ -7,7 +7,6 @@ pub mod types;
 pub mod udt;
 
 use fluxer_common::config::EnvMap;
-use fluxer_svc::cassandra_capture::CaptureMode;
 use fluxer_svc::config::{DatabaseBackend, Mode, ServiceConfig};
 use fluxer_svc::transport::NatsTransport;
 use router_impl::MessagesRouter;
@@ -16,23 +15,18 @@ use tokio_util::sync::CancellationToken;
 
 pub struct Config {
     service: ServiceConfig,
-    capture_mode: CaptureMode,
 }
 
 impl Config {
     pub fn from_env(env: &EnvMap) -> anyhow::Result<Self> {
         Ok(Self {
             service: ServiceConfig::from_env_map(env)?,
-            capture_mode: CaptureMode::from_env(env)?,
         })
     }
 }
 
 pub async fn run(config: Config, shutdown: CancellationToken) -> anyhow::Result<()> {
-    let Config {
-        service: config,
-        capture_mode,
-    } = config;
+    let Config { service: config } = config;
     let transport =
         NatsTransport::connect(&config.nats_url, config.nats_auth_token.as_deref()).await?;
 
@@ -51,11 +45,11 @@ pub async fn run(config: Config, shutdown: CancellationToken) -> anyhow::Result<
             fluxer_svc::router::run_router(&config, router, transport, shutdown).await
         }
         Mode::Shard => {
-            let shard = build_shard(&config, &transport, capture_mode).await?;
+            let shard = build_shard(&config, &transport).await?;
             fluxer_svc::shard::run_shard(&config, shard, transport, shutdown).await
         }
         Mode::Combined => {
-            let shard = build_shard(&config, &transport, capture_mode).await?;
+            let shard = build_shard(&config, &transport).await?;
             let router = MessagesRouter::new();
             fluxer_svc::combined::run_combined(&config, router, shard, transport, shutdown).await
         }
@@ -65,21 +59,20 @@ pub async fn run(config: Config, shutdown: CancellationToken) -> anyhow::Result<
 async fn build_shard(
     config: &ServiceConfig,
     transport: &NatsTransport,
-    capture_mode: CaptureMode,
 ) -> anyhow::Result<MessagesShard<NatsTransport>> {
     match config.database_backend {
         DatabaseBackend::Postgres => {
             let postgres_config = fluxer_svc::postgres::PostgresConfig::from_service_config(config);
             let pool = fluxer_svc::postgres::connect(&postgres_config).await?;
             let kv = fluxer_svc::postgres::KvClient::new(pool, &postgres_config)?;
-            MessagesShard::new_postgres(kv, transport.clone(), capture_mode)
+            MessagesShard::new_postgres(kv, transport.clone())
         }
         DatabaseBackend::Cassandra => {
             #[cfg(feature = "scylla")]
             {
                 let scylla_config = fluxer_svc::scylla::ScyllaConfig::from_service_config(config);
                 let db = fluxer_svc::scylla::connect(&scylla_config).await?;
-                MessagesShard::new_scylla(db, transport.clone(), capture_mode).await
+                MessagesShard::new_scylla(db, transport.clone()).await
             }
             #[cfg(not(feature = "scylla"))]
             {

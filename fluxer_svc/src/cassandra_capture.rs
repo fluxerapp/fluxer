@@ -15,11 +15,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tokio::sync::Notify;
 
 const PUBLISH_TIMEOUT: Duration = Duration::from_secs(2);
-const OUTCOME_BATCH_SIZE: usize = 512;
-const OUTCOME_FLUSH_DELAY: Duration = Duration::from_millis(5);
-const OUTCOME_RETRY_DELAY: Duration = Duration::from_millis(100);
 const CLOSE_POLL: Duration = Duration::from_millis(10);
-const DEFAULT_STREAM: &str = "CASSANDRA_CAPTURE";
 const BEHIND_STREAM: &str = "CASSANDRA_CDC";
 
 pub const SYNCED_TABLES: &[&str] = &[
@@ -31,8 +27,6 @@ pub const SYNCED_TABLES: &[&str] = &[
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CaptureMode {
     Off,
-    Measure,
-    On,
     Behind,
 }
 
@@ -54,8 +48,6 @@ impl CaptureMode {
                 .as_deref()
             {
                 None | Some("off") => Self::Off,
-                Some("measure") => Self::Measure,
-                Some("on") => Self::On,
                 Some("behind") => Self::Behind,
                 Some(other) => {
                     anyhow::bail!("unsupported FLUXER_SVC_CASSANDRA_CAPTURE_MODE: {other}")
@@ -63,33 +55,24 @@ impl CaptureMode {
             },
         )
     }
-
-    pub fn pauses_orphan_cleanup(self) -> bool {
-        matches!(self, Self::Measure | Self::On)
-    }
 }
 
 impl CaptureConfig {
     pub fn from_env(env: &EnvMap) -> anyhow::Result<Self> {
         let mode = CaptureMode::from_env(env)?;
         let nats_url = env.value("FLUXER_SVC_CASSANDRA_CAPTURE_NATS_URL");
-        if matches!(mode, CaptureMode::On | CaptureMode::Behind) && nats_url.is_none() {
+        if mode == CaptureMode::Behind && nats_url.is_none() {
             anyhow::bail!(
-                "FLUXER_SVC_CASSANDRA_CAPTURE_NATS_URL is required when FLUXER_SVC_CASSANDRA_CAPTURE_MODE is on or behind"
+                "FLUXER_SVC_CASSANDRA_CAPTURE_NATS_URL is required when FLUXER_SVC_CASSANDRA_CAPTURE_MODE is behind"
             );
         }
-        let default_stream = if mode == CaptureMode::Behind {
-            BEHIND_STREAM
-        } else {
-            DEFAULT_STREAM
-        };
         Ok(Self {
             mode,
             nats_url,
             nats_token: env.value("FLUXER_SVC_CASSANDRA_CAPTURE_NATS_TOKEN"),
             stream: env
                 .value("FLUXER_SVC_CASSANDRA_CAPTURE_STREAM")
-                .unwrap_or_else(|| default_stream.to_owned()),
+                .unwrap_or_else(|| BEHIND_STREAM.to_owned()),
             pod: env
                 .value("POD_NAME")
                 .or_else(|| env.value("HOSTNAME"))
@@ -165,18 +148,6 @@ pub struct KeyRecord {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind")]
 pub enum CaptureRecord {
-    #[serde(rename = "l")]
-    Lwt {
-        producer: String,
-        seq: u64,
-        ts: i64,
-        rows: Vec<LwtRow>,
-    },
-    #[serde(rename = "o")]
-    Outcomes {
-        producer: String,
-        outcomes: Vec<(u64, CaptureOutcome)>,
-    },
     #[serde(rename = "k")]
     Keys(KeyRecord),
     #[serde(rename = "life")]
@@ -259,18 +230,12 @@ fn outcome_of<T>(
 
 #[derive(Clone, Copy, Debug)]
 struct Limits {
-    max_in_flight: usize,
-    max_buffered_outcomes: usize,
-    slot_wait: Duration,
     max_queued_keys: usize,
     key_retry_delay: Duration,
     alive_interval: Duration,
 }
 
 const DEFAULT_LIMITS: Limits = Limits {
-    max_in_flight: 4096,
-    max_buffered_outcomes: 50_000,
-    slot_wait: Duration::from_secs(2),
     max_queued_keys: 20_000,
     key_retry_delay: Duration::from_millis(250),
     alive_interval: Duration::from_secs(300),
@@ -278,9 +243,6 @@ const DEFAULT_LIMITS: Limits = Limits {
 
 #[derive(Default)]
 struct State {
-    in_flight: usize,
-    outcomes: Vec<(u64, CaptureOutcome)>,
-    outcome_batches: u64,
     closing: bool,
     stopped: bool,
     opened: bool,
@@ -321,11 +283,8 @@ impl State {
 #[derive(Default)]
 struct Shared {
     state: Mutex<State>,
-    room: Notify,
     flush: Notify,
     publish_failures_total: AtomicU64,
-    rejected_busy_total: AtomicU64,
-    rejected_closed_total: AtomicU64,
 }
 
 impl Shared {
@@ -374,7 +333,6 @@ pub struct CassandraCapture {
     subject_prefix: String,
     sink: Option<Sink>,
     limits: Limits,
-    seq: AtomicU64,
     records_total: AtomicU64,
     shared: Arc<Shared>,
     flusher: Option<tokio::task::JoinHandle<()>>,
@@ -385,23 +343,6 @@ impl Drop for CassandraCapture {
         if let Some(flusher) = &self.flusher {
             flusher.abort();
         }
-    }
-}
-
-struct Slot<'a> {
-    shared: &'a Shared,
-    seq: u64,
-    outcome: CaptureOutcome,
-}
-
-impl Drop for Slot<'_> {
-    fn drop(&mut self) {
-        let mut state = self.shared.lock();
-        state.in_flight -= 1;
-        state.outcomes.push((self.seq, self.outcome));
-        drop(state);
-        self.shared.flush.notify_one();
-        self.shared.room.notify_waiters();
     }
 }
 
@@ -435,7 +376,6 @@ impl CassandraCapture {
             subject_prefix: format!("cassandra.capture.{process}"),
             sink: None,
             limits: DEFAULT_LIMITS,
-            seq: AtomicU64::new(0),
             records_total: AtomicU64::new(0),
             shared: Arc::default(),
             flusher: None,
@@ -443,26 +383,15 @@ impl CassandraCapture {
     }
 
     fn with_sink(mut self, sink: Sink) -> Self {
-        let flusher = if self.mode == CaptureMode::Behind {
-            let publisher = KeyPublisher {
-                shared: self.shared.clone(),
-                sink: sink.clone(),
-                subject_prefix: self.subject_prefix.clone(),
-                pod: self.pod.clone(),
-                producer: self.producer.clone(),
-                limits: self.limits,
-            };
-            tokio::spawn(publisher.run())
-        } else {
-            let flusher = OutcomeFlusher {
-                shared: self.shared.clone(),
-                sink: sink.clone(),
-                subject: format!("{}.o", self.subject_prefix),
-                producer: self.producer.clone(),
-            };
-            tokio::spawn(flusher.run())
+        let publisher = KeyPublisher {
+            shared: self.shared.clone(),
+            sink: sink.clone(),
+            subject_prefix: self.subject_prefix.clone(),
+            pod: self.pod.clone(),
+            producer: self.producer.clone(),
+            limits: self.limits,
         };
-        self.flusher = Some(flusher);
+        self.flusher = Some(tokio::spawn(publisher.run()));
         self.sink = Some(sink);
         self
     }
@@ -471,67 +400,44 @@ impl CassandraCapture {
         let producer = format!("{}:{}-{}", config.pod, std::process::id(), now_micros());
         let mut capture = Self::new(config.mode, process, producer);
         capture.pod.clone_from(&config.pod);
-        if !matches!(config.mode, CaptureMode::On | CaptureMode::Behind) {
+        if config.mode != CaptureMode::Behind {
             return Ok(capture);
         }
         let url = config.nats_url.as_deref().unwrap_or_default();
-        let mut options = async_nats::ConnectOptions::new().name("cassandra-capture");
+        let mut options = async_nats::ConnectOptions::new()
+            .name("cassandra-capture")
+            .retry_on_initial_connect();
         if let Some(token) = &config.nats_token {
             options = options.token(token.clone());
-        }
-        if config.mode == CaptureMode::Behind {
-            options = options.retry_on_initial_connect();
         }
         let client = options
             .connect(url)
             .await
             .context("connect to the Cassandra capture stream")?;
         let context = jetstream::new(client);
-        if config.mode == CaptureMode::Behind {
-            if !matches!(
-                tokio::time::timeout(PUBLISH_TIMEOUT, context.get_stream(&config.stream)).await,
-                Ok(Ok(_))
-            ) {
-                capture
-                    .shared
-                    .publish_failures_total
-                    .fetch_add(1, Ordering::Relaxed);
-                tracing::warn!(
-                    stream = config.stream,
-                    "cassandra capture stream is missing, key records stay queued until it exists"
-                );
-            }
-            let capture = capture.with_sink(Sink::JetStream(Box::new(context)));
-            tracing::info!(
-                producer = capture.producer,
-                "cassandra write capture started behind the writes"
+        if !matches!(
+            tokio::time::timeout(PUBLISH_TIMEOUT, context.get_stream(&config.stream)).await,
+            Ok(Ok(_))
+        ) {
+            capture
+                .shared
+                .publish_failures_total
+                .fetch_add(1, Ordering::Relaxed);
+            tracing::warn!(
+                stream = config.stream,
+                "cassandra capture stream is missing, key records stay queued until it exists"
             );
-            return Ok(capture);
         }
-        context
-            .get_stream(&config.stream)
-            .await
-            .with_context(|| format!("capture stream {} is missing", config.stream))?;
         let capture = capture.with_sink(Sink::JetStream(Box::new(context)));
-        capture.publish_life("open", None).await?;
         tracing::info!(
             producer = capture.producer,
-            "cassandra write capture started"
+            "cassandra write capture started behind the writes"
         );
         Ok(capture)
     }
 
     pub fn mode(&self) -> CaptureMode {
         self.mode
-    }
-
-    fn lwt_intent(&self, seq: u64, rows: Vec<LwtRow>) -> CaptureRecord {
-        CaptureRecord::Lwt {
-            producer: self.producer.clone(),
-            seq,
-            ts: now_micros(),
-            rows,
-        }
     }
 
     pub async fn conditional<T>(
@@ -543,36 +449,14 @@ impl CassandraCapture {
         if self.mode == CaptureMode::Off {
             return send.await;
         }
-        if self.mode == CaptureMode::Behind {
-            let mut write = BehindWrite {
-                capture: self,
-                ts: now_micros(),
-                rows,
-                outcome: CaptureOutcome::Unknown,
-            };
-            let result = send.await;
-            write.outcome = outcome_of(&result, applied_of);
-            return result;
-        }
-        let Some(sink) = &self.sink else {
-            let seq = self.seq.fetch_add(1, Ordering::Relaxed) + 1;
-            let _ = self.lwt_intent(seq, rows);
-            self.records_total.fetch_add(1, Ordering::Relaxed);
-            return send.await;
+        let mut write = BehindWrite {
+            capture: self,
+            ts: now_micros(),
+            rows,
+            outcome: CaptureOutcome::Unknown,
         };
-        let mut slot = self.acquire().await?;
-        let record = self.lwt_intent(slot.seq, rows);
-        self.records_total.fetch_add(1, Ordering::Relaxed);
-        self.publish(
-            sink,
-            "l",
-            &format!("{}:{}:l", self.producer, slot.seq),
-            &record,
-        )
-        .await?;
-        slot.outcome = CaptureOutcome::Unknown;
         let result = send.await;
-        slot.outcome = outcome_of(&result, applied_of);
+        write.outcome = outcome_of(&result, applied_of);
         result
     }
 
@@ -615,97 +499,10 @@ impl CassandraCapture {
         self.shared.flush.notify_one();
     }
 
-    async fn acquire(&self) -> anyhow::Result<Slot<'_>> {
-        let deadline = tokio::time::Instant::now() + self.limits.slot_wait;
-        loop {
-            let room = self.shared.room.notified();
-            tokio::pin!(room);
-            room.as_mut().enable();
-            {
-                let mut state = self.shared.lock();
-                if state.closing {
-                    self.shared
-                        .rejected_closed_total
-                        .fetch_add(1, Ordering::Relaxed);
-                    anyhow::bail!("cassandra write capture is closed");
-                }
-                if state.in_flight < self.limits.max_in_flight
-                    && state.outcomes.len() < self.limits.max_buffered_outcomes
-                {
-                    state.in_flight += 1;
-                    return Ok(Slot {
-                        shared: &self.shared,
-                        seq: self.seq.fetch_add(1, Ordering::Relaxed) + 1,
-                        outcome: CaptureOutcome::Failed,
-                    });
-                }
-            }
-            if tokio::time::timeout_at(deadline, room).await.is_err() {
-                self.shared
-                    .rejected_busy_total
-                    .fetch_add(1, Ordering::Relaxed);
-                anyhow::bail!("cassandra write capture is busy");
-            }
-        }
-    }
-
     pub async fn close(&self, timeout: Duration) {
         let Some(sink) = &self.sink else {
             return;
         };
-        if self.mode == CaptureMode::Behind {
-            self.close_behind(sink, timeout).await;
-            return;
-        }
-        {
-            let mut state = self.shared.lock();
-            if state.closing {
-                return;
-            }
-            state.closing = true;
-        }
-        let deadline = tokio::time::Instant::now() + timeout;
-        loop {
-            let (in_flight, outcomes) = {
-                let state = self.shared.lock();
-                (state.in_flight, state.outcomes.len())
-            };
-            if in_flight == 0 && outcomes == 0 {
-                break;
-            }
-            if tokio::time::Instant::now() >= deadline {
-                break;
-            }
-            self.shared.flush.notify_one();
-            tokio::time::sleep(CLOSE_POLL).await;
-        }
-        let (in_flight, outcomes) = {
-            let mut state = self.shared.lock();
-            state.stopped = true;
-            (state.in_flight, state.outcomes.len())
-        };
-        self.shared.flush.notify_one();
-        if in_flight > 0 || outcomes > 0 {
-            tracing::error!(
-                in_flight,
-                outcomes,
-                "cassandra write capture closed with unpublished outcomes"
-            );
-            return;
-        }
-        let record = CaptureRecord::Life(LifeRecord {
-            last_seq: Some(self.seq.load(Ordering::Relaxed)),
-            ..LifeRecord::new(&self.producer, "closed")
-        });
-        if let Err(error) = self
-            .publish(sink, "life", &format!("{}:closed", self.producer), &record)
-            .await
-        {
-            tracing::error!(%error, "cassandra write capture could not publish its closed record");
-        }
-    }
-
-    async fn close_behind(&self, sink: &Sink, timeout: Duration) {
         {
             let mut state = self.shared.lock();
             if state.closing {
@@ -760,20 +557,6 @@ impl CassandraCapture {
         );
         let _ = writeln!(
             output,
-            "# TYPE fluxer_cassandra_capture_rejected_writes_total counter"
-        );
-        for (reason, counter) in [
-            ("busy", &self.shared.rejected_busy_total),
-            ("closed", &self.shared.rejected_closed_total),
-        ] {
-            let _ = writeln!(
-                output,
-                "fluxer_cassandra_capture_rejected_writes_total{{reason=\"{reason}\"}} {}",
-                counter.load(Ordering::Relaxed)
-            );
-        }
-        let _ = writeln!(
-            output,
             "# TYPE fluxer_cassandra_capture_dropped_total counter"
         );
         for (table, dropped) in &self.shared.lock().dropped_by_table {
@@ -782,18 +565,6 @@ impl CassandraCapture {
                 "fluxer_cassandra_capture_dropped_total{{table=\"{table}\"}} {dropped}"
             );
         }
-    }
-
-    async fn publish_life(&self, state: &str, last_seq: Option<u64>) -> anyhow::Result<()> {
-        let Some(sink) = &self.sink else {
-            return Ok(());
-        };
-        let record = CaptureRecord::Life(LifeRecord {
-            last_seq,
-            ..LifeRecord::new(&self.producer, state)
-        });
-        let msg_id = format!("{}:{state}", self.producer);
-        self.publish(sink, "life", &msg_id, &record).await
     }
 
     async fn publish(
@@ -956,85 +727,6 @@ impl KeyPublisher {
     }
 }
 
-struct OutcomeFlusher {
-    shared: Arc<Shared>,
-    sink: Sink,
-    subject: String,
-    producer: String,
-}
-
-impl OutcomeFlusher {
-    async fn run(self) {
-        loop {
-            let flush = self.shared.flush.notified();
-            tokio::pin!(flush);
-            flush.as_mut().enable();
-            let (queued, closing) = {
-                let state = self.shared.lock();
-                if state.stopped {
-                    return;
-                }
-                (state.outcomes.len(), state.closing)
-            };
-            if queued == 0 {
-                flush.await;
-                continue;
-            }
-            if queued < OUTCOME_BATCH_SIZE && !closing {
-                tokio::time::sleep(OUTCOME_FLUSH_DELAY).await;
-            }
-            self.flush().await;
-        }
-    }
-
-    async fn flush(&self) {
-        loop {
-            let (batch, msg_id) = {
-                let mut state = self.shared.lock();
-                if state.stopped || state.outcomes.is_empty() {
-                    return;
-                }
-                let batch = state.outcomes[..state.outcomes.len().min(OUTCOME_BATCH_SIZE)].to_vec();
-                state.outcome_batches += 1;
-                (
-                    batch,
-                    format!("{}:{}:o", self.producer, state.outcome_batches),
-                )
-            };
-            let published = batch.len();
-            let record = CaptureRecord::Outcomes {
-                producer: self.producer.clone(),
-                outcomes: batch,
-            };
-            let body = match serde_json::to_vec(&record) {
-                Ok(body) => body,
-                Err(error) => {
-                    tracing::error!(%error, "cassandra write capture could not encode outcomes");
-                    return;
-                }
-            };
-            loop {
-                match self.sink.publish_once(&self.subject, &msg_id, &body).await {
-                    Ok(()) => {
-                        self.shared.lock().outcomes.drain(..published);
-                        break;
-                    }
-                    Err(_) => {
-                        self.shared
-                            .publish_failures_total
-                            .fetch_add(1, Ordering::Relaxed);
-                        if self.shared.lock().stopped {
-                            return;
-                        }
-                        tokio::time::sleep(OUTCOME_RETRY_DELAY).await;
-                    }
-                }
-            }
-            self.shared.room.notify_waiters();
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1051,7 +743,6 @@ mod tests {
         events: Mutex<Vec<String>>,
         published: Mutex<Vec<(String, String, Value)>>,
         failing: Mutex<Vec<&'static str>>,
-        outcome_gate: Option<tokio::sync::Semaphore>,
     }
 
     impl MemorySink {
@@ -1061,9 +752,6 @@ mod tests {
             msg_id: &str,
             body: &[u8],
         ) -> anyhow::Result<()> {
-            if let (true, Some(gate)) = (subject.ends_with(".o"), &self.outcome_gate) {
-                gate.acquire().await?.forget();
-            }
             if self
                 .failing
                 .lock()
@@ -1086,26 +774,9 @@ mod tests {
             self.events.lock().unwrap().push(event.to_owned());
         }
 
-        fn outcomes(&self) -> Vec<Value> {
-            self.published
-                .lock()
-                .unwrap()
-                .iter()
-                .filter(|(_, _, record)| record["kind"] == "o")
-                .flat_map(|(_, _, record)| record["outcomes"].as_array().unwrap().clone())
-                .collect()
-        }
-
         fn last(&self) -> Value {
             self.published.lock().unwrap().last().unwrap().2.clone()
         }
-    }
-
-    fn capture_on(sink: &Arc<MemorySink>, limits: Limits) -> CassandraCapture {
-        let mut capture =
-            CassandraCapture::new(CaptureMode::On, "users", "users-0:boot".to_owned());
-        capture.limits = limits;
-        capture.with_sink(Sink::Memory(sink.clone()))
     }
 
     const QUICK: Limits = Limits {
@@ -1173,12 +844,12 @@ mod tests {
     }
 
     #[test]
-    fn decodes_and_re_encodes_every_shared_lwt_outcome_and_life_record() {
+    fn decodes_and_re_encodes_every_shared_key_and_life_record() {
         let records = fixture()
             .into_iter()
-            .filter(|record| matches!(record["kind"].as_str(), Some("l" | "o" | "k" | "life")))
+            .filter(|record| matches!(record["kind"].as_str(), Some("k" | "life")))
             .collect::<Vec<_>>();
-        for kind in ["l", "o", "k", "life"] {
+        for kind in ["k", "life"] {
             assert!(
                 records.iter().any(|record| record["kind"] == kind),
                 "{kind}"
@@ -1198,222 +869,6 @@ mod tests {
         }
     }
 
-    #[test]
-    fn builds_the_shared_app_attest_intent() {
-        let capture = CassandraCapture::new(
-            CaptureMode::Measure,
-            "users",
-            "users-0:00000000-0000-0000-0000-000000000001".to_owned(),
-        );
-        let record = capture.lwt_intent(
-            1,
-            vec![LwtRow::new(
-                "app_attest_keys",
-                [
-                    ("user_id", bigint(1_309_547_563_201_765_376)),
-                    ("key_id", Value::from("a2V5")),
-                ],
-                false,
-            )],
-        );
-        let mut built = serde_json::to_value(record).unwrap();
-        built["ts"] = Value::from(1_763_750_000_000_000_i64);
-        assert!(fixture().contains(&built));
-    }
-
-    #[tokio::test]
-    async fn publishes_the_intent_before_the_write_and_its_outcome_after() {
-        let sink = Arc::new(MemorySink::default());
-        let capture = capture_on(&sink, DEFAULT_LIMITS);
-        let applied = capture
-            .conditional(
-                challenge(),
-                async {
-                    sink.event("send");
-                    Ok(true)
-                },
-                |applied| Some(*applied),
-            )
-            .await
-            .unwrap();
-        assert!(applied);
-        capture.close(Duration::from_secs(1)).await;
-        assert_eq!(
-            *sink.events.lock().unwrap(),
-            [
-                "cassandra.capture.users.l",
-                "send",
-                "cassandra.capture.users.o",
-                "cassandra.capture.users.life",
-            ]
-        );
-        let published = sink.published.lock().unwrap().clone();
-        let ids = published
-            .iter()
-            .map(|(_, id, _)| id.as_str())
-            .collect::<Vec<_>>();
-        assert_eq!(
-            ids,
-            [
-                "users-0:boot:1:l",
-                "users-0:boot:1:o",
-                "users-0:boot:closed"
-            ]
-        );
-        assert_eq!(
-            published[1].2,
-            json!({"kind": "o", "producer": "users-0:boot", "outcomes": [[1, "applied"]]})
-        );
-        assert_eq!(
-            sink.last(),
-            json!({"kind": "life", "producer": "users-0:boot", "state": "closed", "last_seq": 1})
-        );
-    }
-
-    #[tokio::test]
-    async fn records_whether_a_conditional_write_applied_and_rethrows_driver_errors() {
-        let sink = Arc::new(MemorySink::default());
-        let capture = capture_on(&sink, DEFAULT_LIMITS);
-        for applied in [Some(true), Some(false), None] {
-            capture
-                .conditional(challenge(), async { Ok(applied) }, |applied| *applied)
-                .await
-                .unwrap();
-        }
-        let error = capture
-            .conditional(
-                challenge(),
-                async { Err::<(), _>(anyhow::anyhow!("socket hang up")) },
-                |_| Some(true),
-            )
-            .await
-            .unwrap_err();
-        assert_eq!(error.to_string(), "socket hang up");
-        capture.close(Duration::from_secs(1)).await;
-        assert_eq!(
-            sink.outcomes(),
-            [
-                json!([1, "applied"]),
-                json!([2, "not_applied"]),
-                json!([3, "unknown"]),
-                json!([4, "unknown"]),
-            ]
-        );
-    }
-
-    #[tokio::test]
-    async fn refuses_the_write_when_the_intent_cannot_be_stored_and_records_it_as_failed() {
-        let sink = Arc::new(MemorySink::default());
-        sink.failing.lock().unwrap().push(".l");
-        let capture = capture_on(&sink, DEFAULT_LIMITS);
-        let sent = AtomicU64::new(0);
-        let result = capture
-            .conditional(
-                challenge(),
-                async {
-                    sent.fetch_add(1, Ordering::Relaxed);
-                    Ok(())
-                },
-                |_| Some(true),
-            )
-            .await;
-        capture.close(Duration::from_secs(1)).await;
-        assert!(result.is_err());
-        assert_eq!(sent.load(Ordering::Relaxed), 0);
-        assert_eq!(
-            capture
-                .shared
-                .publish_failures_total
-                .load(Ordering::Relaxed),
-            1
-        );
-        assert_eq!(sink.outcomes(), [json!([1, "failed"])]);
-    }
-
-    #[tokio::test]
-    async fn records_a_write_cancelled_during_the_driver_call_as_unknown() {
-        let sink = Arc::new(MemorySink::default());
-        let capture = capture_on(&sink, DEFAULT_LIMITS);
-        let write = capture.conditional(
-            challenge(),
-            std::future::pending::<anyhow::Result<()>>(),
-            |_| Some(true),
-        );
-        assert!(
-            tokio::time::timeout(Duration::from_millis(20), write)
-                .await
-                .is_err()
-        );
-        capture.close(Duration::from_secs(1)).await;
-        assert_eq!(sink.outcomes(), [json!([1, "unknown"])]);
-    }
-
-    #[tokio::test]
-    async fn holds_new_writes_while_the_outcome_buffer_is_full_and_closes_once_it_drains() {
-        let sink = Arc::new(MemorySink {
-            outcome_gate: Some(tokio::sync::Semaphore::new(0)),
-            ..MemorySink::default()
-        });
-        let capture = capture_on(
-            &sink,
-            Limits {
-                max_in_flight: 8,
-                max_buffered_outcomes: 1,
-                slot_wait: Duration::from_millis(20),
-                ..DEFAULT_LIMITS
-            },
-        );
-        let write = || capture.conditional(challenge(), async { Ok(()) }, |_| Some(true));
-        write().await.unwrap();
-        assert!(write().await.is_err());
-        tokio::join!(capture.close(Duration::from_secs(1)), async {
-            sink.outcome_gate.as_ref().unwrap().add_permits(16);
-        });
-        assert_eq!(sink.outcomes(), [json!([1, "applied"])]);
-        assert_eq!(sink.last()["state"], "closed");
-        assert_eq!(sink.last()["last_seq"], 1);
-        assert!(write().await.is_err());
-        let mut metrics = String::new();
-        capture.render_metrics(&mut metrics);
-        assert!(
-            metrics.contains("fluxer_cassandra_capture_rejected_writes_total{reason=\"busy\"} 1")
-        );
-        assert!(
-            metrics.contains("fluxer_cassandra_capture_rejected_writes_total{reason=\"closed\"} 1")
-        );
-    }
-
-    #[tokio::test]
-    async fn a_failed_jetstream_publish_fails_the_write_before_it_is_sent() {
-        let client = async_nats::ConnectOptions::new()
-            .retry_on_initial_connect()
-            .connect("nats://127.0.0.1:1")
-            .await
-            .unwrap();
-        let capture = CassandraCapture::new(CaptureMode::On, "users", "users-0:boot".to_owned())
-            .with_sink(Sink::JetStream(Box::new(jetstream::new(client))));
-        let sent = AtomicU64::new(0);
-        let result = capture
-            .conditional(
-                challenge(),
-                async {
-                    sent.fetch_add(1, Ordering::Relaxed);
-                    Ok(())
-                },
-                |_| Some(true),
-            )
-            .await;
-        assert!(result.is_err());
-        assert_eq!(sent.load(Ordering::Relaxed), 0);
-        assert!(
-            capture
-                .shared
-                .publish_failures_total
-                .load(Ordering::Relaxed)
-                >= 1
-        );
-    }
-
     #[tokio::test]
     async fn mode_off_connects_to_nothing_and_lets_every_write_through() {
         let config =
@@ -1430,21 +885,8 @@ mod tests {
             .unwrap();
         assert!(!applied);
         assert_eq!(capture.records_total.load(Ordering::Relaxed), 0);
-        assert_eq!(capture.seq.load(Ordering::Relaxed), 0);
-        assert!(capture.shared.lock().outcomes.is_empty());
+        assert!(capture.shared.lock().queued_keys.is_empty());
         capture.close(Duration::from_secs(1)).await;
-    }
-
-    #[tokio::test]
-    async fn mode_measure_counts_records_and_publishes_no_outcome() {
-        let capture =
-            CassandraCapture::new(CaptureMode::Measure, "users", "users-0:boot".to_owned());
-        capture
-            .conditional(challenge(), async { Ok(()) }, |_| Some(true))
-            .await
-            .unwrap();
-        assert_eq!(capture.records_total.load(Ordering::Relaxed), 1);
-        assert!(capture.shared.lock().outcomes.is_empty());
     }
 
     #[cfg(feature = "scylla")]
@@ -1539,9 +981,9 @@ mod tests {
 
     #[cfg(feature = "scylla")]
     #[tokio::test]
-    async fn records_a_definite_driver_error_as_failed() {
+    async fn behind_skips_a_write_the_driver_definitely_refused() {
         let sink = Arc::new(MemorySink::default());
-        let capture = capture_on(&sink, DEFAULT_LIMITS);
+        let capture = capture_behind(&sink, QUICK);
         let overloaded = scylla::errors::ExecutionError::LastAttemptError(
             scylla::errors::RequestAttemptError::DbError(
                 scylla::errors::DbError::Overloaded,
@@ -1550,14 +992,14 @@ mod tests {
         );
         let result = capture
             .conditional(
-                challenge(),
+                app_attest_key(),
                 async { Err::<(), _>(anyhow::Error::from(overloaded)) },
                 |_| Some(true),
             )
             .await;
         assert!(result.is_err());
         capture.close(Duration::from_secs(1)).await;
-        assert_eq!(sink.outcomes(), [json!([1, "failed"])]);
+        assert_eq!(ids(&sink), ["users-0:boot:open", "users-0:boot:closed"]);
     }
 
     #[tokio::test]
@@ -1833,7 +1275,7 @@ mod tests {
     }
 
     #[test]
-    fn reads_the_mode_and_requires_a_stream_address_when_on() {
+    fn reads_the_mode_and_requires_a_stream_address_when_behind() {
         let env = |pairs: &[(&str, &str)]| {
             EnvMap::from_pairs(
                 pairs
@@ -1845,15 +1287,16 @@ mod tests {
             CaptureConfig::from_env(&env(&[])).unwrap().mode,
             CaptureMode::Off
         );
-        assert_eq!(
-            CaptureConfig::from_env(&env(&[("FLUXER_SVC_CASSANDRA_CAPTURE_MODE", "measure")]))
-                .unwrap()
-                .mode,
-            CaptureMode::Measure
-        );
-        assert!(
-            CaptureConfig::from_env(&env(&[("FLUXER_SVC_CASSANDRA_CAPTURE_MODE", "on")])).is_err()
-        );
+        for retired in ["measure", "on"] {
+            assert!(
+                CaptureConfig::from_env(&env(&[
+                    ("FLUXER_SVC_CASSANDRA_CAPTURE_MODE", retired),
+                    ("FLUXER_SVC_CASSANDRA_CAPTURE_NATS_URL", "nats://nats:4222"),
+                ]))
+                .is_err(),
+                "{retired}"
+            );
+        }
         assert!(
             CaptureConfig::from_env(&env(&[("FLUXER_SVC_CASSANDRA_CAPTURE_MODE", "maybe")]))
                 .is_err()
@@ -1871,12 +1314,6 @@ mod tests {
         assert_eq!(behind.mode, CaptureMode::Behind);
         assert_eq!(behind.stream, "CASSANDRA_CDC");
         assert_eq!(
-            CaptureConfig::from_env(&env(&[("FLUXER_SVC_CASSANDRA_CAPTURE_MODE", "on"), url]))
-                .unwrap()
-                .stream,
-            "CASSANDRA_CAPTURE"
-        );
-        assert_eq!(
             CaptureConfig::from_env(&env(&[
                 ("FLUXER_SVC_CASSANDRA_CAPTURE_MODE", "behind"),
                 url,
@@ -1886,13 +1323,5 @@ mod tests {
             .stream,
             "CDC_PROOF"
         );
-    }
-
-    #[test]
-    fn only_the_migration_modes_pause_orphan_cleanup() {
-        assert!(!CaptureMode::Off.pauses_orphan_cleanup());
-        assert!(CaptureMode::Measure.pauses_orphan_cleanup());
-        assert!(CaptureMode::On.pauses_orphan_cleanup());
-        assert!(!CaptureMode::Behind.pauses_orphan_cleanup());
     }
 }
