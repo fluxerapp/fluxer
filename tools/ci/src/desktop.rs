@@ -9,8 +9,10 @@ use crate::common::{
 };
 use crate::functions::{sha256_file, write_json_pretty};
 use crate::release::{
-    DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION, DesktopPublishedRelease, DesktopReleaseAsset,
-    DesktopReleaseDescriptor, DesktopReleaseKind, desktop_module_manifest_release_asset_name,
+    DESKTOP_MODULES_RELEASE_DESCRIPTOR_SCHEMA_VERSION, DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION,
+    DesktopPublishedRelease, DesktopReleaseAsset, DesktopReleaseDescriptor, DesktopReleaseKind,
+    desktop_linux_repo_coordinates, desktop_linux_repo_release_asset_name,
+    desktop_linux_repo_storage_key, desktop_module_manifest_release_asset_name,
     desktop_module_manifest_storage_key, desktop_module_package_release_asset_name,
     desktop_module_package_storage_key, desktop_release_asset_name, desktop_release_coordinates,
     desktop_release_descriptor_filename, desktop_release_kind, desktop_release_product,
@@ -4624,9 +4626,17 @@ fn prepare_release_assets_step() -> Result<()> {
         }
     }
     add_desktop_module_release_assets(&mut release_builder, &payload_root)?;
-    let (mut descriptor_assets, mut descriptor_modules) = release_builder.finish();
-    descriptor_assets.sort_by(|left, right| left.storage_key.cmp(&right.storage_key));
-    descriptor_modules.sort_by(|left, right| left.storage_key.cmp(&right.storage_key));
+    add_desktop_linux_repo_release_assets(&mut release_builder, &channel, &version)?;
+    let mut staged = release_builder.finish();
+    staged
+        .assets
+        .sort_by(|left, right| left.storage_key.cmp(&right.storage_key));
+    staged
+        .modules
+        .sort_by(|left, right| left.storage_key.cmp(&right.storage_key));
+    staged
+        .linux_repos
+        .sort_by(|left, right| left.storage_key.cmp(&right.storage_key));
     let descriptor = DesktopReleaseDescriptor {
         schema_version: DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION,
         kind: DesktopReleaseKind::Full,
@@ -4634,8 +4644,9 @@ fn prepare_release_assets_step() -> Result<()> {
         version: version.clone(),
         release_tag: format!("fluxer-desktop-{channel}@{version}"),
         source_sha,
-        assets: descriptor_assets,
-        modules: descriptor_modules,
+        assets: staged.assets,
+        modules: staged.modules,
+        linux_repos: staged.linux_repos,
     };
     validate_desktop_release_descriptor(&descriptor, &channel, &version, &descriptor.source_sha)?;
     validate_desktop_release_module_files(&descriptor, release_assets)?;
@@ -4727,6 +4738,7 @@ struct DesktopReleaseAssetBuilder<'a> {
     release_assets: &'a Path,
     descriptor_assets: Vec<DesktopReleaseAsset>,
     descriptor_modules: Vec<DesktopReleaseAsset>,
+    descriptor_linux_repos: Vec<DesktopReleaseAsset>,
     storage_keys: BTreeSet<String>,
     release_asset_content: BTreeMap<String, (String, u64)>,
     release_asset_names: BTreeMap<String, String>,
@@ -4741,6 +4753,7 @@ impl<'a> DesktopReleaseAssetBuilder<'a> {
             release_assets,
             descriptor_assets: Vec::new(),
             descriptor_modules: Vec::new(),
+            descriptor_linux_repos: Vec::new(),
             storage_keys: BTreeSet::new(),
             release_asset_content: BTreeMap::new(),
             release_asset_names: BTreeMap::new(),
@@ -4784,6 +4797,16 @@ impl<'a> DesktopReleaseAssetBuilder<'a> {
             source,
         )?;
         self.descriptor_modules.push(asset);
+        Ok(())
+    }
+
+    fn add_linux_repo(&mut self, kind: &str, machine: &str, source: &Path) -> Result<()> {
+        let asset = self.copy(
+            desktop_linux_repo_storage_key(self.channel, kind, machine),
+            desktop_linux_repo_release_asset_name(self.channel, self.version, kind, machine)?,
+            source,
+        )?;
+        self.descriptor_linux_repos.push(asset);
         Ok(())
     }
 
@@ -4868,9 +4891,50 @@ impl<'a> DesktopReleaseAssetBuilder<'a> {
         })
     }
 
-    fn finish(self) -> (Vec<DesktopReleaseAsset>, Vec<DesktopReleaseAsset>) {
-        (self.descriptor_assets, self.descriptor_modules)
+    fn finish(self) -> DesktopReleaseAssets {
+        DesktopReleaseAssets {
+            assets: self.descriptor_assets,
+            modules: self.descriptor_modules,
+            linux_repos: self.descriptor_linux_repos,
+        }
     }
+}
+
+struct DesktopReleaseAssets {
+    assets: Vec<DesktopReleaseAsset>,
+    modules: Vec<DesktopReleaseAsset>,
+    linux_repos: Vec<DesktopReleaseAsset>,
+}
+
+const DESKTOP_LINUX_REPO_ASSET_DIR: &str = "linux_repos";
+
+fn add_desktop_linux_repo_release_assets(
+    release_builder: &mut DesktopReleaseAssetBuilder,
+    channel: &str,
+    version: &str,
+) -> Result<()> {
+    let dir = Path::new(DESKTOP_LINUX_REPO_ASSET_DIR);
+    ensure!(
+        dir.is_dir(),
+        "Desktop Linux repository assets are missing: {}",
+        dir.display()
+    );
+    let files = collect_files(dir)?;
+    for (kind, machine) in desktop_linux_repo_coordinates() {
+        let name = desktop_linux_repo_release_asset_name(channel, version, kind, machine)?;
+        let matches = files
+            .iter()
+            .filter(|path| path.file_name().and_then(OsStr::to_str) == Some(name.as_str()))
+            .collect::<Vec<_>>();
+        ensure!(
+            matches.len() == 1,
+            "Expected one {name} in {}, found {}",
+            dir.display(),
+            matches.len()
+        );
+        release_builder.add_linux_repo(kind, machine, matches[0])?;
+    }
+    Ok(())
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -6702,21 +6766,24 @@ fn prepare_modules_release_assets_step() -> Result<()> {
     let mut release_builder =
         DesktopReleaseAssetBuilder::new(&channel, &version, product, release_assets);
     add_desktop_module_release_assets(&mut release_builder, &payload_root)?;
-    let (descriptor_assets, mut descriptor_modules) = release_builder.finish();
+    let mut staged = release_builder.finish();
     ensure!(
-        descriptor_assets.is_empty(),
+        staged.assets.is_empty() && staged.linux_repos.is_empty(),
         "A modules-only release staged shell assets"
     );
-    descriptor_modules.sort_by(|left, right| left.storage_key.cmp(&right.storage_key));
+    staged
+        .modules
+        .sort_by(|left, right| left.storage_key.cmp(&right.storage_key));
     let descriptor = DesktopReleaseDescriptor {
-        schema_version: DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION,
+        schema_version: DESKTOP_MODULES_RELEASE_DESCRIPTOR_SCHEMA_VERSION,
         kind: DesktopReleaseKind::Modules,
         channel: channel.clone(),
         version: version.clone(),
         release_tag: format!("fluxer-desktop-{channel}@{version}"),
         source_sha,
         assets: Vec::new(),
-        modules: descriptor_modules,
+        modules: staged.modules,
+        linux_repos: Vec::new(),
     };
     validate_desktop_release_descriptor(&descriptor, &channel, &version, &descriptor.source_sha)?;
     validate_desktop_release_module_files(&descriptor, release_assets)?;
@@ -8235,7 +8302,9 @@ mod tests {
             &release_assets,
         );
         add_desktop_module_release_assets(&mut builder, &payload_root.join("canary")).unwrap();
-        let (assets, modules) = builder.finish();
+        let DesktopReleaseAssets {
+            assets, modules, ..
+        } = builder.finish();
         assert!(assets.is_empty());
         let mut expected = desktop_release_coordinates()
             .into_iter()
@@ -8290,6 +8359,7 @@ mod tests {
             source_sha: "0".repeat(40),
             assets,
             modules,
+            linux_repos: Vec::new(),
         };
         validate_desktop_release_module_files(&descriptor, &release_assets).unwrap();
     }
