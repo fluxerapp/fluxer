@@ -338,7 +338,7 @@ export const CDC_DROPPED_COLUMNS: Readonly<Record<string, ReadonlyArray<string>>
 	dsa_report_email_verifications: ['code_hash'],
 	operator_pass_waitlist: ['verify_token_hash'],
 	store_purchases: ['account_token'],
-	user_connections: ['verification_token'],
+	user_connections: ['credential_payload', 'verification_token'],
 	user_recovery_kits: ['secret_hash'],
 	users: ['password_hash', 'totp_secret'],
 	voice_join_tokens: ['secret_hash'],
