@@ -2,6 +2,7 @@
 
 import {Config} from '@app/api/Config';
 import {loadTableLayouts, readRows} from '@app/api/capture/CaptureTables';
+import {fetchOnce} from '@app/api/capture/ReplayFetch';
 import {type LedgerAction, ReplayLedger} from '@app/api/capture/ReplayLedger';
 import {ReplayRefusal, replayStatement} from '@app/api/capture/ReplayStatements';
 import {type ReplayProgress, type ReplayStatus, replayStatus} from '@app/api/capture/ReplayStatus';
@@ -143,11 +144,11 @@ class Replayer {
 
 	async replay(consumer: Consumer): Promise<void> {
 		while (!this.stopping && this.broken === null) {
-			const messages = await consumer.fetch({max_messages: FETCH_BATCH, expires: 5000});
-			for await (const msg of messages) {
-				if (this.broken !== null) break;
+			await fetchOnce(consumer, {max_messages: FETCH_BATCH, expires: 5000}, async (msg) => {
+				if (this.broken !== null) return false;
 				await this.handle(msg);
-			}
+				return true;
+			});
 			await this.run(this.ledger.orphans(this.latestStreamMs ?? 0));
 		}
 		await Promise.all(this.applies);
@@ -155,9 +156,8 @@ class Replayer {
 
 	async settleImages(consumer: Consumer): Promise<void> {
 		while (!this.stopping && this.broken === null) {
-			const messages = await consumer.fetch({max_messages: 32, expires: 5000});
-			for await (const msg of messages) {
-				if (this.broken !== null) break;
+			await fetchOnce(consumer, {max_messages: 32, expires: 5000}, async (msg) => {
+				if (this.broken !== null) return false;
 				const record = msg.json<ImageRecord | PassRecord>();
 				if (record.kind === 'img') {
 					await this.applyImage(record);
@@ -165,7 +165,8 @@ class Replayer {
 					lastPassSeconds = record.seconds;
 				}
 				if (this.broken === null) msg.ack();
-			}
+				return true;
+			});
 		}
 	}
 
@@ -345,7 +346,7 @@ class Replayer {
 			}
 			appliedTotal.inc('kind="image"');
 			const after = await withRetry(() => readRows(this.client, layout, key));
-			const [difference] = differencesBelowHorizon(layout, source, after, record.h, canonical);
+			const [difference] = differencesBelowHorizon(layout, source, after, record.h, canonical, true);
 			if (difference !== undefined) this.setBroken(`settle pass ${record.pass} left ${difference}`);
 		} catch (error) {
 			this.setBroken(`settle pass ${record.pass} on ${record.t}: ${String(error)}`);

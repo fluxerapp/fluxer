@@ -128,6 +128,7 @@ export function differencesBelowHorizon(
 	lim1: ReadonlyArray<RowState>,
 	horizon: number,
 	canonical: SettleOptions['canonical'],
+	deletedLater = false,
 ): Array<string> {
 	const source = rowsByKey(layout, db1, canonical);
 	const target = rowsByKey(layout, lim1, canonical);
@@ -136,6 +137,7 @@ export function differencesBelowHorizon(
 		const from = source.get(id);
 		const to = target.get(id);
 		const settledRow = !hasCellAtOrAbove(from, horizon) && !hasCellAtOrAbove(to, horizon);
+		if (deletedLater && from !== undefined && to === undefined) continue;
 		if (settledRow && (from === undefined) !== (to === undefined)) {
 			differences.push(`${layout.name} ${id}: row ${from ? 'missing' : 'unexpected'}`);
 			continue;
@@ -144,6 +146,7 @@ export function differencesBelowHorizon(
 			const wanted = from?.cells[column];
 			const present = to?.cells[column];
 			if (touchesHorizon(wanted, present, horizon) || (wanted === undefined && present === undefined)) continue;
+			if (deletedLater && wanted !== undefined && present === undefined) continue;
 			if (wanted === undefined || present === undefined || !sameCell(wanted, present, canonical)) {
 				differences.push(`${layout.name} ${id}: ${column}`);
 			}
