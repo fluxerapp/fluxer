@@ -33,5 +33,5 @@ image:
 clean-build:
 	find '$(CURDIR)' \( -path '$(CURDIR)/.git' -o -path '$(DIST_DIR)' -o -path '$(TOOLCHAIN)' -o -path '$(NATIVE)' \) -prune \
 		-o \( -name target -o -name node_modules \) -type d -prune -exec rm -rf {} +
-	rm -rf fluxer_gateway/_build fluxer_gateway/priv fluxer_app/dist fluxer_api/dist
+	rm -rf fluxer_gateway/build fluxer_gateway/bouncer/build fluxer_gateway/bouncer_proto/build fluxer_gateway/priv fluxer_app/dist fluxer_api/dist
 	if [ -n "$${PNPM_STORE_DIR:-}" ]; then rm -rf "$$PNPM_STORE_DIR"; fi

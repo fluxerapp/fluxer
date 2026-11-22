@@ -14,15 +14,10 @@ indent_style = space
 indent_size = 4
 max_line_length = 100
 
-[*.{erl,hrl,app.src,escript}]
+[*.gleam]
 indent_style = space
-indent_size = 4
-max_line_length = 96
-
-[fluxer_gateway/{rebar.config,elvis.config,.erlfmt}]
-indent_style = space
-indent_size = 4
-max_line_length = 96
+indent_size = 2
+max_line_length = 80
 
 [*.{c,h,py}]
 indent_style = space

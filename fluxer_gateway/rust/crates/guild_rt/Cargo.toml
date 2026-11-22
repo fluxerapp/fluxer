@@ -1,0 +1,21 @@
+[package]
+name = "guild_rt"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+name = "guild_rt"
+path = "src/lib.rs"
+
+[dependencies]
+perm_core = { workspace = true }
+
+[dev-dependencies]
+criterion = { workspace = true }
+
+[[bench]]
+name = "rt"
+harness = false

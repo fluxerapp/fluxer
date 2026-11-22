@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::manifest::GATEWAY_PORT;
 use crate::paths::{DEV_GATEWAY_DIR, GATEWAY_CONFIG_DIR, ROOT, write_private_file};
 use crate::proc::{
     AwaitOutcome, RESTART_LIMIT, RESTART_WINDOW, RunOptions, ShutdownSignal, await_or_shutdown,
@@ -9,21 +10,15 @@ use crate::proc::{
     terminate_process_group,
 };
 use anyhow::{Context, Result, bail};
-use sha2::{Digest, Sha256};
 use std::collections::VecDeque;
 use std::env;
 use std::fs;
-use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::time::{Duration, Instant};
 use tokio::time::sleep;
 
-const GATEWAY_FOREGROUND_EVAL: &str = concat!(
-    "case application:ensure_all_started(fluxer_gateway) of ",
-    "{ok, _Apps} -> io:format(\"gateway started~n\"), receive after infinity -> ok end; ",
-    "Error -> io:format(\"gateway failed: ~p~n\", [Error]), halt(1) end."
-);
+const GATEWAY_MAIN_EVAL: &str = "fluxer_gateway@@main:run(fluxer_gateway)";
 const GATEWAY_CLUSTER_ROLES: &[&str] = &[
     "websocket",
     "sessions",
@@ -35,22 +30,11 @@ const GATEWAY_CLUSTER_ROLES: &[&str] = &[
 const GATEWAY_CLUSTER_DEFAULT_REPLICAS: u16 = 3;
 const GATEWAY_CLUSTER_DIST_PORT_BASE: u16 = 9001;
 const GATEWAY_CLUSTER_COOKIE: &str = "fluxer-dev";
-const GATEWAY_COMPILE_COMMAND: &[&str] = &[
-    "cargo",
-    "run",
-    "--locked",
-    "--quiet",
-    "--manifest-path",
-    "tools/ci/Cargo.toml",
-    "--",
-    "gateway",
-    "--step",
-    "compile",
-];
-const GATEWAY_DEPENDENCY_INPUTS: &[&str] = &["rebar.config", "rebar.config.script", "rebar.lock"];
-const GATEWAY_DEPENDENCY_INPUT_MAX_BYTES: u64 = 4 * 1024 * 1024;
-const GATEWAY_DEPENDENCY_STAMP_FILE: &str = "rebar-dependencies.sha256";
-const GATEWAY_DEPENDENCY_STAMP_MAX_BYTES: u64 = 128;
+const GATEWAY_DEFAULT_NODE_NAME: &str = "fluxer_gateway@127.0.0.1";
+const GATEWAY_DEFAULT_DIST_PORT: &str = "8081";
+const GATEWAY_STATUS_PORT_OFFSET: u16 = 1000;
+const GATEWAY_COMPILE_COMMAND: &[&str] = &["scripts/gleam.sh", "build"];
+const GATEWAY_EPMDLESS_VM_ARGS: &[&str] = &["-start_epmd", "-erl_epmd_port"];
 const NODE_SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(5);
 const NODE_RESTART_PORT_WAIT: Duration = Duration::from_secs(75);
 const NESTED_STOP_GRACE_PERIOD: Duration = Duration::from_secs(5);
@@ -61,6 +45,7 @@ pub struct GatewayNode {
     pub role: String,
     pub ordinal: u16,
     pub http_port: u16,
+    pub status_port: u16,
     pub dist_port: u16,
 }
 
@@ -85,18 +70,25 @@ pub fn gateway_dir() -> PathBuf {
 }
 
 fn gateway_ebin_root() -> PathBuf {
-    gateway_dir().join("_build/default/lib")
+    gateway_dir().join("build/dev/erlang")
+}
+
+fn gateway_cookie() -> String {
+    env::var("FLUXER_ERLANG_COOKIE").unwrap_or_else(|_| GATEWAY_CLUSTER_COOKIE.to_owned())
+}
+
+fn gateway_node_name() -> String {
+    env::var("FLUXER_ERLANG_NODE_NAME").unwrap_or_else(|_| GATEWAY_DEFAULT_NODE_NAME.to_owned())
 }
 
 pub fn setup_gateway_config() -> Result<()> {
     write_gateway_config(
         DEV_GATEWAY_DIR.as_path(),
-        &env::var("FLUXER_ERLANG_NODE_NAME")
-            .unwrap_or_else(|_| "fluxer_gateway@127.0.0.1".to_owned()),
-        &env::var("FLUXER_ERLANG_COOKIE").unwrap_or_else(|_| GATEWAY_CLUSTER_COOKIE.to_owned()),
-        &env::var("FLUXER_ERLANG_DIST_PORT").unwrap_or_else(|_| "8081".to_owned()),
-    )?;
-    remove_stale_gateway_config()
+        &gateway_node_name(),
+        &gateway_cookie(),
+        &env::var("FLUXER_ERLANG_DIST_PORT")
+            .unwrap_or_else(|_| GATEWAY_DEFAULT_DIST_PORT.to_owned()),
+    )
 }
 
 pub fn write_gateway_config(
@@ -105,38 +97,105 @@ pub fn write_gateway_config(
     cookie: &str,
     dist_port: &str,
 ) -> Result<()> {
-    let sys_template = GATEWAY_CONFIG_DIR.join("sys.config.template");
-    let vm_template = GATEWAY_CONFIG_DIR.join("vm.args.template");
-    fs::create_dir_all(config_dir)?;
+    let sys_config_source = GATEWAY_CONFIG_DIR.join("sys.config");
+    let vm_args_source = GATEWAY_CONFIG_DIR.join("vm.args.src");
+    fs::create_dir_all(config_dir)
+        .with_context(|| format!("failed to create {}", config_dir.display()))?;
+    let sys_config = config_dir.join("sys.config");
     fs::write(
-        config_dir.join("sys.config"),
-        fs::read_to_string(sys_template)?,
-    )?;
-    let vm_text = fs::read_to_string(vm_template)?
-        .replace("${FLUXER_ERLANG_NODE_NAME}", node_name)
-        .replace("${FLUXER_ERLANG_COOKIE}", cookie)
-        .replace("${FLUXER_ERLANG_DIST_PORT}", dist_port);
+        &sys_config,
+        fs::read_to_string(&sys_config_source)
+            .with_context(|| format!("failed to read {}", sys_config_source.display()))?,
+    )
+    .with_context(|| format!("failed to write {}", sys_config.display()))?;
+    let template = fs::read_to_string(&vm_args_source)
+        .with_context(|| format!("failed to read {}", vm_args_source.display()))?;
+    let sys_config_path = sys_config.display().to_string();
+    let vm_text = render_dev_vm_args(&template, |name| match name {
+        "FLUXER_ERLANG_NODE_NAME" => Some(node_name.to_owned()),
+        "FLUXER_ERLANG_COOKIE" => Some(cookie.to_owned()),
+        "FLUXER_ERLANG_DIST_PORT" => Some(dist_port.to_owned()),
+        "FLUXER_GATEWAY_SYS_CONFIG" => Some(sys_config_path.clone()),
+        _ => env::var(name).ok(),
+    })
+    .with_context(|| format!("failed to render {}", vm_args_source.display()))?;
     write_private_file(&config_dir.join("vm.args"), &vm_text)?;
     Ok(())
 }
 
-fn remove_stale_gateway_config() -> Result<()> {
-    for path in [
-        GATEWAY_CONFIG_DIR.join("sys.config"),
-        GATEWAY_CONFIG_DIR.join("vm.args"),
-    ] {
-        if path.exists() {
-            fs::remove_file(&path)
-                .with_context(|| format!("failed to remove {}", path.display()))?;
+fn render_dev_vm_args(template: &str, lookup: impl Fn(&str) -> Option<String>) -> Result<String> {
+    let mut rendered = String::with_capacity(template.len());
+    for line in template.lines() {
+        if GATEWAY_EPMDLESS_VM_ARGS
+            .iter()
+            .any(|flag| line.split_whitespace().next() == Some(*flag))
+        {
+            continue;
         }
+        rendered.push_str(&substitute_env_line(line, &lookup)?);
+        rendered.push('\n');
     }
-    Ok(())
+    Ok(rendered)
+}
+
+fn substitute_env_line(line: &str, lookup: &impl Fn(&str) -> Option<String>) -> Result<String> {
+    let mut out = String::with_capacity(line.len());
+    let mut rest = line;
+    while let Some(start) = rest.find("${") {
+        out.push_str(&rest[..start]);
+        let after = &rest[start + 2..];
+        let end = after
+            .find('}')
+            .with_context(|| format!("unterminated variable in vm.args line: {line}"))?;
+        let token = &after[..end];
+        let (name, fallback) = match token.split_once(":-") {
+            Some((name, fallback)) => (name, Some(fallback)),
+            None => (token, None),
+        };
+        if name.is_empty()
+            || !name
+                .chars()
+                .all(|character| character.is_ascii_alphanumeric() || character == '_')
+        {
+            bail!("invalid variable name in vm.args line: {line}");
+        }
+        let value = lookup(name).filter(|value| !value.is_empty());
+        match (value, fallback) {
+            (Some(value), _) => out.push_str(&value),
+            (None, Some(fallback)) => out.push_str(fallback),
+            (None, None) => bail!("{name} is not set and has no default in vm.args"),
+        }
+        rest = &after[end + 1..];
+    }
+    out.push_str(rest);
+    Ok(out)
+}
+
+fn single_status_port(env: &std::collections::BTreeMap<String, String>) -> Result<String> {
+    if let Some(port) = env
+        .get("FLUXER_GATEWAY_STATUS_PORT")
+        .filter(|port| !port.is_empty())
+    {
+        return Ok(port.clone());
+    }
+    let http_port = match env.get("FLUXER_GATEWAY_PORT") {
+        Some(port) => port
+            .parse::<u16>()
+            .with_context(|| format!("FLUXER_GATEWAY_PORT is not a port: {port}"))?,
+        None => GATEWAY_PORT,
+    };
+    status_port_for(http_port).map(|port| port.to_string())
+}
+
+fn status_port_for(http_port: u16) -> Result<u16> {
+    http_port
+        .checked_add(GATEWAY_STATUS_PORT_OFFSET)
+        .with_context(|| format!("no status port fits above gateway port {http_port}"))
 }
 
 pub async fn run_gateway() -> Result<i32> {
     let mut shutdown = ShutdownSignal::new()?;
-    let node_names = std::collections::HashSet::from([env::var("FLUXER_ERLANG_NODE_NAME")
-        .unwrap_or_else(|_| "fluxer_gateway@127.0.0.1".to_owned())]);
+    let node_names = std::collections::HashSet::from([gateway_node_name()]);
     cleanup_orphaned_gateway_processes(&node_names).await?;
     if let Some(signal) = pending_shutdown(&mut shutdown).await {
         println!("Received {signal}; stopping gateway startup...");
@@ -153,10 +212,12 @@ pub async fn run_gateway() -> Result<i32> {
     let command = build_gateway_command(DEV_GATEWAY_DIR.as_path())?;
     let command_refs = command.iter().map(String::as_str).collect::<Vec<_>>();
     let working_dir = gateway_dir();
+    let status_port = single_status_port(&merged_env(None, true)?)?;
     let outcome = run_command_interruptible(
         &command_refs,
         RunOptions {
             cwd: &working_dir,
+            env: vec![("FLUXER_GATEWAY_STATUS_PORT".to_owned(), Some(status_port))],
             ..RunOptions::default()
         },
         &mut shutdown,
@@ -258,103 +319,16 @@ pub async fn run_gateway_cluster() -> Result<i32> {
 async fn compile_gateway_interruptible(
     shutdown: &mut ShutdownSignal,
 ) -> Result<AwaitOutcome<std::process::Output>> {
-    let dependency_stamp = prepare_gateway_compile()?;
-    let outcome =
-        run_command_interruptible(GATEWAY_COMPILE_COMMAND, RunOptions::default(), shutdown).await?;
-    if matches!(&outcome, AwaitOutcome::Completed(_)) {
-        write_gateway_dependency_stamp(&dependency_stamp)?;
-    }
-    Ok(outcome)
-}
-
-fn prepare_gateway_compile() -> Result<String> {
-    let dependency_stamp = gateway_dependency_stamp()?;
-    if gateway_dependency_stamp_matches(&dependency_stamp)? {
-        return Ok(dependency_stamp);
-    }
-    let build_dir = gateway_dir().join("_build/default");
-    println!(
-        "Gateway dependency inputs changed; removing stale {}",
-        build_dir.display()
-    );
-    match fs::remove_dir_all(&build_dir) {
-        Ok(()) => {}
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
-        Err(error) => {
-            return Err(error).with_context(|| format!("failed to remove {}", build_dir.display()));
-        }
-    }
-    Ok(dependency_stamp)
-}
-
-fn gateway_dependency_stamp() -> Result<String> {
-    let mut hasher = Sha256::new();
-    let mut total_bytes = 0_u64;
-    for input in GATEWAY_DEPENDENCY_INPUTS {
-        let path = gateway_dir().join(input);
-        let metadata = fs::metadata(&path)
-            .with_context(|| format!("failed to read metadata for {}", path.display()))?;
-        if !metadata.is_file() {
-            bail!("gateway dependency input is not a file: {}", path.display());
-        }
-        total_bytes = total_bytes
-            .checked_add(metadata.len())
-            .context("gateway dependency input byte count overflowed")?;
-        if total_bytes > GATEWAY_DEPENDENCY_INPUT_MAX_BYTES {
-            bail!(
-                "gateway dependency inputs exceed {} bytes",
-                GATEWAY_DEPENDENCY_INPUT_MAX_BYTES
-            );
-        }
-        let mut bytes = Vec::with_capacity(metadata.len() as usize);
-        fs::File::open(&path)
-            .with_context(|| format!("failed to open {}", path.display()))?
-            .take(metadata.len() + 1)
-            .read_to_end(&mut bytes)
-            .with_context(|| format!("failed to read {}", path.display()))?;
-        if bytes.len() as u64 != metadata.len() {
-            bail!(
-                "gateway dependency input changed while reading: {}",
-                path.display()
-            );
-        }
-        hasher.update((input.len() as u64).to_le_bytes());
-        hasher.update(input.as_bytes());
-        hasher.update(metadata.len().to_le_bytes());
-        hasher.update(&bytes);
-    }
-    Ok(hex::encode(hasher.finalize()))
-}
-
-fn gateway_dependency_stamp_matches(expected: &str) -> Result<bool> {
-    let path = DEV_GATEWAY_DIR.join(GATEWAY_DEPENDENCY_STAMP_FILE);
-    let file = match fs::File::open(&path) {
-        Ok(file) => file,
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(false),
-        Err(error) => {
-            return Err(error).with_context(|| format!("failed to open {}", path.display()));
-        }
-    };
-    let mut bytes = Vec::new();
-    file.take(GATEWAY_DEPENDENCY_STAMP_MAX_BYTES + 1)
-        .read_to_end(&mut bytes)
-        .with_context(|| format!("failed to read {}", path.display()))?;
-    if bytes.len() as u64 > GATEWAY_DEPENDENCY_STAMP_MAX_BYTES {
-        bail!(
-            "gateway dependency stamp exceeds {} bytes: {}",
-            GATEWAY_DEPENDENCY_STAMP_MAX_BYTES,
-            path.display()
-        );
-    }
-    Ok(bytes == format!("{expected}\n").as_bytes())
-}
-
-fn write_gateway_dependency_stamp(dependency_stamp: &str) -> Result<()> {
-    fs::create_dir_all(DEV_GATEWAY_DIR.as_path())
-        .with_context(|| format!("failed to create {}", DEV_GATEWAY_DIR.display()))?;
-    let path = DEV_GATEWAY_DIR.join(GATEWAY_DEPENDENCY_STAMP_FILE);
-    fs::write(&path, format!("{dependency_stamp}\n"))
-        .with_context(|| format!("failed to write {}", path.display()))
+    let working_dir = gateway_dir();
+    run_command_interruptible(
+        GATEWAY_COMPILE_COMMAND,
+        RunOptions {
+            cwd: &working_dir,
+            ..RunOptions::default()
+        },
+        shutdown,
+    )
+    .await
 }
 
 async fn restart_exited_nodes(supervised: &mut [SupervisedNode], static_peers: &str) -> Result<()> {
@@ -417,10 +391,14 @@ pub fn build_gateway_cluster_nodes() -> Result<Vec<GatewayNode>> {
     for role in GATEWAY_CLUSTER_ROLES {
         let ports = gateway_cluster_http_ports(role);
         for ordinal in 1..=replicas {
+            let http_port = ports[(ordinal - 1) as usize]
+                .checked_add(http_port_offset)
+                .context("FLUXER_DEV_GATEWAY_CLUSTER_HTTP_PORT_OFFSET is too large")?;
             nodes.push(GatewayNode {
                 role: (*role).to_owned(),
                 ordinal,
-                http_port: ports[(ordinal - 1) as usize] + http_port_offset,
+                http_port,
+                status_port: status_port_for(http_port)?,
                 dist_port,
             });
             dist_port += 1;
@@ -465,6 +443,10 @@ fn wait_for_cluster_ports_available_sync(nodes: &[GatewayNode]) -> Result<()> {
                 (
                     !can_bind_tcp_port(node.http_port),
                     format!("{} http={}", node.name(), node.http_port),
+                ),
+                (
+                    !can_bind_tcp_port(node.status_port),
+                    format!("{} status={}", node.name(), node.status_port),
                 ),
                 (
                     !can_bind_tcp_port(node.dist_port),
@@ -546,8 +528,7 @@ fn cmdline_has_gateway_node(
 }
 
 fn setup_gateway_cluster_config(nodes: &[GatewayNode]) -> Result<()> {
-    let cookie =
-        env::var("FLUXER_ERLANG_COOKIE").unwrap_or_else(|_| GATEWAY_CLUSTER_COOKIE.to_owned());
+    let cookie = gateway_cookie();
     for node in nodes {
         write_gateway_config(
             &node.config_dir(),
@@ -556,7 +537,7 @@ fn setup_gateway_cluster_config(nodes: &[GatewayNode]) -> Result<()> {
             &node.dist_port.to_string(),
         )?;
     }
-    remove_stale_gateway_config()
+    Ok(())
 }
 
 fn gateway_node_env(node: &GatewayNode, static_peers: &str) -> Vec<(String, Option<String>)> {
@@ -575,6 +556,10 @@ fn gateway_node_env(node: &GatewayNode, static_peers: &str) -> Vec<(String, Opti
             Some(node.http_port.to_string()),
         ),
         (
+            "FLUXER_GATEWAY_STATUS_PORT".to_owned(),
+            Some(node.status_port.to_string()),
+        ),
+        (
             "FLUXER_ERLANG_NODE_NAME".to_owned(),
             Some(node.erlang_name()),
         ),
@@ -582,13 +567,7 @@ fn gateway_node_env(node: &GatewayNode, static_peers: &str) -> Vec<(String, Opti
             "FLUXER_ERLANG_DIST_PORT".to_owned(),
             Some(node.dist_port.to_string()),
         ),
-        (
-            "FLUXER_ERLANG_COOKIE".to_owned(),
-            Some(
-                env::var("FLUXER_ERLANG_COOKIE")
-                    .unwrap_or_else(|_| GATEWAY_CLUSTER_COOKIE.to_owned()),
-            ),
-        ),
+        ("FLUXER_ERLANG_COOKIE".to_owned(), Some(gateway_cookie())),
     ]
 }
 
@@ -600,9 +579,10 @@ fn print_gateway_cluster_topology(nodes: &[GatewayNode]) {
             .filter(|node| node.role == *role)
             .map(|node| {
                 format!(
-                    "{}:http={},dist={}",
+                    "{}:http={},status={},dist={}",
                     node.name(),
                     node.http_port,
+                    node.status_port,
                     node.dist_port
                 )
             })
@@ -713,18 +693,184 @@ pub fn build_gateway_command(config_dir: &Path) -> Result<Vec<String>> {
             gateway_ebin_root().display()
         );
     }
+    Ok(erl_command(&ebin_paths, config_dir))
+}
+
+fn erl_command(ebin_paths: &[PathBuf], config_dir: &Path) -> Vec<String> {
     let mut args = vec!["erl".to_owned(), "-noshell".to_owned()];
     for path in ebin_paths {
         args.push("-pa".to_owned());
         args.push(path.display().to_string());
     }
     args.extend([
-        "-config".to_owned(),
-        config_dir.join("sys.config").display().to_string(),
         "-args_file".to_owned(),
         config_dir.join("vm.args").display().to_string(),
         "-eval".to_owned(),
-        GATEWAY_FOREGROUND_EVAL.to_owned(),
+        GATEWAY_MAIN_EVAL.to_owned(),
+        "-extra".to_owned(),
     ]);
-    Ok(args)
+    args
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::{BTreeMap, HashSet};
+
+    fn lookup(values: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
+        let values = values
+            .iter()
+            .map(|(name, value)| ((*name).to_owned(), (*value).to_owned()))
+            .collect::<BTreeMap<_, _>>();
+        move |name| values.get(name).cloned()
+    }
+
+    #[test]
+    fn substitutes_set_values_and_defaults() {
+        let rendered = render_dev_vm_args(
+            "-name ${NODE}\n+S ${SCHEDULERS:-2}:${SCHEDULERS:-2}\n+SDio ${EMPTY:-3}\n",
+            lookup(&[("NODE", "gw@127.0.0.1"), ("EMPTY", "")]),
+        )
+        .unwrap();
+        assert_eq!(rendered, "-name gw@127.0.0.1\n+S 2:2\n+SDio 3\n");
+    }
+
+    #[test]
+    fn rejects_unset_variable_without_default() {
+        let error = render_dev_vm_args("-setcookie ${COOKIE}\n", lookup(&[])).unwrap_err();
+        assert!(error.to_string().contains("COOKIE is not set"));
+    }
+
+    #[test]
+    fn rejects_unterminated_variable() {
+        assert!(render_dev_vm_args("-name ${NODE\n", lookup(&[("NODE", "x")])).is_err());
+    }
+
+    #[test]
+    fn drops_epmdless_dist_flags_so_local_nodes_share_epmd() {
+        let rendered = render_dev_vm_args(
+            "-name a@127.0.0.1\n-start_epmd false\n-erl_epmd_port ${PORT}\n-kernel inet_dist_listen_min ${PORT}\n",
+            lookup(&[("PORT", "9001")]),
+        )
+        .unwrap();
+        assert_eq!(
+            rendered,
+            "-name a@127.0.0.1\n-kernel inet_dist_listen_min 9001\n"
+        );
+    }
+
+    #[test]
+    fn renders_the_gateway_vm_args_template_completely() {
+        let template = fs::read_to_string(GATEWAY_CONFIG_DIR.join("vm.args.src")).unwrap();
+        let rendered = render_dev_vm_args(
+            &template,
+            lookup(&[
+                ("FLUXER_ERLANG_NODE_NAME", "fluxer_gateway@127.0.0.1"),
+                ("FLUXER_ERLANG_COOKIE", "cookie"),
+                ("FLUXER_ERLANG_DIST_PORT", "9001"),
+                ("FLUXER_GATEWAY_SYS_CONFIG", "/dev/sys.config"),
+            ]),
+        )
+        .unwrap();
+        assert!(!rendered.contains("${"));
+        assert!(!rendered.contains("start_epmd"));
+        assert!(!rendered.contains("erl_epmd_port"));
+        assert!(rendered.contains("-config /dev/sys.config\n"));
+        assert!(rendered.contains("-kernel inet_dist_listen_min 9001\n"));
+        assert!(rendered.contains("-kernel inet_dist_listen_max 9001\n"));
+        assert!(rendered.contains("-kernel connect_all true\n"));
+    }
+
+    #[test]
+    fn single_status_port_follows_the_gateway_port() {
+        let env = BTreeMap::from([("FLUXER_GATEWAY_PORT".to_owned(), "8771".to_owned())]);
+        assert_eq!(single_status_port(&env).unwrap(), "9771");
+        assert_eq!(single_status_port(&BTreeMap::new()).unwrap(), "9771");
+    }
+
+    #[test]
+    fn single_status_port_keeps_an_explicit_value() {
+        let env = BTreeMap::from([
+            ("FLUXER_GATEWAY_PORT".to_owned(), "8771".to_owned()),
+            ("FLUXER_GATEWAY_STATUS_PORT".to_owned(), "9999".to_owned()),
+        ]);
+        assert_eq!(single_status_port(&env).unwrap(), "9999");
+    }
+
+    #[test]
+    fn single_status_port_avoids_the_media_proxy_port() {
+        let env = BTreeMap::from([(
+            "FLUXER_GATEWAY_PORT".to_owned(),
+            crate::manifest::GATEWAY_PORT.to_string(),
+        )]);
+        assert_ne!(
+            single_status_port(&env).unwrap(),
+            crate::manifest::MEDIA_PROXY_PORT.to_string()
+        );
+    }
+
+    #[test]
+    fn cluster_ports_are_unique_and_clear_of_dev_services() {
+        let nodes = build_gateway_cluster_nodes().unwrap();
+        assert_eq!(
+            nodes.len(),
+            GATEWAY_CLUSTER_ROLES.len() * GATEWAY_CLUSTER_DEFAULT_REPLICAS as usize
+        );
+        let ports = nodes
+            .iter()
+            .flat_map(|node| [node.http_port, node.status_port, node.dist_port])
+            .collect::<Vec<_>>();
+        assert_eq!(ports.iter().collect::<HashSet<_>>().len(), ports.len());
+        for reserved in [
+            crate::manifest::API_PORT,
+            crate::manifest::MEDIA_PROXY_PORT,
+            crate::manifest::APP_PROXY_PORT,
+            crate::manifest::DEV_PROXY_PORT,
+        ] {
+            assert!(!ports.contains(&reserved), "port {reserved} is taken");
+        }
+    }
+
+    #[test]
+    fn cluster_node_env_sets_role_ports_and_peers() {
+        let node = GatewayNode {
+            role: "guilds".to_owned(),
+            ordinal: 2,
+            http_port: 8801,
+            status_port: 9801,
+            dist_port: 9011,
+        };
+        let env = gateway_node_env(&node, "a@127.0.0.1,b@127.0.0.1")
+            .into_iter()
+            .collect::<BTreeMap<_, _>>();
+        let value = |name: &str| env.get(name).cloned().flatten();
+        assert_eq!(value("FLUXER_GATEWAY_ROLE").as_deref(), Some("guilds"));
+        assert_eq!(value("FLUXER_GATEWAY_PORT").as_deref(), Some("8801"));
+        assert_eq!(value("FLUXER_GATEWAY_STATUS_PORT").as_deref(), Some("9801"));
+        assert_eq!(value("FLUXER_ERLANG_DIST_PORT").as_deref(), Some("9011"));
+        assert_eq!(
+            value("FLUXER_GATEWAY_CLUSTER_STATIC_PEERS").as_deref(),
+            Some("a@127.0.0.1,b@127.0.0.1")
+        );
+    }
+
+    #[test]
+    fn erl_command_runs_the_gleam_main_with_the_rendered_args() {
+        let ebin = PathBuf::from("/gw/build/dev/erlang/fluxer_gateway/ebin");
+        let command = erl_command(std::slice::from_ref(&ebin), Path::new("/dev-config"));
+        assert_eq!(
+            command,
+            [
+                "erl",
+                "-noshell",
+                "-pa",
+                "/gw/build/dev/erlang/fluxer_gateway/ebin",
+                "-args_file",
+                "/dev-config/vm.args",
+                "-eval",
+                "fluxer_gateway@@main:run(fluxer_gateway)",
+                "-extra",
+            ]
+        );
+    }
 }

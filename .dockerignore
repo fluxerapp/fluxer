@@ -36,6 +36,9 @@
 /fluxer_static/desktop/spellcheck/dictionaries/*/*
 !/fluxer_static/desktop/spellcheck/dictionaries/dictionary-et@2.0.0/LICENSE
 !/fluxer_static/desktop/spellcheck/dictionaries/dictionary-eu@4.0.0/LICENSE
+/fluxer_gateway/build/
+/fluxer_gateway/bouncer/build/
+/fluxer_gateway/bouncer_proto/build/
 /fluxer_gateway/priv/
 
 /fluxer_media_proxy/fuzz/artifacts/
@@ -62,7 +65,6 @@
 **/*.log
 **/*.tmp
 **/erl_crash.dump
-**/rebar3.crashdump
 
 **/.DS_Store
 **/Thumbs.db

@@ -104,24 +104,23 @@ func LayoutFromEnv(getenv func(string) string) Layout {
 	return l
 }
 
-func (l Layout) Dir(svc string) string     { return filepath.Join(l.Data, svc) }
-func (l Layout) PostgresDir() string       { return filepath.Join(l.Data, "postgres") }
-func (l Layout) ValkeyDir() string         { return filepath.Join(l.Data, "valkey") }
-func (l Layout) NATSDir() string           { return filepath.Join(l.Data, "nats") }
-func (l Layout) SeaweedFSDir() string      { return filepath.Join(l.Data, "seaweedfs") }
-func (l Layout) MeilisearchDir() string    { return filepath.Join(l.Data, "meilisearch") }
-func (l Layout) EdgeDir() string           { return filepath.Join(l.Data, "edge") }
-func (l Layout) GatewayHome() string       { return filepath.Join(l.Data, "gateway") }
-func (l Layout) TmpRoot() string           { return filepath.Join(l.Data, "tmp") }
-func (l Layout) Tmp(svc string) string     { return filepath.Join(l.Data, "tmp", svc) }
-func (l Layout) BackupsDir() string        { return filepath.Join(l.Data, "backups") }
-func (l Layout) SecretsFile() string       { return filepath.Join(l.Data, "secrets.env") }
-func (l Layout) ModesFile() string         { return filepath.Join(l.Data, "modes.env") }
-func (l Layout) LockFile() string          { return filepath.Join(l.Data, ".fluxerd.lock") }
-func (l Layout) ControlSocket() string     { return filepath.Join(l.Runtime, "fluxerd.sock") }
-func (l Layout) OperatorSocket() string    { return filepath.Join(l.Runtime, "operator.sock") }
-func (l Layout) PGSocketDir() string       { return filepath.Join(l.Runtime, "pg") }
-func (l Layout) GatewayRuntimeDir() string { return filepath.Join(l.Runtime, "gateway") }
+func (l Layout) Dir(svc string) string  { return filepath.Join(l.Data, svc) }
+func (l Layout) PostgresDir() string    { return filepath.Join(l.Data, "postgres") }
+func (l Layout) ValkeyDir() string      { return filepath.Join(l.Data, "valkey") }
+func (l Layout) NATSDir() string        { return filepath.Join(l.Data, "nats") }
+func (l Layout) SeaweedFSDir() string   { return filepath.Join(l.Data, "seaweedfs") }
+func (l Layout) MeilisearchDir() string { return filepath.Join(l.Data, "meilisearch") }
+func (l Layout) EdgeDir() string        { return filepath.Join(l.Data, "edge") }
+func (l Layout) GatewayHome() string    { return filepath.Join(l.Data, "gateway") }
+func (l Layout) TmpRoot() string        { return filepath.Join(l.Data, "tmp") }
+func (l Layout) Tmp(svc string) string  { return filepath.Join(l.Data, "tmp", svc) }
+func (l Layout) BackupsDir() string     { return filepath.Join(l.Data, "backups") }
+func (l Layout) SecretsFile() string    { return filepath.Join(l.Data, "secrets.env") }
+func (l Layout) ModesFile() string      { return filepath.Join(l.Data, "modes.env") }
+func (l Layout) LockFile() string       { return filepath.Join(l.Data, ".fluxerd.lock") }
+func (l Layout) ControlSocket() string  { return filepath.Join(l.Runtime, "fluxerd.sock") }
+func (l Layout) OperatorSocket() string { return filepath.Join(l.Runtime, "operator.sock") }
+func (l Layout) PGSocketDir() string    { return filepath.Join(l.Runtime, "pg") }
 
 type Env map[string]string
 
