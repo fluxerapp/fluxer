@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {RowState} from '@app/api/capture/CaptureTables';
 import {readRows, TooManyRows} from '@app/api/capture/CaptureTables';
 import type {PendingKey} from '@app/api/capture/cdc/CdcPending';
 import {type RowEncoder, rowExpiry, rowVersion, timestampText} from '@app/api/capture/cdc/CdcRows';
 import {type CdcTable, cdcTableName} from '@app/api/capture/cdc/CdcSchema';
 import {type ClickHouseHttp, quoteIdentifier} from '@app/api/capture/cdc/ClickHouseHttp';
-import type {RowState} from '@app/api/capture/SettleRules';
 import type {CaptureCodec, CaptureValue} from '@app/api/database/capture/CaptureCodec';
 import type {CaptureScope} from '@app/api/database/capture/CaptureRecords';
 import type cassandra from 'cassandra-driver';

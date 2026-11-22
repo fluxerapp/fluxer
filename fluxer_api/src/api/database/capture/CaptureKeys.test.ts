@@ -2,7 +2,7 @@
 
 import {defineTable} from '@app/api/database/CassandraTableDsl';
 import {Db, getStatementMeta, type PreparedQuery} from '@app/api/database/CassandraTypes';
-import {lwtRows, statementTtl, writeKeys} from '@app/api/database/capture/CaptureKeys';
+import {lwtRows, writeKeys} from '@app/api/database/capture/CaptureKeys';
 import {describe, expect, it} from 'vitest';
 
 interface ReactionRow {
@@ -109,15 +109,5 @@ describe('conditional rows', () => {
 			{t: 'capture_reactions', c: {...key, user_id: 3n}, insert: true},
 			{t: 'capture_reactions', c: {...key, user_id: 4n}, insert: false},
 		]);
-	});
-});
-
-describe('statement ttl', () => {
-	it('takes the bound ttl, then the table default, and never a ttl for a delete', () => {
-		const ttlOf = (query: PreparedQuery) => statementTtl(query.kvMeta, getStatementMeta(query.cql).type, query.params);
-		expect(ttlOf(Reactions.insertWithTtl(reaction, 90))).toBe(90);
-		expect(ttlOf(Reactions.insert(reaction))).toBeUndefined();
-		expect(ttlOf(Codes.insert({code: 'abc', user_id: 1n, uses: 0}))).toBe(600);
-		expect(ttlOf(Codes.deleteByPk({code: 'abc'}))).toBeUndefined();
 	});
 });

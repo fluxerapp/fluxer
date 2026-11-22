@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {RowState, TableLayout} from '@app/api/capture/SettleRules';
+import type {RowState, TableLayout} from '@app/api/capture/CaptureTables';
 import type cassandra from 'cassandra-driver';
 
 export type JsonValue = null | boolean | number | bigint | string | Array<JsonValue> | {[key: string]: JsonValue};

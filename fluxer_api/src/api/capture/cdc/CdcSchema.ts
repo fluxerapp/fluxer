@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {TableLayout} from '@app/api/capture/CaptureTables';
 import {type CdcColumn, clickHouseType} from '@app/api/capture/cdc/CdcRows';
 import {quoteIdentifier} from '@app/api/capture/cdc/ClickHouseHttp';
-import type {TableLayout} from '@app/api/capture/SettleRules';
 import {CDC_DROPPED_COLUMNS} from '@app/api/database/capture/CdcRecords';
 import type cassandra from 'cassandra-driver';
 

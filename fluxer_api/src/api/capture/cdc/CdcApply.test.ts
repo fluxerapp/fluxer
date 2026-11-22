@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {TableLayout} from '@app/api/capture/CaptureTables';
 import {linesForKey, recheckKeyText} from '@app/api/capture/cdc/CdcApply';
 import {PendingKeys} from '@app/api/capture/cdc/CdcPending';
 import {clickHouseType, RowEncoder} from '@app/api/capture/cdc/CdcRows';
 import type {CdcTable} from '@app/api/capture/cdc/CdcSchema';
-import type {TableLayout} from '@app/api/capture/SettleRules';
 import cassandra from 'cassandra-driver';
 import {describe, expect, it} from 'vitest';
 

@@ -2,7 +2,6 @@
 
 import {readFileSync} from 'node:fs';
 import {CaptureCodec, type CaptureValue} from '@app/api/database/capture/CaptureCodec';
-import type {CaptureStatement, ProducerRecord} from '@app/api/database/capture/CaptureRecords';
 import cassandra from 'cassandra-driver';
 import {describe, expect, it} from 'vitest';
 
@@ -14,9 +13,9 @@ interface Schema {
 const schema = JSON.parse(
 	readFileSync(new URL('../../../../../tools/dev/cassandra_target_schema.json', import.meta.url), 'utf8'),
 ) as Schema;
-const records = JSON.parse(readFileSync(new URL('./fixtures/records.json', import.meta.url), 'utf8')) as Array<
-	ProducerRecord & {statements?: Array<CaptureStatement>}
->;
+const records = JSON.parse(readFileSync(new URL('./fixtures/records.json', import.meta.url), 'utf8')) as Array<{
+	statements?: Array<{p: Record<string, CaptureValue>}>;
+}>;
 
 const codec = new CaptureCodec(cassandra.types);
 

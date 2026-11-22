@@ -8,14 +8,12 @@ import {
 	upsertOne,
 } from '@app/api/database/CassandraQueryExecution';
 import {defineTable} from '@app/api/database/CassandraTableDsl';
-import {CaptureCodec} from '@app/api/database/capture/CaptureCodec';
-import type {IntentRecord, LwtIntentRecord} from '@app/api/database/capture/CaptureRecords';
-import {type CaptureSink, WriteCapture} from '@app/api/database/capture/CassandraWriteCapture';
+import type {CapturedStatement, WriteCaptureHook} from '@app/api/database/capture/CassandraWriteCapture';
 import {
 	startCassandraWriteCapture,
 	stopCassandraWriteCapture,
 } from '@app/api/database/capture/CassandraWriteCaptureLifecycle';
-import {initCassandra, nextWriteTimestamp, shutdownCassandra} from '@pkgs/cassandra/src/Client';
+import {initCassandra, shutdownCassandra} from '@pkgs/cassandra/src/Client';
 import {JetStreamConnectionManager} from '@pkgs/nats/src/JetStreamConnectionManager';
 import cassandra from 'cassandra-driver';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
@@ -54,11 +52,29 @@ const Codes = defineTable<CodeRow, 'code'>({
 	primaryKey: ['code'],
 });
 
-class RecordingSink implements CaptureSink {
-	readonly records: Array<Record<string, unknown>> = [];
+const CAPTURED_TIMESTAMP = 1_700_000_000_000_000;
 
-	async publish(_subject: string, body: string): Promise<void> {
-		this.records.push(JSON.parse(body) as Record<string, unknown>);
+class RecordingHook implements WriteCaptureHook {
+	readonly plainWrites: Array<{tables: Array<string>; logged: boolean}> = [];
+	readonly conditionalWrites: Array<{table: string; applied: boolean | undefined}> = [];
+
+	async plain<T>(
+		statements: ReadonlyArray<CapturedStatement>,
+		logged: boolean,
+		send: (timestamp: number) => Promise<T>,
+	): Promise<T> {
+		this.plainWrites.push({tables: statements.map((statement) => statement.meta?.table.name ?? ''), logged});
+		return send(CAPTURED_TIMESTAMP);
+	}
+
+	async conditional<T>(
+		statement: CapturedStatement,
+		send: () => Promise<T>,
+		appliedOf: (result: T) => boolean | undefined,
+	): Promise<T> {
+		const result = await send();
+		this.conditionalWrites.push({table: statement.meta?.table.name ?? '', applied: appliedOf(result)});
+		return result;
 	}
 
 	async close(): Promise<void> {}
@@ -132,7 +148,7 @@ describe('driver path', () => {
 
 	it('opens no connection and leaves the driver call untouched when capture starts in mode off', async () => {
 		const connect = vi.spyOn(JetStreamConnectionManager.prototype, 'connect');
-		await startCassandraWriteCapture({mode: 'off', natsUrl: '', authToken: '', stream: 'CASSANDRA_CAPTURE'}, 'api');
+		await startCassandraWriteCapture({mode: 'off', natsUrl: '', authToken: '', stream: 'CASSANDRA_CDC'}, 'api');
 		await writeEachKind();
 		await stopCassandraWriteCapture();
 		expect(connect).not.toHaveBeenCalled();
@@ -146,28 +162,18 @@ describe('driver path', () => {
 	});
 
 	it('sends plain writes and batches at the captured timestamp and leaves conditional writes alone', async () => {
-		const sink = new RecordingSink();
-		setCassandraWriteCapture(
-			new WriteCapture({
-				process: 'api',
-				producer: 'api-0:boot',
-				codec: new CaptureCodec(cassandra.types),
-				sink,
-				nextTimestamp: nextWriteTimestamp,
-			}),
-		);
+		const hook = new RecordingHook();
+		setCassandraWriteCapture(hook);
 		await writeEachKind();
-		const [plain, lwt, batch] = sink.records as unknown as [IntentRecord, LwtIntentRecord, IntentRecord];
 		expect(calls.map(({options}) => options)).toEqual([
-			{prepare: true, timestamp: plain.ts},
+			{prepare: true, timestamp: CAPTURED_TIMESTAMP},
 			{prepare: true},
-			{prepare: true, logged: true, counter: false, timestamp: batch.ts},
+			{prepare: true, logged: true, counter: false, timestamp: CAPTURED_TIMESTAMP},
 		]);
-		expect(lwt).toMatchObject({kind: 'l', rows: [{t: 'driver_path_codes', c: {code: 'abc'}, insert: true}]});
-		expect(batch).toMatchObject({kind: 'i', logged: true});
-		expect(batch.statements.map((statement) => statement.keys)).toEqual([
-			[{s: 'row', c: {code: 'a'}}],
-			[{s: 'row', c: {code: 'b'}}],
+		expect(hook.plainWrites).toEqual([
+			{tables: ['driver_path_codes'], logged: false},
+			{tables: ['driver_path_codes', 'driver_path_codes'], logged: true},
 		]);
+		expect(hook.conditionalWrites).toEqual([{table: 'driver_path_codes', applied: true}]);
 	});
 });

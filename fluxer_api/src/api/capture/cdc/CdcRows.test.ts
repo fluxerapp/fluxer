@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {TableLayout} from '@app/api/capture/CaptureTables';
 import {
 	type CdcColumn,
 	clickHouseType,
@@ -10,7 +11,6 @@ import {
 	timestampText,
 	UnmappableValue,
 } from '@app/api/capture/cdc/CdcRows';
-import type {TableLayout} from '@app/api/capture/SettleRules';
 import cassandra from 'cassandra-driver';
 import {describe, expect, it} from 'vitest';
 

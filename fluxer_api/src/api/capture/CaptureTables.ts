@@ -1,7 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {CellState, RowState, TableLayout} from '@app/api/capture/SettleRules';
 import type cassandra from 'cassandra-driver';
+
+export interface TableLayout {
+	name: string;
+	primaryKey: ReadonlyArray<string>;
+	partitionKey: ReadonlyArray<string>;
+	regular: ReadonlyArray<string>;
+	multiCell: ReadonlySet<string>;
+	defaultTtl: number;
+}
+
+interface CellState {
+	v: unknown;
+	wt: number;
+	ttl: number | null;
+}
+
+export interface RowState {
+	key: Record<string, unknown>;
+	cells: Record<string, CellState>;
+}
 
 const MAX_IMAGE_ROWS = 5000;
 

@@ -77,7 +77,7 @@ export function loadCdcConfig(env: Env): CdcConfig {
 			user: optional(env, 'CDC_CLICKHOUSE_USER', 'cdc'),
 			password: optional(env, 'CDC_CLICKHOUSE_PASSWORD', ''),
 		},
-		viewDatabase: optional(env, 'CDC_VIEW_DATABASE', 'fluxer_live'),
+		viewDatabase: optional(env, 'CDC_VIEW_DATABASE', 'fluxer'),
 		webhookUrl: optional(env, 'CDC_WEBHOOK_URL', ''),
 		port: positive(env, 'CDC_PORT', 9102),
 		flushSeconds: positive(env, 'CDC_FLUSH_SECONDS', 10),
