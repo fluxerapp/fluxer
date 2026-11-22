@@ -9,7 +9,7 @@ const CONTENT_TYPE_TOKEN_MAX_BYTES: usize = 127;
 
 #[derive(Clone, Copy, Debug)]
 pub struct RelayRequest<'a> {
-    pub uploads_bucket: &'a str,
+    pub uploads_buckets: &'a [&'a str],
     pub request_key: &'a str,
     pub request_method: &'a Method,
     pub query_upload_id: Option<&'a str>,
@@ -22,7 +22,7 @@ pub fn validate_relay_request(
     token: &TokenPayload,
     request: RelayRequest<'_>,
 ) -> Result<(), RelayError> {
-    if token.b != request.uploads_bucket {
+    if !request.uploads_buckets.contains(&token.b.as_str()) {
         return Err(RelayError::WrongBucket);
     }
     if token.k != request.request_key {

@@ -137,6 +137,21 @@ pub(super) fn render_metrics(out: &mut String, metrics: &Metrics) -> fmt::Result
     )?;
     render_counter(
         out,
+        "fluxer_media_proxy_storage_fallback_hits_total",
+        &metrics.storage.fallback_hits,
+    )?;
+    render_counter(
+        out,
+        "fluxer_media_proxy_storage_double_miss_total",
+        &metrics.storage.fallback_double_misses,
+    )?;
+    render_counter(
+        out,
+        "fluxer_media_proxy_storage_fallback_errors_total",
+        &metrics.storage.fallback_errors,
+    )?;
+    render_counter(
+        out,
         "fluxer_media_proxy_nsfw_calls_ok_total",
         &metrics.nsfw.nsfw_calls_ok,
     )?;

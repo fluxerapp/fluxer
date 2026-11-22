@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
+    config::StoreSide,
     http_client, http_headers,
     server::{
         relay::body::{
@@ -11,7 +12,7 @@ use crate::{
         state::AppState,
     },
     spool::{SpoolError, spool_to_temp},
-    storage::{RelayBody, RelayPutOptions, StorageError},
+    storage::{RelayBody, RelayPutOptions, StorageError, Store},
     upload_relay::{BufferReservation, RelayError, target, token},
 };
 use axum::{
@@ -75,10 +76,14 @@ pub(in crate::server) async fn relay_put(
         Err(err) => return relay_error(err),
     };
     let content_length = http_headers::parse_content_length(&headers);
+    let Some(side) = app.cfg.storage.relay_side(token.s.as_deref(), &token.b) else {
+        return relay_error(RelayError::WrongBucket);
+    };
+    let accepted_buckets = accepted_uploads_buckets(&app);
     if let Err(err) = target::validate_relay_request(
         &token,
         target::RelayRequest {
-            uploads_bucket: &app.cfg.storage.bucket_uploads,
+            uploads_buckets: &accepted_buckets,
             request_key: &key,
             request_method: request.method(),
             query_upload_id: params.get("uploadId").map(String::as_str),
@@ -196,20 +201,28 @@ pub(in crate::server) async fn relay_put(
         part_number,
         timeout_ms,
     };
-    let (body, replay) = with_replay(body).await;
-    let mut outcome = app
-        .store
-        .relay_put_object(&app.cfg.storage.bucket_uploads, &key, relay_options(body))
+    let (store, bucket) = relay_target(&app, side);
+    let (body, mut replay) = with_replay(body).await;
+    let mut outcome = store
+        .relay_put_object(&bucket, &key, relay_options(body))
         .await;
-    let retry_body = match &outcome {
-        Err(err) if http_client::is_dropped_connection(err) => replay,
-        _ => None,
-    };
-    if let Some(body) = retry_body {
+    if matches!(&outcome, Err(err) if http_client::is_dropped_connection(err))
+        && let Some(body) = replay.take()
+    {
         app.metrics.relay().relay_upstream_retries.inc();
-        outcome = app
-            .store
-            .relay_put_object(&app.cfg.storage.bucket_uploads, &key, relay_options(body))
+        let (body, next_replay) = with_replay(body).await;
+        replay = next_replay;
+        outcome = store
+            .relay_put_object(&bucket, &key, relay_options(body))
+            .await;
+    }
+    if matches!(outcome, Err(StorageError::NoSuchUpload))
+        && let Some(other) = other_side(&app, side)
+        && let Some(body) = replay
+    {
+        let (other_store, other_bucket) = relay_target(&app, other);
+        outcome = other_store
+            .relay_put_object(&other_bucket, &key, relay_options(body))
             .await;
     }
     match outcome {
@@ -245,6 +258,34 @@ fn buffer_reservation(app: &AppState, declared_length: u64) -> Option<BufferRese
         declared_length,
         app.cfg.upload_relay.buffered_retry_total_bytes,
     )
+}
+
+fn other_side(app: &AppState, side: StoreSide) -> Option<StoreSide> {
+    app.cfg.storage.dual_store.as_ref()?;
+    match side {
+        StoreSide::Primary => Some(StoreSide::Fallback),
+        StoreSide::Fallback => Some(StoreSide::Primary),
+    }
+}
+
+fn accepted_uploads_buckets(app: &AppState) -> Vec<&str> {
+    let storage = &app.cfg.storage;
+    let mut buckets = vec![storage.bucket_uploads.as_str()];
+    if let Some(dual) = storage.dual_store.as_ref() {
+        buckets.push(dual.bucket_uploads.as_str());
+    }
+    buckets
+}
+
+fn relay_target(app: &AppState, side: StoreSide) -> (&Store, String) {
+    match (
+        side,
+        app.store.side(side),
+        app.cfg.storage.dual_store.as_ref(),
+    ) {
+        (StoreSide::Fallback, Some(store), Some(dual)) => (store, dual.bucket_uploads.clone()),
+        _ => (&app.store, app.cfg.storage.bucket_uploads.clone()),
+    }
 }
 
 async fn with_replay(body: RelayBody) -> (RelayBody, Option<RelayBody>) {

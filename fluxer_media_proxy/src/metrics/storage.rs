@@ -5,6 +5,9 @@ pub struct StorageMetrics {
     pub storage_hits: Counter,
     pub storage_misses: Counter,
     pub storage_errors: Counter,
+    pub fallback_hits: Counter,
+    pub fallback_double_misses: Counter,
+    pub fallback_errors: Counter,
 }
 
 impl StorageMetrics {}
