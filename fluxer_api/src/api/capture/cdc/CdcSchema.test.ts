@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {TableLayout} from '@app/api/capture/CaptureTables';
 import {cdcTable, schemaPlan, tableDdl, viewDdl} from '@app/api/capture/cdc/CdcSchema';
-import type {TableLayout} from '@app/api/capture/SettleRules';
 import {describe, expect, it} from 'vitest';
 
 const users: TableLayout = {

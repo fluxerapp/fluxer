@@ -425,9 +425,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			mode: master.services.api.cassandra_write_capture?.mode ?? 'off',
 			natsUrl: master.services.api.cassandra_write_capture?.nats_url ?? '',
 			authToken: master.services.api.cassandra_write_capture?.auth_token ?? '',
-			stream:
-				master.services.api.cassandra_write_capture?.stream ??
-				(master.services.api.cassandra_write_capture?.mode === 'behind' ? 'CASSANDRA_CDC' : 'CASSANDRA_CAPTURE'),
+			stream: master.services.api.cassandra_write_capture?.stream ?? 'CASSANDRA_CDC',
 		},
 		search: {
 			engine: master.integrations.search?.engine ?? 'elasticsearch',

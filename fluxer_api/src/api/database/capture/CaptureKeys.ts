@@ -79,12 +79,3 @@ export function lwtRows(meta: KvQueryMeta | undefined, params: Params): Array<Ra
 	const c = rowValues(meta.pkColumns ?? meta.table.primaryKey, params);
 	return c ? [{t, c, insert: meta.ifNotExists === true}] : undefined;
 }
-
-export function statementTtl(meta: KvQueryMeta | undefined, type: string, params: Params): number | undefined {
-	if (type === 'DELETE') return undefined;
-	if (meta?.ttlParamName !== undefined) {
-		const bound = params[meta.ttlParamName];
-		return typeof bound === 'number' ? bound : undefined;
-	}
-	return meta?.table.defaultTtlSeconds;
-}

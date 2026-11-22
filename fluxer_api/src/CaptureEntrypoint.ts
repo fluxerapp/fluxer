@@ -3,13 +3,7 @@
 import {parseArgs} from 'node:util';
 import {MigrationUsageError, positiveInteger} from '@app/api/migrate/MigrationCli';
 
-const USAGE = `usage: CaptureEntrypoint <replay|settle|cdc> [flags]
-
-replay [--consumer lim1-replay] [--images-consumer lim1-settle] [--port 9101]
-  Applies captured Cassandra writes and settle images to the Cassandra in FLUXER_CASSANDRA_*.
-
-settle [--final] [--verify <keys>]
-  Reads settle keys from the Cassandra in FLUXER_CASSANDRA_* and publishes their images.
+const USAGE = `usage: CaptureEntrypoint cdc [flags]
 
 cdc [setup|check|compare|repair|views] [flags], configured only by CDC_* variables
   cdc                        Applies CASSANDRA_CDC to ClickHouse, bootstrapping fluxer_cdc on its first run.
@@ -21,17 +15,6 @@ cdc [setup|check|compare|repair|views] [flags], configured only by CDC_* variabl
                              Marks tables for a repair at bootstrap pace.
   cdc views --database <db> [--replace-tables]
                              Creates the views of every CDC table in <db>.`;
-
-async function initialize(): Promise<void> {
-	const [{initializeConfig}, {initializeLogger}, {Config}, {Logger}] = await Promise.all([
-		import('@app/api/Config'),
-		import('@app/api/Logger'),
-		import('@app/Config'),
-		import('@app/Logger'),
-	]);
-	initializeConfig(Config);
-	initializeLogger(Logger);
-}
 
 async function runCdcCommand(argv: ReadonlyArray<string>): Promise<number> {
 	const [first, ...flags] = argv;
@@ -96,39 +79,6 @@ async function main(argv: ReadonlyArray<string>): Promise<number> {
 	const [command, ...rest] = argv;
 	try {
 		switch (command) {
-			case 'replay': {
-				const {values} = parseArgs({
-					args: rest,
-					strict: true,
-					options: {
-						consumer: {type: 'string', default: 'lim1-replay'},
-						'images-consumer': {type: 'string', default: 'lim1-settle'},
-						port: {type: 'string'},
-					},
-				});
-				await initialize();
-				const {runReplay} = await import('@app/api/capture/ReplayMain');
-				await runReplay({
-					consumer: values.consumer,
-					imagesConsumer: values['images-consumer'],
-					port: positiveInteger('port', values.port, 9101),
-				});
-				return 0;
-			}
-			case 'settle': {
-				const {values} = parseArgs({
-					args: rest,
-					strict: true,
-					options: {final: {type: 'boolean', default: false}, verify: {type: 'string'}},
-				});
-				await initialize();
-				const {runSettle} = await import('@app/api/capture/SettleMain');
-				await runSettle({
-					final: values.final,
-					verify: values.verify === undefined ? null : positiveInteger('verify', values.verify, 1),
-				});
-				return 0;
-			}
 			case 'cdc':
 				return await runCdcCommand(rest);
 			default:
