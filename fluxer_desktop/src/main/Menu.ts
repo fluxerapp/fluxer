@@ -196,7 +196,17 @@ function buildTemplate(): Array<MenuItemConstructorOptions> {
 	template.push({
 		label: t('desktop.appMenu.window'),
 		submenu: [
-			{role: 'minimize', label: t('desktop.appMenu.minimize')},
+			isMac
+				? {role: 'minimize', label: t('desktop.appMenu.minimize')}
+				: {
+						label: t('desktop.appMenu.minimize'),
+						click: (_menuItem: MenuItem, browserWindow: BaseWindow | undefined) => {
+							const targetWindow = browserWindow ?? getMainWindow();
+							if (targetWindow && !targetWindow.isDestroyed()) {
+								targetWindow.minimize();
+							}
+						},
+					},
 			{role: 'zoom', label: t('desktop.appMenu.zoomWindow')},
 			...(isMac
 				? [
