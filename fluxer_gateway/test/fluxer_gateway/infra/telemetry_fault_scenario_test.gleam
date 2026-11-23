@@ -4,6 +4,7 @@ import fluxer_gateway/app/supervisor
 import fluxer_gateway/config/settings
 import fluxer_gateway/infra/harness
 import fluxer_gateway/telemetry/metrics
+import fluxer_gateway/telemetry/vm
 import gleam/dynamic.{type Dynamic}
 import gleam/dynamic/decode
 import gleam/erlang/atom.{type Atom}
@@ -101,9 +102,14 @@ pub fn watchdog_kills_a_killable_mailbox_only_after_sustained_growth_test() {
   let protected = sink("fluxer_gateway_api_http_9901")
   let flat = sink("fluxer_gateway_dispatch_relay_9902")
   flood(flat, 60_000)
+  let kills = watchdog_actions("kill")
+  let collects = watchdog_actions("collect")
   let flooder = keep_flooding([killable, protected])
   assert wait.until(10_000, fn() { !process.is_alive(killable) })
+  assert wait.until(2000, fn() { longest_mailbox("singleton") > 50_000 })
   process.kill(flooder)
+  assert watchdog_actions("kill") > kills
+  assert watchdog_actions("collect") > collects
   assert process.is_alive(protected)
   assert queue_len(protected) > 50_000
   process.sleep(500)
@@ -135,6 +141,29 @@ fn monitor_owner() -> Result(Pid, Nil) {
   })
 }
 
+fn watchdog_actions(action: String) -> Int {
+  metrics.read_all()
+  |> metrics.value("fluxer_gateway_watchdog_actions_total", [
+    #("action", action),
+  ])
+}
+
+fn longest_mailbox(kind: String) -> Int {
+  metrics.read_all()
+  |> metrics.value("fluxer_gateway_watchdog_mailbox_max_messages", [
+    #("kind", kind),
+  ])
+}
+
+fn stall_durations(kind: String) -> Int {
+  metrics.histograms()
+  |> list.filter(fn(series) {
+    series.name == "fluxer_gateway_scheduler_stall_duration_ms"
+    && series.labels == [#("kind", kind)]
+  })
+  |> list.fold(0, fn(total, series) { total + series.count })
+}
+
 fn stalls(kind: String) -> Int {
   metrics.read_all()
   |> metrics.value("fluxer_gateway_scheduler_stalls_total", [#("kind", kind)])
@@ -145,6 +174,15 @@ fn severe(kind: String) -> Int {
   |> metrics.value("fluxer_gateway_scheduler_severe_stalls_total", [
     #("kind", kind),
   ])
+}
+
+pub fn stall_monitor_turns_on_scheduler_wall_time_test() {
+  let _ = harness.cycle(supervisor.StallMonitor)
+  let wall = vm.scheduler_wall_time()
+  assert list.map(wall, fn(entry) { entry.class }) == vm.scheduler_classes
+  assert list.any(wall, fn(entry) {
+    entry.class == vm.Normal && entry.total > 0 && entry.active > 0
+  })
 }
 
 pub fn stall_monitor_successor_owns_the_system_monitor_test() {
@@ -182,6 +220,9 @@ pub fn stall_monitor_counts_injected_events_and_late_ticks_test() {
   let schedule_severe = severe("long_schedule")
   let busy = stalls("busy_dist_port")
   let late = stalls("timer_late")
+  let timed = stall_durations("long_schedule")
+  let busy_timed = stall_durations("busy_dist_port")
+  let late_timed = stall_durations("timer_late")
   let event = fn(kind: String, info: Dynamic) {
     let raw: #(Atom, Pid, Atom, Dynamic) = #(
       atom.create("monitor"),
@@ -206,9 +247,12 @@ pub fn stall_monitor_counts_injected_events_and_late_ticks_test() {
     && stalls("busy_dist_port") == busy + 1
   })
   assert severe("long_schedule") == schedule_severe + 1
+  assert stall_durations("long_schedule") == timed + 1
+  assert stall_durations("busy_dist_port") == busy_timed
   suspend_process(stall)
   process.sleep(500)
   resume_process(stall)
   assert wait.until(2000, fn() { stalls("timer_late") > late })
+  assert stall_durations("timer_late") > late_timed
   assert process.is_alive(stall)
 }

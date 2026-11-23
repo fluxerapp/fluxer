@@ -35,6 +35,7 @@ import fluxer_gateway/session/reactions
 import fluxer_gateway/session/readiness.{type Outcome, Continue, Stop}
 import fluxer_gateway/session/replay_buffer
 import fluxer_gateway/session/seed.{type Seed, Seed}
+import fluxer_gateway/session/session_metrics
 import fluxer_gateway/session/state.{
   type Arrival, type Held, type Internal, type State, ArrivalExpired, Arriving,
   Attached, CallReconnect, ConnectGuild, Detached, EnablePresenceUpdates,
@@ -123,7 +124,10 @@ fn init(start: Start) -> actor.Initialised(State, Message, SessionRef) {
   let now = st.now_ms()
   let socket = case start.socket {
     Some(socket) -> Attached(socket, process.monitor(socket.pid))
-    None -> Detached(1)
+    None -> {
+      session_metrics.detach(process.self())
+      Detached(1)
+    }
   }
   let state =
     State(
@@ -709,7 +713,7 @@ fn attach(state: State, socket: SocketRef) -> State {
         }
       }
     }
-    Detached(_) -> Nil
+    Detached(_) -> session_metrics.attach(process.self())
   }
   State(
     ..state,
@@ -764,6 +768,7 @@ fn replay_after_attach(state: State, seq: Int, timing: Timing) -> State {
       "RESUMED",
       resumed_payload(state, timing, replay_started_us),
     )
+  session_metrics.replayed(session_metrics.ResumeReplay, list.length(missed))
   let frames = list.append(missed, [resumed])
   case list.length(frames) > max_inline_replay {
     True ->
@@ -797,6 +802,7 @@ fn resumed_payload(
 }
 
 fn hold_for_resume(state: State) -> State {
+  session_metrics.detach(process.self())
   let generation = state.generation + 1
   st.schedule(state, limits.resume_timeout_ms(), ResumeExpired(generation))
   st.schedule(state, offline_grace_ms(), OfflineGrace(generation))
@@ -943,9 +949,15 @@ fn reattach(state: State, socket: SocketRef, seq: Int) -> State {
           st.send_frames(state, [ReconnectFrame])
         }
         False -> {
-          list.map(replay_buffer.after(state.replay, seq), fn(entry) {
-            DispatchFrame(entry.seq, entry.event, entry.payload)
-          })
+          let missed =
+            list.map(replay_buffer.after(state.replay, seq), fn(entry) {
+              DispatchFrame(entry.seq, entry.event, entry.payload)
+            })
+          session_metrics.replayed(
+            session_metrics.ReattachReplay,
+            list.length(missed),
+          )
+          missed
           |> list.sized_chunk(max_inline_replay)
           |> list.each(st.send_frames(state, _))
           process.send(socket.outbox, session.Reattached(state.id))

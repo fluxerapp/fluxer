@@ -2,6 +2,7 @@
 
 import fluxer_gateway/core/guild.{AsMember, Focused, JoinRequest}
 import fluxer_gateway/core/session
+import fluxer_gateway/telemetry/metrics
 import gleam/dynamic.{type Dynamic}
 import gleam/dynamic/decode
 import gleam/erlang/process
@@ -277,6 +278,35 @@ pub fn thread_messages_follow_parent_visibility_test() {
   fixture.dispatch(handle, "MESSAGE_CREATE", message(open_thread, 901))
   assert message_ids(holder) == ["900", "901"]
   assert message_ids(member) == ["901"]
+  fixture.stop(found)
+}
+
+pub fn thread_messages_count_as_thread_deliveries_test() {
+  use api <- guild_api.with_api
+  let found = threaded_guild()
+  serve_threads(api, found, 0)
+  let handle = fixture.started(api, found)
+  process.sleep(200)
+  let member = fake.start(2)
+  let holder = fake.start(3)
+  assert fake.is_joined(fake.join(member, handle))
+  assert fake.is_joined(fake.join(holder, handle))
+  let _ = fake.drain(member, 50)
+  let _ = fake.drain(holder, 0)
+  let labels = [#("event", "message_create"), #("variant", "thread")]
+  let delivered = fn() {
+    metrics.value(
+      metrics.read_all(),
+      "fluxer_gateway_thread_dispatch_total",
+      labels,
+    )
+  }
+  let before = delivered()
+  fixture.dispatch(handle, "MESSAGE_CREATE", message(secret_thread, 902))
+  fixture.dispatch(handle, "MESSAGE_CREATE", message(open_thread, 903))
+  assert message_ids(holder) == ["902", "903"]
+  assert message_ids(member) == ["903"]
+  assert delivered() == before + 3
   fixture.stop(found)
 }
 

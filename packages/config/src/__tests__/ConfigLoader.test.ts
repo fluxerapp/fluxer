@@ -98,6 +98,69 @@ describe('ConfigLoader', () => {
 		await expect(loadConfig()).rejects.toThrow('FLUXER_PROFILE_PSEUDONYM_SECRET is required');
 	});
 
+	test('leaves the api metrics port unset by default', async () => {
+		stubMinimalEnv();
+		const config = await loadConfig();
+		expect(config.services.api.metrics_port).toBeUndefined();
+	});
+
+	test('reads the api metrics port from the environment', async () => {
+		stubMinimalEnv({FLUXER_API_METRICS_PORT: '9100'});
+		const config = await loadConfig();
+		expect(config.services.api.metrics_port).toBe(9100);
+	});
+
+	test('rejects an api metrics port equal to the api port', async () => {
+		stubMinimalEnv({FLUXER_API_PORT: '9100', FLUXER_API_METRICS_PORT: '9100'});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_API_METRICS_PORT must differ from FLUXER_API_PORT');
+	});
+
+	test('rejects an api metrics port out of range', async () => {
+		stubMinimalEnv({FLUXER_API_METRICS_PORT: '70000'});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_API_METRICS_PORT must be an integer between 1 and 65535');
+	});
+
+	test('keeps the dual object store off by default', async () => {
+		stubMinimalEnv();
+		const config = await loadConfig();
+		expect(config.s3?.dual_store_enabled).toBe(false);
+		expect(config.s3?.store_id).toBe('primary');
+		expect(config.s3?.fallback).toBeUndefined();
+	});
+
+	test('reads the fallback object store from the environment', async () => {
+		stubMinimalEnv({
+			FLUXER_S3_DUAL_STORE_ENABLED: 'true',
+			FLUXER_S3_FALLBACK_READS_ENABLED: 'true',
+			FLUXER_S3_FALLBACK_STORE_ID: 'store-b',
+			FLUXER_S3_FALLBACK_ENDPOINT: 'https://store-b.example',
+			FLUXER_S3_FALLBACK_REGION: 'region-b',
+			FLUXER_S3_FALLBACK_ACCESS_KEY_ID: 'k',
+			FLUXER_S3_FALLBACK_SECRET_ACCESS_KEY: 's',
+			FLUXER_S3_FALLBACK_BUCKET_MAP: 'cdn=media-new,uploads=uploads-new',
+		});
+		const config = await loadConfig();
+		expect(config.s3?.fallback).toMatchObject({store_id: 'store-b', region: 'region-b'});
+	});
+
+	test('rejects a dual object store without fallback settings', async () => {
+		stubMinimalEnv({FLUXER_S3_DUAL_STORE_ENABLED: 'true'});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_S3_FALLBACK');
+	});
+
+	test('rejects a fallback store with the same id as the primary', async () => {
+		stubMinimalEnv({
+			FLUXER_S3_DUAL_STORE_ENABLED: 'true',
+			FLUXER_S3_FALLBACK_STORE_ID: 'primary',
+			FLUXER_S3_FALLBACK_ENDPOINT: 'https://x',
+			FLUXER_S3_FALLBACK_REGION: 'r',
+			FLUXER_S3_FALLBACK_ACCESS_KEY_ID: 'k',
+			FLUXER_S3_FALLBACK_SECRET_ACCESS_KEY: 's',
+			FLUXER_S3_FALLBACK_BUCKET_MAP: 'cdn=a',
+		});
+		await expect(loadConfig()).rejects.toThrow('must differ');
+	});
+
 	test('rejects unsafe production Postgres defaults', async () => {
 		stubMinimalEnv({FLUXER_ENV: 'production'});
 		await expect(loadConfig()).rejects.toThrow('FLUXER_POSTGRES_HOST');

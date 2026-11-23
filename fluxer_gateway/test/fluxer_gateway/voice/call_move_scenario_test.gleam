@@ -10,7 +10,13 @@ import fluxer_gateway/voice/call/manager
 import fluxer_gateway/voice/call/server as call_server
 import fluxer_gateway/voice/call/state as call_state
 import fluxer_gateway/voice/client
+import fluxer_gateway/voice/dm/server as dm_server
+import fluxer_gateway/voice/entry.{type Entry}
 import fluxer_gateway/voice/rpc
+import gleam/dict
+import gleam/dynamic.{type Dynamic}
+import gleam/dynamic/decode
+import gleam/erlang/atom.{type Atom}
 import gleam/erlang/process.{type Pid}
 import gleam/int
 import gleam/json.{type Json}
@@ -30,6 +36,41 @@ fn suspend(pid: Pid) -> Bool
 
 @external(erlang, "erlang", "resume_process")
 fn resume(pid: Pid) -> Bool
+
+@external(erlang, "erlang", "process_info")
+fn process_info(pid: Pid, item: Atom) -> #(Atom, Int)
+
+@external(erlang, "erlang", "process_info")
+fn monitors_of(pid: Pid, item: Atom) -> #(Atom, List(Pid))
+
+fn monitored_by(pid: Pid, watcher: Pid) -> Bool {
+  list.contains(monitors_of(pid, atom.create("monitored_by")).1, watcher)
+}
+
+@external(erlang, "sys", "get_state")
+fn get_state(pid: Pid) -> Dynamic
+
+@external(erlang, "gleam_stdlib", "identity")
+fn to_entry(value: Dynamic) -> Entry
+
+fn queued(pid: Pid) -> Int {
+  process_info(pid, atom.create("message_queue_len")).1
+}
+
+fn dm_pid(session: fake.Fake) -> Pid {
+  let assert Ok(subject) = dm_server.lookup(session.ref)
+  let assert Ok(pid) = process.subject_owner(subject)
+  pid
+}
+
+fn dm_connections(session: fake.Fake) -> List(String) {
+  let assert Ok(states) =
+    decode.run(
+      get_state(dm_pid(session)),
+      decode.at([5, 1], decode.dict(decode.dynamic, decode.dynamic)),
+    )
+  states |> dict.values |> list.map(to_entry) |> list.map(voice_ids.of)
+}
 
 fn short_grace() -> Nil {
   isolation.set_durations(fn(d) {
@@ -383,5 +424,36 @@ pub fn a_freeze_that_answers_after_the_mover_gave_up_does_not_stay_frozen_test()
   assert call_server.is_leaving(pid) == Ok(False)
   assert call_pid(5306) == Ok(pid)
   leave_all(5306, [one])
+  api.stop(stub)
+}
+
+pub fn a_join_report_that_lands_after_the_call_moved_keeps_the_dm_connection_test() {
+  short_grace()
+  let stub = api.start()
+  api.set(stub, "get_dm_channel", dm_channel([1, 2]))
+  create_call(5307, [1, 2])
+  let one = fake.start(1)
+  let assert Ok(call) = manager.lookup(g.channel_id(5307))
+  let assert Ok(_) = call_server.export(call, 2000)
+  send(one, g.join(5307))
+  assert api.eventually(fn() { dm_connections(one) != [] })
+  let dm = dm_pid(one)
+  assert suspend(dm)
+  call_server.thaw(call)
+  assert api.eventually(fn() { server_updates(one) == 1 })
+  let assert [conn] = connection_ids(5307)
+  let moves = sink.start()
+  let frozen = freeze(5307, 7)
+  let arrival = install(5307, frozen)
+  let _ = complete(moves, frozen, arrival)
+  assert wait_down(frozen.stub)
+  assert call_pid(5307) == Ok(arrival.entity)
+  assert api.eventually(fn() { queued(dm) == 1 })
+  assert resume(dm)
+  assert api.eventually(fn() { monitored_by(arrival.entity, dm) })
+  assert dm_connections(one) == [conn]
+  assert connection_ids(5307) == [conn]
+  sink.stop(moves)
+  leave_all(5307, [one])
   api.stop(stub)
 }

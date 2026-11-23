@@ -3,17 +3,33 @@
 import fluxer_gateway/config/settings.{
   type Durations, type GatewayDurations, Durations, GatewayDurations,
 }
+import fluxer_gateway/session/manager/registry
 import gleam/bit_array
-import gleam/erlang/process
+import gleam/erlang/atom.{type Atom}
+import gleam/erlang/process.{type Pid}
 import gleam/json
 import gleam/list
 import gleam/option.{Some}
 import support/gateway_harness as h
 import support/gateway_ws_client as ws
 import support/isolation
+import support/wait
 
 @external(erlang, "os", "system_time")
 fn os_system_time(unit: Int) -> Int
+
+@external(erlang, "erlang", "suspend_process")
+fn suspend_process(pid: Pid) -> Bool
+
+@external(erlang, "erlang", "resume_process")
+fn resume_process(pid: Pid) -> Bool
+
+@external(erlang, "erlang", "process_info")
+fn process_info(pid: Pid, item: Atom) -> #(Atom, List(Pid))
+
+fn monitored_by(pid: Pid) -> List(Pid) {
+  process_info(pid, atom.create("monitored_by")).1
+}
 
 fn now_ms() -> Int {
   os_system_time(1000)
@@ -92,6 +108,50 @@ pub fn shared_user_budget_carries_across_resume_test_() {
   let #(second, _) = ws.wait_for(second, 5000, fn(p) { p.t == Some("RESUMED") })
   ws.send_frame(second, beats(250, "null"))
   let #(acks, code, reason) = acks_until_close(second, 0)
+  assert acks == 200
+  assert code == 4008
+  assert reason == "Rate limited"
+}
+
+pub fn heartbeats_after_resumed_count_before_the_resume_reply_lands_test_() {
+  use <- h.within(60.0)
+  let window = away_from_edges(3_600_000)
+  isolation.set_durations(
+    gateway(_, fn(g) {
+      GatewayDurations(..g, rate_limit_shared_window_ms: window)
+    }),
+  )
+  h.trust_forwarded_for()
+  let address = "198.51.100.24"
+  use scenario <- h.run(h.sessions_for("1000000000000824"))
+  let port = scenario.gateway.port
+  let first = h.hello_from(port, query(), address)
+  ws.send_json(first, h.identify_payload("t-r824"))
+  let #(first, ready) = ws.wait_for(first, 8000, fn(p) { p.t == Some("READY") })
+  let assert Some(seq) = ready.s
+  ws.send_frame(first, beats(400, "null"))
+  let first = take_acks(first, 400)
+  ws.close_socket(first)
+  assert h.await_detached(h.session_id(ready))
+  let assert Ok(ref) = registry.lookup(h.session_id(ready))
+  let assert Ok(session_pid) = process.subject_owner(ref.inbox)
+  let watchers = monitored_by(session_pid)
+  assert suspend_process(session_pid)
+  let second = h.hello_from(port, query(), address)
+  ws.send_json(second, h.resume_payload("t-r824", h.session_id(ready), seq))
+  let askers = fn() {
+    list.filter(monitored_by(session_pid), fn(pid) {
+      !list.contains(watchers, pid)
+    })
+  }
+  assert wait.until(5000, fn() { askers() != [] })
+  let held = askers()
+  assert list.all(held, suspend_process)
+  assert resume_process(session_pid)
+  let #(second, _) = ws.wait_for(second, 5000, fn(p) { p.t == Some("RESUMED") })
+  ws.send_frame(second, beats(250, "null"))
+  let #(acks, code, reason) = acks_until_close(second, 0)
+  assert list.all(held, resume_process)
   assert acks == 200
   assert code == 4008
   assert reason == "Rate limited"

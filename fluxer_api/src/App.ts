@@ -9,6 +9,7 @@ import {initializeLogger} from '@app/api/Logger';
 import {startEmbeddedWorker, stopEmbeddedWorker} from '@app/api/worker/EmbeddedWorker';
 import {Config} from '@app/Config';
 import {Logger} from '@app/Logger';
+import {createMetricsPortApp} from '@fluxer/hono/src/middleware/Metrics';
 import {createServer, setupGracefulShutdown} from '@fluxer/hono/src/Server';
 
 async function closeHttpServer(server: {close: (callback: (error?: Error) => void) => void}): Promise<void> {
@@ -27,7 +28,7 @@ async function main(): Promise<void> {
 	initializeConfig(Config);
 	initializeLogger(Logger);
 	const host = sizeProcessForHost(Logger);
-	const {app, initialize, shutdown} = await createAPIApp({
+	const {app, initialize, shutdown, renderMetrics} = await createAPIApp({
 		config: Config,
 		logger: Logger,
 	});
@@ -41,6 +42,14 @@ async function main(): Promise<void> {
 	const server = createServer(app, buildAPIServerOptions(Config));
 	Logger.info({port: Config.port}, `Starting Fluxer API on port ${Config.port}`);
 	const operatorServer = await listenOperatorSocket(app, OPERATOR_SOCKET_PATH, Logger);
+	const metricsServer =
+		Config.metricsPort === undefined
+			? null
+			: createServer(createMetricsPortApp(renderMetrics), {
+					port: Config.metricsPort,
+					hostname: Config.host,
+					onListen: (info) => Logger.info({port: info.port}, 'API metrics listening'),
+				});
 	let stopping: Promise<void> | null = null;
 	const stop = (): Promise<void> => (stopping ??= stopServices());
 	const stopServices = async (): Promise<void> => {
@@ -49,6 +58,9 @@ async function main(): Promise<void> {
 				await closeHttpServer(server);
 				if (operatorServer) {
 					await closeHttpServer(operatorServer);
+				}
+				if (metricsServer) {
+					await closeHttpServer(metricsServer);
 				}
 			})(),
 			stopEmbeddedWorker(),

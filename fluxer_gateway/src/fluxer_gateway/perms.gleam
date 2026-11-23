@@ -413,6 +413,10 @@ pub fn revision(reader: Reader) -> Int {
   native.perm_revision(reader.handle)
 }
 
+pub fn status(perms: Perms) -> Result(Nil, PermsError) {
+  native.perm_status(perms.handle) |> normal
+}
+
 pub fn release(perms: Perms) -> Nil {
   native.perm_release(perms.handle)
 }

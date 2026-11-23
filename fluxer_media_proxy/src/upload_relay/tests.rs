@@ -20,6 +20,7 @@ fn token() -> TokenPayload {
         ct: Some("application/octet-stream".to_owned()),
         mb: 100,
         e: 2_000,
+        s: None,
     }
 }
 
@@ -64,7 +65,7 @@ fn validates_relay_mismatches() {
         validate_relay_request(
             &token(),
             RelayRequest {
-                uploads_bucket: "cdn",
+                uploads_buckets: &["cdn"],
                 request_key: "guild/file.bin",
                 request_method: &Method::PUT,
                 query_upload_id: Some("upload-id"),
@@ -79,7 +80,7 @@ fn validates_relay_mismatches() {
         validate_relay_request(
             &token(),
             RelayRequest {
-                uploads_bucket: "uploads",
+                uploads_buckets: &["uploads"],
                 request_key: "guild/file.bin",
                 request_method: &Method::PUT,
                 query_upload_id: Some("upload-id"),
@@ -92,7 +93,7 @@ fn validates_relay_mismatches() {
     validate_relay_request(
         &token(),
         RelayRequest {
-            uploads_bucket: "uploads",
+            uploads_buckets: &["uploads"],
             request_key: "guild/file.bin",
             request_method: &Method::PUT,
             query_upload_id: Some("upload-id"),
@@ -139,7 +140,7 @@ fn relay_request_requires_the_exact_signed_key() {
             validate_relay_request(
                 &token(),
                 RelayRequest {
-                    uploads_bucket: "uploads",
+                    uploads_buckets: &["uploads"],
                     request_key,
                     request_method: &Method::PUT,
                     query_upload_id: Some("upload-id"),
@@ -178,4 +179,35 @@ fn content_type_gate_rejects_header_injection_and_malformed_media_types() {
         assert!(!valid_content_type(rejected), "accepted {rejected:?}");
     }
     assert!(!valid_content_type(&format!("image/{}", "p".repeat(255))));
+}
+
+#[test]
+fn token_store_id_round_trips_and_stays_optional() {
+    let secret = [3u8; 32];
+    let without_store = encode_token(&token(), &secret).unwrap();
+    assert_eq!(
+        None,
+        decode_token(&without_store, &secret, 1_000).unwrap().s
+    );
+    let mut with_store = token();
+    with_store.s = Some("store-b".to_owned());
+    let encoded = encode_token(&with_store, &secret).unwrap();
+    assert_eq!(with_store, decode_token(&encoded, &secret, 1_000).unwrap());
+}
+
+#[test]
+fn accepts_a_token_for_either_uploads_bucket() {
+    validate_relay_request(
+        &token(),
+        RelayRequest {
+            uploads_buckets: &["uploads-new", "uploads"],
+            request_key: "guild/file.bin",
+            request_method: &Method::PUT,
+            query_upload_id: Some("upload-id"),
+            query_part_number: Some(7),
+            content_length: Some(10),
+            max_body_bytes: 100,
+        },
+    )
+    .unwrap();
 }

@@ -282,10 +282,10 @@ fn apply(server: Server, effect: state.Effect) -> Server {
       let send = server.send
       let #(pid, _) =
         spawn.monitored(fn() {
-          process.send(
-            outbox,
-            AttemptReply(attempt_id, send(subject, body, timeout_ms)),
-          )
+          let started = clock.monotonic_ms()
+          let result = send(subject, body, timeout_ms)
+          metrics.attempted(subject, result, clock.monotonic_ms() - started)
+          process.send(outbox, AttemptReply(attempt_id, result))
         })
       Server(
         ..server,

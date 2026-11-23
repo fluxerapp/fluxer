@@ -98,6 +98,22 @@ pub struct StorageConfig {
     pub bucket_cdn: String,
     pub bucket_uploads: String,
     pub bucket_static: String,
+    pub store_id: String,
+    pub dual_store: Option<DualStoreConfig>,
+}
+
+#[derive(Clone, Debug)]
+pub struct DualStoreConfig {
+    pub store_id: String,
+    pub endpoint: String,
+    pub region: String,
+    pub access_key_id: String,
+    pub secret_access_key: String,
+    pub force_path_style: bool,
+    pub reads_enabled: bool,
+    pub bucket_cdn: String,
+    pub bucket_uploads: String,
+    pub bucket_static: String,
 }
 
 #[derive(Clone, Debug)]
@@ -130,6 +146,7 @@ pub struct UploadRelayConfig {
 pub struct Config {
     pub bind_host: String,
     pub port: u16,
+    pub metrics_port: Option<u16>,
     pub(crate) secret_key: SecretString,
     pub public_endpoint: Option<String>,
     pub mode: DeploymentMode,
@@ -167,17 +184,27 @@ impl Config {
             fluxer_common::config::resolve_public_domain_and_port(|name| {
                 env.get(name).map(ToOwned::to_owned)
             })?;
+        let port = parse_u16(
+            "FLUXER_MEDIA_PROXY_PORT",
+            env.get("FLUXER_MEDIA_PROXY_PORT"),
+            8080,
+        )?;
+        let metrics_port = env
+            .get("FLUXER_MEDIA_PROXY_METRICS_PORT")
+            .map(|raw| parse_u16("FLUXER_MEDIA_PROXY_METRICS_PORT", Some(raw), 0))
+            .transpose()?;
+        anyhow::ensure!(
+            metrics_port.is_none_or(|metrics_port| metrics_port != 0 && metrics_port != port),
+            "FLUXER_MEDIA_PROXY_METRICS_PORT must be a nonzero port that differs from FLUXER_MEDIA_PROXY_PORT"
+        );
 
         Ok(Self {
             bind_host: env
                 .get("FLUXER_MEDIA_PROXY_HOST")
                 .unwrap_or("0.0.0.0")
                 .to_owned(),
-            port: parse_u16(
-                "FLUXER_MEDIA_PROXY_PORT",
-                env.get("FLUXER_MEDIA_PROXY_PORT"),
-                8080,
-            )?,
+            port,
+            metrics_port,
             secret_key,
             public_endpoint: env
                 .get("FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT")
@@ -250,6 +277,24 @@ impl StorageConfig {
             env.get("FLUXER_S3_READ_SIGNED").map(str::trim),
         )?
         .unwrap_or(false);
+        let bucket_uploads = env
+            .get("FLUXER_S3_BUCKET_UPLOADS")
+            .map(ToOwned::to_owned)
+            .unwrap_or_else(|| "uploads".to_owned());
+        let bucket_static = env
+            .get("FLUXER_S3_BUCKET_STATIC")
+            .map(ToOwned::to_owned)
+            .unwrap_or_else(|| "static".to_owned());
+        let store_id = env
+            .get("FLUXER_S3_STORE_ID")
+            .map(|v| v.trim().to_owned())
+            .filter(|v| !v.is_empty())
+            .unwrap_or_else(|| "primary".to_owned());
+        let dual_store = DualStoreConfig::load(
+            env,
+            &store_id,
+            [&bucket_cdn, &bucket_uploads, &bucket_static],
+        )?;
         Ok(Self {
             backend: parse_storage_backend(env.get("FLUXER_MEDIA_PROXY_STORAGE_BACKEND"))?
                 .unwrap_or(StorageBackend::Local),
@@ -280,16 +325,118 @@ impl StorageConfig {
             s3_read_bucket_style,
             s3_read_signed,
             bucket_cdn,
-            bucket_uploads: env
-                .get("FLUXER_S3_BUCKET_UPLOADS")
-                .map(ToOwned::to_owned)
-                .unwrap_or_else(|| "uploads".to_owned()),
-            bucket_static: env
-                .get("FLUXER_S3_BUCKET_STATIC")
-                .map(ToOwned::to_owned)
-                .unwrap_or_else(|| "static".to_owned()),
+            bucket_uploads,
+            bucket_static,
+            store_id,
+            dual_store,
         })
     }
+
+    pub fn store_for(&self, store_id: &str) -> Option<StoreSide> {
+        if store_id == self.store_id {
+            return Some(StoreSide::Primary);
+        }
+        match &self.dual_store {
+            Some(dual) if dual.store_id == store_id => Some(StoreSide::Fallback),
+            _ => None,
+        }
+    }
+
+    pub fn relay_side(
+        &self,
+        token_store_id: Option<&str>,
+        token_bucket: &str,
+    ) -> Option<StoreSide> {
+        let Some(dual) = self.dual_store.as_ref() else {
+            return Some(StoreSide::Primary);
+        };
+        match token_store_id {
+            Some(store_id) => self.store_for(store_id),
+            None if token_bucket == self.bucket_uploads => Some(StoreSide::Primary),
+            None if token_bucket == dual.bucket_uploads => Some(StoreSide::Fallback),
+            None => None,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum StoreSide {
+    Primary,
+    Fallback,
+}
+
+impl DualStoreConfig {
+    fn load(
+        env: &EnvMap,
+        primary_store_id: &str,
+        [cdn, uploads, static_bucket]: [&String; 3],
+    ) -> anyhow::Result<Option<Self>> {
+        let enabled = parse_bool(
+            "FLUXER_S3_DUAL_STORE_ENABLED",
+            env.get("FLUXER_S3_DUAL_STORE_ENABLED").map(str::trim),
+        )?
+        .unwrap_or(false);
+        if !enabled {
+            return Ok(None);
+        }
+        let required = |name: &str| -> anyhow::Result<String> {
+            env.get(name)
+                .map(|v| v.trim().to_owned())
+                .filter(|v| !v.is_empty())
+                .ok_or_else(|| {
+                    anyhow::anyhow!("{name} is required when FLUXER_S3_DUAL_STORE_ENABLED is true")
+                })
+        };
+        let store_id = required("FLUXER_S3_FALLBACK_STORE_ID")?;
+        if store_id == primary_store_id {
+            anyhow::bail!("FLUXER_S3_FALLBACK_STORE_ID must differ from FLUXER_S3_STORE_ID");
+        }
+        let map = parse_bucket_map(&required("FLUXER_S3_FALLBACK_BUCKET_MAP")?)?;
+        let mapped = |logical: &str, primary: &String| {
+            map.iter()
+                .find(|(name, _)| name == logical)
+                .map(|(_, physical)| physical.clone())
+                .unwrap_or_else(|| primary.clone())
+        };
+        Ok(Some(Self {
+            store_id,
+            endpoint: required("FLUXER_S3_FALLBACK_ENDPOINT")?,
+            region: required("FLUXER_S3_FALLBACK_REGION")?,
+            access_key_id: required("FLUXER_S3_FALLBACK_ACCESS_KEY_ID")?,
+            secret_access_key: required("FLUXER_S3_FALLBACK_SECRET_ACCESS_KEY")?,
+            force_path_style: parse_bool(
+                "FLUXER_S3_FALLBACK_FORCE_PATH_STYLE",
+                env.get("FLUXER_S3_FALLBACK_FORCE_PATH_STYLE"),
+            )?
+            .unwrap_or(true),
+            reads_enabled: parse_bool(
+                "FLUXER_S3_FALLBACK_READS_ENABLED",
+                env.get("FLUXER_S3_FALLBACK_READS_ENABLED").map(str::trim),
+            )?
+            .unwrap_or(false),
+            bucket_cdn: mapped("cdn", cdn),
+            bucket_uploads: mapped("uploads", uploads),
+            bucket_static: mapped("static", static_bucket),
+        }))
+    }
+}
+
+pub(crate) fn parse_bucket_map(value: &str) -> anyhow::Result<Vec<(String, String)>> {
+    let mut entries: Vec<(String, String)> = Vec::new();
+    for entry in value.split(',').map(str::trim).filter(|e| !e.is_empty()) {
+        let Some((logical, physical)) = entry.split_once('=') else {
+            anyhow::bail!("invalid bucket map entry {entry:?}, expected logical=physical");
+        };
+        let (logical, physical) = (logical.trim(), physical.trim());
+        if logical.is_empty() || physical.is_empty() {
+            anyhow::bail!("invalid bucket map entry {entry:?}, expected logical=physical");
+        }
+        if entries.iter().any(|(name, _)| name == logical) {
+            anyhow::bail!("bucket map lists logical bucket {logical:?} twice");
+        }
+        entries.push((logical.to_owned(), physical.to_owned()));
+    }
+    Ok(entries)
 }
 
 impl MediaServingConfig {

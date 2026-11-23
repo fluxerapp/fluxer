@@ -10,6 +10,7 @@ import fluxer_gateway/session/manager/leases
 import fluxer_gateway/session/manager/names
 import fluxer_gateway/session/manager/registry
 import fluxer_gateway/session/manager/requests
+import fluxer_gateway/session/session_metrics
 import fluxer_gateway/telemetry/metrics
 import gleam/erlang/process.{type Subject}
 import gleam/option.{Some}
@@ -50,6 +51,7 @@ fn start() -> actor.StartResult(Nil) {
     metrics.register_collector("fluxer_gateway_session_manager", fn() {
       [metrics.Sample("fluxer_gateway_sessions_total", [], registry.owned())]
     })
+    session_metrics.register()
     actor.initialised(Nil)
     |> actor.returning(Nil)
     |> Ok

@@ -134,6 +134,13 @@ fn registered(peer: Peer, name: String) -> Dynamic {
   peers.call(peer, "erlang", "whereis", [atom.to_dynamic(atom.create(name))])
 }
 
+fn recoveries(peer: Peer) -> Int {
+  let found =
+    peers.call(peer, "support@cluster_liveness_probe", "recoveries", [])
+  let assert Ok(count) = decode.run(found, decode.int)
+  count
+}
+
 pub fn relay_ordering_blip_and_membership_restart_across_nodes_test() {
   let b = peers.unique_name("scn_rb")
   let c = peers.unique_name("scn_rc")
@@ -156,10 +163,16 @@ pub fn relay_ordering_blip_and_membership_restart_across_nodes_test() {
   assert peers.wait_until(5000, fn() { collected(peer_c, far) == expected })
   assert collected(peer_b, near) == expected
 
+  let healed_b = recoveries(peer_b)
+  let healed_c = recoveries(peer_c)
   peers.call(peer_b, "erlang", "disconnect_node", [
     atom.to_dynamic(atom.create(c)),
   ])
-  assert peers.wait_until(8000, fn() { is_up(peer_b, c) && is_up(peer_c, b) })
+  assert peers.wait_until(8000, fn() {
+    recoveries(peer_b) > healed_b && recoveries(peer_c) > healed_c
+  })
+  assert is_up(peer_b, c)
+  assert is_up(peer_c, b)
   assert serving(peer_b) == sorted
   assert serving(peer_c) == sorted
 

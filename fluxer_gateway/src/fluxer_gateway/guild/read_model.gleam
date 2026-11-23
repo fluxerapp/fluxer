@@ -33,10 +33,14 @@ pub fn put(guild: GuildId, view: View) -> Nil {
 
 pub fn get(guild: GuildId) -> Result(View, Nil) {
   use view <- result.try(table.lookup(rows(), id.guild_id_to_int(guild)))
-  case process.is_alive(view.handle.pid) && members.is_alive(view.members) {
+  case is_live(view) {
     True -> Ok(view)
     False -> Error(Nil)
   }
+}
+
+pub fn is_live(view: View) -> Bool {
+  process.is_alive(view.handle.pid) && members.is_alive(view.members)
 }
 
 pub fn delete(guild: GuildId, owner: process.Pid) -> Nil {

@@ -83,7 +83,7 @@ export class WorkerRunner {
 	private startup: Promise<void> | null = null;
 	private shutdown: Promise<void> | null = null;
 	private processingLoop: Promise<void> | null = null;
-	private readonly inFlightJobs = new Set<Promise<void>>();
+	private readonly inFlightJobs = new Map<Promise<void>, string>();
 
 	constructor(options: WorkerRunnerOptions) {
 		this.tasks = options.tasks;
@@ -166,6 +166,10 @@ export class WorkerRunner {
 		await this.shutdown;
 	}
 
+	inFlightTaskTypes(): Array<string> {
+		return [...this.inFlightJobs.values()];
+	}
+
 	private async stopConsuming(): Promise<void> {
 		const startupResult = await Promise.allSettled([this.startup]);
 		const messages = this.consumerMessages;
@@ -245,7 +249,7 @@ export class WorkerRunner {
 		try {
 			while (this.running) {
 				while (this.inFlightJobs.size >= this.concurrency) {
-					await Promise.race(this.inFlightJobs);
+					await Promise.race(this.inFlightJobs.keys());
 				}
 				if (!this.running) {
 					break;
@@ -283,7 +287,7 @@ export class WorkerRunner {
 				}
 			}
 		} finally {
-			await Promise.allSettled(this.inFlightJobs);
+			await Promise.allSettled(this.inFlightJobs.keys());
 		}
 	}
 
@@ -319,7 +323,7 @@ export class WorkerRunner {
 			.finally(() => {
 				this.inFlightJobs.delete(jobPromise);
 			});
-		this.inFlightJobs.add(jobPromise);
+		this.inFlightJobs.set(jobPromise, taskType);
 	}
 
 	protected async processJob(taskType: string, msg: JsMsg): Promise<boolean> {

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import fluxer_gateway/telemetry/fixed_counters
 import fluxer_gateway/util/table
 import gleam/dict.{type Dict}
 import gleam/int
@@ -49,6 +50,10 @@ type CollectorKey {
   CollectorKey(name: String)
 }
 
+type HistogramCollectorKey {
+  HistogramCollectorKey(name: String)
+}
+
 pub const bucket_bounds_ms = [
   1, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10_000,
 ]
@@ -59,6 +64,10 @@ fn registry() -> table.Table {
 
 fn collectors() -> table.Table {
   table.named("fluxer_gateway_metric_collectors")
+}
+
+fn histogram_collectors() -> table.Table {
+  table.named("fluxer_gateway_metric_histogram_collectors")
 }
 
 pub fn counter(name: String, labels: List(#(String, String)), by: Int) -> Nil {
@@ -107,6 +116,27 @@ pub fn unregister_collector(name: String) -> Nil {
   table.delete(collectors(), CollectorKey(name))
 }
 
+pub fn register_histogram_collector(
+  name: String,
+  collect: fn() -> List(HistogramSeries),
+) -> Nil {
+  case table.ensure_public(histogram_collectors()) {
+    True ->
+      table.insert(histogram_collectors(), #(
+        HistogramCollectorKey(name),
+        collect,
+      ))
+    False -> Nil
+  }
+}
+
+pub fn bucket_of(value: Int) -> Int {
+  case bucket_slot(int.max(0, value)) {
+    Bucket(index) -> index
+    _ -> list.length(bucket_bounds_ms)
+  }
+}
+
 pub fn registry_samples() -> List(#(Kind, Sample)) {
   rows()
   |> list.filter_map(fn(row) {
@@ -142,13 +172,14 @@ fn collected_samples() -> List(Sample) {
 }
 
 pub fn read_all() -> List(Sample) {
-  list.append(
+  list.flatten([
     list.map(registry_samples(), fn(entry) {
       let #(_, sample) = entry
       sample
     }),
     collected_samples(),
-  )
+    list.map(fixed_counters.rows(), fn(row) { Sample(row.0, row.1, row.2) }),
+  ])
 }
 
 pub fn histograms() -> List(HistogramSeries) {
@@ -162,6 +193,23 @@ pub fn histograms() -> List(HistogramSeries) {
     #(key.name, key.labels)
   })
   |> to_series
+  |> list.append(collected_histograms())
+  |> list.sort(fn(a, b) { string.compare(a.name, b.name) })
+}
+
+fn collected_histograms() -> List(HistogramSeries) {
+  let entries: List(#(HistogramCollectorKey, fn() -> List(HistogramSeries))) =
+    table.to_list(histogram_collectors())
+  entries
+  |> list.sort(fn(a, b) {
+    let #(HistogramCollectorKey(left), _) = a
+    let #(HistogramCollectorKey(right), _) = b
+    string.compare(left, right)
+  })
+  |> list.flat_map(fn(entry) {
+    let #(_, collect) = entry
+    collect()
+  })
 }
 
 pub fn value(

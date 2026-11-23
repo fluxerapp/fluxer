@@ -94,6 +94,8 @@ pub struct RuntimeCspSources {
     pub media_endpoint: Option<HttpEndpoint>,
     pub s3_public_endpoint: Option<HttpEndpoint>,
     pub s3_uploads_endpoint: Option<HttpEndpoint>,
+    pub s3_fallback_public_endpoint: Option<HttpEndpoint>,
+    pub s3_fallback_uploads_endpoint: Option<HttpEndpoint>,
 }
 
 const FRAME_SOURCES: &[&str] = &[
@@ -147,7 +149,6 @@ const CONNECT_SOURCES: &[&str] = &[
     "wss://*.fluxer.com",
     "https://*.fluxer.media",
     "wss://*.fluxer.media",
-    "https://fluxer-uploads.ewr1.vultrobjects.com",
     "https://fluxerstatus.com",
     "https://fluxer.media",
 ];
@@ -186,6 +187,8 @@ impl CompiledCspPolicy {
                 media_endpoint: config.media_endpoint.clone(),
                 s3_public_endpoint: config.s3_public_endpoint.clone(),
                 s3_uploads_endpoint: config.s3_uploads_endpoint.clone(),
+                s3_fallback_public_endpoint: config.s3_fallback_public_endpoint.clone(),
+                s3_fallback_uploads_endpoint: config.s3_fallback_uploads_endpoint.clone(),
             },
         )
     }
@@ -405,6 +408,11 @@ fn push_endpoint_source(target: &mut Vec<String>, endpoint: Option<&HttpEndpoint
 fn extend_runtime_s3_sources(target: &mut Vec<String>, runtime_sources: &RuntimeCspSources) {
     push_endpoint_source(target, runtime_sources.s3_public_endpoint.as_ref());
     push_endpoint_source(target, runtime_sources.s3_uploads_endpoint.as_ref());
+    push_endpoint_source(target, runtime_sources.s3_fallback_public_endpoint.as_ref());
+    push_endpoint_source(
+        target,
+        runtime_sources.s3_fallback_uploads_endpoint.as_ref(),
+    );
 }
 
 fn http_twin_of_websocket_source(source: &str) -> Option<String> {
@@ -498,6 +506,47 @@ mod tests {
             )
             .is_err()
         );
+    }
+
+    #[test]
+    fn both_stores_upload_hosts_are_connect_sources() {
+        let config = AppProxyConfig::from_env(&fluxer_common::config::EnvMap::from_pairs([
+            (
+                "FLUXER_S3_PUBLIC_ENDPOINT",
+                "https://objects-a.example.test",
+            ),
+            ("FLUXER_S3_BUCKET_UPLOADS", "uploads-a"),
+            (
+                "FLUXER_S3_FALLBACK_PUBLIC_ENDPOINT",
+                "https://objects-b.example.test",
+            ),
+            (
+                "FLUXER_S3_FALLBACK_BUCKET_MAP",
+                "cdn=media-b, uploads=uploads-b",
+            ),
+        ]));
+        let policy = CompiledCspPolicy::from_config(&config).unwrap();
+        let headers = policy.spa_headers(&[], &[], &InstanceCspSources::default());
+        let connect: Vec<&str> = headers
+            .enforced
+            .to_str()
+            .unwrap()
+            .split("; ")
+            .find(|directive| directive.starts_with("connect-src "))
+            .unwrap()
+            .split(' ')
+            .collect();
+        for source in [
+            "https://objects-a.example.test",
+            "https://uploads-a.objects-a.example.test",
+            "https://objects-b.example.test",
+            "https://uploads-b.objects-b.example.test",
+        ] {
+            assert!(
+                connect.contains(&source),
+                "{source} missing from connect-src"
+            );
+        }
     }
 
     #[test]

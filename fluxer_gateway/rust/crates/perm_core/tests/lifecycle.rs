@@ -297,3 +297,38 @@ fn release_advances_the_revision() {
     shared.release();
     assert!(shared.revision() > loaded);
 }
+
+#[test]
+fn try_release_never_shows_a_live_model_with_an_emptied_index() {
+    for _ in 0..400 {
+        let shared = PermsShared::new(guild(), Config::default());
+        shared.load(&snapshot(64)).unwrap();
+        let stop = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let readers: Vec<_> = (0..4)
+            .map(|_| {
+                let shared = shared.clone();
+                let stop = stop.clone();
+                std::thread::spawn(move || {
+                    let mut empty = 0u32;
+                    while !stop.load(std::sync::atomic::Ordering::Acquire) {
+                        if let Ok(view) = shared.view()
+                            && view.members().is_empty()
+                        {
+                            empty += 1;
+                        }
+                        if shared.status() == Status::Released {
+                            break;
+                        }
+                    }
+                    empty
+                })
+            })
+            .collect();
+        std::thread::yield_now();
+        while shared.try_release().is_err() {}
+        stop.store(true, std::sync::atomic::Ordering::Release);
+        let empty: u32 = readers.into_iter().map(|r| r.join().unwrap()).sum();
+        assert_eq!(empty, 0);
+        assert_eq!(shared.view().err(), Some(PermsError::Gone));
+    }
+}
