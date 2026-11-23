@@ -29,7 +29,7 @@ fn test_config(root: &Path) -> Config {
         mode: DeploymentMode::Mp,
         read_only: false,
         shutdown_grace_ms: 0,
-        socket_io_timeout_ms: 0,
+        socket_io_timeout_ms: 30_000,
         storage: StorageConfig {
             backend: StorageBackend::Local,
             root: root.display().to_string(),
