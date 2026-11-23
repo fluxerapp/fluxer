@@ -3,7 +3,6 @@
 use fluxer_common::config::{EnvMap, normalize_base_path, trim_trailing_slash};
 
 const DEFAULT_ADMIN_OAUTH_CLIENT_ID: &str = "1234567890123456789";
-const DEFAULT_REPORTS_BUCKET_ORIGIN: &str = "https://fluxer-reports.ewr1.vultrobjects.com";
 const STORAGE_BACKEND_ENV: &str = "FLUXER_STORAGE_BACKEND";
 const STORAGE_BACKEND_S3: &str = "s3";
 const STORAGE_BACKEND_FILESYSTEM: &str = "filesystem";
@@ -18,7 +17,7 @@ pub struct AdminConfig {
     pub api_public_endpoint: String,
     pub media_endpoint: String,
     pub static_cdn_endpoint: String,
-    pub reports_bucket_origin: Option<String>,
+    pub reports_bucket_origins: Vec<String>,
     pub admin_endpoint: String,
     pub web_app_endpoint: String,
     pub oauth_client_id: String,
@@ -83,7 +82,7 @@ impl AdminConfig {
             static_cdn_endpoint: env.normalize_public_endpoint(&trim_trailing_slash(
                 &env.read("FLUXER_STATIC_CDN_ENDPOINT", ""),
             ))?,
-            reports_bucket_origin: reports_bucket_origin_from_env(env)?,
+            reports_bucket_origins: reports_bucket_origins_from_env(env)?,
 
             admin_endpoint,
             web_app_endpoint: env.normalize_public_endpoint(&trim_trailing_slash(
@@ -127,14 +126,13 @@ impl AdminConfig {
         };
         let mut origins = Vec::new();
         for origin in [
-            Some(&self.static_cdn_endpoint),
-            Some(&self.media_endpoint),
-            Some(&self.web_app_endpoint),
-            self.reports_bucket_origin.as_ref(),
-            Some(api),
+            &self.static_cdn_endpoint,
+            &self.media_endpoint,
+            &self.web_app_endpoint,
+            api,
         ]
         .into_iter()
-        .flatten()
+        .chain(&self.reports_bucket_origins)
         .filter_map(|endpoint| endpoint_origin(endpoint))
         {
             if !origins.contains(&origin) {
@@ -199,33 +197,66 @@ fn endpoint_origin(endpoint: &str) -> Option<String> {
     origin.is_tuple().then(|| origin.ascii_serialization())
 }
 
-fn reports_bucket_origin_from_env(env: &EnvMap) -> anyhow::Result<Option<String>> {
+fn reports_bucket_origins_from_env(env: &EnvMap) -> anyhow::Result<Vec<String>> {
     match env.read(STORAGE_BACKEND_ENV, STORAGE_BACKEND_S3).trim() {
         STORAGE_BACKEND_S3 => {}
-        STORAGE_BACKEND_FILESYSTEM => return Ok(None),
+        STORAGE_BACKEND_FILESYSTEM => return Ok(Vec::new()),
         other => anyhow::bail!(
             "{STORAGE_BACKEND_ENV} is {other:?}, use {STORAGE_BACKEND_S3} or {STORAGE_BACKEND_FILESYSTEM}"
         ),
     }
+    let primary = store_reports_origin(
+        env,
+        "FLUXER_S3",
+        env.read("FLUXER_S3_BUCKET_UPLOADS", "fluxer-uploads"),
+        env.read("FLUXER_S3_BUCKET_REPORTS", "fluxer-reports"),
+    )?;
+    let fallback_map = env.read("FLUXER_S3_FALLBACK_BUCKET_MAP", "");
+    let fallback = match (
+        bucket_map_entry(&fallback_map, "uploads"),
+        bucket_map_entry(&fallback_map, "reports"),
+    ) {
+        (Some(uploads), Some(reports)) => {
+            store_reports_origin(env, "FLUXER_S3_FALLBACK", uploads, reports)?
+        }
+        _ => None,
+    };
+    let mut origins: Vec<String> = primary.into_iter().collect();
+    origins.extend(fallback.filter(|origin| !origins.contains(origin)));
+    Ok(origins)
+}
+
+fn store_reports_origin(
+    env: &EnvMap,
+    prefix: &str,
+    uploads_bucket: String,
+    reports_bucket: String,
+) -> anyhow::Result<Option<String>> {
     let public_endpoint = env
-        .value("FLUXER_S3_PUBLIC_ENDPOINT")
+        .value(&format!("{prefix}_PUBLIC_ENDPOINT"))
         .map(|value| env.normalize_public_endpoint(value.trim()))
         .transpose()?;
-    let endpoint = env.value("FLUXER_S3_ENDPOINT");
-    let origin = presign_endpoint(
+    let endpoint = env.value(&format!("{prefix}_ENDPOINT"));
+    Ok(presign_endpoint(
         public_endpoint.as_deref(),
         endpoint.as_deref(),
-        &env.read("FLUXER_S3_BUCKET_UPLOADS", "fluxer-uploads"),
+        &uploads_bucket,
     )
     .and_then(|endpoint| {
         bucket_origin(
             &endpoint,
-            env.read_bool("FLUXER_S3_FORCE_PATH_STYLE", false),
-            &env.read("FLUXER_S3_BUCKET_REPORTS", "fluxer-reports"),
+            env.read_bool(&format!("{prefix}_FORCE_PATH_STYLE"), false),
+            &reports_bucket,
         )
+    }))
+}
+
+fn bucket_map_entry(map: &str, kind: &str) -> Option<String> {
+    map.split(',').find_map(|entry| {
+        let (key, bucket) = entry.split_once('=')?;
+        let bucket = bucket.trim();
+        (key.trim() == kind && !bucket.is_empty()).then(|| bucket.to_owned())
     })
-    .unwrap_or_else(|| DEFAULT_REPORTS_BUCKET_ORIGIN.to_owned());
-    Ok(Some(origin))
 }
 
 fn presign_endpoint(
@@ -280,27 +311,62 @@ mod tests {
     use super::*;
 
     fn config(storage_backend: &str) -> anyhow::Result<AdminConfig> {
-        AdminConfig::from_env(&EnvMap::from_pairs([
-            ("FLUXER_ADMIN_SECRET_KEY_BASE", "secret"),
-            ("FLUXER_STORAGE_BACKEND", storage_backend),
-        ]))
+        config_with(&[("FLUXER_STORAGE_BACKEND", storage_backend)])
+    }
+
+    fn config_with(pairs: &[(&str, &str)]) -> anyhow::Result<AdminConfig> {
+        AdminConfig::from_env(&EnvMap::from_pairs(
+            [("FLUXER_ADMIN_SECRET_KEY_BASE", "secret")]
+                .into_iter()
+                .chain(pairs.iter().copied()),
+        ))
     }
 
     #[test]
     fn filesystem_storage_leaves_the_reports_bucket_out_of_the_image_sources() {
         let s3 = config("").unwrap();
-        assert!(
-            s3.image_origins()
-                .contains(&DEFAULT_REPORTS_BUCKET_ORIGIN.to_owned())
-        );
-        let filesystem = config("filesystem").unwrap();
-        assert_eq!(filesystem.reports_bucket_origin, None);
+        assert!(s3.reports_bucket_origins.is_empty());
+        let filesystem = config_with(&[
+            ("FLUXER_STORAGE_BACKEND", "filesystem"),
+            ("FLUXER_S3_ENDPOINT", "https://objects.example.test"),
+        ])
+        .unwrap();
+        assert!(filesystem.reports_bucket_origins.is_empty());
         assert!(
             !filesystem
                 .image_origins()
                 .iter()
-                .any(|origin| origin.contains("fluxer-reports"))
+                .any(|origin| origin.contains("objects.example.test"))
         );
         assert!(config("seaweed").is_err());
+    }
+
+    #[test]
+    fn both_stores_reports_buckets_are_image_sources() {
+        let config = config_with(&[
+            ("FLUXER_S3_ENDPOINT", "https://objects-a.example.test"),
+            ("FLUXER_S3_BUCKET_REPORTS", "reports-a"),
+            (
+                "FLUXER_S3_FALLBACK_ENDPOINT",
+                "https://objects-b.example.test",
+            ),
+            ("FLUXER_S3_FALLBACK_FORCE_PATH_STYLE", "true"),
+            (
+                "FLUXER_S3_FALLBACK_BUCKET_MAP",
+                "cdn=media-b,uploads=uploads-b,reports=reports-b",
+            ),
+        ])
+        .unwrap();
+        assert_eq!(
+            config.reports_bucket_origins,
+            [
+                "https://reports-a.objects-a.example.test",
+                "https://objects-b.example.test",
+            ]
+        );
+        let origins = config.image_origins();
+        for origin in &config.reports_bucket_origins {
+            assert!(origins.contains(origin));
+        }
     }
 }

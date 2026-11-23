@@ -47,7 +47,6 @@ const CONNECT_SOURCES: ReadonlyArray<string> = Object.freeze([
 	'wss://*.fluxer.app',
 	'https://*.fluxer.media',
 	'wss://*.fluxer.media',
-	'https://fluxer-uploads.ewr1.vultrobjects.com',
 	'https://fluxerstatus.com',
 	'https://fluxer.media',
 ]);
