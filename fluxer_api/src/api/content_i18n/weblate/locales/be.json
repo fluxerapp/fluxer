@@ -17,7 +17,7 @@
 	"billing.operator_pass_description_v2": "Нумараваны сертыфікат аператара ў фармаце PDF.",
 	"billing.operator_pass_name": "{product_name} Operator Pass",
 	"billing.operator_pass_terms_submit": "Аплачваючы, вы згаджаецеся з [умовамі выкарыстання]({terms_url}) і з [умовамі Operator Pass]({operator_pass_terms_url}).",
-	"billing.operator_pass_visionary_terms_box": "Я прымаю ўмовы Operator Pass. Гэты пропуск уваходзіць у ваш Visionary, таму перадаць яго нельга.",
+	"billing.operator_pass_visionary_terms_box": "Я прымаю ўмовы Operator Pass. Гэты пропуск уваходзіць у ваш Visionary, таму яго нельга перадаць.",
 	"billing.terms_checkout": "Я згаджаюся з [умовамі выкарыстання]({terms_url}).",
 	"billing.uk_withdrawal_checkout": "Калі я спажывец у Вялікабрытаніі, я прашу, каб {product_name} {premium_tier_name} пачаў дзейнічаць адразу. Я разумею, што калі адмоўлюся на працягу 14 дзён, то заплачу за дні, калі ён у мяне быў, і атрымаю рэшту назад, і што пасля поўнага аказання паслугі адмовіцца ўжо нельга. Гл. [умовы выкарыстання]({terms_url}).",
 	"billing.withdrawal_gift_checkout_pro_rata": "Калі я спажывец у ЕС, ЕЭП або Вялікабрытаніі, я прашу, каб гэты падарунак {product_name} {premium_tier_name} пачаў дзейнічаць, як толькі яго актывуюць. Я разумею, што калі адмоўлюся на працягу 14 дзён, то атрымаю ўсё назад, калі код не актываваны, а інакш заплачу за дні, калі падарунак быў у атрымальніка, і атрымаю рэшту назад. Гл. [умовы выкарыстання]({terms_url}).",

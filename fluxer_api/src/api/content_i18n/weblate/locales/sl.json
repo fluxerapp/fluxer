@@ -17,7 +17,7 @@
 	"billing.operator_pass_description_v2": "Oštevilčeno potrdilo Operator, dostavljeno v obliki PDF.",
 	"billing.operator_pass_name": "",
 	"billing.operator_pass_terms_submit": "S plačilom se strinjate s [pogoji uporabe]({terms_url}) in [pogoji za prepustnico Operator]({operator_pass_terms_url}).",
-	"billing.operator_pass_visionary_terms_box": "Sprejemam pogoje za prepustnico Operator. Ta prepustnica je del vašega paketa Visionary, zato je ni mogoče prenesti na drugo osebo.",
+	"billing.operator_pass_visionary_terms_box": "Sprejemam pogoje za Operator Pass. Ta prepustnica je del vašega paketa Visionary, zato je ni mogoče prenesti na drugo osebo.",
 	"billing.terms_checkout": "Strinjam se s [pogoji uporabe]({terms_url}).",
 	"billing.uk_withdrawal_checkout": "",
 	"billing.withdrawal_gift_checkout_pro_rata": "Če sem potrošnik v EU, EGP ali Združenem kraljestvu, zahtevam, da se to darilo {product_name} {premium_tier_name} začne zagotavljati takoj, ko je unovčeno. Razumem, da v primeru odstopa od pogodbe v 14 dneh prejmem celotno povračilo, če koda še ni bila unovčena, sicer pa plačam za dneve, ko je prejemnik uporabljal storitev, preostanek plačanega zneska pa prejmem nazaj. Glejte [pogoje uporabe]({terms_url}).",
