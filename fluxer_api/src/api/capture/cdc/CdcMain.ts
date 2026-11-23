@@ -51,6 +51,7 @@ import {ClickHouseHttp, quoteIdentifier} from '@app/api/capture/cdc/ClickHouseHt
 import {CaptureCodec, type CaptureValue} from '@app/api/database/capture/CaptureCodec';
 import type {CaptureScope} from '@app/api/database/capture/CaptureRecords';
 import {CDC_SKIPPED, CDC_TABLES, type CdcRecord} from '@app/api/database/capture/CdcRecords';
+import {settleWithin} from '@app/api/utils/ConcurrencyUtils';
 import {createServer, setupGracefulShutdown} from '@fluxer/hono/src/Server';
 import {createLogger} from '@fluxer/logger/src/Logger';
 import type {Consumer, JsMsg} from '@nats-io/jetstream';
@@ -69,6 +70,8 @@ const RECHECK_LIMIT = 2000;
 const REREAD_LIMIT = 20_000;
 const HOUSEKEEPING_MS = 5 * 60_000;
 const STATUS_MS = 30_000;
+const CDC_DRAIN_MS = 30_000;
+const CDC_SHUTDOWN_MS = 50_000;
 const WORKING_MS = 60_000;
 const IDLE_REPAIR_MS = 15_000;
 const SUMMARY_MS = 86_400_000;
@@ -233,7 +236,7 @@ function serialisedProgress(progress: ProducerProgress | null): unknown {
 	return progress === null ? null : {...progress, above: [...progress.above]};
 }
 
-class CdcConsumer {
+export class CdcConsumer {
 	readonly status: CdcStatus = {
 		broken: null,
 		bootstrapped: false,
@@ -344,6 +347,14 @@ class CdcConsumer {
 				this.setBroken(`batch failed: ${String(error)}`);
 			}
 		}
+		if (this.stopping && this.status.broken === null) this.handBack();
+	}
+
+	private handBack(): void {
+		if (this.held.length === 0) return;
+		for (const msg of this.held) msg.nak();
+		Logger.info({messages: this.held.length}, 'ClickHouse CDC handed back unapplied messages');
+		this.held = [];
 	}
 
 	async repairs(): Promise<void> {
@@ -746,13 +757,16 @@ export async function runCdc(config: CdcConfig): Promise<number> {
 	setupGracefulShutdown(
 		async () => {
 			cdc.stop();
-			await finished.catch(() => undefined);
+			await settleWithin(
+				finished.catch(() => undefined),
+				CDC_DRAIN_MS,
+			);
 			clearInterval(statusTimer);
 			server.close();
 			await connection.drain();
 			await shutdownCassandra();
 		},
-		{logger: Logger, timeoutMs: 60_000},
+		{logger: Logger, timeoutMs: CDC_SHUTDOWN_MS},
 	);
 	await finished;
 	Logger.info({status: cdc.status}, 'ClickHouse CDC loop ended');
