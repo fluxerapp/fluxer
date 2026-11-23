@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+mod dual_store;
 mod keys;
 mod slow_stream;
 
@@ -44,6 +45,8 @@ fn test_config(root: &Path) -> Config {
             bucket_cdn: "cdn".to_owned(),
             bucket_uploads: "uploads".to_owned(),
             bucket_static: "static".to_owned(),
+            store_id: "primary".to_owned(),
+            dual_store: None,
         },
         media: MediaServingConfig {
             max_native_transforms: 2,

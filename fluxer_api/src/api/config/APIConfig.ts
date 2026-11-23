@@ -209,6 +209,21 @@ export interface APIConfig {
 			reports: string;
 			harvests: string;
 		};
+		storeId: string;
+		dualStoreEnabled: boolean;
+		fallbackReadsEnabled: boolean;
+		fallback:
+			| {
+					storeId: string;
+					endpoint: string;
+					presignedUrlBase: string | undefined;
+					forcePathStyle: boolean;
+					region: string;
+					accessKeyId: string;
+					secretAccessKey: string;
+					bucketMap: string;
+			  }
+			| undefined;
 	};
 	email: {
 		enabled: boolean;

@@ -425,13 +425,13 @@ mod tests {
     #[test]
     fn cassandra_settings_are_read_from_env() {
         let config = config_with(&[
-            ("FLUXER_CASSANDRA_LOCAL_DC", " ovh-lim "),
+            ("FLUXER_CASSANDRA_LOCAL_DC", " dc-a "),
             ("FLUXER_CASSANDRA_CONSISTENCY", "LOCAL_ONE"),
             ("FLUXER_CASSANDRA_SERIAL_CONSISTENCY", "serial"),
             ("FLUXER_CASSANDRA_ADDRESS_TRANSLATION", "none"),
         ])
         .unwrap();
-        assert_eq!(config.scylla_local_dc.as_deref(), Some("ovh-lim"));
+        assert_eq!(config.scylla_local_dc.as_deref(), Some("dc-a"));
         assert_eq!(config.scylla_consistency, CassandraConsistency::LocalOne);
         assert_eq!(
             config.scylla_serial_consistency,

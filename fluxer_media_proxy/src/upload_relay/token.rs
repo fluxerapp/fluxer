@@ -35,6 +35,8 @@ pub struct TokenPayload {
     pub ct: Option<String>,
     pub mb: u64,
     pub e: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub s: Option<String>,
 }
 
 #[derive(Debug, Error, Eq, PartialEq)]
