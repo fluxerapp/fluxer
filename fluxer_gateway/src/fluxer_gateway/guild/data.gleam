@@ -9,10 +9,13 @@ import fluxer_gateway/core/raw_json.{type RawJson}
 import fluxer_gateway/core/role.{type Role}
 import gleam/dict.{type Dict}
 import gleam/dynamic/decode
+import gleam/int
 import gleam/json.{type Json}
 import gleam/list
 import gleam/option.{type Option, Some}
 import gleam/result
+
+const disabled_member_list_updates = 64
 
 pub type GuildData {
   GuildData(
@@ -129,6 +132,26 @@ pub fn decoded_property(
 ) -> Option(a) {
   property(data, key)
   |> option.then(fn(raw) { raw_json.read(raw, decoder) |> option.from_result })
+}
+
+pub fn updates_enabled(data: GuildData) -> Bool {
+  !operation_disabled(data, disabled_member_list_updates)
+}
+
+pub fn operation_disabled(data: GuildData, bit: Int) -> Bool {
+  let bits =
+    decoded_property(data, "disabled_operations", operations())
+    |> option.unwrap(0)
+  int.bitwise_and(bits, bit) == bit
+}
+
+fn operations() -> decode.Decoder(Int) {
+  decode.one_of(decode.int, [
+    decode.map(decode.string, fn(text) {
+      id.parse_decimal(text) |> result.unwrap(0)
+    }),
+    decode.success(0),
+  ])
 }
 
 pub fn set_member_count(data: GuildData, count: Int) -> GuildData {

@@ -119,11 +119,25 @@ export interface MasterConfig {
 			reports: string;
 			harvests: string;
 		};
+		store_id: string;
+		dual_store_enabled: boolean;
+		fallback_reads_enabled: boolean;
+		fallback?: {
+			store_id: string;
+			endpoint: string;
+			presigned_url_base?: string;
+			force_path_style: boolean;
+			region: string;
+			access_key_id: string;
+			secret_access_key: string;
+			bucket_map: string;
+		};
 	};
 	services: {
 		api: {
 			port: number;
 			host?: string;
+			metrics_port?: number;
 			headers_timeout_ms: number;
 			request_timeout_ms: number;
 			max_inflight_requests: number;

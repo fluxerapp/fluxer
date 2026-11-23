@@ -2,6 +2,7 @@
 
 import fluxer_gateway/config/durations
 import fluxer_gateway/config/settings.{type Settings}
+import fluxer_gateway/core/clock
 import fluxer_gateway/core/id
 import fluxer_gateway/presence/cache
 import fluxer_gateway/presence/counters
@@ -386,9 +387,18 @@ pub fn start_or_lookup(
   first: Input(Monitor),
   timeout_ms: Int,
 ) -> Result(Inbox, remote.CallError) {
-  use target <- result.try(
-    route.owner(request.user) |> result.replace_error(remote.CallUnavailable),
-  )
+  let started = clock.monotonic_ms()
+  let #(outcome, inbox) = start_or_lookup_timed(request, first, timeout_ms)
+  counters.started(outcome, clock.monotonic_ms() - started)
+  inbox
+}
+
+fn start_or_lookup_timed(
+  request: StartRequest,
+  first: Input(Monitor),
+  timeout_ms: Int,
+) -> #(counters.StartOutcome, Result(Inbox, remote.CallError)) {
+  use target <- unavailable_start(route.owner(request.user))
   let found =
     case target == remote.self_atom() {
       True -> live_presence(request.user)
@@ -401,16 +411,40 @@ pub fn start_or_lookup(
   case found {
     Ok(inbox) -> {
       process.send(inbox, first)
-      Ok(inbox)
+      #(counters.StartFound, Ok(inbox))
     }
-    Error(Nil) ->
-      remote.call_from_disposable(
-        target,
-        shard_name(route.shard(request.user)),
-        timeout_ms,
-        fn(reply) { StartOrLookup(request, first, reply) },
-      )
-      |> result.try(result.replace_error(_, remote.CallUnavailable))
+    Error(Nil) -> {
+      let called =
+        remote.call_from_disposable(
+          target,
+          shard_name(route.shard(request.user)),
+          timeout_ms,
+          fn(reply) { StartOrLookup(request, first, reply) },
+        )
+        |> result.try(result.replace_error(_, remote.CallUnavailable))
+      #(start_outcome(called), called)
+    }
+  }
+}
+
+fn unavailable_start(
+  target: Result(Atom, error),
+  next: fn(Atom) -> #(counters.StartOutcome, Result(Inbox, remote.CallError)),
+) -> #(counters.StartOutcome, Result(Inbox, remote.CallError)) {
+  case target {
+    Ok(target) -> next(target)
+    Error(_) -> #(counters.StartUnavailable, Error(remote.CallUnavailable))
+  }
+}
+
+fn start_outcome(
+  called: Result(Inbox, remote.CallError),
+) -> counters.StartOutcome {
+  case called {
+    Ok(_) -> counters.StartCalled
+    Error(remote.CallTimeout) -> counters.StartTimeout
+    Error(remote.CallUnavailable) -> counters.StartUnavailable
+    Error(remote.CallBusy) -> counters.StartBusy
   }
 }
 
@@ -421,6 +455,22 @@ pub type LookupError {
 }
 
 pub fn lookup_all(
+  user: Int,
+  timeout_ms: Int,
+) -> Result(List(Inbox), LookupError) {
+  let started = clock.monotonic_ms()
+  let found = lookup_everywhere(user, timeout_ms)
+  let outcome = case found {
+    Ok(_) -> counters.LookupFound
+    Error(NotFound) -> counters.LookupNotFound
+    Error(OwnerUnavailable) -> counters.LookupOwnerUnavailable
+    Error(LookupFailed(_)) -> counters.LookupFailed
+  }
+  counters.looked_up(outcome, clock.monotonic_ms() - started)
+  found
+}
+
+fn lookup_everywhere(
   user: Int,
   timeout_ms: Int,
 ) -> Result(List(Inbox), LookupError) {

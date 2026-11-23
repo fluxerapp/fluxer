@@ -85,6 +85,7 @@ export interface APIConfig {
 	nodeEnv: 'development' | 'production';
 	port: number;
 	host?: string;
+	metricsPort?: number;
 	headersTimeoutMs: number;
 	requestTimeoutMs: number;
 	maxInflightRequests: number;
@@ -209,6 +210,21 @@ export interface APIConfig {
 			reports: string;
 			harvests: string;
 		};
+		storeId: string;
+		dualStoreEnabled: boolean;
+		fallbackReadsEnabled: boolean;
+		fallback:
+			| {
+					storeId: string;
+					endpoint: string;
+					presignedUrlBase: string | undefined;
+					forcePathStyle: boolean;
+					region: string;
+					accessKeyId: string;
+					secretAccessKey: string;
+					bucketMap: string;
+			  }
+			| undefined;
 	};
 	email: {
 		enabled: boolean;

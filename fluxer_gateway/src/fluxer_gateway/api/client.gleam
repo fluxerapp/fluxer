@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import fluxer_gateway/api/http
+import fluxer_gateway/api/metrics as api_metrics
 import fluxer_gateway/config/durations
 import fluxer_gateway/config/settings.{type Settings}
 import fluxer_gateway/core/clock.{type Deadline}
@@ -142,6 +143,7 @@ fn retry_loop(
                   <> " request_type="
                   <> call.kind,
               )
+              api_metrics.retry(call.kind)
               process.sleep(sleep)
               retry_loop(call, deadline, parse, attempt_number + 1, sleep)
             }
@@ -193,17 +195,26 @@ fn attempt(
     0 -> Error(Retryable(ApiTimeout, None))
     _ -> {
       let current = settings.get()
-      case
+      let started = clock.monotonic_ms()
+      let sent =
         http.post(
           rpc_url(current),
           headers(current, call.ip),
           call.body,
           timeout_ms,
         )
-      {
-        Ok(http.Response(status, reply)) ->
-          parse(status, reply)
-          |> result.map_error(Retryable(_, None))
+      let parsed = case sent {
+        Ok(http.Response(status, reply)) -> Ok(parse(status, reply))
+        Error(failure) -> Error(failure)
+      }
+      api_metrics.request(
+        call.kind,
+        outcome(parsed),
+        clock.monotonic_ms() - started,
+        was_sent(sent),
+      )
+      case parsed {
+        Ok(parsed) -> result.map_error(parsed, Retryable(_, None))
         Error(http.CircuitOpen(retry_after_ms)) ->
           Error(Retryable(ApiUnavailable, Some(retry_after_ms)))
         Error(http.Overloaded) -> Error(Retryable(ApiUnavailable, None))
@@ -231,6 +242,32 @@ fn attempt(
         Error(http.BadUrl) -> Error(Final(ApiUnavailable))
       }
     }
+  }
+}
+
+fn was_sent(sent: Result(http.Response, http.HttpFailure)) -> Bool {
+  case sent {
+    Error(http.CircuitOpen(_)) | Error(http.Overloaded) | Error(http.BadUrl) ->
+      False
+    _ -> True
+  }
+}
+
+fn outcome(parsed: Result(Result(a, ApiError), http.HttpFailure)) -> String {
+  case parsed {
+    Ok(Ok(_)) -> "ok"
+    Ok(Error(ApiHttp(401))) -> "unauthorized"
+    Ok(Error(ApiHttp(429))) -> "throttled"
+    Ok(Error(ApiHttp(_))) -> "server_error"
+    Ok(Error(ApiRejected(..))) -> "rejected"
+    Ok(Error(ApiBadReply)) -> "bad_reply"
+    Ok(Error(ApiTimeout)) -> "timeout"
+    Ok(Error(ApiUnavailable)) -> "transport"
+    Error(http.CircuitOpen(_)) -> "circuit_open"
+    Error(http.Overloaded) -> "overloaded"
+    Error(http.Timeout) -> "timeout"
+    Error(http.Reset(_)) -> "reset"
+    Error(http.Transport(_)) | Error(http.BadUrl) -> "transport"
   }
 }
 

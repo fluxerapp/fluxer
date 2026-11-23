@@ -29,6 +29,7 @@ interface APIAppResult {
 	app: HonoApp;
 	initialize: () => Promise<void>;
 	shutdown: () => Promise<void>;
+	renderMetrics: () => string;
 }
 
 function TelemetryAwareAppErrorHandler(error: Error, ctx: Context<HonoEnv>): Response | Promise<Response> {
@@ -63,7 +64,7 @@ export async function createAPIApp(options: CreateAPIAppOptions): Promise<APIApp
 	registerControllers(routes, config);
 	options.registerRoutes?.(routes);
 	const app = new Hono<HonoEnv>({strict: true});
-	const {middleware: metricsMiddleware, metricsHandler} = createMetricsMiddleware('api');
+	const {middleware: metricsMiddleware, metricsHandler, renderMetrics} = createMetricsMiddleware('api');
 	app.use('*', metricsMiddleware);
 	app.get('/_metrics', metricsHandler);
 	app.use(
@@ -81,5 +82,6 @@ export async function createAPIApp(options: CreateAPIAppOptions): Promise<APIApp
 		app,
 		initialize: createInitializer(config, logger, {operatorPassWallPublisher: options.operatorPassWallPublisher}),
 		shutdown: shutdownApiLifecycle,
+		renderMetrics,
 	};
 }

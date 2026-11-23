@@ -21,7 +21,7 @@ use axum::{
 use std::{net::SocketAddr, sync::Arc, time::Duration};
 use tokio::{net::TcpListener, time::timeout_at};
 use tower_http::compression::{CompressionLayer, CompressionLevel};
-use tracing::info;
+use tracing::{info, warn};
 
 pub async fn run(cfg: Config) -> anyhow::Result<()> {
     media_process::native_runtime::ensure_vips_init()?;
@@ -62,13 +62,38 @@ pub async fn run(cfg: Config) -> anyhow::Result<()> {
     let app = build_router(Arc::clone(&state), drain.clone());
     let listener = TcpListener::bind(addr).await?;
     info!(%addr, "media proxy listening");
+    let metrics_server = match state.cfg.metrics_port {
+        Some(metrics_port) => {
+            let metrics_addr: SocketAddr =
+                format!("{}:{}", state.cfg.bind_host, metrics_port).parse()?;
+            let metrics_listener = TcpListener::bind(metrics_addr).await?;
+            info!(%metrics_addr, "media proxy metrics listening");
+            let metrics_app = build_metrics_router(Arc::clone(&state));
+            Some(tokio::spawn(async move {
+                if let Err(error) = axum::serve(metrics_listener, metrics_app).await {
+                    warn!(%error, "media proxy metrics listener stopped");
+                }
+            }))
+        }
+        None => None,
+    };
     axum::serve(
         listener,
         app.into_make_service_with_connect_info::<SocketAddr>(),
     )
     .with_graceful_shutdown(fluxer_common::shutdown::wait_for_shutdown())
     .await?;
-    drain_and_shutdown(&state, &drain).await
+    let drained = drain_and_shutdown(&state, &drain).await;
+    if let Some(metrics_server) = metrics_server {
+        metrics_server.abort();
+    }
+    drained
+}
+
+fn build_metrics_router(state: Arc<AppState>) -> Router {
+    Router::new()
+        .route("/_metrics", get(routes::ops::metrics_port_handler))
+        .with_state(state)
 }
 
 const STATIC_COMPRESSIBLE_CONTENT_TYPES: [&str; 9] = [
@@ -173,4 +198,92 @@ async fn drain_and_shutdown(state: &Arc<AppState>, drain: &HttpRequestDrain) -> 
         .await
         .map_err(|_| anyhow::anyhow!("media proxy native task shutdown exceeded {grace_ms} ms"));
     aggregate_results("media proxy shutdown", [requests, coalescer, native_tasks])
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::{body::Body, extract::ConnectInfo, http::Request};
+    use tower::ServiceExt;
+
+    fn test_state() -> Arc<AppState> {
+        let cfg = Config::load_from_iter([("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret")])
+            .expect("test config");
+        Arc::new(AppState::for_tests(cfg))
+    }
+
+    fn request_from(path: &str, peer: &str) -> Request<Body> {
+        let mut request = Request::get(path).body(Body::empty()).expect("request");
+        request.extensions_mut().insert(ConnectInfo(
+            peer.parse::<SocketAddr>().expect("valid socket address"),
+        ));
+        request
+    }
+
+    #[tokio::test]
+    async fn metrics_port_serves_a_non_loopback_peer() {
+        let response = build_metrics_router(test_state())
+            .oneshot(request_from("/_metrics", "10.244.1.7:5000"))
+            .await
+            .expect("response");
+
+        assert_eq!(StatusCode::OK, response.status());
+        assert_eq!(
+            "text/plain; version=0.0.4; charset=utf-8",
+            response
+                .headers()
+                .get(header::CONTENT_TYPE)
+                .expect("content type")
+        );
+    }
+
+    #[tokio::test]
+    async fn metrics_port_answers_404_for_other_paths() {
+        for path in [
+            "/",
+            "/_health",
+            "/_metadata",
+            "/_metrics/extra",
+            "/v1/relay/key",
+        ] {
+            let response = build_metrics_router(test_state())
+                .oneshot(request_from(path, "10.244.1.7:5000"))
+                .await
+                .expect("response");
+            assert_eq!(StatusCode::NOT_FOUND, response.status(), "{path}");
+        }
+    }
+
+    #[tokio::test]
+    async fn public_port_refuses_metrics_to_a_non_loopback_peer() {
+        let response = build_router(test_state(), HttpRequestDrain::new())
+            .oneshot(request_from("/_metrics", "10.244.1.7:5000"))
+            .await
+            .expect("response");
+
+        assert_eq!(StatusCode::FORBIDDEN, response.status());
+    }
+
+    #[test]
+    fn metrics_port_must_differ_from_the_public_port() {
+        let error = Config::load_from_iter([
+            ("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret"),
+            ("FLUXER_MEDIA_PROXY_METRICS_PORT", "8080"),
+        ])
+        .expect_err("same port");
+        assert!(
+            error
+                .to_string()
+                .contains("FLUXER_MEDIA_PROXY_METRICS_PORT")
+        );
+        let cfg = Config::load_from_iter([
+            ("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret"),
+            ("FLUXER_MEDIA_PROXY_METRICS_PORT", "9100"),
+        ])
+        .expect("separate port");
+        assert_eq!(Some(9100), cfg.metrics_port);
+        let unset = Config::load_from_iter([("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret")])
+            .expect("unset port");
+        assert_eq!(None, unset.metrics_port);
+    }
 }

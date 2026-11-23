@@ -283,13 +283,51 @@ fn session_end(reason: process.ExitReason) -> protocol.SessionEnd {
 fn handle(server: Server, message: Message) -> actor.Next(Server, Message) {
   case message {
     Signalled(found) -> on_signal(server, found)
-    Inbound(input) ->
+    Inbound(input) -> {
+      counters.input(input_kind(input))
       case server.mode {
         Serving -> next(serve(server, input))
         Frozen(..) -> actor.continue(hold(server, input))
         Handing(..) -> actor.continue(pass_on(server, input))
         Arriving(..) -> actor.continue(stash(server, input))
       }
+    }
+  }
+}
+
+fn input_kind(input: Input(Monitor)) -> counters.InputKind {
+  case input {
+    protocol.ConnectSession(..) | protocol.Connect(..) -> counters.ConnectInput
+    protocol.RepointSession(..) | protocol.Repoint(..) -> counters.RepointInput
+    protocol.SessionDown(..) | protocol.Disconnect(..) ->
+      counters.DisconnectInput
+    protocol.Update(..) -> counters.UpdateInput
+    protocol.SubscribeTargets(..)
+    | protocol.UnsubscribeTargets(..)
+    | protocol.SubscribeAfterStart(..) -> counters.SubscriptionInput
+    Foreign(..) -> counters.ForeignInput
+    protocol.Resend(..)
+    | protocol.ResendNode(..)
+    | protocol.ResendSince(..)
+    | protocol.Joined(..)
+    | protocol.SnapshotRead(..) -> counters.ResendInput
+    protocol.UserDispatch(..) -> counters.UserDispatchInput
+    protocol.Guild(..) | protocol.VisitStart(..) | protocol.VisitEnd(..) ->
+      counters.GuildInput
+    protocol.TerminateSessions(..)
+    | protocol.TerminateReply(..)
+    | protocol.TerminateAll -> counters.TerminateInput
+    protocol.Rejoin
+    | protocol.ExpiryTick
+    | protocol.GraceExpired(..)
+    | protocol.IdleCheck
+    | protocol.ShedTick -> counters.TimerInput
+    protocol.MoveTo(..)
+    | protocol.MoveRetry(..)
+    | protocol.MoveFinished(..)
+    | protocol.AdoptHandoff(..)
+    | protocol.Adopt(..) -> counters.HandoffInput
+    protocol.Validated(..) -> counters.OtherInput
   }
 }
 

@@ -22,6 +22,7 @@ import fluxer_gateway/voice/guild_state.{
 }
 import fluxer_gateway/voice/lifecycle
 import fluxer_gateway/voice/member as voice_member
+import fluxer_gateway/voice/metrics as voice_metrics
 import fluxer_gateway/voice/p2p
 import fluxer_gateway/voice/region
 import fluxer_gateway/voice/registry
@@ -275,6 +276,10 @@ pub fn issued_states(voice: GuildVoice) -> List(VoiceState) {
   |> list.append(voice_states(voice), _)
 }
 
+pub fn issued_count(voice: GuildVoice) -> Int {
+  store.size(voice.state.pending) + store.size(voice.state.states)
+}
+
 pub fn connected_channels(voice: GuildVoice, user: UserId) -> List(ChannelId) {
   store.keys_of_user(voice.state.states, user)
   |> list.map(voice_key.channel)
@@ -490,6 +495,7 @@ fn run(
   let step = body(guild_state.start(ensure_ticking(voice.state, ictx)), ictx)
   let after = step.state.states
   sync_counts(before, after)
+  count_effects(step.effects)
   let effects =
     step.effects
     |> list.reverse
@@ -527,12 +533,31 @@ fn convert(effect: guild_state.Effect) -> Result(VoiceEffect, Nil) {
   }
 }
 
+fn count_effects(effects: List(guild_state.Effect)) -> Nil {
+  let #(updates, errors) =
+    list.fold(effects, #(0, 0), fn(acc, effect) {
+      case effect {
+        guild_state.ToSession(_, "VOICE_SERVER_UPDATE", _) -> #(
+          acc.0 + 1,
+          acc.1,
+        )
+        guild_state.ErrorTo(..) -> #(acc.0, acc.1 + 1)
+        guild_state.ToSession(..)
+        | guild_state.Broadcast(..)
+        | guild_state.BroadcastMove(..) -> acc
+      }
+    })
+  voice_metrics.server_updates(voice_metrics.GuildScope, updates)
+  voice_metrics.guild_errors(errors)
+}
+
 fn sync_counts(before: Store(Entry), after: Store(Entry)) -> Nil {
   case before == after {
     True -> Nil
     False -> {
       let previous = store.to_dict(before)
       let current = store.to_dict(after)
+      voice_metrics.transitions(voice_metrics.GuildScope, previous, current)
       dict.each(previous, fn(key, _value) {
         case dict.has_key(current, key) {
           True -> Nil
@@ -550,6 +575,7 @@ fn sync_counts(before: Store(Entry), after: Store(Entry)) -> Nil {
 }
 
 fn dispatch(step: Step, ctx: Ctx, request: Request) -> Step {
+  voice_metrics.guild_request(request_kind(request))
   case request {
     guild_state.ClientUpdate(update) -> connection.update(step, ctx, update)
     guild_state.Signal(session, channel, to, data) ->
@@ -586,6 +612,19 @@ fn dispatch(step: Step, ctx: Ctx, request: Request) -> Step {
       list.fold(users, step, fn(acc, user) {
         lifecycle.cleanup_access(acc, ctx, user)
       })
+  }
+}
+
+fn request_kind(request: Request) -> voice_metrics.GuildRequest {
+  case request {
+    guild_state.ClientUpdate(..) -> voice_metrics.ClientUpdateRequest
+    guild_state.Signal(..) -> voice_metrics.SignalRequest
+    guild_state.TokenReady(..) -> voice_metrics.TokenReadyRequest
+    guild_state.Rpc(..) -> voice_metrics.RpcRequest
+    guild_state.CollectStates(..) -> voice_metrics.CollectRequest
+    guild_state.Sweep -> voice_metrics.SweepRequest
+    guild_state.P2pCheck -> voice_metrics.P2pCheckRequest
+    guild_state.CleanupAccess(..) -> voice_metrics.CleanupAccessRequest
   }
 }
 

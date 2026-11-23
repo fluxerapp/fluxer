@@ -48,6 +48,11 @@ pub fn held_count() -> Int {
   |> list.count(fn(row) { row.3 })
 }
 
+pub fn waiting_count() -> Int {
+  ets_rows(to_atom("fluxer_gateway_push_permit_rows"))
+  |> list.count(fn(row) { !row.3 })
+}
+
 pub fn spawn_holder(
   kind: permit.PoolKind,
   wait_ms: Int,

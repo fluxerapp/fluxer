@@ -2,7 +2,7 @@
 
 use super::{
     BufferedObjectReadRequest, BufferedStorageObject, ContentDigestRequest, Object, StorageError,
-    Store, record_storage_outcome, unversioned_read_budget,
+    Store, merge_fallback, record_storage_outcome, unversioned_read_budget, wants_fallback,
 };
 use crate::{byte_budget::ByteBudget, config::StorageBackend, constants};
 use bytes::Bytes;
@@ -66,11 +66,31 @@ impl Store {
         &self,
         request: BufferedObjectReadRequest<'_>,
     ) -> Result<BufferedStorageObject, StorageError> {
-        let result = match self.cfg.storage.backend {
-            StorageBackend::Local => self.read_local(request).await,
-            StorageBackend::S3 => self.read_s3(request).await,
-        };
+        let mut result = self.read_backend(request).await;
+        if wants_fallback(&result)
+            && let Some(fallback) = self.reads_fallback()
+        {
+            let bucket = self.fallback_bucket(request.bucket);
+            let fallback_result = fallback
+                .read_backend(BufferedObjectReadRequest {
+                    bucket: &bucket,
+                    ..request
+                })
+                .await;
+            self.record_fallback(&result, &fallback_result);
+            result = merge_fallback(result, fallback_result);
+        }
         record_storage_outcome(&self.metrics, &result);
         result
+    }
+
+    async fn read_backend(
+        &self,
+        request: BufferedObjectReadRequest<'_>,
+    ) -> Result<BufferedStorageObject, StorageError> {
+        match self.cfg.storage.backend {
+            StorageBackend::Local => self.read_local(request).await,
+            StorageBackend::S3 => self.read_s3(request).await,
+        }
     }
 }

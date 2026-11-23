@@ -2,6 +2,7 @@
 
 import fluxer_gateway/core/node.{type Role}
 import gleam/json.{type Json}
+import gleam/string
 
 pub const queue_group = "gateway"
 
@@ -37,6 +38,10 @@ pub fn method(subject: String) -> String {
 pub fn ok(result: Json) -> String {
   json.object([#("ok", json.bool(True)), #("result", result)])
   |> json.to_string
+}
+
+pub fn succeeded(body: String) -> Bool {
+  string.starts_with(body, "{\"ok\":true")
 }
 
 pub fn failure(message: String) -> String {

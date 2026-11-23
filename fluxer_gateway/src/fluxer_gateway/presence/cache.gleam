@@ -81,27 +81,35 @@ pub fn bulk_get_local(users: BitArray) -> List(#(Int, Row)) {
   }
 }
 
-fn group_by_owner(users: List(Int)) -> List(#(Atom, List(Int))) {
-  users
-  |> list.fold(dict.new(), fn(acc, user) {
-    case route.owner(user) {
-      Ok(found) ->
-        dict.upsert(acc, found, fn(existing) {
-          [user, ..option.unwrap(existing, [])]
-        })
-      Error(_) -> acc
-    }
-  })
-  |> dict.to_list
+fn group_by_owner(users: List(Int)) -> #(List(#(Atom, List(Int))), List(Int)) {
+  let #(groups, unroutable) =
+    list.fold(users, #(dict.new(), []), fn(acc, user) {
+      let #(groups, unroutable) = acc
+      case route.owner(user) {
+        Ok(found) -> #(
+          dict.upsert(groups, found, fn(existing) {
+            [user, ..option.unwrap(existing, [])]
+          }),
+          unroutable,
+        )
+        Error(_) -> #(groups, [user, ..unroutable])
+      }
+    })
+  #(dict.to_list(groups), unroutable)
 }
 
 pub fn lookup_events(users: IdSet) -> List(PresenceEvent) {
+  read_events(users).0
+}
+
+fn read_events(users: IdSet) -> #(List(PresenceEvent), List(Int)) {
   let self = route.self_atom()
-  let #(local_groups, remote_groups) =
+  let #(groups, unroutable) =
     users
     |> id_set.to_list
     |> group_by_owner
-    |> list.partition(fn(group) { group.0 == self })
+  let #(local_groups, remote_groups) =
+    list.partition(groups, fn(group) { group.0 == self })
   let local =
     local_groups
     |> list.flat_map(fn(group) {
@@ -111,7 +119,8 @@ pub fn lookup_events(users: IdSet) -> List(PresenceEvent) {
         |> option.to_result(Nil)
       })
     })
-  let remote_events =
+  let owned_by = dict.from_list(remote_groups)
+  let replies =
     remote_groups
     |> list.map(fn(group) {
       #(
@@ -120,7 +129,8 @@ pub fn lookup_events(users: IdSet) -> List(PresenceEvent) {
       )
     })
     |> read_remote
-    |> list.flat_map(fn(reply) {
+  let remote_events =
+    list.flat_map(replies, fn(reply) {
       case reply.1 {
         Ok(rows) ->
           list.map(rows, fn(pair: #(Int, Row)) {
@@ -129,7 +139,14 @@ pub fn lookup_events(users: IdSet) -> List(PresenceEvent) {
         Error(Nil) -> []
       }
     })
-  list.append(local, remote_events)
+  let failed =
+    list.flat_map(replies, fn(reply) {
+      case reply.1, dict.get(owned_by, reply.0) {
+        Error(Nil), Ok(owned) -> owned
+        _, _ -> []
+      }
+    })
+  #(list.append(local, remote_events), list.append(unroutable, failed))
 }
 
 fn read_remote(
@@ -154,7 +171,7 @@ fn read_remote(
 pub fn absent(users: List(Int)) -> List(Int) {
   let self = route.self_atom()
   let #(local_groups, remote_groups) =
-    group_by_owner(users)
+    group_by_owner(users).0
     |> list.partition(fn(group) { group.0 == self })
   let local =
     list.flat_map(local_groups, fn(group) {
@@ -182,12 +199,19 @@ pub fn absent(users: List(Int)) -> List(Int) {
 }
 
 pub fn lookup_many(users: PackedIds) -> List(Presence) {
-  users
-  |> id_set.from_packed
-  |> lookup_events
-  |> list.filter_map(fn(found) {
-    id.user_id(found.user)
-    |> result.map(event.to_presence(found, _))
-    |> result.replace_error(Nil)
-  })
+  lookup_known(users).0
+}
+
+pub fn lookup_known(users: PackedIds) -> #(List(Presence), List(Int)) {
+  let #(events, unknown) =
+    users
+    |> id_set.from_packed
+    |> read_events
+  let found =
+    list.filter_map(events, fn(found) {
+      id.user_id(found.user)
+      |> result.map(event.to_presence(found, _))
+      |> result.replace_error(Nil)
+    })
+  #(found, unknown)
 }

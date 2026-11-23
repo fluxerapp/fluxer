@@ -17,6 +17,7 @@ import fluxer_gateway/cluster/buckets
 import fluxer_gateway/cluster/lease as worker_lease
 import fluxer_gateway/cluster/lease_probe
 import fluxer_gateway/cluster/links
+import fluxer_gateway/cluster/metrics as cluster_metrics
 import fluxer_gateway/cluster/remote
 import fluxer_gateway/cluster/router
 import fluxer_gateway/config/draining
@@ -26,6 +27,7 @@ import fluxer_gateway/config/settings.{BouncerSettings, Settings}
 import fluxer_gateway/core/clock
 import fluxer_gateway/core/id
 import fluxer_gateway/core/node
+import fluxer_gateway/telemetry/metrics
 import gleam/dict
 import gleam/erlang/atom.{type Atom}
 import gleam/erlang/process.{type Subject}
@@ -171,6 +173,17 @@ fn fake_loop(
   fake_loop(selector, fake)
 }
 
+fn histogram_count(name: String, labels: List(#(String, String))) -> Int {
+  metrics.histograms()
+  |> list.filter(fn(series) { series.name == name && series.labels == labels })
+  |> list.fold(0, fn(total, series) { total + series.count })
+}
+
+fn beat_acks(outcome: String) -> Int {
+  metrics.read_all()
+  |> metrics.value(cluster_metrics.beat_acks, [#("outcome", outcome)])
+}
+
 fn counts(control: Subject(Control)) -> #(Int, Int, Int) {
   process.call(control, 1000, Count)
 }
@@ -267,10 +280,14 @@ pub fn a_worker_owns_its_granted_buckets_once_a_bouncer_majority_acks_test() {
   assert view.majority && view.welcomed == [0]
   let #(hellos, _, claims) = counts(control)
   assert hellos >= 1 && claims >= 1
+  let rtts = histogram_count(cluster_metrics.beat_rtt, [])
+  let matched = beat_acks("matched")
   let #(_, before, _) = counts(control)
   process.sleep(500)
   let #(_, after, _) = counts(control)
   assert after - before >= 3 && after - before <= 12
+  assert histogram_count(cluster_metrics.beat_rtt, []) >= rtts + 3
+  assert beat_acks("matched") >= matched + 3
   let other = WorkerId(atom.create("other@h"), 1)
   process.send(control, Push(BucketDelta(0, [held(bucket, other, 4)])))
   assert wait.until(2000, fn() {
@@ -298,6 +315,8 @@ pub fn a_worker_that_loses_every_bouncer_keeps_serving_under_the_roster_rule_unt
   let client = start_client()
   assert wait.until(2000, fn() { worker_lease.check(bucket) == Ok(epoch_of(3)) })
   assert router.in_service()
+  let probes =
+    histogram_count(cluster_metrics.probe_duration, [#("outcome", "isolated")])
   process.send(control, Silence(True))
   let silenced = clock.monotonic_ms()
   assert wait.until(2000, fn() { !links.joined() })
@@ -311,6 +330,10 @@ pub fn a_worker_that_loses_every_bouncer_keeps_serving_under_the_roster_rule_unt
     }
   })
   assert worker_lease.probe_answer() == worker_lease.NoBouncerMajority
+  assert wait.until(2000, fn() {
+    histogram_count(cluster_metrics.probe_duration, [#("outcome", "isolated")])
+    > probes
+  })
   assert wait.until(4000, fn() {
     worker_lease.check(bucket) == Error(worker_lease.NotHeld(bucket))
   })
@@ -378,11 +401,13 @@ pub fn a_fenced_worker_says_hello_again_and_retakes_its_buckets_test() {
   let client = start_client()
   assert wait.until(2000, fn() { worker_lease.check(bucket) == Ok(epoch_of(3)) })
   let #(hellos, _, _) = counts(control)
+  let mismatched = beat_acks("mismatched")
   process.send(control, Mismatch(True))
   assert wait.until(3000, fn() {
     let #(now, _, _) = counts(control)
     now > hellos
   })
+  assert beat_acks("mismatched") > mismatched
   assert worker_lease.check(bucket) != Ok(epoch_of(3))
   process.send(control, Mismatch(False))
   assert wait.until(3000, fn() { worker_lease.check(bucket) == Ok(epoch_of(3)) })

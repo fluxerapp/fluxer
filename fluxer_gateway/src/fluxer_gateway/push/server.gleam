@@ -118,7 +118,13 @@ fn close_gate(gate: Gate, to: Int) -> Bool {
 }
 
 type Worker {
-  Worker(key: Int, create: MessageCreate, waited_ms: Int, gate: Gate)
+  Worker(
+    key: Int,
+    create: MessageCreate,
+    waited_ms: Int,
+    gate: Gate,
+    started_ms: Int,
+  )
 }
 
 type Server {
@@ -183,7 +189,8 @@ pub fn start(
 
 fn handle(server: Server, message: Message) -> actor.Next(Server, Message) {
   case message {
-    MessageCreateCast(create:) ->
+    MessageCreateCast(create:) -> {
+      metrics.received("message_create")
       case server.pending_len {
         0 ->
           case spawn_worker(server, create, 0) {
@@ -193,7 +200,9 @@ fn handle(server: Server, message: Message) -> actor.Next(Server, Message) {
           }
         _ -> actor.continue(schedule_drain(enqueue_pending(server, create)))
       }
+    }
     ClearCast(user:, channel:, message:) -> {
+      metrics.received("clear")
       case id.user_id(user), id.channel_id(channel), id.message_id(message) {
         Ok(user), Ok(channel), Ok(message) -> {
           let _ = publisher.publish_clear(user, channel, message)
@@ -208,6 +217,11 @@ fn handle(server: Server, message: Message) -> actor.Next(Server, Message) {
       actor.continue(server)
     }
     WorkerDown(process.ProcessDown(pid:, ..)) -> {
+      case dict.get(server.workers, pid) {
+        Ok(worker) ->
+          metrics.job_finished(clock.monotonic_ms() - worker.started_ms)
+        Error(Nil) -> Nil
+      }
       let workers = dict.delete(server.workers, pid)
       metrics.gauge("push_workers_active", [], dict.size(workers))
       actor.continue(Server(..server, workers:))
@@ -234,6 +248,7 @@ fn handle(server: Server, message: Message) -> actor.Next(Server, Message) {
           )
         })
       process.send(reply, list.append(running, queued))
+      metrics.pending(list.length(kept))
       actor.continue(
         Server(
           ..server,
@@ -337,8 +352,15 @@ fn spawn_worker(
         dict.insert(
           server.workers,
           pid,
-          Worker(key: message.route_key(create), create:, waited_ms:, gate:),
+          Worker(
+            key: message.route_key(create),
+            create:,
+            waited_ms:,
+            gate:,
+            started_ms: clock.monotonic_ms(),
+          ),
         )
+      metrics.job_waited(waited_ms)
       metrics.gauge("push_workers_active", [], dict.size(workers))
       Ok(Server(..server, workers:))
     }
@@ -423,6 +445,7 @@ fn pop_front(queue: Queue) -> Result(#(Pending, Queue), Nil) {
 }
 
 fn schedule_drain(server: Server) -> Server {
+  metrics.pending(server.pending_len)
   case server.pending_len, server.drain_scheduled {
     0, _ -> server
     _, True -> server

@@ -222,7 +222,11 @@ impl Store {
             .send()
             .await?;
         if !response.status().is_success() {
-            return Err(StorageError::S3(s3_error_summary(response).await));
+            let summary = s3_error_summary(response).await;
+            if options.upload_id.is_some() && summary.contains("NoSuchUpload") {
+                return Err(StorageError::NoSuchUpload);
+            }
+            return Err(StorageError::S3(summary));
         }
         Ok(header_str(response.headers(), header::ETAG))
     }

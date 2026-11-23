@@ -39,6 +39,7 @@ import fluxer_gateway/guild/join/admission.{type Gate}
 import fluxer_gateway/guild/maintenance
 import fluxer_gateway/guild/members
 import fluxer_gateway/guild/members/search
+import fluxer_gateway/guild/metrics as guild_metrics
 import fluxer_gateway/guild/presence/reconcile
 import fluxer_gateway/guild/presence/rows
 import fluxer_gateway/guild/push/dispatch as push_dispatch
@@ -158,7 +159,7 @@ type Timer {
   AutoStop(token: Int)
   ReplayWindowClosed
   FreezeDeadline(token: Int)
-  ReleasePerms(perms.Perms)
+  ReleasePerms(stale: perms.Perms, since_ms: Int)
   AckMoves
 }
 
@@ -287,6 +288,7 @@ fn initialise(
   {
     Error(error) -> Error(init_failure(error))
     Ok(state) -> {
+      let state = rows.restore_engagement(state)
       let state = case voice {
         Some(_) -> resume_voice(state)
         None -> state
@@ -359,7 +361,15 @@ fn go_live(
   let timers = parts.timers
   let guild = guild_state.guild_id(state)
   health.register(guild, handle.control)
-  roster.put_many(guild, rejoining)
+  let carried = guild_sessions.session_refs(guild_state.sessions(state))
+  list.each(carried, fn(ref) {
+    health.put_session(guild, ref)
+    health.send_current(guild, ref)
+  })
+  roster.put_many(
+    guild,
+    list.fold(carried, rejoining, fn(ids, ref) { [ref.id, ..ids] }),
+  )
   maintenance.publish_view(state, handle)
   maintenance.publish_counts(state)
   let _ = availability.publish(guild_state.facts(state))
@@ -385,8 +395,14 @@ fn go_live(
     False, False -> None
   }
   let mode = case arriving {
-    True -> Arriving(applied: 0, early: dict.new(), stash: [])
-    False -> Serving
+    True -> {
+      guild_metrics.enter(guild_metrics.Arriving)
+      Arriving(applied: 0, early: dict.new(), stash: [])
+    }
+    False -> {
+      guild_metrics.enter(guild_metrics.Serving)
+      Serving
+    }
   }
   let server =
     Server(
@@ -444,6 +460,7 @@ fn stage(
     )
   let staging = copy.subject(process.self())
   process.send_after(staging, staged_ttl_ms(), copy.Expire)
+  guild_metrics.enter(guild_metrics.Staged)
   new_server(state, parts, Staged(move:, round: 0), [])
   |> actor.initialised
   |> actor.selecting(
@@ -518,9 +535,34 @@ fn handle_message(
 fn run(server: Server, message: Message) -> Step {
   let occupied = occupancy(server.state)
   case route(server, message) {
-    Continue(next) ->
-      Continue(publish(after_route(catch_up_joined(next), occupied)))
+    Continue(next) -> settle_perms(after_route(catch_up_joined(next), occupied))
     other -> other
+  }
+}
+
+fn settle_perms(server: Server) -> Step {
+  let #(state, repair) = guild_state.take_repair(server.state)
+  case repair {
+    guild_state.Intact -> publish_live(server)
+    guild_state.Rebuilt(stale) -> {
+      let since_ms = clock.monotonic_ms()
+      list.each(stale, fn(handle) {
+        process.send_after(
+          server.timers,
+          stale_perms_release_ms(),
+          ReleasePerms(handle, since_ms),
+        )
+      })
+      publish_live(with_state(server, state))
+    }
+    guild_state.Unrepairable -> Crash(server, "guild_model_rebuild_failed")
+  }
+}
+
+fn publish_live(server: Server) -> Step {
+  case perms.status(guild_state.perms_handle(server.state)) {
+    Ok(Nil) -> Continue(publish(server))
+    Error(_) -> Crash(server, "guild_perms_broken")
   }
 }
 
@@ -569,6 +611,7 @@ fn on_signal(server: Server, found: Signal) -> actor.Next(Server, Message) {
     }
     signal.Thaw(reply:), Frozen(held:, ..) -> {
       process.send(reply, True)
+      guild_metrics.enter(guild_metrics.Serving)
       next(run_all(Server(..server, mode: Serving), list.reverse(held)))
     }
     signal.Thaw(reply:), _ -> {
@@ -584,7 +627,10 @@ fn on_signal(server: Server, found: Signal) -> actor.Next(Server, Message) {
       }
     }
     signal.SealDue, Handing(sealed: False, ..) -> actor.continue(seal(server))
-    signal.ForwardGraceOver, Handing(..) -> next(Stop(server))
+    signal.ForwardGraceOver, Handing(..) -> {
+      guild_metrics.stopped("handed_off")
+      next(Stop(server))
+    }
     signal.Release(seq:, bytes:), Arriving(applied:, early:, stash:) ->
       case seq > applied {
         False -> actor.continue(server)
@@ -602,6 +648,7 @@ fn on_signal(server: Server, found: Signal) -> actor.Next(Server, Message) {
       }
     signal.Seal(last_seq:, reply:), Arriving(applied:, stash:, ..) -> {
       process.send(reply, applied >= last_seq)
+      guild_metrics.enter(guild_metrics.Serving)
       next(run_all(open(Server(..server, mode: Serving)), list.reverse(stash)))
     }
     signal.Probe(reply:), Frozen(..) | signal.Probe(reply:), Handing(..) -> {
@@ -615,7 +662,10 @@ fn on_signal(server: Server, found: Signal) -> actor.Next(Server, Message) {
     signal.AbortArrival, Arriving(..)
     | signal.AbortArrival, Frozen(..)
     | signal.AbortArrival, Handing(..)
-    -> next(Stop(server))
+    -> {
+      guild_metrics.stopped("aborted")
+      next(Stop(server))
+    }
     _, _ -> actor.continue(server)
   }
 }
@@ -818,6 +868,7 @@ fn activate(
       option.unwrap(tail.table, guild_sessions.new())
       |> guild_sessions.rehome(process.monitor),
     )
+    |> rows.restore_engagement
     |> guild_state.set_voice(tail.voice)
   use state <- result.map(
     init.load(state, members.to_list(guild_state.members_table(state)))
@@ -879,6 +930,7 @@ fn freeze(
     Ok(bytes) -> {
       flush_broadcast(state)
       process.send(reply, Ok(bytes))
+      guild_metrics.enter(guild_metrics.Frozen)
       Server(
         ..server,
         mode: Frozen(move:, version:, epoch: epoch.to_int(epoch), held: []),
@@ -970,6 +1022,7 @@ fn commit(
     _,
     control.GuildRebind(target.ref, process.self()),
   ))
+  guild_metrics.enter(guild_metrics.Handing)
   let server =
     Server(
       ..server,
@@ -1165,6 +1218,7 @@ fn process_down(server: Server, monitor: process.Monitor) -> Server {
 }
 
 fn thaw(server: Server, frozen: Frozen) -> Server {
+  guild_metrics.enter(guild_metrics.Serving)
   list.fold(
     hold.release(frozen),
     remember_voice(Server(..server, frozen: None)),
@@ -1281,15 +1335,24 @@ fn drain_joins(server: Server) -> Server {
           let #(state, gate) = acc
           let now = clock.monotonic_ms()
           case admission.deliverable(waiting, now) {
-            True -> #(connect.join(state, waiting.request, waiting.reply), gate)
+            True -> {
+              guild_metrics.join_admitted(
+                waiting.request.class,
+                now - waiting.enqueued_at,
+              )
+              #(connect.join(state, waiting.request, waiting.reply), gate)
+            }
             False -> {
+              guild_metrics.join_expired(now - waiting.enqueued_at)
               let #(gate, effects) = admission.expire(gate, waiting, now)
               run_join_effects(effects)
               #(state, gate)
             }
           }
         })
-      let gate = admission.batch_done(gate, found, clock.monotonic_ms())
+      let finished = clock.monotonic_ms()
+      guild_metrics.join_batch(finished - found.started_at)
+      let gate = admission.batch_done(gate, found, finished)
       drain_joins(Server(..server, state:, gate:))
     }
   }
@@ -1306,8 +1369,16 @@ fn session_op(server: Server, ref: SessionRef, op: session.ClientOp) -> Server {
           server
         }
       }
-    session.LazyRequest(_) ->
-      with_state(server, subscriptions.handle(server.state, ref, op))
+    session.LazyRequest(_) -> {
+      let started = clock.monotonic_ms()
+      let state = subscriptions.handle(server.state, ref, op)
+      metrics.observe_ms(
+        "fluxer_gateway_guild_lazy_request_ms",
+        [],
+        clock.monotonic_ms() - started,
+      )
+      with_state(server, state)
+    }
     _ -> with_state(server, requests.handle(server.state, ref, op))
   }
 }
@@ -1354,6 +1425,12 @@ fn push_message(server: Server, request: push_dispatch.PushGuildMsg) -> Server {
       push_dispatch.on_permit(
         guild_state.push(state),
         guild_state.member_list(state),
+        fn(session_id) {
+          option.is_some(guild_sessions.get(
+            guild_state.sessions(state),
+            session_id,
+          ))
+        },
         request,
       ),
     ),
@@ -1511,6 +1588,7 @@ fn private(server: Server, control: Control) -> Step {
     }
     inbox.Shutdown(reply) -> {
       process.send(reply, Nil)
+      guild_metrics.stopped("shutdown")
       Stop(server)
     }
     inbox.Freeze(owners, reply) -> {
@@ -1523,6 +1601,7 @@ fn private(server: Server, control: Control) -> Step {
         FreezeDeadline(token),
       )
       let frozen = hold.freeze(server.frozen, owners, successor, token)
+      guild_metrics.enter(guild_metrics.Frozen)
       let server =
         remember_voice(
           Server(..server, frozen: Some(frozen), next_token: token + 1),
@@ -1553,6 +1632,7 @@ fn private(server: Server, control: Control) -> Step {
           session.GuildDown(guild, int.random(down_jitter_ms())),
         )
       })
+      guild_metrics.stopped("moved")
       Stop(server)
     }
     inbox.VoiceRpc(request) -> Continue(voice_request(server, request))
@@ -1957,7 +2037,7 @@ fn reload(server: Server, loaded: Loaded) -> Step {
           process.send_after(
             server.timers,
             stale_perms_release_ms(),
-            ReleasePerms(stale_perms),
+            ReleasePerms(stale_perms, clock.monotonic_ms()),
           )
           send.list_dispatches(state, dispatches)
           let state = maintenance.prune_all(state)
@@ -2000,8 +2080,18 @@ fn tick(server: Server, timer: Timer) -> Step {
   case timer {
     DrainJoins -> Continue(drain_joins(server))
     AckMoves -> Continue(ack_moves(server))
-    ReleasePerms(stale) -> {
-      perms.release(stale)
+    ReleasePerms(stale:, since_ms:) -> {
+      case push_busy(server.state, since_ms) {
+        True -> {
+          process.send_after(
+            server.timers,
+            stale_perms_release_ms(),
+            ReleasePerms(stale:, since_ms:),
+          )
+          Nil
+        }
+        False -> perms.release(stale)
+      }
       Continue(server)
     }
     PassiveSync -> {
@@ -2039,8 +2129,13 @@ fn tick(server: Server, timer: Timer) -> Step {
       {
         False, _ -> Continue(server)
         True, True ->
-          case mailbox_empty() {
-            True -> Stop(server)
+          case
+            mailbox_empty() && !push_busy(server.state, clock.monotonic_ms())
+          {
+            True -> {
+              guild_metrics.stopped("idle")
+              Stop(server)
+            }
             False ->
               Continue(maybe_auto_stop(Server(..server, auto_stop: None)))
           }
@@ -2070,8 +2165,14 @@ fn mailbox_empty() -> Bool {
   queue_info(process.self(), MessageQueueLen).1 == 0
 }
 
+fn push_busy(state: GuildState, admitted_by_ms: Int) -> Bool {
+  push_dispatch.busy(guild_state.push(state), admitted_by: admitted_by_ms)
+}
+
 fn occupancy(state: GuildState) -> Int {
-  guild_sessions.count(guild_state.sessions(state)) + visitors.count(state)
+  guild_sessions.count(guild_state.sessions(state))
+  + visitors.count(state)
+  + guild_handler.issued_count(guild_state.voice(state))
 }
 
 fn is_empty(state: GuildState) -> Bool {

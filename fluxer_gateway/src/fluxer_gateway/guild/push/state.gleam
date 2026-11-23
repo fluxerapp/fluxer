@@ -7,13 +7,18 @@ import fluxer_gateway/guild/push/guild_info.{type GuildInfo}
 import fluxer_gateway/guild/push/masks.{type Class}
 import fluxer_gateway/guild/push/profiles.{type Profiles}
 import fluxer_gateway/push/settings.{type Settings}
+import gleam/erlang/atom
 import gleam/erlang/process.{type Pid, type Subject}
 import gleam/option.{type Option, None}
 
 pub type GuildMessage {
-  ReleasedHolds(sessions: List(String), reply: Subject(List(String)))
+  HeldSessions(sessions: List(String), reply: Subject(Holds))
   ProfileSynced(user: Int)
   ProfilesFetched(key: masks.Key, classes: List(FetchedClass))
+}
+
+pub type Holds {
+  Holds(present: List(String), released: List(String))
 }
 
 pub type FetchedClass {
@@ -33,8 +38,15 @@ pub type GuildPush {
   )
 }
 
+pub fn inbox_of(guild: Pid) -> Subject(GuildMessage) {
+  process.unsafely_create_subject(
+    guild,
+    atom.to_dynamic(atom.create("fluxer_gateway_guild_push")),
+  )
+}
+
 pub fn new(guild: GuildId) -> GuildPush {
-  let inbox = process.new_subject()
+  let inbox = inbox_of(process.self())
   GuildPush(
     guild:,
     inbox:,

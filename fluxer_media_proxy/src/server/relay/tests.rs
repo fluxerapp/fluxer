@@ -81,6 +81,7 @@ fn relay_test_token(key: &str, relay_secret: &[u8]) -> String {
             ct: Some("application/octet-stream".to_owned()),
             mb: 4096,
             e: now_unix() + 60,
+            s: None,
         },
         relay_secret,
     )
@@ -184,6 +185,7 @@ async fn relay_put_never_forwards_an_injected_content_type_upstream() {
             ct: Some("image/png\r\nInjected: yes".to_owned()),
             mb: 4096,
             e: now_unix() + 60,
+            s: None,
         },
         &relay_secret,
     )

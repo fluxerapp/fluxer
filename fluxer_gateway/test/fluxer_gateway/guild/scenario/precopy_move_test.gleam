@@ -26,6 +26,7 @@ import gleam/json
 import gleam/list
 import gleam/option.{None, Some}
 import support/guild_api
+import support/guild_engagement
 import support/guild_fixture as fixture
 import support/guild_session as fake
 import support/isolation
@@ -268,6 +269,7 @@ pub fn precopied_move_carries_changes_made_during_the_copy_test() {
   let member = fake.start(2)
   assert fake.is_joined(fake.join(member, handle))
   let _ = fake.drain(member, 50)
+  assert guild_engagement.engaged(handle.pid, 2)
   let receiver = start_receiver()
   let sink = start_sink()
   let move = move_id(1)
@@ -300,6 +302,7 @@ pub fn precopied_move_carries_changes_made_during_the_copy_test() {
   assert downs(after) == 0
   assert rebound(after)
   assert member_answers(target, users) == expected
+  assert guild_engagement.engaged(arrival.entity, 2)
   assert precopy.take(move) == Error(Nil)
   stop_pid(sink.pid)
   stop_pid(receiver)
@@ -670,5 +673,68 @@ pub fn a_staged_copy_nobody_takes_or_drops_is_unstaged_test() {
   assert taken == Error(Nil)
   stop_pid(started.pid)
   let _ = handle
+  fixture.stop(found)
+}
+
+fn private_message(message_id: Int) -> json.Json {
+  json.object([
+    #("id", json.string(int.to_string(message_id))),
+    #("channel_id", json.string("20")),
+    #("content", json.string("hi")),
+    #("author", fixture.user(1)),
+  ])
+}
+
+pub fn precopied_move_gates_private_channels_by_the_target_role_sets_test() {
+  short_timers()
+  use api <- guild_api.with_api
+  let owner = 7_920_000_000_000_001
+  let allowed = 7_920_000_000_000_002
+  let denied = 7_920_000_000_000_003
+  let base = fixture.new(owner)
+  let found =
+    base
+    |> fixture.with_role(300, 0, 1)
+    |> fixture.with_role(400, 0, 2)
+    |> fixture.with_text(10)
+    |> fixture.with_channel(20, 0, None, [
+      fixture.RoleDeny(base.id, fixture.view_channel),
+      fixture.RoleAllow(300, fixture.view_channel),
+    ])
+    |> fixture.with_member(allowed, [300])
+    |> fixture.with_member(denied, [400])
+  let handle = fixture.started(api, found)
+  let entity = Key(key.guild, found.id)
+  let reader = fake.start(allowed)
+  let outsider = fake.start(denied)
+  assert fake.is_joined(fake.join(reader, handle))
+  assert fake.is_joined(fake.join(outsider, handle))
+  let _ = fake.drain(reader, 50)
+  let _ = fake.drain(outsider, 50)
+  let receiver = start_receiver()
+  let sink = start_sink()
+  let move = move_id(7)
+  let _ = stage_bulk(entity, move)
+  fixture.dispatch(handle, "MESSAGE_CREATE", private_message(1))
+  assert seen_ids(fake.drain(reader, 100)) == ["1"]
+  assert seen_ids(fake.drain(outsider, 100)) == []
+  let assert Ok(frozen) = guild_adapter.freeze(entity, move, 3, at(5))
+  assert decoded(frozen).staged
+    == Some(guild_codec.Staged(move:, round: 0, removed: []))
+  let assert Ok(arrival) =
+    guild_adapter.install(entity, me(), at(6), frozen.tail)
+  let assert Ok(target) = handoff_codec.term_of(arrival.target_ref)
+  let target: Handle = target
+  finish_move(sink, frozen, arrival, [reader, outsider])
+  let _ = fake.drain(reader, 150)
+  let _ = fake.drain(outsider, 150)
+  fixture.dispatch(target, "MESSAGE_CREATE", private_message(2))
+  let delivered = #(
+    seen_ids(fake.drain(reader, 100)),
+    seen_ids(fake.drain(outsider, 100)),
+  )
+  assert delivered == #(["2"], [])
+  stop_pid(sink.pid)
+  stop_pid(receiver)
   fixture.stop(found)
 }

@@ -17,6 +17,7 @@ interface RelayTokenPayload {
 	ct?: string;
 	mb: number;
 	e: number;
+	s?: string;
 }
 
 interface UploadRelayConfig {
@@ -82,6 +83,7 @@ function buildRelayUrl({bucket, key, uploadId, partNumber, contentType, maxBytes
 		...(uploadId ? {u: uploadId} : {}),
 		...(partNumber ? {p: partNumber} : {}),
 		...(contentType ? {ct: contentType} : {}),
+		...(Config.s3.dualStoreEnabled ? {s: Config.s3.storeId} : {}),
 	};
 	const token = signRelayToken(payload, config.relaySecretBase64);
 	const params = new URLSearchParams();

@@ -8,11 +8,14 @@ import bouncer_proto/worker.{type WorkerId, WorkerId}
 import fluxer_gateway/handoff/adapter.{type Adapter, Adapter, Precopy}
 import fluxer_gateway/handoff/move
 import fluxer_gateway/handoff/ports.{type Ports}
+import fluxer_gateway/telemetry/metrics
 import fluxer_gateway/telemetry/rollout_metrics
 import gleam/erlang/atom
 import gleam/erlang/process.{type Pid, type Subject}
+import gleam/list
 import gleam/option.{None, Some}
 import support/handoff_toy
+import support/wait
 
 fn entity() -> Key {
   Key(ns: handoff_toy.ns, id: 1)
@@ -275,5 +278,38 @@ pub fn a_stub_that_died_while_in_doubt_still_seals_once_committed_test() {
   assert sealed(sent, 2000) == Ok(0)
   move.from_home(engine, message.AppliedThrough(move_id, 0))
   let assert Ok(Ok(move.Moved(..))) = process.receive(result, 5000)
+  stop(engine)
+}
+
+fn precopies(outcome: String) -> Int {
+  metrics.histograms()
+  |> list.filter(fn(series) {
+    series.name == move.precopy_duration
+    && series.labels == [#("kind", "other"), #("outcome", outcome)]
+  })
+  |> list.fold(0, fn(total, series) { total + series.count })
+}
+
+pub fn a_failed_precopy_is_timed_by_kind_and_outcome_test() {
+  let sent = process.new_subject()
+  let frozen = process.new_subject()
+  let #(ports, at) = source_ports("copy_timed", sent, fn() { True })
+  let assert Ok(engine) =
+    move.start_with([slow_adapter(30, frozen)], move.default_limits(), ports)
+  let failed = precopies("failed")
+  let staged = precopies("staged")
+  let result = process.new_subject()
+  process.spawn(fn() {
+    process.send(
+      result,
+      move.move_entity(engine, entity(), at, target("copy_timed")),
+    )
+  })
+  let move_id = begun(sent)
+  move.from_home(engine, message.MoveAccepted(move_id))
+  assert wait.until(3000, fn() { precopies("failed") == failed + 1 })
+  assert precopies("staged") == staged
+  move.from_home(engine, message.Aborted(move_id))
+  let _ = process.receive(result, 5000)
   stop(engine)
 }

@@ -149,6 +149,19 @@ fn nth(items: List(a), position: Int) -> Result(a, Nil) {
   }
 }
 
+pub fn in_flight(
+  admission: Admission(p),
+  admitted_by admitted_by_ms: Int,
+  now_ms now_ms: Int,
+  is_live is_live: fn(p) -> Bool,
+) -> Bool {
+  list.any(admission.tracked, fn(item) {
+    item.admitted_at_ms <= admitted_by_ms
+    && now_ms - item.admitted_at_ms < 3 * max_age_ms()
+    && is_live(item.plan)
+  })
+}
+
 pub fn released(
   waiting_since_ms: Int,
   now_ms: Int,

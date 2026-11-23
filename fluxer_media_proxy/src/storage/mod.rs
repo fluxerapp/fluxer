@@ -18,7 +18,7 @@ pub use relay_body::{RelayBody, RelayBodyChunks, RelayPutOptions};
 use crate::{
     aws_sigv4,
     byte_budget::{BudgetedBytes, ByteBudget},
-    config::{Config, StorageBackend},
+    config::{Config, StorageBackend, StoreSide},
     http_client::{self, HTTPClientOptions},
     metrics::{http_client::HTTPClientMetrics, storage::StorageMetrics},
     response_body_limit,
@@ -132,6 +132,7 @@ pub struct Store {
     raw_client: reqwest::Client,
     metrics: Arc<StorageMetrics>,
     local_stream_buffers: LocalStreamBufferPool,
+    fallback: Option<Arc<Store>>,
 }
 
 impl Store {
@@ -147,6 +148,7 @@ impl Store {
             raw_client: http_client::build_raw_default(),
             metrics,
             local_stream_buffers: local_stream_buffer_pool(),
+            fallback: None,
         }
     }
 
@@ -161,15 +163,76 @@ impl Store {
         let socket_io_timeout =
             NonZeroU64::new(cfg.socket_io_timeout_ms).unwrap_or(NonZeroU64::MIN);
         let options = HTTPClientOptions::streaming(socket_io_timeout, socket_io_timeout);
-        let client = http_client::build(options, http_client_metrics)?;
+        let client = http_client::build(options, Arc::clone(&http_client_metrics))?;
         let raw_client = http_client::build_raw(options)?;
+        let fallback = match (&cfg.storage.backend, fallback_config(&cfg)) {
+            (StorageBackend::S3, Some(fallback_cfg)) => Some(Arc::new(Self::try_new(
+                fallback_cfg,
+                Arc::clone(&metrics),
+                http_client_metrics,
+            )?)),
+            _ => None,
+        };
         Ok(Self {
             cfg,
             client,
             raw_client,
             metrics,
             local_stream_buffers: local_stream_buffer_pool(),
+            fallback,
         })
+    }
+
+    pub(super) fn reads_fallback(&self) -> Option<&Store> {
+        let reads_enabled = self
+            .cfg
+            .storage
+            .dual_store
+            .as_ref()
+            .is_some_and(|dual| dual.reads_enabled);
+        if reads_enabled {
+            self.fallback.as_deref()
+        } else {
+            None
+        }
+    }
+
+    pub(super) fn fallback_bucket(&self, bucket: &str) -> String {
+        let storage = &self.cfg.storage;
+        let Some(dual) = storage.dual_store.as_ref() else {
+            return bucket.to_owned();
+        };
+        if bucket == storage.bucket_cdn {
+            dual.bucket_cdn.clone()
+        } else if bucket == storage.bucket_uploads {
+            dual.bucket_uploads.clone()
+        } else if bucket == storage.bucket_static {
+            dual.bucket_static.clone()
+        } else {
+            bucket.to_owned()
+        }
+    }
+
+    pub fn side(&self, side: StoreSide) -> Option<&Store> {
+        match side {
+            StoreSide::Primary => Some(self),
+            StoreSide::Fallback => self.fallback.as_deref(),
+        }
+    }
+
+    pub(super) fn record_fallback<T>(
+        &self,
+        primary: &Result<T, StorageError>,
+        fallback: &Result<T, StorageError>,
+    ) {
+        match (primary, fallback) {
+            (_, Ok(_)) => self.metrics.fallback_hits.inc(),
+            (Err(StorageError::NotFound), Err(StorageError::NotFound)) => {
+                self.metrics.fallback_double_misses.inc();
+            }
+            (_, Err(StorageError::NotFound)) => {}
+            (_, Err(_)) => self.metrics.fallback_errors.inc(),
+        }
     }
 
     #[cfg(test)]
@@ -213,6 +276,53 @@ impl Store {
             StorageBackend::Local => self.write_local_relay(bucket, key, options).await,
             StorageBackend::S3 => self.relay_put_s3(bucket, key, options).await,
         }
+    }
+}
+
+fn fallback_config(cfg: &Config) -> Option<Config> {
+    let dual = cfg.storage.dual_store.as_ref()?;
+    let mut fallback = cfg.clone();
+    let storage = &mut fallback.storage;
+    storage.s3_endpoint = dual.endpoint.clone();
+    storage.s3_region = dual.region.clone();
+    storage.s3_access_key_id = dual.access_key_id.clone();
+    storage.s3_secret_access_key = dual.secret_access_key.clone();
+    storage.s3_session_token = String::new();
+    storage.s3_force_path_style = dual.force_path_style;
+    storage.s3_read_endpoint = None;
+    storage.s3_read_bucket = dual.bucket_cdn.clone();
+    storage.bucket_cdn = dual.bucket_cdn.clone();
+    storage.bucket_uploads = dual.bucket_uploads.clone();
+    storage.bucket_static = dual.bucket_static.clone();
+    storage.store_id = dual.store_id.clone();
+    storage.dual_store = None;
+    Some(fallback)
+}
+
+pub(super) fn merge_fallback<T>(
+    primary: Result<T, StorageError>,
+    fallback: Result<T, StorageError>,
+) -> Result<T, StorageError> {
+    match (primary, fallback) {
+        (Ok(value), _) | (_, Ok(value)) => Ok(value),
+        (Err(StorageError::NotFound), Err(fallback_error)) => Err(fallback_error),
+        (Err(primary_error), Err(_)) => Err(primary_error),
+    }
+}
+
+pub(super) fn wants_fallback<T>(result: &Result<T, StorageError>) -> bool {
+    match result {
+        Ok(_) => false,
+        Err(
+            StorageError::InvalidKey
+            | StorageError::InvalidBucket
+            | StorageError::StreamTooLong
+            | StorageError::BufferBudgetExhausted
+            | StorageError::BufferAllocationFailed
+            | StorageError::ObjectChanged
+            | StorageError::ReadOnlyStorage,
+        ) => false,
+        Err(_) => true,
     }
 }
 

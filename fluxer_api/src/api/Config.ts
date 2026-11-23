@@ -369,6 +369,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 		nodeEnv: master.env === 'test' ? 'development' : master.env,
 		port: master.services.api.port,
 		host: master.services.api.host,
+		metricsPort: master.services.api.metrics_port,
 		headersTimeoutMs: master.services.api.headers_timeout_ms,
 		requestTimeoutMs: master.services.api.request_timeout_ms,
 		maxInflightRequests: master.services.api.max_inflight_requests,
@@ -488,6 +489,21 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			accessKeyId: s3Config.access_key_id,
 			secretAccessKey: s3Config.secret_access_key,
 			buckets: s3Buckets,
+			storeId: s3Config.store_id ?? 'primary',
+			dualStoreEnabled: s3Config.dual_store_enabled ?? false,
+			fallbackReadsEnabled: s3Config.fallback_reads_enabled ?? false,
+			fallback: s3Config.fallback
+				? {
+						storeId: s3Config.fallback.store_id,
+						endpoint: s3Config.fallback.endpoint,
+						presignedUrlBase: s3Config.fallback.presigned_url_base,
+						forcePathStyle: s3Config.fallback.force_path_style ?? true,
+						region: s3Config.fallback.region,
+						accessKeyId: s3Config.fallback.access_key_id,
+						secretAccessKey: s3Config.fallback.secret_access_key,
+						bucketMap: s3Config.fallback.bucket_map,
+					}
+				: undefined,
 		},
 		email: {
 			...resolveEnvEmailSwitch(master.integrations.email),

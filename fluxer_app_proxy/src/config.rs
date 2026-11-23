@@ -340,6 +340,8 @@ pub struct AppProxyConfig {
     pub media_endpoint: Option<HttpEndpoint>,
     pub s3_public_endpoint: Option<HttpEndpoint>,
     pub s3_uploads_endpoint: Option<HttpEndpoint>,
+    pub s3_fallback_public_endpoint: Option<HttpEndpoint>,
+    pub s3_fallback_uploads_endpoint: Option<HttpEndpoint>,
     pub branding: crate::branding_images::BrandingSnapshot,
     pub discovery_upstream_url: String,
     pub discovery_refresh_interval_ms: u64,
@@ -428,6 +430,14 @@ pub fn voice_connect_sources(name: &'static str, value: &str) -> Vec<CspSource> 
         .collect()
 }
 
+fn bucket_map_entry(map: &str, kind: &str) -> Option<String> {
+    map.split(',').find_map(|entry| {
+        let (key, bucket) = entry.split_once('=')?;
+        let bucket = bucket.trim();
+        (key.trim() == kind && !bucket.is_empty()).then(|| bucket.to_owned())
+    })
+}
+
 fn read_csp_report_uri(env: &EnvMap, name: &'static str) -> Option<CspReportUri> {
     let value = env.value(name)?;
     CspReportUri::parse(name, value.trim())
@@ -448,6 +458,22 @@ impl AppProxyConfig {
                 .inspect_err(warn_invalid)
                 .ok()
         });
+        let s3_fallback_public_endpoint = parse_optional_http_endpoint(
+            "FLUXER_S3_FALLBACK_PUBLIC_ENDPOINT",
+            env.value("FLUXER_S3_FALLBACK_PUBLIC_ENDPOINT"),
+        );
+        let s3_fallback_uploads_bucket = env
+            .value("FLUXER_S3_FALLBACK_BUCKET_MAP")
+            .and_then(|map| bucket_map_entry(&map, "uploads"));
+        let s3_fallback_uploads_endpoint = s3_fallback_public_endpoint
+            .as_ref()
+            .zip(s3_fallback_uploads_bucket)
+            .and_then(|(endpoint, bucket)| {
+                endpoint
+                    .with_host_prefix("FLUXER_S3_FALLBACK_BUCKET_MAP", &bucket)
+                    .inspect_err(warn_invalid)
+                    .ok()
+            });
 
         let self_hosted = env.read_bool("FLUXER_SELF_HOSTED", false);
         Self {
@@ -472,6 +498,8 @@ impl AppProxyConfig {
             ),
             s3_public_endpoint,
             s3_uploads_endpoint,
+            s3_fallback_public_endpoint,
+            s3_fallback_uploads_endpoint,
             branding: crate::branding_images::snapshot_from_environment(|name| env.value(name)),
             discovery_upstream_url: env
                 .read("DISCOVERY_UPSTREAM_URL", DEFAULT_DISCOVERY_UPSTREAM_URL),

@@ -308,14 +308,7 @@ fn link(
             |> links.refund,
           health: dict.delete(state.health, st.guild_key(guild)),
         )
-      case state.bot {
-        True -> Nil
-        False ->
-          core_guild.send(
-            guild_ref,
-            SessionPushHold(state.id, st.push_hold(state)),
-          )
-      }
+      send_hold(state, guild_ref, st.push_hold(state))
       case readiness.guild_created(state, guild_create) {
         Continue(state) -> {
           replay_subscriptions(state, guild_ref)
@@ -494,6 +487,9 @@ pub fn rebind(state: State, guild_ref: GuildRef) -> State {
   case links.get(state.links, guild_ref.guild), guild_pid(guild_ref) {
     Some(Linked(_, monitor)), Ok(pid) -> {
       process.demonitor_process(monitor)
+      replay(state, guild_ref, subscriptions.replay_threads)
+      replay(state, guild_ref, subscriptions.replay_member_lists)
+      send_hold(state, guild_ref, st.push_hold(state))
       State(
         ..state,
         links: links.put(
@@ -504,6 +500,21 @@ pub fn rebind(state: State, guild_ref: GuildRef) -> State {
       )
     }
     _, _ -> state
+  }
+}
+
+fn replay(
+  state: State,
+  guild_ref: GuildRef,
+  build: fn(subscriptions.Subscriptions, Int) -> Option(raw_json.RawJson),
+) -> Nil {
+  case
+    build(state.subscriptions, st.guild_key(guild_ref.guild))
+    |> option.then(fn(raw) { payload.raw_to_dynamic(raw) |> option.from_result })
+  {
+    Some(data) ->
+      core_guild.send(guild_ref, SessionOp(state.me, LazyRequest(data)))
+    None -> Nil
   }
 }
 
@@ -799,14 +810,14 @@ pub fn repair(state: State) -> State {
 }
 
 pub fn send_push_hold(state: State) -> Nil {
+  let hold = st.push_hold(state)
+  list.each(links.linked(state.links), send_hold(state, _, hold))
+}
+
+fn send_hold(state: State, guild_ref: GuildRef, hold: Bool) -> Nil {
   case state.bot {
     True -> Nil
-    False -> {
-      let hold = st.push_hold(state)
-      list.each(links.linked(state.links), fn(guild_ref) {
-        core_guild.send(guild_ref, SessionPushHold(state.id, hold))
-      })
-    }
+    False -> core_guild.send(guild_ref, SessionPushHold(state.id, hold))
   }
 }
 

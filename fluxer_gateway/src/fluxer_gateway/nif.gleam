@@ -239,6 +239,10 @@ pub fn perm_revision(_reader: a0) -> r {
   nif_error("nif_not_loaded")
 }
 
+pub fn perm_status(_perms: a0) -> r {
+  nif_error("nif_not_loaded")
+}
+
 pub fn perm_release(_perms: a0) -> r {
   nif_error("nif_not_loaded")
 }

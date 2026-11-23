@@ -5,7 +5,6 @@ import fluxer_gateway/core/guild.{type GuildRef} as core_guild
 import fluxer_gateway/core/id
 import fluxer_gateway/core/member
 import fluxer_gateway/guild/data.{type Loaded, Loaded}
-import fluxer_gateway/guild/dispatch/model
 import fluxer_gateway/guild/ets_owner
 import fluxer_gateway/guild/inbox.{type Control}
 import fluxer_gateway/guild/members
@@ -185,7 +184,7 @@ pub fn list_snapshot(
       Error(_) -> acc
     }
   })
-  |> ml_snapshot.set_updates(model.updates_enabled(loaded.data))
+  |> ml_snapshot.set_updates(data.updates_enabled(loaded.data))
 }
 
 pub fn reload_snapshot(

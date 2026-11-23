@@ -2,8 +2,9 @@
 
 import {
 	createMetricsMiddleware,
-	createRegisteredMetricsHandler,
+	createMetricsPortApp,
 	registerCounter,
+	renderRegisteredMetricsText,
 } from '@fluxer/hono/src/middleware/Metrics';
 import {Hono} from 'hono';
 import {describe, expect, test} from 'vitest';
@@ -83,17 +84,48 @@ describe('Metrics Middleware', () => {
 	});
 
 	describe('registered metrics', () => {
-		test('serves only registered metrics from the standalone handler', async () => {
+		test('serves only registered metrics from the standalone renderer', async () => {
 			registerCounter('fluxer_test_standalone_total', 'Standalone counter').inc();
-			const app = new Hono();
-			app.get('/_metrics', createRegisteredMetricsHandler());
+			const app = createMetricsPortApp(renderRegisteredMetricsText);
 			const res = await requestMetrics(app);
 			const body = await res.text();
 			expect(res.status).toBe(200);
 			expect(res.headers.get('Content-Type')).toBe('text/plain; version=0.0.4; charset=utf-8');
 			expect(body).toContain('fluxer_test_standalone_total 1');
 			expect(body).not.toContain('_http_requests_total');
-			expect((await requestMetrics(app, '8.8.8.8')).status).toBe(403);
+		});
+	});
+
+	describe('metrics port app', () => {
+		test('serves request metrics to a non-loopback peer', async () => {
+			const {app: publicApp} = createTestApp();
+			const {middleware, renderMetrics} = createMetricsMiddleware('port');
+			const tracked = new Hono();
+			tracked.use('*', middleware);
+			tracked.get('/ping', (c) => c.text('ok'));
+			await tracked.request('/ping');
+			const portApp = createMetricsPortApp(renderMetrics);
+			const res = await requestMetrics(portApp, '10.244.1.7');
+			const body = await res.text();
+			expect(res.status).toBe(200);
+			expect(res.headers.get('Content-Type')).toBe('text/plain; version=0.0.4; charset=utf-8');
+			expect(body).toContain('fluxer_port_http_requests_total{method="GET",status="2xx"} 1');
+			expect((await requestMetrics(publicApp, '10.244.1.7')).status).toBe(403);
+		});
+
+		test('serves registered metrics to a non-loopback peer', async () => {
+			registerCounter('fluxer_test_port_total', 'Port counter').inc();
+			const res = await requestMetrics(createMetricsPortApp(renderRegisteredMetricsText), '203.0.113.9');
+			expect(res.status).toBe(200);
+			expect(await res.text()).toContain('fluxer_test_port_total 1');
+		});
+
+		test('answers 404 for every other path', async () => {
+			const portApp = createMetricsPortApp(renderRegisteredMetricsText);
+			for (const path of ['/', '/_health', '/v1/users/@me', '/_metrics/extra']) {
+				expect((await portApp.request(path)).status).toBe(404);
+			}
+			expect((await portApp.request('/_metrics', {method: 'POST'})).status).toBe(404);
 		});
 	});
 });

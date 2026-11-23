@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+mod dual_store;
 mod keys;
 mod slow_stream;
 
@@ -22,6 +23,7 @@ fn test_config(root: &Path) -> Config {
     Config {
         bind_host: "127.0.0.1".to_owned(),
         port: 0,
+        metrics_port: None,
         secret_key: SecretString::new("secret".to_owned()),
         public_endpoint: None,
         mode: DeploymentMode::Mp,
@@ -44,6 +46,8 @@ fn test_config(root: &Path) -> Config {
             bucket_cdn: "cdn".to_owned(),
             bucket_uploads: "uploads".to_owned(),
             bucket_static: "static".to_owned(),
+            store_id: "primary".to_owned(),
+            dual_store: None,
         },
         media: MediaServingConfig {
             max_native_transforms: 2,

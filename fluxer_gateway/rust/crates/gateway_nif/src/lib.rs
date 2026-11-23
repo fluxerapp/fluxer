@@ -260,6 +260,11 @@ fn perm_revision<'a>(env: Env<'a>, reader: Term<'a>) -> NifResult<Term<'a>> {
     guard_raise(|| perm_nif::nifs::revision(env, reader))
 }
 
+#[rustler::nif]
+fn perm_status<'a>(env: Env<'a>, perms: Term<'a>) -> Term<'a> {
+    guard(env, || perm_nif::nifs::status(env, perms))
+}
+
 #[rustler::nif(schedule = "DirtyCpu")]
 fn perm_release<'a>(env: Env<'a>, perms: Term<'a>) -> Term<'a> {
     guard(env, || perm_nif::nifs::release(env, perms))
