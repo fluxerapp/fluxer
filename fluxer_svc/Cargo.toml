@@ -26,6 +26,9 @@ tokio-postgres-rustls = { version = "0.14", features = ["native-certs", "ring"] 
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "fmt", "json"] }
 
+[dev-dependencies]
+tower = { version = "0.5.3", features = ["util"] }
+
 [features]
 default = []
 scylla = ["dep:scylla"]

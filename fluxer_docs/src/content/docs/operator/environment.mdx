@@ -2382,6 +2382,10 @@ The address an internal service listens on. When it's empty, it listens on `0.0.
 
 The port an internal service listens on. When it's empty, it uses `8090`.
 
+### `FLUXER_SVC_METRICS_PORT`
+
+A second port an internal service serves only its metrics on, to anyone who can reach it. The main port only serves metrics to the same machine. When it's empty, the service opens no second port. The stack doesn't collect internal service metrics.
+
 ### `FLUXER_SVC_SHARD_ID`
 
 Which shard of an internal service a container runs. When it's empty, the service takes the number at the end of `POD_NAME`, or `0`. The stack runs one shard of each service.

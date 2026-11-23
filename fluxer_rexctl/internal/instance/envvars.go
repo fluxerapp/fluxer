@@ -718,6 +718,7 @@ var envVars = []envVar{
 	{"FLUXER_STRIPE_PRICE_YEARLY_USD", "prices", "The price ID of the yearly plan in USD."},
 	{"FLUXER_SVC_LISTEN_HOST", "internal", "The address an internal service listens on. When it's empty, it listens on `0.0.0.0`."},
 	{"FLUXER_SVC_PORT", "internal", "The port an internal service listens on. When it's empty, it uses `8090`."},
+	{"FLUXER_SVC_METRICS_PORT", "internal", "A second port an internal service serves only its metrics on, to anyone who can reach it. The main port only serves metrics to the same machine. When it's empty, the service opens no second port. The stack doesn't collect internal service metrics."},
 	{"FLUXER_SVC_SHARD_ID", "internal", "Which shard of an internal service a container runs. When it's empty, the service takes the number at the end of POD_NAME, or `0`. The stack runs one shard of each service."},
 	{"FLUXER_TEST_HARNESS_TOKEN", "dev", "The token of the test harness."},
 	{"FLUXER_TEST_MODE_ENABLED", "dev", "Whether test mode is on."},
