@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import fluxer_gateway/core/clock
 import fluxer_gateway/core/id
 import fluxer_gateway/core/json_tree
 import fluxer_gateway/core/session.{type ClientOp, type SessionRef}
 import fluxer_gateway/guild/dispatch/send
+import fluxer_gateway/guild/metrics as guild_metrics
 import fluxer_gateway/guild/presence/row
 import fluxer_gateway/guild/presence/rows
 import fluxer_gateway/guild/sessions as table
@@ -101,21 +103,34 @@ fn subscribe_list(
     Ok(channel_id) -> {
       let members = guild_state.member_list(state)
       let outcome = case may_view_members(state, ref, channel_id), ranges {
-        True, _ ->
-          member_list.subscribe(
-            members,
-            ref,
-            channel_id,
-            ranges,
-            rows.lookup(state),
+        True, _ -> {
+          let began = clock.monotonic_ms()
+          let outcome =
+            member_list.subscribe(
+              members,
+              ref,
+              channel_id,
+              ranges,
+              rows.lookup(state),
+            )
+          guild_metrics.member_list_subscribed(
+            list.length(ranges),
+            clock.monotonic_ms() - began,
           )
+          outcome
+        }
         False, [] ->
           case member_list.subscribed_channel(members, ref.id) {
-            Some(current) if current == channel_id ->
+            Some(current) if current == channel_id -> {
+              guild_metrics.member_list_op(guild_metrics.Unsubscribe)
               member_list.unsubscribe(members, ref.id)
+            }
             _ -> Ok([])
           }
-        False, _ -> Ok([])
+        False, _ -> {
+          guild_metrics.member_list_op(guild_metrics.Denied)
+          Ok([])
+        }
       }
       case outcome {
         Ok(dispatches) -> send.list_dispatches(state, dispatches)

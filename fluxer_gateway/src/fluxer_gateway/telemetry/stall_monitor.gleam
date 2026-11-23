@@ -6,6 +6,7 @@ import fluxer_gateway/core/clock
 import fluxer_gateway/telemetry/metrics
 import fluxer_gateway/telemetry/process_info
 import fluxer_gateway/telemetry/process_registry
+import fluxer_gateway/telemetry/vm
 import fluxer_gateway/util/liveness
 import gleam/dynamic/decode.{type Decoder}
 import gleam/erlang/atom
@@ -124,6 +125,7 @@ fn initialise(
   self: Subject(Message),
 ) -> Result(actor.Initialised(State, Message, Nil), String) {
   let _ = process_flag(Priority, High)
+  vm.track_scheduler_wall_time()
   let claim = install()
   case claim {
     Owner -> Nil
@@ -224,6 +226,15 @@ fn schedule_tick(self: Subject(Message), now: Int) -> Int {
 
 fn record(state: State, kind: String, ms: Int, detail: Detail) -> State {
   metrics.counter("fluxer_gateway_scheduler_stalls_total", [#("kind", kind)], 1)
+  case ms > 0 {
+    True ->
+      metrics.observe_ms(
+        "fluxer_gateway_scheduler_stall_duration_ms",
+        [#("kind", kind)],
+        ms,
+      )
+    False -> Nil
+  }
   case ms >= severe_ms() {
     True ->
       metrics.counter(

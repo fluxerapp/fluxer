@@ -36,3 +36,9 @@ pub fn guild_ints() -> List(Int) {
 pub fn delete_int(guild: Int) -> Nil {
   table.delete(rows(), guild)
 }
+
+pub fn totals() -> #(Int, Int) {
+  table.fold(rows(), #(0, 0), fn(acc, _guild, counts) {
+    #(acc.0 + counts.0, acc.1 + counts.1)
+  })
+}

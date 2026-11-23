@@ -80,3 +80,7 @@ pub fn clear(guild: GuildId, owner: Pid) -> Nil {
     False -> Nil
   }
 }
+
+pub fn size() -> Int {
+  table.size(rows())
+}

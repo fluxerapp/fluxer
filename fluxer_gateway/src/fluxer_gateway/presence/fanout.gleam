@@ -126,7 +126,11 @@ pub fn publish(event: PresenceEvent) -> Int {
   let shard = route.shard(event.user)
   let nodes = registry.interest(event.user)
   list.each(nodes, fn(node) { send_remote(node, shard, Deliver(event)) })
-  locals + list.length(nodes)
+  let remotes = list.length(nodes)
+  counters.published()
+  counters.delivered(counters.LocalDelivery, locals)
+  counters.delivered(counters.NodeDelivery, remotes)
+  locals + remotes
 }
 
 pub fn resend_to(event: PresenceEvent, subscriber: Subscriber) -> Nil {
@@ -208,13 +212,14 @@ fn relay_handle(
   }
   let relay = case message, relay.shed {
     Deliver(event), Normal -> {
-      let _ = deliver_local(event)
+      counters.delivered(counters.RelayedDelivery, deliver_local(event))
       relay
     }
     Deliver(event), Coalescing(pending, order) ->
       coalesce(relay, pending, order, event)
     DeliverTo(event, to), _ -> {
       lanes.deliver(to, event)
+      counters.delivered(counters.RelayedDelivery, 1)
       relay
     }
     RelayTick, Normal -> relay
@@ -285,10 +290,11 @@ fn adjust(relay: Relay) -> Relay {
           |> list.reverse
           |> list.each(fn(user) {
             case dict.get(pending, user) {
-              Ok(event) -> {
-                let _ = deliver_local(event)
-                Nil
-              }
+              Ok(event) ->
+                counters.delivered(
+                  counters.RelayedDelivery,
+                  deliver_local(event),
+                )
               Error(Nil) -> Nil
             }
           })
