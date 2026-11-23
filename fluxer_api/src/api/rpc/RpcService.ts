@@ -2,6 +2,7 @@
 
 import {createHash} from 'node:crypto';
 import type {ApiContext} from '@app/api/ApiContext';
+import {SNOWFLAKE_REGEX} from '@app/api/attachment/AttachmentPublicUrl';
 import * as AuthSession from '@app/api/auth/AuthSession';
 import {visibleWebAuthnCredentials} from '@app/api/auth/services/PasskeyRelyingParty';
 import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
@@ -631,6 +632,11 @@ export class RpcService {
 		return 'unknown';
 	}
 
+	private parseBotTokenApplicationIdField(token: string): {applicationId?: string} {
+		const applicationId = token.slice(0, token.indexOf('.'));
+		return SNOWFLAKE_REGEX.test(applicationId) ? {applicationId} : {};
+	}
+
 	private normalizeSessionToken(token: string): string {
 		if (token.startsWith('Bot ')) {
 			return token.slice('Bot '.length);
@@ -854,6 +860,7 @@ export class RpcService {
 		);
 		const tokenType = timings.timeSync('parse_token_type', () => this.parseTokenType(normalizedToken));
 		const tokenHashPrefix = timings.timeSync('compute_token_hash_prefix', () => tokenHash.slice(0, 12));
+		const applicationIdField = tokenType === 'bot' ? this.parseBotTokenApplicationIdField(normalizedToken) : {};
 		timings.timeSync('log_session_handling_started', () => {
 			Logger.debug(
 				{
@@ -883,6 +890,7 @@ export class RpcService {
 				{
 					tokenType,
 					tokenHashPrefix,
+					...applicationIdField,
 					ip,
 					retryAfter: rateLimitResult.retryAfter,
 					limit: rateLimitResult.limit,
@@ -898,6 +906,7 @@ export class RpcService {
 		}
 		let userId: UserID | null = null;
 		let authSession: AuthSessionModel | null = null;
+		let rejectionReason: string | undefined;
 		if (tokenType === 'user') {
 			authSession = await timings.time('validate_user_session_token', async () =>
 				AuthSession.getAuthSessionByToken(this.apiContext, normalizedToken),
@@ -906,15 +915,22 @@ export class RpcService {
 				userId = authSession.userId;
 			}
 		} else if (tokenType === 'bot') {
-			userId = await timings.time('validate_bot_token', async () =>
-				this.botAuthService.validateBotToken(normalizedToken),
+			const botTokenCheck = await timings.time('validate_bot_token', async () =>
+				this.botAuthService.checkBotToken(normalizedToken),
 			);
+			if (botTokenCheck.ok) {
+				userId = botTokenCheck.userId;
+			} else {
+				rejectionReason = botTokenCheck.reason;
+			}
 		}
 		if (!userId) {
 			Logger.warn(
 				{
 					tokenType,
 					tokenHashPrefix,
+					...applicationIdField,
+					...(rejectionReason !== undefined ? {rejectionReason} : {}),
 					ip,
 				},
 				'RPC session token validation failed',
