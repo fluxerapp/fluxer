@@ -9,8 +9,7 @@ NODE_VERSION=26.8.1
 PNPM_VERSION=11.27.0
 OTP_VERSION=28.5.0.8
 OTP_SHA256=8a696e15bcbe5d57197b1f4c03c92d415f9fd9af70f9222a05911c8a5463cba6
-REBAR3_VERSION=3.27.3
-REBAR3_SHA256=f1d87d78decfc56b87d971c75ee6355698ec0c49fadd57f2c056043b7ca291b5
+GLEAM_VERSION=1.19.2
 GO_VERSION=1.27.3
 
 APT_PACKAGES=(
@@ -41,6 +40,8 @@ x86_64 | amd64)
     NODE_SHA256=3e301118d7df53d563b7e96c1617545f26e2f76f9724be668d6cab65c15dda5d
     GO_ARCH=amd64
     GO_SHA256=65efbc80fdc1fa2cd2631cad5b481777a68e8725f34e89f50fc6ac714e379b40
+    GLEAM_ARCH=x86_64
+    GLEAM_SHA256=2ba2afb66ca9f6dcc01a4a6e9169b6942963bad6483bec9571ddc078cfe6f41f
     ;;
 aarch64 | arm64)
     RUST_TRIPLE=aarch64-unknown-linux-gnu
@@ -49,6 +50,8 @@ aarch64 | arm64)
     NODE_SHA256=23c1b4d19e2f12a7d06fe8aa3d6e0e4923cf77a47e13c5ccdf32fadaa33960f2
     GO_ARCH=arm64
     GO_SHA256=a06e99309dbcbdca1a8ccd2282c3ee146e55930886e26b4f1193269587165f49
+    GLEAM_ARCH=aarch64
+    GLEAM_SHA256=d1d1a9d53f6b317c0563a4806873c8ccace54291ead023373728af379402d4f1
     ;;
 *)
     die "unsupported architecture $(uname -m)"
@@ -157,13 +160,14 @@ install_otp() {
     done
 }
 
-install_rebar3() {
-    local script
-    if [ -x "$PREFIX/bin/rebar3" ] && [ "$(sha256sum "$PREFIX/bin/rebar3" | cut -d' ' -f1)" = "$REBAR3_SHA256" ]; then
+install_gleam() {
+    local tarball
+    if [ "$("$PREFIX/bin/gleam" --version 2>/dev/null || true)" = "gleam $GLEAM_VERSION" ]; then
         return
     fi
-    script="$(fetch "https://github.com/erlang/rebar3/releases/download/${REBAR3_VERSION}/rebar3" "$REBAR3_SHA256")"
-    install -m 0755 "$script" "$PREFIX/bin/rebar3"
+    tarball="$(fetch "https://github.com/gleam-lang/gleam/releases/download/v${GLEAM_VERSION}/gleam-v${GLEAM_VERSION}-${GLEAM_ARCH}-unknown-linux-musl.tar.gz" "$GLEAM_SHA256")"
+    tar -xzf "$tarball" -C "$work" gleam
+    install -m 0755 "$work/gleam" "$PREFIX/bin/gleam"
 }
 
 mkdir -p "$PREFIX/bin"
@@ -185,7 +189,7 @@ if [ "$need_otp" = 1 ]; then
     install_otp
 fi
 [ "$(otp_version)" = "$OTP_VERSION" ] || die "erl on PATH does not report OTP ${OTP_VERSION}"
-install_rebar3
+install_gleam
 
 log "toolchain ready in $PREFIX"
-log "rust $(rustc --version), node $(node --version), pnpm $(pnpm --version), $(go version), OTP $(otp_version), $(rebar3 version)"
+log "rust $(rustc --version), node $(node --version), pnpm $(pnpm --version), $(go version), OTP $(otp_version), $(gleam --version)"

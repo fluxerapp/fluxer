@@ -32785,11 +32785,9 @@ msgid "Send files up to {size}"
 msgstr "{size} तक की फ़ाइलें भेजें"
 
 #. Button or menu action label in the user profile mobile sheet. Keep it concise.
-#. Button or menu action label in the user profile mobile sheet. Keep it concise.
 #. Member actions sheet menu item. Sends a friend request to the target user.
 #: src/features/channel/components/direct_message/DMWelcomeSection.tsx
 #: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx
-#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Send friend request"
 msgstr "फ्रेंड रिक्वेस्ट भेजें"
@@ -40209,9 +40207,7 @@ msgid "Unblock them first to send a friend request."
 msgstr "फ्रेंड रिक्वेस्ट भेजने के लिए पहले उन्हें अनब्लॉक करें।"
 
 #. Button or menu action label in the user profile mobile sheet. Keep it concise. Keep the tone plain and specific.
-#. Button or menu action label in the user profile mobile sheet. Keep it concise. Keep the tone plain and specific.
 #. Title of the confirmation modal for unblocking a previously blocked user. Short command title.
-#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx
 #: src/features/relationship/utils/RelationshipActionUtils.tsx
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Unblock user"

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+pub mod cassandra_capture;
 pub mod combined;
 pub mod config;
 pub mod hash_ring;

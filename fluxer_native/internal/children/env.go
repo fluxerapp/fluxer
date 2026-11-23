@@ -244,14 +244,11 @@ func (c Config) native(svc string, env spec.Env, m spec.Modes) error {
 		env["FLUXER_OPERATOR_SOCKET"] = c.Layout.OperatorSocket()
 	case spec.Gateway:
 		listen("FLUXER_GATEWAY_BIND_HOST", "FLUXER_GATEWAY_PORT", spec.PortGateway)
+		env["FLUXER_GATEWAY_STATUS_PORT"] = "0"
 		schedulers, dirtyCPU, dirtyIO := sizing.Schedulers(c.Host, env)
 		env["FLUXER_ERLANG_SCHEDULERS"] = strconv.Itoa(schedulers)
 		env["FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS"] = strconv.Itoa(dirtyCPU)
 		env["FLUXER_ERLANG_DIRTY_IO_SCHEDULERS"] = strconv.Itoa(dirtyIO)
-		env["RELX_REPLACE_OS_VARS"] = "true"
-		env["VMARGS_PATH"] = filepath.Join(c.Root, "gateway", "releases", "0.0.0", "vm.args.native")
-		env["RELX_CONFIG_PATH"] = filepath.Join(c.Root, "gateway", "releases", "0.0.0", "sys.native.config")
-		env["RELX_OUT_FILE_PATH"] = c.Layout.GatewayRuntimeDir()
 		env["ERL_CRASH_DUMP"] = filepath.Join(c.Layout.GatewayHome(), "erl_crash.dump")
 		env["LANG"] = "C.UTF-8"
 	case spec.MediaProxy:

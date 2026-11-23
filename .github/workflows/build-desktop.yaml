@@ -702,14 +702,91 @@ jobs:
           node fluxer_desktop/scripts/release-check.mjs --app $exe.DirectoryName --channel $env:BUILD_CHANNEL --expect-renderer $env:BUILD_VERSION --expect-source bundled --package-origin http://127.0.0.1:9 --app-arg=--disable-gpu --workdir (Join-Path $env:RUNNER_TEMP 'runs') --timeout-seconds 240
           if ($LASTEXITCODE -ne 0) { throw "The windows arm64 build fails its release check" }
 
+  linux_repos:
+    name: Build ${{ matrix.kind }} (${{ matrix.machine }})
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
+    needs:
+      - meta
+      - build
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    permissions:
+      actions: read
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - kind: flatpak
+            machine: x86_64
+            arch: x64
+            runner: ubuntu-24.04
+          - kind: flatpak
+            machine: aarch64
+            arch: arm64
+            runner: ubuntu-24.04-arm
+          - kind: pacman
+            machine: all
+            arch: all
+            runner: ubuntu-24.04
+    env:
+      BUILD_VERSION: ${{ needs.meta.outputs.version }}
+      PUB_DATE: ${{ needs.meta.outputs.pub_date }}
+      KIND: ${{ matrix.kind }}
+      MACHINE: ${{ matrix.machine }}
+      ARCH: ${{ matrix.arch }}
+      FLATPAK_BUILDER_IMAGE: docker.io/library/fedora:43@sha256:f01112b9a1f1d0504ad962d9adfa401425033f8ab067e0a821904ebdde5b8ca5
+      PACMAN_BUILDER_IMAGE: docker.io/library/archlinux:base-devel@sha256:fa2d4ce3310ddd90a4208e5168be8ad367da5129af1245f38fd2d803bcbe3239
+    steps:
+      - name: Checkout packaging
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ needs.meta.outputs.source_sha }}
+          sparse-checkout: fluxer_desktop/packaging
+
+      - name: Download Linux build artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          path: artifacts
+          pattern: fluxer-desktop-${{ needs.meta.outputs.build_channel }}-linux-*
+
+      - name: Build the flatpak repository
+        if: matrix.kind == 'flatpak'
+        run: |
+          set -euo pipefail
+          tarball="$(find "artifacts/fluxer-desktop-${BUILD_CHANNEL}-linux-${ARCH}" -maxdepth 1 -type f -name '*.tar.gz' -print -quit)"
+          test -n "${tarball}"
+          fluxer_desktop/packaging/linux/flatpak-release-asset.sh \
+            "${BUILD_CHANNEL}" "${BUILD_VERSION}" "${PUB_DATE}" "${MACHINE}" "${tarball}" linux_repos
+
+      - name: Build the pacman packages
+        if: matrix.kind == 'pacman'
+        run: |
+          set -euo pipefail
+          x64="$(find "artifacts/fluxer-desktop-${BUILD_CHANNEL}-linux-x64" -maxdepth 1 -type f -name '*.tar.gz' -print -quit)"
+          arm64="$(find "artifacts/fluxer-desktop-${BUILD_CHANNEL}-linux-arm64" -maxdepth 1 -type f -name '*.tar.gz' -print -quit)"
+          test -n "${x64}" && test -n "${arm64}"
+          fluxer_desktop/packaging/arch/pacman-release-asset.sh \
+            "${BUILD_CHANNEL}" "${BUILD_VERSION}" "${PUB_DATE}" "${x64}" "${arm64}" linux_repos
+
+      - name: Upload Linux repository assets
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: linux-repo-${{ needs.meta.outputs.build_channel }}-${{ matrix.kind }}-${{ matrix.machine }}
+          path: linux_repos
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+
   upload:
     name: Assemble desktop release assets
-    if: ${{ !cancelled() && needs.build.result == 'success' && needs.verify_windows_arm64.result == 'success' }}
+    if: ${{ !cancelled() && needs.build.result == 'success' && needs.verify_windows_arm64.result == 'success' && needs.linux_repos.result == 'success' }}
     needs:
       - meta
       - shared_assets
       - build
       - verify_windows_arm64
+      - linux_repos
     runs-on: ubuntu-24.04-arm
     environment: desktop-releases
     timeout-minutes: 180
@@ -737,6 +814,13 @@ jobs:
         with:
           path: artifacts
           pattern: fluxer-desktop-${{ needs.meta.outputs.build_channel }}-*
+
+      - name: Download Linux repository assets
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          path: linux_repos
+          pattern: linux-repo-${{ needs.meta.outputs.build_channel }}-*
+          merge-multiple: true
 
       - name: Build payload layout (+ manifest.json)
         env:

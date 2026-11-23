@@ -36,6 +36,7 @@ import {
 	refundCooldownExpiresAt,
 	SELF_SERVE_REFUND_WINDOW_DAYS,
 } from '@app/api/stripe/services/RefundAllowance';
+import {MANUAL_GIFT_ORDER_PRODUCT_TYPE} from '@app/api/stripe/services/StripeManualGiftOrderHandler';
 import type {StripeSubscriptionService} from '@app/api/stripe/services/StripeSubscriptionService';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {FeatureNotAvailableSelfHostedError} from '@fluxer/errors/src/domains/core/FeatureNotAvailableSelfHostedError';
@@ -283,7 +284,13 @@ export class StripeRefundService {
 
 	private async giftTargets(user: User): Promise<Array<RefundTarget>> {
 		return (await this.userRepository.findPaymentsByUserId(user.id))
-			.filter((payment) => payment.isGift && payment.status === 'completed' && payment.paymentIntentId)
+			.filter(
+				(payment) =>
+					payment.isGift &&
+					payment.status === 'completed' &&
+					payment.paymentIntentId &&
+					payment.productType !== MANUAL_GIFT_ORDER_PRODUCT_TYPE,
+			)
 			.map((payment) => ({
 				provider: 'stripe' as const,
 				invoiceId: payment.checkoutSessionId,

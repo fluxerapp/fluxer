@@ -24,7 +24,7 @@ export class DownloadChecksumError extends Error {
 	}
 }
 
-export class DownloadStalledError extends Error {
+class DownloadStalledError extends Error {
 	constructor() {
 		super(`Download received no data for ${DOWNLOAD_STALL_MS} ms`);
 		this.name = 'DownloadStalledError';

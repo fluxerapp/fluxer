@@ -162,6 +162,12 @@ export interface MasterConfig {
 				stream?: string;
 				skip_buckets?: Array<string>;
 			};
+			cassandra_write_capture?: {
+				mode?: 'off' | 'behind';
+				nats_url?: string;
+				auth_token?: string;
+				stream?: string;
+			};
 		};
 		nats?: {
 			core_url?: string;

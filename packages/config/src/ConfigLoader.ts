@@ -625,6 +625,28 @@ function validateStorageChangeFeedConfig(config: MasterConfig): void {
 	}
 }
 
+function validateCassandraWriteCaptureConfig(config: MasterConfig): void {
+	const capture = config.services.api?.cassandra_write_capture;
+	if (capture?.mode === undefined) {
+		return;
+	}
+	assertOneOf(capture.mode, ['off', 'behind'], 'FLUXER_CASSANDRA_CAPTURE_MODE');
+	if (capture.mode === 'off') {
+		return;
+	}
+	if (config.database.backend !== 'cassandra') {
+		throw new Error('FLUXER_CASSANDRA_CAPTURE_MODE needs FLUXER_DATABASE_BACKEND=cassandra');
+	}
+	if (!capture.nats_url) {
+		throw new Error(
+			`FLUXER_CASSANDRA_CAPTURE_NATS_URL is required when FLUXER_CASSANDRA_CAPTURE_MODE is ${capture.mode}`,
+		);
+	}
+	if (capture.stream !== undefined && !/^[A-Za-z0-9_-]+$/u.test(capture.stream)) {
+		throw new Error('FLUXER_CASSANDRA_CAPTURE_STREAM must be letters, digits, underscores or hyphens');
+	}
+}
+
 function normalizeAppOriginAliases(config: MasterConfig): void {
 	const api = config.services.api;
 	api.app_origin_aliases = [
@@ -813,6 +835,7 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	validateStorageConfig(config);
 	validateApiWorkerConfig(config);
 	validateStorageChangeFeedConfig(config);
+	validateCassandraWriteCaptureConfig(config);
 	validateReportRetentionConfig(config);
 	validateCachePurgeConfig(config);
 	validateStoreBillingConfig(config);

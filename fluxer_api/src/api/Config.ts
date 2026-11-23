@@ -421,6 +421,12 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			stream: master.services.api.storage_change_feed?.stream ?? 'STORAGE_CHANGES',
 			skipBuckets: master.services.api.storage_change_feed?.skip_buckets ?? [s3Buckets.uploads],
 		},
+		cassandraWriteCapture: {
+			mode: master.services.api.cassandra_write_capture?.mode ?? 'off',
+			natsUrl: master.services.api.cassandra_write_capture?.nats_url ?? '',
+			authToken: master.services.api.cassandra_write_capture?.auth_token ?? '',
+			stream: master.services.api.cassandra_write_capture?.stream ?? 'CASSANDRA_CDC',
+		},
 		search: {
 			engine: master.integrations.search?.engine ?? 'elasticsearch',
 			url: master.integrations.search?.url ?? 'http://127.0.0.1:9200',

@@ -139,6 +139,12 @@ export interface APIConfig {
 		stream: string;
 		skipBuckets: Array<string>;
 	};
+	cassandraWriteCapture: {
+		mode: 'off' | 'behind';
+		natsUrl: string;
+		authToken: string;
+		stream: string;
+	};
 	search: {
 		engine: 'elasticsearch' | 'meilisearch' | 'none';
 		url: string;

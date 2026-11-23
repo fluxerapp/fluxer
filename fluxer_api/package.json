@@ -10,6 +10,7 @@
 		"start": "tsx src/AppEntrypoint.ts",
 		"start:worker": "tsx src/WorkerEntrypoint.ts",
 		"migrate": "tsx src/MigrateEntrypoint.ts",
+		"capture": "tsx src/CaptureEntrypoint.ts",
 		"operator-relay": "node bin/operator-relay.mjs",
 		"generate:operator-pass-name-data": "node scripts/GenerateOperatorPassNameData.mjs"
 	},

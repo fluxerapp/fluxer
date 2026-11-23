@@ -36,7 +36,6 @@ enum Command {
     BuildAppProxy(app_proxy::BuildAppProxyArgs),
     BuildDesktop(desktop::BuildDesktopArgs),
     BuildDesktopNativeAddon(desktop_native::BuildDesktopNativeAddonArgs),
-    BuildGatewayNifs(gateway::BuildGatewayNifsArgs),
     Ci(ci_workflow::CiArgs),
     CleanSchemaGeneratedFiles(schema::CleanSchemaGeneratedFilesArgs),
     Gateway(gateway::GatewayArgs),
@@ -54,7 +53,6 @@ pub async fn run() -> Result<()> {
         Command::BuildDesktopNativeAddon(args) => {
             desktop_native::run_build_desktop_native_addon(args)
         }
-        Command::BuildGatewayNifs(args) => gateway::run_build_gateway_nifs(args),
         Command::Ci(args) => ci_workflow::run_ci(args).await,
         Command::CleanSchemaGeneratedFiles(args) => schema::run_clean_generated_files(args),
         Command::Gateway(args) => gateway::run_gateway(args),

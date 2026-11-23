@@ -4,8 +4,12 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: @lingui/cli\n"
+"X-Generator: Weblate 2026.8.dev0\n"
 "Language: sl\n"
+"PO-Revision-Date: 2026-11-23 03:41+0000\n"
+"Last-Translator: Hampus <hampus@fluxer.com>\n"
+"Language-Team: Slovenian <https://weblate.fluxer.tools/projects/fluxer/app/sl/>\n"
+"Plural-Forms: nplurals=4; plural=n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n%100==4 ? 2 : 3;\n"
 
 #. Problem shown in the quick CSS editor on var() of a CSS variable that does not exist. {name} is the variable name without its leading dashes.
 #: src/features/theme_settings/editor/CssLint.ts
@@ -13224,32 +13228,32 @@ msgstr ""
 #. Required checkbox in the Operator Pass checkout dialog when buying one pass. The buyer asks for the certificate PDF to be delivered right after payment, before the statutory withdrawal period ends, and confirms that the right of withdrawal is lost on delivery. Consumer law text, translate faithfully and keep every condition. Withdraw means the consumer right of withdrawal, never taking money out.
 #: src/features/premium/components/operator_pass/checkout/CheckoutAgreeStage.tsx
 msgid "Deliver my certificate now, before the 14-day withdrawal period ends. I understand that I lose my right to withdraw once it's delivered."
-msgstr ""
+msgstr "Potrdilo mi izdajte takoj, še preden se izteče 14-dnevni rok za odstop od pogodbe. Razumem, da z dostavo potrdila izgubim pravico do odstopa od pogodbe."
 
 #. Required checkbox in the Operator Pass checkout dialog when buying one pass from Brazil or in Brazilian reais for a company whose CNPJ the buyer entered. The buyer asks for the certificate PDF to be delivered right after payment and confirms that a purchase for a company with a CNPJ has no right of withdrawal under the Brazilian Consumer Defense Code, unless Brazilian law treats the company as a consumer. CNPJ is the Brazilian company registration number, keep it as is. Consumer law text, translate faithfully and keep every condition. Withdrawal means the consumer right of withdrawal (pt-BR: direito de arrependimento), never taking money out.
 #: src/features/premium/components/operator_pass/checkout/CheckoutAgreeStage.tsx
 msgid "Deliver my certificate now. I'm buying for the company with the CNPJ I entered, and I understand that this purchase has no right of withdrawal, unless Brazilian law treats the company as a consumer."
-msgstr ""
+msgstr "Potrdilo mi izdajte takoj. Nakup opravljam za podjetje z vneseno številko CNPJ in razumem, da pri tem nakupu nimam pravice do odstopa od pogodbe, razen če brazilska zakonodaja podjetje obravnava kot potrošnika."
 
 #. Required checkbox in the Operator Pass checkout dialog when buying one pass from Brazil or in Brazilian reais. The buyer asks for the certificate PDF to be delivered right after payment. A buyer who has a billing address in Brazil or pays in reais (the Brazilian currency) keeps the right to withdraw for {days} days after delivery. A buyer who enters the CNPJ of a company sees a different text, so this one never needs a business exception. The billing address is not where the buyer happens to be. Nothing in this text takes the right away from anyone, so never add a sentence about losing it. Consumer law text, translate faithfully and keep every condition. Withdraw means the consumer right of withdrawal (pt-BR: desistir), never taking money out.
 #: src/features/premium/components/operator_pass/checkout/CheckoutAgreeStage.tsx
 msgid "Deliver my certificate now. If I have a billing address in Brazil or pay in reais, I can still withdraw within {days, plural, one {# day} other {# days}} of delivery and get a full refund."
-msgstr ""
+msgstr "Potrdilo mi izdajte takoj. Če imam naslov za izstavitev računa v Braziliji ali plačujem v realih, lahko še vedno odstopim od nakupa v roku {days, plural, one {# dneva} two {# dni} few {# dni} other {# dni}} od dostave in prejmem celotno povračilo."
 
 #. Required checkbox in the Operator Pass checkout dialog when buying more than one pass. The buyer asks for the certificate PDF pages to be delivered right after payment, before the statutory withdrawal period ends, and confirms that the right of withdrawal is lost on delivery. Consumer law text, translate faithfully and keep every condition. Withdraw means the consumer right of withdrawal, never taking money out.
 #: src/features/premium/components/operator_pass/checkout/CheckoutAgreeStage.tsx
 msgid "Deliver my certificates now, before the 14-day withdrawal period ends. I understand that I lose my right to withdraw once they're delivered."
-msgstr ""
+msgstr "Potrdila mi izdajte takoj, še preden se izteče 14-dnevni rok za odstop od pogodbe. Razumem, da z dostavo potrdil izgubim pravico do odstopa od pogodbe."
 
 #. Required checkbox in the Operator Pass checkout dialog when buying more than one pass from Brazil or in Brazilian reais for a company whose CNPJ the buyer entered. The buyer asks for the certificate PDF pages to be delivered right after payment and confirms that a purchase for a company with a CNPJ has no right of withdrawal under the Brazilian Consumer Defense Code, unless Brazilian law treats the company as a consumer. CNPJ is the Brazilian company registration number, keep it as is. Consumer law text, translate faithfully and keep every condition. Withdrawal means the consumer right of withdrawal (pt-BR: direito de arrependimento), never taking money out.
 #: src/features/premium/components/operator_pass/checkout/CheckoutAgreeStage.tsx
 msgid "Deliver my certificates now. I'm buying for the company with the CNPJ I entered, and I understand that this purchase has no right of withdrawal, unless Brazilian law treats the company as a consumer."
-msgstr ""
+msgstr "Potrdila mi izdajte takoj. Nakup opravljam za podjetje z vneseno številko CNPJ in razumem, da pri tem nakupu nimam pravice do odstopa od pogodbe, razen če brazilska zakonodaja podjetje obravnava kot potrošnika."
 
 #. Required checkbox in the Operator Pass checkout dialog when buying more than one pass from Brazil or in Brazilian reais. The buyer asks for the certificate PDF pages to be delivered right after payment. A buyer who has a billing address in Brazil or pays in reais (the Brazilian currency) keeps the right to withdraw from each pass for {days} days after delivery. A buyer who enters the CNPJ of a company sees a different text, so this one never needs a business exception. The billing address is not where the buyer happens to be. Nothing in this text takes the right away from anyone, so never add a sentence about losing it. Consumer law text, translate faithfully and keep every condition. Withdraw means the consumer right of withdrawal (pt-BR: desistir), never taking money out.
 #: src/features/premium/components/operator_pass/checkout/CheckoutAgreeStage.tsx
 msgid "Deliver my certificates now. If I have a billing address in Brazil or pay in reais, I can still withdraw from each pass within {days, plural, one {# day} other {# days}} of delivery and get a full refund."
-msgstr ""
+msgstr "Potrdila mi izdajte takoj. Če imam naslov za izstavitev računa v Braziliji ali plačujem v realih, lahko še vedno odstopim od nakupa posamezne vstopnice v roku {days, plural, one {# dneva} two {# dni} few {# dni} other {# dni}} od njene dostave in prejmem celotno povračilo."
 
 #. Group heading for followed announcement channels that post into one channel. targetChannelName is that channel, without the leading #.
 #: src/features/guild/components/modals/guild_tabs/GuildWebhooksTab.tsx
@@ -19340,7 +19344,7 @@ msgstr ""
 #. Required checkbox in the dialog where a Visionary turns on the Operator Pass that comes with Visionary. Consumer law text, translate faithfully and keep every condition. The linked text names the Operator Pass terms document. {OPERATOR_PASS_NAME} is a product name and stays untranslated, and so does Visionary. Passed on means given to another account with the Pass it on feature.
 #: src/features/premium/components/operator_pass/OperatorPassVisionaryModal.tsx
 msgid "I accept the <0>{OPERATOR_PASS_NAME} terms</0>. This pass is part of your Visionary, so it can't be passed on."
-msgstr ""
+msgstr "Sprejemam <0>pogoje za {OPERATOR_PASS_NAME}</0>. Ta prepustnica je del vašega paketa Visionary, zato je ni mogoče prenesti na drugo osebo."
 
 #. Primary button label for accepting updated Terms of service.
 #: src/features/auth/components/modals/TermsAcceptanceModal.tsx
@@ -22138,7 +22142,7 @@ msgstr ""
 #. Description of the community ownership transfer section in community settings.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/OwnerTransferSection.tsx
 msgid "Make another member the owner of this community. You cannot undo this."
-msgstr "Drugega člana nastavite za lastnika te skupnosti. Tega ni mogoče razveljaviti."
+msgstr "Drugega člana določite za lastnika te skupnosti. Tega dejanja ni mogoče razveljaviti."
 
 #. Group DM action that transfers ownership of the group to the selected member.
 #. Group DM action that transfers ownership of the group to the selected member.
@@ -26625,7 +26629,7 @@ msgstr ""
 #. Explains where the code comes from, under the title of the browser page where it is typed. The code is shown by the app the user is signing in to, not by an app that is already signed in. "Signing in on another device?" is the label of a button in that app and must match its translation exactly. PRODUCT_NAME is the app name, such as Fluxer.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx
 msgid "Open the {PRODUCT_NAME} app you're signing in to, select \"Signing in on another device?\" and type the code it shows here. Only enter a code from a device you control."
-msgstr "Odprite aplikacijo {PRODUCT_NAME}, v katero se prijavljate, izberite »Se prijavljate v drugi napravi?« in sem vnesite kodo, ki jo prikaže. Vnesite samo kodo iz naprave, ki jo nadzorujete."
+msgstr "Odprite aplikacijo {PRODUCT_NAME}, v katero se želite prijaviti, izberite »Se prijavljate v drugi napravi?« in tukaj vnesite prikazano kodo. Vnesite samo kodo iz naprave, ki jo imate pod nadzorom."
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts
@@ -32778,11 +32782,9 @@ msgid "Send files up to {size}"
 msgstr ""
 
 #. Button or menu action label in the user profile mobile sheet. Keep it concise.
-#. Button or menu action label in the user profile mobile sheet. Keep it concise.
 #. Member actions sheet menu item. Sends a friend request to the target user.
 #: src/features/channel/components/direct_message/DMWelcomeSection.tsx
 #: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx
-#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Send friend request"
 msgstr ""
@@ -38346,12 +38348,12 @@ msgstr ""
 #. Description of the account settings row for single sign-on when the instance requires it. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "This instance requires you to sign in with {providerName}."
-msgstr "Ta instanca zahteva prijavo prek {providerName}."
+msgstr "Ta instanca zahteva, da se prijavite s ponudnikom {providerName}."
 
 #. Description of the account settings row for single sign-on when the instance requires it and the admin has not given the provider a name.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "This instance requires you to sign in with single sign-on."
-msgstr "Ta instanca zahteva enotno prijavo."
+msgstr "Ta instanca zahteva prijavo z enotno prijavo."
 
 #. Setup wizard explanation of why the sign-in method is fixed: the instance is older than username sign-in.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
@@ -39192,7 +39194,7 @@ msgstr ""
 #. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "To sign in to this account with {providerName}, connect it in the web app in a browser."
-msgstr "Če se želiš v ta račun prijavljati prek {providerName}, ga poveži v spletni aplikaciji v brskalniku."
+msgstr "Če se želite v ta račun prijaviti s ponudnikom {providerName}, ga povežite v spletni aplikaciji v brskalniku."
 
 #: src/features/guild/components/modals/GuildOwnershipWarningModal.tsx
 msgid "To transfer ownership, go to {generalSettingsPath} and use the transfer ownership option."
@@ -40202,9 +40204,7 @@ msgid "Unblock them first to send a friend request."
 msgstr ""
 
 #. Button or menu action label in the user profile mobile sheet. Keep it concise. Keep the tone plain and specific.
-#. Button or menu action label in the user profile mobile sheet. Keep it concise. Keep the tone plain and specific.
 #. Title of the confirmation modal for unblocking a previously blocked user. Short command title.
-#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx
 #: src/features/relationship/utils/RelationshipActionUtils.tsx
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Unblock user"
@@ -43959,7 +43959,7 @@ msgstr ""
 #. placeholder {0}: NicknameUtils.getNickname(targetUser, guildId)
 #: src/features/guild/components/modals/TransferOwnershipModal.tsx
 msgid "You are about to transfer ownership of this community to <0>{0}</0> ({targetUserId}). This action is <1>irreversible</1> and you will lose all owner privileges."
-msgstr "Lastništvo te skupnosti boste prenesli na <0>{0}</0> ({targetUserId}). To dejanje je <1>nepovratno</1> in izgubili boste vse pravice lastnika."
+msgstr "Lastništvo te skupnosti boste prenesli na <0>{0}</0> ({targetUserId}). Tega dejanja <1>ni mogoče razveljaviti</1> in izgubili boste vse lastniške pravice."
 
 #. Error message in the user banned from guild modal. Keep the tone plain and specific.
 #: src/features/invite/commands/InviteCommands.tsx
@@ -44136,7 +44136,7 @@ msgstr "V ta račun se lahko prijaviš prek {providerName}."
 #. Description of the account settings row that disconnects the account from single sign-on when the admin has not given the provider a name.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "You can sign in to this account with single sign-on."
-msgstr "V ta račun se lahko prijaviš prek enotne prijave."
+msgstr "V ta račun se lahko prijavite z enotno prijavo."
 
 #. Cooldown notice in the new thread pane when the parent channel has slowmode. seconds is the wait time.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
@@ -44684,12 +44684,12 @@ msgstr ""
 #. Warning shown before disconnecting single sign-on. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "You won't be able to sign in with {providerName} anymore. You can still use your other sign-in methods."
-msgstr "Prijava prek {providerName} ne bo več mogoča. Druge načine prijave lahko še naprej uporabljaš."
+msgstr "S ponudnikom {providerName} se ne boste mogli več prijaviti. Še vedno boste lahko uporabljali druge načine prijave."
 
 #. Warning shown before disconnecting single sign-on when the admin has not given the provider a name.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "You won't be able to sign in with single sign-on anymore. You can still use your other sign-in methods."
-msgstr "Enotne prijave ne bo več mogoče uporabljati. Druge načine prijave lahko še naprej uporabljaš."
+msgstr "Z enotno prijavo se ne boste mogli več prijaviti. Še vedno boste lahko uporabljali druge načine prijave."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when the account also has an authenticator app.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
@@ -45382,7 +45382,7 @@ msgstr ""
 #. System message in a DM after a send fails because the only community the two people share has turned off direct messages between members who are not friends.
 #: src/features/messaging/state/MessageQueue.tsx
 msgid "Your message could not be delivered. A community you share with this person has turned off direct messages between members who aren't friends."
-msgstr "Vašega sporočila ni bilo mogoče dostaviti. Skupnost, ki si jo delite s to osebo, je izklopila zasebna sporočila med člani, ki niso prijatelji."
+msgstr "Sporočila ni bilo mogoče dostaviti. Skupnost, ki si jo delite s to osebo, je izklopila neposredna sporočila med člani, ki niso prijatelji."
 
 #. Label in the message queue state.
 #: src/features/messaging/state/MessageQueue.tsx

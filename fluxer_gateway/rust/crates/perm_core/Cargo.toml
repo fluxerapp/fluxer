@@ -1,0 +1,32 @@
+[package]
+name = "perm_core"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+name = "perm_core"
+path = "src/lib.rs"
+
+[dependencies]
+arc-swap = { workspace = true }
+bitflags = { workspace = true }
+foldhash = { workspace = true }
+hashbrown = { workspace = true }
+smallvec = { workspace = true }
+
+[features]
+reference = []
+fault = []
+
+[dev-dependencies]
+perm_core = { path = ".", features = ["reference", "fault"] }
+proptest = { workspace = true }
+criterion = { workspace = true }
+
+[[bench]]
+name = "perm"
+path = "benches/perm.rs"
+harness = false

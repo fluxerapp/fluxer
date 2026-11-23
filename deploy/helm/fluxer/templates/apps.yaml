@@ -32,7 +32,7 @@
   (dict "name" "FLUXER_GATEWAY_CLUSTER_DISCOVERY_NODE_BASENAME" "value" "fluxer_gateway") }}
 {{- $gatewayReady := dict "exec" (dict "command" (list "curl" "-fsS" "-o" "/dev/null" "--max-time" "4" "http://127.0.0.1:8080/_health/ready")) "periodSeconds" 10 "timeoutSeconds" 5 "failureThreshold" 3 }}
 {{- $gatewayCtx := dict "root" . "name" "gateway" "component" "gateway" "w" $v.gateway "image" "fluxer-gateway" "port" 8080
-  "extraPorts" (list (dict "name" "epmd" "port" 4369) (dict "name" "erl-dist" "port" 8081))
+  "extraPorts" (list (dict "name" "erl-dist" "port" 8081))
   "env" $gatewayEnv
   "probes" (dict "startup" (merge (dict "httpGet" $health) $start) "liveness" (merge (dict "httpGet" $health) $check) "readiness" $gatewayReady)
   "waitFor" (include "fluxer.appWaitFor" (dict "root" . "usesNats" true) | fromJsonArray)
@@ -56,10 +56,6 @@ spec:
     - name: http
       port: 8080
       targetPort: http
-      protocol: TCP
-    - name: epmd
-      port: 4369
-      targetPort: epmd
       protocol: TCP
     - name: erl-dist
       port: 8081
