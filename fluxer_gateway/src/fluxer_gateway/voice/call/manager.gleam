@@ -5,12 +5,14 @@ import fluxer_gateway/cluster/router
 import fluxer_gateway/config/durations
 import fluxer_gateway/config/env
 import fluxer_gateway/config/settings.{type Settings}
+import fluxer_gateway/core/clock
 import fluxer_gateway/core/id.{type ChannelId}
 import fluxer_gateway/core/node.{type Node}
 import fluxer_gateway/telemetry/process_registry
 import fluxer_gateway/voice/call/handoff/codec as call_codec
 import fluxer_gateway/voice/call/server.{type Message as CallMessage}
 import fluxer_gateway/voice/call/state.{type Call, type Init}
+import fluxer_gateway/voice/metrics as voice_metrics
 import gleam/dict.{type Dict}
 import gleam/erlang/process.{type Monitor, type Name, type Pid, type Subject}
 import gleam/list
@@ -424,6 +426,18 @@ fn owner_node(channel: ChannelId) -> Result(Node, Nil) {
 }
 
 pub fn lookup(channel: ChannelId) -> Result(CallRef, LookupError) {
+  let started = clock.monotonic_ms()
+  let found = lookup_owner(channel)
+  let outcome = case found {
+    Ok(_) -> voice_metrics.CallFound
+    Error(NotFound) -> voice_metrics.CallNotFound
+    Error(Unavailable) -> voice_metrics.CallUnavailable
+  }
+  voice_metrics.call_lookup(outcome, clock.monotonic_ms() - started)
+  found
+}
+
+fn lookup_owner(channel: ChannelId) -> Result(CallRef, LookupError) {
   use target <- result.try(
     owner_node(channel) |> result.replace_error(Unavailable),
   )
@@ -449,6 +463,22 @@ fn lookup_local(
 }
 
 pub fn create(channel: ChannelId, init: Init) -> Result(CallRef, CreateError) {
+  let started = clock.monotonic_ms()
+  let created = create_on_owner(channel, init)
+  let outcome = case created {
+    Ok(_) -> voice_metrics.CallCreated
+    Error(AlreadyExists) -> voice_metrics.CallExists
+    Error(CreateFailed) -> voice_metrics.CallFailed
+    Error(CreateUnavailable) -> voice_metrics.CallCreateUnavailable
+  }
+  voice_metrics.call_create(outcome, clock.monotonic_ms() - started)
+  created
+}
+
+fn create_on_owner(
+  channel: ChannelId,
+  init: Init,
+) -> Result(CallRef, CreateError) {
   use target <- result.try(
     owner_node(channel) |> result.replace_error(CreateUnavailable),
   )

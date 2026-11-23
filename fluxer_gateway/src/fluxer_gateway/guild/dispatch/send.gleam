@@ -9,6 +9,7 @@ import fluxer_gateway/core/raw_json.{type RawJson}
 import fluxer_gateway/core/session.{type SessionInbox, type SessionRef}
 import fluxer_gateway/guild/dispatch/broadcast
 import fluxer_gateway/guild/dispatch/event
+import fluxer_gateway/guild/metrics as guild_metrics
 import fluxer_gateway/guild/sessions as table
 import fluxer_gateway/guild/sessions/entry.{type Entry}
 import fluxer_gateway/guild/state.{type GuildState} as guild_state
@@ -38,12 +39,14 @@ pub fn deliver(
 ) -> Nil {
   case to {
     [] -> Nil
-    _ ->
+    _ -> {
+      guild_metrics.delivered(event_name, list.length(to))
       deliver_message(
         state,
         to,
         session.guild_dispatch(guild_state.guild_id(state), event_name, payload),
       )
+    }
   }
 }
 
@@ -55,7 +58,10 @@ pub fn deliver_tree(
 ) -> Nil {
   case to {
     [] -> Nil
-    _ -> deliver_message(state, to, message(state, event_name, data))
+    _ -> {
+      guild_metrics.delivered(event_name, list.length(to))
+      deliver_message(state, to, message(state, event_name, data))
+    }
   }
 }
 
@@ -145,6 +151,7 @@ pub fn list_dispatches(
   dispatches: List(effects.Dispatch),
 ) -> Nil {
   list.each(dispatches, fn(item) {
+    guild_metrics.delivered(item.event, list.length(item.to))
     relay.send(
       item.to,
       session.guild_dispatch(
@@ -164,12 +171,11 @@ pub fn standard(
 ) -> Nil {
   case recipients {
     [] -> Nil
-    _ ->
-      deliver_message(
-        state,
-        list.map(recipients, entry.ref),
-        message(state, event_name, data),
-      )
+    _ -> {
+      let to = list.map(recipients, entry.ref)
+      guild_metrics.delivered(event_name, list.length(to))
+      deliver_message(state, to, message(state, event_name, data))
+    }
   }
 }
 

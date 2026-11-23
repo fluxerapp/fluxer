@@ -6,6 +6,7 @@ import fluxer_gateway/config/env
 import fluxer_gateway/config/settings.{type Settings}
 import fluxer_gateway/nats/address.{type Address}
 import fluxer_gateway/nats/connection.{type Connection}
+import fluxer_gateway/nats/metrics as nats_metrics
 import fluxer_gateway/nats/protocol
 import gleam/dict.{type Dict}
 import gleam/erlang/process.{type Monitor, type Pid, type Subject}
@@ -170,6 +171,7 @@ pub fn supervised(settings: Settings) -> ChildSpecification(Nil) {
 fn start(settings: Settings) -> Result(actor.Started(Nil), actor.StartError) {
   actor.new_with_initialiser(init_timeout_ms(), fn(named) {
     put_table(FluxerGatewayNatsSlots, Some(slot_table(empty_slots(pool_size))))
+    nats_metrics.watch_connections(slot_counts)
     let self = process.new_subject()
     list.each(slot_indices(), fn(slot) { process.send(self, ConnectSlot(slot)) })
     let selector =
@@ -212,6 +214,31 @@ fn empty_slots(count: Int) -> List(Option(Connection)) {
   list.repeat(None, count)
 }
 
+fn slot_counts() -> #(Int, Int) {
+  case get_table(FluxerGatewayNatsSlots, None) {
+    None -> #(0, 0)
+    Some(table) -> {
+      let size = table_size(table)
+      let ready =
+        list.count(indices(1, size, []), fn(index) {
+          option.is_some(slot_at(index, table))
+        })
+      #(ready, size - ready)
+    }
+  }
+}
+
+fn outcome(result: Result(a, NatsError)) -> String {
+  case result {
+    Ok(_) -> "ok"
+    Error(NotConnected) -> "not_connected"
+    Error(NatsTimeout) -> "timeout"
+    Error(NoResponders) -> "no_responders"
+    Error(ConnectionClosed) -> "closed"
+    Error(ProtocolError(_)) -> "protocol_error"
+  }
+}
+
 fn publish(subject: String, payload: BitArray) -> Result(Nil, NatsError) {
   case protocol.valid_token(subject) {
     False -> Error(ProtocolError("invalid subject"))
@@ -233,7 +260,9 @@ pub fn publish_reply(
   subject: String,
   payload: BitArray,
 ) -> Result(Nil, NatsError) {
-  case publish(subject, payload) {
+  let published = publish(subject, payload)
+  nats_metrics.published("reply", outcome(published))
+  case published {
     Ok(Nil) -> Ok(Nil)
     Error(reason) -> {
       logging.log(
@@ -249,6 +278,16 @@ pub fn publish_reply(
 }
 
 pub fn request(
+  subject: String,
+  payload: BitArray,
+  timeout_ms: Int,
+) -> Result(BitArray, NatsError) {
+  let answered = send_request(subject, payload, timeout_ms)
+  nats_metrics.published("request", outcome(answered))
+  answered
+}
+
+fn send_request(
   subject: String,
   payload: BitArray,
   timeout_ms: Int,
@@ -373,6 +412,7 @@ fn handle(state: State, message: Message) -> actor.Next(State, Message) {
             "Gateway NATS pool slot connect attempt timed out: slot="
               <> int.to_string(slot),
           )
+          nats_metrics.connection_event("connect_failed")
           actor.continue(schedule_reconnect(
             State(..state, slots: dict.insert(state.slots, slot, Idle)),
             slot,
@@ -419,6 +459,7 @@ fn handle(state: State, message: Message) -> actor.Next(State, Message) {
               next_id: id + 1,
             )
           let state = place_subscription(state, id)
+          nats_metrics.subscriptions_held(dict.size(state.subscriptions))
           process.send(reply, SubscriptionId(id, process.self()))
           actor.continue(state)
         }
@@ -468,7 +509,9 @@ fn remove_subscription(state: State, id: Int) -> State {
           Error(Nil) -> Nil
         }
       })
-      State(..state, subscriptions: dict.delete(state.subscriptions, id))
+      let subscriptions = dict.delete(state.subscriptions, id)
+      nats_metrics.subscriptions_held(dict.size(subscriptions))
+      State(..state, subscriptions:)
     }
     Error(Nil) -> state
   }
@@ -532,6 +575,7 @@ fn connected(
             logging.Info,
             "Gateway NATS pool slot connected: slot=" <> int.to_string(slot),
           )
+          nats_metrics.connection_event("connected")
           State(
             ..state,
             slots: dict.insert(state.slots, slot, Ready(found, pid, monitor)),
@@ -554,6 +598,7 @@ fn connected(
           <> " reason="
           <> reason,
       )
+      nats_metrics.connection_event("connect_failed")
       schedule_reconnect(
         State(..state, slots: dict.insert(state.slots, slot, Idle)),
         slot,
@@ -583,6 +628,7 @@ fn slot_down(state: State, pid: Pid) -> State {
         "Gateway NATS pool slot connection lost, reconnecting: slot="
           <> int.to_string(slot),
       )
+      nats_metrics.connection_event("lost")
       let subscriptions =
         dict.map_values(state.subscriptions, fn(_, subscription) {
           Subscription(

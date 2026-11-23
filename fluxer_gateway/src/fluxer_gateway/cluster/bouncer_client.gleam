@@ -18,6 +18,7 @@ import fluxer_gateway/cluster/buckets
 import fluxer_gateway/cluster/lease
 import fluxer_gateway/cluster/lease_probe
 import fluxer_gateway/cluster/links
+import fluxer_gateway/cluster/metrics as cluster_metrics
 import fluxer_gateway/cluster/router
 import fluxer_gateway/cluster/wire
 import fluxer_gateway/config/build_info
@@ -469,6 +470,7 @@ fn isolation(state: State, held: List(proto_lease.Claim), now: Int) -> State {
 }
 
 fn probed(state: State, started: Int, isolated: Bool, now: Int) -> State {
+  cluster_metrics.record_probe(isolated, now - started)
   let state = State(..state, probing: False)
   case state.isolated_since, lease.sees_bouncers(now), isolated {
     None, _, _ | _, True, _ -> state
@@ -583,12 +585,14 @@ fn from_bouncer(state: State, incoming: ToWorker, now: Int) -> State {
         bouncer_view.ack(state.view, bouncer, seq, matched, roster, now)
       case acked {
         Some(sent_mono) -> {
+          cluster_metrics.record_beat_rtt(now - sent_mono)
           let _ = lease.extend(sent_mono)
           let _ = lease.remember_roster(roster, now)
           Nil
         }
         None -> Nil
       }
+      cluster_metrics.record_beat_ack(matched)
       case matched {
         True -> Nil
         False -> {

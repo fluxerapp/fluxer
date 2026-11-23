@@ -39,6 +39,7 @@ import fluxer_gateway/guild/join/admission.{type Gate}
 import fluxer_gateway/guild/maintenance
 import fluxer_gateway/guild/members
 import fluxer_gateway/guild/members/search
+import fluxer_gateway/guild/metrics as guild_metrics
 import fluxer_gateway/guild/presence/reconcile
 import fluxer_gateway/guild/presence/rows
 import fluxer_gateway/guild/push/dispatch as push_dispatch
@@ -394,8 +395,14 @@ fn go_live(
     False, False -> None
   }
   let mode = case arriving {
-    True -> Arriving(applied: 0, early: dict.new(), stash: [])
-    False -> Serving
+    True -> {
+      guild_metrics.enter(guild_metrics.Arriving)
+      Arriving(applied: 0, early: dict.new(), stash: [])
+    }
+    False -> {
+      guild_metrics.enter(guild_metrics.Serving)
+      Serving
+    }
   }
   let server =
     Server(
@@ -453,6 +460,7 @@ fn stage(
     )
   let staging = copy.subject(process.self())
   process.send_after(staging, staged_ttl_ms(), copy.Expire)
+  guild_metrics.enter(guild_metrics.Staged)
   new_server(state, parts, Staged(move:, round: 0), [])
   |> actor.initialised
   |> actor.selecting(
@@ -603,6 +611,7 @@ fn on_signal(server: Server, found: Signal) -> actor.Next(Server, Message) {
     }
     signal.Thaw(reply:), Frozen(held:, ..) -> {
       process.send(reply, True)
+      guild_metrics.enter(guild_metrics.Serving)
       next(run_all(Server(..server, mode: Serving), list.reverse(held)))
     }
     signal.Thaw(reply:), _ -> {
@@ -618,7 +627,10 @@ fn on_signal(server: Server, found: Signal) -> actor.Next(Server, Message) {
       }
     }
     signal.SealDue, Handing(sealed: False, ..) -> actor.continue(seal(server))
-    signal.ForwardGraceOver, Handing(..) -> next(Stop(server))
+    signal.ForwardGraceOver, Handing(..) -> {
+      guild_metrics.stopped("handed_off")
+      next(Stop(server))
+    }
     signal.Release(seq:, bytes:), Arriving(applied:, early:, stash:) ->
       case seq > applied {
         False -> actor.continue(server)
@@ -636,6 +648,7 @@ fn on_signal(server: Server, found: Signal) -> actor.Next(Server, Message) {
       }
     signal.Seal(last_seq:, reply:), Arriving(applied:, stash:, ..) -> {
       process.send(reply, applied >= last_seq)
+      guild_metrics.enter(guild_metrics.Serving)
       next(run_all(open(Server(..server, mode: Serving)), list.reverse(stash)))
     }
     signal.Probe(reply:), Frozen(..) | signal.Probe(reply:), Handing(..) -> {
@@ -649,7 +662,10 @@ fn on_signal(server: Server, found: Signal) -> actor.Next(Server, Message) {
     signal.AbortArrival, Arriving(..)
     | signal.AbortArrival, Frozen(..)
     | signal.AbortArrival, Handing(..)
-    -> next(Stop(server))
+    -> {
+      guild_metrics.stopped("aborted")
+      next(Stop(server))
+    }
     _, _ -> actor.continue(server)
   }
 }
@@ -914,6 +930,7 @@ fn freeze(
     Ok(bytes) -> {
       flush_broadcast(state)
       process.send(reply, Ok(bytes))
+      guild_metrics.enter(guild_metrics.Frozen)
       Server(
         ..server,
         mode: Frozen(move:, version:, epoch: epoch.to_int(epoch), held: []),
@@ -1005,6 +1022,7 @@ fn commit(
     _,
     control.GuildRebind(target.ref, process.self()),
   ))
+  guild_metrics.enter(guild_metrics.Handing)
   let server =
     Server(
       ..server,
@@ -1200,6 +1218,7 @@ fn process_down(server: Server, monitor: process.Monitor) -> Server {
 }
 
 fn thaw(server: Server, frozen: Frozen) -> Server {
+  guild_metrics.enter(guild_metrics.Serving)
   list.fold(
     hold.release(frozen),
     remember_voice(Server(..server, frozen: None)),
@@ -1316,15 +1335,24 @@ fn drain_joins(server: Server) -> Server {
           let #(state, gate) = acc
           let now = clock.monotonic_ms()
           case admission.deliverable(waiting, now) {
-            True -> #(connect.join(state, waiting.request, waiting.reply), gate)
+            True -> {
+              guild_metrics.join_admitted(
+                waiting.request.class,
+                now - waiting.enqueued_at,
+              )
+              #(connect.join(state, waiting.request, waiting.reply), gate)
+            }
             False -> {
+              guild_metrics.join_expired(now - waiting.enqueued_at)
               let #(gate, effects) = admission.expire(gate, waiting, now)
               run_join_effects(effects)
               #(state, gate)
             }
           }
         })
-      let gate = admission.batch_done(gate, found, clock.monotonic_ms())
+      let finished = clock.monotonic_ms()
+      guild_metrics.join_batch(finished - found.started_at)
+      let gate = admission.batch_done(gate, found, finished)
       drain_joins(Server(..server, state:, gate:))
     }
   }
@@ -1341,8 +1369,16 @@ fn session_op(server: Server, ref: SessionRef, op: session.ClientOp) -> Server {
           server
         }
       }
-    session.LazyRequest(_) ->
-      with_state(server, subscriptions.handle(server.state, ref, op))
+    session.LazyRequest(_) -> {
+      let started = clock.monotonic_ms()
+      let state = subscriptions.handle(server.state, ref, op)
+      metrics.observe_ms(
+        "fluxer_gateway_guild_lazy_request_ms",
+        [],
+        clock.monotonic_ms() - started,
+      )
+      with_state(server, state)
+    }
     _ -> with_state(server, requests.handle(server.state, ref, op))
   }
 }
@@ -1552,6 +1588,7 @@ fn private(server: Server, control: Control) -> Step {
     }
     inbox.Shutdown(reply) -> {
       process.send(reply, Nil)
+      guild_metrics.stopped("shutdown")
       Stop(server)
     }
     inbox.Freeze(owners, reply) -> {
@@ -1564,6 +1601,7 @@ fn private(server: Server, control: Control) -> Step {
         FreezeDeadline(token),
       )
       let frozen = hold.freeze(server.frozen, owners, successor, token)
+      guild_metrics.enter(guild_metrics.Frozen)
       let server =
         remember_voice(
           Server(..server, frozen: Some(frozen), next_token: token + 1),
@@ -1594,6 +1632,7 @@ fn private(server: Server, control: Control) -> Step {
           session.GuildDown(guild, int.random(down_jitter_ms())),
         )
       })
+      guild_metrics.stopped("moved")
       Stop(server)
     }
     inbox.VoiceRpc(request) -> Continue(voice_request(server, request))
@@ -2093,7 +2132,10 @@ fn tick(server: Server, timer: Timer) -> Step {
           case
             mailbox_empty() && !push_busy(server.state, clock.monotonic_ms())
           {
-            True -> Stop(server)
+            True -> {
+              guild_metrics.stopped("idle")
+              Stop(server)
+            }
             False ->
               Continue(maybe_auto_stop(Server(..server, auto_stop: None)))
           }

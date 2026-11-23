@@ -26,6 +26,7 @@ import fluxer_gateway/voice/count_table
 import fluxer_gateway/voice/e2ee
 import fluxer_gateway/voice/entry.{type Entry}
 import fluxer_gateway/voice/geo.{type Geo}
+import fluxer_gateway/voice/metrics as voice_metrics
 import fluxer_gateway/voice/p2p
 import fluxer_gateway/voice/store
 import fluxer_gateway/voice/token
@@ -490,6 +491,7 @@ fn init_fresh(self: Subject(Message), init: Init) -> Call {
   let call = Call(..call, initiator_ready: True)
   let #(call, _) = dispatch_pending_ringing(self, call, False)
   let call = reset_idle(self, call)
+  voice_metrics.call_started()
   dispatch_create(call)
 }
 
@@ -605,7 +607,7 @@ fn merge(self: Subject(Message), call: Call, imported: Call) -> Call {
   let merged =
     Call(..cancel_ring_timers(merged, answered), ringing:, pending_ringing:)
     |> start_ring_timers(self, _, ringing)
-  sync_counts(call, merged)
+  sync_table(call, merged)
   let #(merged, _) = dispatch_pending_ringing(self, merged, False)
   merged
   |> reset_idle(self, _)
@@ -1197,11 +1199,13 @@ fn step(server: Server, message: Message) -> Outcome {
       case state.entry_at(call, conn), dict.get(call.sessions, session_id) {
         Ok(#(_, value)), Ok(member) ->
           case entry.session_id(value) == Some(session_id) {
-            True ->
+            True -> {
+              voice_metrics.server_updates(voice_metrics.CallScope, 1)
               process.send(
                 member.inbox,
                 session.Dispatch("VOICE_SERVER_UPDATE", payload),
               )
+            }
             False -> Nil
           }
         _, _ -> Nil
@@ -1705,6 +1709,15 @@ fn has_activity(call: Call) -> Bool {
 }
 
 fn sync_counts(old: Call, new: Call) -> Nil {
+  voice_metrics.transitions(
+    voice_metrics.CallScope,
+    store.to_dict(old.voice_states),
+    store.to_dict(new.voice_states),
+  )
+  sync_table(old, new)
+}
+
+fn sync_table(old: Call, new: Call) -> Nil {
   store.keys(old.voice_states)
   |> list.each(fn(key) {
     case store.has_key(new.voice_states, key) {
@@ -1885,6 +1898,7 @@ fn dispatch_voice_state(call: Call, value: Entry) -> Nil {
 }
 
 fn end_call(call: Call) -> Nil {
+  voice_metrics.call_ended()
   to_recipients(
     call,
     "CALL_DELETE",

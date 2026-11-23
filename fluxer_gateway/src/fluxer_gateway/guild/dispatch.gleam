@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import fluxer_gateway/core/clock
 import fluxer_gateway/core/guild as core_guild
 import fluxer_gateway/core/id.{type ChannelId}
 import fluxer_gateway/core/json_tree.{type JsonTree}
@@ -15,6 +16,7 @@ import fluxer_gateway/guild/dispatch/model_events
 import fluxer_gateway/guild/dispatch/send
 import fluxer_gateway/guild/dispatch/visibility
 import fluxer_gateway/guild/inbox
+import fluxer_gateway/guild/metrics as guild_metrics
 import fluxer_gateway/guild/push/dispatch as push_dispatch
 import fluxer_gateway/guild/push/thread_scope.{type ThreadScope}
 import fluxer_gateway/guild/sessions as table
@@ -32,6 +34,7 @@ import fluxer_gateway/member_list/event as list_event
 import fluxer_gateway/perms
 import fluxer_gateway/perms/audience
 import fluxer_gateway/threads/dispatch as thread_dispatch
+import fluxer_gateway/threads/metrics as thread_metrics
 import fluxer_gateway/threads/value as thread_value
 import gleam/bool
 import gleam/dynamic.{type Dynamic}
@@ -85,7 +88,10 @@ fn handle(
       let features = core_guild.features(guild_state.facts(state))
       let full =
         name == "GUILD_UPDATE" || !list.any(features, event.unavailable_feature)
-      run(state, name, data, full, origin)
+      let began = clock.monotonic_ms()
+      let state = run(state, name, data, full, origin)
+      guild_metrics.event_handled(name, clock.monotonic_ms() - began)
+      state
     }
   }
 }
@@ -192,7 +198,13 @@ fn run_regular(
         filter.InThread(entries) | filter.Scoped(entries) ->
           passive_filter(state, name, facts, entries)
       }
-      let state = case list.length(recipients) >= broadcast_fan_out {
+      let fan_out = list.length(recipients)
+      guild_metrics.fanned_out(fan_out)
+      case found {
+        filter.InThread(_) -> thread_metrics.delivered_in_thread(name, fan_out)
+        filter.Scoped(_) -> Nil
+      }
+      let state = case fan_out >= broadcast_fan_out {
         True -> send.with_broadcaster(state)
         False -> state
       }

@@ -22,6 +22,7 @@ import fluxer_gateway/voice/e2ee
 import fluxer_gateway/voice/entry.{type Entry, type Flags}
 import fluxer_gateway/voice/geo.{type Geo}
 import fluxer_gateway/voice/guild_state
+import fluxer_gateway/voice/metrics as voice_metrics
 import fluxer_gateway/voice/p2p
 import fluxer_gateway/voice/registry
 import fluxer_gateway/voice/store.{type Store}
@@ -1781,6 +1782,7 @@ fn join_loop(
           {
             Ok(Ok(Nil)) -> {
               option.map(attempt.server_update, fn(payload) {
+                voice_metrics.server_updates(voice_metrics.CallScope, 1)
                 session.send(
                   attempt.target,
                   session.Dispatch("VOICE_SERVER_UPDATE", payload),
@@ -1810,6 +1812,7 @@ fn join_loop(
 fn announce(attempt: JoinAttempt) -> JoinAttempt {
   case attempt.server_update {
     Some(payload) -> {
+      voice_metrics.server_updates(voice_metrics.CallScope, 1)
       session.send(
         attempt.target,
         session.Dispatch("VOICE_SERVER_UPDATE", payload),

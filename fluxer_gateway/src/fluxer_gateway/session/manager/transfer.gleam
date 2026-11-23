@@ -15,6 +15,7 @@ import fluxer_gateway/session/manager/names
 import fluxer_gateway/session/manager/registry
 import fluxer_gateway/session/manager/shards
 import fluxer_gateway/session/seed.{type Seed}
+import fluxer_gateway/session/session_metrics
 import fluxer_gateway/telemetry/metrics
 import fluxer_gateway/telemetry/rollout_metrics
 import fluxer_gateway/util/spawn
@@ -389,7 +390,9 @@ fn target_for(session_id: String, nodes: List(Node)) -> Result(Node, Nil) {
 }
 
 fn hand_off(target: Node, ref: session.SessionRef) -> Bool {
+  let started = clock.monotonic_ms()
   let moved = control.hand_off(ref, target, hand_off_timeout_ms())
+  session_metrics.moved(moved, clock.monotonic_ms() - started)
   metrics.counter(
     "fluxer_gateway_session_moves_total",
     [

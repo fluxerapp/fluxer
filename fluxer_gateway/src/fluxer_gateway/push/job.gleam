@@ -85,6 +85,15 @@ pub fn subject(kind: Kind) -> String {
   }
 }
 
+pub fn subject_label(subject: String) -> String {
+  case subject {
+    _ if subject == subject_message -> "message"
+    _ if subject == subject_clear -> "clear"
+    _ if subject == subject_ring -> "ring"
+    _ -> "other"
+  }
+}
+
 pub fn kind_label(kind: Kind) -> String {
   case kind {
     MessageJob -> "message"

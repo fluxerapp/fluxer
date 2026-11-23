@@ -17,6 +17,7 @@ import fluxer_gateway/guild/rpc/params as guild_params
 import fluxer_gateway/nats/pool.{type NatsMessage}
 import fluxer_gateway/presence/rpc as presence_rpc
 import fluxer_gateway/push/rpc as push_rpc
+import fluxer_gateway/rpc/metrics as rpc_metrics
 import fluxer_gateway/rpc/reply
 import fluxer_gateway/telemetry/rpc as telemetry_rpc
 import fluxer_gateway/util/decode as edge
@@ -138,6 +139,7 @@ fn start(settings: Settings) -> Result(actor.Started(Nil), actor.StartError) {
       }
     }
     let _ = overload_senders()
+    rpc_metrics.watch()
     let inbox = process.new_subject()
     let state =
       State(
@@ -220,10 +222,15 @@ fn handler_down(
   pid: Pid,
   reason: process.ExitReason,
 ) -> actor.Next(State, Message) {
+  case dict.has_key(state.handlers, pid) {
+    True -> rpc_metrics.handler_finished()
+    False -> Nil
+  }
   case dict.get(state.handlers, pid), reason {
     Ok(Handler(method:, reply_to:)), process.Abnormal(crash) -> {
       let body = case is_call_timeout(crash) {
         True -> {
+          rpc_metrics.handled(method, "timeout")
           logging.log(
             logging.Warning,
             "Gateway NATS RPC exit timeout: method=" <> method,
@@ -231,6 +238,7 @@ fn handler_down(
           reply.failure("timeout")
         }
         False -> {
+          rpc_metrics.handled(method, "crashed")
           logging.log(
             logging.Error,
             "Gateway NATS RPC method execution failed: method="
@@ -245,6 +253,7 @@ fn handler_down(
       Nil
     }
     Ok(Handler(method:, reply_to:)), process.Killed -> {
+      rpc_metrics.handled(method, "crashed")
       logging.log(
         logging.Error,
         "Gateway NATS RPC method execution failed: method="
@@ -384,6 +393,7 @@ fn dispatch(state: State, request: NatsMessage) -> State {
         handler_limit_reached(dict.size(state.handlers), state.max_handlers)
       {
         True -> {
+          rpc_metrics.handled(reply.method(request.subject), "overloaded")
           send_overloaded(reply_to, state.max_handlers)
           state
         }
@@ -392,6 +402,7 @@ fn dispatch(state: State, request: NatsMessage) -> State {
           let payload = request.payload
           let #(pid, _) =
             spawn.monitored(fn() { run(subject, payload, reply_to) })
+          rpc_metrics.handler_started()
           State(
             ..state,
             handlers: dict.insert(
@@ -406,7 +417,14 @@ fn dispatch(state: State, request: NatsMessage) -> State {
 }
 
 fn run(subject: String, payload: BitArray, reply_to: String) -> Nil {
-  let body = execute(reply.method(subject), payload)
+  let method = reply.method(subject)
+  let started = clock.monotonic_ms()
+  let body = execute(method, payload)
+  rpc_metrics.answered(
+    method,
+    reply.succeeded(body),
+    clock.monotonic_ms() - started,
+  )
   let _ = pool.publish_reply(reply_to, bit_array.from_string(body))
   Nil
 }

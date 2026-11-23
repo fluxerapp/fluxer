@@ -156,3 +156,37 @@ pub fn record_moves(reason: String, count: Int) -> Nil {
     count,
   )
 }
+
+pub const beat_rtt = "fluxer_gateway_bouncer_beat_rtt_ms"
+
+pub const beat_acks = "fluxer_gateway_bouncer_beat_acks_total"
+
+pub const probe_duration = "fluxer_gateway_bouncer_probe_ms"
+
+pub const close_duration = "fluxer_gateway_bouncer_close_ms"
+
+pub const close_outcomes = ["closed", "refused", "unreachable"]
+
+pub fn record_beat_rtt(ms: Int) -> Nil {
+  telemetry.observe_ms(beat_rtt, [], ms)
+}
+
+pub fn record_beat_ack(matched: Bool) -> Nil {
+  let outcome = case matched {
+    True -> "matched"
+    False -> "mismatched"
+  }
+  telemetry.counter(beat_acks, [#("outcome", outcome)], 1)
+}
+
+pub fn record_probe(isolated: Bool, ms: Int) -> Nil {
+  let outcome = case isolated {
+    True -> "isolated"
+    False -> "not_isolated"
+  }
+  telemetry.observe_ms(probe_duration, [#("outcome", outcome)], ms)
+}
+
+pub fn record_close(outcome: String, ms: Int) -> Nil {
+  telemetry.observe_ms(close_duration, [#("outcome", outcome)], ms)
+}

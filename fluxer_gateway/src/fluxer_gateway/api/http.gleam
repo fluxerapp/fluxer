@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import fluxer_gateway/api/breaker.{type Breaker}
+import fluxer_gateway/api/metrics as api_metrics
 import fluxer_gateway/config/durations
 import fluxer_gateway/config/env
 import fluxer_gateway/config/settings.{type Settings}
 import fluxer_gateway/core/clock
-import fluxer_gateway/telemetry/metrics
 import gleam/dict.{type Dict}
 import gleam/dynamic.{type Dynamic}
 import gleam/dynamic/decode
@@ -228,6 +228,8 @@ fn start(settings: Settings) -> Result(actor.Started(Nil), actor.StartError) {
         profiles:,
       )),
     )
+    api_metrics.breaker_closed()
+    api_metrics.watch_in_flight(in_flight)
     State(self:, breaker: breaker.new(config), cells:, holders: dict.new())
     |> actor.initialised
     |> actor.selecting(
@@ -369,7 +371,7 @@ fn changed(state: State, before: breaker.State) -> State {
         breaker.Closed -> {
           atomics_put(state.cells, mode_cell, closed_mode)
           logging.log(logging.Info, "API circuit breaker closed")
-          metrics.gauge("fluxer_gateway_api_breaker_state", [], 0)
+          api_metrics.breaker("closed", 0)
         }
         breaker.Open(until) -> {
           atomics_put(state.cells, until_cell, until)
@@ -380,12 +382,12 @@ fn changed(state: State, before: breaker.State) -> State {
             HalfOpenNow(until),
           )
           logging.log(logging.Warning, "API circuit breaker opening")
-          metrics.gauge("fluxer_gateway_api_breaker_state", [], 1)
+          api_metrics.breaker("open", 1)
         }
         breaker.HalfOpen(0) -> {
           atomics_put(state.cells, probes_cell, 0)
           atomics_put(state.cells, mode_cell, half_open_mode)
-          metrics.gauge("fluxer_gateway_api_breaker_state", [], 2)
+          api_metrics.breaker("half_open", 2)
         }
         breaker.HalfOpen(_) -> Nil
       }

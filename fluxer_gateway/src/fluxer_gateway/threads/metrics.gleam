@@ -67,6 +67,26 @@ pub fn dispatched(event: String, variant: String, count: Int) -> Nil {
   }
 }
 
+pub fn delivered_in_thread(event: String, count: Int) -> Nil {
+  dispatched(thread_event(event), "thread", count)
+}
+
+fn thread_event(event: String) -> String {
+  case event {
+    "MESSAGE_CREATE"
+    | "MESSAGE_UPDATE"
+    | "MESSAGE_DELETE"
+    | "MESSAGE_DELETE_BULK"
+    | "MESSAGE_REACTION_ADD"
+    | "MESSAGE_REACTION_REMOVE"
+    | "MESSAGE_REACTION_REMOVE_ALL"
+    | "MESSAGE_REACTION_REMOVE_EMOJI"
+    | "TYPING_START"
+    | "CHANNEL_PINS_UPDATE" -> event
+    _ -> "other"
+  }
+}
+
 pub fn list_sync(reason: String) -> Nil {
   metrics.counter(
     "fluxer_gateway_thread_list_sync_total",

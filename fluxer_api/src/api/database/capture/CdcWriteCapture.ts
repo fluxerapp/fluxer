@@ -38,6 +38,13 @@ const droppedTotal = registerCounter(
 	'CDC key records dropped before they were published, by table',
 );
 
+export class CaptureClosedError extends Error {
+	constructor() {
+		super('Cassandra write capture is closed');
+		this.name = 'CaptureClosedError';
+	}
+}
+
 export interface CdcCaptureLimits {
 	maxQueued: number;
 	retryMs: number;
@@ -127,6 +134,7 @@ export class CdcWriteCapture implements WriteCaptureHook {
 	private failing = false;
 	private closing = false;
 	private stopped = false;
+	private sending = 0;
 
 	constructor(options: CdcWriteCaptureOptions) {
 		this.process = options.process;
@@ -154,17 +162,22 @@ export class CdcWriteCapture implements WriteCaptureHook {
 		_logged: boolean,
 		send: (timestamp: number) => Promise<T>,
 	): Promise<T> {
+		this.admit();
 		const ts = this.nextTimestamp();
 		const keysOf = () => statements.flatMap(statementKeys);
-		let result: T;
 		try {
-			result = await send(ts);
-		} catch (error) {
-			if (classifyWriteError(error) === 'unknown') this.record(ts, 'unknown', false, keysOf);
-			throw error;
+			let result: T;
+			try {
+				result = await send(ts);
+			} catch (error) {
+				if (classifyWriteError(error) === 'unknown') this.record(ts, 'unknown', false, keysOf);
+				throw error;
+			}
+			this.record(ts, 'applied', false, keysOf);
+			return result;
+		} finally {
+			this.sending--;
 		}
-		this.record(ts, 'applied', false, keysOf);
-		return result;
 	}
 
 	async conditional<T>(
@@ -172,18 +185,23 @@ export class CdcWriteCapture implements WriteCaptureHook {
 		send: () => Promise<T>,
 		appliedOf: (result: T) => boolean | undefined,
 	): Promise<T> {
+		this.admit();
 		const ts = this.nextTimestamp();
 		const keysOf = () => conditionalKeys(statement);
-		let result: T;
 		try {
-			result = await send();
-		} catch (error) {
-			if (classifyWriteError(error) === 'unknown') this.record(ts, 'unknown', true, keysOf);
-			throw error;
+			let result: T;
+			try {
+				result = await send();
+			} catch (error) {
+				if (classifyWriteError(error) === 'unknown') this.record(ts, 'unknown', true, keysOf);
+				throw error;
+			}
+			const applied = appliedOf(result);
+			if (applied !== false) this.record(ts, applied ? 'applied' : 'unknown', true, keysOf);
+			return result;
+		} finally {
+			this.sending--;
 		}
-		const applied = appliedOf(result);
-		if (applied !== false) this.record(ts, applied ? 'applied' : 'unknown', true, keysOf);
-		return result;
 	}
 
 	async close(timeoutMs: number): Promise<void> {
@@ -192,11 +210,12 @@ export class CdcWriteCapture implements WriteCaptureHook {
 		if (this.aliveTimer !== null) clearInterval(this.aliveTimer);
 		this.aliveDue = false;
 		const deadline = this.now() + timeoutMs;
-		while (this.hasWork() && this.now() < deadline) {
+		while ((this.hasWork() || this.sending > 0) && this.now() < deadline) {
 			this.kick();
 			await delay(CLOSE_POLL_MS);
 		}
 		this.stopped = true;
+		this.dropped += this.sending;
 		if (this.retryTimer !== null) clearTimeout(this.retryTimer);
 		await this.pumping;
 		for (const entry of this.queue) this.lose(entry.seq, entry.tables);
@@ -220,6 +239,11 @@ export class CdcWriteCapture implements WriteCaptureHook {
 			Logger.error({error, dropped: this.dropped}, 'Cassandra CDC capture could not publish its closed record');
 		}
 		await this.sink.close();
+	}
+
+	private admit(): void {
+		if (this.closing) throw new CaptureClosedError();
+		this.sending++;
 	}
 
 	private record(ts: number, out: CdcOutcome, lwt: boolean, keysOf: () => Array<TableKey>): void {

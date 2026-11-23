@@ -576,6 +576,8 @@ fn size_class(bytes: Int) -> String {
   }
 }
 
+pub const precopy_duration = "fluxer_gateway_handoff_precopy_duration_ms"
+
 pub fn phase(name: String) -> Nil {
   metrics.counter("fluxer_gateway_handoff_phase_total", [#("phase", name)], 1)
 }
@@ -839,6 +841,17 @@ fn run_precopy(
     )
   let elapsed = mover.ports.now_ms() - started
   let kind = [#("ns", int.to_string(entity.ns))]
+  metrics.observe_ms(
+    precopy_duration,
+    [
+      #("kind", rollout_metrics.kind_of_ns(entity.ns)),
+      #("outcome", case outcome {
+        Ok(_) -> "staged"
+        Error(_) -> "failed"
+      }),
+    ],
+    elapsed,
+  )
   case outcome {
     Ok(copied) -> {
       metrics.observe_ms(

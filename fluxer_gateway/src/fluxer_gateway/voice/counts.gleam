@@ -2,12 +2,14 @@
 
 import fluxer_gateway/config/durations
 import fluxer_gateway/config/settings.{type Settings}
+import fluxer_gateway/core/clock
 import fluxer_gateway/telemetry/metrics.{type Sample, Sample}
 import fluxer_gateway/voice/call/manager
 import fluxer_gateway/voice/call/server as call_server
 import fluxer_gateway/voice/count_table
 import fluxer_gateway/voice/entry.{type Entry}
 import fluxer_gateway/voice/guild_handler
+import fluxer_gateway/voice/metrics as voice_metrics
 import gleam/erlang/process.{type Pid}
 import gleam/list
 import gleam/otp/actor
@@ -50,7 +52,9 @@ pub fn supervised(_settings: Settings) -> ChildSpecification(Nil) {
     |> actor.on_message(fn(ticks, message) {
       case message {
         count_table.RunSync -> {
+          let started = clock.monotonic_ms()
           rebuild()
+          voice_metrics.counts_synced(clock.monotonic_ms() - started)
           process.send_after(ticks, sync_interval_ms(), count_table.RunSync)
           actor.continue(ticks)
         }
