@@ -19,6 +19,7 @@ import fluxer_gateway/core/node
 import fluxer_gateway/gateway/ws/server
 import fluxer_gateway/handoff/move
 import fluxer_gateway/telemetry/metrics
+import fluxer_gateway/telemetry/prometheus
 import fluxer_gateway/telemetry/rollout_metrics
 import gleam/bytes_tree
 import gleam/erlang/process
@@ -31,6 +32,7 @@ import gleam/list
 import gleam/option
 import gleam/otp/supervision
 import gleam/result
+import gleam/set
 import gleam/string
 import glisten.{type IpAddress}
 import logging
@@ -365,14 +367,36 @@ pub fn constant_labels() -> List(#(String, String)) {
   [#("role", node.role_name(configured.role)), #("pool", pool)]
 }
 
+pub const unscraped = [
+  "fluxer_gateway_bouncer_beat_mismatch_total",
+  "fluxer_gateway_cluster_nodedown_total",
+  "fluxer_gateway_cluster_peer_state",
+  "fluxer_gateway_handoff_freeze_ms",
+  "fluxer_gateway_handoff_moves_total",
+  "fluxer_gateway_handoff_precopy_ms",
+  "fluxer_gateway_handoff_precopy_total",
+  "fluxer_gateway_handoff_retries_total",
+  "fluxer_gateway_wire_epoch_refused_peers_total",
+]
+
 pub fn metrics_text(status: Status) -> String {
-  let role = settings.get().role
+  render_metrics(status, settings.get().role)
+}
+
+pub fn render_metrics(status: Status, role: node.Role) -> String {
+  let families = catalogue(status)
+  let taken =
+    families
+    |> list.map(fn(found) { found.name })
+    |> list.append(unscraped)
+    |> set.from_list
   rollout_metrics.render(
-    catalogue(status),
+    families,
     role,
     constant_labels(),
     computed(status, role),
   )
+  <> prometheus.render_without(taken)
 }
 
 pub type Route {

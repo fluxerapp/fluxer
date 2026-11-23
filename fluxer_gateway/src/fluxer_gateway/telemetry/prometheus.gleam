@@ -27,18 +27,31 @@ pub fn current_samples() -> List(Sample) {
 }
 
 pub fn render() -> String {
+  render_without(set.new())
+}
+
+pub fn render_without(taken: Set(String)) -> String {
   let kinds = metrics.registry_samples()
   let samples = current_samples()
   let specs = catalogue(samples)
   let known = list.map(specs, fn(spec) { spec.name }) |> set.from_list
   [
-    list.map(specs, render_spec(_, samples)),
-    [render_vm()],
-    list.map(native_metrics.samples(), render_native),
+    list.map(specs, fn(spec) { #(spec.name, render_spec(spec, samples)) }),
+    render_vm(),
+    list.map(native_metrics.samples(), fn(sample) {
+      #(sample.name, render_native(sample))
+    }),
     render_others(samples, kinds, known),
     render_histograms(metrics.histograms()),
   ]
   |> list.flatten
+  |> list.filter_map(fn(entry) {
+    let #(name, text) = entry
+    case set.contains(taken, name) {
+      True -> Error(Nil)
+      False -> Ok(text)
+    }
+  })
   |> string_tree.concat
   |> string_tree.to_string
 }
@@ -352,9 +365,9 @@ fn labelled_series(
   |> list.map(fn(labels) { #(labels, metrics.value(samples, name, labels)) })
 }
 
-fn render_vm() -> StringTree {
-  string_tree.concat([
-    family(
+fn render_vm() -> List(#(String, StringTree)) {
+  [
+    named_family(
       "erlang_vm_memory_bytes",
       "gauge",
       "Erlang VM memory usage in bytes",
@@ -362,19 +375,31 @@ fn render_vm() -> StringTree {
         #([#("type", kind)], vm.memory(of: kind))
       }),
     ),
-    family("erlang_vm_process_count", "gauge", "Erlang VM process count", [
+    named_family("erlang_vm_process_count", "gauge", "Erlang VM process count", [
       #([], vm.process_count()),
     ]),
-    family("erlang_vm_port_count", "gauge", "Erlang VM port count", [
+    named_family("erlang_vm_port_count", "gauge", "Erlang VM port count", [
       #([], vm.port_count()),
     ]),
-    family("erlang_vm_atom_count", "gauge", "Erlang VM atom count", [
+    named_family("erlang_vm_atom_count", "gauge", "Erlang VM atom count", [
       #([], vm.atom_count()),
     ]),
-    family("erlang_vm_scheduler_count", "gauge", "Erlang VM online schedulers", [
-      #([], vm.schedulers_online()),
-    ]),
-  ])
+    named_family(
+      "erlang_vm_scheduler_count",
+      "gauge",
+      "Erlang VM online schedulers",
+      [#([], vm.schedulers_online())],
+    ),
+  ]
+}
+
+fn named_family(
+  name: String,
+  kind: String,
+  help: String,
+  series: List(#(List(#(String, String)), Int)),
+) -> #(String, StringTree) {
+  #(name, family(name, kind, help, series))
 }
 
 fn render_native(sample: Sample) -> StringTree {
@@ -387,7 +412,7 @@ fn render_others(
   samples: List(Sample),
   kinds: List(#(Kind, Sample)),
   known: Set(String),
-) -> List(StringTree) {
+) -> List(#(String, StringTree)) {
   samples
   |> list.map(fn(sample) { sample.name })
   |> list.unique
@@ -399,7 +424,7 @@ fn render_others(
       |> list.map(fn(sample) { metrics.normalise(sample.labels) })
       |> list.unique
       |> list.map(fn(labels) { #(labels, metrics.value(samples, name, labels)) })
-    family(name, kind_name(registry_kind(kinds, name)), name, series)
+    named_family(name, kind_name(registry_kind(kinds, name)), name, series)
   })
 }
 
@@ -415,7 +440,9 @@ fn registry_kind(kinds: List(#(Kind, Sample)), name: String) -> Kind {
   }
 }
 
-fn render_histograms(series: List(HistogramSeries)) -> List(StringTree) {
+fn render_histograms(
+  series: List(HistogramSeries),
+) -> List(#(String, StringTree)) {
   series
   |> list.map(fn(entry) { entry.name })
   |> list.unique
@@ -424,7 +451,7 @@ fn render_histograms(series: List(HistogramSeries)) -> List(StringTree) {
       series
       |> list.filter(fn(entry) { entry.name == name })
       |> list.map(histogram_lines)
-    string_tree.concat([header(name, "histogram", name), ..lines])
+    #(name, string_tree.concat([header(name, "histogram", name), ..lines]))
   })
 }
 
