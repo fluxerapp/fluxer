@@ -37,6 +37,7 @@ import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/otp/actor
 import gleam/result
+import gleam/set.{type Set}
 
 fn init_timeout_ms() -> Int {
   durations.voice().dm_server_init_timeout_ms
@@ -102,8 +103,12 @@ type Dm {
     session_monitor: Option(Monitor),
     states: Store(Entry),
     channels: Dict(Int, List(UserId)),
-    watched: Dict(Int, #(Pid, Monitor)),
+    watched: Dict(Pid, Watch),
   )
+}
+
+type Watch {
+  Watch(channel: ChannelId, monitor: Monitor, connections: Set(ConnectionId))
 }
 
 @external(erlang, "ets", "lookup")
@@ -325,8 +330,8 @@ fn handle(dm: Dm, message: Message) -> actor.Next(Dm, Message) {
       unregister(dm)
       actor.stop()
     }
-    Down(process.ProcessDown(monitor:, reason:, ..)) ->
-      actor.continue(call_down(dm, monitor, reason))
+    Down(process.ProcessDown(monitor:, pid:, reason:)) ->
+      actor.continue(call_down(dm, pid, monitor, reason))
     Down(process.PortDown(..)) -> actor.continue(dm)
     Adopted(view:, session:, reply:) ->
       case dm.session.inbox == session.inbox {
@@ -358,39 +363,66 @@ fn handle(dm: Dm, message: Message) -> actor.Next(Dm, Message) {
 }
 
 fn watch_call(dm: Dm, channel: ChannelId, call: Pid) -> Dm {
-  let key = id.channel_id_to_int(channel)
-  let connected = store.in_channel(dm.states, channel) != []
-  case dict.get(dm.watched, key), connected {
-    Ok(#(current, _)), _ if current == call -> dm
-    found, True -> {
-      case found {
-        Ok(#(_, old)) -> process.demonitor_process(old)
-        Error(Nil) -> Nil
-      }
-      let watched = dict.insert(dm.watched, key, #(call, process.monitor(call)))
-      Dm(..dm, watched:)
+  let seen = held_by(dm, channel, call)
+  case dict.get(dm.watched, call), store.in_channel(dm.states, channel) {
+    Ok(watch), _ -> {
+      let watch =
+        Watch(..watch, connections: set.union(watch.connections, seen))
+      Dm(..dm, watched: dict.insert(dm.watched, call, watch))
     }
-    _, False -> dm
+    Error(Nil), [] -> dm
+    Error(Nil), _ -> {
+      let watch =
+        Watch(channel:, monitor: process.monitor(call), connections: seen)
+      Dm(..dm, watched: dict.insert(dm.watched, call, watch))
+    }
   }
 }
 
-fn call_down(dm: Dm, monitor: Monitor, reason: process.ExitReason) -> Dm {
-  let found =
-    dict.to_list(dm.watched)
-    |> list.find(fn(pair) { pair.1.1 == monitor })
-  case found {
-    Error(Nil) -> dm
-    Ok(#(key, _)) -> {
-      let dm = Dm(..dm, watched: dict.delete(dm.watched, key))
-      case id.channel_id(key), is_handoff(reason) {
-        Ok(channel), True -> {
-          process.send(dm.calls, WatchCall(channel))
-          dm
-        }
-        Ok(channel), False -> drop_channel(dm, channel)
-        Error(_), _ -> dm
+fn held_by(dm: Dm, channel: ChannelId, call: Pid) -> Set(ConnectionId) {
+  let mine =
+    store.in_channel(dm.states, channel)
+    |> list.map(fn(pair) { voice_key.connection(pair.0) })
+  use <- bool.guard(mine == [], set.new())
+  let view = {
+    use found <- result.try(
+      manager.lookup(channel) |> result.replace_error(Nil),
+    )
+    use owner <- result.try(process.subject_owner(found))
+    use <- bool.guard(owner != call, Error(Nil))
+    call_server.get_state(found, call_timeout_ms())
+  }
+  case view {
+    Ok(view) ->
+      view.connections
+      |> list.map(entry.connection_id)
+      |> list.filter(list.contains(mine, _))
+      |> set.from_list
+    Error(Nil) -> set.new()
+  }
+}
+
+fn call_down(
+  dm: Dm,
+  call: Pid,
+  monitor: Monitor,
+  reason: process.ExitReason,
+) -> Dm {
+  case dict.get(dm.watched, call) {
+    Ok(watch) if watch.monitor == monitor -> {
+      let dm = Dm(..dm, watched: dict.delete(dm.watched, call))
+      let exit = case is_handoff(reason), is_noproc(reason) {
+        True, _ -> HandedOff
+        False, True -> Vanished
+        False, False -> Ended(watch.connections)
+      }
+      process.send(dm.calls, CallExited(watch.channel, call, exit))
+      case exit {
+        Ended(dropped) -> drop_connections(dm, watch.channel, dropped)
+        HandedOff | Vanished -> dm
       }
     }
+    _ -> dm
   }
 }
 
@@ -412,9 +444,25 @@ fn is_handoff(reason: process.ExitReason) -> Bool {
   }
 }
 
-fn drop_channel(dm: Dm, channel: ChannelId) -> Dm {
+fn is_noproc(reason: process.ExitReason) -> Bool {
+  case reason {
+    process.Abnormal(term) ->
+      decode.run(term, atom.decoder()) == Ok(atom.create("noproc"))
+    process.Normal | process.Killed -> False
+  }
+}
+
+fn drop_connections(
+  dm: Dm,
+  channel: ChannelId,
+  connections: Set(ConnectionId),
+) -> Dm {
   let gone =
-    store.in_channel(dm.states, channel) |> list.map(fn(pair) { pair.0 })
+    store.in_channel(dm.states, channel)
+    |> list.map(fn(pair) { pair.0 })
+    |> list.filter(fn(key) {
+      set.contains(connections, voice_key.connection(key))
+    })
   list.each(gone, count_table.remove)
   Dm(..dm, states: store.drop(dm.states, gone))
 }
@@ -1185,7 +1233,7 @@ type CallOp {
     member: call_state.Member,
     connections: List(Entry),
   )
-  WatchCall(channel: ChannelId)
+  CallExited(channel: ChannelId, call: Pid, exit: Exit)
   CheckLegacyCalls
   LegacyView(
     key: Int,
@@ -1196,6 +1244,12 @@ type CallOp {
   OwnerGone
 }
 
+type Exit {
+  Ended(dropped: Set(ConnectionId))
+  HandedOff
+  Vanished
+}
+
 type Worker {
   Worker(
     session: SessionRef,
@@ -1204,7 +1258,12 @@ type Worker {
     selector: process.Selector(CallOp),
     legacy: Dict(Int, LegacyCall),
     checking: Bool,
+    joined: Dict(Pid, Joined),
   )
+}
+
+type Joined {
+  Joined(channel: ChannelId, connections: Set(ConnectionId))
 }
 
 type LegacyCall {
@@ -1237,6 +1296,7 @@ fn start_call_worker(
       selector:,
       legacy: dict.new(),
       checking: False,
+      joined: dict.new(),
     ))
   })
   process.receive(handshake, handshake_timeout_ms())
@@ -1257,21 +1317,13 @@ fn run_op(worker: Worker, op: CallOp) -> Worker {
       case join_loop(attempt, join_retries) {
         Ok(#(call, pid)) -> {
           process.send(worker.dm, CallJoined(attempt.channel, pid))
-          track_legacy(worker, attempt.channel, call, [attempt.value])
+          worker
+          |> record(attempt.channel, pid, [entry.connection_id(attempt.value)])
+          |> track_legacy(attempt.channel, call, [attempt.value])
         }
         Error(Nil) -> worker
       }
-    WatchCall(channel) ->
-      case lookup_call(channel, join_retries) {
-        Ok(call) -> {
-          case process.subject_owner(call) {
-            Ok(pid) -> process.send(worker.dm, CallJoined(channel, pid))
-            Error(Nil) -> Nil
-          }
-          retarget_legacy(worker, channel, call)
-        }
-        Error(Nil) -> worker
-      }
+    CallExited(channel, call, exit) -> settle(worker, channel, call, exit)
     LeaveCall(channel) -> {
       control.call_unmonitor(session, channel)
       case lookup_call(channel, join_retries) {
@@ -1281,6 +1333,9 @@ fn run_op(worker: Worker, op: CallOp) -> Worker {
       Worker(
         ..worker,
         legacy: dict.delete(worker.legacy, id.channel_id_to_int(channel)),
+        joined: dict.filter(worker.joined, fn(_call, found) {
+          found.channel != channel
+        }),
       )
     }
     DropCall(channel, conn) -> {
@@ -1288,7 +1343,11 @@ fn run_op(worker: Worker, op: CallOp) -> Worker {
         Ok(call) -> call_server.drop_connection(call, key(session), conn)
         Error(Nil) -> Nil
       }
-      release_legacy(worker, channel, conn)
+      let joined =
+        dict.map_values(worker.joined, fn(_call, found) {
+          Joined(..found, connections: set.delete(found.connections, conn))
+        })
+      release_legacy(Worker(..worker, joined:), channel, conn)
     }
     SyncCall(user, channel, value) -> {
       case lookup_call(channel, join_retries) {
@@ -1309,7 +1368,13 @@ fn run_op(worker: Worker, op: CallOp) -> Worker {
             Ok(pid) -> {
               control.call_monitor(session, channel, pid)
               process.send(worker.dm, CallJoined(channel, pid))
-              track_legacy(worker, channel, call, connections)
+              worker
+              |> record(
+                channel,
+                pid,
+                list.map(connections, entry.connection_id),
+              )
+              |> track_legacy(channel, call, connections)
             }
             Error(Nil) -> worker
           }
@@ -1320,6 +1385,99 @@ fn run_op(worker: Worker, op: CallOp) -> Worker {
     LegacyView(key, call, snapshot, result) ->
       legacy_viewed(worker, key, call, snapshot, result)
   }
+}
+
+fn record(
+  worker: Worker,
+  channel: ChannelId,
+  call: Pid,
+  connections: List(ConnectionId),
+) -> Worker {
+  let held = case dict.get(worker.joined, call) {
+    Ok(found) -> found.connections
+    Error(Nil) -> set.new()
+  }
+  let found =
+    Joined(channel:, connections: set.union(held, set.from_list(connections)))
+  Worker(..worker, joined: dict.insert(worker.joined, call, found))
+}
+
+fn settle(worker: Worker, channel: ChannelId, call: Pid, exit: Exit) -> Worker {
+  let recorded = case dict.get(worker.joined, call) {
+    Ok(found) -> found.connections
+    Error(Nil) -> set.new()
+  }
+  let worker = Worker(..worker, joined: dict.delete(worker.joined, call))
+  case exit {
+    Ended(dropped) -> {
+      evict(worker, channel, set.difference(recorded, dropped))
+      worker
+    }
+    HandedOff ->
+      case successor(channel, call) {
+        Ok(#(next, pid)) -> rehome(worker, channel, next, pid, recorded)
+        Error(Nil) -> worker
+      }
+    Vanished ->
+      case successor(channel, call) {
+        Ok(#(next, pid)) -> {
+          let kept = still_held(next, recorded)
+          evict(worker, channel, set.difference(recorded, kept))
+          rehome(worker, channel, next, pid, kept)
+        }
+        Error(Nil) -> {
+          evict(worker, channel, recorded)
+          worker
+        }
+      }
+  }
+}
+
+fn still_held(
+  call: manager.CallRef,
+  connections: Set(ConnectionId),
+) -> Set(ConnectionId) {
+  case call_server.get_state(call, call_timeout_ms()) {
+    Ok(view) ->
+      view.connections
+      |> list.map(entry.connection_id)
+      |> set.from_list
+      |> set.intersection(connections)
+    Error(Nil) -> connections
+  }
+}
+
+fn successor(
+  channel: ChannelId,
+  gone: Pid,
+) -> Result(#(manager.CallRef, Pid), Nil) {
+  use call <- result.try(lookup_call(channel, join_retries))
+  use pid <- result.try(process.subject_owner(call))
+  use <- bool.guard(pid == gone, Error(Nil))
+  Ok(#(call, pid))
+}
+
+fn rehome(
+  worker: Worker,
+  channel: ChannelId,
+  call: manager.CallRef,
+  pid: Pid,
+  connections: Set(ConnectionId),
+) -> Worker {
+  process.send(worker.dm, CallJoined(channel, pid))
+  worker
+  |> record(channel, pid, set.to_list(connections))
+  |> retarget_legacy(channel, call)
+}
+
+fn evict(
+  worker: Worker,
+  channel: ChannelId,
+  connections: Set(ConnectionId),
+) -> Nil {
+  set.each(connections, fn(conn) {
+    process.send(worker.dm, ForceDisconnect(channel, Some(conn)))
+  })
 }
 
 fn is_legacy(call: manager.CallRef) -> Bool {

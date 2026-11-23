@@ -10,7 +10,8 @@ import fluxer_gateway/voice/rpc
 import gleam/dict
 import gleam/dynamic.{type Dynamic}
 import gleam/dynamic/decode
-import gleam/erlang/process
+import gleam/erlang/atom.{type Atom}
+import gleam/erlang/process.{type Pid}
 import gleam/int
 import gleam/json.{type Json}
 import gleam/list
@@ -22,7 +23,16 @@ import support/voice_ids
 import support/voice_session as fake
 
 @external(erlang, "sys", "get_state")
-fn get_state(pid: process.Pid) -> Dynamic
+fn get_state(pid: Pid) -> Dynamic
+
+@external(erlang, "erlang", "suspend_process")
+fn suspend_process(pid: Pid) -> Bool
+
+@external(erlang, "erlang", "resume_process")
+fn resume_process(pid: Pid) -> Bool
+
+@external(erlang, "erlang", "process_info")
+fn process_info(pid: Pid, item: Atom) -> #(Atom, Int)
 
 @external(erlang, "gleam_stdlib", "identity")
 fn to_entry(value: Dynamic) -> Entry
@@ -123,12 +133,20 @@ fn p2p_or_token(body: Dynamic) -> api.Response {
   }
 }
 
-fn dm_entries(session: fake.Fake) -> List(Entry) {
+fn dm_pid(session: fake.Fake) -> Pid {
   let assert Ok(subject) = dm_server.lookup(session.ref)
   let assert Ok(pid) = process.subject_owner(subject)
+  pid
+}
+
+fn queued(pid: Pid) -> Int {
+  process_info(pid, atom.create("message_queue_len")).1
+}
+
+fn dm_entries(session: fake.Fake) -> List(Entry) {
   let assert Ok(states) =
     decode.run(
-      get_state(pid),
+      get_state(dm_pid(session)),
       decode.at([5, 1], decode.dict(decode.dynamic, decode.dynamic)),
     )
   states |> dict.values |> list.map(to_entry)
@@ -341,6 +359,38 @@ pub fn dm_crashed_call_is_replaced_and_members_rejoin_cleanly_test() {
   assert api.eventually(fn() { call_gone(5107) })
   fake.stop(one)
   fake.stop(two)
+  api.stop(stub)
+}
+
+pub fn dm_late_join_report_from_a_crashed_call_spares_the_rejoined_connection_test() {
+  let stub = api.start()
+  api.set(stub, "get_dm_channel", dm_channel([1, 2]))
+  create_call(5110, [1, 2])
+  let one = fake.start(1)
+  let assert Ok(crashed) = manager.lookup(g.channel_id(5110))
+  let assert Ok(_) = call_server.export(crashed, 2000)
+  send(one, g.join(5110))
+  assert api.eventually(fn() { dm_entries(one) != [] })
+  let dm = dm_pid(one)
+  assert suspend_process(dm)
+  call_server.thaw(crashed)
+  let assert Some(first) = g.text_of(server_update(one, 1), "connection_id")
+  assert api.eventually(fn() { connection_ids(5110) == [first] })
+  let assert Ok(pid) = process.subject_owner(crashed)
+  process.kill(pid)
+  assert api.eventually(fn() { call_gone(5110) })
+  create_call(5110, [1, 2])
+  send(one, g.join(5110))
+  assert api.eventually(fn() { queued(dm) == 2 })
+  assert resume_process(dm)
+  let assert Some(again) = g.text_of(server_update(one, 2), "connection_id")
+  assert api.eventually(fn() { connection_ids(5110) == [again] })
+  assert api.eventually(fn() {
+    list.map(dm_entries(one), voice_ids.of) == [again]
+  })
+  send(one, leave())
+  assert api.eventually(fn() { call_gone(5110) })
+  fake.stop(one)
   api.stop(stub)
 }
 
