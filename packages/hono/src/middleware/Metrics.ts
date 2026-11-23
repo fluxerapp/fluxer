@@ -2,7 +2,7 @@
 
 import {isLoopbackIpAddress} from '@fluxer/ip_utils/src/IpAddress';
 import type {HttpBindings} from '@hono/node-server';
-import type {Context, Handler, MiddlewareHandler} from 'hono';
+import {type Context, type Handler, Hono, type MiddlewareHandler} from 'hono';
 
 const SKIP_PATHS = new Set(['/_health', '/_healthz', '/_metrics']);
 
@@ -162,17 +162,33 @@ function renderRegisteredMetrics(): Array<string> {
 
 const METRICS_CONTENT_TYPE = 'text/plain; version=0.0.4; charset=utf-8';
 
-function renderMetricsResponse(c: Context, sections: Array<string>): Response {
-	if (!isLoopbackPeer(c.env)) {
-		return c.text('FORBIDDEN', 403, {'Content-Type': 'text/plain'});
-	}
-	return c.text(`${[...sections, ...renderRegisteredMetrics()].join('\n\n')}\n`, 200, {
-		'Content-Type': METRICS_CONTENT_TYPE,
-	});
+type MetricsRenderer = () => string;
+
+function renderMetricsText(sections: Array<string>): string {
+	return `${[...sections, ...renderRegisteredMetrics()].join('\n\n')}\n`;
 }
 
-export function createRegisteredMetricsHandler(): Handler {
-	return (c) => renderMetricsResponse(c, []);
+function metricsResponse(c: Context, body: string): Response {
+	return c.text(body, 200, {'Content-Type': METRICS_CONTENT_TYPE});
+}
+
+function createLoopbackMetricsHandler(render: MetricsRenderer): Handler {
+	return (c) => {
+		if (!isLoopbackPeer(c.env)) {
+			return c.text('FORBIDDEN', 403, {'Content-Type': 'text/plain'});
+		}
+		return metricsResponse(c, render());
+	};
+}
+
+export function renderRegisteredMetricsText(): string {
+	return renderMetricsText([]);
+}
+
+export function createMetricsPortApp(render: MetricsRenderer): Hono {
+	const app = new Hono();
+	app.get('/_metrics', (c) => metricsResponse(c, render()));
+	return app;
 }
 
 interface MetricsState {
@@ -185,6 +201,7 @@ interface MetricsState {
 interface MetricsResult {
 	middleware: MiddlewareHandler;
 	metricsHandler: Handler;
+	renderMetrics: MetricsRenderer;
 	state: MetricsState;
 }
 
@@ -221,14 +238,15 @@ export function createMetricsMiddleware(serviceName: string): MetricsResult {
 		}
 	};
 
-	const metricsHandler: Handler = (c) =>
-		renderMetricsResponse(c, [
+	const renderMetrics: MetricsRenderer = () =>
+		renderMetricsText([
 			requestsTotal.render(`${prefix}_http_requests_total`, 'Total HTTP requests'),
 			requestDuration.render(`${prefix}_http_request_duration_seconds`, 'HTTP request duration in seconds'),
 			errorsTotal.render(`${prefix}_http_errors_total`, 'Total HTTP 5xx errors'),
 			uptime.render(`${prefix}_uptime_seconds`, 'Process uptime in seconds'),
 			...renderRegisteredSections(),
 		]);
+	const metricsHandler = createLoopbackMetricsHandler(renderMetrics);
 
-	return {middleware, metricsHandler, state};
+	return {middleware, metricsHandler, renderMetrics, state};
 }

@@ -498,6 +498,17 @@ function assertIntegerInRange(value: unknown, envName: string, min: number, max:
 	}
 }
 
+function validateApiMetricsPort(config: MasterConfig): void {
+	const metricsPort = config.services.api.metrics_port;
+	if (metricsPort === undefined) {
+		return;
+	}
+	assertIntegerInRange(metricsPort, 'FLUXER_API_METRICS_PORT', 1, 65_535);
+	if (metricsPort === config.services.api.port) {
+		throw new Error('FLUXER_API_METRICS_PORT must differ from FLUXER_API_PORT');
+	}
+}
+
 function assertIdentifier(value: string, envName: string): void {
 	if (!/^[A-Za-z_][A-Za-z0-9_]*$/u.test(value)) {
 		throw new Error(`${envName} must be a safe Postgres identifier`);
@@ -870,6 +881,7 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	normalizeEmailFallbackConfig(config);
 	normalizeAppOriginAliases(config);
 	normalizeAgePolicyConfig(config);
+	validateApiMetricsPort(config);
 	assertIntegerInRange(config.services.api.max_inflight_requests, 'FLUXER_API_MAX_INFLIGHT_REQUESTS', 1, 100_000);
 	assertIntegerInRange(
 		config.services.api.max_concurrent_form_uploads,
