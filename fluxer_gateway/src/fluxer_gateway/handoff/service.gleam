@@ -10,6 +10,7 @@ import fluxer_gateway/cluster/bouncer_client
 import fluxer_gateway/cluster/buckets
 import fluxer_gateway/cluster/lease
 import fluxer_gateway/cluster/links
+import fluxer_gateway/cluster/metrics as cluster_metrics
 import fluxer_gateway/cluster/wire
 import fluxer_gateway/config/draining
 import fluxer_gateway/config/durations
@@ -269,19 +270,21 @@ fn close_bucket(
     |> list.unique
   let watcher = process.new_subject()
   let _ = bouncer_client.subscribe(watcher)
-  let outcome = case
+  let started = clock.monotonic_ms()
+  let #(label, outcome) = case
     bouncer_client.to_home(bucket, CloseBucket(me(), bucket, at, to, ids))
   {
-    Error(Nil) -> Error(message.RetryAfter(close_poll_ms * 10))
+    Error(Nil) -> #(
+      "unreachable",
+      Error(message.RetryAfter(close_poll_ms * 10)),
+    )
     Ok(Nil) ->
-      await_moving(
-        bucket,
-        at,
-        to,
-        watcher,
-        clock.monotonic_ms() + close_wait_ms,
-      )
+      case await_moving(bucket, at, to, watcher, started + close_wait_ms) {
+        Ok(found) -> #("closed", Ok(found))
+        Error(reason) -> #("refused", Error(reason))
+      }
   }
+  cluster_metrics.record_close(label, clock.monotonic_ms() - started)
   case outcome {
     Ok(_) -> Nil
     Error(reason) -> {

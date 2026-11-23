@@ -2,12 +2,14 @@
 
 import fluxer_gateway/config/durations
 import fluxer_gateway/config/settings.{type Settings}
+import fluxer_gateway/telemetry/metrics
 import fluxer_gateway/telemetry/process_info
 import fluxer_gateway/telemetry/process_registry
 import gleam/dict.{type Dict}
 import gleam/erlang/process.{type Pid, type Subject}
 import gleam/int
 import gleam/list
+import gleam/option
 import gleam/otp/actor
 import gleam/otp/supervision.{type ChildSpecification}
 import gleam/result
@@ -78,11 +80,19 @@ fn handle(state: State, message: Message) -> actor.Next(State, Message) {
   case message {
     RunCheck -> {
       let watched = watched_pids()
-      let history =
-        list.fold(watched, state.history, fn(history, entry) {
+      let #(history, longest) =
+        list.fold(watched, #(state.history, dict.new()), fn(acc, entry) {
+          let #(history, longest) = acc
           let #(pid, label) = entry
-          check(pid, label, history)
+          let #(history, queue_len) = check(pid, label, history)
+          #(
+            history,
+            dict.upsert(longest, holder_kind(label), fn(found) {
+              int.max(option.unwrap(found, 0), queue_len)
+            }),
+          )
         })
+      record_longest(longest)
       let live = watched |> list.map(fn(entry) { entry.0 }) |> set.from_list
       let history = dict.filter(history, fn(pid, _) { set.contains(live, pid) })
       process.send_after(state.self, check_interval_ms(), RunCheck)
@@ -107,18 +117,47 @@ pub fn watched_pids() -> List(#(Pid, String)) {
   list.append(guilds, named)
 }
 
+pub const holder_kinds = ["guild", "singleton"]
+
+pub const action_names = ["warn", "collect", "kill", "stuck"]
+
+pub fn holder_kind(label: String) -> String {
+  case string.starts_with(label, "guild:") {
+    True -> "guild"
+    False -> "singleton"
+  }
+}
+
+fn record_longest(longest: Dict(String, Int)) -> Nil {
+  list.each(holder_kinds, fn(kind) {
+    metrics.gauge(
+      "fluxer_gateway_watchdog_mailbox_max_messages",
+      [#("kind", kind)],
+      dict.get(longest, kind) |> result.unwrap(0),
+    )
+  })
+}
+
+fn count_action(name: String) -> Nil {
+  metrics.counter(
+    "fluxer_gateway_watchdog_actions_total",
+    [#("action", name)],
+    1,
+  )
+}
+
 fn check(
   pid: Pid,
   label: String,
   history: Dict(Pid, List(Int)),
-) -> Dict(Pid, List(Int)) {
+) -> #(Dict(Pid, List(Int)), Int) {
   case process_info.message_queue_len(pid) {
-    Error(Nil) -> dict.delete(history, pid)
+    Error(Nil) -> #(dict.delete(history, pid), 0)
     Ok(queue_len) -> {
       let samples =
         record_sample(queue_len, result.unwrap(dict.get(history, pid), []))
       act(pid, label, queue_len, samples)
-      dict.insert(history, pid, samples)
+      #(dict.insert(history, pid, samples), queue_len)
     }
   }
 }
@@ -173,6 +212,7 @@ fn act(pid: Pid, label: String, queue_len: Int, samples: List(Int)) -> Nil {
     <> int.to_string(queue_len)
   case action(queue_len, samples), killable(label) {
     Kill, False -> {
+      count_action("collect")
       logging.log(
         logging.Critical,
         "Mailbox over sustained kill threshold on a process never killed, forcing GC "
@@ -185,6 +225,7 @@ fn act(pid: Pid, label: String, queue_len: Int, samples: List(Int)) -> Nil {
       process_info.major_gc(pid)
     }
     Kill, True -> {
+      count_action("kill")
       logging.log(
         logging.Critical,
         "Killing process over sustained kill threshold "
@@ -197,6 +238,7 @@ fn act(pid: Pid, label: String, queue_len: Int, samples: List(Int)) -> Nil {
       process.kill(pid)
     }
     CollectPendingGrowth, _ -> {
+      count_action("collect")
       logging.log(
         logging.Critical,
         "Mailbox over kill threshold, forcing GC pending sustained growth "
@@ -209,17 +251,22 @@ fn act(pid: Pid, label: String, queue_len: Int, samples: List(Int)) -> Nil {
       process_info.major_gc(pid)
     }
     Collect, _ -> {
+      count_action("collect")
       logging.log(
         logging.Critical,
         "Critical mailbox size, forcing GC " <> details,
       )
       process_info.major_gc(pid)
     }
-    Warn, _ -> logging.log(logging.Warning, "High mailbox size " <> details)
+    Warn, _ -> {
+      count_action("warn")
+      logging.log(logging.Warning, "High mailbox size " <> details)
+    }
     Quiet, _ -> Nil
   }
   case is_growing(samples) {
-    True ->
+    True -> {
+      count_action("stuck")
       logging.log(
         logging.Warning,
         "Stuck process detected, monotonically growing mailbox "
@@ -227,6 +274,7 @@ fn act(pid: Pid, label: String, queue_len: Int, samples: List(Int)) -> Nil {
           <> " samples="
           <> samples_text(samples),
       )
+    }
     False -> Nil
   }
 }

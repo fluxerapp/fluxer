@@ -5,6 +5,7 @@ import fluxer_gateway/config/durations
 import fluxer_gateway/gateway/codec
 import fluxer_gateway/gateway/limits
 import fluxer_gateway/gateway/socket
+import fluxer_gateway/gateway/socket_metrics
 import fluxer_gateway/gateway/ws/fragment.{type Fragment}
 import fluxer_gateway/gateway/ws/frame.{type Frame, type Opcode, Frame}
 import fluxer_gateway/gateway/ws/handshake
@@ -174,7 +175,10 @@ fn init(
 
 fn on_close(state: State) -> Nil {
   case state {
-    Open(ws) -> socket.terminate(ws.socket, False)
+    Open(ws) -> {
+      socket_metrics.disconnected(socket_metrics.TransportLost)
+      socket.terminate(ws.socket, False)
+    }
     Reading(_) | Unknown -> Nil
   }
 }
@@ -404,6 +408,7 @@ fn deliver(ws: Ws, opcode: Opcode, payload: BitArray) -> Step {
 fn live(ws: Ws) -> Step {
   case socket.closing(ws.socket) {
     True -> {
+      socket_metrics.disconnected(socket_metrics.ServerClosed)
       socket.terminate(ws.socket, False)
       Done
     }
@@ -423,6 +428,13 @@ fn remote_close(ws: Ws, payload: BitArray) -> Step {
       let client_closed =
         !socket.close_sent(ws.socket)
         && { code == Some(1000) || code == Some(1001) }
+      socket_metrics.disconnected(
+        case socket.close_sent(ws.socket), client_closed {
+          True, _ -> socket_metrics.ServerClosed
+          False, True -> socket_metrics.ClientNormal
+          False, False -> socket_metrics.ClientCode
+        },
+      )
       socket.terminate(ws.socket, client_closed)
       case client_closed {
         True -> exit(#(atom.create("shutdown"), atom.create("client_closed")))
@@ -434,6 +446,7 @@ fn remote_close(ws: Ws, payload: BitArray) -> Step {
 }
 
 fn fail(ws: Ws, code: Int) -> Step {
+  socket_metrics.disconnected(socket_metrics.ProtocolError)
   case socket.close_sent(ws.socket) {
     True -> Nil
     False -> link.close(ws.link, code, "")

@@ -2,9 +2,11 @@
 
 import fluxer_gateway/config/draining
 import fluxer_gateway/push/job.{type Kind}
+import fluxer_gateway/push/outbox/state.{type SendResult}
 import fluxer_gateway/push/rule.{type Class}
 import fluxer_gateway/telemetry/metrics
 import fluxer_gateway/telemetry/rollout_metrics
+import gleam/list
 
 pub fn count(name: String, by: Int) -> Nil {
   case by {
@@ -112,4 +114,53 @@ pub fn skipped(reason: String, by: Int) -> Nil {
 
 pub fn guild(key: String) -> Nil {
   count_labelled("guild_push_counters_total", [#("key", key)], 1)
+}
+
+pub const attempt_results = [
+  "delivered", "in_flight_elsewhere", "timeout", "not_connected",
+  "no_responders", "connection_closed", "protocol_error", "rejected",
+  "invalid_reply", "worker_down",
+]
+
+pub fn received(kind: String) -> Nil {
+  count_labelled("push_server_received_total", [#("kind", kind)], 1)
+}
+
+pub fn pending(count: Int) -> Nil {
+  gauge("push_pending_jobs", [], count)
+}
+
+pub fn job_waited(waited_ms: Int) -> Nil {
+  metrics.observe_ms("fluxer_gateway_push_job_wait_ms", [], waited_ms)
+}
+
+pub fn job_finished(elapsed_ms: Int) -> Nil {
+  metrics.observe_ms("fluxer_gateway_push_job_duration_ms", [], elapsed_ms)
+}
+
+pub fn attempt_result(result: SendResult) -> String {
+  case result {
+    state.Delivered -> "delivered"
+    state.InFlightElsewhere -> "in_flight_elsewhere"
+    state.Failed("rejected:" <> _) -> "rejected"
+    state.Failed(reason) ->
+      case list.contains(attempt_results, reason) {
+        True -> reason
+        False -> "other"
+      }
+  }
+}
+
+pub fn attempted(subject: String, result: SendResult, elapsed_ms: Int) -> Nil {
+  let kind = job.subject_label(subject)
+  count_labelled(
+    "push_outbox_attempt_results_total",
+    [#("kind", kind), #("result", attempt_result(result))],
+    1,
+  )
+  metrics.observe_ms(
+    "fluxer_gateway_push_outbox_attempt_duration_ms",
+    [#("kind", kind)],
+    elapsed_ms,
+  )
 }

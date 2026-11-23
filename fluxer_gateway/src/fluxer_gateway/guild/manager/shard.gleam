@@ -25,6 +25,7 @@ import fluxer_gateway/guild/handoff/transfer.{type Transfer}
 import fluxer_gateway/guild/inbox.{type Handle}
 import fluxer_gateway/guild/manager/fetch
 import fluxer_gateway/guild/manager/registry
+import fluxer_gateway/guild/metrics as guild_metrics
 import fluxer_gateway/guild/names
 import fluxer_gateway/guild/read_model
 import fluxer_gateway/guild/remains
@@ -139,6 +140,7 @@ type Entry {
 
 type Origin {
   Fetched
+  Arrived
   Transferred(reply: Subject(Bool))
   Abandoned
 }
@@ -267,8 +269,8 @@ fn handle(state: State, message: Message) -> actor.Next(State, Message) {
       )
       actor.continue(state)
     }
-    GuildDown(process.ProcessDown(pid:, ..)) ->
-      actor.continue(forget_pid(state, pid))
+    GuildDown(process.ProcessDown(pid:, reason:, ..)) ->
+      actor.continue(forget_pid(state, pid, reason))
     GuildDown(_) -> actor.continue(state)
   }
 }
@@ -373,6 +375,7 @@ fn expire_joins(state: State, guild: GuildId) -> State {
             WantsHandle(_) | WantsArrival(_) -> False
           }
         })
+      guild_metrics.loading_joins_dropped(list.length(expired))
       list.each(list.reverse(expired), fn(waiter) {
         serve(
           waiter,
@@ -440,6 +443,10 @@ fn cold_start(state: State, guild: GuildId, waiter: Waiter) -> State {
       let shard = state.self
       let index = state.index
       let rejoining = crashed_sessions(state, guild)
+      case rejoining {
+        [] -> Nil
+        _ -> guild_metrics.crash_restarted()
+      }
       let worker =
         watched(fn() {
           case incumbent(guild) {
@@ -558,8 +565,10 @@ fn load_and_start(
   case start_gate.try_guild_start() {
     Error(Nil) -> Error(StartGateFull)
     Ok(permit) -> {
+      let began = clock.monotonic_ms()
       let loaded =
         fetch.load(guild, clock.deadline_in(fetch.fetch_timeout_ms()))
+      guild_metrics.loaded(result.is_ok(loaded), clock.monotonic_ms() - began)
       let result = case loaded {
         Error(error) -> Error(FetchFailed(error))
         Ok(found) ->
@@ -699,7 +708,7 @@ fn install_arriving(
         guilds: dict.insert(
           state.guilds,
           key,
-          Loading(token, [WantsArrival(reply)], worker, Fetched, None, None),
+          Loading(token, [WantsArrival(reply)], worker, Arrived, None, None),
         ),
         next_token: token + 1,
       )
@@ -846,8 +855,12 @@ fn started(
         }
         Ok(handle), _, None -> {
           case origin {
-            Transferred(reply) -> process.send(reply, True)
-            _ -> Nil
+            Transferred(reply) -> {
+              guild_metrics.started(guild_metrics.FromTransfer)
+              process.send(reply, True)
+            }
+            Arrived -> guild_metrics.started(guild_metrics.FromArrival)
+            Fetched | Abandoned -> guild_metrics.started(guild_metrics.FromApi)
           }
           let monitor = process.monitor(handle.pid)
           registry.put(guild, handle)
@@ -893,7 +906,7 @@ fn started(
 fn decline(origin: Origin) -> Nil {
   case origin {
     Transferred(reply) -> process.send(reply, False)
-    Fetched | Abandoned -> Nil
+    Fetched | Arrived | Abandoned -> Nil
   }
 }
 
@@ -976,16 +989,26 @@ fn retry_after(failure: StartFailure) -> Int {
 }
 
 fn log_failure(guild: GuildId, failure: StartFailure) -> Nil {
-  let reason = case failure {
-    StartGateFull -> "start_gate_full"
-    FetchFailed(fetch.FetchTimeout) -> "fetch_timeout"
-    FetchFailed(fetch.FetchCrashed(name)) -> "fetch_crashed " <> name
-    FetchFailed(fetch.BadCollection(name)) -> "bad_collection " <> name
-    FetchFailed(fetch.FetchApi(client.ApiRejected(404, _))) -> "unknown_guild"
-    FetchFailed(fetch.FetchApi(_)) -> "api_error"
-    InitFailed -> "init_failed"
-    StartCrashed -> "start_crashed"
+  let #(kind, reason) = case failure {
+    StartGateFull -> #("start_gate_full", "start_gate_full")
+    FetchFailed(fetch.FetchTimeout) -> #("fetch_timeout", "fetch_timeout")
+    FetchFailed(fetch.FetchCrashed(name)) -> #(
+      "fetch_crashed",
+      "fetch_crashed " <> name,
+    )
+    FetchFailed(fetch.BadCollection(name)) -> #(
+      "bad_collection",
+      "bad_collection " <> name,
+    )
+    FetchFailed(fetch.FetchApi(client.ApiRejected(404, _))) -> #(
+      "unknown_guild",
+      "unknown_guild",
+    )
+    FetchFailed(fetch.FetchApi(_)) -> #("api_error", "api_error")
+    InitFailed -> #("init_failed", "init_failed")
+    StartCrashed -> #("start_crashed", "start_crashed")
   }
+  guild_metrics.start_failed(kind)
   logging.log(
     logging.Warning,
     "guild start failed: guild_id="
@@ -1034,10 +1057,19 @@ fn watched(work: fn() -> Nil) -> process.Pid {
   pid
 }
 
-fn forget_pid(state: State, pid: process.Pid) -> State {
+fn forget_pid(
+  state: State,
+  pid: process.Pid,
+  reason: process.ExitReason,
+) -> State {
   dict.fold(state.guilds, state, fn(state, key, found) {
     case found, id.guild_id(key) {
       Running(handle:, monitor:, ..), Ok(guild) if handle.pid == pid -> {
+        case reason {
+          process.Normal -> Nil
+          process.Killed | process.Abnormal(_) ->
+            guild_metrics.stopped("crashed")
+        }
         let sessions = forget_running(guild, handle, monitor)
         State(..state, guilds: dict.delete(state.guilds, key))
         |> remember_crash(guild, sessions)

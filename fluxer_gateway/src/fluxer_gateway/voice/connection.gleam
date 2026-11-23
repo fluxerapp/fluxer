@@ -17,6 +17,7 @@ import fluxer_gateway/voice/guild_state.{
   Pending, State,
 }
 import fluxer_gateway/voice/lifecycle
+import fluxer_gateway/voice/metrics as voice_metrics
 import fluxer_gateway/voice/p2p
 import fluxer_gateway/voice/permissions
 import fluxer_gateway/voice/region
@@ -322,9 +323,14 @@ pub fn token_ready(
   result: Result(Outcome, GatewayError),
 ) -> Step {
   let nonce = guild_state.job_nonce(job)
-  case dict.has_key(step.state.fetches, nonce) {
-    False -> step
-    True -> {
+  case dict.get(step.state.fetches, nonce) {
+    Error(Nil) -> step
+    Ok(fetch) -> {
+      voice_metrics.token_result(
+        metrics_job(job),
+        is_granted(result),
+        ctx.now_ms - fetch.started_at,
+      )
       let step =
         guild_state.map_state(step, fn(state) {
           State(..state, fetches: dict.delete(state.fetches, nonce))
@@ -336,6 +342,21 @@ pub fn token_ready(
           region.reissue_ready(step, ctx, job, result)
       }
     }
+  }
+}
+
+fn is_granted(fetched: Result(Outcome, GatewayError)) -> Bool {
+  case fetched {
+    Ok(_) -> True
+    Error(_) -> False
+  }
+}
+
+fn metrics_job(job: Job) -> voice_metrics.Job {
+  case job {
+    JoinJob(..) -> voice_metrics.JoinJob
+    MoveJob(..) -> voice_metrics.MoveJob
+    guild_state.ReissueJob(..) -> voice_metrics.ReissueJob
   }
 }
 

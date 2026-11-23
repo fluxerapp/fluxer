@@ -12,6 +12,7 @@ import fluxer_gateway/guild/handoff
 import fluxer_gateway/guild/inbox.{type Handle}
 import fluxer_gateway/guild/manager/registry
 import fluxer_gateway/guild/manager/shard
+import fluxer_gateway/guild/metrics as guild_metrics
 import fluxer_gateway/guild/names
 import fluxer_gateway/guild/server
 import fluxer_gateway/telemetry/memory_stats
@@ -44,6 +45,7 @@ pub fn supervised(_settings: Settings) -> ChildSpecification(Nil) {
   metrics.register_collector("fluxer_gateway_guilds", fn() {
     [metrics.Sample("fluxer_gateway_guilds_total", [], registry.count())]
   })
+  guild_metrics.register()
   memory_stats.register_describer(describe)
   int.range(
     0,

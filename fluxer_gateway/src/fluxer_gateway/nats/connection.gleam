@@ -3,6 +3,7 @@
 import fluxer_gateway/config/durations
 import fluxer_gateway/core/clock
 import fluxer_gateway/nats/address.{type Address}
+import fluxer_gateway/nats/metrics as nats_metrics
 import fluxer_gateway/nats/protocol.{type ServerOp}
 import gleam/bit_array
 import gleam/bytes_tree.{type BytesTree}
@@ -403,11 +404,16 @@ fn handle(state: State, message: Message) -> actor.Next(State, Message) {
       let _ = setopts(state.connection.socket, [Active(Once)])
       case protocol.feed(state.reader, data) {
         Error(error) -> stop(state, "protocol error: " <> string.inspect(error))
-        Ok(#(ops, reader)) ->
+        Ok(#(ops, reader)) -> {
+          nats_metrics.received(
+            list.count(ops, is_message),
+            bit_array.byte_size(data),
+          )
           case list.try_fold(ops, State(..state, reader:), apply) {
             Ok(state) -> actor.continue(state)
             Error(reason) -> stop(state, reason)
           }
+        }
       }
     }
     Replay(ops) ->
@@ -485,6 +491,13 @@ fn apply(state: State, op: ServerOp) -> Result(State, String) {
           Ok(route(state, subject, sid, reply_to, Error(NoResponders)))
         _ -> Ok(route(state, subject, sid, reply_to, Ok(copy(payload))))
       }
+  }
+}
+
+fn is_message(op: ServerOp) -> Bool {
+  case op {
+    protocol.Msg(..) | protocol.HMsg(..) -> True
+    _ -> False
   }
 }
 
@@ -585,7 +598,10 @@ pub fn publish(
       case
         write(connection.socket, protocol.publish(subject, reply_to, payload))
       {
-        True -> Ok(Nil)
+        True -> {
+          nats_metrics.sent(size)
+          Ok(Nil)
+        }
         False -> Error(WriteFailed("socket write failed"))
       }
   }

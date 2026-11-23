@@ -22,6 +22,7 @@ import fluxer_gateway/gateway/limits
 import fluxer_gateway/gateway/opcode.{type Opcode}
 import fluxer_gateway/gateway/rate_limit.{type RateLimits}
 import fluxer_gateway/gateway/resume
+import fluxer_gateway/gateway/socket_metrics.{type ConnectionState, type Hold}
 import fluxer_gateway/gateway/voice_ops.{type VoiceOps}
 import fluxer_gateway/gateway/ws/link.{type Link}
 import fluxer_gateway/presence/protocol
@@ -160,6 +161,9 @@ pub opaque type State {
     voice: VoiceOps,
     voice_generation: Int,
     next_token: Int,
+    identify_at: Option(Int),
+    resume_at: Option(Int),
+    reported: ConnectionState,
   )
 }
 
@@ -266,6 +270,7 @@ fn live_sockets() -> List(Subject(Message)) {
 pub fn open(upgrade: Upgrade, mailbox: Mailbox, link: Link) -> State {
   let _ = table.ensure_public(registry())
   table.insert(registry(), #(process.self(), mailbox.self))
+  socket_metrics.track(process.self(), socket_metrics.AwaitingIdentify)
   let config =
     Config(
       api_version: upgrade.api_version,
@@ -296,18 +301,28 @@ pub fn open(upgrade: Upgrade, mailbox: Mailbox, link: Link) -> State {
     voice: voice_ops.new(),
     voice_generation: 0,
     next_token: 0,
+    identify_at: None,
+    resume_at: None,
+    reported: socket_metrics.AwaitingIdentify,
   )
   |> greet
 }
 
 fn greet(state: State) -> State {
   case state.config.api_version {
-    None -> close(state, error.InvalidApiVersion, "Invalid API version")
+    None -> {
+      socket_metrics.connected(socket_metrics.BadApiVersion)
+      close(state, error.InvalidApiVersion, "Invalid API version")
+    }
     Some(_) ->
       case ip_connections.acquire(state.config.peer_ip) {
-        Error(ip_connections.TooManyConnections) ->
+        Error(ip_connections.TooManyConnections) -> {
+          socket_metrics.connected(socket_metrics.TooManyConnections)
+          socket_metrics.rate_limited(socket_metrics.IpConnectionsLimit)
           close(state, error.CloseRateLimited, "Too many connections")
+        }
         Ok(Nil) -> {
+          socket_metrics.connected(socket_metrics.Accepted)
           let state = State(..state, connection_acquired: True)
           let hello = encode.hello(limits.heartbeat_interval_ms())
           case send_frame(state, hello) {
@@ -353,12 +368,36 @@ fn after(state: State) -> State {
     None, Starting(..) | None, Holding(..) -> garbage_collect()
     _, _ -> Nil
   }
-  state
+  report(state)
+}
+
+fn report(state: State) -> State {
+  let current = connection_state(state)
+  case current == state.reported {
+    True -> state
+    False -> {
+      socket_metrics.track(process.self(), current)
+      State(..state, reported: current)
+    }
+  }
+}
+
+fn connection_state(state: State) -> ConnectionState {
+  case state.phase, state.attached, state.pending {
+    Lingering, _, _ | Closed, _, _ -> socket_metrics.Closing
+    Open, Some(_), _ -> socket_metrics.Attached
+    Open, None, Starting(..) -> socket_metrics.Identifying
+    Open, None, Resuming(..) -> socket_metrics.Resuming
+    Open, None, Holding(..) -> socket_metrics.Held
+    Open, None, Idle | Open, None, Rebinding(..) ->
+      socket_metrics.AwaitingIdentify
+  }
 }
 
 pub fn terminate(state: State, client_closed: Bool) -> Nil {
   table.delete(registry(), process.self())
   table.delete(lingering_table(), process.self())
+  socket_metrics.untrack(process.self())
   rollout.unsubscribe_changes(state.config.rollout_changes)
   case state.connection_acquired {
     True -> ip_connections.release(state.config.peer_ip)
@@ -397,11 +436,18 @@ fn incoming(state: State, data: BitArray) -> State {
     False -> close(state, error.DecodeError, "Payload too large")
     True ->
       case compress.decompress(state.compress, data, max) {
-        Ok(#(bytes, context)) ->
-          case bit_array.byte_size(bytes) <= max {
+        Ok(#(bytes, context)) -> {
+          let size = bit_array.byte_size(bytes)
+          socket_metrics.received(
+            compress.compression(context),
+            bit_array.byte_size(data),
+            size,
+          )
+          case size <= max {
             True -> decoded(State(..state, compress: context), bytes)
             False -> close(state, error.DecodeError, "Payload too large")
           }
+        }
         Error(compress.DecompressTooLarge) ->
           close(state, error.DecodeError, "Payload too large")
         Error(compress.DecompressFailed) ->
@@ -415,7 +461,8 @@ fn decoded(state: State, bytes: BitArray) -> State {
     Error(codec.DecodeFailed) ->
       close(state, error.DecodeError, "Decode failed")
     Error(codec.MissingOp) -> close(state, error.DecodeError, "Invalid payload")
-    Ok(codec.Frame(op:, body:)) ->
+    Ok(codec.Frame(op:, body:)) -> {
+      socket_metrics.op_received(op)
       case
         rate_limit.check(
           state.rates,
@@ -426,10 +473,16 @@ fn decoded(state: State, bytes: BitArray) -> State {
       {
         rate_limit.Allowed(rates) ->
           dispatch_or_defer(State(..state, rates:), op, body)
-        rate_limit.OpcodeLimited(rates) -> State(..state, rates:)
-        rate_limit.ConnectionLimited ->
+        rate_limit.OpcodeLimited(rates) -> {
+          socket_metrics.rate_limited(socket_metrics.OpcodeLimit)
+          State(..state, rates:)
+        }
+        rate_limit.ConnectionLimited -> {
+          socket_metrics.rate_limited(socket_metrics.ConnectionLimit)
           close(state, error.CloseRateLimited, "Rate limited")
+        }
       }
+    }
   }
 }
 
@@ -464,7 +517,10 @@ fn dispatch_or_defer(state: State, op: Opcode, body: Body) -> State {
     True -> {
       let count = state.deferred_count + 1
       case count > max_deferred_payloads {
-        True -> close(state, error.CloseRateLimited, "Rate limited")
+        True -> {
+          socket_metrics.overflowed(socket_metrics.DeferredBuffer)
+          close(state, error.CloseRateLimited, "Rate limited")
+        }
         False ->
           State(
             ..state,
@@ -605,32 +661,60 @@ fn handle_identify(
   payload: Result(Identify, identify.IdentifyError),
 ) -> State {
   case abuse_protection.check_identify_rate(state.config.peer_ip) {
-    Error(_) -> close(state, error.CloseRateLimited, "Identify rate limited")
+    Error(_) -> {
+      socket_metrics.rate_limited(socket_metrics.IdentifyIpLimit)
+      socket_metrics.identified(socket_metrics.IdentifyRateLimited)
+      close(state, error.CloseRateLimited, "Identify rate limited")
+    }
     Ok(Nil) ->
       case payload {
-        Error(identify.InvalidShard) ->
-          close(state, error.InvalidShard, "Invalid shard")
-        Error(identify.InvalidToken) ->
-          close(state, error.AuthenticationFailed, "Invalid token")
-        Error(identify.InvalidPayload) ->
-          close(state, error.DecodeError, "Invalid identify payload")
-        Ok(ident) ->
+        Error(rejected) -> {
+          socket_metrics.identified(socket_metrics.IdentifyRejected(rejected))
+          identify_rejected(state, rejected)
+        }
+        Ok(ident) -> {
+          let state =
+            State(
+              ..state,
+              identify_at: option.or(
+                state.identify_at,
+                Some(clock.monotonic_ms()),
+              ),
+            )
           case
             abuse_protection.check_token_identify_rate(
               ident.token,
               state.config.token_limit_per_minute,
             )
           {
-            Error(_) -> hold_with(state, ident, "Identify rate limited", True)
-            Ok(Nil) -> start_session(state, ident)
+            Error(_) -> {
+              socket_metrics.identified(socket_metrics.IdentifyThrottled)
+              socket_metrics.rate_limited(socket_metrics.IdentifyTokenLimit)
+              hold_with(state, ident, socket_metrics.HoldThrottled, True)
+            }
+            Ok(Nil) -> {
+              socket_metrics.identified(socket_metrics.IdentifyAccepted)
+              start_session(state, ident)
+            }
           }
+        }
       }
+  }
+}
+
+fn identify_rejected(state: State, rejected: identify.IdentifyError) -> State {
+  case rejected {
+    identify.InvalidShard -> close(state, error.InvalidShard, "Invalid shard")
+    identify.InvalidToken ->
+      close(state, error.AuthenticationFailed, "Invalid token")
+    identify.InvalidPayload ->
+      close(state, error.DecodeError, "Invalid identify payload")
   }
 }
 
 fn start_session(state: State, ident: Identify) -> State {
   case rollout.session_rollout_percentage() <= 0 {
-    True -> hold(state, ident, "Session starts paused")
+    True -> hold(state, ident, socket_metrics.HoldPaused)
     False -> start_unless_draining(state, ident)
   }
 }
@@ -674,17 +758,31 @@ fn release_hold(state: State) -> State {
   }
 }
 
-fn hold(state: State, ident: Identify, reason: String) -> State {
-  hold_with(state, ident, reason, False)
+fn hold(state: State, ident: Identify, why: Hold) -> State {
+  hold_with(state, ident, why, False)
+}
+
+fn hold_reason(why: Hold) -> String {
+  case why {
+    socket_metrics.HoldPaused -> "Session starts paused"
+    socket_metrics.HoldThrottled -> "Identify rate limited"
+    socket_metrics.HoldStartTimeout -> "Session start timed out"
+    socket_metrics.HoldRateLimited -> "Session RPC rate limited"
+    socket_metrics.HoldUnavailable -> "Gateway at capacity"
+  }
 }
 
 fn hold_with(
   state: State,
   ident: Identify,
-  reason: String,
+  why: Hold,
   throttled: Bool,
 ) -> State {
-  logging.log(logging.Debug, "Holding gateway identify: reason=" <> reason)
+  socket_metrics.held(why)
+  logging.log(
+    logging.Debug,
+    "Holding gateway identify: reason=" <> hold_reason(why),
+  )
   let retry = case state.pending {
     Holding(retry: Some(token), ..) -> Some(token)
     Holding(retry: None, ..) -> None
@@ -744,14 +842,23 @@ fn handle_resume(
   payload: Result(resume.ResumeRequest, resume.ResumeDecodeError),
 ) -> State {
   case abuse_protection.check_identify_rate(state.config.peer_ip) {
-    Error(_) -> close(state, error.CloseRateLimited, "Resume rate limited")
+    Error(_) -> {
+      socket_metrics.rate_limited(socket_metrics.IdentifyIpLimit)
+      socket_metrics.resume_finished(socket_metrics.ResumeRateLimited)
+      close(state, error.CloseRateLimited, "Resume rate limited")
+    }
     Ok(Nil) ->
       case payload {
-        Error(resume.InvalidResumePayload) ->
+        Error(resume.InvalidResumePayload) -> {
+          socket_metrics.resume_finished(socket_metrics.ResumeInvalidPayload)
           close(state, error.DecodeError, "Invalid resume payload")
+        }
         Ok(resume.ResumeRequest(token:, session_id:, seq:)) ->
           case session.session_id_from_string(session_id) {
-            Error(Nil) -> send_invalid_session(state, "bad_session_id")
+            Error(Nil) -> {
+              socket_metrics.resume_finished(socket_metrics.ResumeBadSessionId)
+              send_invalid_session(state, "bad_session_id")
+            }
             Ok(id) -> {
               let #(state, timeout) = new_token(release_hold(state))
               manager.resume(
@@ -769,6 +876,7 @@ fn handle_resume(
               State(
                 ..state,
                 pending: Resuming(timeout:, session: id, accepted: False),
+                resume_at: Some(clock.monotonic_ms()),
               )
             }
           }
@@ -811,8 +919,14 @@ fn open_info(state: State, message: Message) -> State {
     HeartbeatAckDue(token) -> heartbeat_ack_due(state, token)
     StartTimeout(token) ->
       case state.pending {
-        Starting(identify: ident, timeout:) if timeout == token ->
-          hold(State(..state, pending: Idle), ident, "Session start timed out")
+        Starting(identify: ident, timeout:) if timeout == token -> {
+          socket_metrics.start_timed_out()
+          hold(
+            State(..state, pending: Idle),
+            ident,
+            socket_metrics.HoldStartTimeout,
+          )
+        }
         _ -> state
       }
     RebindTimeout(token) ->
@@ -823,12 +937,14 @@ fn open_info(state: State, message: Message) -> State {
       }
     ResumeTimeout(token) ->
       case state.pending {
-        Resuming(timeout:, ..) if timeout == token ->
+        Resuming(timeout:, ..) if timeout == token -> {
+          socket_metrics.resume_finished(socket_metrics.ResumeTimedOut)
           close(
             State(..state, pending: Idle),
             error.CloseUnknownError,
             "Session unavailable",
           )
+        }
         _ -> state
       }
     RetryIdentify(token) ->
@@ -912,7 +1028,10 @@ fn rebind(state: State, from: SessionRef, to: SessionRef) -> State {
 
 fn hold_early(state: State, message: SocketMsg) -> State {
   case state.early_count >= max_early_messages {
-    True -> close(state, error.CloseUnknownError, "Session unavailable")
+    True -> {
+      socket_metrics.overflowed(socket_metrics.EarlyBuffer)
+      close(state, error.CloseUnknownError, "Session unavailable")
+    }
     False ->
       State(
         ..state,
@@ -946,12 +1065,30 @@ fn send_session_frame(state: State, frame: Outbound) -> State {
   case frame, sent {
     session.DispatchFrame(event:, ..), Ok(state) -> {
       metrics.counter("fluxer_gateway_websocket_dispatches_total", [], 1)
+      socket_metrics.dispatch_sent(event)
       case event {
-        "READY" -> garbage_collect()
-        "RESUMED" -> reconnect_if_draining(state)
-        _ -> Nil
+        "READY" -> {
+          garbage_collect()
+          State(
+            ..state,
+            identify_at: elapsed(
+              state.identify_at,
+              socket_metrics.identify_to_ready,
+            ),
+          )
+        }
+        "RESUMED" -> {
+          reconnect_if_draining(state)
+          State(
+            ..state,
+            resume_at: elapsed(
+              state.resume_at,
+              socket_metrics.resume_to_resumed,
+            ),
+          )
+        }
+        _ -> state
       }
-      state
     }
     session.DispatchFrame(..), Error(Nil) -> {
       metrics.counter("fluxer_gateway_websocket_dispatch_drops_total", [], 1)
@@ -962,6 +1099,14 @@ fn send_session_frame(state: State, frame: Outbound) -> State {
     _, Ok(state) -> state
     _, Error(Nil) -> state
   }
+}
+
+fn elapsed(started: Option(Int), observe: fn(Int) -> Nil) -> Option(Int) {
+  case started {
+    Some(at) -> observe(clock.monotonic_ms() - at)
+    None -> Nil
+  }
+  None
 }
 
 fn drain_reconnect(state: State) -> State {
@@ -1038,10 +1183,14 @@ fn start_reply(state: State, reply: Result(SessionRef, StartError)) -> State {
       session.send(session_ref, session.Terminate(session.Replaced))
       state
     }
-    Ok(session_ref), None, _ ->
+    Ok(session_ref), None, _ -> {
+      socket_metrics.start_replied(Ok(Nil))
       attach(State(..release_hold(state), pending: Idle), session_ref)
-    Error(start_error), None, Starting(identify: ident, ..) ->
+    }
+    Error(start_error), None, Starting(identify: ident, ..) -> {
+      socket_metrics.start_replied(Error(start_error))
       start_failed(State(..state, pending: Idle), ident, start_error)
+    }
     Error(_), _, _ -> state
   }
 }
@@ -1059,8 +1208,9 @@ fn start_failed(
     session.StartTooManySessions ->
       close(state, error.CloseRateLimited, "Too many sessions")
     session.StartRateLimited(..) ->
-      hold(state, ident, "Session RPC rate limited")
-    session.StartUnavailable(..) -> hold(state, ident, "Gateway at capacity")
+      hold(state, ident, socket_metrics.HoldRateLimited)
+    session.StartUnavailable(..) ->
+      hold(state, ident, socket_metrics.HoldUnavailable)
     session.StartUnknownError ->
       close(state, error.CloseUnknownError, "Failed to start session")
   }
@@ -1070,6 +1220,10 @@ fn resume_reply(state: State, reply: Result(SessionRef, ResumeError)) -> State {
   case state.pending, state.attached {
     Resuming(..), None -> {
       let state = State(..state, pending: Idle)
+      socket_metrics.resume_finished(case reply {
+        Ok(_) -> socket_metrics.Resumed
+        Error(rejected) -> socket_metrics.ResumeRejected(rejected)
+      })
       case reply {
         Ok(session_ref) -> {
           metrics.counter("fluxer_gateway_session_resumes_total", [], 1)
@@ -1124,7 +1278,9 @@ fn heartbeat_check(state: State, token: Int) -> State {
   case state.heartbeat_timer {
     Some(current) if current == token -> {
       let state = State(..state, heartbeat_timer: None)
-      let next = case heartbeat.check(state.heartbeat, clock.system_ms()) {
+      let outcome = heartbeat.check(state.heartbeat, clock.system_ms())
+      socket_metrics.heartbeat_checked(outcome)
+      let next = case outcome {
         heartbeat.TimedOut ->
           close(state, error.SessionTimeout, "Heartbeat timeout")
         heartbeat.RequestHeartbeat(waiting) -> {
@@ -1247,9 +1403,20 @@ fn send_frame(state: State, json_bytes: BytesTree) -> Result(State, Nil) {
     Error(compress.CompressFailed) -> Error(Nil)
     Ok(#(bytes, context)) -> {
       let channel = state.config.link
-      let _ = case compress.compression(context) {
+      let compression = compress.compression(context)
+      let wire = bytes_tree.byte_size(bytes)
+      let payload = case compression {
+        compress.NoCompression -> wire
+        compress.ZstdStream -> bytes_tree.byte_size(json_bytes)
+      }
+      socket_metrics.sent(compression, wire, payload)
+      let sent = case compression {
         compress.NoCompression -> link.text(channel, bytes)
         compress.ZstdStream -> link.binary(channel, bytes)
+      }
+      case sent {
+        Ok(Nil) -> Nil
+        Error(Nil) -> socket_metrics.send_failed()
       }
       Ok(State(..state, compress: context))
     }

@@ -39,6 +39,9 @@ fn erlang_process_info(pid: Pid, item: Item) -> Dynamic
 @external(erlang, "erlang", "process_info")
 fn erlang_process_dictionary_item(pid: Pid, item: #(Atom, Atom)) -> Dynamic
 
+@external(erlang, "erlang", "process_info")
+fn erlang_process_info_list(pid: Pid, items: List(Item)) -> Dynamic
+
 @external(erlang, "erlang", "processes")
 fn erlang_processes() -> List(Pid)
 
@@ -78,6 +81,22 @@ pub fn memory(pid: Pid) -> Result(Int, Nil) {
 
 pub fn message_queue_len(pid: Pid) -> Result(Int, Nil) {
   read(pid, MessageQueueLen, decode.int)
+}
+
+pub fn memory_and_queue(pid: Pid) -> Result(#(Int, Int), Nil) {
+  case liveness.is_local(pid) {
+    False -> Error(Nil)
+    True ->
+      case
+        decode.run(
+          erlang_process_info_list(pid, [Memory, MessageQueueLen]),
+          decode.list(decode.at([1], decode.int)),
+        )
+      {
+        Ok([memory, queued]) -> Ok(#(memory, queued))
+        _ -> Error(Nil)
+      }
+  }
 }
 
 pub fn reductions(pid: Pid) -> Result(Int, Nil) {
