@@ -34,3 +34,27 @@ fn debug_output_never_reveals_a_secret() {
     assert_eq!(2, rendered.matches("[REDACTED]").count());
     assert_eq!("signing-secret-material", cfg.secret_key.expose());
 }
+
+#[test]
+fn a_zero_socket_timeout_is_refused() {
+    let err = Config::load_from_iter(env_with(&[(
+        "FLUXER_MEDIA_PROXY_SOCKET_IO_TIMEOUT_MS",
+        "0",
+    )]))
+    .unwrap_err();
+    assert!(
+        err.to_string()
+            .contains("FLUXER_MEDIA_PROXY_SOCKET_IO_TIMEOUT_MS"),
+        "{err}"
+    );
+}
+
+#[test]
+fn the_socket_timeout_keeps_its_configured_value() {
+    let cfg = Config::load_from_iter(env_with(&[(
+        "FLUXER_MEDIA_PROXY_SOCKET_IO_TIMEOUT_MS",
+        "1",
+    )]))
+    .unwrap();
+    assert_eq!(1, cfg.socket_io_timeout_ms.get());
+}

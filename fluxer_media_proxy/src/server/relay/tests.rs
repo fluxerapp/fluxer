@@ -22,6 +22,7 @@ use bytes::Bytes;
 use futures_util::StreamExt as _;
 use std::{
     collections::HashMap,
+    num::NonZeroU64,
     sync::{Arc, OnceLock},
     time::Duration,
 };
@@ -171,7 +172,7 @@ async fn relay_put_never_forwards_an_injected_content_type_upstream() {
     let relay_secret = [7u8; 32];
     let mut cfg = fake.config(tmp.path());
     cfg.mode = crate::config::DeploymentMode::Upload;
-    cfg.socket_io_timeout_ms = 30_000;
+    cfg.socket_io_timeout_ms = NonZeroU64::new(30_000).unwrap();
     cfg.upload_relay.secret = SecretBytes::new(relay_secret.to_vec());
     cfg.upload_relay.max_body_bytes = 4096;
     let key = "guild/injected.bin";

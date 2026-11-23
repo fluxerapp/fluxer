@@ -6,6 +6,7 @@ use bytes::Bytes;
 use futures_util::StreamExt as _;
 use std::{
     io,
+    num::NonZeroU64,
     sync::Arc,
     time::{Duration, Instant},
 };
@@ -34,9 +35,9 @@ struct ActiveDownloadStream {
 type GuardedFrame = Option<(Result<Bytes, io::Error>, Option<ActiveDownloadStream>)>;
 
 impl DownloadStreamPolicy {
-    pub(in crate::server) fn for_passthrough(socket_io_timeout_ms: u64) -> Self {
+    pub(in crate::server) fn for_passthrough(socket_io_timeout_ms: NonZeroU64) -> Self {
         Self {
-            idle_timeout: Duration::from_millis(socket_io_timeout_ms.max(1)),
+            idle_timeout: Duration::from_millis(socket_io_timeout_ms.get()),
             overruns: None,
         }
     }
@@ -44,7 +45,7 @@ impl DownloadStreamPolicy {
     // Only the external route feeds the overrun counter: a stored object that outruns its own
     // Content-Length is a store bug, not the misbehaving-origin signal that series tracks.
     pub(in crate::server) fn for_external(
-        socket_io_timeout_ms: u64,
+        socket_io_timeout_ms: NonZeroU64,
         overruns: Arc<ExternalMetrics>,
     ) -> Self {
         let mut policy = Self::for_passthrough(socket_io_timeout_ms);
