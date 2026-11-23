@@ -4,15 +4,15 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-09-12 11:17+0200\n"
-"PO-Revision-Date: \n"
-"Last-Translator: \n"
-"Language-Team: \n"
+"PO-Revision-Date: 2026-11-23 03:40+0000\n"
+"Last-Translator: Hampus <hampus@fluxer.com>\n"
+"Language-Team: Polish <https://weblate.fluxer.tools/projects/fluxer/app/pl/>\n"
 "Language: pl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: \n"
-"X-Generator: @lingui/cli\n"
+"Plural-Forms: nplurals=3; plural=n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
+"X-Generator: Weblate 2026.8.dev0\n"
 
 #. Problem shown in the quick CSS editor on var() of a CSS variable that does not exist. {name} is the variable name without its leading dashes.
 #: src/features/theme_settings/editor/CssLint.ts
@@ -40,7 +40,7 @@ msgstr "(edytowano)"
 #: src/features/app/components/pages/YouPage.tsx
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx
 msgid "(only visible to you)"
-msgstr "(widoczne tylko dla Ciebie)"
+msgstr "(widoczne tylko dla ciebie)"
 
 #. Short label in the keybinds tab. Keep it concise.
 #: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx
@@ -49,7 +49,7 @@ msgstr "(nieprzypisany)"
 
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/DMMembersList.tsx
 msgid "(you)"
-msgstr "(Ty)"
+msgstr "(ty)"
 
 #. Replaces the text of a copy of a published announcement after the original was deleted in the announcement channel. Keep the square brackets.
 #: src/features/channel/components/UserMessage.tsx
@@ -91,82 +91,82 @@ msgstr "{accountName} na {instanceHost}"
 #. Activity log summary when a channel got a permission override for one member. A permission override is a channel-level exception to the permissions of a role or member. It allows or denies chosen permissions in one channel or category only. Use the same word for override as the channel permissions settings, such as Add override. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {user} is the member the override applies to, shown as a clickable user chip. {channel} is the channel, shown as a channel chip with its name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts
 msgid "{actor} added a permission override for {user} in {channel}"
-msgstr "{actor} dodał nadpisanie uprawnień dla {user} w kanale {channel}"
+msgstr "{actor} dodał(a) nadpisanie uprawnień dla {user} w kanale {channel}"
 
 #. Activity log summary when a channel got a permission override for every member of the community. A permission override is a channel-level exception to the permissions of a role or member. It allows or denies chosen permissions in one channel or category only. Use the same word for override as the channel permissions settings, such as Add override. Keep @everyone unchanged. It is the name of the role that includes all members. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the channel, shown as a channel chip with its name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts
 msgid "{actor} added a permission override for @everyone in {channel}"
-msgstr "{actor} dodał nadpisanie uprawnień dla @everyone w kanale {channel}"
+msgstr "{actor} dodał(a) nadpisanie uprawnień dla @everyone w kanale {channel}"
 
 #. Activity log summary when a channel got a permission override for a role. A permission override is a channel-level exception to the permissions of a role or member. It allows or denies chosen permissions in one channel or category only. Use the same word for override as the channel permissions settings, such as Add override. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {role} is the role, shown as a role chip with its name. {channel} is the channel, shown as a channel chip with its name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts
 msgid "{actor} added a permission override for the role {role} in {channel}"
-msgstr "{actor} dodał nadpisanie uprawnień dla roli {role} w kanale {channel}"
+msgstr "{actor} dodał(a) nadpisanie uprawnień dla roli {role} w kanale {channel}"
 
 #. Activity log summary for a sticker that was added to the community when its name was not recorded. {actor} is the member who added it, shown as a clickable user chip, or the word System.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts
 msgid "{actor} added a sticker"
-msgstr "{actor} dodał naklejkę"
+msgstr "{actor} dodał(a) naklejkę"
 
 #. Activity log summary for a custom emoji that was added to the community when its name was not recorded. {actor} is the member who added it, shown as a clickable user chip, or the word System.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts
 msgid "{actor} added an emoji"
-msgstr "{actor} dodał emoji"
+msgstr "{actor} dodał(a) emoji"
 
 #. Activity log summary for a bot that was added to the community. {actor} is the member who added the bot, shown as a clickable user chip, or the word System. {target} is the bot, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts
 msgid "{actor} added the bot {target}"
-msgstr "{actor} dodał bota {target}"
+msgstr "{actor} dodał(a) bota {target}"
 
 #. Activity log summary for a bot that was added to the community with temporary membership. {actor} is the member who added the bot, shown as a clickable user chip, or the word System. {target} is the bot, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts
 msgid "{actor} added the bot {target} as a temporary member"
-msgstr "{actor} dodał bota {target} jako tymczasowego członka"
+msgstr "{actor} dodał(a) bota {target} jako tymczasowego członka"
 
 #. Activity log summary for a custom emoji that was uploaded or copied to the community. {actor} is the member who added it, shown as a clickable user chip, or the word System. {emoji} is the emoji, shown as its image when it still exists, followed by its name between colons, for example :blobcat:.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts
 msgid "{actor} added the emoji {emoji}"
-msgstr "{actor} dodał emoji {emoji}"
+msgstr "{actor} dodał(a) emoji {emoji}"
 
 #. Activity log summary for a sticker that was uploaded or copied to the community. {actor} is the member who added it, shown as a clickable user chip, or the word System. {name} is the sticker name, shown in bold. The app adds the bold, so do not add ** or <b>.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts
 msgid "{actor} added the sticker {name}"
-msgstr "{actor} dodał naklejkę {name}"
+msgstr "{actor} dodał(a) naklejkę {name}"
 
 #. Activity log summary for a user who was banned from the community with no end date. A ban removes the user from the community and stops them from joining again. It is not the feature that blocks a user. {actor} is the member who made the ban, shown as a clickable user chip, or the word System. {target} is the banned user, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts
 msgid "{actor} banned {target}"
-msgstr "{actor} zbanował {target}"
+msgstr "{actor} zbanował(a) {target}"
 
 #. Activity log summary for a user who was banned from the community for a limited time. A ban removes the user from the community and stops them from joining again. It is not the feature that blocks a user. {actor} is the member who made the ban, shown as a clickable user chip, or the word System. {target} is the banned user, shown as a clickable user chip. {duration} is how long the ban lasts, shown as a formatted duration phrase such as "3 days" or "12 hours".
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts
 msgid "{actor} banned {target} for {duration}"
-msgstr "{actor} zbanował {target} na {duration}"
+msgstr "{actor} zbanował(a) {target} na {duration}"
 
 #. Activity log summary for a block on a member that was already running and was given a new end. The block stops the member from sending messages, reacting and joining voice, and it lifts on its own at the new end. Spell the effect out the way the English does. Do not name it with a word for a ban, a kick, a mute, a suspension or a waiting period, and do not say that time ran out. Keep the three things that are blocked. This is a past tense record of an action that already happened, never an instruction to the reader. {actor} is the member who moved the end of the block, shown as a clickable user chip, or the word System. {target} is the blocked member, shown as a clickable user chip. {date} is the new end of the block, shown as a formatted date and time.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts
 msgid "{actor} changed {target}'s block on sending messages, reacting and joining voice to end at {date}"
-msgstr "{actor} zmienił nałożoną na {target} blokadę wysyłania wiadomości, reagowania i dołączania do rozmowy głosowej tak, aby zakończyła się {date}"
+msgstr "{actor} zmienił(a) nałożoną na {target} blokadę wysyłania wiadomości, reagowania i dołączania do rozmowy głosowej tak, aby zakończyła się {date}"
 
 #. Activity log summary for a nickname that someone changed for another member in the community. {actor} is the member who changed the nickname, shown as a clickable user chip, or the word System. {target} is the member whose nickname changed, shown as a clickable user chip. {oldNick} is the previous nickname and {newNick} is the new nickname. Keep {oldNick} as the old value and {newNick} as the new value. The app shows both in bold, so do not add ** or <b>.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts
 msgid "{actor} changed the nickname of {target} from {oldNick} to {newNick}"
-msgstr "{actor} zmienił pseudonim użytkownika {target} z {oldNick} na {newNick}"
+msgstr "{actor} zmienił(a) pseudonim użytkownika {target} z {oldNick} na {newNick}"
 
 #. Activity log summary for an older entry that only recorded that the permission overrides of an announcement channel were changed, without saying which. A permission override is a channel-level exception to the permissions of a role or member. It allows or denies chosen permissions in one channel or category only. Use the same word for override as the channel permissions settings, such as Add override. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the channel, shown as a channel chip with its name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts
 msgid "{actor} changed the permission overrides of the announcement channel {channel}"
-msgstr "{actor} zmienił/a nadpisy uprawnień kanału ogłoszeń {channel}"
+msgstr "{actor} zmienił(a) nadpisania uprawnień kanału ogłoszeń {channel}"
 
 #. Activity log summary for an older entry that only recorded that the permission overrides of a channel category were changed, without saying which. A permission override is a channel-level exception to the permissions of a role or member. It allows or denies chosen permissions in one channel or category only. Use the same word for override as the channel permissions settings, such as Add override. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the category, shown as a channel chip with its name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts
 msgid "{actor} changed the permission overrides of the category {channel}"
-msgstr "{actor} zmienił nadpisania uprawnień kategorii {channel}"
+msgstr "{actor} zmienił(a) nadpisania uprawnień kategorii {channel}"
 
 #. Activity log summary for an older entry that only recorded that the permission overrides of a channel of a type this app version cannot name were changed, without saying which. A permission override is a channel-level exception to the permissions of a role or member. It allows or denies chosen permissions in one channel or category only. Use the same word for override as the channel permissions settings, such as Add override. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the channel, shown as a channel chip with its name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts
 msgid "{actor} changed the permission overrides of the channel {channel}"
-msgstr "{actor} zmienił nadpisania uprawnień kanału {channel}"
+msgstr "{actor} zmienił(a) nadpisania uprawnień kanału {channel}"
 
 #. Activity log summary for an entry that only recorded that the permission overrides of a forum channel were changed. {channel} is shown as a channel chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogForumPresentation.ts
@@ -176,27 +176,27 @@ msgstr "{actor} zmienił/a uprawnienia dla kanału forum {channel}"
 #. Activity log summary for an older entry that only recorded that the permission overrides of a link channel were changed, without saying which. A link channel is a channel list entry that opens a web address. A permission override is a channel-level exception to the permissions of a role or member. It allows or denies chosen permissions in one channel or category only. Use the same word for override as the channel permissions settings, such as Add override. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the channel, shown as a channel chip with its name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts
 msgid "{actor} changed the permission overrides of the link channel {channel}"
-msgstr "{actor} zmienił nadpisania uprawnień kanału linku {channel}"
+msgstr "{actor} zmienił(a) nadpisania uprawnień kanału linku {channel}"
 
 #. Activity log summary for an entry that only recorded that the permission overrides of a media channel were changed. {channel} is shown as a channel chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogForumPresentation.ts
 msgid "{actor} changed the permission overrides of the media channel {channel}"
-msgstr "{actor} zmienił uprawnienia dla kanału multimediów {channel}"
+msgstr "{actor} zmienił(a) nadpisania uprawnień dla kanału multimediów {channel}"
 
 #. Activity log summary for an older entry that only recorded that the permission overrides of a text channel were changed, without saying which. A permission override is a channel-level exception to the permissions of a role or member. It allows or denies chosen permissions in one channel or category only. Use the same word for override as the channel permissions settings, such as Add override. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the channel, shown as a channel chip with its name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts
 msgid "{actor} changed the permission overrides of the text channel {channel}"
-msgstr "{actor} zmienił nadpisania uprawnień kanału tekstowego {channel}"
+msgstr "{actor} zmienił(a) nadpisania uprawnień kanału tekstowego {channel}"
 
 #. Activity log summary for an older entry that only recorded that the permission overrides of a voice channel were changed, without saying which. A permission override is a channel-level exception to the permissions of a role or member. It allows or denies chosen permissions in one channel or category only. Use the same word for override as the channel permissions settings, such as Add override. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the channel, shown as a channel chip with its name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts
 msgid "{actor} changed the permission overrides of the voice channel {channel}"
-msgstr "{actor} zmienił nadpisania uprawnień kanału głosowego {channel}"
+msgstr "{actor} zmienił(a) nadpisania uprawnień kanału głosowego {channel}"
 
 #. Activity log summary when a member replaced the vanity URL, the custom invite link of the community. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {oldCode} is the previous vanity URL code and {newCode} is the new vanity URL code, both shown as boxed text.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
 msgid "{actor} changed the vanity URL from {oldCode} to {newCode}"
-msgstr "{actor} zmienił niestandardowy adres URL z {oldCode} na {newCode}"
+msgstr "{actor} zmienił(a) niestandardowy adres URL z {oldCode} na {newCode}"
 
 #. Activity log summary for a member who replaced the avatar on their community profile. A community profile is the profile a member uses only in this community, in place of their global profile. The avatar belongs to the member, not to the community. "Their" means the same member as {actor}. {actor} is that member, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts
