@@ -47,5 +47,33 @@ fn apply_overrides(args: &Args, cfg: &mut Config) -> anyhow::Result<()> {
     if let Some(port) = args.port {
         bind_addr.set_port(port);
     }
-    Ok(())
+    let service_port = bind_addr.port();
+    crate::config::ensure_metrics_port_differs(cfg.metrics_port(), service_port)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn env(vars: &[(&str, &str)]) -> EnvMap {
+        EnvMap::from_pairs(vars.iter().copied())
+    }
+
+    #[test]
+    fn a_port_override_cannot_land_on_the_metrics_port() {
+        let args = Args {
+            mode: Mode::Relay,
+            bind_host: None,
+            port: Some(8082),
+            command: None,
+        };
+        assert!(load_config(&args, &env(&[("FLUXER_PUSH_METRICS_PORT", "8082")])).is_err());
+        let args = Args {
+            port: Some(9000),
+            ..args
+        };
+        let cfg =
+            load_config(&args, &env(&[("FLUXER_PUSH_METRICS_PORT", "8082")])).expect("config");
+        assert_eq!(Some(8082), cfg.metrics_port());
+    }
 }

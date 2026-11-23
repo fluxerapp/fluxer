@@ -2362,6 +2362,10 @@ The address the push service listens on. When it's empty, it listens on `0.0.0.0
 
 The port the push service listens on. When it's empty, it uses `8126`, or `8127` for the push relay.
 
+### `FLUXER_PUSH_METRICS_PORT`
+
+A second port the push service serves only its metrics on, to anyone who can reach it. The main port only serves metrics to the same machine. When it's empty, the push service opens no second port. The stack doesn't collect push service metrics.
+
 ### `FLUXER_S3_BUCKET_STATIC`
 
 The bucket the media proxy serves files from when `FLUXER_MEDIA_PROXY_MODE` is `static`. The stack runs the media proxy in `upload` mode.

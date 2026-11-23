@@ -84,6 +84,10 @@ pub async fn run(cfg: RelayConfig, shutdown: CancellationToken) -> anyhow::Resul
     let state = Arc::new(AppState::try_new(cfg)?);
     let addr = state.cfg.bind_addr;
     let serving = serve(addr, router(Arc::clone(&state))).await?;
+    let metrics_serving = state
+        .sidecar
+        .serve_metrics(addr, state.cfg.metrics_port)
+        .await?;
     state.sidecar.set_serving(true);
     info!(
         %addr,
@@ -98,6 +102,9 @@ pub async fn run(cfg: RelayConfig, shutdown: CancellationToken) -> anyhow::Resul
     shutdown.cancelled().await;
     state.sidecar.set_serving(false);
     serving.stop().await;
+    if let Some(metrics_serving) = metrics_serving {
+        metrics_serving.stop().await;
+    }
     Ok(())
 }
 

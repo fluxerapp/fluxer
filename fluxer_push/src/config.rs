@@ -179,6 +179,7 @@ impl FcmConfig {
 #[derive(Debug)]
 pub struct DeliveryConfig {
     pub bind_addr: SocketAddr,
+    pub metrics_port: Option<u16>,
     pub nats: NatsConfig,
     pub rpc: RpcConfig,
     pub queue_capacity: usize,
@@ -202,6 +203,7 @@ pub struct BucketConfig {
 #[derive(Debug)]
 pub struct RelayConfig {
     pub bind_addr: SocketAddr,
+    pub metrics_port: Option<u16>,
     pub max_concurrent: usize,
     pub max_body_bytes: usize,
     pub trust_client_ip_header: bool,
@@ -236,6 +238,13 @@ impl Config {
         })
     }
 
+    pub fn metrics_port(&self) -> Option<u16> {
+        match self {
+            Self::Delivery(cfg) => cfg.metrics_port,
+            Self::Relay(cfg) => cfg.metrics_port,
+        }
+    }
+
     pub fn bind_addr_mut(&mut self) -> &mut SocketAddr {
         match self {
             Self::Delivery(cfg) => &mut cfg.bind_addr,
@@ -252,8 +261,10 @@ impl DeliveryConfig {
         V: Into<String>,
     {
         let env = Env::from_iter(vars);
+        let bind_addr = bind_addr(&env, Mode::Delivery)?;
         Ok(Self {
-            bind_addr: bind_addr(&env, Mode::Delivery)?,
+            metrics_port: metrics_port(&env, bind_addr.port())?,
+            bind_addr,
             nats: nats_config(&env),
             rpc: rpc_config(&env)?,
             queue_capacity: parse_number(
@@ -312,8 +323,10 @@ impl RelayConfig {
         V: Into<String>,
     {
         let env = Env::from_iter(vars);
+        let bind_addr = bind_addr(&env, Mode::Relay)?;
         let cfg = Self {
-            bind_addr: bind_addr(&env, Mode::Relay)?,
+            metrics_port: metrics_port(&env, bind_addr.port())?,
+            bind_addr,
             max_concurrent: parse_number(
                 "FLUXER_PUSH_RELAY_MAX_CONCURRENT",
                 env.get("FLUXER_PUSH_RELAY_MAX_CONCURRENT"),
@@ -389,6 +402,26 @@ fn bind_addr(env: &Env, mode: Mode) -> anyhow::Result<SocketAddr> {
         u16::MAX,
     )?;
     Ok(SocketAddr::new(ip, port))
+}
+
+fn metrics_port(env: &Env, service_port: u16) -> anyhow::Result<Option<u16>> {
+    let Some(raw) = env.get("FLUXER_PUSH_METRICS_PORT") else {
+        return Ok(None);
+    };
+    let port = parse_number("FLUXER_PUSH_METRICS_PORT", Some(raw), 1, 1, u16::MAX)?;
+    ensure_metrics_port_differs(Some(port), service_port)?;
+    Ok(Some(port))
+}
+
+pub(crate) fn ensure_metrics_port_differs(
+    metrics_port: Option<u16>,
+    service_port: u16,
+) -> anyhow::Result<()> {
+    anyhow::ensure!(
+        metrics_port != Some(service_port),
+        "FLUXER_PUSH_METRICS_PORT must differ from the service port"
+    );
+    Ok(())
 }
 
 fn nats_config(env: &Env) -> NatsConfig {
@@ -701,5 +734,62 @@ impl Env {
     fn require(&self, key: &str) -> anyhow::Result<&str> {
         self.get(key)
             .ok_or_else(|| anyhow::anyhow!("{key} is required"))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const DELIVERY_VARS: [(&str, &str); 5] = [
+        ("FLUXER_INTERNAL_API_ENDPOINT", "http://127.0.0.1:8080"),
+        ("FLUXER_GATEWAY_RPC_AUTH_TOKEN", "rpc-token"),
+        ("FLUXER_VAPID_EMAIL", "ops@example.com"),
+        ("FLUXER_VAPID_PUBLIC_KEY", "public-key"),
+        ("FLUXER_VAPID_PRIVATE_KEY", "private-key"),
+    ];
+
+    fn delivery(extra: &[(&str, &str)]) -> anyhow::Result<DeliveryConfig> {
+        DeliveryConfig::load_from_iter(DELIVERY_VARS.iter().chain(extra.iter()).copied())
+    }
+
+    fn relay(extra: &[(&str, &str)]) -> anyhow::Result<RelayConfig> {
+        RelayConfig::load_from_iter(extra.iter().copied())
+    }
+
+    #[test]
+    fn metrics_port_is_off_when_unset() {
+        assert_eq!(None, delivery(&[]).expect("config").metrics_port);
+        assert_eq!(
+            None,
+            delivery(&[("FLUXER_PUSH_METRICS_PORT", " ")])
+                .expect("config")
+                .metrics_port
+        );
+    }
+
+    #[test]
+    fn metrics_port_is_read_in_both_modes() {
+        let extra = [("FLUXER_PUSH_METRICS_PORT", "8082")];
+        assert_eq!(Some(8082), delivery(&extra).expect("config").metrics_port);
+        assert_eq!(Some(8082), relay(&extra).expect("config").metrics_port);
+    }
+
+    #[test]
+    fn metrics_port_must_be_nonzero_and_differ_from_the_service_port() {
+        for port in ["0", "8126", "not-a-port", "70000"] {
+            assert!(
+                delivery(&[("FLUXER_PUSH_METRICS_PORT", port)]).is_err(),
+                "{port} must be refused"
+            );
+        }
+        assert!(
+            delivery(&[
+                ("FLUXER_PUSH_SERVICE_PORT", "9000"),
+                ("FLUXER_PUSH_METRICS_PORT", "9000"),
+            ])
+            .is_err()
+        );
+        assert!(relay(&[("FLUXER_PUSH_METRICS_PORT", "8127")]).is_err());
     }
 }

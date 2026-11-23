@@ -55,6 +55,25 @@ impl Sidecar {
         fluxer_svc::server::ops_router(self.serving.clone(), Arc::new(move || metrics.render()))
     }
 
+    pub fn metrics_router(&self) -> Router {
+        let metrics = self.metrics.clone();
+        fluxer_svc::server::metrics_router(Arc::new(move || metrics.render()))
+    }
+
+    pub async fn serve_metrics(
+        &self,
+        bind_addr: SocketAddr,
+        metrics_port: Option<u16>,
+    ) -> anyhow::Result<Option<Serving>> {
+        let Some(port) = metrics_port else {
+            return Ok(None);
+        };
+        let addr = SocketAddr::new(bind_addr.ip(), port);
+        let serving = serve(addr, self.metrics_router()).await?;
+        info!(%addr, "push metrics listening");
+        Ok(Some(serving))
+    }
+
     pub fn set_serving(&self, serving: bool) {
         self.serving.store(serving, Ordering::SeqCst);
     }
@@ -225,6 +244,10 @@ async fn run_delivery(cfg: DeliveryConfig, shutdown: CancellationToken) -> anyho
     let addr = state.cfg.bind_addr;
     let serving = serve(addr, state.sidecar.router()).await?;
     info!(%addr, vapid_subject = state.cfg.vapid.email, "push sidecar listening");
+    let metrics_serving = state
+        .sidecar
+        .serve_metrics(addr, state.cfg.metrics_port)
+        .await?;
 
     let transport = NatsTransport::connect(
         &state.cfg.nats.url,
@@ -258,6 +281,9 @@ async fn run_delivery(cfg: DeliveryConfig, shutdown: CancellationToken) -> anyho
     subscriber.abort();
     drain_jobs(&state, jobs, JOB_DRAIN_TIMEOUT).await;
     serving.stop().await;
+    if let Some(metrics_serving) = metrics_serving {
+        metrics_serving.stop().await;
+    }
     Ok(())
 }
 
@@ -272,4 +298,50 @@ async fn drain_jobs(state: &AppState, jobs: JoinHandle<()>, timeout: Duration) {
     )
     .await;
     running.abort();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::body::Body;
+    use axum::http::{Request, StatusCode};
+
+    fn sidecar() -> Sidecar {
+        Sidecar::new(Arc::new(Metrics::default()))
+    }
+
+    async fn get(mut router: Router, path: &str, peer: &str) -> StatusCode {
+        let mut request = Request::get(path).body(Body::empty()).expect("request");
+        request.extensions_mut().insert(ConnectInfo(
+            peer.parse::<SocketAddr>().expect("valid socket address"),
+        ));
+        router.call(request).await.expect("response").status()
+    }
+
+    #[tokio::test]
+    async fn metrics_port_serves_a_non_loopback_peer() {
+        let status = get(sidecar().metrics_router(), "/_metrics", "10.244.1.7:5000").await;
+        assert_eq!(StatusCode::OK, status);
+    }
+
+    #[tokio::test]
+    async fn metrics_port_answers_404_for_other_paths() {
+        for path in ["/", "/_health", "/_healthz", "/_metrics/extra"] {
+            let status = get(sidecar().metrics_router(), path, "10.244.1.7:5000").await;
+            assert_eq!(StatusCode::NOT_FOUND, status, "{path}");
+        }
+    }
+
+    #[tokio::test]
+    async fn sidecar_port_still_refuses_metrics_to_a_non_loopback_peer() {
+        let sidecar = sidecar();
+        assert_eq!(
+            StatusCode::FORBIDDEN,
+            get(sidecar.router(), "/_metrics", "10.244.1.7:5000").await
+        );
+        assert_eq!(
+            StatusCode::OK,
+            get(sidecar.router(), "/_metrics", "127.0.0.1:5000").await
+        );
+    }
 }

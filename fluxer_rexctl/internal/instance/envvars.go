@@ -669,6 +669,7 @@ var envVars = []envVar{
 	{"FLUXER_PUSH_RELAY_TRUSTED_PROXY_HOPS", "relay", "How many proxies in front of the push relay it trusts."},
 	{"FLUXER_PUSH_SERVICE_HOST", "internal", "The address the push service listens on. When it's empty, it listens on `0.0.0.0`."},
 	{"FLUXER_PUSH_SERVICE_PORT", "internal", "The port the push service listens on. When it's empty, it uses `8126`, or `8127` for the push relay."},
+	{"FLUXER_PUSH_METRICS_PORT", "internal", "A second port the push service serves only its metrics on, to anyone who can reach it. The main port only serves metrics to the same machine. When it's empty, the push service opens no second port. The stack doesn't collect push service metrics."},
 	{"FLUXER_RELAX_REGISTRATION_RATE_LIMITS", "dev", "Whether registration rate limits are relaxed."},
 	{"FLUXER_S3_BUCKET_STATIC", "internal", "The bucket the media proxy serves files from when FLUXER_MEDIA_PROXY_MODE is `static`. The stack runs the media proxy in `upload` mode."},
 	{"FLUXER_SNOWFLAKE_SERVICE_SUBJECT", "internal", "The NATS subject the API sends snowflakes service requests to. The snowflakes service always listens on `svc.snowflakes`, and any other value breaks ID generation."},
