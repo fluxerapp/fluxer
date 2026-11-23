@@ -71,7 +71,7 @@ import {createWorkerProcessErrorHandler} from '@app/api/worker/WorkerProcessErro
 import {WorkerRunner} from '@app/api/worker/WorkerRunner';
 import {WorkerService} from '@app/api/worker/WorkerService';
 import {workerTasks} from '@app/api/worker/WorkerTaskRegistry';
-import {createRegisteredMetricsHandler} from '@fluxer/hono/src/middleware/Metrics';
+import {createMetricsPortApp, renderRegisteredMetricsText} from '@fluxer/hono/src/middleware/Metrics';
 import {createServer, setupGracefulShutdown} from '@fluxer/hono/src/Server';
 import type {ServerType} from '@hono/node-server';
 import {BACKGROUND_READ_TIMEOUT_MS, getClient, initCassandra, shutdownCassandra} from '@pkgs/cassandra/src/Client';
@@ -79,13 +79,13 @@ import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import {JetStreamConnectionManager} from '@pkgs/nats/src/JetStreamConnectionManager';
 import {getDefaultPostgresClient, initPostgres, shutdownPostgres} from '@pkgs/postgres/src/Client';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
-import {Hono} from 'hono';
 import {ms} from 'itty-time';
 
 function startWorkerMetricsServer(port: number): ServerType {
-	const app = new Hono();
-	app.get('/_metrics', createRegisteredMetricsHandler());
-	return createServer(app, {port, onListen: (info) => Logger.info({port: info.port}, 'Worker metrics listening')});
+	return createServer(createMetricsPortApp(renderRegisteredMetricsText), {
+		port,
+		onListen: (info) => Logger.info({port: info.port}, 'Worker metrics listening'),
+	});
 }
 
 function registerCronJobs(cron: CronScheduler, jobsStreamMaxAgeMs: number, kvClient: IKVProvider): void {

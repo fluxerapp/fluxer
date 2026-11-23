@@ -146,6 +146,7 @@ pub struct UploadRelayConfig {
 pub struct Config {
     pub bind_host: String,
     pub port: u16,
+    pub metrics_port: Option<u16>,
     pub(crate) secret_key: SecretString,
     pub public_endpoint: Option<String>,
     pub mode: DeploymentMode,
@@ -183,17 +184,27 @@ impl Config {
             fluxer_common::config::resolve_public_domain_and_port(|name| {
                 env.get(name).map(ToOwned::to_owned)
             })?;
+        let port = parse_u16(
+            "FLUXER_MEDIA_PROXY_PORT",
+            env.get("FLUXER_MEDIA_PROXY_PORT"),
+            8080,
+        )?;
+        let metrics_port = env
+            .get("FLUXER_MEDIA_PROXY_METRICS_PORT")
+            .map(|raw| parse_u16("FLUXER_MEDIA_PROXY_METRICS_PORT", Some(raw), 0))
+            .transpose()?;
+        anyhow::ensure!(
+            metrics_port.is_none_or(|metrics_port| metrics_port != 0 && metrics_port != port),
+            "FLUXER_MEDIA_PROXY_METRICS_PORT must be a nonzero port that differs from FLUXER_MEDIA_PROXY_PORT"
+        );
 
         Ok(Self {
             bind_host: env
                 .get("FLUXER_MEDIA_PROXY_HOST")
                 .unwrap_or("0.0.0.0")
                 .to_owned(),
-            port: parse_u16(
-                "FLUXER_MEDIA_PROXY_PORT",
-                env.get("FLUXER_MEDIA_PROXY_PORT"),
-                8080,
-            )?,
+            port,
+            metrics_port,
             secret_key,
             public_endpoint: env
                 .get("FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT")

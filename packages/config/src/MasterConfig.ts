@@ -137,6 +137,7 @@ export interface MasterConfig {
 		api: {
 			port: number;
 			host?: string;
+			metrics_port?: number;
 			headers_timeout_ms: number;
 			request_timeout_ms: number;
 			max_inflight_requests: number;

@@ -23,6 +23,7 @@ fn test_config(root: &Path) -> Config {
     Config {
         bind_host: "127.0.0.1".to_owned(),
         port: 0,
+        metrics_port: None,
         secret_key: SecretString::new("secret".to_owned()),
         public_endpoint: None,
         mode: DeploymentMode::Mp,

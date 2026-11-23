@@ -85,6 +85,7 @@ export interface APIConfig {
 	nodeEnv: 'development' | 'production';
 	port: number;
 	host?: string;
+	metricsPort?: number;
 	headersTimeoutMs: number;
 	requestTimeoutMs: number;
 	maxInflightRequests: number;

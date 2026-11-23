@@ -98,6 +98,28 @@ describe('ConfigLoader', () => {
 		await expect(loadConfig()).rejects.toThrow('FLUXER_PROFILE_PSEUDONYM_SECRET is required');
 	});
 
+	test('leaves the api metrics port unset by default', async () => {
+		stubMinimalEnv();
+		const config = await loadConfig();
+		expect(config.services.api.metrics_port).toBeUndefined();
+	});
+
+	test('reads the api metrics port from the environment', async () => {
+		stubMinimalEnv({FLUXER_API_METRICS_PORT: '9100'});
+		const config = await loadConfig();
+		expect(config.services.api.metrics_port).toBe(9100);
+	});
+
+	test('rejects an api metrics port equal to the api port', async () => {
+		stubMinimalEnv({FLUXER_API_PORT: '9100', FLUXER_API_METRICS_PORT: '9100'});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_API_METRICS_PORT must differ from FLUXER_API_PORT');
+	});
+
+	test('rejects an api metrics port out of range', async () => {
+		stubMinimalEnv({FLUXER_API_METRICS_PORT: '70000'});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_API_METRICS_PORT must be an integer between 1 and 65535');
+	});
+
 	test('keeps the dual object store off by default', async () => {
 		stubMinimalEnv();
 		const config = await loadConfig();
