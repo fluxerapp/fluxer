@@ -104,6 +104,8 @@ pub fn rehome(sessions: Sessions, watch: fn(Pid) -> Monitor) -> Sessions {
     }),
     visitors: table.rehome(sessions.visitors, watch),
     broadcaster: None,
+    group_revision: -1,
+    groups: dict.new(),
   )
 }
 
@@ -309,6 +311,10 @@ pub fn delete_row(sessions: Sessions, user: Int) -> Sessions {
 
 pub fn is_engaged(sessions: Sessions, user: Int) -> Bool {
   set.contains(sessions.engaged, user)
+}
+
+pub fn engaged_users(sessions: Sessions) -> List(Int) {
+  set.to_list(sessions.engaged)
 }
 
 pub fn set_engaged(sessions: Sessions, user: Int, engaged: Bool) -> Sessions {

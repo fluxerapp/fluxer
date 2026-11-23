@@ -63,3 +63,30 @@ pub fn escape_after_60_seconds_test() {
   let assert True = admission.released(0, 60_000, True)
   let assert True = admission.released(0, 1, False)
 }
+
+pub fn in_flight_counts_only_live_workers_admitted_in_time_test() {
+  let a = admission.new()
+  let assert #(admission.Run, a, _) = admit(a, 1, 1000)
+  let assert #(admission.Run, a, _) = admit(a, 2, 5000)
+  let only = fn(wanted) { fn(plan) { plan == wanted } }
+  assert admission.in_flight(a, admitted_by: 5000, now_ms: 6000, is_live: live)
+  assert admission.in_flight(
+    a,
+    admitted_by: 4999,
+    now_ms: 6000,
+    is_live: only(1),
+  )
+  assert !admission.in_flight(
+    a,
+    admitted_by: 4999,
+    now_ms: 6000,
+    is_live: only(2),
+  )
+  assert !admission.in_flight(a, admitted_by: 999, now_ms: 6000, is_live: live)
+  assert !admission.in_flight(
+    a,
+    admitted_by: 5000,
+    now_ms: 185_000,
+    is_live: live,
+  )
+}

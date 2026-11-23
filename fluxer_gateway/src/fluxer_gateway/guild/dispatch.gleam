@@ -6,6 +6,7 @@ import fluxer_gateway/core/json_tree.{type JsonTree}
 import fluxer_gateway/core/member
 import fluxer_gateway/core/raw_json.{type RawJson}
 import fluxer_gateway/core/session.{type SessionId}
+import fluxer_gateway/guild/data
 import fluxer_gateway/guild/dispatch/decorate
 import fluxer_gateway/guild/dispatch/event.{type EventFacts}
 import fluxer_gateway/guild/dispatch/filter
@@ -155,7 +156,7 @@ fn run_regular(
     _, _ -> Nil
   }
   let state = forget_removed(applied.state, applied.member)
-  let effects =
+  let #(state, effects) =
     model.apply_perms(
       state,
       name,
@@ -381,7 +382,7 @@ pub fn member_list_updates_enabled(state: GuildState) -> Bool {
 }
 
 fn disabled(state: GuildState, bit: Int) -> Bool {
-  model.operation_disabled(guild_state.guild_data(state), bit)
+  data.operation_disabled(guild_state.guild_data(state), bit)
 }
 
 pub fn broadcast(

@@ -6,7 +6,7 @@ import fluxer_gateway/core/clock
 import fluxer_gateway/core/guild.{type GuildFacts, type GuildRef}
 import fluxer_gateway/core/id.{type GuildId}
 import fluxer_gateway/core/role.{type Role}
-import fluxer_gateway/core/session.{type SessionRef}
+import fluxer_gateway/core/session.{type SessionId, type SessionRef}
 import fluxer_gateway/guild/members.{type MembersTable}
 import fluxer_gateway/guild/push/admission
 import fluxer_gateway/guild/push/engagement
@@ -29,10 +29,12 @@ import gleam/dict
 import gleam/dynamic.{type Dynamic}
 import gleam/erlang/atom.{type Atom}
 import gleam/erlang/process.{type Pid, type Subject}
+import gleam/int
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
 import gleam/set
+import logging
 
 fn settings_deadline_ms() -> Int {
   durations.guild().dispatch_settings_deadline_ms
@@ -87,6 +89,15 @@ pub fn set_info(
       disabled_operations,
       channels,
     ),
+  )
+}
+
+pub fn busy(push: GuildPush, admitted_by admitted_by_ms: Int) -> Bool {
+  admission.in_flight(
+    push.admission,
+    admitted_by: admitted_by_ms,
+    now_ms: clock.monotonic_ms(),
+    is_live: process.is_alive,
   )
 }
 
@@ -229,10 +240,11 @@ fn plan_message(push: GuildPush, capture: Capture) -> GuildPush {
 fn narrow(capture: Capture, users: List(Int)) -> Nil {
   case guild_info.push_disabled(capture.info) {
     True -> Nil
-    False -> {
-      let routed = plan.route(capture, users, set.new())
-      deliver(capture, routed, False, False)
-    }
+    False ->
+      case plan.route(capture, users, set.new()) {
+        Ok(routed) -> deliver(capture, routed, False, False)
+        Error(reason) -> unavailable(capture, reason)
+      }
   }
 }
 
@@ -328,10 +340,21 @@ fn wait_for_slot(gate: Option(Pid)) -> Nil {
 }
 
 fn scan(capture: Capture, planned: plan.Plan) -> Nil {
+  case scan_routes(capture, planned) {
+    Ok(routes) ->
+      list.each(routes, fn(route) { deliver(capture, route.0, route.1, True) })
+    Error(reason) -> unavailable(capture, reason)
+  }
+}
+
+fn scan_routes(
+  capture: Capture,
+  planned: plan.Plan,
+) -> Result(List(#(Routed, Bool)), plan.Unavailable) {
   let direct = message.direct_mention_ids(capture.data)
-  let #(candidates, adds) = case capture.thread, planned {
+  use #(candidates, adds) <- result.try(case capture.thread, planned {
     Some(scope), _ -> {
-      let adds = plan.role_adds(capture, scope, direct)
+      use adds <- result.map(plan.role_adds(capture, scope, direct))
       let base =
         dict.keys(scope.members)
         |> list.append(set.to_list(direct))
@@ -340,19 +363,44 @@ fn scan(capture: Capture, planned: plan.Plan) -> Nil {
         |> list.unique
       #(base, adds)
     }
-    None, plan.Explicit(users) -> #(users, set.new())
-    None, plan.AllMembers -> #(plan.all_member_ids(capture), set.new())
-    None, plan.Nothing -> #([], set.new())
+    None, plan.Explicit(users) -> Ok(#(users, set.new()))
+    None, plan.AllMembers ->
+      plan.all_member_ids(capture)
+      |> result.map(fn(users) { #(users, set.new()) })
+    None, plan.Nothing -> Ok(#([], set.new()))
+  })
+  use main <- result.try(case candidates {
+    [] -> Ok([])
+    _ ->
+      plan.route(capture, candidates, adds)
+      |> result.map(fn(routed) { [#(routed, False)] })
+  })
+  use forum <- result.map(
+    case plan.is_large(capture), plan.forum_starter(capture) {
+      False, Some(#(forum, scope)) ->
+        plan.forum_recipients(capture, forum, scope)
+        |> result.map(fn(routed) { [#(routed, True)] })
+      _, _ -> Ok([])
+    },
+  )
+  list.append(main, forum)
+}
+
+fn unavailable(capture: Capture, reason: plan.Unavailable) -> Nil {
+  let #(key, source) = case reason {
+    plan.PermsUnavailable -> #("scan_perms_unavailable", "permission index")
+    plan.MembersUnavailable -> #("scan_table_unavailable", "members table")
   }
-  case candidates {
-    [] -> Nil
-    _ -> deliver(capture, plan.route(capture, candidates, adds), False, True)
-  }
-  case plan.is_large(capture), plan.forum_starter(capture) {
-    False, Some(#(forum, scope)) ->
-      deliver(capture, plan.forum_recipients(capture, forum, scope), True, True)
-    _, _ -> Nil
-  }
+  metrics.guild(key)
+  logging.log(
+    logging.Warning,
+    "guild push skipped because the "
+      <> source
+      <> " was released before routing finished: guild_id="
+      <> int.to_string(plan.guild_int(capture))
+      <> " message_id="
+      <> int.to_string(capture.message),
+  )
 }
 
 fn deliver(
@@ -485,6 +533,7 @@ fn send_class(
 pub fn on_permit(
   push: GuildPush,
   member_list: MemberList,
+  present: fn(SessionId) -> Bool,
   message: PushGuildMsg,
 ) -> GuildPush {
   case message {
@@ -510,7 +559,7 @@ pub fn on_permit(
         |> masks.update(member_list, _)
       push
     }
-    state.ReleasedHolds(sessions:, reply:) -> {
+    state.HeldSessions(sessions:, reply:) -> {
       let ids =
         list.filter_map(sessions, fn(text) {
           session.session_id_from_string(text)
@@ -518,7 +567,10 @@ pub fn on_permit(
       let released =
         engagement.released_holds(push.engagement, ids)
         |> list.map(session.session_id_to_string)
-      process.send(reply, released)
+      let present =
+        list.filter(ids, present)
+        |> list.map(session.session_id_to_string)
+      process.send(reply, state.Holds(present:, released:))
       push
     }
   }

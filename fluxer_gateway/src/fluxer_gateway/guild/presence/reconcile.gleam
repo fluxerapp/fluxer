@@ -71,12 +71,15 @@ fn mismatch_key(item: Mismatch) -> #(Int, Display, Display) {
 }
 
 fn observe(users: List(Int), seen: Dict(Int, Display)) -> List(Mismatch) {
-  let fetched =
+  let #(found, unknown) =
     users
     |> packed_ids.from_list
-    |> client.lookup_many
+    |> client.lookup_known
+  let fetched =
+    found
     |> list.map(fn(found) { #(id.user_id_to_int(presence.user(found)), found) })
     |> dict.from_list
+  let unknown = set.from_list(unknown)
   list.filter_map(users, fn(user) {
     let shown = dict.get(seen, user) |> result.unwrap(row.offline_display())
     case dict.get(fetched, user), id.user_id(user) {
@@ -86,7 +89,7 @@ fn observe(users: List(Int), seen: Dict(Int, Display)) -> List(Mismatch) {
           False -> Ok(Mismatch(user, found, shown))
         }
       Error(Nil), Ok(user_id) ->
-        case shown == row.offline_display() {
+        case shown == row.offline_display() || set.contains(unknown, user) {
           True -> Error(Nil)
           False -> Ok(Mismatch(user, offline(user_id), shown))
         }

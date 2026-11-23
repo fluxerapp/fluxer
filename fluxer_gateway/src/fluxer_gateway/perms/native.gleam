@@ -307,5 +307,8 @@ pub fn perm_epoch(reader: Reader) -> Int
 @external(erlang, "fluxer_gateway@nif", "perm_revision")
 pub fn perm_revision(reader: Reader) -> Int
 
+@external(erlang, "fluxer_gateway@nif", "perm_status")
+pub fn perm_status(perms: Perms) -> Result(Nil, NifError)
+
 @external(erlang, "fluxer_gateway@nif", "perm_release")
 pub fn perm_release(perms: Perms) -> Nil

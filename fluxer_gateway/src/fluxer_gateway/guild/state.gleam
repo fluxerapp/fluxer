@@ -26,6 +26,12 @@ import gleam/option.{type Option, None, Some}
 
 const small_guild_members = 250
 
+pub type PermsRepair {
+  Intact
+  Rebuilt(stale: List(perms.Perms))
+  Unrepairable
+}
+
 pub opaque type GuildState {
   GuildState(
     self_ref: GuildRef,
@@ -46,6 +52,7 @@ pub opaque type GuildState {
     public_online: Option(Int),
     list_flush: Option(Timer),
     guild_id_json: raw_json.RawJson,
+    repair: PermsRepair,
   )
 }
 
@@ -86,6 +93,7 @@ pub fn new(
     guild_id_json: raw_json.from_json(
       id.json(id.guild_id_to_int(core_guild.id(data.facts))),
     ),
+    repair: Intact,
   )
 }
 
@@ -159,6 +167,38 @@ pub fn set_perms(
     reader:,
     sessions: guild_sessions.clear_groups(state.sessions),
   )
+}
+
+pub fn replace_perms(
+  state: GuildState,
+  perms: perms.Perms,
+  reader: perms.Reader,
+) -> GuildState {
+  let repair = case state.repair {
+    Intact -> Rebuilt([state.perms])
+    Rebuilt(stale) -> Rebuilt([state.perms, ..stale])
+    Unrepairable -> Unrepairable
+  }
+  GuildState(
+    ..set_perms(state, perms, reader),
+    repair:,
+    version: state.version + 1,
+  )
+}
+
+pub fn mark_unrepairable(state: GuildState) -> GuildState {
+  GuildState(..state, repair: Unrepairable)
+}
+
+pub fn repair(state: GuildState) -> PermsRepair {
+  state.repair
+}
+
+pub fn take_repair(state: GuildState) -> #(GuildState, PermsRepair) {
+  case state.repair {
+    Unrepairable -> #(state, Unrepairable)
+    found -> #(GuildState(..state, repair: Intact), found)
+  }
 }
 
 pub fn set_member_list(

@@ -158,7 +158,7 @@ type Timer {
   AutoStop(token: Int)
   ReplayWindowClosed
   FreezeDeadline(token: Int)
-  ReleasePerms(perms.Perms)
+  ReleasePerms(stale: perms.Perms, since_ms: Int)
   AckMoves
 }
 
@@ -287,6 +287,7 @@ fn initialise(
   {
     Error(error) -> Error(init_failure(error))
     Ok(state) -> {
+      let state = rows.restore_engagement(state)
       let state = case voice {
         Some(_) -> resume_voice(state)
         None -> state
@@ -359,7 +360,15 @@ fn go_live(
   let timers = parts.timers
   let guild = guild_state.guild_id(state)
   health.register(guild, handle.control)
-  roster.put_many(guild, rejoining)
+  let carried = guild_sessions.session_refs(guild_state.sessions(state))
+  list.each(carried, fn(ref) {
+    health.put_session(guild, ref)
+    health.send_current(guild, ref)
+  })
+  roster.put_many(
+    guild,
+    list.fold(carried, rejoining, fn(ids, ref) { [ref.id, ..ids] }),
+  )
   maintenance.publish_view(state, handle)
   maintenance.publish_counts(state)
   let _ = availability.publish(guild_state.facts(state))
@@ -518,9 +527,34 @@ fn handle_message(
 fn run(server: Server, message: Message) -> Step {
   let occupied = occupancy(server.state)
   case route(server, message) {
-    Continue(next) ->
-      Continue(publish(after_route(catch_up_joined(next), occupied)))
+    Continue(next) -> settle_perms(after_route(catch_up_joined(next), occupied))
     other -> other
+  }
+}
+
+fn settle_perms(server: Server) -> Step {
+  let #(state, repair) = guild_state.take_repair(server.state)
+  case repair {
+    guild_state.Intact -> publish_live(server)
+    guild_state.Rebuilt(stale) -> {
+      let since_ms = clock.monotonic_ms()
+      list.each(stale, fn(handle) {
+        process.send_after(
+          server.timers,
+          stale_perms_release_ms(),
+          ReleasePerms(handle, since_ms),
+        )
+      })
+      publish_live(with_state(server, state))
+    }
+    guild_state.Unrepairable -> Crash(server, "guild_model_rebuild_failed")
+  }
+}
+
+fn publish_live(server: Server) -> Step {
+  case perms.status(guild_state.perms_handle(server.state)) {
+    Ok(Nil) -> Continue(publish(server))
+    Error(_) -> Crash(server, "guild_perms_broken")
   }
 }
 
@@ -818,6 +852,7 @@ fn activate(
       option.unwrap(tail.table, guild_sessions.new())
       |> guild_sessions.rehome(process.monitor),
     )
+    |> rows.restore_engagement
     |> guild_state.set_voice(tail.voice)
   use state <- result.map(
     init.load(state, members.to_list(guild_state.members_table(state)))
@@ -1354,6 +1389,12 @@ fn push_message(server: Server, request: push_dispatch.PushGuildMsg) -> Server {
       push_dispatch.on_permit(
         guild_state.push(state),
         guild_state.member_list(state),
+        fn(session_id) {
+          option.is_some(guild_sessions.get(
+            guild_state.sessions(state),
+            session_id,
+          ))
+        },
         request,
       ),
     ),
@@ -1957,7 +1998,7 @@ fn reload(server: Server, loaded: Loaded) -> Step {
           process.send_after(
             server.timers,
             stale_perms_release_ms(),
-            ReleasePerms(stale_perms),
+            ReleasePerms(stale_perms, clock.monotonic_ms()),
           )
           send.list_dispatches(state, dispatches)
           let state = maintenance.prune_all(state)
@@ -2000,8 +2041,18 @@ fn tick(server: Server, timer: Timer) -> Step {
   case timer {
     DrainJoins -> Continue(drain_joins(server))
     AckMoves -> Continue(ack_moves(server))
-    ReleasePerms(stale) -> {
-      perms.release(stale)
+    ReleasePerms(stale:, since_ms:) -> {
+      case push_busy(server.state, since_ms) {
+        True -> {
+          process.send_after(
+            server.timers,
+            stale_perms_release_ms(),
+            ReleasePerms(stale:, since_ms:),
+          )
+          Nil
+        }
+        False -> perms.release(stale)
+      }
       Continue(server)
     }
     PassiveSync -> {
@@ -2039,7 +2090,9 @@ fn tick(server: Server, timer: Timer) -> Step {
       {
         False, _ -> Continue(server)
         True, True ->
-          case mailbox_empty() {
+          case
+            mailbox_empty() && !push_busy(server.state, clock.monotonic_ms())
+          {
             True -> Stop(server)
             False ->
               Continue(maybe_auto_stop(Server(..server, auto_stop: None)))
@@ -2070,8 +2123,14 @@ fn mailbox_empty() -> Bool {
   queue_info(process.self(), MessageQueueLen).1 == 0
 }
 
+fn push_busy(state: GuildState, admitted_by_ms: Int) -> Bool {
+  push_dispatch.busy(guild_state.push(state), admitted_by: admitted_by_ms)
+}
+
 fn occupancy(state: GuildState) -> Int {
-  guild_sessions.count(guild_state.sessions(state)) + visitors.count(state)
+  guild_sessions.count(guild_state.sessions(state))
+  + visitors.count(state)
+  + guild_handler.issued_count(guild_state.voice(state))
 }
 
 fn is_empty(state: GuildState) -> Bool {

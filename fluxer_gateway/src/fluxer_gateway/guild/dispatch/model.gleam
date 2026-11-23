@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import fluxer_gateway/core/id.{type ChannelId, type UserId}
-import fluxer_gateway/guild/data.{type GuildData}
+import fluxer_gateway/guild/data
 import fluxer_gateway/guild/dispatch/send
+import fluxer_gateway/guild/init
+import fluxer_gateway/guild/members
 import fluxer_gateway/guild/presence/rows
 import fluxer_gateway/guild/state.{type GuildState} as guild_state
 import fluxer_gateway/member_list
@@ -10,30 +12,29 @@ import fluxer_gateway/member_list/effects
 import fluxer_gateway/member_list/event as list_event
 import fluxer_gateway/perms
 import fluxer_gateway/perms/event.{type Effects} as perm_event
-import gleam/dynamic/decode
-import gleam/int
+import fluxer_gateway/voice/guild_handler
+import gleam/erlang/process
 import gleam/option.{type Option, None, Some}
-import gleam/result
 import logging
-
-const disabled_member_list_updates = 64
 
 pub fn apply_perms(
   state: GuildState,
   name: String,
   events: List(perm_event.Event),
-) -> Option(Effects) {
+) -> #(GuildState, Option(Effects)) {
   case events {
-    [] -> None
+    [] -> #(state, None)
     _ ->
       case perms.apply(guild_state.perms_handle(state), events) {
-        Ok(effects) -> Some(effects)
+        Ok(effects) -> #(state, Some(effects))
         Error(_) -> {
           logging.log(
             logging.Error,
-            "guild permission apply failed for event " <> name,
+            "guild permission apply failed for event "
+              <> name
+              <> ", rebuilding from guild data",
           )
-          None
+          #(rebuild_perms(state), None)
         }
       }
   }
@@ -57,10 +58,67 @@ pub fn apply_member_list(
       {
         Ok(#(dispatches, timer)) -> #(rows.list_timer(state, timer), dispatches)
         Error(_) -> {
-          logging.log(logging.Error, "guild member list apply failed")
-          #(state, [])
+          logging.log(
+            logging.Error,
+            "guild member list apply failed, rebuilding from guild data",
+          )
+          case rebuild_list(state, guild_state.perms_handle(state)) {
+            Ok(rebuilt) -> rebuilt
+            Error(Nil) -> #(guild_state.mark_unrepairable(state), [])
+          }
         }
       }
+  }
+}
+
+fn rebuild_perms(state: GuildState) -> GuildState {
+  let #(fresh, reader) = perms.new(guild_state.guild_id(state), process.self())
+  let snapshot =
+    init.reload_snapshot(
+      guild_state.guild_data(state),
+      guild_state.members_table(state),
+      guild_handler.virtual_grants(guild_state.voice(state)),
+    )
+  let rebuilt = case perms.load(fresh, snapshot) {
+    Ok(_) -> rebuild_list(state, fresh)
+    Error(_) -> Error(Nil)
+  }
+  case rebuilt {
+    Ok(#(state, dispatches)) -> {
+      case member_list_updates_enabled(state) {
+        True -> send.list_dispatches(state, dispatches)
+        False -> Nil
+      }
+      guild_state.replace_perms(state, fresh, reader)
+    }
+    Error(Nil) -> {
+      logging.log(logging.Error, "guild permission rebuild failed")
+      perms.release(fresh)
+      guild_state.mark_unrepairable(state)
+    }
+  }
+}
+
+fn rebuild_list(
+  state: GuildState,
+  handle: perms.Perms,
+) -> Result(#(GuildState, List(effects.Dispatch)), Nil) {
+  let source =
+    data.Loaded(
+      data: guild_state.guild_data(state),
+      members: members.to_list(guild_state.members_table(state)),
+    )
+  case
+    member_list.rebuild(
+      guild_state.member_list(state),
+      handle,
+      init.list_snapshot(source, guild_state.sessions(state)),
+      rows.lookup(state),
+    )
+  {
+    Ok(#(list, counts, dispatches)) ->
+      Ok(#(guild_state.set_member_list(state, list, counts), dispatches))
+    Error(_) -> Error(Nil)
   }
 }
 
@@ -74,8 +132,8 @@ pub fn set_virtual_access(
       perm_event.virtual_access(user, channels),
     ])
   {
-    None -> state
-    Some(found) -> {
+    #(state, None) -> state
+    #(state, Some(found)) -> {
       let #(state, dispatches) =
         apply_member_list(state, [], Some(perms.delta(found)))
       case member_list_updates_enabled(state) {
@@ -88,25 +146,5 @@ pub fn set_virtual_access(
 }
 
 pub fn member_list_updates_enabled(state: GuildState) -> Bool {
-  updates_enabled(guild_state.guild_data(state))
-}
-
-pub fn updates_enabled(guild_data: GuildData) -> Bool {
-  !operation_disabled(guild_data, disabled_member_list_updates)
-}
-
-pub fn operation_disabled(guild_data: GuildData, bit: Int) -> Bool {
-  let bits =
-    data.decoded_property(guild_data, "disabled_operations", operations())
-    |> option.unwrap(0)
-  int.bitwise_and(bits, bit) == bit
-}
-
-fn operations() -> decode.Decoder(Int) {
-  decode.one_of(decode.int, [
-    decode.map(decode.string, fn(text) {
-      id.parse_decimal(text) |> result.unwrap(0)
-    }),
-    decode.success(0),
-  ])
+  data.updates_enabled(guild_state.guild_data(state))
 }
