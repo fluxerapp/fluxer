@@ -1,0 +1,67 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/perm_core",
+    "crates/perm_nif",
+    "crates/ml_core",
+    "crates/ml_nif",
+    "crates/push_core",
+    "crates/zstd_stream",
+    "crates/md_plaintext",
+    "crates/guild_rt",
+    "crates/gateway_nif",
+    "crates/json_scan",
+]
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.98"
+license = "AGPL-3.0-or-later"
+
+[workspace.dependencies]
+rustler = { version = "=0.39.0", default-features = false, features = ["nif_version_2_15"] }
+criterion = { version = "=0.8.2", default-features = false, features = ["cargo_bench_support"] }
+proptest = { version = "=1.11.0", default-features = false, features = ["std", "bit-set"] }
+zstd-safe = { version = "=8.2.0", features = ["experimental"] }
+arc-swap = "=1.9.3"
+bitflags = "=2.11.1"
+foldhash = { version = "=0.2.0", default-features = false, features = ["std"] }
+hashbrown = { version = "=0.16.1", default-features = false }
+smallvec = { version = "=1.15.1", features = ["union", "const_generics"] }
+serde = { version = "=1.0.228", features = ["derive"] }
+serde_json = "=1.0.145"
+itoa = "=1.0.18"
+memchr = "=2.8.3"
+fluxer_markdown_parser = { path = "../../packages/markdown_parser/rust" }
+perm_core = { path = "crates/perm_core" }
+perm_nif = { path = "crates/perm_nif" }
+ml_core = { path = "crates/ml_core" }
+ml_nif = { path = "crates/ml_nif" }
+push_core = { path = "crates/push_core" }
+zstd_stream = { path = "crates/zstd_stream" }
+md_plaintext = { path = "crates/md_plaintext" }
+guild_rt = { path = "crates/guild_rt" }
+json_scan = { path = "crates/json_scan" }
+
+[profile.release]
+panic = "unwind"
+overflow-checks = true
+lto = "thin"
+codegen-units = 1
+opt-level = 3
+
+[profile.gate]
+inherits = "release"
+lto = false
+codegen-units = 16
+incremental = true
+
+[profile.bench]
+inherits = "release"
+
+[profile.dev]
+overflow-checks = true
+
+[profile.test]
+opt-level = 2
+overflow-checks = true

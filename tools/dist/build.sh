@@ -236,25 +236,46 @@ build_rust() {
 }
 
 build_gateway() {
-    need rebar3 erl cargo
-    local release
-    (
-        cd "$repo/fluxer_gateway"
-        export REBAR_SKIP_PROJECT_PLUGINS=1
-        rebar3 compile --deps_only
-        cp config/sys.config.template config/sys.config
-        rebar3 as prod release
-        rm -f config/sys.config
-    )
-    release="$repo/fluxer_gateway/_build/prod/rel/fluxer_gateway"
-    compgen -G "$release/releases/*/vm.args.native.src" >/dev/null \
-        || die "the gateway release has no vm.args.native.src, check the prod overlay in rebar.config"
-    compgen -G "$release/releases/*/sys.native.config" >/dev/null \
-        || die "the gateway release has no sys.native.config, check the prod overlay in rebar.config"
-    rm -rf "$dist/gateway"
-    cp -a "$release" "$dist/gateway"
-    mv "$dist/gateway/bin/fluxer_gateway" "$dist/gateway/bin/fluxer_gateway.real"
-    install -m 0755 "$repo/fluxer_gateway/scripts/fluxer_gateway_release_wrapper.sh" "$dist/gateway/bin/fluxer_gateway"
+    need gleam erl escript cargo strip
+    local src="$repo/fluxer_gateway" gw="$dist/gateway" nif_target="$repo/target/gateway" shipment erts bundled apps listed app tool modules=()
+    (cd "$src/rust" && CARGO_TARGET_DIR="$nif_target" cargo build --locked --release -p gateway_nif)
+    (cd "$src" && gleam export erlang-shipment)
+    shipment="$src/build/erlang-shipment"
+    [ -d "$shipment/fluxer_gateway/ebin" ] || die "gleam export erlang-shipment did not produce $shipment/fluxer_gateway"
+    erts="$(erl -noshell -eval 'io:put_chars([code:root_dir(), "/erts-", erlang:system_info(version)]), halt().')"
+    [ -x "$erts/bin/beam.smp" ] || die "no ERTS at $erts to bundle with the gateway"
+    rm -rf "$gw"
+    mkdir -p "$gw/bin" "$gw/config" "$gw/lib" "$gw/packages"
+    cp -a "$shipment"/*/ "$gw/packages/"
+    find "$gw/packages" -type f ! -name '*.beam' ! -name '*.app' -delete
+    find "$gw/packages" -depth -type d -empty -delete
+    install -D -m 0755 "$nif_target/release/libgateway_nif.so" "$gw/packages/fluxer_gateway/priv/gateway_nif.so"
+    strip --strip-unneeded "$gw/packages/fluxer_gateway/priv/gateway_nif.so"
+    erl -noshell -eval '{ok, _} = beam_lib:strip_files(filelib:wildcard(hd(init:get_plain_arguments()) ++ "/*/ebin/*.beam")), halt().' \
+        -extra "$gw/packages"
+    apps="$("$here/gateway/otp_apps.escript" apps "$gw/packages")"
+    listed="$("$here/gateway/otp_apps.escript" modules "$gw/packages")"
+    mapfile -t modules <<<"$listed"
+    while IFS= read -r app; do
+        mkdir -p "$gw/lib/${app##*/}"
+        cp -a "$app/ebin" "$gw/lib/${app##*/}/"
+        [ ! -d "$app/priv" ] || cp -a "$app/priv" "$gw/lib/${app##*/}/"
+    done <<<"$apps"
+    bundled="$gw/${erts##*/}"
+    for tool in beam.smp erlexec erl_child_setup inet_gethost; do
+        install -D -m 0755 "$erts/bin/$tool" "$bundled/bin/$tool"
+    done
+    strip --strip-debug "$bundled/bin/beam.smp"
+    install -m 0644 "${erts%/*}/bin/start.boot" "$gw/bin/start.boot"
+    install -m 0644 "$here/gateway/vm.args" "$gw/config/vm.args"
+    install -m 0644 "$here/gateway/sys.config" "$gw/config/sys.config"
+    install -m 0755 "$here/gateway/fluxer_gateway.sh" "$gw/bin/fluxer_gateway"
+    ROOTDIR="$gw" BINDIR="$bundled/bin" EMU=beam PROGNAME=erl "$bundled/bin/erlexec" -noshell -pa "$gw"/packages/*/ebin -eval '
+        Mods = [list_to_atom(M) || M <- init:get_plain_arguments()],
+        case [M || M <- Mods, code:ensure_loaded(M) =/= {module, M}] of
+            [] -> halt(0);
+            Missing -> io:format(standard_error, "the bundled gateway cannot load ~p~n", [Missing]), halt(1)
+        end.' -extra "${modules[@]}" || die "the gateway bundle cannot load every module it calls"
 }
 
 build_api() {
@@ -341,7 +362,8 @@ verify_layout() {
     local required=(
         bin/fluxerd bin/node bin/valkey-server bin/valkey-cli bin/weed bin/meilisearch bin/livekit-server
         lib/libheif.so.1
-        gateway/bin/fluxer_gateway gateway/bin/fluxer_gateway.real
+        gateway/bin/fluxer_gateway gateway/bin/start.boot gateway/config/vm.args gateway/config/sys.config
+        gateway/packages/fluxer_gateway/ebin gateway/packages/fluxer_gateway/priv/gateway_nif.so
         api/package.json api/node_modules api/dist/AppEntrypoint.js api/bin
         app/static/index.html app/static/avatars app/static/web
         share/install.sh share/runtime-packages share/systemd/fluxerd.service share/LICENSES/fluxer/LICENSE
@@ -353,6 +375,7 @@ verify_layout() {
     for path in "${required[@]}"; do
         [ -e "$dist/$path" ] || missing+=("$path")
     done
+    compgen -G "$dist/gateway/erts-*/bin/beam.smp" >/dev/null || missing+=("gateway/erts-*/bin/beam.smp")
     [ "${#missing[@]}" -eq 0 ] || die "$dist is incomplete, missing: ${missing[*]}"
     missing=()
     while IFS= read -r path; do missing+=("${path#"$dist"/}"); done < <(escaping_links "${TOP_LEVEL[@]/#/$dist/}")
@@ -373,7 +396,7 @@ pack() {
 }
 
 log "building fluxer $version for linux/$arch with profile $profile into $dist"
-if selected gateway app; then run "fluxer-ci" build_ci; fi
+if selected app; then run "fluxer-ci" build_ci; fi
 if selected api app server; then run "pnpm install" pnpm_install; fi
 if selected "${RUST_PARTS[@]}"; then run "rust services" build_rust; fi
 if selected gateway; then run "gateway" build_gateway; fi

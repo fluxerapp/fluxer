@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::collections::HashMap;
-
 use crate::ast::{
     AlertType, EmojiKind, GuildNavigationType, ListItem, MentionKind, Node, TableAlignment,
 };
@@ -16,9 +14,45 @@ pub struct PlaintextOptions {
     pub hide_spoilers: bool,
     pub include_emoji_names: bool,
     pub include_link_urls: bool,
-    pub users: HashMap<String, String>,
-    pub roles: HashMap<String, String>,
-    pub channels: HashMap<String, String>,
+    pub users: Names,
+    pub roles: Names,
+    pub channels: Names,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct Names {
+    sorted: Vec<(u64, String)>,
+}
+
+impl Names {
+    pub fn new(mut entries: Vec<(u64, String)>) -> Self {
+        entries.sort_by_key(|entry| entry.0);
+        Self { sorted: entries }
+    }
+
+    pub fn get(&self, id: &str) -> Option<&str> {
+        let key = canonical_id(id)?;
+        let end = self.sorted.partition_point(|entry| entry.0 <= key);
+        let (found, name) = self.sorted.get(end.checked_sub(1)?)?;
+        (*found == key).then_some(name.as_str())
+    }
+}
+
+impl FromIterator<(u64, String)> for Names {
+    fn from_iter<I: IntoIterator<Item = (u64, String)>>(entries: I) -> Self {
+        Self::new(entries.into_iter().collect())
+    }
+}
+
+pub fn canonical_id(text: &str) -> Option<u64> {
+    let bytes = text.as_bytes();
+    let canonical = match bytes {
+        [] => false,
+        [b'0'] => true,
+        [b'0', ..] => false,
+        _ => bytes.iter().all(u8::is_ascii_digit),
+    };
+    if canonical { text.parse().ok() } else { None }
 }
 
 impl Default for PlaintextOptions {
@@ -28,9 +62,9 @@ impl Default for PlaintextOptions {
             hide_spoilers: false,
             include_emoji_names: true,
             include_link_urls: false,
-            users: HashMap::new(),
-            roles: HashMap::new(),
-            channels: HashMap::new(),
+            users: Names::default(),
+            roles: Names::default(),
+            channels: Names::default(),
         }
     }
 }

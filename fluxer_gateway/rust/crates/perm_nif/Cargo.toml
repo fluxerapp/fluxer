@@ -1,0 +1,19 @@
+[package]
+name = "perm_nif"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+name = "perm_nif"
+path = "src/lib.rs"
+
+[dependencies]
+perm_core = { workspace = true }
+guild_rt = { workspace = true, optional = true }
+rustler = { workspace = true, optional = true }
+
+[features]
+nif = ["dep:rustler", "dep:guild_rt"]

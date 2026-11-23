@@ -1,0 +1,29 @@
+[package]
+name = "ml_nif"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+name = "ml_nif"
+path = "src/lib.rs"
+crate-type = ["rlib"]
+
+[dependencies]
+ml_core = { workspace = true, optional = true }
+perm_core = { workspace = true, optional = true }
+perm_nif = { workspace = true, optional = true }
+guild_rt = { workspace = true, optional = true }
+rustler = { workspace = true, optional = true }
+
+[features]
+nif = [
+    "dep:ml_core",
+    "dep:perm_core",
+    "dep:perm_nif",
+    "perm_nif/nif",
+    "dep:guild_rt",
+    "dep:rustler",
+]

@@ -1,0 +1,29 @@
+# Do not manually edit this file, it is managed by Gleam.
+#
+# This file locks the dependency versions used, to make your build
+# deterministic and to prevent unexpected versions from being included
+# in your application.
+#
+# You should check this file into your source control repository.
+
+packages = [
+  { name = "bouncer_proto", version = "0.1.0", build_tools = ["gleam"], requirements = ["gleam_erlang", "gleam_stdlib"], source = "local", path = "../bouncer_proto" },
+  { name = "envoy", version = "1.2.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "envoy", source = "hex", outer_checksum = "9C6FBB6BFA02A52798BEEC5977A738CAD6E4A057F4B67FD0C8061AD2502C191A" },
+  { name = "gleam_erlang", version = "1.3.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "gleam_erlang", source = "hex", outer_checksum = "1124AD3AA21143E5AF0FC5CF3D9529F6DB8CA03E43A55711B60B6B7B3874375C" },
+  { name = "gleam_json", version = "3.1.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "gleam_json", source = "hex", outer_checksum = "44FDAA8847BE8FC48CA7A1C089706BD54BADCC4C45B237A992EDDF9F2CDB2836" },
+  { name = "gleam_otp", version = "1.3.0", build_tools = ["gleam"], requirements = ["gleam_erlang", "gleam_stdlib"], otp_app = "gleam_otp", source = "hex", outer_checksum = "DE4CA6850842F0266EE95317A25DD6A0A0F20CDFAB7C0ADC2E63251D7C3C72EC" },
+  { name = "gleam_stdlib", version = "1.1.0", build_tools = ["gleam"], requirements = [], otp_app = "gleam_stdlib", source = "hex", outer_checksum = "E191E535492DDFE6A6499E96C89A40D9BDF2B7F1DADD4D6BEDABE34027E5B1EA" },
+  { name = "gleeunit", version = "1.11.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "gleeunit", source = "hex", outer_checksum = "EC31ABA74256AEA531EDF8169931D775BBB384FED0A8A1BDC4DD9354E3E21826" },
+  { name = "glisten", version = "9.0.1", build_tools = ["gleam"], requirements = ["gleam_erlang", "gleam_otp", "gleam_stdlib", "logging"], otp_app = "glisten", source = "hex", outer_checksum = "7795AA50830656F3A0316A6B26595F893C83272DA901B3405E31339CAA31A10B" },
+  { name = "logging", version = "1.5.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "logging", source = "hex", outer_checksum = "BC5F18CE5DD9686100229FE5409BDC3DD5C46D5A7DF2F804AD2D8F0DD6C5060E" },
+]
+
+[requirements]
+bouncer_proto = { path = "../bouncer_proto" }
+envoy = { version = ">= 1.2.0 and < 2.0.0" }
+gleam_erlang = { version = ">= 1.3.0 and < 2.0.0" }
+gleam_json = { version = ">= 3.1.0 and < 4.0.0" }
+gleam_otp = { version = ">= 1.3.0 and < 2.0.0" }
+gleam_stdlib = { version = ">= 1.0.5 and < 2.0.0" }
+gleeunit = { version = ">= 1.11.0 and < 2.0.0" }
+glisten = { version = ">= 9.0.1 and < 10.0.0" }

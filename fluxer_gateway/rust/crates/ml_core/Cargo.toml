@@ -1,0 +1,40 @@
+[package]
+name = "ml_core"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+name = "ml_core"
+path = "src/lib.rs"
+
+[dependencies]
+perm_core = { workspace = true }
+push_core = { workspace = true }
+bitflags = { workspace = true }
+foldhash = { workspace = true }
+hashbrown = { workspace = true }
+smallvec = { workspace = true }
+
+[features]
+reference = []
+
+[dev-dependencies]
+proptest = { workspace = true }
+criterion = { workspace = true }
+
+[[test]]
+name = "model"
+path = "tests/model.rs"
+required-features = ["reference"]
+
+[[test]]
+name = "units"
+path = "tests/units.rs"
+
+[[bench]]
+name = "ml"
+path = "benches/ml.rs"
+harness = false

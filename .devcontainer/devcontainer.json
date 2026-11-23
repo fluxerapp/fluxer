@@ -39,9 +39,10 @@
 		"vscode": {
 			"settings": {
 				"editor.defaultFormatter": "biomejs.biome",
-				"erlang.includePaths": ["."],
 				"search.exclude": {
-					"**/_build/default/lib/fluxer_gateway": true
+					"fluxer_gateway/build": true,
+					"fluxer_gateway/bouncer/build": true,
+					"fluxer_gateway/bouncer_proto/build": true
 				},
 				"json.schemaDownload.trustedDomains": {
 					"http://json-schema.org/draft-07/schema#": true,
@@ -55,7 +56,7 @@
 				"tamasfe.even-better-toml",
 				"TypeScriptTeam.native-preview",
 				"unifiedjs.vscode-mdx",
-				"pgourlain.erlang",
+				"gleam.gleam",
 				"clinyong.vscode-css-modules",
 				"EditorConfig.EditorConfig",
 				"mkhl.direnv"

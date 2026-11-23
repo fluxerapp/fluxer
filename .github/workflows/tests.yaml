@@ -208,77 +208,87 @@ jobs:
 
   gateway:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 60
     env:
       FLUXER_CI_BIN: ${{ github.workspace }}/target/debug/fluxer-ci
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
-      - name: Set up Rust toolchain (CI helpers)
+      - name: Set up Rust toolchain
         uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
         with:
           toolchain: "1.98.1"
+          components: clippy, rustfmt
 
-      - name: Cache cargo (gateway NIFs)
+      - name: Cache cargo (gateway)
         uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6
         with:
-          workspaces: |
-            fluxer_gateway/native/guild_member_list_oset_nif -> target
-            fluxer_gateway/native/push_markdown_plaintext_nif -> target
+          workspaces: fluxer_gateway/rust -> target
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Set up ci helper
         uses: ./.github/actions/ci-helper
 
-      - name: Set up Erlang
+      - name: Set up Erlang and Gleam
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124
         with:
-          otp-version: '28'
-          rebar3-version: '3.27.3'
+          otp-version: '28.5'
+          gleam-version: '1.19.2'
 
-      - name: Restore rebar3 dependencies
-        id: rebar3-cache
+      - name: Restore Gleam packages
+        id: gleam-cache
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: |
-            ~/.cache/rebar3
-            fluxer_gateway/_build
-            !fluxer_gateway/_build/default/lib/fluxer_gateway/**
-            !fluxer_gateway/_build/test/lib/fluxer_gateway/**
+            ~/.cache/gleam
+            fluxer_gateway/build/packages
+            fluxer_gateway/bouncer/build/packages
+            fluxer_gateway/bouncer_proto/build/packages
           key: >-
-            rebar3-${{ runner.os }}-otp28-rebar3.27.3-${{ hashFiles('fluxer_gateway/rebar.lock',
-            'fluxer_gateway/rebar.config') }}
+            gleam-${{ runner.os }}-1.19.2-${{ hashFiles('fluxer_gateway/manifest.toml',
+            'fluxer_gateway/bouncer/manifest.toml', 'fluxer_gateway/bouncer_proto/manifest.toml') }}
           restore-keys: |
-            rebar3-${{ runner.os }}-otp28-rebar3.27.3-
-
-      - name: Drop restored gateway build output
-        run: rm -rf fluxer_gateway/_build/default/lib/fluxer_gateway fluxer_gateway/_build/test/lib/fluxer_gateway
+            gleam-${{ runner.os }}-1.19.2-
 
       - name: Check formatting
         run: |
           "$FLUXER_CI_BIN" ci --step gateway_fmt
 
-      - name: Compile
+      - name: Check Rust formatting
+        run: |
+          "$FLUXER_CI_BIN" ci --step gateway_rust_fmt
+
+      - name: Clippy (warnings as errors)
+        run: |
+          "$FLUXER_CI_BIN" ci --step gateway_clippy
+
+      - name: Compile (warnings as errors)
         run: |
           "$FLUXER_CI_BIN" ci --step gateway_compile
 
-      - name: Run dialyzer
+      - name: Run Rust tests
         run: |
-          "$FLUXER_CI_BIN" ci --step gateway_dialyzer
+          "$FLUXER_CI_BIN" ci --step gateway_rust_test
 
-      - name: Save rebar3 dependencies
-        if: always() && github.ref == 'refs/heads/main' && steps.rebar3-cache.outputs.cache-hit != 'true'
+      - name: Run gateway tests
+        run: |
+          "$FLUXER_CI_BIN" ci --step gateway_test
+
+      - name: Run bouncer tests
+        run: |
+          "$FLUXER_CI_BIN" ci --step gateway_bouncer_test
+
+      - name: Save Gleam packages
+        if: always() && github.ref == 'refs/heads/main' && steps.gleam-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: |
-            ~/.cache/rebar3
-            fluxer_gateway/_build
-            !fluxer_gateway/_build/default/lib/fluxer_gateway/**
-            !fluxer_gateway/_build/test/lib/fluxer_gateway/**
-          key: >-
-            rebar3-${{ runner.os }}-otp28-rebar3.27.3-${{ hashFiles('fluxer_gateway/rebar.lock',
-            'fluxer_gateway/rebar.config') }}
+            ~/.cache/gleam
+            fluxer_gateway/build/packages
+            fluxer_gateway/bouncer/build/packages
+            fluxer_gateway/bouncer_proto/build/packages
+          key: ${{ steps.gleam-cache.outputs.cache-primary-key }}
 
   knip:
     runs-on: ubuntu-24.04
