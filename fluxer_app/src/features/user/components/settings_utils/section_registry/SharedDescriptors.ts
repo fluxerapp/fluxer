@@ -771,6 +771,11 @@ export const VIDEO_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 
+export const IN_CALL_BEHAVIOR_DESCRIPTOR = msg({
+	message: 'In-call behavior',
+	comment: 'Control confirmation prompts during voice and video calls.',
+});
+
 export const MOTION_DESCRIPTOR = msg({
 	message: 'Motion',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',

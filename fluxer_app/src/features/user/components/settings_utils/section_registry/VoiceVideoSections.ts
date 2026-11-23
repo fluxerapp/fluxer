@@ -31,6 +31,7 @@ import {
 	VOICE_NOISE_SUPPRESSION_DESCRIPTOR,
 	VOICE_OUTPUT_DEVICE_DESCRIPTOR,
 	VOICE_OUTPUT_VOLUME_DESCRIPTOR,
+	VOICE_P2P_ALWAYS_AGREE_SETTING_DESCRIPTOR,
 } from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 
@@ -159,6 +160,10 @@ const CONFIGURE_YOUR_CAMERA_SCREEN_SHARING_QUALITY_PREVIEWS_AND_DESCRIPTOR = msg
 	message: 'Configure your camera, screen sharing quality, previews, and frame rate.',
 	comment: 'Settings section description. One-line summary of what the settings section controls.',
 });
+const CONFIGURE_IN_CALL_BEHAVIOR_DESCRIPTOR = msg({
+	message: 'Confiture options for in-call behavior',
+	comment: 'Control confirmation prompts during voice and video calls.',
+});
 
 const WEBCAM_DESCRIPTOR = msg({
 	message: 'Webcam',
@@ -239,6 +244,11 @@ const VIDEO_DESCRIPTOR = msg({
 	message: 'Video',
 	context: 'voice-video-settings-section',
 	comment: 'Audio/video settings section for camera controls.',
+});
+const IN_CALL_BEHAVIOR_DESCRIPTOR = msg({
+	message: 'In-call behavior',
+	context: 'voice-video-settings-section',
+	comment: 'Audio/video settings section for in-call behavior.',
 });
 export const voiceVideoSections = [
 	{
@@ -329,6 +339,14 @@ export const voiceVideoSections = [
 			SOURCE_QUALITY_DESCRIPTOR,
 			PREMIUM_PRODUCT_NAME_KEYWORD,
 		],
+		isAdvanced: false,
+	},
+	{
+		id: 'in-call-behavior',
+		tabType: 'voice_video',
+		label: IN_CALL_BEHAVIOR_DESCRIPTOR,
+		description: CONFIGURE_IN_CALL_BEHAVIOR_DESCRIPTOR,
+		keywords: [VOICE_P2P_ALWAYS_AGREE_SETTING_DESCRIPTOR],
 		isAdvanced: false,
 	},
 ] as const satisfies ReadonlyArray<SectionDefinition>;
