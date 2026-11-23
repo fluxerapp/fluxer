@@ -273,6 +273,27 @@ fn wrap(guild: Int, fields: List(#(String, json.Json))) -> RawJson {
   )
 }
 
+pub fn replay_member_lists(
+  subscriptions: Subscriptions,
+  guild: Int,
+) -> Option(RawJson) {
+  use sub <- option.then(
+    dict.get(subscriptions.guilds, guild) |> option.from_result,
+  )
+  case dict.is_empty(sub.member_lists) {
+    True -> None
+    False ->
+      Some(
+        wrap(guild, [
+          #(
+            "member_list_channels",
+            json.dict(sub.member_lists, fn(key) { key }, raw_json.to_json),
+          ),
+        ]),
+      )
+  }
+}
+
 pub fn decode_incoming(data: Dynamic) -> List(#(Int, Incoming)) {
   decode.run(data, incoming_decoder()) |> result.unwrap([])
 }

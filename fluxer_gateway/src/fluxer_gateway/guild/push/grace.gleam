@@ -6,7 +6,10 @@ import fluxer_gateway/core/id
 import fluxer_gateway/core/packed_ids
 import fluxer_gateway/core/presence
 import fluxer_gateway/core/session.{type SessionRef}
-import fluxer_gateway/guild/push/state.{type GuildMessage, ReleasedHolds}
+import fluxer_gateway/guild/manager/registry
+import fluxer_gateway/guild/push/state.{
+  type GuildMessage, type Holds, HeldSessions, Holds,
+}
 import fluxer_gateway/presence/client as presence_client
 import fluxer_gateway/push/message.{type MessageCreate, MessageCreate}
 import fluxer_gateway/push/server
@@ -77,15 +80,28 @@ fn deliver_after_grace(
         |> result.map(fn(pid) { #(process.monitor(pid), Held(entry.0, ref)) })
       })
     })
-  let live = await_recheck(monitored, recheck_at)
-  let released = released_holds(guild, live)
-  let holding =
-    live
-    |> list.filter(fn(item) {
-      !set.contains(released, session.session_id_to_string(item.session.id))
-    })
-    |> list.map(fn(item) { item.user })
-  let recipients = grace_recipients(users, holding, already_offline)
+  let #(alive, gone) = await_recheck(monitored, [], recheck_at)
+  let holding = case
+    held_sessions(current_inbox(create.guild, guild), alive, gone)
+  {
+    Ok(Holds(present:, released:)) -> {
+      let present = set.from_list(present)
+      let released = set.from_list(released)
+      list.append(
+        list.filter(alive, fn(item) { !set.contains(released, key(item)) }),
+        list.filter(gone, fn(item) {
+          set.contains(present, key(item)) && !set.contains(released, key(item))
+        }),
+      )
+    }
+    Error(Nil) -> alive
+  }
+  let recipients =
+    grace_recipients(
+      users,
+      list.map(holding, fn(item) { item.user }),
+      already_offline,
+    )
   case recipients {
     [] -> Nil
     _ ->
@@ -93,48 +109,70 @@ fn deliver_after_grace(
   }
 }
 
+fn key(item: Held) -> String {
+  session.session_id_to_string(item.session.id)
+}
+
 fn await_recheck(
   monitored: List(#(Monitor, Held)),
+  gone: List(Held),
   recheck_at: Int,
-) -> List(Held) {
+) -> #(List(Held), List(Held)) {
   let remaining = int.max(0, recheck_at - clock.monotonic_ms())
   case monitored {
-    [] -> []
+    [] -> #([], gone)
     _ -> {
       let selector =
         process.new_selector()
         |> process.select_monitors(fn(down) { down })
       case process.selector_receive(selector, remaining) {
-        Ok(process.ProcessDown(monitor:, ..)) ->
+        Ok(process.ProcessDown(monitor:, ..)) -> {
+          let #(down, up) =
+            list.partition(monitored, fn(entry) { entry.0 == monitor })
           await_recheck(
-            list.filter(monitored, fn(entry) { entry.0 != monitor }),
+            up,
+            list.append(list.map(down, fn(entry) { entry.1 }), gone),
             recheck_at,
           )
-        Ok(_) -> await_recheck(monitored, recheck_at)
-        Error(Nil) -> list.map(monitored, fn(entry) { entry.1 })
+        }
+        Ok(_) -> await_recheck(monitored, gone, recheck_at)
+        Error(Nil) -> #(list.map(monitored, fn(entry) { entry.1 }), gone)
       }
     }
   }
 }
 
-fn released_holds(
-  guild: Subject(GuildMessage),
-  live: List(Held),
-) -> set.Set(String) {
-  case live {
-    [] -> set.new()
-    _ -> {
-      let reply = process.new_subject()
-      let ids =
-        list.map(live, fn(item) {
-          session.session_id_to_string(item.session.id)
-        })
-      process.send(guild, ReleasedHolds(ids, reply))
-      process.receive(reply, hold_call_timeout_ms())
-      |> result.map(set.from_list)
-      |> result.unwrap(set.new())
-    }
+fn current_inbox(
+  guild: Int,
+  captured: Subject(GuildMessage),
+) -> Subject(GuildMessage) {
+  case
+    id.guild_id(guild)
+    |> result.replace_error(Nil)
+    |> result.try(registry.lookup)
+  {
+    Ok(handle) -> state.inbox_of(handle.pid)
+    Error(Nil) -> captured
   }
+}
+
+fn held_sessions(
+  guild: Subject(GuildMessage),
+  alive: List(Held),
+  gone: List(Held),
+) -> Result(Holds, Nil) {
+  use owner <- result.try(process.subject_owner(guild))
+  let monitor = process.monitor(owner)
+  let reply = process.new_subject()
+  let ids = list.map(list.append(alive, gone), key)
+  process.send(guild, HeldSessions(ids, reply))
+  let answer =
+    process.new_selector()
+    |> process.select_map(reply, Ok)
+    |> process.select_specific_monitor(monitor, fn(_) { Error(Nil) })
+    |> process.selector_receive(hold_call_timeout_ms())
+  process.demonitor_process(monitor)
+  result.flatten(answer)
 }
 
 fn offline(users: List(Int)) -> List(Int) {

@@ -66,6 +66,11 @@ pub type Plan {
   AllMembers
 }
 
+pub type Unavailable {
+  PermsUnavailable
+  MembersUnavailable
+}
+
 pub type Routed {
   Routed(
     eligible: List(Int),
@@ -240,22 +245,37 @@ fn here_candidates(capture: Capture) -> Result(List(Int), Nil) {
   |> list.filter(engagement.is_connected(capture.snapshot, _))
 }
 
-pub fn all_member_ids(capture: Capture) -> List(Int) {
+pub fn all_member_ids(capture: Capture) -> Result(List(Int), Unavailable) {
   members.fold(capture.members, [], fn(acc, found) {
     [id.user_id_to_int(member.user_id(found)), ..acc]
   })
   |> list.reverse
+  |> intact(capture, _)
+}
+
+fn intact(capture: Capture, value: a) -> Result(a, Unavailable) {
+  case members.is_alive(capture.members) {
+    True -> Ok(value)
+    False -> Error(MembersUnavailable)
+  }
+}
+
+fn lost(reason: perms.PermsError) -> Bool {
+  case reason {
+    perms.Gone | perms.Broken -> True
+    perms.NotReady | perms.BadInput(_) -> False
+  }
 }
 
 pub fn role_adds(
   capture: Capture,
   scope: ThreadScope,
   direct: Set(Int),
-) -> Set(Int) {
+) -> Result(Set(Int), Unavailable) {
   let roles = mention_roles(capture.data)
   let room = thread_scope.role_add_room(scope)
   case set.is_empty(roles) || room == 0 {
-    True -> set.new()
+    True -> Ok(set.new())
     False -> {
       let candidates =
         members.fold(capture.members, [], fn(acc, found) {
@@ -273,6 +293,7 @@ pub fn role_adds(
         })
         |> list.sort(int.compare)
       take_role_adds(capture, candidates, room, set.new())
+      |> result.try(intact(capture, _))
     }
   }
 }
@@ -282,23 +303,26 @@ fn take_role_adds(
   candidates: List(Int),
   left: Int,
   acc: Set(Int),
-) -> Set(Int) {
+) -> Result(Set(Int), Unavailable) {
   case candidates, left {
-    [], _ -> acc
-    _, 0 -> acc
-    [user, ..rest], _ ->
-      case visible_recipient(capture, user) {
+    [], _ -> Ok(acc)
+    _, 0 -> Ok(acc)
+    [user, ..rest], _ -> {
+      use visible <- result.try(visible_recipient(capture, user))
+      case visible {
         True -> take_role_adds(capture, rest, left - 1, set.insert(acc, user))
         False -> take_role_adds(capture, rest, left, acc)
       }
+    }
   }
 }
 
-fn visible_recipient(capture: Capture, user: Int) -> Bool {
+fn visible_recipient(capture: Capture, user: Int) -> Result(Bool, Unavailable) {
   case member_of(capture, user) {
     Some(found) ->
-      set.contains(visible_members(capture, [#(user, found)]), user)
-    None -> False
+      visible_members(capture, [#(user, found)])
+      |> result.map(set.contains(_, user))
+    None -> Ok(False)
   }
 }
 
@@ -306,7 +330,7 @@ pub fn route(
   capture: Capture,
   candidates: List(Int),
   thread_adds: Set(Int),
-) -> Routed {
+) -> Result(Routed, Unavailable) {
   let direct = message.direct_mention_ids(capture.data)
   let in_thread = fn(user) {
     case capture.thread {
@@ -328,7 +352,7 @@ pub fn route(
         None -> Error(Nil)
       }
     })
-  let visible = visible_members(capture, routed)
+  use visible <- result.try(visible_members(capture, routed))
   list.fold(list.reverse(routed), Routed([], [], dict.new()), fn(acc, pair) {
     let #(user, found) = pair
     case set.contains(visible, user) {
@@ -336,6 +360,7 @@ pub fn route(
       True -> add_routed(capture, acc, user, found)
     }
   })
+  |> intact(capture, _)
 }
 
 fn add_routed(
@@ -356,14 +381,14 @@ fn add_routed(
   }
 }
 
-fn visible_members(capture: Capture, users: List(#(Int, Member))) -> Set(Int) {
+fn visible_members(
+  capture: Capture,
+  users: List(#(Int, Member)),
+) -> Result(Set(Int), Unavailable) {
   case capture.thread {
     None ->
-      set.from_list(viewable(
-        capture,
-        capture.channel,
-        list.map(users, fn(pair) { pair.0 }),
-      ))
+      viewable(capture, capture.channel, list.map(users, fn(pair) { pair.0 }))
+      |> result.map(set.from_list)
     Some(scope) -> thread_viewers(capture, scope, users)
   }
 }
@@ -372,14 +397,14 @@ fn thread_viewers(
   capture: Capture,
   scope: ThreadScope,
   users: List(#(Int, Member)),
-) -> Set(Int) {
+) -> Result(Set(Int), Unavailable) {
   case id.channel_id(scope.parent) {
-    Error(_) -> set.new()
+    Error(_) -> Ok(set.new())
     Ok(parent) -> {
       let now_ms = clock.system_ms()
-      list.fold(users, set.new(), fn(acc, pair) {
+      list.try_fold(users, set.new(), fn(acc, pair) {
         let #(user, found) = pair
-        let granted =
+        case
           perms.thread_permissions(
             capture.reader,
             member.user_id(found),
@@ -388,31 +413,50 @@ fn thread_viewers(
             thread_scope.is_member(scope, user),
             member.is_timed_out(found, now_ms:),
           )
-          |> result.unwrap(permissions.none())
-        case permissions.has(granted, permissions.ViewChannel) {
-          True -> set.insert(acc, user)
-          False -> acc
+        {
+          Ok(granted) ->
+            case permissions.has(granted, permissions.ViewChannel) {
+              True -> Ok(set.insert(acc, user))
+              False -> Ok(acc)
+            }
+          Error(reason) ->
+            case lost(reason) {
+              True -> Error(PermsUnavailable)
+              False -> Ok(acc)
+            }
         }
       })
     }
   }
 }
 
-fn viewable(capture: Capture, channel_id: Int, users: List(Int)) -> List(Int) {
+fn viewable(
+  capture: Capture,
+  channel_id: Int,
+  users: List(Int),
+) -> Result(List(Int), Unavailable) {
   case id.channel_id(channel_id) {
-    Error(_) -> []
+    Error(_) -> Ok([])
     Ok(channel) ->
       users
       |> list.sized_chunk(view_chunk)
-      |> list.flat_map(fn(chunk) {
-        perms.filter_viewers(
-          capture.reader,
-          channel,
-          packed_ids.from_list(chunk),
-        )
-        |> result.map(packed_ids.to_list)
-        |> result.unwrap([])
+      |> list.try_map(fn(chunk) {
+        case
+          perms.filter_viewers(
+            capture.reader,
+            channel,
+            packed_ids.from_list(chunk),
+          )
+        {
+          Ok(found) -> Ok(packed_ids.to_list(found))
+          Error(reason) ->
+            case lost(reason) {
+              True -> Error(PermsUnavailable)
+              False -> Ok([])
+            }
+        }
       })
+      |> result.map(list.flatten)
   }
 }
 
@@ -434,7 +478,7 @@ pub fn forum_recipients(
   capture: Capture,
   forum: Int,
   scope: ThreadScope,
-) -> Routed {
+) -> Result(Routed, Unavailable) {
   let direct = message.direct_mention_ids(capture.data)
   let roles = mention_roles(capture.data)
   let candidates =
@@ -451,12 +495,10 @@ pub fn forum_recipients(
         False -> acc
       }
     })
-  let visible =
-    set.from_list(viewable(
-      capture,
-      forum,
-      list.map(candidates, fn(pair) { pair.0 }),
-    ))
+  use visible <- result.try(
+    viewable(capture, forum, list.map(candidates, fn(pair) { pair.0 }))
+    |> result.map(set.from_list),
+  )
   list.fold(candidates, Routed([], [], dict.new()), fn(acc, pair) {
     let #(user, found) = pair
     case set.contains(visible, user) {
@@ -464,6 +506,7 @@ pub fn forum_recipients(
       True -> add_routed(capture, acc, user, found)
     }
   })
+  |> intact(capture, _)
 }
 
 pub fn build(capture: Capture, routed: Routed, forum: Bool) -> MessageCreate {

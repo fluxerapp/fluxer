@@ -309,6 +309,17 @@ pub fn engagement(
   })
 }
 
+pub fn restore_engagement(state: GuildState) -> GuildState {
+  guild_state.sessions(state)
+  |> table.engaged_users
+  |> list.filter_map(fn(key) {
+    id.user_id(key)
+    |> result.replace_error(Nil)
+    |> result.map(fn(user) { engaged.EngagementChange(user:, engaged: True) })
+  })
+  |> apply_engagement(state, _)
+}
+
 pub fn apply_engagement(
   state: GuildState,
   changes: List(EngagementChange),

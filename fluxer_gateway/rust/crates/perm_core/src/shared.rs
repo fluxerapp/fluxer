@@ -756,14 +756,18 @@ impl PermsShared {
         if self.status() == Status::Released {
             return Ok(None);
         }
-        let members = match self.members.write_with(Wait::Try) {
-            Ok(mut members) => std::mem::take(&mut *members),
+        let mut members = match self.members.write_with(Wait::Try) {
+            Ok(members) => Some(members),
             Err(PermsError::NeedsDirty) => return Err(PermsError::NeedsDirty),
-            Err(_) => MemberIndex::new(),
+            Err(_) => None,
         };
         if self.status.swap(RELEASED, Ordering::AcqRel) == RELEASED {
             return Ok(None);
         }
+        let members = members
+            .as_mut()
+            .map(|members| std::mem::take(&mut **members))
+            .unwrap_or_default();
         Ok(Some(self.retire(members)))
     }
 

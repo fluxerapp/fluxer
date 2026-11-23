@@ -12,6 +12,7 @@ import fluxer_gateway/perms
 import fluxer_gateway/presence/client as presence_client
 import fluxer_gateway/voice/guild_handler
 import gleam/erlang/process
+import gleam/list
 
 pub fn release(state: GuildState) -> Nil {
   let guild = guild_state.guild_id(state)
@@ -24,6 +25,10 @@ pub fn release(state: GuildState) -> Nil {
   guild_threads.release(state)
   member_list.release(guild_state.member_list(state))
   perms.release(guild_state.perms_handle(state))
+  case guild_state.repair(state) {
+    guild_state.Rebuilt(stale) -> list.each(stale, perms.release)
+    guild_state.Intact | guild_state.Unrepairable -> Nil
+  }
   members.drop(guild_state.members_table(state))
   guild_handler.release(guild_state.voice(state))
 }

@@ -6,8 +6,8 @@ use guild_rt::Scheduler;
 use perm_core::rolesets::DEAD;
 use perm_core::{
     ChannelId, Effects, GuildId, MAX_CANDIDATES, MAX_EVENTS, Meter, Model, MutualOnline, Need,
-    PermsError, PermsShared, PushPrune, Read, Scope, Subject, ThreadAccess, Units, UserId, View,
-    Visible,
+    PermsError, PermsShared, PushPrune, Read, Scope, Status, Subject, ThreadAccess, Units, UserId,
+    View, Visible,
 };
 use rustler::{Encoder, Env, LocalPid, NifResult, ResourceArc, Term};
 
@@ -696,6 +696,15 @@ pub fn epoch<'a>(env: Env<'a>, reader: Term<'a>) -> NifResult<Term<'a>> {
 pub fn revision<'a>(env: Env<'a>, reader: Term<'a>) -> NifResult<Term<'a>> {
     let target = Target::of(reader).map_err(|_| rustler::Error::BadArg)?;
     Ok(target.shared.revision().encode(env))
+}
+
+pub fn status<'a>(env: Env<'a>, perms: Term<'a>) -> Term<'a> {
+    let found = perms_of(perms).and_then(|perms| match perms.shared().status() {
+        Status::Ready => Ok(atoms::nil().encode(env)),
+        Status::Broken => Err(PermsError::Broken),
+        Status::Released => Err(PermsError::Gone),
+    });
+    encode::result(env, found)
 }
 
 pub fn release<'a>(env: Env<'a>, perms: Term<'a>) -> Term<'a> {

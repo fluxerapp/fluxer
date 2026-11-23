@@ -36,6 +36,14 @@ pub fn thread_bits(
 }
 
 pub fn answer(view: View, query: Query) -> QueryReply {
+  let reply = reply(view, query)
+  case read_model.is_live(view) {
+    True -> reply
+    False -> Error(QueryFailed("guild_not_found"))
+  }
+}
+
+fn reply(view: View, query: Query) -> QueryReply {
   case query {
     inbox.GetGuildData(user) -> guild_data(view, user)
     inbox.GetAuthContext(user, target) -> auth_context(view, user, target)

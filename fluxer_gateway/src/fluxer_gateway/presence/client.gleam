@@ -268,6 +268,10 @@ pub fn lookup_many(users: PackedIds) -> List(Presence) {
   cache.lookup_many(users)
 }
 
+pub fn lookup_known(users: PackedIds) -> #(List(Presence), List(Int)) {
+  cache.lookup_known(users)
+}
+
 pub fn sessions_replace(link: PresenceLink) -> RawJson {
   link.sessions_replace
 }

@@ -20,6 +20,7 @@ import gleam/json
 import gleam/list
 import gleam/option
 import support/guild_api
+import support/guild_engagement
 import support/guild_fixture as fixture
 import support/guild_session as fake
 import support/isolation
@@ -301,6 +302,102 @@ pub fn a_freeze_that_answers_after_the_mover_gave_up_does_not_stay_frozen_test()
   assert resume(handle.pid)
   send_message(handle, 11)
   assert seen_ids(fake.drain(member, 200)) == ["11"]
+  stop_sink(sink)
+  fixture.stop(found)
+}
+
+pub fn a_moved_guild_keeps_its_engaged_members_for_push_test() {
+  short_timers()
+  use api <- guild_api.with_api
+  let owner = 7_930_000_000_000_001
+  let user = 7_930_000_000_000_002
+  let found =
+    fixture.new(owner) |> fixture.with_text(10) |> fixture.with_member(user, [])
+  let handle = fixture.started(api, found)
+  let guild = id.guild_id_to_int(fixture.guild_id(found))
+  let member = fake.start(user)
+  assert fake.is_joined(fake.join(member, handle))
+  let _ = fake.drain(member, 50)
+  assert guild_engagement.engaged(handle.pid, user)
+  let sink = start_sink()
+  let frozen = freeze(guild, 5)
+  let arrival = install(guild, frozen)
+  let assert Ok(Nil) =
+    guild_adapter.committed(frozen.stub, arrival.target_ref, at(6))
+  assert rebinds(fake.drain(member, 100)) == [frozen.stub]
+  signal.repointed(frozen.stub, member.ref.id)
+  let #(entries, last) = forwarded_until_sealed(sink, [])
+  list.each(entries, fn(entry) {
+    let assert Ok(Nil) = guild_adapter.release(arrival.entity, entry.0, entry.1)
+  })
+  let assert Ok(Nil) = guild_adapter.seal(arrival.entity, last)
+  assert guild_engagement.engaged(arrival.entity, user)
+  stop_sink(sink)
+  fixture.stop(found)
+}
+
+fn private_message(message_id: Int) -> json.Json {
+  json.object([
+    #("id", json.string(int_text(message_id))),
+    #("channel_id", json.string(int_text(20))),
+    #("content", json.string("hi")),
+    #("author", fixture.user(1)),
+  ])
+}
+
+pub fn moved_guild_gates_private_channels_by_the_target_role_sets_test() {
+  short_timers()
+  use api <- guild_api.with_api
+  let owner = 7_920_000_000_000_001
+  let allowed = 7_920_000_000_000_002
+  let denied = 7_920_000_000_000_003
+  let base = fixture.new(owner)
+  let found =
+    base
+    |> fixture.with_role(300, 0, 1)
+    |> fixture.with_role(400, 0, 2)
+    |> fixture.with_text(10)
+    |> fixture.with_channel(20, 0, option.None, [
+      fixture.RoleDeny(base.id, fixture.view_channel),
+      fixture.RoleAllow(300, fixture.view_channel),
+    ])
+    |> fixture.with_member(allowed, [300])
+    |> fixture.with_member(denied, [400])
+  let handle = fixture.started(api, found)
+  let guild = id.guild_id_to_int(fixture.guild_id(found))
+  let reader = fake.start(allowed)
+  let outsider = fake.start(denied)
+  assert fake.is_joined(fake.join(reader, handle))
+  assert fake.is_joined(fake.join(outsider, handle))
+  let _ = fake.drain(reader, 50)
+  let _ = fake.drain(outsider, 50)
+  fixture.dispatch(handle, "MESSAGE_CREATE", private_message(1))
+  assert seen_ids(fake.drain(reader, 100)) == ["1"]
+  assert seen_ids(fake.drain(outsider, 100)) == []
+  let sink = start_sink()
+  let frozen = freeze(guild, 5)
+  let arrival = install(guild, frozen)
+  let assert Ok(target) = handoff_codec.term_of(arrival.target_ref)
+  let target: Handle = target
+  let assert Ok(Nil) =
+    guild_adapter.committed(frozen.stub, arrival.target_ref, at(6))
+  let _ = fake.drain(reader, 100)
+  let _ = fake.drain(outsider, 100)
+  signal.repointed(frozen.stub, reader.ref.id)
+  signal.repointed(frozen.stub, outsider.ref.id)
+  let #(entries, last) = forwarded_until_sealed(sink, [])
+  list.each(entries, fn(entry) {
+    let assert Ok(Nil) = guild_adapter.release(arrival.entity, entry.0, entry.1)
+  })
+  let assert Ok(Nil) = guild_adapter.seal(arrival.entity, last)
+  let _ = fake.drain(reader, 150)
+  let _ = fake.drain(outsider, 150)
+  fixture.dispatch(target, "MESSAGE_CREATE", private_message(2))
+  let delivered = #(
+    seen_ids(fake.drain(reader, 100)),
+    seen_ids(fake.drain(outsider, 100)),
+  )
+  assert delivered == #(["2"], [])
   stop_sink(sink)
   fixture.stop(found)
 }

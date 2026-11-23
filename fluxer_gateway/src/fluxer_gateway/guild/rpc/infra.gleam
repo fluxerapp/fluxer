@@ -58,6 +58,8 @@ fn start_lookup_timeout_ms() -> Int {
 
 const start_attempts = 3
 
+const answer_attempts = 3
+
 fn reload_all_timeout_ms() -> Int {
   durations.guild().infra_reload_all_timeout_ms
 }
@@ -87,8 +89,20 @@ pub fn view(guild: GuildId) -> Result(View, RpcError) {
 }
 
 pub fn answer(guild: GuildId, asked: Query) -> Result(Json, RpcError) {
+  answer_live(guild, asked, answer_attempts)
+}
+
+fn answer_live(
+  guild: GuildId,
+  asked: Query,
+  left: Int,
+) -> Result(Json, RpcError) {
   use found <- result.try(view(guild))
-  query.answer(found, asked) |> result.map_error(query_error)
+  let reply = query.answer(found, asked)
+  case read_model.is_live(found) || left <= 1 {
+    True -> reply |> result.map_error(query_error)
+    False -> answer_live(guild, asked, left - 1)
+  }
 }
 
 pub fn ask(guild: GuildId, asked: Query) -> Result(Json, RpcError) {

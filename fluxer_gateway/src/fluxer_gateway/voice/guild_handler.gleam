@@ -275,6 +275,10 @@ pub fn issued_states(voice: GuildVoice) -> List(VoiceState) {
   |> list.append(voice_states(voice), _)
 }
 
+pub fn issued_count(voice: GuildVoice) -> Int {
+  store.size(voice.state.pending) + store.size(voice.state.states)
+}
+
 pub fn connected_channels(voice: GuildVoice, user: UserId) -> List(ChannelId) {
   store.keys_of_user(voice.state.states, user)
   |> list.map(voice_key.channel)
