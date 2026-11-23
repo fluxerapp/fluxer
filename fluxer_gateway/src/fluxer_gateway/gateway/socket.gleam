@@ -86,7 +86,7 @@ pub opaque type Message {
 type Pending {
   Idle
   Starting(identify: Identify, timeout: Int)
-  Resuming(timeout: Int, session: SessionId)
+  Resuming(timeout: Int, session: SessionId, accepted: Bool)
   Rebinding(timeout: Int)
   Holding(identify: Identify, retry: Option(Int), throttled: Bool)
 }
@@ -434,9 +434,10 @@ fn decoded(state: State, bytes: BitArray) -> State {
 }
 
 fn session_key(state: State) -> Option(SessionId) {
-  case state.attached {
-    Some(Attached(ref:, ..)) -> Some(ref.id)
-    None -> None
+  case state.attached, state.pending {
+    Some(Attached(ref:, ..)), _ -> Some(ref.id)
+    None, Resuming(session:, accepted: True, ..) -> Some(session)
+    None, _ -> None
   }
 }
 
@@ -765,7 +766,10 @@ fn handle_resume(
                 resume_reply_timeout_ms(),
                 ResumeTimeout(timeout),
               )
-              State(..state, pending: Resuming(timeout:, session: id))
+              State(
+                ..state,
+                pending: Resuming(timeout:, session: id, accepted: False),
+              )
             }
           }
       }
@@ -855,8 +859,11 @@ fn outbox(state: State, message: SocketMsg) -> State {
     Some(Attached(ref:, ..)), _ if ref.id == message.session ->
       deliver(state, message)
     Some(_), _ -> state
-    None, Resuming(session:, ..) if session == message.session ->
-      deliver(state, message)
+    None, Resuming(timeout:, session:, ..) if session == message.session ->
+      deliver(
+        State(..state, pending: Resuming(timeout:, session:, accepted: True)),
+        message,
+      )
     None, Resuming(..) -> state
     None, _ -> hold_early(state, message)
   }
