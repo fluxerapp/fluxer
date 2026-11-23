@@ -16,6 +16,7 @@ pub struct ServiceConfig {
     pub shard_id: u32,
     pub shard_count: u32,
     pub listen_addr: SocketAddr,
+    pub metrics_addr: Option<SocketAddr>,
     pub nats_url: String,
     pub nats_auth_token: Option<String>,
     pub cache_max_entries: u64,
@@ -143,6 +144,7 @@ impl ServiceConfig {
             shard_id,
             shard_count,
             listen_addr: "127.0.0.1:0".parse().unwrap(),
+            metrics_addr: None,
             nats_url: "memory".to_owned(),
             nats_auth_token: None,
             cache_max_entries: 100,
@@ -220,6 +222,15 @@ impl ServiceConfig {
             .map(|v| v.parse::<u16>())
             .transpose()?
             .unwrap_or(8090);
+        let metrics_port = env
+            .value("FLUXER_SVC_METRICS_PORT")
+            .map(|v| v.parse::<u16>())
+            .transpose()?;
+        anyhow::ensure!(
+            metrics_port
+                .is_none_or(|metrics_port| metrics_port != 0 && metrics_port != listen_port),
+            "FLUXER_SVC_METRICS_PORT must be a nonzero port that differs from FLUXER_SVC_PORT"
+        );
 
         let nats_url = env
             .value("FLUXER_SVC_NATS_URL")
@@ -287,6 +298,9 @@ impl ServiceConfig {
             shard_id,
             shard_count,
             listen_addr: format!("{listen_host}:{listen_port}").parse()?,
+            metrics_addr: metrics_port
+                .map(|metrics_port| format!("{listen_host}:{metrics_port}").parse())
+                .transpose()?,
             nats_url,
             nats_auth_token,
             cache_max_entries: env
@@ -441,6 +455,20 @@ mod tests {
             config.scylla_address_translation,
             CassandraAddressTranslation::None
         );
+    }
+
+    #[test]
+    fn metrics_port_must_differ_from_the_public_port() {
+        let error = config_with(&[
+            ("FLUXER_SVC_PORT", "8090"),
+            ("FLUXER_SVC_METRICS_PORT", "8090"),
+        ])
+        .expect_err("same port");
+        assert!(error.to_string().contains("FLUXER_SVC_METRICS_PORT"));
+        assert!(config_with(&[("FLUXER_SVC_METRICS_PORT", "0")]).is_err());
+        let config = config_with(&[("FLUXER_SVC_METRICS_PORT", "8082")]).unwrap();
+        assert_eq!(config.metrics_addr, Some("0.0.0.0:8082".parse().unwrap()));
+        assert_eq!(config_with(&[]).unwrap().metrics_addr, None);
     }
 
     #[test]

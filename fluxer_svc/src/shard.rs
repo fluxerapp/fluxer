@@ -239,6 +239,7 @@ where
         linger,
     } = endpoint;
     let health_addr = config.listen_addr;
+    let metrics_addr = config.metrics_addr;
     let is_serving = Arc::new(AtomicBool::new(false));
     let request_permits = Arc::new(Semaphore::new(config.max_concurrent_requests));
     let request_byte_budget = Arc::new(Semaphore::new(MAX_IN_FLIGHT_REQUEST_BYTES));
@@ -252,6 +253,7 @@ where
         async move {
             crate::server::run_http(
                 health_addr,
+                metrics_addr,
                 http_is_serving,
                 http_metrics,
                 name,
