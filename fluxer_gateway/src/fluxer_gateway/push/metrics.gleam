@@ -95,7 +95,6 @@ pub fn lost_or_moved(outcome: String, by: Int) -> Nil {
 }
 
 pub fn outbox_dropped(kind: Kind, class: Class, reason: String) -> Nil {
-  drain_jobs("lost", 1)
   count_labelled(
     "push_outbox_dropped_total",
     [
