@@ -11,6 +11,15 @@ import {hashStoredSecret, type StoredSecretVerifier} from '@app/api/utils/Stored
 const VERIFIED_TOKEN_CACHE_LIMIT = 10_000;
 const VERIFIED_TOKEN_CACHE_TTL_MS = 10 * 60 * 1000;
 
+type BotTokenRejectionReason =
+	| 'malformed'
+	| 'unknown_application'
+	| 'no_bot_token'
+	| 'secret_mismatch'
+	| 'owner_cannot_run_bots';
+
+type BotTokenCheckResult = {ok: true; userId: UserID} | {ok: false; reason: BotTokenRejectionReason};
+
 interface VerifiedTokenEntry {
 	readonly valid: boolean;
 	readonly expiresAt: number;
@@ -47,21 +56,30 @@ export class BotAuthService {
 	}
 
 	async validateBotToken(token: string): Promise<UserID | null> {
+		const result = await this.checkBotToken(token);
+		return result.ok ? result.userId : null;
+	}
+
+	async checkBotToken(token: string): Promise<BotTokenCheckResult> {
 		const parsed = this.parseBotToken(token);
 		if (!parsed) {
-			return null;
+			return {ok: false, reason: 'malformed'};
 		}
 		const {applicationId, secret} = parsed;
 		const application = await this.applicationRepository.getApplication(applicationId);
-		if (!application || application.botUserId === null || !application.botTokenHash) {
-			return null;
+		if (!application) {
+			return {ok: false, reason: 'unknown_application'};
+		}
+		if (application.botUserId === null || !application.botTokenHash) {
+			return {ok: false, reason: 'no_bot_token'};
 		}
 		const [isValid, owner] = await Promise.all([
 			this.verifyBotSecret(applicationId, token, secret, application.botTokenHash),
 			this.users.findUnique(application.ownerUserId),
 		]);
-		if (!isValid || (owner && !canOwnerRunBots(owner))) return null;
-		return application.botUserId;
+		if (!isValid) return {ok: false, reason: 'secret_mismatch'};
+		if (owner && !canOwnerRunBots(owner)) return {ok: false, reason: 'owner_cannot_run_bots'};
+		return {ok: true, userId: application.botUserId};
 	}
 
 	private async verifyBotSecret(
