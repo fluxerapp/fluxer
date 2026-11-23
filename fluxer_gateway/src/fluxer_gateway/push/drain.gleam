@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import fluxer_gateway/config/durations
 import fluxer_gateway/core/clock
 import fluxer_gateway/core/node.{type Node}
 import fluxer_gateway/push/handoff/adapter.{type Site}
@@ -12,6 +13,10 @@ import gleam/int
 import gleam/list
 import gleam/result
 import logging
+
+fn grace_ms() -> Int {
+  durations.push().outbox_state_drain_grace_ms
+}
 
 pub type Peer {
   Peer(node: Node, site: Site)
@@ -87,7 +92,7 @@ fn run_round(
   let now = clock.monotonic_ms()
   case is_idle(from), now >= deadline_ms {
     True, _ -> Drained
-    False, True -> close(from)
+    False, True -> close(from, peer, active, round_ms)
     False, False -> {
       process.sleep(int.min(round_ms, deadline_ms - now))
       run_round(from, peer, active, deadline_ms, round_ms, warned)
@@ -95,13 +100,60 @@ fn run_round(
   }
 }
 
-pub fn close(from: Site) -> Outcome {
+pub fn close(
+  from: Site,
+  peer: fn() -> Result(Peer, Nil),
+  active: fn() -> Bool,
+  round_ms: Int,
+) -> Outcome {
   use <- bool.guard(is_idle(from), Drained)
-  let left = left(from)
+  case peer() {
+    Ok(_) ->
+      linger(from, peer, active, clock.monotonic_ms() + grace_ms(), round_ms)
+    Error(Nil) -> count_left(from)
+  }
+}
+
+fn linger(
+  from: Site,
+  peer: fn() -> Result(Peer, Nil),
+  active: fn() -> Bool,
+  until_ms: Int,
+  round_ms: Int,
+) -> Outcome {
+  use <- bool.guard(!active(), Failed(left(from)))
+  case peer() {
+    Ok(to) -> {
+      let _ = hand(from, to)
+      Nil
+    }
+    Error(Nil) -> Nil
+  }
+  let now = clock.monotonic_ms()
+  case is_idle(from), now >= until_ms {
+    True, _ -> Drained
+    False, True -> count_left(from)
+    False, False -> {
+      process.sleep(int.min(round_ms, until_ms - now))
+      linger(from, peer, active, until_ms, round_ms)
+    }
+  }
+}
+
+fn count_left(from: Site) -> Outcome {
+  let left =
+    answered(fn() { outbox.pending_jobs(from.outbox) })
+    + answered(fn() { server.pending_jobs(from.server) })
   metrics.close_drain(left)
   logging.log(
     logging.Error,
     "Push drain: deadline reached with " <> int.to_string(left) <> " jobs left",
   )
   Failed(left)
+}
+
+fn answered(ask: fn() -> Result(Int, Nil)) -> Int {
+  ask()
+  |> result.lazy_or(ask)
+  |> result.unwrap(0)
 }

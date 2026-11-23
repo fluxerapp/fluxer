@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import fluxer_gateway/config/draining
-import fluxer_gateway/config/settings.{Durations, PushDurations}
+import fluxer_gateway/config/settings.{
+  type PushDurations, Durations, PushDurations,
+}
 import fluxer_gateway/core/clock
 import fluxer_gateway/core/node
 import fluxer_gateway/push/drain.{Peer} as push_drain
@@ -91,12 +93,14 @@ fn sender(sent: Subject(Sent)) -> outbox.Sender {
 }
 
 fn job_for(user: Int) -> job.Job {
+  class_job_for(user, rule.Direct)
+}
+
+fn class_job_for(user: Int, class: rule.Class) -> job.Job {
   let assert Ok(built) =
-    job.for_users(
-      job.template([], channel:, message: user + 1000),
-      rule.Direct,
-      [user],
-    )
+    job.for_users(job.template([], channel:, message: user + 1000), class, [
+      user,
+    ])
   built
 }
 
@@ -351,7 +355,8 @@ pub fn a_drain_with_no_live_owner_fails_at_its_deadline_test() {
   assert took >= 500
   assert took < 2000
   assert drained("lost") - lost == 2
-  assert push_drain.close(source.site) == push_drain.Failed(left: 2)
+  assert push_drain.close(source.site, fn() { Error(Nil) }, always, 50)
+    == push_drain.Failed(left: 2)
   process.send(held.answer, state.Delivered)
   assert wait.until(5000, fn() { push_drain.left(source.site) == 1 })
   assert drained("lost") - lost == 2
@@ -427,4 +432,115 @@ pub fn outbox_counters_show_where_jobs_run_across_an_undrain_test() {
   assert wait.until(5000, fn() { push_drain.is_idle(target.site) })
   stop(source)
   stop(target)
+}
+
+fn with_push(change: fn(PushDurations) -> PushDurations) -> Nil {
+  let current = settings.get()
+  settings.store(
+    settings.Settings(
+      ..current,
+      durations: Durations(
+        ..current.durations,
+        push: change(current.durations.push),
+      ),
+    ),
+  )
+  Nil
+}
+
+fn dropped(reason: String, class: String) -> Int {
+  metrics.value(metrics.read_all(), "fluxer_gateway_push_outbox_dropped_total", [
+    #("kind", "message"),
+    #("reason", reason),
+    #("class", class),
+  ])
+}
+
+pub fn a_bulk_job_expiring_in_flight_is_not_a_drain_loss_test() {
+  timings()
+  with_push(fn(push) { PushDurations(..push, outbox_state_bulk_age_ms: 200) })
+  draining.set_draining()
+  push_metrics.open_drain()
+  let source = start_side("push_drain_expiry_source", Publish)
+  let target = start_side("push_drain_expiry_target", Publish)
+  let lost = drained("lost")
+  let expired = dropped("expired", "bulk")
+  let assert Ok(Nil) =
+    outbox.enqueue_to(source.site.outbox, class_job_for(1, rule.Bulk))
+  let held = next_send(source)
+  let outcome =
+    push_drain.run(
+      source.site,
+      peer(target),
+      always,
+      clock.monotonic_ms() + 10_000,
+      50,
+    )
+  assert outcome == push_drain.Drained
+  assert push_drain.is_idle(source.site)
+  assert quiet(target, 300)
+  assert drained("lost") - lost == 0
+  assert dropped("expired", "bulk") - expired == 1
+  process.send(held.answer, state.Delivered)
+  stop(source)
+  stop(target)
+}
+
+pub fn a_gated_worker_at_the_deadline_is_handed_not_lost_test() {
+  timings()
+  draining.set_draining()
+  push_metrics.open_drain()
+  let events = process.new_subject()
+  let source = start_side("push_drain_late_gate_source", Gate(events))
+  let target = start_side("push_drain_late_gate_target", Publish)
+  server.requeue_local(source.site.server, [create_for(8)])
+  let assert Ok(Gated(user: 8, open: True, resume:)) =
+    process.receive(events, 10_000)
+  let lost = drained("lost")
+  let deadline = clock.monotonic_ms() + 200
+  process.spawn(fn() {
+    process.sleep(500)
+    process.send(resume, Nil)
+  })
+  let outcome = push_drain.run(source.site, peer(target), always, deadline, 50)
+  assert clock.monotonic_ms() >= deadline
+  assert outcome == push_drain.Drained
+  assert deliver(target, 1) == [8]
+  assert quiet(target, 300)
+  assert quiet(source, 0)
+  assert wait.until(5000, fn() { push_drain.is_idle(source.site) })
+  assert drained("lost") - lost == 0
+  stop(source)
+  stop(target)
+}
+
+pub fn a_close_with_no_live_owner_counts_answered_jobs_at_once_test() {
+  timings()
+  with_push(fn(push) {
+    PushDurations(
+      ..push,
+      outbox_state_drain_grace_ms: 30_000,
+      server_init_timeout_ms: 200,
+    )
+  })
+  let source = start_side("push_close_alone_source", Publish)
+  let assert Ok(Nil) = outbox.enqueue_to(source.site.outbox, job_for(1))
+  let held = next_send(source)
+  let deaf = process.spawn_unlinked(process.sleep_forever)
+  let silent: Name(server.Message) = process.new_name("push_close_deaf")
+  let assert Ok(Nil) = process.register(deaf, silent)
+  let site = push_adapter.Site(outbox: source.site.outbox, server: silent)
+  draining.set_draining()
+  push_metrics.open_drain()
+  let lost = drained("lost")
+  let started = clock.monotonic_ms()
+  let outcome = push_drain.close(site, fn() { Error(Nil) }, always, 50)
+  let took = clock.monotonic_ms() - started
+  assert outcome == push_drain.Failed(left: 1)
+  assert took < 5000
+  assert drained("lost") - lost == 1
+  assert push_drain.left(site) == 2
+  process.send(held.answer, state.Delivered)
+  process.kill(deaf)
+  stop(source)
 }

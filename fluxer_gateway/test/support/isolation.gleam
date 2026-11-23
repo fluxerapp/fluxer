@@ -3,6 +3,7 @@
 import fluxer_gateway/app/drain_report
 import fluxer_gateway/config/draining
 import fluxer_gateway/config/settings.{type Durations, type Settings, Settings}
+import fluxer_gateway/push/metrics as push_metrics
 import fluxer_gateway/push/throttle
 import gleam/dynamic.{type Dynamic}
 import gleam/dynamic/decode
@@ -174,6 +175,7 @@ fn restore(snapshot: Snapshot) -> Nil {
     False -> Nil
   }
   drain_report.reset()
+  push_metrics.open_drain()
   stop_strays(snapshot)
   restart_children(snapshot)
   let _ = api_breaker.reset()

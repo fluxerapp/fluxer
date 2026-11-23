@@ -434,7 +434,13 @@ fn hand_push() -> Nil {
 fn close_push() -> Nil {
   case pushes_jobs() {
     True -> {
-      let _ = push_drain.close(push_adapter.site())
+      let _ =
+        push_drain.close(
+          push_adapter.site(),
+          push_owner,
+          draining.is_draining,
+          drain_round_ms,
+        )
       Nil
     }
     False -> Nil
