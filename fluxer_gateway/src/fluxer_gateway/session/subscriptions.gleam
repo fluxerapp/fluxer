@@ -16,6 +16,8 @@ const max_unconnected = 10
 
 const max_member_list_channels = 50
 
+const thread_keys = ["threads", "thread_member_lists"]
+
 const stored_keys = [
   "active", "sync", "typing", "members", "thread_member_lists", "threads",
   "focused_channel_id",
@@ -237,18 +239,38 @@ pub fn replay(subscriptions: Subscriptions, guild: Int) -> Option(RawJson) {
           ..fields
         ]
       }
-      Some(
-        raw_json.from_json(
-          json.object([
-            #(
-              "subscriptions",
-              json.object([#(id.write(guild), json.object(fields))]),
-            ),
-          ]),
-        ),
-      )
+      Some(wrap(guild, fields))
     }
   }
+}
+
+pub fn replay_threads(
+  subscriptions: Subscriptions,
+  guild: Int,
+) -> Option(RawJson) {
+  use sub <- option.then(
+    dict.get(subscriptions.guilds, guild) |> option.from_result,
+  )
+  case
+    sub.fields
+    |> dict.take(thread_keys)
+    |> dict.to_list
+  {
+    [] -> None
+    fields ->
+      Some(wrap(
+        guild,
+        list.map(fields, fn(entry) { #(entry.0, raw_json.to_json(entry.1)) }),
+      ))
+  }
+}
+
+fn wrap(guild: Int, fields: List(#(String, json.Json))) -> RawJson {
+  raw_json.from_json(
+    json.object([
+      #("subscriptions", json.object([#(id.write(guild), json.object(fields))])),
+    ]),
+  )
 }
 
 pub fn decode_incoming(data: Dynamic) -> List(#(Int, Incoming)) {

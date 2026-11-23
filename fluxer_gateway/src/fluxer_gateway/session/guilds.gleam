@@ -494,6 +494,7 @@ pub fn rebind(state: State, guild_ref: GuildRef) -> State {
   case links.get(state.links, guild_ref.guild), guild_pid(guild_ref) {
     Some(Linked(_, monitor)), Ok(pid) -> {
       process.demonitor_process(monitor)
+      replay_thread_subscriptions(state, guild_ref)
       State(
         ..state,
         links: links.put(
@@ -504,6 +505,20 @@ pub fn rebind(state: State, guild_ref: GuildRef) -> State {
       )
     }
     _, _ -> state
+  }
+}
+
+fn replay_thread_subscriptions(state: State, guild_ref: GuildRef) -> Nil {
+  case
+    subscriptions.replay_threads(
+      state.subscriptions,
+      st.guild_key(guild_ref.guild),
+    )
+    |> option.then(fn(raw) { payload.raw_to_dynamic(raw) |> option.from_result })
+  {
+    Some(data) ->
+      core_guild.send(guild_ref, SessionOp(state.me, LazyRequest(data)))
+    None -> Nil
   }
 }
 

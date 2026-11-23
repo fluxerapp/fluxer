@@ -8,6 +8,7 @@ import fluxer_gateway/core/raw_json.{type RawJson}
 import fluxer_gateway/core/session.{type IdentifyFlags, type SessionRef}
 import fluxer_gateway/guild/data
 import fluxer_gateway/guild/push/thread_scope.{type ThreadScope, ThreadScope}
+import fluxer_gateway/guild/sessions as guild_sessions
 import fluxer_gateway/guild/sessions/entry.{type Entry}
 import fluxer_gateway/guild/state.{type GuildState} as guild_state
 import fluxer_gateway/perms
@@ -45,7 +46,16 @@ pub fn install(state: GuildState, handoff: Option(Handoff)) -> GuildState {
     Some(saved) -> runtime.restore(saved, guild_state.thread_context(state))
     None -> store.new()
   }
-  settle(state, threads)
+  guild_sessions.entries(guild_state.sessions(state))
+  |> list.fold(threads, fn(acc, found) {
+    viewers.session_joined(
+      acc,
+      entry.ref(found),
+      entry.flags(found),
+      entry.is_bot(found),
+    )
+  })
+  |> settle(state, _)
 }
 
 pub fn handle(state: GuildState, message: ThreadMsg) -> GuildState {
