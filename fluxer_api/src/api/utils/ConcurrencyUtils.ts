@@ -11,6 +11,18 @@ export async function awaitAll(tasks: ReadonlyArray<Promise<unknown>>, failureMe
 	throwCompletionErrors(errors, failureMessage);
 }
 
+export async function settleWithin(task: Promise<unknown>, budgetMs: number): Promise<boolean> {
+	let timer: NodeJS.Timeout | undefined;
+	const expired = new Promise<false>((resolve) => {
+		timer = setTimeout(() => resolve(false), budgetMs);
+	});
+	try {
+		return await Promise.race([task.then(() => true as const), expired]);
+	} finally {
+		clearTimeout(timer);
+	}
+}
+
 export function startEarly<T>(task: Promise<T>): Promise<T> {
 	task.catch(() => {});
 	return task;

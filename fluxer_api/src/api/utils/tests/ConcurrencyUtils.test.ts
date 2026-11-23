@@ -1,4 +1,4 @@
-import {allSettledWithConcurrency, mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
+import {allSettledWithConcurrency, mapWithConcurrency, settleWithin} from '@app/api/utils/ConcurrencyUtils';
 import {describe, expect, it} from 'vitest';
 
 describe('mapWithConcurrency', () => {
@@ -153,5 +153,21 @@ describe('allSettledWithConcurrency', () => {
 			{status: 'fulfilled', value: 10},
 			{status: 'rejected', reason: failure},
 		]);
+	});
+});
+
+describe('settleWithin', () => {
+	it('reports work that settles inside the budget', async () => {
+		await expect(settleWithin(Promise.resolve(), 1_000)).resolves.toBe(true);
+	});
+
+	it('reports work that outlives the budget without waiting for it', async () => {
+		const pending = Promise.withResolvers<void>();
+		await expect(settleWithin(pending.promise, 10)).resolves.toBe(false);
+		pending.resolve();
+	});
+
+	it('passes a failure through', async () => {
+		await expect(settleWithin(Promise.reject(new Error('failed')), 1_000)).rejects.toThrow('failed');
 	});
 });
