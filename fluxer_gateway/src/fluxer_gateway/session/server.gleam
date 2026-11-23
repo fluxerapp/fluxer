@@ -19,6 +19,7 @@ import fluxer_gateway/gateway/limits
 import fluxer_gateway/guild/handoff/signal as guild_signal
 import fluxer_gateway/presence/handoff/signal as presence_signal
 import fluxer_gateway/presence/protocol
+import fluxer_gateway/session/arrival_log
 import fluxer_gateway/session/calls
 import fluxer_gateway/session/control.{type Control}
 import fluxer_gateway/session/departure
@@ -207,9 +208,11 @@ fn init(start: Start) -> actor.Initialised(State, Message, SessionRef) {
   })
   case seed.transferred {
     True -> {
-      let rejoining = list.length(seed.guilds) - list.length(adopted)
-      rebinds("guild", "fallback", rejoining)
-      fallbacks("guild", "not_adopted", rejoining)
+      let expected = handed_over(seed)
+      let missing = expected - list.length(adopted)
+      rebinds("guild", "fallback", missing)
+      fallbacks("guild", "not_adopted", missing)
+      report_rejoining(seed, expected, list.length(adopted))
       case presence_link.is_linked(state) {
         True -> Nil
         False -> {
@@ -280,6 +283,46 @@ fn arrive(state: State, moved: Option(seed.Moved)) -> #(State, List(GuildId)) {
 fn source_pid(source: SessionRef) -> Option(process.Pid) {
   process.subject_owner(source.inbox) |> option.from_result
 }
+
+fn handed_over(seed: Seed) -> Int {
+  case seed.moved {
+    Some(moved) -> list.length(moved.linked)
+    None -> list.length(seed.guilds)
+  }
+}
+
+fn report_rejoining(seed: Seed, expected: Int, adopted: Int) -> Nil {
+  let guilds = list.length(seed.guilds)
+  case
+    arrival_log.classify(
+      guilds:,
+      expected:,
+      adopted:,
+      moved: option.is_some(seed.moved),
+    )
+  {
+    Error(Nil) -> Nil
+    Ok(reason) ->
+      arrival_log.warn(arrival_log.Arrival(
+        session_id: session.session_id_to_string(seed.id),
+        source_node: source_node(seed.moved),
+        guilds:,
+        expected:,
+        adopted:,
+        reason:,
+      ))
+  }
+}
+
+fn source_node(moved: Option(seed.Moved)) -> String {
+  case option.then(moved, fn(found) { source_pid(found.source) }) {
+    Some(pid) -> atom.to_string(pid_node(pid))
+    None -> "unknown"
+  }
+}
+
+@external(erlang, "erlang", "node")
+fn pid_node(pid: process.Pid) -> Atom
 
 fn announce(
   me: SessionRef,
