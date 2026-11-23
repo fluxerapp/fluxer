@@ -65,11 +65,14 @@ If an LLM suggests code, wording, a defect or a solution, the contributor MUST v
 
 A contributor MAY use machine translation only to translate text that the contributor wrote independently.
 
+Machine translation MAY be used only for issues, discussions, pull request descriptions, security reports and review comments. It MUST NOT be used for code, commit messages, pull request titles, documentation, source comments or other repository text.
+
 When submitting a machine translation, the contributor:
 
-- MUST disclose that machine translation was used;
-- MUST verify that the translation has not added, removed or altered any claim; and
-- MUST include the original text with the translation so that readers can resolve any ambiguity.
+- MUST disclose that machine translation was used; and
+- MUST include the original text with the translation.
+
+If the translation and the original text disagree, the original text applies.
 
 Machine translation is a limited exception to the prohibition on submitting LLM-generated text. It MUST NOT be used to draft, rewrite, expand, summarise or improve the original text.
 
@@ -125,7 +128,7 @@ Any of the following MAY result in the contributor being blocked from the reposi
 - Using an autonomous or semi-autonomous agent to submit content.
 - Repeatedly violating this policy.
 
-Deliberately submitting a fabricated security report MAY result in an immediate block. A security report is fabricated only if the contributor knowingly invented or falsified a material claim. A report that is incorrect but was submitted in good faith is not fabricated.
+Deliberately submitting a fabricated security report MAY result in an immediate block. A security report is fabricated if the contributor knowingly invented or falsified a material claim. A security report written by an LLM, or one that repeats an LLM's claims without independent verification, violates Sections 5 and 8 and MAY also result in an immediate block. A report that the contributor wrote and checked independently but that turns out to be incorrect is not a violation.
 
 Maintainers are not required to investigate possible LLM use proactively. Writing style alone is not evidence of a violation.
 
