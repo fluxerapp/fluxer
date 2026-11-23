@@ -2,7 +2,7 @@
 
 import {createHash} from 'node:crypto';
 import type {ApiContext} from '@app/api/ApiContext';
-import type {ApplicationID, UserID} from '@app/api/BrandedTypes';
+import {type ApplicationID, createApplicationID, type UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {
 	OAuth2AccessTokenRow,
@@ -11,6 +11,7 @@ import type {
 } from '@app/api/database/types/OAuth2Types';
 import {Logger} from '@app/api/Logger';
 import type {Application} from '@app/api/models/Application';
+import type {OAuth2AuthorizationCode} from '@app/api/models/OAuth2AuthorizationCode';
 import {filterOAuth2ScopeSet, isOAuth2Scope, parseOAuth2Scope, sortOAuth2Scopes} from '@app/api/oauth/OAuth2ScopeUtils';
 import {ACCESS_TOKEN_TTL_SECONDS} from '@app/api/oauth/OAuth2TokenConstants';
 import type {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
@@ -19,6 +20,7 @@ import {isSignInRefused} from '@app/api/user/UserHelpers';
 import {mapUserToOAuthResponse} from '@app/api/user/UserMappers';
 import {randomBase64Url} from '@app/api/utils/SecretHash';
 import type {StoredSecretVerifier} from '@app/api/utils/StoredSecret';
+import {ADMIN_OAUTH2_APPLICATION_ID} from '@fluxer/constants/src/Core';
 import {InvalidRequestError} from '@fluxer/errors/src/domains/core/InvalidRequestError';
 import {InvalidTokenError} from '@fluxer/errors/src/domains/core/InvalidTokenError';
 import {BotIsPrivateError} from '@fluxer/errors/src/domains/oauth/BotIsPrivateError';
@@ -31,6 +33,30 @@ import {MissingClientSecretError} from '@fluxer/errors/src/domains/oauth/Missing
 import {MissingRedirectUriError} from '@fluxer/errors/src/domains/oauth/MissingRedirectUriError';
 
 const ADMIN_SSO_TOKEN_SCOPES = ['identify', 'email'];
+const ADMIN_APPLICATION_ID = createApplicationID(ADMIN_OAUTH2_APPLICATION_ID);
+const S256_CODE_CHALLENGE = /^[A-Za-z0-9_-]{43}$/;
+
+function normalizeRedirectUri(value: string | null | undefined): string | null {
+	if (!value) return null;
+	try {
+		return new URL(value).toString();
+	} catch {
+		return null;
+	}
+}
+
+function validateCodeChallenge(challenge: string | undefined, method: 'S256' | undefined): void {
+	if (challenge === undefined && method === undefined) return;
+	if (method !== 'S256' || challenge === undefined || !S256_CODE_CHALLENGE.test(challenge)) {
+		throw new InvalidRequestError();
+	}
+}
+
+function codeVerifierMatches(authCode: OAuth2AuthorizationCode, verifier: string | undefined): boolean {
+	if (!authCode.codeChallenge) return true;
+	if (authCode.codeChallengeMethod !== 'S256' || !verifier) return false;
+	return createHash('sha256').update(verifier).digest('base64url') === authCode.codeChallenge;
+}
 
 interface OAuth2ServiceDeps {
 	applicationRepository: ApplicationRepository;
@@ -96,7 +122,7 @@ export class OAuth2Service {
 		scope: string;
 		state?: string;
 		codeChallenge?: string;
-		codeChallengeMethod?: 'S256' | 'plain';
+		codeChallengeMethod?: 'S256';
 		userId: UserID;
 	}): Promise<{
 		redirectTo: string;
@@ -111,6 +137,7 @@ export class OAuth2Service {
 		if (!application) {
 			throw new InvalidClientError();
 		}
+		validateCodeChallenge(params.codeChallenge, params.codeChallengeMethod);
 		const scopeSet = new Set<string>(parseOAuth2Scope(params.scope));
 		for (const s of scopeSet) {
 			if (!isOAuth2Scope(s)) {
@@ -179,7 +206,7 @@ export class OAuth2Service {
 
 	private async issueTokens(args: {application: Application; userId: UserID; scope: Set<string>}): Promise<{
 		accessToken: OAuth2AccessTokenRow;
-		refreshToken: OAuth2RefreshTokenRow;
+		refreshToken: OAuth2RefreshTokenRow | null;
 		token_type: 'Bearer';
 		expires_in: number;
 		scope?: string;
@@ -193,22 +220,31 @@ export class OAuth2Service {
 			created_at: new Date(),
 		};
 		const createdAccess = await this.tokens.createAccessToken(accessToken);
-		const row: OAuth2RefreshTokenRow = {
-			token_: randomBase64Url(32),
-			application_id: args.application.applicationId,
-			user_id: args.userId,
-			scope,
-			created_at: new Date(),
-		};
-		const created = await this.tokens.createRefreshToken(row);
-		const refreshToken = created.toRow();
 		return {
 			accessToken: createdAccess.toRow(),
-			refreshToken,
+			refreshToken: await this.issueRefreshToken(args.application, args.userId, scope),
 			token_type: 'Bearer',
 			expires_in: ACCESS_TOKEN_TTL_SECONDS,
 			scope: sortOAuth2Scopes(scope).join(' '),
 		};
+	}
+
+	private async issueRefreshToken(
+		application: Application,
+		userId: UserID,
+		scope: Set<string>,
+	): Promise<OAuth2RefreshTokenRow | null> {
+		if (application.applicationId === ADMIN_APPLICATION_ID) {
+			return null;
+		}
+		const created = await this.tokens.createRefreshToken({
+			token_: randomBase64Url(32),
+			application_id: application.applicationId,
+			user_id: userId,
+			scope,
+			created_at: new Date(),
+		});
+		return created.toRow();
 	}
 
 	async authenticateClient(args: {
@@ -255,7 +291,6 @@ export class OAuth2Service {
 		token_type: 'Bearer';
 		expires_in: number;
 		scope: string;
-		refresh_token: string;
 	}> {
 		const res = await this.issueTokens({application, userId, scope: new Set(ADMIN_SSO_TOKEN_SCOPES)});
 		return {
@@ -263,7 +298,6 @@ export class OAuth2Service {
 			token_type: 'Bearer',
 			expires_in: res.expires_in,
 			scope: res.scope ?? '',
-			refresh_token: res.refreshToken.token_,
 		};
 	}
 
@@ -281,7 +315,7 @@ export class OAuth2Service {
 		token_type: 'Bearer';
 		expires_in: number;
 		scope?: string;
-		refresh_token: string;
+		refresh_token?: string;
 	}> {
 		Logger.debug(
 			{
@@ -313,31 +347,24 @@ export class OAuth2Service {
 				);
 				throw new InvalidGrantError();
 			}
-			const expectedRedirectUri = authCode.redirectUri ?? '';
-			const providedRedirectUri = params.redirectUri ?? '';
-			if (expectedRedirectUri !== providedRedirectUri) {
+			if (!(await this.tokens.consumeAuthorizationCode(code, authCode.applicationId))) {
+				Logger.debug({code_len: code.length}, 'OAuth2 tokenExchange: authorization code already redeemed');
+				throw new InvalidGrantError();
+			}
+			const expectedRedirectUri = normalizeRedirectUri(authCode.redirectUri);
+			const providedRedirectUri = normalizeRedirectUri(params.redirectUri);
+			if (expectedRedirectUri === null || expectedRedirectUri !== providedRedirectUri) {
 				Logger.debug(
 					{expected: expectedRedirectUri, got: providedRedirectUri},
 					'OAuth2 tokenExchange: redirect_uri mismatch',
 				);
 				throw new InvalidGrantError();
 			}
-			if (authCode.codeChallenge) {
-				const verifier = params.codeVerifier;
-				if (!verifier) {
-					throw new InvalidGrantError();
-				}
-				const method = authCode.codeChallengeMethod ?? 'plain';
-				const expected = method === 'S256' ? createHash('sha256').update(verifier).digest('base64url') : verifier;
-				if (expected !== authCode.codeChallenge) {
-					throw new InvalidGrantError();
-				}
-			}
-			if (!(await this.findActiveUser(authCode.userId))) {
+			if (!codeVerifierMatches(authCode, params.codeVerifier)) {
+				Logger.debug({code_len: code.length}, 'OAuth2 tokenExchange: code_verifier mismatch');
 				throw new InvalidGrantError();
 			}
-			if (!(await this.tokens.consumeAuthorizationCode(code, authCode.applicationId))) {
-				Logger.debug({code_len: code.length}, 'OAuth2 tokenExchange: authorization code already redeemed');
+			if (!(await this.findActiveUser(authCode.userId))) {
 				throw new InvalidGrantError();
 			}
 			const res = await this.issueTokens({
@@ -345,19 +372,13 @@ export class OAuth2Service {
 				userId: authCode.userId,
 				scope: authCode.scope,
 			});
-			return {
-				access_token: res.accessToken.token_,
-				token_type: 'Bearer',
-				expires_in: res.expires_in,
-				scope: res.scope,
-				refresh_token: res.refreshToken.token_,
-			};
+			return this.tokenResponse(res);
 		}
 		const refresh = await this.tokens.getRefreshToken(params.refreshToken!);
 		if (!refresh) {
 			throw new InvalidGrantError();
 		}
-		if (refresh.applicationId !== application.applicationId) {
+		if (refresh.applicationId !== application.applicationId || refresh.applicationId === ADMIN_APPLICATION_ID) {
 			throw new InvalidGrantError();
 		}
 		if (!(await this.findActiveUser(refresh.userId))) {
@@ -371,12 +392,22 @@ export class OAuth2Service {
 			userId: refresh.userId,
 			scope: refresh.scope,
 		});
+		return this.tokenResponse(res);
+	}
+
+	private tokenResponse(res: Awaited<ReturnType<OAuth2Service['issueTokens']>>): {
+		access_token: string;
+		token_type: 'Bearer';
+		expires_in: number;
+		scope?: string;
+		refresh_token?: string;
+	} {
 		return {
 			access_token: res.accessToken.token_,
 			token_type: 'Bearer',
 			expires_in: res.expires_in,
 			scope: res.scope,
-			refresh_token: res.refreshToken.token_,
+			...(res.refreshToken ? {refresh_token: res.refreshToken.token_} : {}),
 		};
 	}
 

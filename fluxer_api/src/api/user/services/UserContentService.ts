@@ -3,7 +3,14 @@
 import crypto from 'node:crypto';
 import type {Readable} from 'node:stream';
 import type {ApiContext} from '@app/api/ApiContext';
-import {type ChannelID, createChannelID, createUserID, type MessageID, type UserID} from '@app/api/BrandedTypes';
+import {
+	type ChannelID,
+	createChannelID,
+	createUserID,
+	type GuildID,
+	type MessageID,
+	type UserID,
+} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
@@ -223,13 +230,22 @@ export class UserContentService {
 		roles: boolean;
 		guilds: boolean;
 		before?: MessageID;
+		guildId?: GuildID;
 	}): Promise<Array<Message>> {
-		const {userId, viewer, limit, everyone, roles, guilds, before} = params;
+		const {userId, viewer, limit, everyone, roles, guilds, before, guildId} = params;
 		const messages: Array<Message> = [];
 		let cursor = before;
 		let pageLimit = limit;
 		for (let refills = 0; ; refills++) {
-			const mentions = await this.userRepository.listRecentMentions(userId, everyone, roles, guilds, pageLimit, cursor);
+			const mentions = await this.userRepository.listRecentMentions(
+				userId,
+				everyone,
+				roles,
+				guilds,
+				pageLimit,
+				cursor,
+				guildId,
+			);
 			const messagesByChannel = await this.readMessagesByChannel(userId, viewer, mentions);
 			const hiddenChannelIds = await this.hiddenThreadChannelIds(viewer, messagesByChannel);
 			let hidden = 0;

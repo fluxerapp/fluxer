@@ -41,12 +41,17 @@ export const StickerPickerInspector = observer(({hoveredSticker, style}: Sticker
 						className={styles.inspectorEmoji}
 						data-flx="channel.sticker-picker.sticker-picker-inspector.inspector-emoji"
 					/>
-					<span
-						className={styles.inspectorText}
-						data-flx="channel.sticker-picker.sticker-picker-inspector.inspector-text"
+					<div
+						className={styles.inspectorTextContainer}
+						data-flx="channel.sticker-picker.sticker-picker-inspector.inspector-text-container"
 					>
-						{hoveredSticker.name}
-					</span>
+						<span
+							className={styles.inspectorText}
+							data-flx="channel.sticker-picker.sticker-picker-inspector.inspector-text"
+						>
+							{hoveredSticker.name}
+						</span>
+					</div>
 				</>
 			)}
 		</div>

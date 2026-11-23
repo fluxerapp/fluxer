@@ -142,15 +142,15 @@
 		"subject": "您每年對 {product_name} 的捐款將於 {chargeAt, date, long} 續期"
 	},
 	"dsa_report_resolved": {
-		"about": "{target, select, message_community {這是關於您在 {reportedAt, date, long} 提交的檢舉，檢舉內容是「{communityName}」中 #{channelName} 裡的一則訊息。} message_dm {這是關於您在 {reportedAt, date, long} 提交的檢舉，檢舉內容是私人訊息中的一則訊息。} message {這是關於您在 {reportedAt, date, long} 提交的檢舉，檢舉內容是一則訊息。} user {這是關於您在 {reportedAt, date, long} 提交的檢舉，檢舉對象是帳號「{username}」。} community {這是關於您在 {reportedAt, date, long} 提交的檢舉，檢舉對象是社群「{communityName}」。} other {這是關於您在 {reportedAt, date, long} 提交的檢舉。}}",
+		"about": "{target, select, message_community {您在 {reportedAt, date, long} 檢舉了「{communityName}」中 #{channelName} 裡的一則訊息。} message_dm {您在 {reportedAt, date, long} 檢舉了私人訊息中的一則訊息。} message {您在 {reportedAt, date, long} 檢舉了一則訊息。} user {您在 {reportedAt, date, long} 檢舉了帳號「{username}」。} community {您在 {reportedAt, date, long} 檢舉了社群「{communityName}」。} other {您在 {reportedAt, date, long} 向我們提交了一份檢舉。}}",
 		"comment_label": "團隊留言",
 		"footer_reason": "您收到此電子郵件是因為您在 {product_name} 上提交了數位服務法檢舉。",
-		"intro": "{outcome, select, removed {您檢舉的內容違反了我們的規則，我們已將其移除。} restricted {您檢舉的帳號違反了我們的規則，我們已採取措施。我們不會透露具體採取了哪些措施。} action_taken {您檢舉的內容違反了我們的規則，我們已採取措施。我們不會透露具體採取了哪些措施。} no_violation {您檢舉的內容沒有違反我們的規則，因此我們維持原狀。} other {我們已結束處理您的檢舉。}}",
+		"intro": "{outcome, select, removed {該內容違反了我們的規則，我們已將其移除。} restricted {該帳號違反了我們的規則，我們已對其採取措施。為了保護每個人的隱私，我們不會透露具體採取了哪種措施。} action_taken {該內容違反了我們的規則，我們已採取措施。為了保護每個人的隱私，我們不會透露具體採取了哪種措施。} no_violation {{concern, select, self_harm {謝謝您對對方的關心。我們的團隊已查看相關內容。談論情緒低落或感到不安全並不違反我們的規則，所以我們沒有移除任何內容，但我們可能會向對方提供一些支援資源。我們絕不會透露檢舉人是誰。如果您認為有人正面臨立即的危險，請撥打當地的緊急求助電話。} other {我們的團隊已查看相關內容，發現它沒有違反我們的規則，因此沒有對其採取措施。檢舉仍可能促使我們採取其他做法，例如向對方提供支援資源。我們絕不會透露檢舉人是誰。}}} other {我們已結束處理您的檢舉。}}",
 		"note": "{reply, select, yes {如果您不同意，請在 60 天內回覆這封電子郵件。} other {{appeals_email, select, null {} other {如果您不同意，請在 60 天內寄信至 <mail>{appeals_email}</mail>，並附上檢舉 ID。}}}}{appeals_email, select, null {} other {如果您身在歐盟，也可以向經認證的<dsa>庭外爭議解決機構</dsa>尋求協助，或向您所在國家的數位服務協調官提出申訴。}}",
 		"report_label": "檢舉 ID",
 		"signoff": "{product_name} 團隊",
-		"subject": "我們已對您的 {product_name} 檢舉做出決定",
-		"thanks": "{outcome, select, removed {感謝您的檢舉。像您這樣的檢舉幫助 {product_name} 對所有人保持安全。} restricted {感謝您的檢舉。像您這樣的檢舉幫助 {product_name} 對所有人保持安全。} action_taken {感謝您的檢舉。像您這樣的檢舉幫助 {product_name} 對所有人保持安全。} other {感謝您告訴我們。}}"
+		"subject": "我們已審核您的 {product_name} 檢舉",
+		"thanks": "{outcome, select, removed {感謝您的檢舉。像您這樣的檢舉能幫助 {product_name} 保障每個人的安全。} restricted {感謝您的檢舉。像您這樣的檢舉能幫助 {product_name} 保障每個人的安全。} action_taken {感謝您的檢舉。像您這樣的檢舉能幫助 {product_name} 保障每個人的安全。} other {感謝您告訴我們。即使最後發現沒有違反規則，也請繼續檢舉任何讓您擔心的內容。}}"
 	},
 	"dsa_report_verification": {
 		"expiry": "此驗證碼將在 {minutes, plural, other {# 分鐘}}後到期。",
@@ -713,15 +713,15 @@
 		"subject": "我們已收到您的 {product_name} 檢舉"
 	},
 	"report_resolved": {
-		"about": "{target, select, message_community {這是關於您在 {reportedAt, date, long} 提交的檢舉，檢舉內容是「{communityName}」中 #{channelName} 裡的一則訊息。} message_dm {這是關於您在 {reportedAt, date, long} 提交的檢舉，檢舉內容是私人訊息中的一則訊息。} message {這是關於您在 {reportedAt, date, long} 提交的檢舉，檢舉內容是一則訊息。} user {這是關於您在 {reportedAt, date, long} 提交的檢舉，檢舉對象是帳號「{username}」。} community {這是關於您在 {reportedAt, date, long} 提交的檢舉，檢舉對象是社群「{communityName}」。} other {這是關於您在 {reportedAt, date, long} 提交的檢舉。}}",
+		"about": "{target, select, message_community {您在 {reportedAt, date, long} 檢舉了「{communityName}」中 #{channelName} 裡的一則訊息。} message_dm {您在 {reportedAt, date, long} 檢舉了私人訊息中的一則訊息。} message {您在 {reportedAt, date, long} 檢舉了一則訊息。} user {您在 {reportedAt, date, long} 檢舉了帳號「{username}」。} community {您在 {reportedAt, date, long} 檢舉了社群「{communityName}」。} other {您在 {reportedAt, date, long} 向我們提交了一份檢舉。}}",
 		"comment_label": "團隊留言",
 		"footer_reason": "您收到此電子郵件是因為您在 {product_name} 上提交了檢舉。",
-		"intro": "{outcome, select, removed {您檢舉的內容違反了我們的規則，我們已將其移除。} restricted {您檢舉的帳號違反了我們的規則，我們已採取措施。我們不會透露具體採取了哪些措施。} action_taken {您檢舉的內容違反了我們的規則，我們已採取措施。我們不會透露具體採取了哪些措施。} no_violation {您檢舉的內容沒有違反我們的規則，因此我們維持原狀。} other {我們已結束處理您的檢舉。}}",
+		"intro": "{outcome, select, removed {該內容違反了我們的規則，我們已將其移除。} restricted {該帳號違反了我們的規則，我們已對其採取措施。為了保護每個人的隱私，我們不會透露具體採取了哪種措施。} action_taken {該內容違反了我們的規則，我們已採取措施。為了保護每個人的隱私，我們不會透露具體採取了哪種措施。} no_violation {{concern, select, self_harm {謝謝您對對方的關心。我們的團隊已查看相關內容。談論情緒低落或感到不安全並不違反我們的規則，所以我們沒有移除任何內容，但我們可能會向對方提供一些支援資源。我們絕不會透露檢舉人是誰。如果您認為有人正面臨立即的危險，請撥打當地的緊急求助電話。} other {我們的團隊已查看相關內容，發現它沒有違反我們的規則，因此沒有對其採取措施。檢舉仍可能促使我們採取其他做法，例如向對方提供支援資源。我們絕不會透露檢舉人是誰。}}} other {我們已結束處理您的檢舉。}}",
 		"note": "{reply, select, yes {如果您不同意，請在 60 天內回覆這封電子郵件。} other {{appeals_email, select, null {} other {如果您不同意，請在 60 天內寄信至 <mail>{appeals_email}</mail>，並附上檢舉 ID。}}}}{appeals_email, select, null {} other {如果您身在歐盟，也可以向經認證的<dsa>庭外爭議解決機構</dsa>尋求協助，或向您所在國家的數位服務協調官提出申訴。}}",
 		"report_label": "檢舉 ID",
 		"signoff": "{product_name} 團隊",
-		"subject": "您的 {product_name} 檢舉已審核完成",
-		"thanks": "{outcome, select, removed {感謝您的檢舉。像您這樣的檢舉幫助 {product_name} 對所有人保持安全。} restricted {感謝您的檢舉。像您這樣的檢舉幫助 {product_name} 對所有人保持安全。} action_taken {感謝您的檢舉。像您這樣的檢舉幫助 {product_name} 對所有人保持安全。} other {感謝您告訴我們。}}"
+		"subject": "我們已審核您的 {product_name} 檢舉",
+		"thanks": "{outcome, select, removed {感謝您的檢舉。像您這樣的檢舉能幫助 {product_name} 保障每個人的安全。} restricted {感謝您的檢舉。像您這樣的檢舉能幫助 {product_name} 保障每個人的安全。} action_taken {感謝您的檢舉。像您這樣的檢舉能幫助 {product_name} 保障每個人的安全。} other {感謝您告訴我們。即使最後發現沒有違反規則，也請繼續檢舉任何讓您擔心的內容。}}"
 	},
 	"self_deletion_scheduled": {
 		"footer_reason": "您收到這封電子郵件，是因為您要求刪除您的 {product_name} 帳號。",

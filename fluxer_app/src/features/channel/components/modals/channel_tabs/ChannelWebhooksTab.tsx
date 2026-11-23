@@ -23,7 +23,8 @@ import {useWebhookUpdates} from '@app/features/webhook/hooks/useWebhookUpdates';
 import type {Webhook} from '@app/features/webhook/models/Webhook';
 import Webhooks from '@app/features/webhook/state/Webhooks';
 import {generateWebhookName} from '@app/features/webhook/utils/WebhookUtils';
-import {GUILD_TEXT_BASED_CHANNEL_TYPES, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {WEBHOOK_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {RobotIcon, WarningOctagonIcon} from '@phosphor-icons/react';
@@ -63,7 +64,7 @@ const ChannelWebhooksTab: React.FC<{channelId: string}> = observer(({channelId})
 	const availableChannels = useMemo(
 		() =>
 			guildChannels
-				.filter((ch) => GUILD_TEXT_BASED_CHANNEL_TYPES.has(ch.type))
+				.filter((ch) => WEBHOOK_CHANNEL_TYPES.has(ch.type))
 				.map((ch) => ({id: ch.id, label: ch.name ?? i18n._(UNKNOWN_CHANNEL_DESCRIPTOR)})),
 		[guildChannels, i18n.locale],
 	);
@@ -115,7 +116,7 @@ const ChannelWebhooksTab: React.FC<{channelId: string}> = observer(({channelId})
 			});
 		}
 	}, [canManageWebhooks, channelId, guildId, i18n]);
-	if (!channel || !guildId || !GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type)) {
+	if (!channel || !guildId || !WEBHOOK_CHANNEL_TYPES.has(channel.type)) {
 		return (
 			<div className={styles.container} data-flx="channel.channel-tabs.channel-webhooks-tab.container">
 				{header}

@@ -1,0 +1,32 @@
+[package]
+name = "push_core"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+name = "push_core"
+path = "src/lib.rs"
+
+[dependencies]
+guild_rt = { workspace = true, optional = true }
+itoa = { workspace = true }
+rustler = { workspace = true, optional = true }
+
+[features]
+nif = ["dep:rustler", "dep:guild_rt"]
+
+[dev-dependencies]
+criterion = { workspace = true }
+proptest = { workspace = true }
+perm_core = { workspace = true }
+
+[[bench]]
+name = "masks"
+harness = false
+
+[[bench]]
+name = "job"
+harness = false

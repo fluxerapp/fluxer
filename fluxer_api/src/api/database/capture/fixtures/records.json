@@ -1,0 +1,130 @@
+[
+	{
+		"kind": "life",
+		"producer": "api-7f9c:6b1e1c52-6f43-4b8e-9d1f-2d0c5a7e9b10",
+		"state": "open"
+	},
+	{
+		"kind": "i",
+		"producer": "api-7f9c:6b1e1c52-6f43-4b8e-9d1f-2d0c5a7e9b10",
+		"seq": 1,
+		"ts": 1763750000000000,
+		"logged": true,
+		"statements": [
+			{
+				"t": "users",
+				"q": "UPDATE users SET username = :username, flags = :flags, avatar = :avatar, joined_at = :joined_at, ratio = :ratio, roles = :roles, labels = :labels, history = :history, status = :status, birthday = :birthday WHERE user_id = :user_id;",
+				"p": {
+					"user_id": {"$t": "i64", "v": "1309547563201765376"},
+					"username": "fluxer",
+					"flags": 7,
+					"avatar": {"$t": "blob", "v": "AAEC/w=="},
+					"joined_at": {"$t": "ts", "v": 1763750000123},
+					"ratio": {"$t": "f", "v": "-0"},
+					"roles": {"$t": "set", "v": [{"$t": "i64", "v": "1"}, {"$t": "i64", "v": "2"}]},
+					"labels": {"$t": "map", "v": [["a", "b"]]},
+					"history": [{"$t": "tuple", "v": ["a", "b", 1, {"$t": "i64", "v": "9"}]}],
+					"status": {"$t": "udt", "v": {"text": "hi", "emoji_id": null, "expires_at": {"$t": "ts", "v": 0}}},
+					"birthday": {"$t": "date", "v": "2001-02-03"}
+				},
+				"ttl": 600,
+				"keys": [{"s": "row", "c": {"user_id": {"$t": "i64", "v": "1309547563201765376"}}}]
+			},
+			{
+				"t": "user_contact_change_logs",
+				"q": "INSERT INTO user_contact_change_logs (user_id, event_id) VALUES (:user_id, :event_id);",
+				"p": {
+					"user_id": {"$t": "i64", "v": "1309547563201765376"},
+					"event_id": {"$t": "timeuuid", "v": "d8a2f6a0-c71f-11f0-8de9-0242ac120002"}
+				}
+			}
+		]
+	},
+	{
+		"kind": "l",
+		"producer": "api-7f9c:6b1e1c52-6f43-4b8e-9d1f-2d0c5a7e9b10",
+		"seq": 2,
+		"ts": 1763750000000001,
+		"rows": [{"t": "invites", "c": {"code": "fluxer"}, "insert": true}]
+	},
+	{
+		"kind": "o",
+		"producer": "api-7f9c:6b1e1c52-6f43-4b8e-9d1f-2d0c5a7e9b10",
+		"outcomes": [[1, "applied"], [2, "unknown"]]
+	},
+	{
+		"kind": "life",
+		"producer": "api-7f9c:6b1e1c52-6f43-4b8e-9d1f-2d0c5a7e9b10",
+		"state": "closed",
+		"last_seq": 2
+	},
+	{
+		"kind": "life",
+		"producer": "api-7f9c:2a4f7c1e-93d5-4b0a-8e61-5f2c9d7a3b84",
+		"state": "open",
+		"pod": "api-7f9c"
+	},
+	{
+		"kind": "k",
+		"producer": "api-7f9c:2a4f7c1e-93d5-4b0a-8e61-5f2c9d7a3b84",
+		"seq": 1,
+		"ts": 1763750000000000,
+		"out": "applied",
+		"keys": [
+			{"t": "users", "s": "row", "c": {"user_id": {"$t": "i64", "v": "1309547563201765376"}}},
+			{
+				"t": "user_contact_change_logs",
+				"s": "row",
+				"c": {
+					"user_id": {"$t": "i64", "v": "1309547563201765376"},
+					"event_id": {"$t": "timeuuid", "v": "d8a2f6a0-c71f-11f0-8de9-0242ac120002"}
+				}
+			},
+			{"t": "recent_mentions", "s": "partition", "c": {"user_id": {"$t": "i64", "v": "1309547563201765376"}}},
+			{
+				"t": "relationships",
+				"s": "prefix",
+				"c": {
+					"source_user_id": {"$t": "i64", "v": "1309547563201765376"},
+					"target_user_id": {"$t": "i64", "v": "1309547563201765377"}
+				}
+			}
+		]
+	},
+	{
+		"kind": "k",
+		"producer": "api-7f9c:2a4f7c1e-93d5-4b0a-8e61-5f2c9d7a3b84",
+		"seq": 2,
+		"ts": 1763750000000001,
+		"out": "unknown",
+		"lwt": true,
+		"keys": [{"t": "invites", "s": "row", "c": {"code": "fluxer"}}]
+	},
+	{
+		"kind": "life",
+		"producer": "api-7f9c:2a4f7c1e-93d5-4b0a-8e61-5f2c9d7a3b84",
+		"state": "alive",
+		"last_seq": 2
+	},
+	{
+		"kind": "life",
+		"producer": "api-7f9c:2a4f7c1e-93d5-4b0a-8e61-5f2c9d7a3b84",
+		"state": "lossy",
+		"from_seq": 3,
+		"to_seq": 7
+	},
+	{
+		"kind": "life",
+		"producer": "api-7f9c:2a4f7c1e-93d5-4b0a-8e61-5f2c9d7a3b84",
+		"state": "closed",
+		"last_seq": 9,
+		"dropped": 5
+	},
+	{
+		"kind": "l",
+		"producer": "users-0:00000000-0000-0000-0000-000000000001",
+		"seq": 1,
+		"ts": 1763750000000000,
+		"rows": [{"t": "app_attest_keys", "c": {"user_id": {"$t": "i64", "v": "1309547563201765376"}, "key_id": "a2V5"}}]
+	}
+]

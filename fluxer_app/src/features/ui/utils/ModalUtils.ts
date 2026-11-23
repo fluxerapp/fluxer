@@ -137,6 +137,8 @@ export function getModalFocusInsideElements(ownerDocument: Document): Array<Elem
 	ownerDocument.querySelectorAll('[data-quick-css-panel]').forEach((el) => inside.push(el));
 	const nativeTitlebar = ownerDocument.querySelector('[data-native-titlebar]');
 	if (nativeTitlebar) inside.push(nativeTitlebar);
+	const nekoSprite = ownerDocument.querySelector('[data-neko-sprite]');
+	if (nekoSprite) inside.push(nekoSprite);
 	return inside;
 }
 

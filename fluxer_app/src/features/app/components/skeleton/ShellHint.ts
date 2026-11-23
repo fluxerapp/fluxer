@@ -170,7 +170,7 @@ function encodeRailItem(item: RememberedSkeletonGuildRailItem): Array<number> {
 
 function resolveSelectedTopRowIndex(pathname: string, rail: SkeletonRailProjection): number {
 	const leadingTopRowCount = flag(rail.fluxerVisible) + flag(rail.favoritesVisible);
-	if ((Routes.isDMRoute(pathname) || Routes.isSpecialPage(pathname)) && rail.fluxerVisible) {
+	if (Routes.isHomeRoute(pathname) && rail.fluxerVisible) {
 		return 0;
 	}
 	if (Routes.isFavoritesRoute(pathname) && rail.favoritesVisible) {

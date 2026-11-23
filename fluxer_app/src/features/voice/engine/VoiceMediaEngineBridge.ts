@@ -36,6 +36,7 @@ interface MediaEngineAccess {
 	) => Readonly<Record<string, VoiceMediaEngineVoiceState>>;
 	getVoiceStateByConnectionId?: (connectionId: string) => VoiceMediaEngineVoiceState | null;
 	syncLocalVoiceStateWithServer?: (partial: VoiceStateSyncPartial) => void;
+	setCameraEnabled?: (enabled: boolean) => Promise<void>;
 	upsertParticipant?: (participant: Participant) => void;
 }
 
@@ -159,6 +160,14 @@ export function syncLocalVoiceStateWithServer(partial: VoiceStateSyncPartial): v
 	} catch (error) {
 		logger.error('Failed to sync voice state with server', error);
 	}
+}
+
+export function disableCameraFromMediaEngine(): void {
+	const store = getMediaEngine();
+	if (!store?.setCameraEnabled) return;
+	store.setCameraEnabled(false).catch((error) => {
+		logger.error('Failed to turn the camera off through the media engine', error);
+	});
 }
 
 function resolveParticipantIdentityForStreamKey(store: MediaEngineAccess, connectionId: string): string | null {

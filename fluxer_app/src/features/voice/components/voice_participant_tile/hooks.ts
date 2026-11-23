@@ -170,20 +170,47 @@ export function useTileContextMenuActive(tileElRef: React.RefObject<HTMLElement 
 	return open;
 }
 
+type ManagedVideoPublicationRef = React.RefObject<RemoteTrackPublication | null>;
+
+const managedVideoPublicationHolders = new WeakMap<RemoteTrackPublication, Set<ManagedVideoPublicationRef>>();
+
+function holdManagedVideoPublication(
+	managedPublicationRef: ManagedVideoPublicationRef,
+	publication: RemoteTrackPublication,
+): void {
+	managedPublicationRef.current = publication;
+	let holders = managedVideoPublicationHolders.get(publication);
+	if (!holders) {
+		holders = new Set();
+		managedVideoPublicationHolders.set(publication, holders);
+	}
+	holders.add(managedPublicationRef);
+}
+
+function releaseManagedVideoPublication(
+	managedPublicationRef: ManagedVideoPublicationRef,
+	publication: RemoteTrackPublication,
+): boolean {
+	if (managedPublicationRef.current === publication) {
+		managedPublicationRef.current = null;
+	}
+	const holders = managedVideoPublicationHolders.get(publication);
+	holders?.delete(managedPublicationRef);
+	return Boolean(holders && holders.size > 0);
+}
+
 function unsubscribeManagedVideoPublication(
-	managedPublicationRef: React.RefObject<RemoteTrackPublication | null>,
+	managedPublicationRef: ManagedVideoPublicationRef,
 	publication: RemoteTrackPublication | null,
 ): void {
 	if (!publication) return;
+	if (releaseManagedVideoPublication(managedPublicationRef, publication)) return;
 	try {
 		if (publication.isSubscribed) {
 			publication.setSubscribed(false);
 		}
 	} catch (err) {
 		logger.error('setSubscribed(false) failed for managed video publication', err);
-	}
-	if (managedPublicationRef.current === publication) {
-		managedPublicationRef.current = null;
 	}
 }
 
@@ -243,9 +270,9 @@ export function useAutoVideoSubscription(opts: {
 			lastRequestedRef.current.desired = shouldSubscribe;
 			if (shouldSubscribe) {
 				graceGate.cancel();
-				managedPublicationRef.current = pub;
-			} else if (managedPublicationRef.current === pub) {
-				managedPublicationRef.current = null;
+				holdManagedVideoPublication(managedPublicationRef, pub);
+			} else {
+				releaseManagedVideoPublication(managedPublicationRef, pub);
 			}
 			return;
 		}
@@ -255,39 +282,25 @@ export function useAutoVideoSubscription(opts: {
 			graceGate.cancel();
 			try {
 				pub.setSubscribed(shouldSubscribe);
-				managedPublicationRef.current = shouldSubscribe ? pub : null;
+				if (shouldSubscribe) {
+					holdManagedVideoPublication(managedPublicationRef, pub);
+				} else {
+					releaseManagedVideoPublication(managedPublicationRef, pub);
+				}
 			} catch (err) {
 				logger.error('setSubscribed failed', err);
 			}
 			return;
 		}
 		graceGate.scheduleDisable(() => {
-			try {
-				if (pub.isSubscribed) {
-					pub.setSubscribed(false);
-				}
-				if (managedPublicationRef.current === pub) {
-					managedPublicationRef.current = null;
-				}
-			} catch (err) {
-				logger.error('setSubscribed(false) failed after unsubscribe grace period', err);
-			}
+			unsubscribeManagedPublication(pub);
 		});
 	}, [enabled, trackRef, isIntersecting, videoLocallyDisabled, isLocalParticipant, isScreenShare]);
 	useEffect(() => {
 		return () => {
 			graceGateRef.current?.cancel();
-			const publication = managedPublicationRef.current;
-			managedPublicationRef.current = null;
 			lastRequestedRef.current = createEmptyAutoVideoSubscriptionRequest();
-			if (!publication) return;
-			try {
-				if (publication.isSubscribed) {
-					publication.setSubscribed(false);
-				}
-			} catch (err) {
-				logger.error('setSubscribed(false) failed during video publication cleanup', err);
-			}
+			unsubscribeManagedVideoPublication(managedPublicationRef, managedPublicationRef.current);
 		};
 	}, []);
 }

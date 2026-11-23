@@ -115,6 +115,14 @@ impl EmojiContext {
         context
     }
 
+    pub(crate) fn without_bytes_at(&self, removed: &[usize]) -> Self {
+        let mut context = self.clone();
+        for emoji in &mut context.standard {
+            emoji.offset -= removed.partition_point(|at| *at < emoji.offset);
+        }
+        context
+    }
+
     pub(crate) fn standard_cursor(&self) -> StandardCursor<'_> {
         StandardCursor {
             emojis: &self.standard,

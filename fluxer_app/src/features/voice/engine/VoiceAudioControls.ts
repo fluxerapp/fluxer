@@ -8,12 +8,12 @@ import {getActiveVoiceProcessingMode} from '@app/features/voice/utils/VoiceProce
 import type {VoiceEngineV2AudioControls, VoiceEngineV2AudioMode} from '@fluxer/voice_engine_v2/src/protocol/types';
 
 export function isPushToTalkActiveFromAppState(): boolean {
+	if (Keybind.isPushToTalkRequired()) return true;
 	if (getActiveVoiceProcessingMode(VoiceSettings) === 'studio') return false;
 	return Keybind.isPushToTalkEffective();
 }
 
 export function isPushToMuteActiveFromAppState(): boolean {
-	if (getActiveVoiceProcessingMode(VoiceSettings) === 'studio') return false;
 	return Keybind.isPushToMuteEffective();
 }
 

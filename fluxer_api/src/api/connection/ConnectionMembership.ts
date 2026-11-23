@@ -157,7 +157,7 @@ export async function loadConnectionMembership(userId: UserID): Promise<Connecti
 	const rows = await fetchMany<UserConnectionStorageRow>(
 		FETCH_BOOTSTRAP_CONNECTIONS_CQL,
 		{user_id: userId},
-		{consistency: 'all'},
+		{consistency: 'localQuorum'},
 	);
 	const catalogue = rows.find(isConnectionMembershipRow);
 	if (catalogue) return parseMembership(catalogue, userId);

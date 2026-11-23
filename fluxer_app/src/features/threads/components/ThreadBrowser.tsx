@@ -13,6 +13,7 @@ import * as ThreadCommands from '@app/features/threads/commands/ThreadCommands';
 import {
 	openCreateThread,
 	openThreadFromEvent,
+	preventShiftSelection,
 	type ThreadOpenEvent,
 } from '@app/features/threads/commands/ThreadNavigation';
 import styles from '@app/features/threads/components/ThreadBrowser.module.css';
@@ -55,6 +56,7 @@ const ThreadBrowserItem = observer(({thread, onOpen}: {thread: Channel; onOpen: 
 			<button
 				type="button"
 				className={styles.item}
+				onMouseDown={preventShiftSelection}
 				onClick={(event) => onOpen(thread, event)}
 				onContextMenu={(event) =>
 					ContextMenuCommands.openFromEvent(event, ({onClose}) => (

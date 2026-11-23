@@ -471,7 +471,7 @@ describe('Reports of webhook and bot messages', () => {
 			deny: Permissions.VIEW_CHANNEL.toString(),
 		});
 		await submitFlow(harness, world.reporter.token, world.channelId, world.messages.bot)
-			.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.MISSING_PERMISSIONS)
+			.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.UNKNOWN_CHANNEL)
 			.execute();
 		expect(await countReports()).toBe(2);
 	});

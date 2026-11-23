@@ -88,6 +88,17 @@ export function hasVoiceEngineV2MicrophonePublishSettingsChanged(
 	return previous.stereoCapture !== current.stereoCapture;
 }
 
+export function hasVoiceEngineV2DefaultInputEndpointChanged(
+	previous: VoiceEngineV2AppAudioSettingsSnapshot,
+	current: VoiceEngineV2AppAudioSettingsSnapshot,
+): boolean {
+	assertAudioSettingsSnapshot(previous, 'previous');
+	assertAudioSettingsSnapshot(current, 'current');
+	if (previous.effectiveInputDeviceId !== 'default' || current.effectiveInputDeviceId !== 'default') return false;
+	if (previous.activeInputDeviceLabel === null || current.activeInputDeviceLabel === null) return false;
+	return previous.activeInputDeviceLabel !== current.activeInputDeviceLabel;
+}
+
 export function hasVoiceEngineV2MicrophoneCaptureSettingsChanged(
 	previous: VoiceEngineV2AppAudioSettingsSnapshot,
 	current: VoiceEngineV2AppAudioSettingsSnapshot,

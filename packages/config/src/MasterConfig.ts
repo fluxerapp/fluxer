@@ -81,6 +81,8 @@ export interface MasterConfig {
 			port: number;
 			keyspace: string;
 			local_dc: string;
+			consistency: string;
+			serial_consistency: string;
 			username: string;
 			password: string;
 		};
@@ -159,6 +161,12 @@ export interface MasterConfig {
 				enabled?: boolean;
 				stream?: string;
 				skip_buckets?: Array<string>;
+			};
+			cassandra_write_capture?: {
+				mode?: 'off' | 'behind';
+				nats_url?: string;
+				auth_token?: string;
+				stream?: string;
 			};
 		};
 		nats?: {

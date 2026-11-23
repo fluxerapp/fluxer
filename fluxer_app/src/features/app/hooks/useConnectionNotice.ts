@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {canSwitchAccountFromStalledConnection} from '@app/features/app/ConnectionRecovery';
 import {isClientBooting, isClientReconnecting} from '@app/features/app/state/ClientReadiness';
 import Initialization from '@app/features/app/state/Initialization';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import SessionManager from '@app/features/platform/state/AuthSession';
 import Nagbar from '@app/features/ui/state/Nagbar';
 import StatusPage from '@app/features/user/state/StatusPage';
 import {msg} from '@lingui/core/macro';
@@ -75,7 +75,7 @@ export function useConnectionNotice(): ConnectionNotice | null {
 	const booting = isClientBooting();
 	const reconnecting = isClientReconnecting();
 	const forced = Nagbar.forceConnectionNotice;
-	const showSwitchAccount = canSwitchAccountFromStalledConnection();
+	const showSwitchAccount = SessionManager.canSwitchAccount();
 	const [bootStalled, setBootStalled] = useState(false);
 	useEffect(() => {
 		if (!booting) {

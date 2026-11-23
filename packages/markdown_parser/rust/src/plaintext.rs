@@ -1,32 +1,70 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::collections::HashMap;
-
 use crate::ast::{
     AlertType, EmojiKind, GuildNavigationType, ListItem, MentionKind, Node, TableAlignment,
 };
 use crate::emoji::EmojiContext;
 use crate::parser::{MarkdownParser, ParseError};
 
+const HIDDEN_SPOILER_PLACEHOLDER: &str = "█████";
+
 #[derive(Clone, Debug)]
 pub struct PlaintextOptions {
     pub preserve_markdown: bool,
+    pub hide_spoilers: bool,
     pub include_emoji_names: bool,
     pub include_link_urls: bool,
-    pub users: HashMap<String, String>,
-    pub roles: HashMap<String, String>,
-    pub channels: HashMap<String, String>,
+    pub users: Names,
+    pub roles: Names,
+    pub channels: Names,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct Names {
+    sorted: Vec<(u64, String)>,
+}
+
+impl Names {
+    pub fn new(mut entries: Vec<(u64, String)>) -> Self {
+        entries.sort_by_key(|entry| entry.0);
+        Self { sorted: entries }
+    }
+
+    pub fn get(&self, id: &str) -> Option<&str> {
+        let key = canonical_id(id)?;
+        let end = self.sorted.partition_point(|entry| entry.0 <= key);
+        let (found, name) = self.sorted.get(end.checked_sub(1)?)?;
+        (*found == key).then_some(name.as_str())
+    }
+}
+
+impl FromIterator<(u64, String)> for Names {
+    fn from_iter<I: IntoIterator<Item = (u64, String)>>(entries: I) -> Self {
+        Self::new(entries.into_iter().collect())
+    }
+}
+
+pub fn canonical_id(text: &str) -> Option<u64> {
+    let bytes = text.as_bytes();
+    let canonical = match bytes {
+        [] => false,
+        [b'0'] => true,
+        [b'0', ..] => false,
+        _ => bytes.iter().all(u8::is_ascii_digit),
+    };
+    if canonical { text.parse().ok() } else { None }
 }
 
 impl Default for PlaintextOptions {
     fn default() -> Self {
         Self {
             preserve_markdown: false,
+            hide_spoilers: false,
             include_emoji_names: true,
             include_link_urls: false,
-            users: HashMap::new(),
-            roles: HashMap::new(),
-            channels: HashMap::new(),
+            users: Names::default(),
+            roles: Names::default(),
+            channels: Names::default(),
         }
     }
 }
@@ -92,6 +130,9 @@ fn render_node_to_plaintext(node: &Node, options: &PlaintextOptions) -> String {
         Node::Underline { children } => render_formatting_node(children, "__", options),
         Node::Strikethrough { children } => render_formatting_node(children, "~~", options),
         Node::Spoiler { children, is_block } => {
+            if options.hide_spoilers {
+                return HIDDEN_SPOILER_PLACEHOLDER.to_string();
+            }
             let content = render_nodes_to_plaintext(children, options);
             if options.preserve_markdown {
                 if is_block.unwrap_or(false) {
@@ -213,7 +254,7 @@ fn render_list(ordered: bool, items: &[ListItem], options: &PlaintextOptions) ->
             };
             format!(
                 "{prefix}{}",
-                indent_continuation_lines(&content, prefix.len())
+                indent_continuation_lines(&content, prefix.chars().count())
             )
         })
         .collect::<Vec<_>>()
@@ -423,10 +464,9 @@ fn render_nodes_to_plaintext(nodes: &[Node], options: &PlaintextOptions) -> Stri
             continue;
         }
         let needs_block_separator = !result.is_empty()
-            && previous_node.is_some()
-            && (previous_node.is_some_and(is_block_node) || is_block_node(node))
             && !result.ends_with('\n')
-            && !rendered.starts_with('\n');
+            && (previous_node.is_some_and(is_block_node)
+                || (is_block_node(node) && !rendered.starts_with('\n')));
         if needs_block_separator {
             trim_trailing_horizontal_whitespace_for_block_separator(
                 &mut result,

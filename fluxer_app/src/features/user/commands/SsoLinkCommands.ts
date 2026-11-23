@@ -17,3 +17,7 @@ export async function connectSso(): Promise<void> {
 	});
 	await navigateToExternalURL(body.authorization_url);
 }
+
+export async function disconnectSso(): Promise<void> {
+	await http.delete(Endpoints.USER_SSO_UNLINK, {body: {}});
+}

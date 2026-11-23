@@ -33,6 +33,9 @@
 /fluxer_app/src/features/theme/styles/generated/
 /fluxer_app/src/features/ui/components/SVGMasks.tsx
 /fluxer_app/src/features/ui/constants/AvatarStatusGeometry.ts
+/fluxer_gateway/build/
+/fluxer_gateway/bouncer/build/
+/fluxer_gateway/bouncer_proto/build/
 /fluxer_gateway/priv/
 /fluxer_static/desktop/spellcheck/dictionaries/*/*
 !/fluxer_static/desktop/spellcheck/dictionaries/dictionary-et@2.0.0/LICENSE
@@ -57,7 +60,6 @@
 **/*.log
 **/*.tmp
 **/erl_crash.dump
-**/rebar3.crashdump
 
 **/.DS_Store
 **/Thumbs.db

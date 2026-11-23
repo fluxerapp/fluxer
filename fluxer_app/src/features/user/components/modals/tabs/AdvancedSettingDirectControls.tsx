@@ -13,6 +13,7 @@ import {
 	HelpCenterButtonControl,
 	HideKeyboardHintsControl,
 	KeepNekoStillControl,
+	PlutoniumButtonControl,
 	ShowNekoControl,
 	VoiceChannelJoinBehaviorControl,
 	WindowsFluxerSansControl,
@@ -76,6 +77,7 @@ export const DIRECT_CONTROL_ITEM_IDS = new Set([
 	'appearance-voice-channel-join-behavior',
 	'appearance-enable-favorites',
 	'appearance-show-help-center-button',
+	'appearance-show-plutonium-button',
 	'appearance-show-download-button',
 	'chat-settings-auto-send-gifs',
 	'chat-settings-save-gif-favorites',
@@ -130,6 +132,7 @@ export const COMPACT_SWITCH_CONTROL_ITEM_IDS = new Set([
 	'appearance-hide-keyboard-hints',
 	'appearance-enable-favorites',
 	'appearance-show-help-center-button',
+	'appearance-show-plutonium-button',
 	'appearance-show-download-button',
 	'chat-settings-auto-send-gifs',
 	'chat-settings-save-gif-favorites',
@@ -203,6 +206,10 @@ export const AdvancedSettingControl = observer(({item}: {item: SearchableSetting
 		case 'appearance-show-help-center-button':
 			return (
 				<HelpCenterButtonControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.help-center-button-control" />
+			);
+		case 'appearance-show-plutonium-button':
+			return (
+				<PlutoniumButtonControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.plutonium-button-control" />
 			);
 		case 'appearance-show-download-button':
 			return (

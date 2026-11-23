@@ -25,6 +25,10 @@ pub struct ServiceConfig {
     pub scylla_keyspace: String,
     pub scylla_username: Option<String>,
     pub scylla_password: Option<String>,
+    pub scylla_local_dc: Option<String>,
+    pub scylla_consistency: CassandraConsistency,
+    pub scylla_serial_consistency: CassandraSerialConsistency,
+    pub scylla_address_translation: CassandraAddressTranslation,
     pub postgres_url: Option<String>,
     pub postgres_host: String,
     pub postgres_port: u16,
@@ -52,6 +56,83 @@ pub enum DatabaseBackend {
     Cassandra,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CassandraConsistency {
+    One,
+    LocalOne,
+    Quorum,
+    LocalQuorum,
+    EachQuorum,
+    All,
+}
+
+impl CassandraConsistency {
+    fn parse(value: Option<String>) -> anyhow::Result<Self> {
+        let Some(value) = value.filter(|v| !v.trim().is_empty()) else {
+            return Ok(Self::LocalQuorum);
+        };
+        Ok(match normalize_setting(&value).as_str() {
+            "one" => Self::One,
+            "local_one" => Self::LocalOne,
+            "quorum" => Self::Quorum,
+            "local_quorum" => Self::LocalQuorum,
+            "each_quorum" => Self::EachQuorum,
+            "all" => Self::All,
+            _ => anyhow::bail!(
+                "unsupported FLUXER_CASSANDRA_CONSISTENCY: {value} (use one, local_one, quorum, local_quorum, each_quorum or all)"
+            ),
+        })
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CassandraSerialConsistency {
+    Serial,
+    LocalSerial,
+}
+
+impl CassandraSerialConsistency {
+    fn parse(value: Option<String>) -> anyhow::Result<Self> {
+        let Some(value) = value.filter(|v| !v.trim().is_empty()) else {
+            return Ok(Self::LocalSerial);
+        };
+        Ok(match normalize_setting(&value).as_str() {
+            "serial" => Self::Serial,
+            "local_serial" => Self::LocalSerial,
+            _ => anyhow::bail!(
+                "unsupported FLUXER_CASSANDRA_SERIAL_CONSISTENCY: {value} (use serial or local_serial)"
+            ),
+        })
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CassandraAddressTranslation {
+    Auto,
+    ContactPoint,
+    None,
+}
+
+impl CassandraAddressTranslation {
+    fn parse(value: Option<String>) -> anyhow::Result<Self> {
+        let Some(value) = value.filter(|v| !v.trim().is_empty()) else {
+            return Ok(Self::Auto);
+        };
+        Ok(match normalize_setting(&value).as_str() {
+            "auto" => Self::Auto,
+            "contact_point" => Self::ContactPoint,
+            "none" => Self::None,
+            _ => anyhow::bail!(
+                "unsupported FLUXER_CASSANDRA_ADDRESS_TRANSLATION: {value} (use auto, contact_point or none)"
+            ),
+        })
+    }
+}
+
+fn normalize_setting(value: &str) -> String {
+    value.trim().to_ascii_lowercase().replace('-', "_")
+}
+
 impl ServiceConfig {
     #[cfg(test)]
     pub(crate) fn for_test(mode: Mode, shard_id: u32, shard_count: u32) -> Self {
@@ -71,6 +152,10 @@ impl ServiceConfig {
             scylla_keyspace: "fluxer".to_owned(),
             scylla_username: None,
             scylla_password: None,
+            scylla_local_dc: None,
+            scylla_consistency: CassandraConsistency::LocalQuorum,
+            scylla_serial_consistency: CassandraSerialConsistency::LocalSerial,
+            scylla_address_translation: CassandraAddressTranslation::Auto,
             postgres_url: None,
             postgres_host: "127.0.0.1".to_owned(),
             postgres_port: 5432,
@@ -217,6 +302,19 @@ impl ServiceConfig {
                 .unwrap_or_else(|| "fluxer".to_owned()),
             scylla_username: env.value("FLUXER_CASSANDRA_USERNAME"),
             scylla_password: env.value("FLUXER_CASSANDRA_PASSWORD"),
+            scylla_local_dc: env
+                .value("FLUXER_CASSANDRA_LOCAL_DC")
+                .map(|dc| dc.trim().to_owned())
+                .filter(|dc| !dc.is_empty()),
+            scylla_consistency: CassandraConsistency::parse(
+                env.value("FLUXER_CASSANDRA_CONSISTENCY"),
+            )?,
+            scylla_serial_consistency: CassandraSerialConsistency::parse(
+                env.value("FLUXER_CASSANDRA_SERIAL_CONSISTENCY"),
+            )?,
+            scylla_address_translation: CassandraAddressTranslation::parse(
+                env.value("FLUXER_CASSANDRA_ADDRESS_TRANSLATION"),
+            )?,
             postgres_url: env.value("FLUXER_POSTGRES_URL"),
             postgres_host: env
                 .value("FLUXER_POSTGRES_HOST")
@@ -298,5 +396,57 @@ fn parse_bool(value: &str) -> anyhow::Result<bool> {
         "1" | "true" | "yes" | "y" | "on" => Ok(true),
         "0" | "false" | "no" | "n" | "off" => Ok(false),
         other => anyhow::bail!("invalid boolean value: {other}"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn config_with(vars: &[(&str, &str)]) -> anyhow::Result<ServiceConfig> {
+        ServiceConfig::from_env_map(&EnvMap::from_pairs(vars.iter().copied()))
+    }
+
+    #[test]
+    fn cassandra_defaults_are_local_and_keep_contact_point_auto() {
+        let config = config_with(&[]).unwrap();
+        assert_eq!(config.scylla_local_dc, None);
+        assert_eq!(config.scylla_consistency, CassandraConsistency::LocalQuorum);
+        assert_eq!(
+            config.scylla_serial_consistency,
+            CassandraSerialConsistency::LocalSerial
+        );
+        assert_eq!(
+            config.scylla_address_translation,
+            CassandraAddressTranslation::Auto
+        );
+    }
+
+    #[test]
+    fn cassandra_settings_are_read_from_env() {
+        let config = config_with(&[
+            ("FLUXER_CASSANDRA_LOCAL_DC", " ovh-lim "),
+            ("FLUXER_CASSANDRA_CONSISTENCY", "LOCAL_ONE"),
+            ("FLUXER_CASSANDRA_SERIAL_CONSISTENCY", "serial"),
+            ("FLUXER_CASSANDRA_ADDRESS_TRANSLATION", "none"),
+        ])
+        .unwrap();
+        assert_eq!(config.scylla_local_dc.as_deref(), Some("ovh-lim"));
+        assert_eq!(config.scylla_consistency, CassandraConsistency::LocalOne);
+        assert_eq!(
+            config.scylla_serial_consistency,
+            CassandraSerialConsistency::Serial
+        );
+        assert_eq!(
+            config.scylla_address_translation,
+            CassandraAddressTranslation::None
+        );
+    }
+
+    #[test]
+    fn unknown_cassandra_consistency_is_rejected() {
+        assert!(config_with(&[("FLUXER_CASSANDRA_CONSISTENCY", "two")]).is_err());
+        assert!(config_with(&[("FLUXER_CASSANDRA_SERIAL_CONSISTENCY", "quorum")]).is_err());
+        assert!(config_with(&[("FLUXER_CASSANDRA_ADDRESS_TRANSLATION", "nat")]).is_err());
     }
 }

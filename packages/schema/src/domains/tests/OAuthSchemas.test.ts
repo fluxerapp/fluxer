@@ -45,7 +45,7 @@ describe.each([
 	it('normalizes shared fields without adding optional defaults', () => {
 		expect(schema.parse({client_id: ' 123 ', scope: ' identify '})).toEqual({client_id: 123n, scope: 'identify'});
 	});
-	it.each(['S256', 'plain'])('preserves the PKCE method %s and shared fields', (method) => {
+	it.each(['S256'])('preserves the PKCE method %s and shared fields', (method) => {
 		expect(
 			schema.parse({
 				...required,
@@ -78,6 +78,7 @@ describe.each([
 		{redirect_uri: '/relative'},
 		{code_challenge: ''},
 		{code_challenge_method: 's256'},
+		{code_challenge_method: 'plain'},
 	])('rejects malformed shared fields %j', (fields) => {
 		expect(schema.safeParse({...required, ...fields}).success).toBe(false);
 	});

@@ -119,12 +119,12 @@ const AuthWrapper = observer(({children}: {children: ReactNode}): React.ReactEle
 			value={layoutVariantContextValue}
 			data-flx="app.auth-root.auth-wrapper.layout-variant-provider"
 		>
+			{isNative && !useSystemTitleBar && !isRootDocumentFullscreen && (
+				<NativeTitlebar platform={platform} data-flx="app.auth-root.auth-wrapper.native-titlebar" />
+			)}
 			<div ref={ringsContainerRef} className={styles.appContainer} data-flx="app.auth-root.auth-wrapper.app-container">
 				<FocusRingScope containerRef={ringsContainerRef} data-flx="app.auth-root.auth-wrapper.focus-ring-scope">
 					<SkipToContentLink data-flx="app.auth-root.auth-wrapper.skip-to-content-link" />
-					{isNative && !useSystemTitleBar && !isRootDocumentFullscreen && (
-						<NativeTitlebar platform={platform} data-flx="app.auth-root.auth-wrapper.native-titlebar" />
-					)}
 					{children}
 				</FocusRingScope>
 			</div>

@@ -46,6 +46,7 @@ export interface Popout {
 	shouldAutoUpdate?: boolean;
 	offsetMainAxis?: number;
 	offsetCrossAxis?: number;
+	ignoreTitlebarBoundary?: boolean;
 	animationType?: PopoutAnimationType;
 	constrainHeight?: boolean;
 	containerClass?: string;

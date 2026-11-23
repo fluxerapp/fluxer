@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {HdrDisplayMode} from '@app/features/accessibility/state/Accessibility';
+import {syncThemeColorMeta} from '@app/features/app/state/RuntimeDocumentBranding';
 import {readRawStorageItem, writeRawStorageItem} from '@app/features/platform/state/PrebootMirror';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {getInstanceBrandVariables, INSTANCE_BRAND_VARIABLES} from '@app/features/theme/utils/InstanceBrandColors';
 import {useInsertionEffect, useLayoutEffect} from 'react';
 
 const SERVED_THEME_COLOR_STYLE_ID = 'fluxer-instance-theme-color';
+const MESSAGE_LAYOUT_STYLE_ID = 'fluxer-message-layout-variables';
 const INSTANCE_BRAND_PREBOOT_STORAGE_KEY = 'fluxer:instance-brand:preboot';
 const SATURATION_PREBOOT_STORAGE_KEY = 'fluxer:accessibility:saturation-preboot';
 
@@ -25,6 +27,14 @@ function readSavedInstanceBrandColors(): SavedInstanceBrandColors | null {
 	} catch {
 		return null;
 	}
+}
+
+function writeMessageLayoutStyle(fontSize: number, messageGutter: number, messageGroupSpacing: number): void {
+	const existing = document.getElementById(MESSAGE_LAYOUT_STYLE_ID);
+	const styleElement = existing ?? document.createElement('style');
+	styleElement.id = MESSAGE_LAYOUT_STYLE_ID;
+	styleElement.textContent = `:root { --font-size: ${remFromPx(fontSize)}; --chat-horizontal-padding: ${remFromPx(messageGutter)}; --message-group-spacing: ${remFromPx(messageGroupSpacing)}; }`;
+	if (!existing) document.head.prepend(styleElement);
 }
 
 function saveInstanceBrandColors(
@@ -76,9 +86,7 @@ export function useThemeCssVariables({
 		htmlNode.style.setProperty('--saturation-factor', saturationFactor.toString());
 		writeRawStorageItem(SATURATION_PREBOOT_STORAGE_KEY, saturationFactor === 1 ? null : saturationFactor.toString());
 		htmlNode.style.setProperty('--user-select', enableTextSelection ? 'auto' : 'none');
-		htmlNode.style.setProperty('--font-size', remFromPx(fontSize));
-		htmlNode.style.setProperty('--chat-horizontal-padding', remFromPx(messageGutter));
-		htmlNode.style.setProperty('--message-group-spacing', remFromPx(messageGroupSpacing));
+		writeMessageLayoutStyle(fontSize, messageGutter, messageGroupSpacing);
 		htmlNode.style.setProperty('dynamic-range-limit', hdrDisplayMode === HdrDisplayMode.FULL ? 'high' : 'standard');
 		if (alwaysUnderlineLinks) {
 			htmlNode.style.setProperty('--link-decoration', 'underline');
@@ -124,6 +132,7 @@ export function useThemeCssVariables({
 			}
 		};
 	}, [instanceThemeColor, effectiveTheme, saturationFactor]);
+	useLayoutEffect(syncThemeColorMeta, [instanceThemeColor, effectiveTheme, saturationFactor]);
 	useLayoutEffect(() => {
 		const htmlNode = document.documentElement;
 		return () => {
@@ -136,9 +145,7 @@ export function useThemeCssVariables({
 			htmlNode.style.removeProperty('--link-decoration');
 			htmlNode.style.removeProperty('--markup-strikethrough-color');
 			htmlNode.style.removeProperty('--user-select');
-			htmlNode.style.removeProperty('--font-size');
-			htmlNode.style.removeProperty('--chat-horizontal-padding');
-			htmlNode.style.removeProperty('--message-group-spacing');
+			document.getElementById(MESSAGE_LAYOUT_STYLE_ID)?.remove();
 			htmlNode.style.removeProperty('dynamic-range-limit');
 		};
 	}, []);

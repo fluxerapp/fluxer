@@ -1,0 +1,13 @@
+name = "bouncer_proto"
+version = "0.1.0"
+description = "Messages, keys, leases and blob framing shared by the Fluxer bouncer tier and its workers"
+licences = ["AGPL-3.0-or-later"]
+target = "erlang"
+gleam = ">= 1.11.0"
+
+[dependencies]
+gleam_stdlib = ">= 1.0.5 and < 2.0.0"
+gleam_erlang = ">= 1.3.0 and < 2.0.0"
+
+[dev_dependencies]
+gleeunit = ">= 1.11.0 and < 2.0.0"

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::ast::Node;
-use crate::text::{concat, remove_text_presentation, trim};
+use crate::text::{remove_text_presentation, trim};
 
 pub fn normalize_nodes(nodes: &mut Vec<Node>, inside_blockquote: bool) {
     for node in nodes.iter_mut() {
@@ -313,12 +313,4 @@ pub fn is_malformed_block_text(content: &str) -> bool {
     }
     let trimmed_content = trim(content);
     trimmed_content.starts_with('#') || trimmed_content.starts_with("-#")
-}
-
-pub fn replace_trailing_whitespace_with_newline(content: &str) -> String {
-    let trimmed = crate::text::trim_right(content);
-    if trimmed.len() == content.len() {
-        return content.to_owned();
-    }
-    concat(trimmed, "\n")
 }

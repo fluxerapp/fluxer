@@ -15,8 +15,8 @@ services:
       FLUXER_VOICE_EDGE_GLOBAL_OPTIONS: ${FLUXER_VOICE_EDGE_EMAIL:+email ${FLUXER_VOICE_EDGE_EMAIL:-}}
       FLUXER_VOICE_EDGE_SNI_OPTION: ${FLUXER_VOICE_EDGE_IP:+default_sni ${FLUXER_VOICE_EDGE_IP:-}}
     volumes:
-      - ./Caddyfile.voice:/etc/caddy/Caddyfile:ro
-      - ./sites.d:/etc/caddy/sites.d:ro
+      - ./Caddyfile.voice:/etc/caddy/Caddyfile:ro,z
+      - ./sites.d:/etc/caddy/sites.d:ro,z
       - edge-data:/data
       - edge-config:/config
     networks:

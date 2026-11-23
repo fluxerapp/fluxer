@@ -590,6 +590,7 @@ export class UserRepository {
 		includeGuilds: boolean,
 		limit: number,
 		before?: MessageID,
+		guildId?: GuildID,
 	): Promise<Array<RecentMention>> {
 		return this.recentMentionRepository.listRecentMentions(
 			userId,
@@ -598,6 +599,7 @@ export class UserRepository {
 			includeGuilds,
 			limit,
 			before,
+			guildId,
 		);
 	}
 
@@ -647,6 +649,10 @@ export class UserRepository {
 
 	async findGiftCodeByPaymentIntent(paymentIntentId: string): Promise<GiftCode | null> {
 		return this.giftCodeRepository.findGiftCodeByPaymentIntent(paymentIntentId);
+	}
+
+	async findGiftCodesByPaymentIntent(paymentIntentId: string): Promise<Array<GiftCode>> {
+		return this.giftCodeRepository.findGiftCodesByPaymentIntent(paymentIntentId);
 	}
 
 	async findGiftCodesByCreator(userId: UserID): Promise<Array<GiftCode>> {

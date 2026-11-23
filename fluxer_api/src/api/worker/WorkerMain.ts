@@ -3,6 +3,10 @@
 import {Config} from '@app/api/Config';
 import {createApiContext} from '@app/api/CreateApiContext';
 import {setDatabaseQueryExecutor} from '@app/api/database/CassandraQueryExecution';
+import {
+	startCassandraWriteCapture,
+	stopCassandraWriteCapture,
+} from '@app/api/database/capture/CassandraWriteCaptureLifecycle';
 import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from '@app/api/database/PostgresKvQueryExecutor';
 import {
 	activityEventsPublishing,
@@ -405,6 +409,7 @@ export async function startWorkerMain(): Promise<void> {
 				searchInitialized = false;
 			}
 		});
+		await cleanupStep('cassandra write capture', stopCassandraWriteCapture);
 		await cleanupStep('cassandra', async () => {
 			if (cassandraInitialized) {
 				await shutdownCassandra();
@@ -456,6 +461,8 @@ export async function startWorkerMain(): Promise<void> {
 				port: Config.cassandra.port,
 				keyspace: Config.cassandra.keyspace,
 				localDc: Config.cassandra.localDc,
+				consistency: Config.cassandra.consistency,
+				serialConsistency: Config.cassandra.serialConsistency,
 				username: Config.cassandra.username || undefined,
 				password: Config.cassandra.password || undefined,
 				readTimeoutMs: BACKGROUND_READ_TIMEOUT_MS,
@@ -475,6 +482,7 @@ export async function startWorkerMain(): Promise<void> {
 					logger: Logger,
 				});
 			}
+			await startCassandraWriteCapture(Config.cassandraWriteCapture, 'worker');
 		}
 		snowflakeService = createSnowflakeService();
 		await snowflakeService.initialize();

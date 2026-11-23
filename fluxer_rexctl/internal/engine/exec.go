@@ -217,7 +217,12 @@ func (p *Project) Helper(ctx context.Context, o HelperOptions) error {
 		return &Error{Op: "helper", Class: ClassInvalidConfig, Err: errors.New("no image for the helper container")}
 	}
 	mounts := make([]mount.Mount, 0, len(o.Mounts))
+	var binds []string
 	for _, m := range o.Mounts {
+		if m.Bind != "" && m.SELinux != "" {
+			binds = append(binds, bindSpec(m))
+			continue
+		}
 		if m.Bind != "" {
 			mounts = append(mounts, mount.Mount{Type: mount.TypeBind, Source: m.Bind, Target: m.Target, ReadOnly: m.ReadOnly})
 			continue
@@ -226,7 +231,7 @@ func (p *Project) Helper(ctx context.Context, o HelperOptions) error {
 	}
 	for attempt := 1; ; attempt++ {
 		out := &deliveredWriter{}
-		err := p.runHelper(ctx, c, image, mounts, o, out)
+		err := p.runHelper(ctx, c, image, mounts, binds, o, out)
 		if attempt == 1 && out.n.Load() == 0 && o.Stdin == nil && errors.Is(err, ErrHelperStalled) {
 			detailf("engine: helper stalled before it sent any output, starting it again")
 			continue
@@ -262,7 +267,7 @@ func (d *deliveredWriter) close() {
 	d.mu.Unlock()
 }
 
-func (p *Project) runHelper(ctx context.Context, c client.APIClient, image string, mounts []mount.Mount, o HelperOptions, out *deliveredWriter) error {
+func (p *Project) runHelper(ctx context.Context, c client.APIClient, image string, mounts []mount.Mount, binds []string, o HelperOptions, out *deliveredWriter) error {
 	if err := p.removeHelpers(ctx, c); err != nil {
 		return err
 	}
@@ -284,7 +289,7 @@ func (p *Project) runHelper(ctx context.Context, c client.APIClient, image strin
 				api.OneoffLabel:  "True",
 			},
 		},
-		HostConfig: &container.HostConfig{Mounts: mounts, GroupAdd: o.GroupAdd, NetworkMode: container.NetworkMode(cmp.Or(o.Network, "none")), LogConfig: container.LogConfig{Type: "none"}},
+		HostConfig: &container.HostConfig{Mounts: mounts, Binds: binds, GroupAdd: o.GroupAdd, NetworkMode: container.NetworkMode(cmp.Or(o.Network, "none")), LogConfig: container.LogConfig{Type: "none"}},
 		Name:       p.Name + "-rexctl-helper-" + randomID(),
 	})
 	if err != nil {

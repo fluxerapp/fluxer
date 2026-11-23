@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import Accessibility from '@app/features/accessibility/state/Accessibility';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import styles from '@app/features/channel/components/GifPicker.module.css';
 import {useGifVideoPool} from '@app/features/channel/components/GifVideoPool';
@@ -21,6 +22,7 @@ import {
 	REMOVE_FROM_FAVORITES_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
+import {buildStaticGifPreviewURL} from '@app/features/messaging/utils/MediaProxyUtils';
 import {decodeThumbHashDataURL} from '@app/features/messaging/utils/ThumbHashUtils';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -65,6 +67,7 @@ export const GifPickerGridItem = observer(function GifPickerGridItem({
 	onShowTrending,
 	onSearchCategory,
 	isFocused = false,
+	isInViewport,
 	itemKey,
 }: {
 	item: GifPickerGridItemData;
@@ -84,10 +87,12 @@ export const GifPickerGridItem = observer(function GifPickerGridItem({
 	onShowTrending: () => void;
 	onSearchCategory: (term: string) => void;
 	isFocused?: boolean;
+	isInViewport: boolean;
 	itemKey?: string;
 }) {
 	const {i18n} = useLingui();
 	const [isFavoritePending, setIsFavoritePending] = useState(false);
+	const [isHovering, setIsHovering] = useState(false);
 	const videoPool = useGifVideoPool();
 	const videoContainerRef = useRef<HTMLDivElement>(null);
 	const isSkeleton = item.type === 'skeleton';
@@ -119,14 +124,21 @@ export const GifPickerGridItem = observer(function GifPickerGridItem({
 		resolvesToVideo(mediaContentType, proxySrc, mediaSourceUrl);
 	const videoThumbHashURL = decodeThumbHashDataURL(usesVideoElement ? thumbnailPlaceholder : null);
 	const hasThumbnailContent = (proxySrc !== null && proxySrc.length > 0) || thumbnailPlaceholder !== null;
+	const shouldAnimate = Accessibility.animateGifPicker || isHovering || isFocused;
+	const stillSrc = !Accessibility.animateGifPicker && proxySrc ? buildStaticGifPreviewURL(proxySrc) : null;
+	const thumbnailSrc = (shouldAnimate ? proxySrc : stillSrc) ?? '';
 	usePooledVideo({
 		src: usesVideoElement ? proxySrc : null,
 		containerRef: videoContainerRef,
 		videoPool,
 		autoPlay: true,
-		enabled: usesVideoElement,
+		enabled: usesVideoElement && isInViewport && shouldAnimate,
 		wholeFile: true,
 	});
+	const handlePointerEnter = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+		if (event.pointerType === 'mouse') setIsHovering(true);
+	}, []);
+	const handlePointerLeave = useCallback(() => setIsHovering(false), []);
 	const handleClick = useCallback(
 		(event: React.MouseEvent<HTMLDivElement> | React.KeyboardEvent<HTMLDivElement>) => {
 			if (isSkeleton) return;
@@ -243,6 +255,8 @@ export const GifPickerGridItem = observer(function GifPickerGridItem({
 				)}
 				onClick={handleClick}
 				onKeyDown={handleKeyDown}
+				onPointerEnter={handlePointerEnter}
+				onPointerLeave={handlePointerLeave}
 				style={coords}
 				data-grid-item={itemKey}
 				aria-label={i18n._(OPEN_DESCRIPTOR, {title: item.title})}
@@ -258,10 +272,20 @@ export const GifPickerGridItem = observer(function GifPickerGridItem({
 								ref={videoContainerRef}
 								className={styles.gifVideoContainer}
 								data-flx="channel.pickers.gif.gif-picker-grid-item.gif-video-container--2"
-							/>
+							>
+								{stillSrc !== null && (
+									<PickerThumbnail
+										src={stillSrc}
+										alt=""
+										className={styles.gif}
+										placeholder={thumbnailPlaceholder}
+										data-flx="channel.pickers.gif.gif-picker-grid-item.gif--3"
+									/>
+								)}
+							</div>
 						) : (
 							<PickerThumbnail
-								src={proxySrc ?? ''}
+								src={thumbnailSrc}
 								alt=""
 								className={styles.gif}
 								placeholder={thumbnailPlaceholder}
@@ -377,6 +401,8 @@ export const GifPickerGridItem = observer(function GifPickerGridItem({
 				)}
 				onClick={handleClick}
 				onKeyDown={handleKeyDown}
+				onPointerEnter={handlePointerEnter}
+				onPointerLeave={handlePointerLeave}
 				style={coords}
 				data-grid-item={itemKey}
 				aria-label={
@@ -396,19 +422,29 @@ export const GifPickerGridItem = observer(function GifPickerGridItem({
 							className={styles.gifVideoContainer}
 							data-flx="channel.pickers.gif.gif-picker-grid-item.gif-video-container--3"
 						>
-							{videoThumbHashURL != null && (
-								<img
-									src={videoThumbHashURL}
+							{stillSrc !== null ? (
+								<PickerThumbnail
+									src={stillSrc}
 									alt=""
-									aria-hidden
-									data-flx="channel.pickers.gif.gif-picker-grid-item.img--2"
+									className={styles.gif}
+									placeholder={thumbnailPlaceholder}
+									data-flx="channel.pickers.gif.gif-picker-grid-item.gif--4"
 								/>
+							) : (
+								videoThumbHashURL != null && (
+									<img
+										src={videoThumbHashURL}
+										alt=""
+										aria-hidden
+										data-flx="channel.pickers.gif.gif-picker-grid-item.img--2"
+									/>
+								)
 							)}
 						</div>
 					) : (
 						hasThumbnailContent && (
 							<PickerThumbnail
-								src={proxySrc ?? ''}
+								src={thumbnailSrc}
 								alt={gif.title || ''}
 								className={styles.gif}
 								placeholder={thumbnailPlaceholder}

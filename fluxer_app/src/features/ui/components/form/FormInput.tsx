@@ -360,7 +360,13 @@ const BaseTextarea = React.forwardRef<HTMLTextAreaElement, TextareaAutosizeProps
 	<TextareaAutosize
 		data-flx="ui.form.input.base-textarea.input"
 		{...omitStyle(rest)}
-		className={clsx(surfaceStyles.surface, styles.input, scrollerStyles.scroller, className)}
+		className={clsx(
+			surfaceStyles.surface,
+			styles.input,
+			scrollerStyles.scroller,
+			scrollerStyles.scrollerTextarea,
+			className,
+		)}
 		ref={ref}
 	/>
 ));

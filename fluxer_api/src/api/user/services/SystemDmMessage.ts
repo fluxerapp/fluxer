@@ -12,6 +12,7 @@ import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons
 import type {User} from '@app/api/models/User';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {UserChannelService} from '@app/api/user/services/UserChannelService';
+import {MessageFlags} from '@fluxer/constants/src/ChannelConstants';
 
 export interface SystemDmDeps {
 	channelService: ChannelService;
@@ -56,7 +57,7 @@ export async function sendSystemDmMessage(params: {
 		user: systemUser,
 		viewer: SYSTEM_THREAD_VIEWER,
 		channelId: channel.id,
-		data: {content},
+		data: {content, flags: MessageFlags.SUPPRESS_EMBEDS},
 		requestCache,
 	});
 }

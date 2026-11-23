@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use crate::ast::Node;
 use crate::block::ClosingFenceLines;
-use crate::constants::{MAX_AST_NODES, MAX_LINE_LENGTH};
+use crate::constants::MAX_AST_NODES;
 use crate::emoji::EmojiContext;
 use crate::normalize::{
     apply_text_presentation_node, combine_adjacent_text, compact_empty_text_nodes,
@@ -63,8 +63,15 @@ impl MarkdownParser {
     }
 
     pub fn parse(&mut self, input: &str) -> Result<Vec<Node>, ParseError> {
-        let lines = text::split_lines(input);
-        self.parse_lines(lines)
+        if !input.contains("\r\n") {
+            return self.parse_lines(text::split_lines(input));
+        }
+        let removed: Vec<usize> = input.match_indices("\r\n").map(|(at, _)| at).collect();
+        let original = Arc::clone(&self.emoji_context);
+        self.emoji_context = Arc::new(original.without_bytes_at(&removed));
+        let result = self.parse_lines(text::split_lines(&input.replace("\r\n", "\n")));
+        self.emoji_context = original;
+        result
     }
 
     pub(crate) fn parse_lines(&mut self, lines: Vec<Line>) -> Result<Vec<Node>, ParseError> {
@@ -106,10 +113,6 @@ impl RuntimeState<'_> {
         }
 
         while self.current_line < self.lines.len() && self.parser.node_count <= MAX_AST_NODES {
-            if self.lines[self.current_line].text.len() > MAX_LINE_LENGTH {
-                self.lines[self.current_line].text =
-                    text::bounded_line_text(&self.lines[self.current_line].text).to_owned();
-            }
             if trim(&self.lines[self.current_line].text).is_empty() {
                 let blank_count = self.count_blank_lines();
                 if !ast.is_empty() && self.current_line + blank_count < self.lines.len() {

@@ -8,7 +8,11 @@ use fluxer_svc::postgres::{self, KeyPart, KvClient};
 use serde_json::{Value, json};
 
 #[cfg(feature = "scylla")]
+use fluxer_svc::cassandra_capture::{self, CassandraCapture, LwtRow};
+#[cfg(feature = "scylla")]
 use scylla::client::session::Session;
+#[cfg(feature = "scylla")]
+use scylla::serialize::row::SerializeRow;
 #[cfg(feature = "scylla")]
 use scylla::statement::prepared::PreparedStatement;
 #[cfg(feature = "scylla")]
@@ -311,6 +315,7 @@ fn decode_key(row: Value) -> anyhow::Result<StoredKey> {
 #[cfg(feature = "scylla")]
 pub struct ScyllaAppAttestStore {
     db: Arc<Session>,
+    capture: Arc<CassandraCapture>,
     statements: tokio::sync::OnceCell<ScyllaStatements>,
 }
 
@@ -399,12 +404,54 @@ fn lwt_outcome(result: scylla::response::query_result::QueryResult) -> anyhow::R
 }
 
 #[cfg(feature = "scylla")]
+fn challenge_row(challenge: &str, insert: bool) -> LwtRow {
+    LwtRow::new(
+        CHALLENGES_TABLE,
+        [("challenge", Value::from(challenge))],
+        insert,
+    )
+}
+
+#[cfg(feature = "scylla")]
+fn lookup_row(key_id: &str, insert: bool) -> LwtRow {
+    LwtRow::new(KEY_LOOKUP_TABLE, [("key_id", Value::from(key_id))], insert)
+}
+
+#[cfg(feature = "scylla")]
+fn key_row(user_id: i64, key_id: &str, insert: bool) -> LwtRow {
+    LwtRow::new(
+        KEYS_TABLE,
+        [
+            ("user_id", cassandra_capture::bigint(user_id)),
+            ("key_id", Value::from(key_id)),
+        ],
+        insert,
+    )
+}
+
+#[cfg(feature = "scylla")]
 impl ScyllaAppAttestStore {
-    pub fn new(db: Arc<Session>) -> Self {
+    pub fn new(db: Arc<Session>, capture: Arc<CassandraCapture>) -> Self {
         Self {
             db,
+            capture,
             statements: tokio::sync::OnceCell::new(),
         }
+    }
+
+    async fn lwt(
+        &self,
+        rows: Vec<LwtRow>,
+        statement: &PreparedStatement,
+        values: impl SerializeRow,
+    ) -> anyhow::Result<LwtOutcome> {
+        self.capture
+            .conditional(
+                rows,
+                async { lwt_outcome(self.db.execute_unpaged(statement, values).await?) },
+                |outcome| Some(outcome.applied),
+            )
+            .await
     }
 
     async fn statements(&self) -> anyhow::Result<&ScyllaStatements> {
@@ -468,9 +515,9 @@ impl ScyllaAppAttestStore {
         record: &ChallengeRecord,
     ) -> anyhow::Result<()> {
         let statements = self.statements().await?;
-        let result = self
-            .db
-            .execute_unpaged(
+        let outcome = self
+            .lwt(
+                vec![challenge_row(challenge, true)],
                 &statements.insert_challenge,
                 (
                     challenge,
@@ -480,7 +527,7 @@ impl ScyllaAppAttestStore {
                 ),
             )
             .await?;
-        if !lwt_outcome(result)?.applied {
+        if !outcome.applied {
             anyhow::bail!("app attest challenge collision");
         }
         Ok(())
@@ -494,23 +541,25 @@ impl ScyllaAppAttestStore {
         now_ms: i64,
     ) -> anyhow::Result<bool> {
         let statements = self.statements().await?;
-        let result = self
-            .db
-            .execute_unpaged(
+        let outcome = self
+            .lwt(
+                vec![challenge_row(challenge, false)],
                 &statements.consume_challenge,
                 (challenge, user_id, purpose.as_str(), timestamp(now_ms)),
             )
             .await?;
-        Ok(lwt_outcome(result)?.applied)
+        Ok(outcome.applied)
     }
 
     async fn claim_key_id(&self, key_id: &str, user_id: i64) -> anyhow::Result<i64> {
         let statements = self.statements().await?;
-        let result = self
-            .db
-            .execute_unpaged(&statements.claim_key_id, (key_id, user_id))
+        let outcome = self
+            .lwt(
+                vec![lookup_row(key_id, true)],
+                &statements.claim_key_id,
+                (key_id, user_id),
+            )
             .await?;
-        let outcome = lwt_outcome(result)?;
         if outcome.applied {
             return Ok(user_id);
         }
@@ -521,9 +570,9 @@ impl ScyllaAppAttestStore {
 
     async fn insert_key_if_absent(&self, user_id: i64, key: &StoredKey) -> anyhow::Result<bool> {
         let statements = self.statements().await?;
-        let result = self
-            .db
-            .execute_unpaged(
+        let outcome = self
+            .lwt(
+                vec![key_row(user_id, &key.key_id, true)],
                 &statements.insert_key,
                 (
                     user_id,
@@ -537,7 +586,7 @@ impl ScyllaAppAttestStore {
                 ),
             )
             .await?;
-        Ok(lwt_outcome(result)?.applied)
+        Ok(outcome.applied)
     }
 
     async fn get_key(&self, user_id: i64, key_id: &str) -> anyhow::Result<Option<StoredKey>> {
@@ -568,12 +617,18 @@ impl ScyllaAppAttestStore {
 
     async fn delete_key(&self, user_id: i64, key_id: &str) -> anyhow::Result<()> {
         let statements = self.statements().await?;
-        self.db
-            .execute_unpaged(&statements.delete_key, (user_id, key_id))
-            .await?;
-        self.db
-            .execute_unpaged(&statements.delete_lookup, (key_id, user_id))
-            .await?;
+        self.lwt(
+            vec![key_row(user_id, key_id, false)],
+            &statements.delete_key,
+            (user_id, key_id),
+        )
+        .await?;
+        self.lwt(
+            vec![lookup_row(key_id, false)],
+            &statements.delete_lookup,
+            (key_id, user_id),
+        )
+        .await?;
         Ok(())
     }
 
@@ -585,13 +640,39 @@ impl ScyllaAppAttestStore {
         now_ms: i64,
     ) -> anyhow::Result<bool> {
         let statements = self.statements().await?;
-        let result = self
-            .db
-            .execute_unpaged(
+        let outcome = self
+            .lwt(
+                vec![key_row(user_id, key_id, false)],
                 &statements.advance_counter,
                 (counter, timestamp(now_ms), user_id, key_id, counter),
             )
             .await?;
-        Ok(lwt_outcome(result)?.applied)
+        Ok(outcome.applied)
+    }
+}
+
+#[cfg(all(test, feature = "scylla"))]
+mod tests {
+    use super::*;
+
+    const FIXTURE: &str =
+        include_str!("../../../fluxer_api/src/api/database/capture/fixtures/records.json");
+
+    #[test]
+    fn key_rows_match_the_shared_capture_fixture() {
+        let records: Vec<Value> = serde_json::from_str(FIXTURE).unwrap();
+        let expected = &records
+            .iter()
+            .find(|record| record["kind"] == "l" && record["rows"][0]["t"] == KEYS_TABLE)
+            .unwrap()["rows"][0];
+        let row = key_row(1_309_547_563_201_765_376, "a2V5", false);
+        assert_eq!(expected, &serde_json::to_value(row).unwrap());
+    }
+
+    #[test]
+    fn every_app_attest_table_has_a_clickhouse_decision() {
+        for table in [CHALLENGES_TABLE, KEY_LOOKUP_TABLE, KEYS_TABLE] {
+            assert!(cassandra_capture::SYNCED_TABLES.contains(&table), "{table}");
+        }
     }
 }

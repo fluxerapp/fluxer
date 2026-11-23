@@ -21,6 +21,7 @@ import {afterEach, describe, expect, it} from 'vitest';
 
 const REPORT_REFERENCE = {
 	target: 'user',
+	concern: 'other',
 	reportedAt: new Date('2026-10-24T18:12:00Z'),
 	username: 'example',
 	communityName: '',

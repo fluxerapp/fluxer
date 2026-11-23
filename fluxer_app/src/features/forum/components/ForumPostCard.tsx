@@ -32,19 +32,25 @@ import {
 	determineMediaType,
 	findViewerItemIndex,
 } from '@app/features/messaging/utils/MediaViewerItemUtils';
+import {spoilersAutoReveal} from '@app/features/messaging/utils/SpoilerUtils';
 import Navigation from '@app/features/navigation/state/Navigation';
 import {buildMessageNotificationBody} from '@app/features/notification/utils/MessageNotificationPreview';
 import Permission from '@app/features/permissions/state/Permission';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import Relationships from '@app/features/relationship/state/Relationships';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
-import {openThreadFromEvent, type ThreadOpenEvent} from '@app/features/threads/commands/ThreadNavigation';
+import {
+	openThreadFromEvent,
+	preventShiftSelection,
+	type ThreadOpenEvent,
+} from '@app/features/threads/commands/ThreadNavigation';
 import {lastActivityId} from '@app/features/threads/state/ChannelThreads';
 import ThreadMemberships from '@app/features/threads/state/ThreadMemberships';
 import * as MediaViewerCommands from '@app/features/ui/commands/MediaViewerCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {formatShortRelativeTime} from '@app/features/ui/utils/ShortRelativeTimeLabels';
+import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
 import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
@@ -73,11 +79,11 @@ function formatCompactCount(count: number): string {
 	return getCachedNumberFormat(locale, {notation: 'compact', maximumFractionDigits: 1}).format(count);
 }
 
-function isVisualAttachment(attachment: MessageAttachment): boolean {
+function isVisualAttachment(attachment: MessageAttachment, showSpoilers: boolean): boolean {
 	const type = attachment.content_type ?? '';
 	return (
 		(type.startsWith('image/') || type.startsWith('video/')) &&
-		(attachment.flags & MessageAttachmentFlags.IS_SPOILER) === 0 &&
+		(showSpoilers || (attachment.flags & MessageAttachmentFlags.IS_SPOILER) === 0) &&
 		!attachment.nsfw &&
 		(attachment.flags & MessageAttachmentFlags.CONTAINS_EXPLICIT_MEDIA) === 0 &&
 		!attachment.expired
@@ -87,9 +93,10 @@ function isVisualAttachment(attachment: MessageAttachment): boolean {
 function firstMedia(
 	message: WireMessage | null | undefined,
 	channelId: string,
+	showSpoilers: boolean,
 ): {attachment: MessageAttachment; src: string; video: boolean} | null {
 	if (!message || Relationships.isBlocked(message.author.id) || isSensitiveMediaHidden(false, channelId)) return null;
-	const attachment = message?.attachments?.find(isVisualAttachment);
+	const attachment = message?.attachments?.find((entry) => isVisualAttachment(entry, showSpoilers));
 	const source = attachment?.proxy_url ?? attachment?.url;
 	if (!attachment || !source) return null;
 	const src = AttachmentUrlRefresher.freshWhenReady(source);
@@ -173,11 +180,12 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 		if (record === null) return i18n._(D.ORIGINAL_MESSAGE_DELETED_DESCRIPTOR);
 		return buildMessageNotificationBody(record, i18n);
 	}, [firstMessage, record, i18n]);
-	const media = firstMedia(firstMessage, post.id);
+	const showSpoilers = spoilersAutoReveal(UserSettings.renderSpoilers, post.id);
+	const media = firstMedia(firstMessage, post.id, showSpoilers);
 	const viewerAttachments =
 		grid && media && isMediaChannel(forum) && firstMessage
 			? (firstMessage.attachments ?? []).filter(
-					(attachment) => isVisualAttachment(attachment) && isMediaAttachment(attachment),
+					(attachment) => isVisualAttachment(attachment, showSpoilers) && isMediaAttachment(attachment),
 				)
 			: [];
 	const opensViewer = media !== null && viewerAttachments.some((attachment) => attachment.id === media.attachment.id);
@@ -282,6 +290,7 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 						tabIndex={0}
 						className={styles.cardOpenTarget}
 						aria-current={open ? 'true' : undefined}
+						onMouseDown={preventShiftSelection}
 						onClick={handleOpen}
 						onKeyDown={(event) => {
 							if (event.key === 'Enter' || event.key === ' ') {

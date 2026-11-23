@@ -48,6 +48,7 @@ import SoftwareEncoderWarning from '@app/features/voice/state/SoftwareEncoderWar
 import {
 	prepareHighFidelityScreenShareAudioTrack,
 	SCREEN_SHARE_AUDIO_PUBLISH_OPTIONS,
+	withScreenShareAudioCaptureConstraints,
 } from '@app/features/voice/utils/AudioPublishOptions';
 import {
 	findVideoPublishCodecPolicyViolation,
@@ -336,7 +337,7 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 			const requestedPublishOptions = await this.adapter.getEffectivePublishOptionsInternal(enabled, publishOptions);
 			await participant.setScreenShareEnabled(
 				enabled,
-				restOptions,
+				withScreenShareAudioCaptureConstraints(restOptions),
 				requestedPublishOptions,
 				SCREEN_SHARE_AUDIO_PUBLISH_OPTIONS,
 			);

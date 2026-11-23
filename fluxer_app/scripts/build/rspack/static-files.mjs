@@ -41,7 +41,7 @@ function generateManifest(staticCdnEndpoint) {
 		start_url: '/app',
 		display: 'standalone',
 		orientation: 'portrait-primary',
-		theme_color: '#4641D9',
+		theme_color: '#1a181e',
 		background_color: '#2b2d31',
 		categories: ['social', 'communication'],
 		lang: 'en',

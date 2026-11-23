@@ -29,6 +29,7 @@ import {
 } from '@app/features/messaging/utils/InAppLinkUtils';
 import {goToMessage} from '@app/features/messaging/utils/MessageNavigator';
 import type {LinkNode} from '@app/features/messaging/utils/markdown/parser/Nodes';
+import {decodeNonAsciiForDisplay} from '@app/features/messaging/utils/markdown/parser/UrlUtils';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import {
 	type AppPageId,
@@ -63,6 +64,7 @@ import {
 	getUserSettingsSectionLabel,
 	getUserSettingsTabIconDescriptor,
 	getUserSettingsTabLabel,
+	USER_SETTINGS_LABEL_DESCRIPTOR,
 } from '@app/features/user/components/settings_utils/SettingsConstants';
 import type {UserSettingsDeepLinkTarget} from '@app/features/user/components/settings_utils/UserSettingsDeepLinks';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
@@ -71,7 +73,7 @@ import {isProbablyAValidSnowflake} from '@fluxer/snowflake/src/SnowflakeUtils';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react';
-import {ChatTeardropIcon, LockIcon} from '@phosphor-icons/react';
+import {ChatTeardropIcon, GearIcon, LockIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -605,9 +607,9 @@ function SettingsJumpLinkMention({target, url, i18n, interactive = true}: Settin
 	);
 	const handleAuxClick = useJumpLinkAuxClick(url, interactive);
 	const handleContextMenu = useLinkContextMenu(SettingsLinkContextMenu, url, interactive, i18n);
-	const tabLabel = getUserSettingsTabLabel(i18n, target.tab);
+	const tabLabel = target.tab ? getUserSettingsTabLabel(i18n, target.tab) : i18n._(USER_SETTINGS_LABEL_DESCRIPTOR);
 	const sectionLabel = target.section ? getUserSettingsSectionLabel(i18n, target.section, target.tab) : '';
-	const tabIcon = getUserSettingsTabIconDescriptor(target.tab);
+	const tabIcon = target.tab ? getUserSettingsTabIconDescriptor(target.tab) : {icon: GearIcon};
 	const TabIcon = tabIcon?.icon;
 	const tabIconWeight = tabIcon?.iconWeight ?? 'fill';
 	const ariaLabelText = sectionLabel ? `${tabLabel} > ${sectionLabel}` : tabLabel;
@@ -731,7 +733,7 @@ export const LinkRenderer = observer(function LinkRenderer({
 	const i18n = options.i18n!;
 	const {url, text} = node;
 	const openInBrowser = useOpenInBrowserOnMiddleClick(url);
-	const content = text ? renderChildren([text], LINK_CONTENT_OPTION_OVERRIDES) : url;
+	const content = text ? renderChildren([text], LINK_CONTENT_OPTION_OVERRIDES) : decodeNonAsciiForDisplay(url);
 	const messageJumpTarget = parseMessageJumpLink(url);
 	const channelJumpTarget = messageJumpTarget ? null : parseChannelJumpLink(url);
 	const jumpTarget = messageJumpTarget ?? channelJumpTarget;

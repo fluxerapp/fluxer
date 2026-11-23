@@ -4,11 +4,9 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getSharedVoiceAudioContext} from '@app/features/voice/engine/VoiceSharedAudioContext';
 import {
 	advanceSpeakingHysteresis,
-	getRemoteSpeakingThresholdRms,
 	SILENT_SPEAKING_HYSTERESIS,
 	type SpeakingHysteresis,
 } from '@app/features/voice/engine/VoiceSpeakingThreshold';
-import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 
 const logger = new Logger('VoiceSpeakingDetection');
 export const SPEAKING_ANALYSER_INTERVAL_MS = 50;
@@ -23,10 +21,6 @@ export function computeTimeDomainRms(samples: Float32Array): number {
 		sumSquares += sample * sample;
 	}
 	return Math.sqrt(sumSquares / samples.length);
-}
-
-export function readSpeakingThresholdRms(): number {
-	return getRemoteSpeakingThresholdRms(VoiceSettings.getVadThreshold());
 }
 
 export function createSpeakingAnalyser(context: BaseAudioContext): AnalyserNode {
@@ -88,7 +82,7 @@ export class VoiceSpeakingMeter {
 		const running = tap.context.state === 'running';
 		if (running) tap.analyser.getFloatTimeDomainData(this.samples);
 		const rms = running ? computeTimeDomainRms(this.samples) : 0;
-		this.update(advanceSpeakingHysteresis(this.hysteresis, rms, readSpeakingThresholdRms(), nowMs));
+		this.update(advanceSpeakingHysteresis(this.hysteresis, rms, nowMs));
 	}
 
 	dispose(): void {

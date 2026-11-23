@@ -23,7 +23,11 @@ enum CiStep {
     Knip,
     GatewayFmt,
     GatewayCompile,
-    GatewayDialyzer,
+    GatewayTest,
+    GatewayBouncerTest,
+    GatewayRustFmt,
+    GatewayClippy,
+    GatewayRustTest,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -67,14 +71,18 @@ pub async fn run_ci(args: CiArgs) -> Result<()> {
                     .current_dir(root),
             )
         }
-        CiStep::GatewayFmt => run_gateway_step(&root.join("fluxer_gateway"), GatewayStep::FmtCheck),
-        CiStep::GatewayCompile => {
-            run_gateway_step(&root.join("fluxer_gateway"), GatewayStep::Compile)
-        }
-        CiStep::GatewayDialyzer => {
-            run_gateway_step(&root.join("fluxer_gateway"), GatewayStep::Dialyzer)
-        }
+        CiStep::GatewayFmt => run_gateway_ci_step(&root, GatewayStep::FmtCheck),
+        CiStep::GatewayCompile => run_gateway_ci_step(&root, GatewayStep::Compile),
+        CiStep::GatewayTest => run_gateway_ci_step(&root, GatewayStep::Test),
+        CiStep::GatewayBouncerTest => run_gateway_ci_step(&root, GatewayStep::BouncerTest),
+        CiStep::GatewayRustFmt => run_gateway_ci_step(&root, GatewayStep::RustFmtCheck),
+        CiStep::GatewayClippy => run_gateway_ci_step(&root, GatewayStep::Clippy),
+        CiStep::GatewayRustTest => run_gateway_ci_step(&root, GatewayStep::RustTest),
     }
+}
+
+fn run_gateway_ci_step(root: &Path, step: GatewayStep) -> Result<()> {
+    run_gateway_step(&root.join("fluxer_gateway"), step)
 }
 
 fn run_app_test_artifact_generators(root: &Path, wasm: AppWasm) -> Result<()> {

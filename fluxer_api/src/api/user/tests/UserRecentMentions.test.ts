@@ -8,7 +8,13 @@ import {
 	setupTestGuildWithMembers,
 	updateGuild,
 } from '@app/api/channel/tests/ChannelTestUtils';
-import {addMemberRole, createRole, removeMemberRole} from '@app/api/guild/tests/GuildTestUtils';
+import {
+	acceptInvite,
+	addMemberRole,
+	createChannelInvite,
+	createRole,
+	removeMemberRole,
+} from '@app/api/guild/tests/GuildTestUtils';
 import {sendMessage, updateChannelPermissions} from '@app/api/message/tests/MessageTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
@@ -80,7 +86,7 @@ describe('User recent mentions', () => {
 		await removeMemberRole(harness, owner.token, guild.id, member.userId, accessRole.id);
 		await createBuilder(harness, member.token)
 			.get(`/channels/${channelId}/messages/${message.id}`)
-			.expect(HttpStatus.FORBIDDEN)
+			.expect(HttpStatus.NOT_FOUND)
 			.execute();
 		const filteredMentions = await createBuilder<MessageListResponse>(harness, member.token)
 			.get('/users/@me/mentions')
@@ -146,6 +152,25 @@ describe('User recent mentions', () => {
 			.execute();
 
 		expect(mentions).toEqual([]);
+	});
+	test('limits mentions to one community when all community mentions are excluded', async () => {
+		const first = await setupTestGuildWithMembers(harness, 1);
+		const [member] = first.members;
+		assert(member, 'Expected a guild member');
+		const second = await setupTestGuildWithMembers(harness, 0);
+		const invite = await createChannelInvite(harness, second.owner.token, second.systemChannel.id);
+		await acceptInvite(harness, member.token, invite.code);
+		const firstMessage = await sendChannelMessage(harness, first.owner.token, first.systemChannel.id, 'first ping');
+		const secondMessage = await sendChannelMessage(harness, second.owner.token, second.systemChannel.id, 'second ping');
+		await recordMentions(member.userId, first.guild.id, [firstMessage]);
+		await recordMentions(member.userId, second.guild.id, [secondMessage]);
+
+		const mentions = await createBuilder<MessageListResponse>(harness, member.token)
+			.get(`/users/@me/mentions?guilds=false&guild_id=${first.guild.id}`)
+			.expect(HttpStatus.OK)
+			.execute();
+
+		expect(mentions.map((mention) => mention.id)).toEqual([firstMessage.id]);
 	});
 	test('continues scanning older rows when recent mentions are filtered out', async () => {
 		const repository = new UserRepository();

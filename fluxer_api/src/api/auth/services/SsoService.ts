@@ -19,6 +19,7 @@ import {
 } from '@app/api/auth/services/OidcClient';
 import {
 	isLinkedToSsoProvider,
+	SsoIdentityLinkService,
 	ssoIdentityTrait,
 	ssoIdentityTraits,
 	ssoProviderIdOf,
@@ -58,7 +59,12 @@ import {
 	reserveUsername,
 	type UsernameReservation,
 } from '@app/api/user/UniqueUsernames';
-import {isEnforcementDeletion, isProfileSubstringExempt, isSignInRefused} from '@app/api/user/UserHelpers';
+import {
+	isEnforcementDeletion,
+	isProfileSubstringExempt,
+	isSignInRefused,
+	isSsoLinkedUser,
+} from '@app/api/user/UserHelpers';
 import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {renameUser} from '@app/api/user/UserRename';
 import {USERNAME_MODE_DISCRIMINATOR} from '@app/api/user/UserTag';
@@ -653,6 +659,17 @@ export class SsoService {
 		const linkedUser = await this.bindSsoIdentity(user, claims.sub, config);
 		await dispatchUserUpdate(gateway, linkedUser);
 		getLogger().info({user_id: user.id.toString()}, 'Connected an SSO identity from account settings');
+	}
+
+	async unlinkSignedInUser(user: User): Promise<void> {
+		if (!isSsoLinkedUser(user)) {
+			return;
+		}
+		const {users, gateway} = this.apiContext.services;
+		const providerId = ssoProviderIdOf(await this.instanceConfigRepository.getSsoConfig());
+		await new SsoIdentityLinkService(users).unlink(user, providerId);
+		await dispatchUserUpdate(gateway, await users.findUniqueAssert(user.id));
+		getLogger().info({user_id: user.id.toString()}, 'Disconnected an SSO identity from account settings');
 	}
 
 	private async challengeSecondFactor(

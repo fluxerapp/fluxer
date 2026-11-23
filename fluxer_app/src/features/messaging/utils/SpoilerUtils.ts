@@ -3,8 +3,9 @@
 import {stripAttachmentSignature} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import Permission from '@app/features/permissions/state/Permission';
 import UserSettings from '@app/features/user/state/UserSettings';
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {MessageEmbedTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {RenderSpoilers} from '@fluxer/constants/src/UserConstants';
+import type {MessageEmbed} from '@fluxer/schema/src/domains/message/EmbedSchemas';
 import type React from 'react';
 import {createContext, createElement, useCallback, useContext, useMemo, useState} from 'react';
 
@@ -54,7 +55,18 @@ const canAutoRevealForModerators = (channelId?: string): boolean => {
 	return channelPermissions ? (channelPermissions & Permissions.MANAGE_MESSAGES) !== 0n : false;
 };
 
-export function extractSpoileredUrls(content: string | null | undefined): Set<string> {
+export function spoilersAutoReveal(renderSpoilersSetting: number, channelId?: string): boolean {
+	switch (renderSpoilersSetting) {
+		case RenderSpoilers.ALWAYS:
+			return true;
+		case RenderSpoilers.IF_MODERATOR:
+			return canAutoRevealForModerators(channelId);
+		default:
+			return false;
+	}
+}
+
+function extractSpoileredUrls(content: string | null | undefined): Set<string> {
 	const spoileredUrls = new Set<string>();
 	if (!content) return spoileredUrls;
 	for (const match of content.matchAll(SPOILER_REGEX)) {
@@ -68,6 +80,29 @@ export function extractSpoileredUrls(content: string | null | undefined): Set<st
 		}
 	}
 	return spoileredUrls;
+}
+
+export function getEmbedSpoilerUrls(embed: MessageEmbed, content: string | null | undefined): Array<string> {
+	const spoileredUrls = extractSpoileredUrls(content);
+	if (spoileredUrls.size === 0) return [];
+	const urlsToCheck = [
+		embed.url,
+		embed.provider?.url,
+		embed.image?.url,
+		embed.image?.proxy_url,
+		embed.thumbnail?.url,
+		embed.thumbnail?.proxy_url,
+		embed.video?.url,
+		embed.video?.proxy_url,
+		embed.audio?.url,
+		embed.audio?.proxy_url,
+	];
+	const matches = urlsToCheck
+		.map((url) => canonicalizeMediaUrl(url))
+		.filter((canonical): canonical is string => !!canonical && spoileredUrls.has(canonical));
+	if (matches.length > 0 || embed.type === MessageEmbedTypes.RICH) return matches;
+	const contentOutsideSpoilers = content?.replace(SPOILER_REGEX, ' ') ?? '';
+	return contentOutsideSpoilers.match(URL_REGEX) ? [] : Array.from(spoileredUrls);
 }
 
 interface SpoilerSyncContextValue {
@@ -120,17 +155,10 @@ export function useSpoilerState(
 	const [manuallyRevealed, setManuallyRevealed] = useState(false);
 	const spoilerSync = useContext(SpoilerSyncContext);
 	const renderSpoilersSetting = getRenderSpoilersSetting();
-	const autoReveal = useMemo(() => {
-		if (!isSpoiler) return true;
-		switch (renderSpoilersSetting) {
-			case RenderSpoilers.ALWAYS:
-				return true;
-			case RenderSpoilers.IF_MODERATOR:
-				return canAutoRevealForModerators(channelId);
-			default:
-				return false;
-		}
-	}, [channelId, isSpoiler, renderSpoilersSetting]);
+	const autoReveal = useMemo(
+		() => !isSpoiler || spoilersAutoReveal(renderSpoilersSetting, channelId),
+		[channelId, isSpoiler, renderSpoilersSetting],
+	);
 	const normalizedKeys = useMemo(() => Array.from(new Set(syncKeys)), [syncKeys]);
 	const sharedRevealed = useMemo(() => spoilerSync?.isRevealed(normalizedKeys) ?? false, [spoilerSync, normalizedKeys]);
 	const hidden = isSpoiler && !autoReveal && !manuallyRevealed && !sharedRevealed;

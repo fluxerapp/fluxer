@@ -26,7 +26,7 @@ impl Config {
 }
 
 pub async fn run(config: Config, shutdown: CancellationToken) -> anyhow::Result<()> {
-    let config = config.service;
+    let Config { service: config } = config;
     let transport =
         NatsTransport::connect(&config.nats_url, config.nats_auth_token.as_deref()).await?;
 

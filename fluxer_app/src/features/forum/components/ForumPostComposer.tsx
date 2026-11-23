@@ -6,9 +6,12 @@ import {
 } from '@app/features/channel/components/LexicalChannelTextareaContent';
 import type {Channel} from '@app/features/channel/models/Channel';
 import {EmojiPickerPopout} from '@app/features/emoji/components/popouts/EmojiPickerPopout';
+import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
+import {getSkinTonedSurrogate} from '@app/features/expressions/utils/SkinToneUtils';
 import * as ForumCommands from '@app/features/forum/commands/ForumCommands';
 import styles from '@app/features/forum/components/Forum.module.css';
 import {ForumComposerTags} from '@app/features/forum/components/ForumTagPicker';
+import ForumPostDrafts from '@app/features/forum/state/ForumPostDrafts';
 import {isMediaChannel, isTagRequired} from '@app/features/forum/utils/ForumChannelUtils';
 import {reportForumError} from '@app/features/forum/utils/ForumErrors';
 import * as D from '@app/features/forum/utils/ForumMessageDescriptors';
@@ -40,27 +43,27 @@ import {EyeIcon, ImageSquareIcon, SmileyIcon, XIcon} from '@phosphor-icons/react
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useEffect, useRef, useState} from 'react';
+import {flushSync} from 'react-dom';
 
 interface ForumPostComposerProps {
 	forum: Channel;
-	initialTitle: string;
 	onClose: () => void;
 }
 
-export const ForumPostComposer = observer(({forum, initialTitle, onClose}: ForumPostComposerProps) => {
+export const ForumPostComposer = observer(({forum, onClose}: ForumPostComposerProps) => {
 	const {i18n} = useLingui();
-	const [title, setTitle] = useState(initialTitle.slice(0, THREAD_NAME_MAX_LENGTH));
-	const [tags, setTags] = useState<Array<string>>([]);
+	const draft = ForumPostDrafts.get(forum.id);
+	const title = draft?.title ?? '';
+	const tags = draft?.tags ?? [];
 	const [error, setError] = useState<string | undefined>(undefined);
 	const [body, setBody] = useState('');
 	const [preview, setPreview] = useState(false);
 	const controlsRef = useRef<ChannelTextareaControls | null>(null);
 	const titleRef = useRef<HTMLInputElement>(null);
+	const emojiTargetRef = useRef<'title' | 'body'>('title');
 	useEffect(() => {
 		titleRef.current?.focus();
 	}, []);
-	const stateRef = useRef({title, tags});
-	stateRef.current = {title, tags};
 	const draftKey = `forum-post:${forum.id}`;
 	const accountKey = Users.viewAccountKey;
 	const media = isMediaChannel(forum);
@@ -78,12 +81,13 @@ export const ForumPostComposer = observer(({forum, initialTitle, onClose}: Forum
 				setError(i18n._(D.POST_FAVORITE_MEDIA_UNSUPPORTED_DESCRIPTOR));
 				return false;
 			}
-			const name = stateRef.current.title.trim();
+			const current = ForumPostDrafts.get(forum.id);
+			const name = current?.title.trim() ?? '';
 			if (!name) {
 				setError(i18n._(D.POST_TITLE_REQUIRED_DESCRIPTOR));
 				return false;
 			}
-			if (isTagRequired(forum) && stateRef.current.tags.length === 0) {
+			if (isTagRequired(forum) && !current?.tags.length) {
 				setError(i18n._(D.POST_TAG_REQUIRED_DESCRIPTOR));
 				return false;
 			}
@@ -96,7 +100,7 @@ export const ForumPostComposer = observer(({forum, initialTitle, onClose}: Forum
 			const claimed = hasAttachments ? MessageSubmitUtils.claimMessageAttachments(draftKey, nonce, content) : [];
 			void ForumCommands.createForumPost(forum, {
 				name,
-				appliedTags: stateRef.current.tags,
+				appliedTags: current?.tags ?? [],
 				content,
 				nonce,
 				hasAttachments: claimed.length > 0,
@@ -122,6 +126,23 @@ export const ForumPostComposer = observer(({forum, initialTitle, onClose}: Forum
 		(media ? attachments.length > 0 : hasVisibleMessageContent(body) || attachments.length > 0) &&
 		(!isTagRequired(forum) || tags.length > 0);
 	const mobile = MobileLayout.enabled;
+	const handleEmojiSelect = (emoji: FlatEmoji) => {
+		const input = titleRef.current;
+		if (emojiTargetRef.current === 'body' || input == null) {
+			controlsRef.current?.insertEmoji(emoji);
+			return;
+		}
+		const text = getSkinTonedSurrogate(emoji) || `:${emoji.name}:`;
+		const start = input.selectionStart ?? input.value.length;
+		const end = input.selectionEnd ?? start;
+		const next = `${input.value.slice(0, start)}${text}${input.value.slice(end)}`;
+		if (next.length > THREAD_NAME_MAX_LENGTH) return;
+		flushSync(() => {
+			ForumPostDrafts.update(forum.id, {title: next});
+			setError(undefined);
+		});
+		input.setSelectionRange(start + text.length, start + text.length);
+	};
 	return (
 		<div className={styles.composerCard} data-flx="forum.forum-post-composer.composer">
 			<div className={styles.composerHead} data-flx="forum.forum-post-composer.composer-head">
@@ -129,8 +150,11 @@ export const ForumPostComposer = observer(({forum, initialTitle, onClose}: Forum
 					className={styles.composerTitle}
 					value={title}
 					onChange={(event) => {
-						setTitle(event.target.value);
+						ForumPostDrafts.update(forum.id, {title: event.target.value});
 						setError(undefined);
+					}}
+					onFocus={() => {
+						emojiTargetRef.current = 'title';
 					}}
 					onKeyDown={(event) => {
 						if (event.key !== 'Enter') return;
@@ -177,6 +201,9 @@ export const ForumPostComposer = observer(({forum, initialTitle, onClose}: Forum
 					bare
 					controlsRef={controlsRef}
 					onValueChange={setBody}
+					onFocus={() => {
+						emojiTargetRef.current = 'body';
+					}}
 					data-flx="forum.forum-post-composer.lexical-channel-textarea-content.submit"
 				/>
 			</div>
@@ -231,7 +258,7 @@ export const ForumPostComposer = observer(({forum, initialTitle, onClose}: Forum
 							render={({onClose: closePicker}) => (
 								<EmojiPickerPopout
 									channelId={forum.id}
-									handleSelect={(emoji) => controlsRef.current?.insertEmoji(emoji)}
+									handleSelect={handleEmojiSelect}
 									onClose={closePicker}
 									data-flx="forum.forum-post-composer.emoji-picker-popout"
 								/>
@@ -256,7 +283,7 @@ export const ForumPostComposer = observer(({forum, initialTitle, onClose}: Forum
 							forum={forum}
 							selected={tags}
 							onChange={(next) => {
-								setTags(next);
+								ForumPostDrafts.update(forum.id, {tags: next});
 								setError(undefined);
 							}}
 							data-flx="forum.forum-post-composer.forum-tag-picker.set-tags"

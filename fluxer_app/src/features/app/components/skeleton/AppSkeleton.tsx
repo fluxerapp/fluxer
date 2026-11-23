@@ -117,7 +117,7 @@ interface FrozenChatSkeletonPresentation {
 export const AppSkeleton = observer(({isExiting = false, onTransitionEnd, effectivePathname}: AppSkeletonProps) => {
 	const location = useLocation();
 	const pathname = effectivePathname ?? location.pathname;
-	const isFluxerSelected = pathname.startsWith(Routes.ME) || Routes.isSpecialPage(pathname);
+	const isFluxerSelected = Routes.isHomeRoute(pathname);
 	const isFavoritesSelected = pathname.startsWith(Routes.FAVORITES);
 	const isDiscoverySelected = Routes.isDiscoverRoute(pathname);
 	const isMobile = MobileLayout.enabled;

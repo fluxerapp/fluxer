@@ -14,10 +14,12 @@ import {threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
 import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {StartForumThreadResponse} from '@fluxer/schema/src/domains/channel/ForumRequestSchemas';
 import type {ThreadChannelResponse} from '@fluxer/schema/src/domains/channel/ThreadRequestSchemas';
+import type {GuildAuditLogListResponse} from '@fluxer/schema/src/domains/guild/GuildAuditLogSchemas';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
@@ -224,6 +226,24 @@ describe('Bulk delete my messages', () => {
 		const memberReply = await sendThreadMessage(harness, member.token, post.id, 'reply should stay');
 		await bulkDeleteMine(harness, owner, forum.id);
 		expectMessageVisibility(await listMessages(harness, member.token, post.id), [memberReply.id], [ownerReply.id]);
+	});
+	it('records a bulk delete entry in the community audit log', async () => {
+		const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
+		const member = members[0]!;
+		const channel = await createChannel(harness, owner.token, guild.id, 'audited');
+		await sendChannelMessage(harness, member.token, channel.id, 'member cleanup target');
+		await sendChannelMessage(harness, member.token, channel.id, 'member cleanup target 2');
+		await bulkDeleteMine(harness, member, channel.id);
+		const auditLog = await createBuilder<GuildAuditLogListResponse>(harness, owner.token)
+			.get(`/guilds/${guild.id}/audit-logs?action_type=${AuditLogActionType.MESSAGE_BULK_DELETE}`)
+			.expect(200)
+			.execute();
+		const entries = auditLog.audit_log_entries.map((entry) => ({
+			user_id: entry.user_id,
+			channel_id: entry.options?.channel_id,
+			count: entry.options?.count,
+		}));
+		expect(entries).toEqual([{user_id: member.userId, channel_id: channel.id, count: 2}]);
 	});
 	it('rejects a caller outside the community and leaves its thread messages', async () => {
 		const {owner, systemChannel} = await setupTestGuildWithMembers(harness, 0);

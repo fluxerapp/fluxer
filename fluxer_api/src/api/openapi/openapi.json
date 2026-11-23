@@ -21980,6 +21980,16 @@
 							"$ref": "#/components/schemas/SnowflakeType"
 						},
 						"description": "Get mentions before this message ID"
+					},
+					{
+						"name": "guild_id",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Community to list mentions from when guilds is false",
+							"$ref": "#/components/schemas/SnowflakeType"
+						},
+						"description": "Community to list mentions from when guilds is false"
 					}
 				]
 			}
@@ -25315,6 +25325,60 @@
 					"content": {
 						"application/json": {"schema": {"$ref": "#/components/schemas/VoiceActivitySharingUpdateRequest"}}
 					}
+				}
+			}
+		},
+		"/users/@me/sso": {
+			"delete": {
+				"operationId": "unlink_sso",
+				"summary": "Disconnect single sign-on",
+				"tags": ["Users"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Disconnects the instance's single sign-on provider from the current account. Needs sudo mode and a password, a passkey or email code sign-in, otherwise the route returns LOCAL_SIGN_IN_METHOD_REQUIRED.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": false,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/SudoVerificationSchema"}}}
 				}
 			}
 		},
@@ -35142,10 +35206,13 @@
 						"description": "The number of seconds until the access token expires",
 						"$ref": "#/components/schemas/Int32Type"
 					},
-					"refresh_token": {"type": "string", "description": "The refresh token for obtaining new access tokens"},
+					"refresh_token": {
+						"description": "The refresh token for obtaining new access tokens. Not issued to every client",
+						"type": "string"
+					},
 					"scope": {"type": "string", "description": "The space-separated list of granted scopes"}
 				},
-				"required": ["access_token", "token_type", "expires_in", "refresh_token", "scope"],
+				"required": ["access_token", "token_type", "expires_in", "scope"],
 				"additionalProperties": false
 			},
 			"IntrospectRequestForm": {
@@ -35191,11 +35258,9 @@
 					"permissions": {"description": "The bot permissions to request", "type": "string"},
 					"code_challenge": {"description": "The PKCE code challenge", "type": "string"},
 					"code_challenge_method": {
-						"description": "The PKCE code challenge method",
-						"x-enumNames": ["S256", "PLAIN"],
-						"x-enumDescriptions": ["SHA-256 hash of code verifier", "Plain text code verifier"],
-						"enum": ["S256", "plain"],
-						"type": "string"
+						"description": "The PKCE code challenge method, must be \"S256\"",
+						"type": "string",
+						"const": "S256"
 					}
 				},
 				"required": ["client_id", "scope"]
@@ -48087,6 +48152,7 @@
 					"SEARCH_INDEX_NOT_READY",
 					"SSO_PROVIDER_UNAVAILABLE",
 					"SSO_REQUIRED",
+					"LOCAL_SIGN_IN_METHOD_REQUIRED",
 					"STORE_BILLING_UNAVAILABLE",
 					"STORE_NOTIFICATION_UNAUTHORIZED",
 					"STORE_PURCHASE_INVALID",
@@ -48492,6 +48558,7 @@
 					"The search index isn't ready yet. Try again in a moment.",
 					"Your sign-in provider didn't respond. Try again in a moment.",
 					"{reason, select, managed_credentials {This instance requires single sign-on, so your SSO provider manages your email and password.} no_account {This instance only lets existing accounts sign in with SSO, and there's no account for you yet. Ask an admin of this instance for access.} managed_username {This instance requires single sign-on, so your username comes from your SSO provider.} other {This instance requires single sign-on. Sign in with the SSO button on the sign-in page.}}",
+					"Add another way to sign in, such as a password or passkey, before you disconnect single sign-on.",
 					"In-app purchases are unavailable right now. Try again later.",
 					"The notification signature is invalid.",
 					"This purchase could not be verified.",

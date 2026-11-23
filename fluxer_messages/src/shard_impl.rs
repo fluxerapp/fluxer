@@ -707,7 +707,7 @@ impl<T: Transport> MessagesShard<T> {
                 )
                 .await?;
             let exhausted = page.len() < page_size as usize;
-            let reached_floor =
+            let at_floor =
                 floor.is_some_and(|floor| page.iter().any(|message| message.message_id <= floor));
             let next = cursor.next(&page);
             let hidden = self.hidden_message_ids(&page, options, users).await;
@@ -719,7 +719,7 @@ impl<T: Transport> MessagesShard<T> {
             let Some(next) = next else {
                 break;
             };
-            if !refill || exhausted || reached_floor || out.len() >= limit as usize {
+            if !refill || exhausted || at_floor || out.len() >= limit as usize {
                 break;
             }
             cursor = next;
@@ -3823,6 +3823,21 @@ mod tests {
         }
     }
 
+    #[tokio::test]
+    async fn orphan_cleanup_deletes_the_orphaned_message() {
+        let orphan: Message = serde_json::from_value(json!({
+            "message_id": 1_509_197_195_776_110_592_i64,
+            "channel_id": 7,
+            "bucket": 0,
+        }))
+        .unwrap();
+        let deleted = DeletedMessageKeys::default();
+        recording_shard(&deleted)
+            .cleanup_orphaned_messages(vec![orphan])
+            .await;
+        assert_eq!(deleted.lock().unwrap().len(), 1);
+    }
+
     fn build_options() -> ResponseBuildOptions {
         ResponseBuildOptions {
             viewer_user_id: 1,
@@ -4017,7 +4032,7 @@ mod tests {
         assert_eq!(
             Some("https://example.com/article".to_owned()),
             base.url,
-            "a page link never reaches the media proxy"
+            "a page link never goes to the media proxy"
         );
         assert_eq!(
             Some("https://example.com/author".to_owned()),

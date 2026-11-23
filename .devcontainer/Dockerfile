@@ -6,7 +6,7 @@ ARG USERNAME=vscode
 ARG USER_UID=1000
 ARG USER_GID=1000
 ARG NODE_MAJOR=26
-ARG ELP_VERSION=2026-08-10
+ARG GLEAM_VERSION=1.19.2
 ARG PNPM_VERSION=11.27.0
 ARG WASM_BINDGEN_VERSION=0.2.128
 
@@ -162,14 +162,19 @@ RUN python3 -m pip install --break-system-packages --no-cache-dir -r /tmp/fluxer
 
 RUN ARCH="$(dpkg --print-architecture)" \
 	&& case "$ARCH" in \
-		amd64) ELP_ARCH="x86_64" ;; \
-		arm64) ELP_ARCH="aarch64" ;; \
-		*) echo "Unsupported architecture for ELP: $ARCH" >&2; exit 1 ;; \
+		amd64) GLEAM_ARCH="x86_64" ;; \
+		arm64) GLEAM_ARCH="aarch64" ;; \
+		*) echo "Unsupported architecture for Gleam: $ARCH" >&2; exit 1 ;; \
 	esac \
-	&& curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL "https://github.com/WhatsApp/erlang-language-platform/releases/download/${ELP_VERSION}/elp-linux-${ELP_ARCH}-unknown-linux-gnu-otp-28.5.tar.gz" -o /tmp/elp.tgz \
-	&& tar -C /usr/local/bin -xzf /tmp/elp.tgz elp \
-	&& chmod +x /usr/local/bin/elp \
-	&& rm /tmp/elp.tgz
+	&& GLEAM_ARCHIVE="gleam-v${GLEAM_VERSION}-${GLEAM_ARCH}-unknown-linux-musl.tar.gz" \
+	&& GLEAM_URL="https://github.com/gleam-lang/gleam/releases/download/v${GLEAM_VERSION}/${GLEAM_ARCHIVE}" \
+	&& curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL "${GLEAM_URL}" -o "/tmp/${GLEAM_ARCHIVE}" \
+	&& curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL "${GLEAM_URL}.sha256" -o "/tmp/${GLEAM_ARCHIVE}.sha256" \
+	&& echo "$(cut -d ' ' -f 1 "/tmp/${GLEAM_ARCHIVE}.sha256")  /tmp/${GLEAM_ARCHIVE}" | sha256sum -c - \
+	&& tar -C /usr/local/bin -xzf "/tmp/${GLEAM_ARCHIVE}" gleam \
+	&& chmod +x /usr/local/bin/gleam \
+	&& gleam --version \
+	&& rm "/tmp/${GLEAM_ARCHIVE}" "/tmp/${GLEAM_ARCHIVE}.sha256"
 
 RUN if ! getent group "${USER_GID}" >/dev/null; then groupadd --gid "${USER_GID}" "${USERNAME}"; fi \
 	&& if ! id -u "${USERNAME}" >/dev/null 2>&1; then useradd --uid "${USER_UID}" --gid "${USER_GID}" -m "${USERNAME}" --shell /bin/bash; fi \

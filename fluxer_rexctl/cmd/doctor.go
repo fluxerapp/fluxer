@@ -127,7 +127,7 @@ func diagnose(ctx context.Context, app *App, env *checks.Env, phase checks.Phase
 	}
 	fixed := map[string]bool{}
 	skipped := map[string]string{}
-	failed := map[string]bool{}
+	failed := map[string]error{}
 	for round := 0; round < 3; round++ {
 		progressed := false
 		for _, i := range fixOrder(results) {
@@ -158,9 +158,8 @@ func diagnose(ctx context.Context, app *App, env *checks.Env, phase checks.Phase
 				return err
 			})
 			if err != nil {
-				app.UI.Detail("%v", err)
 				results[i] = checks.Recheck(ctx, env, c)
-				failed[r.ID] = true
+				failed[r.ID] = err
 				continue
 			}
 			delete(failed, r.ID)
@@ -180,10 +179,9 @@ func diagnose(ctx context.Context, app *App, env *checks.Env, phase checks.Phase
 				return nil
 			})
 			if err != nil {
-				app.UI.Detail("%v", err)
 				for _, id := range staged {
 					delete(fixed, id)
-					failed[id] = true
+					failed[id] = err
 				}
 			} else {
 				for _, id := range staged {
@@ -198,16 +196,19 @@ func diagnose(ctx context.Context, app *App, env *checks.Env, phase checks.Phase
 		results = check()
 	}
 	for i, r := range results {
+		if failed[r.ID] != nil && r.Fixable {
+			results[i].Details = append([]string{failed[r.ID].Error()}, r.Details...)
+		}
 		switch {
 		case fixed[r.ID] && r.Status == checks.Pass:
 			results[i].Fixed = true
 		case skipped[r.ID] != "" && (r.Status == checks.Warn || r.Status == checks.Fail):
 			results[i].Fix = skipped[r.ID]
-		case failed[r.ID] && r.Fixable && r.Manual != "":
+		case failed[r.ID] != nil && r.Fixable && r.Manual != "":
 			results[i].Fix = "rexctl couldn't fix this. " + r.Manual
-		case failed[r.ID] && r.Fixable && strings.Contains(r.Fix, "rexctl doctor --fix"):
+		case failed[r.ID] != nil && r.Fixable && strings.Contains(r.Fix, "rexctl doctor --fix"):
 			results[i].Fix = "rexctl couldn't fix this. Run rexctl doctor --fix --verbose to see why."
-		case failed[r.ID] && r.Fixable:
+		case failed[r.ID] != nil && r.Fixable:
 			results[i].Fix = "rexctl couldn't fix this. " + r.Fix
 		}
 	}
@@ -297,6 +298,9 @@ func reportDoctor(app *App, results []checks.Result, fix, dryRun bool) error {
 			}
 		}
 		for _, d := range r.Details {
+			if strings.TrimSpace(d) == "" {
+				continue
+			}
 			app.UI.Detail("  %s", d)
 		}
 		if r.Plan != nil {

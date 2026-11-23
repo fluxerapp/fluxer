@@ -194,7 +194,7 @@ describe('thread routes', () => {
 				parent_id: s.channelId,
 				owner_id: s.owner.userId,
 				name: 'Discussion',
-				member_count: 1,
+				member_count: 2,
 				message_count: 0,
 				total_message_sent: 0,
 				rate_limit_per_user: 0,
@@ -215,6 +215,29 @@ describe('thread routes', () => {
 				createUserID(BigInt(s.owner.userId)),
 			);
 			expect(member?.flags).toBe(ThreadMemberFlags.HAS_INTERACTED);
+		});
+
+		it('adds the message author as a member when someone else starts the thread', async () => {
+			const s = await setup();
+			const message = await sendMessage(harness, s.member.token, s.channelId, 'start here');
+			const thread = await threadsRequest<ThreadChannelResponse>(harness, s.owner.token)
+				.post(`/channels/${s.channelId}/messages/${message.id}/threads`)
+				.body({name: 'Discussion'})
+				.expect(201)
+				.execute();
+			expect(thread.member_count).toBe(2);
+			const author = await repository.threads.getMember(
+				createChannelID(BigInt(message.id)),
+				createUserID(BigInt(s.member.userId)),
+			);
+			expect(author?.flags).toBe(0);
+			const own = await sendMessage(harness, s.owner.token, s.channelId, 'mine');
+			const ownThread = await threadsRequest<ThreadChannelResponse>(harness, s.owner.token)
+				.post(`/channels/${s.channelId}/messages/${own.id}/threads`)
+				.body({name: 'Mine'})
+				.expect(201)
+				.execute();
+			expect(ownThread.member_count).toBe(1);
 		});
 
 		it('announces threads started from messages above the latest five without moving its last message', async () => {
@@ -498,7 +521,7 @@ describe('thread routes', () => {
 			const thread = await startThread(s.owner.token, s.channelId, {name: 'p', type: ChannelTypes.PRIVATE_THREAD});
 			await threadsRequest(harness, s.member.token)
 				.put(`/channels/${thread.id}/thread-members/@me`)
-				.expect(403, APIErrorCodes.MISSING_ACCESS)
+				.expect(404, APIErrorCodes.UNKNOWN_CHANNEL)
 				.execute();
 		});
 

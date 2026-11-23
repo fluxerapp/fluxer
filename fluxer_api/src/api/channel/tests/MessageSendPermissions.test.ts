@@ -61,12 +61,12 @@ describe('Message send permissions', () => {
 		await createBuilder(harness, member.token)
 			.post(`/channels/${systemChannel.id}/messages`)
 			.body({content: 'after the lockout'})
-			.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_PERMISSIONS')
+			.expect(HTTP_STATUS.NOT_FOUND, 'UNKNOWN_CHANNEL')
 			.execute();
 		await createBuilder(harness, member.token)
 			.patch(`/channels/${systemChannel.id}/messages/${sentMessage.id}`)
 			.body({content: 'after the lockout'})
-			.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_PERMISSIONS')
+			.expect(HTTP_STATUS.NOT_FOUND, 'UNKNOWN_CHANNEL')
 			.execute();
 	});
 

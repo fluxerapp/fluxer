@@ -37,6 +37,7 @@ import {
 } from '@app/features/voice/engine/VoiceLocalAudioReconcilePolicy';
 import {isLocalSpeakingSuppressed} from '@app/features/voice/engine/VoiceLocalSpeakingGate';
 import {
+	disableCameraFromMediaEngine,
 	getRoomFromMediaEngine,
 	getVoiceConnectionContextFromMediaEngine,
 	getVoiceEngineV2SnapshotFromMediaEngine,
@@ -252,12 +253,27 @@ class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		this.microphoneLifecycleBinding = null;
 	}
 
-	private bindCameraLifecycle(track: MediaStreamTrack | null | undefined): void {
+	private bindCameraLifecycle(track: LocalVideoTrack | null | undefined): void {
 		this.unbindCameraLifecycle();
 		if (!track) return;
-		const captureId = `voice-cam:${track.id}`;
-		const sourceId = `voice-cam:${track.id}`;
-		this.cameraLifecycleBinding = this.bindMediaTrackLifecycle(captureId, sourceId, track);
+		const mediaStreamTrack = track.mediaStreamTrack;
+		const captureId = `voice-cam:${mediaStreamTrack.id}`;
+		const sourceId = `voice-cam:${mediaStreamTrack.id}`;
+		const bridgeBinding = this.bindMediaTrackLifecycle(captureId, sourceId, mediaStreamTrack);
+		const onMuted = (): void => {
+			logger.warn('Camera was muted outside a camera transition, turning the camera off');
+			this.unbindCameraLifecycle();
+			disableCameraFromMediaEngine();
+		};
+		track.on(TrackEvent.Muted, onMuted);
+		this.cameraLifecycleBinding = {
+			captureId,
+			trackId: mediaStreamTrack.id,
+			cleanup: () => {
+				track.off(TrackEvent.Muted, onMuted);
+				bridgeBinding?.cleanup();
+			},
+		};
 	}
 
 	private unbindCameraLifecycle(): void {
@@ -1220,8 +1236,7 @@ class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 			const cameraPublication = Array.from(participant.videoTrackPublications.values()).find(
 				(pub) => pub.source === Track.Source.Camera,
 			);
-			const cameraTrack = cameraPublication?.track?.mediaStreamTrack;
-			this.bindCameraLifecycle(cameraTrack);
+			this.bindCameraLifecycle(cameraPublication?.videoTrack as LocalVideoTrack | undefined);
 		} else {
 			this.unbindCameraLifecycle();
 		}

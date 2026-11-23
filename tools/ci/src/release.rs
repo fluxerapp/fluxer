@@ -19,7 +19,11 @@ use std::time::Duration;
 
 pub(crate) const RELEASE_REPOSITORY: &str = "fluxerapp/fluxer";
 const RELEASE_COMPARE_URL: &str = "https://github.com/fluxerapp/fluxer/compare";
-pub(crate) const DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION: u8 = 2;
+pub(crate) const DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION: u8 = 3;
+pub(crate) const DESKTOP_MODULES_RELEASE_DESCRIPTOR_SCHEMA_VERSION: u8 = 2;
+pub(crate) const DESKTOP_LINUX_REPO_MACHINES: [&str; 2] = ["x86_64", "aarch64"];
+pub(crate) const DESKTOP_LINUX_REPO_KINDS: [(&str, &str); 2] =
+    [("flatpak", "ostree.tar.zst"), ("pacman", "pkg.tar.zst")];
 const DESKTOP_RELEASE_ARCHES: [&str; 2] = ["x64", "arm64"];
 
 struct DesktopReleasePlatform {
@@ -174,6 +178,8 @@ pub(crate) struct DesktopReleaseDescriptor {
     pub(crate) assets: Vec<DesktopReleaseAsset>,
     #[serde(default)]
     pub(crate) modules: Vec<DesktopReleaseAsset>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub(crate) linux_repos: Vec<DesktopReleaseAsset>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -268,6 +274,42 @@ pub(crate) fn desktop_module_package_release_asset_name(
     ))
 }
 
+pub(crate) fn desktop_linux_repo_storage_key(channel: &str, kind: &str, machine: &str) -> String {
+    format!("linux-repo/{channel}/{kind}/{machine}")
+}
+
+pub(crate) fn desktop_linux_repo_release_asset_name(
+    channel: &str,
+    version: &str,
+    kind: &str,
+    machine: &str,
+) -> Result<String> {
+    let extension = DESKTOP_LINUX_REPO_KINDS
+        .iter()
+        .find(|(name, _)| *name == kind)
+        .map(|(_, extension)| *extension)
+        .ok_or_else(|| anyhow!("Unsupported desktop Linux repository kind {kind:?}"))?;
+    ensure!(
+        DESKTOP_LINUX_REPO_MACHINES.contains(&machine),
+        "Unsupported desktop Linux repository machine {machine:?}"
+    );
+    Ok(format!(
+        "{}-{version}-{kind}-{machine}.{extension}",
+        desktop_release_product(channel)?
+    ))
+}
+
+pub(crate) fn desktop_linux_repo_coordinates() -> Vec<(&'static str, &'static str)> {
+    DESKTOP_LINUX_REPO_KINDS
+        .iter()
+        .flat_map(|(kind, _)| {
+            DESKTOP_LINUX_REPO_MACHINES
+                .iter()
+                .map(move |machine| (*kind, *machine))
+        })
+        .collect()
+}
+
 pub(crate) fn desktop_release_product(channel: &str) -> Result<&'static str> {
     match channel {
         "stable" => Ok("Fluxer"),
@@ -316,8 +358,13 @@ pub(crate) fn validate_desktop_release_descriptor(
     version: &str,
     source_sha: &str,
 ) -> Result<()> {
+    let expected_schema_version = if descriptor.kind == DesktopReleaseKind::Modules {
+        DESKTOP_MODULES_RELEASE_DESCRIPTOR_SCHEMA_VERSION
+    } else {
+        DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION
+    };
     ensure!(
-        descriptor.schema_version == DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION,
+        descriptor.schema_version == expected_schema_version,
         "Unsupported desktop release descriptor schema version {}",
         descriptor.schema_version
     );
@@ -355,6 +402,11 @@ pub(crate) fn validate_desktop_release_descriptor(
             descriptor.assets.is_empty(),
             "A modules-only desktop release descriptor must not list shell assets, found {}",
             descriptor.assets.len()
+        );
+        ensure!(
+            descriptor.linux_repos.is_empty(),
+            "A modules-only desktop release descriptor must not list Linux repository assets, found {}",
+            descriptor.linux_repos.len()
         );
         let descriptor_name = desktop_release_descriptor_filename(channel, version)?;
         let mut release_asset_names = BTreeMap::from([(
@@ -469,7 +521,63 @@ pub(crate) fn validate_desktop_release_descriptor(
         route_counts == expected_route_counts,
         "Desktop release descriptor route inventory mismatch: expected {expected_route_counts:?}, found {route_counts:?}"
     );
-    validate_desktop_release_modules(descriptor, channel, version, &mut release_asset_names)
+    validate_desktop_release_modules(descriptor, channel, version, &mut release_asset_names)?;
+    validate_desktop_release_linux_repos(descriptor, channel, version, &mut release_asset_names)
+}
+
+fn validate_desktop_release_linux_repos<'a>(
+    descriptor: &'a DesktopReleaseDescriptor,
+    channel: &str,
+    version: &str,
+    release_asset_names: &mut BTreeMap<String, &'a str>,
+) -> Result<()> {
+    let mut expected = desktop_linux_repo_coordinates()
+        .into_iter()
+        .map(|(kind, machine)| {
+            Ok((
+                desktop_linux_repo_storage_key(channel, kind, machine),
+                desktop_linux_repo_release_asset_name(channel, version, kind, machine)?,
+            ))
+        })
+        .collect::<Result<BTreeMap<_, _>>>()?;
+    for entry in &descriptor.linux_repos {
+        let expected_release_asset = expected.remove(&entry.storage_key).with_context(|| {
+            format!(
+                "Desktop release descriptor contains an unexpected or duplicate Linux repository storage key {:?}",
+                entry.storage_key
+            )
+        })?;
+        ensure!(
+            entry.release_asset == expected_release_asset,
+            "Desktop release descriptor contains invalid Linux repository release asset {:?}, expected {expected_release_asset:?}",
+            entry.release_asset
+        );
+        if let Some(existing) = release_asset_names.insert(
+            entry.release_asset.to_ascii_lowercase(),
+            entry.release_asset.as_str(),
+        ) {
+            bail!(
+                "Desktop release asset name {:?} collides with {existing:?}",
+                entry.release_asset
+            );
+        }
+        ensure!(
+            is_lowercase_sha256(&entry.sha256),
+            "Desktop release descriptor contains invalid SHA-256 for {:?}",
+            entry.release_asset
+        );
+        ensure!(
+            entry.size > 0,
+            "Desktop release descriptor contains an empty asset {:?}",
+            entry.release_asset
+        );
+    }
+    ensure!(
+        expected.is_empty(),
+        "Desktop release descriptor is missing Linux repository assets {:?}",
+        expected.keys().collect::<Vec<_>>()
+    );
+    Ok(())
 }
 
 fn validate_desktop_release_modules<'a>(
@@ -1207,6 +1315,7 @@ fn local_release_assets(
         .assets
         .iter()
         .chain(&descriptor.modules)
+        .chain(&descriptor.linux_repos)
         .map(|asset| asset.release_asset.clone())
         .chain(std::iter::once(descriptor_name))
         .collect::<BTreeSet<_>>();
@@ -1222,7 +1331,12 @@ fn local_release_assets(
         .iter()
         .map(|asset| (asset.name.as_str(), asset))
         .collect::<BTreeMap<_, _>>();
-    for descriptor_asset in descriptor.assets.iter().chain(&descriptor.modules) {
+    for descriptor_asset in descriptor
+        .assets
+        .iter()
+        .chain(&descriptor.modules)
+        .chain(&descriptor.linux_repos)
+    {
         let local = local_by_name
             .get(descriptor_asset.release_asset.as_str())
             .with_context(|| {
@@ -1598,7 +1712,27 @@ mod tests {
             source_sha: SAMPLE_SOURCE_SHA.to_string(),
             assets,
             modules,
+            linux_repos: sample_linux_repos(),
         }
+    }
+
+    fn sample_linux_repos() -> Vec<DesktopReleaseAsset> {
+        desktop_linux_repo_coordinates()
+            .into_iter()
+            .enumerate()
+            .map(|(index, (kind, machine))| DesktopReleaseAsset {
+                storage_key: desktop_linux_repo_storage_key(SAMPLE_CHANNEL, kind, machine),
+                release_asset: desktop_linux_repo_release_asset_name(
+                    SAMPLE_CHANNEL,
+                    SAMPLE_VERSION,
+                    kind,
+                    machine,
+                )
+                .unwrap(),
+                sha256: format!("{:064x}", 1200 + index),
+                size: 8192,
+            })
+            .collect()
     }
 
     const SAMPLE_MODULES: [&str; 2] = ["fluxer_renderer", "fluxer_sourcemaps"];
@@ -1686,9 +1820,100 @@ mod tests {
 
     fn sample_modules_only_descriptor() -> DesktopReleaseDescriptor {
         let mut descriptor = sample_descriptor();
+        descriptor.schema_version = DESKTOP_MODULES_RELEASE_DESCRIPTOR_SCHEMA_VERSION;
         descriptor.kind = DesktopReleaseKind::Modules;
         descriptor.assets.clear();
+        descriptor.linux_repos.clear();
         descriptor
+    }
+
+    #[test]
+    fn modules_only_descriptor_rejects_linux_repo_assets() {
+        let mut descriptor = sample_modules_only_descriptor();
+        descriptor.linux_repos = sample_linux_repos();
+        let error = validate_sample(&descriptor).unwrap_err().to_string();
+        assert!(
+            error.contains("must not list Linux repository assets"),
+            "{error}"
+        );
+    }
+
+    #[test]
+    fn modules_only_descriptor_stays_on_schema_two() {
+        let mut descriptor = sample_modules_only_descriptor();
+        descriptor.schema_version = DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION;
+        assert_eq!(
+            validate_sample(&descriptor).unwrap_err().to_string(),
+            "Unsupported desktop release descriptor schema version 3"
+        );
+    }
+
+    #[test]
+    fn a_full_schema_two_descriptor_is_refused() {
+        let mut descriptor = sample_descriptor();
+        descriptor.schema_version = DESKTOP_MODULES_RELEASE_DESCRIPTOR_SCHEMA_VERSION;
+        descriptor.linux_repos.clear();
+        assert_eq!(
+            validate_sample(&descriptor).unwrap_err().to_string(),
+            "Unsupported desktop release descriptor schema version 2"
+        );
+    }
+
+    #[test]
+    fn linux_repo_assets_follow_the_contract_names() {
+        let names = sample_linux_repos()
+            .into_iter()
+            .map(|entry| (entry.storage_key, entry.release_asset))
+            .collect::<Vec<_>>();
+        assert_eq!(
+            names,
+            vec![
+                (
+                    "linux-repo/canary/flatpak/x86_64".to_string(),
+                    format!("Fluxer-Canary-{SAMPLE_VERSION}-flatpak-x86_64.ostree.tar.zst"),
+                ),
+                (
+                    "linux-repo/canary/flatpak/aarch64".to_string(),
+                    format!("Fluxer-Canary-{SAMPLE_VERSION}-flatpak-aarch64.ostree.tar.zst"),
+                ),
+                (
+                    "linux-repo/canary/pacman/x86_64".to_string(),
+                    format!("Fluxer-Canary-{SAMPLE_VERSION}-pacman-x86_64.pkg.tar.zst"),
+                ),
+                (
+                    "linux-repo/canary/pacman/aarch64".to_string(),
+                    format!("Fluxer-Canary-{SAMPLE_VERSION}-pacman-aarch64.pkg.tar.zst"),
+                ),
+            ]
+        );
+    }
+
+    #[test]
+    fn a_full_release_missing_a_linux_repo_asset_is_refused() {
+        let mut descriptor = sample_descriptor();
+        descriptor
+            .linux_repos
+            .retain(|entry| entry.storage_key != "linux-repo/canary/pacman/aarch64");
+        let error = validate_sample(&descriptor).unwrap_err().to_string();
+        assert!(error.contains("missing Linux repository assets"), "{error}");
+    }
+
+    #[test]
+    fn linux_repo_entries_with_wrong_keys_or_names_are_refused() {
+        let mut descriptor = sample_descriptor();
+        descriptor.linux_repos[0].storage_key = "linux-repo/stable/flatpak/x86_64".to_string();
+        assert!(validate_sample(&descriptor).is_err());
+        let mut descriptor = sample_descriptor();
+        descriptor.linux_repos[0].release_asset =
+            format!("Fluxer-Canary-{SAMPLE_VERSION}-flatpak-x86_64.tar.zst");
+        assert!(validate_sample(&descriptor).is_err());
+        let mut descriptor = sample_descriptor();
+        let duplicate = descriptor.linux_repos[0].clone();
+        descriptor.linux_repos.push(duplicate);
+        assert!(validate_sample(&descriptor).is_err());
+        let mut descriptor = sample_descriptor();
+        descriptor.linux_repos[0].size = 0;
+        assert!(validate_sample(&descriptor).is_err());
     }
 
     #[test]
@@ -1849,11 +2074,12 @@ mod tests {
     }
 
     #[test]
-    fn a_schema_two_descriptor_round_trips_with_its_modules() {
+    fn a_schema_three_descriptor_round_trips_with_its_modules_and_linux_repos() {
         let descriptor = sample_descriptor();
-        assert_eq!(descriptor.schema_version, 2);
+        assert_eq!(descriptor.schema_version, 3);
         let json = serde_json::to_value(&descriptor).unwrap();
         assert_eq!(json["modules"].as_array().unwrap().len(), 8);
+        assert_eq!(json["linux_repos"].as_array().unwrap().len(), 4);
         let parsed: DesktopReleaseDescriptor = serde_json::from_value(json).unwrap();
         assert_eq!(parsed, descriptor);
 
@@ -1873,9 +2099,11 @@ mod tests {
         let mut json = serde_json::to_value(sample_descriptor()).unwrap();
         let object = json.as_object_mut().unwrap();
         object.remove("modules");
+        object.remove("linux_repos");
         object.insert("schema_version".to_string(), 1.into());
         let parsed: DesktopReleaseDescriptor = serde_json::from_value(json).unwrap();
         assert!(parsed.modules.is_empty());
+        assert!(parsed.linux_repos.is_empty());
         assert_eq!(
             validate_sample(&parsed).unwrap_err().to_string(),
             "Unsupported desktop release descriptor schema version 1"
@@ -2053,7 +2281,11 @@ mod tests {
 
     fn write_sample_release_dir(dir: &Path) -> DesktopReleaseDescriptor {
         let mut descriptor = write_sample_module_release(dir, &SAMPLE_MODULES);
-        for asset in &mut descriptor.assets {
+        for asset in descriptor
+            .assets
+            .iter_mut()
+            .chain(descriptor.linux_repos.iter_mut())
+        {
             let path = dir.join(&asset.release_asset);
             if !path.exists() {
                 fs::write(&path, format!("{} bytes", asset.release_asset)).unwrap();
@@ -2083,12 +2315,33 @@ mod tests {
         .into_iter()
         .map(|asset| asset.name)
         .collect::<BTreeSet<_>>();
-        for entry in &descriptor.modules {
+        for entry in descriptor.modules.iter().chain(&descriptor.linux_repos) {
             assert!(uploaded.contains(&entry.release_asset));
         }
         assert_eq!(
             uploaded.len(),
-            desktop_release_asset_count() + descriptor.modules.len() + 1
+            desktop_release_asset_count()
+                + descriptor.modules.len()
+                + descriptor.linux_repos.len()
+                + 1
+        );
+    }
+
+    #[test]
+    fn the_publisher_refuses_a_release_missing_a_linux_repo_file() {
+        let temp = tempfile::tempdir().unwrap();
+        let descriptor = write_sample_release_dir(temp.path());
+        fs::remove_file(temp.path().join(&descriptor.linux_repos[0].release_asset)).unwrap();
+        assert!(
+            local_release_assets(
+                "fluxer-desktop-canary",
+                SAMPLE_VERSION,
+                SAMPLE_SOURCE_SHA,
+                Some(temp.path()),
+            )
+            .unwrap_err()
+            .to_string()
+            .starts_with("Desktop release asset inventory mismatch")
         );
     }
 

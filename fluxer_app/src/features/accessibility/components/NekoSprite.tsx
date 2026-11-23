@@ -669,6 +669,7 @@ const NekoEngine = observer((): React.ReactElement => {
 			className={styles.neko}
 			style={{backgroundImage: `url(${nekoSpriteUrl})`}}
 			aria-hidden="true"
+			data-neko-sprite=""
 			data-flx="accessibility.neko-sprite.neko"
 		/>
 	);

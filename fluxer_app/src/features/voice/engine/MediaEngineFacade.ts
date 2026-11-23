@@ -173,6 +173,7 @@ import {
 import {buildVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
 import {
 	isVoiceServerMuteActive,
+	isVoiceSpeakPermissionDenied,
 	resolveVoiceStateSelfMute,
 	shouldPrepareMicrophoneForVoiceConnect,
 } from '@app/features/voice/utils/VoicePermissionUtils';
@@ -238,6 +239,7 @@ function buildCameraCommandOptions(options?: {deviceId?: string; sendUpdate?: bo
 }
 
 function buildRoomEventDependencies(facade: {
+	disableCamera: () => Promise<void>;
 	resetStreamTracking: () => void;
 	participants: VoiceEngineV2AppParticipantAdapter;
 	sourceLifecycleBridge: VoiceEngineV2AppSourceLifecycleBridge | null;
@@ -261,6 +263,7 @@ function buildRoomEventDependencies(facade: {
 		media: {
 			applyAllLocalAudioPreferences: (activeRoom) =>
 				voiceEngineV2AppMediaExecutionAdapter.applyAllLocalAudioPreferences(activeRoom),
+			disableCamera: () => facade.disableCamera(),
 			ensureMicrophone: (activeRoom, activeChannelId) =>
 				voiceEngineV2AppMediaExecutionAdapter.ensureMicrophone(activeRoom, activeChannelId),
 			playEntranceSound: () => voiceEngineV2AppMediaExecutionAdapter.playEntranceSound(),
@@ -269,6 +272,7 @@ function buildRoomEventDependencies(facade: {
 		mediaState: {
 			handleLocalTrackStateChange: (source, isPublished) =>
 				voiceEngineV2AppMediaStateAdapter.handleLocalTrackStateChange(source, isPublished),
+			isLocalCameraOn: () => LocalVoiceState.getSelfVideo(),
 			resetLocalMediaState: (reason) => voiceEngineV2AppMediaStateAdapter.resetLocalMediaState(reason),
 		},
 		participants: {
@@ -1485,12 +1489,12 @@ class MediaEngineFacade extends Store {
 	}
 
 	private isPushToTalkActive(): boolean {
+		if (Keybind.isPushToTalkRequired()) return true;
 		if (getActiveVoiceProcessingMode(VoiceSettings) === 'studio') return false;
 		return Keybind.isPushToTalkEffective();
 	}
 
 	private isPushToMuteActive(): boolean {
-		if (getActiveVoiceProcessingMode(VoiceSettings) === 'studio') return false;
 		return Keybind.isPushToMuteEffective();
 	}
 
@@ -1627,6 +1631,7 @@ class MediaEngineFacade extends Store {
 			raw,
 			(room, attemptId, guildId, channelId) => {
 				const roomEventDependencies = buildRoomEventDependencies({
+					disableCamera: () => this.setCameraEnabled(false),
 					resetStreamTracking: () => this.resetLocalMediaAndScreenShareTracking(),
 					participants: this.voiceEngineV2Participants,
 					sourceLifecycleBridge: this.voiceEngineV2SourceLifecycleBridge,
@@ -1864,11 +1869,12 @@ class MediaEngineFacade extends Store {
 				const ptmActive = this.isPushToMuteActive();
 				const pttActive = this.isPushToTalkActive();
 				const applyServerState = shouldApplyIncomingLocalState;
+				const speakDenied = isVoiceSpeakPermissionDenied(guildId ?? voiceState.guild_id, voiceState.channel_id);
 				shouldApplyCurrentServerState = applyServerState;
 				this.applyingGatewayVoiceStateEcho = true;
 				try {
 					LocalVoiceState.syncConnectionState(voiceState.connection_id, {
-						selfMute: ptmActive || pttActive || !applyServerState ? undefined : voiceState.self_mute,
+						selfMute: ptmActive || pttActive || speakDenied || !applyServerState ? undefined : voiceState.self_mute,
 						selfDeaf: applyServerState ? voiceState.self_deaf : undefined,
 						selfVideo: applyServerState ? voiceState.self_video : undefined,
 						selfStream: applyServerState ? voiceState.self_stream : undefined,

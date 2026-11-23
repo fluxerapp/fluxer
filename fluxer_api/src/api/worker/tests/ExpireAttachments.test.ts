@@ -95,6 +95,6 @@ describe('processExpiredAttachments', () => {
 		await processExpiredAttachments(new Date(EXTENDED_EXPIRY.getTime() + ms('1 day')));
 
 		expect(await queuedKeys(queue)).toEqual([`attachments/${CHANNEL_ID}/${ATTACHMENT_ID}/${FILENAME}`]);
-		expect(await repository.fetchById(ATTACHMENT_ID)).toBeNull();
+		expect((await repository.fetchById(ATTACHMENT_ID))?.expires_at.toISOString()).toBe(EXTENDED_EXPIRY.toISOString());
 	});
 });

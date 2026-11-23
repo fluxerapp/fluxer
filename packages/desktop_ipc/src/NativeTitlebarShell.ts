@@ -10,6 +10,7 @@ export const NATIVE_TITLEBAR_CLASS = {
 	left: 'fluxer-native-titlebar__left',
 	wordmark: 'fluxer-native-titlebar__wordmark',
 	spacer: 'fluxer-native-titlebar__spacer',
+	action: 'fluxer-native-titlebar__action',
 	controls: 'fluxer-native-titlebar__controls',
 	control: 'fluxer-native-titlebar__control',
 	controlClose: 'fluxer-native-titlebar__control--close',

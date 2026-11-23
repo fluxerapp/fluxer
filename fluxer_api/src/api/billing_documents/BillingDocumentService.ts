@@ -25,8 +25,9 @@ import type {BillingDocumentRow} from '@app/api/database/types/BillingDocumentTy
 import {Logger} from '@app/api/Logger';
 import {getKVClient, getSnowflakeService} from '@app/api/middleware/ServiceRegistry';
 import {getBillingBranding} from '@app/api/stripe/BillingBranding';
-import {ProductType} from '@app/api/stripe/ProductRegistry';
+import {getProductRegistry, ProductType} from '@app/api/stripe/ProductRegistry';
 import {extractId} from '@app/api/stripe/StripeUtils';
+import {isManualGiftOrderSession} from '@app/api/stripe/services/StripeManualGiftOrderHandler';
 import {
 	type BillingDocumentAddress,
 	type BillingDocumentBuyer,
@@ -558,7 +559,11 @@ export class BillingDocumentService {
 				case 'operator_pass':
 					return descriptions.operatorPass;
 				case 'gift':
-					return descriptions.gift(premium, session.metadata?.product_type === ProductType.GIFT_1_YEAR);
+					return descriptions.gift(
+						premium,
+						(item.price ? getProductRegistry().getGiftProductForPrice(item.price)?.type : null) ===
+							ProductType.GIFT_1_YEAR || session.metadata?.product_type === ProductType.GIFT_1_YEAR,
+					);
 				case 'donation':
 					return descriptions.donation('once');
 				default:
@@ -914,6 +919,6 @@ function untaxedAtNet(
 function checkoutFlow(session: Stripe.Checkout.Session): BillingDocumentFlow {
 	if (session.metadata?.operator_pass === 'true') return 'operator_pass';
 	if (session.metadata?.is_donation === 'true') return 'donation';
-	if (session.metadata?.is_gift === 'true') return 'gift';
+	if (session.metadata?.is_gift === 'true' || isManualGiftOrderSession(session)) return 'gift';
 	return 'plutonium';
 }

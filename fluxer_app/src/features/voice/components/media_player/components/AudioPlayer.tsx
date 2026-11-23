@@ -234,7 +234,7 @@ export function AudioPlayer({
 					data-flx="voice.media-player.audio-player.progress-bar"
 				/>
 				<span className={styles.timeDisplay} data-flx="voice.media-player.audio-player.time-display">
-					{formatDuration(displayCurrentTime)} / {formatDuration(displayDuration)}
+					{formatDuration(displayCurrentTime)} / {formatDuration(Math.ceil(displayDuration))}
 				</span>
 			</div>
 			<div className={styles.controls} data-flx="voice.media-player.audio-player.controls">

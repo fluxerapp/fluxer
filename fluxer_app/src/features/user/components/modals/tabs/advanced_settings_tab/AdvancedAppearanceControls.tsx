@@ -3,6 +3,7 @@
 import * as AccessibilityCommands from '@app/features/accessibility/commands/AccessibilityCommands';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import HiddenGuildListButtons from '@app/features/guild/state/HiddenGuildListButtons';
+import HiddenPlutoniumButton from '@app/features/premium/state/HiddenPlutoniumButton';
 import WindowsFont from '@app/features/theme/state/WindowsFont';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import {SwitchGroup, SwitchGroupItem} from '@app/features/ui/components/SwitchGroup';
@@ -13,6 +14,7 @@ import {
 	SHOW_DOWNLOAD_BUTTON_DESCRIPTOR,
 	SHOW_HELP_CENTER_BUTTON_DESCRIPTOR,
 	SHOW_NEKO_DESCRIPTOR,
+	SHOW_PLUTONIUM_BUTTON_DESCRIPTOR,
 	USE_FLUXER_SANS_ON_WINDOWS_DESCRIPTOR,
 } from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import {CONFIRM_BEFORE_JOINING_VOICE_CHANNELS_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
@@ -120,6 +122,19 @@ export const HelpCenterButtonControl = observer(() => {
 			onChange={(value) => (value ? HiddenGuildListButtons.showHelpButton() : HiddenGuildListButtons.hideHelpButton())}
 			compact
 			data-flx="user.advanced-settings-tab.switch.help-center-button"
+		/>
+	);
+});
+
+export const PlutoniumButtonControl = observer(() => {
+	const {i18n} = useLingui();
+	return (
+		<Switch
+			ariaLabel={i18n._(SHOW_PLUTONIUM_BUTTON_DESCRIPTOR)}
+			value={!HiddenPlutoniumButton.hidden}
+			onChange={(value) => (value ? HiddenPlutoniumButton.show() : HiddenPlutoniumButton.hide())}
+			compact
+			data-flx="user.advanced-settings-tab.switch.plutonium-button"
 		/>
 	);
 });

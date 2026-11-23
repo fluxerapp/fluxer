@@ -18,6 +18,14 @@ function hasOnlyLatin1WithHighBytes(value: string): boolean {
 	return high;
 }
 
+function decodePercentEncoding(value: string): string {
+	try {
+		return decodeURIComponent(value);
+	} catch {
+		return value;
+	}
+}
+
 function decodeHeaderUtf8(value: string): string {
 	if (!hasOnlyLatin1WithHighBytes(value)) {
 		return value;
@@ -32,7 +40,7 @@ function decodeHeaderUtf8(value: string): string {
 export const AuditLogMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 	const auditLogReasonHeader = ctx.req.header('X-Audit-Log-Reason');
 	if (auditLogReasonHeader) {
-		const result = AuditLogReasonType.safeParse(decodeHeaderUtf8(auditLogReasonHeader));
+		const result = AuditLogReasonType.safeParse(decodePercentEncoding(decodeHeaderUtf8(auditLogReasonHeader)));
 		if (!result.success) {
 			throw InputValidationError.fromCode('X-Audit-Log-Reason', ValidationErrorCodes.INVALID_AUDIT_LOG_REASON);
 		}

@@ -2,5 +2,4 @@
 
 export const ExternalUrls = {
 	SERVICE_STATUS: 'https://fluxerstatus.com',
-	BLUESKY: 'https://bsky.app/profile/fluxer.app',
 } as const;

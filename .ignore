@@ -1,6 +1,5 @@
 **/Cargo.lock
 **/pnpm-lock.yaml
-**/rebar.lock
 
 /fluxer_static/
 /packages/fonts/files/

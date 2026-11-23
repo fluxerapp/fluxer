@@ -4,6 +4,10 @@ import {randomUUID} from 'node:crypto';
 import {ensureDeletionQueueState} from '@app/api/app/DeletionQueueStartup';
 import type {APIConfig} from '@app/api/config/APIConfig';
 import {hasDatabaseQueryExecutor, setDatabaseQueryExecutor} from '@app/api/database/CassandraQueryExecution';
+import {
+	startCassandraWriteCapture,
+	stopCassandraWriteCapture,
+} from '@app/api/database/capture/CassandraWriteCaptureLifecycle';
 import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from '@app/api/database/PostgresKvQueryExecutor';
 import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {
@@ -230,6 +234,8 @@ export function createInitializer(
 					port: config.cassandra.port,
 					keyspace: config.cassandra.keyspace,
 					localDc: config.cassandra.localDc,
+					consistency: config.cassandra.consistency,
+					serialConsistency: config.cassandra.serialConsistency,
 					username: config.cassandra.username || undefined,
 					password: config.cassandra.password || undefined,
 				}).catch((error: unknown) => {
@@ -247,6 +253,7 @@ export function createInitializer(
 						logger,
 					});
 				}
+				await startCassandraWriteCapture(config.cassandraWriteCapture, 'api');
 			} else if (config.database.backend === 'cassandra') {
 				logger.info('Using injected database query executor for tests');
 			}
@@ -415,6 +422,11 @@ export function createShutdown(config: APIConfig, logger: LoggerInterface): () =
 				}
 				break;
 			case 'cassandra':
+				try {
+					await stopCassandraWriteCapture();
+				} catch (error) {
+					logger.error({error}, 'Error stopping Cassandra write capture');
+				}
 				try {
 					await shutdownCassandra();
 					logger.info('Cassandra client shut down');

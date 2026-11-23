@@ -41,6 +41,7 @@ import {isUnclaimedNagbarSnoozed} from '@app/features/ui/state/UnclaimedNagbarSn
 import {hasUnavailableElectronNativeContext, isDesktop, isNativeWindows} from '@app/features/ui/utils/NativeUtils';
 import {isStandalonePwa} from '@app/features/ui/utils/PwaUtils';
 import StatusPage from '@app/features/user/state/StatusPage';
+import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
 import {needsEmailConfirmation} from '@app/features/user/utils/AccountGates';
 import VoiceRuntime, {useVoiceRuntimeVersion} from '@app/features/voice/engine/VoiceRuntime';
@@ -94,6 +95,7 @@ export const useNagbarConditions = (): NagbarConditions => {
 	const voiceEngineV2Model = VoiceRuntime.voiceEngineV2Model;
 	const user = Users.currentUser;
 	const nagbarState = Nagbar;
+	const syncedDismissalsLoaded = UserSettings.isHydrated();
 	const premiumOverrideType = DeveloperOptions.premiumTypeOverride;
 	const premiumWillCancel = user?.premiumWillCancel ?? false;
 	const isMockPremium = premiumOverrideType != null && premiumOverrideType > 0;
@@ -201,7 +203,7 @@ export const useNagbarConditions = (): NagbarConditions => {
 	const canShowDesktopDownload = (() => {
 		if (nagbarState.forceHideDesktopDownload) return false;
 		if (nagbarState.forceDesktopDownload) return true;
-		return isDesktopBrowser && !nagbarState.desktopDownloadDismissed;
+		return isDesktopBrowser && syncedDismissalsLoaded && !nagbarState.desktopDownloadDismissed;
 	})();
 	const androidAppNagbarStarted = useAndroidAppNagbarStarted();
 	const canShowAndroidApp = (() => {
@@ -209,7 +211,7 @@ export const useNagbarConditions = (): NagbarConditions => {
 		if (nagbarState.forceAndroidApp) return true;
 		if (hasBrokenElectronNativeContext) return false;
 		if (isIOSMobileOrTabletUserAgent(navigator.userAgent, navigator.maxTouchPoints)) return false;
-		return androidAppNagbarStarted && !nagbarState.androidAppDismissed;
+		return androidAppNagbarStarted && syncedDismissalsLoaded && !nagbarState.androidAppDismissed;
 	})();
 	const canShowVisionaryMfa = (() => {
 		if (isSelfHosted) return false;
@@ -367,7 +369,8 @@ export const useNagbarConditions = (): NagbarConditions => {
 	} else if (nagbarState.forceDesktopNotification) {
 		canShowDesktopNotification = true;
 	} else {
-		canShowDesktopNotification = shouldShowDesktopNotification && !nagbarState.desktopNotificationDismissed;
+		canShowDesktopNotification =
+			shouldShowDesktopNotification && syncedDismissalsLoaded && !nagbarState.desktopNotificationDismissed;
 	}
 	return {
 		canShowBuildEnvironment,

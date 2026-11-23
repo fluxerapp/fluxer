@@ -24,7 +24,7 @@ interface MediaTimeDisplayProps {
 function areTimeDisplayPropsEqualToTheSecond(previous: MediaTimeDisplayProps, next: MediaTimeDisplayProps): boolean {
 	return (
 		Math.trunc(previous.currentTime) === Math.trunc(next.currentTime) &&
-		Math.trunc(previous.duration) === Math.trunc(next.duration) &&
+		Math.ceil(previous.duration) === Math.ceil(next.duration) &&
 		previous.size === next.size &&
 		previous.compact === next.compact &&
 		previous.className === next.className
@@ -40,7 +40,7 @@ function MediaTimeDisplayImpl({
 }: MediaTimeDisplayProps) {
 	const {i18n} = useLingui();
 	const currentFormatted = formatDuration(currentTime);
-	const durationFormatted = formatDuration(duration);
+	const durationFormatted = formatDuration(Math.ceil(duration));
 	return (
 		<div
 			className={clsx(styles.container, styles[size], compact && styles.compact, className)}

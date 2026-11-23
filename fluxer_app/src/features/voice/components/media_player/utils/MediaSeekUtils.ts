@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 const MIN_BUFFERED_RANGE_SECONDS = 1;
+const STORED_DURATION_TOLERANCE_SECONDS = 1;
 
 export const EMPTY_BUFFERED_SPANS: ReadonlyArray<BufferedSpanFraction> = Object.freeze([]);
 
@@ -59,6 +60,12 @@ export function getEffectiveMediaDuration(media: HTMLMediaElement | null | undef
 	return (
 		getFiniteMediaDuration(media) || (Number.isFinite(fallbackDuration) && fallbackDuration > 0 ? fallbackDuration : 0)
 	);
+}
+
+export function resolveStoredMediaDuration(mediaDuration: number, storedDuration: number): number {
+	if (!Number.isFinite(storedDuration) || storedDuration <= 0) return mediaDuration;
+	if (!Number.isFinite(mediaDuration) || mediaDuration <= 0) return storedDuration;
+	return Math.abs(mediaDuration - storedDuration) <= STORED_DURATION_TOLERANCE_SECONDS ? mediaDuration : storedDuration;
 }
 
 export function getSeekPercentageFromClientX(clientX: number, rect: Pick<DOMRect, 'left' | 'width'>): number {

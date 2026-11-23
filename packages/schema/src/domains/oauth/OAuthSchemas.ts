@@ -64,13 +64,7 @@ export const AuthorizeRequest = z.object({
 	permissions: z.string().optional().describe('The bot permissions to request'),
 	disable_guild_select: DisableGuildSelectType.optional(),
 	code_challenge: createStringType(1).optional().describe('The PKCE code challenge'),
-	code_challenge_method: createNamedStringLiteralUnion(
-		[
-			['S256', 'S256', 'SHA-256 hash of code verifier'],
-			['plain', 'PLAIN', 'Plain text code verifier'],
-		] as const,
-		'The PKCE code challenge method',
-	).optional(),
+	code_challenge_method: z.literal('S256').optional().describe('The PKCE code challenge method, must be "S256"'),
 });
 
 export type AuthorizeRequest = z.infer<typeof AuthorizeRequest>;
@@ -190,7 +184,10 @@ export const OAuth2TokenResponse = z.object({
 	access_token: z.string().describe('The access token for API authorization'),
 	token_type: z.string().describe('The type of token, typically "Bearer"'),
 	expires_in: Int32Type.describe('The number of seconds until the access token expires'),
-	refresh_token: z.string().describe('The refresh token for obtaining new access tokens'),
+	refresh_token: z
+		.string()
+		.optional()
+		.describe('The refresh token for obtaining new access tokens. Not issued to every client'),
 	scope: z.string().describe('The space-separated list of granted scopes'),
 });
 

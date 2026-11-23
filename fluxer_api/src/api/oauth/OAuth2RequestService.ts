@@ -19,7 +19,7 @@ import {
 	mapBotTokenResetResponse,
 	mapBotUserToResponse,
 } from '@app/api/oauth/OAuth2Mappers';
-import {filterOAuth2Scopes, parseOAuth2Scope} from '@app/api/oauth/OAuth2ScopeUtils';
+import {filterOAuth2Scopes, isOAuth2Scope, parseOAuth2Scope} from '@app/api/oauth/OAuth2ScopeUtils';
 import type {OAuth2Service} from '@app/api/oauth/OAuth2Service';
 import {ACCESS_TOKEN_TTL_SECONDS} from '@app/api/oauth/OAuth2TokenConstants';
 import type {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
@@ -43,6 +43,7 @@ import {BotUserNotFoundError} from '@fluxer/errors/src/domains/oauth/BotUserNotF
 import {InvalidClientError} from '@fluxer/errors/src/domains/oauth/InvalidClientError';
 import {InvalidGrantError} from '@fluxer/errors/src/domains/oauth/InvalidGrantError';
 import {InvalidResponseTypeForNonBotError} from '@fluxer/errors/src/domains/oauth/InvalidResponseTypeForNonBotError';
+import {InvalidScopeError} from '@fluxer/errors/src/domains/oauth/InvalidScopeError';
 import {MissingClientSecretError} from '@fluxer/errors/src/domains/oauth/MissingClientSecretError';
 import {NotABotApplicationError} from '@fluxer/errors/src/domains/oauth/NotABotApplicationError';
 import {RedirectUriRequiredForNonBotError} from '@fluxer/errors/src/domains/oauth/RedirectUriRequiredForNonBotError';
@@ -135,7 +136,7 @@ export class OAuth2RequestService {
 		token_type: string;
 		expires_in: number;
 		scope?: string;
-		refresh_token: string;
+		refresh_token?: string;
 	}): OAuth2TokenResponse {
 		if (!response.scope) {
 			throw new InvalidGrantError();
@@ -144,7 +145,7 @@ export class OAuth2RequestService {
 			access_token: response.access_token,
 			token_type: response.token_type,
 			expires_in: response.expires_in,
-			refresh_token: response.refresh_token,
+			...(response.refresh_token ? {refresh_token: response.refresh_token} : {}),
 			scope: response.scope,
 		};
 	}
@@ -196,6 +197,9 @@ export class OAuth2RequestService {
 	}): Promise<OAuth2ConsentResponse> {
 		const scopeStr = params.body.scope;
 		const scopeSet = new Set(parseOAuth2Scope(scopeStr));
+		if (![...scopeSet].every(isOAuth2Scope)) {
+			throw new InvalidScopeError();
+		}
 		const isBotOnly = scopeSet.size === 1 && scopeSet.has('bot');
 		const responseType = params.body.response_type ?? (isBotOnly ? undefined : 'code');
 		const guildId = params.body.guild_id ? createGuildID(params.body.guild_id) : null;
@@ -241,7 +245,7 @@ export class OAuth2RequestService {
 			scope: params.body.scope,
 			state: params.body.state ?? undefined,
 			codeChallenge: params.body.code_challenge,
-			codeChallengeMethod: params.body.code_challenge_method as 'S256' | 'plain' | undefined,
+			codeChallengeMethod: params.body.code_challenge_method,
 			userId: params.userId,
 		});
 		const authCode = (() => {

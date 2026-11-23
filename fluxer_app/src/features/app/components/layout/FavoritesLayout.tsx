@@ -5,7 +5,9 @@ import {FavoritesGuildHeader} from '@app/features/app/components/layout/Favorite
 import styles from '@app/features/app/components/layout/GuildLayout.module.css';
 import {GuildSidebar} from '@app/features/app/components/layout/GuildSidebar';
 import {NativeDragRegion} from '@app/features/app/components/layout/NativeDragRegion';
+import Channels from '@app/features/channel/state/Channels';
 import {FavoritesWelcomeSection} from '@app/features/expressions/components/FavoritesWelcomeSection';
+import Guilds from '@app/features/guild/state/Guilds';
 import Favorites from '@app/features/messaging/state/Favorites';
 import Navigation from '@app/features/navigation/state/Navigation';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
@@ -20,10 +22,12 @@ export const FavoritesLayout = observer(({children}: {children: React.ReactNode}
 	const {channelId} = useParams() as {channelId?: string};
 	const hasAccessibleChannels = Favorites.getFirstAccessibleChannel() !== undefined;
 	const showWelcomeScreen = !channelId && !hasAccessibleChannels;
+	const favorite = channelId ? Favorites.getChannel(channelId) : undefined;
+	const isFavoriteDeleted =
+		favorite != null && Guilds.getGuild(favorite.guildId) != null && Channels.getChannel(favorite.channelId) == null;
 	useEffect(() => {
 		if (!channelId) return;
-		const isStillFavorited = Favorites.getChannel(channelId);
-		if (!isStillFavorited) {
+		if (!favorite || isFavoriteDeleted) {
 			const validChannelId = SelectedChannel.getValidatedFavoritesChannel();
 			if (validChannelId) {
 				Navigation.navigateToFavorites(validChannelId, undefined, 'push');
@@ -31,7 +35,7 @@ export const FavoritesLayout = observer(({children}: {children: React.ReactNode}
 				Navigation.navigateToFavorites(undefined, undefined, 'push');
 			}
 		}
-	}, [channelId, Favorites.channels]);
+	}, [channelId, favorite, isFavoriteDeleted]);
 	if (showWelcomeScreen && !mobileLayout.enabled) {
 		return (
 			<div className={styles.guildLayoutContainer} data-flx="app.favorites-layout.guild-layout-container">

@@ -124,6 +124,16 @@ export function getActiveVoiceProcessingMode(store: typeof VoiceSettings): Voice
 	return store.getVoiceProcessingModeForDeviceLabel(getActiveInputDeviceLabel(store));
 }
 
+export function buildRecordingAudioConstraints(store: typeof VoiceSettings): MediaTrackConstraints {
+	const profile = resolveVoiceProcessingFromStateForDeviceLabel(store, getActiveInputDeviceLabel(store));
+	return {
+		echoCancellation: profile.echoCancellation,
+		noiseSuppression: profile.noiseSuppressionBackend !== 'none',
+		autoGainControl: profile.autoGainControl,
+		...(store.inputDeviceId === 'default' ? {} : {deviceId: {ideal: store.inputDeviceId}}),
+	};
+}
+
 export function applyContentHintToTrack(track: MediaStreamTrack, hint: '' | 'speech' | 'music'): void {
 	try {
 		(

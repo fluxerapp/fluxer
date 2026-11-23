@@ -10,7 +10,7 @@ import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import MessageReferences, {MessageReferenceState} from '@app/features/messaging/state/MessageReferences';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import messageStyles from '@app/features/theme/styles/Message.module.css';
-import {openThreadFromEvent} from '@app/features/threads/commands/ThreadNavigation';
+import {openThreadFromEvent, preventShiftSelection} from '@app/features/threads/commands/ThreadNavigation';
 import styles from '@app/features/threads/components/ThreadSystemMessages.module.css';
 import ChannelThreads from '@app/features/threads/state/ChannelThreads';
 import * as D from '@app/features/threads/utils/ThreadMessageDescriptors';
@@ -44,6 +44,7 @@ export const ThreadCreatedMessage = observer(({message}: {message: Message}) => 
 				<button
 					type="button"
 					className={messageStyles.systemMessageLink}
+					onMouseDown={preventShiftSelection}
 					onClick={(event) => openThreadFromEvent(thread, event)}
 					data-flx="threads.thread-created-message.system-message-link.open"
 				>
@@ -76,8 +77,7 @@ export const ThreadCreatedMessage = observer(({message}: {message: Message}) => 
 	);
 });
 
-export const ThreadStarterMessage = observer(({message}: {message: Message}) => {
-	const {i18n} = useLingui();
+function getShownStarter(message: Message) {
 	const reference = message.messageReference;
 	const resolution = MessageReferences.getMessageReference(reference?.channel_id ?? '', reference?.message_id ?? '');
 	const parent = reference?.channel_id ? Channels.getChannel(reference.channel_id) : undefined;
@@ -87,7 +87,18 @@ export const ThreadStarterMessage = observer(({message}: {message: Message}) => 
 	} else if (resolution.state === MessageReferenceState.DELETED) {
 		starter = null;
 	}
-	if (starter && parent) {
+	return starter && parent ? {starter, parent} : null;
+}
+
+export const ThreadStarterDivider = observer(({message}: {message: Message}) =>
+	getShownStarter(message) ? <Divider spacing={8} data-flx="threads.thread-starter-divider.divider" /> : null,
+);
+
+export const ThreadStarterMessage = observer(({message}: {message: Message}) => {
+	const {i18n} = useLingui();
+	const shown = getShownStarter(message);
+	if (shown) {
+		const {starter, parent} = shown;
 		return (
 			<div className={styles.starter} data-flx="threads.thread-starter-message.starter">
 				<MessageComponent
@@ -96,7 +107,6 @@ export const ThreadStarterMessage = observer(({message}: {message: Message}) => 
 					previewContext={MessagePreviewContext.LIST_POPOUT}
 					data-flx="threads.thread-starter-message.message-component"
 				/>
-				<Divider spacing={8} data-flx="threads.thread-starter-message.divider" />
 			</div>
 		);
 	}

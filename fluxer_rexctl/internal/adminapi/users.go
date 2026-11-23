@@ -304,7 +304,7 @@ func (c *Client) SetAdmin(ctx context.Context, id string, admin bool) error {
 }
 
 func auditHeaders(reason string) map[string]string {
-	return map[string]string{"X-Audit-Log-Reason": strings.Join(strings.Fields(reason), " ")}
+	return map[string]string{"X-Audit-Log-Reason": url.PathEscape(strings.Join(strings.Fields(reason), " "))}
 }
 
 func (c *Client) Ban(ctx context.Context, id string, reason BanReason, note string) error {

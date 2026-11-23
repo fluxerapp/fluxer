@@ -51,6 +51,8 @@ import {VoiceCallCornerControls} from '@app/features/voice/components/VoiceCallC
 import {VoiceCallLayoutContent} from '@app/features/voice/components/VoiceCallLayoutContent';
 import styles from '@app/features/voice/components/VoiceCallView.module.css';
 import {VoiceControlBar} from '@app/features/voice/components/VoiceControlBar';
+import type {VoiceGridCapacityInfo} from '@app/features/voice/components/VoiceGridLayout';
+import {resolveVoiceGridPackedLayoutMetrics} from '@app/features/voice/components/VoiceGridLayoutMetrics';
 import {
 	useVoiceParticipantAvatarEntries,
 	VoiceParticipantWrappedAvatarList,
@@ -189,8 +191,7 @@ const VoiceCallViewInner = observer(
 		}, [ContextMenu.contextMenu]);
 		const isPoppedOut = !inPopout && PopoutWindowManager.isCallPopoutOpenForChannel(channel.id);
 		const poppedOutTransition = usePoppedOutTransition(isPoppedOut);
-		const wantsChromePinned =
-			inPopout || isAnyContextMenuOpen || isInboxPopoutOpen || isStatsOpen || isSpectatorsPopoutOpen;
+		const wantsChromePinned = isAnyContextMenuOpen || isInboxPopoutOpen || isStatsOpen || isSpectatorsPopoutOpen;
 		const [isChromePinned, setIsChromePinned] = useState(wantsChromePinned);
 		const [expandedUserIds, setExpandedUserIds] = useState<Set<string>>(() => new Set());
 		const handleExpandUser = useCallback((userId: string) => {
@@ -217,17 +218,41 @@ const VoiceCallViewInner = observer(
 			channelId: channel.id,
 		});
 		const hasRenderableTiles = hasScreenShare || filteredCameraTracks.length > 0;
-		const [gridOverflow, setGridOverflow] = useState(false);
-		const handleGridCapacityChange = useCallback(
-			(info: {visibleTileCount: number; totalTileCount: number; overflow: boolean}) => {
-				setGridOverflow(info.overflow);
-			},
-			[],
-		);
+		const [gridOverflowInset, setGridOverflowInset] = useState<{width: number; height: number} | null>(null);
+		const handleGridCapacityChange = useCallback((info: VoiceGridCapacityInfo) => {
+			const rootNode = containerRef.current;
+			if (!info.overflow || !rootNode) {
+				setGridOverflowInset(null);
+				return;
+			}
+			setGridOverflowInset({
+				width: rootNode.clientWidth - info.viewportWidth,
+				height: rootNode.clientHeight - info.viewportHeight,
+			});
+		}, []);
 		useEffect(() => {
-			if (layoutMode !== 'grid') setGridOverflow(false);
+			if (layoutMode !== 'grid') setGridOverflowInset(null);
 		}, [layoutMode]);
-		const effectiveLayoutMode = isMobile || (layoutMode === 'grid' && gridOverflow) ? 'focus' : layoutMode;
+		const gridTileCount = gridEntries.length;
+		useEffect(() => {
+			const rootNode = containerRef.current;
+			if (!gridOverflowInset || !rootNode) return;
+			const ownerWindow = rootNode.ownerDocument.defaultView ?? window;
+			const releaseWhenGridFits = () => {
+				const {visibleTileCount} = resolveVoiceGridPackedLayoutMetrics({
+					tileCount: gridTileCount,
+					containerWidth: rootNode.clientWidth - gridOverflowInset.width,
+					containerHeight: rootNode.clientHeight - gridOverflowInset.height,
+				});
+				if (visibleTileCount >= gridTileCount) setGridOverflowInset(null);
+			};
+			releaseWhenGridFits();
+			if (typeof ownerWindow.ResizeObserver === 'undefined') return;
+			const resizeObserver = new ownerWindow.ResizeObserver(releaseWhenGridFits);
+			resizeObserver.observe(rootNode);
+			return () => resizeObserver.disconnect();
+		}, [gridOverflowInset, gridTileCount]);
+		const effectiveLayoutMode = isMobile || (layoutMode === 'grid' && gridOverflowInset != null) ? 'focus' : layoutMode;
 		const effectiveFocusMainTrack =
 			effectiveLayoutMode === 'focus' ? (focusMainTrack ?? (isMobile ? pipTrack : null)) : null;
 		const effectiveSecondaryFocusTrackCount =

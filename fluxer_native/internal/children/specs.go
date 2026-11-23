@@ -260,7 +260,7 @@ func Prepare(ctx context.Context, c Config, specs []spec.Child) error {
 	if err := os.Remove(spec.WorkerHeartbeatPath); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return err
 	}
-	dirs := []string{c.Layout.NATSDir(), c.Layout.EdgeDir(), c.Layout.PGSocketDir(), c.Layout.GatewayRuntimeDir()}
+	dirs := []string{c.Layout.NATSDir(), c.Layout.EdgeDir(), c.Layout.PGSocketDir()}
 	for _, ch := range specs {
 		dirs = append(dirs, ch.Cwd, c.Layout.Tmp(ch.Name))
 	}

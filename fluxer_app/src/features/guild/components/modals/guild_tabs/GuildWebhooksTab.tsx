@@ -15,7 +15,8 @@ import {WebhookListItem} from '@app/features/webhook/components/WebhookListItem'
 import {useWebhookUpdates} from '@app/features/webhook/hooks/useWebhookUpdates';
 import type {Webhook} from '@app/features/webhook/models/Webhook';
 import Webhooks from '@app/features/webhook/state/Webhooks';
-import {GUILD_TEXT_BASED_CHANNEL_TYPES, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {WEBHOOK_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {RobotIcon, WarningCircleIcon} from '@phosphor-icons/react';
@@ -52,7 +53,7 @@ const GuildWebhooksTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 	const availableChannels = useMemo(
 		() =>
 			guildChannels
-				.filter((ch) => GUILD_TEXT_BASED_CHANNEL_TYPES.has(ch.type))
+				.filter((ch) => WEBHOOK_CHANNEL_TYPES.has(ch.type))
 				.map((ch) => ({id: ch.id, label: ch.name ?? i18n._(UNKNOWN_CHANNEL_DESCRIPTOR)})),
 		[guildChannels, i18n.locale],
 	);

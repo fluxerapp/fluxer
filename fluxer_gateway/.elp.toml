@@ -1,8 +1,0 @@
-# SPDX-License-Identifier: AGPL-3.0-or-later
-
-[eqwalizer]
-enable_all = true
-max_tasks = 8
-
-[rebar]
-profile = "test"

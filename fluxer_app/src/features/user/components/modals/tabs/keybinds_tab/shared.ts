@@ -109,7 +109,7 @@ const SECTION_DISPLAY_ORDER: Partial<Record<KeybindSection, ReadonlyArray<Keybin
 		'system_jump_account_mention',
 		'nav_quick_switcher_accounts',
 	],
-	misc: ['misc_search', 'misc_open_context_menu', 'misc_help'],
+	misc: ['misc_search', 'misc_open_context_menu', 'misc_help', 'system_toggle_downloads'],
 };
 const SHORTCUT_MERGE_PAIRS: ReadonlyArray<readonly [KeybindCommand, KeybindCommand]> = [
 	['message_reply_prev', 'message_reply_next'],

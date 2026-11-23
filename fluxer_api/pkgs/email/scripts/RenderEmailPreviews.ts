@@ -195,6 +195,7 @@ const USER = 'operator@example.com';
 const REPORT_ID = '1290874512349872128';
 const REPORT_REFERENCE = {
 	target: 'message_community',
+	concern: 'other',
 	reportedAt: new Date('2026-10-24T18:12:00Z'),
 	username: '',
 	communityName: 'Fluxer HQ',
@@ -203,6 +204,7 @@ const REPORT_REFERENCE = {
 const REPORT_REFERENCE_ACCOUNT = {
 	...REPORT_REFERENCE,
 	target: 'user',
+	concern: 'other',
 	username: 'example',
 	communityName: '',
 	channelName: '',

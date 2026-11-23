@@ -423,6 +423,7 @@ export function resolveScreenShareTarget(input: ScreenShareTargetInput): ScreenS
 export interface ScreenShareLayeringInput {
 	codec: VideoCodec | undefined;
 	svcSetting: ScreenShareScalabilityModePreference | undefined;
+	hardwareEncoder: boolean;
 }
 
 export interface ScreenShareLayering {
@@ -434,9 +435,10 @@ export function resolveScreenShareLayering(input: ScreenShareLayeringInput): Scr
 	if (input.codec !== 'av1' && input.codec !== 'vp9') {
 		return {simulcast: false, scalabilityMode: undefined};
 	}
+	const singleLayer = input.svcSetting === 'single_layer' || (input.svcSetting === undefined && input.hardwareEncoder);
 	return {
 		simulcast: false,
-		scalabilityMode: input.svcSetting === 'single_layer' ? 'L1T1' : 'L1T3',
+		scalabilityMode: singleLayer ? 'L1T1' : 'L1T3',
 	};
 }
 

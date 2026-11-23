@@ -18,8 +18,16 @@ interface VoiceGridLayoutProps {
 	children: React.ReactElement;
 	edgeToEdge?: boolean;
 	compact?: boolean;
-	onCapacityChange?: (info: {visibleTileCount: number; totalTileCount: number; overflow: boolean}) => void;
+	onCapacityChange?: (info: VoiceGridCapacityInfo) => void;
 	onExpandUser: (userId: string) => void;
+}
+
+export interface VoiceGridCapacityInfo {
+	visibleTileCount: number;
+	totalTileCount: number;
+	overflow: boolean;
+	viewportWidth: number;
+	viewportHeight: number;
 }
 
 type GridStyle = React.CSSProperties &
@@ -106,8 +114,10 @@ export function VoiceGridLayout({
 			visibleTileCount,
 			totalTileCount: entries.length,
 			overflow: hiddenTileCount > 0,
+			viewportWidth: viewportSize?.width ?? 0,
+			viewportHeight: viewportSize?.height ?? 0,
 		});
-	}, [hiddenTileCount, onCapacityChange, entries.length, visibleTileCount]);
+	}, [hiddenTileCount, onCapacityChange, entries.length, visibleTileCount, viewportSize]);
 	const gridStyle = useMemo<GridStyle>(() => {
 		const rowStyle = getVoiceGridRowStyle(visibleEntries.length);
 		if (typeof packedMetrics === 'number') return rowStyle;

@@ -1,11 +1,14 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 -name ${FLUXER_ERLANG_NODE_NAME}
 -setcookie ${FLUXER_ERLANG_COOKIE}
+-config ${FLUXER_GATEWAY_SYS_CONFIG}
+-start_epmd false
+-erl_epmd_port ${FLUXER_ERLANG_DIST_PORT}
 +A1
 +P 262144
 +Q 65536
 +S ${FLUXER_ERLANG_SCHEDULERS:-2}:${FLUXER_ERLANG_SCHEDULERS:-2}
-+SDcpu ${FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS:-1}:${FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS:-1}
++SDcpu ${FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS:-2}:${FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS:-2}
 +SDio ${FLUXER_ERLANG_DIRTY_IO_SCHEDULERS:-2}
 +sbwt none
 +sbwtdcpu none
@@ -23,3 +26,4 @@
 -kernel inet_dist_listen_min ${FLUXER_ERLANG_DIST_PORT}
 -kernel inet_dist_listen_max ${FLUXER_ERLANG_DIST_PORT}
 -kernel prevent_overlapping_partitions false
+-kernel connect_all ${FLUXER_ERLANG_CONNECT_ALL:-true}

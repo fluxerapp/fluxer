@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
 import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import type {Message} from '@app/api/models/Message';
@@ -27,6 +27,7 @@ interface UserMentionsParams {
 	everyone: boolean;
 	guilds: boolean;
 	before?: MessageID;
+	guildId?: GuildID;
 }
 
 interface UserMentionDeleteParams {
@@ -90,6 +91,7 @@ export class UserContentRequestService {
 			roles: params.roles,
 			guilds: params.guilds,
 			before: params.before,
+			guildId: params.guildId,
 		});
 		return this.userContentService.buildMessageResponsesForUser(params.userId, params.viewer, messages);
 	}

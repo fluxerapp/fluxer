@@ -1097,7 +1097,7 @@ How many NATS RPC requests the gateway works on at once. When it's empty, the ga
 
 ### `FLUXER_GATEWAY_ZSTD_WINDOW_LOG`
 
-The base 2 logarithm of the zstd window the gateway compresses websocket traffic with, from 10 to 21. Values outside that range count as the nearest end. Larger values compress better and use more memory per connection. When it's empty, the gateway uses `17`. With rexctl, use `rexctl config set FLUXER_GATEWAY_ZSTD_WINDOW_LOG`.
+The base 2 logarithm of the zstd window the gateway compresses websocket traffic with, from 10 to 21. Values outside that range count as the nearest end. Larger values compress better and use more memory per connection. When it's empty, the gateway uses `14`. With rexctl, use `rexctl config set FLUXER_GATEWAY_ZSTD_WINDOW_LOG`.
 
 ### `FLUXER_GATEWAY_IDENTIFY_TOKEN_LIMIT_PER_MINUTE`
 
@@ -1105,7 +1105,7 @@ The most times one token can identify on one gateway node in a minute. The gatew
 
 ### `FLUXER_GATEWAY_HTTP_FAILURE_THRESHOLD`
 
-How many failed requests from the gateway to the API in 10 seconds open its circuit breaker, when at least 80 percent of the requests in that time failed. The breaker then stops further requests for a while. When it's empty, the gateway uses `6`. With rexctl, use `rexctl config set FLUXER_GATEWAY_HTTP_FAILURE_THRESHOLD`.
+The fewest failed requests from the gateway to the API in 10 seconds that open its circuit breaker. The breaker also needs at least 20 requests in that time, with more than half of them failed. It then stops further requests for a while. When it's empty, the gateway uses `0`, and only the other two conditions count. With rexctl, use `rexctl config set FLUXER_GATEWAY_HTTP_FAILURE_THRESHOLD`.
 
 ### `FLUXER_GATEWAY_HTTP_RECOVERY_TIMEOUT_MS`
 
@@ -1709,7 +1709,7 @@ The memory reservation for the gateway container, the amount Docker tries to kee
 
 ### `FLUXER_ERLANG_SCHEDULERS`
 
-How many normal schedulers the Erlang VM of the gateway runs, a positive whole number. When it's empty, the gateway uses the container's CPU count kept between `FLUXER_ERLANG_SCHEDULERS_MIN` and `FLUXER_ERLANG_SCHEDULERS_MAX`. With rexctl, use `rexctl config set FLUXER_ERLANG_SCHEDULERS`.
+How many normal schedulers the Erlang VM of the gateway or a bouncer node runs, a positive whole number. When it's empty, the gateway uses the container's CPU count kept between `FLUXER_ERLANG_SCHEDULERS_MIN` and `FLUXER_ERLANG_SCHEDULERS_MAX`. With rexctl, use `rexctl config set FLUXER_ERLANG_SCHEDULERS`.
 
 ### `FLUXER_ERLANG_SCHEDULERS_MIN`
 
@@ -1717,11 +1717,11 @@ The lowest scheduler count the gateway picks from the CPU count when `FLUXER_ERL
 
 ### `FLUXER_ERLANG_SCHEDULERS_MAX`
 
-The highest scheduler count the gateway picks from the CPU count when `FLUXER_ERLANG_SCHEDULERS` is empty. When it's empty, the gateway uses `16`. With rexctl, use `rexctl config set FLUXER_ERLANG_SCHEDULERS_MAX`.
+The highest scheduler count the gateway picks from the CPU count when `FLUXER_ERLANG_SCHEDULERS` is empty. When it's empty, the gateway uses `16`, and a bouncer node uses `4`. With rexctl, use `rexctl config set FLUXER_ERLANG_SCHEDULERS_MAX`.
 
 ### `FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS`
 
-How many dirty CPU schedulers the Erlang VM of the gateway runs, a positive whole number. When it's empty, the gateway uses half the normal scheduler count, and at least `1`. With rexctl, use `rexctl config set FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS`.
+How many dirty CPU schedulers the Erlang VM of the gateway runs, a positive whole number. When it's empty, the gateway uses the normal scheduler count. With rexctl, use `rexctl config set FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS`.
 
 ### `FLUXER_ERLANG_DIRTY_IO_SCHEDULERS`
 
@@ -1947,11 +1947,20 @@ The api, worker, gateway and Rust services also take a setting from a file. Set 
 
 These variables don't take the file form. Set them as plain values.
 
+- `BUILD_REVISION`
 - `BUILD_VERSION`
 - `FLUXER_API_PORT`
+- `FLUXER_BOUNCER_BASENAME`
+- `FLUXER_BOUNCER_COUNT`
+- `FLUXER_BOUNCER_DNS_NAME`
+- `FLUXER_BOUNCER_HOME`
+- `FLUXER_BOUNCER_LOGGER_LEVEL`
+- `FLUXER_BOUNCER_QUORUM`
+- `FLUXER_BOUNCER_STATUS_PORT`
 - `FLUXER_CLIENT_IP_HEADER_NAME`
 - `FLUXER_DISABLE_RATE_LIMITS`
 - `FLUXER_ENV`
+- `FLUXER_ERLANG_CONNECT_ALL`
 - `FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS`
 - `FLUXER_ERLANG_DIRTY_IO_SCHEDULERS`
 - `FLUXER_ERLANG_DIST_PORT`
@@ -1960,11 +1969,16 @@ These variables don't take the file form. Set them as plain values.
 - `FLUXER_ERLANG_SCHEDULERS`
 - `FLUXER_ERLANG_SCHEDULERS_MAX`
 - `FLUXER_ERLANG_SCHEDULERS_MIN`
+- `FLUXER_GATEWAY_BOUNCER_BASENAME`
+- `FLUXER_GATEWAY_BOUNCER_COUNT`
+- `FLUXER_GATEWAY_BOUNCER_DNS_NAME`
+- `FLUXER_GATEWAY_HOME`
+- `FLUXER_GATEWAY_RUN_DIR`
+- `FLUXER_GATEWAY_SYS_CONFIG`
 - `FLUXER_OPERATOR_SOCKET`
 - `HOSTNAME`
 - `LOG_LEVEL`
 - `POD_NAME`
-- `RELX_REPLACE_OS_VARS`
 
 The file form doesn't work for the docs site variables either, or for variables that system libraries and runtimes look up, such as `NODE_OPTIONS`, `MALLOC_ARENA_MAX`, `TOKIO_WORKER_THREADS`, `HTTP_PROXY`, `SSL_CERT_FILE` and `VIPS_CONCURRENCY`. The bundled third-party images follow their own rules.
 
@@ -2224,6 +2238,10 @@ Fluxer's services, their images, some of the libraries they use and the Fluxer H
 
 The proxy the Rust services use for HTTP and HTTPS requests when `HTTP_PROXY` or `HTTPS_PROXY` is empty. They also take the lowercase `all_proxy`.
 
+### `BUILD_REVISION`
+
+The source commit the gateway and bouncer nodes report in their status. The gateway image sets it.
+
 ### `BUILD_VERSION`
 
 The build version a service reports. Each image sets its own.
@@ -2268,6 +2286,10 @@ The address the app-proxy service listens on. When it's empty, it listens on `0.
 
 The older name for `BUILD_VERSION`, which only the admin and app-proxy services read when `BUILD_VERSION` is empty. Their images set `BUILD_VERSION`.
 
+### `FLUXER_BOUNCER_HOME`
+
+The directory a bouncer node runs from. The gateway image sets it to `/opt/fluxer_bouncer`.
+
 ### `FLUXER_ERLANG_COOKIE_FILE`
 
 A file that has the gateway's Erlang cookie. The stack passes `FLUXER_ERLANG_COOKIE` itself.
@@ -2280,9 +2302,29 @@ The URL the gateway sends API RPC requests to. When it's empty, the gateway uses
 
 The IP address the gateway listens on. When it's empty, it listens on every interface.
 
+### `FLUXER_GATEWAY_DRAIN_DEADLINE_MS`
+
+The longest a draining gateway node spends handing its sessions, communities and other work to other nodes, in milliseconds. A request to `/_health/drain` starts a drain. When it's empty, the gateway uses `600000`, which is 10 minutes.
+
+### `FLUXER_GATEWAY_HOME`
+
+The directory the gateway runs from. The gateway image sets it to `/opt/fluxer_gateway`.
+
 ### `FLUXER_GATEWAY_NATS_RPC_ENABLED`
 
 Whether the gateway responds to RPC requests over NATS. The gateway responds to the API only over NATS RPC and must keep it turned on.
+
+### `FLUXER_GATEWAY_RUN_DIR`
+
+The directory the gateway entrypoint writes the Erlang VM arguments, the node name file and crash dumps to. The gateway image sets it to `/tmp`.
+
+### `FLUXER_GATEWAY_STATUS_PORT`
+
+The second port the gateway listens on, on every interface, for `/_status` and `/_metrics`. A value of `0` turns it off. When it's empty, the gateway uses `8082`.
+
+### `FLUXER_GATEWAY_SYS_CONFIG`
+
+The Erlang config file the gateway starts with. When it's empty, the gateway entrypoint uses the one in the gateway image.
 
 ### `FLUXER_GIF_SERVICE_SUBJECT`
 
@@ -2350,7 +2392,7 @@ The GLib log domains whose debug messages libvips prints in the media proxy, or 
 
 ### `HOSTNAME`
 
-The hostname of the container. Docker sets it.
+The hostname of the container. Docker sets it. A bouncer node needs it and takes its number from the end of it, such as `2` for `gateway-bouncer-2`.
 
 ### `KLIPY_API_KEY`
 
@@ -2399,10 +2441,6 @@ The password of the bundled Valkey. The Fluxer Helm chart sets it on the Valkey 
 ### `RELEASE_CHANNEL`
 
 The release channel the app-proxy service puts in the web app, `stable` or `canary`. The self-hosted app-proxy service serves the stable channel.
-
-### `RELX_REPLACE_OS_VARS`
-
-Whether the gateway release scripts fill in environment variables in the gateway config. The gateway entrypoint sets it.
 
 ### `SSL_CERT_DIR`
 
@@ -2688,6 +2726,34 @@ The price ID of the yearly plan in USD.
 
 The stack runs the gateway as one node.
 
+#### `FLUXER_BOUNCER_BASENAME`
+
+The node name of a bouncer node. Name its pods after it followed by a dash and a number, as a StatefulSet of that name does, since gateway nodes look for them under those names. When it's empty, a bouncer node uses `FLUXER_GATEWAY_BOUNCER_BASENAME`, or `gateway-bouncer`.
+
+#### `FLUXER_BOUNCER_COUNT`
+
+How many bouncer nodes there are, as seen by a bouncer node. When it's empty, a bouncer node uses `FLUXER_GATEWAY_BOUNCER_COUNT`. A bouncer node doesn't start without one of them.
+
+#### `FLUXER_BOUNCER_DNS_NAME`
+
+The DNS domain of the bouncer nodes, as seen by a bouncer node. When it's empty, a bouncer node uses `FLUXER_GATEWAY_BOUNCER_DNS_NAME`. A bouncer node doesn't start without one of them.
+
+#### `FLUXER_BOUNCER_LOGGER_LEVEL`
+
+The log level of a bouncer node. Use `debug`, `info`, `notice`, `warning`, `error`, `critical`, `alert` or `emergency`. Any other value stops the bouncer node from starting. When it's empty, it uses `warning`.
+
+#### `FLUXER_BOUNCER_QUORUM`
+
+How many bouncer nodes must agree before a bouncer node moves work between gateway nodes, from 1 to `FLUXER_BOUNCER_COUNT`. When it's empty, a bouncer node uses a majority of `FLUXER_BOUNCER_COUNT`.
+
+#### `FLUXER_BOUNCER_STATUS_PORT`
+
+The port a bouncer node serves its status and metrics on. A value of `0` turns it off. When it's empty, a bouncer node uses `8082`.
+
+#### `FLUXER_ERLANG_CONNECT_ALL`
+
+Whether each gateway node connects to every node that another node knows, `true` or `false`. When it's empty, the gateway uses `false` when `FLUXER_GATEWAY_BOUNCER_COUNT` is above `0`, and `true` otherwise.
+
 #### `FLUXER_ERLANG_DIST_PORT`
 
 The Erlang distribution port of the gateway.
@@ -2699,6 +2765,18 @@ The Erlang node name of the gateway.
 #### `FLUXER_ERLANG_NODE_NAME_PREFIX`
 
 A prefix that gives each gateway node a unique Erlang node name.
+
+#### `FLUXER_GATEWAY_BOUNCER_BASENAME`
+
+The node name of the bouncer nodes. Each bouncer node is named after it, `@`, the name followed by a dash and the bouncer's number, and `FLUXER_GATEWAY_BOUNCER_DNS_NAME`. When it's empty, the gateway uses `gateway-bouncer`.
+
+#### `FLUXER_GATEWAY_BOUNCER_COUNT`
+
+How many bouncer nodes the gateway uses. Bouncer nodes run from the gateway image with `FLUXER_GATEWAY_ROLE` set to `bouncer`. They keep track of which gateway node holds which sessions, communities and other work, and move that work between nodes during a rolling update. When it's above `0`, also set `FLUXER_GATEWAY_BOUNCER_DNS_NAME`, or the gateway doesn't start. When it's empty or `0`, the gateway uses no bouncers.
+
+#### `FLUXER_GATEWAY_BOUNCER_DNS_NAME`
+
+The DNS domain of the bouncer nodes, such as the headless service of their StatefulSet.
 
 #### `FLUXER_GATEWAY_CLUSTER_DISCOVERY_DNS_NAME`
 
@@ -2720,25 +2798,21 @@ Whether the gateway runs as a cluster.
 
 A fixed list of the other gateway nodes.
 
-#### `FLUXER_GATEWAY_GUILD_PIN_KEEPER_BASE_MD5S`
-
-The module MD5s a node may have before the gateway patches it.
-
-#### `FLUXER_GATEWAY_GUILD_PIN_KEEPER_BEAM`
-
-The path of the BEAM file the gateway loads onto other nodes to pin communities.
-
-#### `FLUXER_GATEWAY_GUILD_PIN_KEEPER_BEAM_MD5`
-
-The MD5 that the `FLUXER_GATEWAY_GUILD_PIN_KEEPER_BEAM` file must have.
-
 #### `FLUXER_GATEWAY_PINNED_GUILD_IDS`
 
 The communities the gateway pins to particular nodes.
 
+#### `FLUXER_GATEWAY_POOL`
+
+The pool a gateway node belongs to when it uses bouncers. A node hands work only to nodes in the same pool, and a node in a pool other than `default` holds the communities in `FLUXER_GATEWAY_PINNED_GUILD_IDS`. When it's empty, the gateway uses `default`.
+
 #### `FLUXER_GATEWAY_ROLE`
 
-The role of a gateway node in a cluster.
+The role of a gateway node in a cluster: `all`, `websocket`, `sessions`, `websocket+sessions`, `presence`, `guilds`, `calls` or `push`. When it's empty, the node runs every role, and so does any other value, which the gateway logs as a warning. The value `bouncer` instead starts a bouncer node from the same image and needs `HOSTNAME` and `FLUXER_BOUNCER_DNS_NAME` or `FLUXER_GATEWAY_BOUNCER_DNS_NAME`. Set `bouncer` as a plain value, since the image reads it before it reads any file.
+
+#### `FLUXER_GATEWAY_TEMPLATE_HASH`
+
+A label for the version of the deployment a gateway node runs, such as the hash of its pod template, when it uses bouncers. A draining node hands its work to nodes with a different label first, which are the nodes of the new version. The gateway reports it in `/_status`.
 
 ### Push relay
 
@@ -2788,6 +2862,14 @@ How many proxies in front of the push relay it trusts.
 
 The stack runs Postgres only.
 
+#### `FLUXER_CASSANDRA_ADDRESS_TRANSLATION`
+
+How the Rust services reach the Cassandra nodes the driver discovers. `auto` sends every connection to the contact point when `FLUXER_CASSANDRA_HOSTS` lists one host, and uses the nodes' own addresses otherwise. `contact_point` always sends every connection to the first host. `none` always uses the nodes' own addresses, so each request can go to a node that holds the data. Use `none` when every node's address is reachable, such as inside Kubernetes. Defaults to `auto`.
+
+#### `FLUXER_CASSANDRA_CONSISTENCY`
+
+The consistency level for Cassandra reads and writes that don't set their own: `one`, `local_one`, `quorum`, `local_quorum`, `each_quorum` or `all`. Defaults to `local_quorum`.
+
 #### `FLUXER_CASSANDRA_HOSTS`
 
 The Cassandra hosts.
@@ -2798,7 +2880,7 @@ The Cassandra keyspace.
 
 #### `FLUXER_CASSANDRA_LOCAL_DC`
 
-The local Cassandra data centre.
+The local Cassandra data centre. Requests go only to nodes in it, and `local_quorum` and `local_serial` count the replicas in it. When it's empty, the Rust services send requests to any data centre.
 
 #### `FLUXER_CASSANDRA_PASSWORD`
 
@@ -2807,6 +2889,10 @@ The Cassandra password.
 #### `FLUXER_CASSANDRA_PORT`
 
 The Cassandra port.
+
+#### `FLUXER_CASSANDRA_SERIAL_CONSISTENCY`
+
+The consistency level for Cassandra lightweight transactions and the reads that check them: `serial` or `local_serial`. Defaults to `local_serial`.
 
 #### `FLUXER_CASSANDRA_USERNAME`
 

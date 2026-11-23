@@ -18,6 +18,7 @@ import {useKeybindManager} from '@app/features/app/hooks/useKeybindManager';
 import {useNativePlatform} from '@app/features/app/hooks/useNativePlatform';
 import {usePlatformClasses} from '@app/features/app/hooks/usePlatformClasses';
 import {useServiceWorkerBadge} from '@app/features/app/hooks/useServiceWorkerBadge';
+import DownloadsStore from '@app/features/app/state/DownloadsStore';
 import {getInstanceBrandStyle, getInstanceCssOrigins} from '@app/features/app/state/InstanceBrandStyle';
 import {type LayoutVariant, LayoutVariantProvider} from '@app/features/app/state/LayoutVariantContext';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
@@ -127,6 +128,10 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 		return () => showMyselfTypingHelper.stop();
 	}, []);
 	useEffect(() => {
+		DownloadsStore.subscribe();
+		return DownloadsStore.unsubscribe;
+	}, []);
+	useEffect(() => {
 		let active = true;
 		AccountEngine.start();
 		let disposeBootStateWriter: (() => void) | null = null;
@@ -234,12 +239,12 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 		<LayoutVariantProvider value={layoutVariantContextValue} data-flx="app.app.app-wrapper.layout-variant-provider">
 			<SVGMasks data-flx="app.app.app-wrapper.svg-masks" />
 			<VoiceLiveKitRoot data-flx="app.app.app-wrapper.voice-live-kit-root">
+				{isNative && !useSystemTitleBar && !isRootDocumentFullscreen && (
+					<NativeTitlebar platform={platform} data-flx="app.app.app-wrapper.native-titlebar" />
+				)}
 				<div ref={ringsContainerRef} className={styles.appContainer} data-flx="app.app.app-wrapper.app-container">
 					<FocusRingScope containerRef={ringsContainerRef} data-flx="app.app.app-wrapper.focus-ring-scope">
 						<SkipToContentLink data-flx="app.app.app-wrapper.skip-to-content-link" />
-						{isNative && !useSystemTitleBar && !isRootDocumentFullscreen && (
-							<NativeTitlebar platform={platform} data-flx="app.app.app-wrapper.native-titlebar" />
-						)}
 						{children}
 					</FocusRingScope>
 				</div>

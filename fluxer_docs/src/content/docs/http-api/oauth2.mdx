@@ -11,16 +11,20 @@ OAuth2 lets a user give an application access to their account, and the same con
 ## Authorization code grant
 
 1. Send the user's browser to [Authorize application](#authorize-application). When the user approves on the consent screen, Fluxer sends the browser to your `redirect_uri` with a `code` and your `state`.
-2. Exchange the code at [Exchange OAuth2 token](#exchange-oauth2-token) with your client credentials to get an access token and a refresh token.
+2. Exchange the code at [Exchange OAuth2 token](#exchange-oauth2-token) with your client credentials to get an access token and a refresh token. Every third-party application gets a refresh token.
 3. Send the access token as `Authorization: Bearer <token>`. Before the access token expires, exchange the refresh token for a new pair.
 
 | Credential | Lifetime |
 | --- | --- |
 | Authorization code | 10 minutes, single use |
 | Access token | 7 days |
-| Refresh token | 30 days, single use. Each refresh returns a new one |
+| Refresh token | 30 days, single use. Each refresh returns a new one that lasts another 30 days |
 
-PKCE supports the `S256` and `plain` methods. A `code_challenge` with no `code_challenge_method` uses `plain`. When the code has a challenge, the token exchange needs a matching `code_verifier`.
+A code works for one token exchange. Once your application is authenticated, its first exchange of a code uses the code up, even if the `redirect_uri` or `code_verifier` is wrong, so after such a failure you need a new code. A code sent by another application or with a wrong client secret isn't used up.
+
+If you don't refresh within 30 days, the refresh token expires and the user has to authorize your application again. Once the user has no refresh token left for your application, the application drops out of their authorized applications and `prompt=none` returns `consent_required`.
+
+PKCE supports only the `S256` method. Send `code_challenge` together with `code_challenge_method=S256`. Fluxer rejects `plain` with a validation error. At [Grant OAuth2 consent](#grant-oauth2-consent), a challenge without a method or a method without a challenge gets `invalid_request`. With `prompt=none`, the same mistakes redirect with `error=consent_required`. When the code has a challenge, the token exchange needs the matching `code_verifier`.
 
 The token, introspection and revocation routes take an `application/x-www-form-urlencoded` or `multipart/form-data` body. Authenticate your application with HTTP Basic or with the `client_id` and `client_secret` fields. Introspection and revocation return `invalid_request` when credentials are in both the `Authorization` header and the body.
 
@@ -68,7 +72,7 @@ The token, consent, introspection and revocation routes return this body with st
 
 | Value | Description |
 | --- | --- |
-| invalid_request | The redirect URI, response type or permission mask is wrong, or credentials were sent in both places |
+| invalid_request | The redirect URI, response type, PKCE challenge or permission mask is wrong, or credentials were sent in both places |
 | invalid_client | The application is unknown or the client secret is missing or wrong |
 | invalid_grant | The code, refresh token, redirect URI or PKCE verifier doesn't match a valid grant |
 | invalid_scope | A requested scope isn't in [OAuth2 scopes](#oauth2-scopes) |
@@ -84,7 +88,7 @@ The token pair a successful exchange returns.
 | access_token | string | The bearer token |
 | token_type | string | Always `Bearer` |
 | expires_in | integer | The access token lifetime in seconds, 604800 |
-| refresh_token | string | The refresh token for the next exchange |
+| refresh_token | string | The refresh token for the next exchange. Every third-party application gets one |
 | scope | string | The granted scopes, separated by spaces |
 
 ### Example
@@ -252,7 +256,7 @@ Starts the grant and redirects the browser to the Fluxer consent screen with the
 | permissions? | string | The permissions to give the bot, as an integer string |
 | disable_guild_select? | string | `true` to stop the user from picking another guild |
 | code_challenge? | string | The PKCE challenge |
-| code_challenge_method? | string | The PKCE method, `S256` or `plain` |
+| code_challenge_method? | string | The PKCE method, `S256` |
 
 ### Response
 
@@ -260,7 +264,13 @@ Starts the grant and redirects the browser to the Fluxer consent screen with the
 | --- | --- | --- |
 | 302 | empty | The `Location` header has the consent screen or your callback |
 
-With `prompt=none`, Fluxer skips the consent screen when the signed-in user has already granted every requested scope, and redirects to your `redirect_uri` with a `code`. Otherwise it redirects with `error=login_required` when nobody is signed in, or `error=consent_required`. If `redirect_uri` isn't registered on the application, the error goes to the Fluxer web app.
+With `prompt=none`, Fluxer skips the consent screen only when the request comes with a signed-in user session and that user has already authorized your application for every requested scope. Fluxer then redirects to your `redirect_uri` with a `code`. Otherwise it redirects with an `error`:
+
+- `login_required` when there is no signed-in user session.
+- `consent_required` when the user hasn't authorized every requested scope, or when the request includes the `bot` scope, which always needs the consent screen.
+- `consent_required` also when the request has a problem the consent screen would reject, such as a missing or unregistered `redirect_uri` or a PKCE challenge without a method.
+
+If `redirect_uri` isn't registered on the application, the error goes to the Fluxer web app.
 
 The rate limit is 60 requests per minute, on the `oauth:authorize` bucket.
 
@@ -283,7 +293,7 @@ Records the user's consent and returns an [OAuth2 consent response](#oauth2-cons
 | guild_id?<sup>3</sup> | snowflake | The guild to install the bot into |
 | channel_id?<sup>3</sup> | snowflake | The group DM to install the bot into |
 | code_challenge? | string | The PKCE challenge |
-| code_challenge_method? | string | The PKCE method, `S256` or `plain` |
+| code_challenge_method? | string | The PKCE method, `S256` |
 
 <sup>1</sup> Required unless the only scope is `bot` and the application doesn't set `bot_require_code_grant`
 
@@ -296,7 +306,7 @@ Records the user's consent and returns an [OAuth2 consent response](#oauth2-cons
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [OAuth2 consent response](#oauth2-consent-response-object) object | Consent was recorded |
-| 400 | [OAuth2 error](#oauth2-error-response-object) object | The application, scope, redirect URI, response type or permission mask was rejected |
+| 400 | [OAuth2 error](#oauth2-error-response-object) object | The application, scope, redirect URI, response type, PKCE challenge or permission mask was rejected |
 | 400 | [error response](/http-api/#error-response) | `NOT_A_BOT_APPLICATION`, `BOT_ALREADY_IN_GUILD` or `INVALID_CHANNEL_TYPE` |
 | 400 | [error response](/http-api/#error-response) | `MAX_GUILD_MEMBERS`, `MAX_GUILD_ROLES` or `MAX_GROUP_DM_RECIPIENTS` |
 | 403 | [error response](/http-api/#error-response) | `BOT_IS_PRIVATE` when you don't own a private bot's application |
@@ -323,7 +333,7 @@ If you lose the response to a refresh, the user has to authorize your applicatio
 | --- | --- | --- |
 | grant_type | string | The grant type, `authorization_code` or `refresh_token` |
 | code | string | The code from the callback, for `authorization_code` |
-| redirect_uri | string | The code's redirect URI, normalized, so `https://example.com` is sent as `https://example.com/` |
+| redirect_uri | string | The redirect URI the code was issued for. Fluxer compares normalized URLs, so `https://example.com` and `https://example.com/` match |
 | code_verifier? | string | The PKCE verifier, when the code has a challenge |
 | refresh_token | string | The refresh token, for `refresh_token` |
 | client_id? | snowflake | The ID of the application, if you don't use HTTP Basic |

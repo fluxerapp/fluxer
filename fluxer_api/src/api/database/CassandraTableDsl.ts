@@ -570,8 +570,7 @@ WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};
 	function insertWithNow<NowCol extends ColumnName<Row>>(row: Omit<Row, NowCol>, nowColumn: NowCol): PreparedQuery {
 		const otherColumns = columns.filter((c) => c !== nowColumn);
 		const allCols = [...otherColumns, nowColumn];
-		const values = otherColumns.map((c) => `:${c}`).concat(['now()']);
-		const cql = `INSERT INTO ${def.name} (${allCols.join(', ')}) VALUES (${values.join(', ')});`;
+		const cql = `INSERT INTO ${def.name} (${allCols.join(', ')}) VALUES (${allCols.map((c) => `:${c}`).join(', ')});`;
 		const params: CassandraParams = {};
 		for (const c of otherColumns) {
 			if (c === nowColumn) continue;

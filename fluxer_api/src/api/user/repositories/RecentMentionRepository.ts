@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createMessageID, type MessageID, type UserID} from '@app/api/BrandedTypes';
+import {createMessageID, type GuildID, type MessageID, type UserID} from '@app/api/BrandedTypes';
 import {BatchBuilder, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
 import type {RecentMentionRow} from '@app/api/database/types/UserTypes';
 import {RecentMention} from '@app/api/models/RecentMention';
@@ -36,8 +36,10 @@ export class RecentMentionRepository {
 		includeGuilds: boolean = true,
 		limit: number = 25,
 		before?: MessageID,
+		guildId?: GuildID,
 	): Promise<Array<RecentMention>> {
-		if (!includeGuilds) return [];
+		const scopedGuildId = includeGuilds ? null : (guildId ?? null);
+		if (!includeGuilds && scopedGuildId == null) return [];
 		const fetchLimit = Math.max(limit * 2, 50);
 		const query = createFetchRecentMentionsQuery(fetchLimit);
 		let beforeMessageId = before || createMessageID(generateSnowflake());
@@ -51,7 +53,7 @@ export class RecentMentionRepository {
 			);
 			if (allMentions.length === 0) break;
 			filteredMentions.push(
-				...allMentions.filter((mention) => this.matchesFilters(mention, includeEveryone, includeRole)),
+				...allMentions.filter((mention) => this.matchesFilters(mention, includeEveryone, includeRole, scopedGuildId)),
 			);
 			beforeMessageId = allMentions[allMentions.length - 1].message_id;
 			if (allMentions.length < fetchLimit) break;
@@ -59,7 +61,13 @@ export class RecentMentionRepository {
 		return filteredMentions.slice(0, limit).map((mention) => new RecentMention(mention));
 	}
 
-	private matchesFilters(mention: RecentMentionRow, includeEveryone: boolean, includeRole: boolean): boolean {
+	private matchesFilters(
+		mention: RecentMentionRow,
+		includeEveryone: boolean,
+		includeRole: boolean,
+		scopedGuildId: GuildID | null,
+	): boolean {
+		if (scopedGuildId != null && mention.guild_id !== scopedGuildId) return false;
 		if (!includeEveryone && mention.is_everyone) return false;
 		if (!includeRole && mention.is_role) return false;
 		return true;

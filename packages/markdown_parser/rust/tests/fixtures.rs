@@ -237,3 +237,23 @@ fn skin_tone_shortcode_names_resolve_from_emoji_context() {
         ]})
     );
 }
+
+#[test]
+fn alert_text_after_list_keeps_space_before_inline_node() {
+    assert_eq!(
+        parse(
+            "> [!NOTE]\n> - Bullet point\n> String with [link](https://example.com)",
+            ParserFlags::ALL,
+            ""
+        ),
+        json!({"nodes":[
+            {"type":"Alert","alertType":"Note","children":[
+                {"type":"List","ordered":false,"items":[
+                    {"children":[{"type":"Text","content":"Bullet point"}]}
+                ]},
+                {"type":"Text","content":"String with "},
+                {"type":"Link","text":{"type":"Text","content":"link"},"url":"https://example.com","escaped":false,"rawUrl":"https://example.com","source":"[link](https://example.com)"}
+            ]}
+        ]})
+    );
+}

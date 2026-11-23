@@ -178,6 +178,7 @@ export const LexicalChannelTextareaContent = observer(
 		bare = false,
 		controlsRef,
 		onValueChange,
+		onFocus,
 	}: {
 		accountKey: string | null;
 		channel: Channel;
@@ -196,6 +197,7 @@ export const LexicalChannelTextareaContent = observer(
 		bare?: boolean;
 		controlsRef?: React.MutableRefObject<ChannelTextareaControls | null>;
 		onValueChange?: (value: string) => void;
+		onFocus?: () => void;
 	}) => {
 		const {i18n} = useLingui();
 		const composerKey = draftChannelId ?? channel.id;
@@ -1298,7 +1300,7 @@ export const LexicalChannelTextareaContent = observer(
 		const isMobileEditBarVisible = editingMessage && mobileLayout.enabled;
 		const isReplyBarVisible = !isMobileEditBarVisible && referencedMessage != null;
 		const presentableTypingUsers = usePresentableTypingUsers(channel);
-		const isTypingStatusVisible = !isAutocompleteVisible && presentableTypingUsers.length > 0;
+		const isTypingStatusVisible = draftChannelId == null && !isAutocompleteVisible && presentableTypingUsers.length > 0;
 		const isSlowmodeIndicatorVisible = isSlowmodeEnabled;
 		const hasLeadingStatusContent = isMobileEditBarVisible || isReplyBarVisible || isSlashParamBarVisible;
 		let shouldReplyMention = false;
@@ -1374,10 +1376,12 @@ export const LexicalChannelTextareaContent = observer(
 										/>
 									</flx-channel-textarea-typing-slot>
 								)}
-								<TypingAnnouncer
-									channel={channel}
-									data-flx="channel.lexical-channel-textarea-content.typing-announcer"
-								/>
+								{draftChannelId == null && (
+									<TypingAnnouncer
+										channel={channel}
+										data-flx="channel.lexical-channel-textarea-content.typing-announcer"
+									/>
+								)}
 							</flx-channel-textarea-status-rail-left>
 							{isSlowmodeIndicatorVisible && (
 								<flx-channel-textarea-slowmode-slot
@@ -1482,7 +1486,8 @@ export const LexicalChannelTextareaContent = observer(
 										maxWireLength={maxMessageLength}
 										silentMessagePrefix={!isEditingMessageOnMobile}
 										focusRingTarget={containerRef}
-										focusRingEnabled={!textareaInputDisabled && Accessibility.showTextareaFocusRing}
+										focusRingEnabled={!inputSuppressed && Accessibility.showTextareaFocusRing}
+										tabIndex={disabled ? 0 : undefined}
 										className={lexicalStyles.composerEditable}
 										autocompleteOptions={autocompleteOptions}
 										autocompleteType={autocompleteType}
@@ -1502,6 +1507,7 @@ export const LexicalChannelTextareaContent = observer(
 											setIsFocused(true);
 											setIsInputAreaFocused(true);
 											ChannelSearch.setInputFocused(channel.id, false);
+											onFocus?.();
 										}}
 										onBlur={() => {
 											setIsFocused(false);

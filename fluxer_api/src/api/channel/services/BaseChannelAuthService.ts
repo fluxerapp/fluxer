@@ -13,7 +13,6 @@ import {
 	ensurePersonalNotesChannelExists,
 	isPersonalNotesChannelId,
 } from '@app/api/channel/services/PersonalNotesChannelRepair';
-import {assertThreadAllowed} from '@app/api/channel/services/thread/ThreadDenials';
 import {
 	type ContentWarningChannelLike,
 	channelResponseToContentWarningView,
@@ -369,7 +368,7 @@ export abstract class BaseChannelAuthService {
 			const allowed = await hasPermission(permission);
 			if (!allowed) throw new MissingPermissionsError();
 		};
-		await checkPermission(Permissions.VIEW_CHANNEL);
+		if (!(await hasPermission(Permissions.VIEW_CHANNEL))) throw new UnknownChannelError();
 		const parentCategory = await this.getParentCategoryContentWarningView({
 			channel,
 			parentChannel: authContextResult.parentChannel,
@@ -478,7 +477,7 @@ export abstract class BaseChannelAuthService {
 	}): Promise<AuthenticatedChannel> {
 		const context = await this.resolveThreadPermissionContext({thread: channel, userId});
 		const {guild, member, thread} = context;
-		assertThreadAllowed(canViewThread(thread.actor));
+		if (canViewThread(thread.actor) !== null) throw new UnknownChannelError();
 		const permissions = threadViewPermissions(thread.parentPermissions);
 		const hasPermission = async (permission: bigint): Promise<boolean> => {
 			const allowed = (permissions & permission) === permission;

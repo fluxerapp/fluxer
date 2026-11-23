@@ -9,6 +9,7 @@ import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as FailureInspect from '@app/features/platform/utils/ResponseInspection';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
+import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import * as UserProfileCommands from '@app/features/user/commands/UserProfileCommands';
 import {handleAccountLimitedError} from '@app/features/user/utils/AccountLimitUtils';
 import type {ConnectionType} from '@fluxer/constants/src/ConnectionConstants';
@@ -57,6 +58,18 @@ const CONNECTIONS_REORDERED_DESCRIPTOR = msg({
 	comment: 'Short label in the connection connection commands.',
 });
 const logger = new Logger('Connections');
+
+function openPendingAuthorizeWindow(): Window | null {
+	if (getElectronAPI()) return null;
+	const pending = window.open('about:blank', '_blank');
+	if (pending) pending.opener = null;
+	return pending;
+}
+
+function showAuthorizePage(pending: Window | null, authorizeUrl: string): void {
+	if (pending) pending.location.replace(authorizeUrl);
+	else window.open(authorizeUrl, '_blank', 'noopener,noreferrer');
+}
 
 function connectionCreateRequest(type: ConnectionType, identifier: string): CreateConnectionRequest {
 	return {
@@ -125,10 +138,12 @@ export async function initiateConnection(
 }
 
 export async function authorizeBlueskyConnection(i18n: I18n, handle: string): Promise<void> {
+	const pending = openPendingAuthorizeWindow();
 	try {
 		const response = await http.post<BlueskyAuthorizeResponse>(Endpoints.BLUESKY_AUTHORIZE, {body: {handle}});
-		window.open(response.body.authorize_url, '_blank', 'noopener,noreferrer');
+		showAuthorizePage(pending, response.body.authorize_url);
 	} catch (error) {
+		pending?.close();
 		logger.error(`Failed to start Bluesky OAuth flow for ${handle}:`, error);
 		showErrorModal(i18n, error, {
 			...FAILED_TO_START_AUTHORISATION_DESCRIPTOR,
@@ -139,12 +154,14 @@ export async function authorizeBlueskyConnection(i18n: I18n, handle: string): Pr
 }
 
 export async function authorizeOAuthConnection(i18n: I18n, provider: InstanceConnectionProvider): Promise<void> {
+	const pending = openPendingAuthorizeWindow();
 	try {
 		const response = await http.post<OAuthConnectionAuthorizeResponse>(
 			Endpoints.CONNECTION_OAUTH_AUTHORIZE(provider.id),
 		);
-		window.open(response.body.authorize_url, '_blank', 'noopener,noreferrer');
+		showAuthorizePage(pending, response.body.authorize_url);
 	} catch (error) {
+		pending?.close();
 		logger.error(`Failed to start the ${provider.id} connection flow:`, error);
 		showErrorModal(i18n, error, {
 			...FAILED_TO_START_AUTHORISATION_DESCRIPTOR,

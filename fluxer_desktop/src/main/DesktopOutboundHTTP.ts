@@ -133,6 +133,7 @@ interface DesktopOutboundGETRequest {
 	readonly context: string;
 	readonly timeoutMs: number;
 	readonly url: URL;
+	readonly signal?: AbortSignal | null;
 }
 
 export interface DesktopOutboundHTTPMessage {
@@ -803,12 +804,15 @@ export class DesktopOutboundHTTP {
 			body: null,
 			headers: {},
 			method: 'GET',
-			signal: null,
+			signal: request.signal ?? null,
 			target: request.url,
 			timeout: () => new DesktopOutboundHTTPTimeoutError(),
 			timeoutMs: request.timeoutMs,
 			release,
 		}).catch((error: unknown) => {
+			if (request.signal?.aborted === true) {
+				throw new DesktopOutboundHTTPRequestAbortedError(request.url.toString());
+			}
 			if (error instanceof DesktopOutboundHTTPTimeoutError) {
 				throw error;
 			}
@@ -962,18 +966,37 @@ export class DesktopOutboundHTTP {
 			}, request.timeoutMs);
 			deadline.unref();
 			let settled = false;
+			const onAbort = (): void => {
+				const error = new DesktopOutboundHTTPRequestAbortedError(request.url.toString());
+				clientRequest.destroy(error);
+				connection.abort(error);
+			};
 			const settle = (): void => {
 				if (settled) {
 					return;
 				}
 				settled = true;
 				clearTimeout(deadline);
+				request.signal?.removeEventListener('abort', onAbort);
 				release();
 			};
+			if (request.signal != null) {
+				if (request.signal.aborted) {
+					settle();
+					clientRequest.destroy();
+					reject(new DesktopOutboundHTTPRequestAbortedError(request.url.toString()));
+					return;
+				}
+				request.signal.addEventListener('abort', onAbort);
+			}
 			clientRequest.on('error', (error) => {
 				settle();
 				if (error instanceof DesktopOutboundHTTPTimeoutError) {
 					reject(error);
+					return;
+				}
+				if (request.signal?.aborted === true) {
+					reject(new DesktopOutboundHTTPRequestAbortedError(request.url.toString()));
 					return;
 				}
 				logger.warn('Outbound request failed', {context: request.context, hostname: request.url.hostname, error});

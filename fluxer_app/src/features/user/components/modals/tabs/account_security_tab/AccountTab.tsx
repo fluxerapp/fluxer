@@ -22,6 +22,10 @@ import {
 	canConnectSso,
 	SsoConnectRow,
 } from '@app/features/user/components/modals/tabs/account_security_tab/SsoConnectRow';
+import {
+	isSsoLinked,
+	SsoDisconnectRow,
+} from '@app/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow';
 import type {User} from '@app/features/user/models/User';
 import {needsEmailConfirmation} from '@app/features/user/utils/AccountGates';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
@@ -258,8 +262,15 @@ export const AccountTabContent: React.FC<AccountTabProps> = observer(({user, sho
 						data-flx="user.account-security-tab.account-tab.account-tab-content.recovery-kit-row"
 					/>
 				)}
-				{canConnectSso(user) && (
+				{canConnectSso(user) ? (
 					<SsoConnectRow data-flx="user.account-security-tab.account-tab.account-tab-content.sso-connect-row" />
+				) : (
+					isSsoLinked(user) && (
+						<SsoDisconnectRow
+							user={user}
+							data-flx="user.account-security-tab.account-tab.account-tab-content.sso-disconnect-row"
+						/>
+					)
 				)}
 			</AccountSecurityCard>
 			{needsEmailConfirmation(user) && (

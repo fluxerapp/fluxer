@@ -3,12 +3,14 @@
 import {DESKTOP_APP_NAME} from '@electron/common/DesktopIdentity';
 import {errorMessage as describeError} from '@electron/common/ErrorMessage';
 import {createChildLogger} from '@electron/common/Logger';
+import {IS_OFFLINE_BUILD} from '@electron/common/OfflineBuild';
 import {
 	checkDesktopUpdateNow,
 	desktopUpdateReplacesShell,
 	getDesktopUpdateState,
 	startDesktopUpdate,
 } from '@electron/main/DesktopUpdateGate';
+import {shouldDisableModuleUpdatesForLaunch} from '@electron/main/LaunchOptions';
 import {getFlatpakAppId, isFlatpakRuntime} from '@electron/main/LinuxSandbox';
 import {t} from '@electron/main/MainI18n';
 import {openExternalDeduped} from '@electron/main/OpenExternal';
@@ -133,7 +135,14 @@ async function offerDesktopUpdate(): Promise<void> {
 	}
 }
 
+export function canCheckForUpdatesFromShell(): boolean {
+	return !IS_OFFLINE_BUILD && !shouldDisableModuleUpdatesForLaunch();
+}
+
 export function checkForUpdatesFromShell(): Promise<void> {
+	if (IS_OFFLINE_BUILD) {
+		return Promise.resolve();
+	}
 	checking ??= runUpdateCheck()
 		.catch((error: unknown) => {
 			logger.error('The native update prompt failed', error);
@@ -156,6 +165,10 @@ export function startDesktopUpdateFromShell(): void {
 }
 
 export async function updateFromCommandLine(): Promise<void> {
+	if (IS_OFFLINE_BUILD) {
+		logger.info('The command line asked for an update, but this build is updated by its package manager');
+		return;
+	}
 	try {
 		const state = await checkDesktopUpdateNow({manual: true});
 		if (!state.available) {

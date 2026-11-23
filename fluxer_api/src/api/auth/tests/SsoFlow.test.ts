@@ -12,7 +12,13 @@ import {
 	setUserACLs,
 	type TestAccount,
 	totpCodeNow,
+	unclaimAccount,
 } from '@app/api/auth/tests/AuthTestUtils';
+import {
+	createSudoWebAuthnBody,
+	createWebAuthnDevice,
+	registerWebAuthnCredential,
+} from '@app/api/auth/tests/WebAuthnTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {createChannelInvite, setupTestGuildWithMembers} from '@app/api/guild/tests/GuildTestUtils';
@@ -1131,6 +1137,96 @@ describe('Auth SSO flow', () => {
 				providerCode(createUniqueEmail('sso-link-again'), sub),
 			);
 			expect(signedIn.user_id).toBe(account.userId);
+		});
+
+		it('lets a regular user disconnect SSO', async () => {
+			const account = await createTestAccount(harness);
+			await enableSso(harness, admin.token, {enforced: false});
+			const sub = `itest-sso-unlink-${Date.now()}`;
+			await complete(await startLink(account), providerCode(createUniqueEmail('sso-unlink'), sub));
+			expect(await new SsoIdentityRepository().listForUser(createUserID(BigInt(account.userId)))).toHaveLength(1);
+
+			await createBuilder(harness, account.token)
+				.delete('/users/@me/sso')
+				.body({password: account.password})
+				.expect(204)
+				.execute();
+
+			expect(await new SsoIdentityRepository().listForUser(createUserID(BigInt(account.userId)))).toHaveLength(0);
+		});
+
+		it('lets a user disconnect a stale SSO link after the instance turns SSO off', async () => {
+			const account = await createTestAccount(harness);
+			await enableSso(harness, admin.token, {enforced: false});
+			const sub = `itest-sso-unlink-disabled-${Date.now()}`;
+			await complete(await startLink(account), providerCode(createUniqueEmail('sso-unlink-disabled'), sub));
+			await disableSso(harness, admin.token);
+
+			await createBuilder(harness, account.token)
+				.delete('/users/@me/sso')
+				.body({password: account.password})
+				.expect(204)
+				.execute();
+
+			expect(await new SsoIdentityRepository().listForUser(createUserID(BigInt(account.userId)))).toHaveLength(0);
+			const user = await createBuilder<{traits: Array<string>}>(harness, account.token).get('/users/@me').execute();
+			expect(user.traits).not.toContain('sso');
+			expect(user.traits.some((trait) => trait.startsWith('sso_identity:'))).toBe(false);
+		});
+
+		it('does not allow users to disconnect SSO while the instance enforces it', async () => {
+			const account = await accountThenSso();
+			await enableSso(harness, admin.token, {enforced: true});
+			const sub = `itest-sso-unlink-enforced-${Date.now()}`;
+			await complete(await startLink(account), providerCode(createUniqueEmail('sso-unlink-enforced'), sub));
+			await createBuilder(harness, account.token)
+				.delete('/users/@me/sso')
+				.body({password: account.password})
+				.expect(403, 'SSO_REQUIRED')
+				.execute();
+		});
+
+		it('refuses to disconnect SSO when the account has no local sign-in method', async () => {
+			const account = await accountThenSso();
+			await enableSso(harness, admin.token, {enforced: false});
+			const sub = `itest-sso-unlink-no-local-${Date.now()}`;
+			await complete(await startLink(account), providerCode(createUniqueEmail('sso-unlink-no-local'), sub));
+			await unclaimAccount(harness, account.userId);
+			await createBuilder(harness, account.token)
+				.delete('/users/@me/sso')
+				.body({})
+				.expect(403, 'LOCAL_SIGN_IN_METHOD_REQUIRED')
+				.execute();
+		});
+
+		it('allows disconnecting SSO when the account has only a passkey', async () => {
+			const account = await accountThenSso();
+			await enableSso(harness, admin.token, {enforced: false});
+			const device = createWebAuthnDevice();
+			await registerWebAuthnCredential(harness, account.token, device, () => ({
+				password: account.password,
+			}));
+			const sub = `itest-sso-unlink-passkey-${Date.now()}`;
+			await complete(await startLink(account), providerCode(createUniqueEmail('sso-unlink-passkey'), sub));
+			await unclaimAccount(harness, account.userId);
+			const user = await createBuilder<{
+				email: string | null;
+				has_password: boolean;
+				traits: Array<string>;
+			}>(harness, account.token)
+				.get('/users/@me')
+				.execute();
+			expect(user.email).toBeNull();
+			expect(user.has_password).toBe(false);
+			expect(user.traits).toContain('passkey');
+			const sudoBody = await createSudoWebAuthnBody(harness, account.token, device);
+			await createBuilder(harness, account.token).delete('/users/@me/sso').body(sudoBody).expect(204).execute();
+			expect(await new SsoIdentityRepository().listForUser(createUserID(BigInt(account.userId)))).toHaveLength(0);
+			const updatedUser = await createBuilder<{traits: Array<string>}>(harness, account.token)
+				.get('/users/@me')
+				.execute();
+			expect(updatedUser.traits).not.toContain('sso');
+			expect(updatedUser.traits).toContain('passkey');
 		});
 
 		it('refuses to connect an identity another account already uses', async () => {

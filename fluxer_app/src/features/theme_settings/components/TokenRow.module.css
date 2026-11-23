@@ -2,6 +2,7 @@
 
 .row {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	gap: var(--spacing-3);
 	min-height: 3rem;
@@ -10,7 +11,7 @@
 
 .text {
 	display: flex;
-	flex: 1 1 auto;
+	flex: 1 1 12rem;
 	flex-direction: column;
 	gap: 0.125rem;
 	min-width: 0;
@@ -139,10 +140,6 @@
 }
 
 @media (max-width: 720px) {
-	.row {
-		flex-wrap: wrap;
-	}
-
 	.text {
 		flex-basis: 100%;
 	}

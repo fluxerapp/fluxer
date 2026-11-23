@@ -696,7 +696,7 @@
 	pointer-events: auto;
 }
 
-@media (pointer: coarse) {
+@media (any-hover: none) {
 	:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
 		.message:hover
 		.hoverAction,
@@ -1130,6 +1130,7 @@
 	font-weight: 500;
 	color: var(--text-primary);
 	line-height: var(--message-line-height);
+	text-align: start;
 	user-select: text;
 	-webkit-user-select: text;
 }
@@ -1143,14 +1144,12 @@
 .userTagOffset {
 	margin-inline-start: 0.35rem;
 	vertical-align: middle;
-	display: inline-flex;
 }
 
 .userTagCompact {
 	margin-inline-end: var(--message-compact-gap);
 	flex-shrink: 0;
 	vertical-align: middle;
-	display: inline-flex;
 }
 
 .messageAuthorName {

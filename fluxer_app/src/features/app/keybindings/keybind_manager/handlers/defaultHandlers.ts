@@ -42,6 +42,7 @@ import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateC
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
 import * as ThemeSettingsCommands from '@app/features/theme_settings/commands/ThemeSettingsCommands';
+import ActiveComposer from '@app/features/threads/state/ActiveComposer';
 import {getUnreadThreadIds} from '@app/features/threads/utils/ThreadViewUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -136,6 +137,10 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 	host.register('misc_search', ({type}) => {
 		if (type !== 'press') return;
 		ComponentBus.dispatch('MESSAGE_SEARCH_OPEN');
+	});
+	host.register('system_toggle_downloads', ({type}) => {
+		if (type !== 'press') return;
+		ComponentBus.dispatch('DOWNLOADS_POPOUT_OPEN');
 	});
 	host.register('voice_toggle_mute', ({type}) => {
 		if (type !== 'press') return;
@@ -463,7 +468,7 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 	});
 	host.register('chat_toggle_pins', ({type}) => {
 		if (type !== 'press') return;
-		ComponentBus.dispatch('CHANNEL_PINS_OPEN');
+		ComponentBus.dispatch('CHANNEL_PINS_OPEN', {channelId: host.currentChannelId});
 	});
 	host.register('chat_toggle_inbox', ({type}) => {
 		if (type !== 'press') return;
@@ -474,9 +479,8 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 		ComponentBus.dispatch('CHANNEL_MEMBER_LIST_TOGGLE');
 	});
 	host.register('chat_toggle_emoji', ({type}) => {
-		if (type !== 'press') return;
-		const channelId = host.currentChannelId;
-		if (!channelId) return;
+		if (type !== 'press' || !host.currentChannelId) return;
+		const channelId = ActiveComposer.resolve(host.currentChannelId);
 		const editingMessageId = MessageEdit.getEditingMessageId(channelId);
 		if (editingMessageId) {
 			ComponentBus.dispatch('EDITING_EXPRESSION_PICKER_TAB_TOGGLE', {
@@ -489,21 +493,18 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 		ComponentBus.dispatch('EXPRESSION_PICKER_TAB_TOGGLE', {channelId, tab: 'emojis'});
 	});
 	host.register('chat_toggle_gif', ({type}) => {
-		if (type !== 'press') return;
-		const channelId = host.currentChannelId;
-		if (!channelId) return;
+		if (type !== 'press' || !host.currentChannelId) return;
+		const channelId = ActiveComposer.resolve(host.currentChannelId);
 		ComponentBus.dispatch('EXPRESSION_PICKER_TAB_TOGGLE', {channelId, tab: 'gifs'});
 	});
 	host.register('chat_toggle_sticker', ({type}) => {
-		if (type !== 'press') return;
-		const channelId = host.currentChannelId;
-		if (!channelId) return;
+		if (type !== 'press' || !host.currentChannelId) return;
+		const channelId = ActiveComposer.resolve(host.currentChannelId);
 		ComponentBus.dispatch('EXPRESSION_PICKER_TAB_TOGGLE', {channelId, tab: 'stickers'});
 	});
 	host.register('chat_toggle_saved_media', ({type}) => {
-		if (type !== 'press') return;
-		const channelId = host.currentChannelId;
-		if (!channelId) return;
+		if (type !== 'press' || !host.currentChannelId) return;
+		const channelId = ActiveComposer.resolve(host.currentChannelId);
 		ComponentBus.dispatch('EXPRESSION_PICKER_TAB_TOGGLE', {channelId, tab: 'memes'});
 	});
 	host.register('chat_send_voice_message', ({type}) => {

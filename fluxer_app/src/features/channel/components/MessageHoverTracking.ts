@@ -6,37 +6,39 @@ const SCROLL_IDLE_MS = 150;
 
 const hoverTargets = new Map<HTMLElement, MessageHoverListener>();
 let pointerPosition: {x: number; y: number} | null = null;
-let hoveredTarget: HTMLElement | null = null;
+let hoveredTargets: Array<HTMLElement> = [];
 let resolveFrame: number | null = null;
 let globalListenersAttached = false;
 let scrollIdleTimer: ReturnType<typeof setTimeout> | null = null;
 let suspendedByScroll = false;
 
-const resolveHoveredTarget = (): HTMLElement | null => {
+const resolveHoveredTargets = (): Array<HTMLElement> => {
 	if (pointerPosition == null) {
-		return null;
+		return [];
 	}
+	const targets: Array<HTMLElement> = [];
 	let node: Element | null = document.elementFromPoint(pointerPosition.x, pointerPosition.y);
 	while (node != null) {
 		if (node instanceof HTMLElement && hoverTargets.has(node)) {
-			return node;
+			targets.push(node);
 		}
 		node = node.parentElement;
 	}
-	return null;
+	return targets;
 };
 
-const setHoveredTarget = (nextHoveredTarget: HTMLElement | null): void => {
-	if (hoveredTarget === nextHoveredTarget) {
-		return;
+const setHoveredTargets = (nextHoveredTargets: Array<HTMLElement>): void => {
+	const previousHoveredTargets = hoveredTargets;
+	hoveredTargets = nextHoveredTargets;
+	for (const target of previousHoveredTargets) {
+		if (!nextHoveredTargets.includes(target)) {
+			hoverTargets.get(target)?.(false);
+		}
 	}
-	const previousHoveredTarget = hoveredTarget;
-	hoveredTarget = nextHoveredTarget;
-	if (previousHoveredTarget != null) {
-		hoverTargets.get(previousHoveredTarget)?.(false);
-	}
-	if (nextHoveredTarget != null) {
-		hoverTargets.get(nextHoveredTarget)?.(true);
+	for (const target of nextHoveredTargets) {
+		if (!previousHoveredTargets.includes(target)) {
+			hoverTargets.get(target)?.(true);
+		}
 	}
 };
 
@@ -54,7 +56,7 @@ const scheduleResolve = (): void => {
 	}
 	resolveFrame = requestAnimationFrame(() => {
 		resolveFrame = null;
-		setHoveredTarget(resolveHoveredTarget());
+		setHoveredTargets(resolveHoveredTargets());
 	});
 };
 
@@ -80,7 +82,7 @@ const forgetPointerPosition = (): void => {
 	cancelScheduledResolve();
 	clearScrollIdleTimer();
 	suspendedByScroll = false;
-	setHoveredTarget(null);
+	setHoveredTargets([]);
 };
 
 const isTouchPointerEvent = (event: PointerEvent | MouseEvent): boolean =>
@@ -116,7 +118,7 @@ const handlePointerMotion = (event: PointerEvent | MouseEvent): void => {
 const handleScroll = (): void => {
 	suspendedByScroll = true;
 	cancelScheduledResolve();
-	setHoveredTarget(null);
+	setHoveredTargets([]);
 	clearScrollIdleTimer();
 	scrollIdleTimer = setTimeout(resumeAfterScroll, SCROLL_IDLE_MS);
 };
@@ -180,8 +182,8 @@ export function registerMessageHoverTarget(element: HTMLElement, listener: Messa
 			return;
 		}
 		hoverTargets.delete(element);
-		if (hoveredTarget === element) {
-			hoveredTarget = null;
+		if (hoveredTargets.includes(element)) {
+			hoveredTargets = hoveredTargets.filter((target) => target !== element);
 			listener(false);
 		}
 		if (hoverTargets.size > 0) {
@@ -190,7 +192,7 @@ export function registerMessageHoverTarget(element: HTMLElement, listener: Messa
 		}
 		detachGlobalListeners();
 		cancelScheduledResolve();
-		hoveredTarget = null;
+		hoveredTargets = [];
 	};
 }
 
@@ -199,5 +201,5 @@ export function resolveMessageHoverTargetsNow(): void {
 		return;
 	}
 	cancelScheduledResolve();
-	setHoveredTarget(resolveHoveredTarget());
+	setHoveredTargets(resolveHoveredTargets());
 }

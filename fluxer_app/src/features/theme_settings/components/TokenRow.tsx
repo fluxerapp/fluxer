@@ -6,6 +6,7 @@ import type {ThemeVariableKind} from '@app/features/theme/variables/ThemeVariabl
 import styles from '@app/features/theme_settings/components/TokenRow.module.css';
 import surfaceStyles from '@app/features/ui/components/form/FormSurface.module.css';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {PortalHostContext} from '@app/features/ui/overlay/PortalHostContext';
 import {
 	cssColorStringToHex,
 	stripCssColorPriority,
@@ -15,7 +16,7 @@ import {useLingui} from '@lingui/react/macro';
 import {ArrowCounterClockwiseIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import type React from 'react';
-import {useCallback, useEffect, useState} from 'react';
+import {useCallback, useContext, useEffect, useState} from 'react';
 import {Button as AriaButton, Dialog, DialogTrigger, Popover} from 'react-aria-components';
 
 const EDIT_COLOR_FOR_DESCRIPTOR = msg({
@@ -68,6 +69,7 @@ function commitOnEnter(commit: () => void) {
 const ColorControl: React.FC<TokenRowProps> = ({label, currentValue, defaultValue, onChange}) => {
 	const {i18n} = useLingui();
 	const [open, setOpen] = useState(false);
+	const portalHost = useContext(PortalHostContext);
 	const colorValue = currentValue || defaultValue;
 	const swatchCss = stripCssColorPriority(colorValue) || 'transparent';
 	const [draft, setDraft] = useDraft(cssColorStringToHex(colorValue) ?? colorValue);
@@ -123,6 +125,7 @@ const ColorControl: React.FC<TokenRowProps> = ({label, currentValue, defaultValu
 						placement="bottom end"
 						offset={8}
 						className={styles.popover}
+						UNSTABLE_portalContainer={portalHost ?? undefined}
 						data-flx="theme-settings.token-row.color-control.popover"
 					>
 						<Dialog

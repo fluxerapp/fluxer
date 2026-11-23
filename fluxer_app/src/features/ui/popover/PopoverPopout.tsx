@@ -46,6 +46,7 @@ interface PopoutProps {
 	freezePosition?: boolean;
 	offsetMainAxis?: number;
 	offsetCrossAxis?: number;
+	ignoreTitlebarBoundary?: boolean;
 	animationType?: PopoutAnimationType;
 	constrainHeight?: boolean;
 	containerClass?: string;
@@ -53,6 +54,7 @@ interface PopoutProps {
 	hoverDelay?: number;
 	hoverCloseDelay?: number;
 	subscribeTo?: ComponentActionType;
+	subscribeFilter?: (args: unknown) => boolean;
 	onOpen?: () => void;
 	onClose?: () => void;
 	onCloseRequest?: (event?: Event) => boolean;
@@ -82,6 +84,7 @@ export const openPopout = (target: HTMLElement, props: OpenPopoutOptions, key: s
 		shouldAutoUpdate: props.shouldAutoUpdate,
 		offsetMainAxis: props.offsetMainAxis,
 		offsetCrossAxis: props.offsetCrossAxis,
+		ignoreTitlebarBoundary: props.ignoreTitlebarBoundary,
 		animationType: props.animationType,
 		constrainHeight: props.constrainHeight,
 		clickPos,
@@ -115,25 +118,11 @@ function getTargetRectSnapshot(target: HTMLElement): PopoutReferenceRect {
 
 function hasActiveTextSelectionInsideTarget(target: HTMLElement): boolean {
 	const selection = target.ownerDocument.getSelection();
-	if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
+	if (!selection || selection.isCollapsed) {
 		return false;
 	}
-	for (let i = 0; i < selection.rangeCount; i++) {
-		const range = selection.getRangeAt(i);
-		if (range.collapsed) {
-			continue;
-		}
-		try {
-			if (range.intersectsNode(target)) {
-				return true;
-			}
-		} catch {
-			const anchorNode = selection.anchorNode;
-			const focusNode = selection.focusNode;
-			return Boolean((anchorNode && target.contains(anchorNode)) || (focusNode && target.contains(focusNode)));
-		}
-	}
-	return false;
+	const {anchorNode, focusNode} = selection;
+	return Boolean((anchorNode && target.contains(anchorNode)) || (focusNode && target.contains(focusNode)));
 }
 
 function focusPopoutMenuItem(popoutId: string, placement: 'first' | 'last', ownerDocument: Document): boolean {
@@ -366,10 +355,14 @@ export const Popout = React.forwardRef<HTMLElement, PopoutProps>((props, ref) =>
 	}, [props.hoverDelay, clearTimers, close]);
 	useEffect(() => {
 		if (!props.subscribeTo) return;
-		const handler = () => toggle();
+		const filter = props.subscribeFilter;
+		const handler = (args: unknown) => {
+			if (filter && !filter(args)) return;
+			toggle();
+		};
 		ComponentBus.subscribe(props.subscribeTo, handler);
 		return () => ComponentBus.unsubscribe(props.subscribeTo!, handler);
-	}, [props.subscribeTo, toggle]);
+	}, [props.subscribeTo, props.subscribeFilter, toggle]);
 	const childToRender = (props.children as React.ReactNode) || state.lastValidChildren;
 	type PopoutChildProps = React.HTMLAttributes<HTMLElement> & {ref?: React.Ref<HTMLElement>};
 	const child =
@@ -454,7 +447,7 @@ export const Popout = React.forwardRef<HTMLElement, PopoutProps>((props, ref) =>
 		onClick: (event: React.MouseEvent<HTMLElement>) => {
 			const shouldOpen =
 				!consumeDragClick(event) &&
-				!hasActiveTextSelectionInsideTarget(event.currentTarget) &&
+				(event.detail > 1 || !hasActiveTextSelectionInsideTarget(event.currentTarget)) &&
 				(props.shouldOpenOnClick?.(event) ?? true);
 			if (shouldOpen) {
 				const clickPos = event.pageX - event.currentTarget.getBoundingClientRect().left;

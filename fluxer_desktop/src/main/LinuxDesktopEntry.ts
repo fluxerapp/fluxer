@@ -11,10 +11,17 @@ import {
 	LEGACY_LINUX_DESKTOP_ENTRY_ID,
 	LINUX_DESKTOP_ENTRY_ID,
 	LINUX_ICON_NAME,
+	OTHER_CHANNEL_LINUX_DESKTOP_FILES,
 } from '@electron/common/DesktopIdentity';
 import {createChildLogger} from '@electron/common/Logger';
 import {IS_OFFLINE_BUILD} from '@electron/common/OfflineBuild';
 import {getAppResourcesPath} from '@electron/main/DesktopDistributionPath';
+import {
+	desktopExecRunsPath,
+	isAppImageIntegratorEntry,
+	readDesktopEntryValue,
+	setDesktopEntryValue,
+} from '@electron/main/DesktopEntryText';
 import {isDirectMessagesAvailable, onDirectMessagesAvailabilityChange, TASK_ARG_PREFIX} from '@electron/main/JumpList';
 import {getStableLinuxLaunchPath} from '@electron/main/LinuxLaunchPath';
 import {isFlatpakRuntime} from '@electron/main/LinuxSandbox';
@@ -60,6 +67,10 @@ function getUserApplicationsDir(): string {
 	return path.join(getXdgDataHome(), 'applications');
 }
 
+export function getLinuxApplicationsDirs(): Array<string> {
+	return [getUserApplicationsDir(), ...getXdgDataDirs().map((dataDir) => path.join(dataDir, 'applications'))];
+}
+
 function getDesktopFilePath(): string {
 	return path.join(getUserApplicationsDir(), DESKTOP_FILE_BASENAME);
 }
@@ -82,14 +93,23 @@ function findThirdPartyDesktopEntry(execPath: string): string | null {
 	} catch {
 		return null;
 	}
-	for (const entry of entries) {
-		if (!entry.endsWith('.desktop') || entry === DESKTOP_FILE_BASENAME) continue;
+	let firstMatch: string | null = null;
+	for (const entry of entries.sort()) {
+		if (
+			!entry.endsWith('.desktop') ||
+			entry === DESKTOP_FILE_BASENAME ||
+			OTHER_CHANNEL_LINUX_DESKTOP_FILES.has(entry)
+		) {
+			continue;
+		}
 		const candidate = path.join(applicationsDir, entry);
-		try {
-			if (fs.readFileSync(candidate, 'utf8').includes(execPath)) return candidate;
-		} catch {}
+		const contents = readExistingDesktopFile(candidate);
+		if (contents === null || contents.includes(GENERATED_MARKER)) continue;
+		if (!desktopExecRunsPath(readDesktopEntryValue(contents, 'Exec'), execPath)) continue;
+		if (isAppImageIntegratorEntry(contents, execPath)) return candidate;
+		firstMatch ??= candidate;
 	}
-	return null;
+	return firstMatch;
 }
 
 export function escapeDesktopValue(value: string): string {
@@ -158,7 +178,7 @@ function buildDesktopFileBody(execPath: string, hidden: boolean): string {
 		'Terminal=false',
 		'Categories=Network;InstantMessaging;Chat;',
 		`MimeType=x-scheme-handler/${APP_PROTOCOL};`,
-		`StartupWMClass=${WM_CLASS}`,
+		...(hidden ? [] : [`StartupWMClass=${WM_CLASS}`]),
 		'SingleMainWindow=true',
 		'StartupNotify=true',
 		...(hidden ? ['NoDisplay=true'] : []),
@@ -177,15 +197,6 @@ function buildDesktopFileContents(execPath: string, hidden: boolean): string {
 		`${GENERATED_MARKER}\n`,
 		`${GENERATED_MARKER}\n${GENERATED_DIGEST_PREFIX}${digestDesktopFileBody(body)}\n`,
 	);
-}
-
-function readDesktopEntryValue(contents: string, key: string): string | null {
-	for (const line of contents.split('\n')) {
-		const trimmed = line.trim();
-		if (trimmed.startsWith('[Desktop Action ')) break;
-		if (trimmed.startsWith(`${key}=`)) return trimmed.slice(key.length + 1).trim();
-	}
-	return null;
 }
 
 function isExecutableFile(candidate: string): boolean {
@@ -290,17 +301,37 @@ function removeLegacyGeneratedDesktopEntry(): boolean {
 	return removeFile(legacyPath, 'Removed the generated .desktop entry for the previous desktop id');
 }
 
-function writeDesktopFileAtomically(filePath: string, contents: string): void {
+function writeDesktopFileAtomically(filePath: string, contents: string, mode = 0o644): void {
 	const tempPath = `${filePath}.${crypto.randomBytes(8).toString('hex')}.tmp`;
 	try {
 		fs.mkdirSync(path.dirname(filePath), {recursive: true});
-		fs.writeFileSync(tempPath, contents, {encoding: 'utf8', mode: 0o644, flag: 'wx'});
+		fs.writeFileSync(tempPath, contents, {encoding: 'utf8', mode, flag: 'wx'});
+		fs.chmodSync(tempPath, mode);
 		fs.renameSync(tempPath, filePath);
 	} catch (error) {
 		try {
 			fs.rmSync(tempPath, {force: true});
 		} catch {}
 		throw error;
+	}
+}
+
+function claimThirdPartyWindowClass(filePath: string, execPath: string): boolean {
+	if (path.dirname(filePath) !== getUserApplicationsDir()) return false;
+	const contents = readExistingDesktopFile(filePath);
+	if (contents === null || !isAppImageIntegratorEntry(contents, execPath)) return false;
+	if (readDesktopEntryValue(contents, 'StartupWMClass') === WM_CLASS) return false;
+	const updated = setDesktopEntryValue(contents, 'StartupWMClass', WM_CLASS);
+	if (updated === contents) return false;
+	try {
+		const stat = fs.lstatSync(filePath);
+		if (!stat.isFile()) return false;
+		writeDesktopFileAtomically(filePath, updated, stat.mode & 0o777);
+		logger.info('Set our window class on the integrator .desktop entry so the window groups with it', {filePath});
+		return true;
+	} catch (error) {
+		logger.warn('Failed to set the window class on the integrator .desktop entry', {filePath, error});
+		return false;
 	}
 }
 
@@ -326,10 +357,11 @@ function syncUserDesktopEntry(): boolean {
 	if (thirdPartyEntry) {
 		logger.debug('Another .desktop entry manages the app menu entry; keeping ours hidden', {thirdPartyEntry});
 	}
+	const claimed = thirdPartyEntry !== null && claimThirdPartyWindowClass(thirdPartyEntry, execPath);
 	const desired = buildDesktopFileContents(execPath, thirdPartyEntry !== null);
 	if (existing === desired) {
 		logger.debug('Linux .desktop entry already up to date', {filePath});
-		return false;
+		return claimed;
 	}
 	writeDesktopFileAtomically(filePath, desired);
 	logger.info('Wrote Linux .desktop entry', {filePath, execPath});

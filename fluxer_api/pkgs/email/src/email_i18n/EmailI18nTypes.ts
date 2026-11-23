@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export type PlutoniumPlan = 'monthly' | 'yearly' | 'gift_1_month' | 'gift_1_year';
+export type PlutoniumPlan = 'monthly' | 'yearly' | 'gift_1_month' | 'gift_1_year' | 'gift_bundle';
 
 export type BillingPaymentProblem = 'declined' | 'action_required';
 
@@ -53,8 +53,11 @@ export type ReporterOutcome = 'removed' | 'restricted' | 'action_taken' | 'no_vi
 
 export type ReportReferenceTarget = 'message_community' | 'message_dm' | 'message' | 'user' | 'community' | 'other';
 
+export type ReportConcern = 'self_harm' | 'other';
+
 export interface ReportReference {
 	target: ReportReferenceTarget;
+	concern: ReportConcern;
 	reportedAt: Date;
 	username: string;
 	communityName: string;

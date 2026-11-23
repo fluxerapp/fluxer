@@ -95,6 +95,7 @@ export class ChannelService {
 			storageService,
 			purgeQueue,
 			workerService,
+			guildAuditLogService,
 		});
 		const messagePersistenceService = new MessagePersistenceService(
 			channelRepository,

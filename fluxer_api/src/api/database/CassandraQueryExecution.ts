@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {logBatch, logQuery} from '@app/api/database/CassandraDevLogger';
-import {getIsDev} from '@app/api/database/CassandraMetaRegistry';
+import {getIsDev, getKvMeta} from '@app/api/database/CassandraMetaRegistry';
 import type {
-	CassandraParam,
 	CassandraParams,
 	KvAdvance,
 	KvQueryMeta,
@@ -17,11 +16,12 @@ import {
 	normalizeExecuteArgs,
 	normalizeInParams,
 } from '@app/api/database/CassandraTypes';
+import type {CapturedStatement, WriteCaptureHook} from '@app/api/database/capture/CassandraWriteCapture';
 import {LocalDate} from '@app/api/database/LocalDate';
 import {Logger} from '@app/api/Logger';
 import {chunkArray} from '@app/api/utils/ArrayUtils';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
-import {getClient, getLoadedCassandraDriver} from '@pkgs/cassandra/src/Client';
+import {getClient, getLoadedCassandraDriver, getSerialConsistency} from '@pkgs/cassandra/src/Client';
 import type cassandra from 'cassandra-driver';
 
 const DEFAULT_MAX_PARTITION_KEYS_PER_QUERY = 100;
@@ -40,10 +40,21 @@ function isDriverOverloadError(err: unknown): boolean {
 	return false;
 }
 
-function driverParams(params: object): Record<string, CassandraParam> {
-	const out: Record<string, CassandraParam> = {};
+function loadedDriver(): typeof cassandra {
+	const driver = getLoadedCassandraDriver();
+	if (!driver) {
+		throw new Error('Cassandra driver is not loaded');
+	}
+	return driver;
+}
+
+function driverParams(params: object, meta?: KvQueryMeta): Record<string, unknown> {
+	const out: Record<string, unknown> = {};
 	for (const [key, value] of Object.entries(params)) {
 		out[key] = value instanceof LocalDate ? value.toString() : value;
+	}
+	if (meta?.nowColumn) {
+		out[meta.nowColumn] = loadedDriver().types.TimeUuid.now();
 	}
 	return out;
 }
@@ -71,6 +82,11 @@ export interface CassandraQueryExecutorForTesting {
 
 let injectedExecutorForTesting: CassandraQueryExecutorForTesting | null = null;
 let configuredExecutor: CassandraQueryExecutorForTesting | null = null;
+let writeCapture: WriteCaptureHook | null = null;
+
+export function setCassandraWriteCapture(capture: WriteCaptureHook | null): void {
+	writeCapture = capture;
+}
 
 function activeExecutor(): CassandraQueryExecutorForTesting | null {
 	return injectedExecutorForTesting ?? configuredExecutor;
@@ -103,7 +119,38 @@ export interface PagedQueryResult<T> {
 }
 
 interface CassandraReadOptions {
-	consistency: 'all' | 'serial' | 'localQuorum';
+	consistency: 'serial' | 'localQuorum';
+}
+
+function driverConsistencyOption(consistency: CassandraReadOptions['consistency'] | undefined): {consistency?: number} {
+	if (!consistency) return {};
+	const name = consistency === 'serial' ? getSerialConsistency() : consistency;
+	const value = getLoadedCassandraDriver()?.types.consistencies[name];
+	return value === undefined ? {} : {consistency: value};
+}
+
+function appliedOf(rows: ReadonlyArray<Record<string, unknown>>): boolean | undefined {
+	const applied = rows[0]?.['[applied]'];
+	return typeof applied === 'boolean' && rows.every((row) => row['[applied]'] === applied) ? applied : undefined;
+}
+
+function executeCaptured(
+	capture: WriteCaptureHook,
+	statement: CapturedStatement,
+	conditional: boolean,
+	options: cassandra.QueryOptions,
+): Promise<cassandra.types.ResultSet> {
+	const client = getClient();
+	if (conditional) {
+		return capture.conditional(
+			statement,
+			() => client.execute(statement.cql, statement.params, options),
+			(result) => appliedOf(result.rows ?? []),
+		);
+	}
+	return capture.plain([statement], false, (timestamp) =>
+		client.execute(statement.cql, statement.params, {...options, timestamp}),
+	);
 }
 
 async function collectSelectRows<T>(queryType: string, result: cassandra.types.ResultSet): Promise<Array<T>> {
@@ -132,21 +179,28 @@ export async function executeQuery<T = Record<string, unknown>, P extends Cassan
 		throw new Error('Read consistency options require a SELECT query');
 	}
 	assertNoUndefinedParams(bound as Record<string, unknown>);
+	const kvMeta = typeof queryOrPrepared === 'string' ? undefined : queryOrPrepared.kvMeta;
 	const executor = activeExecutor();
 	if (executor) {
-		return executor.executeQuery<T, P>({
-			cql,
-			params: bound as P,
-			kvMeta: typeof queryOrPrepared === 'string' ? undefined : queryOrPrepared.kvMeta,
-		});
+		return executor.executeQuery<T, P>({cql, params: bound as P, kvMeta});
 	}
 	const isDev = getIsDev();
 	const startTime = isDev ? performance.now() : 0;
 	try {
-		const result = await getClient().execute(cql, driverParams(bound), {
-			prepare: true,
-			...(readOptions ? {consistency: getLoadedCassandraDriver()?.types.consistencies[readOptions.consistency]} : {}),
-		});
+		const driverBound = driverParams(bound, kvMeta);
+		const options = {prepare: true, ...driverConsistencyOption(readOptions?.consistency)};
+		let result: cassandra.types.ResultSet;
+		if (writeCapture === null || meta.type === 'SELECT') {
+			result = await getClient().execute(cql, driverBound, options);
+		} else {
+			const statementMeta = kvMeta ?? getKvMeta(cql);
+			result = await executeCaptured(
+				writeCapture,
+				{cql, type: meta.type, params: driverBound, meta: statementMeta},
+				isConditionalQuery({cql, params: bound, kvMeta: statementMeta}),
+				options,
+			);
+		}
 		const rows = await collectSelectRows<T>(meta.type, result);
 		if (isDev) {
 			const durationMs = performance.now() - startTime;
@@ -344,18 +398,29 @@ async function executeBatch(
 		prepare: true,
 		logged: atomic,
 		counter: false,
-		...(consistency ? {consistency: getLoadedCassandraDriver()?.types.consistencies[consistency]} : {}),
+		...driverConsistencyOption(consistency),
 	};
 	const isDev = getIsDev();
 	const startTime = isDev ? performance.now() : 0;
+	const statements = queries.map(({query, params, meta}) => ({
+		query,
+		params: driverParams(normalizeInParams(getStatementMeta(query), params as CassandraParams), meta),
+	}));
 	try {
-		await getClient().batch(
-			queries.map(({query, params}) => ({
-				query,
-				params: driverParams(normalizeInParams(getStatementMeta(query), params as CassandraParams)),
-			})),
-			options,
-		);
+		if (writeCapture === null) {
+			await getClient().batch(statements, options);
+		} else {
+			await writeCapture.plain(
+				statements.map(({query, params}, index) => ({
+					cql: query,
+					type: getStatementMeta(query).type,
+					params,
+					meta: queries[index]?.meta ?? getKvMeta(query),
+				})),
+				atomic,
+				(timestamp) => getClient().batch(statements, {...options, timestamp}),
+			);
+		}
 	} catch (err: unknown) {
 		throw mapCassandraDriverError(err);
 	}

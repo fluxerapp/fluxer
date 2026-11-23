@@ -211,7 +211,7 @@ export const ChannelHeader = observer(
 		const isHeaderContextMenuOpen = Boolean(
 			headerRef.current && isContextMenuNodeTarget(contextMenuTarget) && headerRef.current.contains(contextMenuTarget),
 		);
-		const isHeaderPopoutOpen = PopoutState.isOpen('inbox') || PopoutState.isOpen('channel-pins');
+		const isHeaderPopoutOpen = PopoutState.isOpen('inbox') || PopoutState.isOpen(`channel-pins-${channel?.id}`);
 		const isVoiceCallChromePinned = isHeaderContextMenuOpen || isHeaderPopoutOpen;
 		const channelId = channel?.id;
 		const channelType = channel?.type;

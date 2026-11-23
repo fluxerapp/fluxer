@@ -1,0 +1,22 @@
+[package]
+name = "gateway_nif"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+name = "gateway_nif"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+guild_rt = { workspace = true }
+perm_nif = { workspace = true, features = ["nif"] }
+ml_nif = { workspace = true, features = ["nif"] }
+zstd_stream = { workspace = true, features = ["nif"] }
+md_plaintext = { workspace = true, features = ["nif"] }
+push_core = { workspace = true, features = ["nif"] }
+json_scan = { workspace = true, features = ["nif"] }
+rustler = { workspace = true }

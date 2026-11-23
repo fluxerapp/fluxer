@@ -5,10 +5,10 @@ use crate::constants::{
     CODE_FENCE_LENGTH, MAX_AST_NODES, MAX_CODE_BLOCK_SEARCH_LINES, MAX_LINE_LENGTH,
 };
 use crate::links::{has_open_inline_code, has_valid_code_fence_language};
-use crate::normalize::{normalize_nodes, replace_trailing_whitespace_with_newline};
+use crate::normalize::normalize_nodes;
 use crate::parser::{MarkdownParser, ParseError, RuntimeState};
 use crate::text::{
-    Line, bounded_line_text, byte_at, concat, has_visible_content, line_as_text, lines_to_text,
+    Line, append_text, byte_at, concat, has_visible_content, line_as_text, lines_to_text,
     starts_with, trim, trim_line_window, trim_right, trim_start, trim_start_newline_whitespace,
 };
 
@@ -387,7 +387,7 @@ fn parse_blockquote(
             break;
         }
         child_lines.push(Line {
-            text: bounded_line_text(child_text).to_owned(),
+            text: child_text.to_owned(),
             offset: child_offset,
         });
         content_len += child_text.len() + 1;
@@ -450,7 +450,7 @@ fn parse_multiline_blockquote(
     }
     let trimmed_offset = lines[current].text.len() - trimmed_line.len();
     let mut child_lines = vec![Line {
-        text: bounded_line_text(&trimmed_line[4..]).to_owned(),
+        text: trimmed_line[4..].to_owned(),
         offset: lines[current].offset + trimmed_offset + 4,
     }];
     let mut content_len = trimmed_line[4..].len();
@@ -617,7 +617,7 @@ fn scan_code_block(
         if !content_line.is_empty() {
             content.push_line(content_line);
         }
-        let extra_text = if !closing.trailing_text.is_empty() {
+        let extra_text = if !trim(closing.trailing_text).is_empty() {
             closing.trailing_text
         } else if closing.backtick_count > fence_length {
             &trimmed[closing.fence_index + fence_length..]
@@ -748,7 +748,7 @@ fn parse_block_spoiler(
             if let Some(start) = line.find("||") {
                 let child_text = &line[start + 2..];
                 child_lines.push(Line {
-                    text: bounded_line_text(child_text).to_owned(),
+                    text: child_text.to_owned(),
                     offset: lines[index].offset + start + 2,
                 });
                 content_len += child_text.len() + 1;
@@ -756,12 +756,12 @@ fn parse_block_spoiler(
         } else if let Some(end) = line.find("||") {
             let child_text = &line[..end];
             child_lines.push(Line {
-                text: bounded_line_text(child_text).to_owned(),
+                text: child_text.to_owned(),
                 offset: lines[index].offset,
             });
             found_end = true;
             let trailing = &line[end + 2..];
-            if !trailing.is_empty() {
+            if !trim(trailing).is_empty() {
                 trailing_content = Some(ExtraContent {
                     content: trailing.to_owned(),
                     offset: lines[index].offset + (line.len() - trailing.len()),
@@ -839,7 +839,7 @@ fn parse_alert_lines(
     let after_trimmed = trim_start_newline_whitespace(after_label);
     if !after_trimmed.is_empty() {
         content_lines.push(Line {
-            text: bounded_line_text(after_trimmed).to_owned(),
+            text: after_trimmed.to_owned(),
             offset: lines[0].offset + close + 1 + (after_label.len() - after_trimmed.len()),
         });
     }
@@ -852,9 +852,8 @@ fn parse_alert_lines(
             | ParserFlags::ALLOW_HEADINGS,
     );
     child_parser.node_count = node_count + 1;
-    let prepared = prepare_alert_content_lines(content_lines);
-    let mut children = child_parser.parse_lines(prepared)?;
-    children = post_process_alert_nodes(children);
+    let mut children = child_parser.parse_lines(content_lines)?;
+    normalize_nodes(&mut children, true);
     Ok(Some((
         Node::Alert {
             alert_type,
@@ -862,78 +861,6 @@ fn parse_alert_lines(
         },
         child_parser.node_count,
     )))
-}
-
-fn prepare_alert_content_lines(mut lines: Vec<Line>) -> Vec<Line> {
-    let mut out = Vec::new();
-    let mut blank_run = 0usize;
-    for line in lines.drain(..) {
-        let is_list_like = is_alert_list_like_line(trim(&line.text));
-        let mut prepared = line;
-        if is_list_like {
-            prepared.text = bounded_line_text(&prepared.text).to_owned();
-        } else {
-            let left_trimmed = trim_start(&prepared.text);
-            let leading_bytes = prepared.text.len() - left_trimmed.len();
-            prepared.offset += leading_bytes;
-            prepared.text = bounded_line_text(trim_right(left_trimmed)).to_owned();
-        }
-        if trim(&prepared.text).is_empty() {
-            blank_run += 1;
-            if blank_run > 2 {
-                continue;
-            }
-            prepared.text.clear();
-        } else {
-            blank_run = 0;
-        }
-        out.push(prepared);
-    }
-    trim_line_window(&mut out)
-}
-
-fn is_alert_list_like_line(trimmed_line: &str) -> bool {
-    if starts_with(trimmed_line, "-") {
-        return true;
-    }
-    let mut index = 0usize;
-    while index < trimmed_line.len() && byte_at(trimmed_line, index).is_ascii_digit() {
-        index += 1;
-    }
-    index > 0 && index < trimmed_line.len() && byte_at(trimmed_line, index) == b'.'
-}
-
-fn post_process_alert_nodes(nodes: Vec<Node>) -> Vec<Node> {
-    if nodes.len() <= 1 {
-        return nodes;
-    }
-    let mut out = Vec::new();
-    let mut nodes = nodes.into_iter().peekable();
-    while let Some(node) = nodes.next() {
-        match node {
-            Node::Text { content } if matches!(nodes.peek(), Some(Node::List { .. })) => {
-                let content = replace_trailing_whitespace_with_newline(&content);
-                if !content.is_empty() {
-                    out.push(Node::Text { content });
-                }
-            }
-            node @ Node::List { .. } if nodes.peek().is_some() => {
-                out.push(node);
-                let trailing = match nodes.peek() {
-                    Some(Node::Text { content }) if !trim(content).is_empty() => {
-                        Some(concat("\n", trim(content)))
-                    }
-                    _ => None,
-                };
-                if let Some(content) = trailing {
-                    nodes.next();
-                    out.push(Node::Text { content });
-                }
-            }
-            node => out.push(node),
-        }
-    }
-    out
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -971,7 +898,8 @@ impl ListContext<'_> {
             }
             let current_line = &lines[index].text;
             let trimmed_line = trim_start(current_line);
-            if starts_with(trimmed_line, "#")
+            if trimmed_line.is_empty()
+                || starts_with(trimmed_line, "#")
                 || is_blockquote_start(trimmed_line, self.parser.flags())
             {
                 break;
@@ -1055,6 +983,28 @@ impl ListContext<'_> {
                     break;
                 }
             } else if is_list_continuation(current_line, indent_level) {
+                if starts_with(trim_start(current_line), "```")
+                    && let Some(code) = parse_code_block(
+                        lines,
+                        index,
+                        current_line,
+                        lines[index].offset,
+                        self.fences,
+                    )
+                    && let Some(last) = items.last_mut()
+                {
+                    last.children.push(code.node);
+                    new_count += 1;
+                    index = code.new_line_index;
+                    if let Some(extra) = code.extra_content {
+                        let parsed =
+                            crate::inline::parse_inline(self.parser, &extra.content, extra.offset)?;
+                        new_count += parsed.len();
+                        last.children.extend(parsed);
+                        index += 1;
+                    }
+                    continue;
+                }
                 if let Some(last) = items.last_mut() {
                     let trimmed = trim_start(current_line);
                     let parsed = crate::inline::parse_inline(
@@ -1063,7 +1013,7 @@ impl ListContext<'_> {
                         lines[index].offset + (current_line.len() - trimmed.len()),
                     )?;
                     new_count += parsed.len();
-                    last.children.extend(parsed);
+                    append_list_continuation(&mut last.children, parsed);
                 }
                 index += 1;
             } else {
@@ -1090,22 +1040,6 @@ impl ListContext<'_> {
         let lines = self.lines;
         if current >= lines.len() {
             return Ok(None);
-        }
-        let trimmed = trim_start(&lines[current].text);
-        if starts_with(trimmed, "```")
-            && let Some(result) = parse_code_block(
-                lines,
-                current,
-                &lines[current].text,
-                lines[current].offset,
-                self.fences,
-            )
-        {
-            return Ok(Some(ListResult {
-                node: result.node,
-                new_line_index: result.new_line_index,
-                new_node_count: node_count + 1,
-            }));
         }
         if let Some(item) = match_list_item(&lines[current].text)
             && item.indent_level > parent_indent
@@ -1450,6 +1384,24 @@ fn normalise_ordinal(items: &[ListItem], ordinal: Option<usize>, ordered: bool) 
     }
     let start = items[0].ordinal.or(ordinal).unwrap_or(1);
     Some(start + items.len())
+}
+
+fn append_list_continuation(children: &mut Vec<Node>, parsed: Vec<Node>) {
+    if parsed.is_empty() {
+        return;
+    }
+    if children
+        .last()
+        .is_some_and(|node| !matches!(node, Node::List { .. } | Node::CodeBlock { .. }))
+    {
+        append_text(children, "\n");
+    }
+    for node in parsed {
+        match node {
+            Node::Text { content } => append_text(children, &content),
+            other => children.push(other),
+        }
+    }
 }
 
 fn is_list_continuation(line: &str, indent_level: usize) -> bool {

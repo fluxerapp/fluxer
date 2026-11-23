@@ -86,6 +86,11 @@ export const Routes = {
 		pathname === Routes.NOTIFICATIONS ||
 		pathname === Routes.YOU,
 	isDMRoute: (pathname: string) => pathname.startsWith('/channels/@me'),
+	isHomeRoute: (pathname: string) =>
+		Routes.isDMRoute(pathname) ||
+		pathname === Routes.PLUTONIUM ||
+		pathname === Routes.OPERATOR_PASS ||
+		Routes.isSpecialPage(pathname),
 	isFavoritesRoute: (pathname: string) => pathname.startsWith('/channels/@favorites'),
 	isDiscoverRoute: (pathname: string) =>
 		pathname.startsWith(Routes.DISCOVER) || pathname.startsWith(Routes.LEGACY_DISCOVER),
