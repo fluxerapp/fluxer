@@ -13,7 +13,7 @@ use parse::{
     parse_mode_env, parse_policy_mode, parse_storage_backend, parse_u16, parse_u64, parse_usize,
     validate_read_endpoint,
 };
-use std::path::PathBuf;
+use std::{num::NonZeroU64, path::PathBuf};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum StorageBackend {
@@ -152,7 +152,7 @@ pub struct Config {
     pub mode: DeploymentMode,
     pub read_only: bool,
     pub shutdown_grace_ms: u64,
-    pub socket_io_timeout_ms: u64,
+    pub socket_io_timeout_ms: NonZeroU64,
     pub storage: StorageConfig,
     pub media: MediaServingConfig,
     pub upload_relay: UploadRelayConfig,
@@ -229,13 +229,13 @@ impl Config {
                 0,
                 5 * 60 * 1000,
             )?,
-            socket_io_timeout_ms: parse_u64(
+            socket_io_timeout_ms: NonZeroU64::try_from(parse_u64(
                 "FLUXER_MEDIA_PROXY_SOCKET_IO_TIMEOUT_MS",
                 env.get("FLUXER_MEDIA_PROXY_SOCKET_IO_TIMEOUT_MS"),
                 30_000,
-                0,
+                1,
                 5 * 60 * 1000,
-            )?,
+            )?)?,
             storage: StorageConfig::load(&env)?,
             media: MediaServingConfig::load(&env)?,
             upload_relay: UploadRelayConfig::load(&env, mode)?,

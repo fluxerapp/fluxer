@@ -17,7 +17,7 @@ use crate::{
     },
     storage::Store,
 };
-use std::{num::NonZeroU64, sync::Arc};
+use std::sync::Arc;
 
 pub(in crate::server) struct AppState {
     pub(in crate::server) cfg: Config,
@@ -39,8 +39,7 @@ pub(in crate::server) struct MediaRuntime {
 impl AppState {
     pub(in crate::server) fn try_new(cfg: Config) -> anyhow::Result<Self> {
         let metrics = Arc::new(metrics::Metrics::new());
-        let socket_io_timeout =
-            NonZeroU64::new(cfg.socket_io_timeout_ms).unwrap_or(NonZeroU64::MIN);
+        let socket_io_timeout = cfg.socket_io_timeout_ms;
         let store = Store::try_new(cfg.clone(), metrics.storage(), metrics.http_client())?;
         let external_client = http_client::build(
             HTTPClientOptions::external(socket_io_timeout),

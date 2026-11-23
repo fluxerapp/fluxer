@@ -15,7 +15,7 @@ use axum::response::Response;
 use bytes::Bytes;
 use http::{HeaderMap, HeaderName, HeaderValue, Method, StatusCode, header};
 use parking_lot::Mutex;
-use std::{collections::HashMap, path::Path, sync::Arc};
+use std::{collections::HashMap, num::NonZeroU64, path::Path, sync::Arc};
 
 pub(crate) type CapturedRequest = (Method, http::Uri, HeaderMap, Bytes);
 
@@ -29,7 +29,7 @@ fn test_config(root: &Path) -> Config {
         mode: DeploymentMode::Mp,
         read_only: false,
         shutdown_grace_ms: 0,
-        socket_io_timeout_ms: 30_000,
+        socket_io_timeout_ms: NonZeroU64::new(30_000).unwrap(),
         storage: StorageConfig {
             backend: StorageBackend::Local,
             root: root.display().to_string(),

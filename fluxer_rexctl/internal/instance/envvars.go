@@ -280,7 +280,7 @@ var envVars = []envVar{
 	{"FLUXER_MEDIA_PROXY_TRANSFORM_CACHE_BYTES", "media", "How much memory the media proxy's transform cache may use, in bytes from 0 to 4 GiB. When it's empty, it uses `268435456`, which is 256 MiB."},
 	{"FLUXER_MEDIA_PROXY_TRANSFORM_CACHE_MAX_ENTRY_BYTES", "media", "The largest transform result the media proxy caches, in bytes from 0 to 512 MiB. When it's empty, it uses `67108864`, which is 64 MiB."},
 	{"FLUXER_MEDIA_PROXY_TRANSFORM_CACHE_TTL_MS", "media", "How long the media proxy keeps a transform result in its cache, in milliseconds from 0 to 3600000. When it's empty, it uses `120000`."},
-	{"FLUXER_MEDIA_PROXY_SOCKET_IO_TIMEOUT_MS", "media", "How long the media proxy waits on socket input and output, in milliseconds from 0 to 300000. When it's empty, it uses `30000`."},
+	{"FLUXER_MEDIA_PROXY_SOCKET_IO_TIMEOUT_MS", "media", "How long the media proxy waits on socket input and output, in milliseconds from 1 to 300000. When it's empty, it uses `30000`."},
 	{"FLUXER_MEDIA_PROXY_SHUTDOWN_GRACE_MS", "media", "How long the media proxy waits for open requests and transforms to finish when it stops, in milliseconds from 0 to 300000. When it's empty, it uses `30000`."},
 	{"FLUXER_MEDIA_PROXY_UPLOAD_RELAY_S3_TIMEOUT_MS", "media", "How long the relay waits for an upload's write to the object store, in milliseconds from 1000 to 3600000. When it's empty, it uses `900000`."},
 	{"FLUXER_MEDIA_PROXY_UPLOAD_RELAY_BUFFERED_RETRY_BYTES", "media", "The largest upload the relay keeps in memory so it can retry the object store write, in bytes from 0 to 256 MiB. Larger uploads stream to the store without a retry. When it's empty, the relay uses `33554432`, which is 32 MiB."},

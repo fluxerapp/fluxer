@@ -5,7 +5,7 @@ use crate::{
     metrics::{http_client::HTTPClientMetrics, storage::StorageMetrics},
     storage::Store,
 };
-use std::{sync::Arc, time::Duration};
+use std::{num::NonZeroU64, sync::Arc, time::Duration};
 
 async fn slow_s3(chunks: usize, gap: Duration) -> String {
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -41,7 +41,7 @@ async fn read_slow_object(
     let dir = tempfile::tempdir().unwrap();
     let mut cfg = fake_s3().await.config(dir.path());
     cfg.storage.s3_endpoint = slow_s3(chunks, gap).await;
-    cfg.socket_io_timeout_ms = socket_io_timeout_ms;
+    cfg.socket_io_timeout_ms = NonZeroU64::new(socket_io_timeout_ms).unwrap();
     let store = Store::try_new(
         cfg,
         Arc::new(StorageMetrics::default()),

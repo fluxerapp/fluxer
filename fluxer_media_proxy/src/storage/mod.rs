@@ -27,7 +27,7 @@ use axum::body::Body;
 use bytes::Bytes;
 use http::StatusCode;
 use response_body::LocalStreamBufferPool;
-use std::{num::NonZeroU64, sync::Arc};
+use std::sync::Arc;
 use thiserror::Error;
 
 const STORAGE_STREAM_CHUNK_BYTES: usize = 256 * 1024;
@@ -160,8 +160,7 @@ impl Store {
         if matches!(cfg.storage.backend, StorageBackend::Local) {
             local::prepare_local_root(&cfg.storage.root)?;
         }
-        let socket_io_timeout =
-            NonZeroU64::new(cfg.socket_io_timeout_ms).unwrap_or(NonZeroU64::MIN);
+        let socket_io_timeout = cfg.socket_io_timeout_ms;
         let options = HTTPClientOptions::streaming(socket_io_timeout, socket_io_timeout);
         let client = http_client::build(options, Arc::clone(&http_client_metrics))?;
         let raw_client = http_client::build_raw(options)?;
