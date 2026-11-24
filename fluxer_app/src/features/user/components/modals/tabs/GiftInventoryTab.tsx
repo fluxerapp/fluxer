@@ -166,12 +166,6 @@ const GiftCard: React.FC<GiftCardProps> = observer(({gift, isExpanded, onToggle,
 			)),
 		);
 	}, [gift.code]);
-	useEffect(() => {
-		const currentUser = Users.getCurrentUser();
-		if (currentUser?.hasUnreadGiftInventory) {
-			UserCommands.update({has_unread_gift_inventory: false});
-		}
-	}, []);
 	return (
 		<div className={styles.giftCard} data-flx="user.gift-inventory-tab.gift-card.gift-card">
 			<button
@@ -327,6 +321,12 @@ const GiftInventoryTab: React.FC = observer(() => {
 	useEffect(() => {
 		fetchGifts();
 	}, [fetchGifts]);
+	const hasGifts = gifts.length > 0;
+	useEffect(() => {
+		if (hasGifts && Users.getCurrentUser()?.hasUnreadGiftInventory) {
+			UserCommands.update({has_unread_gift_inventory: false});
+		}
+	}, [hasGifts]);
 	const handleToggle = (code: string) => {
 		setExpandedGiftId((prev) => (prev === code ? null : code));
 	};
