@@ -223,6 +223,8 @@ export const CDC_SKIPPED: ReadonlySet<string> = new Set([
 	'billing_refunds_by_payment_intent',
 	'billing_subscriptions_by_customer',
 	'billing_subscriptions_by_user',
+	'cassandra_migrations',
+	'cassandra_migrations_lock',
 	'channel_empty_buckets',
 	'channel_message_buckets',
 	'channel_pins',
