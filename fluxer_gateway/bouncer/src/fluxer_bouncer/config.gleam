@@ -21,6 +21,7 @@ pub type Timings {
     freeze_bound_ms: Int,
     tick_ms: Int,
     blob_ttl_ms: Int,
+    leave_bound_ms: Int,
   )
 }
 
@@ -61,6 +62,7 @@ pub fn default_timings() -> Timings {
     freeze_bound_ms: 2000,
     tick_ms: 100,
     blob_ttl_ms: 60_000,
+    leave_bound_ms: 5000,
   )
 }
 
@@ -136,9 +138,29 @@ pub fn from_env() -> Result(Config, ConfigError) {
     Ok(text) -> with_quorum(config, text)
     Error(Nil) -> Ok(config)
   })
-  case envoy.get("FLUXER_BOUNCER_STATUS_PORT") {
+  use config <- result.try(case envoy.get("FLUXER_BOUNCER_STATUS_PORT") {
     Ok(text) -> with_status_port(config, text)
     Error(Nil) -> Ok(config)
+  })
+  case envoy.get("FLUXER_BOUNCER_LEAVE_BOUND_MS") {
+    Ok(text) -> with_leave_bound(config, text)
+    Error(Nil) -> Ok(config)
+  }
+}
+
+pub fn with_leave_bound(
+  config: Config,
+  text: String,
+) -> Result(Config, ConfigError) {
+  case int.parse(string.trim(text)) {
+    Ok(bound) if bound >= 0 ->
+      Ok(
+        Config(
+          ..config,
+          timings: Timings(..config.timings, leave_bound_ms: bound),
+        ),
+      )
+    _ -> Error(Invalid("FLUXER_BOUNCER_LEAVE_BOUND_MS", text))
   }
 }
 
