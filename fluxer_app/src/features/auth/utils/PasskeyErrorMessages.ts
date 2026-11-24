@@ -41,6 +41,29 @@ const PASSKEY_NOT_SUPPORTED_DESCRIPTOR = msg({
 	comment: 'Error shown when the browser or security key does not support the requested passkey type.',
 });
 
+const PASSKEY_FAILED_DESCRIPTOR = msg({
+	message:
+		"Your passkey or security key couldn't finish the request. Try again, and if it keeps failing, contact support with this error: {detail}",
+	comment:
+		'Error shown when a passkey or security key prompt fails for a reason Fluxer has no specific message for. {detail} is a technical error code such as UnknownError or com.apple.AuthenticationServices.AuthorizationError 1004. Keep {detail} unchanged.',
+});
+
+export const NATIVE_PASSKEY_ERROR_NAME = 'NativePasskeyError';
+
+const UNMAPPED_WEBAUTHN_ERROR_NAMES = new Set(['ConstraintError', 'EncodingError', 'UnknownError']);
+const NATIVE_ERROR_CODE = /\(((?:[A-Za-z][\w.]* -?\d+)|0x[0-9A-Fa-f]{8})\)/u;
+const IPC_ERROR_PREFIX = /^Error invoking remote method '[^']+': (?:\w+: )?/u;
+const MAX_NATIVE_ERROR_DETAIL_LENGTH = 160;
+
+function nativeErrorDetail(error: Error): string {
+	const code = NATIVE_ERROR_CODE.exec(error.message)?.[1];
+	if (code !== undefined) {
+		return code;
+	}
+	const message = error.message.replace(IPC_ERROR_PREFIX, '').trim();
+	return message.length > 0 ? message.slice(0, MAX_NATIVE_ERROR_DETAIL_LENGTH) : error.name;
+}
+
 export class PasskeysUnsupportedError extends Error {
 	constructor() {
 		super('WebAuthn is not supported in this environment.');
@@ -88,7 +111,11 @@ export function describePasskeyError(i18n: I18n, error: unknown, rpId: string | 
 			);
 		case 'NotSupportedError':
 			return withErrorName(i18n._(PASSKEY_NOT_SUPPORTED_DESCRIPTOR), error.name);
+		case NATIVE_PASSKEY_ERROR_NAME:
+			return i18n._(PASSKEY_FAILED_DESCRIPTOR, {detail: nativeErrorDetail(error)});
 		default:
-			return null;
+			return UNMAPPED_WEBAUTHN_ERROR_NAMES.has(error.name)
+				? i18n._(PASSKEY_FAILED_DESCRIPTOR, {detail: error.name})
+				: null;
 	}
 }

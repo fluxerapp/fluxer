@@ -10,7 +10,7 @@ use dispatch2::{
     DispatchQueue, DispatchRetained, DispatchSemaphore, DispatchTime, MainThreadBound, WaitError,
 };
 use napi::Result;
-use objc2::rc::Retained;
+use objc2::rc::{Allocated, Retained};
 use objc2::runtime::{AnyClass, AnyObject, NSObject, NSObjectProtocol, ProtocolObject, Sel};
 use objc2::{
     AllocAnyThread, ClassType, DefinedClass, MainThreadMarker, MainThreadOnly, define_class,
@@ -284,100 +284,26 @@ define_class!(
                 return context;
             }
             let context_ref: &AnyObject = unsafe { &*context };
-
             let ivars = self.ivars().borrow();
-            let is_create = ivars.is_create;
-            let mut security_key = false;
-            let mut options: *mut AnyObject = ptr::null_mut();
-
+            let (platform_selector, security_key_selector) = if ivars.is_create {
+                (
+                    sel!(platformKeyCredentialCreationOptions),
+                    sel!(securityKeyCredentialCreationOptions),
+                )
+            } else {
+                (
+                    sel!(platformKeyCredentialAssertionOptions),
+                    sel!(securityKeyCredentialAssertionOptions),
+                )
+            };
             unsafe {
-                if is_create {
-                    if responds_to(context_ref, sel!(platformKeyCredentialCreationOptions)) {
-                        options = msg_send![context_ref, platformKeyCredentialCreationOptions];
-                    }
-                    if options.is_null()
-                        && responds_to(context_ref, sel!(securityKeyCredentialCreationOptions))
-                    {
-                        options = msg_send![context_ref, securityKeyCredentialCreationOptions];
-                        security_key = true;
-                    }
-                } else {
-                    if responds_to(context_ref, sel!(platformKeyCredentialAssertionOptions)) {
-                        options = msg_send![context_ref, platformKeyCredentialAssertionOptions];
-                    }
-                    if options.is_null()
-                        && responds_to(context_ref, sel!(securityKeyCredentialAssertionOptions))
-                    {
-                        options = msg_send![context_ref, securityKeyCredentialAssertionOptions];
-                    }
+                if let Some(options) = context_options(context_ref, platform_selector) {
+                    apply_context_overrides(options, &ivars, true);
+                }
+                if let Some(options) = context_options(context_ref, security_key_selector) {
+                    apply_context_overrides(options, &ivars, false);
                 }
             }
-
-            if options.is_null() {
-                return context;
-            }
-            let options_ref: &AnyObject = unsafe { &*options };
-
-            if let Some(hash) = &ivars.client_data_hash {
-
-
-
-
-
-
-                unsafe {
-                    if responds_to(options_ref, sel!(setClientDataHash:)) {
-                        let _: () = msg_send![options_ref, setClientDataHash: &**hash];
-                    }
-                    if responds_to(options_ref, sel!(setChallenge:)) {
-                        let nil_data: *mut NSData = ptr::null_mut();
-                        let _: () = msg_send![options_ref, setChallenge: nil_data];
-                    }
-                }
-            }
-
-            if is_create {
-                if let Some(algs) = &ivars.supported_algorithms {
-
-
-
-                    unsafe {
-                        if responds_to(options_ref, sel!(setSupportedAlgorithmIdentifiers:)) {
-                            let _: () = msg_send![
-                                options_ref,
-                                setSupportedAlgorithmIdentifiers: &**algs
-                            ];
-                        }
-                    }
-                }
-                if !security_key {
-
-
-
-
-                    unsafe {
-                        if responds_to(options_ref, sel!(setShouldRequireResidentKey:)) {
-                            let flag: bool = ivars.require_resident_key;
-                            let _: () =
-                                msg_send![options_ref, setShouldRequireResidentKey: flag];
-                        }
-                    }
-                }
-                if let Some(excluded) = &ivars.exclude_credentials {
-
-
-
-                    unsafe {
-                        if responds_to(options_ref, sel!(setExcludedCredentials:))
-                            && excluded.count() > 0
-                        {
-                            let _: () =
-                                msg_send![options_ref, setExcludedCredentials: &**excluded];
-                        }
-                    }
-                }
-            }
-
             context
         }
     }
@@ -395,6 +321,70 @@ impl ControllerOverride {
 
 unsafe fn responds_to(obj: &AnyObject, sel: Sel) -> bool {
     unsafe { msg_send![obj, respondsToSelector: sel] }
+}
+
+unsafe fn context_options(context: &AnyObject, getter: Sel) -> Option<&AnyObject> {
+    unsafe {
+        if !responds_to(context, getter) {
+            return None;
+        }
+        let options: *mut AnyObject = msg_send![context, performSelector: getter];
+        options.as_ref()
+    }
+}
+
+unsafe fn apply_context_overrides(
+    options: &AnyObject,
+    ivars: &ControllerOverrideIvars,
+    platform: bool,
+) {
+    unsafe {
+        if let Some(hash) = &ivars.client_data_hash {
+            if responds_to(options, sel!(setClientDataHash:)) {
+                let _: () = msg_send![options, setClientDataHash: &**hash];
+            }
+            if responds_to(options, sel!(setChallenge:)) {
+                let nil_data: *mut NSData = ptr::null_mut();
+                let _: () = msg_send![options, setChallenge: nil_data];
+            }
+        }
+        if !ivars.is_create {
+            return;
+        }
+        if let Some(algs) = &ivars.supported_algorithms
+            && responds_to(options, sel!(setSupportedAlgorithmIdentifiers:))
+        {
+            let _: () = msg_send![options, setSupportedAlgorithmIdentifiers: &**algs];
+        }
+        if platform && responds_to(options, sel!(setShouldRequireResidentKey:)) {
+            let flag: bool = ivars.require_resident_key;
+            let _: () = msg_send![options, setShouldRequireResidentKey: flag];
+        }
+        if let Some(excluded) = &ivars.exclude_credentials
+            && excluded.count() > 0
+            && responds_to(options, sel!(setExcludedCredentials:))
+        {
+            let _: () = msg_send![options, setExcludedCredentials: &**excluded];
+        }
+    }
+}
+
+fn context_descriptor_array(
+    descriptors: &[DescriptorInput],
+) -> Option<Retained<NSArray<AnyObject>>> {
+    let class = AnyClass::get(c"ASCPublicKeyCredentialDescriptor")?;
+    let entries: Vec<Retained<AnyObject>> = descriptors
+        .iter()
+        .filter_map(|d| {
+            let data = ns_data(&d.id);
+            let transports = security_key_transport_array(d.transports);
+            unsafe {
+                let allocated: Allocated<AnyObject> = msg_send![class, alloc];
+                msg_send![allocated, initWithCredentialID: &*data, transports: &*transports]
+            }
+        })
+        .collect();
+    Some(NSArray::from_retained_slice(&entries))
 }
 
 fn controller_private_context_selector_available() -> bool {
@@ -921,6 +911,26 @@ fn build_create_controller(
     sender: Sender<CompletionPayload>,
     semaphore: DispatchRetained<DispatchSemaphore>,
 ) -> std::result::Result<MainThreadHandles, String> {
+    let controller = create_controller(&s)?;
+    let delegate = WebAuthnDelegate::new(mtm, CeremonyKind::Create, sender, semaphore);
+
+    unsafe {
+        controller.setDelegate(Some(ProtocolObject::from_ref(&*delegate)));
+        controller.setPresentationContextProvider(Some(ProtocolObject::from_ref(&*delegate)));
+    }
+
+    Ok(MainThreadHandles::new(
+        mtm,
+        MainThreadHandlesInner {
+            controller,
+            delegate,
+        },
+    ))
+}
+
+fn create_controller(
+    s: &CeremonyInputsCreate,
+) -> std::result::Result<Retained<ControllerOverride>, String> {
     if !controller_private_context_selector_available() {
         return Err(
             "AuthenticationServices request-context override is unavailable on this macOS version"
@@ -935,7 +945,6 @@ fn build_create_controller(
     let user_id_ns = ns_data(&s.user_id);
     let credential_params = credential_parameters_array(&s.pub_key_algs);
     let supported_algorithms = supported_algorithm_numbers(&s.pub_key_algs);
-    let platform_excluded = platform_descriptor_array(&s.exclude_credentials);
     let security_key_excluded = security_key_descriptor_array(&s.exclude_credentials);
 
     let requests: Retained<NSMutableArray<ASAuthorizationRequest>> = NSMutableArray::new();
@@ -1002,12 +1011,6 @@ fn build_create_controller(
         return Err("No supported WebAuthn registration requests were created".to_owned());
     }
 
-    let excluded_for_override: Retained<NSArray<AnyObject>> = if security_key_excluded.count() > 0 {
-        unsafe { Retained::cast_unchecked(security_key_excluded) }
-    } else {
-        unsafe { Retained::cast_unchecked(platform_excluded) }
-    };
-
     let ivars = ControllerOverrideIvars {
         client_data_hash: if s.client_data_hash.is_empty() {
             None
@@ -1015,13 +1018,22 @@ fn build_create_controller(
             Some(ns_data(&s.client_data_hash))
         },
         supported_algorithms: Some(supported_algorithms),
-        exclude_credentials: Some(excluded_for_override),
+        exclude_credentials: context_descriptor_array(&s.exclude_credentials),
         require_resident_key: s.require_resident_key,
         is_create: true,
     };
 
-    let controller = ControllerOverride::new(&requests, ivars);
-    let delegate = WebAuthnDelegate::new(mtm, CeremonyKind::Create, sender, semaphore);
+    Ok(ControllerOverride::new(&requests, ivars))
+}
+
+fn build_get_controller(
+    mtm: MainThreadMarker,
+    s: CeremonyInputsGet,
+    sender: Sender<CompletionPayload>,
+    semaphore: DispatchRetained<DispatchSemaphore>,
+) -> std::result::Result<MainThreadHandles, String> {
+    let controller = get_controller(&s)?;
+    let delegate = WebAuthnDelegate::new(mtm, CeremonyKind::Get, sender, semaphore);
 
     unsafe {
         controller.setDelegate(Some(ProtocolObject::from_ref(&*delegate)));
@@ -1037,12 +1049,9 @@ fn build_create_controller(
     ))
 }
 
-fn build_get_controller(
-    mtm: MainThreadMarker,
-    s: CeremonyInputsGet,
-    sender: Sender<CompletionPayload>,
-    semaphore: DispatchRetained<DispatchSemaphore>,
-) -> std::result::Result<MainThreadHandles, String> {
+fn get_controller(
+    s: &CeremonyInputsGet,
+) -> std::result::Result<Retained<ControllerOverride>, String> {
     if !controller_private_context_selector_available() {
         return Err(
             "AuthenticationServices request-context override is unavailable on this macOS version"
@@ -1110,19 +1119,137 @@ fn build_get_controller(
         is_create: false,
     };
 
-    let controller = ControllerOverride::new(&requests, ivars);
-    let delegate = WebAuthnDelegate::new(mtm, CeremonyKind::Get, sender, semaphore);
+    Ok(ControllerOverride::new(&requests, ivars))
+}
 
-    unsafe {
-        controller.setDelegate(Some(ProtocolObject::from_ref(&*delegate)));
-        controller.setPresentationContextProvider(Some(ProtocolObject::from_ref(&*delegate)));
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn registration_inputs(exclude_credentials: Vec<DescriptorInput>) -> CeremonyInputsCreate {
+        CeremonyInputsCreate {
+            rp_id: "fluxer.app".to_owned(),
+            user_name: "user".to_owned(),
+            display_name: "user".to_owned(),
+            challenge: vec![7; 32],
+            user_id: b"1234".to_vec(),
+            client_data_hash: vec![9; 32],
+            pub_key_algs: vec![-8, -7, -257],
+            exclude_credentials,
+            authenticator_attachment: 0,
+            user_verification: 2,
+            attestation: 1,
+            require_resident_key: false,
+            prefer_resident_key: true,
+        }
     }
 
-    Ok(MainThreadHandles::new(
-        mtm,
-        MainThreadHandlesInner {
-            controller,
-            delegate,
-        },
-    ))
+    fn request_context(controller: &ControllerOverride) -> Retained<AnyObject> {
+        let requests = unsafe { controller.authorizationRequests() };
+        let mut error: *mut NSError = ptr::null_mut();
+        let context: *mut AnyObject = unsafe {
+            msg_send![controller, _requestContextWithRequests: &*requests, error: &mut error]
+        };
+        assert!(error.is_null());
+        unsafe { Retained::retain(context) }.expect("request context")
+    }
+
+    fn secure_coding_round_trip(object: &AnyObject) -> Option<Retained<AnyObject>> {
+        let archiver = AnyClass::get(c"NSKeyedArchiver").expect("NSKeyedArchiver");
+        let unarchiver = AnyClass::get(c"NSKeyedUnarchiver").expect("NSKeyedUnarchiver");
+        let mut error: *mut NSError = ptr::null_mut();
+        let data: Option<Retained<NSData>> = unsafe {
+            msg_send![archiver, archivedDataWithRootObject: object, requiringSecureCoding: true, error: &mut error]
+        };
+        let class: &AnyClass = object.class();
+        let mut error: *mut NSError = ptr::null_mut();
+        unsafe {
+            msg_send![unarchiver, unarchivedObjectOfClass: class, fromData: &*data?, error: &mut error]
+        }
+    }
+
+    fn options(context: &AnyObject, getter: Sel) -> &AnyObject {
+        unsafe { context_options(context, getter) }.expect("credential options")
+    }
+
+    fn excluded_class_names(options: &AnyObject) -> Vec<String> {
+        let excluded: Option<Retained<NSArray<AnyObject>>> =
+            unsafe { msg_send![options, excludedCredentials] };
+        excluded
+            .map(|list| {
+                list.iter()
+                    .map(|d| d.class().name().to_string_lossy().into_owned())
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
+    fn client_data_hash(options: &AnyObject) -> Option<Vec<u8>> {
+        let hash: Option<Retained<NSData>> = unsafe { msg_send![options, clientDataHash] };
+        hash.map(|data| data.to_vec())
+    }
+
+    #[test]
+    fn registration_context_with_excluded_credentials_survives_secure_coding() {
+        let controller = create_controller(&registration_inputs(vec![DescriptorInput {
+            id: b"first-security-key".to_vec(),
+            transports: 0x0000_0001,
+        }]))
+        .expect("controller");
+        let context = request_context(&controller);
+        let decoded = secure_coding_round_trip(&context).expect("context decodes");
+        for getter in [
+            sel!(platformKeyCredentialCreationOptions),
+            sel!(securityKeyCredentialCreationOptions),
+        ] {
+            let options = options(&decoded, getter);
+            assert_eq!(
+                excluded_class_names(options),
+                vec!["ASCPublicKeyCredentialDescriptor"]
+            );
+            assert_eq!(client_data_hash(options), Some(vec![9; 32]));
+        }
+    }
+
+    #[test]
+    fn assertion_context_carries_client_data_hash_for_every_authenticator() {
+        let controller = get_controller(&CeremonyInputsGet {
+            rp_id: "fluxer.app".to_owned(),
+            challenge: vec![7; 32],
+            client_data_hash: vec![9; 32],
+            allow_credentials: vec![DescriptorInput {
+                id: b"first-security-key".to_vec(),
+                transports: 0x0000_0001,
+            }],
+            authenticator_attachment: 0,
+            user_verification: 2,
+        })
+        .expect("controller");
+        let context = request_context(&controller);
+        let decoded = secure_coding_round_trip(&context).expect("context decodes");
+        for getter in [
+            sel!(platformKeyCredentialAssertionOptions),
+            sel!(securityKeyCredentialAssertionOptions),
+        ] {
+            assert_eq!(
+                client_data_hash(options(&decoded, getter)),
+                Some(vec![9; 32])
+            );
+        }
+    }
+
+    #[test]
+    fn registration_context_without_excluded_credentials_survives_secure_coding() {
+        let controller = create_controller(&registration_inputs(Vec::new())).expect("controller");
+        let context = request_context(&controller);
+        let decoded = secure_coding_round_trip(&context).expect("context decodes");
+        for getter in [
+            sel!(platformKeyCredentialCreationOptions),
+            sel!(securityKeyCredentialCreationOptions),
+        ] {
+            let options = options(&decoded, getter);
+            assert!(excluded_class_names(options).is_empty());
+            assert_eq!(client_data_hash(options), Some(vec![9; 32]));
+        }
+    }
 }

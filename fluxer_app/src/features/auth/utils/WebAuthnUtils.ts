@@ -2,7 +2,7 @@
 
 import {promptForSecurityKeyPin} from '@app/features/auth/components/modals/PasskeyPinModal';
 import {writePasskeyLoginRoute} from '@app/features/auth/passkey_migration/PasskeyLoginRoute';
-import {PasskeysUnsupportedError} from '@app/features/auth/utils/PasskeyErrorMessages';
+import {NATIVE_PASSKEY_ERROR_NAME, PasskeysUnsupportedError} from '@app/features/auth/utils/PasskeyErrorMessages';
 import {parsePasskeyPinFailure} from '@app/features/auth/utils/PasskeyPinErrors';
 import {Platform} from '@app/features/platform/types/Platform';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
@@ -22,13 +22,13 @@ interface NativeCeremonyRequestContext {
 	instanceKey?: string;
 }
 
-const NATIVE_CEREMONY_ERROR_NAME = /\b(NotAllowedError|InvalidStateError|NoAuthenticatorError): /u;
+const NATIVE_CEREMONY_ERROR_NAME = /\b(NotAllowedError|InvalidStateError|NoAuthenticatorError|NotSupportedError): /u;
 
 function withNativeCeremonyErrorName(error: unknown): unknown {
-	const name = error instanceof Error ? NATIVE_CEREMONY_ERROR_NAME.exec(error.message)?.[1] : undefined;
-	if (name !== undefined) {
-		(error as Error).name = name;
+	if (!(error instanceof Error) || parsePasskeyPinFailure(error) !== null) {
+		return error;
 	}
+	error.name = NATIVE_CEREMONY_ERROR_NAME.exec(error.message)?.[1] ?? NATIVE_PASSKEY_ERROR_NAME;
 	return error;
 }
 

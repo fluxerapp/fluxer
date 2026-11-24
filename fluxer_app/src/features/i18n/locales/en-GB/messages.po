@@ -45189,6 +45189,11 @@ msgstr "Your passes"
 msgid "Your passes, your certificate and your spot on the Operators' wall"
 msgstr "Your passes, your certificate and your spot on the Operators' wall"
 
+#. Error shown when a passkey or security key prompt fails for a reason Fluxer has no specific message for. {detail} is a technical error code such as UnknownError or com.apple.AuthenticationServices.AuthorizationError 1004. Keep {detail} unchanged.
+#: src/features/auth/utils/PasskeyErrorMessages.ts
+msgid "Your passkey or security key couldn't finish the request. Try again, and if it keeps failing, contact support with this error: {detail}"
+msgstr ""
+
 #. Recovery kit modal description shown after someone recovers their account with a recovery key.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx
 msgid "Your password is reset. Your old recovery kit no longer works. Store this new one somewhere safe."
