@@ -7,7 +7,12 @@ import type {
 	EmailVerificationTokenRow,
 	PasswordResetTokenRow,
 } from '@app/api/database/types/AuthTypes';
-import type {GiftCodeRow, PaymentBySubscriptionRow, PaymentRow} from '@app/api/database/types/PaymentTypes';
+import type {
+	GiftCodeRow,
+	GiftRedemptionCountries,
+	PaymentBySubscriptionRow,
+	PaymentRow,
+} from '@app/api/database/types/PaymentTypes';
 import type {
 	PushSubscriptionRow,
 	RecentMentionRow,
@@ -663,8 +668,8 @@ export class UserRepository {
 		return this.giftCodeRepository.findGiftCodesByRedeemer(userId);
 	}
 
-	async redeemGiftCode(code: string, userId: UserID): Promise<void> {
-		return this.giftCodeRepository.redeemGiftCode(code, userId);
+	async redeemGiftCode(code: string, userId: UserID, countries?: GiftRedemptionCountries): Promise<void> {
+		return this.giftCodeRepository.redeemGiftCode(code, userId, countries);
 	}
 
 	async unredeemGiftCode(code: string, userId: UserID): Promise<void> {
@@ -737,6 +742,10 @@ export class UserRepository {
 
 	async findPaymentsByUserId(userId: UserID): Promise<Array<Payment>> {
 		return this.paymentRepository.findPaymentsByUserId(userId);
+	}
+
+	async findLatestBillingCountry(userId: UserID): Promise<string | null> {
+		return this.paymentRepository.findLatestBillingCountry(userId);
 	}
 
 	async getPaymentByPaymentIntent(paymentIntentId: string): Promise<Payment | null> {
