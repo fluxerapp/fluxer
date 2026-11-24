@@ -114,6 +114,7 @@
 	"enforcement.summary.content_removal": "{all, select, yes {Kami menghapus semua pesan yang kamu kirim.} other {Kami menghapus {count, plural, =1 {# pesan} other {# pesan}} yang kamu kirim.}}",
 	"enforcement.summary.feature_limit": "{ends, select, yes {Kami membatasi sebuah fitur di akunmu sampai {ends_at}.} other {Kami membatasi sebuah fitur di akunmu.}}",
 	"enforcement.summary.profile_reset": "Kami mengatur ulang sebagian profilmu: {fields}.",
+	"enforcement.summary.superseding": "",
 	"enforcement.summary.suspension": "{target, select, bot {Kami menangguhkan botmu {bot_name} sampai {ends_at}.} other {Kami menangguhkan akunmu sampai {ends_at}.}}",
 	"enforcement.summary.suspension_permanent": "{target, select, bot {Kami memblokir botmu {bot_name}.} other {Kami memblokir akunmu.}}",
 	"enforcement.summary.warning": "Kami memperingatkanmu tentang aktivitas di akunmu.",

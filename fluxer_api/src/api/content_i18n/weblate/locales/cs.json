@@ -114,6 +114,7 @@
 	"enforcement.summary.content_removal": "{all, select, yes {Odstranili jsme všechny vámi odeslané zprávy.} other {Odstranili jsme {count, plural, one {# vámi odeslanou zprávu} few {# vámi odeslané zprávy} many {# vámi odeslané zprávy} other {# vámi odeslaných zpráv}}.}}",
 	"enforcement.summary.feature_limit": "{ends, select, yes {Do {ends_at} jsme omezili jednu z funkcí vašeho účtu.} other {Omezili jsme jednu z funkcí vašeho účtu.}}",
 	"enforcement.summary.profile_reset": "Resetovali jsme části vašeho profilu: {fields}.",
+	"enforcement.summary.superseding": "",
 	"enforcement.summary.suspension": "{target, select, bot {Pozastavili jsme vašeho bota {bot_name} do {ends_at}.} other {Pozastavili jsme váš účet do {ends_at}.}}",
 	"enforcement.summary.suspension_permanent": "{target, select, bot {Zablokovali jsme vašeho bota {bot_name}.} other {Zablokovali jsme váš účet.}}",
 	"enforcement.summary.warning": "Udělujeme vám varování kvůli aktivitě na vašem účtu.",

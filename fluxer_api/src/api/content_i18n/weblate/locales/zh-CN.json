@@ -114,6 +114,7 @@
 	"enforcement.summary.content_removal": "{all, select, yes {我们删除了你发送的所有消息。} other {我们删除了你发送的 {count, plural, other {# 条消息}}。}}",
 	"enforcement.summary.feature_limit": "{ends, select, yes {我们限制了你账号上的一项功能，直至 {ends_at}。} other {我们限制了你账号上的一项功能。}}",
 	"enforcement.summary.profile_reset": "我们重置了你个人资料的部分内容：{fields}。",
+	"enforcement.summary.superseding": "",
 	"enforcement.summary.suspension": "{target, select, bot {我们暂时封禁了你的机器人 {bot_name}，直至 {ends_at}。} other {我们暂时封禁了你的账号，直至 {ends_at}。}}",
 	"enforcement.summary.suspension_permanent": "{target, select, bot {我们永久封禁了你的机器人 {bot_name}。} other {我们永久封禁了你的账号。}}",
 	"enforcement.summary.warning": "我们就你账号上的活动向你发出警告。",

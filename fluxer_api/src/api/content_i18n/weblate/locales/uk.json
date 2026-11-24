@@ -114,6 +114,7 @@
 	"enforcement.summary.content_removal": "{all, select, yes {Ми видалили всі твої повідомлення.} other {Ми видалили {count, plural, one {# твоє повідомлення} few {# твої повідомлення} many {# твоїх повідомлень} other {# твого повідомлення}}.}}",
 	"enforcement.summary.feature_limit": "{ends, select, yes {Ми обмежили одну з функцій твого акаунта до {ends_at}.} other {Ми обмежили одну з функцій твого акаунта.}}",
 	"enforcement.summary.profile_reset": "Ми скинули частину даних твого профілю: {fields}.",
+	"enforcement.summary.superseding": "",
 	"enforcement.summary.suspension": "{target, select, bot {Ми тимчасово заблокували твого бота {bot_name} до {ends_at}.} other {Ми тимчасово заблокували твій акаунт до {ends_at}.}}",
 	"enforcement.summary.suspension_permanent": "{target, select, bot {Ми назавжди заблокували твого бота {bot_name}.} other {Ми назавжди заблокували твій акаунт.}}",
 	"enforcement.summary.warning": "Ми попереджаємо тебе через активність у твоєму акаунті.",

@@ -18,6 +18,7 @@ import {
 	EnforcementDecisionNoteRequest,
 	EnforcementDecisionNoteResponse,
 	EnforcementDecisionResponse,
+	EnforcementDecisionSupersedeRequest,
 	NetworkBlockCandidatesResponse,
 } from '@fluxer/schema/src/domains/admin/EnforcementSchemas';
 import {UserIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
@@ -159,6 +160,31 @@ export function EnforcementAdminController(app: HonoApp) {
 			const {decision_id: decisionId} = ctx.req.valid('param');
 			return ctx.json(
 				await ctx.get('adminService').enforcementService.end(decisionId, ctx.req.valid('json'), enforcementActor(ctx)),
+			);
+		},
+	);
+	app.post(
+		'/admin/enforcement-decisions/:decision_id/supersede',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
+		requireAdminACL(AdminACLs.ENFORCEMENT_VIEW),
+		Validator('param', EnforcementDecisionIdParam),
+		Validator('json', EnforcementDecisionSupersedeRequest),
+		OpenAPI({
+			operationId: 'supersede_admin_enforcement_decision',
+			summary: 'Change the reason for an enforcement decision',
+			responseSchema: EnforcementDecisionResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+			description:
+				'Replaces an active decision about a user with a new decision that has a new reason, and returns the new decision. The new reason is checked like a new decision of the same kind. The restriction never lapses. The new decision keeps the suspension end, deletion date, limit and network blocks of the old one, and the old decision ends as superseded. The holder gets one notice with the new reason and a new appeal deadline, and no notice that the old decision ended. Decisions from a payment dispute, about a community, or replaced by a later decision cannot be changed. Creates audit log entry. Requires ENFORCEMENT_VIEW permission plus the permission of the route that made the decision, such as USER_TEMP_BAN for a suspension or USER_DELETE for a closure.',
+		}),
+		async (ctx) => {
+			const {decision_id: decisionId} = ctx.req.valid('param');
+			return ctx.json(
+				await ctx
+					.get('adminService')
+					.enforcementService.supersede(decisionId, ctx.req.valid('json'), enforcementActor(ctx)),
 			);
 		},
 	);

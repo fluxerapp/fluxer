@@ -73,7 +73,8 @@ export type EnforcementNoticeKindLabel =
 	| 'content_removal'
 	| 'profile_reset'
 	| 'community_removal'
-	| 'bot';
+	| 'bot'
+	| 'updated';
 
 export interface EmailTemplateVariables {
 	account_deletion_cancelled: Record<string, never>;

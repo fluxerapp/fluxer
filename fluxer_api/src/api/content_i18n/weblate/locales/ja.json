@@ -114,6 +114,7 @@
 	"enforcement.summary.content_removal": "{all, select, yes {あなたが送信したすべてのメッセージを削除しました。} other {あなたが送信した{count, plural, other {#件のメッセージ}}を削除しました。}}",
 	"enforcement.summary.feature_limit": "{ends, select, yes {{ends_at}まで、あなたのアカウントの機能を1つ制限しました。} other {あなたのアカウントの機能を1つ制限しました。}}",
 	"enforcement.summary.profile_reset": "あなたのプロフィールの一部をリセットしました: {fields}。",
+	"enforcement.summary.superseding": "",
 	"enforcement.summary.suspension": "{target, select, bot {あなたのボット{bot_name}を{ends_at}まで一時停止しました。} other {あなたのアカウントを{ends_at}まで一時停止しました。}}",
 	"enforcement.summary.suspension_permanent": "{target, select, bot {あなたのボット{bot_name}を永久停止しました。} other {あなたのアカウントを永久停止しました。}}",
 	"enforcement.summary.warning": "あなたのアカウントでの活動について警告します。",

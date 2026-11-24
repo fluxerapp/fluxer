@@ -82,6 +82,12 @@ interface EnforcementDecisionEnd {
 	statement: string | null;
 }
 
+interface EnforcementDecisionSupersede {
+	endedAt: Date;
+	endedBy: bigint;
+	supersededBy: bigint;
+}
+
 export interface EnforcementNoticeRecord {
 	status: EnforcementNoticeStatus;
 	channels: ReadonlySet<EnforcementNoticeChannel>;
@@ -208,6 +214,22 @@ export class EnforcementDecisionRepository {
 	async endIfActive(decisionId: bigint, end: EnforcementDecisionEnd): Promise<boolean> {
 		return executeConditional(
 			EnforcementDecisions.conditionalPatchByPk({decision_id: decisionId}, endPatch(end), {status: 'active'}),
+		);
+	}
+
+	async supersedeIfActive(
+		decisionId: bigint,
+		{endedAt, endedBy, supersededBy}: EnforcementDecisionSupersede,
+	): Promise<boolean> {
+		return executeConditional(
+			EnforcementDecisions.conditionalPatchByPk(
+				{decision_id: decisionId},
+				{
+					...endPatch({outcome: 'superseded', endedAt, endedBy, statement: null}),
+					superseded_by: Db.set(supersededBy),
+				},
+				{status: 'active'},
+			),
 		);
 	}
 

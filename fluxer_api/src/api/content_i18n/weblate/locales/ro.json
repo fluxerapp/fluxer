@@ -114,6 +114,7 @@
 	"enforcement.summary.content_removal": "{all, select, yes {Am eliminat toate mesajele trimise de tine.} other {Am eliminat {count, plural, one {# mesaj trimis de tine} few {# mesaje trimise de tine} other {# de mesaje trimise de tine}}.}}",
 	"enforcement.summary.feature_limit": "{ends, select, yes {Am limitat o funcție a contului tău până la {ends_at}.} other {Am limitat o funcție a contului tău.}}",
 	"enforcement.summary.profile_reset": "Am resetat unele părți ale profilului tău: {fields}.",
+	"enforcement.summary.superseding": "",
 	"enforcement.summary.suspension": "{target, select, bot {Am suspendat botul tău {bot_name} până la {ends_at}.} other {Am suspendat contul tău până la {ends_at}.}}",
 	"enforcement.summary.suspension_permanent": "{target, select, bot {Am suspendat permanent botul tău {bot_name}.} other {Am suspendat permanent contul tău.}}",
 	"enforcement.summary.warning": "Îți trimitem un avertisment privind activitatea contului tău.",

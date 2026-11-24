@@ -29,12 +29,14 @@ function decisionRow(decisionId: bigint, overrides: Partial<EnforcementDecisionR
 		payment_at: null,
 		report_ids: new Set([7n, 8n]),
 		decided_by: 1n,
+		supersedes: null,
 		created_at: new Date('2026-10-14T10:00:00.000Z'),
 		status: 'active',
 		end_outcome: null,
 		ended_at: null,
 		ended_by: null,
 		end_statement: null,
+		superseded_by: null,
 		notice_status: 'pending',
 		notice_channels: null,
 		notice_locale: null,
@@ -148,6 +150,24 @@ function describeRepository(backend: string, setup: () => Promise<void>, teardow
 				}),
 			);
 			expect((await repository.listNotes(300n)).map((note) => note.body)).toEqual(['Internal note', 'Second']);
+		});
+
+		it('supersedes an active decision once and links its successor', async () => {
+			await create(repository, decisionRow(350n), false);
+			const endedAt = new Date('2026-10-15T10:00:00.000Z');
+			const supersede = {endedAt, endedBy: 2n, supersededBy: 360n};
+			expect(await repository.supersedeIfActive(350n, supersede)).toBe(true);
+			expect(await repository.get(350n)).toEqual(
+				decisionRow(350n, {
+					status: 'ended',
+					end_outcome: 'superseded',
+					ended_at: endedAt,
+					ended_by: 2n,
+					superseded_by: 360n,
+				}),
+			);
+			expect(await repository.supersedeIfActive(350n, {...supersede, supersededBy: 370n})).toBe(false);
+			expect((await repository.get(350n))?.superseded_by).toBe(360n);
 		});
 
 		it('deletes every row it created', async () => {

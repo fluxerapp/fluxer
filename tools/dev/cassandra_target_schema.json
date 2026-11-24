@@ -4451,6 +4451,10 @@
 					"type": "bigint"
 				},
 				{
+					"name": "supersedes",
+					"type": "bigint"
+				},
+				{
 					"name": "created_at",
 					"type": "timestamp"
 				},
@@ -4473,6 +4477,10 @@
 				{
 					"name": "end_statement",
 					"type": "text"
+				},
+				{
+					"name": "superseded_by",
+					"type": "bigint"
 				},
 				{
 					"name": "notice_status",

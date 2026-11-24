@@ -233,6 +233,14 @@ function decisionSummary(ctx: NoticeContext, decision: EnforcementDecisionRow, t
 	}
 }
 
+function noticeSummary(ctx: NoticeContext, decision: EnforcementDecisionRow, target: NoticeTarget): string {
+	const summary = decisionSummary(ctx, decision, target);
+	if (decision.supersedes === null) {
+		return summary;
+	}
+	return text(ctx, 'enforcement.summary.superseding', {summary, decision_id: decision.supersedes.toString()});
+}
+
 function kindEffect(ctx: NoticeContext, decision: EnforcementDecisionRow, target: NoticeTarget): string {
 	switch (decision.kind) {
 		case 'suspension':
@@ -360,7 +368,7 @@ function buildDecisionNotice(
 		issued_at: decision.created_at.toISOString(),
 		ends_at: toIsoOrNull(decision.ends_at),
 		deletion_at: toIsoOrNull(decision.deletion_at),
-		summary: decisionSummary(ctx, decision, target),
+		summary: noticeSummary(ctx, decision, target),
 		effects: decisionEffects(ctx, decision, target, networksBlockedUntil),
 		rule: ruleOf(ctx, reason.rule),
 		facts: decisionFacts(ctx, decision, evidence),

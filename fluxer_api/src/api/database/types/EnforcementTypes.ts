@@ -7,7 +7,7 @@ export type EnforcementSubjectType = 'user' | 'guild';
 type EnforcementSource = 'report' | 'own_review';
 type EnforcementAutomation = 'none' | 'flagged' | 'automated';
 type EnforcementStatus = 'active' | 'ended';
-export type EnforcementEndOutcome = 'lifted' | 'reversed' | 'expired';
+export type EnforcementEndOutcome = 'lifted' | 'reversed' | 'expired' | 'superseded';
 export type EnforcementNoticeStatus = 'pending' | 'sent' | 'undelivered';
 export type EnforcementNoticeChannel = 'email' | 'system_dm' | 'sign_in';
 export type EvidenceChannelKind = 'direct_message' | 'group_message' | 'channel';
@@ -33,12 +33,14 @@ export interface EnforcementDecisionRow {
 	payment_at: Date | null;
 	report_ids: Set<bigint> | null;
 	decided_by: bigint;
+	supersedes: bigint | null;
 	created_at: Date;
 	status: EnforcementStatus;
 	end_outcome: EnforcementEndOutcome | null;
 	ended_at: Date | null;
 	ended_by: bigint | null;
 	end_statement: string | null;
+	superseded_by: bigint | null;
 	notice_status: EnforcementNoticeStatus;
 	notice_channels: Set<EnforcementNoticeChannel> | null;
 	notice_locale: string | null;
@@ -67,12 +69,14 @@ export const ENFORCEMENT_DECISION_COLUMNS = [
 	'payment_at',
 	'report_ids',
 	'decided_by',
+	'supersedes',
 	'created_at',
 	'status',
 	'end_outcome',
 	'ended_at',
 	'ended_by',
 	'end_statement',
+	'superseded_by',
 	'notice_status',
 	'notice_channels',
 	'notice_locale',

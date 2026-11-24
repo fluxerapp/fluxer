@@ -114,6 +114,7 @@
 	"enforcement.summary.content_removal": "{all, select, yes {Eltávolítottuk az összes általad küldött üzenetet.} other {Eltávolítottunk {count, plural, one {# általad küldött üzenetet} other {# általad küldött üzenetet}}.}}",
 	"enforcement.summary.feature_limit": "{ends, select, yes {Korlátoztunk egy funkciót a fiókodon. A korlátozás vége: {ends_at}.} other {Korlátoztunk egy funkciót a fiókodon.}}",
 	"enforcement.summary.profile_reset": "Visszaállítottuk a profilod egyes részeit: {fields}.",
+	"enforcement.summary.superseding": "",
 	"enforcement.summary.suspension": "{target, select, bot {Felfüggesztettük a(z) {bot_name} nevű botodat. A felfüggesztés vége: {ends_at}.} other {Felfüggesztettük a fiókodat. A felfüggesztés vége: {ends_at}.}}",
 	"enforcement.summary.suspension_permanent": "{target, select, bot {Véglegesen felfüggesztettük a(z) {bot_name} nevű botodat.} other {Véglegesen felfüggesztettük a fiókodat.}}",
 	"enforcement.summary.warning": "Figyelmeztetést küldünk a fiókodon folytatott tevékenység miatt.",

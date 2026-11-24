@@ -124,4 +124,38 @@ export const EnforcementAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> =
 			};
 		},
 	},
+	{
+		method: 'POST',
+		route: '/admin/enforcement-decisions/:decision_id/supersede',
+		async prepare(context) {
+			const {userId, decisionId} = await suspend(context);
+			return {
+				request: {
+					path: `/admin/enforcement-decisions/${decisionId}/supersede`,
+					body: {
+						decision: {
+							reason_code: DeletionReasons.COORDINATED_RAIDING,
+							source: 'own_review',
+							automation: 'none',
+							statement: 'Coverage reason change',
+						},
+					},
+				},
+				expected: {
+					action: 'supersede_enforcement_decision',
+					targetType: 'enforcement_decision',
+					targetId: decisionId,
+					metadata: {
+						decision_id: decisionId,
+						kind: 'suspension',
+						previous_reason_code: DeletionReasons.SPAM.toString(),
+						reason_code: DeletionReasons.COORDINATED_RAIDING.toString(),
+						subject_id: userId,
+						superseded_by: expect.any(String),
+						notice_status: 'sent',
+					},
+				},
+			};
+		},
+	},
 ];

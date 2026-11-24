@@ -114,6 +114,7 @@
 	"enforcement.summary.content_removal": "{all, select, yes {Αφαιρέσαμε όλα τα μηνύματα που έστειλες.} other {Αφαιρέσαμε {count, plural, one {# μήνυμα που έστειλες} other {# μηνύματα που έστειλες}}.}}",
 	"enforcement.summary.feature_limit": "{ends, select, yes {Περιορίσαμε μια λειτουργία στον λογαριασμό σου έως τις {ends_at}.} other {Περιορίσαμε μια λειτουργία στον λογαριασμό σου.}}",
 	"enforcement.summary.profile_reset": "Επαναφέραμε ορισμένα μέρη του προφίλ σου: {fields}.",
+	"enforcement.summary.superseding": "",
 	"enforcement.summary.suspension": "{target, select, bot {Θέσαμε το bot σου {bot_name} σε αναστολή έως τις {ends_at}.} other {Θέσαμε τον λογαριασμό σου σε αναστολή έως τις {ends_at}.}}",
 	"enforcement.summary.suspension_permanent": "{target, select, bot {Θέσαμε το bot σου {bot_name} σε οριστική αναστολή.} other {Θέσαμε τον λογαριασμό σου σε οριστική αναστολή.}}",
 	"enforcement.summary.warning": "Σου στέλνουμε προειδοποίηση για δραστηριότητα στον λογαριασμό σου.",

@@ -114,6 +114,7 @@
 	"enforcement.summary.content_removal": "{all, select, yes {Poistimme kaikki lähettämäsi viestit.} other {Poistimme {count, plural, one {# lähettämäsi viestin} other {# lähettämääsi viestiä}}.}}",
 	"enforcement.summary.feature_limit": "{ends, select, yes {Rajoitimme yhtä tilisi ominaisuuksista {ends_at} asti.} other {Rajoitimme yhtä tilisi ominaisuuksista.}}",
 	"enforcement.summary.profile_reset": "Nollasimme osia profiilistasi: {fields}.",
+	"enforcement.summary.superseding": "",
 	"enforcement.summary.suspension": "{target, select, bot {Jäädytimme bottisi {bot_name} {ends_at} asti.} other {Jäädytimme tilisi {ends_at} asti.}}",
 	"enforcement.summary.suspension_permanent": "{target, select, bot {Jäädytimme bottisi {bot_name} pysyvästi.} other {Jäädytimme tilisi pysyvästi.}}",
 	"enforcement.summary.warning": "Annamme sinulle varoituksen tililläsi tapahtuneesta toiminnasta.",

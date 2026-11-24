@@ -114,6 +114,7 @@
 	"enforcement.summary.content_removal": "{all, select, yes {Pašalinome visas tavo išsiųstas žinutes.} other {Pašalinome {count, plural, one {# tavo išsiųstą žinutę} few {# tavo išsiųstas žinutes} many {# tavo išsiųstos žinutės} other {# tavo išsiųstų žinučių}}.}}",
 	"enforcement.summary.feature_limit": "{ends, select, yes {Iki {ends_at} apribojome vieną tavo paskyros funkciją.} other {Apribojome vieną tavo paskyros funkciją.}}",
 	"enforcement.summary.profile_reset": "Iš naujo nustatėme kai kurias tavo profilio dalis: {fields}.",
+	"enforcement.summary.superseding": "",
 	"enforcement.summary.suspension": "{target, select, bot {Sustabdėme tavo botą {bot_name} iki {ends_at}.} other {Sustabdėme tavo paskyrą iki {ends_at}.}}",
 	"enforcement.summary.suspension_permanent": "{target, select, bot {Visam laikui sustabdėme tavo botą {bot_name}.} other {Visam laikui sustabdėme tavo paskyrą.}}",
 	"enforcement.summary.warning": "Įspėjame tave dėl veiklos tavo paskyroje.",

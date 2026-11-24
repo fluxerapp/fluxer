@@ -114,6 +114,7 @@
 	"enforcement.summary.content_removal": "{all, select, yes {Мы удалили все твои сообщения.} other {Мы удалили {count, plural, one {# твоё сообщение} few {# твоих сообщения} many {# твоих сообщений} other {# твоего сообщения}}.}}",
 	"enforcement.summary.feature_limit": "{ends, select, yes {Мы ограничили одну из функций твоего аккаунта до {ends_at}.} other {Мы ограничили одну из функций твоего аккаунта.}}",
 	"enforcement.summary.profile_reset": "Мы сбросили часть данных твоего профиля: {fields}.",
+	"enforcement.summary.superseding": "",
 	"enforcement.summary.suspension": "{target, select, bot {Мы временно заблокировали твоего бота {bot_name} до {ends_at}.} other {Мы временно заблокировали твой аккаунт до {ends_at}.}}",
 	"enforcement.summary.suspension_permanent": "{target, select, bot {Мы навсегда заблокировали твоего бота {bot_name}.} other {Мы навсегда заблокировали твой аккаунт.}}",
 	"enforcement.summary.warning": "Мы предупреждаем тебя из-за активности в твоём аккаунте.",

@@ -255,6 +255,12 @@ export const EnforcementDecisionEndRequest = z.object({
 
 export type EnforcementDecisionEndRequest = z.infer<typeof EnforcementDecisionEndRequest>;
 
+export const EnforcementDecisionSupersedeRequest = z.object({
+	decision: EnforcementDecisionInput,
+});
+
+export type EnforcementDecisionSupersedeRequest = z.infer<typeof EnforcementDecisionSupersedeRequest>;
+
 const EnforcementDecisionSummary = z.object({
 	decision_id: SnowflakeStringType,
 	subject_type: z.enum(['user', 'guild']),
@@ -276,15 +282,19 @@ const EnforcementDecisionSummary = z.object({
 	payment_at: z.string().nullable(),
 	report_ids: z.array(SnowflakeStringType).describe('Empty without the report view permission'),
 	decided_by: SnowflakeStringType,
+	supersedes: SnowflakeStringType.nullable().describe('The decision this one replaced when its reason changed'),
 	created_at: z.string(),
 	status: z.enum(['active', 'ended']),
 	end_outcome: z
-		.enum(['lifted', 'reversed', 'expired'])
+		.enum(['lifted', 'reversed', 'expired', 'superseded'])
 		.nullable()
-		.describe('Expired is recorded by Fluxer when a temporary suspension runs out'),
+		.describe(
+			'Expired is recorded by Fluxer when a temporary suspension runs out. Superseded means a new decision with a changed reason took over',
+		),
 	ended_at: z.string().nullable(),
 	ended_by: SnowflakeStringType.nullable(),
 	end_statement: z.string().nullable(),
+	superseded_by: SnowflakeStringType.nullable().describe('The decision that replaced this one when its reason changed'),
 	notice_status: z.enum(['pending', 'sent', 'undelivered']),
 	notice_channels: z.array(z.enum(['email', 'system_dm', 'sign_in'])),
 	notice_locale: z.string().nullable(),

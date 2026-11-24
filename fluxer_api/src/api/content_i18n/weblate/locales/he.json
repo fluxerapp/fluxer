@@ -114,6 +114,7 @@
 	"enforcement.summary.content_removal": "{all, select, yes {הסרנו את כל ההודעות ששלחתם.} other {הסרנו {count, plural, =1 {הודעה אחת} two {שתי הודעות} other {# הודעות}} ששלחתם.}}",
 	"enforcement.summary.feature_limit": "{ends, select, yes {הגבלנו תכונה בחשבון שלכם עד {ends_at}.} other {הגבלנו תכונה בחשבון שלכם.}}",
 	"enforcement.summary.profile_reset": "איפסנו חלקים מהפרופיל שלכם: {fields}.",
+	"enforcement.summary.superseding": "",
 	"enforcement.summary.suspension": "{target, select, bot {השעינו את הבוט שלכם {bot_name} עד {ends_at}.} other {השעינו את החשבון שלכם עד {ends_at}.}}",
 	"enforcement.summary.suspension_permanent": "{target, select, bot {חסמנו את הבוט שלכם {bot_name}.} other {חסמנו את החשבון שלכם.}}",
 	"enforcement.summary.warning": "אנחנו מזהירים אתכם בנוגע לפעילות בחשבון שלכם.",

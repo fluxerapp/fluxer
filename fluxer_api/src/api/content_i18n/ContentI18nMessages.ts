@@ -165,6 +165,8 @@ export const CONTENT_I18N_MESSAGES = {
 	'enforcement.summary.feature_limit':
 		'{ends, select, yes {We limited a feature on your account until {ends_at}.} other {We limited a feature on your account.}}',
 	'enforcement.summary.profile_reset': 'We reset parts of your profile: {fields}.',
+	'enforcement.summary.superseding':
+		'{summary} We changed the reason for this decision. It replaces decision {decision_id} and the reason we gave you then.',
 	'enforcement.summary.suspension':
 		'{target, select, bot {We suspended your bot {bot_name} until {ends_at}.} other {We suspended your account until {ends_at}.}}',
 	'enforcement.summary.suspension_permanent':
