@@ -228,7 +228,9 @@ export function StripeController(app: HonoApp) {
 			const {code} = ctx.req.valid('param');
 			const userId = ctx.get('user').id;
 			assertTierAllows(ctx.get('user'), TierGatedActions.GIFT_REDEEM, NO_TIER_CONTEXT);
-			await ctx.get('stripeService').gifts.redeemGiftCode(userId, code);
+			await ctx
+				.get('stripeService')
+				.gifts.redeemGiftCode(userId, code, await getPurchaseGeoipCountryCode(ctx.req.raw).catch(() => null));
 			return ctx.body(null, 204);
 		},
 	);
