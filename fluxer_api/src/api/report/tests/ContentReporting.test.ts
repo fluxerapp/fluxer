@@ -32,6 +32,11 @@ import {getInstanceProductName} from '@app/api/instance/ProductName';
 import {getRateLimitService} from '@app/api/middleware/ServiceSingletons';
 import {ReadStateRepository} from '@app/api/read_state/ReadStateRepository';
 import {ReportRepository} from '@app/api/report/ReportRepository';
+import {
+	MESSAGE_REPORT_USER_CHANNEL_RATE_LIMIT_MAX,
+	REPORT_RATE_LIMIT_MAX,
+	REPORT_RATE_LIMIT_WINDOW,
+} from '@app/api/report/ReportService';
 import {Users} from '@app/api/Tables';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS, TEST_IDS} from '@app/api/test/TestConstants';
@@ -63,6 +68,12 @@ interface DmMessageResponse {
 	flags: number;
 	id: string;
 	content: string | null;
+}
+
+async function spendReportLimit(identifier: string, maxAttempts: number, count: number): Promise<void> {
+	for (let index = 0; index < count; index++) {
+		await getRateLimitService().checkLimit({identifier, maxAttempts, windowMs: REPORT_RATE_LIMIT_WINDOW});
+	}
 }
 
 async function listSystemDmChannels(harness: ApiTestHarness, token: string): Promise<Array<PrivateChannelResponse>> {
@@ -335,6 +346,11 @@ describe('Content Reporting', () => {
 				[0, 1, 2, 3].map((index) =>
 					sendChannelMessage(harness, targetUser.token, channel.id, `Report rate limit target ${index}`),
 				),
+			);
+			await spendReportLimit(
+				`report:message:channel:user:${owner.userId}:${channel.id}`,
+				MESSAGE_REPORT_USER_CHANNEL_RATE_LIMIT_MAX,
+				MESSAGE_REPORT_USER_CHANNEL_RATE_LIMIT_MAX - 3,
 			);
 			for (const message of messages.slice(0, 3)) {
 				await createBuilder<ReportResponse>(harness, owner.token)
@@ -653,6 +669,7 @@ describe('Content Reporting', () => {
 		test('a guild report past the reporter allowance is rate limited before it is a conflict', async () => {
 			const {reporter, guild} = await setupMemberAndGuild();
 			await reportGuild(harness, reporter.token, guild.id).expect(HTTP_STATUS.OK).execute();
+			await spendReportLimit(`report:create:user:${reporter.userId}`, REPORT_RATE_LIMIT_MAX, REPORT_RATE_LIMIT_MAX - 5);
 			const targets = await Promise.all([0, 1, 2, 3].map(() => createTestAccount(harness)));
 			for (const target of targets) {
 				await reportUser(harness, reporter.token, target.userId).expect(HTTP_STATUS.OK).execute();
@@ -713,6 +730,7 @@ describe('Content Reporting', () => {
 			const guild = await createGuild(harness, owner.token, 'Problematic Guild');
 			const invite = await createChannelInvite(harness, owner.token, guild.system_channel_id!);
 			await reportGuild(harness, reporter.token, guild.id, invite.code).expect(HTTP_STATUS.OK).execute();
+			await spendReportLimit(`report:create:user:${reporter.userId}`, REPORT_RATE_LIMIT_MAX, REPORT_RATE_LIMIT_MAX - 5);
 			for (let attempt = 0; attempt < 5; attempt += 1) {
 				await reportGuild(harness, reporter.token, guild.id, invite.code)
 					.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.CONFLICT)
