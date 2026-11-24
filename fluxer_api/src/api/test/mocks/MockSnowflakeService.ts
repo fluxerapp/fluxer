@@ -7,17 +7,19 @@ interface MockSnowflakeServiceConfig {
 	startTimestampMs?: number;
 }
 
+function waitForMillisecond(): Promise<void> {
+	return new Promise((resolve) => setTimeout(resolve, 1));
+}
+
 export class MockSnowflakeService implements ISnowflakeService {
-	private startTimestampMs?: number;
-	private sequence = 0;
+	private nextTimestampMs?: number;
 	private initialized = false;
 	constructor(config: MockSnowflakeServiceConfig = {}) {
-		this.startTimestampMs = config.startTimestampMs;
+		this.nextTimestampMs = config.startTimestampMs;
 	}
 	configure(config: MockSnowflakeServiceConfig): void {
 		if (config.startTimestampMs !== undefined) {
-			this.startTimestampMs = config.startTimestampMs;
-			this.sequence = 0;
+			this.nextTimestampMs = config.startTimestampMs;
 		}
 	}
 	async initialize(): Promise<void> {
@@ -33,11 +35,12 @@ export class MockSnowflakeService implements ISnowflakeService {
 	async generateForChannel(_channelId: string | bigint): Promise<bigint> {
 		return this.generate();
 	}
-	private generateId(): bigint {
-		const timestamp = this.startTimestampMs ?? Date.now();
-		const id = createSnowflake({timestamp, workerId: 0, sequence: this.sequence});
-		this.sequence = (this.sequence + 1) & 4095;
-		if (this.sequence === 0 || this.startTimestampMs !== undefined) this.startTimestampMs = timestamp + 1;
-		return id;
+	private async generateId(): Promise<bigint> {
+		const timestamp = this.nextTimestampMs ?? Date.now();
+		this.nextTimestampMs = timestamp + 1;
+		while (Date.now() < timestamp) {
+			await waitForMillisecond();
+		}
+		return createSnowflake({timestamp, workerId: 0, sequence: 0});
 	}
 }
