@@ -14,7 +14,7 @@ export interface ContentSignals {
 const MAX_LINKS = 16;
 const MAX_URL_LENGTH = 512;
 const MAX_TOKENS = 512;
-const INVISIBLE = /[­᠎​-‏‪-‮⁠-⁤﻿]/g;
+const INVISIBLE = /[\u00AD\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2064\uFEFF]/g;
 const WHITESPACE = /\s+/g;
 const TOKEN = /[\p{L}\p{N}]+/gu;
 const URL_CANDIDATE = /https?:\/\/[^\s<>"'`|\\^{}]+/gi;
