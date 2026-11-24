@@ -16,10 +16,6 @@ Each request also counts against a global bucket of 50 requests per second for e
 
 Buckets refill continuously. A request still counts when the API rejects it with an error.
 
-:::caution[A global denial signs the user out]
-When the global bucket denies a request made with a user session token, the API revokes that token and the client has to log in again. Bot tokens, OAuth2 access tokens and Admin API keys are never revoked this way.
-:::
-
 ## Rate limit response object
 
 A 429 body has the fields of the [error response](/http-api/#error-response) and two more.
