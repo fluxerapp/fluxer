@@ -978,7 +978,10 @@ pub fn normalize_phone_number(text: &str) -> String {
 }
 
 fn is_trimmed_autolink_punctuation(char: u8) -> bool {
-    matches!(char, b'.' | b',' | b';' | b':' | b'!' | b'?')
+    matches!(
+        char,
+        b'.' | b',' | b';' | b':' | b'!' | b'?' | b'"' | b'\'' | b']'
+    )
 }
 
 fn has_terminal_tld(text: &str) -> bool {
