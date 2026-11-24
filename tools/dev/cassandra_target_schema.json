@@ -4141,10 +4141,6 @@
 					"type": "text"
 				},
 				{
-					"name": "redeemed_phone_country_code",
-					"type": "text"
-				},
-				{
 					"name": "redeemed_billing_country_code",
 					"type": "text"
 				}

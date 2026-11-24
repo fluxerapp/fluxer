@@ -64,7 +64,6 @@ function normaliseGiftCodeRowForWrite(data: GiftCodeRow): GiftCodeRow {
 		revoked_at: data.revoked_at ?? null,
 		premium_reversed_seconds: data.premium_reversed_seconds ?? null,
 		redeemed_geoip_country_code: data.redeemed_geoip_country_code ?? null,
-		redeemed_phone_country_code: data.redeemed_phone_country_code ?? null,
 		redeemed_billing_country_code: data.redeemed_billing_country_code ?? null,
 	};
 }
@@ -160,7 +159,6 @@ export class GiftCodeRepository {
 					redeemed_by_user_id: Db.set(userId),
 					redeemed_at: Db.set(new Date()),
 					redeemed_geoip_country_code: Db.set(countries.geoipCountryCode),
-					redeemed_phone_country_code: Db.set(countries.phoneCountryCode),
 					redeemed_billing_country_code: Db.set(countries.billingCountryCode),
 				},
 			),
@@ -183,7 +181,6 @@ export class GiftCodeRepository {
 					redeemed_by_user_id: Db.set(null),
 					redeemed_at: Db.set(null),
 					redeemed_geoip_country_code: Db.set(null),
-					redeemed_phone_country_code: Db.set(null),
 					redeemed_billing_country_code: Db.set(null),
 				},
 			),
