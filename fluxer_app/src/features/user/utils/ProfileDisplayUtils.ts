@@ -82,13 +82,13 @@ export function getProfileAvatarMenuUrl(
 				userId: user.id,
 				avatar: user.avatar,
 				memberAvatar: guildMember.avatar,
-				animated: false,
+				animated: true,
 				size: MEDIA_PROXY_AVATAR_SIZE_DEFAULT,
 			});
 		}
 	}
 	if (user.avatar) {
-		return AvatarUtils.getUserAvatarURL(user, false, MEDIA_PROXY_AVATAR_SIZE_DEFAULT);
+		return AvatarUtils.getUserAvatarURL(user, true, MEDIA_PROXY_AVATAR_SIZE_DEFAULT);
 	}
 	return null;
 }

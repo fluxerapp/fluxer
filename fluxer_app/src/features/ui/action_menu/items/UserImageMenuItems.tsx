@@ -63,7 +63,11 @@ export function getUserMenuAvatarUrl(options: UserImageMenuUrlOptions): string |
 }
 
 export function getUserMenuBannerUrl(options: UserImageMenuUrlOptions): string | null {
-	return ProfileDisplayUtils.getProfileBannerUrl(getUserImageMenuProfileContext(options), options.previewOverrides);
+	return ProfileDisplayUtils.getProfileBannerUrl(
+		getUserImageMenuProfileContext(options),
+		options.previewOverrides,
+		true,
+	);
 }
 
 export const UserImageMenuItems: React.FC<UserImageMenuItemsProps> = observer(
