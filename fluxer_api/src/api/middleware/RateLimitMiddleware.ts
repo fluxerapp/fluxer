@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash} from 'node:crypto';
-import * as AuthSession from '@app/api/auth/AuthSession';
 import {Config} from '@app/api/Config';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {getRequestClientIp} from '@app/api/utils/RequestClientIp';
@@ -156,18 +155,6 @@ function getRetryAfterSeconds(result: RateLimitResult): number {
 	return Math.max(1, Math.ceil((result.resetTime.getTime() - Date.now()) / 1000));
 }
 
-async function revokeAuthenticatedSessionOnGlobalRateLimit(ctx: Context<HonoEnv>): Promise<void> {
-	const authTokenType = ctx.get('authTokenType');
-	if (authTokenType !== 'session') return;
-	const user = ctx.get('user');
-	if (!user || user.isBot) return;
-	const token = ctx.get('authToken');
-	if (!token) return;
-	try {
-		await AuthSession.revokeToken(ctx.get('apiContext'), token);
-	} catch (_error) {}
-}
-
 interface RateLimitMiddlewareOptions {
 	skipRouteLimit?: (ctx: Context<HonoEnv>) => Promise<boolean>;
 }
@@ -200,7 +187,6 @@ export function RateLimitMiddleware(
 			const globalLimit = getGlobalRateLimit(ctx);
 			const globalResult = await rateLimitService.checkGlobalLimit(clientId, globalLimit);
 			if (!globalResult.allowed) {
-				await revokeAuthenticatedSessionOnGlobalRateLimit(ctx);
 				throw new RateLimitError({
 					global: true,
 					retryAfter: getRetryAfterSeconds(globalResult),
