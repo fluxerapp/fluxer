@@ -114,6 +114,7 @@
 	"enforcement.summary.content_removal": "{all, select, yes {เราได้ลบข้อความทั้งหมดที่คุณส่งแล้ว} other {เราได้ลบข้อความที่คุณส่งจำนวน {count, plural, =1 {# ข้อความ} other {# ข้อความ}} แล้ว}}",
 	"enforcement.summary.feature_limit": "{ends, select, yes {เราได้จำกัดฟีเจอร์หนึ่งในบัญชีของคุณจนถึง {ends_at}} other {เราได้จำกัดฟีเจอร์หนึ่งในบัญชีของคุณ}}",
 	"enforcement.summary.profile_reset": "เราได้รีเซ็ตบางส่วนของโปรไฟล์ของคุณ: {fields}",
+	"enforcement.summary.superseding": "",
 	"enforcement.summary.suspension": "{target, select, bot {เราได้ระงับบอท {bot_name} ของคุณชั่วคราวจนถึง {ends_at}} other {เราได้ระงับบัญชีของคุณชั่วคราวจนถึง {ends_at}}}",
 	"enforcement.summary.suspension_permanent": "{target, select, bot {เราได้แบนบอท {bot_name} ของคุณ} other {เราได้แบนบัญชีของคุณ}}",
 	"enforcement.summary.warning": "เราขอแจ้งเตือนคุณเกี่ยวกับกิจกรรมในบัญชีของคุณ",

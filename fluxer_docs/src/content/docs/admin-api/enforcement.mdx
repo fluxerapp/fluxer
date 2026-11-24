@@ -1,7 +1,7 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Enforcement decisions
-description: The record behind every restriction staff apply, the notice it sends, and the routes that read, annotate and end it.
+description: The record behind every restriction staff apply, the notice it sends, and the routes that read, annotate, change and end it.
 ---
 
 import RouteHeader from '@/components/RouteHeader.astro';
@@ -43,6 +43,8 @@ The API computes two more states each time it returns a decision, and never stor
 - `replaced`: an active suspension or closure that a later decision replaced
 
 A closure replaces an active suspension and lifts it. A replaced decision gets no ended email.
+
+When staff [change the reason](#change-the-reason-for-an-enforcement-decision), a new decision takes over and the old one ends as `superseded`. The two link to each other through `supersedes` and `superseded_by`.
 
 ### Basis
 
@@ -192,12 +194,14 @@ A person's suspension or closure notice is sent by email only. Every other notic
 | payment_at | ?ISO8601 timestamp | The charge a payment decision is about |
 | report_ids<sup>1</sup> | array[snowflake] | Linked reports |
 | decided_by | snowflake | The staff member who decided, or 0 for an automated decision |
+| supersedes | ?snowflake | The decision this one took over from when its reason changed |
 | created_at | ISO8601 timestamp | When the decision was made |
 | status | string | `active` or `ended` |
-| end_outcome | ?string | `lifted`, `reversed` or `expired` |
+| end_outcome | ?string | `lifted`, `reversed`, `expired` or `superseded` |
 | ended_at | ?ISO8601 timestamp | When the decision ended |
 | ended_by | ?snowflake | Who ended it |
 | end_statement | ?string | Note to the user sent with the ended email |
+| superseded_by | ?snowflake | The decision that took over when the reason changed |
 | notice_status | string | `pending`, `sent` or `undelivered` |
 | notice_channels | array[string] | `email`, `system_dm` and `sign_in` |
 | notice_locale | ?string | The locale the notice was written in |
@@ -344,5 +348,36 @@ Ending any other kind changes nothing on the account. Ending a closure also unbl
 | 409 | [error response](/admin-api/#error-response) | `ENFORCEMENT_DELETION_STARTED` when the deletion of a closed account has started |
 
 The holder is emailed that the restriction ended or was reversed, with the statement when one is given. Every kind except a person's suspension or closure also gets a system DM.
+
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
+
+## Change the reason for an enforcement decision
+
+<RouteHeader method="POST" path="/v1/admin/enforcement-decisions/{decision_id}/supersede" auditReason />
+
+Records a new decision with a new reason in place of an active decision about a user, and ends the old one as `superseded`. You need `enforcement:view` and the same ACL as [ending the decision](#end-an-enforcement-decision). The new reason is checked like a new decision of the same kind, with the same [validation](#validation), and the `X-Audit-Log-Reason` header becomes its first note.
+
+The restriction never lapses. The new decision keeps the kind, `ends_at`, `deletion_at`, `limit`, `profile_fields` and removal counts of the old one, and takes over its network blocks. For a suspension or closure, `enforcement_decision_id` on the account moves to the new decision. A closure also updates `deletion_reason_code`, and blocks or unblocks the email address when the new rule bars new accounts and the old one did not, or the other way round.
+
+The new decision has its own evidence and reports. Evidence from the old decision is not copied, except the profile values of a profile reset. The old decision keeps its reason, statement, evidence, notes and the notice that was sent.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| decision | [decision input](#enforcement-decision-input) object | The new reason |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [enforcement decision](#enforcement-decision-object) object | The new decision |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` when the new reason fails [validation](#validation), or with `ENFORCEMENT_KIND_NOT_ALLOWED` on `decision_id` for a decision about a community or from a payment dispute |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_ENFORCEMENT_DECISION` when no decision has this ID |
+| 409 | [error response](/admin-api/#error-response) | `ENFORCEMENT_DECISION_ENDED` when the decision already ended, or is a suspension or limit past its end |
+| 409 | [error response](/admin-api/#error-response) | `ENFORCEMENT_DECISION_REPLACED` when a later decision replaced the suspension or closure |
+| 409 | [error response](/admin-api/#error-response) | `ENFORCEMENT_DELETION_STARTED` when the deletion of a closed account has started |
+
+The holder gets one notice for the new decision, sent the same way as any [notice](#notice-delivery). It starts with what the decision does, says that the reason changed and which decision it replaces, and gives the new rule, statement and an appeal deadline counted from this notice. No ended email is sent for the old decision.
 
 The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.

@@ -114,6 +114,7 @@
 	"enforcement.summary.content_removal": "{all, select, yes {보낸 메시지를 모두 삭제했어요.} other {보낸 메시지 {count, plural, other {#개}}를 삭제했어요.}}",
 	"enforcement.summary.feature_limit": "{ends, select, yes {{ends_at}까지 계정의 기능 하나를 제한했어요.} other {계정의 기능 하나를 제한했어요.}}",
 	"enforcement.summary.profile_reset": "프로필의 일부를 초기화했어요: {fields}.",
+	"enforcement.summary.superseding": "",
 	"enforcement.summary.suspension": "{target, select, bot {{bot_name} 봇을 {ends_at}까지 정지했어요.} other {계정을 {ends_at}까지 정지했어요.}}",
 	"enforcement.summary.suspension_permanent": "{target, select, bot {{bot_name} 봇을 영구 정지했어요.} other {계정을 영구 정지했어요.}}",
 	"enforcement.summary.warning": "계정에서 발생한 활동에 대해 경고드려요.",

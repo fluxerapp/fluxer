@@ -114,6 +114,7 @@
 	"enforcement.summary.content_removal": "{all, select, yes {我們移除了您傳送的所有訊息。} other {我們移除了您傳送的 {count, plural, other {# 則訊息}}。}}",
 	"enforcement.summary.feature_limit": "{ends, select, yes {我們限制了您帳號的一項功能，直到 {ends_at}。} other {我們限制了您帳號的一項功能。}}",
 	"enforcement.summary.profile_reset": "我們重設了您個人檔案的部分內容：{fields}。",
+	"enforcement.summary.superseding": "",
 	"enforcement.summary.suspension": "{target, select, bot {我們暫時停權了您的機器人 {bot_name}，直到 {ends_at}。} other {我們暫時停權了您的帳號，直到 {ends_at}。}}",
 	"enforcement.summary.suspension_permanent": "{target, select, bot {我們永久停權了您的機器人 {bot_name}。} other {我們永久停權了您的帳號。}}",
 	"enforcement.summary.warning": "我們就您帳號上的活動向您提出警告。",

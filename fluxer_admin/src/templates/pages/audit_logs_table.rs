@@ -30,6 +30,7 @@ pub fn action_badge_variant(action: &str) -> BadgeVariant {
         | "update_settings"
         | "annotate_ban"
         | "annotate_enforcement_decision"
+        | "supersede_enforcement_decision"
         | "annotate_report" => BadgeVariant::Info,
         "delete_message" | "warn_user" => BadgeVariant::Warning,
         _ => BadgeVariant::Default,

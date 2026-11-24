@@ -114,6 +114,7 @@
 	"enforcement.summary.content_removal": "{all, select, yes {Gönderdiğin tüm mesajları kaldırdık.} other {Gönderdiğin {count, plural, one {# mesajı} other {# mesajı}} kaldırdık.}}",
 	"enforcement.summary.feature_limit": "{ends, select, yes {Hesabındaki bir özelliği {ends_at} tarihine kadar kısıtladık.} other {Hesabındaki bir özelliği kısıtladık.}}",
 	"enforcement.summary.profile_reset": "Profilinin bazı bölümlerini sıfırladık: {fields}.",
+	"enforcement.summary.superseding": "",
 	"enforcement.summary.suspension": "{target, select, bot {{bot_name} adlı botunu {ends_at} tarihine kadar askıya aldık.} other {Hesabını {ends_at} tarihine kadar askıya aldık.}}",
 	"enforcement.summary.suspension_permanent": "{target, select, bot {{bot_name} adlı botunu kalıcı olarak askıya aldık.} other {Hesabını kalıcı olarak askıya aldık.}}",
 	"enforcement.summary.warning": "Hesabındaki etkinlik nedeniyle seni uyarıyoruz.",

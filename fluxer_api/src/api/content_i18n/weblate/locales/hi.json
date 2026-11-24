@@ -114,6 +114,7 @@
 	"enforcement.summary.content_removal": "{all, select, yes {हमने आपके भेजे सभी मैसेज हटा दिए हैं।} other {{count, plural, =1 {हमने आपका भेजा # मैसेज हटा दिया है।} other {हमने आपके भेजे # मैसेज हटा दिए हैं।}}}}",
 	"enforcement.summary.feature_limit": "{ends, select, yes {हमने {ends_at} तक आपके अकाउंट पर एक फ़ीचर सीमित कर दिया है।} other {हमने आपके अकाउंट पर एक फ़ीचर सीमित कर दिया है।}}",
 	"enforcement.summary.profile_reset": "हमने आपकी प्रोफ़ाइल के कुछ हिस्से रीसेट कर दिए हैं: {fields}।",
+	"enforcement.summary.superseding": "",
 	"enforcement.summary.suspension": "{target, select, bot {हमने आपके बॉट {bot_name} को {ends_at} तक सस्पेंड कर दिया है।} other {हमने आपके अकाउंट को {ends_at} तक सस्पेंड कर दिया है।}}",
 	"enforcement.summary.suspension_permanent": "{target, select, bot {हमने आपके बॉट {bot_name} को बैन कर दिया है।} other {हमने आपके अकाउंट को बैन कर दिया है।}}",
 	"enforcement.summary.warning": "हम आपको आपके अकाउंट पर हुई गतिविधि के बारे में चेतावनी दे रहे हैं।",

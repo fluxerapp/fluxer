@@ -18,6 +18,7 @@ import type {
 } from '@app/api/database/types/EnforcementTypes';
 import type {IARMessageContextRow} from '@app/api/database/types/ReportTypes';
 import {type ClosureStateDeps, cancelClosure} from '@app/api/enforcement/ClosureState';
+import {isDecisionExpired} from '@app/api/enforcement/DecisionStatus';
 import {loadDecisionNotice} from '@app/api/enforcement/EnforcementAccountNotice';
 import type {EnforcementActor} from '@app/api/enforcement/EnforcementActor';
 import type {EnforcementDecisionRepository} from '@app/api/enforcement/EnforcementDecisionRepository';
@@ -84,6 +85,7 @@ import type {
 	EnforcementDecisionListQuery,
 	EnforcementDecisionListResponse,
 	EnforcementDecisionResponse,
+	EnforcementDecisionSupersedeRequest,
 	NetworkBlockCandidatesResponse,
 	NetworkBlockRequest,
 } from '@fluxer/schema/src/domains/admin/EnforcementSchemas';
@@ -174,6 +176,10 @@ function kindAcls(decision: EnforcementDecisionRow): Array<string> {
 	}
 }
 
+function barsNewAccounts(reasonCode: EnforcementReasonCode): boolean {
+	return ENFORCEMENT_RULES[ENFORCEMENT_REASONS[reasonCode].rule].barsNewAccounts;
+}
+
 function firstNoteBody(
 	input: EnforcementDecisionInput,
 	internalNote: string,
@@ -233,6 +239,7 @@ type DecisionFields = Pick<
 	| 'payment_at'
 	| 'report_ids'
 	| 'decided_by'
+	| 'supersedes'
 >;
 
 function evidenceSubject(subject: EnforcementSubject): EvidenceSubject {
@@ -307,6 +314,7 @@ export class EnforcementDecisionService {
 				payment_at: null,
 				report_ids: reports.length > 0 ? new Set(reports.map((report) => report.reportId)) : null,
 				decided_by: actor.adminUserId,
+				supersedes: null,
 			},
 			{messages: stored, channelKinds, profileValues: profileReset?.values ?? null},
 			firstNoteBody(
@@ -370,6 +378,7 @@ export class EnforcementDecisionService {
 				payment_at: paymentAt,
 				report_ids: null,
 				decided_by: SYSTEM_USER_ID,
+				supersedes: null,
 			},
 			{messages: [], channelKinds: new Map(), profileValues: null},
 			internalNote,
@@ -403,6 +412,7 @@ export class EnforcementDecisionService {
 				payment_at: paymentAt,
 				report_ids: null,
 				decided_by: decidedBy,
+				supersedes: null,
 			},
 			{messages: [], channelKinds: new Map(), profileValues: null},
 			internalNote,
@@ -463,6 +473,117 @@ export class EnforcementDecisionService {
 		}
 		await this.finish(decision, request, actor.adminUserId, actor.internalNote);
 		return this.get(decisionId, actor.acls);
+	}
+
+	async supersede(
+		decisionId: bigint,
+		{decision: input}: EnforcementDecisionSupersedeRequest,
+		actor: EnforcementActor,
+	): Promise<EnforcementDecisionResponse> {
+		const previous = await this.requireDecision(decisionId);
+		requireGrantedAdminACLs(actor.acls, kindAcls(previous));
+		if (previous.status === 'ended' || isDecisionExpired(previous)) {
+			throw new EnforcementDecisionEndedError();
+		}
+		if (previous.subject_type !== 'user' || previous.payment_at !== null) {
+			throw InputValidationError.fromCode('decision_id', ValidationErrorCodes.ENFORCEMENT_KIND_NOT_ALLOWED);
+		}
+		const user = await this.requireUserSubject(previous);
+		if (isAccountKind(previous.kind) && user.enforcementDecisionId !== previous.decision_id) {
+			throw new EnforcementDecisionReplacedError();
+		}
+		if (previous.kind === 'closure' && user.deletionStartedAt) {
+			throw new EnforcementDeletionStartedError();
+		}
+		const params: RecordDecisionParams = {
+			subject: {type: 'user', user},
+			kind: previous.kind,
+			input,
+			endsAt: previous.ends_at,
+			limit: previous.feature_limit ?? undefined,
+			removal: previous.removed_all_messages ? {type: 'all_messages'} : undefined,
+			actor,
+		};
+		const {reports, evidence, internalNote} = await this.validate(params);
+		const restricted = ENFORCEMENT_REASONS[input.reason_code].handling === 'restricted';
+		const stored = restricted ? evidence.map(restrictedEvidence) : evidence;
+		const channelKinds = await snapshotEvidenceChannelKinds(evidence, this.deps.channelRepository);
+		const profileValues = previous.profile_fields
+			? ((await this.deps.repository.getEvidence(decisionId))?.profile_values ?? null)
+			: null;
+		const decision = await this.persist(
+			await this.subjectFields({type: 'user', user}),
+			{
+				kind: previous.kind,
+				reason_code: input.reason_code,
+				source: input.source,
+				automation: input.automation,
+				statement: input.statement ?? null,
+				rights_holder: input.rights_holder ?? null,
+				ends_at: previous.ends_at,
+				deletion_at: previous.deletion_at,
+				feature_limit: previous.feature_limit,
+				profile_fields: previous.profile_fields,
+				removed_message_count: previous.removed_message_count,
+				removed_all_messages: previous.removed_all_messages,
+				payment_at: null,
+				report_ids: reports.length > 0 ? new Set(reports.map((report) => report.reportId)) : null,
+				decided_by: actor.adminUserId,
+				supersedes: previous.decision_id,
+			},
+			{messages: stored, channelKinds, profileValues},
+			[
+				firstNoteBody(input, internalNote, null),
+				`Replaces decision ${previous.decision_id}, which gave reason code ${previous.reason_code}`,
+			].join('\n\n'),
+			async (supersedingId) => {
+				await this.handOver(
+					previous,
+					user,
+					{decisionId: supersedingId, reasonCode: input.reason_code},
+					actor.adminUserId,
+				);
+			},
+		);
+		if (
+			previous.kind === 'closure' &&
+			user.email &&
+			barsNewAccounts(previous.reason_code) !== barsNewAccounts(input.reason_code)
+		) {
+			if (barsNewAccounts(input.reason_code)) {
+				await this.banClosedAccountEmail(user, actor.adminUserId, internalNote);
+			} else {
+				await this.deps.banManagementService.unbanEmail({email: user.email}, actor.adminUserId, internalNote);
+			}
+		}
+		const movedBlocks = isAccountKind(previous.kind)
+			? await this.takeOverNetworkBlocks(previous.decision_id, decision, {
+					keep: canBlockNetworks(previous.kind, previous.ends_at),
+				})
+			: [];
+		await this.resolveReports(
+			reports.map((report) => ({report, outcome: reportOutcome(report, params, [])})),
+			actor,
+			internalNote,
+		);
+		const delivered = await this.deliverNotice(decision, stored, channelKinds, latestNetworkBlockExpiry(movedBlocks));
+		await this.deps.auditService.createAuditLog({
+			adminUserId: actor.adminUserId,
+			targetType: 'enforcement_decision',
+			targetId: previous.decision_id,
+			action: 'supersede_enforcement_decision',
+			auditLogReason: internalNote,
+			metadata: new Map([
+				['decision_id', previous.decision_id.toString()],
+				['kind', previous.kind],
+				['previous_reason_code', previous.reason_code.toString()],
+				['reason_code', input.reason_code.toString()],
+				['subject_id', previous.subject_id.toString()],
+				['superseded_by', delivered.decision_id.toString()],
+				['notice_status', delivered.notice_status],
+			]),
+		});
+		return this.get(decision.decision_id, actor.acls);
 	}
 
 	async reverseAutomatedPurchaseLimits(subjectId: UserID, paymentAt: Date, internalNote: string): Promise<void> {
@@ -585,6 +706,7 @@ export class EnforcementDecisionService {
 			ended_at: null,
 			ended_by: null,
 			end_statement: null,
+			superseded_by: null,
 			notice_status: 'pending',
 			notice_channels: null,
 			notice_locale: null,
@@ -679,6 +801,37 @@ export class EnforcementDecisionService {
 		}
 	}
 
+	private async handOver(
+		previous: EnforcementDecisionRow,
+		user: User,
+		successor: {decisionId: bigint; reasonCode: EnforcementReasonCode},
+		actorId: UserID,
+	): Promise<void> {
+		const superseded = await this.deps.repository.supersedeIfActive(previous.decision_id, {
+			endedAt: new Date(),
+			endedBy: actorId,
+			supersededBy: successor.decisionId,
+		});
+		if (!superseded) {
+			throw new EnforcementDecisionEndedError();
+		}
+		if (!isAccountKind(previous.kind)) {
+			return;
+		}
+		const closure = previous.kind === 'closure';
+		await this.deps.apiContext.services.users.patchUpsert(
+			user.id,
+			{
+				enforcement_decision_id: successor.decisionId,
+				...(closure ? {deletion_reason_code: successor.reasonCode} : {}),
+			},
+			user.toRow(),
+		);
+		if (closure && user.pendingDeletionAt) {
+			await this.deps.kvDeletionQueue.scheduleDeletion(user.id, user.pendingDeletionAt, successor.reasonCode);
+		}
+	}
+
 	private async notifyClosureEnded(decision: EnforcementDecisionRow): Promise<void> {
 		const {onClosureEnded} = this.deps;
 		if (!onClosureEnded) {
@@ -726,8 +879,7 @@ export class EnforcementDecisionService {
 				}
 				await cancelClosure(this.deps, user);
 				await this.deps.banManagementService.removeDecisionNetworkBlocks([decision.decision_id]);
-				const {rule} = ENFORCEMENT_REASONS[decision.reason_code];
-				if (ENFORCEMENT_RULES[rule].barsNewAccounts && user.email) {
+				if (barsNewAccounts(decision.reason_code) && user.email) {
 					await this.deps.banManagementService.unbanEmail({email: user.email}, actorId, internalNote);
 				}
 				await emitAdminAction(actorId, subjectId, 'cancel_deletion');

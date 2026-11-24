@@ -17,8 +17,8 @@ use crate::{
     templates::{
         components::{
             enforcement_fields::{
-                FIELD_HELP_CLASS, FIELD_INPUT_CLASS, FIELD_LABEL_CLASS, field_label,
-                internal_note_field, statement_field,
+                DecisionFields, FIELD_HELP_CLASS, FIELD_INPUT_CLASS, FIELD_LABEL_CLASS,
+                enforcement_fields, field_label, internal_note_field, statement_field,
             },
             form::{csrf_input, form_actions, submit_button},
             page_container::{page_header, page_header_with_back},
@@ -58,6 +58,7 @@ pub fn state_label(
         ("ended", Some("lifted")) => "Lifted",
         ("ended", Some("reversed")) => "Reversed",
         ("ended", Some("expired")) => "Expired",
+        ("ended", Some("superseded")) => "Superseded",
         ("ended", _) => "Ended",
         _ if replaced => "Replaced",
         _ if expired => "Expired",
@@ -222,6 +223,37 @@ pub fn end_decision_form(form: &EndDecisionForm<'_>) -> Markup {
     }
 }
 
+fn supersede_form(base: &str, decision: &EnforcementDecisionResponse, csrf_token: &str) -> Markup {
+    let decision_id = decision.decision_id.as_str();
+    html! {
+        form method="post"
+            action={(base) "/decisions/" (decision_id) "?action=supersede"}
+            data-admin-refresh-on-success="#decision-detail" {
+            (csrf_input(csrf_token))
+            div class="space-y-4" {
+                p class=(FIELD_HELP_CLASS) {
+                    "Records a new decision with this reason and ends this one as superseded. The restriction and its end stay as they are. The user gets one notice with the new reason, not a reversal."
+                }
+                (enforcement_fields(&DecisionFields {
+                    id_prefix: &format!("supersede-{decision_id}"),
+                    kind: decision.kind,
+                    report_ids: &[],
+                    messages: Some(&[]),
+                    user_flags: None,
+                    allow_restricted: true,
+                }))
+                (form_actions(submit_button("Change reason")))
+            }
+        }
+    }
+}
+
+fn decision_link(base: &str, decision_id: &str) -> Markup {
+    html! {
+        a href={(base) "/decisions/" (decision_id)} class="text-blue-600 hover:underline" { (decision_id) }
+    }
+}
+
 fn field(label: &str, value: Markup) -> Markup {
     html! {
         div class="flex min-w-0 flex-col gap-1" {
@@ -279,6 +311,9 @@ fn summary_section(
                 }))
                 (field("Decided", html! { (format_admin_timestamp(&decision.created_at)) }))
                 (field("Decided by", user_link(base, users, &decision.decided_by)))
+                @if let Some(previous) = &decision.supersedes {
+                    (field("Replaces", decision_link(base, previous.as_str())))
+                }
                 @if !ends.is_empty() {
                     (field("Ends", html! { (ends) }))
                 }
@@ -311,6 +346,9 @@ fn summary_section(
                             " by " (user_link(base, users, by))
                         }
                     }))
+                }
+                @if let Some(successor) = &decision.superseded_by {
+                    (field("Superseded by", decision_link(base, successor.as_str())))
                 }
                 @if let Some(statement) = &decision.end_statement {
                     (field("Note to the user on ending", html! { span class="whitespace-pre-wrap" { (statement) } }))
@@ -575,6 +613,15 @@ pub fn decision_detail(
                     csrf_token,
                     refresh_target: "#decision-detail",
                 })))
+            }
+            @if open
+                && !expired_end
+                && !decision.expired
+                && decision.subject_type.to_string() == "user"
+                && decision.payment_at.is_none()
+                && can_end(admin_acls, decision.kind, decision.removed_all_messages)
+            {
+                (section_card_simple("Change reason", supersede_form(base, decision, csrf_token)))
             }
             (notice_section(decision))
             (evidence_section(base, decision))

@@ -114,6 +114,7 @@
 	"enforcement.summary.content_removal": "{all, select, yes {Chúng tôi đã xóa tất cả tin nhắn bạn đã gửi.} other {Chúng tôi đã xóa {count, plural, other {# tin nhắn}} bạn đã gửi.}}",
 	"enforcement.summary.feature_limit": "{ends, select, yes {Chúng tôi đã giới hạn một tính năng trên tài khoản của bạn cho đến {ends_at}.} other {Chúng tôi đã giới hạn một tính năng trên tài khoản của bạn.}}",
 	"enforcement.summary.profile_reset": "Chúng tôi đã đặt lại một phần hồ sơ của bạn: {fields}.",
+	"enforcement.summary.superseding": "",
 	"enforcement.summary.suspension": "{target, select, bot {Chúng tôi đã đình chỉ bot {bot_name} của bạn cho đến {ends_at}.} other {Chúng tôi đã đình chỉ tài khoản của bạn cho đến {ends_at}.}}",
 	"enforcement.summary.suspension_permanent": "{target, select, bot {Chúng tôi đã cấm bot {bot_name} của bạn.} other {Chúng tôi đã cấm tài khoản của bạn.}}",
 	"enforcement.summary.warning": "Chúng tôi cảnh báo bạn về hoạt động trên tài khoản của bạn.",

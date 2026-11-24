@@ -114,6 +114,7 @@
 	"enforcement.summary.content_removal": "{all, select, yes {أزلنا كل الرسائل التي أرسلتها.} other {أزلنا {count, plural, =1 {رسالة واحدة} two {رسالتين} few {# رسائل} many {# رسالة} other {# رسالة}} أرسلتها.}}",
 	"enforcement.summary.feature_limit": "{ends, select, yes {قيّدنا ميزة في حسابك حتى {ends_at}.} other {قيّدنا ميزة في حسابك.}}",
 	"enforcement.summary.profile_reset": "أعدنا تعيين أجزاء من ملفك الشخصي: {fields}.",
+	"enforcement.summary.superseding": "",
 	"enforcement.summary.suspension": "{target, select, bot {علّقنا البوت الخاص بك {bot_name} حتى {ends_at}.} other {علّقنا حسابك حتى {ends_at}.}}",
 	"enforcement.summary.suspension_permanent": "{target, select, bot {حظرنا البوت الخاص بك {bot_name}.} other {حظرنا حسابك.}}",
 	"enforcement.summary.warning": "نوجّه إليك تحذيرًا بشأن نشاط في حسابك.",

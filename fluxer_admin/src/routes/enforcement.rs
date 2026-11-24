@@ -13,7 +13,7 @@ use crate::{
         htmx,
     },
     state::AppState,
-    templates::pages::enforcement_decision,
+    templates::{components::enforcement_fields::decision_from_form, pages::enforcement_decision},
     utils::{forms::MultiValueForm, snowflake::is_snowflake},
 };
 use axum::{
@@ -170,6 +170,19 @@ async fn dispatch(
             {
                 Ok(_) => FlashData::success("Decision ended"),
                 Err(error) => failure("Failed to end the decision", &error),
+            }
+        }
+        Some("supersede") => {
+            let submission = match decision_from_form(form) {
+                Ok(submission) => submission,
+                Err(message) => return FlashData::error(message),
+            };
+            match client.supersede_decision(decision_id, &submission).await {
+                Ok(decision) => FlashData::success(format!(
+                    "Reason changed. The new decision is {}",
+                    decision.decision_id.as_str()
+                )),
+                Err(error) => failure("Failed to change the reason", &error),
             }
         }
         Some("add_note") => {

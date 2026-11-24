@@ -191,6 +191,26 @@ impl AdminApiClient {
         .await
     }
 
+    pub async fn supersede_decision(
+        &self,
+        decision_id: &str,
+        submission: &DecisionSubmission,
+    ) -> ApiResult<generated_types::EnforcementDecisionResponse> {
+        let body = generated_types::EnforcementDecisionSupersedeRequest {
+            decision: submission.decision.clone(),
+        };
+        self.send(
+            Method::POST,
+            &format!(
+                "/admin/enforcement-decisions/{}/supersede",
+                urlencoding::encode(decision_id)
+            ),
+            Some(&body),
+            Some(&submission.internal_note),
+        )
+        .await
+    }
+
     pub async fn annotate_decision(
         &self,
         decision_id: &str,

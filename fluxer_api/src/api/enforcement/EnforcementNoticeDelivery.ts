@@ -65,6 +65,7 @@ function ruleTitle(rule: EnforcementNotice['rule'], format: NoticeFormat): strin
 
 function kindLabel(decision: EnforcementDecisionRow, notice: EnforcementNotice): EnforcementNoticeKindLabel {
 	if (isBotDecision(decision)) return 'bot';
+	if (decision.supersedes !== null) return 'updated';
 	return notice.permanent ? 'ban' : decision.kind;
 }
 

@@ -114,6 +114,7 @@
 	"enforcement.summary.content_removal": "{all, select, yes {Removemos todas as mensagens que você enviou.} other {Removemos {count, plural, one {# mensagem que você enviou} other {# mensagens que você enviou}}.}}",
 	"enforcement.summary.feature_limit": "{ends, select, yes {Limitamos um recurso da sua conta até {ends_at}.} other {Limitamos um recurso da sua conta.}}",
 	"enforcement.summary.profile_reset": "Redefinimos partes do seu perfil: {fields}.",
+	"enforcement.summary.superseding": "",
 	"enforcement.summary.suspension": "{target, select, bot {Suspendemos seu bot {bot_name} até {ends_at}.} other {Suspendemos sua conta até {ends_at}.}}",
 	"enforcement.summary.suspension_permanent": "{target, select, bot {Banimos seu bot {bot_name}.} other {Banimos sua conta.}}",
 	"enforcement.summary.warning": "Este é um aviso sobre atividades na sua conta.",

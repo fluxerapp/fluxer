@@ -114,6 +114,7 @@
 	"enforcement.summary.content_removal": "{all, select, yes {Мы выдалілі ўсе адпраўленыя вамі паведамленні.} other {Мы выдалілі {count, plural, =1 {# адпраўленае вамі паведамленне} one {# адпраўленае вамі паведамленне} few {# адпраўленыя вамі паведамленні} many {# адпраўленых вамі паведамленняў} other {# адпраўленага вамі паведамлення}}.}}",
 	"enforcement.summary.feature_limit": "{ends, select, yes {Мы абмежавалі адну з функцый вашага ўліковага запісу да {ends_at}.} other {Мы абмежавалі адну з функцый вашага ўліковага запісу.}}",
 	"enforcement.summary.profile_reset": "Мы скінулі частку вашага профілю: {fields}.",
+	"enforcement.summary.superseding": "",
 	"enforcement.summary.suspension": "{target, select, bot {Мы прыпынілі працу вашага бота {bot_name} да {ends_at}.} other {Мы прыпынілі дзеянне вашага ўліковага запісу да {ends_at}.}}",
 	"enforcement.summary.suspension_permanent": "{target, select, bot {Мы забанілі вашага бота {bot_name}.} other {Мы забанілі ваш уліковы запіс.}}",
 	"enforcement.summary.warning": "Мы папярэджваем вас наконт актыўнасці ў вашым уліковым запісе.",

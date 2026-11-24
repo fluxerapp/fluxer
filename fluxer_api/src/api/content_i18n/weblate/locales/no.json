@@ -114,6 +114,7 @@
 	"enforcement.summary.content_removal": "{all, select, yes {Vi har fjernet alle meldinger du har sendt.} other {Vi har fjernet {count, plural, =1 {# melding} other {# meldinger}} du har sendt.}}",
 	"enforcement.summary.feature_limit": "{ends, select, yes {Vi har begrenset en funksjon på kontoen din frem til {ends_at}.} other {Vi har begrenset en funksjon på kontoen din.}}",
 	"enforcement.summary.profile_reset": "Vi har tilbakestilt deler av profilen din: {fields}.",
+	"enforcement.summary.superseding": "",
 	"enforcement.summary.suspension": "{target, select, bot {Vi har suspendert boten din {bot_name} frem til {ends_at}.} other {Vi har suspendert kontoen din frem til {ends_at}.}}",
 	"enforcement.summary.suspension_permanent": "{target, select, bot {Vi har utestengt boten din {bot_name}.} other {Vi har utestengt kontoen din.}}",
 	"enforcement.summary.warning": "Vi gir deg en advarsel om aktivitet på kontoen din.",

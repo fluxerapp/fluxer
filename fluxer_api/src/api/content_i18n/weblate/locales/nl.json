@@ -114,6 +114,7 @@
 	"enforcement.summary.content_removal": "{all, select, yes {We hebben alle berichten verwijderd die je hebt gestuurd.} other {We hebben {count, plural, =1 {# bericht dat je hebt gestuurd} other {# berichten die je hebt gestuurd}} verwijderd.}}",
 	"enforcement.summary.feature_limit": "{ends, select, yes {We hebben een functie op je account beperkt tot {ends_at}.} other {We hebben een functie op je account beperkt.}}",
 	"enforcement.summary.profile_reset": "We hebben delen van je profiel teruggezet: {fields}.",
+	"enforcement.summary.superseding": "",
 	"enforcement.summary.suspension": "{target, select, bot {We hebben je bot {bot_name} geschorst tot {ends_at}.} other {We hebben je account geschorst tot {ends_at}.}}",
 	"enforcement.summary.suspension_permanent": "{target, select, bot {We hebben je bot {bot_name} verbannen.} other {We hebben je account verbannen.}}",
 	"enforcement.summary.warning": "We geven je een waarschuwing over activiteit op je account.",

@@ -114,6 +114,7 @@
 	"enforcement.summary.content_removal": "{all, select, yes {Uklonili smo sve tvoje poruke.} other {Uklonili smo {count, plural, one {# tvoju poruku} few {# tvoje poruke} other {# tvojih poruka}}.}}",
 	"enforcement.summary.feature_limit": "{ends, select, yes {Ograničili smo jednu funkciju tvog računa do {ends_at}.} other {Ograničili smo jednu funkciju tvog računa.}}",
 	"enforcement.summary.profile_reset": "Vratili smo dijelove tvog profila na zadano: {fields}.",
+	"enforcement.summary.superseding": "",
 	"enforcement.summary.suspension": "{target, select, bot {Suspendirali smo tvog bota {bot_name} do {ends_at}.} other {Suspendirali smo tvoj račun do {ends_at}.}}",
 	"enforcement.summary.suspension_permanent": "{target, select, bot {Trajno smo blokirali tvog bota {bot_name}.} other {Trajno smo blokirali tvoj račun.}}",
 	"enforcement.summary.warning": "Upozoravamo te zbog aktivnosti na tvom računu.",
