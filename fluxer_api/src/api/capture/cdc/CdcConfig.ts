@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {MARKED_ROWS_PER_SECOND} from '@app/api/capture/cdc/CdcRepair';
+import {MARKED_ROWS_PER_SECOND, ROUTINE_ROWS_PER_SECOND} from '@app/api/capture/cdc/CdcRepair';
 
 export interface CdcNatsConfig {
 	url: string;
@@ -27,6 +27,7 @@ export interface CdcConfig {
 	port: number;
 	flushSeconds: number;
 	markedRowsPerSecond: number;
+	routineRowsPerSecond: number;
 }
 
 type Env = Readonly<Record<string, string | undefined>>;
@@ -82,5 +83,6 @@ export function loadCdcConfig(env: Env): CdcConfig {
 		port: positive(env, 'CDC_PORT', 9102),
 		flushSeconds: positive(env, 'CDC_FLUSH_SECONDS', 10),
 		markedRowsPerSecond: positive(env, 'CDC_MARKED_ROWS_PER_SECOND', MARKED_ROWS_PER_SECOND),
+		routineRowsPerSecond: positive(env, 'CDC_ROUTINE_ROWS_PER_SECOND', ROUTINE_ROWS_PER_SECOND),
 	};
 }

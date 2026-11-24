@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {rowState, selectedColumns} from '@app/api/capture/CaptureTables';
+import {rowLineFor} from '@app/api/capture/cdc/CdcApply';
 import {delay, withBackoff} from '@app/api/capture/cdc/CdcBackoff';
 import {type RowEncoder, rowExpiry, rowVersion} from '@app/api/capture/cdc/CdcRows';
 import {type CdcTable, cdcTableName} from '@app/api/capture/cdc/CdcSchema';
@@ -97,10 +98,11 @@ export async function repairTable(deps: RepairDeps, table: CdcTable, rowsPerSeco
 	const cql = `SELECT ${selectedColumns(table.layout).join(', ')} FROM ${name}`;
 	let pageState: string | undefined;
 	let rows = 0;
+	let read = 0;
 	do {
 		const page = await deps.locks.hold([name], async () => {
 			const readStartMs = Date.now();
-			const read = await retry(() =>
+			const result = await retry(() =>
 				deps.client.execute(cql, [], {
 					prepare: true,
 					fetchSize: PAGE_SIZE,
@@ -108,22 +110,26 @@ export async function repairTable(deps: RepairDeps, table: CdcTable, rowsPerSeco
 					...(pageState === undefined ? {} : {pageState}),
 				}),
 			);
-			const lines = read.rows.map((row) => {
+			const lines = result.rows.flatMap((row) => {
 				const state = rowState(table.layout, row);
-				return deps.encoder.rowLine(
-					table.columns,
+				const line = rowLineFor(
+					deps.encoder,
+					table,
 					state,
 					rowVersion(0, state, readStartMs * 1000),
 					rowExpiry(table.layout, state, readStartMs),
+					readStartMs,
 				);
+				return line === null ? [] : [line];
 			});
-			await retry(() => deps.clickhouse.insert(cdcTableName(name), lines));
-			return {written: lines.length, next: read.pageState ?? undefined};
+			if (lines.length > 0) await retry(() => deps.clickhouse.insert(cdcTableName(name), lines));
+			return {read: result.rows.length, written: lines.length, next: result.pageState ?? undefined};
 		});
 		rows += page.written;
+		read += page.read;
 		deps.onRows(name, page.written);
 		pageState = page.next;
-		const aheadMs = (rows / rowsPerSecond) * 1000 - (Date.now() - scanStartMs);
+		const aheadMs = (read / rowsPerSecond) * 1000 - (Date.now() - scanStartMs);
 		if (aheadMs > 0) await delay(aheadMs);
 	} while (pageState !== undefined);
 	const summary = await retry(() => deps.clickhouse.command(vanishedTombstoneSql(table, scanStartMs * 1000)));

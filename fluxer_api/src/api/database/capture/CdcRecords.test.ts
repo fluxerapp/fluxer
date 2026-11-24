@@ -4,6 +4,7 @@ import {readFileSync} from 'node:fs';
 import {CaptureCodec} from '@app/api/database/capture/CaptureCodec';
 import {
 	CDC_DROPPED_COLUMNS,
+	CDC_EMITTED_COLUMNS,
 	CDC_KEPT_SENSITIVE,
 	CDC_SKIPPED,
 	CDC_TABLES,
@@ -33,7 +34,13 @@ function keyColumns(table: SchemaTable): Set<string> {
 }
 
 function syncedColumns(): Array<[string, string]> {
-	return [...CDC_TABLES].flatMap((name) => (tables.get(name)?.columns ?? []).map(({name: column}) => [name, column]));
+	return [...CDC_TABLES].flatMap((name) => {
+		const emitted = CDC_EMITTED_COLUMNS[name];
+		const columns = (tables.get(name)?.columns ?? []).map(({name: column}) => column);
+		return columns
+			.filter((column) => emitted === undefined || emitted.includes(column))
+			.map((column) => [name, column]);
+	});
 }
 
 function listed(policy: Readonly<Record<string, Readonly<Record<string, string>> | ReadonlyArray<string>>>) {
@@ -73,6 +80,16 @@ describe('cdc table policy', () => {
 			return definition !== undefined && keyColumns(definition).has(column);
 		});
 		expect(droppedKeys).toEqual([]);
+	});
+
+	it('emits from message tables only listed columns that carry no text', () => {
+		const unknown = listed(CDC_EMITTED_COLUMNS).filter(
+			([table, column]) => !CDC_TABLES.has(table) || !tables.get(table)?.columns.some(({name}) => name === column),
+		);
+		expect(unknown).toEqual([]);
+		expect(CDC_EMITTED_COLUMNS['messages']).not.toContain('content');
+		expect(CDC_EMITTED_COLUMNS['messages']).not.toContain('webhook_name');
+		expect(CDC_TABLES.has('messages_by_author_id_v2')).toBe(false);
 	});
 });
 
