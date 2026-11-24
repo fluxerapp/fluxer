@@ -24,7 +24,7 @@ const DEFAULT_APP_PROXY_BUNDLE_LOCAL_ASSETS: &str = "false";
 #[cfg(feature = "s3")]
 const DEFAULT_STATIC_BUCKET: &str = "fluxer-static";
 #[cfg(feature = "s3")]
-const DEFAULT_S3_ENDPOINT: &str = "https://ewr1.vultrobjects.com";
+const DEFAULT_S3_ENDPOINT: &str = "https://s3.de.io.cloud.ovh.net";
 #[cfg(feature = "s3")]
 const IMMUTABLE_ASSET_CACHE_CONTROL: &str = "public, max-age=31536000, immutable";
 const RUNTIME_STATIC_DIR: &str = "/srv/app/static";
