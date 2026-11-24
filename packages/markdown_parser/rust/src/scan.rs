@@ -372,7 +372,7 @@ impl ChainMemo {
 }
 
 fn is_url_terminator(byte: u8) -> bool {
-    matches!(byte, b' ' | b'\t' | b'\n' | b'\r' | b'"')
+    matches!(byte, b' ' | b'\t' | b'\n' | b'\r')
 }
 
 pub(crate) fn step(text: &str, position: usize) -> Token {

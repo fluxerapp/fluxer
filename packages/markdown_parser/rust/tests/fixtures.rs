@@ -257,3 +257,48 @@ fn alert_text_after_list_keeps_space_before_inline_node() {
         ]})
     );
 }
+
+fn link_urls(value: &serde_json::Value) -> Vec<(String, bool)> {
+    value["nodes"]
+        .as_array()
+        .expect("nodes")
+        .iter()
+        .filter(|node| node["type"] == "Link")
+        .map(|node| {
+            (
+                node["url"].as_str().expect("url").to_owned(),
+                node["escaped"].as_bool().expect("escaped"),
+            )
+        })
+        .collect()
+}
+
+#[test]
+fn autolinks_keep_quotes_inside_urls() {
+    let flags = ParserFlags::ALL;
+    let explore = r#"https://example.com/explore?orgId=1&left={"datasource":"vm","queries":[{"refId":"A"}],"range":{"from":"now-3h","to":"now"}}"#;
+    assert_eq!(
+        link_urls(&parse(&format!("Source: {explore}"), flags, "")),
+        vec![(explore.to_owned(), false)]
+    );
+    assert_eq!(
+        link_urls(&parse(r#"see https://example.com/a"b more"#, flags, "")),
+        vec![(r#"https://example.com/a"b"#.to_owned(), false)]
+    );
+    assert_eq!(
+        link_urls(&parse(r#"say "https://example.com" ok"#, flags, "")),
+        vec![("https://example.com".to_owned(), true)]
+    );
+    assert_eq!(
+        link_urls(&parse(r#"end https://example.com/x"."#, flags, "")),
+        vec![("https://example.com/x".to_owned(), true)]
+    );
+    assert_eq!(
+        link_urls(&parse("'https://example.com'", flags, "")),
+        vec![("https://example.com".to_owned(), true)]
+    );
+    assert_eq!(
+        link_urls(&parse("[x](https://example.com/y)", flags, "")),
+        vec![("https://example.com/y".to_owned(), false)]
+    );
+}
