@@ -113,10 +113,7 @@ export class MessageContentService {
 	}
 
 	attachmentNsfwMode(params: NsfwScope): MediaProxyNsfwMode {
-		if (!this.isNSFWContentAllowed(params)) {
-			return 'block';
-		}
-		return this.skipsMediaScan(params) ? 'allow' : 'flag';
+		return this.isNSFWContentAllowed(params) ? 'flag' : 'block';
 	}
 
 	skipsMediaScan(params: NsfwScope): boolean {

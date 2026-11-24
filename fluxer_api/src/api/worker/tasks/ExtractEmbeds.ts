@@ -260,7 +260,7 @@ async function processUnfurlUrl(
 	});
 	if (embeds.length > 0) {
 		const messageEmbeds = embeds.map((e) => e.toMessageEmbed());
-		const safeEmbeds = nsfwMode === 'allow' ? messageEmbeds : messageEmbeds.filter((e) => !isEmbedNsfw(e));
+		const safeEmbeds = nsfwMode === 'block' ? messageEmbeds.filter((e) => !isEmbedNsfw(e)) : messageEmbeds;
 		if (safeEmbeds.length > 0) {
 			unfurledEmbedsByUrl.set(url, safeEmbeds);
 		}

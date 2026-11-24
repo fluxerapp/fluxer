@@ -29,10 +29,10 @@ function channel(type: number, nsfwOverride: boolean | null): Channel {
 }
 
 describe('attachmentNsfwMode in age-restricted guilds', () => {
-	it('skips classification in channels that inherit the guild setting', () => {
+	it('classifies and records uploads in channels that inherit the guild setting', () => {
 		expect(
 			service.attachmentNsfwMode({channel: channel(ChannelTypes.GUILD_TEXT, null), guild: ageRestrictedGuild}),
-		).toBe('allow');
+		).toBe('flag');
 	});
 
 	it('classifies uploads in a channel marked safe for work', () => {
@@ -49,5 +49,42 @@ describe('attachmentNsfwMode in age-restricted guilds', () => {
 				guild: ageRestrictedGuild,
 			}),
 		).toBe('flag');
+	});
+});
+
+const plainGuild = {
+	features: [],
+	nsfw_level: GuildNSFWLevel.SAFE,
+	explicit_content_filter: GuildExplicitContentFilterTypes.ALL_MEMBERS,
+} as unknown as GuildResponse;
+
+describe('attachmentNsfwMode always classifies', () => {
+	it('records the result in a channel marked nsfw without blocking it', () => {
+		expect(service.attachmentNsfwMode({channel: channel(ChannelTypes.GUILD_TEXT, true), guild: plainGuild})).toBe(
+			'flag',
+		);
+	});
+
+	it('records the result in personal notes', () => {
+		expect(service.attachmentNsfwMode({channel: channel(ChannelTypes.DM_PERSONAL_NOTES, null)})).toBe('flag');
+	});
+
+	it('blocks in a guild that filters explicit media for every member', () => {
+		expect(service.attachmentNsfwMode({channel: channel(ChannelTypes.GUILD_TEXT, false), guild: plainGuild})).toBe(
+			'block',
+		);
+	});
+
+	it('never skips classification', () => {
+		const scopes = [
+			{channel: channel(ChannelTypes.GUILD_TEXT, null), guild: ageRestrictedGuild},
+			{channel: channel(ChannelTypes.GUILD_TEXT, true), guild: plainGuild},
+			{channel: channel(ChannelTypes.GROUP_DM, true)},
+			{channel: channel(ChannelTypes.DM_PERSONAL_NOTES, null)},
+			{channel: channel(ChannelTypes.GUILD_TEXT, false), guild: plainGuild, isBot: true},
+		];
+		for (const scope of scopes) {
+			expect(service.attachmentNsfwMode(scope)).not.toBe('allow');
+		}
 	});
 });

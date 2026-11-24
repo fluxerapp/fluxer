@@ -15,18 +15,6 @@ import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {resolveLimit} from '@fluxer/limits/src/LimitResolver';
 
-const EXPLICIT_IMAGERY_BLOCKED_KINDS: ReadonlySet<AssetKind> = new Set([
-	'avatar',
-	'banner',
-	'guild_icon',
-	'splash',
-	'embed_splash',
-	'role_icon',
-	'sign_in_backdrop',
-	'emoji',
-	'sticker',
-]);
-
 export function resolveAssetSizeLimit(
 	limitConfigService: Pick<LimitConfigService, 'getConfigSnapshot'>,
 	key: LimitKey,
@@ -59,7 +47,7 @@ export async function decodeValidatedImage(
 			type: 'base64',
 			base64: base64Data,
 			version: 2,
-			nsfw: EXPLICIT_IMAGERY_BLOCKED_KINDS.has(kind) ? 'block' : 'allow',
+			nsfw: 'allow',
 		}),
 		kind,
 		errorPath,
