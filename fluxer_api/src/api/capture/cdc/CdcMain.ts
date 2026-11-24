@@ -27,13 +27,7 @@ import {
 	tombstonesTotal,
 } from '@app/api/capture/cdc/CdcMetrics';
 import {PendingKeys} from '@app/api/capture/cdc/CdcPending';
-import {
-	nextRepair,
-	type RepairRecord,
-	ROUTINE_ROWS_PER_SECOND,
-	repairTable,
-	TableLocks,
-} from '@app/api/capture/cdc/CdcRepair';
+import {nextRepair, type RepairRecord, repairTable, TableLocks} from '@app/api/capture/cdc/CdcRepair';
 import {RowEncoder, UnmappableValue} from '@app/api/capture/cdc/CdcRows';
 import {
 	bookkeepingDdl,
@@ -663,7 +657,7 @@ export class CdcConsumer {
 					onRows: (name, rows) => rowsWrittenTotal.inc(`table="${name}"`, rows),
 				},
 				table,
-				choice.marked ? this.runtime.config.markedRowsPerSecond : ROUTINE_ROWS_PER_SECOND,
+				choice.marked ? this.runtime.config.markedRowsPerSecond : this.runtime.config.routineRowsPerSecond,
 			);
 			repairFinished.set(choice.table, record.finishedMs / 1000);
 			repairTombstones.set(choice.table, record.tombstones);
@@ -855,6 +849,7 @@ export async function runCdcCompare(config: CdcConfig, options: CompareOptions):
 		const cdcColumns = await comparer.columns(config.viewDatabase);
 		let failed = 0;
 		for (const [name, table] of tables) {
+			if (table.derived !== undefined) continue;
 			const sync = syncColumns.get(name);
 			const cdc = cdcColumns.get(name);
 			if (sync === undefined || cdc === undefined) {

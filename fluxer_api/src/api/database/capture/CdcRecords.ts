@@ -127,6 +127,8 @@ export const CDC_TABLES: ReadonlySet<string> = new Set([
 	'iar_submissions',
 	'instance_configuration',
 	'invites',
+	'message_reactions',
+	'messages',
 	'notes',
 	'operator_pass_certificate_links',
 	'operator_pass_certificate_numbers',
@@ -250,9 +252,7 @@ export const CDC_SKIPPED: ReadonlySet<string> = new Set([
 	'jobs_active',
 	'jobs_by_day_bucket',
 	'jobs_by_id',
-	'message_reactions',
 	'message_report_submissions_by_reporter',
-	'messages',
 	'messages_by_author_id_v2',
 	'mfa_backup_codes',
 	'oauth2_access_tokens',
@@ -315,6 +315,22 @@ export const CDC_DROPPED_COLUMNS: Readonly<Record<string, ReadonlyArray<string>>
 	voice_servers: ['api_secret'],
 };
 
+export const CDC_EMITTED_COLUMNS: Readonly<Record<string, ReadonlyArray<string>>> = {
+	message_reactions: ['created_at', 'emoji_animated'],
+	messages: [
+		'author_id',
+		'edited_timestamp',
+		'flags',
+		'has_reaction',
+		'mention_everyone',
+		'pinned_timestamp',
+		'type',
+		'version',
+		'webhook_avatar_hash',
+		'webhook_id',
+	],
+};
+
 const IMAGE_HASH = 'content hash of a public image or file, not a credential';
 const MODERATION_EMAIL = 'support and moderation look accounts up by email';
 const MODERATION_IP = 'support and moderation look abuse up by IP';
@@ -365,6 +381,7 @@ export const CDC_KEPT_SENSITIVE: Readonly<Record<string, Readonly<Record<string,
 		reported_webhook_default_avatar_hash: IMAGE_HASH,
 		reporter_email: MODERATION_EMAIL,
 	},
+	messages: {webhook_avatar_hash: IMAGE_HASH},
 	operator_pass_certificate_links: {
 		token_: 'the partition key, the link of a certificate page that is public by design',
 	},

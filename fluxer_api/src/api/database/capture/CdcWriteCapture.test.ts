@@ -80,10 +80,13 @@ const Invites = defineTable<{code: string; uses: number}, 'code'>({
 	primaryKey: ['code'],
 });
 
-const Messages = defineTable<{channel_id: bigint; message_id: bigint; content: string}, 'channel_id' | 'message_id'>({
-	name: 'messages',
-	columns: ['channel_id', 'message_id', 'content'],
-	primaryKey: ['channel_id', 'message_id'],
+const MessagesByAuthor = defineTable<
+	{author_id: bigint; message_id: bigint; channel_id: bigint},
+	'author_id' | 'message_id'
+>({
+	name: 'messages_by_author_id_v2',
+	columns: ['author_id', 'message_id', 'channel_id'],
+	primaryKey: ['author_id', 'message_id'],
 });
 
 const fixture = JSON.parse(readFileSync(new URL('./fixtures/records.json', import.meta.url), 'utf8')) as Array<
@@ -97,7 +100,7 @@ function statement(query: PreparedQuery): CapturedStatement {
 }
 
 const userWrite = statement(Users.upsertAll({user_id: USER_ID, username: 'fluxer'}));
-const messageWrite = statement(Messages.insert({channel_id: 1n, message_id: 2n, content: 'hi'}));
+const messageWrite = statement(MessagesByAuthor.insert({author_id: 1n, message_id: 2n, channel_id: 3n}));
 const inviteClaim = statement(Invites.insertIfNotExists({code: 'fluxer', uses: 0}));
 
 function capture(

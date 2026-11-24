@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {TableLayout} from '@app/api/capture/CaptureTables';
+import {CDC_DERIVED, type DerivedSpec} from '@app/api/capture/cdc/CdcDerived';
 import {type CdcColumn, clickHouseType} from '@app/api/capture/cdc/CdcRows';
 import {quoteIdentifier} from '@app/api/capture/cdc/ClickHouseHttp';
-import {CDC_DROPPED_COLUMNS} from '@app/api/database/capture/CdcRecords';
+import {CDC_DROPPED_COLUMNS, CDC_EMITTED_COLUMNS} from '@app/api/database/capture/CdcRecords';
 import type cassandra from 'cassandra-driver';
 
 export const CDC_DATABASE = 'fluxer_cdc';
@@ -13,6 +14,7 @@ export interface CdcTable {
 	layout: TableLayout;
 	columns: ReadonlyArray<CdcColumn>;
 	keyColumns: ReadonlyArray<CdcColumn>;
+	derived?: DerivedSpec;
 }
 
 export interface SchemaPlan {
@@ -56,29 +58,43 @@ export function cdcTable(layout: TableLayout, types: ReadonlyMap<string, string>
 		return {name, cqlType, chType: clickHouseType(cqlType)};
 	};
 	const regular = layout.regular.filter((name) => !dropped.has(name));
+	const emitted = CDC_EMITTED_COLUMNS[layout.name];
+	const output = emitted === undefined ? regular : regular.filter((name) => emitted.includes(name));
+	const derived = CDC_DERIVED[layout.name];
 	return {
 		layout: {...layout, regular, multiCell: new Set([...layout.multiCell].filter((name) => !dropped.has(name)))},
-		columns: [...layout.primaryKey, ...regular].sort().map(column),
+		columns: [...[...layout.primaryKey, ...output].map(column), ...(derived?.columns ?? [])].sort((a, b) =>
+			a.name < b.name ? -1 : 1,
+		),
 		keyColumns: layout.primaryKey.map(column),
+		...(derived === undefined ? {} : {derived}),
 	};
+}
+
+function columnDdl(column: CdcColumn): string {
+	const definition = `${quoteIdentifier(column.name)} ${column.chType}`;
+	return column.materialized === undefined ? definition : `${definition} MATERIALIZED ${column.materialized}`;
 }
 
 const TABLE_SETTINGS =
 	'non_replicated_deduplication_window = 1000, allow_nullable_key = 1, allow_experimental_replacing_merge_with_cleanup = 1';
 
 export function tableDdl(table: CdcTable): string {
-	const columns = table.columns.map((column) => `${quoteIdentifier(column.name)} ${column.chType}`);
+	const {derived} = table;
 	return [
 		`CREATE TABLE IF NOT EXISTS ${cdcTableName(table.layout.name)} (`,
 		[
-			...columns,
+			...table.columns.map(columnDdl),
 			'_version UInt64',
 			'_deleted UInt8',
 			"_expires_at DateTime64(3, 'UTC') DEFAULT 0",
 			"_reread_at DateTime64(3, 'UTC') DEFAULT 0",
+			...(derived?.indexes ?? []),
 		].join(', '),
 		') ENGINE = ReplacingMergeTree(_version, _deleted)',
+		...(derived === undefined ? [] : [`PARTITION BY ${derived.partitionBy}`]),
 		`ORDER BY (${table.keyColumns.map((column) => quoteIdentifier(column.name)).join(', ')})`,
+		...(derived === undefined ? [] : [`TTL ${derived.ttl}`]),
 		`SETTINGS ${TABLE_SETTINGS}`,
 	].join(' ');
 }
@@ -130,9 +146,9 @@ export function schemaPlan(options: {
 				plan.mismatched.push(name);
 				continue;
 			}
-			const added = [...wanted].filter(([column]) => !current.has(column));
-			for (const [column, type] of added) {
-				plan.statements.push(`ALTER TABLE ${cdcTableName(name)} ADD COLUMN ${quoteIdentifier(column)} ${type}`);
+			const added = table.columns.filter((column) => !current.has(column.name));
+			for (const column of added) {
+				plan.statements.push(`ALTER TABLE ${cdcTableName(name)} ADD COLUMN ${columnDdl(column)}`);
 			}
 			if (added.length > 0) plan.widened.push(name);
 			for (const column of current.keys()) {
