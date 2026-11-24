@@ -2,6 +2,7 @@
 
 import fluxer_bouncer/config
 import fluxer_bouncer/server
+import fluxer_bouncer/shutdown
 import fluxer_bouncer/status
 import gleam/erlang/process
 import gleam/result
@@ -16,9 +17,11 @@ pub fn main() -> Nil {
       case server.start(settings) {
         Error(_) -> halt(1)
         Ok(_) ->
-          case serve_status(settings.status_port) {
-            Ok(Nil) -> process.sleep_forever()
-            Error(Nil) -> halt(3)
+          case serve_status(settings.status_port), shutdown.install() {
+            Ok(Nil), Ok(Nil) ->
+              shutdown.run(settings.timings.leave_bound_ms, server.leave)
+            Error(Nil), _ -> halt(3)
+            Ok(Nil), Error(Nil) -> halt(4)
           }
       }
   }

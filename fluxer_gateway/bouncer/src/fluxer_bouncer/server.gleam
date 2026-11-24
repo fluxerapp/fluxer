@@ -5,6 +5,7 @@ import bouncer_proto/transport
 import fluxer_bouncer/config.{type Config}
 import fluxer_bouncer/core
 import fluxer_bouncer/discovery
+import fluxer_bouncer/shutdown
 import fluxer_bouncer/status
 import gleam/dict.{type Dict}
 import gleam/dynamic.{type Dynamic}
@@ -28,6 +29,7 @@ type State {
     ticks: Subject(Nil),
     peers: Dict(Int, Atom),
     published: core.Status,
+    left: Bool,
   )
 }
 
@@ -104,6 +106,7 @@ fn initialise(
           ticks: ticks,
           peers: dict.from_list(discovery.peers(config)),
           published: core.status(fresh),
+          left: False,
         )
       process.send_after(ticks, config.timings.tick_ms, Nil)
       let node_of = fn(raw: Dynamic) {
@@ -174,6 +177,13 @@ fn advance(state: State, input: core.Input) -> State {
   let #(next, effects) =
     core.step(state.core, input, monotonic_time(Millisecond))
   list.each(effects, perform(state, _))
+  let state = case !state.left && core.handed_over(next) {
+    True -> {
+      shutdown.announce_left()
+      State(..state, left: True)
+    }
+    False -> state
+  }
   let current = core.status(next)
   case current == state.published {
     True -> State(..state, core: next)

@@ -1954,6 +1954,7 @@ These variables don't take the file form. Set them as plain values.
 - `FLUXER_BOUNCER_COUNT`
 - `FLUXER_BOUNCER_DNS_NAME`
 - `FLUXER_BOUNCER_HOME`
+- `FLUXER_BOUNCER_LEAVE_BOUND_MS`
 - `FLUXER_BOUNCER_LOGGER_LEVEL`
 - `FLUXER_BOUNCER_QUORUM`
 - `FLUXER_BOUNCER_STATUS_PORT`
@@ -2753,6 +2754,10 @@ How many bouncer nodes there are, as seen by a bouncer node. When it's empty, a 
 #### `FLUXER_BOUNCER_DNS_NAME`
 
 The DNS domain of the bouncer nodes, as seen by a bouncer node. When it's empty, a bouncer node uses `FLUXER_GATEWAY_BOUNCER_DNS_NAME`. A bouncer node doesn't start without one of them.
+
+#### `FLUXER_BOUNCER_LEAVE_BOUND_MS`
+
+How long, in milliseconds, a bouncer node waits after SIGTERM for the other bouncer nodes to take over its moves before it exits. A second SIGTERM ends the wait at once. Give its pod a termination grace period a few seconds longer than this. When it's empty, a bouncer node uses `5000`.
 
 #### `FLUXER_BOUNCER_LOGGER_LEVEL`
 

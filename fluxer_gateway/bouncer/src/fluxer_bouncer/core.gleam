@@ -410,6 +410,13 @@ pub fn moves_in_flight(state: State) -> Int {
   dict.size(state.moves)
 }
 
+pub fn handed_over(state: State) -> Bool {
+  state.leaving
+  && dict.is_empty(state.writes)
+  && dict.is_empty(state.queued)
+  && !list.any(dict.values(state.moves), fn(move) { move.role == HomeRole })
+}
+
 fn home_of(state: State, bucket: BucketId) -> Result(Int, Nil) {
   homes_of(state, bucket) |> result.map(fn(homes) { homes.home })
 }
