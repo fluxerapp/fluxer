@@ -12,6 +12,10 @@ import {
 	type MediaProxyStrippedObject,
 } from '@app/api/infrastructure/IMediaService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {ExplicitContentCannotBeSentError} from '@fluxer/errors/src/domains/moderation/ExplicitContentCannotBeSentError';
+
+export const TEST_EXPLICIT_MEDIA_MARKER = 'explicit-media-fixture';
+const TEST_EXPLICIT_MEDIA_PROBABILITY = 0.97;
 
 export class TestMediaService extends IMediaService {
 	constructor(private readonly storageService: IStorageService) {
@@ -19,6 +23,21 @@ export class TestMediaService extends IMediaService {
 	}
 
 	async getMetadata(request: MediaProxyMetadataRequest): Promise<MediaProxyMetadataResponse | null> {
+		const metadata = await this.describe(request);
+		if (!metadata || request.nsfw === 'allow') {
+			return metadata;
+		}
+		const name = mediaRequestName(request);
+		if (!name.includes(TEST_EXPLICIT_MEDIA_MARKER)) {
+			return metadata;
+		}
+		if (request.nsfw === 'block') {
+			throw new ExplicitContentCannotBeSentError(TEST_EXPLICIT_MEDIA_PROBABILITY);
+		}
+		return {...metadata, nsfw: true, nsfw_probability: TEST_EXPLICIT_MEDIA_PROBABILITY};
+	}
+
+	private async describe(request: MediaProxyMetadataRequest): Promise<MediaProxyMetadataResponse | null> {
 		if (request.type === 'base64') {
 			return this.analyzeBase64Image(request.base64);
 		}
@@ -235,5 +254,18 @@ export class TestMediaService extends IMediaService {
 		if (format === 'svg') return 'image/svg+xml';
 		if (format === 'wav') return 'audio/wav';
 		return `image/${format}`;
+	}
+}
+
+function mediaRequestName(request: MediaProxyMetadataRequest): string {
+	switch (request.type) {
+		case 'external':
+			return request.url;
+		case 'upload':
+			return `${request.upload_filename} ${request.filename ?? ''}`;
+		case 's3':
+			return request.key;
+		default:
+			return '';
 	}
 }
