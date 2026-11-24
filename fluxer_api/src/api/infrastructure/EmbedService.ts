@@ -141,7 +141,7 @@ export class EmbedService {
 			}
 			const messageEmbeds = embeds.map((embed) => embed.toMessageEmbed());
 			const safeEmbeds =
-				nsfwMode === 'allow' ? messageEmbeds : messageEmbeds.filter((embed) => !this.isEmbedNsfw(embed));
+				nsfwMode === 'block' ? messageEmbeds.filter((embed) => !this.isEmbedNsfw(embed)) : messageEmbeds;
 			return {embeds: safeEmbeds, hasUncachedUrls: false};
 		} catch (error) {
 			Logger.warn({error, url}, 'Failed to read cached URL embeds during message creation');

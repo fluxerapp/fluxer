@@ -396,7 +396,7 @@ export class MessagePersistenceService {
 			const embedResult = await this.embedService.getInitialEmbeds({
 				content: messageContent,
 				customEmbeds: resolvedEmbeds,
-				nsfwMode: isNSFWAllowed ? 'allow' : 'block',
+				nsfwMode: attachmentNsfwMode,
 			});
 			initialEmbeds = embedResult.embeds;
 			hasUncachedUrls = embedResult.hasUncachedUrls;
@@ -543,7 +543,7 @@ export class MessagePersistenceService {
 					params.channelId,
 					params.messageId,
 					params.guildId,
-					isNSFWAllowed ? 'allow' : 'block',
+					isNSFWAllowed ? 'flag' : 'block',
 					{content: message.content},
 				);
 		}
@@ -598,7 +598,6 @@ export class MessagePersistenceService {
 			isBot: params.isBot,
 			dmNsfwContext: params.dmNsfwContext,
 		});
-		const isNSFWAllowed = attachmentNsfwMode !== 'block';
 		const updatedRowData = {...message.toRow()};
 		let hasChanges = false;
 		const allowEmbeds = params.allowEmbeds ?? true;
@@ -714,7 +713,7 @@ export class MessagePersistenceService {
 			const {embeds: initialEmbeds, hasUncachedUrls: embedUrls} = await this.embedService.getInitialEmbeds({
 				content: updatedRowData.content ?? null,
 				customEmbeds: resolvedEmbeds,
-				nsfwMode: isNSFWAllowed ? 'allow' : 'block',
+				nsfwMode: attachmentNsfwMode,
 			});
 			if (embedsExplicitlyProvided) {
 				keepOwnedEmbedAttachments(message, initialEmbeds);
@@ -740,7 +739,7 @@ export class MessagePersistenceService {
 							channel.id,
 							messageId,
 							guild?.id ? createGuildID(BigInt(guild.id)) : null,
-							isNSFWAllowed ? 'allow' : 'block',
+							attachmentNsfwMode,
 							{content: updatedMessage.content},
 						)
 				: () => Promise.resolve();
