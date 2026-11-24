@@ -30,6 +30,7 @@ import {
 import {OperatorPassRepository} from '@app/api/operator_pass/OperatorPassRepository';
 import {stripeInvoice} from '@app/api/stripe/tests/BillingEmailTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {runOperatorPassFulfilmentSweep} from '@app/api/worker/tasks/OperatorPassFulfilmentSweep';
@@ -42,16 +43,10 @@ import {PDFDocument} from 'pdf-lib';
 import type Stripe from 'stripe';
 import {afterAll, beforeAll, expect, test, vi} from 'vitest';
 
-const {loggerError} = vi.hoisted(() => ({loggerError: vi.fn()}));
+const loggerError = vi.spyOn(NoopLogger.prototype, 'error');
 
-vi.mock('@app/api/Logger', async (importOriginal) => {
-	const actual = await importOriginal<typeof import('@app/api/Logger')>();
-	return {
-		...actual,
-		Logger: new Proxy(actual.Logger, {
-			get: (target, prop) => (prop === 'error' ? loggerError : Reflect.get(target, prop)),
-		}),
-	};
+afterAll(() => {
+	loggerError.mockRestore();
 });
 
 const DAY_MS = 24 * 60 * 60 * 1000;

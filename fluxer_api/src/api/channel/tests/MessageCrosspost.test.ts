@@ -27,9 +27,8 @@ import {
 import {getMessages} from '@app/api/message/tests/MessageTestUtils';
 import {fileShaCache} from '@app/api/middleware/FileShaCache';
 import {phraseBlocklistCache} from '@app/api/middleware/PhraseBlocklistCache';
-import {getSnowflakeService, setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
+import {setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import type {MockSnowflakeService} from '@app/api/test/mocks/MockSnowflakeService';
 import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {createWebhook} from '@app/api/webhook/tests/WebhookTestUtils';
@@ -378,11 +377,11 @@ describe('Publishing messages in announcement channels', () => {
 
 	test('the history cutoff applies to moderators without Read Message History', async () => {
 		const older = await postMessage(harness, world.author.token, world.announcement.id, 'Old news');
-		const olderTimestamp = snowflakeToDate(BigInt(older.id)).getTime();
-		const snowflakes = getSnowflakeService() as MockSnowflakeService;
-		snowflakes.configure({startTimestampMs: olderTimestamp + 20_000});
 		const newer = await postMessage(harness, world.author.token, world.announcement.id, 'Fresh news');
-		await patchGuildRow(world.guild.id, {message_history_cutoff: new Date(olderTimestamp + 10_000)});
+		const olderTimestamp = snowflakeToDate(BigInt(older.id)).getTime();
+		const newerTimestamp = snowflakeToDate(BigInt(newer.id)).getTime();
+		expect(newerTimestamp).toBeGreaterThan(olderTimestamp);
+		await patchGuildRow(world.guild.id, {message_history_cutoff: new Date(newerTimestamp)});
 		await createChannelPermissionOverwrite(harness, world.owner.token, world.announcement.id, world.mod.userId, {
 			type: 1,
 			allow: Permissions.VIEW_CHANNEL.toString(),

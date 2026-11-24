@@ -6,20 +6,15 @@ import {CaptureCodec} from '@app/api/database/capture/CaptureCodec';
 import type {CapturedStatement, CaptureSink} from '@app/api/database/capture/CassandraWriteCapture';
 import type {CdcRecord} from '@app/api/database/capture/CdcRecords';
 import {CaptureClosedError, CdcWriteCapture} from '@app/api/database/capture/CdcWriteCapture';
+import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import {drainWorkerRuntime} from '@app/api/worker/WorkerShutdown';
 import cassandra from 'cassandra-driver';
-import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {afterAll, beforeEach, describe, expect, it, vi} from 'vitest';
 
-const loggerWarn = vi.fn();
+const loggerWarn = vi.spyOn(NoopLogger.prototype, 'warn');
 
-vi.mock('@app/api/Logger', async (importOriginal) => {
-	const actual = await importOriginal<typeof import('@app/api/Logger')>();
-	return {
-		...actual,
-		Logger: new Proxy(actual.Logger, {
-			get: (target, prop) => (prop === 'warn' ? loggerWarn : Reflect.get(target, prop)),
-		}),
-	};
+afterAll(() => {
+	loggerWarn.mockRestore();
 });
 
 class RecordingSink implements CaptureSink {

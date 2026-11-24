@@ -12,22 +12,17 @@ import {
 	setupSyncStripeWebhookWorker,
 } from '@app/api/stripe/tests/StripeWebhookTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import {createStripeApiHandlers} from '@app/api/test/msw/handlers/StripeApiHandlers';
 import {server} from '@app/api/test/msw/server';
 import {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {PremiumFlags, UserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi} from 'vitest';
 
-const {loggerError} = vi.hoisted(() => ({loggerError: vi.fn()}));
+const loggerError = vi.spyOn(NoopLogger.prototype, 'error');
 
-vi.mock('@app/api/Logger', async (importOriginal) => {
-	const actual = await importOriginal<typeof import('@app/api/Logger')>();
-	return {
-		...actual,
-		Logger: new Proxy(actual.Logger, {
-			get: (target, prop) => (prop === 'error' ? loggerError : Reflect.get(target, prop)),
-		}),
-	};
+afterAll(() => {
+	loggerError.mockRestore();
 });
 
 describe('Stripe Webhook Early Fraud Warning', () => {
