@@ -44,6 +44,8 @@ const GAUGE_HELP: Record<keyof typeof gauges, string> = {
 
 export const repairFinished = new Map<string, number>();
 export const repairTombstones = new Map<string, number>();
+export const repairScanStarted = new Map<string, number>();
+export const repairRowsRead = new Map<string, number>();
 export const schemaMismatch = new Set<string>();
 
 const counters: Array<[string, string, Counter]> = [];
@@ -99,6 +101,12 @@ export function renderMetrics(): string {
 		batchSeconds.render(`${PREFIX}_batch_seconds`, 'Time from the first fetch of a batch to its acknowledgement'),
 		byTable('repair_last_finished_timestamp_seconds', 'When the last repair of a table finished', repairFinished),
 		byTable('repair_tombstones', 'Tombstones written by the last repair of a table', repairTombstones),
+		byTable(
+			'repair_scan_started_timestamp_seconds',
+			'When the repair scan of a table in progress started, 0 when none runs',
+			repairScanStarted,
+		),
+		byTable('repair_rows_read', 'Rows read so far by the repair scan of a table in progress', repairRowsRead),
 		byTable(
 			'schema_mismatch',
 			'Whether a table has a column type ClickHouse does not match',

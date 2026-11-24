@@ -14,12 +14,23 @@ export const MARKED_ROWS_PER_SECOND = 2000;
 export const ROUTINE_ROWS_PER_SECOND = 500;
 const PAGE_SIZE = 500;
 const OPTIMIZE_TIMEOUT_MS = 30 * 60_000;
+const PROGRESS_EVERY_MS = 30_000;
+export const PROGRESS_PREFIX = 'repair_progress:';
 
 export interface RepairRecord {
 	scanStartMs: number;
 	finishedMs: number;
 	rows: number;
 	tombstones: number;
+}
+
+export interface RepairProgress {
+	scanStartMs: number;
+	cql: string;
+	pageState: string;
+	marked: boolean;
+	read: number;
+	rows: number;
 }
 
 export interface RepairChoice {
@@ -88,17 +99,37 @@ export interface RepairDeps {
 	stopping: () => boolean;
 	onError: (error: unknown) => void;
 	onRows: (table: string, rows: number) => void;
+	onProgress: (table: string, scanStartMs: number, read: number) => void;
 }
 
-export async function repairTable(deps: RepairDeps, table: CdcTable, rowsPerSecond: number): Promise<RepairRecord> {
-	const scanStartMs = Date.now();
+export function repairCql(table: CdcTable): string {
+	return `SELECT ${selectedColumns(table.layout).join(', ')} FROM ${table.layout.name}`;
+}
+
+export function resumableProgress(progress: RepairProgress | undefined, table: CdcTable): RepairProgress | undefined {
+	return progress?.cql === repairCql(table) ? progress : undefined;
+}
+
+export async function repairTable(
+	deps: RepairDeps,
+	table: CdcTable,
+	rowsPerSecond: number,
+	options: {marked: boolean; resume?: RepairProgress},
+): Promise<RepairRecord> {
 	const name = table.layout.name;
+	const progressKey = `${PROGRESS_PREFIX}${name}`;
 	const retry = <T>(run: () => Promise<T>) =>
 		withBackoff(run, {stopping: deps.stopping, onError: (error) => deps.onError(error)});
-	const cql = `SELECT ${selectedColumns(table.layout).join(', ')} FROM ${name}`;
-	let pageState: string | undefined;
-	let rows = 0;
-	let read = 0;
+	const cql = repairCql(table);
+	const resume = resumableProgress(options.resume, table);
+	const scanStartMs = resume?.scanStartMs ?? Date.now();
+	let pageState: string | undefined = resume?.pageState;
+	let rows = resume?.rows ?? 0;
+	let read = resume?.read ?? 0;
+	const pacedFromMs = Date.now();
+	const pacedFromRead = read;
+	let savedMs = pacedFromMs;
+	deps.onProgress(name, scanStartMs, read);
 	do {
 		const page = await deps.locks.hold([name], async () => {
 			const readStartMs = Date.now();
@@ -128,13 +159,26 @@ export async function repairTable(deps: RepairDeps, table: CdcTable, rowsPerSeco
 		rows += page.written;
 		read += page.read;
 		deps.onRows(name, page.written);
+		deps.onProgress(name, scanStartMs, read);
 		pageState = page.next;
-		const aheadMs = (read / rowsPerSecond) * 1000 - (Date.now() - scanStartMs);
+		if (pageState !== undefined && Date.now() - savedMs >= PROGRESS_EVERY_MS) {
+			const progress: RepairProgress = {scanStartMs, cql, pageState, marked: options.marked, read, rows};
+			await retry(() => deps.state.write(new Map([[progressKey, progress]])));
+			savedMs = Date.now();
+		}
+		const aheadMs = ((read - pacedFromRead) / rowsPerSecond) * 1000 - (Date.now() - pacedFromMs);
 		if (aheadMs > 0) await delay(aheadMs);
 	} while (pageState !== undefined);
 	const summary = await retry(() => deps.clickhouse.command(vanishedTombstoneSql(table, scanStartMs * 1000)));
 	const record: RepairRecord = {scanStartMs, finishedMs: Date.now(), rows, tombstones: summary.writtenRows};
-	await retry(() => deps.state.write(new Map([[`repair:${name}`, record]])));
+	await retry(() =>
+		deps.state.write(
+			new Map<string, RepairRecord | null>([
+				[`repair:${name}`, record],
+				[progressKey, null],
+			]),
+		),
+	);
 	await retry(() =>
 		deps.clickhouse.command(`OPTIMIZE TABLE ${cdcTableName(name)} FINAL CLEANUP`, {timeoutMs: OPTIMIZE_TIMEOUT_MS}),
 	);
