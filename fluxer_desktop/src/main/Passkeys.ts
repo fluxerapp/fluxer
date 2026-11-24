@@ -5,6 +5,7 @@ import {createChildLogger} from '@electron/common/Logger';
 import {getDesktopLocalAppProtocol} from '@electron/main/LocalAppProtocol';
 import {httpOriginSource} from '@electron/main/LocalAppRuntimePlans';
 import {isLocalAppURL} from '@electron/main/LocalAppURL';
+import {webAuthnErrorName} from '@electron/main/PasskeyNativeErrors';
 import {isOfficialInstanceHost} from '@fluxer/instance_bootstrap/src/OfficialInstance';
 import type {
 	create as nativeCreateFn,
@@ -304,32 +305,6 @@ const eventCeremonyContext = (
 	windowHandle: eventWindowHandle(event),
 	pin: sanitizePin(requestContext),
 });
-
-const NOT_ALLOWED_NATIVE_ERRORS = [
-	/\(com\.apple\.AuthenticationServices\.AuthorizationError 1001\)/u,
-	/\bWebAuthn (?:authentication|registration) timed out\b/u,
-	/\bNotAllowed \(/u,
-	/\bTimeout \(/u,
-	/\(0x(?:80090036|800704C7|800705B4|80090035|80090011)\)/iu,
-];
-const NO_AUTHENTICATOR_NATIVE_ERROR = /\bNoAuthenticator \(/u;
-const INVALID_STATE_NATIVE_ERRORS = [
-	/\(com\.apple\.AuthenticationServices\.AuthorizationError 1006\)/u,
-	/\(0x8009000F\)/iu,
-];
-
-const webAuthnErrorName = (message: string): string | null => {
-	if (NOT_ALLOWED_NATIVE_ERRORS.some((pattern) => pattern.test(message))) {
-		return 'NotAllowedError';
-	}
-	if (INVALID_STATE_NATIVE_ERRORS.some((pattern) => pattern.test(message))) {
-		return 'InvalidStateError';
-	}
-	if (NO_AUTHENTICATOR_NATIVE_ERROR.test(message)) {
-		return 'NoAuthenticatorError';
-	}
-	return null;
-};
 
 async function withWebAuthnErrorName<T>(ceremony: () => Promise<T>): Promise<T> {
 	try {
