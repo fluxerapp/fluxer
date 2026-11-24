@@ -21,6 +21,14 @@ interface SchemaField {
 	type: string;
 }
 
+interface SchemaIndex {
+	name: string;
+	table: string;
+	expression: string;
+}
+
+const TARGET_INDEXES: ReadonlyArray<SchemaIndex> = TARGET_SCHEMA.indexes;
+
 interface UserType {
 	name: string;
 	fields: Array<SchemaField>;
@@ -144,7 +152,7 @@ export function planCassandraSchema(existing: ExistingSchemaRows, keyspace: stri
 			}
 		}
 	}
-	for (const index of [...TARGET_SCHEMA.indexes].sort((a, b) => a.name.localeCompare(b.name))) {
+	for (const index of [...TARGET_INDEXES].sort((a, b) => a.name.localeCompare(b.name))) {
 		if (!indexes.has(index.name)) {
 			statements.push(
 				`CREATE INDEX IF NOT EXISTS ${index.name} ON ${quotedKeyspace}.${index.table} (${index.expression})`,
