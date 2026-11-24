@@ -41,6 +41,12 @@ export class MfaEmailVerificationRequiredError extends EmailVerificationRequired
 	}
 }
 
+export class PollVoteVerificationRequiredError extends EmailVerificationRequiredError {
+	constructor() {
+		super(APIErrorCodes.POLL_VOTE_EMAIL_VERIFICATION_REQUIRED);
+	}
+}
+
 export class ProfileEmailVerificationRequiredError extends EmailVerificationRequiredError {
 	constructor() {
 		super(APIErrorCodes.PROFILE_EMAIL_VERIFICATION_REQUIRED);

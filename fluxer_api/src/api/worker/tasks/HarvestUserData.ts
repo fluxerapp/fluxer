@@ -40,6 +40,7 @@ import type {Application} from '@app/api/models/Application';
 import type {Attachment} from '@app/api/models/Attachment';
 import type {Channel} from '@app/api/models/Channel';
 import type {Payment} from '@app/api/models/Payment';
+import type {Poll} from '@app/api/models/Poll';
 import type {ThreadMember} from '@app/api/models/ThreadMember';
 import type {User} from '@app/api/models/User';
 import {getOperatorPassVisionaryPassId} from '@app/api/operator_pass/OperatorPassVisionaryService';
@@ -93,6 +94,7 @@ interface HarvestedMessage {
 	id: string;
 	timestamp: string;
 	content: string;
+	poll: {question: string | null; answers: Array<string>} | null;
 	attachments: Array<HarvestedAttachment>;
 }
 
@@ -216,7 +218,7 @@ interface HarvestMessageRepository {
 	getMessage(
 		channelId: ChannelID,
 		messageId: MessageID,
-	): Promise<{content: string | null; attachments?: Array<Attachment>} | null>;
+	): Promise<{content: string | null; poll?: Poll | null; attachments?: Array<Attachment>} | null>;
 }
 
 async function harvestMessages(
@@ -248,6 +250,12 @@ async function harvestMessages(
 				id: messageId.toString(),
 				timestamp: snowflakeToDate(messageId).toISOString(),
 				content: message.content ?? '',
+				poll: message.poll
+					? {
+							question: message.poll.question?.text ?? null,
+							answers: message.poll.answers.map((answer) => answer.poll_media?.text ?? ''),
+						}
+					: null,
 				attachments: (message.attachments ?? []).map((attachment) => ({
 					attachment_id: attachment.id.toString(),
 					filename: attachment.filename,

@@ -31,6 +31,7 @@ import MemberSearch from '@app/features/member/state/MemberSearch';
 import MemberSidebar from '@app/features/member/state/MemberSidebar';
 import MessageReactions from '@app/features/messaging/state/MessageReactions';
 import Messages from '@app/features/messaging/state/MessagingMessages';
+import PollVotes from '@app/features/messaging/state/PollVotes';
 import SavedMessages from '@app/features/messaging/state/SavedMessages';
 import NavigationSideEffects from '@app/features/navigation/state/NavigationSideEffects';
 import MentionFeed from '@app/features/notification/state/MentionFeed';
@@ -171,6 +172,7 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext,
 	AuthSession.handleGatewayReady(data.auth_session_id_hash ?? null);
 	if (!Initialization.isStale) {
 		MessageReactions.handleGatewayReady();
+		PollVotes.handleGatewayReady();
 	}
 	Sticker.handleGatewayReady(guilds);
 	Emoji.handleGatewayReady({guilds});

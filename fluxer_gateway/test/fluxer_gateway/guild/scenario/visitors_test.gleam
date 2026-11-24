@@ -233,3 +233,42 @@ pub fn visitor_view_follows_channel_overwrites_test() {
   assert message_ids(visitor) == []
   fixture.stop(found)
 }
+
+fn poll_vote(channel: Int) -> Json {
+  json.object([
+    #("channel_id", json.string(int_text(channel))),
+    #("message_id", json.string("2")),
+    #("user_id", json.string("1")),
+    #("session_id", json.string("abc")),
+    #("member", json.object([#("user", fixture.user(1))])),
+    #(
+      "emoji",
+      json.object([#("id", json.string("3")), #("name", json.string("3"))]),
+    ),
+    #("reaction_type", json.int(2)),
+  ])
+}
+
+pub fn focused_visitor_gets_poll_votes_without_voter_test() {
+  use api <- guild_api.with_api
+  let found = visit_guild()
+  let handle = fixture.started(api, found)
+  let visitor = fake.start(9)
+  assert fake.is_joined(fake.join_with(visitor, handle, visit(visitor)))
+  focus(visitor, handle, 10)
+  let _ = fake.drain(visitor, 50)
+  fixture.dispatch(handle, "MESSAGE_POLL_VOTE_ADD", poll_vote(10))
+  fixture.dispatch(handle, "MESSAGE_POLL_VOTE_REMOVE", poll_vote(10))
+  let seen =
+    fake.dispatches(visitor, 150)
+    |> list.filter(fn(pair) { string.starts_with(pair.0, "MESSAGE_POLL_VOTE") })
+  assert list.map(seen, fn(pair) { pair.0 })
+    == ["MESSAGE_POLL_VOTE_ADD", "MESSAGE_POLL_VOTE_REMOVE"]
+  list.each(seen, fn(pair) {
+    assert fake.text_at(pair.1, ["message_id"]) == option.Some("2")
+    assert fake.text_at(pair.1, ["user_id"]) == None
+    assert fake.text_at(pair.1, ["session_id"]) == None
+    assert fake.text_at(pair.1, ["member", "user", "id"]) == None
+  })
+  fixture.stop(found)
+}

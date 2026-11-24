@@ -5,6 +5,7 @@ import type {Attachment} from '@app/api/models/Attachment';
 import type {Embed} from '@app/api/models/Embed';
 import type {Message} from '@app/api/models/Message';
 import type {MessageSnapshot} from '@app/api/models/MessageSnapshot';
+import type {Poll} from '@app/api/models/Poll';
 import type {SearchableMessage} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 
@@ -124,6 +125,7 @@ interface IndexAccumulator {
 	mentionedUserIds: Array<string>;
 	hasLink: boolean;
 	hasEmbed: boolean;
+	hasPoll: boolean;
 	hasFile: boolean;
 	hasImage: boolean;
 	hasVideo: boolean;
@@ -143,6 +145,7 @@ function emptyAccumulator(): IndexAccumulator {
 		mentionedUserIds: [],
 		hasLink: false,
 		hasEmbed: false,
+		hasPoll: false,
 		hasFile: false,
 		hasImage: false,
 		hasVideo: false,
@@ -155,6 +158,7 @@ function accumulateContent(
 	acc: IndexAccumulator,
 	content: string | null,
 	embeds: Array<Embed>,
+	poll: Poll | null,
 	attachments: Array<Attachment>,
 	mentionedUserIds: Iterable<UserID>,
 	stickerCount: number,
@@ -176,6 +180,9 @@ function accumulateContent(
 			}
 			collectEmbedText(embed, acc.embedContent);
 		}
+	}
+	if (poll) {
+		acc.hasPoll = true;
 	}
 	if (attachments.length > 0) {
 		acc.hasFile = true;
@@ -203,6 +210,7 @@ function mergeSnapshotsIntoAccumulator(acc: IndexAccumulator, snapshots: Array<M
 			acc,
 			snapshot.content,
 			snapshot.embeds,
+			snapshot.poll,
 			snapshot.attachments,
 			snapshot.mentionedUserIds,
 			snapshot.stickers.length,
@@ -219,6 +227,7 @@ export function convertToSearchableMessage(message: Message, authorIsBot?: boole
 		acc,
 		message.content,
 		message.embeds,
+		message.poll,
 		message.attachments,
 		message.mentionedUserIds,
 		message.stickers.length,
@@ -242,7 +251,7 @@ export function convertToSearchableMessage(message: Message, authorIsBot?: boole
 		mentionEveryone: message.mentionEveryone,
 		hasLink: acc.hasLink,
 		hasEmbed: acc.hasEmbed,
-		hasPoll: false,
+		hasPoll: acc.hasPoll,
 		hasFile: acc.hasFile,
 		hasVideo: acc.hasVideo,
 		hasImage: acc.hasImage,

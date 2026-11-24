@@ -7,9 +7,11 @@ import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRout
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import MessageReactions from '@app/features/messaging/state/MessageReactions';
 import Messages from '@app/features/messaging/state/MessagingMessages';
+import PollVotes from '@app/features/messaging/state/PollVotes';
 import SavedMessages from '@app/features/messaging/state/SavedMessages';
 import type {ReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
 import MentionFeed from '@app/features/notification/state/MentionFeed';
+import {ReactionType} from '@fluxer/constants/src/EmojiConstants';
 import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 
 interface ReactionEmojiPayload {
@@ -24,6 +26,7 @@ interface MessageReactionRemovePayload {
 	emoji: ReactionEmojiPayload;
 	guild_id?: string;
 	member?: GuildMemberData;
+	reaction_type?: ReactionType;
 }
 
 export function handleMessageReactionRemove(data: MessageReactionRemovePayload, _context: GatewayHandlerContext): void {
@@ -32,15 +35,19 @@ export function handleMessageReactionRemove(data: MessageReactionRemovePayload, 
 		GuildMembers.hydrateIfMissing(data.guild_id, data.member);
 	}
 	SavedMessages.handleMessageReactionChange(data.message_id);
-	MessageReactions.handleReactionRemove(data.message_id, data.user_id, emoji);
+	if ((data.reaction_type ?? ReactionType.Emoji) === ReactionType.PollVote)
+		PollVotes.handlePollVoteRemove(data.message_id, data.user_id, Number(emoji.id));
+	else MessageReactions.handleReactionRemove(data.message_id, data.user_id, emoji);
 	ChannelPins.handleMessageReactionRemove(data.channel_id, data.message_id);
-	ForumPosts.handleReaction(
-		data.channel_id,
-		data.message_id,
-		emoji,
-		false,
-		data.user_id === Authentication.currentUserId,
-	);
+	if ((data.reaction_type ?? ReactionType.Emoji) !== ReactionType.PollVote) {
+		ForumPosts.handleReaction(
+			data.channel_id,
+			data.message_id,
+			emoji,
+			false,
+			data.user_id === Authentication.currentUserId,
+		);
+	}
 	MentionFeed.handleMessageReactionChange(data.message_id);
 	Messages.handleReaction({
 		type: 'MESSAGE_REACTION_REMOVE',
@@ -48,5 +55,6 @@ export function handleMessageReactionRemove(data: MessageReactionRemovePayload, 
 		messageId: data.message_id,
 		userId: data.user_id,
 		emoji,
+		reactionType: data.reaction_type ?? ReactionType.Emoji,
 	});
 }

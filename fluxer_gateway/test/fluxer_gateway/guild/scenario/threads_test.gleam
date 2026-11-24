@@ -565,3 +565,38 @@ pub fn thread_member_update_skips_added_users_without_access_test() {
   let assert Some(_) = fake.await_event(member, "THREAD_MEMBERS_UPDATE", 500)
   fixture.stop(found)
 }
+
+pub fn private_thread_poll_votes_follow_membership_test() {
+  use api <- guild_api.with_api
+  let found = threaded_guild()
+  serve_threads(api, found, 0)
+  let handle = fixture.started(api, found)
+  process.sleep(200)
+  let member = fake.start(2)
+  let holder = fake.start(3)
+  assert fake.is_joined(fake.join(member, handle))
+  assert fake.is_joined(fake.join(holder, handle))
+  fixture.dispatch(
+    handle,
+    "THREAD_CREATE",
+    json.object([
+      #("_fluxer_members", json.preprocessed_array([thread_member(400, 3)])),
+      ..private_fields(found.id)
+    ]),
+  )
+  let _ = fake.drain(member, 100)
+  let _ = fake.drain(holder, 0)
+  fixture.dispatch(
+    handle,
+    "MESSAGE_POLL_VOTE_ADD",
+    json.object([
+      #("channel_id", json.string("400")),
+      #("message_id", json.string("950")),
+      #("user_id", json.string("3")),
+      #("answer_id", json.string("1")),
+    ]),
+  )
+  let assert Some(_) = fake.await_event(holder, "MESSAGE_POLL_VOTE_ADD", 500)
+  assert !list.contains(fake.events(member, 100), "MESSAGE_POLL_VOTE_ADD")
+  fixture.stop(found)
+}

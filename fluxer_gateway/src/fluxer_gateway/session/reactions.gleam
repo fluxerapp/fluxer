@@ -3,6 +3,7 @@
 import fluxer_gateway/config/durations
 import fluxer_gateway/core/dispatch_facts.{type ReactionFacts}
 import fluxer_gateway/core/raw_json.{type RawJson}
+import gleam/dynamic/decode
 import gleam/json
 import gleam/list
 import gleam/option.{type Option, None, Some}
@@ -80,22 +81,24 @@ fn drop_oldest(reactions: Reactions) -> Reactions {
 pub fn cancel(
   reactions: Reactions,
   removal: ReactionFacts,
+  raw: RawJson,
 ) -> Result(Reactions, Nil) {
   case reactions.count {
     0 -> Error(Nil)
-    _ -> remove_first(list.reverse(reactions.held), removal, [])
+    _ -> remove_first(list.reverse(reactions.held), removal, kind(raw), [])
   }
 }
 
 fn remove_first(
   oldest_first: List(Reaction),
   removal: ReactionFacts,
+  removal_kind: Result(Int, Nil),
   seen: List(Reaction),
 ) -> Result(Reactions, Nil) {
   case oldest_first {
     [] -> Error(Nil)
     [entry, ..rest] ->
-      case matches(entry, removal) {
+      case matches(entry, removal, removal_kind) {
         True -> {
           let remaining = list.append(list.reverse(seen), rest)
           Ok(Reactions(
@@ -103,16 +106,30 @@ fn remove_first(
             count: list.length(remaining),
           ))
         }
-        False -> remove_first(rest, removal, [entry, ..seen])
+        False -> remove_first(rest, removal, removal_kind, [entry, ..seen])
       }
   }
 }
 
-fn matches(entry: Reaction, removal: ReactionFacts) -> Bool {
+fn matches(
+  entry: Reaction,
+  removal: ReactionFacts,
+  removal_kind: Result(Int, Nil),
+) -> Bool {
   entry.facts.message == removal.message
   && entry.facts.user == removal.user
   && entry.facts.emoji_id == removal.emoji_id
   && entry.facts.emoji_name == removal.emoji_name
+  && kind(entry.payload) == removal_kind
+}
+
+fn kind(payload: RawJson) -> Result(Int, Nil) {
+  case raw_json.field(payload, "reaction_type") {
+    Error(Nil) -> Ok(0)
+    Ok(value) ->
+      raw_json.read(value, decode.optional(decode.int))
+      |> result.map(option.unwrap(_, 0))
+  }
 }
 
 pub fn flush(reactions: Reactions) -> #(Reactions, List(#(String, RawJson))) {
@@ -172,11 +189,19 @@ fn reaction_json(entry: Reaction) -> json.Json {
       None -> json.object([])
     }),
   ]
-  case entry.facts.member_raw {
-    Some(member) ->
-      json.object(list.append(base, [#("member", raw_json.to_json(member))]))
-    None -> json.object(base)
+  let member = case entry.facts.member_raw {
+    Some(member) -> [#("member", raw_json.to_json(member))]
+    None -> []
   }
+  let reaction_type = case raw_json.field(entry.payload, "reaction_type") {
+    Ok(value) ->
+      case raw_json.to_bits(value) {
+        <<"null">> -> []
+        _ -> [#("reaction_type", raw_json.to_json(value))]
+      }
+    Error(Nil) -> []
+  }
+  json.object(list.flatten([base, member, reaction_type]))
 }
 
 fn raw_or_null(value: Option(RawJson)) -> json.Json {

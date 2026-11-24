@@ -65,6 +65,7 @@ function message(attachments: Array<MessageAttachment>, content = ''): Message {
 		mention_channels: null,
 		attachments,
 		embeds: null,
+		poll: null,
 		sticker_items: null,
 		message_reference: null,
 		message_snapshots: null,

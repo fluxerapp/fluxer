@@ -1426,6 +1426,7 @@ export class ReportService {
 				embeds: message.embeds.length > 0 ? message.embeds.map((embed) => embed.toMessageEmbed()) : null,
 				sticker_items:
 					message.stickers.length > 0 ? message.stickers.map((sticker) => sticker.toMessageStickerItem()) : null,
+				poll: message.poll?.toMessagePoll() ?? null,
 			});
 		}
 		return context;

@@ -118,7 +118,9 @@ fn message_access_event(event: String) -> Bool {
     | "MESSAGE_REACTION_ADD"
     | "MESSAGE_REACTION_REMOVE"
     | "MESSAGE_REACTION_REMOVE_ALL"
-    | "MESSAGE_REACTION_REMOVE_EMOJI" -> True
+    | "MESSAGE_REACTION_REMOVE_EMOJI"
+    | "MESSAGE_POLL_VOTE_ADD"
+    | "MESSAGE_POLL_VOTE_REMOVE" -> True
     _ -> False
   }
 }

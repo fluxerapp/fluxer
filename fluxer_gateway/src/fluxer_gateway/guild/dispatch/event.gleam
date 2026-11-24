@@ -87,6 +87,8 @@ fn is_channel_scoped(event: String) -> Bool {
     | "MESSAGE_REACTION_REMOVE"
     | "MESSAGE_REACTION_REMOVE_ALL"
     | "MESSAGE_REACTION_REMOVE_EMOJI"
+    | "MESSAGE_POLL_VOTE_ADD"
+    | "MESSAGE_POLL_VOTE_REMOVE"
     | "TYPING_START"
     | "CHANNEL_PINS_UPDATE"
     | "WEBHOOKS_UPDATE" -> True
@@ -101,7 +103,9 @@ pub fn is_message_access(event: String) -> Bool {
     | "MESSAGE_REACTION_ADD"
     | "MESSAGE_REACTION_REMOVE"
     | "MESSAGE_REACTION_REMOVE_ALL"
-    | "MESSAGE_REACTION_REMOVE_EMOJI" -> True
+    | "MESSAGE_REACTION_REMOVE_EMOJI"
+    | "MESSAGE_POLL_VOTE_ADD"
+    | "MESSAGE_POLL_VOTE_REMOVE" -> True
     _ -> False
   }
 }
@@ -122,8 +126,14 @@ pub fn is_bulk_update(event: String) -> Bool {
   event == "CHANNEL_UPDATE_BULK"
 }
 
-pub fn is_reaction(event: String) -> Bool {
-  event == "MESSAGE_REACTION_ADD" || event == "MESSAGE_REACTION_REMOVE"
+pub fn carries_session(event: String) -> Bool {
+  case event {
+    "MESSAGE_REACTION_ADD"
+    | "MESSAGE_REACTION_REMOVE"
+    | "MESSAGE_POLL_VOTE_ADD"
+    | "MESSAGE_POLL_VOTE_REMOVE" -> True
+    _ -> False
+  }
 }
 
 pub fn member_placement(event: String) -> Placement {
@@ -132,8 +142,11 @@ pub fn member_placement(event: String) -> Placement {
     | "MESSAGE_UPDATE"
     | "MESSAGE_DELETE"
     | "MESSAGE_DELETE_BULK" -> MessagePlacement
-    "TYPING_START" | "MESSAGE_REACTION_ADD" | "MESSAGE_REACTION_REMOVE" ->
-      UserPlacement
+    "TYPING_START"
+    | "MESSAGE_REACTION_ADD"
+    | "MESSAGE_REACTION_REMOVE"
+    | "MESSAGE_POLL_VOTE_ADD"
+    | "MESSAGE_POLL_VOTE_REMOVE" -> UserPlacement
     _ -> NoPlacement
   }
 }

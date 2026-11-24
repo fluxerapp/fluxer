@@ -16,7 +16,7 @@ pub fn extract_session(
   event_name: String,
   data: JsonTree,
 ) -> #(Option(String), JsonTree) {
-  use <- bool.guard(!event.is_reaction(event_name), #(None, data))
+  use <- bool.guard(!event.carries_session(event_name), #(None, data))
   case json_tree.field(data, "session_id") {
     Ok(json_tree.String(key)) -> {
       let clean = json_tree.remove(data, "session_id") |> result.unwrap(data)

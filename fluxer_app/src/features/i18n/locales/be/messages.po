@@ -16,6 +16,11 @@ msgstr ""
 msgid "--{name} isn't a Fluxer variable and isn't set anywhere in your CSS."
 msgstr "--{name} не з’яўляецца зменнай Fluxer і нідзе не зададзена ў вашым CSS."
 
+#. Separator that goes between answer qualifiers that are only readable for screenreaders. Example: "Winning answer[, ]Selected answer".
+#: src/features/channel/components/Poll.tsx
+msgid ", "
+msgstr ""
+
 #. Description text in the messages tab.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx
 msgid "... turn dense mode on. Nice!"
@@ -57,6 +62,21 @@ msgstr "[Зыходнае паведамленне выдалена]"
 #: src/features/discovery/discovery/DiscoveryGuildCard.tsx
 msgid "{0, plural, one {# member} other {# members}}"
 msgstr "{0, plural, one {# удзельнік} few {# удзельнікі} many {# удзельнікаў} other {# удзельніка}}"
+
+#. placeholder {0}: Math.floor(secondsLeft / 86400)
+#: src/features/channel/components/Poll.tsx
+msgid "{0}d left"
+msgstr ""
+
+#. placeholder {0}: Math.round(secondsLeft / 3600)
+#: src/features/channel/components/Poll.tsx
+msgid "{0}h left"
+msgstr ""
+
+#. placeholder {0}: Math.round(secondsLeft / 60)
+#: src/features/channel/components/Poll.tsx
+msgid "{0}m left"
+msgstr ""
 
 #. Screen reader announcement in the composer when two people are typing. {a} and {b} are their display names.
 #: src/features/typing/rolling/RollingTypingText.tsx
@@ -1207,6 +1227,11 @@ msgstr "{count, plural, one {# суполка часова недаступна�
 msgid "{count, plural, one {# connection} other {# connections}}"
 msgstr "{count, plural, one {# падключэнне} few {# падключэнні} many {# падключэнняў} other {# падключэння}}"
 
+#. Generic description for a duration option that is measured in days.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx
+msgid "{count, plural, one {# day} other {# days}}"
+msgstr ""
+
 #. Button in the status bar of the quick CSS editor that opens the list of problems.
 #: src/features/theme_settings/components/QuickCssStatusBar.tsx
 msgid "{count, plural, one {# error} other {# errors}}"
@@ -1222,6 +1247,11 @@ msgstr "{count, plural, one {# файл} few {# файлы} many {# файлаў
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts
 msgid "{count, plural, one {# gift} other {# gifts}}"
 msgstr "{count, plural, one {# падарунак} few {# падарункі} many {# падарункаў} other {# падарунка}}"
+
+#. Generic description for a duration option that is measured in hours.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx
+msgid "{count, plural, one {# hour} other {# hours}}"
+msgstr ""
 
 #. Attachment summary in the forward modal message preview when the message has images and no videos. count is the number of images.
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx
@@ -1317,10 +1347,20 @@ msgstr "{count, plural, one {Даступна # падказка} few {Даст�
 msgid "{count, plural, one {# video} other {# videos}}"
 msgstr "{count, plural, one {# відэа} few {# відэа} many {# відэа} other {# відэа}}"
 
+#. Small text indicating the number of votes on the poll or on a specific answer of the poll.
+#: src/features/channel/components/Poll.tsx
+msgid "{count, plural, one {# vote} other {# votes}}"
+msgstr ""
+
 #. Button in the status bar of the quick CSS editor that opens the list of problems.
 #: src/features/theme_settings/components/QuickCssStatusBar.tsx
 msgid "{count, plural, one {# warning} other {# warnings}}"
 msgstr "{count, plural, one {# папярэджанне} few {# папярэджанні} many {# папярэджанняў} other {# папярэджання}}"
+
+#. Generic description for a duration option that is measured in weeks.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx
+msgid "{count, plural, one {# week} other {# weeks}}"
+msgstr ""
 
 #. Compact age label shown beside a list row (DM list, invite list). count is a number of days; the "d" is an abbreviation of "days". Keep it as short as possible; it sits in a narrow column.
 #: src/features/ui/utils/ShortRelativeTimeLabels.ts
@@ -2574,6 +2614,10 @@ msgstr "Выклік ад <0/> доўжыўся {durationText}."
 msgid "<0/> started a call."
 msgstr "<0/> пачынае выклік."
 
+#: src/features/channel/components/PollClosedMessage.tsx
+msgid "<0/>'s poll <1/> has closed."
+msgstr ""
+
 #: src/features/moderation/components/modals/TimeoutMemberSheet.tsx
 msgid "<0>{targetUserTag}</0> is currently timed out. You can update their timeout duration or remove the timeout."
 msgstr "<0>{targetUserTag}</0> зараз у тайм-аўце. Вы можаце змяніць працягласць тайм-аўту або зняць яго."
@@ -2591,6 +2635,11 @@ msgstr "<0>Пераслана з</0>{sourceInfo}"
 #: src/features/user/components/modals/tabs/appearance_tab/InterfaceTab.tsx
 msgid "<0>Kenji</0>, <1>Amara</1> and <2>Mateo</2> are typing..."
 msgstr "<0>Кэнджы</0>, <1>Амара</1> і <2>Матэа</2> пішуць..."
+
+#. Very short text informing the user that the poll ends in less than one minute.
+#: src/features/channel/components/Poll.tsx
+msgid "<1m left"
+msgstr ""
 
 #. Summary chip text in the mobile channel search sheet when exactly one channel is selected as a filter.
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx
@@ -2940,6 +2989,11 @@ msgstr "Пасля імя карыстальніка дадаецца лік, н
 #: src/features/search/utils/SearchUtils.ts
 msgid "a poll"
 msgstr "апытанне"
+
+#. Placeholder text for each answer input.
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx
+msgid "A possible answer"
+msgstr ""
 
 #. Plutonium page perk card title about profile customization.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
@@ -3603,6 +3657,11 @@ msgstr "Дадайце электронную пошту і пароль, каб
 msgid "Add an email and a password to talk in this community."
 msgstr "Дадайце электронную пошту і пароль, каб пісаць у гэтай суполцы."
 
+#. Reason shown on an instance that cannot send email, when someone without an email tries to vote in a poll.
+#: src/features/user/utils/AccountGatePresentation.tsx
+msgid "Add an email and a password to vote in polls."
+msgstr ""
+
 #. Reason shown when someone without an email starts a purchase.
 #: src/features/user/utils/AccountGatePresentation.tsx
 msgid "Add an email so we can send your receipts."
@@ -3719,6 +3778,11 @@ msgstr "Дадайце электронную пошту, каб падавац�
 msgid "Add an email to talk in this community."
 msgstr "Дадайце электронную пошту, каб пісаць у гэтай суполцы."
 
+#. Reason shown when someone without an email tries to vote in a poll.
+#: src/features/user/utils/AccountGatePresentation.tsx
+msgid "Add an email to vote in polls."
+msgstr ""
+
 #. Notice in the Operator Pass checkout dialog for accounts that have no email yet. Operator Pass is a product name.
 #: src/features/premium/components/operator_pass/checkout/CheckoutNoticeStage.tsx
 msgid "Add an email to your account to buy the {operatorPassName}."
@@ -3743,6 +3807,11 @@ msgstr "Дадаць іншы экзэмпляр"
 #: src/features/channel/components/MessageActionBottomSheet.tsx
 msgid "Add another reaction"
 msgstr "Дадаць яшчэ адну рэакцыю"
+
+#. Label for the button that adds a new answer to the poll.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx
+msgid "Add answer"
+msgstr ""
 
 #. OAuth authorization destination step title. The user chooses where a bot will be added.
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthCommunityStep.tsx
@@ -4484,6 +4553,11 @@ msgstr "Дазволіць згадванні гэтай ролі"
 msgid "Allow microphone"
 msgstr "Дазволіць мікрафон"
 
+#. Label for the checkbox that allows users of the poll to select multiple answers.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx
+msgid "Allow multiple answers"
+msgstr ""
+
 #. Switch label in community settings. On by default for new communities, owners can turn it off.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/GuildVisitsSection.tsx
 msgid "Allow people to preview this community before joining"
@@ -5017,6 +5091,11 @@ msgstr "Аб’явы"
 msgid "Annual"
 msgstr "Штогадовая"
 
+#. Label for the checkbox that makes the poll anonymous (only moderators/admins of the community can see who voted).
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx
+msgid "Anonymous voting"
+msgstr ""
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx
 msgid "Another checkbox"
 msgstr "Іншы сцяжок"
@@ -5029,6 +5108,11 @@ msgstr "Яшчэ адзін круглы сцяжок"
 #: src/features/input/state/input_keybind/shared.ts
 msgid "Answer the incoming call"
 msgstr "Адказаць на ўваходны выклік"
+
+#. Label for the answers section of the poll creation modal.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx
+msgid "Answers"
+msgstr ""
 
 #: src/features/user/components/modals/tabs/keybinds_tab/shared.ts
 msgid "Any key"
@@ -10029,6 +10113,11 @@ msgstr "Пацвердзіце электронную пошту, каб піс�
 msgid "Confirm your email to turn on two-factor authentication or add a passkey."
 msgstr "Пацвердзіце электронную пошту, каб уключыць двухфактарную аўтэнтыфікацыю або дадаць ключ доступу."
 
+#. Reason shown when someone with an unconfirmed email tries to vote in a poll.
+#: src/features/user/utils/AccountGatePresentation.tsx
+msgid "Confirm your email to vote in polls."
+msgstr ""
+
 #. Warning shown when the account email is not confirmed yet. The person confirms it by entering a code sent to their email.
 #: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx
 msgid "Confirm your email with a code to send messages and join communities."
@@ -11682,6 +11771,11 @@ msgstr "Стварыць новы набор"
 msgid "Create a new recovery kit?"
 msgstr "Стварыць новы набор для аднаўлення?"
 
+#. Title of the poll creation modal.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx
+msgid "Create a poll"
+msgstr ""
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts
 msgid "Create a recovery kit to reset a forgotten password"
@@ -11800,6 +11894,16 @@ msgstr "Стварыць новую спасылку"
 #: src/features/input/state/input_keybind/shared.ts
 msgid "Create or join a community"
 msgstr "Стварыць суполку або далучыцца да наяўнай"
+
+#. Plus menu item that opens a form to create a poll.
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx
+msgid "Create poll"
+msgstr ""
+
+#. Permission name: allows creating polls.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts
+msgid "Create polls"
+msgstr ""
 
 #. Permission name in forum and media channel permissions. Lets members create posts.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
@@ -12880,6 +12984,11 @@ msgstr "Выдаліць дзеянне."
 msgid "Delete all messages"
 msgstr "Выдаліць усе паведамленні"
 
+#. Tooltip text for the button that deletes an answer from the poll.
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx
+msgid "Delete answer"
+msgstr ""
+
 #. Button or menu action label in the application detail. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx
 msgid "Delete application"
@@ -12916,7 +13025,9 @@ msgid "Delete community"
 msgstr "Выдаліць суполку"
 
 #. Confirmation modal title for deleting a custom emoji.
+#. Title of a context menu item to delete the emoji of a poll answer.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx
 msgid "Delete emoji"
 msgstr "Выдаліць эмоджы"
 
@@ -14482,6 +14593,11 @@ msgstr "Стварыць копію канала"
 msgid "Duplicate role"
 msgstr "Стварыць копію ролі"
 
+#. Label for the duration input.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx
+msgid "Duration"
+msgstr ""
+
 #. Field label in the voice connection status popout. Shows how long the current voice session has been connected.
 #: src/features/voice/components/voice_connection_status/shared.ts
 msgid "Duration:"
@@ -15428,6 +15544,13 @@ msgstr "Завяршыць льготны перыяд"
 #: src/features/user/components/modals/tabs/SubscriptionsTab.tsx
 msgid "End grace period now?"
 msgstr "Завяршыць льготны перыяд зараз?"
+
+#. Action label for ending a poll now.
+#. Message context menu item that ends the poll now. Only displayed on poll messages.
+#: src/features/channel/components/MessageActionMenu.tsx
+#: src/features/i18n/utils/CommonMessageDescriptors.ts
+msgid "End poll now"
+msgstr ""
 
 #. Voice control menu action to stop sharing the screen.
 #: src/features/voice/components/VoiceControlBar.tsx
@@ -18304,6 +18427,11 @@ msgstr "Вярніцеся ў праграму {PRODUCT_NAME}. Яна сама �
 msgid "Go back to the {PRODUCT_NAME} app. You can close this tab."
 msgstr "Вярніцеся ў праграму {PRODUCT_NAME}. Гэту ўкладку можна закрыць."
 
+#. Label of the button to go back to vote when the user is looking at poll results.
+#: src/features/channel/components/Poll.tsx
+msgid "Go back to vote"
+msgstr ""
+
 #. Accessible label for the community row of an expression info card, which opens a community the viewer is already a member of. {communityName} is the community name.
 #: src/features/expressions/components/ExpressionInfoCard.tsx
 msgid "Go to {communityName}"
@@ -20570,6 +20698,11 @@ msgstr "Магчыма, суполка пакінула раздзел «Агл�
 msgid "It moves to them as soon as they accept. You can take the offer back until then."
 msgstr "Пропуск пяройдзе да гэтага чалавека, як толькі той прыме прапанову. Да таго часу прапанову можна адклікаць."
 
+#. Small explanatory text informing the user that the poll resulted in a draw.
+#: src/features/channel/components/PollClosedMessage.tsx
+msgid "It's a draw"
+msgstr ""
+
 #. Label in the channel and chat active now sidebar.
 #: src/features/channel/components/active_now/ActiveNowSidebar.tsx
 msgid "It's quiet for now..."
@@ -22438,6 +22571,11 @@ msgstr "Медыя для дарослых"
 #: src/features/invite/components/modals/InviteModal.tsx
 msgid "Max number of uses"
 msgstr "Максімальная колькасць выкарыстанняў"
+
+#. Short label in the max poll vote count reached modal.
+#: src/features/app/components/alerts/MaxPollVoteCountReachedModal.tsx
+msgid "Max poll vote count reached"
+msgstr ""
 
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx
 msgid "Max size: {BACKGROUND_MEDIA_MAX_SIZE_LABEL}."
@@ -25212,6 +25350,11 @@ msgstr "Такую рэакцыю пакуль ніхто не паставіў.
 msgid "Nobody matches that search."
 msgstr "Па гэтым пошуку нікога не знойдзена."
 
+#. Small explanatory text informing the user that nobody voted on the poll.
+#: src/features/channel/components/PollClosedMessage.tsx
+msgid "Nobody voted!"
+msgstr ""
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts
 msgid "Noise"
@@ -27980,6 +28123,21 @@ msgstr "Польшча"
 msgid "Polish"
 msgstr "Польская"
 
+#. Small text informing the user that the poll is closed.
+#: src/features/channel/components/Poll.tsx
+msgid "Poll closed"
+msgstr ""
+
+#. Small text informing the user that the poll message has not been sent yet.
+#: src/features/channel/components/Poll.tsx
+msgid "Poll not sent"
+msgstr ""
+
+#. Notification body shown when a poll is sent. question is the question asked on the poll.
+#: src/features/notification/utils/MessageNotificationPreview.ts
+msgid "Poll: {question}"
+msgstr ""
+
 #. Button label in a popped-out voice window titlebar that restores the content into the main app window.
 #: src/features/voice/utils/VoiceSharedMessageDescriptors.ts
 msgid "Pop back in"
@@ -28905,6 +29063,11 @@ msgstr "Рэжым рацыі працуе па-за {productName}, толькі
 #: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx
 msgid "Push-to-talk works outside {productName} only after you bind it in your Hyprland config. Add the line for your Hyprland version and replace KEY with the key you want."
 msgstr "Рэжым рацыі працуе па-за {productName}, толькі калі вы прызначыце для яго клавішу ў канфігурацыі Hyprland. Дадайце радок для вашай версіі Hyprland і замяніце KEY на патрэбную клавішу."
+
+#. Label for the question input.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx
+msgid "Question"
+msgstr ""
 
 #. Section title in Settings > Themes. Quick CSS is custom CSS the user writes to restyle the app.
 #: src/features/user/components/settings_utils/section_registry/ThemesSections.ts
@@ -29883,6 +30046,11 @@ msgstr "Выдаліць перакладчык"
 msgid "Remove user"
 msgstr ""
 
+#. Label of the button to remove the user's vote.
+#: src/features/channel/components/Poll.tsx
+msgid "Remove vote"
+msgstr ""
+
 #. Description of the switch that hides the purchase date, under the premium badge row in the "Badges" profile settings. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
 msgid "Remove when you first bought {premiumProductName} from your badge"
@@ -30169,6 +30337,11 @@ msgstr "Замяніць фон"
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx
 msgid "Replace background?"
 msgstr "Замяніць фон?"
+
+#. Title of a context menu item to replace the emoji of a poll answer.
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx
+msgid "Replace emoji"
+msgstr ""
 
 #. Accessible label of the button that replaces a stored API key. key is the field name, such as Klipy API key.
 #: src/features/app/components/setup/SetupServicesStep.tsx
@@ -32201,6 +32374,11 @@ msgstr "Бачыць спіс удзельнікаў гэтага канала."
 msgid "See this channel. Denying it for {everyoneMention} makes the channel private."
 msgstr "Бачыць гэты канал. Калі забараніць гэта для {everyoneMention}, канал стане прыватным."
 
+#. Permission name: allows looking at votes on anonymous polls.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts
+msgid "See votes on anonymous polls"
+msgstr ""
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts
 msgid "Seek preview"
@@ -32298,6 +32476,11 @@ msgstr "Выберыце ўліковы запіс, каб працягнуць,
 msgid "Select an option from the radio group"
 msgstr "Выберыце варыянт з групы перамыкачоў"
 
+#. Tooltip text for the emoji selection button on an answer.
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx
+msgid "Select emoji"
+msgstr ""
+
 #. Button or menu action label in the add friends to group modal. Keep it concise.
 #. Button or menu action label in the create dm bottom sheet. Keep it concise.
 #. Button or menu action label in the create dm modal. Keep it concise.
@@ -32316,6 +32499,16 @@ msgstr "Выбраць GIF {title}"
 #: src/features/user/components/modals/tabs/LanguageTab.tsx
 msgid "Select interface language"
 msgstr "Выберыце мову інтэрфейсу"
+
+#. Small explanatory text instructing the user to select one answer on the poll.
+#: src/features/channel/components/Poll.tsx
+msgid "Select one answer"
+msgstr ""
+
+#. Small explanatory text instructing the user to select one or multiple answers on the poll.
+#: src/features/channel/components/Poll.tsx
+msgid "Select one or multiple answers"
+msgstr ""
 
 #. Shown above the [data-flx] values in the "Reference" tab of the quick CSS editor.
 #: src/features/theme_settings/components/QuickCssReference.tsx
@@ -32380,6 +32573,11 @@ msgstr "Тэкст, які можна вылучаць"
 #: src/features/channel/components/direct_message/DMListItem.tsx
 msgid "selected"
 msgstr "выбрана"
+
+#. Label showing the answer with the most votes on the poll.
+#: src/features/channel/components/Poll.tsx
+msgid "Selected answer"
+msgstr ""
 
 #. Announced by screen readers in the code editor of the quick CSS editor.
 #: src/features/theme_settings/editor/EditorPhrases.ts
@@ -32563,9 +32761,7 @@ msgid "Send GIF {title}"
 msgstr "Адправіць GIF {title}"
 
 #. Action label for sending a gift to a friend.
-#. Button or menu action label in the channel and chat mobile textarea plus bottom sheet. Keep it concise.
 #. Plus menu item that opens the gift purchase flow.
-#: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx
 #: src/features/expressions/components/modals/GiftSendToFriendModal.tsx
 msgid "Send gift"
@@ -32906,6 +33102,11 @@ msgstr "Задайце пароль, каб падаваць скаргі."
 #: src/features/user/utils/AccountGatePresentation.tsx
 msgid "Set a password to talk in this community."
 msgstr "Задайце пароль, каб пісаць у гэтай суполцы."
+
+#. Reason shown when someone whose account has no password or passkey yet tries to vote in a poll.
+#: src/features/user/utils/AccountGatePresentation.tsx
+msgid "Set a password to vote in polls."
+msgstr ""
 
 #. Video settings note shown when a streaming preset decides the screen share resolution and frame rate. preset is the Gaming or Screen share preset label, and Custom is the third preset label.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx
@@ -33927,6 +34128,11 @@ msgstr "Паказаць праблемы"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
 msgid "Show quick reactions"
 msgstr "Паказваць хуткія рэакцыі"
+
+#. Label of the button to show poll answer results.
+#: src/features/channel/components/Poll.tsx
+msgid "Show results"
+msgstr ""
 
 #. Short label for an advanced message input preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx
@@ -35918,6 +36124,11 @@ msgstr "Афармленне"
 msgid "Submenu"
 msgstr "Падменю"
 
+#. Label for the poll submit button.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx
+msgid "Submit"
+msgstr ""
+
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
 msgid "Submit application"
 msgstr "Адправіць заяўку"
@@ -37165,6 +37376,11 @@ msgstr "Пададзены redirect_uri не зарэгістраваны для
 msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "Пададзены redirect_uri мусіць выкарыстоўваць HTTP або HTTPS."
 
+#. Placeholder text for the question input.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx
+msgid "The question you want to ask"
+msgstr ""
+
 #. Error under the "Quote on the wall" field when the quote looks like a link, a web address such as example.com, an email address, an @mention or a community invite.
 #: src/features/premium/components/operator_pass/OperatorPassWallQuoteField.tsx
 msgid "The quote can't have links, web addresses, email addresses, @mentions or invites."
@@ -38407,6 +38623,16 @@ msgstr "Гэты план недаступны. Звярніцеся ў служ
 msgid "This plan isn't available. Contact the administrators of this instance."
 msgstr "Гэты план недаступны. Звярніцеся да адміністратараў гэтага экзэмпляра."
 
+#. Small disclaimer explaining to the user that this poll is anonymous, but they can see votes because they have the permission for it.
+#: src/features/channel/components/Poll.tsx
+msgid "This poll is anonymous, but you can see votes."
+msgstr ""
+
+#. Small disclaimer explaining to the user that this poll is anonymous.
+#: src/features/channel/components/Poll.tsx
+msgid "This poll is anonymous."
+msgstr ""
+
 #: src/features/app/components/dialogs/components/plutonium/RefundsSection.tsx
 msgid "This purchase is not eligible for a refund."
 msgstr "За гэту пакупку нельга вярнуць грошы."
@@ -38630,6 +38856,11 @@ msgstr "Гэта было паведамленне {silentMention}."
 #: src/features/voice/components/dialogs/DisableScreenSharePiPConfirmModal.tsx
 msgid "This will close the current popout and stop screen share picture-in-picture popouts from opening automatically. You can turn them back on in {audioVideoSettingsPath}."
 msgstr "Гэта закрые цяперашняе выплыўное акно, і выплыўныя вокны «карцінка ў карцінцы» для дэманстрацыі экрана больш не будуць адкрывацца аўтаматычна. Зноў уключыць іх можна ў раздзеле {audioVideoSettingsPath}."
+
+#. Description of the action of ending a poll in a confirmation modal.
+#: src/features/messaging/commands/PollCommands.tsx
+msgid "This will close the poll now and show the results."
+msgstr ""
 
 #: src/features/messaging/commands/FavoritesCommands.tsx
 msgid "This will hide all favorites-related UI elements including buttons and menu items. Your existing favorites will be preserved and can be re-enabled anytime from <0>{favoritesSettingsPath}</0>."
@@ -40819,9 +41050,7 @@ msgstr "Загрузіць адразу ў {displayName}"
 msgid "Upload emoji"
 msgstr "Загрузіць эмоджы"
 
-#. Button or menu action label in the channel and chat mobile textarea plus bottom sheet. Keep it concise.
 #. Plus menu item that opens the system file picker to attach a file.
-#: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx
 msgid "Upload file"
 msgstr "Загрузіць файл"
@@ -40887,9 +41116,7 @@ msgstr "Загрузіць стыкер"
 msgid "Upload to {displayName}"
 msgstr "Загрузіць у {displayName}"
 
-#. Button or menu action label in the channel and chat mobile textarea plus bottom sheet. Keep it concise.
 #. Plus menu item that uploads the current textarea content as a .txt file when it exceeds the size limit.
-#: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx
 msgid "Upload your message as a file"
 msgstr "Загрузіць паведамленне як файл"
@@ -42064,6 +42291,11 @@ msgstr "Паглядзець дазволы"
 msgid "View plans"
 msgstr "Паглядзець планы"
 
+#. Title of the button that redirects to the poll message.
+#: src/features/channel/components/PollClosedMessage.tsx
+msgid "View poll"
+msgstr ""
+
 #. Action label that opens the user profile modal or sheet for the selected user.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "View profile"
@@ -42429,6 +42661,11 @@ msgstr "Паўзункі гучнасці"
 msgctxt "keyboard-key-name"
 msgid "Volume up"
 msgstr "Гучней"
+
+#. Label of the vote button.
+#: src/features/channel/components/Poll.tsx
+msgid "Vote"
+msgstr ""
 
 #. Description text in the message delete too quick modal. Keep the tone plain and specific.
 #: src/features/messaging/commands/MessageCommands.tsx
@@ -43401,6 +43638,11 @@ msgstr "Вокны, абрэзаныя зверху або знізу экран
 msgid "Windows default"
 msgstr "Прадвызначаная прылада Windows"
 
+#. Label showing or describing the answer with the most votes on the poll.
+#: src/features/channel/components/Poll.tsx
+msgid "Winning answer"
+msgstr ""
+
 #. Switch description in the leave-community or leave-group confirmation. Warns that deleting the caller's messages is destructive.
 #: src/features/guild/components/modals/LeaveConfirmModal.tsx
 msgid "Wipe every message you've sent here on the way out. Can't be undone."
@@ -43920,6 +44162,11 @@ msgstr "Пасля стварэння ўліковага запісу гэта �
 msgid "You can't change your nickname here"
 msgstr "Тут нельга змяніць свой псеўданім"
 
+#. Tooltip on the disabled create poll item when the user lacks Create Poll permission. Calm, factual tone.
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx
+msgid "You can't create polls in this channel."
+msgstr ""
+
 #. Title of the error modal shown when the user lacks permission to delete a channel or category.
 #: src/features/app/components/alerts/ChannelDeleteFailedModal.tsx
 msgid "You can't delete this"
@@ -44149,6 +44396,11 @@ msgstr "У вас няма дазволу далучацца да гэтага �
 msgid "You don't have permission to rename this emoji. The name was reverted to what it was before."
 msgstr "У вас няма дазволу пераймяноўваць гэта эмоджы. Назва вернута да ранейшай."
 
+#. Error message for when no question has been entered in the poll.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx
+msgid "You forgot to enter a question."
+msgstr ""
+
 #. Sentence in the dialog that withdraws from one Operator Pass. The certificate page is the page for this pass in the Operator certificate PDF. "Withdraw" means using the consumer right of withdrawal on an Operator Pass purchase for a full refund, before the certificate is delivered or, where the law keeps the right after delivery such as in Brazil, within the days it gives. Never a word for taking money out.
 #: src/features/premium/components/operator_pass/OperatorPassWithdrawModal.tsx
 msgid "You get a full refund to your original payment method. The pass ends now, and our records show its certificate page as canceled."
@@ -44323,6 +44575,11 @@ msgstr "Каб пачаць асабістую перапіску, трэба п
 msgid "You need to confirm your email before you can purchase {premiumProductFullName}."
 msgstr "Каб купіць {premiumProductFullName}, трэба пацвердзіць электронную пошту."
 
+#. Small disclaimer explaining to the user that email verification is necessary to vote on a poll.
+#: src/features/channel/components/Poll.tsx
+msgid "You need to verify your email address to vote on a poll."
+msgstr ""
+
 #. Body of the error modal shown when the user or a recipient has too many open group DMs.
 #: src/features/app/components/alerts/DmActionErrorModal.tsx
 msgid "You or someone you're adding already has the maximum number of group DMs open. Leave one and try again."
@@ -44347,6 +44604,11 @@ msgstr "Вы заплацілі {paid}. Мы пакідаем частку за 
 #: src/features/app/components/setup/SetupRecoveryKitStep.tsx
 msgid "You saved a recovery kit."
 msgstr "Вы захавалі набор для аднаўлення."
+
+#. Error message for when no answer has been entered in the poll.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx
+msgid "You should enter at least one answer."
+msgstr ""
 
 #. Description of the password row in account settings when the account has a confirmed email but no password.
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx
@@ -44677,6 +44939,11 @@ msgstr "Запрашэнне ў групавы чат ад"
 #: src/features/channel/components/ThemeEmbed.tsx
 msgid "You've got CSS!"
 msgstr "У вас ёсць CSS!"
+
+#. Modal body shown when the maximum vote count per answer has been reached on a poll. Keep plain.
+#: src/features/app/components/alerts/MaxPollVoteCountReachedModal.tsx
+msgid "You've reached the maximum number of votes per answer."
+msgstr ""
 
 #: src/features/auth/flow/GiftHeader.tsx
 msgid "You've received a gift"

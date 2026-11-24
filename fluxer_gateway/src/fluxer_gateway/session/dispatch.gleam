@@ -219,7 +219,7 @@ fn route(
       State(..state, reactions: held)
     }
     "MESSAGE_REACTION_REMOVE", _, Reaction(reaction) ->
-      case reactions.cancel(state.reactions, reaction) {
+      case reactions.cancel(state.reactions, reaction, payload) {
         Ok(remaining) -> State(..state, reactions: remaining)
         Error(Nil) -> after_reactions(state, source, event, payload, facts)
       }

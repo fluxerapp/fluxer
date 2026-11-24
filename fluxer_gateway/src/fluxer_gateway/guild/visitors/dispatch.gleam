@@ -126,7 +126,9 @@ fn scope(event_name: String) -> Scope {
     | "MESSAGE_REACTION_ADD"
     | "MESSAGE_REACTION_REMOVE"
     | "MESSAGE_REACTION_REMOVE_ALL"
-    | "MESSAGE_REACTION_REMOVE_EMOJI" -> FocusedScope
+    | "MESSAGE_REACTION_REMOVE_EMOJI"
+    | "MESSAGE_POLL_VOTE_ADD"
+    | "MESSAGE_POLL_VOTE_REMOVE" -> FocusedScope
     "THREAD_CREATE" | "THREAD_UPDATE" | "THREAD_DELETE" -> ThreadScope
     "CHANNEL_PINS_UPDATE" -> PinsScope
     _ -> NoScope
@@ -150,7 +152,10 @@ fn without(data: JsonTree, keys: List(String)) -> JsonTree {
 
 fn visitor_payload(event_name: String, data: JsonTree) -> JsonTree {
   case event_name {
-    "MESSAGE_REACTION_ADD" | "MESSAGE_REACTION_REMOVE" ->
+    "MESSAGE_REACTION_ADD"
+    | "MESSAGE_REACTION_REMOVE"
+    | "MESSAGE_POLL_VOTE_ADD"
+    | "MESSAGE_POLL_VOTE_REMOVE" ->
       without(data, ["user_id", "member", "session_id"])
     "CHANNEL_CREATE" | "CHANNEL_UPDATE" | "CHANNEL_DELETE" ->
       snapshot.strip_channel(data)

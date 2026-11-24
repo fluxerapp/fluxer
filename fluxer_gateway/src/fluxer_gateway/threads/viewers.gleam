@@ -90,6 +90,8 @@ fn is_channel_scoped(event: String) -> Bool {
     | "MESSAGE_REACTION_REMOVE"
     | "MESSAGE_REACTION_REMOVE_ALL"
     | "MESSAGE_REACTION_REMOVE_EMOJI"
+    | "MESSAGE_POLL_VOTE_ADD"
+    | "MESSAGE_POLL_VOTE_REMOVE"
     | "TYPING_START"
     | "CHANNEL_PINS_UPDATE"
     | "WEBHOOKS_UPDATE" -> True

@@ -87,3 +87,27 @@ pub fn facts_collect_mentions_once_test() {
   assert facts.mentions.here
   assert !facts.mentions.everyone
 }
+
+pub fn poll_vote_events_route_like_reactions_test() {
+  let data =
+    json_tree.Object([
+      #("channel_id", json_tree.String("6")),
+      #("user_id", json_tree.String("9")),
+    ])
+  assert event.scope("MESSAGE_POLL_VOTE_ADD", data)
+    == event.ChannelEvent(Some(6))
+  assert event.scope("MESSAGE_POLL_VOTE_REMOVE", data)
+    == event.ChannelEvent(Some(6))
+  assert event.is_message_access("MESSAGE_POLL_VOTE_ADD")
+  assert event.is_message_access("MESSAGE_POLL_VOTE_REMOVE")
+  assert event.member_placement("MESSAGE_POLL_VOTE_ADD") == event.UserPlacement
+  assert event.member_placement("MESSAGE_POLL_VOTE_REMOVE")
+    == event.UserPlacement
+  assert event.member_user("MESSAGE_POLL_VOTE_ADD", data) == Some(9)
+  assert event.member_user("MESSAGE_POLL_VOTE_REMOVE", data) == Some(9)
+  assert event.carries_session("MESSAGE_REACTION_ADD")
+  assert event.carries_session("MESSAGE_REACTION_REMOVE")
+  assert event.carries_session("MESSAGE_POLL_VOTE_ADD")
+  assert event.carries_session("MESSAGE_POLL_VOTE_REMOVE")
+  assert !event.carries_session("MESSAGE_CREATE")
+}

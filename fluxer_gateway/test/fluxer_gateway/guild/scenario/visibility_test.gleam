@@ -342,6 +342,34 @@ pub fn reaction_skips_the_reacting_session_test() {
   fixture.stop(found)
 }
 
+pub fn poll_vote_skips_the_voting_session_test() {
+  use api <- guild_api.with_api
+  let found = secret_guild()
+  let handle = fixture.started(api, found)
+  let first = fake.start(2)
+  let second = fake.start(2)
+  assert fake.is_joined(fake.join(first, handle))
+  assert fake.is_joined(fake.join(second, handle))
+  let _ = fake.drain(first, 50)
+  let _ = fake.drain(second, 0)
+  fixture.dispatch(
+    handle,
+    "MESSAGE_POLL_VOTE_ADD",
+    json.object([
+      #("channel_id", json.string("10")),
+      #("message_id", json.string("500")),
+      #("user_id", json.string("2")),
+      #("session_id", json.string(session_text(first))),
+      #("answer_id", json.string("1")),
+    ]),
+  )
+  let assert Some(vote) = fake.await_event(second, "MESSAGE_POLL_VOTE_ADD", 500)
+  assert fake.text_at(vote, ["session_id"]) == None
+  assert fake.text_at(vote, ["member", "user", "id"]) == Some("2")
+  assert !list.contains(fake.events(first, 100), "MESSAGE_POLL_VOTE_ADD")
+  fixture.stop(found)
+}
+
 fn session_text(found: fake.FakeSession) -> String {
   session.session_id_to_string(found.ref.id)
 }
