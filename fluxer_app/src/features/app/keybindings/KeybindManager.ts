@@ -77,6 +77,7 @@ import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import MessageFocus from '@app/features/messaging/state/MessageFocus';
 import {getSortedDmChannels} from '@app/features/messaging/utils/DmChannelUtils';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
+import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
 import Navigation from '@app/features/navigation/state/Navigation';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
@@ -343,6 +344,7 @@ class KeybindManager {
 		const safeIndex = currentIndex <= 0 && currentGuildId ? 0 : currentIndex;
 		const slotCount = guilds.length + 1;
 		const nextIndex = (safeIndex + direction + slotCount) % slotCount;
+		PopoutCommands.closeAllForDocument(document);
 		this.navigateToGuildLikeSlot(nextIndex);
 	}
 
