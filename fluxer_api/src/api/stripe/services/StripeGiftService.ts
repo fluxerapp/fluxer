@@ -138,7 +138,6 @@ export class StripeGiftService {
 			}
 			await this.userRepository.redeemGiftCode(code, userId, {
 				geoipCountryCode,
-				phoneCountryCode: null,
 				billingCountryCode: await this.findRedeemerBillingCountry(userId),
 			});
 			Logger.debug({userId, giftCode: code}, 'Applied gift redemption row update');

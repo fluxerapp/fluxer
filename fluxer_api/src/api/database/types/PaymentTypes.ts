@@ -19,20 +19,17 @@ export interface GiftCodeRow {
 	revoked_at?: Date | null;
 	premium_reversed_seconds?: number | null;
 	redeemed_geoip_country_code?: string | null;
-	redeemed_phone_country_code?: string | null;
 	redeemed_billing_country_code?: string | null;
 	version: number;
 }
 
 export interface GiftRedemptionCountries {
 	geoipCountryCode: string | null;
-	phoneCountryCode: string | null;
 	billingCountryCode: string | null;
 }
 
 export const NO_GIFT_REDEMPTION_COUNTRIES: GiftRedemptionCountries = {
 	geoipCountryCode: null,
-	phoneCountryCode: null,
 	billingCountryCode: null,
 };
 
@@ -136,7 +133,6 @@ export const GIFT_CODE_COLUMNS = [
 	'revoked_at',
 	'premium_reversed_seconds',
 	'redeemed_geoip_country_code',
-	'redeemed_phone_country_code',
 	'redeemed_billing_country_code',
 	'version',
 ] as const;

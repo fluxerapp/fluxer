@@ -80,14 +80,12 @@ describe('gift code redemption countries', () => {
 		const userId = createUserID(BigInt(account.userId));
 		await getUserRepository().redeemGiftCode(code, userId, {
 			geoipCountryCode: 'DE',
-			phoneCountryCode: 'SE',
 			billingCountryCode: 'FR',
 		});
 		const redeemed = await getUserRepository().findGiftCode(code);
 		expect(redeemed).toMatchObject({
 			redeemedByUserId: userId,
 			redeemedGeoipCountryCode: 'DE',
-			redeemedPhoneCountryCode: 'SE',
 			redeemedBillingCountryCode: 'FR',
 		});
 		await getUserRepository().unredeemGiftCode(code, userId);
@@ -95,7 +93,6 @@ describe('gift code redemption countries', () => {
 		expect(cleared).toMatchObject({
 			redeemedByUserId: null,
 			redeemedGeoipCountryCode: null,
-			redeemedPhoneCountryCode: null,
 			redeemedBillingCountryCode: null,
 		});
 	});
@@ -108,7 +105,6 @@ describe('gift code redemption countries', () => {
 		expect(gift?.redeemedByUserId).toBe(createUserID(BigInt(account.userId)));
 		expect(gift).toMatchObject({
 			redeemedGeoipCountryCode: null,
-			redeemedPhoneCountryCode: null,
 			redeemedBillingCountryCode: null,
 		});
 	});
