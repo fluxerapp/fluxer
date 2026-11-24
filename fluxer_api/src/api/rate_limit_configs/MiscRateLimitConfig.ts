@@ -42,7 +42,7 @@ export const MiscRateLimitConfigs = {
 	} as RouteRateLimitConfig,
 	REPORT_CREATE: {
 		bucket: 'report:create',
-		config: {limit: 10, windowMs: ms('1 hour')},
+		config: {limit: 100, windowMs: ms('1 hour')},
 	} as RouteRateLimitConfig,
 	DSA_REPORT_EMAIL_SEND: {
 		bucket: 'dsa:report:email:send',

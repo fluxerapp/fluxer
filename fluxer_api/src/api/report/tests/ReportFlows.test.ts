@@ -18,8 +18,16 @@ import {resetActivityEventsForTests, startActivityEvents} from '@app/api/infrast
 import type {ActivityPublisher} from '@app/api/infrastructure/activity/ActivitySpool';
 import {phraseBlocklistCache} from '@app/api/middleware/PhraseBlocklistCache';
 import {getInstanceConfigRepository, getRateLimitService} from '@app/api/middleware/ServiceSingletons';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import {getReportFlowResponse, resolveReportFlowAnswers} from '@app/api/report/flows/ReportFlowRegistry';
 import {ReportRepository} from '@app/api/report/ReportRepository';
+import {
+	MESSAGE_REPORT_TARGET_MESSAGE_RATE_LIMIT_MAX,
+	MESSAGE_REPORT_USER_CHANNEL_RATE_LIMIT_MAX,
+	MESSAGE_REPORT_USER_GUILD_RATE_LIMIT_MAX,
+	REPORT_RATE_LIMIT_MAX,
+	REPORT_RATE_LIMIT_WINDOW,
+} from '@app/api/report/ReportService';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS, TEST_IDS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
@@ -206,6 +214,31 @@ function legacyUser(harness: ApiTestHarness, token: string, userId: string) {
 	return createBuilder<ReportResponse>(harness, token)
 		.post('/reports/user')
 		.body({user_id: userId, category: 'spam_account'});
+}
+
+async function spendReportLimit(identifier: string, maxAttempts: number, count: number): Promise<void> {
+	for (let index = 0; index < count; index++) {
+		await getRateLimitService().checkLimit({identifier, maxAttempts, windowMs: REPORT_RATE_LIMIT_WINDOW});
+	}
+}
+
+async function spendReporterAllowance(userId: string, count: number): Promise<void> {
+	await spendReportLimit(`report:create:user:${userId}`, REPORT_RATE_LIMIT_MAX, count);
+}
+
+async function spendChannelAllowance(userId: string, channelId: string, count: number): Promise<void> {
+	await spendReportLimit(
+		`report:message:channel:user:${userId}:${channelId}`,
+		MESSAGE_REPORT_USER_CHANNEL_RATE_LIMIT_MAX,
+		count,
+	);
+}
+
+async function spendRouteTokens(userId: string, count: number): Promise<void> {
+	const {bucket, config} = RateLimitConfigs.REPORT_CREATE;
+	for (let index = 0; index < count; index++) {
+		await getRateLimitService().checkBucketLimit(`user:${userId}:session:${bucket}`, config);
+	}
 }
 
 async function setUserFlags(harness: ApiTestHarness, userId: string, flags: bigint): Promise<void> {
@@ -614,6 +647,7 @@ describe('Report flows', () => {
 		test('a rate limited message report releases its reservation', async () => {
 			const reporter = await createTestAccount(harness);
 			const {channelId, messageIds} = await setupDmMessages(harness, reporter, 4);
+			await spendChannelAllowance(reporter.userId, channelId, MESSAGE_REPORT_USER_CHANNEL_RATE_LIMIT_MAX - 3);
 			for (const messageId of messageIds.slice(0, 3)) {
 				await submitMessage(harness, reporter.token, messageBody({channelId, messageId}))
 					.expect(HTTP_STATUS.OK)
@@ -633,6 +667,7 @@ describe('Report flows', () => {
 		test('a repeat user submission past the reporter allowance is rate limited', async () => {
 			const reporter = await createTestAccount(harness);
 			const users = await Promise.all([0, 1, 2, 3, 4].map(() => createTestAccount(harness)));
+			await spendReporterAllowance(reporter.userId, REPORT_RATE_LIMIT_MAX - 5);
 			for (const user of users) {
 				await submitUser(harness, reporter.token, userBody(user.userId)).expect(HTTP_STATUS.OK).execute();
 			}
@@ -648,6 +683,7 @@ describe('Report flows', () => {
 
 		test('a rate limited user report releases its reservation', async () => {
 			const reporter = await createTestAccount(harness);
+			await spendReporterAllowance(reporter.userId, REPORT_RATE_LIMIT_MAX - 5);
 			for (let index = 0; index < 5; index++) {
 				const user = await createTestAccount(harness);
 				await submitUser(harness, reporter.token, userBody(user.userId)).expect(HTTP_STATUS.OK).execute();
@@ -680,6 +716,11 @@ describe('Report flows', () => {
 			for (let index = 0; index < 2; index++) {
 				other.push((await sendChannelMessage(harness, author.token, second.id, `Second ${index}`)).id);
 			}
+			await spendReportLimit(
+				`report:message:guild:user:${owner.userId}:${guild.id}`,
+				MESSAGE_REPORT_USER_GUILD_RATE_LIMIT_MAX,
+				MESSAGE_REPORT_USER_GUILD_RATE_LIMIT_MAX - 4,
+			);
 			for (const messageId of first) {
 				await submitMessage(harness, owner.token, messageBody({channelId: systemChannel.id, messageId}))
 					.expect(HTTP_STATUS.OK)
@@ -692,21 +733,41 @@ describe('Report flows', () => {
 			const remaining = async (identifier: string, maxAttempts: number) =>
 				(await getRateLimitService().peekLimit({identifier, maxAttempts, windowMs: 3_600_000})).remaining;
 			const budgets = async () => ({
-				reporter: await remaining(`report:create:user:${owner.userId}`, 5),
-				channel: await remaining(`report:message:channel:user:${owner.userId}:${second.id}`, 3),
-				target: await remaining(`report:message:target:${limited.messageId}`, 20),
-				guild: await remaining(`report:message:guild:user:${owner.userId}:${guild.id}`, 4),
+				reporter: await remaining(`report:create:user:${owner.userId}`, REPORT_RATE_LIMIT_MAX),
+				channel: await remaining(
+					`report:message:channel:user:${owner.userId}:${second.id}`,
+					MESSAGE_REPORT_USER_CHANNEL_RATE_LIMIT_MAX,
+				),
+				target: await remaining(
+					`report:message:target:${limited.messageId}`,
+					MESSAGE_REPORT_TARGET_MESSAGE_RATE_LIMIT_MAX,
+				),
+				guild: await remaining(
+					`report:message:guild:user:${owner.userId}:${guild.id}`,
+					MESSAGE_REPORT_USER_GUILD_RATE_LIMIT_MAX,
+				),
 			});
-			expect(await budgets()).toEqual({reporter: 1, channel: 2, target: 20, guild: 0});
+			const refused = {
+				reporter: REPORT_RATE_LIMIT_MAX - 4,
+				channel: MESSAGE_REPORT_USER_CHANNEL_RATE_LIMIT_MAX - 1,
+				target: MESSAGE_REPORT_TARGET_MESSAGE_RATE_LIMIT_MAX,
+				guild: 0,
+			};
+			expect(await budgets()).toEqual(refused);
 			for (let attempt = 0; attempt < 2; attempt++) {
 				await submitMessage(harness, owner.token, messageBody(limited))
 					.expect(429, APIErrorCodes.RATE_LIMITED)
 					.execute();
 			}
-			expect(await budgets()).toEqual({reporter: 1, channel: 2, target: 20, guild: 0});
+			expect(await budgets()).toEqual(refused);
 			await getRateLimitService().resetLimit(`report:message:guild:user:${owner.userId}:${guild.id}`);
 			await submitMessage(harness, owner.token, messageBody(limited)).expect(HTTP_STATUS.OK).execute();
-			expect(await budgets()).toEqual({reporter: 0, channel: 1, target: 19, guild: 3});
+			expect(await budgets()).toEqual({
+				reporter: REPORT_RATE_LIMIT_MAX - 5,
+				channel: MESSAGE_REPORT_USER_CHANNEL_RATE_LIMIT_MAX - 2,
+				target: MESSAGE_REPORT_TARGET_MESSAGE_RATE_LIMIT_MAX - 1,
+				guild: MESSAGE_REPORT_USER_GUILD_RATE_LIMIT_MAX - 1,
+			});
 			expect(await countReports()).toBe(5);
 		});
 
@@ -714,6 +775,7 @@ describe('Report flows', () => {
 			const reporter = await createTestAccount(harness);
 			const dmA = await setupDmMessages(harness, reporter, 2);
 			const dmB = await setupDmMessages(harness, reporter, 1);
+			await spendReporterAllowance(reporter.userId, REPORT_RATE_LIMIT_MAX - 5);
 			await legacyMessage(harness, reporter.token, {channelId: dmA.channelId, messageId: dmA.messageIds[0]})
 				.expect(HTTP_STATUS.OK)
 				.execute();
@@ -743,6 +805,8 @@ describe('Report flows', () => {
 		test('child safety and self-harm reports are filed past the reporter allowances', async () => {
 			const reporter = await createTestAccount(harness);
 			const dm = await setupDmMessages(harness, reporter, 5);
+			await spendReporterAllowance(reporter.userId, REPORT_RATE_LIMIT_MAX - 5);
+			await spendChannelAllowance(reporter.userId, dm.channelId, MESSAGE_REPORT_USER_CHANNEL_RATE_LIMIT_MAX - 3);
 			for (const messageId of dm.messageIds.slice(0, 3)) {
 				await submitMessage(harness, reporter.token, messageBody({channelId: dm.channelId, messageId}))
 					.expect(HTTP_STATUS.OK)
@@ -777,6 +841,8 @@ describe('Report flows', () => {
 		test('the route bucket is shared and invalid walks spend a route token but no service token', async () => {
 			const reporter = await createTestAccount(harness);
 			const dm = await setupDmMessages(harness, reporter, 3);
+			await spendRouteTokens(reporter.userId, RateLimitConfigs.REPORT_CREATE.config.limit - 10);
+			await spendReporterAllowance(reporter.userId, REPORT_RATE_LIMIT_MAX - 5);
 			for (let attempt = 0; attempt < 6; attempt++) {
 				await submitMessage(
 					harness,
@@ -826,16 +892,15 @@ describe('Report flows', () => {
 		}
 
 		async function spendRouteBucket(reporter: TestAccount, target: {channelId: string; messageId: string}) {
-			for (let attempt = 0; attempt < 10; attempt++) {
-				await submitMessage(
-					harness,
-					reporter.token,
-					messageBody(target, [{screen_id: 'root_message', option_id: 'dislike'}]),
-				)
-					.header(RATE_LIMIT_HEADER, 'true')
-					.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_REPORT_FLOW_ANSWERS)
-					.execute();
-			}
+			await spendRouteTokens(reporter.userId, RateLimitConfigs.REPORT_CREATE.config.limit - 1);
+			await submitMessage(
+				harness,
+				reporter.token,
+				messageBody(target, [{screen_id: 'root_message', option_id: 'dislike'}]),
+			)
+				.header(RATE_LIMIT_HEADER, 'true')
+				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_REPORT_FLOW_ANSWERS)
+				.execute();
 		}
 
 		test('every answer on an urgent screen counts as urgent, and only those', () => {
