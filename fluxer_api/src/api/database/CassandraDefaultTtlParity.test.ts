@@ -31,17 +31,7 @@ const SCHEMA_DEFAULTS = new Map<string, number>(
 const DSL_TABLES = [...Object.values(Tables), ...Object.values(DonationTables), ...Object.values(OperatorPassTables)];
 const DSL_NAMES = new Set<string>(DSL_TABLES.map((table) => table.name));
 
-const NON_DSL_DEFAULTS: Record<string, number | null> = {
-	billing_webhook_events: null,
-	forensic_identifier_by_key_day: null,
-	forensic_identifier_by_request: null,
-	forensic_request_meta_by_actor_day: null,
-	forensic_request_meta_by_id: null,
-	forensic_request_meta_by_route_day_shard: null,
-	forensic_resource_exposure_by_request: null,
-	forensic_resource_exposure_by_route_day_shard: null,
-	forensic_resource_exposure_by_subject_day: null,
-};
+const NON_DSL_DEFAULTS: Record<string, number | null> = {};
 
 const OWN_EXPIRY_PASS = new Set(['jobs_by_id', 'jobs_by_day_bucket']);
 

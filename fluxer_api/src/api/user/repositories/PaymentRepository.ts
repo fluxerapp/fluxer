@@ -26,6 +26,13 @@ const FETCH_PAYMENTS_BY_USER_QUERY = PaymentsByUser.selectCql({
 const FETCH_PAYMENTS_BY_IDS_QUERY = Payments.selectCql({
 	where: Payments.where.in('checkout_session_id', 'checkout_session_ids'),
 });
+const LATEST_PAYMENTS_SCANNED_FOR_BILLING_COUNTRY = 10;
+const FETCH_LATEST_PAYMENT_REFS_BY_USER = PaymentsByUser.select({
+	columns: ['checkout_session_id', 'created_at'],
+	where: PaymentsByUser.where.eq('user_id'),
+	orderBy: {col: 'created_at', direction: 'DESC'},
+	limit: LATEST_PAYMENTS_SCANNED_FOR_BILLING_COUNTRY,
+});
 
 export class PaymentRepository {
 	async createPayment(data: {
@@ -212,5 +219,21 @@ export class PaymentRepository {
 			checkout_session_ids: paymentRefs.map((r) => r.checkout_session_id),
 		});
 		return rows.map((r) => new Payment(r));
+	}
+
+	async findLatestBillingCountry(userId: UserID): Promise<string | null> {
+		const refs = await fetchMany<{checkout_session_id: string; created_at: Date}>(
+			FETCH_LATEST_PAYMENT_REFS_BY_USER.bind({user_id: userId}),
+		);
+		if (refs.length === 0) return null;
+		const rows = await fetchMany<Pick<PaymentRow, 'checkout_session_id' | 'tax_country'>>(FETCH_PAYMENTS_BY_IDS_QUERY, {
+			checkout_session_ids: refs.map((r) => r.checkout_session_id),
+		});
+		const countryBySession = new Map(rows.map((r) => [r.checkout_session_id, r.tax_country ?? null]));
+		for (const ref of refs) {
+			const country = countryBySession.get(ref.checkout_session_id);
+			if (country) return country.toUpperCase();
+		}
+		return null;
 	}
 }

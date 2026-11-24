@@ -54,7 +54,16 @@ export class StripeGiftService {
 		return giftCode;
 	}
 
-	async redeemGiftCode(userId: UserID, code: string): Promise<void> {
+	private async findRedeemerBillingCountry(userId: UserID): Promise<string | null> {
+		try {
+			return await this.userRepository.findLatestBillingCountry(userId);
+		} catch (error) {
+			Logger.warn({userId, error}, 'Could not read the redeemer billing country');
+			return null;
+		}
+	}
+
+	async redeemGiftCode(userId: UserID, code: string, geoipCountryCode: string | null = null): Promise<void> {
 		const lockKey = `gift_redeem_lock:${code}`;
 		const appliedKey = `gift_redeem_applied:${code}`;
 		Logger.debug({userId, giftCode: code, lockKey, appliedKey}, 'Starting gift code redemption');
@@ -127,7 +136,10 @@ export class StripeGiftService {
 				Logger.debug({userId, giftCode: code}, 'Rejecting redemption for lifetime user');
 				throw new CannotRedeemPlutoniumWithVisionaryError((await getBillingBranding()).premiumName);
 			}
-			await this.userRepository.redeemGiftCode(code, userId);
+			await this.userRepository.redeemGiftCode(code, userId, {
+				geoipCountryCode,
+				billingCountryCode: await this.findRedeemerBillingCountry(userId),
+			});
 			Logger.debug({userId, giftCode: code}, 'Applied gift redemption row update');
 			let stackedOntoStripe = false;
 			let claimedVisionarySlot: number | null = null;

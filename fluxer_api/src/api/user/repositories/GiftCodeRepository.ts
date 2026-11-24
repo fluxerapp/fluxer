@@ -9,7 +9,11 @@ import {
 	upsertOne,
 } from '@app/api/database/CassandraQueryExecution';
 import {Db} from '@app/api/database/CassandraTypes';
-import type {GiftCodeRow} from '@app/api/database/types/PaymentTypes';
+import {
+	type GiftCodeRow,
+	type GiftRedemptionCountries,
+	NO_GIFT_REDEMPTION_COUNTRIES,
+} from '@app/api/database/types/PaymentTypes';
 import {GiftCode, mapGiftCodeDurationToMonths, mapGiftDurationMonthsToFields} from '@app/api/models/GiftCode';
 import {GiftCodes, GiftCodesByCreator, GiftCodesByPaymentIntent, GiftCodesByRedeemer} from '@app/api/Tables';
 
@@ -59,6 +63,8 @@ function normaliseGiftCodeRowForWrite(data: GiftCodeRow): GiftCodeRow {
 		duration_months: durationMonths,
 		revoked_at: data.revoked_at ?? null,
 		premium_reversed_seconds: data.premium_reversed_seconds ?? null,
+		redeemed_geoip_country_code: data.redeemed_geoip_country_code ?? null,
+		redeemed_billing_country_code: data.redeemed_billing_country_code ?? null,
 	};
 }
 
@@ -140,7 +146,11 @@ export class GiftCodeRepository {
 		return gifts;
 	}
 
-	async redeemGiftCode(code: string, userId: UserID): Promise<void> {
+	async redeemGiftCode(
+		code: string,
+		userId: UserID,
+		countries: GiftRedemptionCountries = NO_GIFT_REDEMPTION_COUNTRIES,
+	): Promise<void> {
 		const batch = new BatchBuilder();
 		batch.addPrepared(
 			GiftCodes.patchByPk(
@@ -148,6 +158,8 @@ export class GiftCodeRepository {
 				{
 					redeemed_by_user_id: Db.set(userId),
 					redeemed_at: Db.set(new Date()),
+					redeemed_geoip_country_code: Db.set(countries.geoipCountryCode),
+					redeemed_billing_country_code: Db.set(countries.billingCountryCode),
 				},
 			),
 		);
@@ -168,6 +180,8 @@ export class GiftCodeRepository {
 				{
 					redeemed_by_user_id: Db.set(null),
 					redeemed_at: Db.set(null),
+					redeemed_geoip_country_code: Db.set(null),
+					redeemed_billing_country_code: Db.set(null),
 				},
 			),
 		);

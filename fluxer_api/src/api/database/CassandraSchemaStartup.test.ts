@@ -158,7 +158,7 @@ describe('planCassandraSchema', () => {
 		]);
 	});
 
-	it('adds missing columns, type fields, types and indexes', () => {
+	it('adds missing columns, type fields and types', () => {
 		const rows = fullSchemaRows();
 		const statements = planCassandraSchema(
 			{
@@ -182,9 +182,6 @@ describe('planCassandraSchema', () => {
 		);
 		expect(statements).toContain('ALTER TYPE fluxer.channel_override ADD unread_badges int');
 		expect(statements).toContain('ALTER TABLE fluxer.webauthn_credentials ADD rp_id text');
-		expect(statements.at(-1)).toBe(
-			'CREATE INDEX IF NOT EXISTS billing_action_intents_by_status ON fluxer.billing_action_intents (status)',
-		);
 	});
 
 	it('keeps clustering order and other table options', () => {

@@ -18,8 +18,20 @@ export interface GiftCodeRow {
 	checkout_session_id: string | null;
 	revoked_at?: Date | null;
 	premium_reversed_seconds?: number | null;
+	redeemed_geoip_country_code?: string | null;
+	redeemed_billing_country_code?: string | null;
 	version: number;
 }
+
+export interface GiftRedemptionCountries {
+	geoipCountryCode: string | null;
+	billingCountryCode: string | null;
+}
+
+export const NO_GIFT_REDEMPTION_COUNTRIES: GiftRedemptionCountries = {
+	geoipCountryCode: null,
+	billingCountryCode: null,
+};
 
 export interface PaymentRow {
 	checkout_session_id: string;
@@ -120,6 +132,8 @@ export const GIFT_CODE_COLUMNS = [
 	'checkout_session_id',
 	'revoked_at',
 	'premium_reversed_seconds',
+	'redeemed_geoip_country_code',
+	'redeemed_billing_country_code',
 	'version',
 ] as const;
 export const GIFT_CODE_BY_CREATOR_COLUMNS = ['created_by_user_id', 'code'] as const;

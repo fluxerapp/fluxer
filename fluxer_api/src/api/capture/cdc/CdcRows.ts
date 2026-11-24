@@ -9,6 +9,7 @@ export interface CdcColumn {
 	name: string;
 	cqlType: string;
 	chType: string;
+	materialized?: string;
 }
 
 export interface RowExpiry {
@@ -119,9 +120,20 @@ export class RowEncoder {
 		return typeof mapped === 'bigint' || typeof mapped === 'number' ? String(mapped) : jsonText(mapped, true);
 	}
 
-	rowLine(columns: ReadonlyArray<CdcColumn>, row: RowState, version: number, expiry: RowExpiry): string {
+	rowLine(
+		columns: ReadonlyArray<CdcColumn>,
+		row: RowState,
+		version: number,
+		expiry: RowExpiry,
+		derived: Readonly<Record<string, JsonValue>> = {},
+	): string {
 		const values: Record<string, JsonValue> = {};
 		for (const column of columns) {
+			if (column.materialized !== undefined) continue;
+			if (column.name in derived) {
+				values[column.name] = derived[column.name];
+				continue;
+			}
 			const value = this.column(column, column.name in row.key ? row.key[column.name] : row.cells[column.name]?.v);
 			if (value !== undefined) values[column.name] = value;
 		}

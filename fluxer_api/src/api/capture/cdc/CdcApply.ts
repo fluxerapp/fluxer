@@ -3,7 +3,7 @@
 import type {RowState} from '@app/api/capture/CaptureTables';
 import {readRows, TooManyRows} from '@app/api/capture/CaptureTables';
 import type {PendingKey} from '@app/api/capture/cdc/CdcPending';
-import {type RowEncoder, rowExpiry, rowVersion, timestampText} from '@app/api/capture/cdc/CdcRows';
+import {type RowEncoder, type RowExpiry, rowExpiry, rowVersion, timestampText} from '@app/api/capture/cdc/CdcRows';
 import {type CdcTable, cdcTableName} from '@app/api/capture/cdc/CdcSchema';
 import {type ClickHouseHttp, quoteIdentifier} from '@app/api/capture/cdc/ClickHouseHttp';
 import type {CaptureCodec, CaptureValue} from '@app/api/database/capture/CaptureCodec';
@@ -28,6 +28,21 @@ export function recheckKeyText(primaryKey: ReadonlyArray<string>, key: Readonly<
 	return JSON.stringify(Object.fromEntries(primaryKey.filter((column) => column in key).map((c) => [c, key[c]])));
 }
 
+export function rowLineFor(
+	encoder: RowEncoder,
+	table: CdcTable,
+	row: RowState,
+	version: number,
+	expiry: RowExpiry,
+	nowMs: number,
+): string | null {
+	const {derived} = table;
+	if (derived === undefined) return encoder.rowLine(table.columns, row, version, expiry);
+	if (!derived.retained(row.key, nowMs)) return null;
+	const values = derived.values(row);
+	return values === null ? null : encoder.rowLine(table.columns, row, version, expiry, values);
+}
+
 export function linesForKey(options: {
 	encoder: RowEncoder;
 	table: CdcTable;
@@ -40,22 +55,29 @@ export function linesForKey(options: {
 }): {lines: Array<string>; tombstones: number} {
 	const {encoder, table, rows, readStartMs} = options;
 	const readStartUs = readStartMs * 1000;
-	const lines = rows.map((row) =>
-		encoder.rowLine(
-			table.columns,
+	const kept = rows.flatMap((row) => {
+		const line = rowLineFor(
+			encoder,
+			table,
 			row,
 			rowVersion(options.ts, row, readStartUs),
 			rowExpiry(table.layout, row, readStartMs),
-		),
-	);
+			readStartMs,
+		);
+		return line === null ? [] : [{row, line}];
+	});
+	const lines = kept.map(({line}) => line);
 	const tombstoneVersion = Math.max(options.ts, readStartUs);
 	if (options.scope === 'row') {
-		if (rows.length > 0) return {lines, tombstones: 0};
+		if (kept.length > 0) return {lines, tombstones: 0};
+		if (table.derived !== undefined && !table.derived.retained(options.key, readStartMs)) {
+			return {lines: [], tombstones: 0};
+		}
 		return {lines: [encoder.tombstoneLine(table.keyColumns, options.key, tombstoneVersion)], tombstones: 1};
 	}
 	const identity = (key: Readonly<Record<string, unknown>>) =>
 		JSON.stringify(table.keyColumns.map((column) => encoder.keyText(column, key[column.name])));
-	const found = new Set(rows.map((row) => identity(row.key)));
+	const found = new Set(kept.map(({row}) => identity(row.key)));
 	const vanished = options.live.filter((key) => !found.has(identity(key)));
 	for (const key of vanished) lines.push(encoder.tombstoneLine(table.keyColumns, key, tombstoneVersion));
 	return {lines, tombstones: vanished.length};

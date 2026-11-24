@@ -116,6 +116,8 @@ export class GiftCode {
 	readonly checkoutSessionId: string | null;
 	readonly revokedAt: Date | null;
 	readonly premiumReversedSeconds: number | null;
+	readonly redeemedGeoipCountryCode: string | null;
+	readonly redeemedBillingCountryCode: string | null;
 	readonly version: number;
 
 	constructor(row: GiftCodeRow) {
@@ -133,6 +135,8 @@ export class GiftCode {
 		this.checkoutSessionId = row.checkout_session_id ?? null;
 		this.revokedAt = row.revoked_at ?? null;
 		this.premiumReversedSeconds = row.premium_reversed_seconds ?? null;
+		this.redeemedGeoipCountryCode = row.redeemed_geoip_country_code ?? null;
+		this.redeemedBillingCountryCode = row.redeemed_billing_country_code ?? null;
 		this.version = row.version;
 	}
 
@@ -151,6 +155,8 @@ export class GiftCode {
 			checkout_session_id: this.checkoutSessionId,
 			revoked_at: this.revokedAt,
 			premium_reversed_seconds: this.premiumReversedSeconds,
+			redeemed_geoip_country_code: this.redeemedGeoipCountryCode,
+			redeemed_billing_country_code: this.redeemedBillingCountryCode,
 			version: this.version,
 		};
 	}
@@ -205,6 +211,8 @@ export function createGiftCodeRow({
 		stripe_payment_intent_id: paymentIntentId,
 		visionary_sequence_number: null,
 		checkout_session_id: checkoutSessionId,
+		redeemed_geoip_country_code: null,
+		redeemed_billing_country_code: null,
 		version: 1,
 	};
 }
