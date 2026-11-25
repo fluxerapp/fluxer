@@ -391,7 +391,7 @@ export const EMAIL_I18N_MESSAGES = {
 		withdrawal_country_v4:
 			'{quantity, plural, =1 {At checkout you asked us to deliver your certificate right away. Section 12 of the terms applies to your purchase, so you can withdraw until {withdrawalEndsOn, date, long} and get a full refund, even after delivery. Use "Withdraw from contract here" next to the purchase in your <settings>settings</settings>.} other {At checkout you asked us to deliver your certificates right away. Section 12 of the terms applies to your purchase, so you can withdraw until {withdrawalEndsOn, date, long} and get a full refund, even after delivery. Use "Withdraw from contract here" next to the purchase in your <settings>settings</settings>.}}',
 		seller:
-			'Seller: Fluxer Platform AB, 559537-3993, registered office (säte) Haninge, Sweden, {sellerAddress}, {sellerPhone}, <mail>{sellerEmail}</mail>',
+			'The seller is Fluxer Platform AB (reg. no. 559537-3993), a Swedish company with its registered seat in Haninge. Write to us at {sellerAddress}, call {sellerPhone} or email <mail>{sellerEmail}</mail>.',
 		terms_link: 'Operator Pass terms',
 		wall_status_v2:
 			"{wallOptOut, select, yes {You chose not to be listed on the Operators' wall. You can add your name in your <settings>settings</settings>.} other {You're listed on the Operators' wall as {wallName}. You can change it or leave the wall in your <settings>settings</settings>.}}",
@@ -740,7 +740,7 @@ export const EMAIL_I18N_MESSAGES = {
 		form_body:
 			'To Fluxer Platform AB, {sellerAddress}, <mail>{sellerEmail}</mail>:\nI withdraw from my contract for {premiumName}, bought on {paidAt, date, long}.\nInvoice number: {invoiceNumber}\nName:\nAddress:\nDate:\nSignature (only on paper):',
 		seller:
-			'Seller: Fluxer Platform AB, 559537-3993, registered office (säte) Haninge, Sweden, {sellerAddress}, <mail>{sellerEmail}</mail>',
+			'The seller is Fluxer Platform AB (reg. no. 559537-3993), a Swedish company with its registered seat in Haninge. Write to us at {sellerAddress} or email <mail>{sellerEmail}</mail>.',
 		manage_link: 'Manage your subscription',
 		signoff: 'The {product_name} team',
 		footer_reason: 'You received this email because you paid for {premiumName} on {product_name}.',

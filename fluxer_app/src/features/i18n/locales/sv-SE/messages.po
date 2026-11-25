@@ -32475,11 +32475,6 @@ msgstr "Åsidosätt läget för drift på egen server"
 msgid "Self-serve refunds are available within 3 days of payment, once every 30 days. Refunding a subscription cancels it. If you are a consumer in the EU, the EEA, the UK or Brazil, you can <0>withdraw</0> until your withdrawal period ends, even after {premiumProductName} starts. Please ask for a refund before you dispute a charge. A dispute about a wrong or unauthorized charge never leads to action against your account, and <1>our terms</1> list the only cases where a dispute can. {PAYMENT_PROVIDER_NAME} handles payment securely. We never see your full card number."
 msgstr "Du kan själv begära återbetalning inom 3 dagar efter betalning, en gång var 30:e dag. Återbetalning av ett abonnemang avslutar det. Om du är konsument i EU, EES, Storbritannien eller Brasilien kan du <0>ångra köpet</0> fram till att din ångerfrist löper ut, även efter att {premiumProductName} har startat. Begär återbetalning innan du öppnar en betalningstvist. En tvist om en felaktig eller obehörig debitering leder aldrig till åtgärder mot ditt konto, och <1>våra villkor</1> anger de enda fall där en tvist kan göra det. {PAYMENT_PROVIDER_NAME} hanterar betalningar säkert. Vi ser aldrig hela ditt kortnummer."
 
-#. Sentence after the privacy sentence in the Operator Pass checkout dialog that names the company selling the pass. Fluxer Platform AB is the company name and 559537-3993 its Swedish organization number, keep both as is. Haninge is the Swedish municipality where the company is registered and stays as is. Translate registered office with the legal term your language uses for the registered seat of a company, and keep the Swedish word säte in parentheses. The address, phone number and email address are filled in and stay as is. Use the same word for seller as on a receipt.
-#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx
-msgid "Seller: Fluxer Platform AB, 559537-3993, registered office (säte) Haninge, Sweden, {OPERATOR_PASS_SELLER_ADDRESS}, {OPERATOR_PASS_SELLER_PHONE}, {SUPPORT_EMAIL}."
-msgstr "Säljare: Fluxer Platform AB, 559537-3993, säte Haninge, {OPERATOR_PASS_SELLER_ADDRESS}, {OPERATOR_PASS_SELLER_PHONE}, {SUPPORT_EMAIL}."
-
 #. Button or menu action label in the share theme modal. Keep it concise.
 #. Send-message button label in the voice message composer modal.
 #: src/features/theme/components/modals/ShareThemeModal.tsx
@@ -37218,6 +37213,11 @@ msgstr "Rollen gav {permissions}"
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "Skärmdelningskällan slutade skicka video, så din skärmdelning har stoppats."
+
+#. Sentences after the privacy sentence in the Operator Pass checkout dialog that name the company selling the pass and how to reach it. Fluxer Platform AB is the company name and 559537-3993 its Swedish registration number, keep both as is. Haninge is the Swedish municipality where the company has its registered seat and stays as is. Translate registered seat with the legal term your language uses for the registered seat of a company. The address, phone number and email address are filled in and stay as is. Use the same word for seller as on a receipt.
+#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx
+msgid "The seller is Fluxer Platform AB (reg. no. 559537-3993), a Swedish company with its registered seat in Haninge. Write to us at {OPERATOR_PASS_SELLER_ADDRESS}, call {OPERATOR_PASS_SELLER_PHONE} or email {SUPPORT_EMAIL}."
+msgstr ""
 
 #. Setup wizard body explaining what the setup token is for.
 #: src/features/app/components/setup/SetupTokenStep.tsx

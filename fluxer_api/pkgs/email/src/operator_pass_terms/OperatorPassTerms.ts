@@ -5,8 +5,10 @@ import {
 	type OperatorPassTermsBlock,
 } from '@pkgs/email/src/operator_pass_terms/OperatorPassTermsText';
 import {OPERATOR_PASS_TERMS_TEXT_2026_11_01} from '@pkgs/email/src/operator_pass_terms/OperatorPassTermsText20261101';
+import {OPERATOR_PASS_TERMS_TEXT_2026_11_03} from '@pkgs/email/src/operator_pass_terms/OperatorPassTermsText20261103';
+import {OPERATOR_PASS_TERMS_TEXT_2026_11_20} from '@pkgs/email/src/operator_pass_terms/OperatorPassTermsText20261120';
 
-export const OPERATOR_PASS_TERMS_VERSION = '2026-11-03';
+export const OPERATOR_PASS_TERMS_VERSION = '2026-11-24';
 
 export type OperatorPassTermsLanguage = keyof typeof OPERATOR_PASS_TERMS_TEXT;
 
@@ -14,6 +16,8 @@ const OPERATOR_PASS_TERMS_BY_VERSION: Readonly<
 	Record<string, Readonly<Record<OperatorPassTermsLanguage, ReadonlyArray<OperatorPassTermsBlock>>>>
 > = {
 	'2026-11-01': OPERATOR_PASS_TERMS_TEXT_2026_11_01,
+	'2026-11-03': OPERATOR_PASS_TERMS_TEXT_2026_11_03,
+	'2026-11-20': OPERATOR_PASS_TERMS_TEXT_2026_11_20,
 	[OPERATOR_PASS_TERMS_VERSION]: OPERATOR_PASS_TERMS_TEXT,
 };
 
@@ -43,19 +47,19 @@ const SELLER_ADDRESSES: Record<OperatorPassTermsLanguage, string> = {
 
 const TRADER_LINES: Record<OperatorPassTermsLanguage, ReadonlyArray<string>> = {
 	'en-US': [
-		'Fluxer Platform AB, organization number 559537-3993, registered office (säte) Haninge, Sweden',
+		'Fluxer Platform AB (reg. no. 559537-3993), a Swedish company with its registered seat in Haninge',
 		SELLER_ADDRESSES['en-US'],
 		`Phone ${OPERATOR_PASS_TRADER_PHONE}`,
 		OPERATOR_PASS_TRADER_EMAIL,
 	],
 	'sv-SE': [
-		'Fluxer Platform AB, organisationsnummer 559537-3993, säte Haninge',
+		'Fluxer Platform AB (org.nr 559537-3993), ett svenskt aktiebolag med säte i Haninge',
 		SELLER_ADDRESSES['sv-SE'],
 		`Telefon ${OPERATOR_PASS_TRADER_PHONE}`,
 		OPERATOR_PASS_TRADER_EMAIL,
 	],
 	'pt-BR': [
-		'Fluxer Platform AB, número de registro sueco 559537-3993, sede em Haninge, Suécia',
+		'Fluxer Platform AB (número de registro 559537-3993), uma empresa sueca com sede em Haninge',
 		SELLER_ADDRESSES['pt-BR'],
 		`Telefone ${OPERATOR_PASS_TRADER_PHONE}`,
 		OPERATOR_PASS_TRADER_EMAIL,
