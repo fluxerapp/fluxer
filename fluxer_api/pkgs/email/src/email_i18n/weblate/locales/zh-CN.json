@@ -29,7 +29,7 @@
 	},
 	"bulk_message_deletion_completed": {
 		"footer_reason": "你收到此邮件是因为有人为你的 {product_name} 账号申请了消息删除。",
-		"intro": "我们已删除你的消息。从 {channel_count, plural, =0 {0 个位置} other {# 个位置}} 中移除了 {message_count, plural, =0 {0 条消息} other {# 条消息}}。",
+		"intro": "我们已删除完你的消息，共从 {channel_count, plural, =0 {0 个频道和对话} other {# 个频道和对话}}中删除了 {message_count, plural, =0 {0 条消息} other {# 条消息}}。",
 		"note": "{reply, select, yes {如果你没有请求此操作，请立即更改密码并回复此邮件。} other {如果你没有请求此操作，请立即更改密码并联系此实例的管理员。}}",
 		"signoff": "{product_name} 团队",
 		"subject": "我们已删除你的 {product_name} 消息"
@@ -231,9 +231,9 @@
 	"gift_chargeback_notification": {
 		"billing_resumed": "由于礼物已被移除，你的{plan, select, yearly {年付} other {月付}} {premiumName} 订阅从今天起恢复计费。你会另外收到这笔扣款的收据。你可以随时在“管理订阅”中取消。",
 		"footer_reason": "你收到此邮件是因为你的 {product_name} 账号中的权益已被移除。",
-		"intro": "你兑换的一个礼物码的付款已被撤销，因此我们移除了它为你账号添加的权益。",
+		"intro": "你兑换的一个礼品码的付款已被撤销，因此我们移除了它为你账号添加的权益。",
 		"manage_cta": "管理你的订阅",
-		"note": "{reply, select, yes {如果你认为这是误会，请回复此邮件，告诉我们你所了解的有关这个礼物码的情况。} other {如果你认为这是误会，请联系此实例的管理员，告诉他们你所了解的有关这个礼物码的情况。}}",
+		"note": "{reply, select, yes {如果你认为这是误会，请回复此邮件，告诉我们你所了解的有关这个礼品码的情况。} other {如果你认为这是误会，请联系此实例的管理员，告诉他们你所了解的有关这个礼品码的情况。}}",
 		"signoff": "{product_name} 团队",
 		"subject": "我们移除了你兑换的 {product_name} 礼物所带来的权益"
 	},
@@ -272,11 +272,11 @@
 	},
 	"mfa_backup_codes_view": {
 		"expiry": "此验证码将在 {minutes, plural, other {# 分钟}}后过期。",
-		"footer_reason": "你收到此邮件是因为有人请求查看你的 {product_name} 账号备用码。",
-		"intro": "如需查看你的 {product_name} 备用码，请在应用中输入此验证码。",
+		"footer_reason": "你收到此邮件是因为有人请求查看你的 {product_name} 账号备份码。",
+		"intro": "如需查看你的 {product_name} 备份码，请在应用中输入此验证码。",
 		"note": "如果你没有提出此请求，可能有人能够访问你的账号。请立即更改密码。",
 		"signoff": "{product_name} 团队",
-		"subject": "确认访问你的 {product_name} 备用码"
+		"subject": "确认访问你的 {product_name} 备份码"
 	},
 	"operator_pass_offer_accepted": {
 		"footer_reason": "你收到此邮件是因为你在 {product_name} 上转交了一张 Operator Pass。",
@@ -321,7 +321,7 @@
 		"bonus_line_v2": "Operator 徽章、Operators 墙上的一个位置、{labs_name} 中的 #operators 等随通行证提供。",
 		"boxes_heading": "你同意的内容",
 		"currency_label": "币种",
-		"delivery_box": "于 {consentAt, date, long} {consentAt, time, short}结账时，你在第 {termsVersion} 版条款下勾选了以下选项。",
+		"delivery_box": "于 {consentAt, date, long} {consentAt, time, short} 结账时，你在第 {termsVersion} 版条款下勾选了以下选项。",
 		"document_attached": "{business, select, yes {发票 {documentNumber} 已作为 PDF 附在此邮件中。} other {收据 {documentNumber} 已作为 PDF 附在此邮件中。}}",
 		"footer_reason": "你收到此邮件是因为你在 {product_name} 上购买了 Operator Pass。",
 		"intro": "{document, select, yes {感谢你的订购。你接受的 Operator Pass 条款（版本 {termsVersion}）以 PDF 形式附上。} other {感谢你的订购。此邮件就是你的收据，你接受的 Operator Pass 条款（版本 {termsVersion}）以 PDF 形式附上。}}",
@@ -336,7 +336,7 @@
 		"product_label": "产品",
 		"product_value": "{quantity, plural, other {# 张 {product_name} Operator Pass}}",
 		"reverse_charge": "由于适用反向征收机制，本次未收取增值税。详情请见发票。",
-		"seller": "卖家：Fluxer Platform AB，559537-3993，注册所在地Haninge，瑞典，{sellerAddress}，{sellerPhone}，<mail>{sellerEmail}</mail>",
+		"seller": "卖家为 Fluxer Platform AB（注册号 559537-3993），是一家注册地位于 Haninge 的瑞典公司。你可以写信至 {sellerAddress}，致电 {sellerPhone}，或发送邮件至 <mail>{sellerEmail}</mail>。",
 		"signoff": "{product_name} 团队",
 		"subject": "你的 {product_name} Operator Pass 收据",
 		"tax_added": "价格另加税费 {taxFormatted}",
@@ -344,14 +344,14 @@
 		"terms_link": "Operator Pass 条款",
 		"unit_price_label": "每张通行证价格",
 		"wall_status_v2": "{wallOptOut, select, yes {你选择了不在 Operators 墙上展示。你可以在<settings>设置</settings>中添加你的名字。} other {你在 Operators 墙上以 {wallName} 的名字展示。你可以在<settings>设置</settings>中更改名字或离开墙。}}",
-		"withdrawal_country_v4": "{quantity, plural, =1 {付款时，你要求我们立即交付证书。条款第 12 节适用于你的这笔购买，因此即使证书已交付，截至 {withdrawalEndsOn, date, long}（含当日），你仍可撤回并获得全额退款。请在<settings>设置</settings>中使用购买记录旁的“在此处撤销合同”。} other {付款时，你要求我们立即交付所有证书。条款第 12 节适用于你的这笔购买，因此即使证书已交付，截至 {withdrawalEndsOn, date, long}（含当日），你仍可撤回并获得全额退款。请在<settings>设置</settings>中使用购买记录旁的“在此处撤销合同”。}}",
+		"withdrawal_country_v4": "{quantity, plural, =1 {结账时，你要求我们立即交付证书。条款第 12 条适用于你的这笔购买，因此即使证书已交付，截至 {withdrawalEndsOn, date, long}（含当日），你仍可撤回并获得全额退款。请在<settings>设置</settings>中使用购买记录旁的“在此撤回合同”。} other {结账时，你要求我们立即交付所有证书。条款第 12 条适用于你的这笔购买，因此即使证书已交付，截至 {withdrawalEndsOn, date, long}（含当日），你仍可撤回并获得全额退款。请在<settings>设置</settings>中使用购买记录旁的“在此撤回合同”。}}",
 		"withdrawal_heading": "撤回权",
-		"withdrawal_waiver": "{quantity, plural, =1 {付款时，你要求我们立即交付证书，并确认证书一经交付你便失去撤回权。我们会在发送这封邮件后立即交付证书，因此从那时起你无法撤回购买。如果证书未交付或有缺陷，法律仍然保护你。} other {付款时，你要求我们立即交付证书，并确认证书一经交付你便失去撤回权。我们会在发送这封邮件后立即交付所有证书，因此从那时起你无法撤回购买。如果有证书未交付或有缺陷，法律仍然保护你。}}"
+		"withdrawal_waiver": "{quantity, plural, =1 {结账时，你要求我们立即交付证书，并确认证书一经交付你便失去撤回权。我们会在发送这封邮件后立即交付证书，因此从那时起你无法撤回购买。如果证书未交付或有缺陷，法律仍然保护你。} other {结账时，你要求我们立即交付证书，并确认证书一经交付你便失去撤回权。我们会在发送这封邮件后立即交付所有证书，因此从那时起你无法撤回购买。如果有证书未交付或有缺陷，法律仍然保护你。}}"
 	},
 	"operator_pass_purchase_refused": {
 		"credit_note_attached": "此次退款的贷项通知单已作为 PDF 附在此邮件中。",
 		"credit_note_label": "贷项通知单编号",
-		"footer_reason": "你收到此邮件是因为你在 {product_name} 账号上支付了一张 Operator Pass。",
+		"footer_reason": "你收到此邮件是因为你在 {product_name} 账号上为 Operator Pass 付了款。",
 		"intro": "我们未能保存你的购买信息，因此没有为你创建证书，并已将全部款项退还到你使用的付款方式。你可以再次购买 Operator Pass。",
 		"note": "退款通常会在 5 到 10 个工作日内显示在你的银行账户中。你账号中的其他内容不会改变。",
 		"signoff": "{product_name} 团队",
@@ -365,7 +365,7 @@
 		"footer_reason": "你收到此邮件是因为你在 {product_name} 上的一笔 Operator Pass 付款已退款。",
 		"heading": "退款 {amountFormatted}",
 		"intro": "我们已将你购买 Operator Pass 所付款项中的 {amountFormatted} 退还到你付款时使用的银行卡或账户。具体到账时间取决于你的银行，通常需要 5 到 10 个工作日。",
-		"lead": "{delivered, select, no {我们尚未向你交付证书，因此你账户中的其他内容不会改变。} other {{passCount, plural, =0 {本次退款没有终止你的任何通行证，因此你账户中的其他内容不会改变。} other {{passCount, plural, =1 {通行证已终止。} other {# 张通行证已终止。}}{lastPass, select, yes {{visionary, select, yes {你的徽章和墙上展示也随之终止。你通过 Visionary 保留 '#'operators。} other {你的徽章、墙上展示和 '#'operators 也随之终止。}}} other {你的其他通行证不受影响。}}}}}}",
+		"lead": "{delivered, select, no {我们尚未向你交付证书，因此你账号中的其他内容不会改变。} other {{passCount, plural, =0 {本次退款没有终止你的任何通行证，因此你账号中的其他内容不会改变。} other {{passCount, plural, =1 {通行证已终止。} other {# 张通行证已终止。}}{lastPass, select, yes {{visionary, select, yes {你的徽章和墙上展示也随之终止。你通过 Visionary 保留 '#'operators。} other {你的徽章、墙上展示和 '#'operators 也随之终止。}}} other {你的其他通行证不受影响。}}}}}}",
 		"note": "{reply, select, yes {对本次退款有疑问？请回复此邮件。} other {如果你对本次退款有疑问，请联系此实例的管理员。}}",
 		"order_date_label": "订单日期",
 		"order_date_value": "{orderDate, date, long}",
@@ -446,13 +446,13 @@
 		"footer_reason": "你收到此邮件是因为我们对你在 {product_name} Operators 墙上的展示做出了一项决定。",
 		"ground": "服务条款第 6.2 条",
 		"ground_label": "依据",
-		"intro": "我们已从你在 Operators 墙上的位置撤下这句话。你的位置的其余部分保持不变，你的徽章和购买也不受影响。",
-		"next": "你可以在<settings>设置</settings>中添加新的一句话，内容需要符合社区准则。",
+		"intro": "我们已从你在 Operators 墙上的展示中撤下了你的引言。展示的其余内容保持不变，你的徽章和购买也不受影响。",
+		"next": "你可以在<settings>设置</settings>中添加一条符合社区准则的新引言。",
 		"reason_label": "原因",
 		"reason_value": "{reason, select, impersonation {冒充他人} rights {未经授权使用他人的文字} age_suitability {不适合年龄较小的用户} other {违反社区准则}}",
 		"redress_v2": "你也可以向法院提起诉讼。如果你在欧盟，可以求助于经认证的<dsa>庭外争议解决机构</dsa>。如果你是欧盟或欧洲经济区的消费者，也可以将争议提交给瑞典国家消费者争议委员会（<arn>ARN</arn>，Box 174, 101 23 Stockholm, 瑞典）。",
 		"signoff": "{product_name} 团队",
-		"subject": "我们已从 {product_name} Operators 墙上撤下你的一句话"
+		"subject": "我们已从 {product_name} Operators 墙上撤下你的引言"
 	},
 	"operator_pass_welcome": {
 		"badge_line": "你的徽章已显示在个人资料上。你可以在<settings>设置</settings>中隐藏它。",
@@ -482,7 +482,7 @@
 		"order_date_label": "订单日期",
 		"order_date_value": "{orderDate, date, long}",
 		"order_number_label": "订单号",
-		"refund": "{refund, select, dispute {你的银行先就这笔购买提出了付款争议，因此我们接受了该争议，你的银行会将全部 {amountFormatted} 退还给你。} already {这笔购买的 {amountFormatted} 我们此前已退还到你的付款方式，因此无需再次退款。} other {我们已开始将全部 {amountFormatted} 退还到你的付款方式。退款通常会在 5 到 10 个工作日内显示在你的银行账户中。}}{delivered, select, no {我们尚未向你交付证书，因此你账户中的其他内容不会改变。} other {{passCount, plural, =1 {通行证已终止。} other {# 张通行证已终止。}}{lastPass, select, yes {{visionary, select, yes {你的徽章和墙上展示也随之终止。你通过 Visionary 保留 #operators。} other {你的徽章、墙上展示和 #operators 也随之终止。}}} other {你的其他通行证不受影响。}}}}",
+		"refund": "{refund, select, dispute {你的银行先就这笔购买提出了付款争议，因此我们接受了该争议，你的银行会将全部 {amountFormatted} 退还给你。} already {这笔购买的 {amountFormatted} 我们此前已退还到你的付款方式，因此无需再次退款。} other {我们已开始将全部 {amountFormatted} 退还到你的付款方式。退款通常会在 5 到 10 个工作日内显示在你的银行账户中。}}{delivered, select, no {我们尚未向你交付证书，因此你账号中的其他内容不会改变。} other {{passCount, plural, =1 {通行证已终止。} other {# 张通行证已终止。}}{lastPass, select, yes {{visionary, select, yes {你的徽章和墙上展示也随之终止。你通过 Visionary 保留 #operators。} other {你的徽章、墙上展示和 #operators 也随之终止。}}} other {你的其他通行证不受影响。}}}}",
 		"refund_label": "退款金额",
 		"signoff": "{product_name} 团队",
 		"subject": "我们已收到你的 {product_name} Operator Pass 撤回申请"
@@ -570,7 +570,7 @@
 		"charge_line": "{method, select, card {我们将于 {trialEnd, date, long} 从你尾号为 {last4} 的 {brand} 卡扣取 {tax, select, yes {{amountFormatted}} other {{amountFormatted}（另加适用税费）}}，之后你的订阅将每{plan, select, yearly {年} other {月}}自动续费，直到你取消为止。} plain_card {我们将于 {trialEnd, date, long} 从你尾号为 {last4} 的银行卡扣取 {tax, select, yes {{amountFormatted}} other {{amountFormatted}（另加适用税费）}}，之后你的订阅将每{plan, select, yearly {年} other {月}}自动续费，直到你取消为止。} named {我们将于 {trialEnd, date, long} 通过 {methodName} 扣取 {tax, select, yes {{amountFormatted}} other {{amountFormatted}（另加适用税费）}}，之后你的订阅将每{plan, select, yearly {年} other {月}}自动续费，直到你取消为止。} other {我们将于 {trialEnd, date, long} 从你已保存的付款方式扣取 {tax, select, yes {{amountFormatted}} other {{amountFormatted}（另加适用税费）}}，之后你的订阅将每{plan, select, yearly {年} other {月}}自动续费，直到你取消为止。}}",
 		"cta": "管理你的订阅",
 		"footer_reason": "你收到此邮件是因为你兑换了 {premiumName} 礼物。",
-		"heading": "礼物已兑换",
+		"heading": "礼物已添加",
 		"intro": "你获赠的时长已添加。在 {trialEnd, date, long} 之前，你的{plan, select, yearly {年付} other {月付}} {premiumName} 订阅不会向你收费。",
 		"lead": "在此之前，你可以随时在“管理订阅”中取消。",
 		"preheader": "在 {trialEnd, date, long} 之前不会向你收费",
@@ -595,7 +595,7 @@
 	},
 	"plutonium_payment_receipt": {
 		"consent_body": "你在 {consentAt, date, long} 要求立即开始使用 {premiumName}。你同时确认了解，在撤回期结束前你仍可撤回并获得全额退款。",
-		"consent_body_pro_rata": "{gift, select, yes {你在 {consentAt, date, long} 要求这份 {premiumName} 礼物在兑换码被兑换后立即开始。你还确认，如果在 14 天内撤回，兑换码尚未兑换时你将获得全额退款，否则需支付接收者拥有 {premiumName} 的天数费用，其余部分退还给你。} other {你在 {consentAt, date, long} 要求立即开通 {premiumName}。你还确认，如果在 14 天内撤回，需支付拥有 {premiumName} 的天数费用，其余部分退还给你，并且在服务完全提供后将无法再撤回。}}",
+		"consent_body_pro_rata": "{gift, select, yes {你在 {consentAt, date, long} 要求这份 {premiumName} 礼物在礼品码被兑换后立即开始。你还确认，如果在 14 天内撤回，礼品码尚未兑换时你将获得全额退款，否则需支付接收者拥有 {premiumName} 的天数费用，其余部分退还给你。} other {你在 {consentAt, date, long} 要求立即开通 {premiumName}。你还确认，如果在 14 天内撤回，需支付拥有 {premiumName} 的天数费用，其余部分退还给你，并且在服务完全提供后将无法再撤回。}}",
 		"consent_title": "立即开始",
 		"credit_label": "已抵扣金额",
 		"date_label": "付款日期",
@@ -618,7 +618,7 @@
 		"product_label": "产品",
 		"product_value": "{plan, select, monthly {{premiumName}，月付} yearly {{premiumName}，年付} gift_1_month {{premiumName} 礼物，1 个月} gift_1_year {{premiumName} 礼物，1 年} other {{premiumName}}}",
 		"reverse_charge": "由于适用反向征收机制，本次未收取增值税。详情请见发票。",
-		"seller": "卖家：Fluxer Platform AB，559537-3993，注册所在地Haninge，瑞典，{sellerAddress}，<mail>{sellerEmail}</mail>",
+		"seller": "卖家为 Fluxer Platform AB（注册号 559537-3993），是一家注册地位于 Haninge 的瑞典公司。你可以写信至 {sellerAddress}，或发送邮件至 <mail>{sellerEmail}</mail>。",
 		"signoff": "{product_name} 团队",
 		"subject": "{gift, select, yes {你的 {product_name} {premiumName} 礼物收据} other {你的 {product_name} {premiumName} 收据}}",
 		"tax_added": "价格另加税费 {taxFormatted}",
@@ -626,7 +626,7 @@
 		"total_label": "总计",
 		"withdrawal_body": "截至 {withdrawalEndsAt, date, long}，你都可以撤回此次购买并获得全额退款。如需撤回，请回复此邮件或发送邮件至 <mail>{sellerEmail}</mail>，告知我们你要撤回。你可以使用下方的表格，但并非必须。",
 		"withdrawal_body_brazil": "你可以在 {withdrawalEndsAt, date, long} 阿克里时间 23:59（UTC-5）之前撤回本次购买，并取回你支付的全部款项。如需撤回，请回复此邮件或写信至 <mail>{sellerEmail}</mail> 告知我们你要撤回。你可以使用下方表格，但不是必须的。{gift, select, yes {} other {同一方案的自动续订不会开始新的撤回期。}}",
-		"withdrawal_body_pro_rata": "你可以在 {withdrawalEndsAt, date, long} 之前撤回本次购买。{gift, select, yes {如果兑换码尚未兑换，我们会退还你支付的全部金额。如果已兑换，我们会退还你支付的金额，扣除接收者拥有 {premiumName} 的天数对应的部分。} other {撤回后，我们会退还你支付的金额，扣除你拥有 {premiumName} 的天数对应的部分。同一套餐自动续订不会开启新的撤回期。}}如需撤回，请在\"用户设置\"的 {premiumName} 页面使用\"在此处撤销合同\"，或回复此邮件或写信至 <mail>{sellerEmail}</mail> 告知我们你要撤回。你可以使用下方表格，但不是必须的。",
+		"withdrawal_body_pro_rata": "你可以在 {withdrawalEndsAt, date, long} 之前撤回本次购买。{gift, select, yes {如果礼品码尚未兑换，我们会退还你支付的全部金额。如果已兑换，我们会退还你支付的金额，扣除接收者拥有 {premiumName} 的天数对应的部分。} other {撤回后，我们会退还你支付的金额，扣除你拥有 {premiumName} 的天数对应的部分。同一方案自动续订不会开启新的撤回期。}}如需撤回，请在“用户设置”的 {premiumName} 页面使用“在此撤回合同”，或回复此邮件或写信至 <mail>{sellerEmail}</mail> 告知我们你要撤回。你可以使用下方表格，但不是必须的。",
 		"withdrawal_note": "应用内的退款按钮在付款后 3 天内可用。它是撤回权之外的额外便利，不会取代撤回权。",
 		"withdrawal_title": "撤回权"
 	},
@@ -674,9 +674,9 @@
 		"name_label": "姓名",
 		"note": "请保留此邮件，作为我们已收到你撤回申请的确认。",
 		"reference_label": "参考编号",
-		"refund": "{gift, select, yes {礼物码将失效，如果已有人兑换，对方会失去礼物码提供的时长。} other {你的 {premiumName} 订阅已结束，不会续费。}}{refund, select, manual {我们无法自动发起 {amountFormatted} 的退款，因此我们团队的工作人员会{brazil, select, yes {立即} other {在 14 天内}}将这笔款项退回你付款时使用的卡或账户。} other {我们已向你付款时使用的卡或账户发起 {amountFormatted} 的全额退款。具体到账时间取决于你的银行，通常需要 5 到 10 个工作日。}}退款完成后，我们会通过邮件把贷项通知单发给你。",
+		"refund": "{gift, select, yes {礼品码将失效，如果已有人兑换，对方会失去礼品码提供的时长。} other {你的 {premiumName} 订阅已结束，不会续费。}}{refund, select, manual {我们无法自动发起 {amountFormatted} 的退款，因此我们团队的工作人员会{brazil, select, yes {立即} other {在 14 天内}}将这笔款项退回你付款时使用的卡或账户。} other {我们已向你付款时使用的卡或账户发起 {amountFormatted} 的全额退款。具体到账时间取决于你的银行，通常需要 5 到 10 个工作日。}}退款完成后，我们会通过邮件把贷项通知单发给你。",
 		"refund_label": "退款金额",
-		"refund_pro_rata": "{gift, select, yes {礼物码将失效，如果已有人兑换，对方会失去礼物码提供的时长。} other {你的 {premiumName} 订阅已结束，不会续费。}}{refund, select, manual {我们无法自动发起 {amountFormatted} 的退款，因此我们团队的工作人员会{brazil, select, yes {立即} other {在 14 天内}}将这笔款项退回你付款时使用的卡或账户。} other {我们已开始将 {amountFormatted} 退还到你付款所用的卡或账户。这是你支付的金额扣除 {premiumName} 使用天数对应的部分。视你的银行而定，通常需要 5 到 10 个工作日才会显示。}}退款完成后，我们会通过邮件把贷项通知单发给你。",
+		"refund_pro_rata": "{gift, select, yes {礼品码将失效，如果已有人兑换，对方会失去礼品码提供的时长。} other {你的 {premiumName} 订阅已结束，不会续费。}}{refund, select, manual {我们无法自动发起 {amountFormatted} 的退款，因此我们团队的工作人员会{brazil, select, yes {立即} other {在 14 天内}}将这笔款项退回你付款时使用的卡或账户。} other {我们已开始将 {amountFormatted} 退还到你付款所用的卡或账户。这是你支付的金额扣除 {premiumName} 使用天数对应的部分。视你的银行而定，通常需要 5 到 10 个工作日才会显示。}}退款完成后，我们会通过邮件把贷项通知单发给你。",
 		"signoff": "{product_name} 团队",
 		"statement_label": "你的撤回申请",
 		"statement_value": "{gift, select, yes {我撤回我于 {purchasedAt, date, long} 购买的 {premiumName} 礼物的合同。} other {我撤回我于 {purchasedAt, date, long} 付款的 {premiumName} 订阅的合同。}}",
@@ -695,7 +695,7 @@
 		"footer_reason": "你收到此邮件是因为此地址曾用于一个 {product_name} 账号。",
 		"intro": "你在 {product_name} 的注册已获批准。现在可以登录了。",
 		"signoff": "{product_name} 团队",
-		"subject": "你的 {product_name} 账户已获批准"
+		"subject": "你的 {product_name} 账号已获批准"
 	},
 	"registration_pending": {
 		"cta": "查看待审批的注册",

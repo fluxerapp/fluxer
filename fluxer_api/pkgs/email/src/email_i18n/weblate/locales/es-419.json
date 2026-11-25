@@ -28,9 +28,9 @@
 		"subject": "Tu cuenta de {product_name} se eliminará el {deletion_date}"
 	},
 	"bulk_message_deletion_completed": {
-		"footer_reason": "Recibiste este correo porque se solicitó la eliminación de un mensaje para tu cuenta de {product_name}.",
-		"intro": "Terminamos de eliminar tus mensajes. Eliminamos {message_count, plural, =0 {0 mensajes} one {# mensaje} other {# mensajes}} de {channel_count, plural, =0 {0 lugares} one {# lugar} other {# lugares}}.",
-		"note": "{reply, select, yes {Si no solicitaste esto, cambia tu contraseña ahora y responde a este correo.} other {Si no solicitaste esto, cambia tu contraseña ahora y contacta a los administradores de esta instancia.}}",
+		"footer_reason": "Recibiste este correo porque se solicitó eliminar mensajes de tu cuenta de {product_name}.",
+		"intro": "Terminamos de eliminar tus mensajes. Eliminamos {message_count, plural, =0 {0 mensajes} one {# mensaje} many {# de mensajes} other {# mensajes}} de {channel_count, plural, =0 {0 lugares} one {# lugar} many {# de lugares} other {# lugares}}.",
+		"note": "{reply, select, yes {Si no solicitaste esto, cambia tu contraseña ahora y responde a este correo.} other {Si no solicitaste esto, cambia tu contraseña ahora y comunícate con los administradores de esta instancia.}}",
 		"signoff": "El equipo de {product_name}",
 		"subject": "Terminamos de eliminar tus mensajes de {product_name}"
 	},
@@ -75,7 +75,7 @@
 	},
 	"donation_magic_link": {
 		"cta": "Administrar donaciones",
-		"expiry": "Este enlace vence en {minutes, plural, one {# minuto} other {# minutos}}.",
+		"expiry": "Este enlace vence en {minutes, plural, one {# minuto} many {# de minutos} other {# minutos}}.",
 		"footer_reason": "Recibiste este correo electrónico porque se solicitó un enlace al portal de donantes para esta dirección de correo electrónico.",
 		"intro": "Usa este enlace para administrar o cancelar una donación recurrente y actualizar tu método de pago.",
 		"note": "Si no pediste este enlace, puedes ignorar este correo.",
@@ -142,7 +142,7 @@
 		"subject": "Tu donación anual a {product_name} se renueva el {chargeAt, date, long}"
 	},
 	"dsa_report_resolved": {
-		"about": "{target, select, message_community {Reportaste un mensaje en #{channelName} de la comunidad “{communityName}” el {reportedAt, date, long}.} message_dm {Reportaste un mensaje directo el {reportedAt, date, long}.} message {Reportaste un mensaje el {reportedAt, date, long}.} user {Reportaste la cuenta “{username}” el {reportedAt, date, long}.} community {Reportaste la comunidad “{communityName}” el {reportedAt, date, long}.} other {Nos enviaste un reporte el {reportedAt, date, long}.}}",
+		"about": "{target, select, message_community {Reportaste un mensaje en #{channelName} de la comunidad \"{communityName}\" el {reportedAt, date, long}.} message_dm {Reportaste un mensaje directo el {reportedAt, date, long}.} message {Reportaste un mensaje el {reportedAt, date, long}.} user {Reportaste la cuenta \"{username}\" el {reportedAt, date, long}.} community {Reportaste la comunidad \"{communityName}\" el {reportedAt, date, long}.} other {Nos enviaste un reporte el {reportedAt, date, long}.}}",
 		"comment_label": "Nota de nuestro equipo",
 		"footer_reason": "Recibiste este correo electrónico porque enviaste un reporte conforme a la Ley de Servicios Digitales en {product_name}.",
 		"intro": "{outcome, select, removed {Lo eliminamos porque infringía nuestras reglas.} restricted {La cuenta infringía nuestras reglas y tomamos medidas. Para proteger la privacidad de todos, no compartimos qué medida tomamos.} action_taken {Lo que reportaste infringía nuestras reglas y tomamos medidas. Para proteger la privacidad de todos, no compartimos qué medida tomamos.} no_violation {{concern, select, self_harm {Gracias por preocuparte por esa persona. Nuestro equipo lo revisó. Hablar de sentirse triste o de no sentirse a salvo no infringe nuestras reglas, así que no eliminamos nada, pero es posible que le enviemos recursos de apoyo a esa persona. Nunca compartimos quién envió un reporte. Si crees que alguien está en peligro inmediato, llama al número de emergencias de tu zona.} other {Nuestro equipo lo revisó y determinó que no va en contra de nuestras reglas, así que no tomamos medidas. Aun así, un reporte puede llevar a otros pasos, como enviarle a la persona recursos de apoyo. Nunca compartimos quién envió un reporte.}}} other {Cerramos tu reporte.}}",
@@ -153,7 +153,7 @@
 		"thanks": "{outcome, select, removed {Gracias por reportarlo. Los reportes como el tuyo ayudan a que {product_name} sea seguro para todos.} restricted {Gracias por reportarlo. Los reportes como el tuyo ayudan a que {product_name} sea seguro para todos.} action_taken {Gracias por reportarlo. Los reportes como el tuyo ayudan a que {product_name} sea seguro para todos.} other {Gracias por avisarnos. Sigue reportando todo lo que te preocupe, aunque al final no infrinja nuestras reglas.}}"
 	},
 	"dsa_report_verification": {
-		"expiry": "Este código vence en {minutes, plural, one {# minuto} other {# minutos}}.",
+		"expiry": "Este código vence en {minutes, plural, one {# minuto} many {# de minutos} other {# minutos}}.",
 		"footer_reason": "Recibiste este correo electrónico porque esta dirección se ingresó en un formulario de reporte conforme a la Ley de Servicios Digitales en {product_name}.",
 		"intro": "Usa este código para enviar a {product_name} tu reporte conforme a la Ley de Servicios Digitales.",
 		"note": "Si no lo pediste tú, puedes ignorar este correo.",
@@ -161,7 +161,7 @@
 		"subject": "Tu código de {product_name} para un reporte DSA"
 	},
 	"email_change_new": {
-		"expiry": "Este código vence en {minutes, plural, one {# minuto} other {# minutos}}.",
+		"expiry": "Este código vence en {minutes, plural, one {# minuto} many {# de minutos} other {# minutos}}.",
 		"footer_reason": "Recibiste este correo electrónico porque esta dirección se ingresó como el nuevo correo electrónico para una cuenta de {product_name}.",
 		"intro": "Ingresa este código en la app para confirmar tu nueva dirección de correo.",
 		"note": "Si no lo pediste tú, puedes ignorar este correo.",
@@ -169,7 +169,7 @@
 		"subject": "Confirma tu nueva dirección de correo de {product_name}"
 	},
 	"email_change_original": {
-		"expiry": "Este código vence en {minutes, plural, one {# minuto} other {# minutos}}.",
+		"expiry": "Este código vence en {minutes, plural, one {# minuto} many {# de minutos} other {# minutos}}.",
 		"footer_reason": "Recibiste este correo electrónico porque alguien solicitó cambiar la dirección de correo electrónico de tu cuenta de {product_name}.",
 		"intro": "Para cambiar la dirección de correo de tu cuenta de {product_name}, ingresa este código en la app.",
 		"note": "Si no lo pediste tú, cambia tu contraseña ahora.",
@@ -196,7 +196,7 @@
 		"subject": "Confirma tu dirección de correo electrónico en {product_name}"
 	},
 	"email_verification_code": {
-		"expiry": "Este código vence en {minutes, plural, one {# minuto} other {# minutos}}.",
+		"expiry": "Este código vence en {minutes, plural, one {# minuto} many {# de minutos} other {# minutos}}.",
 		"footer_reason": "Recibiste este correo porque esta dirección se agregó a una cuenta de {product_name}.",
 		"intro": "Ingresa este código en la app para confirmar tu dirección de correo.",
 		"note": "No compartas este código con nadie. El personal de {product_name} nunca te lo pedirá. Si no agregaste esta dirección de correo electrónico a una cuenta, puedes ignorar este correo.",
@@ -229,7 +229,7 @@
 		"why_title": "Por qué"
 	},
 	"gift_chargeback_notification": {
-		"billing_resumed": "Como se quitó el regalo, tu suscripción {plan, select, yearly {anual} other {mensual}} a {premiumName} vuelve a cobrarse a partir de hoy. Recibirás un recibo aparte por este cobro. Puedes cancelarla cuando quieras en “Administrar suscripción”.",
+		"billing_resumed": "Como se quitó el regalo, tu suscripción {plan, select, yearly {anual} other {mensual}} a {premiumName} vuelve a cobrarse a partir de hoy. Recibirás un recibo aparte por este cobro. Puedes cancelarla cuando quieras en \"Administrar suscripción\".",
 		"footer_reason": "Recibiste este correo electrónico porque se eliminaron los beneficios de tu cuenta de {product_name}.",
 		"intro": "Se revirtió el pago de un código de regalo que canjeaste, así que quitamos los beneficios que agregó a tu cuenta.",
 		"manage_cta": "Administrar tu suscripción",
@@ -271,7 +271,7 @@
 		"subject": "Autoriza un inicio de sesión en {product_name} desde una nueva dirección IP"
 	},
 	"mfa_backup_codes_view": {
-		"expiry": "Este código vence en {minutes, plural, one {# minuto} other {# minutos}}.",
+		"expiry": "Este código vence en {minutes, plural, one {# minuto} many {# de minutos} other {# minutos}}.",
 		"footer_reason": "Recibiste este correo electrónico porque alguien solicitó ver los códigos de respaldo de tu cuenta de {product_name}.",
 		"intro": "Para ver tus códigos de respaldo de {product_name}, ingresa este código en la app.",
 		"note": "Si no lo pediste tú, es posible que alguien tenga acceso a tu cuenta. Cambia tu contraseña ahora.",
@@ -334,9 +334,9 @@
 		"price_label": "Total",
 		"price_value": "{priceFormatted}, pago único",
 		"product_label": "Producto",
-		"product_value": "{quantity, plural, one {Operator Pass de {product_name}} other {# Operator Pass de {product_name}}}",
+		"product_value": "{quantity, plural, one {Operator Pass de {product_name}} many {# de Operator Pass de {product_name}} other {# Operator Pass de {product_name}}}",
 		"reverse_charge": "No se cobró IVA porque se aplica la inversión del sujeto pasivo. Encontrarás los detalles en la factura.",
-		"seller": "Vendedor: Fluxer Platform AB, 559537-3993, domicilio social Haninge, Suecia, {sellerAddress}, {sellerPhone}, <mail>{sellerEmail}</mail>",
+		"seller": "El vendedor es Fluxer Platform AB (n.º de registro 559537-3993), una empresa sueca con domicilio social en Haninge. Puedes escribirnos a {sellerAddress}, llamarnos al {sellerPhone} o enviarnos un correo a <mail>{sellerEmail}</mail>.",
 		"signoff": "El equipo de {product_name}",
 		"subject": "Recibo de tu Operator Pass de {product_name}",
 		"tax_added": "Se agregan {taxFormatted} de IVA al precio",
@@ -380,7 +380,7 @@
 		"footer_reason": "Recibiste este correo electrónico debido a una decisión sobre el Operator Pass en tu cuenta de {product_name}.",
 		"ground": "Sección 8 de los términos del Operator Pass",
 		"ground_label": "Fundamento",
-		"intro": "Tenemos la intención de retirar de forma permanente lo que viene con tu Operator Pass. Tienes {replyDays, plural, one {# día} other {# días}} para responder antes de que decidamos.",
+		"intro": "Tenemos la intención de retirar de forma permanente lo que viene con tu Operator Pass. Tienes {replyDays, plural, one {# día} many {# de días} other {# días}} para responder antes de que decidamos.",
 		"next_v2": "Si seguimos adelante, te enviaremos por correo la decisión y cómo apelarla. Si eres consumidor en la UE o el EEE, también puedes llevar un litigio sobre una eliminación a la Junta Nacional de Reclamaciones de los Consumidores de Suecia (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Suecia.",
 		"reply": "{reply, select, yes {Responde a este correo y cuéntanos todo lo que debamos saber.} other {Comunícate con los administradores de esta instancia y cuéntales todo lo que debamos saber.}} Una persona de nuestro equipo lee cada respuesta antes de que decidamos. {visionary, select, yes {Hasta entonces, tu entrada en el muro, tu insignia y el rol Operator se quedan como están. Conservas #operators gracias a tu Visionary.} other {Hasta entonces, tu entrada en el muro, tu insignia, #operators y el rol Operator se quedan como están.}}",
 		"rule_label": "Regla",
@@ -397,7 +397,7 @@
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {Tu insignia Operator está en tu perfil. Puedes ocultarla en tu <settings>configuración</settings>.} other {Tu insignia Operator está oculta. Puedes mostrarla en tu <settings>configuración</settings>.}}",
 		"cta": "Abrir Fluxer Labs",
-		"footer_reason": "Recibes este correo porque activaste el Operator Pass que viene con Visionary en tu cuenta de {product_name}.",
+		"footer_reason": "Recibiste este correo electrónico porque activaste el Operator Pass que viene con Visionary en tu cuenta de {product_name}.",
 		"intro": "Tu Operator Pass está activado. Tu certificado está adjunto, y puedes volver a descargarlo en tu <settings>configuración</settings>. Guarda también tu propia copia, porque borramos la nuestra si se elimina tu cuenta.",
 		"labs_line": "{member, select, yes {Tienes el rol Operator en Fluxer Labs.} other {El rol Operator en Fluxer Labs viene con tu Operator Pass. Lo tienes siempre que esta cuenta esté en Fluxer Labs.}}",
 		"signoff": "El equipo de {product_name}",
@@ -446,7 +446,7 @@
 		"footer_reason": "Recibiste este correo electrónico debido a una decisión sobre tu entrada en el muro de Operators de {product_name}.",
 		"ground": "Sección 6.2 de los términos de servicio",
 		"ground_label": "Fundamento",
-		"intro": "Quitamos la cita de tu lugar en el muro de Operators. El resto de tu lugar se queda como está, y tu insignia y tu compra no se ven afectadas.",
+		"intro": "Quitamos la cita de tu entrada en el muro de Operators. El resto de tu entrada se queda como está, y tu insignia y tu compra no se ven afectadas.",
 		"next": "Puedes agregar una cita nueva que siga las normas de la comunidad en tu <settings>configuración</settings>.",
 		"reason_label": "Motivo",
 		"reason_value": "{reason, select, impersonation {Se hace pasar por otra persona} rights {Usa un texto ajeno sin tener los derechos} age_suitability {No es adecuado para usuarios más jóvenes} other {Infringe las normas de la comunidad}}",
@@ -488,7 +488,7 @@
 		"subject": "Recibimos tu desistimiento del Operator Pass de {product_name}"
 	},
 	"password_change_verification": {
-		"expiry": "Este código vence en {minutes, plural, one {# minuto} other {# minutos}}.",
+		"expiry": "Este código vence en {minutes, plural, one {# minuto} many {# de minutos} other {# minutos}}.",
 		"footer_reason": "Recibiste este correo electrónico porque alguien solicitó cambiar la contraseña de tu cuenta de {product_name}.",
 		"intro": "Para cambiar tu contraseña de {product_name}, ingresa este código en la app.",
 		"note": "Si no lo pediste tú, es posible que alguien tenga acceso a tu cuenta. Cambia tu contraseña ahora y activa la autenticación de dos factores.",
@@ -512,7 +512,7 @@
 		"appeal_title": "Si crees que nos equivocamos",
 		"currency_label": "Moneda",
 		"deadline_body": "Si la disputa no se retira antes del {warningDate, date, long} y termina con la devolución del dinero a ti, eliminaremos tu cuenta de {product_name} de forma permanente. Una cuenta eliminada no se puede recuperar. Si cerramos tu cuenta, tampoco podrás crear ni usar otras cuentas de {product_name}.",
-		"deadline_body_operator_pass": "Si la disputa no se retira antes del {warningDate, date, long} y termina con la devolución del dinero a ti, los pases que cubrió ese pago terminan y quitamos de tu cuenta, de forma permanente, lo que viene con el Operator Pass. Después, tu cuenta no podrá comprar ni recibir un pase de nuevo. Nada más en tu cuenta cambia.",
+		"deadline_body_operator_pass": "Si la disputa no se retira antes del {warningDate, date, long} y termina con la devolución del dinero a ti, los pases que cubrió ese pago terminan y quitamos de tu cuenta, de forma permanente, lo que viene con el Operator Pass. Después, tu cuenta no podrá comprar ni recibir un pase de nuevo. No cambia nada más en tu cuenta.",
 		"deadline_label": "Retira la disputa antes del",
 		"deadline_value": "{warningDate, date, long}",
 		"footer_reason": "Recibiste este correo electrónico debido a una disputa de pago relacionada con tu cuenta de {product_name}.",
@@ -536,7 +536,7 @@
 		"footer_reason": "Recibiste este correo porque cancelaste tu suscripción a {premiumName}.",
 		"heading": "Recibimos tu cancelación",
 		"intro": "El {receivedFormatted} recibimos tu solicitud para cancelar tu suscripción {plan, select, yearly {anual} other {mensual}} a {premiumName}.",
-		"lead": "¿Cambiaste de opinión? Puedes reanudar tu suscripción en “Administrar suscripción” antes del {endsAt, date, long}.",
+		"lead": "¿Cambiaste de opinión? Puedes reanudar tu suscripción en \"Administrar suscripción\" antes del {endsAt, date, long}.",
 		"preheader": "Seguirás teniendo {premiumName} hasta el {endsAt, date, long}",
 		"reference_line": "Referencia: {reference}",
 		"seller": "Vendedor: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
@@ -555,7 +555,7 @@
 		"subject": "Tu tarjeta vence antes de tu próximo pago de {premiumName} en {product_name}"
 	},
 	"plutonium_ended_unpaid": {
-		"cta": "Obtén {premiumName}",
+		"cta": "Obtener {premiumName}",
 		"footer_reason": "Recibiste este correo porque tu suscripción a {premiumName} terminó.",
 		"heading": "Tu suscripción terminó",
 		"intro": "Tu suscripción a {premiumName} terminó porque no pudimos cobrar el pago de renovación.",
@@ -572,7 +572,7 @@
 		"footer_reason": "Recibiste este correo porque canjeaste un regalo de {premiumName}.",
 		"heading": "Regalo agregado",
 		"intro": "Agregamos tu tiempo de regalo. No se te cobrará nada por tu suscripción {plan, select, yearly {anual} other {mensual}} a {premiumName} hasta el {trialEnd, date, long}.",
-		"lead": "Hasta entonces, puedes cancelarla cuando quieras en “Administrar suscripción”.",
+		"lead": "Hasta entonces, puedes cancelarla cuando quieras en \"Administrar suscripción\".",
 		"preheader": "No se te cobrará nada hasta el {trialEnd, date, long}",
 		"seller": "Vendedor: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
 		"signoff": "El equipo de {product_name}",
@@ -586,7 +586,7 @@
 		"heading": "{reason, select, action_required {Tu banco necesita que confirmes un pago} other {No se pudo cobrar tu pago de {premiumName}}}",
 		"intro": "{reason, select, action_required {Tu banco quiere que confirmes el pago de renovación de tu suscripción a {premiumName}.} other {No pudimos cobrar el pago de renovación de tu suscripción a {premiumName}.}} {access, select, yes {Seguirás teniendo {premiumName} hasta el {accessEndsAt, date, long}.} other {}}",
 		"intro_change": "{reason, select, action_required {Tu banco quiere que confirmes el pago del cambio en tu suscripción a {premiumName}.} other {No pudimos cobrar el pago del cambio en tu suscripción a {premiumName}.}} {access, select, yes {Seguirás teniendo {premiumName} hasta el {accessEndsAt, date, long}.} other {}}",
-		"manage_link": "Actualizar tu método de pago en “Administrar suscripción”",
+		"manage_link": "Actualizar tu método de pago en \"Administrar suscripción\"",
 		"note": "{reply, select, yes {Si necesitas ayuda, responde a este correo.} other {Si necesitas ayuda, comunícate con los administradores de esta instancia.}}",
 		"preheader": "{reason, select, action_required {Confirma {amountFormatted} para {premiumName}} other {No pudimos cobrar {amountFormatted} para {premiumName}}}",
 		"reminder_subject": "Recordatorio: confirma tu pago de {premiumName}",
@@ -604,7 +604,7 @@
 		"footer_reason": "Recibiste este correo porque pagaste {premiumName} en {product_name}.",
 		"form_body": "A la atención de Fluxer Platform AB, {sellerAddress}, <mail>{sellerEmail}</mail>:\nPor la presente comunico que desisto de mi contrato de {premiumName}, comprado el {paidAt, date, long}.\nNúmero de factura: {invoiceNumber}\nNombre:\nDirección:\nFecha:\nFirma (solo si se envía en papel):",
 		"form_title": "Formulario de desistimiento",
-		"gift_note": "El enlace del regalo está en tu configuración, en “Regalos”. Cópialo desde ahí y envíaselo a la persona a la que quieras regalarle {premiumName}. Cualquier persona que tenga el enlace puede canjearlo.",
+		"gift_note": "El enlace del regalo está en tu configuración, en \"Regalos\". Cópialo desde ahí y envíaselo a la persona a la que quieras regalarle {premiumName}. Cualquier persona que tenga el enlace puede canjearlo.",
 		"heading": "{gift, select, yes {Recibo de tu regalo de {premiumName}} other {Recibo de {premiumName}}}",
 		"intro": "{document, select, yes {{gift, select, yes {Gracias por regalar {premiumName}.} other {Gracias por tu pago.}}} other {{gift, select, yes {Gracias por regalar {premiumName}. Este correo es tu recibo.} other {Gracias por tu pago. Este correo es tu recibo.}}}}",
 		"invoice_label": "Número de factura",
@@ -612,13 +612,13 @@
 		"paid_label": "Monto pagado",
 		"period_label": "Periodo",
 		"period_value": "del {periodStart, date, long} al\n{periodEnd, date, long}",
-		"plan_body": "{renewal, select, month {{premiumName} se renueva cada mes por {renewalFormatted}{renewalTax, select, included { IVA incluido} added { más IVA} other {}} hasta que canceles la suscripción. Puedes cancelarla cuando quieras en “Administrar suscripción”, en la página de {premiumName}, y conservas {premiumName} hasta el final del periodo que pagaste.} year {{premiumName} se renueva cada año por {renewalFormatted}{renewalTax, select, included { IVA incluido} added { más IVA} other {}} hasta que canceles la suscripción. Puedes cancelarla cuando quieras en “Administrar suscripción”, en la página de {premiumName}, y conservas {premiumName} hasta el final del periodo que pagaste.} other {Este regalo es una compra única. No se renueva y no se te cobrará nada más.}}",
+		"plan_body": "{renewal, select, month {{premiumName} se renueva cada mes por {renewalFormatted}{renewalTax, select, included { IVA incluido} added { más IVA} other {}} hasta que canceles la suscripción. Puedes cancelarla cuando quieras en \"Administrar suscripción\", en la página de {premiumName}, y conservas {premiumName} hasta el final del periodo que pagaste.} year {{premiumName} se renueva cada año por {renewalFormatted}{renewalTax, select, included { IVA incluido} added { más IVA} other {}} hasta que canceles la suscripción. Puedes cancelarla cuando quieras en \"Administrar suscripción\", en la página de {premiumName}, y conservas {premiumName} hasta el final del periodo que pagaste.} other {Este regalo es una compra única. No se renueva y no se te cobrará nada más.}}",
 		"plan_title": "{gift, select, yes {Tu regalo} other {Tu suscripción}}",
 		"preheader": "Pagaste {amountFormatted} por {premiumName}",
 		"product_label": "Producto",
 		"product_value": "{plan, select, monthly {{premiumName}, mensual} yearly {{premiumName}, anual} gift_1_month {Regalo de {premiumName}, 1 mes} gift_1_year {Regalo de {premiumName}, 1 año} other {{premiumName}}}",
 		"reverse_charge": "No se cobró IVA porque se aplica la inversión del sujeto pasivo. Encontrarás los detalles en la factura.",
-		"seller": "Vendedor: Fluxer Platform AB, 559537-3993, domicilio social Haninge, Suecia, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"seller": "El vendedor es Fluxer Platform AB (n.º de registro 559537-3993), una empresa sueca con domicilio social en Haninge. Puedes escribirnos a {sellerAddress} o enviarnos un correo a <mail>{sellerEmail}</mail>.",
 		"signoff": "El equipo de {product_name}",
 		"subject": "{gift, select, yes {Recibo de tu regalo de {premiumName} en {product_name}} other {Recibo de {premiumName} en {product_name}}}",
 		"tax_added": "Se agregan {taxFormatted} de IVA al precio",
@@ -627,7 +627,7 @@
 		"withdrawal_body": "Puedes desistir de esta compra hasta el {withdrawalEndsAt, date, long} y recibir un reembolso completo. Para hacerlo, responde a este correo o escribe a <mail>{sellerEmail}</mail> y dinos que desistes. Puedes usar el formulario de abajo, pero no es obligatorio.",
 		"withdrawal_body_brazil": "Puedes desistir de esta compra hasta las 23:59 hora de Acre (UTC-5) del {withdrawalEndsAt, date, long} y recuperar todo lo que pagaste. Para desistir, responde a este correo o escribe a <mail>{sellerEmail}</mail> y dinos que desistes. Puedes usar el formulario de abajo, pero no es obligatorio.{gift, select, yes {} other { La renovación automática del mismo plan no inicia un nuevo período de desistimiento.}}",
 		"withdrawal_body_pro_rata": "Puedes desistir de esta compra hasta el {withdrawalEndsAt, date, long}. {gift, select, yes {Si el código no se ha canjeado, te reembolsamos todo lo que pagaste. Si se canjeó, te reembolsamos lo que pagaste menos la parte de los días en que la persona que lo recibió tuvo {premiumName}.} other {Si lo haces, te reembolsamos lo que pagaste menos la parte de los días en que tuviste {premiumName}. La renovación automática del mismo plan no inicia un nuevo período de desistimiento.}} Para desistir, usa \"Desistir del contrato aquí\" en la página de {premiumName} en \"Configuración de usuario\", o responde a este correo o escribe a <mail>{sellerEmail}</mail> y dinos que desistes. Puedes usar el formulario de abajo, pero no es obligatorio.",
-		"withdrawal_note": "El botón de reembolso de la aplicación funciona durante 3 días después de cada pago. Es adicional a tu derecho de desistimiento y no lo reemplaza.",
+		"withdrawal_note": "El botón de reembolso de la app funciona durante 3 días después de cada pago. Es adicional a tu derecho de desistimiento y no lo reemplaza.",
 		"withdrawal_title": "Derecho de desistimiento"
 	},
 	"plutonium_refund_receipt": {
@@ -648,7 +648,7 @@
 		"product_value": "{plan, select, monthly {{premiumName}, mensual} yearly {{premiumName}, anual} gift_1_month {Regalo de {premiumName}, 1 mes} gift_1_year {Regalo de {premiumName}, 1 año} other {{premiumName}}}",
 		"refund_label": "Monto reembolsado",
 		"signoff": "El equipo de {product_name}",
-		"subject": "Tu reembolso de {product_name} {premiumName}"
+		"subject": "Reembolso de {premiumName} en {product_name}"
 	},
 	"plutonium_renewal_notice": {
 		"after_line": "{differs, select, yes {Después, el precio será de {tax, select, yes {{regularFormatted}} other {{regularFormatted}, más los impuestos aplicables,}} {plan, select, yearly {al año} other {al mes}}.} other {Después, pagarás {tax, select, yes {{regularFormatted}} other {{regularFormatted}, más los impuestos aplicables,}} cada {plan, select, yearly {año} other {mes}} hasta que la canceles.}}",
@@ -683,7 +683,7 @@
 		"subject": "Recibimos tu desistimiento de {premiumName} en {product_name}"
 	},
 	"reauth_code": {
-		"expiry": "Este código vence en {minutes, plural, one {# minuto} other {# minutos}}.",
+		"expiry": "Este código vence en {minutes, plural, one {# minuto} many {# de minutos} other {# minutos}}.",
 		"footer_reason": "Recibiste este correo porque un cambio en tu cuenta de {product_name} requirió un código de confirmación.",
 		"intro": "Ingresa este código en la app para confirmar que eres tú antes de cambiar tu cuenta.",
 		"note": "No compartas este código con nadie. El personal de {product_name} nunca te lo pedirá. Si no lo pediste tú, es posible que alguien esté usando tu cuenta. Cierra todas las sesiones y revisa la seguridad de tu cuenta.",
@@ -713,7 +713,7 @@
 		"subject": "Recibimos tu reporte en {product_name}"
 	},
 	"report_resolved": {
-		"about": "{target, select, message_community {Reportaste un mensaje en #{channelName} de la comunidad “{communityName}” el {reportedAt, date, long}.} message_dm {Reportaste un mensaje directo el {reportedAt, date, long}.} message {Reportaste un mensaje el {reportedAt, date, long}.} user {Reportaste la cuenta “{username}” el {reportedAt, date, long}.} community {Reportaste la comunidad “{communityName}” el {reportedAt, date, long}.} other {Nos enviaste un reporte el {reportedAt, date, long}.}}",
+		"about": "{target, select, message_community {Reportaste un mensaje en #{channelName} de la comunidad \"{communityName}\" el {reportedAt, date, long}.} message_dm {Reportaste un mensaje directo el {reportedAt, date, long}.} message {Reportaste un mensaje el {reportedAt, date, long}.} user {Reportaste la cuenta \"{username}\" el {reportedAt, date, long}.} community {Reportaste la comunidad \"{communityName}\" el {reportedAt, date, long}.} other {Nos enviaste un reporte el {reportedAt, date, long}.}}",
 		"comment_label": "Nota de nuestro equipo",
 		"footer_reason": "Recibiste este correo electrónico porque enviaste un reporte en {product_name}.",
 		"intro": "{outcome, select, removed {Lo eliminamos porque infringía nuestras reglas.} restricted {La cuenta infringía nuestras reglas y tomamos medidas. Para proteger la privacidad de todos, no compartimos qué medida tomamos.} action_taken {Lo que reportaste infringía nuestras reglas y tomamos medidas. Para proteger la privacidad de todos, no compartimos qué medida tomamos.} no_violation {{concern, select, self_harm {Gracias por preocuparte por esa persona. Nuestro equipo lo revisó. Hablar de sentirse triste o de no sentirse a salvo no infringe nuestras reglas, así que no eliminamos nada, pero es posible que le enviemos recursos de apoyo a esa persona. Nunca compartimos quién envió un reporte. Si crees que alguien está en peligro inmediato, llama al número de emergencias de tu zona.} other {Nuestro equipo lo revisó y determinó que no va en contra de nuestras reglas, así que no tomamos medidas. Aun así, un reporte puede llevar a otros pasos, como enviarle a la persona recursos de apoyo. Nunca compartimos quién envió un reporte.}}} other {Cerramos tu reporte.}}",
@@ -732,7 +732,7 @@
 	},
 	"sign_in_code": {
 		"device_label": "Dispositivo",
-		"expiry": "Este código vence en {minutes, plural, one {# minuto} other {# minutos}}.",
+		"expiry": "Este código vence en {minutes, plural, one {# minuto} many {# de minutos} other {# minutos}}.",
 		"footer_reason": "Recibiste este correo porque alguien solicitó iniciar sesión en {product_name} con esta dirección.",
 		"intro": "Usa este código para iniciar sesión en {product_name}.",
 		"location_label": "Solicitado desde",
@@ -742,7 +742,7 @@
 	},
 	"sign_up_code": {
 		"device_label": "Dispositivo",
-		"expiry": "Este código vence en {minutes, plural, one {# minuto} other {# minutos}}.",
+		"expiry": "Este código vence en {minutes, plural, one {# minuto} many {# de minutos} other {# minutos}}.",
 		"footer_reason": "Recibiste este correo porque alguien solicitó crear una cuenta de {product_name} con esta dirección.",
 		"intro": "Usa este código para terminar de crear tu cuenta de {product_name}.",
 		"location_label": "Solicitado desde",

@@ -29,7 +29,7 @@
 	},
 	"bulk_message_deletion_completed": {
 		"footer_reason": "您收到此電子郵件，是因為您的 {product_name} 帳號曾要求刪除訊息。",
-		"intro": "我們已刪除您的訊息。從 {channel_count, plural, =0 {0 個位置} other {# 個位置}} 中移除了 {message_count, plural, =0 {0 則訊息} other {# 則訊息}}。",
+		"intro": "我們已刪除您的訊息。從 {channel_count, plural, =0 {0 個位置} other {# 個位置}}中移除了 {message_count, plural, =0 {0 則訊息} other {# 則訊息}}。",
 		"note": "{reply, select, yes {如果您沒有要求此操作，請立即變更密碼並回覆這封電子郵件。} other {如果您沒有要求此操作，請立即變更密碼並聯絡此實例的管理員。}}",
 		"signoff": "{product_name} 團隊",
 		"subject": "我們已完成刪除您的 {product_name} 訊息"
@@ -106,7 +106,7 @@
 		"intro": "{document, select, yes {{interval, select, year {感謝您的每年捐款。} other {感謝您的每月捐款。}}} other {{interval, select, year {感謝您的每年捐款。此電子郵件就是您的收據。} other {感謝您的每月捐款。此電子郵件就是您的收據。}}}}",
 		"manage_link": "管理您的捐款",
 		"period_label": "捐款期間",
-		"period_value": "{periodStart, date, long}至\n{periodEnd, date, long}",
+		"period_value": "{periodStart, date, long} 至\n{periodEnd, date, long}",
 		"preheader": "已捐款 {amountFormatted} 給 {product_name}",
 		"signoff": "{product_name} 團隊",
 		"subject": "您的 {product_name} 捐款收據",
@@ -142,11 +142,11 @@
 		"subject": "您每年對 {product_name} 的捐款將於 {chargeAt, date, long} 續期"
 	},
 	"dsa_report_resolved": {
-		"about": "{target, select, message_community {您在 {reportedAt, date, long} 檢舉了「{communityName}」中 #{channelName} 裡的一則訊息。} message_dm {您在 {reportedAt, date, long} 檢舉了私人訊息中的一則訊息。} message {您在 {reportedAt, date, long} 檢舉了一則訊息。} user {您在 {reportedAt, date, long} 檢舉了帳號「{username}」。} community {您在 {reportedAt, date, long} 檢舉了社群「{communityName}」。} other {您在 {reportedAt, date, long} 向我們提交了一份檢舉。}}",
+		"about": "{target, select, message_community {您在 {reportedAt, date, long} 檢舉了「{communityName}」中 #{channelName} 裡的一則訊息。} message_dm {您在 {reportedAt, date, long} 檢舉了私訊中的一則訊息。} message {您在 {reportedAt, date, long} 檢舉了一則訊息。} user {您在 {reportedAt, date, long} 檢舉了帳號「{username}」。} community {您在 {reportedAt, date, long} 檢舉了社群「{communityName}」。} other {您在 {reportedAt, date, long} 向我們提交了一份檢舉。}}",
 		"comment_label": "團隊留言",
 		"footer_reason": "您收到此電子郵件是因為您在 {product_name} 上提交了數位服務法檢舉。",
 		"intro": "{outcome, select, removed {該內容違反了我們的規則，我們已將其移除。} restricted {該帳號違反了我們的規則，我們已對其採取措施。為了保護每個人的隱私，我們不會透露具體採取了哪種措施。} action_taken {該內容違反了我們的規則，我們已採取措施。為了保護每個人的隱私，我們不會透露具體採取了哪種措施。} no_violation {{concern, select, self_harm {謝謝您對對方的關心。我們的團隊已查看相關內容。談論情緒低落或感到不安全並不違反我們的規則，所以我們沒有移除任何內容，但我們可能會向對方提供一些支援資源。我們絕不會透露檢舉人是誰。如果您認為有人正面臨立即的危險，請撥打當地的緊急求助電話。} other {我們的團隊已查看相關內容，發現它沒有違反我們的規則，因此沒有對其採取措施。檢舉仍可能促使我們採取其他做法，例如向對方提供支援資源。我們絕不會透露檢舉人是誰。}}} other {我們已結束處理您的檢舉。}}",
-		"note": "{reply, select, yes {如果您不同意，請在 60 天內回覆這封電子郵件。} other {{appeals_email, select, null {} other {如果您不同意，請在 60 天內寄信至 <mail>{appeals_email}</mail>，並附上檢舉 ID。}}}}{appeals_email, select, null {} other {如果您身在歐盟，也可以向經認證的<dsa>庭外爭議解決機構</dsa>尋求協助，或向您所在國家的數位服務協調官提出申訴。}}",
+		"note": "{reply, select, yes {如果您不同意，請在 60 天內回覆這封電子郵件。} other {{appeals_email, select, null {} other {如果您不同意，請在 60 天內寄信至 <mail>{appeals_email}</mail>，並附上檢舉 ID。}}}}{appeals_email, select, null {} other {如果您身在歐盟，也可以向經認證的<dsa>庭外爭議解決機構</dsa>尋求協助，或向您所在國家的數位服務協調機構提出申訴。}}",
 		"report_label": "檢舉 ID",
 		"signoff": "{product_name} 團隊",
 		"subject": "我們已審核您的 {product_name} 檢舉",
@@ -199,7 +199,7 @@
 		"expiry": "此驗證碼將在 {minutes, plural, other {# 分鐘}}後到期。",
 		"footer_reason": "您收到此電子郵件是因為此地址已新增至某個 {product_name} 帳號。",
 		"intro": "在應用程式中輸入此驗證碼，確認您的電子郵件地址。",
-		"note": "請勿與任何人分享此驗證碼。{product_name} 工作人員絕不會向您索取此驗證碼。如果您並未將此電子郵件地址新增至帳號，可以忽略這封電子郵件。",
+		"note": "請勿與任何人分享此驗證碼。{product_name} 員工絕不會向您索取此驗證碼。如果您並未將此電子郵件地址新增至帳號，可以忽略這封電子郵件。",
 		"signoff": "{product_name} 團隊",
 		"subject": "您的 {product_name} 電子郵件驗證碼"
 	},
@@ -224,18 +224,18 @@
 		"rule_label": "規則",
 		"signoff": "{product_name} 團隊",
 		"statement": "{statement, select, null {} other {團隊留言：{statement}}}",
-		"subject": "{neutral, select, yes {關於您 {product_name} 帳號的通知} other {{kind_label, select, warning {關於您 {product_name} 帳號的警告} suspension {您的 {product_name} 帳號已遭暫時停權} ban {您的 {product_name} 帳號已遭永久停權} closure {您的 {product_name} 帳號已關閉} feature_limit {您 {product_name} 帳號的部分功能已受到限制} content_removal {我們移除了您在 {product_name} 上傳送的訊息} profile_reset {我們重設了您 {product_name} 個人檔案的部分內容} community_removal {我們移除了您在 {product_name} 上的社群} bot {關於您在 {product_name} 上的機器人的通知} other {關於您 {product_name} 帳號的通知}}}}",
+		"subject": "{neutral, select, yes {關於您 {product_name} 帳號的通知} other {{kind_label, select, warning {關於您 {product_name} 帳號的警告} suspension {您的 {product_name} 帳號已遭停權} ban {您的 {product_name} 帳號已遭永久停權} closure {您的 {product_name} 帳號已關閉} feature_limit {您 {product_name} 帳號的部分功能已受到限制} content_removal {我們移除了您在 {product_name} 上傳送的訊息} profile_reset {我們重設了您 {product_name} 個人檔案的部分內容} community_removal {我們移除了您在 {product_name} 上的社群} bot {關於您在 {product_name} 上的機器人的通知} other {關於您 {product_name} 帳號的通知}}}}",
 		"why_body": "{facts}",
 		"why_title": "原因"
 	},
 	"gift_chargeback_notification": {
 		"billing_resumed": "由於禮物已被移除，您的{plan, select, yearly {年付} other {月付}} {premiumName} 訂閱從今天起恢復計費。您會另外收到這筆扣款的收據。您可以隨時在「管理訂閱」中取消。",
-		"footer_reason": "您收到此電子郵件是因為您的 {product_name} 帳號已移除權益。",
-		"intro": "您兌換的一組禮物碼的付款已被撤銷，因此我們移除了它為您帳號新增的權益。",
+		"footer_reason": "您收到此電子郵件是因為您的 {product_name} 帳號已移除福利。",
+		"intro": "您兌換的一組禮物代碼的付款已被撤銷，因此我們移除了它為您帳號新增的福利。",
 		"manage_cta": "管理您的訂閱",
-		"note": "{reply, select, yes {如果您認為這是誤會，請回覆這封電子郵件，告訴我們您所知道的這組禮物碼相關情況。} other {如果您認為這是誤會，請聯絡此實例的管理員，告訴他們您所知道的這組禮物碼相關情況。}}",
+		"note": "{reply, select, yes {如果您認為這是誤會，請回覆這封電子郵件，告訴我們您所知道的這組禮物代碼相關情況。} other {如果您認為這是誤會，請聯絡此實例的管理員，告訴他們您所知道的這組禮物代碼相關情況。}}",
 		"signoff": "{product_name} 團隊",
-		"subject": "我們移除了您兌換的 {product_name} 禮物所提供的權益"
+		"subject": "我們移除了您兌換的 {product_name} 禮物所提供的福利"
 	},
 	"harvest_completed": {
 		"cta": "下載您的資料",
@@ -280,16 +280,16 @@
 	},
 	"operator_pass_offer_accepted": {
 		"footer_reason": "您收到這封電子郵件，是因為您在 {product_name} 上轉交了一張 Operator Pass。",
-		"intro": "{recipientName} 已接受您轉交的 Operator Pass，它現在在對方的帳號上。",
+		"intro": "{recipientName} 已接受您轉交的 Operator Pass，通行證現在已轉到對方的帳號。",
 		"note": "{remainingCount, plural, =0 {{visionary, select, yes {您已經沒有剩餘的 Operator Pass，因此您的徽章和牆上的展示已移除。您透過 Visionary 保留 '#'operators。} other {您已經沒有剩餘的 Operator Pass，因此您的徽章、牆上的展示和 '#'operators 已移除。}}} =1 {您還剩 # 張 Operator Pass。} other {您還剩 # 張 Operator Pass。}}",
 		"signoff": "{product_name} 團隊",
 		"subject": "{recipientName} 接受了您轉交的 {product_name} Operator Pass"
 	},
 	"operator_pass_offer_ended": {
 		"footer_reason": "您收到這封電子郵件，是因為 {product_name} 上的一筆 Operator Pass 轉交。",
-		"intro": "{ended, select, withdrawn {{otherName} 收回了向您轉交的 Operator Pass。} declined {{otherName} 拒絕了您轉交的 Operator Pass。通行證仍然是您的，您可以轉交給其他人。} unavailable {{otherName} 已無法接收您轉交的 Operator Pass，因此我們取消了這次轉交。通行證仍然是您的，您可以轉交給其他人。} other {您與 {otherName} 之間的 Operator Pass 轉交已取消，因為該通行證或其付款發生了變化。}}",
+		"intro": "{ended, select, withdrawn {{otherName} 收回了向您轉交的 Operator Pass。} declined {{otherName} 拒絕了您轉交的 Operator Pass。通行證仍然是您的，您可以轉交給其他人。} unavailable {{otherName} 已無法接收您轉交的 Operator Pass，因此我們取消了這次轉交。通行證仍然是您的，您可以轉交給其他人。} other {您與 {otherName} 之間的 Operator Pass 轉交已取消，因為該通行證或其付款有所變更。}}",
 		"signoff": "{product_name} 團隊",
-		"subject": "{ended, select, withdrawn {一次 Operator Pass 轉交已被收回} declined {您的 Operator Pass 轉交已被拒絕} other {一次 Operator Pass 轉交已取消}}"
+		"subject": "{ended, select, withdrawn {Operator Pass 轉交已被收回} declined {您的 Operator Pass 轉交遭到拒絕} other {Operator Pass 轉交已取消}}"
 	},
 	"operator_pass_offer_received": {
 		"cta": "查看轉交",
@@ -309,7 +309,7 @@
 		"footer_reason": "您收到這封電子郵件，是因為我們對您 {product_name} 帳號上的 Operator Pass 做出了一項決定。",
 		"ground": "Operator Pass 條款第 8 條",
 		"ground_label": "依據",
-		"intro": "{scope, select, permanent {我們已永久移除您 Operator Pass 附帶的內容。} other {我們已移除您 Operator Pass 附帶的內容，直到 {until, date, long}，屆時這些內容將恢復，並保留您原本的徽章日期。}}{visionary, select, yes {這包括您在牆上的展示、徽章和 Operator 身分組。您透過 Visionary 保留 #operators。} other {這包括您在牆上的展示、徽章、#operators 和 Operator 身分組。}} {cause, select, dispute {該筆付款對應的證書頁面已作廢，無法再下載，您的 {product_name} 帳號也沒有被停權。} other {您的 Operator 證書不受影響，您的 {product_name} 帳號也沒有被停權。}}",
+		"intro": "{scope, select, permanent {我們已永久移除您 Operator Pass 附帶的內容。} other {我們已移除您 Operator Pass 附帶的內容，直到 {until, date, long}，屆時這些內容將恢復，並保留您原本的徽章日期。}}{visionary, select, yes {這包括您在牆上的展示、徽章和 Operator 身分組。您透過 Visionary 保留 #operators。} other {這包括您在牆上的展示、徽章、#operators 和 Operator 身分組。}}{cause, select, dispute {該筆付款對應的證書頁面已作廢，無法再下載，您的 {product_name} 帳號也沒有被停權。} other {您的 Operator 證書不受影響，您的 {product_name} 帳號也沒有被停權。}}",
 		"redress_v2": "您也可以向法院提起訴訟。如果您在歐盟，可以向經認證的<dsa>庭外爭議解決機構</dsa>尋求協助。如果您是歐盟或歐洲經濟區的消費者，也可以將爭議提交給瑞典國家消費者爭議委員會（<arn>ARN</arn>，Box 174, 101 23 Stockholm, 瑞典）。",
 		"refund": "{scope, select, permanent {在此決定有效期間，您無法再次購買或接收 Operator Pass。} other {}}{cause, select, dispute {由於您的銀行已將款項退還給您，此次移除不予退款。} other {由於 Operator Pass 的價格只用於支付 Operator 證書，而移除隨通行證附帶的內容不會使證書失效，此次移除不予退款。}}如果您仍可撤回您的購買，此決定不會影響這項權利。",
 		"rule_label": "規則",
@@ -336,14 +336,14 @@
 		"product_label": "產品",
 		"product_value": "{quantity, plural, other {# 張 {product_name} Operator Pass}}",
 		"reverse_charge": "由於適用反向課稅機制，本次未收取增值稅。詳情請見發票。",
-		"seller": "賣方：Fluxer Platform AB，559537-3993，登記所在地Haninge，瑞典，{sellerAddress}，{sellerPhone}，<mail>{sellerEmail}</mail>",
+		"seller": "賣方為 Fluxer Platform AB（公司登記號碼 559537-3993），是一家登記所在地位於 Haninge 的瑞典公司。您可以寫信至 {sellerAddress}、致電 {sellerPhone}，或寄電子郵件至 <mail>{sellerEmail}</mail> 與我們聯絡。",
 		"signoff": "{product_name} 團隊",
 		"subject": "您的 {product_name} Operator Pass 收據",
 		"tax_added": "價格另加稅金 {taxFormatted}",
 		"tax_included": "含稅金 {taxFormatted}",
 		"terms_link": "Operator Pass 條款",
 		"unit_price_label": "每張通行證價格",
-		"wall_status_v2": "{wallOptOut, select, yes {您選擇不在 Operators 牆上展示。您可以在<settings>設定</settings>中加入您的名字。} other {您以 {wallName} 的名稱展示在 Operators 牆上。您可以在<settings>設定</settings>中變更名稱或離開牆。}}",
+		"wall_status_v2": "{wallOptOut, select, yes {您選擇不在 Operators 牆上展示。您可以在<settings>設定</settings>中加入您的名字。} other {您以 {wallName} 的名稱展示在 Operators 牆上。您可以在<settings>設定</settings>中變更名稱，或選擇不在牆上展示。}}",
 		"withdrawal_country_v4": "{quantity, plural, =1 {付款時，您要求我們立即交付證書。條款第 12 節適用於您的這筆購買，因此即使證書已交付，截至 {withdrawalEndsOn, date, long}（含當日），您仍可撤回並獲得全額退款。請在<settings>設定</settings>中使用購買項目旁的「在此處撤回合約」。} other {付款時，您要求我們立即交付所有證書。條款第 12 節適用於您的這筆購買，因此即使證書已交付，截至 {withdrawalEndsOn, date, long}（含當日），您仍可撤回並獲得全額退款。請在<settings>設定</settings>中使用購買項目旁的「在此處撤回合約」。}}",
 		"withdrawal_heading": "撤回權",
 		"withdrawal_waiver": "{quantity, plural, =1 {付款時，您要求我們立即交付證書，並確認證書一經交付您便失去撤回權。我們會在寄出這封電子郵件後立即交付證書，因此從那時起您無法撤回購買。如果證書未交付或有瑕疵，法律仍會保護您。} other {付款時，您要求我們立即交付證書，並確認證書一經交付您便失去撤回權。我們會在寄出這封電子郵件後立即交付所有證書，因此從那時起您無法撤回購買。如果有證書未交付或有瑕疵，法律仍會保護您。}}"
@@ -351,7 +351,7 @@
 	"operator_pass_purchase_refused": {
 		"credit_note_attached": "這筆退款的折讓單已以 PDF 檔附在此電子郵件中。",
 		"credit_note_label": "折讓單編號",
-		"footer_reason": "您收到這封電子郵件，是因為您在 {product_name} 帳號上支付了一張 Operator Pass。",
+		"footer_reason": "您收到這封電子郵件，是因為您在 {product_name} 帳號上為 Operator Pass 付款。",
 		"intro": "我們未能儲存您的購買資訊，因此沒有為您建立證書，並已將全部款項退回您使用的付款方式。您可以再次購買 Operator Pass。",
 		"note": "退款通常會在 5 到 10 個工作天內顯示在您的銀行帳戶中。您帳號中的其他內容不會改變。",
 		"signoff": "{product_name} 團隊",
@@ -365,7 +365,7 @@
 		"footer_reason": "您收到此電子郵件是因為您在 {product_name} 上的一筆 Operator Pass 付款已退款。",
 		"heading": "退款 {amountFormatted}",
 		"intro": "我們已將您購買 Operator Pass 所付款項中的 {amountFormatted} 退還至您付款時使用的卡片或帳戶。實際入帳時間視您的銀行而定，通常需要 5 到 10 個工作天。",
-		"lead": "{delivered, select, no {我們尚未向您交付證書，因此您帳戶中的其他內容不會改變。} other {{passCount, plural, =0 {這筆退款沒有終止您的任何通行證，因此您帳戶中的其他內容不會改變。} other {{passCount, plural, =1 {通行證已終止。} other {# 張通行證已終止。}}{lastPass, select, yes {{visionary, select, yes {您的徽章和牆上展示也隨之終止。您透過 Visionary 保留 '#'operators。} other {您的徽章、牆上展示和 '#'operators 也隨之終止。}}} other {您的其他通行證不受影響。}}}}}}",
+		"lead": "{delivered, select, no {我們尚未向您交付證書，因此您帳號中的其他內容不會改變。} other {{passCount, plural, =0 {這筆退款沒有終止您的任何通行證，因此您帳號中的其他內容不會改變。} other {{passCount, plural, =1 {通行證已終止。} other {# 張通行證已終止。}}{lastPass, select, yes {{visionary, select, yes {您的徽章和牆上展示也隨之終止。您透過 Visionary 保留 '#'operators。} other {您的徽章、牆上展示和 '#'operators 也隨之終止。}}} other {您的其他通行證不受影響。}}}}}}",
 		"note": "{reply, select, yes {對這筆退款有疑問嗎？請回覆此電子郵件。} other {如果您對這筆退款有疑問，請聯絡此實例的管理員。}}",
 		"order_date_label": "訂單日期",
 		"order_date_value": "{orderDate, date, long}",
@@ -404,7 +404,7 @@
 		"subject": "您的 {product_name} Operator 證書",
 		"terms_attached": "您所接受的 Operator Pass 條款（版本 {termsVersion}）已以 PDF 附上。",
 		"terms_link": "Operator Pass 條款",
-		"wall_line": "{wallOptOut, select, yes {您選擇不在 Operators 牆上展示。您可以在<settings>設定</settings>中加入您的名字。} other {您以 {wallName} 的名稱展示在 Operators 牆上。您可以在<settings>設定</settings>中變更名稱或離開牆。}}"
+		"wall_line": "{wallOptOut, select, yes {您選擇不在 Operators 牆上展示。您可以在<settings>設定</settings>中加入您的名字。} other {您以 {wallName} 的名稱展示在 Operators 牆上。您可以在<settings>設定</settings>中變更名稱，或選擇不在牆上展示。}}"
 	},
 	"operator_pass_wall_hidden": {
 		"appeal_body_v2": "{reply, select, yes {請在 60 天內回覆這封電子郵件，告訴我們您不同意的理由。申訴不收費用，由我們團隊的人員閱讀並作出決定。} other {請在 60 天內聯絡此實例的管理員，告訴他們您不同意的理由。}}",
@@ -430,13 +430,13 @@
 		"footer_reason": "您收到這封電子郵件，是因為我們對您在 {product_name} Operators 牆上的展示做出了一項決定。",
 		"ground": "Operator Pass 條款第 3.1 條",
 		"ground_label": "依據",
-		"intro": "{target, select, avatar {我們已從 Operators 牆上移除您的大頭貼。} both {我們已從 Operators 牆上移除您的名字和大頭貼。} other {我們已從 Operators 牆上移除您的名字。}}{shown, select, previous {牆上會顯示您之前的名字和大頭貼。} other {在您提交新的之前，牆上會顯示 Operator 一詞和預設大頭貼。}}您在牆上的位置、大小和徽章都保持不變，您的購買也不受影響。",
+		"intro": "{target, select, avatar {我們已從 Operators 牆上移除您的頭像。} both {我們已從 Operators 牆上移除您的名字和頭像。} other {我們已從 Operators 牆上移除您的名字。}}{shown, select, previous {牆上會顯示您之前的名字和頭像。} other {在您提交新的內容之前，牆上會顯示「Operator」字樣和預設頭像。}}您在牆上的位置、大小和徽章都保持不變，您的購買也不受影響。",
 		"next": "您可以在<settings>設定</settings>中送出新的名字或頭像。",
 		"reason_label": "原因",
 		"reason_value": "{reason, select, impersonation {冒充他人} rights {未經授權使用名字或圖片} age_suitability {不適合年齡較小的使用者} other {違反社群規範}}",
 		"redress_v2": "您也可以向法院提起訴訟。如果您在歐盟，可以向經認證的<dsa>庭外爭議解決機構</dsa>尋求協助。如果您是歐盟或歐洲經濟區的消費者，也可以將爭議提交給瑞典國家消費者爭議委員會（<arn>ARN</arn>，Box 174, 101 23 Stockholm, 瑞典）。",
 		"signoff": "{product_name} 團隊",
-		"subject": "我們已從 {product_name} Operators 牆上移除您的名字或大頭貼"
+		"subject": "我們已從 {product_name} Operators 牆上移除您的名字或頭像"
 	},
 	"operator_pass_wall_quote_cleared": {
 		"appeal_body_v2": "{reply, select, yes {請在 60 天內回覆這封電子郵件，告訴我們您不同意的理由。申訴不收費用，由我們團隊的人員閱讀並作出決定。} other {請在 60 天內聯絡此實例的管理員，告訴他們您不同意的理由。}}",
@@ -446,13 +446,13 @@
 		"footer_reason": "您收到這封電子郵件，是因為我們對您在 {product_name} Operators 牆上的展示做出了一項決定。",
 		"ground": "服務條款第 6.2 條",
 		"ground_label": "依據",
-		"intro": "我們已從您在 Operators 牆上的位置移除這句話。您的位置的其餘部分保持不變，您的徽章和購買也不受影響。",
-		"next": "您可以在<settings>設定</settings>中新增新的一句話，內容需要符合社群規範。",
+		"intro": "我們已從您在 Operators 牆上的展示中移除引言。展示的其餘內容保持不變，您的徽章和購買也不受影響。",
+		"next": "您可以在<settings>設定</settings>中新增符合社群規範的新引言。",
 		"reason_label": "原因",
 		"reason_value": "{reason, select, impersonation {冒充他人} rights {未經授權使用他人的文字} age_suitability {不適合年齡較小的使用者} other {違反社群規範}}",
 		"redress_v2": "您也可以向法院提起訴訟。如果您在歐盟，可以向經認證的<dsa>庭外爭議解決機構</dsa>尋求協助。如果您是歐盟或歐洲經濟區的消費者，也可以將爭議提交給瑞典國家消費者爭議委員會（<arn>ARN</arn>，Box 174, 101 23 Stockholm, 瑞典）。",
 		"signoff": "{product_name} 團隊",
-		"subject": "我們已從 {product_name} Operators 牆上移除您的一句話"
+		"subject": "我們已從 {product_name} Operators 牆上移除您的引言"
 	},
 	"operator_pass_welcome": {
 		"badge_line": "您的徽章已顯示在個人檔案上。您可以在<settings>設定</settings>中隱藏它。",
@@ -469,7 +469,7 @@
 		"signoff": "{founderName} 和 {product_name} 團隊",
 		"subject": "您的 {product_name} Operator 證書",
 		"terms_link": "Operator Pass 條款",
-		"wall_line_v2": "{wallOptOut, select, yes {您選擇不在 Operators 牆上展示。您可以在<settings>設定</settings>中加入您的名字。} other {您以 {wallName} 的名稱展示在 Operators 牆上。您可以在<settings>設定</settings>中變更名稱或離開牆。}}"
+		"wall_line_v2": "{wallOptOut, select, yes {您選擇不在 Operators 牆上展示。您可以在<settings>設定</settings>中加入您的名字。} other {您以 {wallName} 的名稱展示在 Operators 牆上。您可以在<settings>設定</settings>中變更名稱，或選擇不在牆上展示。}}"
 	},
 	"operator_pass_withdrawal_receipt": {
 		"credit_note_attached": "這筆退款的折讓單已以 PDF 檔附在此電子郵件中。",
@@ -482,7 +482,7 @@
 		"order_date_label": "訂單日期",
 		"order_date_value": "{orderDate, date, long}",
 		"order_number_label": "訂單編號",
-		"refund": "{refund, select, dispute {您的銀行先就這筆購買提出了付款爭議，因此我們接受了該爭議，您的銀行會將全額 {amountFormatted} 退還給您。} already {這筆購買的 {amountFormatted} 我們先前已退還至您的付款方式，因此無需再次退款。} other {我們已開始將全額 {amountFormatted} 退還至您的付款方式。退款通常會在 5 到 10 個工作天內顯示在您的銀行帳戶中。}}{delivered, select, no {我們尚未向您交付證書，因此您帳戶中的其他內容不會改變。} other {{passCount, plural, =1 {通行證已終止。} other {# 張通行證已終止。}}{lastPass, select, yes {{visionary, select, yes {您的徽章和牆上展示也隨之終止。您透過 Visionary 保留 #operators。} other {您的徽章、牆上展示和 #operators 也隨之終止。}}} other {您的其他通行證不受影響。}}}}",
+		"refund": "{refund, select, dispute {您的銀行先就這筆購買提出了付款爭議，因此我們接受了該爭議，您的銀行會將全額 {amountFormatted} 退還給您。} already {這筆購買的 {amountFormatted} 我們先前已退還至您的付款方式，因此無需再次退款。} other {我們已開始將全額 {amountFormatted} 退還至您的付款方式。退款通常會在 5 到 10 個工作天內顯示在您的銀行帳戶中。}}{delivered, select, no {我們尚未向您交付證書，因此您帳號中的其他內容不會改變。} other {{passCount, plural, =1 {通行證已終止。} other {# 張通行證已終止。}}{lastPass, select, yes {{visionary, select, yes {您的徽章和牆上展示也隨之終止。您透過 Visionary 保留 #operators。} other {您的徽章、牆上展示和 #operators 也隨之終止。}}} other {您的其他通行證不受影響。}}}}",
 		"refund_label": "退款金額",
 		"signoff": "{product_name} 團隊",
 		"subject": "我們已收到您的 {product_name} Operator Pass 撤回申請"
@@ -570,7 +570,7 @@
 		"charge_line": "{method, select, card {我們將於 {trialEnd, date, long} 從您末四碼為 {last4} 的 {brand} 卡扣款 {tax, select, yes {{amountFormatted}} other {{amountFormatted}（另加適用稅金）}}，之後您的訂閱將每{plan, select, yearly {年} other {月}}自動續訂，直到您取消為止。} plain_card {我們將於 {trialEnd, date, long} 從您末四碼為 {last4} 的卡片扣款 {tax, select, yes {{amountFormatted}} other {{amountFormatted}（另加適用稅金）}}，之後您的訂閱將每{plan, select, yearly {年} other {月}}自動續訂，直到您取消為止。} named {我們將於 {trialEnd, date, long} 透過 {methodName} 扣款 {tax, select, yes {{amountFormatted}} other {{amountFormatted}（另加適用稅金）}}，之後您的訂閱將每{plan, select, yearly {年} other {月}}自動續訂，直到您取消為止。} other {我們將於 {trialEnd, date, long} 從您已儲存的付款方式扣款 {tax, select, yes {{amountFormatted}} other {{amountFormatted}（另加適用稅金）}}，之後您的訂閱將每{plan, select, yearly {年} other {月}}自動續訂，直到您取消為止。}}",
 		"cta": "管理您的訂閱",
 		"footer_reason": "您收到此電子郵件是因為您兌換了 {premiumName} 禮物。",
-		"heading": "禮物已兌換",
+		"heading": "禮物已加入",
 		"intro": "您獲贈的使用期間已加入。在 {trialEnd, date, long} 之前，您的{plan, select, yearly {年付} other {月付}} {premiumName} 訂閱不會向您收費。",
 		"lead": "在此之前，您可以隨時在「管理訂閱」中取消。",
 		"preheader": "在 {trialEnd, date, long} 之前不會向您收費",
@@ -595,7 +595,7 @@
 	},
 	"plutonium_payment_receipt": {
 		"consent_body": "您在 {consentAt, date, long} 要求立即開始使用 {premiumName}。您同時確認了解，在撤回期結束前您仍可撤回並獲得全額退款。",
-		"consent_body_pro_rata": "{gift, select, yes {你在 {consentAt, date, long} 要求這份 {premiumName} 禮物在兌換碼被兌換後立即開始。你也確認，如果在 14 天內撤回，兌換碼尚未兌換時你將獲得全額退款，否則需支付接收者擁有 {premiumName} 的天數費用，其餘部分退還給你。} other {你在 {consentAt, date, long} 要求立即開通 {premiumName}。你也確認，如果在 14 天內撤回，需支付擁有 {premiumName} 的天數費用，其餘部分退還給你，並且在服務完全提供後將無法再撤回。}}",
+		"consent_body_pro_rata": "{gift, select, yes {您在 {consentAt, date, long} 要求這份 {premiumName} 禮物在兌換後立即開始。您也確認，如果在 14 天內撤回，禮物代碼尚未兌換時可獲得全額退款，已兌換時則需支付接收者擁有 {premiumName} 天數的費用，其餘部分退還給您。} other {您在 {consentAt, date, long} 要求立即開通 {premiumName}。您也確認，如果在 14 天內撤回，需支付您擁有 {premiumName} 天數的費用，其餘部分退還給您，且服務完全提供後便無法再撤回。}}",
 		"consent_title": "立即開始",
 		"credit_label": "已折抵金額",
 		"date_label": "付款日期",
@@ -611,22 +611,22 @@
 		"manage_link": "管理您的訂閱",
 		"paid_label": "實付金額",
 		"period_label": "服務期間",
-		"period_value": "{periodStart, date, long}至\n{periodEnd, date, long}",
+		"period_value": "{periodStart, date, long} 至\n{periodEnd, date, long}",
 		"plan_body": "{renewal, select, month {{premiumName} 將每月自動續訂，費用為 {renewalFormatted}{renewalTax, select, included {（含稅）} added {（另加稅金）} other {}}，直到您取消為止。您可以隨時在 {premiumName} 頁面的「管理訂閱」中取消，取消後仍可使用 {premiumName} 至已付費期間結束。} year {{premiumName} 將每年自動續訂，費用為 {renewalFormatted}{renewalTax, select, included {（含稅）} added {（另加稅金）} other {}}，直到您取消為止。您可以隨時在 {premiumName} 頁面的「管理訂閱」中取消，取消後仍可使用 {premiumName} 至已付費期間結束。} other {這份禮物為一次性購買，不會自動續訂，也不會再收取任何費用。}}",
 		"plan_title": "{gift, select, yes {您的禮物} other {您的訂閱}}",
 		"preheader": "已為 {premiumName} 支付 {amountFormatted}",
 		"product_label": "產品",
 		"product_value": "{plan, select, monthly {{premiumName}，月付} yearly {{premiumName}，年付} gift_1_month {{premiumName} 禮物，1 個月} gift_1_year {{premiumName} 禮物，1 年} other {{premiumName}}}",
 		"reverse_charge": "由於適用反向課稅機制，本次未收取增值稅。詳情請見發票。",
-		"seller": "賣方：Fluxer Platform AB，559537-3993，登記所在地Haninge，瑞典，{sellerAddress}，<mail>{sellerEmail}</mail>",
+		"seller": "賣方為 Fluxer Platform AB（公司登記號碼 559537-3993），是一家登記所在地位於 Haninge 的瑞典公司。您可以寫信至 {sellerAddress}，或寄電子郵件至 <mail>{sellerEmail}</mail> 與我們聯絡。",
 		"signoff": "{product_name} 團隊",
 		"subject": "{gift, select, yes {您的 {product_name} {premiumName} 禮物收據} other {您的 {product_name} {premiumName} 收據}}",
 		"tax_added": "價格另加稅金 {taxFormatted}",
 		"tax_included": "含稅金 {taxFormatted}",
 		"total_label": "總計",
 		"withdrawal_body": "截至 {withdrawalEndsAt, date, long} 為止，您都可以撤回此次購買並獲得全額退款。如要撤回，請回覆此電子郵件或寄信至 <mail>{sellerEmail}</mail>，告知我們您要撤回。您可以使用下方的表單，但並非必要。",
-		"withdrawal_body_brazil": "你可以在 {withdrawalEndsAt, date, long} 阿克里時間 23:59（UTC-5）之前撤回本次購買，並取回你支付的全部款項。如需撤回，請回覆此郵件或寫信至 <mail>{sellerEmail}</mail> 告知我們你要撤回。你可以使用下方表格，但並非必要。{gift, select, yes {} other {同一方案的自動續訂不會開始新的撤回期。}}",
-		"withdrawal_body_pro_rata": "你可以在 {withdrawalEndsAt, date, long} 之前撤回本次購買。{gift, select, yes {如果兌換碼尚未兌換，我們會退還你支付的全部金額。如果已兌換，我們會退還你支付的金額，扣除接收者擁有 {premiumName} 的天數對應的部分。} other {撤回後，我們會退還你支付的金額，扣除你擁有 {premiumName} 的天數對應的部分。同一方案自動續訂不會開啟新的撤回期。}}如需撤回，請在「使用者設定」的 {premiumName} 頁面使用「在此處撤回合約」，或回覆此郵件或寫信至 <mail>{sellerEmail}</mail> 告知我們你要撤回。你可以使用下方表格，但並非必要。",
+		"withdrawal_body_brazil": "您可以在 {withdrawalEndsAt, date, long} 阿克里時間 23:59（UTC-5）之前撤回本次購買，並取回您支付的全部款項。如要撤回，請回覆此電子郵件或寄信至 <mail>{sellerEmail}</mail>，告知我們您要撤回。您可以使用下方的表單，但並非必要。{gift, select, yes {} other {同一方案的自動續訂不會開始新的撤回期。}}",
+		"withdrawal_body_pro_rata": "您可以在 {withdrawalEndsAt, date, long} 之前撤回本次購買。{gift, select, yes {如果禮物代碼尚未兌換，我們會退還您支付的全部金額。如果已兌換，我們會退還您支付的金額，並扣除接收者擁有 {premiumName} 天數所對應的部分。} other {撤回後，我們會退還您支付的金額，並扣除您擁有 {premiumName} 天數所對應的部分。同一方案自動續訂不會開始新的撤回期。}}如要撤回，請在「使用者設定」的 {premiumName} 頁面使用「在此處撤回合約」，或回覆此電子郵件，或寄信至 <mail>{sellerEmail}</mail> 告知我們您要撤回。您可以使用下方的表單，但並非必要。",
 		"withdrawal_note": "應用程式內的退款按鈕在付款後 3 天內可用。這是撤回權之外額外提供的服務，不會取代撤回權。",
 		"withdrawal_title": "撤回權"
 	},
@@ -676,7 +676,7 @@
 		"reference_label": "參考編號",
 		"refund": "{gift, select, yes {禮物代碼將失效，如果已有人兌換，對方會失去禮物代碼提供的時間。} other {您的 {premiumName} 訂閱已結束，不會續訂。}}{refund, select, manual {我們無法自動啟動 {amountFormatted} 的退款，因此我們團隊的成員會{brazil, select, yes {立即} other {在 14 天內}}將這筆款項退回您付款時使用的卡片或帳戶。} other {我們已向您付款時使用的卡片或帳戶啟動 {amountFormatted} 的全額退款。實際入帳時間視您的銀行而定，通常需要 5 到 10 個工作天。}}退款完成後，我們會以電子郵件寄送折讓單給您。",
 		"refund_label": "退款金額",
-		"refund_pro_rata": "{gift, select, yes {禮物代碼將失效，如果已有人兌換，對方會失去禮物代碼提供的時間。} other {您的 {premiumName} 訂閱已結束，不會續訂。}}{refund, select, manual {我們無法自動啟動 {amountFormatted} 的退款，因此我們團隊的成員會{brazil, select, yes {立即} other {在 14 天內}}將這筆款項退回您付款時使用的卡片或帳戶。} other {我們已開始將 {amountFormatted} 退還到你付款所用的卡或帳戶。這是你支付的金額扣除 {premiumName} 使用天數對應的部分。視你的銀行而定，通常需要 5 到 10 個工作天才會顯示。}}退款完成後，我們會以電子郵件寄送折讓單給您。",
+		"refund_pro_rata": "{gift, select, yes {禮物代碼將失效，如果已有人兌換，對方會失去禮物代碼提供的時間。} other {您的 {premiumName} 訂閱已結束，不會續訂。}}{refund, select, manual {我們無法自動啟動 {amountFormatted} 的退款，因此我們團隊的成員會{brazil, select, yes {立即} other {在 14 天內}}將這筆款項退回您付款時使用的卡片或帳戶。} other {我們已向您付款時使用的卡片或帳戶啟動 {amountFormatted} 的退款，金額為您支付的款項扣除 {premiumName} 使用天數所對應的部分。實際入帳時間視您的銀行而定，通常需要 5 到 10 個工作天。}}退款完成後，我們會以電子郵件寄送折讓單給您。",
 		"signoff": "{product_name} 團隊",
 		"statement_label": "您的撤回申請",
 		"statement_value": "{gift, select, yes {我撤回我於 {purchasedAt, date, long} 購買的 {premiumName} 禮物的契約。} other {我撤回我於 {purchasedAt, date, long} 付款的 {premiumName} 訂閱的契約。}}",
@@ -686,16 +686,16 @@
 		"expiry": "此驗證碼將在 {minutes, plural, other {# 分鐘}}後到期。",
 		"footer_reason": "您收到這封電子郵件，是因為您的 {product_name} 帳號有變更需要驗證碼。",
 		"intro": "在變更帳號之前，請在應用程式中輸入此驗證碼，確認是您本人。",
-		"note": "請勿與任何人分享此驗證碼。{product_name} 工作人員絕不會向您索取此驗證碼。如果您沒有要求此驗證碼，可能有人正在使用您的帳號。請登出所有工作階段並檢查帳號安全性。",
+		"note": "請勿與任何人分享此驗證碼。{product_name} 員工絕不會向您索取此驗證碼。如果您沒有要求此驗證碼，可能有人正在使用您的帳號。請登出所有工作階段並檢查帳號安全性。",
 		"signoff": "{product_name} 團隊",
 		"subject": "您的 {product_name} 驗證碼"
 	},
 	"registration_approved": {
 		"cta": "登入 {product_name}",
 		"footer_reason": "您收到此電子郵件，是因為此電子郵件地址用於 {product_name} 帳號。",
-		"intro": "你在 {product_name} 的註冊已獲核准。現在可以登入了。",
+		"intro": "您在 {product_name} 的註冊已獲核准。現在可以登入了。",
 		"signoff": "{product_name} 團隊",
-		"subject": "你的 {product_name} 帳號已獲核准"
+		"subject": "您的 {product_name} 帳號已獲核准"
 	},
 	"registration_pending": {
 		"cta": "查看待審核的註冊",
@@ -736,7 +736,7 @@
 		"footer_reason": "您收到這封電子郵件，是因為有人要求使用此地址登入 {product_name}。",
 		"intro": "使用此驗證碼登入 {product_name}。",
 		"location_label": "要求自",
-		"note": "請勿與任何人分享此驗證碼。{product_name} 工作人員絕不會向您索取此驗證碼。如果您並未嘗試登入，可以忽略這封電子郵件。",
+		"note": "請勿與任何人分享此驗證碼。{product_name} 員工絕不會向您索取此驗證碼。如果您並未嘗試登入，可以忽略這封電子郵件。",
 		"signoff": "{product_name} 團隊",
 		"subject": "您的 {product_name} 登入驗證碼"
 	},
@@ -746,7 +746,7 @@
 		"footer_reason": "您收到這封電子郵件，是因為有人使用此地址要求建立 {product_name} 帳號。",
 		"intro": "使用此驗證碼完成建立您的 {product_name} 帳號。",
 		"location_label": "要求自",
-		"note": "請勿與任何人分享此驗證碼。{product_name} 工作人員絕不會向您索取此驗證碼。如果您並未嘗試建立帳號，可以忽略這封電子郵件。",
+		"note": "請勿與任何人分享此驗證碼。{product_name} 員工絕不會向您索取此驗證碼。如果您並未嘗試建立帳號，可以忽略這封電子郵件。",
 		"signoff": "{product_name} 團隊",
 		"subject": "您的 {product_name} 註冊驗證碼"
 	}
