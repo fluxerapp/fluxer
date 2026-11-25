@@ -15713,7 +15713,6 @@
 										"channel_id": {"$ref": "#/components/schemas/SnowflakeStringType"},
 										"channel_type": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/Int32Type"}]},
 										"channel_nsfw": {"nullable": true, "type": "boolean"},
-										"guild_nsfw_level": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/NSFWLevel"}]},
 										"recipient_ids": {
 											"maxItems": 100,
 											"type": "array",
@@ -15748,7 +15747,6 @@
 										"channel_id",
 										"channel_type",
 										"channel_nsfw",
-										"guild_nsfw_level",
 										"recipient_ids",
 										"recipients",
 										"last_message_id",
@@ -15776,7 +15774,6 @@
 										"channel_id": {"$ref": "#/components/schemas/SnowflakeStringType"},
 										"channel_type": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/Int32Type"}]},
 										"channel_nsfw": {"nullable": true, "type": "boolean"},
-										"guild_nsfw_level": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/NSFWLevel"}]},
 										"recipient_ids": {
 											"maxItems": 100,
 											"type": "array",
@@ -15811,7 +15808,6 @@
 										"channel_id",
 										"channel_type",
 										"channel_nsfw",
-										"guild_nsfw_level",
 										"recipient_ids",
 										"recipients",
 										"last_message_id",

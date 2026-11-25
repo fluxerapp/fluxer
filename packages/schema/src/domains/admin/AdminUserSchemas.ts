@@ -18,7 +18,6 @@ import {
 } from '@fluxer/schema/src/domains/admin/EnforcementSchemas';
 import {AdminProfileBadgeResponse} from '@fluxer/schema/src/domains/user/ProfileBadgeSchemas';
 import {CalendarDateType} from '@fluxer/schema/src/primitives/DateValidators';
-import {NSFWLevelSchema} from '@fluxer/schema/src/primitives/GuildValidators';
 import {createQueryIntegerType, QueryBooleanType} from '@fluxer/schema/src/primitives/QueryValidators';
 import {
 	createBitflagInt32Type,
@@ -243,7 +242,6 @@ const AdminUserDmChannelSchema = z.object({
 	channel_id: SnowflakeStringType,
 	channel_type: Int32Type.nullable(),
 	channel_nsfw: z.boolean().nullable(),
-	guild_nsfw_level: NSFWLevelSchema.nullable(),
 	recipient_ids: z.array(SnowflakeStringType).max(100),
 	recipients: z.array(AdminResolvedUserSchema).max(100),
 	last_message_id: SnowflakeStringType.nullable(),

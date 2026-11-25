@@ -30,6 +30,7 @@ import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {Logger} from '@app/api/Logger';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Guild} from '@app/api/models/Guild';
 import {describeReportFlowAnswers} from '@app/api/report/flows/ReportFlowRegistry';
 import {findReportReason, listReportReasons} from '@app/api/report/flows/ReportReasonCatalog';
 import type {IARMessageContext, IARSubmission} from '@app/api/report/ReportModels';
@@ -106,16 +107,23 @@ function staffOutcome(
 	}
 }
 
+interface ChannelContext {
+	nsfw: boolean | null;
+	contentWarningLevel: number;
+	contentWarningText: string | null;
+	guildId: GuildID | null;
+}
+
 interface ReportLookupCache {
-	channelNsfwByChannelId: Map<string, boolean | null>;
-	guildNsfwLevelByGuildId: Map<string, number | null>;
+	channelContextByChannelId: Map<string, ChannelContext | null>;
+	guildByGuildId: Map<string, Guild | null>;
 	reporterEmailByReporterId: Map<string, Promise<string | null>>;
 }
 
 function createReportLookupCache(): ReportLookupCache {
 	return {
-		channelNsfwByChannelId: new Map(),
-		guildNsfwLevelByGuildId: new Map(),
+		channelContextByChannelId: new Map(),
+		guildByGuildId: new Map(),
 		reporterEmailByReporterId: new Map(),
 	};
 }
@@ -381,16 +389,17 @@ export class AdminReportService {
 		if (report.reportedGuildNsfw !== null) {
 			reportedGuildNsfwLevel = report.reportedGuildNsfw ? 3 : 0;
 		} else {
-			reportedGuildNsfwLevel = await this.getGuildNsfwLevelForContext(
-				report.reportedChannelId,
-				report.reportedGuildId ?? report.guildContextId ?? null,
+			const channel = await this.getChannelContext(report.reportedChannelId, reportLookupCache);
+			const guild = await this.getGuild(
+				report.reportedGuildId ?? report.guildContextId ?? channel?.guildId ?? null,
 				reportLookupCache,
 			);
+			reportedGuildNsfwLevel = guild?.nsfwLevel ?? null;
 		}
 		const reportedChannelNsfw =
 			report.reportedChannelEffectiveNsfw !== null
 				? report.reportedChannelEffectiveNsfw
-				: await this.getChannelNsfwState(report.reportedChannelId, reportLookupCache);
+				: ((await this.getChannelContext(report.reportedChannelId, reportLookupCache))?.nsfw ?? null);
 		const baseResponse = {
 			report_id: report.reportId.toString(),
 			reporter_id: report.reporterId?.toString() ?? null,
@@ -450,7 +459,7 @@ export class AdminReportService {
 		if (!includeContext) {
 			return baseResponse;
 		}
-		const authorBotFlags = await this.getContextAuthorBotFlags(report, requestCache);
+		const authors = await this.getContextAuthors(report, requestCache);
 		const messageContext = (
 			await Promise.all(
 				(report.messageContext ?? []).map((message) =>
@@ -459,7 +468,7 @@ export class AdminReportService {
 						report.reportedChannelId ?? null,
 						report.reportedGuildId ?? report.guildContextId ?? null,
 						reportLookupCache,
-						authorBotFlags,
+						authors,
 					),
 				),
 			)
@@ -492,10 +501,10 @@ export class AdminReportService {
 		return email;
 	}
 
-	private async getContextAuthorBotFlags(
+	private async getContextAuthors(
 		report: IARSubmission,
 		requestCache: RequestCache,
-	): Promise<Map<string, boolean | null>> {
+	): Promise<Map<string, UserPartialResponse>> {
 		const authorIds = [
 			...new Set((report.messageContext ?? []).flatMap((message) => (message.authorId ? [message.authorId] : []))),
 		];
@@ -504,9 +513,9 @@ export class AdminReportService {
 		}
 		try {
 			const partials = await this.deps.userCacheService.getUserPartialResponses(authorIds, requestCache);
-			return new Map([...partials].map(([userId, partial]) => [userId.toString(), mapUserPartialBotFlag(partial)]));
+			return new Map([...partials].map(([userId, partial]) => [userId.toString(), partial]));
 		} catch (error) {
-			Logger.warn({reportId: report.reportId.toString(), error}, 'Failed to resolve author bot flags for report');
+			Logger.warn({reportId: report.reportId.toString(), error}, 'Failed to resolve context authors for report');
 			return new Map();
 		}
 	}
@@ -634,15 +643,16 @@ export class AdminReportService {
 		fallbackChannelId: ChannelID | null,
 		fallbackGuildId: GuildID | null,
 		reportLookupCache: ReportLookupCache,
-		authorBotFlags: Map<string, boolean | null>,
+		authors: Map<string, UserPartialResponse>,
 	) {
 		const channelId = message.channelId ?? fallbackChannelId;
 		if (!channelId) {
 			return null;
 		}
 		const authorId = (message.authorId ?? message.webhookId ?? 0n).toString();
-		const channelNsfw = await this.getChannelNsfwState(channelId, reportLookupCache);
-		const guildNsfwLevel = await this.getGuildNsfwLevelForContext(channelId, fallbackGuildId, reportLookupCache);
+		const channel = await this.getChannelContext(channelId, reportLookupCache);
+		const guild = await this.getGuild(fallbackGuildId ?? channel?.guildId ?? null, reportLookupCache);
+		const author = authors.get(authorId);
 		const attachments =
 			message.attachments && message.attachments.length > 0
 				? (
@@ -667,83 +677,68 @@ export class AdminReportService {
 		return {
 			id: message.messageId.toString(),
 			channel_id: channelId.toString(),
-			channel_nsfw: channelNsfw,
-			channel_content_warning_level: null,
-			channel_content_warning_text: null,
+			channel_nsfw: channel?.nsfw ?? null,
+			channel_content_warning_level: channel?.contentWarningLevel ?? null,
+			channel_content_warning_text: channel?.contentWarningText ?? null,
 			guild_id: fallbackGuildId ? fallbackGuildId.toString() : null,
-			guild_nsfw_level: guildNsfwLevel,
-			guild_nsfw: null,
-			guild_content_warning_level: null,
-			guild_content_warning_text: null,
+			guild_nsfw_level: guild?.nsfwLevel ?? null,
+			guild_nsfw: guild?.nsfw ?? null,
+			guild_content_warning_level: guild?.contentWarningLevel ?? null,
+			guild_content_warning_text: guild?.contentWarningText ?? null,
 			content: message.content ?? '',
 			timestamp: message.timestamp.toISOString(),
 			attachments,
 			author_id: authorId,
 			author_username: message.authorUsername,
-			author_global_name: null,
+			author_global_name: author?.global_name ?? null,
 			author_discriminator: message.authorDiscriminator.toString().padStart(4, '0'),
 			author_avatar: message.authorAvatarHash,
 			webhook_id: message.webhookId?.toString() ?? null,
-			author_bot: message.authorId ? (authorBotFlags.get(authorId) ?? null) : null,
+			author_bot: author ? mapUserPartialBotFlag(author) : null,
 			missing_attachments: message.missingAttachments
 				.filter((attachment) => attachment.attachment_id != null && attachment.filename)
 				.map(mapMissingAttachmentToResponse),
 		};
 	}
 
-	private async getChannelNsfwState(
+	private async getChannelContext(
 		channelId: ChannelID | null,
 		reportLookupCache: ReportLookupCache,
-	): Promise<boolean | null> {
+	): Promise<ChannelContext | null> {
 		if (!channelId) {
 			return null;
 		}
 		const channelIdString = channelId.toString();
-		if (reportLookupCache.channelNsfwByChannelId.has(channelIdString)) {
-			return reportLookupCache.channelNsfwByChannelId.get(channelIdString) ?? null;
+		if (reportLookupCache.channelContextByChannelId.has(channelIdString)) {
+			return reportLookupCache.channelContextByChannelId.get(channelIdString) ?? null;
 		}
 		const channel = await this.deps.channelRepository.channelData.findUnique(channelId);
 		const scope = channel
 			? await resolveNsfwScopeChannel(channel, (id) => this.deps.channelRepository.channelData.findUnique(id))
 			: null;
-		const channelNsfw = scope?.isNsfw ?? null;
-		reportLookupCache.channelNsfwByChannelId.set(channelIdString, channelNsfw);
-		return channelNsfw;
+		const context = channel
+			? {
+					nsfw: scope?.isNsfw ?? null,
+					contentWarningLevel: channel.contentWarningLevel,
+					contentWarningText: channel.contentWarningText,
+					guildId: channel.guildId ?? null,
+				}
+			: null;
+		reportLookupCache.channelContextByChannelId.set(channelIdString, context);
+		return context;
 	}
 
-	private async getGuildNsfwLevel(
-		guildId: GuildID | null,
-		reportLookupCache: ReportLookupCache,
-	): Promise<number | null> {
+	private async getGuild(guildId: GuildID | null, reportLookupCache: ReportLookupCache): Promise<Guild | null> {
 		if (!guildId) {
 			return null;
 		}
 		const guildIdString = guildId.toString();
-		if (reportLookupCache.guildNsfwLevelByGuildId.has(guildIdString)) {
-			return reportLookupCache.guildNsfwLevelByGuildId.get(guildIdString) ?? null;
+		if (reportLookupCache.guildByGuildId.has(guildIdString)) {
+			return reportLookupCache.guildByGuildId.get(guildIdString) ?? null;
 		}
 		const guild = await this.deps.guildRepository.findUnique(guildId);
-		const guildNsfwLevel = guild?.nsfwLevel ?? null;
-		reportLookupCache.guildNsfwLevelByGuildId.set(guildIdString, guildNsfwLevel);
-		return guildNsfwLevel;
-	}
-
-	private async getGuildNsfwLevelForContext(
-		channelId: ChannelID | null,
-		fallbackGuildId: GuildID | null,
-		reportLookupCache: ReportLookupCache,
-	): Promise<number | null> {
-		if (fallbackGuildId) {
-			return this.getGuildNsfwLevel(fallbackGuildId, reportLookupCache);
-		}
-		if (!channelId) {
-			return null;
-		}
-		const channel = await this.deps.channelRepository.channelData.findUnique(channelId);
-		if (!channel?.guildId) {
-			return null;
-		}
-		return this.getGuildNsfwLevel(channel.guildId, reportLookupCache);
+		reportLookupCache.guildByGuildId.set(guildIdString, guild);
+		return guild;
 	}
 
 	private async mapReportAttachmentToResponse(

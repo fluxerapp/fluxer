@@ -223,7 +223,6 @@ export class AdminUserService {
 					channel_id: summary.channelId.toString(),
 					channel_type: summary.channelType,
 					channel_nsfw: model?.isNsfw ?? null,
-					guild_nsfw_level: null,
 					recipient_ids: recipientIds.map((id) => id.toString()),
 					recipients: recipientIds
 						.map((id) => resolvedUsers.get(id))

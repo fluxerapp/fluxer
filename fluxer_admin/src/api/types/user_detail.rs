@@ -57,7 +57,6 @@ pub struct DmChannel {
     pub channel_id: String,
     pub channel_type: Option<i32>,
     pub channel_nsfw: Option<bool>,
-    pub guild_nsfw_level: Option<i32>,
     #[serde(default)]
     pub recipient_ids: Vec<String>,
     #[serde(default)]
