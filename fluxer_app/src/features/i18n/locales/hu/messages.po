@@ -25203,8 +25203,8 @@ msgstr "Senki sem nyithatja meg a személyes jegyzeteket, és nem írhat beléj�
 
 #. Description of the invite-only registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
-msgid "Nobody can sign up on their own. You make registration links in the admin panel and send them to people."
-msgstr "Senki sem regisztrálhat magától. Te hozol létre regisztrációs linkeket az adminisztrációs panelen, és elküldöd őket az embereknek."
+msgid "Nobody can sign up on their own. You make invite links in the admin panel and send them to people."
+msgstr ""
 
 #. Empty-state text in the channel and chat message reactions sheet.
 #: src/features/channel/components/MessageReactionsSheet.tsx
@@ -25879,7 +25879,7 @@ msgstr "Ezt a címkét csak moderátorok alkalmazhatják."
 msgid "Only moderators can use this tag"
 msgstr "Csak moderátorok használhatják ezt a címkét"
 
-#. Registration mode option where only people with a registration link can sign up.
+#. Registration mode option where only people with an invite link can sign up.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 msgid "Only people you invite"
 msgstr "Csak akiket meghívsz"
@@ -29496,8 +29496,8 @@ msgid "Registration is currently closed."
 msgstr "A regisztráció jelenleg szünetel."
 
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
-msgid "Registration is currently closed. Use a registration link from an admin to create an account."
-msgstr "A regisztráció jelenleg zárva van. Fiók létrehozásához használj egy admintól kapott regisztrációs hivatkozást."
+msgid "Registration is currently closed. Use an invite link from an admin to create an account."
+msgstr ""
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Regular button"
@@ -38943,8 +38943,8 @@ msgstr "Webhook létrehozásához nyisd meg ezt: <0>{channelWebhooksSettingsPath
 
 #. Last setup wizard screen when only invited people can sign up.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
-msgid "To let people in, make a registration link in the admin panel."
-msgstr "Ha be akarsz engedni embereket, hozz létre regisztrációs linket az adminisztrációs panelen."
+msgid "To let people in, make an invite link in the admin panel."
+msgstr ""
 
 #. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx

@@ -25203,8 +25203,8 @@ msgstr "Không ai có thể mở hoặc viết ghi chú cá nhân."
 
 #. Description of the invite-only registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
-msgid "Nobody can sign up on their own. You make registration links in the admin panel and send them to people."
-msgstr "Không ai tự đăng ký được. Bạn tạo liên kết đăng ký trong bảng quản trị rồi gửi cho mọi người."
+msgid "Nobody can sign up on their own. You make invite links in the admin panel and send them to people."
+msgstr ""
 
 #. Empty-state text in the channel and chat message reactions sheet.
 #: src/features/channel/components/MessageReactionsSheet.tsx
@@ -25879,7 +25879,7 @@ msgstr "Chỉ người kiểm duyệt mới có thể áp dụng thẻ này."
 msgid "Only moderators can use this tag"
 msgstr "Chỉ người kiểm duyệt mới có thể dùng thẻ này"
 
-#. Registration mode option where only people with a registration link can sign up.
+#. Registration mode option where only people with an invite link can sign up.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 msgid "Only people you invite"
 msgstr "Chỉ những người bạn mời"
@@ -29496,8 +29496,8 @@ msgid "Registration is currently closed."
 msgstr "Đăng ký hiện đã đóng."
 
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
-msgid "Registration is currently closed. Use a registration link from an admin to create an account."
-msgstr "Hiện tại đăng ký đang đóng. Hãy dùng liên kết đăng ký từ quản trị viên để tạo tài khoản."
+msgid "Registration is currently closed. Use an invite link from an admin to create an account."
+msgstr ""
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Regular button"
@@ -38943,8 +38943,8 @@ msgstr "Để tạo webhook, hãy mở <0>{channelWebhooksSettingsPath}</0>. B�
 
 #. Last setup wizard screen when only invited people can sign up.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
-msgid "To let people in, make a registration link in the admin panel."
-msgstr "Để cho mọi người vào, hãy tạo liên kết đăng ký trong bảng quản trị."
+msgid "To let people in, make an invite link in the admin panel."
+msgstr ""
 
 #. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx

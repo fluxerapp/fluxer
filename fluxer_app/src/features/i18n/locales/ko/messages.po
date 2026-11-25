@@ -25203,8 +25203,8 @@ msgstr "아무도 개인 노트를 열거나 쓸 수 없습니다."
 
 #. Description of the invite-only registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
-msgid "Nobody can sign up on their own. You make registration links in the admin panel and send them to people."
-msgstr "아무도 스스로 가입할 수 없습니다. 관리자 패널에서 가입 링크를 만들어 사람들에게 보내세요."
+msgid "Nobody can sign up on their own. You make invite links in the admin panel and send them to people."
+msgstr ""
 
 #. Empty-state text in the channel and chat message reactions sheet.
 #: src/features/channel/components/MessageReactionsSheet.tsx
@@ -25879,7 +25879,7 @@ msgstr "이 태그는 운영자만 적용할 수 있습니다."
 msgid "Only moderators can use this tag"
 msgstr "이 태그는 관리자만 사용할 수 있습니다."
 
-#. Registration mode option where only people with a registration link can sign up.
+#. Registration mode option where only people with an invite link can sign up.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 msgid "Only people you invite"
 msgstr "초대한 사람만"
@@ -29496,8 +29496,8 @@ msgid "Registration is currently closed."
 msgstr "현재 등록이 마감되었습니다."
 
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
-msgid "Registration is currently closed. Use a registration link from an admin to create an account."
-msgstr "현재 가입이 닫혀 있습니다. 계정을 만들려면 관리자가 제공한 가입 링크를 사용하세요."
+msgid "Registration is currently closed. Use an invite link from an admin to create an account."
+msgstr ""
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Regular button"
@@ -38943,8 +38943,8 @@ msgstr "웹훅을 생성하려면 <0>{channelWebhooksSettingsPath}</0>을(를) �
 
 #. Last setup wizard screen when only invited people can sign up.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
-msgid "To let people in, make a registration link in the admin panel."
-msgstr "사람들을 들어오게 하려면 관리자 패널에서 가입 링크를 만드세요."
+msgid "To let people in, make an invite link in the admin panel."
+msgstr ""
 
 #. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx

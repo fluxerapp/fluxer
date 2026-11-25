@@ -114,7 +114,7 @@ const REGISTRATION_TITLE_DESCRIPTOR = msg({
 	comment: 'Setup wizard title for the registration mode.',
 });
 const REGISTRATION_CLOSED_DESC_DESCRIPTOR = msg({
-	message: 'Nobody can sign up on their own. You make registration links in the admin panel and send them to people.',
+	message: 'Nobody can sign up on their own. You make invite links in the admin panel and send them to people.',
 	comment: 'Description of the invite-only registration mode in the setup wizard.',
 });
 const REGISTRATION_APPROVAL_DESC_DESCRIPTOR = msg({

@@ -430,7 +430,7 @@ export const AuthRegisterFormCore = observer(function AuthRegisterFormCore({
 			<div className={styles.form} data-flx={`${flx}.closed`}>
 				<div className={styles.registrationNotice} role="alert" data-flx={`${flx}.closed-notice`}>
 					{runtimeSnapshot.registration.admin_registration_urls_enabled ? (
-						<Trans>Registration is currently closed. Use a registration link from an admin to create an account.</Trans>
+						<Trans>Registration is currently closed. Use an invite link from an admin to create an account.</Trans>
 					) : (
 						<Trans>Registration is currently closed.</Trans>
 					)}

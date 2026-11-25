@@ -218,7 +218,7 @@ function removeStored(key: string): void {
 
 function finishDraftFromConfig(config: InstanceConfigResponse, stored: unknown): FinishDraft {
 	const draft: FinishDraft = {
-		registrationMode: config.registration.mode,
+		registrationMode: RegistrationModes.CLOSED,
 		singleCommunityEnabled: config.policy.single_community_enabled,
 		singleCommunityName: config.app_public.branding.product_name,
 		directMessagesDisabled: config.policy.direct_messages_disabled,

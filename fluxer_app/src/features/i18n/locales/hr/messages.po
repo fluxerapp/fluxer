@@ -25203,8 +25203,8 @@ msgstr "Nitko ne može otvoriti osobne bilješke niti pisati u njih."
 
 #. Description of the invite-only registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
-msgid "Nobody can sign up on their own. You make registration links in the admin panel and send them to people."
-msgstr "Nitko se ne može registrirati sam. Na administratorskoj ploči izrađujete poveznice za registraciju i šaljete ih ljudima."
+msgid "Nobody can sign up on their own. You make invite links in the admin panel and send them to people."
+msgstr ""
 
 #. Empty-state text in the channel and chat message reactions sheet.
 #: src/features/channel/components/MessageReactionsSheet.tsx
@@ -25879,7 +25879,7 @@ msgstr "Ovu oznaku mogu dodati ili ukloniti samo moderatori."
 msgid "Only moderators can use this tag"
 msgstr "Samo moderatori mogu koristiti ovu oznaku"
 
-#. Registration mode option where only people with a registration link can sign up.
+#. Registration mode option where only people with an invite link can sign up.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 msgid "Only people you invite"
 msgstr "Samo ljudi koje pozovete"
@@ -29496,8 +29496,8 @@ msgid "Registration is currently closed."
 msgstr "Registracija je trenutno zatvorena."
 
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
-msgid "Registration is currently closed. Use a registration link from an admin to create an account."
-msgstr "Registracija je trenutačno zatvorena. Za izradu računa upotrijebi registracijsku poveznicu od administratora."
+msgid "Registration is currently closed. Use an invite link from an admin to create an account."
+msgstr ""
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Regular button"
@@ -38943,8 +38943,8 @@ msgstr "Za izradu webhooka otvorite <0>{channelWebhooksSettingsPath}</0>. Ovdje 
 
 #. Last setup wizard screen when only invited people can sign up.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
-msgid "To let people in, make a registration link in the admin panel."
-msgstr "Da biste pustili ljude unutra, izradite poveznicu za registraciju na administratorskoj ploči."
+msgid "To let people in, make an invite link in the admin panel."
+msgstr ""
 
 #. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx

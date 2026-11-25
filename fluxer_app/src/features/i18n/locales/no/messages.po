@@ -25203,8 +25203,8 @@ msgstr "Ingen kan åpne eller skrive i personlige notater."
 
 #. Description of the invite-only registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
-msgid "Nobody can sign up on their own. You make registration links in the admin panel and send them to people."
-msgstr "Ingen kan registrere seg på egen hånd. Du lager registreringslenker i administrasjonspanelet og sender dem til folk."
+msgid "Nobody can sign up on their own. You make invite links in the admin panel and send them to people."
+msgstr ""
 
 #. Empty-state text in the channel and chat message reactions sheet.
 #: src/features/channel/components/MessageReactionsSheet.tsx
@@ -25879,7 +25879,7 @@ msgstr "Kun moderatorer kan bruke denne taggen."
 msgid "Only moderators can use this tag"
 msgstr "Kun moderatorer kan bruke denne taggen"
 
-#. Registration mode option where only people with a registration link can sign up.
+#. Registration mode option where only people with an invite link can sign up.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 msgid "Only people you invite"
 msgstr "Bare folk du inviterer"
@@ -29496,8 +29496,8 @@ msgid "Registration is currently closed."
 msgstr "Registrering er for øyeblikket stengt."
 
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
-msgid "Registration is currently closed. Use a registration link from an admin to create an account."
-msgstr "Registrering er stengt for øyeblikket. Bruk en registreringslenke fra en administrator for å opprette en konto."
+msgid "Registration is currently closed. Use an invite link from an admin to create an account."
+msgstr ""
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Regular button"
@@ -38943,8 +38943,8 @@ msgstr "For å opprette en webhook, åpne <0>{channelWebhooksSettingsPath}</0>. 
 
 #. Last setup wizard screen when only invited people can sign up.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
-msgid "To let people in, make a registration link in the admin panel."
-msgstr "Lag en registreringslenke i administrasjonspanelet for å slippe folk inn."
+msgid "To let people in, make an invite link in the admin panel."
+msgstr ""
 
 #. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx

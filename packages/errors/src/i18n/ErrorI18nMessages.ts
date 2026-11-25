@@ -213,7 +213,7 @@ export const ERROR_I18N_MESSAGES = {
 		'This instance reviews new accounts. Sign up from the sign-up page with a password so you can sign in once approved.',
 	'auth_and_oauth.registration_pending_approval': 'This registration is waiting for admin approval.',
 	'auth_and_oauth.registration_rejected': 'This registration request was rejected.',
-	'auth_and_oauth.registration_url_invalid': 'This registration link is invalid or has expired.',
+	'auth_and_oauth.registration_url_invalid': 'This invite link is invalid or has expired.',
 	'auth_and_oauth.sso_account_linked_to_another_identity':
 		'This account is already linked to a different SSO identity.',
 	'auth_and_oauth.sso_account_link_requires_sign_in':
@@ -225,7 +225,7 @@ export const ERROR_I18N_MESSAGES = {
 		'This SSO identity is already linked to a different account.',
 	'auth_and_oauth.sso_identity_mismatch': 'SSO identity mismatch between id_token and userinfo.',
 	'auth_and_oauth.sso_issuer_change_has_identities':
-		'{count, plural, =1 {# account is} other {# accounts are}} linked to the old issuer. Choose whether to move those links to the new issuer or leave them behind.',
+		'{count, plural, one {# account is} other {# accounts are}} linked to the old issuer. Choose whether to move those links to the new issuer or leave them behind.',
 	'auth_and_oauth.sso_issuer_required':
 		'Enter the issuer URL of your sign-in provider. SSO needs it to check who signed in.',
 	'auth_and_oauth.sso_misconfigured': 'SSO is misconfigured. Please contact your administrator.',

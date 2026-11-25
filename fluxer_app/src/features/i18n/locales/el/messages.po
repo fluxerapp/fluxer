@@ -25203,8 +25203,8 @@ msgstr "Κανείς δεν μπορεί να ανοίξει ή να γράψε�
 
 #. Description of the invite-only registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
-msgid "Nobody can sign up on their own. You make registration links in the admin panel and send them to people."
-msgstr "Κανείς δεν μπορεί να εγγραφεί μόνος του. Δημιουργείτε συνδέσμους εγγραφής στον πίνακα διαχείρισης και τους στέλνετε στους χρήστες."
+msgid "Nobody can sign up on their own. You make invite links in the admin panel and send them to people."
+msgstr ""
 
 #. Empty-state text in the channel and chat message reactions sheet.
 #: src/features/channel/components/MessageReactionsSheet.tsx
@@ -25879,7 +25879,7 @@ msgstr "Μόνο οι διαχειριστές μπορούν να εφαρμό�
 msgid "Only moderators can use this tag"
 msgstr "Μόνο οι διαχειριστές μπορούν να χρησιμοποιήσουν αυτήν την ετικέτα"
 
-#. Registration mode option where only people with a registration link can sign up.
+#. Registration mode option where only people with an invite link can sign up.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 msgid "Only people you invite"
 msgstr "Μόνο όσοι προσκαλέσετε"
@@ -29496,8 +29496,8 @@ msgid "Registration is currently closed."
 msgstr "Η εγγραφή είναι προσωρινά κλειστή."
 
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
-msgid "Registration is currently closed. Use a registration link from an admin to create an account."
-msgstr "Οι εγγραφές είναι προς το παρόν κλειστές. Χρησιμοποιήστε έναν σύνδεσμο εγγραφής από διαχειριστή για να δημιουργήσετε λογαριασμό."
+msgid "Registration is currently closed. Use an invite link from an admin to create an account."
+msgstr ""
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Regular button"
@@ -38943,8 +38943,8 @@ msgstr "Για να δημιουργήσετε ένα webhook, ανοίξτε <0
 
 #. Last setup wizard screen when only invited people can sign up.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
-msgid "To let people in, make a registration link in the admin panel."
-msgstr "Για να μπουν άτομα, δημιουργήστε σύνδεσμο εγγραφής στον πίνακα διαχείρισης."
+msgid "To let people in, make an invite link in the admin panel."
+msgstr ""
 
 #. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx

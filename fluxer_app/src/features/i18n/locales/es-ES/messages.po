@@ -25203,8 +25203,8 @@ msgstr "Nadie puede abrir ni escribir notas personales."
 
 #. Description of the invite-only registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
-msgid "Nobody can sign up on their own. You make registration links in the admin panel and send them to people."
-msgstr "Nadie puede registrarse por su cuenta. Creas enlaces de registro en el panel de administración y se los envías a la gente."
+msgid "Nobody can sign up on their own. You make invite links in the admin panel and send them to people."
+msgstr ""
 
 #. Empty-state text in the channel and chat message reactions sheet.
 #: src/features/channel/components/MessageReactionsSheet.tsx
@@ -25879,7 +25879,7 @@ msgstr "Solo los moderadores pueden aplicar esta etiqueta."
 msgid "Only moderators can use this tag"
 msgstr "Solo los moderadores pueden usar esta etiqueta"
 
-#. Registration mode option where only people with a registration link can sign up.
+#. Registration mode option where only people with an invite link can sign up.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 msgid "Only people you invite"
 msgstr "Solo las personas que invites"
@@ -29496,8 +29496,8 @@ msgid "Registration is currently closed."
 msgstr "El registro está cerrado temporalmente."
 
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
-msgid "Registration is currently closed. Use a registration link from an admin to create an account."
-msgstr "El registro está cerrado actualmente. Usa un enlace de registro de un administrador para crear una cuenta."
+msgid "Registration is currently closed. Use an invite link from an admin to create an account."
+msgstr ""
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Regular button"
@@ -38943,8 +38943,8 @@ msgstr "Para crear un webhook, abre <0>{channelWebhooksSettingsPath}</0>. Puedes
 
 #. Last setup wizard screen when only invited people can sign up.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
-msgid "To let people in, make a registration link in the admin panel."
-msgstr "Para dejar entrar a la gente, crea un enlace de registro en el panel de administración."
+msgid "To let people in, make an invite link in the admin panel."
+msgstr ""
 
 #. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx

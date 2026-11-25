@@ -73,7 +73,7 @@ const LOCK_UNKNOWN_DESCRIPTOR = msg({
 
 export const REGISTRATION_CLOSED_NAME_DESCRIPTOR = msg({
 	message: 'Only people you invite',
-	comment: 'Registration mode option where only people with a registration link can sign up.',
+	comment: 'Registration mode option where only people with an invite link can sign up.',
 });
 
 export const REGISTRATION_APPROVAL_NAME_DESCRIPTOR = msg({
@@ -109,7 +109,7 @@ const DONE_APPROVAL_DESCRIPTOR = msg({
 	comment: 'Last setup wizard screen when new accounts need approval.',
 });
 const DONE_CLOSED_DESCRIPTOR = msg({
-	message: 'To let people in, make a registration link in the admin panel.',
+	message: 'To let people in, make an invite link in the admin panel.',
 	comment: 'Last setup wizard screen when only invited people can sign up.',
 });
 const DONE_MORE_DESCRIPTOR = msg({
