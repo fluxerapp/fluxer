@@ -324,18 +324,6 @@ export function isLoopbackIpAddress(ip: string): boolean {
 	return groups.length === 8 && groups.slice(0, 7).every((group) => group === '0000') && groups[7] === '0001';
 }
 
-export function isSameIpDecisionMatch(left: string | null | undefined, right: string | null | undefined): boolean {
-	if (!left || !right) {
-		return false;
-	}
-	const leftKey = getSameIpDecisionKey(left);
-	const rightKey = getSameIpDecisionKey(right);
-	if (leftKey && rightKey) {
-		return leftKey === rightKey;
-	}
-	return normalizeIpString(left) === normalizeIpString(right);
-}
-
 export function getSubnet(ip: string): string | null {
 	return getIpNetworkKey(ip, {
 		ipv4PrefixLength: 24,

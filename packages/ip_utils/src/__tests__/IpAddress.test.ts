@@ -7,7 +7,6 @@ import {
 	getSubnet,
 	isLoopbackIpAddress,
 	isPublicIpAddress,
-	isSameIpDecisionMatch,
 	isValidIp,
 	maskIpForDisplay,
 	normalizeIpString,
@@ -244,20 +243,5 @@ describe('getSameIpDecisionKey', () => {
 	it('uses exact IPv4 and /64 IPv6 matching', () => {
 		expect(getSameIpDecisionKey('203.0.113.42')).toBe('203.0.113.42');
 		expect(getSameIpDecisionKey('2a01:e0a:d10:95b0:8f54:410e:f290:1c66')).toBe('2a01:e0a:d10:95b0::/64');
-	});
-});
-
-describe('isSameIpDecisionMatch', () => {
-	it('matches IPv6 addresses that share a /64', () => {
-		expect(isSameIpDecisionMatch('2a01:e0a:d10:95b0:8f54:410e:f290:1c66', '2a01:e0a:d10:95b0:1e4:53a8:d0dd:7733')).toBe(
-			true,
-		);
-	});
-	it('keeps IPv4 matching exact', () => {
-		expect(isSameIpDecisionMatch('203.0.113.10', '203.0.113.10')).toBe(true);
-		expect(isSameIpDecisionMatch('203.0.113.10', '203.0.113.11')).toBe(false);
-	});
-	it('falls back to normalized exact comparison for invalid values', () => {
-		expect(isSameIpDecisionMatch(' not-an-ip ', 'not-an-ip')).toBe(true);
 	});
 });

@@ -69,7 +69,7 @@ export const ThreadMemberFlags = {
 	NO_MESSAGES: 1 << 3,
 } as const;
 
-export const THREAD_MEMBER_NOTIFICATION_FLAG_MASK =
+const THREAD_MEMBER_NOTIFICATION_FLAG_MASK =
 	ThreadMemberFlags.ALL_MESSAGES | ThreadMemberFlags.ONLY_MENTIONS | ThreadMemberFlags.NO_MESSAGES;
 
 export function isValidThreadMemberSettingsFlags(flags: number): boolean {
