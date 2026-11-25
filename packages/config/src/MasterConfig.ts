@@ -218,6 +218,17 @@ export interface MasterConfig {
 		connection_initiation_secret: string;
 		profile_pseudonym_secret: string;
 		sso_allow_private_addresses: boolean;
+		sso: {
+			enabled: boolean | null;
+			enforced: boolean | null;
+			auto_provision: boolean | null;
+			issuer: string;
+			client_id: string;
+			client_secret: string;
+			scope: string;
+			display_name: string;
+			allowed_domains: Array<string>;
+		};
 		passkeys: {
 			rp_name: string;
 			rp_id: string;
@@ -366,6 +377,8 @@ export interface MasterConfig {
 		setup: {
 			configured: boolean;
 			token?: string;
+			install_method?: string;
+			command?: string;
 		};
 		account_identity: AccountIdentityModeName | null;
 		tag_style: TagStyleName | null;

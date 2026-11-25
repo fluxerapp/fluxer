@@ -39993,6 +39993,17 @@
 					"setup_token_required": {
 						"description": "Present only while a self-hosted instance is unconfigured. True when registration needs the setup token",
 						"type": "boolean"
+					},
+					"install_method": {
+						"description": "Present only while a self-hosted instance is unconfigured. How Fluxer was installed, or null when it is unknown",
+						"anyOf": [
+							{"type": "string", "enum": ["rexctl", "systemd", "helm", "compose", "docker", "podman", "container"]},
+							{"type": "null"}
+						]
+					},
+					"setup_command": {
+						"description": "Present only while a self-hosted instance is unconfigured. The terminal command that prints the setup token on this install, or null when it is unknown",
+						"type": ["string", "null"]
 					}
 				},
 				"required": ["configured", "admin_url"],

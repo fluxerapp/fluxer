@@ -31083,6 +31083,11 @@ msgstr "{0}님에 대한 차단이 해제되었습니다"
 msgid "Rewind {defaultSeekAmount} seconds"
 msgstr "{defaultSeekAmount}초 뒤로 감기"
 
+#. Help on the setup token screen of an instance installed with rexctl, followed by a terminal command. rexctl is a name that must not be translated.
+#: src/features/app/components/setup/SetupTokenStep.tsx
+msgid "rexctl printed the token when it finished. Run this on your server to show it again."
+msgstr ""
+
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts
 msgctxt "us-state"
@@ -31286,6 +31291,21 @@ msgstr "컴퓨터 시작 시 {productName} 자동 실행"
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
 msgid "Run at login"
 msgstr "로그인 시 실행"
+
+#. Help on the setup token screen of an instance in a container whose tool the app does not know, followed by a terminal command.
+#: src/features/app/components/setup/SetupTokenStep.tsx
+msgid "Run this in the Fluxer container to show the token."
+msgstr ""
+
+#. Help on the setup token screen of an instance run with systemd, Docker or Podman, followed by a terminal command.
+#: src/features/app/components/setup/SetupTokenStep.tsx
+msgid "Run this on your server to show the token."
+msgstr ""
+
+#. Help on the setup token screen of an instance installed with the Helm chart, followed by a terminal command. kubectl is a name that must not be translated.
+#: src/features/app/components/setup/SetupTokenStep.tsx
+msgid "Run this where kubectl reaches your cluster to show the token."
+msgstr ""
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx

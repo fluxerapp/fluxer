@@ -320,6 +320,8 @@ export function InstanceController(app: Hono<HonoEnv>) {
 							account_identity_locked: lockReason !== null,
 							account_identity_lock_reason: lockReason,
 							setup_token_required: await instanceConfigRepository.isSetupTokenRequired(),
+							install_method: Config.instance.setup.installMethod,
+							setup_command: Config.instance.setup.command,
 						};
 			const discovery = buildDiscoveryResponse(
 				buildDiscoveryStaticInput(

@@ -45,6 +45,7 @@ import {
 } from '@fluxer/instance_bootstrap/src/Types';
 import type {LimitConfigSnapshot, LimitConfigWireFormat, LimitFilter, LimitRule} from '@fluxer/limits/src/LimitTypes';
 import {EXPERIMENT_BUCKET_RESOLUTION} from '@fluxer/schema/src/domains/experiment/ExperimentBucket';
+import {INSTALL_METHODS} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 
 export const INSTANCE_DISCOVERY_PATH = '/.well-known/fluxer';
 const INSTANCE_DISCOVERY_CONVENTIONAL_ENDPOINT_PATH = '/api';
@@ -989,6 +990,12 @@ function parseSetup(value: unknown): Readonly<Partial<InstanceSetup>> {
 			'account_identity_lock_reason',
 			ACCOUNT_IDENTITY_LOCK_REASONS,
 		);
+	}
+	if (Object.hasOwn(source, 'install_method')) {
+		setup.install_method = readLiteral(source, 'install_method', INSTALL_METHODS);
+	}
+	if (Object.hasOwn(source, 'setup_command')) {
+		setup.setup_command = readNonEmptyString(source, 'setup_command');
 	}
 	return setup;
 }

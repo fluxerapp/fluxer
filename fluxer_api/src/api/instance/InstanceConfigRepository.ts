@@ -1588,6 +1588,39 @@ function readStoredSsoBoolean(
 	return options?.invalidFallback ?? fallback;
 }
 
+type SsoEnvSeed = typeof Config.auth.sso;
+
+function ssoEnvRows(seed: SsoEnvSeed): Map<string, string> {
+	const rows = new Map<string, string>();
+	const put = (key: string, value: string | boolean | null) => {
+		if (value === null || value === '') return;
+		rows.set(key, typeof value === 'boolean' ? formatSsoBoolean(value) : value.trim());
+	};
+	put('sso_enabled', seed.enabled);
+	put('sso_enforced', seed.enforced);
+	put('sso_auto_provision', seed.autoProvision);
+	put('sso_issuer', seed.issuer);
+	put('sso_client_id', seed.clientId);
+	put('sso_client_secret', seed.clientSecret);
+	put('sso_scope', seed.scope);
+	put('sso_display_name', seed.displayName);
+	if (seed.allowedDomains.length > 0) rows.set('sso_allowed_domains', JSON.stringify(seed.allowedDomains));
+	return rows;
+}
+
+function withSsoEnvSeed(configs: ReadonlyMap<string, string>, seed: SsoEnvSeed): ReadonlyMap<string, string> {
+	const rows = ssoEnvRows(seed);
+	if (rows.size === 0) return configs;
+	const merged = new Map(configs);
+	for (const [key, value] of rows) {
+		if (!configs.has(key)) merged.set(key, value);
+	}
+	if (rows.has('sso_enabled') && !configs.has('sso_enabled') && !merged.has('sso_enforced')) {
+		merged.set('sso_enforced', 'false');
+	}
+	return merged;
+}
+
 function readStoredSsoFlags(configs: ReadonlyMap<string, string>, log = false): InstanceSsoFlags {
 	const enabled = readStoredSsoBoolean(configs, 'sso_enabled', false, {log});
 	return {
@@ -3442,12 +3475,13 @@ export class InstanceConfigRepository {
 	}
 
 	async getSsoConfig(options?: {includeSecret?: boolean}): Promise<InstanceSsoConfig> {
-		return readStoredSsoConfig(await this.getAllConfigs(), options);
+		return readStoredSsoConfig(withSsoEnvSeed(await this.getAllConfigs(), Config.auth.sso), options);
 	}
 
 	async setSsoConfig(config: Partial<InstanceSsoConfig>): Promise<InstanceSsoConfig> {
 		const configs = await this.getAllConfigs();
-		const current = readStoredSsoConfig(configs, {includeSecret: true});
+		const fromEnv = ssoEnvRows(Config.auth.sso);
+		const current = readStoredSsoConfig(withSsoEnvSeed(configs, Config.auth.sso), {includeSecret: true});
 		const enabled = config.enabled ?? current.enabled;
 		const allowedEmailDomains =
 			config.allowedEmailDomains === undefined
@@ -3483,7 +3517,7 @@ export class InstanceConfigRepository {
 		const cache = this.configCache;
 		const results = await Promise.allSettled(
 			rows
-				.filter((row) => row.value !== undefined || !configs.has(row.key))
+				.filter((row) => row.value !== undefined || (!configs.has(row.key) && !fromEnv.has(row.key)))
 				.map((row) =>
 					this.compareAndSetStoredValue(cache, row.key, (raw) => ({value: nextSsoRowValue(row, raw), result: null})),
 				),

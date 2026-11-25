@@ -27,6 +27,7 @@ import {EmailDeliveryModes} from '@fluxer/constants/src/AccountConfigConstants';
 import {smtpTlsModeFromSecure} from '@fluxer/constants/src/SmtpConstants';
 import {parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
 import type {GeoEntry} from '@fluxer/schema/src/domains/geolocation/GeolocationSchemas';
+import {INSTALL_METHODS, type InstallMethod} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 import {normalizeString} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {parseCassandraConsistency, parseCassandraSerialConsistency} from '@pkgs/cassandra/src/Client';
 import {parseGeoipSourceConfig, resolveGeoipRuntimeSourceConfig} from '@pkgs/geoip/src/GeoipStartup';
@@ -210,6 +211,11 @@ function resolveSetupToken(master: MasterConfig): string | null {
 		);
 	}
 	return token;
+}
+
+function resolveInstallMethod(value: string | undefined): InstallMethod | null {
+	const method = value?.trim().toLowerCase();
+	return INSTALL_METHODS.find((known) => known === method) ?? null;
 }
 
 const ISO_INSTANT_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/u;
@@ -626,6 +632,17 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			connectionInitiationSecret: master.auth.connection_initiation_secret,
 			profilePseudonymSecret: master.auth.profile_pseudonym_secret,
 			ssoAllowPrivateAddresses: master.auth.sso_allow_private_addresses,
+			sso: {
+				enabled: master.auth.sso.enabled,
+				enforced: master.auth.sso.enforced,
+				autoProvision: master.auth.sso.auto_provision,
+				issuer: master.auth.sso.issuer,
+				clientId: master.auth.sso.client_id,
+				clientSecret: master.auth.sso.client_secret,
+				scope: master.auth.sso.scope,
+				displayName: master.auth.sso.display_name,
+				allowedDomains: master.auth.sso.allowed_domains,
+			},
 			passkeys: {
 				rpName: master.auth.passkeys.rp_name,
 				rpId: master.auth.passkeys.rp_id,
@@ -661,6 +678,8 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			setup: {
 				configured: master.instance.setup.configured,
 				token: resolveSetupToken(master),
+				installMethod: resolveInstallMethod(master.instance.setup.install_method),
+				command: master.instance.setup.command?.trim() || null,
 			},
 			accountIdentity: master.instance.account_identity,
 			tagStyle: master.instance.tag_style,

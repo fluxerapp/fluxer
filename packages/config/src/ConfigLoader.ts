@@ -199,6 +199,17 @@ function defaultConfig(): MasterConfig {
 			connection_initiation_secret: '',
 			profile_pseudonym_secret: '',
 			sso_allow_private_addresses: false,
+			sso: {
+				enabled: null,
+				enforced: null,
+				auto_provision: null,
+				issuer: '',
+				client_id: '',
+				client_secret: '',
+				scope: '',
+				display_name: '',
+				allowed_domains: [],
+			},
 			passkeys: {
 				rp_name: 'Fluxer',
 				rp_id: '',

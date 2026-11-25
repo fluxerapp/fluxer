@@ -3,6 +3,7 @@
 import styles from '@app/features/app/components/setup/SelfHostedSetupWizardGate.module.css';
 import {checkSetupToken} from '@app/features/app/components/setup/SetupWizardClient';
 import {StepHeader} from '@app/features/app/components/setup/SetupWizardSteps';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {failureRetryAfterSeconds, failureValidationErrors} from '@app/features/platform/utils/ResponseInspection';
 import {Button} from '@app/features/ui/button/Button';
@@ -12,6 +13,8 @@ import * as FormUtils from '@app/lib/forms';
 import {HttpStatus} from '@fluxer/constants/src/HttpConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {SECONDS_PER_MINUTE} from '@fluxer/date_utils/src/DateConstants';
+import type {InstallMethod} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
+import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -34,6 +37,26 @@ const SETUP_TOKEN_HELP_DESCRIPTOR = msg({
 		'If you installed Fluxer with rexctl, it printed the token when it finished. Run this on your server to show it again.',
 	comment:
 		'Help on the setup token screen, followed by a terminal command. rexctl is a name that must not be translated.',
+});
+const SETUP_TOKEN_REXCTL_DESCRIPTOR = msg({
+	message: 'rexctl printed the token when it finished. Run this on your server to show it again.',
+	comment:
+		'Help on the setup token screen of an instance installed with rexctl, followed by a terminal command. rexctl is a name that must not be translated.',
+});
+const SETUP_TOKEN_SERVER_DESCRIPTOR = msg({
+	message: 'Run this on your server to show the token.',
+	comment:
+		'Help on the setup token screen of an instance run with systemd, Docker or Podman, followed by a terminal command.',
+});
+const SETUP_TOKEN_KUBERNETES_DESCRIPTOR = msg({
+	message: 'Run this where kubectl reaches your cluster to show the token.',
+	comment:
+		'Help on the setup token screen of an instance installed with the Helm chart, followed by a terminal command. kubectl is a name that must not be translated.',
+});
+const SETUP_TOKEN_CONTAINER_DESCRIPTOR = msg({
+	message: 'Run this in the Fluxer container to show the token.',
+	comment:
+		'Help on the setup token screen of an instance in a container whose tool the app does not know, followed by a terminal command.',
 });
 const SETUP_TOKEN_LOST_DESCRIPTOR = msg({
 	message:
@@ -64,6 +87,16 @@ const SETUP_TOKEN_LOCKED_OUT_DESCRIPTOR = msg({
 	comment:
 		'Alert on the setup token screen after too many wrong setup tokens came from the same network. minutes is how long until they can try again.',
 });
+const SETUP_TOKEN_HELP_BY_METHOD: Record<InstallMethod, MessageDescriptor> = {
+	rexctl: SETUP_TOKEN_REXCTL_DESCRIPTOR,
+	systemd: SETUP_TOKEN_SERVER_DESCRIPTOR,
+	compose: SETUP_TOKEN_SERVER_DESCRIPTOR,
+	docker: SETUP_TOKEN_SERVER_DESCRIPTOR,
+	podman: SETUP_TOKEN_SERVER_DESCRIPTOR,
+	helm: SETUP_TOKEN_KUBERNETES_DESCRIPTOR,
+	container: SETUP_TOKEN_CONTAINER_DESCRIPTOR,
+};
+
 interface SetupTokenDraft {
 	value: string;
 	setValue: (value: string) => void;
@@ -102,6 +135,10 @@ export const SetupTokenStep = observer(
 		onAdvance: () => void;
 	}) => {
 		const {i18n} = useLingui();
+		const {install_method: installMethod, setup_command: setupCommand} = RuntimeConfig.appPublic.setup;
+		const known = installMethod != null && setupCommand != null;
+		const command = known ? setupCommand : SETUP_TOKEN_COMMAND;
+		const help = known ? SETUP_TOKEN_HELP_BY_METHOD[installMethod] : SETUP_TOKEN_HELP_DESCRIPTOR;
 		const {
 			value: setupToken,
 			setValue: setSetupToken,
@@ -154,7 +191,7 @@ export const SetupTokenStep = observer(
 					</p>
 				)}
 				<p className={styles.body} data-flx="app.self-hosted-setup-wizard-gate.setup-token-help">
-					{i18n._(SETUP_TOKEN_HELP_DESCRIPTOR)}
+					{i18n._(help)}
 				</p>
 				<div className={styles.codeRow} data-flx="app.self-hosted-setup-wizard-gate.setup-token-command">
 					<code
@@ -162,21 +199,23 @@ export const SetupTokenStep = observer(
 						className={styles.codeBlock}
 						data-flx="app.self-hosted-setup-wizard-gate.setup-token-command-text"
 					>
-						{SETUP_TOKEN_COMMAND}
+						{command}
 					</code>
 					<Button
 						variant="secondary"
 						small
 						aria-label={i18n._(SETUP_TOKEN_COPY_COMMAND_DESCRIPTOR)}
-						onClick={() => TextCopyCommands.copy(i18n, SETUP_TOKEN_COMMAND)}
+						onClick={() => TextCopyCommands.copy(i18n, command)}
 						data-flx="app.self-hosted-setup-wizard-gate.setup-token-copy"
 					>
 						{i18n._(COPY_DESCRIPTOR)}
 					</Button>
 				</div>
-				<p className={styles.body} data-flx="app.self-hosted-setup-wizard-gate.setup-token-lost">
-					{i18n._(SETUP_TOKEN_LOST_DESCRIPTOR)}
-				</p>
+				{!known && (
+					<p className={styles.body} data-flx="app.self-hosted-setup-wizard-gate.setup-token-lost">
+						{i18n._(SETUP_TOKEN_LOST_DESCRIPTOR)}
+					</p>
+				)}
 				<Input
 					label={i18n._(SETUP_TOKEN_LABEL_DESCRIPTOR)}
 					type="text"

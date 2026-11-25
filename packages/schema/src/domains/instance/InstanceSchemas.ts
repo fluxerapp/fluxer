@@ -148,6 +148,9 @@ export const AccountIdentityLockReasonSchema = createNamedStringLiteralUnion(
 	'Why the sign-in method can no longer change',
 );
 
+export const INSTALL_METHODS = ['rexctl', 'systemd', 'helm', 'compose', 'docker', 'podman', 'container'] as const;
+export type InstallMethod = (typeof INSTALL_METHODS)[number];
+
 export const InstanceSetupSchema = z
 	.object({
 		configured: z.boolean().describe('Whether the instance administrator has completed initial setup'),
@@ -168,6 +171,20 @@ export const InstanceSetupSchema = z
 			.optional()
 			.describe(
 				'Present only while a self-hosted instance is unconfigured. True when registration needs the setup token',
+			),
+		install_method: z
+			.enum(INSTALL_METHODS)
+			.nullable()
+			.optional()
+			.describe(
+				'Present only while a self-hosted instance is unconfigured. How Fluxer was installed, or null when it is unknown',
+			),
+		setup_command: z
+			.string()
+			.nullable()
+			.optional()
+			.describe(
+				'Present only while a self-hosted instance is unconfigured. The terminal command that prints the setup token on this install, or null when it is unknown',
 			),
 	})
 	.describe('Initial setup state for self-hosted instances');

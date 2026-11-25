@@ -10,6 +10,7 @@ import type {CachePurgeAdapterName, StoreProductSlotName, VoiceTurnServerConfig}
 import type {AccountIdentityMode, TagStyle} from '@fluxer/constants/src/AccountIdentityConstants';
 import type {SmtpTlsMode} from '@fluxer/constants/src/SmtpConstants';
 import type {GeoEntry} from '@fluxer/schema/src/domains/geolocation/GeolocationSchemas';
+import type {InstallMethod} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 import type {OperatorPassCurrency} from '@fluxer/schema/src/domains/operator_pass/OperatorPassSchemas';
 import type {CassandraConsistencyName, CassandraSerialConsistencyName} from '@pkgs/cassandra/src/Client';
 
@@ -335,6 +336,17 @@ export interface APIConfig {
 		connectionInitiationSecret: string;
 		profilePseudonymSecret: string;
 		ssoAllowPrivateAddresses: boolean;
+		sso: {
+			enabled: boolean | null;
+			enforced: boolean | null;
+			autoProvision: boolean | null;
+			issuer: string;
+			clientId: string;
+			clientSecret: string;
+			scope: string;
+			displayName: string;
+			allowedDomains: Array<string>;
+		};
 		passkeys: {
 			rpName: string;
 			rpId: string;
@@ -370,6 +382,8 @@ export interface APIConfig {
 		setup: {
 			configured: boolean;
 			token: string | null;
+			installMethod: InstallMethod | null;
+			command: string | null;
 		};
 		accountIdentity: AccountIdentityMode | null;
 		tagStyle: TagStyle | null;
