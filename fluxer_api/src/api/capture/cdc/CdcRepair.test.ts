@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {CDC_DERIVED} from '@app/api/capture/cdc/CdcDerived';
 import {
 	nextRepair,
 	REPAIR_INTERVAL_MS,
@@ -77,7 +78,27 @@ describe('repair tombstones', () => {
 			keyColumns: [column('user_id'), column('target_id')],
 		};
 		expect(vanishedTombstoneSql(table, 1234)).toBe(
-			'INSERT INTO fluxer_cdc.`notes` (`user_id`, `target_id`, _version, _deleted) SELECT `user_id`, `target_id`, toUInt64(1234), 1 FROM fluxer_cdc.`notes` FINAL WHERE _deleted = 0 AND _version < 1234',
+			'INSERT INTO fluxer_cdc.`notes` (`user_id`, `target_id`, _version, _deleted) SELECT `user_id`, `target_id`, toUInt64(1234), 1 FROM fluxer_cdc.`notes` FINAL WHERE _deleted = 0 AND (_expires_at = 0 OR _expires_at > now64(3)) AND _version < 1234',
+		);
+	});
+
+	it('leaves rows past their retention window to the table TTL', () => {
+		const column = (name: string) => ({name, cqlType: 'bigint', chType: clickHouseType('bigint')});
+		const table: CdcTable = {
+			layout: {
+				name: 'messages',
+				primaryKey: ['channel_id', 'bucket', 'message_id'],
+				partitionKey: ['channel_id', 'bucket'],
+				regular: [],
+				multiCell: new Set<string>(),
+				defaultTtl: 0,
+			},
+			columns: [column('bucket'), column('channel_id'), column('message_id')],
+			keyColumns: [column('channel_id'), column('bucket'), column('message_id')],
+			derived: CDC_DERIVED['messages'],
+		};
+		expect(vanishedTombstoneSql(table, 1234)).toBe(
+			'INSERT INTO fluxer_cdc.`messages` (`channel_id`, `bucket`, `message_id`, _version, _deleted) SELECT `channel_id`, `bucket`, `message_id`, toUInt64(1234), 1 FROM fluxer_cdc.`messages` FINAL WHERE _deleted = 0 AND (_expires_at = 0 OR _expires_at > now64(3)) AND `message_created_at` + INTERVAL 90 DAY > now64(3) AND _version < 1234',
 		);
 	});
 });
