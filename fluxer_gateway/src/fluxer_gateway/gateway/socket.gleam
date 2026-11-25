@@ -176,6 +176,7 @@ pub opaque type State {
     next_token: Int,
     identify_at: Option(Int),
     resume_at: Option(Int),
+    identify_deadline_ms: Option(Int),
     reported: ConnectionState,
   )
 }
@@ -317,6 +318,9 @@ pub fn open(upgrade: Upgrade, mailbox: Mailbox, link: Link) -> State {
     next_token: 0,
     identify_at: None,
     resume_at: None,
+    identify_deadline_ms: Some(
+      clock.system_ms() + limits.heartbeat_interval_ms(),
+    ),
     reported: socket_metrics.AwaitingIdentify,
   )
   |> greet
@@ -674,6 +678,7 @@ fn handle_identify(
   state: State,
   payload: Result(Identify, identify.IdentifyError),
 ) -> State {
+  let state = State(..state, identify_deadline_ms: None)
   case abuse_protection.check_identify_rate(state.config.peer_ip) {
     Error(_) -> {
       socket_metrics.rate_limited(socket_metrics.IdentifyIpLimit)
@@ -885,6 +890,7 @@ fn handle_resume(
   state: State,
   payload: Result(resume.ResumeRequest, resume.ResumeDecodeError),
 ) -> State {
+  let state = State(..state, identify_deadline_ms: None)
   case abuse_protection.check_identify_rate(state.config.peer_ip) {
     Error(_) -> {
       socket_metrics.rate_limited(socket_metrics.IdentifyIpLimit)
@@ -1336,24 +1342,33 @@ fn heartbeat_check(state: State, token: Int) -> State {
   case state.heartbeat_timer {
     Some(current) if current == token -> {
       let state = State(..state, heartbeat_timer: None)
-      let outcome = heartbeat.check(state.heartbeat, clock.system_ms())
+      let now_ms = clock.system_ms()
+      let outcome = heartbeat.check(state.heartbeat, now_ms)
       socket_metrics.heartbeat_checked(outcome)
-      let next = case outcome {
-        heartbeat.TimedOut ->
-          close(state, error.SessionTimeout, "Heartbeat timeout")
-        heartbeat.RequestHeartbeat(waiting) -> {
-          let state = schedule_heartbeat(State(..state, heartbeat: waiting))
-          case send_frame(state, encode.heartbeat_request()) {
-            Ok(state) -> state
-            Error(Nil) -> state
-          }
-        }
-        heartbeat.StillAlive -> schedule_heartbeat(state)
+      let next = case state.identify_deadline_ms {
+        Some(deadline) if now_ms >= deadline ->
+          close(state, error.NotAuthenticated, "Not authenticated")
+        _ -> heartbeat_outcome(state, outcome)
       }
       garbage_collect()
       next
     }
     _ -> state
+  }
+}
+
+fn heartbeat_outcome(state: State, outcome: heartbeat.CheckOutcome) -> State {
+  case outcome {
+    heartbeat.TimedOut ->
+      close(state, error.SessionTimeout, "Heartbeat timeout")
+    heartbeat.RequestHeartbeat(waiting) -> {
+      let state = schedule_heartbeat(State(..state, heartbeat: waiting))
+      case send_frame(state, encode.heartbeat_request()) {
+        Ok(state) -> state
+        Error(Nil) -> state
+      }
+    }
+    heartbeat.StillAlive -> schedule_heartbeat(state)
   }
 }
 

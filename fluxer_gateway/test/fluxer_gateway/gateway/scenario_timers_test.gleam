@@ -24,6 +24,7 @@ pub fn silent_client_is_closed_with_session_timeout_test_() {
   isolation.set_durations(short_heartbeat)
   use scenario <- h.run(h.sessions_for("1000000000000141"))
   let client = h.hello(scenario.gateway.port)
+  ws.send_json(client, h.identify_payload("token-silent"))
   let #(code, _) = ws.expect_close(client, 5000)
   assert code == Some(4009)
 }
