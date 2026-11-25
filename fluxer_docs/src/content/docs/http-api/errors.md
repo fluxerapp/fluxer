@@ -74,7 +74,7 @@ These are the most common extra fields. Other extra fields come with the endpoin
 | `has_mfa`, `methods` | On `SUDO_MODE_REQUIRED`, the proofs the account can give for [sudo mode](/http-api/users/mfa/#sudo-mode) |
 | `captcha_provider`, `altcha_challenge` | On `CAPTCHA_REQUIRED` and `INVALID_CAPTCHA`, the [challenge to solve](/topics/captcha/) |
 | `step_index` | On `INVALID_REPORT_FLOW_ANSWERS`, the index of the first [report flow step](/http-api/reports/#report-flow-step-object) whose answer isn't valid |
-| `ticket`, `email`, `resend_available_in` | On `IP_AUTHORIZATION_REQUIRED`, the ticket for [authorizing a new IP address](/http-api/authentication/#log-in-with-a-password), and `ip_authorization_required` is `true` |
+| `ticket`, `email`, `resend_available_in` | On `IP_AUTHORIZATION_REQUIRED`, the ticket for [authorising a new IP address](/http-api/authentication/#log-in-with-a-password), and `ip_authorization_required` is `true` |
 | `action`, `tier`, `need` | On `ACCOUNT_VERIFICATION_REQUIRED`, what was refused and [which step is missing](/http-api/users/#account-tiers) |
 | `ban_kind`, `expires_at`, `reason` | On `GLOBAL_IP_BANNED` and `GLOBAL_IP_TEMPORARILY_BANNED`, [details of the block](/http-api/authentication/#network-block-response) |
 | `notice` | On `ACCOUNT_SUSPENDED_TEMPORARILY` and `ACCOUNT_SUSPENDED_PERMANENTLY`, the [enforcement notice](/http-api/authentication/#enforcement-notice-object) for the account |

@@ -47,7 +47,7 @@ For `/_metadata`, the body is the reason phrase of the origin status.
 | Decoded image area | 268,435,456 pixels | 400, the [transformation fails](/media-proxy/transformations/#transformation-limits) |
 | Animated input frames | 20,000 | 400, the [transformation fails](/media-proxy/transformations/#transformation-limits) |
 | Animated input decoded pixels | 1,073,741,824 across all frames | 400, the [transformation fails](/media-proxy/transformations/#transformation-limits) |
-| Upload relay body | The smaller of the authorized size and the endpoint limit, which defaults to 500 MiB | 413 |
+| Upload relay body | The smaller of the authorised size and the endpoint limit, which defaults to 500 MiB | 413 |
 | Internal `/_metadata`, `/_sniff`, `/_thumbnail`, `/_frames`, `/_strip` and `/_audio_duration` body | About 668 MiB | 413 |
 
 Each redirect target goes through the same URL length limit and the public address check, which blocks non-public IP addresses and every port except 80 and 443.

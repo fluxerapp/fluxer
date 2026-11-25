@@ -32,7 +32,9 @@ The attachment, signed external and image asset routes take [transformation para
 
 Get the read base URLs `endpoints.media` and `endpoints.static_cdn` from [instance discovery](/http-api/instance/#instance-endpoints-object). Read paths have no `/v1` prefix. For an upload, use the full URL from the HTTP API response.
 
-## Authorization
+<a id="authorization"></a>
+
+## Authorisation
 
 Read routes need no `Authorization` header.
 
@@ -48,8 +50,8 @@ Each Media Proxy process serves one mode, set with `FLUXER_MEDIA_PROXY_MODE` at 
 | Mode | Serves |
 | --- | --- |
 | `mp` | Attachments, signed external media, themes, entrance sounds and every image asset route |
-| `static` | Every read route as a raw object from the static bucket, with no transformation or SVG rasterization |
-| `upload` | The [upload relay](/media-proxy/upload-relay/) and every `mp` read route, without SVG rasterization on a non-transforming read |
+| `static` | Every read route as a raw object from the static bucket, with no transformation or SVG rasterisation |
+| `upload` | The [upload relay](/media-proxy/upload-relay/) and every `mp` read route, without SVG rasterisation on a non-transforming read |
 | `relay` | The [upload relay](/media-proxy/upload-relay/) alone, and every read path returns 404 |
 
 The [operator and internal endpoints](/media-proxy/routes/#operator-and-internal-endpoints) work in every mode. You choose which mode serves each base URL, and the reference self-hosted deployment serves `endpoints.media` from an `upload` process.
@@ -144,7 +146,7 @@ A satisfiable range returns 206 with `Accept-Ranges: bytes`, `Content-Range` and
 
 ### Transformed representations
 
-A response whose bytes come from a transformation ignores `Range`, returns the complete result with 200 and has no `Accept-Ranges` header. An SVG that an `mp` process rasterizes counts as transformed.
+A response whose bytes come from a transformation ignores `Range`, returns the complete result with 200 and has no `Accept-Ranges` header. An SVG that an `mp` process rasterises counts as transformed.
 
 ## Representation headers
 
@@ -177,4 +179,4 @@ Use the response `Content-Type`. Outside `static` mode, the Media Proxy replaces
 
 An image other than SVG and a video are served inline. Every other type, including SVG and PDF, is an attachment, and `download` forces an attachment on every route that accepts it. When you save a file, use the filename from `Content-Disposition`, which has the right extension for a transformed file.
 
-An `mp` process rasterizes SVG to lossless WebP on a non-transforming read. An `upload` process returns the original SVG bytes as an attachment.
+An `mp` process rasterises SVG to lossless WebP on a non-transforming read. An `upload` process returns the original SVG bytes as an attachment.

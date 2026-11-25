@@ -33,7 +33,7 @@ The public description of one instance.
 | notice? | ?[instance notice](#instance-notice-object) object | The current notice from the instance admins, or null |
 | guild_badges?<sup>1</sup> | array[[guild badge](#guild-badge-object) object] | The first custom badges that guilds can show next to their name, in display order (at most 100) |
 | guild_badges_partial? | boolean | True when the instance has more guild badges than `guild_badges` lists |
-| custom_badges_version? | string | The badge catalog version. It changes whenever a badge is created, edited, deleted or moved |
+| custom_badges_version? | string | The badge catalogue version. It changes whenever a badge is created, edited, deleted or moved |
 | built_in_guild_badge_images? | [built-in guild badge images](#built-in-guild-badge-images-object) object | The images the instance shows in place of the built-in guild badges |
 | hidden_built_in_guild_badges?<sup>2</sup> | array[string] | The built-in guild badges the instance doesn't show, from `verified`, `partnered` and `discoverable` |
 | voice_origins? | array[string] | The origin of every voice server endpoint, such as `wss://voice.example.com`, for content security policies. Voice servers that share a domain are listed once as a wildcard, such as `wss://*.example.com` (at most 1000) |
@@ -59,7 +59,7 @@ A custom badge that instance admins give to guilds. A guild lists the badges it 
 
 ### Loading badges
 
-A client can show guild badges without holding the whole catalog.
+A client can show guild badges without holding the whole catalogue.
 
 1. Keep the badges from `guild_badges` and the `custom_badges_version` of the discovery document.
 2. For each guild, look up the IDs in `badge_ids` that you don't know, in batches of up to 100, with `ids` and `version` set.
@@ -166,7 +166,7 @@ Instance-wide switches to check before you offer a feature.
 | email_delivery_state? | string | Whether the instance sends email and why not, one of the [email delivery states](#email-delivery-states) |
 | verification_basis? | string | What an account needs to be verified, `confirmed_email` or `local_credential` |
 
-When `emails_enabled` is false, email verification, password recovery and IP authorization don't work.
+When `emails_enabled` is false, email verification, password recovery and IP authorisation don't work.
 
 ### Instant account availability
 
@@ -363,7 +363,7 @@ A `feature_` key is `1` when the feature is available and `0` when it isn't. The
 | max_custom_backgrounds | Maximum custom profile backgrounds (user) |
 | max_embeds_per_message | Maximum embeds per message (user and guild) |
 | max_favorite_meme_tags | Maximum meme tags to track (user) |
-| max_favorite_memes | Maximum favorite memes (user) |
+| max_favorite_memes | Maximum favourite memes (user) |
 | max_group_dm_recipients | Maximum members per group direct message (user) |
 | max_group_dms_per_user | Maximum group direct messages a user can own (user) |
 | max_guild_channels | Maximum channels per guild, counting forum and media channels but not threads (guild) |
@@ -419,15 +419,15 @@ What a client needs before anyone signs in.
 | logo_url | ?string | App logo URL, or null |
 | wordmark_url | ?string | App wordmark URL, or null |
 | favicon_url | ?string | Favicon URL, or null |
-| favicon_dark_url | ?string | Favicon URL for a dark color scheme, or null to use `favicon_url` |
-| theme_color | ?string | Brand color as lowercase `#rrggbb`, or null |
+| favicon_dark_url | ?string | Favicon URL for a dark colour scheme, or null to use `favicon_url` |
+| theme_color | ?string | Brand colour as lowercase `#rrggbb`, or null |
 | status_page_url | ?string | Status page URL, or null |
 | status_page_instatus | boolean | Whether the status page is an Instatus page browsers can read. Clients show its incidents only when this is true |
 | status_page_incident_history_url | ?string | Status page incident history URL, or null |
 | premium_product_name | string | The name of the premium tier, `Premium` unless an admin sets one |
 | premium_info_url | ?string | URL of a page about the premium tier, or null |
 | sign_in_backdrop_url | ?string | Image shown behind the sign-in screens, or null for the default |
-| premium_page_color | ?string | Premium page color of a self-hosted instance as lowercase `#rrggbb`, or null |
+| premium_page_color | ?string | Premium page colour of a self-hosted instance as lowercase `#rrggbb`, or null |
 | premium_showcase_expressions_url | ?string | Image next to the emoji card on the premium page of a self-hosted instance, or null |
 | premium_showcase_profile_url | ?string | Image next to the profile card on the premium page of a self-hosted instance, or null |
 | premium_showcase_stream_url | ?string | Image next to the stream card on the premium page of a self-hosted instance, or null |
@@ -564,7 +564,7 @@ Returns custom guild badges in display order. Send `ids` to look up the badges o
 
 | Field | Type | Description |
 | --- | --- | --- |
-| version | string | The current badge catalog version |
+| version | string | The current badge catalogue version |
 | badges | array[[guild badge](#guild-badge-object) object] | The badges in display order. IDs that are unknown, deleted or user badges are left out |
 | next | ?string | Send this as `after` to get the next page, or null on the last page and for a lookup by `ids` |
 
@@ -575,7 +575,7 @@ Returns custom guild badges in display order. Send `ids` to look up the badges o
 | `version` is the current version | `public, max-age=86400, immutable` |
 | no `version`, or an older one | `public, max-age=60, must-revalidate` |
 
-The response has an `ETag` header, and a request with a matching `If-None-Match` gets 304 with no body. A response read while the catalog changes gets the short lifetime and no `ETag`. The version also changes when the instance moves to a new media URL, because every `asset_url` changes with it.
+The response has an `ETag` header, and a request with a matching `If-None-Match` gets 304 with no body. A response read while the catalogue changes gets the short lifetime and no `ETag`. The version also changes when the instance moves to a new media URL, because every `asset_url` changes with it.
 
 ### Response
 

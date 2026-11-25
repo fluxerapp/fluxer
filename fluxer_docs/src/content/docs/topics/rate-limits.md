@@ -119,7 +119,7 @@ These return 400 `INVALID_FORM_BODY` with a [validation error](/http-api/#valida
 | Username | 5 username or discriminator changes per 3 hours | `USERNAME_CHANGED_TOO_MANY_TIMES` |
 | Biography | 25 changes per 30 minutes | `BIO_CHANGED_TOO_MANY_TIMES` |
 | Pronouns | 25 changes per 30 minutes | `PRONOUNS_CHANGED_TOO_MANY_TIMES` |
-| Accent color | 25 changes per 30 minutes | `ACCENT_COLOR_CHANGED_TOO_MANY_TIMES` |
+| Accent colour | 25 changes per 30 minutes | `ACCENT_COLOR_CHANGED_TOO_MANY_TIMES` |
 | Avatar | 25 changes per 30 minutes | `AVATAR_CHANGED_TOO_MANY_TIMES` |
 | Banner | 25 changes per 30 minutes | `BANNER_CHANGED_TOO_MANY_TIMES` |
 | [Voice activity sharing](/http-api/users/settings/#modify-voice-activity-sharing) | 1 change per 24 hours | `VOICE_ACTIVITY_SHARING_ON_COOLDOWN` |

@@ -35,7 +35,7 @@ An `oauth` connection with a null `provider_id` is left out of profiles until th
 
 | Value | Name | Description |
 | --- | --- | --- |
-| bsky | BLUESKY | A Bluesky account authorized through atproto OAuth |
+| bsky | BLUESKY | A Bluesky account authorised through atproto OAuth |
 | domain | DOMAIN | A domain the account has proved it controls |
 | oauth | OAUTH | An account at an OAuth 2.0 or OpenID Connect provider the instance set up |
 
@@ -70,15 +70,19 @@ Fluxer checks the proof once, when the connection is created. Use either method.
 - Publish a TXT record at `_fluxer.<domain>` with the value `fluxer-verification=<token>` in it.
 - Serve the token alone, without the prefix, at `https://<domain>/.well-known/fluxer-verification` with a 2xx status. Fluxer follows up to three HTTPS redirects to the same path on the domain, with or without `www.` in front.
 
-## Bluesky authorization object
+<a id="bluesky-authorization-object"></a>
 
-[Start Bluesky authorization](#start-bluesky-authorization) and [Start provider authorization](#start-provider-authorization) return this object.
+## Bluesky authorisation object
+
+[Start Bluesky authorisation](#start-bluesky-authorization) and [Start provider authorisation](#start-provider-authorization) return this object.
+
+<a id="bluesky-authorization-object-structure"></a>
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| authorize_url | string | The URL to open for authorization |
+| authorize_url | string | The URL to open for authorisation |
 
 ## List connections
 
@@ -204,60 +208,70 @@ Sets each listed connection's `sort_order` to its position in the array. Unknown
 
 The rate limit is 30 requests per minute, on the `connection:update` bucket.
 
-## Start Bluesky authorization
+<a id="start-bluesky-authorization"></a>
+
+## Start Bluesky authorisation
 
 <RouteHeader method="POST" path="/v1/users/@me/connections/bluesky/authorize" />
 
 Starts or renews a Bluesky connection. Send the user to `authorize_url`, and Bluesky then returns them through `/connections/bluesky/callback`, which clients never call directly.
+<a id="start-bluesky-authorization-json-body"></a>
+
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
 | handle | string | Bluesky handle or profile URL (1-253 characters) |
 
+<a id="start-bluesky-authorization-response"></a>
+
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | [Bluesky authorization](#bluesky-authorization-object) object | Authorization was started |
+| 200 | [Bluesky authorisation](#bluesky-authorization-object) object | Authorisation was started |
 | 400 | [error response](/http-api/#error-response) | `BLUESKY_OAUTH_NOT_ENABLED` or `BLUESKY_OAUTH_AUTHORIZATION_FAILED` |
 | 403 | [error response](/http-api/#error-response) | `ACCOUNT_LIMITED` when the account is [limited](/http-api/users/#account-limitation) |
 
-After authorization, the browser ends on `/connection-callback` in the web app with `status=connected`, or with `status=error` and one of these `reason` values. Success creates or refreshes the connection and sends [User Connections Update](/gateway/events/#user-connections-update).
+After authorisation, the browser ends on `/connection-callback` in the web app with `status=connected`, or with `status=error` and one of these `reason` values. Success creates or refreshes the connection and sends [User Connections Update](/gateway/events/#user-connections-update).
 
 | Value | Description |
 | --- | --- |
 | not_enabled | Bluesky connections are not enabled on the instance |
-| state_invalid | The authorization state is invalid |
-| callback_failed | Authorization could not be completed |
+| state_invalid | The authorisation state is invalid |
+| callback_failed | Authorisation could not be completed |
 | unknown | The connection could not be saved |
 
 The rate limit is 5 requests per minute, on the `connection:create` bucket.
 
-## Start provider authorization
+<a id="start-provider-authorization"></a>
+
+## Start provider authorisation
 
 <RouteHeader method="POST" path="/v1/users/@me/connections/oauth/{provider_id}/authorize" />
 
 Starts or renews a connection to one of the `connection_providers` in the [service availability object](/http-api/instance/#service-availability-object). Send the user to `authorize_url`, and the provider then returns them through `/connections/oauth/{provider_id}/callback`, which clients never call directly. The session that started the request has to still be signed in when the provider returns.
 
+<a id="start-provider-authorization-response"></a>
+
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | [Bluesky authorization](#bluesky-authorization-object) object | Authorization was started |
+| 200 | [Bluesky authorisation](#bluesky-authorization-object) object | Authorisation was started |
 | 400 | [error response](/http-api/#error-response) | `CONNECTION_LIMIT_REACHED` when the account has 20 connections |
 | 403 | [error response](/http-api/#error-response) | `ACCOUNT_LIMITED` when the account is [limited](/http-api/users/#account-limitation) |
 | 404 | [error response](/http-api/#error-response) | `UNKNOWN_CONNECTION_PROVIDER` when the instance has no such provider turned on |
 | 503 | [error response](/http-api/#error-response) | `SERVICE_UNAVAILABLE` when the provider's discovery document can't be fetched |
 
-After authorization, the browser ends on `/connection-callback` in the web app with `status=connected`, or with `status=error` and one of these `reason` values. Success creates the connection, or refreshes its name when the account is already connected, and sends [User Connections Update](/gateway/events/#user-connections-update).
+After authorisation, the browser ends on `/connection-callback` in the web app with `status=connected`, or with `status=error` and one of these `reason` values. Success creates the connection, or refreshes its name when the account is already connected, and sends [User Connections Update](/gateway/events/#user-connections-update).
 
 | Value | Description |
 | --- | --- |
 | not_enabled | The provider is not turned on |
-| state_invalid | The authorization state is invalid, used or expired, or the session that started it signed out |
+| state_invalid | The authorisation state is invalid, used or expired, or the session that started it signed out |
 | denied | The user did not allow the connection at the provider |
-| callback_failed | Authorization could not be completed |
+| callback_failed | Authorisation could not be completed |
 | already_connected | The account is already connected |
 | limit_reached | The account has 20 connections |
 | unknown | The connection could not be saved |
@@ -268,7 +282,7 @@ The rate limit is 10 requests per minute, on the `connection:oauth:authorize` bu
 
 <RouteHeader method="GET" path="/connections/bluesky/client-metadata.json" unauthenticated />
 
-Returns the instance's atproto OAuth client metadata. Bluesky fetches this document during authorization, and it has to be publicly accessible.
+Returns the instance's atproto OAuth client metadata. Bluesky fetches this document during authorisation, and it has to be publicly accessible.
 
 ### Response
 

@@ -67,7 +67,7 @@ Settings for the instance's OpenID Connect provider.
 | display_name | ?string | Provider name shown on the sign-in screen |
 | button_label | ?string | Text on the sign-in button, or null for the default (up to 64 characters) |
 | issuer | ?string | OpenID Connect issuer. Required while `enabled` is true |
-| authorization_url | ?string | Authorization endpoint |
+| authorization_url | ?string | Authorisation endpoint |
 | token_url | ?string | Token endpoint |
 | userinfo_url | ?string | Userinfo endpoint |
 | jwks_url | ?string | JWKS endpoint |
@@ -347,7 +347,7 @@ The admin view of the branding, legal and setup settings that the [Instance](/ht
 
 | Field | Type | Description |
 | --- | --- | --- |
-| branding | [public branding](/http-api/instance/#public-branding-object) object | Product name, image URLs and theme color |
+| branding | [public branding](/http-api/instance/#public-branding-object) object | Product name, image URLs and theme colour |
 | setup | object | Has the boolean `configured` |
 | legal | [public legal configuration](/http-api/instance/#public-legal-configuration-object) object | Terms, privacy and community guidelines URLs |
 | registration | [public registration fields](/http-api/instance/#public-registration-fields-object) object | Has the boolean `collect_date_of_birth` |
@@ -417,8 +417,8 @@ Outgoing email settings, where each `effective_` field gives the value in use af
 | from_email | ?string | Sender address |
 | from_name | ?string | Sender name, or null to use the product name |
 | smtp<sup>1</sup> | object | The SMTP server settings |
-| disable_new_ip_authorization | boolean | Saved switch that turns off new-IP authorization email |
-| effective_disable_new_ip_authorization | boolean | Whether new-IP authorization email is off, true when the instance doesn't send email |
+| disable_new_ip_authorization | boolean | Saved switch that turns off new-IP authorisation email |
+| effective_disable_new_ip_authorization | boolean | Whether new-IP authorisation email is off, true when the instance doesn't send email |
 
 <sup>1</sup> Has nullable `host`, `port` (1-65535), `username`, `tls_mode` (the saved [SMTP TLS mode](#smtp-tls-mode)) and `effective_tls_mode`, plus the boolean `password_set`
 

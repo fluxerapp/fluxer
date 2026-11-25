@@ -10,7 +10,9 @@ Anyone who has a credential can act as its owner.
 
 Keep credentials out of URLs, logs and source code, and treat webhook URLs, [signed media paths](/media-proxy/overview/) and [upload capabilities](/media-proxy/upload-relay/) as secrets as well.
 
-## Authorization schemes
+<a id="authorization-schemes"></a>
+
+## Authorisation schemes
 
 | Value | Name | Description |
 | --- | --- | --- |
@@ -55,7 +57,9 @@ An [Admin API](/admin-api/) key authenticates as its creator on routes below `/v
 
 The user needs the `admin:authenticate` ACL or `*`, otherwise the request returns 403 `MISSING_PERMISSIONS`. A request with a key also needs the operation's ACLs on both the key and its owner, otherwise it returns 403 `MISSING_ACL`.
 
-## Authorization outcomes
+<a id="authorization-outcomes"></a>
+
+## Authorisation outcomes
 
 A protected operation returns 401 `UNAUTHORIZED` for a missing, malformed, unknown, expired or revoked credential, and the response doesn't say which. A valid identity that the operation denies returns 403 `ACCESS_DENIED`.
 
@@ -79,7 +83,7 @@ Turning on enforcement doesn't end existing sessions or revoke tokens and keys.
 | Multi-factor login | TOTP, WebAuthn MFA options, WebAuthn MFA |
 | Email | Verify, resend verification, revert an email change |
 | Recovery | Request, validate and reset a password, recover an account |
-| IP authorization | Authorize, resend, poll |
+| IP authorisation | Authorise, resend, poll |
 | Account | Change password, create a recovery kit |
 | Other | Get username suggestions, check username availability |
 

@@ -20,7 +20,7 @@ Every route here needs membership of the guild, and a target that isn't a member
 | nick | ?string | The nickname in this guild |
 | avatar<sup>1</sup> | ?string | The image hash of the guild avatar |
 | banner<sup>1</sup> | ?string | The image hash of the guild banner |
-| accent_color | ?integer | The guild profile accent color as packed 24-bit RGB |
+| accent_color | ?integer | The guild profile accent colour as packed 24-bit RGB |
 | roles<sup>2</sup> | array[snowflake] | The IDs of the member's roles (max 250) |
 | joined_at | ISO8601 timestamp | The time the account joined this guild |
 | mute<sup>3</sup> | boolean | Whether the member is muted in voice |
@@ -79,7 +79,7 @@ The request body for [Modify current guild member](#modify-current-guild-member)
 | banner?<sup>3</sup> | ?base64 string | The guild banner image data, or null to clear it |
 | bio? | ?string | The guild profile biography (1 character up to the `max_bio_length` limit, 320 by default) |
 | pronouns? | ?string | The guild profile pronouns (1-40 characters) |
-| accent_color? | ?integer | The guild profile accent color as packed 24-bit RGB (0-16777215) |
+| accent_color? | ?integer | The guild profile accent colour as packed 24-bit RGB (0-16777215) |
 | profile_flags? | ?integer | The [guild member profile flags](#guild-member-profile-flags) to store |
 | mention_flags?<sup>4</sup> | ?integer | The [reply mention preference](/http-api/users/#reply-mention-preferences) for this guild |
 | mute? | boolean | Whether the member is muted in voice |

@@ -114,7 +114,7 @@ A role is a permission mask that a guild assigns to its members.
 | --- | --- | --- |
 | id | snowflake | The ID of the role |
 | name | string | The name of the role (1-100 characters) |
-| color | integer | The color of the role as an RGB integer (0-16777215) |
+| color | integer | The colour of the role as an RGB integer (0-16777215) |
 | position | integer | The rank of the role, where a larger value ranks higher |
 | hoist_position | ?integer | The position of the role's group in the member list, or null to follow `position` |
 | permissions | decimal string | The [permission](#permissions) mask the role grants |
@@ -123,7 +123,7 @@ A role is a permission mask that a guild assigns to its members.
 | icon | ?string | The hash of the role icon image, or null |
 | unicode_emoji | ?string | The Unicode emoji used as the role icon, or null |
 
-The everyone role has the guild's ID, is called `@everyone` and is always at position 0. You can change its color and permissions, but you can't delete it, move it, give it a hoist position or give it an icon.
+The everyone role has the guild's ID, is called `@everyone` and is always at position 0. You can change its colour and permissions, but you can't delete it, move it, give it a hoist position or give it an icon.
 
 A role has at most one of `icon` and `unicode_emoji`. Clients show the icon of a member's highest role that has one. The Media Proxy serves an image icon through [Get role icon](/media-proxy/routes/#get-role-icon), at a size you choose.
 
@@ -197,7 +197,7 @@ Creates a role at position 1 and returns its [guild role object](#guild-role-obj
 | Field | Type | Description |
 | --- | --- | --- |
 | name | string | The name of the role (1-100 characters) |
-| color? | integer | The color of the role as an RGB integer (0-16777215, default 0) |
+| color? | integer | The colour of the role as an RGB integer (0-16777215, default 0) |
 | permissions? | decimal string \| integer | The [permission](#permissions) mask, which defaults to the everyone role's mask |
 | icon? | ?base64 string | A PNG, JPEG, WebP or AVIF image for the [role icon](#role-icons), or null to remove it |
 | unicode_emoji? | ?string | A single Unicode emoji for the role icon, or null to remove it |
@@ -238,7 +238,7 @@ Fields you leave out keep their value. On the everyone role, Fluxer ignores ever
 | Field | Type | Description |
 | --- | --- | --- |
 | name? | string | The name of the role (1-100 characters) |
-| color? | integer | The color of the role as an RGB integer (0-16777215) |
+| color? | integer | The colour of the role as an RGB integer (0-16777215) |
 | permissions? | decimal string \| integer | The new [permission](#permissions) mask, which replaces the old one |
 | hoist? | boolean | Whether the role's members show as their own group in the member list |
 | hoist_position? | ?integer | The member list position to give the role, or null to clear it |

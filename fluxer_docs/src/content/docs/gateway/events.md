@@ -123,7 +123,7 @@ A single Dispatch over about 2 MiB is sent but [never kept for replay](/gateway/
 | [Channel Pins ACK](#channel-pins-ack) | The current user acknowledges a channel's pins |
 | [Voice State Update](#voice-state-update) | A guild or call participant's voice state changes |
 | [Voice Server Update](#voice-server-update) | The session receives or replaces its own voice grant |
-| [Voice Signal](#voice-signal) | A signaling message from another peer-to-peer connection |
+| [Voice Signal](#voice-signal) | A signalling message from another peer-to-peer connection |
 | [Entrance Sound Play](#entrance-sound-play) | A participant's entrance sound plays in a voice channel |
 | [Call Create](#call-create) | A private channel call begins or becomes visible |
 | [Call Update](#call-update) | The ringing set, participant roster, or region of a call changes |
@@ -916,7 +916,7 @@ A peer-to-peer voice channel or call switches to LiveKit only when a participant
 
 ### <span id="voice-signal"></span>VOICE_SIGNAL
 
-Another connection in a [peer-to-peer](#peer-to-peer-voice) call sent this session a signaling message with the [Voice Signal](/gateway/commands/#voice-signal) command. Only the session that owns the target connection receives it. Ignore a signal whose `from` is no longer in your roster.
+Another connection in a [peer-to-peer](#peer-to-peer-voice) call sent this session a signalling message with the [Voice Signal](/gateway/commands/#voice-signal) command. Only the session that owns the target connection receives it. Ignore a signal whose `from` is no longer in your roster.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -924,7 +924,7 @@ Another connection in a [peer-to-peer](#peer-to-peer-voice) call sent this sessi
 | channel_id | snowflake | The voice channel or call channel |
 | from | string | The `connection_id` of the sender |
 | user_id | snowflake | The user who owns the sending connection |
-| data | object | The signaling message exactly as the sender sent it |
+| data | object | The signalling message exactly as the sender sent it |
 
 ```json
 {

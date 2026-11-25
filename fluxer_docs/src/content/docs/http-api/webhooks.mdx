@@ -126,7 +126,7 @@ Token routes return this shorter form of the [webhook object](#webhook-object).
 | message_reference?<sup>2</sup> | ?[message reference input](/http-api/messages/#message-reference-input-object) object | A reply or forward reference |
 | allowed_mentions?<sup>3</sup> | ?[allowed mentions](/http-api/messages/#allowed-mentions-object) object | Which mentions notify |
 | flags? | integer | [Message flags](/http-api/messages/#message-flags) |
-| favorite_meme_id? | ?snowflake | Accepted, but webhook messages never attach a favorite meme |
+| favorite_meme_id? | ?snowflake | Accepted, but webhook messages never attach a favourite meme |
 | sticker_ids? | ?array[snowflake] | Up to 3 sticker IDs |
 | tts? | boolean | Accepted, but webhook messages are never text-to-speech |
 | nonce?<sup>4</sup> | string \| integer | A client-generated message identifier (1-32 characters) |
@@ -477,7 +477,7 @@ The `webhook:message_delete::webhook_id` bucket allows 30 requests per minute.
 | fallback? | string | The embed description when `pretext` and `text` are absent |
 | pretext? | string | The first line of the embed description |
 | text? | string | The rest of the embed description |
-| color? | string | The embed color as six hex digits, with or without `#` |
+| color? | string | The embed colour as six hex digits, with or without `#` |
 | title? | string | The embed title |
 | title_link? | string | The embed URL |
 | fields? | array[[Slack attachment field](#slack-attachment-field-object) object] | The embed fields |
@@ -848,7 +848,7 @@ Fluxer posts the latest update as the embed description.
 
 ## Instatus status values
 
-Fluxer uppercases a status and drops everything except letters, which turns `degraded_performance` into `DEGRADEDPERFORMANCE`. Each value sets the label, and every value except `UP` and `HASISSUES` also sets the embed color. Any other status is shown as sent.
+Fluxer uppercases a status and drops everything except letters, which turns `degraded_performance` into `DEGRADEDPERFORMANCE`. Each value sets the label, and every value except `UP` and `HASISSUES` also sets the embed colour. Any other status is shown as sent.
 
 | Value | Description |
 | --- | --- |

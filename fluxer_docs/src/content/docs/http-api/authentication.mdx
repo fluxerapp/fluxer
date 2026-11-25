@@ -18,10 +18,10 @@ An instance reports how people sign in as `account_identity` in its [instance fe
 - [Resend email verification](#resend-email-verification)
 - [Request password recovery](#request-password-recovery)
 - [Revert an email change](#revert-an-email-change)
-- [Authorize an IP address](#authorize-an-ip-address)
-- [Resend IP authorization](#resend-ip-authorization)
+- [Authorise an IP address](#authorize-an-ip-address)
+- [Resend IP authorisation](#resend-ip-authorization)
 
-When the instance enforces SSO, the password, passkey, email code, registration, email verification, password reset, recovery, IP authorization and username routes return 403 `SSO_REQUIRED`. The SSO routes, logout, the session routes, [redeem a sign-in link](#redeem-a-sign-in-link), the desktop and origin handoff routes and the MFA routes for a ticket from [complete SSO](#complete-sso) keep working.
+When the instance enforces SSO, the password, passkey, email code, registration, email verification, password reset, recovery, IP authorisation and username routes return 403 `SSO_REQUIRED`. The SSO routes, logout, the session routes, [redeem a sign-in link](#redeem-a-sign-in-link), the desktop and origin handoff routes and the MFA routes for a ticket from [complete SSO](#complete-sso) keep working.
 
 Each sign-in creates one session, and a session lasts until it is revoked. When a session is revoked, its Gateway connection gets [Invalid Session](/gateway/overview/#invalid-session) with `d: false`.
 
@@ -230,9 +230,13 @@ The result of [recover an account](#recover-an-account), which extends an [authe
 | recovery_key | string | The new recovery key, 8 groups of 4 characters joined by `-`. Show it to the person, because it is returned only here |
 | recovery_kit_created_at | ISO8601 timestamp | When the new recovery kit was created |
 
-## IP authorization poll object
+<a id="ip-authorization-poll-object"></a>
 
-The state of a sign-in that waits for IP authorization.
+## IP authorisation poll object
+
+The state of a sign-in that waits for IP authorisation.
+
+<a id="ip-authorization-poll-object-structure"></a>
 
 ### Structure
 
@@ -427,7 +431,7 @@ Turn on SSO only for a provider that controls the email addresses it asserts.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| code | string | The authorization code from the provider (1-4096 characters) |
+| code | string | The authorisation code from the provider (1-4096 characters) |
 | state | string | The state from [start SSO](#start-sso) (1-4096 characters) |
 | client_binding? | ?string | The `client_binding` from [start SSO](#start-sso). Required unless the state was started with the mobile `redirect_uri` (1-128 characters) |
 
@@ -606,7 +610,7 @@ The rate limit is 5 requests per minute, on the `auth:email_code:send` bucket.
 
 <RouteHeader method="POST" path="/v1/auth/email-code/verify" unauthenticated />
 
-Checks the emailed code and signs in to the existing account, or creates the account for a new address the way [register an account](#register-an-account) does, with the email already verified. A code allows 5 tries. When the code confirms an address that was never confirmed, it also ends every other session of the account, forgets its authorized IP addresses and revokes its OAuth2 grants.
+Checks the emailed code and signs in to the existing account, or creates the account for a new address the way [register an account](#register-an-account) does, with the email already verified. A code allows 5 tries. When the code confirms an address that was never confirmed, it also ends every other session of the account, forgets its authorised IP addresses and revokes its OAuth2 grants.
 
 ### JSON body
 
@@ -708,7 +712,7 @@ Signs in with an email address or username and a password. Returns an [authentic
 
 An unknown account and a wrong password both return the field code `INVALID_EMAIL_OR_PASSWORD`, or `INVALID_LOGIN_OR_PASSWORD` on a `username` instance.
 
-A sign-in from a new IP address on an account without a second factor returns 403 `IP_AUTHORIZATION_REQUIRED` with a `ticket` and sends an email. Poll with [poll IP authorization](#poll-ip-authorization) until the person uses the link. Instances that send no email or turn off new-IP authorization skip this step.
+A sign-in from a new IP address on an account without a second factor returns 403 `IP_AUTHORIZATION_REQUIRED` with a `ticket` and sends an email. Poll with [poll IP authorisation](#poll-ip-authorization) until the person uses the link. Instances that send no email or turn off new-IP authorisation skip this step.
 
 Signing in turns a disabled account back on and cancels a deletion the person scheduled.
 
@@ -1001,7 +1005,7 @@ The rate limit is 10 requests per minute, on the `auth:recover` bucket.
 Uses the token sent to the old address after an email change to put that address back and set a new password. Returns an [authentication token response](#authentication-token-response) and sends [User Update](/gateway/events/#user-update). The token is valid for 24 hours.
 
 :::danger[Reverting removes every other way in]
-It ends every session, removes every second factor and leaves only the current IP address authorized.
+It ends every session, removes every second factor and leaves only the current IP address authorised.
 :::
 
 ### JSON body
@@ -1062,17 +1066,23 @@ Signs out the sessions whose `id_hash` values you send and returns 204. It needs
 
 The rate limit is 20 requests per 10 seconds, on the `auth:sessions:logout` bucket.
 
-## Authorize an IP address
+<a id="authorize-an-ip-address"></a>
+
+## Authorise an IP address
 
 <RouteHeader method="POST" path="/v1/auth/authorize-ip" unauthenticated />
 
-Uses the token from the IP authorization email to approve the new IP address and returns 204. The waiting device gets its session from [poll IP authorization](#poll-ip-authorization).
+Uses the token from the IP authorisation email to approve the new IP address and returns 204. The waiting device gets its session from [poll IP authorisation](#poll-ip-authorization).
+
+<a id="authorize-an-ip-address-json-body"></a>
 
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
 | token | string | The token from the email |
+
+<a id="authorize-an-ip-address-response"></a>
 
 ### Response
 
@@ -1104,17 +1114,23 @@ Signs in with the token from a sign-in link made by [create admin sign-in link](
 
 The rate limit is 5 requests per minute, on the shared `auth:authorize_ip` bucket.
 
-## Resend IP authorization
+<a id="resend-ip-authorization"></a>
+
+## Resend IP authorisation
 
 <RouteHeader method="POST" path="/v1/auth/ip-authorization/resend" unauthenticated />
 
-Sends the IP authorization email again and returns 204. Each ticket allows one resend, 30 seconds or more after the sign-in.
+Sends the IP authorisation email again and returns 204. Each ticket allows one resend, 30 seconds or more after the sign-in.
+
+<a id="resend-ip-authorization-json-body"></a>
 
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
 | ticket | string | The ticket from the `IP_AUTHORIZATION_REQUIRED` error |
+
+<a id="resend-ip-authorization-response"></a>
 
 ### Response
 
@@ -1126,11 +1142,15 @@ Sends the IP authorization email again and returns 204. Each ticket allows one r
 
 The rate limit is 5 requests per minute, on the `auth:ip_authorization_resend` bucket.
 
-## Poll IP authorization
+<a id="poll-ip-authorization"></a>
+
+## Poll IP authorisation
 
 <RouteHeader method="GET" path="/v1/auth/ip-authorization/poll" unauthenticated />
 
-Returns the [IP authorization poll](#ip-authorization-poll-object) state of a waiting sign-in. After the link is used, the token is returned for 60 seconds.
+Returns the [IP authorisation poll](#ip-authorization-poll-object) state of a waiting sign-in. After the link is used, the token is returned for 60 seconds.
+
+<a id="poll-ip-authorization-query-parameters"></a>
 
 ### Query parameters
 
@@ -1138,11 +1158,13 @@ Returns the [IP authorization poll](#ip-authorization-poll-object) state of a wa
 | --- | --- | --- |
 | ticket | string | The ticket from the `IP_AUTHORIZATION_REQUIRED` error |
 
+<a id="poll-ip-authorization-response"></a>
+
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | [IP authorization poll](#ip-authorization-poll-object) object | The state was returned |
+| 200 | [IP authorisation poll](#ip-authorization-poll-object) object | The state was returned |
 | 400 | [error response](/http-api/#error-response) | The field code `INVALID_OR_EXPIRED_AUTHORIZATION_TICKET` |
 
 The rate limit is 60 requests per minute, on the `auth:ip_authorization_poll` bucket.

@@ -10,7 +10,7 @@ The Media Proxy resizes and converts images, keeps or removes animation and extr
 
 An attachment or signed external request transforms when `width`, `height`, `format` or `quality` is present, or when `animated` is true. `download` and `effort` don't start a transformation.
 
-A signed external request also transforms when the target filename ends in `.svg` or the origin body is SVG. An SVG attachment with no transformation parameter is still rasterized to lossless WebP, but only in [`mp` mode](/media-proxy/overview/#deployment-modes).
+A signed external request also transforms when the target filename ends in `.svg` or the origin body is SVG. An SVG attachment with no transformation parameter is still rasterised to lossless WebP, but only in [`mp` mode](/media-proxy/overview/#deployment-modes).
 
 An image asset request always transforms, unless the requested format matches the source and the requested size is at least the source size.
 
@@ -89,7 +89,7 @@ A sticker returns WebP whatever `format` says, unless it is an animated GIF requ
 
 ## Quality
 
-Values are case-sensitive, and an unrecognized value selects `high`.
+Values are case-sensitive, and an unrecognised value selects `high`.
 
 | Value | Description |
 | --- | --- |

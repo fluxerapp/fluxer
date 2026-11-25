@@ -23,7 +23,7 @@ The public account object inside messages, relationships, guild members and appl
 | discriminator | string | The discriminator, four digits with leading zeroes |
 | global_name | ?string | The display name, or null |
 | avatar<sup>1</sup> | ?string | The avatar hash, or null |
-| avatar_color | ?integer | The 24-bit RGB color taken from the avatar, or null |
+| avatar_color | ?integer | The 24-bit RGB colour taken from the avatar, or null |
 | bot? | boolean | Whether the account is a bot, omitted when false |
 | system? | boolean | Whether the account is a Fluxer system account, omitted when false |
 | flags | integer | [Public user flags](#public-user-flags) |
@@ -89,11 +89,11 @@ The current account as its owner sees it, returned by [Get current user](/http-a
 | has_verified_phone | boolean | Deprecated. Always false |
 | bio | ?string | The profile biography, or null |
 | pronouns | ?string | The profile pronouns, or null |
-| accent_color | ?integer | The profile accent color as 24-bit RGB, or null |
+| accent_color | ?integer | The profile accent colour as 24-bit RGB, or null |
 | timezone?<sup>1</sup> | ?string | The IANA timezone, or null |
 | timezone_privacy_flags?<sup>1</sup> | integer | [Profile field privacy flags](#profile-field-privacy-flags) for the timezone |
 | banner | ?string | The profile banner hash, or null |
-| banner_color | ?integer | The 24-bit RGB color taken from the banner, or null |
+| banner_color | ?integer | The 24-bit RGB colour taken from the banner, or null |
 | mfa_enabled<sup>1</sup> | boolean | Whether any authenticator is set up |
 | authenticator_types?<sup>1</sup> | array[integer] | [Authenticator types](#authenticator-types) set up for the account |
 | verified<sup>2</sup> | boolean | Whether the email address is confirmed |
@@ -187,7 +187,7 @@ An account is limited while `account_limited` is true. It can still read, join v
 - Creating a group direct message with [Create private channel](/http-api/users/private-channels/#create-private-channel), and [Add group direct message recipient](/http-api/channels/#add-group-direct-message-recipient)
 - Changing a profile field with [Modify current user](/http-api/users/current-user/#modify-current-user) or [Modify current guild member](/http-api/guild-members/#modify-current-guild-member)
 - Setting a custom status with [Modify current user settings](/http-api/users/settings/#modify-current-user-settings) or a [presence update](/gateway/commands/#presence-update)
-- [Initiate connection](/http-api/connections/#initiate-connection), [Verify and create connection](/http-api/connections/#verify-and-create-connection) and [Start Bluesky authorization](/http-api/connections/#start-bluesky-authorization)
+- [Initiate connection](/http-api/connections/#initiate-connection), [Verify and create connection](/http-api/connections/#verify-and-create-connection) and [Start Bluesky authorisation](/http-api/connections/#start-bluesky-authorization)
 - [Upload entrance sound](/http-api/entrance-sounds/#upload-entrance-sound) and [Set entrance sound selection](/http-api/entrance-sounds/#set-entrance-sound-selection)
 
 ## Account tiers
@@ -333,15 +333,15 @@ The text and emoji set as the account's status.
 
 ## Guild folder object
 
-A folder in the guild sidebar. When you join a guild, Fluxer adds it to the start of the uncategorized folder, and when you leave one, Fluxer removes it and deletes any other folder it leaves empty.
+A folder in the guild sidebar. When you join a guild, Fluxer adds it to the start of the uncategorised folder, and when you leave one, Fluxer removes it and deletes any other folder it leaves empty.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| id | ?integer | The ID of the folder, `-1` for the uncategorized folder |
+| id | ?integer | The ID of the folder, `-1` for the uncategorised folder |
 | name | ?string | The folder name, or null |
-| color | ?integer | The folder color as 24-bit RGB, or null |
+| color | ?integer | The folder colour as 24-bit RGB, or null |
 | flags | integer | [Guild folder flags](#guild-folder-flags) |
 | icon | string | [Guild folder icon](#guild-folder-icons) |
 | guild_ids | array[snowflake] | The guild IDs in sidebar order. A guild can appear in only one folder |
@@ -483,8 +483,8 @@ The account-wide profile inside a [full user profile object](#full-user-profile-
 | bio | ?string | The biography, or null |
 | pronouns | ?string | The pronouns, or null |
 | banner | ?string | The profile banner hash, or null |
-| banner_color | ?integer | The 24-bit RGB color taken from the banner, or null |
-| accent_color | ?integer | The accent color as 24-bit RGB, or null |
+| banner_color | ?integer | The 24-bit RGB colour taken from the banner, or null |
+| accent_color | ?integer | The accent colour as 24-bit RGB, or null |
 
 ## Guild member profile object
 
@@ -497,7 +497,7 @@ The target's profile in the guild from the `guild_id` query parameter.
 | bio | ?string | The guild biography, or null |
 | pronouns | ?string | The guild pronouns, or null |
 | banner | ?string | The guild banner hash, or null |
-| accent_color | ?integer | The guild accent color as 24-bit RGB, or null |
+| accent_color | ?integer | The guild accent colour as 24-bit RGB, or null |
 
 ## Mutual guild object
 

@@ -243,22 +243,22 @@ One folder of a submitted guild folder layout.
 | --- | --- | --- |
 | id<sup>1</sup> | integer | The ID of the folder |
 | name? | ?string | The name of the folder (0-100 characters) |
-| color?<sup>2</sup> | ?integer | The packed 24-bit RGB color (0-16777215), default 0 |
+| color?<sup>2</sup> | ?integer | The packed 24-bit RGB colour (0-16777215), default 0 |
 | flags? | integer | [Guild folder flags](/http-api/users/#guild-folder-flags), default 0 |
 | icon? | string | [Guild folder icon](/http-api/users/#guild-folder-icons), default `folder` |
 | guild_ids | array[snowflake] | The guild IDs in display order (max 200) |
 
-<sup>1</sup> At least `-1`, which is the uncategorized folder
+<sup>1</sup> At least `-1`, which is the uncategorised folder
 
 <sup>2</sup> Out-of-range values fail with `COLOR_VALUE_TOO_LOW` or `COLOR_VALUE_TOO_HIGH`
 
-Fluxer adds an empty uncategorized folder when your layout has none. A guild ID in more than one folder stays in only one of them. A folder with a name wins over one without, then any folder wins over the uncategorized folder, then the earlier folder wins.
+Fluxer adds an empty uncategorised folder when your layout has none. A guild ID in more than one folder stays in only one of them. A folder with a name wins over one without, then any folder wins over the uncategorised folder, then the earlier folder wins.
 
 :::caution[Send back guild IDs you don't show]
 The array replaces the stored layout, including guild IDs your client can't resolve. Send those IDs back too, or the update deletes them from the layout.
 :::
 
-Joining a guild adds it to the uncategorized folder. Leaving a guild removes it from every folder and deletes every folder left empty except the uncategorized folder. Both send [User Settings Update](/gateway/events/#user-settings-update).
+Joining a guild adds it to the uncategorised folder. Leaving a guild removes it from every folder and deletes every folder left empty except the uncategorised folder. Both send [User Settings Update](/gateway/events/#user-settings-update).
 
 ## Custom status input object
 
@@ -292,7 +292,7 @@ A new account starts with these settings.
 | Rendering | Everything shown and animated, spoilers hidden until clicked |
 | Incoming calls and group direct message additions | Friends only |
 | Guild DM restrictions | None for members and bots |
-| Guild folders | One empty uncategorized folder |
+| Guild folders | One empty uncategorised folder |
 | AFK timeout | 600 seconds |
 | Time format | Automatic |
 | Profile privacy | Visible to all guild members |

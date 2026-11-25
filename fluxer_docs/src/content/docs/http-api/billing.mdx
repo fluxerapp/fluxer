@@ -70,7 +70,7 @@ If the account already has an `active` or `trialing` subscription and `price_id`
 | Field | Type | Description |
 | --- | --- | --- |
 | price_id | string | Stripe price ID of a monthly or yearly premium plan (1-256 characters) |
-| country_code?<sup>1</sup> | string | Two-letter country code that picks the price catalog (2 characters) |
+| country_code?<sup>1</sup> | string | Two-letter country code that picks the price catalogue (2 characters) |
 | client_geoip_country_code? | string | Two-letter country code the client detected, saved with the purchase (2 characters) |
 | eu_withdrawal_waiver_accepted? | boolean | Whether the user accepted the EU withdrawal waiver for digital content |
 | payment_method?<sup>2</sup> | string | Either `card`, `pix` or `upi` (default `card`) |
@@ -90,7 +90,7 @@ If the account already has an `active` or `trialing` subscription and `price_id`
 | --- | --- | --- |
 | 200 | [redirect URL](#redirect-url-object) object | The session was created or the billing cycle change was scheduled |
 | 400 | [error response](/http-api/#error-response) | `STRIPE_INVALID_PRODUCT` for an unknown price |
-| 400 | [error response](/http-api/#error-response) | `STRIPE_INVALID_PRODUCT_CONFIGURATION` for a gift price, a wrong catalog or a bad `payment_method` |
+| 400 | [error response](/http-api/#error-response) | `STRIPE_INVALID_PRODUCT_CONFIGURATION` for a gift price, a wrong catalogue or a bad `payment_method` |
 | 400 | [error response](/http-api/#error-response) | `UNCLAIMED_ACCOUNT_CANNOT_MAKE_PURCHASES` for an unclaimed account |
 | 400 | [error response](/http-api/#error-response) | `STRIPE_ERROR` when Stripe rejects the request |
 | 403 | [error response](/http-api/#error-response) | `PURCHASE_EMAIL_VERIFICATION_REQUIRED` for an unverified email address |
@@ -119,7 +119,7 @@ Creates a one-time premium gift checkout session and returns a [redirect URL](#r
 | Field | Type | Description |
 | --- | --- | --- |
 | price_id | string | Stripe price ID of a gift (1-256 characters) |
-| country_code?<sup>1</sup> | string | Two-letter country code that picks the price catalog (2 characters) |
+| country_code?<sup>1</sup> | string | Two-letter country code that picks the price catalogue (2 characters) |
 | client_geoip_country_code? | string | Two-letter country code the client detected, saved with the purchase (2 characters) |
 | eu_withdrawal_waiver_accepted? | boolean | Whether the user accepted the EU withdrawal waiver for digital content |
 | is_business? | boolean | Whether to require a billing address for tax invoicing (default false) |
@@ -137,7 +137,7 @@ Creates a one-time premium gift checkout session and returns a [redirect URL](#r
 | --- | --- | --- |
 | 200 | [redirect URL](#redirect-url-object) object | The session was created |
 | 400 | [error response](/http-api/#error-response) | `STRIPE_INVALID_PRODUCT` for an unknown price |
-| 400 | [error response](/http-api/#error-response) | `STRIPE_INVALID_PRODUCT_CONFIGURATION` for a recurring price or a wrong catalog |
+| 400 | [error response](/http-api/#error-response) | `STRIPE_INVALID_PRODUCT_CONFIGURATION` for a recurring price or a wrong catalogue |
 | 400 | [error response](/http-api/#error-response) | `UNCLAIMED_ACCOUNT_CANNOT_MAKE_PURCHASES` for an unclaimed account |
 | 400 | [error response](/http-api/#error-response) | `STRIPE_ERROR` when Stripe rejects the request |
 | 403 | [error response](/http-api/#error-response) | `PURCHASE_EMAIL_VERIFICATION_REQUIRED` for an unverified email address |

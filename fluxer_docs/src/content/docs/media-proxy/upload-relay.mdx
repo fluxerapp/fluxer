@@ -8,7 +8,9 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 The upload relay stores the bytes of one file at a signed upload URL. [Request attachment upload URLs](/http-api/messages/#request-attachment-upload-urls) and [Create stream preview upload URL](/http-api/streams/#create-stream-preview-upload-url) issue these URLs as one step of an [attachment upload](/topics/uploads/).
 
-## Authorization
+<a id="authorization"></a>
+
+## Authorisation
 
 The `t` query parameter is a signed token for one object or multipart part, and the relay ignores the `Authorization` header. Send the request to the URL exactly as the HTTP API returned it and keep the URL private. The URL expires after 900 seconds unless the instance sets another lifetime.
 
@@ -16,7 +18,7 @@ The `t` query parameter is a signed token for one object or multipart part, and 
 
 <RouteHeader method="PUT" path="/v1/relay/{key}" />
 
-Stores the object or multipart part the upload URL authorizes, and returns the `ETag` from storage when storage sends one.
+Stores the object or multipart part the upload URL authorises, and returns the `ETag` from storage when storage sends one.
 
 ### Query parameters
 
@@ -43,7 +45,7 @@ Stores the object or multipart part the upload URL authorizes, and returns the `
 | 403 | `Forbidden` | The key, `uploadId` or `partNumber` does not match the token |
 | 404 | `Not Found` | The Media Proxy is not running in `upload` or `relay` [mode](/media-proxy/overview/#deployment-modes) |
 | 405 | empty | The method is not `PUT` or `OPTIONS` |
-| 413 | `Payload Too Large` | The body is longer than `Content-Length`, the authorized size or the body limit |
+| 413 | `Payload Too Large` | The body is longer than `Content-Length`, the authorised size or the body limit |
 | 500 | `Internal Server Error` | The relay could not store the upload locally |
 | 502 | `Bad Gateway` | Object storage refused the write |
 | 503 | `Service Unavailable` | The request has no `Content-Length` and the relay's temporary upload space is full |

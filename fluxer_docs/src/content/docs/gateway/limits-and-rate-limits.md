@@ -29,7 +29,7 @@ When the Gateway is busy, it keeps an Identify waiting and starts the session on
 
 ## Connection and command rate limits
 
-Every client payload counts toward the first three budgets.
+Every client payload counts towards the first three budgets.
 
 | Scope | Budget | Over the budget |
 | --- | --- | --- |

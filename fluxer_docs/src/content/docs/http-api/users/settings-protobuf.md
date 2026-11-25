@@ -37,13 +37,13 @@ A field marked `?` is absent until a client sets it. Every other scalar field is
 | accessibility? | [accessibility settings](#accessibility-settings-object) object | Display, motion, media and other accessibility preferences |
 | accessibility_overrides? | [accessibility overrides](#accessibility-overrides-object) object | Media setting dirty flags |
 | textual_preview? | [textual preview settings](#textual-preview-settings-object) object | Textual attachment preview preferences |
-| emoji_picker? | [emoji picker state](#emoji-picker-state-object) object | Emoji picker usage and favorites |
-| sticker_picker? | [sticker picker state](#sticker-picker-state-object) object | Sticker picker usage and favorites |
-| memes_picker? | [memes picker state](#memes-picker-state-object) object | Memes picker usage and favorites |
+| emoji_picker? | [emoji picker state](#emoji-picker-state-object) object | Emoji picker usage and favourites |
+| sticker_picker? | [sticker picker state](#sticker-picker-state-object) object | Sticker picker usage and favourites |
+| memes_picker? | [memes picker state](#memes-picker-state-object) object | Memes picker usage and favourites |
 | emoji? | [emoji state](#emoji-state-object) object | Emoji skin tone |
 | emoji_sticker_layout? | [emoji and sticker layout settings](#emoji-and-sticker-layout-settings-object) object | Emoji and sticker picker layout |
-| favorite_gifs? | [favorite GIF settings](#favorite-gif-settings-object) object | Favorite GIFs |
-| favorites? | [favorites state](#favorites-state-object) object | Favorite channels and their categories |
+| favorite_gifs? | [favourite GIF settings](#favorite-gif-settings-object) object | Favourite GIFs |
+| favorites? | [favourites state](#favorites-state-object) object | Favourite channels and their categories |
 | recent_mentions? | [recent mentions settings](#recent-mentions-settings-object) object | Recent mentions filters |
 | sidebar? | [sidebar preferences](#sidebar-preferences-object) object | Direct message sidebar state |
 | member_list? | [member list state](#member-list-state-object) object | Member list visibility |
@@ -84,7 +84,7 @@ Display, motion, message, media, voice and interaction preferences.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| saturation_factor? | double | Color saturation multiplier, where 1 is unchanged |
+| saturation_factor? | double | Colour saturation multiplier, where 1 is unchanged |
 | always_underline_links | bool | Whether links are always underlined |
 | enable_text_selection? | bool | Whether message text can be selected |
 | show_message_send_button? | bool | Whether the composer shows a send button |
@@ -108,7 +108,7 @@ Display, motion, message, media, voice and interaction preferences.
 | show_memes_button? | bool | Whether the composer shows the memes button |
 | show_stickers_button? | bool | Whether the composer shows the sticker button |
 | show_emoji_button? | bool | Whether the composer shows the emoji button |
-| show_media_favorite_button? | bool | Whether media shows the favorite button |
+| show_media_favorite_button? | bool | Whether media shows the favourite button |
 | show_media_download_button? | bool | Whether media shows the download button |
 | show_media_delete_button? | bool | Whether media shows the delete button |
 | show_suppress_embeds_button? | bool | Whether messages show the suppress embeds button |
@@ -126,7 +126,7 @@ Display, motion, message, media, voice and interaction preferences.
 | show_memes_in_autocomplete? | bool | Whether autocomplete includes memes |
 | voice_channel_join_requires_double_click? | bool | Whether joining a voice channel needs a double click |
 | custom_theme_css? | string | CSS of the synced custom theme |
-| show_favorites? | bool | Whether the favorites section is shown |
+| show_favorites? | bool | Whether the favourites section is shown |
 | zoom_level? | double | App zoom multiplier, where 1 is unscaled |
 | dm_message_preview_mode | int32 | [Direct message preview mode](#direct-message-preview-modes) |
 | enable_tts_command? | bool | Whether the text-to-speech command is on |
@@ -208,38 +208,38 @@ How often and how recently one emoji, sticker or meme was used.
 
 ## Emoji picker state object
 
-Emoji usage, favorites and collapsed categories. Fluxer clients key emoji as `unicode:<name>` or `custom:<guild id>:<emoji id>`.
+Emoji usage, favourites and collapsed categories. Fluxer clients key emoji as `unicode:<name>` or `custom:<guild id>:<emoji id>`.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
 | usage | map[string, [usage stat](#usage-stat-object) object] | Usage keyed by emoji key |
-| favorite_emoji_ids | array[string] | Favorite emoji keys in display order |
+| favorite_emoji_ids | array[string] | Favourite emoji keys in display order |
 | collapsed_category_ids | array[string] | Collapsed category IDs |
 
 ## Sticker picker state object
 
-Sticker usage, favorites and collapsed categories.
+Sticker usage, favourites and collapsed categories.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
 | usage | map[string, [usage stat](#usage-stat-object) object] | Usage keyed by sticker ID |
-| favorite_sticker_ids | array[string] | Favorite sticker IDs in display order |
+| favorite_sticker_ids | array[string] | Favourite sticker IDs in display order |
 | collapsed_category_ids | array[string] | Collapsed category IDs |
 
 ## Memes picker state object
 
-Meme usage, favorites and collapsed categories. The memes are in the account's [memes](/http-api/memes/).
+Meme usage, favourites and collapsed categories. The memes are in the account's [memes](/http-api/memes/).
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
 | usage | map[string, [usage stat](#usage-stat-object) object] | Usage keyed by meme ID |
-| favorite_meme_ids | array[string] | Favorite meme IDs in display order |
+| favorite_meme_ids | array[string] | Favourite meme IDs in display order |
 | collapsed_category_ids | array[string] | Collapsed category IDs |
 
 ## Emoji state object
@@ -275,21 +275,29 @@ Meme usage, favorites and collapsed categories. The memes are in the account's [
 | 1 | STICKER_PICKER_VIEW_MODE_COZY | Roomy layout |
 | 2 | STICKER_PICKER_VIEW_MODE_COMPACT | Compact layout |
 
-## Favorite GIF settings object
+<a id="favorite-gif-settings-object"></a>
 
-Fluxer clients keep favorite GIFs here, or in the account's [memes](/http-api/memes/) when `save_as_saved_media` is true.
+## Favourite GIF settings object
+
+Fluxer clients keep favourite GIFs here, or in the account's [memes](/http-api/memes/) when `save_as_saved_media` is true.
+
+<a id="favorite-gif-settings-object-structure"></a>
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| entries | array[[favorite GIF entry](#favorite-gif-entry-object) object] | Favorite GIFs in display order |
-| save_as_saved_media | bool | Whether favoriting a GIF saves it as a meme |
-| seen_first_time_prompt | bool | Whether the first-time favorite prompt was shown |
+| entries | array[[favourite GIF entry](#favorite-gif-entry-object) object] | Favourite GIFs in display order |
+| save_as_saved_media | bool | Whether favouriting a GIF saves it as a meme |
+| seen_first_time_prompt | bool | Whether the first-time favourite prompt was shown |
 
-## Favorite GIF entry object
+<a id="favorite-gif-entry-object"></a>
 
-One favorite GIF, in the same format as a [resolved GIF entry](/http-api/memes/#resolved-gif-entry-object).
+## Favourite GIF entry object
+
+One favourite GIF, in the same format as a [resolved GIF entry](/http-api/memes/#resolved-gif-entry-object).
+
+<a id="favorite-gif-entry-object-structure"></a>
 
 ### Structure
 
@@ -299,13 +307,17 @@ One favorite GIF, in the same format as a [resolved GIF entry](/http-api/memes/#
 | proxy_url | string | [Media Proxy](/media-proxy/overview/) URL of the preview |
 | width | uint32 | Preview width in pixels, or 0 if unknown |
 | height | uint32 | Preview height in pixels, or 0 if unknown |
-| media | map[string, [favorite GIF media format](#favorite-gif-media-format-object) object] | Formats keyed by [format name](/http-api/memes/#gif-media-format-names) |
+| media | map[string, [favourite GIF media format](#favorite-gif-media-format-object) object] | Formats keyed by [format name](/http-api/memes/#gif-media-format-names) |
 | content_type | string | Media type of the preview, or empty for `image/gif` |
 | placeholder | string | Thumbhash placeholder, or empty |
 
-## Favorite GIF media format object
+<a id="favorite-gif-media-format-object"></a>
 
-One encoding of a favorite GIF, in the same format as a [GIF media format](/http-api/memes/#gif-media-format-object).
+## Favourite GIF media format object
+
+One encoding of a favourite GIF, in the same format as a [GIF media format](/http-api/memes/#gif-media-format-object).
+
+<a id="favorite-gif-media-format-object-structure"></a>
 
 ### Structure
 
@@ -316,21 +328,29 @@ One encoding of a favorite GIF, in the same format as a [GIF media format](/http
 | width | uint32 | Width in pixels |
 | height | uint32 | Height in pixels |
 
-## Favorites state object
+<a id="favorites-state-object"></a>
 
-Favorite channels and the categories they're grouped in. They aren't guild categories.
+## Favourites state object
+
+Favourite channels and the categories they're grouped in. They aren't guild categories.
+
+<a id="favorites-state-object-structure"></a>
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| channels | array[[favorite channel](#favorite-channel-object) object] | Favorite channels |
-| categories | array[[favorite category](#favorite-category-object) object] | Favorite categories |
-| collapsed_category_ids | array[string] | Collapsed favorite category IDs |
+| channels | array[[favourite channel](#favorite-channel-object) object] | Favourite channels |
+| categories | array[[favourite category](#favorite-category-object) object] | Favourite categories |
+| collapsed_category_ids | array[string] | Collapsed favourite category IDs |
 | hide_muted_channels | bool | Whether muted channels are hidden |
-| muted | bool | Whether favorites are muted |
+| muted | bool | Whether favourites are muted |
 
-## Favorite channel object
+<a id="favorite-channel-object"></a>
+
+## Favourite channel object
+
+<a id="favorite-channel-object-structure"></a>
 
 ### Structure
 
@@ -338,11 +358,15 @@ Favorite channels and the categories they're grouped in. They aren't guild categ
 | --- | --- | --- |
 | channel_id | string | The ID of the channel |
 | guild_id | string | The ID of the guild |
-| parent_id? | string | The `id` of the [favorite category](#favorite-category-object) it's in |
-| position | int32 | Position in the favorites list |
+| parent_id? | string | The `id` of the [favourite category](#favorite-category-object) it's in |
+| position | int32 | Position in the favourites list |
 | nickname? | string | Nickname the user gave the channel |
 
-## Favorite category object
+<a id="favorite-category-object"></a>
+
+## Favourite category object
+
+<a id="favorite-category-object-structure"></a>
 
 ### Structure
 

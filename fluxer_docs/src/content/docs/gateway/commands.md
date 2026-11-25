@@ -279,14 +279,14 @@ Updates over the [Voice State Update limit](/gateway/limits-and-rate-limits/#con
 
 ## Voice Signal
 
-Opcode `13` sends one signaling message to another connection in a [peer-to-peer](/gateway/events/#peer-to-peer-voice) voice channel or call. Send it after a [Voice Server Update](/gateway/events/#voice-server-update) with `p2p: true`.
+Opcode `13` sends one signalling message to another connection in a [peer-to-peer](/gateway/events/#peer-to-peer-voice) voice channel or call. Send it after a [Voice Server Update](/gateway/events/#voice-server-update) with `p2p: true`.
 
 | Field | Type | Description |
 | --- | --- | --- |
 | guild_id? | ?snowflake | The guild with the voice channel, where null or omitted selects the direct message and group direct message call context |
 | channel_id | snowflake | The voice channel or call channel both connections are in |
 | to | string | The `connection_id` of the voice state the signal is for |
-| data | object | The signaling message, which Fluxer relays unread |
+| data | object | The signalling message, which Fluxer relays unread |
 
 ```json
 {

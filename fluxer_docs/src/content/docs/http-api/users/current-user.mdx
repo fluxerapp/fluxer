@@ -85,7 +85,7 @@ Changes the account and returns the updated [user](/http-api/users/#user-object)
 | banner?<sup>5</sup> <sup>6</sup> | ?string | Base64-encoded banner image, or null to clear |
 | bio?<sup>7</sup> | ?string | Biography (1 character up to the `max_bio_length` limit, 320 by default), or null to clear |
 | pronouns? | ?string | Pronouns (1-40 characters), or null to clear |
-| accent_color? | ?integer | Packed 24-bit RGB color (0-16777215), or null to clear |
+| accent_color? | ?integer | Packed 24-bit RGB colour (0-16777215), or null to clear |
 | timezone?<sup>8</sup> | ?string | IANA timezone identifier (1-128 characters), or null to clear |
 | timezone_privacy_flags? | integer | [Profile field privacy flags](/http-api/users/#profile-field-privacy-flags) for the timezone |
 | hidden_profile_badges?<sup>12</sup> | array[string] | The full list of [badge keys](/http-api/users/#hiding-badges) to hide from other people, at most 1008 |
@@ -173,7 +173,7 @@ A denied change returns 400 `INVALID_FORM_BODY` with the validation code.
 | Username or discriminator | 5 per 3 hours | `USERNAME_CHANGED_TOO_MANY_TIMES` |
 | Biography | 25 per 30 minutes | `BIO_CHANGED_TOO_MANY_TIMES` |
 | Pronouns | 25 per 30 minutes | `PRONOUNS_CHANGED_TOO_MANY_TIMES` |
-| Accent color | 25 per 30 minutes | `ACCENT_COLOR_CHANGED_TOO_MANY_TIMES` |
+| Accent colour | 25 per 30 minutes | `ACCENT_COLOR_CHANGED_TOO_MANY_TIMES` |
 | Avatar | 25 per 30 minutes | `AVATAR_CHANGED_TOO_MANY_TIMES` |
 | Banner | 25 per 30 minutes | `BANNER_CHANGED_TOO_MANY_TIMES` |
 
@@ -294,15 +294,21 @@ Fluxer sends [User Update](/gateway/events/#user-update).
 
 The rate limit is 10 requests per minute, on the `user:email_verification:confirm` bucket.
 
-## Forget authorized IPs
+<a id="forget-authorized-ips"></a>
+
+## Forget authorised IPs
 
 <RouteHeader method="DELETE" path="/v1/users/@me/authorized-ips" mfa />
 
-Deletes every authorized IP record, and the next sign-in from any address needs fresh authorization. Needs [sudo verification](/http-api/users/mfa/#sudo-mode).
+Deletes every authorised IP record, and the next sign-in from any address needs fresh authorisation. Needs [sudo verification](/http-api/users/mfa/#sudo-mode).
+
+<a id="forget-authorized-ips-json-body"></a>
 
 ### JSON body
 
 The [sudo verification object](/http-api/users/mfa/#sudo-verification-object), which can be empty when you send a sudo token.
+
+<a id="forget-authorized-ips-response"></a>
 
 ### Response
 

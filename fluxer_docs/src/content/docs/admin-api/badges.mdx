@@ -96,7 +96,7 @@ A page with `query` looks at up to 5,000 badges. It can hold fewer badges than `
 | --- | --- | --- |
 | badges | array[[Admin custom badge](#admin-custom-badge-object) object] | One page of badges |
 | next | ?string | Send this as `after` to get the next page, or null when there are no more badges to look at |
-| version | string | The catalog version, the same value as `custom_badges_version` in [instance discovery](/http-api/instance/#instance-discovery-object) |
+| version | string | The catalogue version, the same value as `custom_badges_version` in [instance discovery](/http-api/instance/#instance-discovery-object) |
 | settings | [badge settings](#badge-settings-object) object | The badge limits |
 | built_in | array[[Built-in badge image](#built-in-badge-image-object) object] | Every built-in badge and the image the instance shows for it |
 
@@ -226,7 +226,7 @@ It works on instances with up to 1,000 badges. Larger instances move badges one 
 | --- | --- | --- |
 | badges | array[[Admin custom badge](#admin-custom-badge-object) object] | The first page of badges, up to 200 |
 | next | ?string | Send this as `after` to [List badges](#list-badges) for the next page, or null when there are no more badges |
-| version | string | The catalog version |
+| version | string | The catalogue version |
 | settings | [badge settings](#badge-settings-object) object | The badge limits |
 | built_in | array[[Built-in badge image](#built-in-badge-image-object) object] | Every built-in badge and the image the instance shows for it |
 
@@ -264,7 +264,7 @@ The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 ## Errors while a change is published
 
-Every create, edit, delete and move saves the badge and then publishes a new catalog version, which tells API servers and clients to load the badges again. If the API can't publish the version, the request fails with 503 `SERVICE_UNAVAILABLE` although the change was saved. The next badge change, or the next API restart, publishes it. Until then some clients can show the old badge. An image that the change replaced or deleted is cleaned up the same way as when the version is published.
+Every create, edit, delete and move saves the badge and then publishes a new catalogue version, which tells API servers and clients to load the badges again. If the API can't publish the version, the request fails with 503 `SERVICE_UNAVAILABLE` although the change was saved. The next badge change, or the next API restart, publishes it. Until then some clients can show the old badge. An image that the change replaced or deleted is cleaned up the same way as when the version is published.
 
 ## Replace built-in badge image
 
@@ -286,7 +286,7 @@ Uploads an image and shows it everywhere the built-in badge appears, then return
 | --- | --- | --- |
 | badges | array[[Admin custom badge](#admin-custom-badge-object) object] | The first page of badges, up to 200 |
 | next | ?string | Send this as `after` to [List badges](#list-badges) for the next page, or null when there are no more badges |
-| version | string | The catalog version |
+| version | string | The catalogue version |
 | settings | [badge settings](#badge-settings-object) object | The badge limits |
 | built_in | array[[Built-in badge image](#built-in-badge-image-object) object] | Every built-in badge and the image the instance shows for it |
 
@@ -312,7 +312,7 @@ Goes back to the built-in image for a badge, deletes the uploaded one and return
 | --- | --- | --- |
 | badges | array[[Admin custom badge](#admin-custom-badge-object) object] | The first page of badges, up to 200 |
 | next | ?string | Send this as `after` to [List badges](#list-badges) for the next page, or null when there are no more badges |
-| version | string | The catalog version |
+| version | string | The catalogue version |
 | settings | [badge settings](#badge-settings-object) object | The badge limits |
 | built_in | array[[Built-in badge image](#built-in-badge-image-object) object] | Every built-in badge and the image the instance shows for it |
 
@@ -337,7 +337,7 @@ Stops clients on this instance from showing a built-in guild badge, then returns
 | --- | --- | --- |
 | badges | array[[Admin custom badge](#admin-custom-badge-object) object] | The first page of badges, up to 200 |
 | next | ?string | Send this as `after` to [List badges](#list-badges) for the next page, or null when there are no more badges |
-| version | string | The catalog version |
+| version | string | The catalogue version |
 | settings | [badge settings](#badge-settings-object) object | The badge limits |
 | built_in | array[[Built-in badge image](#built-in-badge-image-object) object] | Every built-in badge and the image the instance shows for it |
 
@@ -362,7 +362,7 @@ Shows a hidden built-in guild badge again and returns the first page of [List ba
 | --- | --- | --- |
 | badges | array[[Admin custom badge](#admin-custom-badge-object) object] | The first page of badges, up to 200 |
 | next | ?string | Send this as `after` to [List badges](#list-badges) for the next page, or null when there are no more badges |
-| version | string | The catalog version |
+| version | string | The catalogue version |
 | settings | [badge settings](#badge-settings-object) object | The badge limits |
 | built_in | array[[Built-in badge image](#built-in-badge-image-object) object] | Every built-in badge and the image the instance shows for it |
 

@@ -284,7 +284,7 @@ The reported profile as it was when the report was filed, with copies of its ima
 
 ## Report flow answers object
 
-The answers a reporter gave in a [report flow](/http-api/reports/#report-flows), with English labels from the current catalog.
+The answers a reporter gave in a [report flow](/http-api/reports/#report-flows), with English labels from the current catalogue.
 
 ### Structure
 
@@ -318,7 +318,7 @@ The answers a reporter gave in a [report flow](/http-api/reports/#report-flows),
 
 ## Report reason object
 
-An entry in the [report reason](/http-api/reports/#report-reasons) catalog, as [List report reasons](#list-report-reasons) returns it.
+An entry in the [report reason](/http-api/reports/#report-reasons) catalogue, as [List report reasons](#list-report-reasons) returns it.
 
 ### Structure
 
@@ -444,13 +444,13 @@ Returns every [report reason](/http-api/reports/#report-reasons) with the catego
 
 | Field | Type | Description |
 | --- | --- | --- |
-| reasons | array[[report reason](#report-reason-object) object] | Every reason, in catalog order |
+| reasons | array[[report reason](#report-reason-object) object] | Every reason, in catalogue order |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | The catalog was returned |
+| 200 | response body | The catalogue was returned |
 
 The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 

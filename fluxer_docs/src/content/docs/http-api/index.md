@@ -27,7 +27,7 @@ Use the HTTP API to read and change resources.
 | [Gateway](/http-api/gateway/) | Gateway endpoint discovery and the session start budget |
 | [Instance](/http-api/instance/) | Instance discovery, geolocation, limit keys, the OpenAPI document |
 | [Experiments](/http-api/experiments/) | Experiment assignments and how to poll for them |
-| [OAuth2](/http-api/oauth2/) | Authorization, consent, tokens, introspection, revocation |
+| [OAuth2](/http-api/oauth2/) | Authorisation, consent, tokens, introspection, revocation |
 | [Applications](/http-api/applications/) | Applications, bot accounts, client secrets, bot tokens |
 | [Connections](/http-api/connections/) | External account connections |
 | [Users](/http-api/users/) | The user object and shared user enumerations |
@@ -100,7 +100,9 @@ Use the HTTP API to read and change resources.
 
 To upload files before sending, use [attachment uploads](/topics/uploads/). The OAuth2 token operations take `application/x-www-form-urlencoded` or `multipart/form-data` bodies.
 
-## Input normalization
+<a id="input-normalization"></a>
+
+## Input normalisation
 
 Before validation, Fluxer changes these values.
 

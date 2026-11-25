@@ -20,7 +20,7 @@ Each list has three [Admin ACLs](/admin-api/#acl-registry) in the form `ban:<lis
 
 ## Blocklist types
 
-Fluxer normalizes each value when you add or check it and stores the normalized form. The `url`, `url-domain`, `file-sha` and `avatar-hash` lists are content blocklists, and each of their entries has a category and a severity.
+Fluxer normalises each value when you add or check it and stores the normalised form. The `url`, `url-domain`, `file-sha` and `avatar-hash` lists are content blocklists, and each of their entries has a category and a severity.
 
 | Value | Description |
 | --- | --- |
@@ -124,7 +124,7 @@ An entry stored in a blocklist. Every field is present, and a field the list doe
 | Field | Type | Description |
 | --- | --- | --- |
 | list_type | string | The [blocklist type](#blocklist-types) |
-| value | string | The normalized value, to send as `entry_value` or `after` (1-2048 characters) |
+| value | string | The normalised value, to send as `entry_value` or `after` (1-2048 characters) |
 | scope | ?string | The [profile substring scope](#profile-substring-scopes) |
 | category | ?string | The [content blocklist category](#content-blocklist-categories) |
 | severity | ?integer | The [content blocklist severity](#content-blocklist-severities) |
@@ -222,7 +222,7 @@ Returns a [blocklist object](#blocklist-object) for each blocklist. You need the
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | The catalog was returned |
+| 200 | response body | The catalogue was returned |
 
 The rate limit is 60 requests per minute, on the `admin:ban:operation` bucket.
 
