@@ -22,7 +22,7 @@ export const DiscoveryCategoryLabels: Record<DiscoveryCategory, string> = {
 	2: 'Entertainment',
 	3: 'Education',
 	4: 'Science & Technology',
-	5: 'Content Creator',
+	5: 'Streamers & Artists',
 	6: 'Anime & Manga',
 	7: 'Movies & TV',
 	8: 'Other',

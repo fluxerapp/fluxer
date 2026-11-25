@@ -261,7 +261,7 @@ export const CONTENT_I18N_MESSAGES = {
 	'report_flow.label.impersonation_guild': 'Pretending to be {product_name} or another organization',
 	'report_flow.label.impersonation_organization': 'A company, brand or group',
 	'report_flow.label.impersonation_person': 'Me or someone close to me',
-	'report_flow.label.impersonation_public_figure': 'A well-known person, like a creator or politician',
+	'report_flow.label.impersonation_public_figure': 'A well-known person, like a streamer or politician',
 	'report_flow.label.impersonation_staff': '{product_name} staff or support',
 	'report_flow.label.intimate_image_abuse':
 		'Intimate images shared without consent, including deepfakes, or a threat to share them',

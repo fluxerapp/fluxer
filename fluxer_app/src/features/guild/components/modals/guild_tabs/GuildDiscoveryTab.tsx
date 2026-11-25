@@ -98,9 +98,9 @@ const SCIENCE_TECHNOLOGY_DESCRIPTOR = msg({
 	comment: 'Category dropdown option in the "Explore" tab in community settings.',
 });
 const CONTENT_CREATOR_DESCRIPTOR = msg({
-	message: 'Content creator',
+	message: 'Streamers, video makers and artists',
 	comment:
-		'Category dropdown option in the "Explore" tab in community settings. Communities run by an individual creator.',
+		'Category dropdown option in the "Explore" tab in community settings. Communities run by a streamer, video maker or artist for their audience.',
 });
 const ANIME_MANGA_DESCRIPTOR = msg({
 	message: 'Anime & manga',

@@ -633,15 +633,15 @@ export const ERROR_I18N_MESSAGES = {
 	'permissions.user_not_in_channel': "This user isn't in the channel.",
 	'permissions.user_not_in_voice': "This user isn't in voice.",
 	'permissions.user_owns_guilds': 'This user owns communities.',
-	'premium_and_plans.animated_avatars_require_premium': 'Animated avatars require Premium.',
-	'premium_and_plans.banners_require_premium': 'Banners require Premium.',
+	'premium_and_plans.animated_avatars_require_premium': 'Animated avatars require Plutonium.',
+	'premium_and_plans.banners_require_premium': 'Banners require Plutonium.',
 	'premium_and_plans.cannot_redeem_plutonium_with_visionary': 'You already have lifetime {premium_tier_name}.',
 	'premium_and_plans.custom_emojis_outside_source_require_premium':
-		"You can't use custom emojis outside their source communities without Premium.",
-	'premium_and_plans.custom_stickers_in_dms_require_premium': "You can't use custom stickers in DMs without Premium.",
+		"You can't use custom emojis outside their source communities without Plutonium.",
+	'premium_and_plans.custom_stickers_in_dms_require_premium': "You can't use custom stickers in DMs without Plutonium.",
 	'premium_and_plans.custom_stickers_outside_source_require_premium':
-		"You can't use custom stickers outside their source communities without Premium.",
-	'premium_and_plans.discriminator_change_requires_premium': 'Changing your discriminator requires Premium.',
+		"You can't use custom stickers outside their source communities without Plutonium.",
+	'premium_and_plans.discriminator_change_requires_premium': 'Changing your discriminator requires Plutonium.',
 	'premium_and_plans.no_active_subscription': 'No active subscription.',
 	'premium_and_plans.visionary_required_for_discriminator':
 		'You must be on the Visionary lifetime plan to use that discriminator.',

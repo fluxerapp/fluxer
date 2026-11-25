@@ -10345,11 +10345,6 @@ msgstr ""
 msgid "Content blocked"
 msgstr ""
 
-#. Category dropdown option in the "Explore" tab in community settings. Communities run by an individual creator.
-#: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
-msgid "Content creator"
-msgstr ""
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts
 msgid "Content filter"
@@ -36057,6 +36052,11 @@ msgstr ""
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
 msgid "Stream volume"
 msgstr ""
+
+#. Category dropdown option in the "Explore" tab in community settings. Communities run by a streamer, video maker or artist for their audience.
+#: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
+msgid "Streamers, video makers and artists"
+msgstr "Streameri, autori videí a umelci"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/profile/VoiceActivityCard.tsx
