@@ -33,13 +33,9 @@ import type {VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilitySer
 import type {WebhookRepository} from '@app/api/webhook/WebhookRepository';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {TEXT_THREAD_PARENT_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
+import type {TypingCooldownResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 import type {IVirusScanService} from '@pkgs/virus_scan/src/IVirusScanService';
-
-interface TypingCooldown {
-	message_send_cooldown_ms?: number;
-	thread_create_cooldown_ms?: number;
-}
 
 interface SlowmodeState {
 	rateLimitPerUser: number;
@@ -205,7 +201,7 @@ export class ChannelService {
 		user: User;
 		viewer: ThreadViewer;
 		auth: AuthenticatedChannel;
-	}): Promise<TypingCooldown | null> {
+	}): Promise<TypingCooldownResponse | null> {
 		const {channel, guild} = auth;
 		if (!guild || user.isBot || !viewerActive(viewer, guild.id)) return null;
 		const createsThreads = TEXT_THREAD_PARENT_CHANNEL_TYPES.has(channel.type);

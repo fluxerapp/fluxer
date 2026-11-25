@@ -6964,7 +6964,14 @@
 				"summary": "Indicate typing activity",
 				"tags": ["Channels", "Messages"],
 				"responses": {
-					"200": {"description": "Success"},
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {"anyOf": [{"$ref": "#/components/schemas/TypingCooldownResponse"}, {"type": "null"}]}
+							}
+						}
+					},
 					"204": {"description": "No Content"},
 					"400": {
 						"description": "Bad Request - The request was malformed or contained invalid data",
@@ -36973,6 +36980,20 @@
 					"has_more": {"type": "boolean", "description": "Whether there are potentially more threads to fetch"}
 				},
 				"required": ["threads", "members", "has_more"],
+				"additionalProperties": false
+			},
+			"TypingCooldownResponse": {
+				"type": "object",
+				"properties": {
+					"message_send_cooldown_ms": {
+						"description": "Milliseconds until slowmode lets the user send a message",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"thread_create_cooldown_ms": {
+						"description": "Milliseconds until slowmode lets the user create a thread",
+						"$ref": "#/components/schemas/Int32Type"
+					}
+				},
 				"additionalProperties": false
 			},
 			"ThreadSearchSortOrderSchema": {

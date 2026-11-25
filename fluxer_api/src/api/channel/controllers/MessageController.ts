@@ -21,6 +21,7 @@ import {requireRequestClientIp} from '@app/api/utils/RequestClientIp';
 import {Validator} from '@app/api/Validator';
 import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
 import {SudoVerificationSchema} from '@fluxer/schema/src/domains/auth/AuthSchemas';
+import {TypingCooldownResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import {
 	ChannelIdMessageIdAttachmentIdParam,
 	ChannelIdMessageIdParam,
@@ -496,7 +497,7 @@ export function MessageController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'indicate_typing',
 			summary: 'Indicate typing activity',
-			responseSchema: null,
+			responseSchema: TypingCooldownResponse,
 			statusCode: [200, 204],
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Channels', 'Messages'],

@@ -41,6 +41,13 @@ export const ChannelSlowmodeStateResponse = z.object({
 
 export type ChannelSlowmodeStateResponse = z.infer<typeof ChannelSlowmodeStateResponse>;
 
+export const TypingCooldownResponse = z.object({
+	message_send_cooldown_ms: Int32Type.optional().describe('Milliseconds until slowmode lets the user send a message'),
+	thread_create_cooldown_ms: Int32Type.optional().describe('Milliseconds until slowmode lets the user create a thread'),
+});
+
+export type TypingCooldownResponse = z.infer<typeof TypingCooldownResponse>;
+
 export const CallEligibilityResponse = z.object({
 	ringable: z.boolean().describe('Whether the current user can ring this call'),
 	silent: z.boolean().describe('Whether the call should be joined silently'),
