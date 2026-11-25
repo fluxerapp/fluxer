@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash, createHmac, randomUUID, timingSafeEqual} from 'node:crypto';
+import {isIP} from 'node:net';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import {createGuildIDSet, createUserIDSet, type UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
@@ -47,6 +48,10 @@ export const VOICE_JOIN_TOKEN_PREFIX = 'fvj_';
 export function voiceJoinCommand(webApp: string, baseDomain: string, token: string): string {
 	const instance = URL.parse(webApp)?.host || baseDomain;
 	return `curl -fsSL https://fluxer.dev/install.sh | sh -s -- voice ${instance} ${token}`;
+}
+
+function suggestedVoiceHostname(regionId: string, baseDomain: string): string {
+	return isIP(baseDomain.replace(/^\[(.*)\]$/u, '$1')) ? '' : `voice-${regionId}.${baseDomain}`;
 }
 
 const VOICE_NODE_AUDIENCE = 'fluxer-voice-node';
@@ -216,7 +221,7 @@ export class VoiceNodeService {
 			latitude: point ? round(point.latitude) : null,
 			longitude: point ? round(point.longitude) : null,
 			hostname: row.hostname,
-			suggested_hostname: `voice-${region.id}.${Config.instance.baseDomain}`,
+			suggested_hostname: suggestedVoiceHostname(region.id, Config.instance.baseDomain),
 			soft_connection_limit: row.soft_connection_limit,
 			webhook_url: `${Config.endpoints.apiPublic}/webhooks/livekit`,
 			api_code_version: API_CODE_VERSION,
