@@ -29,10 +29,10 @@
 	},
 	"bulk_message_deletion_completed": {
 		"footer_reason": "Du fick det här mejlet eftersom en meddelanderadering begärdes för ditt {product_name}-konto.",
-		"intro": "Vi har raderat dina meddelanden. Vi tog bort {message_count, plural, =0 {0 meddelanden} one {# meddelande} other {# meddelanden}} från {channel_count, plural, =0 {0 platser} one {# plats} other {# platser}}.",
-		"note": "{reply, select, yes {Om du inte bad om detta, byt lösenord direkt och svara på det här mejlet.} other {Om du inte bad om detta, byt lösenord direkt och kontakta administratörerna för den här instansen.}}",
+		"intro": "Vi har raderat dina meddelanden. Vi raderade {message_count, plural, =0 {0 meddelanden} one {# meddelande} other {# meddelanden}} från {channel_count, plural, =0 {0 platser} one {# plats} other {# platser}}.",
+		"note": "{reply, select, yes {Om du inte bad om det här, byt lösenord direkt och svara på det här mejlet.} other {Om du inte bad om det här, byt lösenord direkt och kontakta administratörerna för den här instansen.}}",
 		"signoff": "{product_name}-teamet",
-		"subject": "Vi har tagit bort dina meddelanden i {product_name}"
+		"subject": "Vi har raderat dina meddelanden i {product_name}"
 	},
 	"donation_cancellation_confirmation": {
 		"charge_line_v2": "Vi kommer inte att dra fler betalningar.",
@@ -48,7 +48,7 @@
 		"subject": "Vi har tagit emot din begäran om att avsluta donationen till {product_name}"
 	},
 	"donation_card_expiring": {
-		"cta": "Uppdatera ditt betalningssätt",
+		"cta": "Uppdatera din betalningsmetod",
 		"footer_reason": "Du fick det här mejlet eftersom ett kort som du använder för din donation till {product_name} snart går ut.",
 		"heading": "Uppdatera ditt kort",
 		"intro": "{branded, select, yes {Ditt {brand}-kort som slutar på {last4}} other {Ditt kort som slutar på {last4}}} går ut i slutet av {expiryFormatted}. Din nästa betalning på {tax, select, yes {{amountFormatted}} other {{amountFormatted} plus eventuell moms}} ska dras den {chargeAt, date, long}.",
@@ -89,7 +89,7 @@
 		"footer_reason": "Du fick det här mejlet eftersom en betalning för din återkommande donation till {product_name} behöver åtgärdas.",
 		"heading": "{reason, select, action_required {Din bank vill att du bekräftar en betalning} other {Betalningen av din donation gick inte igenom}}",
 		"intro": "{reason, select, action_required {Din bank vill att du bekräftar nästa betalning av din återkommande donation till {product_name}.} other {Vi kunde inte dra nästa betalning av din återkommande donation till {product_name}.}}",
-		"lead": "Om du vill byta betalningssätt eller avsluta donationen går du till dina donationer.",
+		"lead": "Om du vill byta betalningsmetod eller avsluta donationen går du till dina donationer.",
 		"manage_link": "Hantera dina donationer",
 		"note": "{reply, select, yes {Om du behöver hjälp kan du svara på det här mejlet.} other {Om du behöver hjälp kan du kontakta administratörerna för den här instansen.}}",
 		"preheader": "{reason, select, action_required {Bekräfta {amountFormatted} för din donation} other {Vi kunde inte dra {amountFormatted} för din donation}}",
@@ -130,7 +130,7 @@
 	"donation_renewal_notice": {
 		"after_line": "{differs, select, yes {Därefter är priset {tax, select, yes {{regularFormatted}} other {{regularFormatted} plus eventuell moms}} per år.} other {Därefter betalar du {tax, select, yes {{regularFormatted}} other {{regularFormatted} plus eventuell moms}} per år tills du avslutar donationen.}}",
 		"box": "Avsluta donationen före {cancelByFormatted} om du inte vill att den förnyas.",
-		"charge_line": "{method, select, card {Den {chargeAt, date, long} drar vi {tax, select, yes {{nextFormatted}} other {{nextFormatted} plus eventuell moms}} från ditt {brand}-kort som slutar på {last4}.} plain_card {Den {chargeAt, date, long} drar vi {tax, select, yes {{nextFormatted}} other {{nextFormatted} plus eventuell moms}} från ditt kort som slutar på {last4}.} named {Den {chargeAt, date, long} drar vi {tax, select, yes {{nextFormatted}} other {{nextFormatted} plus eventuell moms}} via {methodName}.} other {Den {chargeAt, date, long} drar vi {tax, select, yes {{nextFormatted}} other {{nextFormatted} plus eventuell moms}} från ditt sparade betalningssätt.}}",
+		"charge_line": "{method, select, card {Den {chargeAt, date, long} drar vi {tax, select, yes {{nextFormatted}} other {{nextFormatted} plus eventuell moms}} från ditt {brand}-kort som slutar på {last4}.} plain_card {Den {chargeAt, date, long} drar vi {tax, select, yes {{nextFormatted}} other {{nextFormatted} plus eventuell moms}} från ditt kort som slutar på {last4}.} named {Den {chargeAt, date, long} drar vi {tax, select, yes {{nextFormatted}} other {{nextFormatted} plus eventuell moms}} via {methodName}.} other {Den {chargeAt, date, long} drar vi {tax, select, yes {{nextFormatted}} other {{nextFormatted} plus eventuell moms}} från din sparade betalningsmetod.}}",
 		"cta": "Hantera din donation",
 		"footer_reason": "Du fick det här mejlet eftersom din årliga donation till {product_name} förnyas automatiskt.",
 		"heading": "Din donation förnyas snart",
@@ -197,7 +197,7 @@
 	},
 	"email_verification_code": {
 		"expiry": "Koden går ut om {minutes, plural, one {# minut} other {# minuter}}.",
-		"footer_reason": "Du fick det här mejlet eftersom den här adressen lades till ett {product_name}-konto.",
+		"footer_reason": "Du fick det här mejlet eftersom den här adressen lades till i ett {product_name}-konto.",
 		"intro": "Ange den här koden i appen för att bekräfta din e-postadress.",
 		"note": "Dela inte den här koden med någon. Personal på {product_name} kommer aldrig att be om den. Om du inte lade till den här e-postadressen till ett konto kan du ignorera det här mejlet.",
 		"signoff": "{product_name}-teamet",
@@ -235,7 +235,7 @@
 		"manage_cta": "Hantera ditt abonnemang",
 		"note": "{reply, select, yes {Om du tror att det här är ett misstag, svara på det här mejlet och berätta vad du vet om presentkoden.} other {Om du tror att det här är ett misstag, kontakta administratörerna för den här instansen och berätta vad du vet om presentkoden.}}",
 		"signoff": "{product_name}-teamet",
-		"subject": "Vi har tagit bort förmånerna från en {product_name}-gåva som du löste in"
+		"subject": "Vi har tagit bort förmånerna från en {product_name}-present som du löste in"
 	},
 	"harvest_completed": {
 		"cta": "Ladda ner dina data",
@@ -280,7 +280,7 @@
 	},
 	"operator_pass_offer_accepted": {
 		"footer_reason": "Du fick det här mejlet eftersom du lämnade vidare ett Operator Pass på {product_name}.",
-		"intro": "{recipientName} tog emot det Operator Pass som du lämnade vidare, och det finns nu på deras konto.",
+		"intro": "{recipientName} tog emot det Operator Pass som du lämnade vidare, och nu finns det på hens konto.",
 		"note": "{remainingCount, plural, =0 {{visionary, select, yes {Du har inga Operator Pass kvar, så ditt märke och din plats på väggen är borta. Du behåller '#'operators genom din Visionary.} other {Du har inga Operator Pass kvar, så ditt märke, din plats på väggen och '#'operators är borta.}}} =1 {Du har # Operator Pass kvar.} other {Du har # Operator Pass kvar.}}",
 		"signoff": "{product_name}-teamet",
 		"subject": "{recipientName} tog emot ditt {product_name} Operator Pass"
@@ -300,7 +300,7 @@
 		"subject": "{senderName} vill lämna vidare ett Operator Pass till dig"
 	},
 	"operator_pass_perks_removed": {
-		"appeal_body_v2": "{reply, select, yes {Svara på det här mejlet inom 60 dagar och berätta varför du inte håller med. Det är gratis, och en person i vårt team läser och avgör din överklagan.} other {Kontakta administratörerna för den här instansen inom 60 dagar och berätta varför du inte håller med.}}",
+		"appeal_body_v2": "{reply, select, yes {Svara på det här mejlet inom 60 dagar och berätta varför du inte håller med. Det är gratis, och en person i vårt team läser och avgör ditt överklagande.} other {Kontakta administratörerna för den här instansen inom 60 dagar och berätta varför du inte håller med.}}",
 		"appeal_title": "Så överklagar du",
 		"automated_text": "{automated, select, yes {Automatiska verktyg hjälpte oss att hitta det här. En person i vårt team fattade beslutet.} other {Inga automatiska verktyg hittade det här, och en person i vårt team fattade beslutet.}}",
 		"dispute_facts": "Vi bedömde att betalningstvisten {disputeId} var obefogad, förklarade varför och gav dig fram till den {deadline, date, long} att dra tillbaka den, och tvisten slutade med att din bank betalade tillbaka beloppet till dig. De pass som betalningen avsåg har upphört, och det här kontot kan inte köpa eller få ett pass igen.",
@@ -352,7 +352,7 @@
 		"credit_note_attached": "Kreditfakturan för den här återbetalningen finns bifogad som PDF i det här mejlet.",
 		"credit_note_label": "Kreditfakturanummer",
 		"footer_reason": "Du fick det här mejlet eftersom du betalade för ett Operator Pass på ditt {product_name}-konto.",
-		"intro": "Vi kunde inte spara uppgifterna om ditt köp, så vi har inte skapat ditt certifikat och har återbetalat hela betalningen till betalningssättet du använde. Du kan köpa Operator Pass igen.",
+		"intro": "Vi kunde inte spara uppgifterna om ditt köp, så vi har inte skapat ditt certifikat och har återbetalat hela beloppet till betalningsmetoden du använde. Du kan köpa Operator Pass igen.",
 		"note": "Din bank visar oftast återbetalningen inom 5 till 10 bankdagar. Inget annat på ditt konto ändras.",
 		"signoff": "{product_name}-teamet",
 		"subject": "Vi har återbetalat din betalning för Operator Pass på {product_name}"
@@ -397,7 +397,7 @@
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {Ditt Operator-märke syns på din profil. Du kan dölja det i dina <settings>inställningar</settings>.} other {Ditt Operator-märke är dolt. Du kan visa det i dina <settings>inställningar</settings>.}}",
 		"cta": "Öppna Fluxer Labs",
-		"footer_reason": "Du får det här mejlet eftersom du slog på det Operator Pass som följer med Visionary på ditt {product_name}-konto.",
+		"footer_reason": "Du fick det här mejlet eftersom du slog på det Operator Pass som följer med Visionary på ditt {product_name}-konto.",
 		"intro": "Ditt Operator Pass är aktiverat. Ditt certifikat är bifogat, och du kan ladda ner det igen i dina <settings>inställningar</settings>. Spara också en egen kopia, eftersom vi raderar vår om ditt konto raderas.",
 		"labs_line": "{member, select, yes {Du har Operator-rollen i Fluxer Labs.} other {Med ditt Operator Pass följer Operator-rollen i Fluxer Labs. Du har den när det här kontot är med i Fluxer Labs.}}",
 		"signoff": "{product_name}-teamet",
@@ -407,11 +407,11 @@
 		"wall_line": "{wallOptOut, select, yes {Du valde att inte visas på Operators-väggen. Du kan lägga till ditt namn i dina <settings>inställningar</settings>.} other {Du visas på Operators-väggen som {wallName}. Du kan ändra det eller lämna väggen i dina <settings>inställningar</settings>.}}"
 	},
 	"operator_pass_wall_hidden": {
-		"appeal_body_v2": "{reply, select, yes {Svara på det här mejlet inom 60 dagar och berätta varför du inte håller med. Det är gratis, och en person i vårt team läser och avgör din överklagan.} other {Kontakta administratörerna för den här instansen inom 60 dagar och berätta varför du inte håller med.}}",
+		"appeal_body_v2": "{reply, select, yes {Svara på det här mejlet inom 60 dagar och berätta varför du inte håller med. Det är gratis, och en person i vårt team läser och avgör ditt överklagande.} other {Kontakta administratörerna för den här instansen inom 60 dagar och berätta varför du inte håller med.}}",
 		"appeal_title": "Så överklagar du",
 		"automated_text": "Inga automatiska verktyg hittade det här, och en person i vårt team fattade beslutet.",
 		"facts_label": "Fakta vi grundar oss på",
-		"footer_reason": "Du fick det här mejlet på grund av ett beslut om din plats på {product_name}s Operators-vägg.",
+		"footer_reason": "Du fick det här mejlet på grund av ett beslut om din plats på Operators-väggen på {product_name}.",
 		"ground": "Avsnitt 3.1 i villkoren för Operator Pass",
 		"ground_label": "Grund",
 		"intro": "Vi har tagit bort din plats från Operators-väggen tills vidare. Dina pass, ditt märke och ditt köp påverkas inte.",
@@ -420,14 +420,14 @@
 		"reason_value": "{reason, select, impersonation {Utger sig för att vara någon annan} rights {Använder ett namn eller en bild utan rätt till det} age_suitability {Passar inte yngre användare} other {Bryter mot communityriktlinjerna}}",
 		"redress_v2": "Du kan också vända dig till domstol. Om du är i EU kan du vända dig till ett certifierat <dsa>organ för tvistlösning utanför domstol</dsa>. Om du är konsument i EU eller EES kan du också ta tvisten till Allmänna reklamationsnämnden (<arn>ARN</arn>), Box 174, 101 23 Stockholm.",
 		"signoff": "{product_name}-teamet",
-		"subject": "Vi har tagit bort din plats från {product_name}s Operators-vägg tills vidare"
+		"subject": "Vi har tagit bort din plats från Operators-väggen på {product_name} tills vidare"
 	},
 	"operator_pass_wall_name_replaced": {
-		"appeal_body_v2": "{reply, select, yes {Svara på det här mejlet inom 60 dagar och berätta varför du inte håller med. Det är gratis, och en person i vårt team läser och avgör din överklagan.} other {Kontakta administratörerna för den här instansen inom 60 dagar och berätta varför du inte håller med.}}",
+		"appeal_body_v2": "{reply, select, yes {Svara på det här mejlet inom 60 dagar och berätta varför du inte håller med. Det är gratis, och en person i vårt team läser och avgör ditt överklagande.} other {Kontakta administratörerna för den här instansen inom 60 dagar och berätta varför du inte håller med.}}",
 		"appeal_title": "Så överklagar du",
 		"automated_text": "Inga automatiska verktyg hittade det här, och en person i vårt team fattade beslutet.",
 		"facts_label": "Fakta vi grundar oss på",
-		"footer_reason": "Du fick det här mejlet på grund av ett beslut om din plats på {product_name}s Operators-vägg.",
+		"footer_reason": "Du fick det här mejlet på grund av ett beslut om din plats på Operators-väggen på {product_name}.",
 		"ground": "Avsnitt 3.1 i villkoren för Operator Pass",
 		"ground_label": "Grund",
 		"intro": "{target, select, avatar {Vi har tagit bort din avatar från Operators-väggen.} both {Vi har tagit bort ditt namn och din avatar från Operators-väggen.} other {Vi har tagit bort ditt namn från Operators-väggen.}} {shown, select, previous {Väggen visar ditt tidigare namn och din tidigare avatar.} other {Tills du skickar in något nytt visar väggen ordet Operator och standardavataren.}} Din plats på väggen, dess storlek och ditt märke finns kvar, och ditt köp påverkas inte.",
@@ -436,14 +436,14 @@
 		"reason_value": "{reason, select, impersonation {Utger sig för att vara någon annan} rights {Använder ett namn eller en bild utan rätt till det} age_suitability {Passar inte yngre användare} other {Bryter mot communityriktlinjerna}}",
 		"redress_v2": "Du kan också vända dig till domstol. Om du är i EU kan du vända dig till ett certifierat <dsa>organ för tvistlösning utanför domstol</dsa>. Om du är konsument i EU eller EES kan du också ta tvisten till Allmänna reklamationsnämnden (<arn>ARN</arn>), Box 174, 101 23 Stockholm.",
 		"signoff": "{product_name}-teamet",
-		"subject": "Vi har tagit bort ditt namn eller din avatar från {product_name}s Operators-vägg"
+		"subject": "Vi har tagit bort ditt namn eller din avatar från Operators-väggen på {product_name}"
 	},
 	"operator_pass_wall_quote_cleared": {
-		"appeal_body_v2": "{reply, select, yes {Svara på det här mejlet inom 60 dagar och berätta varför du inte håller med. Det är gratis, och en person i vårt team läser och avgör din överklagan.} other {Kontakta administratörerna för den här instansen inom 60 dagar och berätta varför du inte håller med.}}",
+		"appeal_body_v2": "{reply, select, yes {Svara på det här mejlet inom 60 dagar och berätta varför du inte håller med. Det är gratis, och en person i vårt team läser och avgör ditt överklagande.} other {Kontakta administratörerna för den här instansen inom 60 dagar och berätta varför du inte håller med.}}",
 		"appeal_title": "Så överklagar du",
 		"automated_text": "Inga automatiska verktyg hittade det här, och en person i vårt team fattade beslutet.",
 		"facts_label": "Fakta vi grundar oss på",
-		"footer_reason": "Du fick det här mejlet på grund av ett beslut om din plats på {product_name}s Operators-vägg.",
+		"footer_reason": "Du fick det här mejlet på grund av ett beslut om din plats på Operators-väggen på {product_name}.",
 		"ground": "Avsnitt 6.2 i användarvillkoren",
 		"ground_label": "Grund",
 		"intro": "Vi har tagit bort citatet från din plats på Operators-väggen. Resten av din plats finns kvar som den är, och ditt märke och ditt köp påverkas inte.",
@@ -452,7 +452,7 @@
 		"reason_value": "{reason, select, impersonation {Utger sig för att vara någon annan} rights {Använder någon annans text utan rätt till den} age_suitability {Passar inte yngre användare} other {Bryter mot communityriktlinjerna}}",
 		"redress_v2": "Du kan också vända dig till domstol. Om du är i EU kan du vända dig till ett certifierat <dsa>organ för tvistlösning utanför domstol</dsa>. Om du är konsument i EU eller EES kan du också ta tvisten till Allmänna reklamationsnämnden (<arn>ARN</arn>), Box 174, 101 23 Stockholm.",
 		"signoff": "{product_name}-teamet",
-		"subject": "Vi har tagit bort ditt citat från {product_name}s Operators-vägg"
+		"subject": "Vi har tagit bort ditt citat från Operators-väggen på {product_name}"
 	},
 	"operator_pass_welcome": {
 		"badge_line": "Ditt märke syns på din profil. Du kan dölja det i dina <settings>inställningar</settings>.",
@@ -482,7 +482,7 @@
 		"order_date_label": "Orderdatum",
 		"order_date_value": "{orderDate, date, long}",
 		"order_number_label": "Ordernummer",
-		"refund": "{refund, select, dispute {Din bank hade redan öppnat en betalningstvist för det här köpet, så vi godtog tvisten och din bank betalar tillbaka hela beloppet på {amountFormatted} till dig.} already {Vi hade redan betalat tillbaka {amountFormatted} för det här köpet till ditt betalningssätt, så ingen ny återbetalning behövdes.} other {Vi har påbörjat en återbetalning av hela beloppet på {amountFormatted} till ditt betalningssätt. Din bank visar den oftast inom 5 till 10 bankdagar.}} {delivered, select, no {{passCount, plural, =1 {Vi hade inte levererat ditt certifikat än, så inget annat på ditt konto ändras.} other {Vi hade inte levererat dina certifikat än, så inget annat på ditt konto ändras.}}} other {{passCount, plural, =1 {Passet har upphört.} other {# pass har upphört.}} {lastPass, select, yes {{visionary, select, yes {Ditt märke och din plats på väggen har också upphört. Du behåller #operators genom din Visionary.} other {Ditt märke, din plats på väggen och #operators har också upphört.}}} other {Dina andra pass finns kvar.}}}}",
+		"refund": "{refund, select, dispute {Din bank hade redan öppnat en betalningstvist för det här köpet, så vi godtog tvisten och din bank betalar tillbaka hela beloppet på {amountFormatted} till dig.} already {Vi hade redan betalat tillbaka {amountFormatted} för det här köpet till din betalningsmetod, så ingen ny återbetalning behövdes.} other {Vi har påbörjat en återbetalning av hela beloppet på {amountFormatted} till din betalningsmetod. Din bank visar den oftast inom 5 till 10 bankdagar.}} {delivered, select, no {{passCount, plural, =1 {Vi hade inte levererat ditt certifikat än, så inget annat på ditt konto ändras.} other {Vi hade inte levererat dina certifikat än, så inget annat på ditt konto ändras.}}} other {{passCount, plural, =1 {Passet har upphört.} other {# pass har upphört.}} {lastPass, select, yes {{visionary, select, yes {Ditt märke och din plats på väggen har också upphört. Du behåller #operators genom din Visionary.} other {Ditt märke, din plats på väggen och #operators har också upphört.}}} other {Dina andra pass finns kvar.}}}}",
 		"refund_label": "Återbetalning",
 		"signoff": "{product_name}-teamet",
 		"subject": "Vi har tagit emot ditt besked om att ångra köpet av Operator Pass för {product_name}"
@@ -508,7 +508,7 @@
 	},
 	"payment_dispute_warning": {
 		"amount_label": "Bestridet belopp",
-		"appeal_body_v2": "{reply, select, yes {Svara på det här mejlet inom 60 dagar och berätta varför du inte håller med. Det är gratis, och en person i vårt team läser och avgör din överklagan.} other {{appeals_email, select, null {Kontakta administratörerna för den här instansen och berätta varför.} other {Skriv till <mail>{appeals_email}</mail> och berätta varför.}}}} Om betalningstvisten var befogad vidtar vi inga åtgärder mot ditt konto.",
+		"appeal_body_v2": "{reply, select, yes {Svara på det här mejlet inom 60 dagar och berätta varför du inte håller med. Det är gratis, och en person i vårt team läser och avgör ditt överklagande.} other {{appeals_email, select, null {Kontakta administratörerna för den här instansen och berätta varför.} other {Skriv till <mail>{appeals_email}</mail> och berätta varför.}}}} Om betalningstvisten var befogad vidtar vi inga åtgärder mot ditt konto.",
 		"appeal_title": "Om du tycker att vi har gjort fel",
 		"currency_label": "Valuta",
 		"deadline_body": "Om betalningstvisten inte dras tillbaka före {warningDate, date, long} och det slutar med att pengarna betalas tillbaka till dig, raderar vi ditt {product_name}-konto permanent. Ett raderat konto går inte att återställa. Om vi stänger ditt konto får du inte heller skapa eller använda andra {product_name}-konton.",
@@ -544,7 +544,7 @@
 		"subject": "Vi har tagit emot din uppsägning av {product_name} {premiumName}"
 	},
 	"plutonium_card_expiring": {
-		"cta": "Uppdatera ditt betalningssätt",
+		"cta": "Uppdatera din betalningsmetod",
 		"footer_reason": "Du fick det här mejlet eftersom ett kort som du använder för {premiumName} snart går ut.",
 		"heading": "Uppdatera ditt kort",
 		"intro": "{branded, select, yes {Ditt {brand}-kort som slutar på {last4}} other {Ditt kort som slutar på {last4}}} går ut i slutet av {expiryFormatted}. Din nästa betalning på {tax, select, yes {{amountFormatted}} other {{amountFormatted} plus eventuell moms}} ska dras den {chargeAt, date, long}.",
@@ -567,7 +567,7 @@
 		"subject": "Ditt {product_name} {premiumName}-abonnemang har upphört"
 	},
 	"plutonium_gift_applied": {
-		"charge_line": "{method, select, card {Den {trialEnd, date, long} drar vi {tax, select, yes {{amountFormatted}} other {{amountFormatted} plus eventuell moms}} från ditt {brand}-kort som slutar på {last4}, och sedan förnyas abonnemanget varje {plan, select, yearly {år} other {månad}} tills du säger upp det.} plain_card {Den {trialEnd, date, long} drar vi {tax, select, yes {{amountFormatted}} other {{amountFormatted} plus eventuell moms}} från ditt kort som slutar på {last4}, och sedan förnyas abonnemanget varje {plan, select, yearly {år} other {månad}} tills du säger upp det.} named {Den {trialEnd, date, long} drar vi {tax, select, yes {{amountFormatted}} other {{amountFormatted} plus eventuell moms}} via {methodName}, och sedan förnyas abonnemanget varje {plan, select, yearly {år} other {månad}} tills du säger upp det.} other {Den {trialEnd, date, long} drar vi {tax, select, yes {{amountFormatted}} other {{amountFormatted} plus eventuell moms}} från ditt sparade betalningssätt, och sedan förnyas abonnemanget varje {plan, select, yearly {år} other {månad}} tills du säger upp det.}}",
+		"charge_line": "{method, select, card {Den {trialEnd, date, long} drar vi {tax, select, yes {{amountFormatted}} other {{amountFormatted} plus eventuell moms}} från ditt {brand}-kort som slutar på {last4}, och sedan förnyas abonnemanget varje {plan, select, yearly {år} other {månad}} tills du säger upp det.} plain_card {Den {trialEnd, date, long} drar vi {tax, select, yes {{amountFormatted}} other {{amountFormatted} plus eventuell moms}} från ditt kort som slutar på {last4}, och sedan förnyas abonnemanget varje {plan, select, yearly {år} other {månad}} tills du säger upp det.} named {Den {trialEnd, date, long} drar vi {tax, select, yes {{amountFormatted}} other {{amountFormatted} plus eventuell moms}} via {methodName}, och sedan förnyas abonnemanget varje {plan, select, yearly {år} other {månad}} tills du säger upp det.} other {Den {trialEnd, date, long} drar vi {tax, select, yes {{amountFormatted}} other {{amountFormatted} plus eventuell moms}} från din sparade betalningsmetod, och sedan förnyas abonnemanget varje {plan, select, yearly {år} other {månad}} tills du säger upp det.}}",
 		"cta": "Hantera ditt abonnemang",
 		"footer_reason": "Du fick det här mejlet eftersom du har löst in en {premiumName}-present.",
 		"heading": "Presenten har lagts till",
@@ -586,7 +586,7 @@
 		"heading": "{reason, select, action_required {Din bank vill att du bekräftar en betalning} other {Din betalning för {premiumName} gick inte igenom}}",
 		"intro": "{reason, select, action_required {Din bank vill att du bekräftar betalningen för förnyelsen av ditt {premiumName}-abonnemang.} other {Vi kunde inte dra betalningen för förnyelsen av ditt {premiumName}-abonnemang.}} {access, select, yes {Du behåller {premiumName} fram till {accessEndsAt, date, long}.} other {}}",
 		"intro_change": "{reason, select, action_required {Din bank vill att du bekräftar betalningen för ändringen av ditt {premiumName}-abonnemang.} other {Vi kunde inte dra betalningen för ändringen av ditt {premiumName}-abonnemang.}} {access, select, yes {Du behåller {premiumName} fram till {accessEndsAt, date, long}.} other {}}",
-		"manage_link": "Uppdatera ditt betalningssätt under ”Hantera abonnemang”",
+		"manage_link": "Uppdatera din betalningsmetod under ”Hantera abonnemang”",
 		"note": "{reply, select, yes {Om du behöver hjälp kan du svara på det här mejlet.} other {Om du behöver hjälp kan du kontakta administratörerna för den här instansen.}}",
 		"preheader": "{reason, select, action_required {Bekräfta {amountFormatted} för {premiumName}} other {Vi kunde inte dra {amountFormatted} för {premiumName}}}",
 		"reminder_subject": "Påminnelse: bekräfta din betalning för {premiumName}",
@@ -612,7 +612,7 @@
 		"paid_label": "Betalt belopp",
 		"period_label": "Period",
 		"period_value": "{periodStart, date, long} till\n{periodEnd, date, long}",
-		"plan_body": "{renewal, select, month {{premiumName} förnyas varje månad för {renewalFormatted}{renewalTax, select, included { inklusive moms} added { plus moms} other {}} tills du avslutar abonnemanget. Du kan avsluta det när som helst under ”Hantera abonnemang” på {premiumName}-sidan, och du behåller {premiumName} till slutet av perioden du har betalat för.} year {{premiumName} förnyas varje år för {renewalFormatted}{renewalTax, select, included { inklusive moms} added { plus moms} other {}} tills du avslutar abonnemanget. Du kan avsluta det när som helst under ”Hantera abonnemang” på {premiumName}-sidan, och du behåller {premiumName} till slutet av perioden du har betalat för.} other {Presenten är ett engångsköp. Den förnyas inte, och inget mer dras.}}",
+		"plan_body": "{renewal, select, month {{premiumName} förnyas varje månad för {renewalFormatted}{renewalTax, select, included { inklusive moms} added { plus moms} other {}} tills du säger upp abonnemanget. Du kan säga upp det när som helst under ”Hantera abonnemang” på {premiumName}-sidan, och du behåller {premiumName} till slutet av perioden du har betalat för.} year {{premiumName} förnyas varje år för {renewalFormatted}{renewalTax, select, included { inklusive moms} added { plus moms} other {}} tills du säger upp abonnemanget. Du kan säga upp det när som helst under ”Hantera abonnemang” på {premiumName}-sidan, och du behåller {premiumName} till slutet av perioden du har betalat för.} other {Presenten är ett engångsköp. Den förnyas inte, och inget mer dras.}}",
 		"plan_title": "{gift, select, yes {Din present} other {Ditt abonnemang}}",
 		"preheader": "{amountFormatted} betalt för {premiumName}",
 		"product_label": "Produkt",
@@ -625,8 +625,8 @@
 		"tax_included": "Varav moms {taxFormatted}",
 		"total_label": "Totalt",
 		"withdrawal_body": "Du kan ångra köpet fram till {withdrawalEndsAt, date, long} och få tillbaka hela beloppet. Om du vill ångra köpet svarar du på det här mejlet eller skriver till <mail>{sellerEmail}</mail> och meddelar att du ångrar dig. Du kan använda formuläret nedan, men du behöver inte.",
-		"withdrawal_body_brazil": "Du kan ångra köpet fram till kl. 23.59 Acre-tid (UTC-5) den {withdrawalEndsAt, date, long} och få tillbaka allt du har betalat. Ångra köpet genom att svara på det här mejlet eller skriva till <mail>{sellerEmail}</mail> och tala om att du ångrar dig. Du kan använda formuläret nedan, men du måste inte.{gift, select, yes {} other { En automatisk förnyelse av samma abonnemang startar ingen ny ångerfrist.}}",
-		"withdrawal_body_pro_rata": "Du kan ångra köpet till och med {withdrawalEndsAt, date, long}. {gift, select, yes {Om koden inte har lösts in betalar vi tillbaka allt du har betalat. Om den har lösts in betalar vi tillbaka det du har betalat, minus andelen för de dagar mottagaren har haft {premiumName}.} other {Om du gör det betalar vi tillbaka det du har betalat, minus andelen för de dagar du har haft {premiumName}. En automatisk förnyelse av samma abonnemang startar ingen ny ångerfrist.}} Du ångrar köpet med \"Ångra avtalet här\" på sidan {premiumName} i \"Användarinställningar\", eller genom att svara på det här mejlet eller skriva till <mail>{sellerEmail}</mail> och tala om att du ångrar dig. Du kan använda formuläret nedan, men du måste inte.",
+		"withdrawal_body_brazil": "Du kan ångra köpet fram till kl. 23.59 Acre-tid (UTC-5) den {withdrawalEndsAt, date, long} och få tillbaka allt du har betalat. Ångra köpet genom att svara på det här mejlet eller skriva till <mail>{sellerEmail}</mail> och tala om att du ångrar dig. Du kan använda formuläret nedan, men du behöver inte.{gift, select, yes {} other { En automatisk förnyelse av samma abonnemang startar ingen ny ångerfrist.}}",
+		"withdrawal_body_pro_rata": "Du kan ångra köpet till och med {withdrawalEndsAt, date, long}. {gift, select, yes {Om koden inte har lösts in betalar vi tillbaka allt du har betalat. Om den har lösts in betalar vi tillbaka det du har betalat, minus andelen för de dagar mottagaren har haft {premiumName}.} other {Om du gör det betalar vi tillbaka det du har betalat, minus andelen för de dagar du har haft {premiumName}. En automatisk förnyelse av samma abonnemang startar ingen ny ångerfrist.}} Du ångrar köpet med ”Ångra avtalet här” på sidan {premiumName} i ”Användarinställningar”, eller genom att svara på det här mejlet eller skriva till <mail>{sellerEmail}</mail> och tala om att du ångrar dig. Du kan använda formuläret nedan, men du behöver inte.",
 		"withdrawal_note": "Knappen för återbetalning i appen fungerar i 3 dagar efter en betalning. Den gäller utöver din ångerrätt och ersätter den inte.",
 		"withdrawal_title": "Ångerrätt"
 	},
@@ -654,7 +654,7 @@
 		"after_line": "{differs, select, yes {Därefter är priset {tax, select, yes {{regularFormatted}} other {{regularFormatted} plus eventuell moms}} per {plan, select, yearly {år} other {månad}}.} other {Därefter betalar du {tax, select, yes {{regularFormatted}} other {{regularFormatted} plus eventuell moms}} per {plan, select, yearly {år} other {månad}} tills du säger upp abonnemanget.}}",
 		"annual_line": "Det här är din årliga påminnelse om att ditt månadsabonnemang på {premiumName} förnyas automatiskt varje månad tills du säger upp det.",
 		"box": "Säg upp abonnemanget före {cancelByFormatted} om du vill stoppa förnyelsen.",
-		"charge_line": "{method, select, card {Den {chargeAt, date, long} drar vi {tax, select, yes {{nextFormatted}} other {{nextFormatted} plus eventuell moms}} från ditt {brand}-kort som slutar på {last4}.} plain_card {Den {chargeAt, date, long} drar vi {tax, select, yes {{nextFormatted}} other {{nextFormatted} plus eventuell moms}} från ditt kort som slutar på {last4}.} named {Den {chargeAt, date, long} drar vi {tax, select, yes {{nextFormatted}} other {{nextFormatted} plus eventuell moms}} via {methodName}.} other {Den {chargeAt, date, long} drar vi {tax, select, yes {{nextFormatted}} other {{nextFormatted} plus eventuell moms}} från ditt sparade betalningssätt.}}",
+		"charge_line": "{method, select, card {Den {chargeAt, date, long} drar vi {tax, select, yes {{nextFormatted}} other {{nextFormatted} plus eventuell moms}} från ditt {brand}-kort som slutar på {last4}.} plain_card {Den {chargeAt, date, long} drar vi {tax, select, yes {{nextFormatted}} other {{nextFormatted} plus eventuell moms}} från ditt kort som slutar på {last4}.} named {Den {chargeAt, date, long} drar vi {tax, select, yes {{nextFormatted}} other {{nextFormatted} plus eventuell moms}} via {methodName}.} other {Den {chargeAt, date, long} drar vi {tax, select, yes {{nextFormatted}} other {{nextFormatted} plus eventuell moms}} från din sparade betalningsmetod.}}",
 		"cta": "Hantera ditt abonnemang",
 		"footer_reason": "Du fick det här mejlet eftersom ditt {premiumName}-abonnemang förnyas automatiskt.",
 		"gift_line": "Tiden du har fått i present tar slut den {giftEndsAt, date, long}. Därefter förnyas ditt {plan, select, yearly {årsabonnemang} other {månadsabonnemang}} på {premiumName} automatiskt om du inte säger upp det innan dess.",
@@ -743,11 +743,11 @@
 	"sign_up_code": {
 		"device_label": "Enhet",
 		"expiry": "Koden går ut om {minutes, plural, one {# minut} other {# minuter}}.",
-		"footer_reason": "Du fick det här mejlet eftersom någon begärde att skapa ett {product_name}-konto med den här adressen.",
-		"intro": "Använd den här koden för att slutföra skapandet av ditt {product_name}-konto.",
+		"footer_reason": "Du fick det här mejlet eftersom någon bad om att skapa ett {product_name}-konto med den här adressen.",
+		"intro": "Använd den här koden för att skapa klart ditt {product_name}-konto.",
 		"location_label": "Begärd från",
 		"note": "Dela inte den här koden med någon. Personal på {product_name} kommer aldrig att be om den. Om du inte försökte skapa ett konto kan du ignorera det här mejlet.",
 		"signoff": "{product_name}-teamet",
-		"subject": "Din {product_name}-registreringskod"
+		"subject": "Din registreringskod för {product_name}"
 	}
 }

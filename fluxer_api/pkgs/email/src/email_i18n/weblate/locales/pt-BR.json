@@ -66,12 +66,12 @@
 		"date_label": "Data do pagamento",
 		"date_value": "{paidAt, date, long}",
 		"document_attached": "O recibo da sua doação {documentNumber} está anexado a este e-mail em PDF.",
-		"footer_reason": "Você recebeu este e-mail porque doou para {product_name} com este endereço de e-mail.",
+		"footer_reason": "Você recebeu este e-mail porque doou ao {product_name} com este endereço de e-mail.",
 		"intro": "{interval, select, month {Sua doação mensal ao {product_name} está ativa.} year {Sua doação anual ao {product_name} está ativa.} other {Recebemos sua doação ao {product_name}.}}",
 		"lead": "{interval, select, month {Enviamos um recibo por e-mail a cada pagamento.} year {Enviamos um recibo por e-mail a cada pagamento.} other {Este e-mail é o seu recibo.}}",
 		"reference_label": "Referência",
 		"signoff": "Equipe do {product_name}",
-		"subject": "Agradecemos pela sua doação ao {product_name}"
+		"subject": "Obrigado pela sua doação ao {product_name}"
 	},
 	"donation_magic_link": {
 		"cta": "Gerenciar doações",
@@ -142,7 +142,7 @@
 		"subject": "Sua doação anual ao {product_name} será renovada em {chargeAt, date, long}"
 	},
 	"dsa_report_resolved": {
-		"about": "{target, select, message_community {Você denunciou uma mensagem no canal #{channelName} da comunidade “{communityName}” em {reportedAt, date, long}.} message_dm {Você denunciou uma mensagem direta em {reportedAt, date, long}.} message {Você denunciou uma mensagem em {reportedAt, date, long}.} user {Você denunciou a conta “{username}” em {reportedAt, date, long}.} community {Você denunciou a comunidade “{communityName}” em {reportedAt, date, long}.} other {Você nos enviou uma denúncia em {reportedAt, date, long}.}}",
+		"about": "{target, select, message_community {Você denunciou uma mensagem no canal #{channelName} da comunidade \"{communityName}\" em {reportedAt, date, long}.} message_dm {Você denunciou uma mensagem direta em {reportedAt, date, long}.} message {Você denunciou uma mensagem em {reportedAt, date, long}.} user {Você denunciou a conta \"{username}\" em {reportedAt, date, long}.} community {Você denunciou a comunidade \"{communityName}\" em {reportedAt, date, long}.} other {Você nos enviou uma denúncia em {reportedAt, date, long}.}}",
 		"comment_label": "Nota da nossa equipe",
 		"footer_reason": "Você recebeu este e-mail porque enviou uma denúncia nos termos da Lei dos Serviços Digitais no {product_name}.",
 		"intro": "{outcome, select, removed {Removemos o conteúdo porque ele violava nossas regras.} restricted {A conta violou nossas regras, e tomamos providências em relação a ela. Para proteger a privacidade de todos, não informamos quais foram.} action_taken {Isso violou nossas regras, e tomamos providências. Para proteger a privacidade de todos, não informamos quais foram.} no_violation {{concern, select, self_harm {Obrigado por se preocupar com essa pessoa. Nossa equipe analisou a denúncia. Falar sobre tristeza ou sobre não se sentir em segurança não viola nossas regras, então não removemos nada, mas podemos enviar à pessoa recursos de apoio. Nunca revelamos quem fez uma denúncia. Se você acha que alguém corre perigo imediato, ligue para o número de emergência local.} other {Nossa equipe analisou a denúncia e concluiu que isso não vai contra nossas regras, então não tomamos providências. Uma denúncia ainda pode levar a outras medidas, como enviar à pessoa recursos de apoio. Nunca revelamos quem fez uma denúncia.}}} other {Encerramos sua denúncia.}}",
@@ -150,7 +150,7 @@
 		"report_label": "ID da denúncia",
 		"signoff": "Equipe do {product_name}",
 		"subject": "Analisamos sua denúncia no {product_name}",
-		"thanks": "{outcome, select, removed {Obrigado por denunciar. Denúncias como a sua ajudam a manter o {product_name} seguro para todos.} restricted {Obrigado por denunciar. Denúncias como a sua ajudam a manter o {product_name} seguro para todos.} action_taken {Obrigado por denunciar. Denúncias como a sua ajudam a manter o {product_name} seguro para todos.} other {Obrigado por nos avisar. Continue denunciando qualquer coisa que te preocupe, mesmo que no fim esteja dentro das nossas regras.}}"
+		"thanks": "{outcome, select, removed {Obrigado por denunciar. Denúncias como a sua ajudam a manter o {product_name} seguro para todos.} restricted {Obrigado por denunciar. Denúncias como a sua ajudam a manter o {product_name} seguro para todos.} action_taken {Obrigado por denunciar. Denúncias como a sua ajudam a manter o {product_name} seguro para todos.} other {Obrigado por nos avisar. Continue denunciando tudo o que causar preocupação, mesmo que no fim esteja dentro das nossas regras.}}"
 	},
 	"dsa_report_verification": {
 		"expiry": "Este código expira em {minutes, plural, one {# minuto} other {# minutos}}.",
@@ -229,7 +229,7 @@
 		"why_title": "Por quê"
 	},
 	"gift_chargeback_notification": {
-		"billing_resumed": "Como o presente foi removido, sua assinatura {plan, select, yearly {anual} other {mensal}} do {premiumName} volta a ser cobrada a partir de hoje. Você vai receber um recibo separado para essa cobrança. Você pode cancelar a qualquer momento em “Gerenciar assinatura”.",
+		"billing_resumed": "Como o presente foi removido, sua assinatura {plan, select, yearly {anual} other {mensal}} do {premiumName} volta a ser cobrada a partir de hoje. Você vai receber um recibo separado para essa cobrança. Você pode cancelar a qualquer momento em \"Gerenciar assinatura\".",
 		"footer_reason": "Você recebeu este e-mail porque os benefícios foram removidos da sua conta do {product_name}.",
 		"intro": "O pagamento de um código de presente que você resgatou foi revertido, então removemos os benefícios que ele adicionou à sua conta.",
 		"manage_cta": "Gerenciar sua assinatura",
@@ -318,7 +318,7 @@
 	},
 	"operator_pass_purchase_confirmation": {
 		"bonus_heading": "Também com o seu passe",
-		"bonus_line_v2": "O selo Operator, uma presença no mural de Operators, o #operators no {labs_name} e mais vêm com o passe.",
+		"bonus_line_v2": "O selo Operator, um lugar no mural de Operators, o #operators no {labs_name} e outras coisas vêm com o passe.",
 		"boxes_heading": "Com o que você concordou",
 		"currency_label": "Moeda",
 		"delivery_box": "Na finalização da compra, em {consentAt, date, long} às {consentAt, time, short}, você marcou esta caixa na versão {termsVersion} dos termos.",
@@ -478,7 +478,7 @@
 		"footer_reason": "Você recebeu este e-mail porque desistiu do contrato de compra do Operator Pass no {product_name}.",
 		"intro": "Recebemos sua desistência em {receivedAt, date, long} às {receivedAt, time, short}.",
 		"name_label": "Nome",
-		"note": "Guarde este e-mail como confirmação de que recebemos seu pedido de arrependimento.",
+		"note": "Guarde este e-mail como confirmação de que recebemos sua desistência.",
 		"order_date_label": "Data do pedido",
 		"order_date_value": "{orderDate, date, long}",
 		"order_number_label": "Número do pedido",
@@ -536,7 +536,7 @@
 		"footer_reason": "Você recebeu este e-mail porque cancelou sua assinatura do {premiumName}.",
 		"heading": "Cancelamento recebido",
 		"intro": "Recebemos sua solicitação para cancelar sua assinatura {plan, select, yearly {anual} other {mensal}} do {premiumName} em {receivedFormatted}.",
-		"lead": "Mudou de ideia? Você pode retomar sua assinatura em “Gerenciar assinatura” antes de {endsAt, date, long}.",
+		"lead": "Mudou de ideia? Você pode retomar sua assinatura em \"Gerenciar assinatura\" antes de {endsAt, date, long}.",
 		"preheader": "Você continua com o {premiumName} até {endsAt, date, long}",
 		"reference_line": "Referência: {reference}",
 		"seller": "Vendedor: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
@@ -572,7 +572,7 @@
 		"footer_reason": "Você recebeu este e-mail porque resgatou um presente do {premiumName}.",
 		"heading": "Presente adicionado",
 		"intro": "O tempo que você ganhou de presente foi adicionado. Nada será cobrado pela sua assinatura {plan, select, yearly {anual} other {mensal}} do {premiumName} até {trialEnd, date, long}.",
-		"lead": "Até lá, você pode cancelar a qualquer momento em “Gerenciar assinatura”.",
+		"lead": "Até lá, você pode cancelar a qualquer momento em \"Gerenciar assinatura\".",
 		"preheader": "Nada será cobrado até {trialEnd, date, long}",
 		"seller": "Vendedor: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
 		"signoff": "Equipe do {product_name}",
@@ -586,7 +586,7 @@
 		"heading": "{reason, select, action_required {Seu banco pede que você confirme um pagamento} other {Seu pagamento do {premiumName} não foi concluído}}",
 		"intro": "{reason, select, action_required {Seu banco pede que você confirme o pagamento de renovação da sua assinatura do {premiumName}.} other {Não conseguimos cobrar o pagamento de renovação da sua assinatura do {premiumName}.}} {access, select, yes {Você continua com o {premiumName} até {accessEndsAt, date, long}.} other {}}",
 		"intro_change": "{reason, select, action_required {Seu banco pede que você confirme o pagamento da alteração na sua assinatura do {premiumName}.} other {Não conseguimos cobrar o pagamento da alteração na sua assinatura do {premiumName}.}} {access, select, yes {Você continua com o {premiumName} até {accessEndsAt, date, long}.} other {}}",
-		"manage_link": "Atualizar sua forma de pagamento em “Gerenciar assinatura”",
+		"manage_link": "Atualizar sua forma de pagamento em \"Gerenciar assinatura\"",
 		"note": "{reply, select, yes {Se precisar de ajuda, responda a este e-mail.} other {Se precisar de ajuda, fale com os administradores desta instância.}}",
 		"preheader": "{reason, select, action_required {Confirme {amountFormatted} do {premiumName}} other {Não conseguimos cobrar {amountFormatted} do {premiumName}}}",
 		"reminder_subject": "Lembrete: confirme seu pagamento do {premiumName}",
@@ -604,7 +604,7 @@
 		"footer_reason": "Você recebeu este e-mail porque pagou pelo {premiumName} no {product_name}.",
 		"form_body": "Para Fluxer Platform AB, {sellerAddress}, <mail>{sellerEmail}</mail>:\nVenho por meio deste comunicar minha desistência do contrato de {premiumName}, comprado em {paidAt, date, long}.\nNúmero da fatura: {invoiceNumber}\nNome:\nEndereço:\nData:\nAssinatura (somente se enviado em papel):",
 		"form_title": "Formulário de desistência",
-		"gift_note": "Seu link de presente fica nas suas configurações, em “Presentes”. Copie-o de lá e envie para a pessoa que você quer presentear com o {premiumName}. Qualquer pessoa com o link pode resgatá-lo.",
+		"gift_note": "Seu link de presente fica nas suas configurações, em \"Presentes\". Copie-o de lá e envie para a pessoa que você quer presentear com o {premiumName}. Qualquer pessoa com o link pode resgatá-lo.",
 		"heading": "{gift, select, yes {Recibo do seu presente de {premiumName}} other {Recibo do {premiumName}}}",
 		"intro": "{document, select, yes {{gift, select, yes {Obrigado por comprar um presente de {premiumName}.} other {Obrigado pelo seu pagamento.}}} other {{gift, select, yes {Obrigado por comprar um presente de {premiumName}. Este e-mail é o seu recibo.} other {Obrigado pelo seu pagamento. Este e-mail é o seu recibo.}}}}",
 		"invoice_label": "Número da fatura",
@@ -612,7 +612,7 @@
 		"paid_label": "Valor pago",
 		"period_label": "Período",
 		"period_value": "de {periodStart, date, long} a\n{periodEnd, date, long}",
-		"plan_body": "{renewal, select, month {O {premiumName} é renovado todo mês por {renewalFormatted}{renewalTax, select, included { com impostos incluídos} added { mais impostos} other {}} até você cancelar. Você pode cancelar a qualquer momento em “Gerenciar assinatura”, na página do {premiumName}, e continua com o {premiumName} até o fim do período pago.} year {O {premiumName} é renovado todo ano por {renewalFormatted}{renewalTax, select, included { com impostos incluídos} added { mais impostos} other {}} até você cancelar. Você pode cancelar a qualquer momento em “Gerenciar assinatura”, na página do {premiumName}, e continua com o {premiumName} até o fim do período pago.} other {Este presente é uma compra única. Ele não é renovado, e nada mais será cobrado.}}",
+		"plan_body": "{renewal, select, month {O {premiumName} é renovado todo mês por {renewalFormatted}{renewalTax, select, included { com impostos incluídos} added { mais impostos} other {}} até você cancelar. Você pode cancelar a qualquer momento em \"Gerenciar assinatura\", na página do {premiumName}, e continua com o {premiumName} até o fim do período pago.} year {O {premiumName} é renovado todo ano por {renewalFormatted}{renewalTax, select, included { com impostos incluídos} added { mais impostos} other {}} até você cancelar. Você pode cancelar a qualquer momento em \"Gerenciar assinatura\", na página do {premiumName}, e continua com o {premiumName} até o fim do período pago.} other {Este presente é uma compra única. Ele não é renovado, e nada mais será cobrado.}}",
 		"plan_title": "{gift, select, yes {Seu presente} other {Sua assinatura}}",
 		"preheader": "Você pagou {amountFormatted} pelo {premiumName}",
 		"product_label": "Produto",
@@ -627,8 +627,8 @@
 		"withdrawal_body": "Você pode desistir desta compra até {withdrawalEndsAt, date, long} e receber o reembolso total. Para desistir, responda a este e-mail ou escreva para <mail>{sellerEmail}</mail> dizendo que deseja desistir. Você pode usar o formulário abaixo, mas não é obrigatório.",
 		"withdrawal_body_brazil": "Você pode desistir desta compra até as 23h59 no horário do Acre (UTC-5) de {withdrawalEndsAt, date, long} e receber de volta todo o valor pago. Para desistir, responda a este e-mail ou escreva para <mail>{sellerEmail}</mail> dizendo que desiste. Você pode usar o formulário abaixo, mas não é obrigatório.{gift, select, yes {} other { A renovação automática do mesmo plano não abre um novo prazo de arrependimento.}}",
 		"withdrawal_body_pro_rata": "Você pode desistir desta compra até {withdrawalEndsAt, date, long}. {gift, select, yes {Se o código não tiver sido resgatado, devolvemos tudo o que você pagou. Se tiver, devolvemos o que você pagou, descontada a parte dos dias em que quem o recebeu teve o {premiumName}.} other {Se fizer isso, devolvemos o que você pagou, descontada a parte dos dias em que você teve o {premiumName}. A renovação automática do mesmo plano não abre um novo prazo de desistência.}} Para desistir, use \"Desistir do contrato aqui\" na página do {premiumName} em \"Configurações de usuário\", ou responda a este e-mail ou escreva para <mail>{sellerEmail}</mail> dizendo que desiste. Você pode usar o formulário abaixo, mas não é obrigatório.",
-		"withdrawal_note": "O botão de reembolso no aplicativo funciona por 3 dias após cada pagamento. Ele é um benefício a mais, além do seu direito de desistência, e não o substitui.",
-		"withdrawal_title": "Direito de desistência"
+		"withdrawal_note": "O botão de reembolso no app funciona por 3 dias após cada pagamento. Ele é um benefício a mais, além do seu direito de arrependimento, e não o substitui.",
+		"withdrawal_title": "Direito de arrependimento"
 	},
 	"plutonium_refund_receipt": {
 		"credit_note_attached": "A nota de crédito deste reembolso está anexada a este e-mail em PDF.",
@@ -648,7 +648,7 @@
 		"product_value": "{plan, select, monthly {{premiumName}, mensal} yearly {{premiumName}, anual} gift_1_month {Presente de {premiumName}, 1 mês} gift_1_year {Presente de {premiumName}, 1 ano} other {{premiumName}}}",
 		"refund_label": "Valor reembolsado",
 		"signoff": "Equipe do {product_name}",
-		"subject": "Seu reembolso do {product_name} {premiumName}"
+		"subject": "Reembolso do {premiumName} no {product_name}"
 	},
 	"plutonium_renewal_notice": {
 		"after_line": "{differs, select, yes {Depois disso, o preço passa a ser {tax, select, yes {{regularFormatted}} other {{regularFormatted}, mais os impostos aplicáveis,}} por {plan, select, yearly {ano} other {mês}}.} other {Depois disso, você paga {tax, select, yes {{regularFormatted}} other {{regularFormatted}, mais os impostos aplicáveis,}} todo {plan, select, yearly {ano} other {mês}} até cancelar.}}",
@@ -672,7 +672,7 @@
 		"footer_reason": "Você recebeu este e-mail porque desistiu de uma compra do {premiumName} no {product_name}.",
 		"intro": "Recebemos sua desistência em {receivedAt, date, long} às {receivedAt, time, short}.",
 		"name_label": "Nome",
-		"note": "Guarde este e-mail como confirmação de que recebemos seu pedido de arrependimento.",
+		"note": "Guarde este e-mail como confirmação de que recebemos sua desistência.",
 		"reference_label": "Referência",
 		"refund": "{gift, select, yes {O código de presente deixa de funcionar e, se alguém já o resgatou, essa pessoa perde o tempo que ele deu.} other {Sua assinatura do {premiumName} foi encerrada e não será renovada.}} {refund, select, manual {Não conseguimos iniciar o reembolso de {amountFormatted} automaticamente, então uma pessoa da nossa equipe vai devolver o valor no cartão ou na conta que você usou para pagar {brazil, select, yes {imediatamente} other {em até 14 dias}}.} other {Iniciamos o reembolso integral de {amountFormatted} no cartão ou na conta que você usou para pagar. Dependendo do seu banco, costuma levar de 5 a 10 dias úteis para aparecer.}} Quando o reembolso for concluído, enviamos a nota de crédito por e-mail.",
 		"refund_label": "Reembolso",
@@ -680,7 +680,7 @@
 		"signoff": "Equipe do {product_name}",
 		"statement_label": "Sua desistência",
 		"statement_value": "{gift, select, yes {Desisto do meu contrato do presente de {premiumName} que comprei em {purchasedAt, date, long}.} other {Desisto do meu contrato da assinatura do {premiumName} que paguei em {purchasedAt, date, long}.}}",
-		"subject": "Recebemos sua desistência do {premiumName} do {product_name}"
+		"subject": "Recebemos sua desistência da compra do {premiumName} no {product_name}"
 	},
 	"reauth_code": {
 		"expiry": "Este código expira em {minutes, plural, one {# minuto} other {# minutos}}.",
@@ -713,7 +713,7 @@
 		"subject": "Recebemos sua denúncia no {product_name}"
 	},
 	"report_resolved": {
-		"about": "{target, select, message_community {Você denunciou uma mensagem no canal #{channelName} da comunidade “{communityName}” em {reportedAt, date, long}.} message_dm {Você denunciou uma mensagem direta em {reportedAt, date, long}.} message {Você denunciou uma mensagem em {reportedAt, date, long}.} user {Você denunciou a conta “{username}” em {reportedAt, date, long}.} community {Você denunciou a comunidade “{communityName}” em {reportedAt, date, long}.} other {Você nos enviou uma denúncia em {reportedAt, date, long}.}}",
+		"about": "{target, select, message_community {Você denunciou uma mensagem no canal #{channelName} da comunidade \"{communityName}\" em {reportedAt, date, long}.} message_dm {Você denunciou uma mensagem direta em {reportedAt, date, long}.} message {Você denunciou uma mensagem em {reportedAt, date, long}.} user {Você denunciou a conta \"{username}\" em {reportedAt, date, long}.} community {Você denunciou a comunidade \"{communityName}\" em {reportedAt, date, long}.} other {Você nos enviou uma denúncia em {reportedAt, date, long}.}}",
 		"comment_label": "Nota da nossa equipe",
 		"footer_reason": "Você recebeu este e-mail porque enviou uma denúncia no {product_name}.",
 		"intro": "{outcome, select, removed {Removemos o conteúdo porque ele violava nossas regras.} restricted {A conta violou nossas regras, e tomamos providências em relação a ela. Para proteger a privacidade de todos, não informamos quais foram.} action_taken {Isso violou nossas regras, e tomamos providências. Para proteger a privacidade de todos, não informamos quais foram.} no_violation {{concern, select, self_harm {Obrigado por se preocupar com essa pessoa. Nossa equipe analisou a denúncia. Falar sobre tristeza ou sobre não se sentir em segurança não viola nossas regras, então não removemos nada, mas podemos enviar à pessoa recursos de apoio. Nunca revelamos quem fez uma denúncia. Se você acha que alguém corre perigo imediato, ligue para o número de emergência local.} other {Nossa equipe analisou a denúncia e concluiu que isso não vai contra nossas regras, então não tomamos providências. Uma denúncia ainda pode levar a outras medidas, como enviar à pessoa recursos de apoio. Nunca revelamos quem fez uma denúncia.}}} other {Encerramos sua denúncia.}}",
@@ -721,7 +721,7 @@
 		"report_label": "ID da denúncia",
 		"signoff": "Equipe do {product_name}",
 		"subject": "Analisamos sua denúncia no {product_name}",
-		"thanks": "{outcome, select, removed {Obrigado por denunciar. Denúncias como a sua ajudam a manter o {product_name} seguro para todos.} restricted {Obrigado por denunciar. Denúncias como a sua ajudam a manter o {product_name} seguro para todos.} action_taken {Obrigado por denunciar. Denúncias como a sua ajudam a manter o {product_name} seguro para todos.} other {Obrigado por nos avisar. Continue denunciando qualquer coisa que te preocupe, mesmo que no fim esteja dentro das nossas regras.}}"
+		"thanks": "{outcome, select, removed {Obrigado por denunciar. Denúncias como a sua ajudam a manter o {product_name} seguro para todos.} restricted {Obrigado por denunciar. Denúncias como a sua ajudam a manter o {product_name} seguro para todos.} action_taken {Obrigado por denunciar. Denúncias como a sua ajudam a manter o {product_name} seguro para todos.} other {Obrigado por nos avisar. Continue denunciando tudo o que causar preocupação, mesmo que no fim esteja dentro das nossas regras.}}"
 	},
 	"self_deletion_scheduled": {
 		"footer_reason": "Você recebeu este e-mail porque solicitou a exclusão da sua conta do {product_name}.",
