@@ -15,7 +15,6 @@ import {describe, expect, it} from 'vitest';
 const PAGE = {
 	number: 123,
 	paidAt: new Date('2026-11-01T16:03:27Z'),
-	earlyBird: true,
 	termsVersion: '2026-11-01',
 	issuedAt: new Date('2026-11-01T16:03:29Z'),
 	copy: 'original' as const,

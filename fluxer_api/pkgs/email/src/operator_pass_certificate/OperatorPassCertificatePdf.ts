@@ -14,7 +14,6 @@ export interface OperatorPassCertificatePage {
 	number: number;
 	holderName: string;
 	paidAt: Date;
-	earlyBird: boolean;
 	termsVersion: string;
 	issuedAt: Date;
 	copy: 'original' | 'same_name' | 'new_name';
@@ -220,9 +219,6 @@ export async function renderOperatorPassCertificatePage(page: OperatorPassCertif
 		15,
 		306,
 	);
-	if (page.earlyBird && !visionary) {
-		drawCentered(sheet, 'Early bird price', bold, 13, 280, BRAND_COLOR);
-	}
 	drawCentered(
 		sheet,
 		visionary
