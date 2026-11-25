@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomUUID} from 'node:crypto';
-import {Config} from '@app/api/Config';
 import type {OperatorPassWaitlistRow} from '@app/api/database/types/OperatorPassTypes';
 import type {OperatorPassRepository} from '@app/api/operator_pass/OperatorPassRepository';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
@@ -13,6 +12,7 @@ const OPERATOR_PASS_WAITLIST_CLEANUP_LOCK_KEY = 'operator_pass:waitlist_cleanup:
 
 const OPERATOR_PASS_WAITLIST_PENDING_RETENTION_MS = ms('7 days');
 const OPERATOR_PASS_WAITLIST_RETENTION_MS = ms('30 days');
+const OPERATOR_PASS_WAITLIST_DELETE_BY_MS = Date.parse('2027-02-01T12:00:00Z');
 
 const LOCK_TTL_SECONDS = 120;
 const DEFAULT_PAGE_SIZE = 100;
@@ -49,14 +49,8 @@ function getStatusDeleteAt(entry: OperatorPassWaitlistRow): number | null {
 	}
 }
 
-function getOperatorPassWaitlistDeleteAt(
-	entry: OperatorPassWaitlistRow,
-	priceRisesAt: Date | null = Config.operatorPass.priceRisesAt,
-): number {
-	const backstop = priceRisesAt
-		? priceRisesAt.getTime() + OPERATOR_PASS_WAITLIST_RETENTION_MS
-		: Number.POSITIVE_INFINITY;
-	return Math.min(getStatusDeleteAt(entry) ?? backstop, backstop);
+function getOperatorPassWaitlistDeleteAt(entry: OperatorPassWaitlistRow): number {
+	return Math.min(getStatusDeleteAt(entry) ?? OPERATOR_PASS_WAITLIST_DELETE_BY_MS, OPERATOR_PASS_WAITLIST_DELETE_BY_MS);
 }
 
 function isDue(entry: OperatorPassWaitlistRow | null, nowMs: number): entry is OperatorPassWaitlistRow {

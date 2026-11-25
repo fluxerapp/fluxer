@@ -11,7 +11,6 @@ import type {
 import {
 	parseOperatorPassMaxQuantity,
 	parseOperatorPassReleaseLists,
-	parseOperatorPassStandardPrices,
 	parseOperatorPassWallTiers,
 	parseOperatorPassWithdrawalCountries,
 	resolveOperatorPassDisabledCurrencies,
@@ -219,7 +218,6 @@ function resolveInstallMethod(value: string | undefined): InstallMethod | null {
 }
 
 const ISO_INSTANT_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/u;
-const OPERATOR_PASS_MAX_GRACE_MINUTES = 24 * 60;
 
 function parseIsoInstant(value: string | undefined, envName: string): Date {
 	const trimmed = (value ?? '').trim();
@@ -260,21 +258,6 @@ function resolveOperatorPassClockOffsetMs(master: MasterConfig): number {
 
 function buildOperatorPassConfig(master: MasterConfig): OperatorPassConfig {
 	const source = master.operator_pass;
-	const priceRisesAt = parseOptionalIsoInstant(source.price_rises_at, 'FLUXER_OPERATOR_PASS_PRICE_RISES_AT');
-	if (priceRisesAt === null && master.env === 'production' && !master.instance.self_hosted) {
-		console.warn('FLUXER_OPERATOR_PASS_PRICE_RISES_AT is not set, the Operator Pass early bird price never ends');
-	}
-	const graceMinutes = source.grace_minutes;
-	if (
-		typeof graceMinutes !== 'number' ||
-		!Number.isInteger(graceMinutes) ||
-		graceMinutes < 0 ||
-		graceMinutes > OPERATOR_PASS_MAX_GRACE_MINUTES
-	) {
-		throw new Error(
-			`FLUXER_OPERATOR_PASS_GRACE_MINUTES must be an integer between 0 and ${OPERATOR_PASS_MAX_GRACE_MINUTES}`,
-		);
-	}
 	const labsGuildId = parseOptionalSnowflake(source.labs_guild_id, 'FLUXER_LABS_GUILD_ID');
 	const labsOperatorRoleId = parseOptionalSnowflake(source.labs_operator_role_id, 'FLUXER_LABS_OPERATOR_ROLE_ID');
 	if ((labsGuildId === null) !== (labsOperatorRoleId === null)) {
@@ -291,13 +274,6 @@ function buildOperatorPassConfig(master: MasterConfig): OperatorPassConfig {
 	if (labsOperatorsChannelId !== null && labsGuildId === null) {
 		throw new Error('FLUXER_LABS_OPERATORS_CHANNEL_ID needs FLUXER_LABS_GUILD_ID');
 	}
-	const standardPricesMinor = parseOperatorPassStandardPrices(source.standard_prices_minor);
-	const hostedSale = priceRisesAt !== null && master.env === 'production' && !master.instance.self_hosted;
-	if (hostedSale && standardPricesMinor === null) {
-		throw new Error(
-			'FLUXER_OPERATOR_PASS_STANDARD_PRICE_* must be set in production when FLUXER_OPERATOR_PASS_PRICE_RISES_AT is set',
-		);
-	}
 	if (
 		master.env === 'production' &&
 		!master.instance.self_hosted &&
@@ -308,14 +284,11 @@ function buildOperatorPassConfig(master: MasterConfig): OperatorPassConfig {
 		);
 	}
 	return {
-		priceRisesAt,
-		graceMs: graceMinutes * 60 * 1000,
 		clockOffsetMs: resolveOperatorPassClockOffsetMs(master),
 		labsGuildId,
 		labsOperatorRoleId,
 		labsVisionaryRoleId,
 		labsOperatorsChannelId,
-		standardPricesMinor,
 		releaseLists: parseOperatorPassReleaseLists(source.release_lists),
 		withdrawalCountries: parseOperatorPassWithdrawalCountries(source.withdrawal_countries),
 		wallTierMinimums: parseOperatorPassWallTiers(source.wall_tiers),

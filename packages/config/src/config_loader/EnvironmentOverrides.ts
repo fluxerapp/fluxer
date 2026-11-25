@@ -367,45 +367,7 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 	FLUXER_LABS_VISIONARY_ROLE_ID: {path: ['operator_pass', 'labs_visionary_role_id']},
 	FLUXER_LABS_OPERATORS_CHANNEL_ID: {path: ['operator_pass', 'labs_operators_channel_id']},
 	FLUXER_PAYMENT_DISPUTE_CLOSURE_EFFECTIVE_AT: {path: ['payment_disputes', 'closure_effective_at']},
-	FLUXER_OPERATOR_PASS_PRICE_RISES_AT: {path: ['operator_pass', 'price_rises_at']},
-	FLUXER_OPERATOR_PASS_GRACE_MINUTES: {path: ['operator_pass', 'grace_minutes'], parse: parseInteger},
 	FLUXER_OPERATOR_PASS_NOW: {path: ['operator_pass', 'now_override']},
-	FLUXER_OPERATOR_PASS_STANDARD_PRICE_USD: {
-		path: ['operator_pass', 'standard_prices_minor', 'usd'],
-		parse: parseInteger,
-	},
-	FLUXER_OPERATOR_PASS_STANDARD_PRICE_EUR: {
-		path: ['operator_pass', 'standard_prices_minor', 'eur'],
-		parse: parseInteger,
-	},
-	FLUXER_OPERATOR_PASS_STANDARD_PRICE_BRL: {
-		path: ['operator_pass', 'standard_prices_minor', 'brl'],
-		parse: parseInteger,
-	},
-	FLUXER_OPERATOR_PASS_STANDARD_PRICE_DKK: {
-		path: ['operator_pass', 'standard_prices_minor', 'dkk'],
-		parse: parseInteger,
-	},
-	FLUXER_OPERATOR_PASS_STANDARD_PRICE_INR: {
-		path: ['operator_pass', 'standard_prices_minor', 'inr'],
-		parse: parseInteger,
-	},
-	FLUXER_OPERATOR_PASS_STANDARD_PRICE_NOK: {
-		path: ['operator_pass', 'standard_prices_minor', 'nok'],
-		parse: parseInteger,
-	},
-	FLUXER_OPERATOR_PASS_STANDARD_PRICE_PLN: {
-		path: ['operator_pass', 'standard_prices_minor', 'pln'],
-		parse: parseInteger,
-	},
-	FLUXER_OPERATOR_PASS_STANDARD_PRICE_SEK: {
-		path: ['operator_pass', 'standard_prices_minor', 'sek'],
-		parse: parseInteger,
-	},
-	FLUXER_OPERATOR_PASS_STANDARD_PRICE_TRY: {
-		path: ['operator_pass', 'standard_prices_minor', 'try'],
-		parse: parseInteger,
-	},
 	FLUXER_OPERATOR_PASS_RELEASE_LISTS: {path: ['operator_pass', 'release_lists']},
 	FLUXER_OPERATOR_PASS_WITHDRAWAL_COUNTRIES: {path: ['operator_pass', 'withdrawal_countries']},
 	FLUXER_OPERATOR_PASS_WALL_TIERS: {path: ['operator_pass', 'wall_tiers']},

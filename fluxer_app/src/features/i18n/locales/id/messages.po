@@ -37360,7 +37360,7 @@ msgstr "Permintaan kunci sandi dibatalkan, waktunya habis, atau diblokir oleh br
 msgid "The passwords don't match."
 msgstr "Kata sandi tidak cocok."
 
-#. Notice in the Operator Pass checkout dialog when the price changed before payment, usually because the early bird price ended. {price} is a price with currency.
+#. Notice in the Operator Pass checkout dialog when the price changed before payment, for example because checkout now uses another currency. {price} is a price with currency.
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "The price is now {price}."
 msgstr "Harganya sekarang {price}."
@@ -38120,16 +38120,6 @@ msgstr "Perangkat atau kunci keamanan ini sudah memiliki kunci sandi untuk akunm
 #: src/features/guild/components/modals/add_guild_modal/shared.ts
 msgid "This doesn't look like a valid template response. Make sure you copied the entire JSON document."
 msgstr "Ini sepertinya bukan respons template yang valid. Pastikan kamu menyalin seluruh dokumen JSON."
-
-#. Note under the early bird Operator Pass price, saying that this lower price applies to purchases made until the given day. It must never read as if a price already paid will change later. {date} is a date such as January 1, 2027.
-#: src/features/premium/components/operator_pass/checkout/OperatorPassPriceBlock.tsx
-msgid "This early bird price is for purchases until {date}."
-msgstr "Harga early bird ini berlaku untuk pembelian sampai {date}."
-
-#. Note under the early bird Operator Pass price. The first sentence says this lower price applies to purchases made until the given day. The second says what one pass costs when bought after that day. It must never read as if a price already paid will change later or as a future charge. {date} is a date such as January 1, 2027, and {standardPrice} is the price of one pass with currency.
-#: src/features/premium/components/operator_pass/checkout/OperatorPassPriceBlock.tsx
-msgid "This early bird price is for purchases until {date}. After that, a pass costs {standardPrice}."
-msgstr "Harga early bird ini berlaku untuk pembelian sampai {date}. Pass yang dibeli setelah itu harganya {standardPrice}."
 
 #. Generic per-file error text shown when preparing an emoji upload fails.
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx

@@ -115,7 +115,7 @@ export function OperatorPassController(app: HonoApp) {
 			operationId: 'get_operator_pass_state',
 			summary: 'Get Operator Pass state',
 			description:
-				'Returns whether the early bird or the standard price applies, the price of one pass in the buyer currency, the most passes one checkout can buy, the withdrawal rule of the buyer country and a signed quote. Signed-in callers also get their holder status with the number of passes they hold, and why they cannot buy passes.',
+				'Returns the price of one pass in the buyer currency, the most passes one checkout can buy, the withdrawal rule of the buyer country and a signed quote. Signed-in callers also get their holder status with the number of passes they hold, and why they cannot buy passes.',
 			responseSchema: OperatorPassStateResponse,
 			statusCode: 200,
 			security: [],

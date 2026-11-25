@@ -41,8 +41,6 @@ import {
 import type Stripe from 'stripe';
 import {afterAll, beforeAll, describe, expect, test, vi} from 'vitest';
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-
 function boxTextOf(params: Stripe.Checkout.SessionCreateParams): string | undefined {
 	const acceptance = params.custom_text?.terms_of_service_acceptance;
 	return acceptance ? acceptance.message : undefined;
@@ -50,19 +48,15 @@ function boxTextOf(params: Stripe.Checkout.SessionCreateParams): string | undefi
 
 describe('Operator Pass checkout session', () => {
 	let harness: ApiTestHarness;
-	let priceRisesAt: Date | null;
 	let disabledCurrencies: ReadonlySet<OperatorPassCurrency>;
 
 	beforeAll(async () => {
 		harness = await createApiTestHarness();
-		priceRisesAt = Config.operatorPass.priceRisesAt;
 		disabledCurrencies = Config.operatorPass.disabledCurrencies;
-		Config.operatorPass.priceRisesAt = new Date(Date.now() + 30 * DAY_MS);
 		Config.operatorPass.disabledCurrencies = new Set();
 	});
 
 	afterAll(async () => {
-		Config.operatorPass.priceRisesAt = priceRisesAt;
 		Config.operatorPass.disabledCurrencies = disabledCurrencies;
 		await harness.shutdown();
 	});

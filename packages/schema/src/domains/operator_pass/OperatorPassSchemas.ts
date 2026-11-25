@@ -32,7 +32,7 @@ export type OperatorPassPhase = (typeof OPERATOR_PASS_PHASES)[number];
 
 export const OperatorPassPhaseSchema = createNamedStringLiteralUnion(
 	[
-		['early_bird', 'EARLY_BIRD', 'Sales are open at the early bird price'],
+		['early_bird', 'EARLY_BIRD', 'Bought at the launch price'],
 		['standard', 'STANDARD', 'Sales are open at the standard price'],
 	],
 	'Operator Pass sale phase',
@@ -191,12 +191,8 @@ export type OperatorPassHolderResponse = z.infer<typeof OperatorPassHolderRespon
 export const OperatorPassStateResponse = z.object({
 	phase: OperatorPassPhaseSchema,
 	now: z.iso.datetime().describe('The server time the state was computed at'),
-	price_rises_at: z.iso
-		.datetime()
-		.nullable()
-		.describe('When the early bird price ends, null while no sale date is set'),
 	currency: OperatorPassCurrencySchema,
-	price_minor: z.number().int().describe('Current price of one pass in minor units'),
+	price_minor: z.number().int().describe('Price of one pass in minor units'),
 	max_quantity: z
 		.number()
 		.int()
@@ -204,11 +200,6 @@ export const OperatorPassStateResponse = z.object({
 	withdrawal_rule: OperatorPassWithdrawalRuleResponse.nullable().describe(
 		'A country rule that keeps the right of withdrawal after delivery, null when the right ends once the certificate is delivered',
 	),
-	standard_price_minor: z
-		.number()
-		.int()
-		.nullable()
-		.describe('Price of one pass after the early bird phase in minor units, null when no standard price is set'),
 	quote: z.string().describe('Signed price quote to send back with checkout'),
 	holder: OperatorPassHolderResponse.nullable().describe('The passes held by the current account, null otherwise'),
 	purchase_blocked_reason: OperatorPassPurchaseBlockedReasonSchema.nullable().describe(

@@ -319,9 +319,7 @@ function defaultConfig(): MasterConfig {
 			age_policy: {},
 		},
 		payment_disputes: {},
-		operator_pass: {
-			grace_minutes: 30,
-		},
+		operator_pass: {},
 		dev: {
 			relax_registration_rate_limits: false,
 			disable_rate_limits: false,

@@ -12,14 +12,14 @@ import type {BillingPaymentMethod, BillingTotals, EmailSendParams} from '@pkgs/e
 const PREVIEW_WITHDRAWAL_RULES: Readonly<Record<string, 'uk' | 'brazil'>> = {'en-GB': 'uk', 'pt-BR': 'brazil'};
 
 const DEFAULT_LOCALES = ['en-US', 'sv-SE', 'de', 'ar', 'ja'];
-const PRICES: Record<string, {currency: string; earlyBird: number}> = {
-	'sv-SE': {currency: 'SEK', earlyBird: 225000},
-	de: {currency: 'EUR', earlyBird: 19900},
-	fr: {currency: 'EUR', earlyBird: 19900},
-	'pt-BR': {currency: 'BRL', earlyBird: 102000},
-	tr: {currency: 'TRY', earlyBird: 971000},
+const PRICES: Record<string, {currency: string; unitMinor: number}> = {
+	'sv-SE': {currency: 'SEK', unitMinor: 225000},
+	de: {currency: 'EUR', unitMinor: 19900},
+	fr: {currency: 'EUR', unitMinor: 19900},
+	'pt-BR': {currency: 'BRL', unitMinor: 102000},
+	tr: {currency: 'TRY', unitMinor: 971000},
 };
-const USD = {currency: 'USD', earlyBird: 19900};
+const USD = {currency: 'USD', unitMinor: 19900};
 const PLUTONIUM_PRICES: Record<string, {currency: string; monthly: number; tax: number | null}> = {
 	'sv-SE': {currency: 'SEK', monthly: 4900, tax: 980},
 	de: {currency: 'EUR', monthly: 499, tax: 80},
@@ -64,7 +64,7 @@ const SUBSCRIPTION_ID = 'sub_1SJHDHFPC94Os7Fd';
 
 function passTotals(locale: string, quantity: number): BillingTotals {
 	const price = PRICES[locale] ?? USD;
-	const totalMinor = price.earlyBird * quantity;
+	const totalMinor = price.unitMinor * quantity;
 	return {
 		totalMinor,
 		paidMinor: totalMinor,
@@ -537,7 +537,7 @@ const previews: Record<string, Preview> = {
 				withdrawalEndsOn: null,
 				withdrawalCountry: null,
 				wallName: 'Maja Lind',
-				unitAmountMinor: price.earlyBird,
+				unitAmountMinor: price.unitMinor,
 				paymentMethod: 'Visa ···· 4242',
 				deliveryBoxText:
 					"Deliver my certificate now. I understand that I lose my right to withdraw once it's delivered.",
@@ -562,7 +562,7 @@ const previews: Record<string, Preview> = {
 				withdrawalEndsOn: new Date(DATE.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
 				withdrawalCountry: 'BR',
 				wallName: null,
-				unitAmountMinor: price.earlyBird,
+				unitAmountMinor: price.unitMinor,
 				paymentMethod: 'Visa ···· 4242',
 				deliveryBoxText:
 					'Deliver my certificates now. I can still withdraw within 7 days of delivery and get a full refund.',
@@ -581,7 +581,7 @@ const previews: Record<string, Preview> = {
 				receivedAt: DATE,
 				invoiceNumber: 'C1Q2W3E4-0003',
 				orderDate: DATE,
-				amountMinor: price.earlyBird,
+				amountMinor: price.unitMinor,
 				currency: price.currency,
 				delivered: true,
 				passCount: 1,
@@ -990,7 +990,7 @@ const previews: Record<string, Preview> = {
 				product: 'plutonium',
 				invoiceNumber: 'B1Q2W3E4-0001',
 				orderDate: DATE,
-				amountMinor: price.earlyBird,
+				amountMinor: price.unitMinor,
 				currency: price.currency,
 				warningDate: new Date('2026-10-27T12:00:00Z'),
 				note: null,

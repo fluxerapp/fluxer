@@ -37360,7 +37360,7 @@ msgstr "通行金鑰提示已被取消、逾時，或遭瀏覽器封鎖。請再
 msgid "The passwords don't match."
 msgstr "兩次輸入的密碼不一致。"
 
-#. Notice in the Operator Pass checkout dialog when the price changed before payment, usually because the early bird price ended. {price} is a price with currency.
+#. Notice in the Operator Pass checkout dialog when the price changed before payment, for example because checkout now uses another currency. {price} is a price with currency.
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "The price is now {price}."
 msgstr "價格已變更為 {price}。"
@@ -38120,16 +38120,6 @@ msgstr "此裝置或安全金鑰已儲存您帳號的通行金鑰。"
 #: src/features/guild/components/modals/add_guild_modal/shared.ts
 msgid "This doesn't look like a valid template response. Make sure you copied the entire JSON document."
 msgstr "這看起來不是有效的範本回應。請確認您已複製整個 JSON 文件。"
-
-#. Note under the early bird Operator Pass price, saying that this lower price applies to purchases made until the given day. It must never read as if a price already paid will change later. {date} is a date such as January 1, 2027.
-#: src/features/premium/components/operator_pass/checkout/OperatorPassPriceBlock.tsx
-msgid "This early bird price is for purchases until {date}."
-msgstr "此早鳥價適用於 {date} 及之前的購買。"
-
-#. Note under the early bird Operator Pass price. The first sentence says this lower price applies to purchases made until the given day. The second says what one pass costs when bought after that day. It must never read as if a price already paid will change later or as a future charge. {date} is a date such as January 1, 2027, and {standardPrice} is the price of one pass with currency.
-#: src/features/premium/components/operator_pass/checkout/OperatorPassPriceBlock.tsx
-msgid "This early bird price is for purchases until {date}. After that, a pass costs {standardPrice}."
-msgstr "此早鳥價適用於 {date} 及之前的購買。在此之後購買的通行證價格為 {standardPrice}。"
 
 #. Generic per-file error text shown when preparing an emoji upload fails.
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx

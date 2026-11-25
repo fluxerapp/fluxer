@@ -37353,7 +37353,7 @@ msgstr "Kinansela, nag-time out o hinarang ng browser mo ang passkey prompt. Sub
 msgid "The passwords don't match."
 msgstr "Hindi magkatugma ang mga password."
 
-#. Notice in the Operator Pass checkout dialog when the price changed before payment, usually because the early bird price ended. {price} is a price with currency.
+#. Notice in the Operator Pass checkout dialog when the price changed before payment, for example because checkout now uses another currency. {price} is a price with currency.
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "The price is now {price}."
 msgstr "{price} na ang presyo ngayon."
@@ -38113,16 +38113,6 @@ msgstr "May passkey na para sa account mo ang device o security key na ito."
 #: src/features/guild/components/modals/add_guild_modal/shared.ts
 msgid "This doesn't look like a valid template response. Make sure you copied the entire JSON document."
 msgstr "Mukhang hindi ito valid na template response. Tiyaking nakopya mo ang buong JSON document."
-
-#. Note under the early bird Operator Pass price, saying that this lower price applies to purchases made until the given day. It must never read as if a price already paid will change later. {date} is a date such as January 1, 2027.
-#: src/features/premium/components/operator_pass/checkout/OperatorPassPriceBlock.tsx
-msgid "This early bird price is for purchases until {date}."
-msgstr "Para sa mga bibili hanggang {date} ang early bird na presyong ito."
-
-#. Note under the early bird Operator Pass price. The first sentence says this lower price applies to purchases made until the given day. The second says what one pass costs when bought after that day. It must never read as if a price already paid will change later or as a future charge. {date} is a date such as January 1, 2027, and {standardPrice} is the price of one pass with currency.
-#: src/features/premium/components/operator_pass/checkout/OperatorPassPriceBlock.tsx
-msgid "This early bird price is for purchases until {date}. After that, a pass costs {standardPrice}."
-msgstr "Para sa mga bibili hanggang {date} ang early bird na presyong ito. Pagkatapos noon, {standardPrice} na ang isang pass."
 
 #. Generic per-file error text shown when preparing an emoji upload fails.
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx

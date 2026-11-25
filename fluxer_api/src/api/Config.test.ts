@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {buildAPIConfigFromMaster} from '@app/api/Config';
-import {OPERATOR_PASS_EARLY_BIRD_PRICES_MINOR} from '@app/api/operator_pass/OperatorPassPrices';
 import {loadConfig, resetConfig} from '@fluxer/config/src/ConfigLoader';
 import type {MasterConfig} from '@fluxer/config/src/MasterConfig';
 import {afterAll, afterEach, beforeAll, describe, expect, it, test, vi} from 'vitest';
@@ -189,17 +188,10 @@ function withHostedOperatorPassSale(
 		instance: {...master.instance, self_hosted: false},
 		operator_pass: {
 			...master.operator_pass,
-			price_rises_at: '2027-02-01T12:00:00Z',
 			labs_guild_id: '1',
 			labs_operator_role_id: '2',
 			labs_visionary_role_id: '3',
 			labs_operators_channel_id: '4',
-			standard_prices_minor: Object.fromEntries(
-				Object.entries(OPERATOR_PASS_EARLY_BIRD_PRICES_MINOR).map(([currency, amount]) => [
-					currency.toLowerCase(),
-					amount + 1,
-				]),
-			),
 			...operatorPass,
 		},
 	};
@@ -212,7 +204,6 @@ describe('buildAPIConfigFromMaster Operator Pass sale', () => {
 	});
 
 	test.each([
-		['standard price', {standard_prices_minor: undefined}, /FLUXER_OPERATOR_PASS_STANDARD_PRICE_/],
 		['Labs Visionary role', {labs_visionary_role_id: undefined}, /FLUXER_LABS_VISIONARY_ROLE_ID/],
 		['Labs #operators channel', {labs_operators_channel_id: undefined}, /FLUXER_LABS_OPERATORS_CHANNEL_ID/],
 	] as const)('refuses a hosted production sale without the %s', (_name, missing, message) => {

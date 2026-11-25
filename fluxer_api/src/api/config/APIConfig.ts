@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {
-	OperatorPassPriceTable,
 	OperatorPassReleaseListTable,
 	OperatorPassWithdrawalCountryTable,
 } from '@app/api/operator_pass/OperatorPassPrices';
@@ -47,14 +46,11 @@ interface APICachePurgeTarget {
 }
 
 export interface OperatorPassConfig {
-	priceRisesAt: Date | null;
-	graceMs: number;
 	clockOffsetMs: number;
 	labsGuildId: bigint | null;
 	labsOperatorRoleId: bigint | null;
 	labsVisionaryRoleId: bigint | null;
 	labsOperatorsChannelId: bigint | null;
-	standardPricesMinor: OperatorPassPriceTable | null;
 	releaseLists: OperatorPassReleaseListTable;
 	withdrawalCountries: OperatorPassWithdrawalCountryTable;
 	disabledCurrencies: ReadonlySet<OperatorPassCurrency>;

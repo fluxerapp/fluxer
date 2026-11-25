@@ -14807,7 +14807,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Returns whether the early bird or the standard price applies, the price of one pass in the buyer currency, the most passes one checkout can buy, the withdrawal rule of the buyer country and a signed quote. Signed-in callers also get their holder status with the number of passes they hold, and why they cannot buy passes.",
+				"description": "Returns the price of one pass in the buyer currency, the most passes one checkout can buy, the withdrawal rule of the buyer country and a signed quote. Signed-in callers also get their holder status with the number of passes they hold, and why they cannot buy passes.",
 				"parameters": [
 					{
 						"name": "country_code",
@@ -34342,23 +34342,12 @@
 						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
 						"description": "The server time the state was computed at"
 					},
-					"price_rises_at": {
-						"anyOf": [
-							{
-								"type": "string",
-								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-							},
-							{"type": "null"}
-						],
-						"description": "When the early bird price ends, null while no sale date is set"
-					},
 					"currency": {"$ref": "#/components/schemas/OperatorPassCurrencySchema"},
 					"price_minor": {
 						"type": "integer",
 						"minimum": -9007199254740991,
 						"maximum": 9007199254740991,
-						"description": "Current price of one pass in minor units"
+						"description": "Price of one pass in minor units"
 					},
 					"max_quantity": {
 						"type": "integer",
@@ -34369,10 +34358,6 @@
 					"withdrawal_rule": {
 						"anyOf": [{"$ref": "#/components/schemas/OperatorPassWithdrawalRuleResponse"}, {"type": "null"}],
 						"description": "A country rule that keeps the right of withdrawal after delivery, null when the right ends once the certificate is delivered"
-					},
-					"standard_price_minor": {
-						"anyOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "null"}],
-						"description": "Price of one pass after the early bird phase in minor units, null when no standard price is set"
 					},
 					"quote": {"type": "string", "description": "Signed price quote to send back with checkout"},
 					"holder": {
@@ -34387,12 +34372,10 @@
 				"required": [
 					"phase",
 					"now",
-					"price_rises_at",
 					"currency",
 					"price_minor",
 					"max_quantity",
 					"withdrawal_rule",
-					"standard_price_minor",
 					"quote",
 					"holder",
 					"purchase_blocked_reason"
@@ -44797,7 +44780,7 @@
 			"OperatorPassPhaseSchema": {
 				"description": "Operator Pass sale phase",
 				"x-enumNames": ["EARLY_BIRD", "STANDARD"],
-				"x-enumDescriptions": ["Sales are open at the early bird price", "Sales are open at the standard price"],
+				"x-enumDescriptions": ["Bought at the launch price", "Sales are open at the standard price"],
 				"enum": ["early_bird", "standard"],
 				"type": "string"
 			},

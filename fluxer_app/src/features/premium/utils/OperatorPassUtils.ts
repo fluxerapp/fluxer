@@ -6,7 +6,6 @@ import {getCachedListFormat} from '@app/features/i18n/utils/IntlCache';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {shouldUse12HourFormat} from '@app/features/user/utils/DateFormatting';
 import {getCurrentOrDetectedLocale} from '@app/features/user/utils/LocaleUtils';
-import {getOperatorPassEarlyBirdEndsOn} from '@fluxer/constants/src/OperatorPassEarlyBird';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {getDateFormatter} from '@fluxer/date_utils/src/DateFormatterCache';
 import {
@@ -81,11 +80,8 @@ interface OperatorPassCalendarDay {
 	day: number;
 }
 
-function formatCalendarDay(
-	{year, month, day}: OperatorPassCalendarDay,
-	dateStyle: 'medium' | 'long' = 'medium',
-): string {
-	return getDateFormatter(getCurrentOrDetectedLocale(), {dateStyle, timeZone: 'UTC'}).format(
+function formatCalendarDay({year, month, day}: OperatorPassCalendarDay): string {
+	return getDateFormatter(getCurrentOrDetectedLocale(), {dateStyle: 'medium', timeZone: 'UTC'}).format(
 		new Date(Date.UTC(year, month - 1, day)),
 	);
 }
@@ -97,10 +93,6 @@ function parseCalendarDay(day: string): OperatorPassCalendarDay {
 
 export function formatOperatorPassCalendarDay(day: string): string {
 	return formatCalendarDay(parseCalendarDay(day));
-}
-
-export function formatOperatorPassEarlyBirdEnd(priceRisesAt: string): string {
-	return formatCalendarDay(parseCalendarDay(getOperatorPassEarlyBirdEndsOn(priceRisesAt)), 'long');
 }
 
 export function formatOperatorPassSinceDate(iso: string | Date): string {

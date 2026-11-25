@@ -2,7 +2,6 @@
 
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
-import {Config} from '@app/api/Config';
 import {getKVClient} from '@app/api/middleware/ServiceRegistry';
 import {
 	getCacheService,
@@ -30,20 +29,15 @@ import {OPERATOR_PASS_TERMS_VERSION} from '@pkgs/email/src/operator_pass_terms/O
 import {TestEmailService} from '@pkgs/email/src/TestEmailService';
 import {afterAll, beforeAll, expect, test, vi} from 'vitest';
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 const VISIONARY_SINCE = new Date('2025-03-14T09:30:00.000Z');
 
 let harness: ApiTestHarness;
-let priceRisesAt: Date | null;
 
 beforeAll(async () => {
 	harness = await createApiTestHarness();
-	priceRisesAt = Config.operatorPass.priceRisesAt;
-	Config.operatorPass.priceRisesAt = new Date(Date.now() + 30 * DAY_MS);
 });
 
 afterAll(async () => {
-	Config.operatorPass.priceRisesAt = priceRisesAt;
 	await harness.shutdown();
 });
 

@@ -19,9 +19,7 @@ import {
 } from '@app/api/operator_pass/OperatorPassPrices';
 import type {OperatorPassRepository} from '@app/api/operator_pass/OperatorPassRepository';
 import {
-	getOperatorPassPhase,
 	getOperatorPassPriceMinor,
-	getOperatorPassSchedule,
 	getOperatorPassSessionExpiresAt,
 	issueOperatorPassQuote,
 	operatorPassNow,
@@ -54,6 +52,7 @@ import {
 	OPERATOR_PASS_DELIVERY_WAIVER_VERSION,
 	type OperatorPassCheckoutRequest,
 	type OperatorPassCurrency,
+	type OperatorPassPhase,
 	type OperatorPassPurchaseBlockedReason,
 	type OperatorPassStateResponse,
 } from '@fluxer/schema/src/domains/operator_pass/OperatorPassSchemas';
@@ -67,6 +66,8 @@ type CheckoutSessionCreateParams = Stripe.Checkout.SessionCreateParams;
 type CheckoutLineItem = NonNullable<CheckoutSessionCreateParams['line_items']>[number];
 
 const PASS_TAX_CODE = 'txcd_10000000';
+
+const SALE_PHASE: OperatorPassPhase = 'standard';
 
 function normalizeCountryCode(countryCode: string | null | undefined): string | null {
 	const normalized = countryCode?.trim().toUpperCase();
@@ -189,28 +190,23 @@ export class OperatorPassCheckoutService {
 	) {}
 
 	async getState({user, countryCode}: OperatorPassStateParams): Promise<OperatorPassStateResponse> {
-		const schedule = getOperatorPassSchedule();
-		const now = operatorPassNow(schedule);
-		const phase = getOperatorPassPhase(now, schedule);
+		const now = operatorPassNow();
 		const country = normalizeCountryCode(countryCode);
 		const currency = resolveOperatorPassCurrency(country);
 		const rule = resolveCheckoutWithdrawalRule(country, currency);
-		const priceMinor = getOperatorPassPriceMinor(phase, currency, schedule);
+		const priceMinor = getOperatorPassPriceMinor(currency);
 		const entitlement = user ? await this.entitlementService.loadState(user.id) : null;
 		const holder = user && entitlement ? resolveOperatorPassHolder(entitlement, now) : null;
 		const wallChosen = holder && user ? hasOperatorPassWallChoice(await this.repository.findWallEntry(user.id)) : false;
 		return {
-			phase,
+			phase: SALE_PHASE,
 			now: now.toISOString(),
-			price_rises_at: schedule.priceRisesAt?.toISOString() ?? null,
 			currency,
 			price_minor: priceMinor,
 			max_quantity: Config.operatorPass.maxQuantity,
 			withdrawal_rule: rule ? {country: rule.country, days: rule.days} : null,
-			standard_price_minor: schedule.standardPricesMinor?.[currency] ?? null,
 			quote: issueOperatorPassQuote({
 				now,
-				phase,
 				currency,
 				amountMinor: priceMinor,
 				userId: user ? user.id.toString() : null,
@@ -248,8 +244,7 @@ export class OperatorPassCheckoutService {
 		if (quantity > Config.operatorPass.maxQuantity) {
 			throw InputValidationError.create('quantity', `At most ${Config.operatorPass.maxQuantity} passes per checkout`);
 		}
-		const schedule = getOperatorPassSchedule();
-		const now = operatorPassNow(schedule);
+		const now = operatorPassNow();
 		assertUserCanPurchase(user);
 		assertOperatorPassEmailDeliverable(user);
 		await assertNoOpenPaymentDispute(getPaymentDisputeRepository(), user.id);
@@ -284,20 +279,17 @@ export class OperatorPassCheckoutService {
 			: normalizeOperatorPassWallChoice({name: request.wall_name, optOut: request.wall_opt_out});
 		const userId = user.id.toString();
 		const price = resolveOperatorPassCheckoutPrice({
-			now,
-			schedule,
 			currency,
 			userId,
 			quote: request.quote,
 		});
 		if (price.priceChanged) {
 			throw new OperatorPassPriceChangedError({
-				phase: price.phase,
+				phase: SALE_PHASE,
 				currency,
 				price_minor: price.amountMinor,
 				quote: issueOperatorPassQuote({
 					now,
-					phase: price.phase,
 					currency,
 					amountMinor: price.amountMinor,
 					userId,
@@ -316,10 +308,9 @@ export class OperatorPassCheckoutService {
 			operator_pass_purchaser_id: userId,
 			operator_pass_quantity: String(quantity),
 			operator_pass_unit_amount_minor: String(price.amountMinor),
-			operator_pass_phase: price.pricedPhase,
+			operator_pass_phase: SALE_PHASE,
 			operator_pass_amount_minor: String(amountMinor),
 			operator_pass_currency: currency,
-			operator_pass_quote_honored: price.quoteHonored ? 'true' : 'false',
 			operator_pass_locale: locale ?? 'en-US',
 			operator_pass_waiver_consent_at: consentAt.toISOString(),
 			operator_pass_waiver_consent_version: consentVersion,
@@ -348,7 +339,7 @@ export class OperatorPassCheckoutService {
 			},
 			quantity,
 		};
-		const expiresAt = getOperatorPassSessionExpiresAt(price.pricedPhase, now, schedule);
+		const expiresAt = getOperatorPassSessionExpiresAt();
 		const email = user.email;
 		const checkoutParams: CheckoutSessionCreateParams = {
 			...(email ? {customer_email: email} : {}),
@@ -395,10 +386,10 @@ export class OperatorPassCheckoutService {
 			purchaser_id: user.id,
 			quantity,
 			status: 'pending',
-			phase: price.pricedPhase,
+			phase: SALE_PHASE,
 			amount_minor: amountMinor,
 			currency,
-			quote_honored: price.quoteHonored,
+			quote_honored: false,
 			payment_intent_id: null,
 			invoice_id: null,
 			created_at: new Date(),

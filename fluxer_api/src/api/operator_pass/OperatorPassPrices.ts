@@ -28,7 +28,7 @@ const DEFAULT_WITHDRAWAL_COUNTRIES: OperatorPassWithdrawalCountryTable = {BR: {d
 
 const CURRENCY_WITHDRAWAL_COUNTRY: Readonly<Partial<Record<string, string>>> = {BRL: 'BR'};
 
-export const OPERATOR_PASS_EARLY_BIRD_PRICES_MINOR: OperatorPassPriceTable = {
+export const OPERATOR_PASS_PRICES_MINOR: OperatorPassPriceTable = {
 	USD: 19900,
 	EUR: 19900,
 	BRL: 102000,
@@ -39,39 +39,6 @@ export const OPERATOR_PASS_EARLY_BIRD_PRICES_MINOR: OperatorPassPriceTable = {
 	SEK: 225000,
 	TRY: 971000,
 };
-
-function getOperatorPassStandardPriceEnvName(currency: OperatorPassCurrency): string {
-	return `FLUXER_OPERATOR_PASS_STANDARD_PRICE_${currency}`;
-}
-
-export function parseOperatorPassStandardPrices(
-	source: Partial<Record<string, number>> | undefined,
-): OperatorPassPriceTable | null {
-	const missing = OPERATOR_PASS_CURRENCIES.filter((currency) => source?.[currency.toLowerCase()] === undefined);
-	if (missing.length === OPERATOR_PASS_CURRENCIES.length) {
-		return null;
-	}
-	if (missing.length > 0) {
-		throw new Error(
-			`${missing.map(getOperatorPassStandardPriceEnvName).join(', ')} must be set, the standard price needs every currency or none`,
-		);
-	}
-	const prices = {} as Record<OperatorPassCurrency, number>;
-	for (const currency of OPERATOR_PASS_CURRENCIES) {
-		const amount = source?.[currency.toLowerCase()];
-		if (
-			typeof amount !== 'number' ||
-			!Number.isSafeInteger(amount) ||
-			amount <= OPERATOR_PASS_EARLY_BIRD_PRICES_MINOR[currency]
-		) {
-			throw new Error(
-				`${getOperatorPassStandardPriceEnvName(currency)} must be a whole amount in minor units above the early bird price`,
-			);
-		}
-		prices[currency] = amount;
-	}
-	return prices;
-}
 
 function defaultReleaseListWindow(year: number): OperatorPassReleaseListWindow {
 	return {

@@ -52,16 +52,12 @@ afterAll(() => {
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 let harness: ApiTestHarness;
-let priceRisesAt: Date | null;
 
 beforeAll(async () => {
 	harness = await createApiTestHarness();
-	priceRisesAt = Config.operatorPass.priceRisesAt;
-	Config.operatorPass.priceRisesAt = new Date(Date.now() + 30 * DAY_MS);
 });
 
 afterAll(async () => {
-	Config.operatorPass.priceRisesAt = priceRisesAt;
 	await harness.shutdown();
 });
 

@@ -391,14 +391,11 @@ export interface MasterConfig {
 		closure_effective_at?: string;
 	};
 	operator_pass: {
-		price_rises_at?: string;
-		grace_minutes: number;
 		now_override?: string;
 		labs_guild_id?: string;
 		labs_operator_role_id?: string;
 		labs_visionary_role_id?: string;
 		labs_operators_channel_id?: string;
-		standard_prices_minor?: Partial<Record<string, number>>;
 		release_lists?: string;
 		withdrawal_countries?: string;
 		localized_prices_enabled?: Partial<Record<string, boolean>>;

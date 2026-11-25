@@ -157,7 +157,7 @@ const CANCELED_NOTICE_DESCRIPTOR = msg({
 const PRICE_CHANGED_NOTICE_DESCRIPTOR = msg({
 	message: 'The price is now {price}.',
 	comment:
-		'Notice in the Operator Pass checkout dialog when the price changed before payment, usually because the early bird price ended. {price} is a price with currency.',
+		'Notice in the Operator Pass checkout dialog when the price changed before payment, for example because checkout now uses another currency. {price} is a price with currency.',
 });
 const RATE_LIMITED_NOTICE_DESCRIPTOR = msg({
 	message: 'Too many tries. Wait a minute and try again.',
