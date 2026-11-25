@@ -58,11 +58,3 @@ pub fn forced_offline_wire(user: Int) -> BitArray {
     <<"}}":utf8>>,
   ])
 }
-
-pub fn user_update_wire(user_wire: BitArray) -> BitArray {
-  bit_array.concat([
-    <<"{\"user\":":utf8>>,
-    user_wire,
-    <<",\"user_update\":true}":utf8>>,
-  ])
-}

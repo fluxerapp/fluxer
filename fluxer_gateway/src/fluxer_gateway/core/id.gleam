@@ -150,14 +150,6 @@ pub fn channel_id_to_string(id: ChannelId) -> String {
   write(channel_id_to_int(id))
 }
 
-pub fn role_id_to_string(id: RoleId) -> String {
-  write(role_id_to_int(id))
-}
-
-pub fn message_id_to_string(id: MessageId) -> String {
-  write(message_id_to_int(id))
-}
-
 pub fn guild_json(id: GuildId) -> Json {
   json(guild_id_to_int(id))
 }

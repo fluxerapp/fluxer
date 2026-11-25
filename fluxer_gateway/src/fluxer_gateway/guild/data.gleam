@@ -83,16 +83,6 @@ pub fn set_channel_field(
   )
 }
 
-pub fn channel_field(
-  data: GuildData,
-  target: ChannelId,
-  key: String,
-) -> Option(RawJson) {
-  dict.get(data.channel_patches, id.channel_id_to_int(target))
-  |> result.try(dict.get(_, key))
-  |> option.from_result
-}
-
 pub fn drop_channel_patches(data: GuildData, target: ChannelId) -> GuildData {
   GuildData(
     ..data,

@@ -266,11 +266,6 @@ pub fn subscription_lists(sessions: Sessions) -> List(#(String, List(Int))) {
   |> list.map(fn(pair) { #(pair.0, set.to_list(pair.1)) })
 }
 
-pub fn drop_subscriptions(sessions: Sessions, key: String) -> Sessions {
-  let #(sessions, _, _) = replace_subscriptions(sessions, key, [])
-  sessions
-}
-
 fn drop_subscriber(
   subscribers: Dict(Int, Set(String)),
   user: Int,

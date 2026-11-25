@@ -20,13 +20,6 @@ import gleam/option.{None, Some}
 import gleeunit/should
 
 pub fn status_parse_test() {
-  status.parse_op3("offline") |> should.equal(Ok(Invisible))
-  status.parse_op3("dnd") |> should.equal(Ok(Dnd))
-  status.parse_op3("busy") |> should.equal(Error(Nil))
-  status.parse_identify(Some("")) |> should.equal(Some(Online))
-  status.parse_identify(Some("online")) |> should.equal(None)
-  status.parse_stored(Some("busy")) |> should.equal(Online)
-  status.initial(None, Dnd) |> should.equal(Dnd)
   status.settings_invisible(Some("offline")) |> should.equal(Some(True))
   status.settings_invisible(Some("idle")) |> should.equal(Some(False))
   status.settings_invisible(Some("x")) |> should.equal(None)
@@ -247,6 +240,4 @@ pub fn payload_wire_test() {
   |> should.equal(<<
     "{\"afk\":false,\"custom_status\":null,\"mobile\":false,\"status\":\"offline\",\"user\":{\"id\":\"9\"}}",
   >>)
-  payload.user_update_wire(<<"{}">>)
-  |> should.equal(<<"{\"user\":{},\"user_update\":true}">>)
 }

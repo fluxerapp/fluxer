@@ -836,7 +836,7 @@ fn resumed_payload(
           #(
             "_timings_gw",
             timing
-              |> timings.record("replay_missed_events", replay_started_us, None)
+              |> timings.record("replay_missed_events", replay_started_us)
               |> timings.finish,
           ),
         ]),

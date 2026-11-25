@@ -60,8 +60,6 @@ pub fn homes_are_the_top_two_ordinals_test() {
 pub fn epochs_only_grow_test() {
   let zero = epoch.zero()
   let one = epoch.next(zero)
-  assert epoch.is_stale(zero, one)
-  assert !epoch.is_stale(one, one)
   assert epoch.max(zero, one) == one
   assert epoch.compare(one, zero) == order.Gt
   assert epoch.from_int(-1) == Error(Nil)

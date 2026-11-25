@@ -320,10 +320,6 @@ pub fn pending_key(pending: Pending) -> VoiceKey {
   )
 }
 
-pub fn recent_key(recent: Recent) -> Result(VoiceKey, Nil) {
-  entry.key(recent.entry)
-}
-
 pub fn connected(
   state: State,
   connection_id: ConnectionId,

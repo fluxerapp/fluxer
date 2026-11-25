@@ -97,10 +97,6 @@ pub fn drop_through(buffer: FreezeBuffer, seq: Int) -> FreezeBuffer {
   FreezeBuffer(..buffer, newest_first: kept, bytes: buffer.bytes - freed)
 }
 
-pub fn sealed_at(buffer: FreezeBuffer) -> Option(Int) {
-  buffer.sealed
-}
-
 pub fn size_bytes(buffer: FreezeBuffer) -> Int {
   buffer.bytes
 }

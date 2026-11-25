@@ -40,7 +40,3 @@ pub fn max(a: Epoch, b: Epoch) -> Epoch {
     False -> b
   }
 }
-
-pub fn is_stale(seen: Epoch, current: Epoch) -> Bool {
-  seen.value < current.value
-}

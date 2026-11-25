@@ -4,12 +4,12 @@ import fluxer_gateway/cluster/discovery
 import fluxer_gateway/cluster/liveness
 import fluxer_gateway/cluster/membership/state.{type Membership}
 import fluxer_gateway/cluster/metrics
-import fluxer_gateway/cluster/node_metadata
 import fluxer_gateway/cluster/remote
 import fluxer_gateway/cluster/router
 import fluxer_gateway/config/draining
 import fluxer_gateway/config/durations
 import fluxer_gateway/config/env
+import fluxer_gateway/config/node_name
 import fluxer_gateway/config/settings.{type Settings}
 import fluxer_gateway/core/clock
 import fluxer_gateway/core/id
@@ -222,8 +222,7 @@ fn handle(current: State, message: Message) -> actor.Next(State, Message) {
     NodeEvent(Unreadable) -> actor.continue(current)
     Discovered(discovery.PeersChanged(peers)) ->
       actor.continue(step(current, state.DnsAnswer(peers), now))
-    PeerHello(from, role, pod_name, pins, draining, wants_reply) -> {
-      node_metadata.cache_node_pod_name(from, pod_name)
+    PeerHello(from, role, _, pins, draining, wants_reply) -> {
       actor.continue(step(
         current,
         state.PeerInfo(from, role, pins, draining, wants_reply),
@@ -347,7 +346,7 @@ fn execute(current: State, decision: state.Decision) -> Nil {
           PeerHello(
             node.self(),
             current.role,
-            node_metadata.local_pod_name(),
+            node_name.pod_name(),
             current.pins,
             draining,
             wants_reply,

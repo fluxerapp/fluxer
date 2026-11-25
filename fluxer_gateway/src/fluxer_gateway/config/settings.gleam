@@ -464,7 +464,6 @@ pub type TelemetryDurations {
     stall_monitor_long_schedule_ms: Int,
     stall_monitor_severe_ms: Int,
     stall_monitor_tick_ms: Int,
-    timings_remote_pod_lookup_timeout_ms: Int,
     watchdog_check_interval_ms: Int,
     watchdog_init_timeout_ms: Int,
   )
@@ -875,7 +874,6 @@ pub fn default_durations() -> Durations {
       stall_monitor_long_schedule_ms: 200,
       stall_monitor_severe_ms: 1000,
       stall_monitor_tick_ms: 100,
-      timings_remote_pod_lookup_timeout_ms: 100,
       watchdog_check_interval_ms: 10_000,
       watchdog_init_timeout_ms: 1000,
     ),

@@ -105,10 +105,6 @@ pub fn target_at(on: node.Node, outbox: Name(Message)) -> state.Target {
   )
 }
 
-pub fn target_on(on: node.Node) -> state.Target {
-  state.Target(node: node.to_string(on), outbox: outbox_name)
-}
-
 pub fn supervised(settings: Settings) -> supervision.ChildSpecification(Nil) {
   supervision.worker(fn() { start(name(), settings, attempt.send) })
 }

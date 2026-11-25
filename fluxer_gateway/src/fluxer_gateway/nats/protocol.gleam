@@ -104,12 +104,6 @@ fn parse_loop(
   }
 }
 
-pub fn parse_first(
-  buffer: BitArray,
-) -> Result(Option(#(ServerOp, BitArray)), ParseError) {
-  parse_one(buffer)
-}
-
 fn parse_one(
   buffer: BitArray,
 ) -> Result(Option(#(ServerOp, BitArray)), ParseError) {

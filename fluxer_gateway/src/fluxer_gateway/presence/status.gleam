@@ -5,44 +5,6 @@ import fluxer_gateway/core/presence.{
 }
 import gleam/list
 import gleam/option.{type Option, None, Some}
-import gleam/result
-
-fn known(raw: String) -> Result(Status, Nil) {
-  case raw {
-    "" | "online" -> Ok(Online)
-    "idle" -> Ok(Idle)
-    "dnd" -> Ok(Dnd)
-    "invisible" -> Ok(Invisible)
-    "offline" -> Ok(Offline)
-    _ -> Error(Nil)
-  }
-}
-
-pub fn parse_op3(raw: String) -> Result(Status, Nil) {
-  case known(raw) {
-    Ok(Offline) -> Ok(Invisible)
-    other -> other
-  }
-}
-
-pub fn parse_identify(raw: Option(String)) -> Option(Status) {
-  case raw {
-    Some("online") -> None
-    Some(value) -> option.from_result(known(value))
-    None -> None
-  }
-}
-
-pub fn parse_stored(raw: Option(String)) -> Status {
-  raw
-  |> option.to_result(Nil)
-  |> result.try(known)
-  |> result.unwrap(Online)
-}
-
-pub fn initial(identify: Option(Status), stored: Status) -> Status {
-  option.unwrap(identify, stored)
-}
 
 pub fn settings_invisible(raw: Option(String)) -> Option(Bool) {
   case raw {
@@ -59,10 +21,6 @@ pub fn to_wire(status: Status) -> String {
     Dnd -> "dnd"
     Invisible | Offline -> "offline"
   }
-}
-
-pub fn to_session_wire(status: Status) -> String {
-  presence.status_to_wire(status)
 }
 
 pub fn is_visible(status: Status) -> Bool {
