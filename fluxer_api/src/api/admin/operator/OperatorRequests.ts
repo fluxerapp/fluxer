@@ -4,6 +4,7 @@ import {stripApiPrefix} from '@app/api/utils/RequestPathUtils';
 
 export const OPERATOR_SOCKET_PATH = process.env.FLUXER_OPERATOR_SOCKET || '/run/fluxer/operator.sock';
 export const OPERATOR_HOST_USER_HEADER = 'X-Fluxer-Operator-Host-User';
+export const OPERATOR_CLIENT_HEADER = 'X-Fluxer-Operator-Client';
 export const OPERATOR_PEER_ADDRESS = '127.0.0.1';
 
 const HOST_USER_MAX_LENGTH = 64;
@@ -30,4 +31,8 @@ export function readOperatorHostUser(request: Request): string | null {
 		return null;
 	}
 	return value;
+}
+
+export function readOperatorClient(request: Request): 'rexctl' | 'fluxerd' {
+	return request.headers.get(OPERATOR_CLIENT_HEADER)?.trim() === 'fluxerd' ? 'fluxerd' : 'rexctl';
 }

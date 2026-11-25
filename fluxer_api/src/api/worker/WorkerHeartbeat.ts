@@ -39,7 +39,7 @@ export class WorkerHeartbeat {
 
 	constructor(options: WorkerHeartbeatOptions) {
 		this.logger = options.logger;
-		this.path = options.path ?? WORKER_HEARTBEAT_PATH;
+		this.path = options.path ?? (process.env.FLUXER_API_HEARTBEAT_FILE || WORKER_HEARTBEAT_PATH);
 		this.intervalMs = options.intervalMs ?? WORKER_HEARTBEAT_WRITE_INTERVAL_MS;
 		this.now = options.now ?? Date.now;
 		this.write = options.write ?? ((path, contents) => writeFileSync(path, contents));

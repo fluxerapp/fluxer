@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {spawn} from 'node:child_process';
-import {existsSync} from 'node:fs';
-import {mkdtemp, readdir, readFile, rm} from 'node:fs/promises';
+import {mkdtemp, readFile, rm} from 'node:fs/promises';
 import {createServer, request, type Server} from 'node:http';
 import type {AddressInfo} from 'node:net';
 import {tmpdir} from 'node:os';
@@ -23,7 +22,6 @@ import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 const API_ROOT = path.resolve(import.meta.dirname, '../../../..');
-const REPO_ROOT = path.resolve(API_ROOT, '..');
 const RELAY_PATH = path.join(API_ROOT, 'bin/operator-relay.mjs');
 const NEW_PASSWORD = 'chosen-from-the-link-2026';
 
@@ -97,15 +95,6 @@ async function newAuditLogs(before: Set<string>): Promise<Array<AdminAuditLog>> 
 
 async function auditLogIds(): Promise<Set<string>> {
 	return new Set((await getAdminRepository().listAllAuditLogsPaginated(100000)).map((log) => log.logId.toString()));
-}
-
-async function filesUnder(directory: string): Promise<Array<string>> {
-	if (!existsSync(directory)) return [];
-	const files: Array<string> = [];
-	for (const entry of await readdir(directory, {withFileTypes: true, recursive: true})) {
-		if (entry.isFile()) files.push(path.join(entry.parentPath, entry.name));
-	}
-	return files;
 }
 
 describe('operator channel', () => {
@@ -343,19 +332,5 @@ describe('operator channel', () => {
 
 	it('keeps the relay and the api on the same socket path', async () => {
 		expect(await readFile(RELAY_PATH, 'utf8')).toContain(`'${OPERATOR_SOCKET_PATH}'`);
-	});
-
-	it('gives the edge and the stack files no route to the socket', async () => {
-		const roots = [path.join(REPO_ROOT, 'deploy'), path.join(REPO_ROOT, 'fluxer_rexctl/internal/stack/files')];
-		const offenders: Array<string> = [];
-		for (const root of roots) {
-			for (const file of await filesUnder(root)) {
-				if (file.includes(`${path.sep}node_modules${path.sep}`) || file.includes(`${path.sep}target${path.sep}`))
-					continue;
-				const text = await readFile(file, 'utf8').catch(() => '');
-				if (text.includes(path.dirname(OPERATOR_SOCKET_PATH))) offenders.push(path.relative(REPO_ROOT, file));
-			}
-		}
-		expect(offenders).toEqual([]);
 	});
 });

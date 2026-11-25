@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {type AdminAuditAttribution, runWithAdminAuditAttribution} from '@app/api/admin/AdminAuditAttribution';
-import {isOperatorRequest, readOperatorHostUser} from '@app/api/admin/operator/OperatorRequests';
+import {isOperatorRequest, readOperatorClient, readOperatorHostUser} from '@app/api/admin/operator/OperatorRequests';
 import {createApplicationID, createUserID} from '@app/api/BrandedTypes';
 import {assertMutableUserId} from '@app/api/constants/Core';
 import {Logger} from '@app/api/Logger';
@@ -84,8 +84,9 @@ function getRequestAdminACLs(ctx: Context<HonoEnv>, adminUser: User, tokenType: 
 
 function getAdminAuditAttribution(ctx: Context<HonoEnv>, tokenType: AdminAuthTokenType): AdminAuditAttribution | null {
 	if (tokenType === 'operator') {
+		const via = readOperatorClient(ctx.req.raw);
 		const hostUser = readOperatorHostUser(ctx.req.raw);
-		return hostUser === null ? {via: 'rexctl'} : {via: 'rexctl', host_user: hostUser};
+		return hostUser === null ? {via} : {via, host_user: hostUser};
 	}
 	if (tokenType === 'admin_api_key') {
 		const keyId = ctx.get('adminApiKeyId');

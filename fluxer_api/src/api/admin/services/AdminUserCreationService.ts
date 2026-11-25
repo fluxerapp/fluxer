@@ -12,6 +12,7 @@ import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {DiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import {withAccountIdentitySetupLock} from '@app/api/instance/AccountIdentitySetupLock';
 import {instanceCollectsDateOfBirth} from '@app/api/instance/DateOfBirthCollectionCache';
+import {clearUsedSetupToken} from '@app/api/instance/SetupToken';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {User} from '@app/api/models/User';
 import {UserSettings} from '@app/api/models/UserSettings';
@@ -48,6 +49,9 @@ export class AdminUserCreationService {
 			!config.instance.selfHosted || (await repository.isAccountIdentityLocked())
 				? await this.createAccount(data)
 				: await withAccountIdentitySetupLock(cache, () => this.createAccount(data));
+		if (data.admin && config.instance.selfHosted && (await repository.claimAdminBootstrap(user.id))) {
+			await clearUsedSetupToken(repository);
+		}
 		await this.deps.auditService.createAuditLog({
 			adminUserId,
 			targetType: 'user',
