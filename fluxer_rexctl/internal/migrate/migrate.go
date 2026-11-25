@@ -31,7 +31,7 @@ var All = []Option{OptDocker, OptKV, OptRust, OptStorage}
 func (o Option) Title() string {
 	switch o {
 	case OptDocker:
-		return "Out of Docker"
+		return "Move to the new layout"
 	case OptKV:
 		return "Valkey to Postgres"
 	case OptRust:
@@ -45,7 +45,7 @@ func (o Option) Title() string {
 func (o Option) Summary() string {
 	switch o {
 	case OptDocker:
-		return "Fluxer runs as one systemd service with no containers, and Docker or Podman is no longer needed for it."
+		return "Fluxer moves from one container per service to one container or to one systemd service."
 	case OptKV:
 		return "Cache, rate limits and queues move into the Postgres database, and the Valkey service goes away."
 	case OptRust:
@@ -63,7 +63,7 @@ const (
 	Native  Runtime = instance.RuntimeNative
 )
 
-var ErrUnknownOption = errors.New("migrate: unknown option")
+var errUnknownOption = errors.New("migrate: unknown option")
 
 func Parse(list string) ([]Option, error) {
 	var out []Option
@@ -73,7 +73,7 @@ func Parse(list string) ([]Option, error) {
 			continue
 		}
 		if !slices.Contains(All, o) {
-			return nil, fmt.Errorf("%w %q, use %s", ErrUnknownOption, o, joinOptions(All))
+			return nil, fmt.Errorf("%w %q, use %s", errUnknownOption, o, joinOptions(All))
 		}
 		if !slices.Contains(out, o) {
 			out = append(out, o)
@@ -161,7 +161,7 @@ type Service struct {
 	Health  string
 }
 
-const Healthy = "healthy"
+const healthy = "healthy"
 
 type Host interface {
 	Runtime() Runtime
@@ -191,15 +191,23 @@ type Host interface {
 }
 
 type Run struct {
+	Journal func(State) error
 	Host    Host
 	Backup  string
 	Done    []Option
-	Picked  []Option
+	Started bool
 	State   State
 	Notes   []string
 	Now     func() time.Time
 	Log     io.Writer
 	OnPhase func(Phase, Option)
+}
+
+func (r *Run) record() error {
+	if r.Journal == nil {
+		return nil
+	}
+	return r.Journal(r.State)
 }
 
 func (r *Run) note(format string, args ...any) {
@@ -242,10 +250,6 @@ func (f *Failure) Unwrap() error { return f.Err }
 
 func Execute(ctx context.Context, r *Run, steps []Step) error {
 	steps = sortSteps(steps)
-	r.Picked = nil
-	for _, s := range steps {
-		r.Picked = append(r.Picked, s.Option())
-	}
 	for _, s := range steps {
 		r.phase(PhasePreflight, s.Option())
 		if err := s.Preflight(ctx, r); err != nil {
@@ -289,6 +293,7 @@ func Execute(ctx context.Context, r *Run, steps []Step) error {
 	}
 
 	r.phase(PhaseStart, "")
+	r.Started = true
 	if err := r.Host.Start(ctx); err != nil {
 		return r.fail(ctx, &Failure{Phase: PhaseStart, Err: err}, touched, origin)
 	}
@@ -310,16 +315,26 @@ func (r *Run) fail(ctx context.Context, f *Failure, touched []Step, origin Host)
 	var errs []error
 	for _, s := range slices.Backward(touched) {
 		r.phase(PhaseRollback, s.Option())
-		if err := s.Rollback(ctx, r); err != nil {
+		err := s.Rollback(ctx, r)
+		if errors.Is(err, ErrOneWay) {
+			f.Rollback = err
+			return f
+		}
+		if err != nil {
 			errs = append(errs, fmt.Errorf("%s: %w", s.Option(), err))
 		}
 	}
 	r.Done = nil
-	r.State = State{}
 	r.Host = origin
 	r.phase(PhaseStart, "")
 	if err := origin.Start(ctx); err != nil {
 		errs = append(errs, fmt.Errorf("starting again: %w", err))
+	}
+	if len(errs) == 0 {
+		r.State = State{}
+		if err := r.record(); err != nil {
+			errs = append(errs, fmt.Errorf("recording the rollback: %w", err))
+		}
 	}
 	f.Rollback = errors.Join(errs...)
 	return f

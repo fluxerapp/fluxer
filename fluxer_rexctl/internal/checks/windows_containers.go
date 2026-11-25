@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	Register(Check{ID: "windows-linux-containers", Phases: Preinstall | Installed, Run: runWindowsContainers})
+	Register(Check{ID: "windows-linux-containers", Phases: Preinstall | Installed, Run: composeOnly(runWindowsContainers)})
 }
 
 func runWindowsContainers(ctx context.Context, e *Env) Result {

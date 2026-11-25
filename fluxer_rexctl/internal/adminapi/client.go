@@ -14,7 +14,7 @@ import (
 	"sync"
 )
 
-const SchemaMajor = 1
+const schemaMajor = 1
 
 type Client struct {
 	t        Transport
@@ -82,8 +82,8 @@ func (c *Client) do(ctx context.Context, req Request, in, out any) error {
 		return &RelayError{Detail: firstLine(resp.RelayError, "no response from the api")}
 	}
 	c.checkSkew(resp.APIVersion)
-	if resp.SchemaMajor != 0 && resp.SchemaMajor != SchemaMajor {
-		return ErrSchemaMismatch
+	if resp.SchemaMajor != 0 && resp.SchemaMajor != schemaMajor {
+		return errSchemaMismatch
 	}
 	if resp.Status >= 400 {
 		return decodeAPIError(resp)

@@ -251,8 +251,8 @@
 			"!fluxer_api/src/api/content_i18n/weblate",
 			"!packages/errors/src/i18n/weblate",
 			"!fluxer_rexctl/internal/adminapi/configschema.json",
-			"!fluxer_rexctl/internal/stack/imageset.json",
-			"!fluxer_rexctl/internal/stack/files/profiles.json"
+			"!fluxer_rexctl/internal/settings/catalog.json",
+			"!fluxer_rexctl/internal/stack/profiles.json"
 		],
 		"ignoreUnknown": true
 	}

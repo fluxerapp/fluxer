@@ -4,6 +4,7 @@ package engine
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -102,7 +103,7 @@ func pullOne(ctx context.Context, c *conn, ref, id string, emit func(Event)) err
 	api := c.cli.Client()
 	resp, err := api.ImagePull(ctx, ref, client.ImagePullOptions{RegistryAuth: auth})
 	if err != nil {
-		return err
+		return daemonText(err)
 	}
 	defer resp.Close()
 	for msg, err := range resp.JSONMessages(ctx) {
@@ -126,4 +127,32 @@ func pullOne(ctx context.Context, c *conn, ref, id string, emit func(Event)) err
 		emit(ev)
 	}
 	return nil
+}
+
+const daemonPrefix = "Error response from daemon: "
+
+type daemonError struct {
+	msg string
+	err error
+}
+
+func (d *daemonError) Error() string { return d.msg }
+
+func (d *daemonError) Unwrap() error { return d.err }
+
+func daemonText(err error) error {
+	if err == nil {
+		return nil
+	}
+	body, ok := strings.CutPrefix(err.Error(), daemonPrefix)
+	if !ok {
+		return err
+	}
+	var resp struct {
+		Message string `json:"message"`
+	}
+	if json.Unmarshal([]byte(strings.TrimSpace(body)), &resp) != nil || strings.TrimSpace(resp.Message) == "" {
+		return err
+	}
+	return &daemonError{msg: daemonPrefix + plain(strings.TrimSpace(resp.Message)), err: err}
 }

@@ -62,9 +62,9 @@ type Result struct {
 }
 
 var (
-	ErrNoToken       = errors.New("setup: no setup token")
+	errNoToken       = errors.New("setup: no setup token")
 	ErrAlreadyDone   = errors.New("setup: already finished")
-	ErrPendingSignup = errors.New("setup: the account is waiting for approval")
+	errPendingSignup = errors.New("setup: the account is waiting for approval")
 	ErrRecoveryKit   = errors.New("setup: couldn't save the recovery kit")
 )
 
@@ -107,21 +107,23 @@ func Done(ctx context.Context, c *adminapi.Client) (bool, error) {
 	if err := c.Loopback(ctx, http.MethodGet, "/.well-known/fluxer", nil, nil, &d); err != nil {
 		return false, err
 	}
+	switch d.AppPublic.Setup.LockReason {
+	case "admin_exists", "setup_configured":
+		return true, nil
+	}
 	return d.AppPublic.Setup.Configured, nil
 }
 
-func AccountsExist(ctx context.Context, c *adminapi.Client) (admin bool, exists bool, err error) {
+func AccountsExist(ctx context.Context, c *adminapi.Client) (bool, error) {
 	var d discovery
 	if err := c.Loopback(ctx, http.MethodGet, "/.well-known/fluxer", nil, nil, &d); err != nil {
-		return false, false, err
+		return false, err
 	}
 	switch d.AppPublic.Setup.LockReason {
-	case "admin_exists":
-		return true, true, nil
 	case "accounts_exist", "existing_instance":
-		return false, true, nil
+		return true, nil
 	}
-	return false, false, nil
+	return false, nil
 }
 
 type registerResponse struct {
@@ -137,7 +139,7 @@ type recoveryKitResponse struct {
 func Run(ctx context.Context, c *adminapi.Client, token, origin, dir string, a Answers) (*Result, error) {
 	token = strings.TrimSpace(token)
 	if token == "" {
-		return nil, ErrNoToken
+		return nil, errNoToken
 	}
 	patch := map[string]any{
 		"app_public":   map[string]any{"branding": map[string]any{"product_name": a.Name}},
@@ -173,7 +175,7 @@ func Run(ctx context.Context, c *adminapi.Client, token, origin, dir string, a A
 		return nil, err
 	}
 	if reg.Token == "" {
-		return nil, ErrPendingSignup
+		return nil, errPendingSignup
 	}
 	auth := map[string]string{"Authorization": reg.Token}
 	res := &Result{UserID: reg.UserID}

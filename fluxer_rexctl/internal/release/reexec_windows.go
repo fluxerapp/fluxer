@@ -11,15 +11,13 @@ import (
 	"os/signal"
 )
 
-var stdout = os.Stdout
-
 func Reexec(args []string) error {
 	if selfPathErr != nil {
 		return selfPathErr
 	}
 	cmd := exec.Command(selfPath, args...)
 	cmd.Stdin = os.Stdin
-	cmd.Stdout = stdout
+	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	signal.Ignore(os.Interrupt)
 	err := cmd.Run()

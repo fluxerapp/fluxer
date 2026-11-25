@@ -6,6 +6,7 @@ import (
 	"archive/tar"
 	"bufio"
 	"bytes"
+	"cmp"
 	"context"
 	"crypto/rand"
 	"encoding/hex"
@@ -13,6 +14,7 @@ import (
 	"fmt"
 	"io"
 	"maps"
+	"net"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -26,7 +28,6 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/deploy"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/envfile"
-	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/release"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
@@ -44,6 +45,7 @@ var ErrNeverStarted = errors.New("backup: Fluxer has never run and has no data y
 type CreateOptions struct {
 	Reason   string
 	Scope    string
+	Sizes    *Sizes
 	Progress func(stage string)
 	OnEvent  func(engine.Event)
 }
@@ -97,7 +99,7 @@ func Create(ctx context.Context, inst *instance.Instance, p *engine.Project, opt
 	if err != nil {
 		return nil, err
 	}
-	partial := final + PartialSuffix
+	partial := final + partialSuffix
 
 	m := &Manifest{
 		Project:   inst.Project(),
@@ -139,7 +141,11 @@ func Create(ctx context.Context, inst *instance.Instance, p *engine.Project, opt
 	if err != nil {
 		return nil, err
 	}
-	if err := checkDisk(ctx, p, image, dir, volumes, bundledDB); err != nil {
+	if opts.Sizes != nil {
+		if err := NeedSpace(dir, opts.Sizes.Need); err != nil {
+			return nil, err
+		}
+	} else if err := checkDisk(ctx, p, image, dir, volumes, bundledDB); err != nil {
 		return nil, err
 	}
 
@@ -169,14 +175,14 @@ func Create(ctx context.Context, inst *instance.Instance, p *engine.Project, opt
 				return nil, err
 			}
 		}
-		if err := addDump(ctx, w, p, final+".dump"+PartialSuffix); err != nil {
+		if err := addDump(ctx, w, p, final+".dump"+partialSuffix); err != nil {
 			return nil, err
 		}
-		m.Database = DumpName
+		m.Database = dumpName
 	}
 
 	if len(volumes) > 0 {
-		spool := final + ".vol" + PartialSuffix
+		spool := final + ".vol" + partialSuffix
 		if err := copyVolumes(ctx, w, p, image, volumes, running, spool, progress, opts.OnEvent); err != nil {
 			return nil, err
 		}
@@ -223,6 +229,31 @@ func instanceValues(inst *instance.Instance) map[string]string {
 func ExternalData(inst *instance.Instance) (database, uploads bool) {
 	values := instanceValues(inst)
 	return externalPostgres(values), externalUploads(inst, values)
+}
+
+func ExternalPostgresURL(inst *instance.Instance) string {
+	values := instanceValues(inst)
+	if !externalPostgres(values) {
+		return ""
+	}
+	if raw := values["FLUXER_POSTGRES_URL"]; raw != "" {
+		return raw
+	}
+	host := values["FLUXER_POSTGRES_HOST"]
+	if port := values["FLUXER_POSTGRES_PORT"]; port != "" {
+		host = net.JoinHostPort(host, port)
+	}
+	u := url.URL{Scheme: "postgres", Host: host, Path: "/" + cmp.Or(values["FLUXER_POSTGRES_DATABASE"], "fluxer")}
+	user := cmp.Or(values["FLUXER_POSTGRES_USERNAME"], "fluxer")
+	if pw := cmp.Or(values["FLUXER_POSTGRES_PASSWORD"], values["POSTGRES_PASSWORD"]); pw != "" {
+		u.User = url.UserPassword(user, pw)
+	} else {
+		u.User = url.User(user)
+	}
+	if ssl := strings.ToLower(values["FLUXER_POSTGRES_SSL"]); ssl == "true" || ssl == "1" || ssl == "require" {
+		u.RawQuery = "sslmode=require"
+	}
+	return u.String()
 }
 
 func externalPostgres(values map[string]string) bool {
@@ -352,7 +383,7 @@ func uploadsShort(short string) string {
 	return short
 }
 
-const UploadsIDFile = ".rexctl-uploads-id"
+const uploadsIDFile = ".rexctl-uploads-id"
 
 func uploadsRef(v volumeRef, have []engine.Volume, mark bool) *UploadsRef {
 	if v.bind != "" {
@@ -409,7 +440,7 @@ func uploadsDefinition(inst *instance.Instance) string {
 }
 
 func bindID(dir string, create bool) (string, error) {
-	path := filepath.Join(dir, UploadsIDFile)
+	path := filepath.Join(dir, uploadsIDFile)
 	data, err := os.ReadFile(path)
 	if err == nil && strings.TrimSpace(string(data)) != "" {
 		return strings.TrimSpace(string(data)), nil
@@ -505,20 +536,40 @@ func (e *HelperError) Error() string {
 
 func (e *HelperError) Unwrap() error { return e.Err }
 
+type Sizes struct {
+	Need    uint64
+	Volumes uint64
+}
+
 func Estimate(ctx context.Context, inst *instance.Instance, p *engine.Project, scope string) (uint64, error) {
+	sz, err := Measure(ctx, inst, p, scope)
+	return sz.Need, err
+}
+
+func Measure(ctx context.Context, inst *instance.Instance, p *engine.Project, scope string) (Sizes, error) {
 	values := instanceValues(inst)
 	model := projectModel(ctx, inst, p)
 	volumes, err := volumesToCopy(ctx, inst, values, p, model, &Manifest{}, scope, false)
 	if err != nil {
-		return 0, err
+		return Sizes{}, err
 	}
-	var image string
+	var vol uint64
 	if len(volumes) > 0 {
-		if image, err = helperImage(ctx, inst, p, model); err != nil {
-			return 0, err
+		image, err := helperImage(ctx, inst, p, model)
+		if err != nil {
+			return Sizes{}, err
 		}
+		kb, err := volumesSize(ctx, p, image, volumes)
+		if err != nil {
+			return Sizes{}, err
+		}
+		vol = kb * 1024
 	}
-	return diskNeed(ctx, p, image, volumes, bundledDatabase(values, model))
+	var db uint64
+	if bundledDatabase(values, model) {
+		db = databaseSize(ctx, p)
+	}
+	return Sizes{Need: backupDiskNeed(db, vol), Volumes: vol}, nil
 }
 
 func projectModel(ctx context.Context, inst *instance.Instance, p *engine.Project) *types.Project {
@@ -532,9 +583,9 @@ func projectModel(ctx context.Context, inst *instance.Instance, p *engine.Projec
 }
 
 func checkDisk(ctx context.Context, p *engine.Project, image, dir string, volumes []volumeRef, bundledDB bool) error {
-	free, err := host.FreeDisk(dir)
+	free, err := FreeSpace(dir)
 	if err != nil {
-		return nil
+		return err
 	}
 	need, err := diskNeed(ctx, p, image, volumes, bundledDB)
 	if err != nil {
@@ -615,7 +666,7 @@ func instanceFiles(dir string) ([]string, error) {
 	var out []string
 	for _, e := range ents {
 		name := e.Name()
-		if e.IsDir() || name == instance.EnvFileName || strings.HasPrefix(name, "recovery-kit-") || strings.HasSuffix(name, PartialSuffix) {
+		if e.IsDir() || name == instance.EnvFileName || strings.HasPrefix(name, "recovery-kit-") || strings.HasSuffix(name, partialSuffix) {
 			continue
 		}
 		fi, err := os.Stat(filepath.Join(dir, name))
@@ -634,18 +685,18 @@ func addInstanceFiles(w *archiveWriter, inst *instance.Instance) error {
 		return err
 	}
 	for _, name := range names {
-		if err := addFile(w, filepath.Join(dir, name), FilesPrefix+name, 0o644); err != nil {
+		if err := addFile(w, filepath.Join(dir, name), filesPrefix+name, 0o644); err != nil {
 			return err
 		}
 	}
 	state := filepath.Join(dir, instance.StateDirName, instance.StateFileName)
 	if _, err := os.Stat(state); err == nil {
-		if err := addFile(w, state, FilesPrefix+instance.StateDirName+"/"+instance.StateFileName, 0o600); err != nil {
+		if err := addFile(w, state, filesPrefix+instance.StateDirName+"/"+instance.StateFileName, 0o600); err != nil {
 			return err
 		}
 	}
 	for _, sub := range []string{instance.CertsDir, instance.CADir, instance.CaddyDropInDir, stack.GeneratedDir} {
-		if err := addTree(w, filepath.Join(dir, filepath.FromSlash(sub)), FilesPrefix+sub, 0); err != nil {
+		if err := addTree(w, filepath.Join(dir, filepath.FromSlash(sub)), filesPrefix+sub, 0); err != nil {
 			return err
 		}
 	}
@@ -655,7 +706,7 @@ func addInstanceFiles(w *archiveWriter, inst *instance.Instance) error {
 		if err != nil || !filepath.IsLocal(name) {
 			return nil
 		}
-		return addTree(w, rel, FilesPrefix+filepath.ToSlash(name), 0)
+		return addTree(w, rel, filesPrefix+filepath.ToSlash(name), 0)
 	}
 	return nil
 }
@@ -743,7 +794,7 @@ func addDump(ctx context.Context, w *archiveWriter, p *engine.Project, spool str
 	if _, err := f.Seek(0, io.SeekStart); err != nil {
 		return err
 	}
-	return w.add(&tar.Header{Name: DumpName, Mode: 0o600, Size: fi.Size(), ModTime: time.Now(), Typeflag: tar.TypeReg}, f)
+	return w.add(&tar.Header{Name: dumpName, Mode: 0o600, Size: fi.Size(), ModTime: time.Now(), Typeflag: tar.TypeReg}, f)
 }
 
 type InterruptedError struct {
@@ -941,11 +992,11 @@ func relayVolume(spool *volumeSpool, short string, tr *tar.Reader) (int64, error
 		}
 		inner := strings.TrimPrefix(strings.TrimPrefix(hdr.Name, "./"), "/")
 		inner = strings.TrimSuffix(inner, "/")
-		if uploadsVolume(short) && inner == UploadsIDFile && hdr.Typeflag == tar.TypeReg {
+		if uploadsVolume(short) && inner == uploadsIDFile && hdr.Typeflag == tar.TypeReg {
 			copied += hdr.Size
 			continue
 		}
-		name := VolumesPrefix + short
+		name := volumesPrefix + short
 		if inner != "" && inner != "." {
 			name += "/" + inner
 		}
@@ -971,7 +1022,7 @@ func relayVolume(spool *volumeSpool, short string, tr *tar.Reader) (int64, error
 			out.Linkname = hdr.Linkname
 		case tar.TypeLink:
 			target := strings.TrimPrefix(strings.TrimPrefix(hdr.Linkname, "./"), "/")
-			out.Linkname = VolumesPrefix + short + "/" + target
+			out.Linkname = volumesPrefix + short + "/" + target
 		case tar.TypeChar, tar.TypeBlock, tar.TypeFifo:
 		default:
 			continue

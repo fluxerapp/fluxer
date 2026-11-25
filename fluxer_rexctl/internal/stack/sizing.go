@@ -111,7 +111,7 @@ func Sizing(hw Hardware, memory bool, fixed map[string]string) map[string]string
 	setBytes(out, "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_BUFFERED_RETRY_TOTAL_BYTES", media/4)
 	gifsCache := min(clamp(m/64, 64, 128), size("FLUXER_GIFS_MEMORY_LIMIT", 256)/2)
 	setBytes(out, "FLUXER_GIFS_SHARD_CACHE_MAX_BYTES", gifsCache)
-	out[RustMemoryLimitVar] = strconv.Itoa(clamp(m*6/100, 384, 1536)+gifsCache) + "mb"
+	out[rustMemoryLimitVar] = strconv.Itoa(clamp(m*6/100, 384, 1536)+gifsCache) + "mb"
 
 	out["FLUXER_LIVEKIT_GOMEMLIMIT"] = strconv.Itoa(share("FLUXER_LIVEKIT_MEMORY_LIMIT", 6, 320, 2048)*85/100) + "MiB"
 	out["FLUXER_NATS_GOMEMLIMIT"] = strconv.Itoa(share("FLUXER_NATS_MEMORY_LIMIT", 3, 192, 1024)*4/5) + "MiB"
@@ -152,7 +152,7 @@ const EmbeddedWorkerVar = "FLUXER_API_EMBEDDED_WORKER"
 
 const (
 	RustWorkerThreadsVar = "FLUXER_RUST_SERVER_TOKIO_WORKER_THREADS"
-	RustMemoryLimitVar   = "FLUXER_RUST_MEMORY_LIMIT"
+	rustMemoryLimitVar   = "FLUXER_RUST_MEMORY_LIMIT"
 	KVPoolVar            = "FLUXER_KV_POSTGRES_MAX_CONNECTIONS"
 	KVMaxBytesVar        = "FLUXER_KV_POSTGRES_MAX_BYTES"
 	kvRowOverhead        = 4
@@ -188,6 +188,24 @@ func FoldWorker(hw Hardware, env, fixed map[string]string) map[string]string {
 		}
 	}
 	return out
+}
+
+const (
+	apiHeapVar        = "FLUXER_API_NODE_HEAP_MB"
+	apiMemoryLimitVar = "FLUXER_API_MEMORY_LIMIT"
+	apiLimitMiB       = 2560
+	apiHeapPercent    = 60
+)
+
+func NativeSizing(env map[string]string) map[string]string {
+	if strings.TrimSpace(env[apiHeapVar]) != "" {
+		return nil
+	}
+	limit := parseMiB(env[apiMemoryLimitVar])
+	if limit <= 0 {
+		limit = apiLimitMiB
+	}
+	return map[string]string{apiHeapVar: strconv.Itoa(limit * apiHeapPercent / 100)}
 }
 
 func SizingKeys() []string {

@@ -415,11 +415,27 @@ jobs:
           node-version: '26'
           cache: 'pnpm'
 
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+        with:
+          go-version: "1.27.x"
+          check-latest: true
+          cache-dependency-path: fluxer_rexctl/go.sum
+
+      - name: Check docs links and anchors
+        working-directory: fluxer_rexctl
+        run: go run ./internal/lint/doclinks ..
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --filter fluxer_docs...
 
       - name: Build documentation
         run: pnpm --filter fluxer_docs build
+
+      - name: Install Chromium
+        run: pnpm --filter fluxer_docs exec playwright install --with-deps chromium
+
+      - name: Check prose shape
+        run: pnpm --filter fluxer_docs prose:check --no-build
 
   fonts:
     runs-on: ubuntu-24.04

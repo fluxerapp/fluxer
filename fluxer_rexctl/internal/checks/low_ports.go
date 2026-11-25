@@ -10,7 +10,7 @@ import (
 )
 
 func init() {
-	Register(Check{ID: "low-ports", Phases: Preinstall | Installed, Run: runLowPorts, Fix: fixLowPorts})
+	Register(Check{ID: "low-ports", Phases: Preinstall | Installed, Run: composeOnly(runLowPorts), Fix: fixLowPorts})
 }
 
 func runLowPorts(_ context.Context, e *Env) Result {

@@ -15,7 +15,7 @@ import (
 )
 
 func init() {
-	Register(Check{ID: "engine", Phases: Preinstall | Installed | Voice, Run: runEngine, Fix: fixEngine})
+	Register(Check{ID: "engine", Phases: Preinstall | Installed | Voice, Run: byRuntime(runEngine, runNativePackages), Fix: byRuntime(fixEngine, fixNativePackages)})
 }
 
 func runEngine(ctx context.Context, e *Env) Result {
@@ -66,9 +66,13 @@ func runEngine(ctx context.Context, e *Env) Result {
 }
 
 func podmanSocketResult(ctx context.Context, e *Env) Result {
-	s := host.CheckPodman(ctx, os.Geteuid() != 0, true)
+	rootless := os.Geteuid() != 0
+	s := host.CheckPodman(ctx, rootless, true)
 	if !s.Systemd {
 		return fail("Podman's API socket isn't running.", "Start podman.socket, then run rexctl doctor.")
+	}
+	if r, ok := podmanServiceRow(host.PodmanServiceFailed(ctx, rootless), true); ok {
+		return r
 	}
 	fix := "Run rexctl doctor --fix or rexctl install to start it."
 	if e.installed() {

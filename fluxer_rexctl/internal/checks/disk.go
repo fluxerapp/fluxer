@@ -39,7 +39,7 @@ func runDisk(ctx context.Context, e *Env) Result {
 	if e.Native {
 		return e.nativeInstallDisk()
 	}
-	spaces := e.InstallNeed(ctx)
+	spaces := e.InstallNeed()
 	if len(spaces) == 0 {
 		return skip("Couldn't read how much free disk space this machine has.")
 	}
@@ -56,7 +56,7 @@ func runDisk(ctx context.Context, e *Env) Result {
 		data, dataFound := spaceOn(spaces, stores.Data)
 		img, imgFound := spaceOn(spaces, stores.Images)
 		growth := e.growthCap(stores.Data)
-		next := e.nextReleaseNeed()
+		next := uint64(nativeReleaseBytes)
 		has := func(sp Space) string {
 			return fmt.Sprintf("%s has %s of free disk space and this install needs about %s.", e.diskRole(sp.Path), size(sp.Free), size(sp.Need))
 		}
@@ -88,6 +88,9 @@ func (e *Env) nativeInstallDisk() Result {
 }
 
 func (e *Env) installedDisk(ctx context.Context) Result {
+	if e.Container {
+		return e.reserveDisk(spaces([]Space{{Path: e.Dir}}))
+	}
 	spaces := e.NextUpgradeNeed(ctx)
 	r := e.reserveDisk(spaces)
 	if r.Status != Pass {
@@ -173,6 +176,9 @@ func (e *Env) stores() engine.Roots {
 }
 
 func (e *Env) wants(pull, data uint64) []Space {
+	if e.Native {
+		return []Space{{Path: e.Dir, Need: pull + data}}
+	}
 	stores := e.stores()
 	var out []Space
 	if stores.Images != "" {
@@ -247,30 +253,20 @@ func (e *Env) startAllowance() uint64 {
 	if !e.installed() {
 		return firstStartBytes
 	}
-	return firstStartBytes + stack.WALCap(stack.Embedded(), e.effective())
+	return firstStartBytes + stack.WALCap(e.releaseSet(), e.effective())
 }
 
-func (e *Env) installRefs() (stack.ImageSet, []string) {
-	images, _ := stack.EmbeddedImages()
-	return images, RunningRefs(stack.Embedded(), images.Images, e.runningSet())
-}
-
-func (e *Env) InstallNeed(ctx context.Context) []Space {
-	images, refs := e.installRefs()
-	need := images.Need(e.platform(), refs, e.localDiffIDs(ctx))
-	return spaces(e.wants(need, firstStartBytes))
-}
-
-func (e *Env) nextReleaseNeed() uint64 {
-	images, refs := e.installRefs()
-	return images.Need(e.platform(), refs, nil)
+func (e *Env) InstallNeed() []Space {
+	return spaces(e.wants(nativeReleaseBytes, firstStartBytes))
 }
 
 func (e *Env) NextUpgradeNeed(ctx context.Context) []Space {
+	if e.Native {
+		return e.UpgradeSpace(nativeReleaseBytes, 0)
+	}
 	var pull uint64
 	if st := e.state(); st != nil && e.Engine != nil {
-		images, _ := stack.EmbeddedImages()
-		pull = ReleaseSize(ctx, e.Engine, images, slices.Sorted(maps.Values(st.Images.Refs)))
+		pull = ReleaseSize(ctx, e.Engine, slices.Sorted(maps.Values(st.Images.Refs)))
 	}
 	var saved uint64
 	if e.Instance != nil && e.Project != nil && !e.Instance.State.IsVoice() {
@@ -279,26 +275,20 @@ func (e *Env) NextUpgradeNeed(ctx context.Context) []Space {
 	return e.UpgradeSpace(pull, saved)
 }
 
-func ReleaseSize(ctx context.Context, en *engine.Engine, set stack.ImageSet, refs []string) uint64 {
-	var known []string
+func ReleaseSize(ctx context.Context, en *engine.Engine, refs []string) uint64 {
 	var need uint64
 	for _, ref := range slices.Compact(slices.Sorted(slices.Values(refs))) {
-		if _, ok := set.LayersFor(en.Platform, ref); ok {
-			known = append(known, ref)
-			continue
-		}
 		if n, found, err := en.ImageSize(ctx, ref); err == nil && found {
 			need += n
 			continue
 		}
-		need += stack.ImageGuess
+		need += engine.ImageGuess
 	}
-	return need + set.Need(en.Platform, known, nil)
+	return need
 }
 
 func PullSpace(ctx context.Context, en *engine.Engine, dir string, refs []string, sizes map[string]uint64) (Space, bool) {
-	images, _ := stack.EmbeddedImages()
-	need := en.PullNeed(ctx, images, refs, sizes)
+	need := en.PullNeed(ctx, refs, sizes)
 	if need == 0 {
 		return Space{}, false
 	}
@@ -316,35 +306,9 @@ func (e *Env) chosen(key string) string {
 	return e.setting(key)
 }
 
-func (e *Env) runningSet() Running {
-	return Running{
-		Voice:         stack.VoiceBundled(e.value(stack.VoiceBundledKey)),
-		ExternalStore: strings.TrimSpace(e.chosen(settings.StorageEndpoint)) != "",
-		Chosen:        e.chosen,
-	}
-}
-
-func (e *Env) platform() string {
-	if e.Engine == nil {
-		return engine.HostPlatform()
-	}
-	return e.Engine.Platform
-}
-
-func (e *Env) localDiffIDs(ctx context.Context) map[string]bool {
-	if e.Engine == nil {
-		return nil
-	}
-	ids, err := e.Engine.LocalDiffIDs(ctx)
-	if err != nil {
-		return nil
-	}
-	return ids
-}
-
 func (e *Env) growthCap(store string) uint64 {
 	if e.installed() {
-		return stack.GrowthCap(stack.Embedded(), e.effective())
+		return stack.GrowthCap(e.releaseSet(), e.effective())
 	}
 	profile := e.chosen(settings.DiskProfile)
 	if _, set := e.Settings[settings.DiskProfile]; !set {
@@ -352,82 +316,20 @@ func (e *Env) growthCap(store string) uint64 {
 			profile = stack.DiskProfileFor(total)
 		}
 	}
-	return stack.GrowthCap(stack.Embedded(), stack.DiskSizing(profile, nil))
+	return stack.GrowthCap(e.releaseSet(), stack.DiskSizing(profile, nil))
+}
+
+func (e *Env) releaseSet() *stack.Set {
+	if e.state() != nil {
+		if set, err := e.Instance.Set(); err == nil {
+			return set
+		}
+	}
+	return settings.NativeSet(stack.EmbeddedRelease())
 }
 
 type Running struct {
 	Voice         bool
 	ExternalStore bool
 	Chosen        func(string) string
-}
-
-func RunningRefs(set *stack.Set, fluxer map[string]string, run Running) []string {
-	compose, err := stack.ReadFile(set, stack.ComposeFile)
-	if err != nil {
-		return nil
-	}
-	chosen := run.Chosen
-	if chosen == nil {
-		chosen = func(string) string { return "" }
-	}
-	modes := map[string]string{}
-	for _, k := range []string{settings.RustProcess, settings.StorageBackend, settings.KVMode} {
-		modes[k] = chosen(k)
-	}
-	external := run.ExternalStore || stack.FilesystemStorage(modes)
-	single := stack.RustSingle(modes)
-	images := stack.ComposeImages(compose)
-	if single {
-		images[stack.RustService] = "${FLUXER_REGISTRY}"
-	}
-	var out []string
-	for svc, value := range images {
-		switch {
-		case svc == "livekit" && !run.Voice:
-			continue
-		case (svc == "seaweedfs" || svc == "seaweedfs-init") && external:
-			continue
-		case svc == "valkey" && stack.KVPostgres(modes):
-			continue
-		case stack.RunsIn(svc, single) != svc:
-			continue
-		}
-		ref := imageFor(svc, value, fluxer, chosen)
-		if !slices.Contains(out, ref) {
-			out = append(out, ref)
-		}
-	}
-	slices.Sort(out)
-	return out
-}
-
-func imageFor(svc, value string, fluxer map[string]string, chosen func(string) string) string {
-	if strings.HasPrefix(value, "${FLUXER_REGISTRY") {
-		if ref := fluxer[svc]; ref != "" {
-			return ref
-		}
-		return svc
-	}
-	def, ok := stack.ImageDefault(value)
-	if pinned := fluxer[svc]; pinned != "" {
-		def = pinned
-	}
-	if !ok {
-		if def != "" {
-			return def
-		}
-		return value
-	}
-	name := strings.TrimPrefix(strings.SplitN(value, ":-", 2)[0], "${")
-	if v := strings.TrimSpace(chosen(name)); v != "" {
-		return v
-	}
-	for key, v := range settings.ImageVars {
-		if v == name {
-			if ref := strings.TrimSpace(chosen(settings.ImagesPrefix + key)); ref != "" {
-				return ref
-			}
-		}
-	}
-	return def
 }

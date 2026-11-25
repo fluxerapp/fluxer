@@ -6,78 +6,124 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"os"
-	"os/signal"
 	"runtime"
 	"strings"
-	"syscall"
 
-	"charm.land/fang/v2"
-	"github.com/charmbracelet/x/ansi"
 	"github.com/spf13/cobra"
-	"golang.org/x/term"
 
-	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/native"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/release"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
-
-func exitCodesHelp() string {
-	codes := [][2]string{
-		{"0", "ok"},
-		{"1", "failed"},
-		{"2", "usage"},
-		{"3", "refused, or doctor found a problem"},
-		{"130", "interrupted"},
-	}
-	room := 0
-	if w, _, err := term.GetSize(int(os.Stdout.Fd())); err == nil {
-		room = min(w, 120) - 10
-	}
-	indent := strings.Repeat(" ", 8)
-	var b strings.Builder
-	b.WriteString("Exit codes:")
-	for _, c := range codes {
-		desc := c[1]
-		if room >= 12 {
-			desc = strings.ReplaceAll(ansi.Wordwrap(desc, room, ""), "\n", "\n"+indent)
-		}
-		fmt.Fprintf(&b, "\n  %-6s%s", c[0], desc)
-	}
-	return b.String()
-}
 
 func Execute(version, commit string) int {
 	if runtime.GOOS == "windows" {
 		release.RemoveOldBinary()
 	}
+	os.Args = append(os.Args[:1:1], takeSudoEnv(os.Args[1:], ranWithSudo(), os.Setenv)...)
+	ui.PrepareConsole(os.Stdout, os.Stderr)
 	app := &App{Version: version, Commit: commit, UI: ui.New(ui.Options{})}
-	native.Warn = app.UI.Warn
 	root := newRoot(app)
-	root.SetOut(ui.NewHelpWriter(os.Stdout, groupRun, groupManage, groupOther))
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
+	root.Version = versionString(version, commit)
+	ctx, stop := ui.SignalContext()
 	defer stop()
-	defer ui.QuietTerminal()()
-	err := fang.Execute(ctx, root,
-		fang.WithVersion(version),
-		fang.WithCommit(commit),
-		fang.WithColorSchemeFunc(ui.FangColorScheme),
-		fang.WithErrorHandler(app.handleError),
-	)
-	return app.exitCode(ctx, err)
+	err := root.ExecuteContext(ctx)
+	if err != nil {
+		app.handleError(err)
+	}
+	code := app.exitCode(ctx, err)
+	app.UI.End(code)
+	return code
+}
+
+func versionString(version, commit string) string {
+	if len(commit) >= 7 {
+		return version + " (" + commit[:7] + ")"
+	}
+	return version
+}
+
+type displayFlags struct {
+	noColor     bool
+	plain       bool
+	accessible  bool
+	noRex       bool
+	noAnimation bool
+	progress    string
+}
+
+func (d displayFlags) apply(u *ui.UI) error {
+	progress := ui.ProgressFormat(d.progress)
+	switch progress {
+	case ui.ProgressAuto, ui.ProgressPlain, ui.ProgressJSON:
+	default:
+		return &ui.ExitError{
+			Code: ui.ExitUsage,
+			Msg:  fmt.Sprintf("--progress can't be %q.", d.progress),
+			Fix:  "Pass --progress auto, --progress plain or --progress json.",
+		}
+	}
+	u.SetDisplay(ui.Display{
+		NoColor:     d.noColor,
+		Plain:       d.plain,
+		Accessible:  d.accessible,
+		NoRex:       d.noRex,
+		NoAnimation: d.noAnimation,
+		Progress:    progress,
+	})
+	return nil
+}
+
+func (d *displayFlags) scan(c *cobra.Command, args []string, jsonOut *bool) {
+	bools := map[string]*bool{
+		"no-color":     &d.noColor,
+		"plain":        &d.plain,
+		"accessible":   &d.accessible,
+		"no-rex":       &d.noRex,
+		"no-animation": &d.noAnimation,
+	}
+	if c.Flags().Lookup("json") != nil {
+		bools["json"] = jsonOut
+	}
+	for i, a := range args {
+		if a == "--" {
+			return
+		}
+		name, val, hasVal := strings.Cut(strings.TrimPrefix(a, "--"), "=")
+		if !strings.HasPrefix(a, "--") {
+			continue
+		}
+		if p, ok := bools[name]; ok && (!hasVal || val == "true") {
+			*p = true
+		}
+		if name != "progress" {
+			continue
+		}
+		switch {
+		case hasVal:
+			d.progress = val
+		case i+1 < len(args):
+			d.progress = args[i+1]
+		}
+	}
 }
 
 func newRoot(app *App) *cobra.Command {
+	var display displayFlags
 	root := &cobra.Command{
 		Use:           "rexctl",
 		Short:         "Install and run your Fluxer instance",
-		Long:          "Install and run your Fluxer instance.\n\n" + exitCodesHelp(),
+		Long:          "Install and run your Fluxer instance.",
 		Args:          noArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		PersistentPreRunE: func(c *cobra.Command, _ []string) error {
+			derr := display.apply(app.UI)
 			app.init(c)
+			app.UI.Begin(c.CommandPath())
+			if derr != nil {
+				return derr
+			}
 			if c.Flags().Changed("dir") && strings.TrimSpace(app.Flags.Dir) == "" {
 				return ui.Usage("Pass a folder to --dir.")
 			}
@@ -87,10 +133,18 @@ func newRoot(app *App) *cobra.Command {
 			return runHome(c.Context(), app, c)
 		},
 	}
+	root.SetHelpFunc(func(c *cobra.Command, _ []string) {
+		_ = display.apply(app.UI)
+		app.UI.Help(c)
+	})
 	root.SetFlagErrorFunc(func(c *cobra.Command, err error) error {
+		display.scan(c, os.Args[1:], &app.Flags.JSON)
+		_ = display.apply(app.UI)
+		app.init(c)
+		app.UI.Begin(c.CommandPath())
 		return &ui.ExitError{
 			Code: ui.ExitUsage,
-			Msg:  usageSentence(err),
+			Msg:  flagErrorText(err),
 			Fix:  "Run " + c.CommandPath() + " --help to see every flag.",
 		}
 	})
@@ -100,7 +154,13 @@ func newRoot(app *App) *cobra.Command {
 	pf.StringVar(&app.Flags.Dir, "dir", "", "folder with your instance")
 	pf.BoolVarP(&app.Flags.Yes, "yes", "y", false, "answer yes to every question and never prompt")
 	pf.BoolVarP(&app.Flags.Quiet, "quiet", "q", false, "print only errors and results")
-	pf.BoolVar(&app.Flags.Verbose, "verbose", false, "print every step and command")
+	pf.BoolVar(&app.Flags.Verbose, "verbose", false, "print every step and command, and the full error when one fails")
+	pf.BoolVar(&display.noColor, "no-color", false, "print without colour")
+	pf.BoolVar(&display.plain, "plain", false, "print plain lines with no animation or prompts")
+	pf.BoolVar(&display.accessible, "accessible", false, "print for screen readers and ask questions as numbered lists")
+	pf.BoolVar(&display.noRex, "no-rex", false, "hide Rex")
+	pf.BoolVar(&display.noAnimation, "no-animation", false, "keep the layout but stop anything moving")
+	pf.StringVar(&display.progress, "progress", string(ui.ProgressAuto), "how to show progress on stderr, auto, plain or json")
 
 	root.AddCommand(
 		newInstallCmd(app),
@@ -120,8 +180,7 @@ func newRoot(app *App) *cobra.Command {
 		newBackupCmd(app),
 		newRestoreCmd(app),
 		newUninstallCmd(app),
-		newTakeoverCmd(app),
-		newEjectCmd(app),
+		newDetachCmd(app),
 		newUseCmd(app),
 		newProxyCmd(app),
 		newUsersCmd(app),
@@ -133,13 +192,33 @@ func newRoot(app *App) *cobra.Command {
 		newBrandingCmd(app),
 		newSearchCmd(app),
 		newConfigCmd(app),
+		newPostgresCmd(app),
 		newVersionCmd(app),
 		newDocsCmd(app),
-		newBundleCmd(app),
 	)
 	groupCommands(root)
 	refuseUnknownSubcommands(root)
+	reportErrors(app, root)
 	return root
+}
+
+func reportErrors(app *App, c *cobra.Command) {
+	for _, sub := range c.Commands() {
+		reportErrors(app, sub)
+	}
+	run := c.RunE
+	if run == nil {
+		return
+	}
+	c.RunE = func(cmd *cobra.Command, args []string) error {
+		err := run(cmd, args)
+		if err == nil || errors.Is(err, errDeclined) {
+			return nil
+		}
+		app.handleError(err)
+		app.SetExit(app.exitCode(cmd.Context(), err))
+		return nil
+	}
 }
 
 func refuseUnknownSubcommands(c *cobra.Command) {
@@ -160,21 +239,27 @@ func refuseUnknownSubcommands(c *cobra.Command) {
 const helpOnly = "rexctl-help-only"
 
 const (
-	groupRun    = "Install and run"
-	groupManage = "Manage your instance"
-	groupOther  = "Other commands"
+	groupEveryday = "Everyday"
+	groupSetUp    = "Set up"
+	groupManage   = "Manage your instance"
+	groupAdvanced = "Advanced"
+	groupOther    = "Other commands"
 )
 
 var commandGroups = map[string][]string{
-	"run":    {"install", "setup", "status", "doctor", "logs", "start", "stop", "down", "restart", "upgrade", "auto-upgrade", "rollback", "backup", "restore", "proxy", "takeover", "eject", "use", "uninstall"},
-	"manage": {"users", "admins", "invites", "voice", "registration", "email", "branding", "search", "config"},
-	"other":  {"version", "docs"},
+	"everyday": {"status", "logs", "start", "stop", "restart", "upgrade", "backup", "restore"},
+	"setup":    {"install", "setup", "proxy", "boot", "auto-upgrade", "use"},
+	"manage":   {"users", "admins", "invites", "voice", "registration", "email", "branding", "search", "config"},
+	"advanced": {"doctor", "rollback", "migrate", "postgres", "down", "detach", "uninstall"},
+	"other":    {"version", "docs"},
 }
 
 func groupCommands(root *cobra.Command) {
 	root.AddGroup(
-		&cobra.Group{ID: "run", Title: groupRun},
+		&cobra.Group{ID: "everyday", Title: groupEveryday},
+		&cobra.Group{ID: "setup", Title: groupSetUp},
 		&cobra.Group{ID: "manage", Title: groupManage},
+		&cobra.Group{ID: "advanced", Title: groupAdvanced},
 		&cobra.Group{ID: "other", Title: groupOther},
 	)
 	for id, names := range commandGroups {
@@ -195,24 +280,22 @@ func groupCommands(root *cobra.Command) {
 		case "completion":
 			c.Short = "Print a shell completion script"
 			c.Long = "Print a script that completes rexctl commands in your shell."
+			c.Args = noArgs
 			for _, sub := range c.Commands() {
 				sub.Short = "Print the completion script for " + sub.Name()
+				sub.Args = noArgs
 			}
 		}
 	}
 }
 
-func (a *App) handleError(_ io.Writer, _ fang.Styles, err error) {
+func (a *App) handleError(err error) {
 	var ee *ui.ExitError
 	if errors.As(err, &ee) {
 		a.UI.ReportError(ee)
 		return
 	}
 	if errors.Is(err, context.Canceled) {
-		return
-	}
-	if isUsageError(err) {
-		a.UI.ReportError(&ui.ExitError{Code: ui.ExitUsage, Msg: usageSentence(err), Fix: "Run rexctl --help to see every command."})
 		return
 	}
 	a.UI.ReportError(err)
@@ -225,38 +308,5 @@ func (a *App) exitCode(ctx context.Context, err error) int {
 	if ctx.Err() != nil || errors.Is(err, context.Canceled) {
 		return ui.ExitInterrupted
 	}
-	if isUsageError(err) {
-		return ui.ExitUsage
-	}
 	return ui.CodeOf(err)
-}
-
-func isUsageError(err error) bool {
-	var ee *ui.ExitError
-	if errors.As(err, &ee) {
-		return ee.Code == ui.ExitUsage
-	}
-	s := err.Error()
-	for _, p := range []string{"unknown command", "unknown flag", "unknown shorthand", "invalid argument", "accepts ", "requires ", "flag needs", "required flag"} {
-		if strings.HasPrefix(s, p) {
-			return true
-		}
-	}
-	return false
-}
-
-func usageSentence(err error) string {
-	s, _, _ := strings.Cut(err.Error(), "\n")
-	s = strings.TrimSpace(s)
-	if !strings.HasSuffix(s, ".") {
-		s += "."
-	}
-	return capitalise(s)
-}
-
-func capitalise(s string) string {
-	if s == "" {
-		return s
-	}
-	return strings.ToUpper(s[:1]) + s[1:]
 }

@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	Register(Check{ID: "stack-files", Phases: Installed, Run: runStackFiles, Fix: fixStackFiles, SafeFix: true})
+	Register(Check{ID: "stack-files", Phases: Installed, Run: byRuntime(runStackFiles, runNativeFiles), Fix: byRuntime(fixStackFiles, fixNativeFiles), SafeFix: true})
 }
 
 func runStackFiles(ctx context.Context, e *Env) Result {

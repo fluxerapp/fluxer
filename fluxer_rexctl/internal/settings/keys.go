@@ -35,6 +35,8 @@ type Key struct {
 	Options  []string
 	File     string
 	Help     string
+	Takes    string
+	Hidden   bool
 }
 
 const (
@@ -46,6 +48,9 @@ const (
 	EdgeHTTPSPort   = "edge.https_port"
 	EdgePublicPort  = "edge.public_port"
 	EdgeTrusted     = "edge.trusted_proxies"
+	EdgeProxyKind   = "edge.proxy_kind"
+	edgeACMECA      = "edge.acme_directory"
+	edgeACMERoot    = "edge.acme_ca_root"
 	VoiceTCPPort    = "voice.tcp_port"
 	VoiceUDPPort    = "voice.udp_port"
 	VoicePublicIP   = "voice.public_ip"
@@ -60,7 +65,7 @@ const (
 	HTTPSProxy      = "network.https_proxy"
 	NoProxy         = "network.no_proxy"
 	IPv6            = "network.ipv6"
-	SSOPrivate      = "sso.allow_private_addresses"
+	ssoPrivate      = "sso.allow_private_addresses"
 	SignedMedia     = "media.signed_attachments"
 	ImagesRegistry  = "images.registry"
 	MemoryProfile   = "memory.profile"
@@ -70,6 +75,9 @@ const (
 	RustProcess     = "rust.process"
 	StorageBackend  = "storage.backend"
 	KVMode          = "kv.mode"
+	LiveKitEnabled  = "FLUXER_LIVEKIT_ENABLED"
+	backupsSchedule = "backups.schedule"
+	BackupsBefore   = "backups.before_upgrade"
 )
 
 const (
@@ -83,15 +91,35 @@ const (
 )
 
 const (
-	RustServerOverlayFile       = "rust-server.compose.yml"
-	FilesystemObjectOverlayFile = "filesystem-object-store.compose.yml"
-	KVPostgresOverlayFile       = "kv-postgres.compose.yml"
+	rustServerOverlayFile       = "rust-server.compose.yml"
+	filesystemObjectOverlayFile = "filesystem-object-store.compose.yml"
+	kvPostgresOverlayFile       = "kv-postgres.compose.yml"
 )
 
 const (
 	EdgeBundled = "bundled"
 	EdgeProxy   = "proxy"
 	EdgeTunnel  = "tunnel"
+)
+
+const (
+	ProxyLocal    = "local"
+	ProxyRemote   = "remote"
+	ProxyTunnel   = "tunnel"
+	ProxyOverlay  = "overlay"
+	ProxyInstance = "instance"
+)
+
+const (
+	scheduleOff    = "off"
+	scheduleDaily  = "daily"
+	scheduleWeekly = "weekly"
+)
+
+const (
+	BackupFull           = "full"
+	BackupWithoutUploads = "without-uploads"
+	BackupOff            = "off"
 )
 
 func ImageRef(chosen, refs map[string]string, svc string) string {
@@ -116,6 +144,13 @@ var ImageVars = map[string]string{
 const EdgeListenVar = "FLUXER_EDGE_LISTEN_ADDRESS"
 
 const (
+	acmeCAVar       = "FLUXER_EDGE_ACME_CA"
+	acmeRootVar     = "FLUXER_EDGE_ACME_CA_ROOT"
+	ACMERootFile    = "acme-ca-root.pem"
+	CertsMountPoint = "/certs/"
+)
+
+const (
 	SignatureModeVar    = "FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE"
 	SignatureSecretsVar = "FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64"
 )
@@ -127,32 +162,39 @@ func SignsAttachments(mode string) bool {
 
 const storageConfirm = "Files people already uploaded stay where they are. rexctl doesn't move them."
 
-const migrateConfirm = "Data already stored stays where it is. Run rexctl migrate --experimental-native to move it over instead."
+const migrateConfirm = "Data already stored stays where it is. Run rexctl migrate to move it over instead."
 
 var named = buildNamed()
 
 func buildNamed() []Key {
 	keys := []Key{
-		{Name: Domain, Type: "hostname", Vars: []string{"FLUXER_DOMAIN"}, Validate: validHostname,
-			Help:    "The domain Fluxer runs on",
-			Confirm: "Fluxer gets a new certificate for the new domain. Passkeys made for the old domain stop working. The domain_migration settings help people move over."},
+		{Name: Domain, Type: "hostname", Vars: []string{"FLUXER_DOMAIN"}, Validate: validHostname, Takes: "a domain name or IP address, like chat.example.com",
+			Help:    "The domain or IP address Fluxer runs on",
+			Confirm: "Fluxer gets a new certificate for the new domain. Passkeys made for the old domain stop working. The domain_migration settings help people move over, and rexctl config list domain_migration shows them."},
 		{Name: EdgeMode, Type: "choice", Options: []string{EdgeBundled, EdgeProxy, EdgeTunnel}, Validate: oneOf(EdgeBundled, EdgeProxy, EdgeTunnel),
 			Help: "Whether Fluxer serves HTTPS itself or runs behind your reverse proxy or a tunnel"},
 		{Name: EdgeBind, Type: "address", Vars: []string{"FLUXER_EDGE_BIND"}, Validate: validBind,
 			Help: "The address your reverse proxy or tunnel connects to"},
+		{Name: EdgeProxyKind, Type: "choice", Options: []string{ProxyLocal, ProxyRemote, ProxyTunnel, ProxyOverlay, ProxyInstance}, Validate: oneOf(ProxyLocal, ProxyRemote, ProxyTunnel, ProxyOverlay, ProxyInstance),
+			Help: "What is in front of Fluxer behind a proxy"},
 		{Name: EdgeListen, Type: "ip", Vars: []string{EdgeListenVar}, Validate: validIP,
 			Help: "The IP address on this machine that Fluxer listens on for HTTP and HTTPS, or empty for every address"},
-		{Name: EdgeHTTPPort, Type: "port", Vars: []string{"FLUXER_HTTP_PORT"}, Validate: validPort,
+		{Name: EdgeHTTPPort, Type: "port", Vars: []string{"FLUXER_HTTP_PORT"}, Validate: ValidPort,
 			Help: "The port Fluxer listens on for HTTP"},
-		{Name: EdgeHTTPSPort, Type: "port", Vars: []string{"FLUXER_HTTPS_PORT"}, Validate: validPort,
+		{Name: EdgeHTTPSPort, Type: "port", Vars: []string{"FLUXER_HTTPS_PORT"}, Validate: ValidPort,
 			Help: "The port Fluxer listens on for HTTPS"},
-		{Name: EdgePublicPort, Type: "port", Vars: []string{"FLUXER_PUBLIC_PORT"}, Validate: validPort,
+		{Name: EdgePublicPort, Type: "port", Vars: []string{"FLUXER_PUBLIC_PORT"}, Validate: ValidPort,
 			Help: "The port people use in Fluxer's address, when it differs from the one Fluxer listens on"},
 		{Name: EdgeTrusted, Type: "list", Vars: []string{"FLUXER_EDGE_TRUSTED_PROXIES"}, Validate: validTrustedProxies,
-			Help: "Proxies whose client address headers Fluxer trusts, separated by spaces"},
-		{Name: VoiceTCPPort, Type: "port", Vars: []string{"FLUXER_LIVEKIT_TCP_PORT"}, Validate: validPort,
+			Takes: "IP addresses or ranges such as 10.0.0.0/8, or private_ranges, separated by spaces or commas",
+			Help:  "Proxies whose client address headers Fluxer trusts, by default only this machine, or private ranges in proxy and tunnel mode"},
+		{Name: edgeACMECA, Type: "url", Vars: []string{acmeCAVar}, Validate: validURL, Hidden: true,
+			Help: "The ACME directory the edge gets its certificate from"},
+		{Name: edgeACMERoot, Type: "pem", Vars: []string{acmeRootVar}, Validate: validText, Hidden: true,
+			Help: "A PEM file with the CA certificate the edge trusts for the ACME directory"},
+		{Name: VoiceTCPPort, Type: "port", Vars: []string{"FLUXER_LIVEKIT_TCP_PORT"}, Validate: ValidPort,
 			Help: "The TCP port for voice and video"},
-		{Name: VoiceUDPPort, Type: "port", Vars: []string{"FLUXER_LIVEKIT_UDP_PORT"}, Validate: validPort,
+		{Name: VoiceUDPPort, Type: "port", Vars: []string{"FLUXER_LIVEKIT_UDP_PORT"}, Validate: ValidPort,
 			Help: "The UDP port for voice and video"},
 		{Name: VoicePublicIP, Type: "ip", Vars: []string{"FLUXER_LIVEKIT_NODE_IP", "FLUXER_LIVEKIT_USE_EXTERNAL_IP"}, Validate: validIP,
 			Help: "The public IP address voice and video use, when Fluxer can't find it by itself"},
@@ -172,14 +214,14 @@ func buildNamed() []Key {
 		{Name: StorageSecret, Type: "secret", Vars: []string{"FLUXER_S3_SECRET_KEY"}, Validate: validText, Secret: true, Confirm: storageConfirm,
 			Help: "The object store secret key"},
 		{Name: HTTPProxy, Type: "url", Vars: []string{"HTTP_PROXY"}, Validate: validURL,
-			Help: "The proxy the Rust services other than the app-proxy use for outgoing HTTP requests"},
+			Help: "The proxy the edge and the Rust services other than the app-proxy use for outgoing HTTP requests"},
 		{Name: HTTPSProxy, Type: "url", Vars: []string{"HTTPS_PROXY"}, Validate: validURL,
-			Help: "The proxy the Rust services other than the app-proxy use for outgoing HTTPS requests"},
+			Help: "The proxy the edge and the Rust services other than the app-proxy use for outgoing HTTPS requests"},
 		{Name: NoProxy, Type: "list", Vars: []string{"NO_PROXY"}, Validate: validText,
-			Help: "Hosts the Rust services other than the app-proxy connect to without the proxy, separated by commas"},
-		{Name: IPv6, Type: "bool", Validate: validBool, Confirm: "Every Fluxer service restarts.",
+			Help: "Hosts the edge and the Rust services other than the app-proxy connect to without the proxy, separated by commas"},
+		{Name: IPv6, Type: "bool", Validate: validBool,
 			Help: "Whether Fluxer's network uses IPv6"},
-		{Name: SSOPrivate, Type: "bool", Vars: []string{"FLUXER_SSO_ALLOW_PRIVATE_ADDRESSES"}, Validate: validBool,
+		{Name: ssoPrivate, Type: "bool", Vars: []string{"FLUXER_SSO_ALLOW_PRIVATE_ADDRESSES"}, Validate: validBool,
 			Help: "Whether single sign-on can use a provider on a private or local network address"},
 		{Name: SignedMedia, Type: "choice", Vars: []string{SignatureModeVar}, Options: []string{"off", "report", "enforce"}, Validate: oneOf("off", "report", "enforce"),
 			Confirm: "With enforce, attachment links without a valid signature stop working. That includes links copied out of Fluxer more than a day ago, links a bot saved and data packages made before signing was on. Fluxer's apps get new links by themselves.",
@@ -192,15 +234,18 @@ func buildNamed() []Key {
 			Help: "small to keep logs, the database write-ahead log and the upload spool smaller on a small disk, or empty for the usual sizes"},
 		{Name: EngineHost, Type: "endpoint", Validate: validEndpoint,
 			Help: "The Docker or Podman engine that runs Fluxer"},
-		{Name: RustProcess, Type: "choice", Vars: []string{"FLUXER_RUST_PROCESS"}, Options: []string{RustPerService, RustSingle}, Validate: oneOf(RustPerService, RustSingle), File: RustServerOverlayFile,
-			Confirm: "The Rust services restart.",
-			Help:    "single to run the Rust services in one container, or per-service for one container each"},
-		{Name: StorageBackend, Type: "choice", Vars: []string{"FLUXER_STORAGE_BACKEND"}, Options: []string{StorageS3, StorageFilesystem}, Validate: oneOf(StorageS3, StorageFilesystem), File: FilesystemObjectOverlayFile,
+		{Name: RustProcess, Type: "choice", Vars: []string{"FLUXER_RUST_PROCESS"}, Options: []string{RustPerService, RustSingle}, Validate: oneOf(RustPerService, RustSingle), File: rustServerOverlayFile,
+			Help: "single to run the Rust services in one container, or per-service for one container each"},
+		{Name: StorageBackend, Type: "choice", Vars: []string{"FLUXER_STORAGE_BACKEND"}, Options: []string{StorageS3, StorageFilesystem}, Validate: oneOf(StorageS3, StorageFilesystem), File: filesystemObjectOverlayFile,
 			Confirm: migrateConfirm,
 			Help:    "filesystem to keep uploaded files as plain files in a volume, or s3 for SeaweedFS or the object store set in storage.endpoint"},
-		{Name: KVMode, Type: "choice", Vars: []string{"FLUXER_KV_MODE"}, Options: []string{KVStandalone, KVCluster, KVPostgres}, Validate: oneOf(KVStandalone, KVCluster, KVPostgres), File: KVPostgresOverlayFile,
+		{Name: KVMode, Type: "choice", Vars: []string{"FLUXER_KV_MODE"}, Options: []string{KVStandalone, KVCluster, KVPostgres}, Validate: oneOf(KVStandalone, KVCluster, KVPostgres), File: kvPostgresOverlayFile,
 			Confirm: migrateConfirm,
-			Help:    "postgres to keep cache, rate limit and queue data in the database, standalone for the Valkey container, or cluster for a Redis-compatible cluster at FLUXER_KV_URL"},
+			Help:    "postgres to keep cache, rate limit and queue data in the database, standalone for one Valkey server, or cluster for a Redis-compatible cluster at FLUXER_KV_URL"},
+		{Name: backupsSchedule, Type: "choice", Options: []string{scheduleOff, scheduleDaily, scheduleWeekly}, Validate: oneOf(scheduleOff, scheduleDaily, scheduleWeekly),
+			Help: "How often rexctl backs up your instance by itself"},
+		{Name: BackupsBefore, Type: "choice", Options: []string{BackupFull, BackupWithoutUploads, BackupOff}, Validate: oneOf(BackupFull, BackupWithoutUploads, BackupOff),
+			Help: "What rexctl backs up before an upgrade"},
 	}
 	for _, svc := range slices.Sorted(maps.Keys(ImageVars)) {
 		help := "The image the " + svc + " container runs"
@@ -244,9 +289,9 @@ func namedByVar(v string) (Key, bool) {
 }
 
 var (
-	ErrUnknownKey   = errors.New("settings: unknown setting")
-	ErrNeedsUpgrade = errors.New("settings: the release doesn't read this setting")
-	ErrOtherName    = errors.New("settings: set under another name")
+	errUnknownKey   = errors.New("settings: unknown setting")
+	errNeedsUpgrade = errors.New("settings: the release doesn't read this setting")
+	errOtherName    = errors.New("settings: set under another name")
 )
 
 type Error struct {
@@ -264,7 +309,7 @@ func (e *Error) Unwrap() error { return e.Err }
 func Lookup(set *stack.Set, custom []string, name string, adminSchema []adminapi.ConfigKey) (Key, error) {
 	if k, ok := namedKey(name); ok {
 		if !releaseReads(set, custom, k) {
-			return Key{}, &Error{Key: name, Err: ErrNeedsUpgrade,
+			return Key{}, &Error{Key: name, Err: errNeedsUpgrade,
 				Problem: "This setting needs a newer Fluxer.", Fix: "Run rexctl upgrade first."}
 		}
 		return k, nil
@@ -278,10 +323,16 @@ func Lookup(set *stack.Set, custom []string, name string, adminSchema []adminapi
 		return Key{}, unknown(name)
 	}
 	if k, ok := namedByVar(name); ok {
-		return Key{}, otherName(name, k.Name)
+		if k.Vars[0] != name {
+			return Key{}, otherName(name, k.Name)
+		}
+		return Lookup(set, custom, k.Name, adminSchema)
 	}
 	if admin, ok := Twins[name]; ok {
-		return Key{}, otherName(name, admin)
+		if slices.Contains(legacyTwins, name) || !slices.ContainsFunc(adminSchema, func(a adminapi.ConfigKey) bool { return a.Key == admin }) {
+			return Key{}, otherName(name, admin)
+		}
+		return Lookup(set, custom, admin, adminSchema)
 	}
 	if !slices.Contains(set.Vars, name) && !slices.Contains(custom, name) {
 		return Key{}, unknown(name)
@@ -293,24 +344,30 @@ func Lookup(set *stack.Set, custom []string, name string, adminSchema []adminapi
 	case SignatureSecretsVar:
 		validate = validSignatureSecrets
 	}
-	return Key{Name: name, Kind: Raw, Type: "text", Vars: []string{name}, Secret: SecretName(name),
+	secret := SecretName(name)
+	if s, ok := set.Setting(name); ok {
+		secret = s.Secret || secret
+	}
+	return Key{Name: name, Kind: Raw, Type: "text", Vars: []string{name}, Secret: secret,
 		Stateful: generatedStateful(name), Validate: validate}, nil
 }
 
+var legacyTwins = []string{"FLUXER_EMAIL_ENABLED", "FLUXER_EMAIL_PROVIDER", "FLUXER_EMAIL_SMTP_SECURE"}
+
 func unknown(name string) error {
-	return &Error{Key: name, Err: ErrUnknownKey,
+	return &Error{Key: name, Err: errUnknownKey,
 		Problem: fmt.Sprintf("rexctl doesn't know a setting called %s.", name),
-		Fix:     "Run rexctl config list to see every setting."}
+		Fix:     "Run rexctl config list --all to see every setting."}
 }
 
 func otherName(name, use string) error {
-	return &Error{Key: name, Use: use, Err: ErrOtherName,
+	return &Error{Key: name, Use: use, Err: errOtherName,
 		Problem: fmt.Sprintf("%s is set through %s.", name, use),
 		Fix:     fmt.Sprintf("Use rexctl config set %s instead.", use)}
 }
 
 func releaseReads(set *stack.Set, custom []string, k Key) bool {
-	if k.File != "" {
+	if k.File != "" && set.Catalog == nil {
 		if set.Files == nil {
 			return false
 		}
@@ -356,7 +413,7 @@ func generatedStateful(name string) bool {
 	return false
 }
 
-func CheckCombination(chosen map[string]string) error {
+func checkCombination(chosen map[string]string) error {
 	if strings.TrimSpace(chosen[StorageBackend]) == StorageFilesystem && strings.TrimSpace(chosen[StorageEndpoint]) != "" {
 		return &Error{Key: StorageBackend,
 			Problem: "storage.backend filesystem keeps files on this machine, and storage.endpoint points at another object store.",

@@ -47,9 +47,9 @@ func goFiles(root string) ([]string, error) {
 	return files, err
 }
 
-const SPDXHeader = "// SPDX-License-Identifier: AGPL-3.0-or-later"
+const spdxHeader = "// SPDX-License-Identifier: AGPL-3.0-or-later"
 
-func CheckComments(path string, src []byte) ([]Finding, error) {
+func checkComments(path string, src []byte) ([]Finding, error) {
 	fset := token.NewFileSet()
 	f, err := parser.ParseFile(fset, path, src, parser.ParseComments)
 	if err != nil {
@@ -64,7 +64,7 @@ func CheckComments(path string, src []byte) ([]Finding, error) {
 		for _, cm := range group.List {
 			line := fset.Position(cm.Pos()).Line
 			switch {
-			case line == 1 && cm.Text == SPDXHeader:
+			case line == 1 && cm.Text == spdxHeader:
 				hasHeader = true
 			case strings.HasPrefix(cm.Text, "//go:"), strings.HasPrefix(cm.Text, "//line "):
 			default:
@@ -73,7 +73,7 @@ func CheckComments(path string, src []byte) ([]Finding, error) {
 		}
 	}
 	if !hasHeader {
-		out = append(out, Finding{File: path, Line: 1, Rule: "missing SPDX header", Text: SPDXHeader})
+		out = append(out, Finding{File: path, Line: 1, Rule: "missing SPDX header", Text: spdxHeader})
 	}
 	return out, nil
 }
@@ -90,7 +90,7 @@ func Comments(root string) ([]Finding, error) {
 			return nil, err
 		}
 		rel, _ := filepath.Rel(root, path)
-		found, err := CheckComments(rel, src)
+		found, err := checkComments(rel, src)
 		if err != nil {
 			return nil, err
 		}

@@ -13,6 +13,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/native"
 )
 
 type Status string
@@ -45,18 +46,28 @@ type Result struct {
 }
 
 type Env struct {
-	Dir      string
-	Domain   string
-	Instance *instance.Instance
-	Engine   *engine.Engine
-	Project  *engine.Project
-	Host     *host.Info
-	Behind   bool
-	Native   bool
-	Bind     string
-	Admin    *adminapi.Client
-	Settings map[string]string
-	Prefer   engine.Kind
+	Dir       string
+	Domain    string
+	Instance  *instance.Instance
+	Engine    *engine.Engine
+	Project   *engine.Project
+	Host      *host.Info
+	Behind    bool
+	Native    bool
+	Name      string
+	Container bool
+	Stack     *native.Stack
+	Bind      string
+	Admin     *adminapi.Client
+	Settings  map[string]string
+	Prefer    engine.Kind
+	Downloads []string
+
+	Start         func(ctx context.Context) error
+	Restart       func(ctx context.Context, parts []string) error
+	Parts         func(services []string) []string
+	ApplySettings func(ctx context.Context, changes map[string]*string) error
+	Resolve       func(ctx context.Context) error
 
 	phase         Phase
 	prepared      bool
@@ -94,11 +105,18 @@ type Check struct {
 
 var order = []string{
 	"engine",
+	"service-account",
+	"fluxer-config",
+	"fluxer-namespaces",
+	"fluxer-stopped",
+	"postgres-version",
 	"podman-subids",
 	"podman-setup",
+	"podman-api",
 	"windows-linux-containers",
 	"memory",
 	"disk",
+	"clock",
 	"ports",
 	"low-ports",
 	"dns",
@@ -107,6 +125,8 @@ var order = []string{
 	"stack-edits",
 	"pending-change",
 	"upgrade-unfinished",
+	"restore-unfinished",
+	"move-download",
 	"boot-unit",
 	"origin",
 	"vapid",
@@ -115,6 +135,7 @@ var order = []string{
 	"stale-containers",
 	"health",
 	"certificate",
+	"local-certificate",
 	"discovery",
 	"app-proxy-discovery",
 	"media-proxy-spool",
@@ -133,6 +154,8 @@ var order = []string{
 	"client-ip",
 	"sso-provider",
 	"connection-providers",
+	"push-relay",
+	"uploads-read-only",
 	"backup-age",
 }
 
@@ -154,7 +177,7 @@ func rank(id string) int {
 	return len(order)
 }
 
-func All() []Check {
+func all() []Check {
 	out := make([]Check, 0, len(registry))
 	for _, c := range registry {
 		out = append(out, c)
@@ -169,6 +192,25 @@ func All() []Check {
 	return out
 }
 
+func byRuntime[T any](compose, native func(context.Context, *Env) T) func(context.Context, *Env) T {
+	return func(ctx context.Context, e *Env) T {
+		if e.Native {
+			return native(ctx, e)
+		}
+		return compose(ctx, e)
+	}
+}
+
+func skipRun(context.Context, *Env) Result { return skip("") }
+
+func composeOnly(run func(context.Context, *Env) Result) func(context.Context, *Env) Result {
+	return byRuntime(run, skipRun)
+}
+
+func nativeOnly(run func(context.Context, *Env) Result) func(context.Context, *Env) Result {
+	return byRuntime(skipRun, run)
+}
+
 func Get(id string) (Check, bool) {
 	c, ok := registry[id]
 	return c, ok
@@ -179,16 +221,29 @@ func Run(ctx context.Context, env *Env, phase Phase) []Result {
 	env.prepare(ctx)
 	env.reset()
 	out := []Result{}
-	for _, c := range All() {
-		if c.Phases&phase == 0 {
+	for _, c := range all() {
+		if c.Phases&phase == 0 || env.Container && slices.Contains(hostOnly, c.ID) && !(c.ID == "ports" && !env.containerUp(ctx)) {
 			continue
 		}
-		out = append(out, RunOne(ctx, env, c))
+		out = append(out, runOne(ctx, env, c))
 	}
 	return out
 }
 
-func RunOne(ctx context.Context, env *Env, c Check) Result {
+func (e *Env) containerUp(ctx context.Context) bool {
+	if e.Stack == nil {
+		return true
+	}
+	switch e.Stack.ActiveState(ctx) {
+	case "inactive", "failed":
+		return false
+	}
+	return true
+}
+
+var hostOnly = []string{"engine", "stack-files", "fluxer-config", "postgres-version", "fluxer-namespaces", "fluxer-stopped", "service-account", "boot-unit", "objects-filesystem", "media-proxy-spool", "ports"}
+
+func runOne(ctx context.Context, env *Env, c Check) Result {
 	if env.phase == 0 {
 		env.phase = c.Phases
 	}
@@ -204,18 +259,18 @@ func RunOne(ctx context.Context, env *Env, c Check) Result {
 
 func Recheck(ctx context.Context, env *Env, c Check) Result {
 	env.reset()
-	return RunOne(ctx, env, c)
+	return runOne(ctx, env, c)
 }
 
 func RunIn(ctx context.Context, env *Env, phase Phase, c Check) Result {
 	env.phase = phase
-	return RunOne(ctx, env, c)
+	return runOne(ctx, env, c)
 }
 
 func ApplyFix(ctx context.Context, env *Env, id string) (Result, error) {
 	c, ok := registry[id]
 	if !ok || c.Fix == nil {
-		return Result{}, ErrNoFix
+		return Result{}, errNoFix
 	}
 	before := env.stagedCount()
 	if err := c.Fix(ctx, env); err != nil {
@@ -225,7 +280,7 @@ func ApplyFix(ctx context.Context, env *Env, id string) (Result, error) {
 		env.stagedBy = append(env.stagedBy, id)
 	}
 	env.reset()
-	r := RunOne(ctx, env, c)
+	r := runOne(ctx, env, c)
 	r.Fixable = true
 	r.Fixed = r.Status == Pass || r.Status == Skip
 	return r, nil
@@ -241,7 +296,7 @@ type Plan struct {
 func PlanFix(ctx context.Context, env *Env, id string) (Plan, error) {
 	c, ok := registry[id]
 	if !ok || c.Fix == nil {
-		return Plan{}, ErrNoFix
+		return Plan{}, errNoFix
 	}
 	staged, secrets, admin := maps.Clone(env.staged), maps.Clone(env.stagedSecrets), maps.Clone(env.stagedAdmin)
 	importEnv, kept := env.importEnv, slices.Clone(env.keptEdits)

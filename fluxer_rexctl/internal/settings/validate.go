@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/netip"
 	"net/url"
 	"runtime"
 	"strconv"
@@ -71,7 +72,7 @@ func validBool(v string) error {
 	return nil
 }
 
-func validPort(v string) error {
+func ValidPort(v string) error {
 	n, err := strconv.Atoi(v)
 	if err != nil || n < 1 || n > 65535 {
 		return errors.New("Use a port number from 1 to 65535.")
@@ -86,8 +87,59 @@ func validIP(v string) error {
 	return errors.New("Use an IP address, for example 203.0.113.7.")
 }
 
+func DomainIP(v string) (netip.Addr, bool) {
+	bare := v
+	if strings.HasPrefix(v, "[") && strings.HasSuffix(v, "]") {
+		bare = v[1 : len(v)-1]
+	}
+	ip, err := netip.ParseAddr(bare)
+	if err != nil || ip.Zone() != "" || ip.Is4() && bare != v {
+		return netip.Addr{}, false
+	}
+	return ip.Unmap(), true
+}
+
+func NormalDomain(v string) string {
+	ip, ok := DomainIP(v)
+	switch {
+	case !ok:
+		return v
+	case ip.Is4():
+		return ip.String()
+	}
+	return "[" + ip.String() + "]"
+}
+
+func BareHost(v string) string {
+	if ip, ok := DomainIP(v); ok {
+		return ip.String()
+	}
+	return v
+}
+
+func MailDomain(v string) string {
+	ip, ok := DomainIP(v)
+	switch {
+	case !ok:
+		return v
+	case ip.Is4():
+		return "[" + ip.String() + "]"
+	}
+	return "[IPv6:" + ip.String() + "]"
+}
+
+func LocalOnlyIP(ip netip.Addr) bool {
+	return ip.IsLoopback() || ip.IsUnspecified() || ip.IsMulticast() || ip.IsLinkLocalUnicast()
+}
+
 func validHostname(v string) error {
-	bad := errors.New("Use a domain name such as chat.example.com, without https:// or a port.")
+	if ip, ok := DomainIP(v); ok {
+		if LocalOnlyIP(ip) {
+			return errors.New("Use an IP address other devices can open, not a loopback or link-local one.")
+		}
+		return nil
+	}
+	bad := errors.New("Use a domain name such as chat.example.com or an IP address, without https:// or a port.")
 	if v == "" || len(v) > 253 || strings.HasSuffix(v, ".") {
 		return bad
 	}
@@ -104,19 +156,47 @@ func validHostname(v string) error {
 	return nil
 }
 
-func validBind(v string) error {
-	bad := errors.New("Use an address and port such as 127.0.0.1:8080, or only a port.")
-	if validPort(v) == nil {
-		return nil
+const DefaultBind = "127.0.0.1:8080"
+
+var errBind = errors.New("Use an address and port such as " + DefaultBind + ", or only a port.")
+
+func NormaliseBind(v string) (string, error) {
+	v = strings.TrimSpace(v)
+	if ValidPort(v) == nil {
+		n, _ := strconv.Atoi(v)
+		return net.JoinHostPort("127.0.0.1", strconv.Itoa(n)), nil
 	}
 	host, port, err := net.SplitHostPort(v)
-	if err != nil || validPort(port) != nil {
-		return bad
+	if err != nil || ValidPort(port) != nil {
+		return "", errBind
 	}
-	if host != "" && net.ParseIP(host) == nil {
-		return bad
+	n, _ := strconv.Atoi(port)
+	if host == "" {
+		return net.JoinHostPort("127.0.0.1", strconv.Itoa(n)), nil
 	}
-	return nil
+	ip := net.ParseIP(host)
+	if ip == nil {
+		return "", errBind
+	}
+	return net.JoinHostPort(ip.String(), strconv.Itoa(n)), nil
+}
+
+func BindIsLoopback(v string) bool {
+	norm, err := NormaliseBind(v)
+	if err != nil {
+		return false
+	}
+	host, _, err := net.SplitHostPort(norm)
+	if err != nil {
+		return false
+	}
+	ip := net.ParseIP(host)
+	return ip != nil && ip.IsLoopback()
+}
+
+func validBind(v string) error {
+	_, err := NormaliseBind(v)
+	return err
 }
 
 func validURL(v string) error {
@@ -146,7 +226,7 @@ func validRegistry(v string) error {
 	return nil
 }
 
-func EngineExample() string {
+func engineExample() string {
 	if runtime.GOOS == "windows" {
 		return "npipe:////./pipe/docker_engine"
 	}
@@ -154,7 +234,7 @@ func EngineExample() string {
 }
 
 func validEndpoint(v string) error {
-	bad := errors.New("Use an engine address such as " + EngineExample() + ".")
+	bad := errors.New("Use an engine address such as " + engineExample() + ".")
 	u, err := url.Parse(v)
 	if err != nil {
 		return bad

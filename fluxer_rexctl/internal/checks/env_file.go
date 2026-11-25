@@ -17,7 +17,7 @@ import (
 
 func init() {
 	Register(Check{ID: "env-file", Phases: Installed, Run: runEnvFile, Fix: fixEnvFile})
-	Register(Check{ID: "stack-edits", Phases: Installed, Run: runStackEdits, Fix: fixStackEdits})
+	Register(Check{ID: "stack-edits", Phases: Installed, Run: composeOnly(runStackEdits), Fix: fixStackEdits})
 }
 
 func (e *Env) drift() (*instance.DriftReport, error) {
@@ -47,21 +47,21 @@ func runEnvFile(ctx context.Context, e *Env) Result {
 	for _, c := range r.Env.Changes {
 		fix += "\n    " + c.Command()
 	}
-	res := fail("Your instance has a .env file, and rexctl doesn't read it.", fix)
-	if len(r.Env.Unused) > 0 {
-		return res
-	}
-	return fixable(res)
+	return fixable(fail("Your instance has a .env file, and rexctl doesn't read it.", fix))
 }
 
 func fixEnvFile(ctx context.Context, e *Env) error {
 	r, err := e.drift()
-	if err != nil || r.Env == nil || len(r.Env.Unused) > 0 {
+	if err != nil || r.Env == nil {
 		return err
 	}
-	if r.Env.Same {
+	if len(r.Env.Changes) == 0 {
+		why := " rexctl already keeps every setting in it."
+		if len(r.Env.Unused) > 0 {
+			why = " Fluxer doesn't use " + ui.JoinAnd(r.Env.Unused) + "."
+		}
 		return e.run(ctx, host.Step{
-			Do:  "Deletes .env from " + e.Instance.Dir + ". rexctl already keeps every setting in it.",
+			Do:  "Deletes .env from " + e.Instance.Dir + "." + why,
 			Run: func(context.Context) error { return instance.RemoveEnv(e.Instance) },
 		})
 	}
@@ -75,7 +75,7 @@ func fixEnvFile(ctx context.Context, e *Env) error {
 			e.stageAdmin(c.Key, c.Value)
 		}
 	}
-	e.stageEnvImport()
+	e.stageEnvImport(r.Env.Unused)
 	return nil
 }
 

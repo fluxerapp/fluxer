@@ -16,15 +16,15 @@ import (
 )
 
 const (
-	FormatVersion = 2
+	formatVersion = 2
 	formatFull    = 1
-	Extension     = ".tar.zst"
-	ManifestName  = "manifest.json"
-	SumsName      = "SHA256SUMS"
-	PartialSuffix = ".partial"
-	DumpName      = "postgres/fluxer.dump"
-	FilesPrefix   = "files/"
-	VolumesPrefix = "volumes/"
+	extension     = ".tar.zst"
+	manifestName  = "manifest.json"
+	sumsName      = "SHA256SUMS"
+	partialSuffix = ".partial"
+	dumpName      = "postgres/fluxer.dump"
+	filesPrefix   = "files/"
+	volumesPrefix = "volumes/"
 )
 
 const (
@@ -149,7 +149,7 @@ func List(dir string) ([]Info, error) {
 	out := []Info{}
 	for _, e := range ents {
 		name := e.Name()
-		if e.IsDir() || !strings.HasSuffix(name, Extension) {
+		if e.IsDir() || !strings.HasSuffix(name, extension) {
 			continue
 		}
 		path := filepath.Join(dir, name)
@@ -241,9 +241,9 @@ func fileName(domain string, at time.Time, n int) string {
 	}
 	stamp := at.UTC().Format("20060102-150405")
 	if n > 0 {
-		return fmt.Sprintf("fluxer-%s-%s-%d%s", d, stamp, n, Extension)
+		return fmt.Sprintf("fluxer-%s-%s-%d%s", d, stamp, n, extension)
 	}
-	return fmt.Sprintf("fluxer-%s-%s%s", d, stamp, Extension)
+	return fmt.Sprintf("fluxer-%s-%s%s", d, stamp, extension)
 }
 
 func newPath(dir, domain string, at time.Time) (string, error) {
@@ -251,7 +251,7 @@ func newPath(dir, domain string, at time.Time) (string, error) {
 		p := filepath.Join(dir, fileName(domain, at, n))
 		_, err := os.Lstat(p)
 		if errors.Is(err, os.ErrNotExist) {
-			_, err = os.Lstat(p + PartialSuffix)
+			_, err = os.Lstat(p + partialSuffix)
 			if errors.Is(err, os.ErrNotExist) {
 				return p, nil
 			}
@@ -269,7 +269,7 @@ func removePartials(dir string) {
 		return
 	}
 	for _, e := range ents {
-		if strings.HasSuffix(e.Name(), PartialSuffix) {
+		if strings.HasSuffix(e.Name(), partialSuffix) {
 			os.Remove(filepath.Join(dir, e.Name()))
 		}
 	}

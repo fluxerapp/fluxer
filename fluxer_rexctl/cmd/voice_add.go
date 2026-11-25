@@ -7,10 +7,7 @@ import (
 	"context"
 	"fmt"
 	"net/netip"
-	"os"
-	"path/filepath"
 	"slices"
-	"strconv"
 	"strings"
 	"time"
 
@@ -18,9 +15,9 @@ import (
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/adminapi"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/deploy"
-	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
+	rt "github.com/fluxerapp/fluxer/fluxer_rexctl/internal/runtime"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/voice"
@@ -53,11 +50,13 @@ type voiceFlags struct {
 	DryRun      bool
 	Force       bool
 	Count       int
+	Runtime     string
+	Print       bool
 }
 
 func addVoiceOverrideFlags(c *cobra.Command, f *voiceFlags) {
 	fl := c.Flags()
-	fl.StringVar(&f.ID, "id", "", "server ID, such as fra-server-2")
+	fl.StringVar(&f.ID, "id", "", "server ID, such as fra-server-2. With --print, a registered server's ID prints a new config with a new secret")
 	fl.StringVar(&f.Region, "region", "", "existing voice region for the server")
 	fl.Float64Var(&f.Lat, "lat", 0, "latitude of the server")
 	fl.Float64Var(&f.Long, "long", 0, "longitude of the server")
@@ -150,12 +149,19 @@ func newVoiceAddCmd(app *App) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "add",
 		Short: "Add voice servers on this Fluxer machine",
-		Long: "Add standalone LiveKit voice servers next to your Fluxer instance on this machine. " +
+		Long: "Add standalone LiveKit voice servers next to your instance on this machine. " +
 			"Each one gets its own ID, ports, keys and path on your domain, and rexctl registers it with your instance.",
+		Example: "  rexctl voice add\n" +
+			"  rexctl voice add --count 2\n" +
+			"  rexctl voice add --print --endpoint wss://voice.example.com > livekit.yaml\n" +
+			"  rexctl voice add --new-region fra --region-name Frankfurt --lat 50.1 --long 8.7",
 		Args: noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
 			if err := validateVoiceFlags(c, f); err != nil {
 				return err
+			}
+			if f.Print || f.Endpoint != "" {
+				return runVoiceAddPrint(c.Context(), app, c, f)
 			}
 			if f.Count < 1 || f.Count > 16 {
 				return ui.Usage("Pass --count from 1 to 16.")
@@ -177,6 +183,8 @@ func newVoiceAddCmd(app *App) *cobra.Command {
 	c.Flags().StringVar(&f.NewRegion, "new-region", "", "create a voice region with this ID for the servers")
 	c.Flags().StringVar(&f.RegionName, "region-name", "", "name of the new region")
 	c.Flags().BoolVar(&f.Force, "force", false, "add servers even when Fluxer runs through a tunnel")
+	c.Flags().BoolVar(&f.Print, "print", false, "register a server you run yourself with plain LiveKit and print its LiveKit config, with --endpoint")
+	c.Flags().StringVar(&f.Endpoint, "endpoint", "", "public wss:// URL of the LiveKit server you run yourself, with --print")
 	return c
 }
 
@@ -197,11 +205,17 @@ func runVoiceAdd(ctx context.Context, app *App, c *cobra.Command, f *voiceFlags)
 	if err := managed(inst); err != nil {
 		return err
 	}
-	named, err := app.Named(ctx, inst)
+	vs, err := voiceRuntime(ctx, app, inst)
 	if err != nil {
 		return err
 	}
-	api := app.adminClient(inst, named)
+	if err := vs.CanChange(); err != nil {
+		return err
+	}
+	api, _, err := app.Admin(ctx)
+	if err != nil {
+		return err
+	}
 	switch inst.State.Settings[settings.EdgeMode] {
 	case settings.EdgeTunnel:
 		if !f.Force {
@@ -211,10 +225,6 @@ func runVoiceAdd(ctx context.Context, app *App, c *cobra.Command, f *voiceFlags)
 		app.UI.Info("Your proxy must pass WebSocket upgrades on the new paths, as it does for /livekit/.")
 	}
 	return app.Locked(ctx, inst, func() error {
-		e, err := app.Engine(ctx, inst)
-		if err != nil {
-			return err
-		}
 		regions, err := api.VoiceRegions(ctx)
 		if err != nil {
 			return adminapi.Explain(err)
@@ -223,7 +233,7 @@ func runVoiceAdd(ctx context.Context, app *App, c *cobra.Command, f *voiceFlags)
 		if err != nil {
 			return err
 		}
-		plans, err := planVoiceAdd(ctx, app, e, inst, regions, region, f)
+		plans, err := planVoiceAdd(ctx, app, vs, inst, regions, region, f)
 		if err != nil {
 			return err
 		}
@@ -242,7 +252,7 @@ func runVoiceAdd(ctx context.Context, app *App, c *cobra.Command, f *voiceFlags)
 			}
 		}
 		for i := range plans {
-			if err := addOneVoiceServer(ctx, app, api, e, named, inst, &plans[i], f); err != nil {
+			if err := addOneVoiceServer(ctx, app, api, vs, inst, &plans[i], f); err != nil {
 				return err
 			}
 		}
@@ -291,9 +301,13 @@ func takenVoiceIDs(regions []adminapi.VoiceRegion, inst *instance.Instance) []st
 	return out
 }
 
-func planVoiceAdd(ctx context.Context, app *App, e *engine.Engine, inst *instance.Instance, regions []adminapi.VoiceRegion, region string, f *voiceFlags) ([]plannedVoice, error) {
-	ids := append(takenVoiceIDs(regions, inst), voiceIDsInUse(ctx, e, inst, voice.ProjectName(inst.Project(), ""))...)
-	ports := takenVoicePorts(ctx, e, inst)
+func planVoiceAdd(ctx context.Context, app *App, vs rt.VoiceServers, inst *instance.Instance, regions []adminapi.VoiceRegion, region string, f *voiceFlags) ([]plannedVoice, error) {
+	inUse, published := vs.InUse(ctx)
+	ids := append(append(takenVoiceIDs(regions, inst), voiceIDsInUse(ctx, nil, inst, "")...), inUse...)
+	ports := takenVoicePorts(ctx, nil, inst)
+	for _, p := range published {
+		ports[p] = true
+	}
 	nodeIP := f.IP
 	if nodeIP == "" {
 		nodeIP = strings.TrimSpace(inst.State.Settings[settings.VoicePublicIP])
@@ -304,7 +318,7 @@ func planVoiceAdd(ctx context.Context, app *App, e *engine.Engine, inst *instanc
 		publicIP, _ = host.PublicIPv4(pctx)
 		cancel()
 	}
-	nodeIPv6, err := addIPv6(ctx, app, e, inst, publicIP, f)
+	nodeIPv6, err := addIPv6(ctx, app, vs, publicIP, f)
 	if err != nil {
 		return nil, err
 	}
@@ -319,7 +333,7 @@ func planVoiceAdd(ctx context.Context, app *App, e *engine.Engine, inst *instanc
 		}
 	}
 	image := f.Image
-	if image == "" {
+	if image == "" && vs.Images() {
 		image = instanceLiveKitImage(inst)
 	}
 	_, cpus := host.Hardware()
@@ -362,54 +376,43 @@ func planVoiceAdd(ctx context.Context, app *App, e *engine.Engine, inst *instanc
 		if err != nil {
 			return nil, err
 		}
-		bindIP := bindAddress(f.IP, voice.InterfaceAddresses())
-		plans = append(plans, plannedVoice{
-			srv: instance.VoiceServer{
-				ID:        id,
-				Region:    region,
-				Endpoint:  base + voice.Path(id),
-				Key:       voice.Key(id),
-				Secret:    secret,
-				TCPPort:   tcp,
-				UDPPort:   udp,
-				NodeIP:    nodeIP,
-				NodeIPv6:  nodeIPv6,
-				IPPinned:  f.IP != "",
-				BindIP:    bindIP,
-				Image:     image,
-				Pinned:    f.Image != "",
-				Memory:    memory,
-				SoftLimit: softLimit,
-				Project:   voice.ProjectName(inst.Project(), id),
-				Network:   inst.Project() + "_fluxer",
-				Webhook:   "http://api:8080/webhooks/livekit",
-				Edge:      voice.EdgeInstance,
-			},
-			publicIP:  publicIP,
-			softLimit: softLimit,
-		})
+		srv := instance.VoiceServer{
+			ID:        id,
+			Region:    region,
+			Endpoint:  base + voice.Path(id),
+			Key:       voice.Key(id),
+			Secret:    secret,
+			TCPPort:   tcp,
+			UDPPort:   udp,
+			NodeIP:    nodeIP,
+			NodeIPv6:  nodeIPv6,
+			IPPinned:  f.IP != "",
+			BindIP:    bindAddress(f.IP, voice.InterfaceAddresses()),
+			Image:     image,
+			Pinned:    f.Image != "",
+			Memory:    memory,
+			SoftLimit: softLimit,
+		}
+		pending := make([]instance.VoiceServer, len(plans))
+		for i, p := range plans {
+			pending[i] = p.srv
+		}
+		if err := vs.Prepare(&srv, pending); err != nil {
+			return nil, err
+		}
+		plans = append(plans, plannedVoice{srv: srv, publicIP: publicIP, softLimit: softLimit})
 	}
 	return plans, nil
 }
 
-func addIPv6(ctx context.Context, app *App, e *engine.Engine, inst *instance.Instance, publicIP string, f *voiceFlags) (string, error) {
+func addIPv6(ctx context.Context, app *App, vs rt.VoiceServers, publicIP string, f *voiceFlags) (string, error) {
 	v6 := detectIPv6(ctx, f)
 	if v6 == "" {
 		return "", nil
 	}
-	on, _ := strconv.ParseBool(strings.TrimSpace(inst.State.Settings[settings.IPv6]))
-	_, has6, err := e.NetworkIPv6(ctx, inst.Project()+"_fluxer")
+	why, fix, err := vs.IPv6Blocked(ctx, bindAddress(f.IP, voice.InterfaceAddresses()))
 	if err != nil {
-		return "", engineFailure(err)
-	}
-	why, fix := "", ""
-	switch {
-	case !e.IPv6Voice():
-		why, fix = ipv6EngineText(e), fmt.Sprintf("Upgrade Docker to %s or later.", engine.MinDockerIPv6)
-	case !on || !has6:
-		why, fix = "network.ipv6 is off", "Run rexctl config set network.ipv6 true first."
-	case bindAddress(f.IP, voice.InterfaceAddresses()) != "":
-		why, fix = "--ip binds the ports to one IPv4 address", "Leave out --ip."
+		return "", err
 	}
 	if why == "" {
 		return v6, nil
@@ -429,69 +432,86 @@ func showVoiceAddSummary(app *App, inst *instance.Instance, region string, plans
 		n, _ := voice.ParseBytes(p.srv.Memory)
 		total += n
 	}
-	for _, p := range plans {
+	for i, p := range plans {
 		s := p.srv
-		u.Info("Voice server %s on %s", s.ID, inst.Domain())
 		ip := p.publicIP
 		if s.NodeIP == "" && ip != "" {
 			ip += ", found with STUN"
 		} else if ip == "" {
 			ip = "LiveKit finds it with STUN"
 		}
-		rows := [][]string{
-			{"Region", region},
-			{"Endpoint", s.Endpoint},
-			{"Public IPv4", ip},
-			{"Public IPv6", orNone(s.NodeIPv6)},
-			{"Ports", fmt.Sprintf("%d/tcp, %d/udp", s.TCPPort, s.UDPPort)},
-			{"LiveKit", s.Image},
-			{"Memory limit", fmt.Sprintf("%s of %s", s.Memory, voice.HumanBytes(hostMem))},
-			{"Soft limit", plural(p.softLimit, "connection", "connections")},
-			{"Webhook", s.Webhook},
+		memory := s.Memory
+		if n, ok := voice.ParseBytes(s.Memory); ok && n > 0 {
+			memory = ui.Bytes(int64(n))
+		}
+		image, _, _ := strings.Cut(cmp.Or(s.Image, "the release's LiveKit"), "@")
+		rows := []ui.KV{
+			{Key: "Region", Value: region},
+			{Key: "Endpoint", Value: s.Endpoint},
+			{Key: "Public IPv4", Value: ip},
+			{Key: "Public IPv6", Value: orNone(s.NodeIPv6)},
+			{Key: "Ports", Value: fmt.Sprintf("%d/tcp, %d/udp", s.TCPPort, s.UDPPort)},
+			{Key: "LiveKit", Value: image},
+			{Key: "Memory", Value: memory},
+			{Key: "Soft limit", Value: plural(p.softLimit, "connection", "connections")},
+			{Key: "Webhook", Value: s.Webhook},
+		}
+		if hostMem > 0 {
+			rows[6].Hint = "of " + ui.Bytes(int64(hostMem)) + " on this machine"
 		}
 		if f.HasCoords {
-			rows = append(rows, []string{"Location", fmt.Sprintf("%.2f, %.2f", f.Lat, f.Long)})
+			rows = append(rows, ui.KV{Key: "Location", Value: fmt.Sprintf("%.2f, %.2f", f.Lat, f.Long)})
 		}
-		for _, r := range rows {
-			u.Info("  %-15s %s", r[0], r[1])
+		card := ui.Card{Title: "Voice server " + s.ID + " on " + inst.Domain(), Rows: rows}
+		if i == len(plans)-1 {
+			card.Body = []string{"Adding a path to the edge reloads it, and people connected to Fluxer reconnect once.", "Open the same ports in your provider's firewall. rexctl can't see that one."}
+			if f.NoFirewall {
+				var ports []string
+				for _, p := range plans {
+					ports = append(ports, portStrings(voicePortStrings(&p.srv))...)
+				}
+				card.Body = append(card.Body, fmt.Sprintf("rexctl leaves the firewall on this machine alone. Open %s in it too.", ui.JoinAnd(ports)))
+			}
+			card.Footer = []string{"Change any of these with flags. rexctl voice add --help lists them."}
 		}
-		u.Info("")
+		u.Card(card)
 	}
 	if hostMem > 0 && total > hostMem/2 {
 		u.Warn(fmt.Sprintf("These servers can use %s together, more than half of this machine's %s.", voice.HumanBytes(total), voice.HumanBytes(hostMem)), "Pass --memory with a smaller limit.")
 	}
-	u.Info("Adding a path to the edge reloads it, and people connected to Fluxer reconnect once.")
-	u.Info("Open the same ports in your provider's firewall. rexctl can't see that one.")
-	if f.NoFirewall {
-		var ports []string
-		for _, p := range plans {
-			ports = append(ports, portStrings(voicePortStrings(&p.srv))...)
-		}
-		u.Info("rexctl leaves the firewall on this machine alone. Open %s in it too.", ui.JoinAnd(ports))
-	}
-	u.Info("Change any of these with flags. Run rexctl voice add --help to see them.")
 }
 
 func confirmVoice(app *App, question string) error {
-	if app.UI.Yes() || !app.UI.Interactive() {
-		return nil
+	ok, err := app.UI.ConfirmWith(ui.Question{Text: question, Default: true})
+	if err == nil && !ok {
+		app.UI.Info("Nothing changed.")
+		return errDeclined
 	}
-	ok, err := app.UI.Confirm(question, true)
-	if err != nil {
-		return err
-	}
-	if !ok {
-		return ui.Refused("Stopped without changing anything.", "")
-	}
-	return nil
+	return err
 }
 
-func addOneVoiceServer(ctx context.Context, app *App, api *adminapi.Client, e *engine.Engine, p *engine.Project, inst *instance.Instance, plan *plannedVoice, f *voiceFlags) error {
+func rollBackVoiceAdd(ctx context.Context, app *App, vs rt.VoiceServers, inst *instance.Instance, id string, cause error) error {
+	undo := fmt.Sprintf("Run rexctl voice remove %s to undo what rexctl did so far.", id)
+	rerr := app.UI.Step(context.WithoutCancel(ctx), "Taking voice server "+id+" back out", func(ctx context.Context, s *ui.Step) error {
+		if err := vs.Remove(ctx, s, id); err != nil {
+			return err
+		}
+		inst.State.RemoveVoiceServer(id)
+		if err := saveVoiceState(inst); err != nil {
+			return err
+		}
+		s.Done("Took voice server %s back out.", id)
+		return nil
+	})
+	if rerr != nil {
+		return withFix(cause, undo)
+	}
+	return withFix(cause, "rexctl took "+id+" back out, so nothing is left behind. Run rexctl doctor, then run the same command again.")
+}
+
+func addOneVoiceServer(ctx context.Context, app *App, api *adminapi.Client, vs rt.VoiceServers, inst *instance.Instance, plan *plannedVoice, f *voiceFlags) error {
 	srv := plan.srv
 	srv.CreatedAt = time.Now().UTC().Truncate(time.Second)
-	if err := writeVoiceServer(inst, &srv); err != nil {
-		return ui.Wrap(err, "Couldn't write the voice server's files.", "Check that you can write to "+inst.Dir+".")
-	}
 	inst.State.Voice = append(inst.State.Voice, srv)
 	saved := inst.State.VoiceServer(srv.ID)
 	if err := saveVoiceState(inst); err != nil {
@@ -499,18 +519,18 @@ func addOneVoiceServer(ctx context.Context, app *App, api *adminapi.Client, e *e
 	}
 	undo := fmt.Sprintf("Run rexctl voice remove %s to undo what rexctl did so far.", srv.ID)
 	err := app.UI.Step(ctx, "Starting voice server "+srv.ID, func(ctx context.Context, s *ui.Step) error {
-		if err := startVoiceServer(ctx, app, e, inst, saved, s); err != nil {
+		if err := vs.Add(ctx, s, *saved); err != nil {
 			return err
 		}
 		s.Done("Started voice server %s.", srv.ID)
 		return nil
 	})
 	if err != nil {
-		return err
+		return rollBackVoiceAdd(ctx, app, vs, inst, srv.ID, err)
 	}
 	draining := true
 	active := true
-	internal := voice.InternalURL(srv.ID)
+	internal := vs.Internal(saved)
 	notes := "Added with rexctl voice add on " + time.Now().UTC().Format("2006-01-02")
 	limit := plan.softLimit
 	body := adminapi.CreateVoiceServerRequestBody{
@@ -535,20 +555,12 @@ func addOneVoiceServer(ctx context.Context, app *App, api *adminapi.Client, e *e
 		v6 := srv.NodeIPv6
 		body.PublicIpv6 = &v6
 	}
-	_, err = api.CreateVoiceServer(ctx, srv.Region, body)
-	if err != nil {
+	if _, err := api.CreateVoiceServer(ctx, srv.Region, body); err != nil {
 		return ui.Wrap(adminapi.Explain(err), fmt.Sprintf("Couldn't register %s with your instance.", srv.ID), undo)
 	}
-	dropIn := filepath.Join(inst.Path(instance.CaddyDropInDir), voice.DropInName(srv.ID))
-	if err := os.WriteFile(dropIn, voice.DropIn(srv.ID), 0o644); err != nil {
-		return ui.Wrap(err, "Couldn't write the edge route.", undo)
-	}
-	if err := reloadCaddy(ctx, p, "edge", "/etc/caddy/Caddyfile"); err != nil {
-		return ui.Wrap(engineFailure(err), "Couldn't reload the edge with the new route.", undo)
-	}
-	base, dial := voiceProbeTarget(inst, saved)
+	base, dial := deploy.VoiceProbeTarget(inst, saved)
 	if err := waitForEndpoint(ctx, base, dial, true, time.Minute); err != nil {
-		return ui.Wrap(err, fmt.Sprintf("%s doesn't answer through the edge.", srv.Endpoint), undo)
+		return ui.Wrap(err, fmt.Sprintf("%s doesn't respond through the edge.", srv.Endpoint), undo)
 	}
 	saved.Opened = openVoiceFirewall(ctx, app, voicePortStrings(saved), f.NoFirewall)
 	if err := saveVoiceState(inst); err != nil {
@@ -556,7 +568,7 @@ func addOneVoiceServer(ctx context.Context, app *App, api *adminapi.Client, e *e
 	}
 	open := false
 	if _, err := api.UpdateVoiceServer(ctx, srv.Region, srv.ID, adminapi.UpdateVoiceServerRequestBody{Draining: &open}); err != nil {
-		return ui.Wrap(adminapi.Explain(err), fmt.Sprintf("%s runs, and it's still draining.", srv.ID), fmt.Sprintf("Clear Draining for %s in the admin panel.", srv.ID))
+		return ui.Wrap(adminapi.Explain(err), fmt.Sprintf("%s runs, and it's still draining.", srv.ID), fmt.Sprintf("Run rexctl voice undrain %s.", srv.ID))
 	}
 	app.UI.OK("Added voice server %s at %s.", srv.ID, srv.Endpoint)
 	results := runTransportTests(ctx, srv.Endpoint, serverPaths(saved), func() (string, error) {

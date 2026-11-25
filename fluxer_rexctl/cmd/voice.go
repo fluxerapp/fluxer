@@ -3,13 +3,13 @@
 package cmd
 
 import (
+	"bytes"
 	"cmp"
 	"context"
 	"errors"
 	"fmt"
 	"net/http"
 	"os"
-	"path/filepath"
 	"runtime"
 	"slices"
 	"strings"
@@ -18,8 +18,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/adminapi"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/deploy"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
+	rt "github.com/fluxerapp/fluxer/fluxer_rexctl/internal/runtime"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/voice"
@@ -36,6 +38,9 @@ func newVoiceCmd(app *App) *cobra.Command {
 			"To run without the bundled voice server, run rexctl config set voice.bundled false, " +
 			"or install with rexctl install --no-bundled-voice. Calls then go only to the servers you add. " +
 			"rexctl config set voice.bundled true brings the bundled server back.",
+		Example: "  rexctl voice add\n" +
+			"  rexctl voice status\n" +
+			"  rexctl voice token --region fra",
 		Args: noArgs,
 	}
 	c.AddCommand(
@@ -47,6 +52,13 @@ func newVoiceCmd(app *App) *cobra.Command {
 		newVoiceTestCmd(app),
 		newVoiceHostnameCmd(app),
 		newVoiceRemoveCmd(app),
+		newVoiceTurnCmd(app),
+		newVoiceResyncCmd(app),
+		newVoiceDrainCmd(app, true),
+		newVoiceDrainCmd(app, false),
+		newVoiceSetCmd(app),
+		newVoiceLogsCmd(app),
+		newVoiceRestartCmd(app),
 	)
 	return c
 }
@@ -58,7 +70,7 @@ func newVoiceTokenCmd(app *App) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "token",
 		Short: "Create a join token for a voice server on another machine",
-		Long:  "Create a join token and print the command that installs a voice server with it. The token works once.",
+		Long:  "Create a one-time join token and print the command that installs a voice server with it.",
 		Args:  noArgs,
 	}
 	c.Flags().StringVar(&region, "region", "", "existing region for the server")
@@ -231,37 +243,55 @@ func voiceListRows(regions []adminapi.VoiceRegion, inst *instance.Instance) ([][
 			if s.DuplicateApiKey {
 				state += ", shared key"
 			}
-			rows = append(rows, []string{s.ServerId, r.Id, state, s.Endpoint, here})
+			rows = append(rows, []string{s.ServerId, r.Id, state, wsEndpoint(s.Endpoint), here})
 		}
 	}
 	return rows, servers
 }
 
-func listVoiceMachine(ctx context.Context, app *App, inst *instance.Instance) error {
-	client := &voice.Client{HTTP: &http.Client{Timeout: 10 * time.Second}}
-	type row struct {
-		ID       string `json:"id"`
-		Instance string `json:"instance"`
-		Region   string `json:"region"`
-		Endpoint string `json:"endpoint"`
-		Health   string `json:"health"`
+func wsEndpoint(endpoint string) string {
+	if rest, ok := strings.CutPrefix(endpoint, "https://"); ok {
+		return "wss://" + rest
 	}
-	var out []row
+	if rest, ok := strings.CutPrefix(endpoint, "http://"); ok {
+		return "ws://" + rest
+	}
+	return endpoint
+}
+
+type voiceMachineRow struct {
+	ID       string `json:"id"`
+	Instance string `json:"instance"`
+	Region   string `json:"region"`
+	Endpoint string `json:"endpoint"`
+	Health   string `json:"health"`
+	up       bool
+	draining bool
+}
+
+func voiceMachineRows(ctx context.Context, inst *instance.Instance) []voiceMachineRow {
+	client := &voice.Client{HTTP: &http.Client{Timeout: 10 * time.Second}}
+	out := []voiceMachineRow{}
 	for _, s := range inst.State.Voice {
-		health := "unknown"
+		r := voiceMachineRow{ID: s.ID, Instance: s.Instance, Region: s.Region, Endpoint: s.Endpoint, Health: "unknown"}
 		if node, err := client.GetNode(ctx, s.NodeURL, s.Key, s.Secret); err == nil {
-			health = node.Health.Status
+			r.Health, r.up, r.draining = node.Health.Status, node.IsActive && node.Health.Status == "up", node.Draining
 			if node.Draining {
-				health += ", draining"
+				r.Health += ", draining"
 			}
 			if !node.IsActive {
-				health = "off"
+				r.Health = "off"
 			}
 		} else if code := voice.CodeOf(err); code != "" {
-			health = strings.ToLower(code)
+			r.Health = strings.ToLower(code)
 		}
-		out = append(out, row{s.ID, s.Instance, s.Region, s.Endpoint, health})
+		out = append(out, r)
 	}
+	return out
+}
+
+func listVoiceMachine(ctx context.Context, app *App, inst *instance.Instance) error {
+	out := voiceMachineRows(ctx, inst)
 	if app.Flags.JSON {
 		return app.UI.JSON(out)
 	}
@@ -275,6 +305,22 @@ func listVoiceMachine(ctx context.Context, app *App, inst *instance.Instance) er
 	}
 	app.UI.Table([]string{"ID", "Instance", "Region", "Health", "Endpoint"}, rows)
 	return nil
+}
+
+func voiceServersHere(inst *instance.Instance, args []string) (*instance.Instance, []*instance.VoiceServer, error) {
+	bundled := deploy.BundledVoiceServer(inst)
+	if bundled != nil && len(args) == 1 && args[0] == bundled.ID {
+		return inst, []*instance.VoiceServer{bundled}, nil
+	}
+	owner, servers, err := localVoiceServers(inst, args)
+	if err == nil && len(args) == 0 && bundled != nil {
+		servers = append([]*instance.VoiceServer{bundled}, servers...)
+	}
+	return owner, servers, err
+}
+
+func isBundled(inst *instance.Instance, srv *instance.VoiceServer) bool {
+	return srv.ID == deploy.BundledVoiceServerID(inst) && inst.State.VoiceServer(srv.ID) == nil
 }
 
 func localVoiceServers(inst *instance.Instance, args []string) (*instance.Instance, []*instance.VoiceServer, error) {
@@ -312,79 +358,172 @@ func findVoiceServer(inst *instance.Instance, id string) (*instance.Instance, *i
 }
 
 func newVoiceStatusCmd(app *App) *cobra.Command {
-	return &cobra.Command{
-		Use:   "status [id]",
-		Short: "Show the voice servers on this machine",
-		Args:  maxArgs(1),
+	c := &cobra.Command{
+		Use:     "status [id]",
+		Short:   "Show the voice servers on this machine",
+		Example: "  rexctl voice status\n  rexctl voice status fra-server-2",
+		Args:    maxArgs(1),
 		RunE: func(c *cobra.Command, args []string) error {
 			ctx := c.Context()
 			inst, err := app.Instance()
 			if err != nil {
 				return err
 			}
-			inst, servers, err := localVoiceServers(inst, args)
+			inst, servers, err := voiceServersHere(inst, args)
 			if err != nil {
 				return err
 			}
 			if len(servers) == 0 {
+				if app.Flags.JSON {
+					return app.UI.JSON([]voiceStatus{})
+				}
 				app.UI.Info("This machine runs no voice servers.")
 				return nil
 			}
-			e, err := app.Engine(ctx, inst)
+			r, err := app.Runtime(ctx, inst)
 			if err != nil {
 				return err
 			}
+			out := []voiceStatus{}
 			for _, srv := range servers {
-				showVoiceStatus(ctx, app, e, inst, srv)
+				out = append(out, readVoiceStatus(ctx, r, inst, srv))
+			}
+			markDraining(ctx, app, inst, out)
+			if app.Flags.JSON {
+				return app.UI.JSON(out)
+			}
+			for _, v := range out {
+				showVoiceStatus(app, v)
 			}
 			return nil
 		},
 	}
+	app.jsonFlag(c)
+	return c
 }
 
-func showVoiceStatus(ctx context.Context, app *App, e *engine.Engine, inst *instance.Instance, srv *instance.VoiceServer) {
-	u := app.UI
-	container := "not running"
-	if cs, err := voiceProject(e, inst, srv).PS(ctx); err == nil && len(cs) > 0 {
-		container = cs[0].State
-		if cs[0].Health != "" {
-			container += ", " + cs[0].Health
+func markDraining(ctx context.Context, app *App, inst *instance.Instance, out []voiceStatus) {
+	if inst.State.IsVoice() {
+		return
+	}
+	api, _, err := app.Admin(ctx)
+	if err != nil {
+		return
+	}
+	regions, err := api.VoiceRegions(ctx)
+	if err != nil {
+		return
+	}
+	for _, r := range regions {
+		for _, s := range r.Servers {
+			for i := range out {
+				if out[i].ID == s.ServerId && s.Draining {
+					out[i].State += ", draining"
+				}
+			}
 		}
 	}
-	base, dial := voiceProbeTarget(inst, srv)
-	reach := "answers"
+}
+
+type voiceStatus struct {
+	ID          string `json:"id"`
+	Bundled     bool   `json:"bundled"`
+	Region      string `json:"region"`
+	Endpoint    string `json:"endpoint"`
+	Reach       string `json:"reach"`
+	State       string `json:"state"`
+	TCPPort     int    `json:"tcp_port"`
+	UDPPort     int    `json:"udp_port"`
+	Addresses   string `json:"addresses"`
+	Certificate string `json:"certificate"`
+	Calls       string `json:"calls"`
+	LiveKit     string `json:"livekit"`
+	Webhook     string `json:"webhook"`
+	Instance    string `json:"instance,omitempty"`
+	Browsers    string `json:"browsers,omitempty"`
+}
+
+func voiceServerState(ctx context.Context, r rt.Runtime, inst *instance.Instance, srv *instance.VoiceServer) (string, func(int) []string) {
+	if !isBundled(inst, srv) {
+		vs := rt.VoiceOf(r)
+		return vs.State(ctx, srv), func(tail int) []string { return voiceLogLines(ctx, vs, srv, tail) }
+	}
+	state := "unknown"
+	if st, err := r.Status(ctx); err == nil {
+		state = "not running"
+		for _, p := range st.Parts {
+			if p.Name == "voice" {
+				state = string(p.State)
+				if p.Health != "" {
+					state += ", " + p.Health
+				}
+			}
+		}
+	}
+	return state, func(tail int) []string {
+		var buf bytes.Buffer
+		if err := r.Logs(ctx, &buf, rt.LogOptions{Parts: []string{"voice"}, Tail: tail}); err != nil {
+			return nil
+		}
+		return voice.LogLines(&buf, func(string) bool { return true })
+	}
+}
+
+func readVoiceStatus(ctx context.Context, r rt.Runtime, inst *instance.Instance, srv *instance.VoiceServer) voiceStatus {
+	state, logs := voiceServerState(ctx, r, inst, srv)
+	base, dial := deploy.VoiceProbeTarget(inst, srv)
+	v := voiceStatus{ID: srv.ID, Bundled: isBundled(inst, srv), Region: srv.Region, Endpoint: srv.Endpoint, Reach: "responds", State: state,
+		TCPPort: srv.TCPPort, UDPPort: srv.UDPPort, Addresses: addressesText(srv), Certificate: "-", Calls: "unknown",
+		LiveKit: cmp.Or(srv.Image, "the release's LiveKit"), Webhook: srv.Webhook + ", " + webhookState(logs), Instance: srv.Instance}
 	if err := voice.ProbeThroughEdge(ctx, base, dial, true); err != nil {
-		reach = err.Error()
+		v.Reach = err.Error()
 	}
-	cert := "-"
-	if srv.Edge == voice.EdgeOwn {
+	secure := strings.HasPrefix(srv.Endpoint, "wss://")
+	ownTLS := srv.Edge == voice.EdgeOwn || srv.Edge == voice.EdgeInstance && cmp.Or(inst.State.Settings[settings.EdgeMode], settings.EdgeBundled) == settings.EdgeBundled
+	switch {
+	case !secure:
+		v.Certificate = "none, the endpoint uses plain HTTP"
+	case !ownTLS:
+		v.Certificate = "your proxy's"
+	default:
 		if exp, err := voice.CertificateExpiry(ctx, srv.Endpoint, dial); err != nil {
-			cert = "not valid (" + err.Error() + ")"
+			v.Certificate = "not valid (" + err.Error() + ")"
 		} else {
-			cert = "valid until " + exp.Local().Format("2 January 15:04")
+			v.Certificate = "valid until " + exp.Local().Format("2 January at 15:04 MST")
 		}
 	}
-	load := "unknown"
 	if l, err := voice.ListRooms(ctx, base, dial, srv.Key, srv.Secret, true); err == nil {
-		load = fmt.Sprintf("%s, %s", plural(l.Rooms, "room", "rooms"), plural(l.Participants, "participant", "participants"))
-	}
-	u.Info("Voice server %s", srv.ID)
-	rows := [][]string{
-		{"Region", srv.Region},
-		{"Endpoint", srv.Endpoint + ", " + reach},
-		{"Container", container},
-		{"Ports", fmt.Sprintf("%d/tcp, %d/udp", srv.TCPPort, srv.UDPPort)},
-		{"Addresses", addressesText(srv)},
-		{"Certificate", cert},
-		{"Calls", load},
-		{"LiveKit", srv.Image},
-		{"Webhook", srv.Webhook + ", " + webhookState(ctx, e, inst, srv)},
-	}
-	if srv.Instance != "" {
-		rows = append(rows, []string{"Instance", srv.Instance})
+		v.Calls = fmt.Sprintf("%s, %s", plural(l.Rooms, "room", "rooms"), plural(l.Participants, "participant", "participants"))
 	}
 	if srv.Joined && srv.Instance != "" {
-		rows = append(rows, []string{"Browsers", browsersText(ctx, srv)})
+		v.Browsers = browsersText(ctx, srv)
+	}
+	return v
+}
+
+func showVoiceStatus(app *App, v voiceStatus) {
+	u := app.UI
+	if v.Bundled {
+		u.Info("Voice server %s, bundled with Fluxer", v.ID)
+	} else {
+		u.Info("Voice server %s", v.ID)
+	}
+	rows := [][]string{
+		{"Region", v.Region},
+		{"Endpoint", v.Endpoint + ", " + v.Reach},
+		{"State", v.State},
+		{"Ports", fmt.Sprintf("%d/tcp, %d/udp", v.TCPPort, v.UDPPort)},
+		{"Addresses", v.Addresses},
+		{"Certificate", v.Certificate},
+		{"Calls", v.Calls},
+		{"LiveKit", v.LiveKit},
+		{"Webhook", v.Webhook},
+	}
+	if v.Instance != "" {
+		rows = append(rows, []string{"Instance", v.Instance})
+	}
+	if v.Browsers != "" {
+		rows = append(rows, []string{"Browsers", v.Browsers})
 	}
 	for _, r := range rows {
 		u.Info("  %-15s %s", r[0], r[1])
@@ -405,8 +544,8 @@ func browsersText(ctx context.Context, srv *instance.VoiceServer) string {
 	return "unknown, rexctl can't read " + srv.Instance
 }
 
-func webhookState(ctx context.Context, e *engine.Engine, inst *instance.Instance, srv *instance.VoiceServer) string {
-	failed, sent := voiceWebhookLog(ctx, e, inst, srv)
+func webhookState(logs func(int) []string) string {
+	failed, sent := voiceWebhookLog(logs(2000))
 	switch {
 	case failed != "":
 		return "failing (" + failed + ")"
@@ -422,14 +561,15 @@ func newVoiceTestCmd(app *App) *cobra.Command {
 		Short: "Test that calls can connect to a voice server over UDP and TCP",
 		Long: "Join a throwaway room on a voice server and report which transports connect. " +
 			"On the Fluxer machine it can test any server of the instance, including servers on other machines.",
-		Args: maxArgs(1),
+		Example: "  rexctl voice test\n  rexctl voice test ams-server-1",
+		Args:    maxArgs(1),
 		RunE: func(c *cobra.Command, args []string) error {
 			ctx := c.Context()
 			inst, err := app.Instance()
 			if err != nil {
 				return err
 			}
-			owner, servers, err := localVoiceServers(inst, args)
+			owner, servers, err := voiceServersHere(inst, args)
 			if err != nil && len(args) == 1 && !inst.State.IsVoice() {
 				return testRemoteVoiceServer(c, app, args[0])
 			}
@@ -503,13 +643,13 @@ func testRemoteVoiceServer(c *cobra.Command, app *App, id string) error {
 		if !reportTransports(app, results, false) {
 			switch {
 			case slices.ContainsFunc(results, func(r transportResult) bool { return errors.Is(r.Err, voice.ErrTokenRejected) }):
-				app.UI.Info("%s rejected a token signed with the API secret your instance has for it. Put the server's own secret back in the admin panel. It's FLUXER_VOICE_API_SECRET in voice/%s/.env in the rexctl folder on the machine that runs it.", id, id)
+				app.UI.Info("%s rejected a token signed with the API secret your instance has for it. Run rexctl voice resync %s on the machine that runs it.", id, id)
 			case slices.ContainsFunc(results, func(r transportResult) bool { return r.Path.Relay && errors.Is(r.Err, voice.ErrSignalling) }):
-				app.UI.Info("rexctl couldn't open the signalling connection to %s over IPv4. Callers with only IPv4 need an A record for its hostname at a machine that forwards ports 80 and 443 to it. See the voice servers guide.", id)
+				app.UI.Info("rexctl couldn't open the signalling connection to %s over IPv4. Callers with only IPv4 need an A record for its hostname at a machine that forwards ports 80 and 443 to it.", id)
 			case slices.ContainsFunc(results, func(r transportResult) bool {
 				return r.Path.Relay && r.Err != nil && !errors.Is(r.Err, voice.ErrNoTurn)
 			}):
-				app.UI.Info("Media through your TURN server didn't connect. IPv4 through TURN needs a TURN server that hands out IPv6 relay addresses. See the voice servers guide.")
+				app.UI.Info("Media through your TURN server didn't connect. IPv4 through TURN needs a TURN server that hands out IPv6 relay addresses.")
 			default:
 				app.UI.Info("Open the server's TCP and UDP ports in the firewall of its provider and on the machine itself.")
 			}
@@ -558,10 +698,11 @@ func globalOnly(ip string) string {
 
 func newVoiceHostnameCmd(app *App) *cobra.Command {
 	return &cobra.Command{
-		Use:   "hostname <id> <host>",
-		Short: "Move a voice server to a new hostname",
-		Long:  "Move a voice server on this machine to a hostname once its DNS record points here. rexctl gets a certificate and updates the server's endpoint on the instance.",
-		Args:  exactArgs("the server ID", "the hostname"),
+		Use:     "hostname <id> <host>",
+		Short:   "Move a voice server to a new hostname",
+		Long:    "Move a voice server on this machine to a hostname once its DNS record points here. rexctl gets a certificate and updates the server's endpoint on the instance.",
+		Example: "  rexctl voice hostname ams-server-1 voice.example.com",
+		Args:    exactArgs("the server ID", "the hostname"),
 		RunE: func(c *cobra.Command, args []string) error {
 			ctx := c.Context()
 			inst, err := app.Instance()
@@ -586,28 +727,31 @@ func newVoiceHostnameCmd(app *App) *cobra.Command {
 				}
 				return voice.CheckHostname(answer, srv.NodeIP, srv.NodeIPv6, voice.InterfaceAddresses())
 			}
+			if fluxerdVoice(inst) && slices.ContainsFunc(inst.State.Voice, func(o instance.VoiceServer) bool { return o.ID != srv.ID && o.Edge == voice.EdgeOwn }) {
+				return ui.Refused("Every voice server on this machine uses one address, so one server can't move on its own.", "Remove the other servers with rexctl voice remove first, or keep the hostname.")
+			}
 			if !waitForHostname(ctx, app, name, voice.Reachability{PublicIPv4: srv.NodeIP, PublicIPv6: srv.NodeIPv6}, check, false, true) {
 				return ui.Refused(fmt.Sprintf("%s doesn't point at this machine yet.", name), "Fix the DNS record, then run the same command again.")
 			}
-			e, err := app.Engine(ctx, inst)
+			e, err := voiceMachineEngine(ctx, app, inst)
 			if err != nil {
 				return err
 			}
 			return app.Locked(ctx, inst, func() error {
 				old := srv.Endpoint
 				srv.Endpoint, srv.Hostname = voice.Endpoint(name, srv.ID), name
-				if err := routeVoiceServer(ctx, app, e, inst, srv); err != nil {
+				if err := rerouteVoiceServer(ctx, app, e, inst, srv); err != nil {
 					return err
 				}
 				if err := waitForEndpoint(ctx, voice.HTTPBase(srv.Endpoint), "127.0.0.1:443", false, 3*time.Minute); err != nil {
 					srv.Endpoint = old
-					_ = routeVoiceServer(ctx, app, e, inst, srv)
+					_ = rerouteVoiceServer(ctx, app, e, inst, srv)
 					return ui.Wrap(err, fmt.Sprintf("%s didn't get a certificate.", name), "Check that ports 80 and 443 are open, then try again.")
 				}
 				client := &voice.Client{HTTP: &http.Client{Timeout: 30 * time.Second}}
 				if _, err := client.UpdateNode(ctx, srv.NodeURL, srv.Key, srv.Secret, voice.NodeUpdate{Endpoint: &srv.Endpoint}); err != nil {
 					srv.Endpoint = old
-					_ = routeVoiceServer(ctx, app, e, inst, srv)
+					_ = rerouteVoiceServer(ctx, app, e, inst, srv)
 					return joinError(err, srv.Instance, srv.ID)
 				}
 				if err := saveVoiceState(inst); err != nil {
@@ -622,7 +766,7 @@ func newVoiceHostnameCmd(app *App) *cobra.Command {
 }
 
 func newVoiceRemoveCmd(app *App) *cobra.Command {
-	var all, now bool
+	var all, now, forget bool
 	var drain time.Duration
 	c := &cobra.Command{
 		Use:   "remove [id]",
@@ -636,12 +780,18 @@ func newVoiceRemoveCmd(app *App) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if len(args) == 1 && args[0] == deploy.BundledVoiceServerID(inst) && inst.State.VoiceServer(args[0]) == nil {
+				return ui.Refused(fmt.Sprintf("%s is the voice server bundled with Fluxer.", args[0]), "Run rexctl config set voice.bundled false to run without it.")
+			}
 			if all && !inst.State.IsVoice() {
 				return ui.Refused("--all works on a voice machine.", "Pass the ID of the server to remove.")
 			}
+			if forget {
+				return forgetVoiceServer(c, app, inst, args)
+			}
 			owner, servers, err := localVoiceServers(inst, args)
 			if err != nil && len(args) == 1 && !inst.State.IsVoice() && instanceHasVoiceServer(c, app, args[0]) {
-				return ui.Refused(fmt.Sprintf("%s runs on another machine.", args[0]), fmt.Sprintf("Run rexctl voice remove %s on the machine that runs it, or delete it in the admin panel.", args[0]))
+				return ui.Refused(fmt.Sprintf("%s runs on another machine.", args[0]), fmt.Sprintf("Run rexctl voice remove %s on the machine that runs it, or pass --forget if that machine is gone.", args[0]))
 			}
 			if err != nil {
 				return err
@@ -659,7 +809,37 @@ func newVoiceRemoveCmd(app *App) *cobra.Command {
 	c.Flags().BoolVar(&all, "all", false, "remove every voice server and the edge on this machine")
 	c.Flags().BoolVar(&now, "now", false, "don't wait for calls to end")
 	c.Flags().DurationVar(&drain, "drain-timeout", defaultDrainTimeout, "how long to wait for calls to end")
+	c.Flags().BoolVar(&forget, "forget", false, "only remove a server on another machine from the instance, when that machine is gone")
+	c.MarkFlagsMutuallyExclusive("forget", "all")
+	c.Example = "  rexctl voice remove fra-server-2\n  rexctl voice remove ams-server-1 --forget\n  rexctl voice remove --all"
 	return c
+}
+
+func forgetVoiceServer(c *cobra.Command, app *App, inst *instance.Instance, args []string) error {
+	if inst.State.IsVoice() {
+		return ui.Refused("--forget works on the Fluxer machine.", "Run rexctl voice remove "+args[0]+" here to remove the server from this machine.")
+	}
+	id := args[0]
+	if inst.State.VoiceServer(id) != nil {
+		return ui.Refused(fmt.Sprintf("%s runs on this machine.", id), "Run rexctl voice remove "+id+" without --forget.")
+	}
+	if id == deploy.BundledVoiceServerID(inst) {
+		return ui.Refused(fmt.Sprintf("%s is the voice server bundled with Fluxer.", id), "Run rexctl config set voice.bundled false to run without it.")
+	}
+	if err := confirmVoice(app, "Remove "+id+" from your instance? Calls on it end."); err != nil {
+		return err
+	}
+	return adminWrite(c, app, func(ctx context.Context, api *adminapi.Client, _ *instance.Instance) error {
+		region, err := voiceRegionOf(ctx, api, id)
+		if err != nil {
+			return err
+		}
+		if err := api.DeleteVoiceServer(ctx, region, id); err != nil && !adminapi.IsStatus(err, http.StatusNotFound) {
+			return err
+		}
+		app.UI.OK("Removed %s from your instance. If its machine comes back, run rexctl voice remove %s there.", id, id)
+		return nil
+	})
 }
 
 func instanceHasVoiceServer(c *cobra.Command, app *App, id string) bool {
@@ -685,20 +865,24 @@ func removeVoiceServers(ctx context.Context, app *App, inst *instance.Instance, 
 	for i, s := range servers {
 		ids[i] = s.ID
 	}
-	if err := confirmVoice(app, "Remove "+ui.JoinAnd(ids)+"?"); err != nil {
-		return err
-	}
-	e, err := app.Engine(ctx, inst)
+	vs, err := voiceRuntime(ctx, app, inst)
 	if err != nil {
 		return err
 	}
+	if err := vs.CanChange(); err != nil {
+		return err
+	}
+	if err := confirmVoice(app, "Remove "+ui.JoinAnd(ids)+"?"); err != nil {
+		return err
+	}
+	var e *engine.Engine
 	var api *adminapi.Client
-	if !inst.State.IsVoice() {
-		p, err := app.Named(ctx, inst)
-		if err != nil {
+	if inst.State.IsVoice() {
+		if e, err = voiceMachineEngine(ctx, app, inst); err != nil {
 			return err
 		}
-		api = app.adminClient(inst, p)
+	} else if api, _, err = app.Admin(ctx); err != nil {
+		return err
 	}
 	return app.Locked(ctx, inst, func() error {
 		for _, id := range ids {
@@ -706,7 +890,7 @@ func removeVoiceServers(ctx context.Context, app *App, inst *instance.Instance, 
 			if srv == nil {
 				continue
 			}
-			if err := removeOneVoiceServer(ctx, app, e, api, inst, srv, drain); err != nil {
+			if err := removeOneVoiceServer(ctx, app, vs, e, api, inst, srv, drain); err != nil {
 				return err
 			}
 		}
@@ -731,7 +915,7 @@ func waitForDrain(ctx context.Context, app *App, inst *instance.Instance, srv *i
 	if limit <= 0 {
 		return
 	}
-	base, dial := voiceProbeTarget(inst, srv)
+	base, dial := deploy.VoiceProbeTarget(inst, srv)
 	_ = app.UI.Step(ctx, "Waiting for calls on "+srv.ID+" to end", func(ctx context.Context, s *ui.Step) error {
 		deadline := time.Now().Add(limit)
 		for {
@@ -762,6 +946,39 @@ func waitForDrain(ctx context.Context, app *App, inst *instance.Instance, srv *i
 	})
 }
 
+func waitInstanceSees(ctx context.Context, app *App, inst *instance.Instance, limit time.Duration) {
+	if !inst.State.IsVoice() || len(inst.State.Voice) == 0 {
+		return
+	}
+	client := &voice.Client{HTTP: &http.Client{Timeout: 10 * time.Second}}
+	who := voiceInstances(inst)
+	_ = app.UI.Step(ctx, "Waiting for "+who+" to see the voice servers up", func(ctx context.Context, s *ui.Step) error {
+		deadline := time.Now().Add(limit)
+		for {
+			var down []string
+			for _, srv := range inst.State.Voice {
+				node, err := client.GetNode(ctx, srv.NodeURL, srv.Key, srv.Secret)
+				if err != nil || (node.IsActive && node.Health.Status != "up") {
+					down = append(down, srv.ID)
+				}
+			}
+			if len(down) == 0 {
+				s.Done("%s sees the voice servers up.", who)
+				return nil
+			}
+			if time.Now().After(deadline) {
+				app.UI.Warn(fmt.Sprintf("%s doesn't see %s up yet.", who, ui.JoinAnd(down)), "Run rexctl voice test "+down[0]+" on the Fluxer machine to see why.")
+				return nil
+			}
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(3 * time.Second):
+			}
+		}
+	})
+}
+
 func unregisterVoiceServer(ctx context.Context, app *App, api *adminapi.Client, inst *instance.Instance, srv *instance.VoiceServer, drain time.Duration) error {
 	if inst.State.IsVoice() && srv.NodeURL == "" {
 		app.UI.Info("%s never joined %s. rexctl removes it here.", srv.ID, cmp.Or(srv.Instance, "the instance"))
@@ -776,7 +993,7 @@ func unregisterVoiceServer(ctx context.Context, app *App, api *adminapi.Client, 
 		case voice.CodeOf(err) == voice.CodeTokenExpired:
 			return ui.Refused(voice.ClockProblem(err, srv.Instance, time.Now())+".", voice.ClockFix)
 		case voice.CodeOf(err) == voice.CodeSignatureInvalid:
-			return ui.Refused(fmt.Sprintf("The instance has another secret for %s.", srv.ID), fmt.Sprintf("Put FLUXER_VOICE_API_SECRET from %s back in the admin panel, or delete the server there and run this again.", filepath.Join(voice.ServerDir(inst.Dir, srv.ID), voice.EnvFile)))
+			return ui.Refused(fmt.Sprintf("The instance has another secret for %s.", srv.ID), fmt.Sprintf("Run rexctl voice resync %s%s, then run this again.", srv.ID, voiceDirFlag(inst.Dir)))
 		default:
 			app.UI.Warn(fmt.Sprintf("Couldn't mark %s as draining (%v).", srv.ID, err), "")
 		}
@@ -803,23 +1020,17 @@ func unregisterVoiceServer(ctx context.Context, app *App, api *adminapi.Client, 
 	return nil
 }
 
-func removeOneVoiceServer(ctx context.Context, app *App, e *engine.Engine, api *adminapi.Client, inst *instance.Instance, srv *instance.VoiceServer, drain time.Duration) error {
+func removeOneVoiceServer(ctx context.Context, app *App, vs rt.VoiceServers, e *engine.Engine, api *adminapi.Client, inst *instance.Instance, srv *instance.VoiceServer, drain time.Duration) error {
 	if err := unregisterVoiceServer(ctx, app, api, inst, srv, drain); err != nil {
 		return err
 	}
 	err := app.UI.Step(ctx, "Removing voice server "+srv.ID, func(ctx context.Context, s *ui.Step) error {
-		if err := removeVoiceServerProject(ctx, e, srv); err != nil {
+		removed := *srv
+		if err := vs.Remove(ctx, s, srv.ID); err != nil {
 			return err
 		}
-		_ = os.RemoveAll(voice.ServerDir(inst.Dir, srv.ID))
-		removed := *srv
-		inst.State.RemoveVoiceServer(srv.ID)
-		if !inst.State.IsVoice() {
-			_ = os.Remove(filepath.Join(inst.Path(instance.CaddyDropInDir), voice.DropInName(removed.ID)))
-			if err := reloadCaddy(ctx, e.Named(inst.Project(), inst.Dir), "edge", "/etc/caddy/Caddyfile"); err != nil {
-				app.UI.Detail("reloading the edge: %v", err)
-			}
-		} else {
+		inst.State.RemoveVoiceServer(removed.ID)
+		if inst.State.IsVoice() {
 			unrouteVoiceServer(ctx, app, e, inst, &removed)
 		}
 		closeVoiceFirewall(ctx, app, removed.Opened)
@@ -834,15 +1045,24 @@ func removeOneVoiceServer(ctx context.Context, app *App, e *engine.Engine, api *
 
 func removeVoiceMachine(ctx context.Context, app *App, e *engine.Engine, inst *instance.Instance) error {
 	done := "Removed every voice server in " + inst.Dir + "."
-	if edge := inst.State.VoiceEdge; edge != nil && edge.Instance == "" {
+	if fluxerdVoice(inst) {
+		done = "Removed every voice server and the voice service from this machine."
+		if err := removeVoiceHost(ctx, inst, true); err != nil {
+			return ui.Wrap(err, "Couldn't remove the voice service.", "Run the same command again.")
+		}
+		if edge := inst.State.VoiceEdge; edge != nil {
+			closeVoiceFirewall(ctx, app, edge.Opened)
+		}
+	} else if edge := inst.State.VoiceEdge; edge != nil && edge.Instance == "" {
 		done = "Removed every voice server and the edge from this machine."
-		if err := engineFailure(e.Named(voice.EdgeProject, inst.Path(voice.EdgeDir)).Down(context.WithoutCancel(ctx), true)); err != nil {
+		if err := rt.EngineError("", e.Named(voice.EdgeProject, inst.Path(voice.EdgeDir)).Down(context.WithoutCancel(ctx), true)); err != nil {
 			return ui.Wrap(err, "Couldn't stop the voice edge.", "Run the same command again.")
 		}
 		closeVoiceFirewall(ctx, app, edge.Opened)
 	}
-	if _, err := removeAutoUpgradeFor(ctx, inst, e); err != nil {
+	if _, err := removeAutoUpgrade(ctx, inst, e); err != nil {
 		app.UI.Detail("removing automatic upgrades: %v", err)
+		app.UI.Warn("The timer that upgrades the voice servers by itself is still on this machine.", "")
 	}
 	app.forget(inst.Dir)
 	removeVoiceSysctl(app)
@@ -852,8 +1072,6 @@ func removeVoiceMachine(ctx context.Context, app *App, e *engine.Engine, inst *i
 	app.UI.OK("%s", done)
 	return nil
 }
-
-var removeAutoUpgradeFor = removeAutoUpgrade
 
 func removeVoiceSysctl(app *App) {
 	if runtime.GOOS != "linux" || euid() != 0 {
@@ -874,7 +1092,10 @@ func voiceCommandAllowed(path string) bool {
 	if len(parts) < 2 {
 		return true
 	}
-	return slices.Contains([]string{"voice", "uninstall", "upgrade", "auto-upgrade", "doctor", "status", "version", "docs", "use", "help", "completion"}, parts[1])
+	if len(parts) == 2 && parts[1] == "backup" {
+		return true
+	}
+	return slices.Contains([]string{"voice", "logs", "restart", "uninstall", "upgrade", "auto-upgrade", "doctor", "status", "version", "docs", "use", "help", "completion", "migrate"}, parts[1])
 }
 
 func stringOf(p *string) string {

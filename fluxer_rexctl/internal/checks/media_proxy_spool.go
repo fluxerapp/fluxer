@@ -17,7 +17,7 @@ const (
 )
 
 func init() {
-	Register(Check{ID: "media-proxy-spool", Phases: Installed, Run: runMediaProxySpool, Fix: fixMediaProxySpool, SafeFix: true})
+	Register(Check{ID: "media-proxy-spool", Phases: Installed, Run: composeOnly(runMediaProxySpool), Fix: fixMediaProxySpool, SafeFix: true})
 }
 
 func runMediaProxySpool(ctx context.Context, e *Env) Result {

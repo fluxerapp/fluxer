@@ -27,7 +27,7 @@ const (
 	maxCaptchaRounds = 3
 )
 
-var ErrCaptcha = errors.New("setup: couldn't solve the sign-up challenge")
+var errCaptcha = errors.New("setup: couldn't solve the sign-up challenge")
 
 type altchaChallenge struct {
 	Parameters struct {
@@ -59,7 +59,7 @@ func register(ctx context.Context, c *adminapi.Client, account map[string]any, o
 		}
 		headers = map[string]string{captchaHeader: token}
 	}
-	return ErrCaptcha
+	return errCaptcha
 }
 
 func captchaChallenge(err error) (json.RawMessage, bool) {
@@ -87,7 +87,7 @@ func solveAltcha(ctx context.Context, raw json.RawMessage) (string, error) {
 	salt, serr := hex.DecodeString(p.Salt)
 	prefix, perr := hex.DecodeString(p.KeyPrefix)
 	if p.Algorithm != altchaAlgorithm || nerr != nil || serr != nil || perr != nil || p.Cost <= 0 || p.KeyLength <= 0 || len(prefix) == 0 {
-		return "", ErrCaptcha
+		return "", errCaptcha
 	}
 	sol, err := searchAltcha(ctx, nonce, salt, prefix, p.Cost, p.KeyLength)
 	if err != nil {
@@ -142,5 +142,5 @@ func searchAltcha(parent context.Context, nonce, salt, prefix []byte, cost, keyL
 	if err := parent.Err(); err != nil {
 		return nil, err
 	}
-	return nil, ErrCaptcha
+	return nil, errCaptcha
 }

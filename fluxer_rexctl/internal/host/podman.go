@@ -5,6 +5,7 @@ package host
 import (
 	"bytes"
 	"context"
+	"errors"
 	"net"
 	"net/http"
 	"os"
@@ -95,12 +96,39 @@ func lingerStep() (Step, bool) {
 		Command: "loginctl enable-linger " + u.Username,
 		Undo:    "loginctl disable-linger " + u.Username,
 		Run: func(ctx context.Context) error {
-			if out, err := exec.CommandContext(ctx, "loginctl", "enable-linger", u.Username).CombinedOutput(); err != nil {
+			out, err := exec.CommandContext(ctx, "loginctl", "--no-ask-password", "enable-linger", u.Username).CombinedOutput()
+			if err == nil {
+				return nil
+			}
+			if isRoot() || !has("sudo") {
 				return &CommandError{Command: "loginctl enable-linger", Output: string(out), Err: err}
+			}
+			if _, err := output(ctx, false, "loginctl", "enable-linger", u.Username); err != nil {
+				return &CommandError{Command: "sudo loginctl enable-linger", Output: string(out), Err: err}
 			}
 			return nil
 		},
 	}, true
+}
+
+func MissingRootlessTools() []string {
+	var out []string
+	for _, t := range []string{"newuidmap", "newgidmap"} {
+		if !has(t) {
+			out = append(out, t)
+		}
+	}
+	if !has("pasta") && !has("slirp4netns") {
+		out = append(out, "pasta")
+	}
+	return out
+}
+
+func RootlessToolsFix(again string) string {
+	if has("apt-get") {
+		return "Run sudo apt-get install uidmap passt, then run " + again + "."
+	}
+	return "Install the packages that have newuidmap, newgidmap and pasta, then run " + again + "."
 }
 
 func HasSubIDs(ctx context.Context) bool {
@@ -184,11 +212,13 @@ func (s PodmanSetup) Steps() []Step {
 			Command: sys + " enable --now podman.socket",
 			Undo:    undo,
 			Run: func(ctx context.Context) error {
-				if out, err := systemctl(ctx, s.Rootless, "enable", "--now", "podman.socket").CombinedOutput(); err != nil {
+				if out, err := systemctl(ctx, s.Rootless, "--no-ask-password", "enable", "--now", "podman.socket").CombinedOutput(); err != nil {
+					if s.Rootless && noUserBus(string(out)) {
+						err = ErrNoUserSession
+					}
 					return &CommandError{Command: "systemctl enable --now podman.socket", Output: string(out), Err: err}
 				}
-				waitPodmanSocket(ctx, s.Rootless)
-				return nil
+				return waitPodmanSocket(ctx, s.Rootless)
 			},
 		})
 	}
@@ -228,32 +258,112 @@ func podmanSocketPath(rootless bool) string {
 	return filepath.Join("/run/user", strconv.Itoa(os.Getuid()), "podman", "podman.sock")
 }
 
-func waitPodmanSocket(ctx context.Context, rootless bool) {
+func podmanClient(rootless bool) *http.Client {
 	path := podmanSocketPath(rootless)
-	hc := &http.Client{Transport: &http.Transport{DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
+	return &http.Client{Transport: &http.Transport{DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
 		var d net.Dialer
 		return d.DialContext(ctx, "unix", path)
 	}}}
+}
+
+func pingPodman(ctx context.Context, hc *http.Client) bool {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://d/_ping", nil)
+	if err != nil {
+		return false
+	}
+	res, err := hc.Do(req)
+	if err != nil {
+		return false
+	}
+	res.Body.Close()
+	return res.StatusCode == http.StatusOK
+}
+
+func PodmanAPI(ctx context.Context, rootless bool) (PodmanSetup, error) {
+	s := PodmanSetup{Rootless: rootless, Systemd: podmanSystemd()}
+	if runtime.GOOS != "linux" {
+		return s, nil
+	}
+	hc := podmanClient(rootless)
+	defer hc.CloseIdleConnections()
+	pingCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+	if pingPodman(pingCtx, hc) {
+		return s, nil
+	}
+	if out, _ := systemctlOutput(ctx, rootless, "is-active", "podman.socket"); strings.TrimSpace(string(out)) == "active" {
+		if err := PodmanServiceFailed(ctx, rootless); err != nil {
+			return s, err
+		}
+		return s, ErrPodmanAPIDown
+	}
+	s.SocketMissing = true
+	if err := PodmanServiceFailed(ctx, rootless); err != nil {
+		return s, err
+	}
+	return s, ErrPodmanAPIDown
+}
+
+func waitPodmanSocket(ctx context.Context, rootless bool) error {
+	hc := podmanClient(rootless)
 	defer hc.CloseIdleConnections()
 	ctx, cancel := context.WithTimeout(ctx, 90*time.Second)
 	defer cancel()
 	for {
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://d/_ping", nil)
-		if err != nil {
-			return
+		if pingPodman(ctx, hc) {
+			return nil
 		}
-		if res, err := hc.Do(req); err == nil {
-			res.Body.Close()
-			if res.StatusCode == http.StatusOK {
-				return
-			}
+		if err := PodmanServiceFailed(ctx, rootless); err != nil {
+			return err
 		}
 		select {
 		case <-ctx.Done():
-			return
+			return &CommandError{Output: "Podman's API gave no reply on " + podmanSocketPath(rootless) + " within 90 seconds.", Err: ctx.Err()}
 		case <-time.After(time.Second):
 		}
 	}
+}
+
+func PodmanServiceFailed(ctx context.Context, rootless bool) error {
+	out, _ := systemctlOutput(ctx, rootless, "is-failed", podmanServiceUnit)
+	if strings.TrimSpace(string(out)) != "failed" {
+		return nil
+	}
+	return &CommandError{Output: serviceErrorLines(journal(ctx, rootless, podmanServiceUnit)), Err: ErrPodmanServiceFailed}
+}
+
+func journal(ctx context.Context, rootless bool, unit string) []byte {
+	args := []string{"-u", unit, "-n", "20", "-o", "cat", "--no-pager"}
+	if rootless {
+		out, _ := exec.CommandContext(ctx, "journalctl", append([]string{"--user"}, args...)...).Output()
+		return out
+	}
+	out, _ := output(ctx, true, "journalctl", args...)
+	return out
+}
+
+func serviceErrorLines(out []byte) string {
+	var program, unit []string
+	for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+		line = strings.TrimSpace(line)
+		switch {
+		case line == "":
+		case strings.HasPrefix(line, "Started ") || strings.HasPrefix(line, "Starting "):
+			program, unit = nil, nil
+		case strings.HasPrefix(line, podmanServiceUnit+": "):
+			unit = append(unit, strings.TrimPrefix(line, podmanServiceUnit+": "))
+		default:
+			program = append(program, line)
+		}
+	}
+	lines := program
+	if len(lines) == 0 {
+		lines = unit
+	}
+	if len(lines) > 3 {
+		lines = lines[len(lines)-3:]
+	}
+	return strings.Join(lines, "\n")
 }
 
 type CommandError struct {
@@ -264,10 +374,75 @@ type CommandError struct {
 
 func (e *CommandError) Error() string {
 	out := strings.TrimSpace(e.Output)
-	if out == "" {
+	switch {
+	case e.Command == "" && out == "":
+		return e.Err.Error()
+	case e.Command == "":
+		return out
+	case out == "":
 		return e.Command + ": " + e.Err.Error()
 	}
 	return e.Command + ": " + out
 }
 
 func (e *CommandError) Unwrap() error { return e.Err }
+
+const (
+	podmanRestartUnit = "podman-restart.service"
+	podmanServiceUnit = "podman.service"
+)
+
+var (
+	ErrPodmanServiceFailed = errors.New("the podman.service unit failed")
+	ErrPodmanAPIDown       = errors.New("the podman.socket unit isn't running")
+	ErrNoUserSession       = errors.New("this shell has no systemd user session")
+)
+
+func noUserBus(out string) bool {
+	return strings.Contains(out, "user scope bus") || strings.Contains(out, "Failed to connect to bus") || strings.Contains(out, "XDG_RUNTIME_DIR not defined")
+}
+
+func NoUserSession(next string) (msg, fix string) {
+	name := "your account"
+	if u, err := user.Current(); err == nil {
+		name = u.Username
+	}
+	return "This shell has no systemd session for " + name + ", so Podman can't start.", "Sign in as " + name + " over SSH or at the console, then run " + next + "."
+}
+
+func podmanSystemd() bool {
+	if runtime.GOOS != "linux" || !has("systemctl") {
+		return false
+	}
+	_, err := os.Stat("/run/systemd/system")
+	return err == nil
+}
+
+func PodmanRestartOn(ctx context.Context, rootless bool) bool {
+	if !podmanSystemd() {
+		return true
+	}
+	out, _ := systemctl(ctx, rootless, "is-enabled", podmanRestartUnit).Output()
+	return strings.TrimSpace(string(out)) == "enabled"
+}
+
+func PodmanRestartStep(rootless bool) Step {
+	sys := rootCmd("systemctl")
+	if rootless {
+		sys = "systemctl --user"
+	}
+	return Step{
+		Do:      "Turns on Podman's own " + podmanRestartUnit + ", which starts Fluxer's container with the machine.",
+		Command: sys + " enable " + podmanRestartUnit,
+		Undo:    sys + " disable " + podmanRestartUnit,
+		Run: func(ctx context.Context) error {
+			if !podmanSystemd() {
+				return nil
+			}
+			if out, err := systemctl(ctx, rootless, "enable", podmanRestartUnit).CombinedOutput(); err != nil {
+				return &CommandError{Command: "systemctl enable " + podmanRestartUnit, Output: string(out), Err: err}
+			}
+			return nil
+		},
+	}
+}

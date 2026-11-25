@@ -14,28 +14,31 @@ import (
 )
 
 var (
-	ErrAlreadyNative   = errors.New("migrate: the instance already runs without Docker")
-	ErrStorageReadOnly = errors.New("migrate: uploads are still read-only after the move off SeaweedFS, open them with rexctl migrate --experimental-native --open-writes or go back with rexctl migrate --experimental-native --undo storage first")
+	errAlreadyNative   = errors.New("migrate: the instance already runs in the new layout")
+	errStorageReadOnly = errors.New("migrate: uploads are still read-only after the move off SeaweedFS, open them with rexctl migrate --open-writes or go back with rexctl migrate --undo storage first")
 )
 
 var ErrNoNativeEquivalent = errors.New("migrate: a setting has no equivalent without Docker")
 
-const LiveKitEnabledVar = "FLUXER_LIVEKIT_ENABLED"
+var ErrOneWay = errors.New("migrate: the new release already started on your own PostgreSQL database, and the old containers can't run on it")
 
-type NativeTarget interface {
+type MoveTarget interface {
 	Dir() string
+	Runtime() string
 	Preflight(ctx context.Context, chosen map[string]string) error
+	Prepare(ctx context.Context) error
 	Install(ctx context.Context) error
 	Restore(ctx context.Context, archive string) error
+	Units() []SavedUnit
 	Open(ctx context.Context, chosen map[string]string) (Host, error)
 	Discard(ctx context.Context) error
+	OneWay() bool
 }
 
 var composeDefaults = map[string]string{
-	settings.RustProcess:    settings.RustPerService,
 	settings.StorageBackend: settings.StorageS3,
 	settings.KVMode:         settings.KVStandalone,
-	LiveKitEnabledVar:       "true",
+	settings.LiveKitEnabled: "true",
 	StorageReadOnlyVar:      "",
 }
 
@@ -49,7 +52,9 @@ func ForNative(compose map[string]string) (NativeSettings, error) {
 	for k := range composeDefaults {
 		delete(rest, k)
 	}
-	kept, left, refused := settings.ForNative(stack.Embedded(), rest)
+	delete(rest, settings.RustProcess)
+	kept, left, refused := settings.ForNative(settings.NativeSet(stack.EmbeddedRelease()), rest)
+	kept[settings.RustProcess] = settings.RustSingle
 	for k, def := range composeDefaults {
 		v := strings.TrimSpace(compose[k])
 		if v == "" {
@@ -59,18 +64,18 @@ func ForNative(compose map[string]string) (NativeSettings, error) {
 	}
 	out := NativeSettings{Settings: kept, Left: left}
 	if len(refused) > 0 {
-		return out, fmt.Errorf("%w: Fluxer without Docker doesn't use %s. Remove them with rexctl config unset %s first", ErrNoNativeEquivalent, strings.Join(refused, ", "), strings.Join(refused, " "))
+		return out, fmt.Errorf("%w: Fluxer in the new layout doesn't use %s. Remove them with rexctl config unset %s first", ErrNoNativeEquivalent, strings.Join(refused, ", "), strings.Join(refused, " "))
 	}
 	return out, nil
 }
 
 type DockerStep struct {
-	target    NativeTarget
+	target    MoveTarget
 	recorded  State
 	installed bool
 }
 
-func NewDockerStep(target NativeTarget, recorded State) *DockerStep {
+func NewDockerStep(target MoveTarget, recorded State) *DockerStep {
 	return &DockerStep{target: target, recorded: recorded}
 }
 
@@ -79,17 +84,17 @@ func (s *DockerStep) Writers() []string { return nil }
 
 func (s *DockerStep) Preflight(ctx context.Context, r *Run) error {
 	if r.Host.Runtime() != Compose {
-		return ErrAlreadyNative
+		return errAlreadyNative
 	}
 	if st := s.recorded.Storage; st != nil && !st.Open() {
-		return ErrStorageReadOnly
+		return errStorageReadOnly
 	}
 	c, err := ForNative(r.Host.Settings())
 	if err != nil {
 		return err
 	}
 	if len(c.Left) > 0 {
-		r.note("These settings only change Docker containers and stay with the Docker instance: %s.", strings.Join(c.Left, ", "))
+		r.note("These settings only change the old containers and stay with them: %s.", strings.Join(c.Left, ", "))
 	}
 	return s.target.Preflight(ctx, c.Settings)
 }
@@ -103,7 +108,16 @@ func (s *DockerStep) Migrate(ctx context.Context, r *Run) error {
 		return err
 	}
 	s.installed = true
-	if err := s.target.Install(ctx); err != nil {
+	r.State.Docker = &Moving{At: r.now(), Dir: s.target.Dir(), Runtime: s.target.Runtime()}
+	if err := r.record(); err != nil {
+		return err
+	}
+	err = s.target.Install(ctx)
+	r.State.Docker.Units = s.target.Units()
+	if rerr := r.record(); err == nil {
+		err = rerr
+	}
+	if err != nil {
 		return err
 	}
 	return s.target.Restore(ctx, archive)
@@ -123,15 +137,25 @@ func (s *DockerStep) Switch(ctx context.Context, r *Run) error {
 	if err := r.Host.Halt(ctx); err != nil {
 		return err
 	}
+	if r.State.Docker != nil {
+		at := r.now()
+		r.State.Docker.SwitchedAt = &at
+		if err := r.record(); err != nil {
+			return err
+		}
+	}
 	r.Host = next
 	return nil
 }
 
 func (s *DockerStep) Check(context.Context, *Run) error { return nil }
 
-func (s *DockerStep) Rollback(ctx context.Context, _ *Run) error {
+func (s *DockerStep) Rollback(ctx context.Context, r *Run) error {
 	if !s.installed {
 		return nil
+	}
+	if r.Started && s.target.OneWay() {
+		return errors.Join(ErrOneWay, r.Host.Halt(ctx))
 	}
 	return s.target.Discard(ctx)
 }

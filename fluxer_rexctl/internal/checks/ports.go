@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
@@ -36,8 +37,13 @@ func ContainerOwner(name string) bool {
 }
 
 func runPorts(ctx context.Context, e *Env) Result {
+	if e.Native && e.installed() {
+		return runFluxerPorts(ctx, e)
+	}
 	if e.installed() {
-		return e.portOwners(ctx)
+		if r := e.portOwners(ctx); r.Status != Skip || e.anyRunning(ctx) {
+			return r
+		}
 	}
 	wanted := e.wantedPorts()
 	pub, _ := e.published(ctx)
@@ -139,9 +145,14 @@ func (e *Env) portOwners(ctx context.Context) Result {
 		for i, n := range nums {
 			strs[i] = strconv.Itoa(n)
 		}
-		parts = append(parts, fmt.Sprintf("%s uses %s", proj, ui.JoinAnd(strs)))
+		switch {
+		case e.Instance != nil && proj == e.Instance.Project():
+			parts = append(parts, fmt.Sprintf("Fluxer uses ports %s", ui.JoinAnd(strs)))
+		default:
+			parts = append(parts, fmt.Sprintf("the project %s uses ports %s", proj, ui.JoinAnd(strs)))
+		}
 	}
-	return pass(strings.Join(parts, ", ") + ".")
+	return pass(ui.Sentence(strings.Join(parts, ", ")))
 }
 
 func (e *Env) isVoicePort(p stack.Port) bool {
@@ -233,6 +244,9 @@ func (e *Env) portBusy(ctx context.Context, p stack.Port, owner string, containe
 }
 
 func (e *Env) portFix(ctx context.Context, p stack.Port, container bool) string {
+	if e.installed() {
+		return ""
+	}
 	if e.mode() == modeBundled && (p.Number == 80 || p.Number == 443) {
 		return "Run rexctl install --behind-proxy to use your own proxy."
 	}
@@ -261,4 +275,9 @@ func nextFreePort(from int) int {
 		}
 	}
 	return 0
+}
+
+func (e *Env) anyRunning(ctx context.Context) bool {
+	cs, err := e.containers(ctx)
+	return err != nil || slices.ContainsFunc(cs, func(c engine.Container) bool { return c.State == "running" })
 }

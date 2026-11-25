@@ -9,14 +9,22 @@ import (
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
 
 func init() {
-	Register(Check{ID: "podman-subids", Phases: Preinstall | Installed, Run: runPodmanSubIDs})
+	Register(Check{ID: "podman-subids", Phases: Preinstall | Installed, Run: composeOnly(runPodmanSubIDs)})
 	Register(Check{ID: "podman-setup", Phases: Installed, Run: runPodmanSetup, Fix: fixPodmanSetup})
 }
 
 func (e *Env) podmanSetup(ctx context.Context) (host.PodmanSetup, bool) {
+	if e.Native {
+		rootless, ok := e.containerOnPodman()
+		if !ok {
+			return host.PodmanSetup{}, false
+		}
+		return host.CheckPodman(ctx, rootless, false), true
+	}
 	if e.Engine == nil || e.Engine.Kind != engine.Podman {
 		return host.PodmanSetup{}, false
 	}
@@ -29,6 +37,9 @@ func runPodmanSubIDs(ctx context.Context, e *Env) Result {
 	}
 	if !host.HasSubIDs(ctx) {
 		return fail("Your account has no subordinate user IDs, and Podman needs them to unpack Fluxer.", "Add your account to /etc/subuid and /etc/subgid, run podman system migrate, then run rexctl doctor.")
+	}
+	if missing := host.MissingRootlessTools(); len(missing) > 0 {
+		return fail("Podman without root needs newuidmap, newgidmap and pasta, and this machine has no "+ui.JoinOr(missing)+".", host.RootlessToolsFix("rexctl doctor"))
 	}
 	return pass("Your account has the subordinate user IDs Podman needs.")
 }

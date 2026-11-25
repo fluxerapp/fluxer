@@ -74,7 +74,7 @@ func MediaPaths(server, tester string) []MediaPath {
 func hasFamily(set, fam string) bool { return set == fam || set == FamilyDual }
 
 var (
-	ErrTransportTimeout = errors.New("voice: no media path within the time limit")
+	errTransportTimeout = errors.New("voice: no media path within the time limit")
 	ErrTokenRejected    = errors.New("voice: the server rejected the access token")
 	ErrNoTurn           = errors.New("voice: the instance gives clients no TURN server over UDP or TCP")
 	ErrSignalling       = errors.New("voice: signalling connection failed")
@@ -88,18 +88,18 @@ func ipv4Only(network, _ string, _ syscall.RawConn) error {
 	return nil
 }
 
-const TestRoomPrefix = "rexctl-test-"
+const testRoomPrefix = "rexctl-test-"
 
 func TestRoom() string {
 	b := make([]byte, 6)
 	_, _ = rand.Read(b)
-	return TestRoomPrefix + hex.EncodeToString(b)
+	return testRoomPrefix + hex.EncodeToString(b)
 }
 
 func TestToken(key, secret, room string, now time.Time) string {
 	b := make([]byte, 4)
 	_, _ = rand.Read(b)
-	return SignHS256(secret, map[string]any{
+	return signHS256(secret, map[string]any{
 		"iss": key,
 		"sub": "rexctl-test-" + hex.EncodeToString(b),
 		"nbf": now.Add(-10 * time.Second).Unix(),
@@ -387,7 +387,7 @@ func TestTransport(ctx context.Context, endpoint, token string, path MediaPath, 
 		case err := <-readErr:
 			return signallingClosed(path, haveAnswer, err)
 		case <-ctx.Done():
-			return ErrTransportTimeout
+			return errTransportTimeout
 		}
 	}
 }

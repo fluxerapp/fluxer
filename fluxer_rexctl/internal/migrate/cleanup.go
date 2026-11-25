@@ -35,7 +35,7 @@ func OldDataOf(st State, newestBackup time.Time) []OldData {
 		d := OldData{Option: OptStorage, What: stack.SeaweedFSVolume}
 		switch {
 		case !s.Open():
-			d.Wait = "Uploads are still read-only. Open them with rexctl migrate --experimental-native --open-writes first, or go back with rexctl migrate --experimental-native --undo storage."
+			d.Wait = "Uploads are still read-only. Open them with rexctl migrate --open-writes first, or go back with rexctl migrate --undo storage."
 		case !newestBackup.After(*s.OpenedAt):
 			d.Wait = "Make a backup with rexctl backup first, so the files are in one."
 		default:
@@ -48,7 +48,7 @@ func OldDataOf(st State, newestBackup time.Time) []OldData {
 
 func CleanUp(ctx context.Context, h Host, st *State, d OldData, at time.Time) error {
 	if !d.Ready {
-		return ErrNoNewBackup
+		return errNoNewBackup
 	}
 	if err := h.DropData(ctx, d.What); err != nil {
 		return err

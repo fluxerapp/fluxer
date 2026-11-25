@@ -43,7 +43,7 @@ type Roots struct {
 	Images string
 }
 
-func PlannedRoots(prefer Kind) Roots {
+func plannedRoots(prefer Kind) Roots {
 	if runtime.GOOS != "linux" {
 		return Roots{}
 	}

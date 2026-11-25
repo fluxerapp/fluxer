@@ -9,12 +9,13 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 )
 
-var ErrEjected = errors.New("instance: managed by hand after rexctl eject")
+var errEjected = errors.New("instance: managed by hand after rexctl eject")
 
 type EjectedError struct {
-	At   time.Time
-	Tool string
-	Dir  string
+	At       time.Time
+	Tool     string
+	Dir      string
+	Detached bool
 }
 
 func (e *EjectedError) Error() string {
@@ -22,14 +23,17 @@ func (e *EjectedError) Error() string {
 }
 
 func (e *EjectedError) Fix() string {
-	return "Run rexctl takeover to let rexctl manage it again."
+	if e.Detached {
+		return "It runs from compose.yaml in " + e.Dir + ". Run " + e.Tool + " ps there to check it."
+	}
+	return "Install the last rexctl that has rexctl takeover from https://github.com/fluxerapp/fluxer/releases, take the instance over with it, then run rexctl upgrade, which offers the move."
 }
 
 func (e *EjectedError) Start() string {
 	return "Run " + e.Tool + " up -d in " + e.Dir + "."
 }
 
-func (e *EjectedError) Unwrap() error { return ErrEjected }
+func (e *EjectedError) Unwrap() error { return errEjected }
 
 func ComposeTool(kind string) string {
 	if kind == string(engine.Podman) {
@@ -39,19 +43,28 @@ func ComposeTool(kind string) string {
 }
 
 type MovedError struct {
-	Dir string
-	To  string
+	Dir       string
+	To        string
+	Release   string
+	CleanedUp bool
 }
 
 func (e *MovedError) Error() string {
-	return "Fluxer moved from " + e.Dir + " to " + e.To + " and runs there without Docker, so the Docker instance stays stopped."
+	if e.CleanedUp {
+		return "Fluxer moved from " + e.Dir + " to " + e.To + " and runs there in the new layout. The old containers and their volumes are removed."
+	}
+	return "Fluxer moved from " + e.Dir + " to " + e.To + " and runs there in the new layout, so the old containers stay stopped."
 }
 
 func (i *Instance) Moved() *MovedError {
 	if i == nil || i.State == nil || i.State.MovedTo == "" || gone(i.State.MovedTo) {
 		return nil
 	}
-	return &MovedError{Dir: i.Dir, To: i.State.MovedTo}
+	moved := &MovedError{Dir: i.Dir, To: i.State.MovedTo}
+	if to, err := Find(i.State.MovedTo); err == nil {
+		moved.Release, moved.CleanedUp = to.State.Release, to.State.MovedFrom == nil
+	}
+	return moved
 }
 
 func (i *Instance) Managed() error {
@@ -61,7 +74,7 @@ func (i *Instance) Managed() error {
 	if i == nil || i.State == nil || i.State.Ejected == nil {
 		return nil
 	}
-	return &EjectedError{At: i.State.Ejected.At, Tool: ComposeTool(i.State.Engine.Kind), Dir: i.Dir}
+	return &EjectedError{At: i.State.Ejected.At, Tool: ComposeTool(i.State.Engine.Kind), Dir: i.Dir, Detached: i.State.IsContainer()}
 }
 
 func day(t time.Time) string {

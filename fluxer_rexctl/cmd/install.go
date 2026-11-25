@@ -3,31 +3,26 @@
 package cmd
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
-	"maps"
-	"net"
 	"net/netip"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"slices"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 
-	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/checks"
-	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/deploy"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/proxyconf"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/release"
-	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/secrets"
+	rt "github.com/fluxerapp/fluxer/fluxer_rexctl/internal/runtime"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/setup"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
@@ -39,9 +34,12 @@ const defaultProject = "fluxer"
 type installFlags struct {
 	Domain        string
 	Engine        string
+	Runtime       string
 	Native        bool
 	BehindProxy   bool
 	Bind          string
+	Proxy         string
+	ProxyFrom     string
 	VoiceIP       string
 	MemoryProfile string
 	InstallDocker bool
@@ -51,112 +49,167 @@ type installFlags struct {
 	NoStart       bool
 	BootService   string
 	DryRun        bool
-	TakeOver      bool
-	DeleteOld     bool
 	Confirm       string
 	Project       string
 	VoiceTCPPort  int
 	VoiceUDPPort  int
 	NoVoice       bool
+	ForMigrate    bool
+	MigrateFrom   string
 	Setup         setupFlags
 	Storage       storageFlags
 }
 
 type installer struct {
-	answers      *setup.Answers
-	storage      *storageChoice
-	app          *App
-	c            *cobra.Command
-	f            *installFlags
-	dir          string
-	host         *host.Info
-	engine       *engine.Engine
-	found        *engine.Engine
-	findErr      error
-	ran          map[string]bool
-	plan         []string
-	lowPortsSaid bool
+	app         *App
+	c           *cobra.Command
+	f           *installFlags
+	ctx         context.Context
+	dir         string
+	native      bool
+	container   bool
+	facts       runtimeFacts
+	defaulted   bool
+	machineRuns int
+	resuming    *instance.Instance
+	inst        *instance.Instance
+	release     func()
+	host        *host.Info
+	engine      *engine.Engine
+	found       *engine.Engine
+	findErr     error
+	rel         *release.Release
+	postgres    int
+	ran         map[string]bool
+	failed      error
+	plans       map[string][]planned
+	planStage   string
+	net         netAnswer
+	store       string
+	backups     string
+	scheduled   bool
+	storage     *storageChoice
+	secret      string
+	admin       setupState
+	answers     *setup.Answers
+	started     time.Time
+	done        bool
+	adminID     string
+	addrStage   *ui.Stage
+	netStage    *ui.Stage
+	adminStage  *ui.Stage
+	publicIP    string
+	lanIP       string
+	publicDone  bool
+	tailnet     *host.Tailnet
+	noCert      bool
+	proxyFiles  map[proxyconf.Server]string
+	opened      []instance.OpenedPort
 }
 
 func newInstallCmd(app *App) *cobra.Command {
 	var f installFlags
 	c := &cobra.Command{
 		Use:   "install",
-		Short: "Install Fluxer on this machine, or take over an existing install",
-		Args:  noArgs,
+		Short: "Install Fluxer on this machine",
+		Example: "rexctl install\n" +
+			"sudo rexctl install --runtime systemd --domain chat.example.com --yes\n" +
+			"rexctl install --runtime docker --domain chat.example.com --behind-proxy --yes",
+		Args: noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
 			return runInstall(c.Context(), app, c, &f)
 		},
 	}
 	fl := c.Flags()
-	fl.StringVar(&f.Domain, "domain", "", "address people will use to open your instance, like chat.example.com")
-	fl.StringVar(&f.Engine, "engine", "", "container engine to use (docker or podman)")
-	fl.BoolVar(&f.Native, "experimental-native", false, "install Fluxer as one systemd service without containers, set up for this machine. This is experimental")
+	fl.StringVar(&f.Domain, "domain", "", "domain or IP address people will use to open your instance, like chat.example.com or 203.0.113.7, and without it --yes uses this machine's public IP address")
+	fl.StringVar(&f.Runtime, "runtime", "", "where Fluxer runs, systemd for a service on this machine or docker or podman for one container. Without it, rexctl picks systemd on Debian or Ubuntu as root and one container everywhere else")
+	fl.StringVar(&f.Engine, "engine", "", "")
+	_ = fl.MarkHidden("engine")
+	fl.BoolVar(&f.Native, "experimental-native", false, "")
+	_ = fl.MarkHidden("experimental-native")
 	fl.BoolVar(&f.BehindProxy, "behind-proxy", false, "serve plain HTTP for your own reverse proxy or tunnel")
-	fl.StringVar(&f.Bind, "bind", "127.0.0.1:8080", "address your proxy or tunnel connects to, with --behind-proxy")
+	fl.StringVar(&f.Bind, "bind", settings.DefaultBind, "address your proxy or tunnel connects to. Implies --behind-proxy")
+	fl.StringVar(&f.Proxy, "proxy", "", "what is in front of Fluxer (local, remote or tunnel). Implies --behind-proxy")
+	fl.StringVar(&f.ProxyFrom, "proxy-from", "", "address your proxy on another machine connects from, with --proxy remote")
 	fl.StringVar(&f.VoiceIP, "voice-ip", "", "public IP address for voice and video (found automatically)")
-	fl.StringVar(&f.MemoryProfile, "memory-profile", "", "pin small, medium or large instead of sizing Fluxer to this machine on every start")
+	fl.StringVar(&f.MemoryProfile, "memory-profile", "", "use small, medium or large on every start, without sizing Fluxer to this machine")
 	fl.BoolVar(&f.InstallDocker, "install-docker", true, "install Docker if it's missing")
 	fl.BoolVar(&f.OpenFirewall, "open-firewall", true, "open the ports Fluxer needs in ufw or firewalld")
 	fl.BoolVar(&f.SetupPodman, "setup-podman", true, "start Podman's API socket and start Fluxer with the machine")
 	fl.StringVar(&f.SetupWhere, "setup", "", "where to create your admin account (terminal or browser)")
 	fl.BoolVar(&f.NoStart, "no-start", false, "write the files without starting Fluxer")
-	fl.StringVar(&f.BootService, "boot-service", "", "on or off: add a systemd service that starts Fluxer with this machine. Podman needs it. With Docker, rexctl asks, and leaves it off without a terminal.")
+	fl.StringVar(&f.BootService, "boot-service", "", "start Fluxer when this machine starts (on or off)")
 	fl.BoolVar(&f.DryRun, "dry-run", false, "show what would happen without changing anything")
-	fl.BoolVar(&f.TakeOver, "take-over", false, "take over Fluxer data found on this machine")
-	fl.BoolVar(&f.DeleteOld, "delete-old-data", false, "delete Fluxer data found on this machine and start fresh")
-	fl.StringVar(&f.Project, "project", defaultProject, "name for this instance's containers and volumes, for running more than one instance on a host")
-	fl.IntVar(&f.VoiceTCPPort, "voice-tcp-port", 0, "TCP port for voice and video, for running more than one instance on a host")
-	fl.IntVar(&f.VoiceUDPPort, "voice-udp-port", 0, "UDP port for voice and video, for running more than one instance on a host")
+	fl.StringVar(&f.Project, "project", defaultProject, "name for this instance's service, containers and folders. A second Fluxer on one machine gets a free name by itself")
+	fl.IntVar(&f.VoiceTCPPort, "voice-tcp-port", 0, "TCP port for voice and video. A second Fluxer on one machine gets a free port by itself")
+	fl.IntVar(&f.VoiceUDPPort, "voice-udp-port", 0, "UDP port for voice and video. A second Fluxer on one machine gets a free port by itself")
 	fl.BoolVar(&f.NoVoice, "no-bundled-voice", false, "run without the bundled LiveKit and use only voice servers you add later")
+	fl.BoolVar(&f.ForMigrate, "for-migrate", false, "")
+	_ = fl.MarkHidden("for-migrate")
+	fl.StringVar(&f.MigrateFrom, "migrate-from", "", "")
+	_ = fl.MarkHidden("migrate-from")
 	confirmFlag(c, &f.Confirm)
 	f.Setup.bind(c)
 	f.Storage.bind(c)
 	return c
 }
 
-func installTarget(app *App) (string, error) {
+func installTarget(app *App) (string, bool, error) {
 	l, err := app.locate()
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 	dir := l.Dir
+	explicit := l.From == instance.FromFlag || l.From == instance.FromWorkdir
 	switch {
 	case l.Stale != "" && l.Chosen:
 		dir = l.Stale
+		explicit = true
 		app.located = &instance.Located{Dir: dir, From: instance.FromRecord, Scope: l.Scope}
 		app.UI.Info("Installing Fluxer in %s, the folder you picked with rexctl use.", dir)
 	case l.Stale != "":
 		app.warnStale(l)
 	}
 	if dir, err = filepath.Abs(dir); err != nil {
-		return "", err
+		return "", false, err
 	}
 	inst, err := instance.Find(dir)
 	if err != nil || !inst.State.IsVoice() {
-		return dir, nil
+		return dir, explicit, nil
 	}
 	refusal := ui.Refused(fmt.Sprintf("%s holds voice servers that joined %s, not a Fluxer instance.", dir, voiceInstances(inst)), "Pass --dir with another folder to install Fluxer there.")
-	if l.From == instance.FromFlag || l.From == instance.FromWorkdir {
-		return "", refusal
+	if explicit {
+		return "", false, refusal
 	}
 	fallback, err := instance.DefaultDir()
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 	if fallback, err = filepath.Abs(fallback); err != nil {
-		return "", err
+		return "", false, err
 	}
 	if other, err := instance.Find(fallback); err == nil && other.State.IsVoice() {
-		return "", refusal
+		return "", false, refusal
 	}
 	app.located = &instance.Located{Dir: fallback, From: instance.FromFallback}
 	app.UI.Info("Installing Fluxer in %s. %s holds this machine's voice servers.", fallback, dir)
-	return fallback, nil
+	return fallback, false, nil
 }
 
 func runInstall(ctx context.Context, app *App, c *cobra.Command, f *installFlags) error {
-	if err := validateInstallFlags(f); err != nil {
+	err := install(ctx, app, c, f)
+	switch {
+	case err == nil:
+		return nil
+	case f.ForMigrate:
+		app.UI.Detail("%v", err)
+		return &ui.ExitError{Code: ui.CodeOf(err)}
+	}
+	return err
+}
+
+func install(ctx context.Context, app *App, c *cobra.Command, f *installFlags) error {
+	if err := validateInstallFlags(app, c, f); err != nil {
 		return err
 	}
 	if err := f.Storage.validate(c); err != nil {
@@ -171,111 +224,185 @@ func runInstall(ctx context.Context, app *App, c *cobra.Command, f *installFlags
 	if names := f.Setup.passedNames(c); f.SetupWhere == "browser" && len(names) > 0 {
 		return &ui.ExitError{Code: ui.ExitUsage, Msg: fmt.Sprintf("--setup browser doesn't take %s.", ui.JoinAnd(names)), Fix: "Pass --setup terminal instead, or leave out the setup options and enter them in the browser."}
 	}
-	if f.Native {
-		return runNativeInstall(ctx, app, c, f)
+	in := &installer{app: app, c: c, f: f, ctx: ctx, ran: map[string]bool{}}
+	if f.ForMigrate {
+		movingFrom = instance.RealPath(f.MigrateFrom)
 	}
-	dir, err := installTarget(app)
+	dir, explicit, err := installTarget(app)
 	if err != nil {
 		return err
 	}
-	in := &installer{app: app, c: c, f: f, dir: dir, ran: map[string]bool{}}
-
+	in.dir = dir
 	inst, err := instance.Find(dir)
+	if err == nil && inst.State != nil && !inst.State.SetupDone {
+		switch {
+		case f.Domain == "" || normaliseDomain(f.Domain) == inst.Domain():
+			return in.resume(ctx, inst)
+		case inst.State.Installing:
+			return ui.Refused(fmt.Sprintf("The install of %s in %s didn't finish.", inst.Domain(), dir), "Run rexctl install --dir "+shellWord(dir)+" to finish it first, or pass --dir with an empty folder for another Fluxer.")
+		}
+	}
+	if f.Runtime == "" {
+		in.defaultRuntime(ctx)
+	} else {
+		in.facts = gatherFacts(ctx, app.UI.Interactive(), false)
+	}
+	in.native = f.Runtime == runtimeSystemd
+	in.container = f.Runtime == runtimeDocker || f.Runtime == runtimePodman
+	if in.native {
+		if err := in.nativeFlags(ctx); err != nil {
+			return err
+		}
+	}
+	second := false
 	switch {
 	case errors.Is(err, instance.ErrLegacy):
-		return in.takeOver(ctx, dir)
+		return preRexctlRefusal(ctx, dir)
 	case errors.Is(err, instance.ErrNotFound):
 	case err != nil:
 		return err
-	case inst.State != nil && inst.State.SetupDone:
-		return ui.Refused(fmt.Sprintf("Fluxer is already installed in %s.", dir), "Run rexctl status to check it, or rexctl upgrade to upgrade it.")
+	case explicit:
+		return ui.Refused(fmt.Sprintf("Fluxer is already installed in %s.", dir), "Run rexctl status --dir "+shellWord(dir)+" to check it. For a second Fluxer next to it, pass --dir with an empty folder.")
 	default:
-		return in.resume(ctx, inst)
+		if err := keptData(dir); err != nil {
+			return err
+		}
+		if in.dir, err = in.secondDir(dir); err != nil {
+			return err
+		}
+		second = true
+		app.located = &instance.Located{Dir: in.dir, From: instance.FromFlag}
 	}
-
+	if !second {
+		if err := in.pickName(explicit); err != nil {
+			return err
+		}
+	}
+	if in.native {
+		if err := in.nativeTarget(); err != nil {
+			return err
+		}
+	}
+	in.defaultDomain()
+	if f.Domain != "" {
+		if err := domainTaken(in.dir, f.Domain); err != nil {
+			return err
+		}
+	}
+	if second || !c.Flags().Changed("project") && f.Project != defaultProject {
+		app.UI.Info("Fluxer already runs on this machine, so this one is called %s and goes in %s.", f.Project, in.dir)
+	}
 	if err := in.missingFlags(); err != nil {
 		return err
 	}
-	app.UI.Welcome()
-	if in.host, err = host.Detect(ctx, dir); err != nil {
+	ok, err := in.confirmPublicBind()
+	if err != nil || !ok {
 		return err
 	}
-	in.findEngine(ctx)
-	if in.runChecks(ctx, checks.Preinstall, "memory", "disk") {
-		return notReady()
-	}
-	if err := in.ensureEngine(ctx); err != nil {
+	if err := in.loadSecrets(); err != nil {
 		return err
 	}
-	if in.engine != nil {
-		if in.engine != in.found {
-			delete(in.ran, "disk")
-		}
-		if in.runChecks(ctx, checks.Preinstall, "engine", "podman-subids", "windows-linux-containers", "disk") {
-			return notReady()
-		}
-	} else {
-		in.ran["engine"], in.ran["podman-subids"], in.ran["windows-linux-containers"] = true, true, true
-	}
-	if err := in.offerProxy(); err != nil {
-		return err
-	}
-	if in.engine != nil {
-		if err := in.preparePodman(ctx); err != nil {
-			return err
-		}
-	}
-	if err := app.UI.Ask(c, ui.Field{
-		Flag:     "domain",
-		Title:    "What address will people use to open your instance?",
-		Value:    &f.Domain,
-		Validate: validateDomain,
-	}); err != nil {
-		return err
-	}
-	f.Domain = normaliseDomain(f.Domain)
-	in.resolveVoicePorts(ctx)
-	if in.runChecks(ctx, checks.Preinstall) {
-		return notReady()
-	}
-	if err := in.openFirewall(ctx); err != nil {
-		return err
-	}
-	if err := in.askStorage(); err != nil {
-		return err
-	}
-	if err := in.checkStorage(ctx); err != nil {
-		return err
-	}
-	if err := in.askSetupWhere(); err != nil {
-		return err
-	}
-	if err := in.collectAnswers(f.Domain); err != nil {
-		return err
-	}
-	deleteOld, err := in.checkOldData(ctx)
-	if err != nil || deleteOld == nil {
-		return err
-	}
-	if f.DryRun {
-		return in.printPlan()
-	}
+	return in.run(ctx)
+}
 
-	inst, err = instance.Create(dir, f.Project)
-	if err != nil {
-		return ui.Wrap(err, fmt.Sprintf("Couldn't create %s.", dir), "Check that you can write to it, or pass --dir.")
+func (in *installer) run(ctx context.Context) error {
+	defer func() {
+		if in.release != nil {
+			in.release()
+		}
+	}()
+	flow := in.flow()
+	if in.f.DryRun {
+		flow.Tasks = nil
+		flow.Review = nil
 	}
-	inst.State.Installing = true
-	return app.Locked(ctx, inst, func() error {
-		if err := in.write(ctx, inst, *deleteOld); err != nil {
-			return err
-		}
-		if err := in.start(ctx, inst); err != nil {
-			return err
-		}
-		in.proxyNote()
+	if err := in.app.UI.RunFlow(ctx, in.c, flow); err != nil {
+		return in.interrupted(ctx, err)
+	}
+	if in.f.DryRun {
+		in.app.UI.Card(in.review())
 		return nil
-	})
+	}
+	if !in.done {
+		return nil
+	}
+	in.scheduleBackups(ctx)
+	if err := in.finish(ctx); err != nil {
+		return in.interrupted(ctx, err)
+	}
+	return nil
+}
+
+func (in *installer) interrupted(ctx context.Context, err error) error {
+	if err == nil || ctx.Err() == nil || ui.CodeOf(err) == ui.ExitInterrupted {
+		return err
+	}
+	return ui.Interrupted(in.resumeHint())
+}
+
+func (in *installer) resumeHint() string {
+	if in.f != nil && in.f.ForMigrate {
+		return ""
+	}
+	cmd := "rexctl install"
+	if def, err := instance.DefaultDir(); err == nil && in.dir != "" && instance.RealPath(def) != instance.RealPath(in.dir) {
+		cmd += " --dir " + shellWord(in.dir)
+	}
+	return in.asRun(cmd)
+}
+
+func thenAgain(first, resume string) string {
+	switch {
+	case resume == "" && first == "":
+		return ""
+	case resume == "":
+		return first + "."
+	case first == "":
+		return "Run " + resume + " again."
+	}
+	return first + ", then run " + resume + " again."
+}
+
+func (in *installer) runtimeLabel() string {
+	if in.native {
+		return rt.NativeLabel
+	}
+	return rt.ContainerLabel(engine.Kind(in.f.Engine))
+}
+
+func (in *installer) releaseLabel() string {
+	if in.rel != nil {
+		return in.rel.Version
+	}
+	return stack.EmbeddedRelease()
+}
+
+func (in *installer) subtitle() string {
+	if release := in.releaseLabel(); release != "" && release != "dev" {
+		return in.runtimeLabel() + ", Fluxer " + release
+	}
+	return in.runtimeLabel()
+}
+
+func (in *installer) flow() *ui.Flow {
+	resuming := func() bool { return in.resuming != nil }
+	in.addrStage = &ui.Stage{ID: "address", Title: "Address", Key: 'a', Hide: resuming, Checks: in.addressChecks, Fields: in.addressFields(), Summary: in.addressSummary}
+	in.netStage = &ui.Stage{ID: "network", Title: "Network", Key: 'n', Hide: resuming, Checks: in.networkChecks, After: in.readyChecks, Fields: in.networkFields(), Summary: in.networkSummary}
+	in.adminStage = &ui.Stage{ID: "admin", Title: "Admin", Key: 'u', Hide: func() bool { return in.f.NoStart }, Checks: in.adminChecks, Fields: in.adminFields(), Summary: in.adminSummary}
+	return &ui.Flow{
+		Title:    "rexctl install",
+		Subtitle: in.subtitle(),
+		Greeting: in.resuming == nil,
+		Stages: []*ui.Stage{
+			{ID: "machine", Title: "Machine", Key: 'r', Hide: resuming, Checks: in.machineChecks, Summary: in.machineSummary},
+			in.addrStage,
+			in.netStage,
+			{ID: "storage", Title: "Storage", Key: 's', Hide: resuming, Checks: in.storageChecks, Fields: in.storageFields(), Summary: in.storageSummary},
+			in.adminStage,
+		},
+		Review: in.review,
+		Tasks:  in.tasks,
+	}
 }
 
 func (in *installer) missingFlags() error {
@@ -288,8 +415,13 @@ func (in *installer) missingFlags() error {
 		missing = append(missing, "--domain")
 	}
 	missing = append(missing, f.Storage.missing(in.c)...)
-	terminal := f.SetupWhere == "terminal" || (f.SetupWhere == "" && f.Setup.passed(in.c))
-	if terminal && !f.NoStart {
+	if f.Proxy == settings.ProxyRemote && f.ProxyFrom == "" {
+		missing = append(missing, "--proxy-from")
+	}
+	if in.terminalSetup() && !f.NoStart {
+		if f.Setup.SignIn == "" && usernameDomain(normaliseDomain(f.Domain)) {
+			f.Setup.SignIn = string(setup.SignInUsername)
+		}
 		s := f.Setup
 		if s.SignIn == "" {
 			missing = append(missing, "--sign-in email or --sign-in username")
@@ -306,7 +438,7 @@ func (in *installer) missingFlags() error {
 		if s.Name == "" {
 			missing = append(missing, "--name")
 		}
-		if s.SignIn == string(setup.SignInEmail) && !s.SkipEmail && s.SMTPHost == "" {
+		if s.SignIn == string(setup.SignInEmail) && !s.SkipEmail && s.SMTP.Host == "" {
 			missing = append(missing, "--smtp-host or --skip-email")
 		}
 	}
@@ -316,13 +448,60 @@ func (in *installer) missingFlags() error {
 	return ui.Usage("Pass " + ui.JoinAnd(missing) + ".")
 }
 
+func (in *installer) defaultDomain() {
+	if in.f.Domain != "" || in.f.BehindProxy || in.app.UI.Interactive() {
+		return
+	}
+	ip := in.detectPublicIP(in.ctx)
+	if ip == "" {
+		return
+	}
+	in.f.Domain = settings.NormalDomain(ip)
+	in.app.UI.Info("Without --domain, Fluxer uses this machine's public IP address, %s.", in.f.Domain)
+	if in.lanIP != "" {
+		in.app.UI.Info("Behind a home router, --domain %s works for devices on the same network without forwarding ports.", in.lanIP)
+	}
+}
+
+func (in *installer) terminalSetup() bool {
+	f := in.f
+	return f.SetupWhere == "terminal" || (f.SetupWhere == "" && f.Setup.passed(in.c))
+}
+
 func notReady() error {
 	return ui.Refused("This machine isn't ready for Fluxer yet.", "Fix the problems above, then run rexctl install again.")
 }
 
-func validateInstallFlags(f *installFlags) error {
+var proxyKinds = []string{settings.ProxyLocal, settings.ProxyRemote, settings.ProxyTunnel, settings.ProxyInstance}
+
+func validateInstallFlags(app *App, c *cobra.Command, f *installFlags) error {
 	if f.Engine != "" && f.Engine != string(engine.Docker) && f.Engine != string(engine.Podman) {
-		return ui.Usage("Pass --engine docker or --engine podman.")
+		return ui.Usage("Pass --runtime docker or --runtime podman.")
+	}
+	if f.Native {
+		if f.Runtime != "" && f.Runtime != runtimeSystemd {
+			return ui.Usage("Pass --runtime systemd without --experimental-native.")
+		}
+		f.Runtime = runtimeSystemd
+		aliasLine(app, "--experimental-native", "--runtime systemd")
+	}
+	switch f.Runtime {
+	case "":
+		if f.Engine != "" {
+			f.Runtime = f.Engine
+			aliasLine(app, "--engine "+f.Engine, "--runtime "+f.Engine)
+		}
+	case runtimeSystemd:
+		if f.Engine != "" {
+			return ui.Usage("--runtime systemd runs Fluxer without containers, so it doesn't take --engine.")
+		}
+	case runtimeDocker, runtimePodman:
+		if f.Engine != "" && f.Engine != f.Runtime {
+			return ui.Usage("Pass --runtime " + f.Runtime + " on its own.")
+		}
+		f.Engine = f.Runtime
+	default:
+		return ui.Usage("Pass --runtime systemd, --runtime docker or --runtime podman.")
 	}
 	switch stack.MemoryProfile(f.MemoryProfile) {
 	case "", stack.ProfileSmall, stack.ProfileMedium, stack.ProfileLarge:
@@ -337,8 +516,24 @@ func validateInstallFlags(f *installFlags) error {
 			return ui.Usage(fmt.Sprintf("%s isn't an IP address.", f.VoiceIP))
 		}
 	}
-	if f.BehindProxy && validateBind(f.Bind) != nil {
-		return ui.Usage("Pass --bind as an address and port, like 127.0.0.1:8080.")
+	bind, err := settings.NormaliseBind(f.Bind)
+	if err != nil {
+		return ui.Usage("Pass --bind as an address and port, like " + settings.DefaultBind + ".")
+	}
+	f.Bind = bind
+	if f.Proxy != "" && !slices.Contains(proxyKinds, f.Proxy) {
+		return ui.Usage("Pass --proxy local, --proxy remote or --proxy tunnel.")
+	}
+	if f.ProxyFrom != "" {
+		if err := validateProxyFrom(f.ProxyFrom); err != nil {
+			return ui.Usage(fmt.Sprintf("--proxy-from can't be %q. %s", f.ProxyFrom, err.Error()))
+		}
+		if f.Proxy == "" {
+			f.Proxy = settings.ProxyRemote
+		}
+	}
+	if c.Flags().Changed("bind") || f.Proxy != "" {
+		f.BehindProxy = true
 	}
 	for _, p := range []int{f.VoiceTCPPort, f.VoiceUDPPort} {
 		if p < 0 || p > 65535 {
@@ -351,25 +546,68 @@ func validateInstallFlags(f *installFlags) error {
 	if !projectPattern.MatchString(f.Project) {
 		return ui.Usage("Pass --project with lowercase letters, numbers, dashes or underscores.")
 	}
-	if err := validTLS(f.Setup.SMTPTLS, "smtp-tls"); err != nil {
-		return err
-	}
-	if f.TakeOver && f.DeleteOld {
-		return ui.Usage("Pass --take-over or --delete-old-data, not both.")
-	}
 	if f.Domain != "" {
 		if err := validateDomain(f.Domain); err != nil {
 			return ui.Usage(err.Error())
 		}
+		f.Domain = normaliseDomain(f.Domain)
 	}
 	return nil
 }
 
+func (in *installer) confirmPublicBind() (bool, error) {
+	f := in.f
+	if !f.BehindProxy || !in.c.Flags().Changed("bind") || settings.BindIsLoopback(f.Bind) {
+		return true, nil
+	}
+	ok, err := confirmPublicBind(in.app, f.Bind, in.native)
+	if err != nil || !ok {
+		return false, err
+	}
+	if f.Proxy == "" {
+		f.Proxy = settings.ProxyRemote
+	}
+	return true, nil
+}
+
+func confirmPublicBind(app *App, bind string, firewallHolds bool) (bool, error) {
+	if settings.BindIsLoopback(bind) {
+		return true, nil
+	}
+	detail := "Only your proxy should connect to it. rexctl lets only the proxy's address through the firewall."
+	if !firewallHolds {
+		detail = "Only your proxy should connect to it. Docker and rootful Podman publish ports past the host firewall, so use an address on a private network that only your proxy can connect to."
+	}
+	ok, err := app.UI.ConfirmWith(ui.Question{
+		Text:   fmt.Sprintf("Serve plain HTTP on %s, where other machines can connect to it?", bind),
+		Detail: detail,
+		Flag:   "yes",
+	})
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		app.UI.Info("Nothing changed.")
+	}
+	return ok, nil
+}
+
 func validateBind(v string) error {
-	if _, _, err := net.SplitHostPort(v); err != nil {
-		return setupInputError("Enter an address and port, like 127.0.0.1:8080.")
+	if _, err := settings.NormaliseBind(v); err != nil {
+		return setupInputError("Enter an address and port, like " + settings.DefaultBind + ".")
 	}
 	return nil
+}
+
+func validateProxyFrom(v string) error {
+	v = strings.TrimSpace(v)
+	if _, err := netip.ParseAddr(v); err == nil {
+		return nil
+	}
+	if _, err := netip.ParsePrefix(v); err == nil {
+		return nil
+	}
+	return setupInputError("Enter an IP address or range, like 203.0.113.10 or 10.0.0.0/24.")
 }
 
 var projectPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]*$`)
@@ -380,1037 +618,118 @@ func normaliseDomain(v string) string {
 	v = strings.ToLower(strings.TrimSpace(v))
 	v = strings.TrimPrefix(v, "https://")
 	v = strings.TrimPrefix(v, "http://")
-	return strings.TrimSuffix(v, "/")
+	return settings.NormalDomain(strings.TrimSuffix(v, "/"))
 }
 
 func validateDomain(v string) error {
 	d := normaliseDomain(v)
-	if _, err := netip.ParseAddr(d); err == nil {
-		return setupInputError("Enter a domain name, like chat.example.com. An IP address won't get a certificate.")
+	if ip, ok := settings.DomainIP(d); ok {
+		if settings.LocalOnlyIP(ip) {
+			return setupInputError("Enter an IP address other devices can open, not a loopback or link-local one.")
+		}
+		return nil
 	}
+	bad := setupInputError("Enter a domain name or IP address, like chat.example.com or 203.0.113.7.")
 	labels := strings.Split(d, ".")
 	if len(d) > 253 || len(labels) < 2 {
-		return setupInputError("Enter a domain name, like chat.example.com.")
+		return bad
 	}
 	for _, l := range labels {
 		if !labelPattern.MatchString(l) {
-			return setupInputError("Enter a domain name, like chat.example.com.")
+			return bad
 		}
 	}
 	return nil
 }
 
-func (in *installer) runChecks(ctx context.Context, phase checks.Phase, ids ...string) bool {
-	env := &checks.Env{Dir: in.dir, Domain: normaliseDomain(in.f.Domain), Engine: in.engine, Host: in.host, Behind: in.f.BehindProxy, Native: in.f.Native, Bind: in.f.Bind, Settings: in.settings(), Prefer: engine.Kind(in.f.Engine)}
-	if in.engine == nil {
-		env.SetEngine(in.found, in.findErr)
-	}
-	list := ids
-	if len(list) == 0 {
-		for _, c := range checks.All() {
-			list = append(list, c.ID)
-		}
-	}
-	failed := false
-	for _, id := range list {
-		if in.ran[id] {
-			continue
-		}
-		c, ok := checks.Get(id)
-		if !ok || c.Phases&phase == 0 {
-			continue
-		}
-		in.ran[id] = true
-		r := checks.RunIn(ctx, env, checks.Preinstall, c)
-		in.printResult(r)
-		failed = failed || r.Status == checks.Fail
-	}
-	return failed
-}
-
-func (in *installer) printResult(r checks.Result) {
-	if r.Message == "" {
-		return
-	}
-	switch r.Status {
-	case checks.Pass:
-		in.app.UI.OK("%s", r.Message)
-	case checks.Warn:
-		in.app.UI.Warn(r.Message, r.Fix)
-	case checks.Fail:
-		in.app.UI.Fail(r.Message, r.Fix)
-	}
-}
-
-func (in *installer) consent(flag string, value bool, question string) (bool, error) {
-	if fl := in.c.Flags().Lookup(flag); fl != nil && fl.Changed {
-		return value, nil
-	}
-	if in.app.UI.Interactive() {
-		return in.app.UI.Confirm(question, true)
-	}
-	if in.app.UI.Yes() {
-		return value, nil
-	}
-	return false, ui.MissingFlag(flag)
-}
-
-func (in *installer) findEngine(ctx context.Context) {
-	want := engine.Kind(in.f.Engine)
-	in.findErr = in.app.UI.Step(ctx, "Checking "+want.Name(), func(ctx context.Context, _ *ui.Step) error {
-		e, err := engine.Connect(ctx, engine.ConnectOptions{Prefer: want, AllowOld: true})
+func (in *installer) loadSecrets() error {
+	if file := in.f.Storage.SecretFile; file != "" {
+		v, err := readSetupSecret(in.app, file)
 		if err != nil {
-			return err
+			return ui.Wrap(err, fmt.Sprintf("Couldn't read %s.", file), "Check the path you passed to --storage-secret-key-file.")
 		}
-		if want != "" && e.Kind != want {
-			e.Close()
-			return &engine.Error{Op: "connect", Class: engine.ClassUnreachable, Err: fmt.Errorf("%s does not answer", want)}
-		}
-		in.found = e
-		return nil
-	})
-	if in.findErr != nil {
-		in.found = nil
+		in.secret = v
 	}
-}
-
-func (in *installer) ensureEngine(ctx context.Context) error {
-	e, err := in.found, in.findErr
-	if err == nil {
-		if e.TooOld {
-			return in.offerDocker(ctx, e)
-		}
-		in.engine = e
-		return nil
-	}
-	if engine.ClassOf(err) != engine.ClassUnreachable {
-		return engineFailureFor(engine.Kind(in.f.Engine), err)
-	}
-	if runtime.GOOS != "linux" && in.f.Engine == string(engine.Podman) {
-		return ui.Refused("rexctl runs Fluxer on Podman only on Linux.", "Start Docker Desktop, then run rexctl install without --engine podman.")
-	}
-	_, podmanErr := exec.LookPath("podman")
-	docker := dockerInstalled()
-	switch {
-	case podmanErr == nil && runtime.GOOS == "linux" && in.f.Engine != string(engine.Docker) && (!docker || in.f.Engine == string(engine.Podman)):
-		return in.startPodman(ctx)
-	case podmanErr != nil && !docker:
-		return in.installDocker(ctx)
-	}
-	return engineFailureFor(engine.Kind(in.f.Engine), err)
-}
-
-func dockerInstalled() bool {
-	if path, err := exec.LookPath("docker"); err == nil {
-		return !engine.PodmanDockerWrapper(path)
-	}
-	switch runtime.GOOS {
-	case "windows":
-		dir := os.Getenv("ProgramFiles")
-		return dir != "" && fileExists(filepath.Join(dir, "Docker", "Docker", "Docker Desktop.exe"))
-	case "darwin":
-		home, _ := os.UserHomeDir()
-		return fileExists("/Applications/Docker.app") || (home != "" && fileExists(filepath.Join(home, "Applications", "Docker.app")))
-	}
-	return false
-}
-
-func (in *installer) startPodman(ctx context.Context) error {
-	rootless := os.Geteuid() != 0
-	if runtime.GOOS == "linux" && rootless && !host.HasSubIDs(ctx) {
-		return ui.Refused("Your account has no subordinate user IDs, and Podman needs them to unpack Fluxer.", "Add your account to /etc/subuid and /etc/subgid, run podman system migrate, then run rexctl install again.")
-	}
-	s := host.CheckPodman(ctx, rootless, true)
-	if !s.Systemd {
-		return ui.Refused("Podman's API socket isn't running.", "Start podman.socket, then run rexctl install again.")
-	}
-	ok, err := in.consent("setup-podman", in.f.SetupPodman, "Start Podman's API socket, which Fluxer needs?")
-	if err != nil {
+	if err := in.admin.load(in.app, &in.f.Setup, in.f.Domain); err != nil {
 		return err
 	}
-	if !ok {
-		return ui.Refused("Fluxer needs Podman's API socket.", "Start podman.socket, then run rexctl install again.")
-	}
-	if in.f.DryRun {
-		in.plan = append(in.plan, "Start Podman's API socket.")
-		return nil
-	}
-	if err := host.RunSteps(ctx, s.Steps()); err != nil {
-		return ui.Wrap(err, "Couldn't start Podman's API socket.", "Run rexctl install --verbose to see why.")
-	}
-	e, err := engine.Connect(ctx, engine.ConnectOptions{Prefer: engine.Podman, AllowOld: true})
-	if err != nil {
-		return engineFailureFor(engine.Podman, err)
-	}
-	if e.TooOld {
-		return in.offerDocker(ctx, e)
-	}
-	in.engine = e
-	in.app.UI.OK("Started Podman's API socket.")
-	return nil
-}
-
-func (in *installer) offerDocker(ctx context.Context, e *engine.Engine) error {
-	need := strings.TrimSuffix(engine.MinPodman, ".0")
-	msg := fmt.Sprintf("Podman %s is too old for Fluxer, which needs %s or newer.", e.Version, need)
-	if in.f.Engine == string(engine.Podman) || !host.CanInstallDocker(in.host) {
-		return ui.Refused(msg, fmt.Sprintf("Upgrade Podman to %s or newer, or install Docker, then run rexctl install again.", need))
-	}
-	in.app.UI.Warn(msg, "")
-	ok, err := in.consent("install-docker", in.f.InstallDocker, "Install Docker and run Fluxer on it instead?")
-	if err != nil {
-		return err
-	}
-	if !ok {
-		return ui.Refused(msg, fmt.Sprintf("Upgrade Podman to %s or newer, or install Docker, then run rexctl install again.", need))
-	}
-	e.Close()
-	return in.dockerInstall(ctx)
-}
-
-func (in *installer) preparePodman(ctx context.Context) error {
-	if in.engine.Kind != engine.Podman {
-		return nil
-	}
-	if err := in.setupPodman(ctx); err != nil {
-		return err
-	}
-	return in.allowLowPorts(ctx)
-}
-
-func (in *installer) setupPodman(ctx context.Context) error {
-	s := host.CheckPodman(ctx, in.engine.Rootless, false)
-	if !s.Needed() {
-		return nil
-	}
-	ok, err := in.consent("setup-podman", in.f.SetupPodman, "Start Fluxer with this machine and turn off Podman's health check logging?")
-	if err != nil || !ok {
-		return err
-	}
-	if in.f.DryRun {
-		in.plan = append(in.plan, "Set up Podman for Fluxer.")
-		return nil
-	}
-	if err := host.RunSteps(ctx, s.Steps()); err != nil {
-		return ui.Wrap(err, "Couldn't set up Podman for Fluxer.", "Run rexctl install --verbose to see why.")
-	}
-	in.app.UI.OK("Set up Podman for Fluxer.")
-	return nil
-}
-
-func (in *installer) allowLowPorts(ctx context.Context) error {
-	if in.f.BehindProxy || !host.LowPortsBlocked(in.engine.Rootless) {
-		return nil
-	}
-	if !in.lowPortsSaid {
-		in.app.UI.Info("Rootless Podman needs this to serve Fluxer on ports 80 and 443.")
-	}
-	ok, err := in.consent("setup-podman", in.f.SetupPodman, "Let programs that don't run as root use ports 80 and up on this machine?")
-	if err != nil {
-		return err
-	}
-	if !ok {
-		return ui.Refused("Fluxer can't serve HTTPS from rootless Podman without ports 80 and 443.", "Run rexctl install --behind-proxy to use your own reverse proxy or tunnel instead.")
-	}
-	if in.f.DryRun {
-		in.plan = append(in.plan, "Let programs that don't run as root use ports 80 and up.")
-		return nil
-	}
-	if err := host.RunSteps(ctx, host.LowPortsSysctl.Steps()); err != nil {
-		return ui.Wrap(err, "Couldn't open ports 80 and up to programs that don't run as root.", "Run rexctl install --verbose to see why.")
-	}
-	in.app.UI.OK("Programs that don't run as root can use ports 80 and up.")
-	return nil
-}
-
-type proxyHint struct {
-	Interactive bool
-	Decided     bool
-	Busy        []int
-	Owner       string
-	LowPorts    string
-}
-
-func (h proxyHint) offer() (reason string, def bool, ok bool) {
-	if !h.Interactive || h.Decided {
-		return "", false, false
-	}
-	if len(h.Busy) > 0 {
-		nums := make([]string, len(h.Busy))
-		for i, n := range h.Busy {
-			nums[i] = strconv.Itoa(n)
-		}
-		subject := fmt.Sprintf("Port %s on this machine is", nums[0])
-		if len(nums) > 1 {
-			subject = fmt.Sprintf("Ports %s on this machine are", ui.JoinAnd(nums))
-		}
-		switch {
-		case checks.ContainerOwner(h.Owner):
-			return subject + " already in use by a container.", true, true
-		case h.Owner != "":
-			return fmt.Sprintf("%s already in use by %s.", subject, h.Owner), true, true
-		}
-		return subject + " already in use.", true, true
-	}
-	if h.LowPorts != "" {
-		return fmt.Sprintf("Rootless %s can't use ports 80 and 443 without a change to this machine.", h.LowPorts), false, true
-	}
-	return "", false, false
-}
-
-func (in *installer) proxyHint() proxyHint {
-	h := proxyHint{
-		Interactive: in.app.UI.Interactive(),
-		Decided:     in.f.BehindProxy || in.c.Flags().Changed("behind-proxy") || in.c.Flags().Changed("bind"),
-	}
-	if !h.Interactive || h.Decided {
-		return h
-	}
-	sameOwner := true
-	for _, port := range []int{80, 443} {
-		used, owner, err := host.PortInUse("tcp", port)
-		if err != nil || !used {
-			continue
-		}
-		if len(h.Busy) == 0 {
-			h.Owner = owner
-		} else if owner != h.Owner {
-			sameOwner = false
-		}
-		h.Busy = append(h.Busy, port)
-	}
-	if !sameOwner {
-		h.Owner = ""
-	}
-	if in.engine != nil && host.LowPortsBlocked(in.engine.Rootless) {
-		h.LowPorts = in.engine.Kind.Name()
-	}
-	return h
-}
-
-func (in *installer) offerProxy() error {
-	h := in.proxyHint()
-	reason, def, ok := h.offer()
-	if !ok {
-		return nil
-	}
-	in.lowPortsSaid = len(h.Busy) == 0
-	in.app.UI.Info("%s", reason)
-	yes, err := in.app.UI.Confirm("Use your own reverse proxy or tunnel in front of Fluxer, as with --behind-proxy?", def)
-	if err != nil || !yes {
-		return err
-	}
-	if err := in.app.UI.Ask(in.c, ui.Field{
-		Flag:     "bind",
-		Title:    "Which address should your proxy or tunnel connect to?",
-		Value:    &in.f.Bind,
-		Validate: validateBind,
-	}); err != nil {
-		return err
-	}
-	in.f.BehindProxy = true
-	in.plan = append(in.plan, fmt.Sprintf("Serve Fluxer over plain HTTP on %s for your reverse proxy or tunnel.", in.f.Bind))
-	return nil
-}
-
-const (
-	publicSchemeVar = "FLUXER_PUBLIC_SCHEME"
-	plainHTTPNote   = "Fluxer uses http links for %s because Tor and I2P browsers open it over plain HTTP. To use https, run rexctl config set FLUXER_PUBLIC_SCHEME=https."
-)
-
-func (in *installer) plainHTTP() bool {
-	return in.f.BehindProxy && checks.PlainHTTPDomain(in.f.Domain)
-}
-
-func (in *installer) proxyNote() {
-	if !in.f.BehindProxy {
-		return
-	}
-	in.app.UI.Info("Set up your proxy or tunnel to forward %s to http://%s.", normaliseDomain(in.f.Domain), in.f.Bind)
-	in.app.UI.Info("See %sreverse-proxy/ for what your proxy or tunnel needs to do.", docsURL)
-}
-
-func (in *installer) installDocker(ctx context.Context) error {
-	if in.f.Engine == string(engine.Podman) {
-		return ui.Refused("Podman isn't installed.", "Install Podman, then run rexctl install again.")
-	}
-	if !host.CanInstallDocker(in.host) {
-		if in.host.OS == "linux" && !in.host.WSL {
-			return ui.Refused("Docker isn't installed.", "Install Docker from https://docs.docker.com/engine/install/, then run rexctl install again.")
-		}
-		return ui.Refused("Docker isn't installed.", "Install Docker Desktop from https://docs.docker.com/desktop/, then run rexctl install again.")
-	}
-	in.app.UI.Warn("Docker isn't installed.", "")
-	ok, err := in.consent("install-docker", in.f.InstallDocker, "Install Docker?")
-	if err != nil {
-		return err
-	}
-	if !ok {
-		return ui.Refused("Fluxer needs Docker.", "Install Docker, then run rexctl install again.")
-	}
-	return in.dockerInstall(ctx)
-}
-
-func (in *installer) dockerInstall(ctx context.Context) error {
-	if in.f.DryRun {
-		in.plan = append(in.plan, "Install Docker.")
-		return nil
-	}
-	err := in.app.UI.Step(ctx, "Installing Docker", func(ctx context.Context, s *ui.Step) error {
-		if err := host.InstallDocker(ctx, in.host, s.Log); err != nil {
-			return err
-		}
-		e, err := engine.Connect(ctx, engine.ConnectOptions{Prefer: engine.Docker})
-		if err != nil {
-			return err
-		}
-		in.engine = e
-		s.Done("Installed Docker %s.", e.Version)
-		return nil
-	})
-	switch {
-	case err == nil:
-		return nil
-	case errors.Is(err, host.ErrRelogin) || engine.ClassOf(err) == engine.ClassDenied:
-		return ui.Refused("Docker is installed, and your account needs a new login to use it.", "Log out and back in, then run rexctl install again.")
-	case errors.Is(err, context.Canceled):
-		return err
-	}
-	return ui.Wrap(err, "Couldn't install Docker.", "Install Docker from https://docs.docker.com/engine/install/, then run rexctl install again.")
-}
-
-func (in *installer) settings() map[string]string {
-	out := map[string]string{}
-	if in.f.VoiceTCPPort > 0 {
-		out[stack.VoiceTCPPortKey] = strconv.Itoa(in.f.VoiceTCPPort)
-	}
-	if in.f.VoiceUDPPort > 0 {
-		out[stack.VoiceUDPPortKey] = strconv.Itoa(in.f.VoiceUDPPort)
-	}
-	if in.f.NoVoice {
-		out[stack.VoiceBundledKey] = "false"
-	}
-	if in.f.Storage.Endpoint != "" {
-		out[settings.StorageEndpoint] = in.f.Storage.Endpoint
-	}
-	return out
-}
-
-func (in *installer) resolveVoicePorts(ctx context.Context) {
-	if in.f.NoVoice {
-		return
-	}
-	tcpSet := in.f.VoiceTCPPort > 0
-	udpSet := in.f.VoiceUDPPort > 0
-	if tcpSet && udpSet {
-		return
-	}
-	pub := in.publishedPorts(ctx)
-	for _, v := range instance.RecordedVoicePorts() {
-		pub[host.Port{Number: v.Number, Proto: v.Proto}] = true
-	}
-	free := func(number int, proto string) bool {
-		if number < 1 || number > 65535 {
-			return false
-		}
-		used, _, err := host.PortInUse(proto, number)
-		if err != nil || used {
-			return false
-		}
-		return !pub[host.Port{Number: number, Proto: proto}]
-	}
-	switch {
-	case !tcpSet && !udpSet:
-		tcp, udp := pickVoicePair(free)
-		if tcp == 0 || tcp == 7881 {
-			return
-		}
-		in.f.VoiceTCPPort, in.f.VoiceUDPPort = tcp, udp
-		in.announceVoicePorts(tcp, udp)
-	case !tcpSet:
-		for tcp := 7881; tcp <= 65535; tcp += 2 {
-			if tcp != in.f.VoiceUDPPort && free(tcp, "tcp") {
-				in.f.VoiceTCPPort = tcp
-				return
-			}
-		}
-	case !udpSet:
-		for udp := 7882; udp <= 65535; udp += 2 {
-			if udp != in.f.VoiceTCPPort && free(udp, "udp") {
-				in.f.VoiceUDPPort = udp
-				return
-			}
-		}
-	}
-}
-
-func pickVoicePair(free func(number int, proto string) bool) (int, int) {
-	for tcp, udp := 7881, 7882; tcp <= 65533 && udp <= 65534; tcp, udp = tcp+2, udp+2 {
-		if free(tcp, "tcp") && free(udp, "udp") {
-			return tcp, udp
-		}
-	}
-	return 0, 0
-}
-
-func (in *installer) announceVoicePorts(tcp, udp int) {
-	msg := fmt.Sprintf("Ports 7881 and 7882 are already in use, so this instance will use %d and %d for voice and video.", tcp, udp)
-	in.plan = append(in.plan, msg)
-	if !in.f.DryRun {
-		in.app.UI.Info("%s", msg)
-	}
-}
-
-func (in *installer) publishedPorts(ctx context.Context) map[host.Port]bool {
-	out := map[host.Port]bool{}
-	e := in.engine
-	if e == nil {
-		e = in.found
-	}
-	if e == nil {
-		return out
-	}
-	owners, err := e.PublishedHostPorts(ctx)
-	if err != nil {
-		return out
-	}
-	for _, o := range owners {
-		out[host.Port{Number: o.Number, Proto: o.Proto}] = true
-	}
-	return out
-}
-
-func (in *installer) firewallPorts() []host.Port {
-	var out []host.Port
-	for _, p := range stack.Ports(in.settings()) {
-		if in.f.BehindProxy && (p.Number == 80 || p.Number == 443) {
-			continue
-		}
-		out = append(out, host.Port{Number: p.Number, Proto: p.Proto})
-	}
-	return out
-}
-
-func portList(ports []host.Port) string {
-	var nums []int
-	for _, p := range ports {
-		if !slices.Contains(nums, p.Number) {
-			nums = append(nums, p.Number)
-		}
-	}
-	slices.Sort(nums)
-	parts := make([]string, len(nums))
-	for i, n := range nums {
-		parts[i] = strconv.Itoa(n)
-	}
-	if len(parts) == 1 {
-		return parts[0]
-	}
-	return strings.Join(parts[:len(parts)-1], ", ") + " and " + parts[len(parts)-1]
-}
-
-func (in *installer) openFirewall(ctx context.Context) error {
-	fw, err := host.DetectFirewall(ctx)
-	if err != nil || fw == host.FirewallNone {
-		return nil
-	}
-	closed, err := host.ClosedPorts(ctx, fw, in.firewallPorts())
-	if err != nil || len(closed) == 0 {
-		return nil
-	}
-	ok, err := in.consent("open-firewall", in.f.OpenFirewall, fmt.Sprintf("Open ports %s in the firewall on this machine?", portList(closed)))
-	if err != nil {
-		return err
-	}
-	if !ok {
-		in.app.UI.Warn(fmt.Sprintf("Ports %s are closed in the firewall on this machine.", portList(closed)), "Open them before people connect.")
-		return nil
-	}
-	if in.f.DryRun {
-		in.plan = append(in.plan, fmt.Sprintf("Open ports %s in the firewall.", portList(closed)))
-		return nil
-	}
-	if err := host.OpenPorts(ctx, fw, closed); err != nil {
-		return ui.Wrap(err, "Couldn't open the ports.", fmt.Sprintf("Open ports %s in the firewall yourself, then run rexctl install again.", portList(closed)))
-	}
-	in.app.UI.OK("Opened the ports.")
-	return nil
-}
-
-func (in *installer) askSetupWhere() error {
-	def := "browser"
-	if in.f.Setup.passed(in.c) {
-		def = "terminal"
-	}
-	return in.app.UI.Ask(in.c, ui.Field{
-		Flag:    "setup",
-		Title:   "Where do you want to create your admin account?",
-		Value:   &in.f.SetupWhere,
-		Default: def,
-		Options: []ui.Option{
-			{Label: "Here in the terminal", Value: "terminal"},
-			{Label: "In my browser", Value: "browser"},
-		},
-	})
-}
-
-func (in *installer) collectAnswers(domain string) error {
-	if in.f.SetupWhere != "terminal" || in.app.UI.Interactive() || in.f.NoStart {
-		return nil
-	}
-	a, err := askSetup(in.app, in.c, domain, &in.f.Setup)
-	if err != nil {
-		return err
-	}
-	in.answers = &a
-	return nil
-}
-
-func (in *installer) checkOldData(ctx context.Context) (*bool, error) {
-	no := false
-	if in.engine == nil {
-		return &no, nil
-	}
-	vols, err := in.engine.Volumes(ctx, in.f.Project)
-	if err != nil {
-		return nil, ui.Wrap(err, "Couldn't check for Fluxer data on this machine.", "Run rexctl install --verbose to see why.")
-	}
-	if len(vols) == 0 {
-		return &no, nil
-	}
-	legacy := in.findLegacy(ctx)
-	choice := ""
-	switch {
-	case in.f.TakeOver:
-		choice = "take-over"
-	case in.f.DeleteOld:
-		choice = "delete"
-	case in.app.UI.Interactive():
-		kept := ""
-		if dir := in.keptDir(); dir != "" {
-			kept = fmt.Sprintf("It belongs to the instance in %s. Run rexctl start --dir %s to start it again.", dir, dir)
-		}
-		in.app.UI.Warn("Fluxer data from an earlier install is on this machine.", kept)
-		opts := []ui.Option{{Label: "Delete it and start fresh", Value: "delete"}, {Label: "Stop here", Value: "stop"}}
-		if legacy != nil {
-			opts = append([]ui.Option{{Label: "Keep it and take over that install", Value: "take-over"}}, opts...)
-		}
-		if err := in.app.UI.Ask(nil, ui.Field{Title: "What do you want to do with it?", Value: &choice, Options: opts}); err != nil {
-			return nil, err
-		}
-	default:
-		fix := in.keptFix()
-		if legacy != nil {
-			fix = fmt.Sprintf("Run rexctl install --take-over --dir %s to take it over, or pass --delete-old-data to start fresh.", legacy.Dir)
-		}
-		return nil, ui.Refused("Fluxer data from an earlier install is on this machine.", fix)
-	}
-	switch choice {
-	case "take-over":
-		if legacy == nil {
-			return nil, ui.Refused("Couldn't find the settings that belong to the Fluxer data on this machine.", in.keptFix())
-		}
-		return nil, in.takeOver(ctx, legacy.Dir)
-	case "delete":
-		if err := in.app.UI.ConfirmDestructive("This deletes every account, message and file in the old data.", normaliseDomain(in.f.Domain), in.f.Confirm); err != nil {
-			return nil, err
-		}
-		if in.f.DryRun {
-			in.plan = append(in.plan, "Delete the Fluxer data from the earlier install.")
-		}
-		yes := true
-		return &yes, nil
-	}
-	return nil, ui.Refused("Stopped without changing anything.", "")
-}
-
-func (in *installer) keptFix() string {
-	if dir := in.keptDir(); dir != "" {
-		return fmt.Sprintf("It belongs to the instance in %s. Run rexctl start --dir %s to start it again, or pass --delete-old-data to delete the data and start fresh.", dir, dir)
-	}
-	return "If you removed Fluxer with rexctl uninstall --keep-data, run rexctl start --dir with the folder it was in. To delete the data and start fresh, pass --delete-old-data."
-}
-
-func (in *installer) keptDir() string {
-	var dirs []string
-	if d, err := instance.DefaultDir(); err == nil {
-		dirs = append(dirs, d)
-	}
-	if h, err := os.UserHomeDir(); err == nil {
-		dirs = append(dirs, filepath.Join(h, "fluxer"))
-	}
-	if wd, err := os.Getwd(); err == nil {
-		dirs = append(dirs, wd)
-	}
-	own, _ := filepath.Abs(in.dir)
-	for _, d := range dirs {
-		if abs, _ := filepath.Abs(d); abs == own {
-			continue
-		}
-		if inst, err := instance.Find(d); err == nil && inst.Project() == in.f.Project {
-			return d
-		}
-	}
-	return ""
-}
-
-func (in *installer) findLegacy(ctx context.Context) *instance.Legacy {
-	projects, err := in.engine.Projects(ctx)
-	if err != nil {
-		return nil
-	}
-	for _, p := range projects {
-		if p.Name != in.f.Project || p.ConfigFiles == "" {
-			continue
-		}
-		first := strings.Split(p.ConfigFiles, ",")[0]
-		if l, err := instance.DetectLegacy(stack.ProjectDir(first)); err == nil && l != nil {
-			return l
-		}
+	if in.f.SetupWhere == "" {
+		in.f.SetupWhere = defaultSetupPlace(in.f.Setup.passed(in.c), in.app.UI.Interactive())
 	}
 	return nil
 }
 
-func (in *installer) takeOver(ctx context.Context, dir string) error {
-	if in.f.Storage.passed(in.c) {
-		return &ui.ExitError{Code: ui.ExitUsage, Msg: "Taking over an install doesn't use the storage options.", Fix: "Leave them out, then change the object store after the take-over with rexctl config set."}
+func defaultSetupPlace(flags, interactive bool) string {
+	desktop := os.Getenv("DISPLAY") != "" || os.Getenv("WAYLAND_DISPLAY") != ""
+	if flags || interactive && (!desktop || os.Getenv("SSH_CONNECTION") != "") {
+		return "terminal"
 	}
-	legacy, err := instance.DetectLegacy(dir)
-	if err != nil {
-		return ui.Wrap(err, fmt.Sprintf("Couldn't read the Fluxer install in %s.", dir), "Run rexctl install --verbose to see why.")
-	}
-	if !in.f.TakeOver {
-		in.app.UI.Info("Fluxer is already installed in %s.", dir)
-		ok, err := in.consent("take-over", in.f.TakeOver || !in.c.Flags().Changed("take-over"), "Take it over with rexctl?")
-		if err != nil {
-			return err
-		}
-		if !ok {
-			return ui.Refused("Stopped without changing anything.", "")
-		}
-	}
-	inst, _, err := takeoverDir(ctx, in.app, legacy.Dir, takeoverOptions{DryRun: in.f.DryRun})
-	if err != nil || in.f.DryRun || inst == nil {
-		return err
-	}
-	in.app.UI.OK("rexctl looks after your instance in %s.", inst.Dir)
-	return nil
-}
-
-func (in *installer) printPlan() error {
-	u := in.app.UI
-	domain := normaliseDomain(in.f.Domain)
-	u.Info("rexctl would do this:")
-	steps := append([]string{}, in.plan...)
-	steps = append(steps, fmt.Sprintf("Save Fluxer %s and its settings in %s.", stack.Embedded().Release, in.dir))
-	if in.f.NoStart {
-		steps = append(steps, "Leave Fluxer stopped.")
-	} else {
-		scheme := "https"
-		if in.plainHTTP() {
-			scheme = "http"
-		}
-		steps = append(steps, fmt.Sprintf("Download Fluxer and start it at %s://%s.", scheme, domain))
-		if in.answers != nil {
-			steps = append(steps, fmt.Sprintf("Create the admin account %s and finish setup.", in.answers.Username))
-		} else if in.f.SetupWhere == "terminal" {
-			steps = append(steps, "Ask you for the admin account details and finish setup here.")
-		} else {
-			steps = append(steps, "Show the setup token for your browser.")
-		}
-	}
-	for _, s := range steps {
-		u.Info("  %s", s)
-	}
-	return nil
-}
-
-func (in *installer) write(ctx context.Context, inst *instance.Instance, deleteOld bool) error {
-	f := in.f
-	st := inst.State
-	set := stack.Embedded()
-	images, err := stack.EmbeddedImages()
-	if err != nil {
-		return ui.Wrap(err, "This copy of rexctl has no Fluxer release in it.", "Download rexctl again.")
-	}
-	st.Settings[settings.Domain] = normaliseDomain(f.Domain)
-	if f.BehindProxy {
-		st.Settings[settings.EdgeMode] = settings.EdgeProxy
-		st.Settings[settings.EdgeBind] = f.Bind
-	}
-	if in.plainHTTP() {
-		st.Settings[publicSchemeVar] = "http"
-		in.app.UI.Info(plainHTTPNote, normaliseDomain(f.Domain))
-	}
-	if f.VoiceTCPPort > 0 {
-		st.Settings[settings.VoiceTCPPort] = strconv.Itoa(f.VoiceTCPPort)
-	}
-	if f.VoiceUDPPort > 0 {
-		st.Settings[settings.VoiceUDPPort] = strconv.Itoa(f.VoiceUDPPort)
-	}
-	if f.VoiceIP != "" {
-		st.Settings[settings.VoicePublicIP] = f.VoiceIP
-	}
-	if f.NoVoice {
-		st.Settings[settings.VoiceBundled] = "false"
-	}
-	if f.MemoryProfile != "" {
-		st.Settings[settings.MemoryProfile] = f.MemoryProfile
-	}
-	if in.storage != nil {
-		maps.Copy(st.Settings, in.storage.values())
-	}
-	store := engine.Stores(inst.Dir, in.engine, "").Data
-	if total, err := host.DiskSize(store); err == nil {
-		if profile := stack.DiskProfileFor(total); profile != "" {
-			st.Settings[settings.DiskProfile] = profile
-			in.app.UI.Info("%s is on a %s disk, so Fluxer keeps its logs, database write-ahead log and upload spool smaller. To use the usual sizes, run rexctl config unset %s.", store, ui.Bytes(int64(total)), settings.DiskProfile)
-		}
-	}
-	if _, err := secrets.Mint(st.Secrets, false); err != nil {
-		return ui.Wrap(err, "Couldn't create your instance's secrets.", "Run rexctl install again.")
-	}
-	if _, err := setup.EnsureToken(st.Secrets); err != nil {
-		return ui.Wrap(err, "Couldn't create a setup token.", "Run rexctl install again.")
-	}
-	st.Engine = instance.EngineRef{Kind: string(in.engine.Kind), Host: in.engine.Host, ID: in.engine.ID}
-	st.Release = set.Release
-	st.Images = instance.Images{Release: set.Release, Refs: maps.Clone(images.Images)}
-	if st.Images.Refs == nil {
-		st.Images.Refs = map[string]string{}
-	}
-	if err := release.WriteRelease(inst, set); err != nil {
-		return saveFailed(inst, err, fmt.Sprintf("Couldn't write Fluxer's files to %s.", inst.Dir), "rexctl install")
-	}
-	r, err := inst.Render(set, stack.OverlaysFor(st.Settings), st.Images.Refs)
-	if err != nil {
-		return saveFailed(inst, err, fmt.Sprintf("Couldn't write Fluxer's files to %s.", inst.Dir), "rexctl install")
-	}
-	if err := inst.WriteCustomTemplate(); err != nil {
-		return saveFailed(inst, err, fmt.Sprintf("Couldn't write %s to %s.", instance.CustomCompose, inst.Dir), "rexctl install")
-	}
-	st.Rendered = r.Hashes
-	if err := inst.Save(); err != nil {
-		return ui.Wrap(err, fmt.Sprintf("Couldn't save your settings in %s.", inst.Dir), "Check that you can write to it, then run rexctl install again.")
-	}
-	if deleteOld {
-		p := in.engine.Named(inst.Project(), inst.Dir)
-		err := in.app.UI.Step(ctx, "Deleting the old Fluxer data", func(ctx context.Context, s *ui.Step) error {
-			if err := p.Down(context.WithoutCancel(ctx), true); err != nil {
-				return err
-			}
-			s.Done("Deleted the old Fluxer data.")
-			return nil
-		})
-		if err != nil {
-			return ui.Wrap(engineFailure(err), "Couldn't delete the old Fluxer data.", "Run rexctl install again.")
-		}
-	}
-	return nil
+	return "browser"
 }
 
 func (in *installer) resume(ctx context.Context, inst *instance.Instance) error {
-	if err := rootlessGuard(inst); err != nil {
-		return err
-	}
-	in.app.UI.Info("Continuing the install in %s.", inst.Dir)
-	e, err := in.app.Engine(ctx, inst)
+	r, err := rt.Open(ctx, inst, in.app.UI)
 	if err != nil {
 		return err
 	}
-	in.engine = e
-	in.f.BehindProxy = inst.State.Settings[settings.EdgeMode] == settings.EdgeProxy || inst.State.Settings[settings.EdgeMode] == settings.EdgeTunnel
+	if r.Kind() == rt.Compose {
+		return legacyRefusal()
+	}
+	in.native = r.Kind() == rt.Native
+	in.container = r.Kind() == rt.Container
+	if in.container {
+		in.f.Runtime = cmp.Or(inst.State.Engine.Kind, runtimeDocker)
+		in.f.Engine = in.f.Runtime
+	}
+	if in.f.Runtime == runtimeSystemd && !in.native {
+		return ui.Refused(fmt.Sprintf("Fluxer already runs in %s in %s.", engineName(inst), inst.Dir), "To move it out of "+engineName(inst)+", run "+sudoRun(inst.Dir, dockerMoveArgs("")...)+".")
+	}
+	if in.native {
+		in.f.Runtime = runtimeSystemd
+	}
+	in.f.Project = inst.Project()
+	in.resuming = inst
+	in.inst = inst
+	in.f.Domain = inst.Domain()
+	if err := rootlessGuard(inst); err != nil {
+		return err
+	}
+	in.restoreNetwork(inst)
 	if in.f.DryRun {
 		if in.f.Storage.passed(in.c) {
 			return &ui.ExitError{Code: ui.ExitUsage, Msg: "--dry-run doesn't use the storage options when it continues an unfinished install.", Fix: "Leave out --dry-run to check and save them, or leave out the storage options."}
 		}
-		in.app.UI.Info("rexctl would start Fluxer at %s and finish setup.", inst.Origin())
+		in.app.UI.Info("rexctl would continue the install in %s.", inst.Dir)
+		in.app.UI.Card(in.review())
 		return nil
 	}
-	if err := in.resumeStorage(ctx, inst); err != nil {
-		return err
+	if in.native {
+		if err := in.app.nativeRoot(inst.Dir); err != nil {
+			return err
+		}
 	}
-	if err := in.askSetupWhere(); err != nil {
-		return err
-	}
-	if err := in.collectAnswers(inst.Domain()); err != nil {
-		return err
-	}
-	return in.app.Locked(ctx, inst, func() error { return in.start(ctx, inst) })
-}
-
-func (in *installer) start(ctx context.Context, inst *instance.Instance) error {
-	u := in.app.UI
-	in.app.remember(inst.Dir)
-	origin := inst.Origin()
-	token := setup.Token(inst.State.Secrets)
-	if token == "" && !inst.State.SetupDone {
-		t, err := setup.EnsureToken(inst.State.Secrets)
+	in.app.UI.Info("Continuing the install in %s.", inst.Dir)
+	switch {
+	case in.native:
+		rel, err := nativeRelease(ctx, inst.State.Release, nativeInstallFix)
 		if err != nil {
 			return err
 		}
-		if err := inst.Save(); err != nil {
-			return ui.Wrap(err, fmt.Sprintf("Couldn't save your settings in %s.", inst.Dir), "Check that you can write to it, then run rexctl install again.")
-		}
-		token = t
-	}
-	if in.f.NoStart {
-		inst.State.Stopped = true
-		inst.State.Installing = false
-		if err := inst.Save(); err != nil {
-			return ui.Wrap(err, fmt.Sprintf("Couldn't save your settings in %s.", inst.Dir), "Check that you can write to it, then run rexctl install again.")
-		}
-		in.installBootUnit(ctx, inst)
-		u.OK("Saved Fluxer and its settings in %s.", inst.Dir)
-		u.Info("Run rexctl start to start it.")
-		if in.f.SetupWhere != "terminal" {
-			u.Info("Then open %s and enter this setup token to create your admin account.", origin)
-			u.Highlight(token)
-		} else {
-			u.Info("Then run rexctl setup to create your admin account.")
-		}
-		return nil
-	}
-	p := in.engine.Named(inst.Project(), inst.Dir)
-	var err error
-	if in.alreadyRunning(ctx, inst) {
-		u.OK("Fluxer is already running.")
-	} else {
-		err = in.startFluxer(ctx, inst, p)
-	}
-	if err != nil {
-		return err
-	}
-	if inst.State.Stopped || inst.State.Installing {
-		inst.State.Stopped = false
-		inst.State.Installing = false
-		if err := inst.Save(); err != nil {
-			return ui.Wrap(err, fmt.Sprintf("Couldn't save your settings in %s.", inst.Dir), "Check that you can write to it, then run rexctl install again.")
-		}
-	}
-	in.installBootUnit(ctx, inst)
-	if !in.f.BehindProxy {
-		in.waitCertificate(ctx, inst, p)
-	}
-
-	client := in.app.adminClient(inst, p)
-	if done, err := setup.Done(ctx, client); err == nil && done {
-		inst.State.SetupDone = true
-		if err := inst.Save(); err != nil {
+		in.rel = rel
+	case in.container:
+		rel, err := resolveRelease(ctx, inst.State.Release)
+		if err != nil {
 			return err
 		}
-		in.app.UI.Finish(origin)
-		return nil
-	}
-	if in.f.SetupWhere != "terminal" {
-		u.Info("Your instance is ready at %s.", origin)
-		u.Info("Open it and enter this setup token to create your admin account.")
-		u.Highlight(token)
-		return nil
-	}
-	adminID, err := runSetup(ctx, in.app, in.c, inst, p, &in.f.Setup, in.answers)
-	if err != nil {
-		return err
-	}
-	in.app.UI.Finish(origin)
-	signInAfterSetup(ctx, in.app, inst, p, adminID)
-	return nil
-}
-
-func (in *installer) installBootUnit(ctx context.Context, inst *instance.Instance) {
-	if !host.BootUnitSupported() {
-		return
-	}
-	var p *engine.Project
-	if loaded, err := deploy.Load(ctx, inst, in.engine); err == nil {
-		p = loaded
-	}
-	if err := setupBootService(ctx, in.app, inst, in.engine, p, in.f.BootService); err != nil {
-		in.app.UI.Detail("%v", err)
-		in.app.UI.Warn("Fluxer won't start by itself when this machine restarts.", "Run rexctl boot on to set that up.")
-	}
-}
-
-func refreshBootUnit(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, p *engine.Project) error {
-	u, err := checks.BootUnitFor(inst, e, p)
-	if err != nil {
-		return err
-	}
-	steps, err := u.RefreshSteps(ctx)
-	if err != nil || len(steps) == 0 {
-		return err
-	}
-	ok, err := confirmHostSteps(app, steps, "Update the service that starts Fluxer with this machine?")
-	if err != nil {
-		return err
-	}
-	if !ok {
-		app.UI.Warn("The service that starts Fluxer with this machine still uses the old rexctl.", "Run rexctl doctor --fix to update it.")
-		return nil
-	}
-	return host.RunSteps(ctx, steps)
-}
-
-func (in *installer) waitCertificate(ctx context.Context, inst *instance.Instance, p *engine.Project) {
-	c, ok := checks.Get("certificate")
-	if !ok {
-		return
-	}
-	env := &checks.Env{Dir: inst.Dir, Domain: inst.Domain(), Instance: inst, Engine: in.engine, Project: p, Host: in.host}
-	last := checks.RunIn(ctx, env, checks.Installed, c)
-	if last.Status == checks.Skip {
-		return
-	}
-	_ = in.app.UI.Step(ctx, fmt.Sprintf("Getting a certificate for %s", inst.Domain()), func(ctx context.Context, s *ui.Step) error {
-		deadline := time.Now().Add(3 * time.Minute)
-		for {
-			last = checks.RunIn(ctx, env, checks.Installed, c)
-			if last.Status == checks.Skip {
-				return nil
-			}
-			if last.Status == checks.Pass {
-				s.Done("Got a certificate for %s.", inst.Domain())
-				return nil
-			}
-			if time.Now().After(deadline) {
-				return nil
-			}
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			case <-time.After(5 * time.Second):
-			}
-		}
-	})
-	if last.Status != checks.Pass && last.Message != "" {
-		in.app.UI.Warn(last.Message, last.Fix)
-	}
-}
-
-func (in *installer) startFluxer(ctx context.Context, inst *instance.Instance, p *engine.Project) error {
-	return in.app.UI.Step(ctx, "Starting Fluxer", func(ctx context.Context, s *ui.Step) error {
-		if _, err := deploy.Apply(ctx, inst, in.engine, deploy.ApplyOptions{Pull: true, OnEvent: in.app.progress(s, "Starting")}); err != nil {
-			return readyFailure(ctx, inst, p, err)
-		}
-		if err := waitForFluxer(ctx, inst, p, s, "Starting"); err != nil {
+		in.rel = rel
+		e, err := in.app.anyEngine(ctx, inst)
+		if err != nil {
 			return err
 		}
-		s.Done("Started Fluxer.")
-		return nil
-	})
-}
-
-func (in *installer) alreadyRunning(ctx context.Context, inst *instance.Instance) bool {
-	if inst.State.Stopped {
-		return false
+		in.engine = e
 	}
-	proj, err := deploy.Load(ctx, inst, in.engine)
-	if err != nil {
-		return false
+	if err := in.loadSecrets(); err != nil {
+		return err
 	}
-	plan, err := proj.Plan(ctx)
-	if err != nil || len(plan.Create)+len(plan.Recreate)+len(plan.Remove) > 0 {
-		return false
-	}
-	return proj.WaitReady(ctx, 5*time.Second, nil) == nil
+	return in.app.Locked(ctx, inst, func() error { return in.run(ctx) })
 }

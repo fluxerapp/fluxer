@@ -17,8 +17,12 @@ import (
 )
 
 func Effective(set *stack.Set, chosen, secrets, adminImport map[string]string) (map[string]string, error) {
-	if err := CheckCombination(chosen); err != nil {
+	if err := checkCombination(chosen); err != nil {
 		return nil, err
+	}
+	if set.Catalog != nil && chosen[stack.EmbeddedWorkerVar] == "" {
+		chosen = maps.Clone(chosen)
+		chosen[stack.EmbeddedWorkerVar] = "true"
 	}
 	env := map[string]string{}
 	reads := func(v string) bool { return slices.Contains(set.Vars, v) }
@@ -26,6 +30,10 @@ func Effective(set *stack.Set, chosen, secrets, adminImport map[string]string) (
 		if reads(v) {
 			env[v] = value
 		}
+	}
+	size := put
+	if set.Catalog != nil {
+		size = func(v, value string) { env[v] = value }
 	}
 
 	fixed := map[string]string{}
@@ -39,12 +47,12 @@ func Effective(set *stack.Set, chosen, secrets, adminImport map[string]string) (
 	}
 	if len(set.Profiles) > 0 {
 		for v, value := range stack.Sizing(Hardware(), chosen[MemoryProfile] == "", fixed) {
-			put(v, value)
+			size(v, value)
 		}
 	}
 
 	for v, value := range stack.DiskSizing(chosen[DiskProfile], fixed) {
-		put(v, value)
+		size(v, value)
 	}
 
 	if name := chosen[MemoryProfile]; name != "" {
@@ -54,13 +62,13 @@ func Effective(set *stack.Set, chosen, secrets, adminImport map[string]string) (
 				Fix: "Run rexctl config unset memory.profile."}
 		}
 		for v, value := range values {
-			put(v, value)
+			size(v, value)
 		}
 	}
 
 	if reads(stack.EmbeddedWorkerVar) {
 		for v, value := range stack.FoldWorker(Hardware(), env, fixed) {
-			put(v, value)
+			size(v, value)
 		}
 	}
 
@@ -96,7 +104,7 @@ func Effective(set *stack.Set, chosen, secrets, adminImport map[string]string) (
 	}
 
 	for adminKey, value := range adminImport {
-		if v, ok := TwinVar(adminKey); ok {
+		if v, ok := twinVar(adminKey); ok {
 			put(v, value)
 		}
 	}
@@ -109,10 +117,15 @@ func Effective(set *stack.Set, chosen, secrets, adminImport map[string]string) (
 
 	put(stack.SettingsLoadedVar, "true")
 
+	if set.Catalog != nil {
+		maps.Copy(env, stack.NativeSizing(env))
+		maps.DeleteFunc(env, func(v, _ string) bool { return !reads(v) && !operator[v] })
+	}
+
 	if registry := chosen[ImagesRegistry]; registry != "" {
 		for _, v := range ImageVars {
 			if ref, ok := env[v]; ok {
-				env[v] = RewriteRegistry(ref, registry)
+				env[v] = rewriteRegistry(ref, registry)
 			}
 		}
 	}
@@ -131,6 +144,8 @@ func namedVars(k Key, value string) map[string]string {
 			return nil
 		}
 		return map[string]string{"FLUXER_LIVEKIT_NODE_IP": value, "FLUXER_LIVEKIT_USE_EXTERNAL_IP": "false"}
+	case Domain:
+		value = NormalDomain(value)
 	case EdgeTrusted:
 		value = strings.Join(trustedProxyList(value), " ")
 	case StoragePath:
@@ -166,10 +181,10 @@ func derived(chosen map[string]string) map[string]string {
 	if raw := strings.TrimSpace(chosen[EdgePublicPort]); raw != "" {
 		port = raw
 	}
-	if domain := strings.ToLower(strings.TrimSpace(chosen[Domain])); domain != "" {
+	if domain := NormalDomain(strings.ToLower(strings.TrimSpace(chosen[Domain]))); domain != "" {
 		origin := scheme + "://" + domain
 		if (scheme == "https" && port != "443") || (scheme == "http" && port != "80") {
-			origin = scheme + "://" + net.JoinHostPort(domain, port)
+			origin = scheme + "://" + net.JoinHostPort(BareHost(domain), port)
 		}
 		out["FLUXER_PUBLIC_ORIGIN"] = origin
 		if mode == EdgeBundled {
@@ -183,7 +198,7 @@ func DerivedVars() []string {
 	return slices.Sorted(maps.Keys(derived(map[string]string{Domain: "example.com"})))
 }
 
-func RewriteRegistry(ref, registry string) string {
+func rewriteRegistry(ref, registry string) string {
 	name, digest, ok := strings.Cut(ref, "@")
 	if !ok || !strings.HasPrefix(digest, "sha256:") || registry == "" {
 		return ref

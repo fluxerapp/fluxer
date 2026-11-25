@@ -3,6 +3,7 @@
 package cmd
 
 import (
+	"errors"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -11,7 +12,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
+	rt "github.com/fluxerapp/fluxer/fluxer_rexctl/internal/runtime"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
 
 var sudoPath = []string{"/usr/sbin", "/usr/bin", "/sbin", "/bin"}
@@ -96,7 +100,7 @@ func ownersInstance() string {
 	if euid() != 0 || ranWithSudo() {
 		return ""
 	}
-	uid, ok := fileOwner(runningBinary())
+	uid, _, ok := host.FileOwner(runningBinary())
 	if !ok || uid == 0 {
 		return ""
 	}
@@ -110,3 +114,101 @@ func ownersInstance() string {
 	}
 	return dir
 }
+
+func absoluteBinary() string {
+	exe, err := os.Executable()
+	if err != nil {
+		return ""
+	}
+	if real, err := filepath.EvalSymlinks(exe); err == nil {
+		return real
+	}
+	return exe
+}
+
+func sudoArgs(exe string, args []string, dir string, environ []string) []string {
+	out := append([]string{exe}, args...)
+	if dir != "" && !slices.ContainsFunc(args, func(a string) bool { return a == "--dir" || strings.HasPrefix(a, "--dir=") }) {
+		out = append(out, "--dir", dir)
+	}
+	for _, kv := range environ {
+		if name, value, ok := strings.Cut(kv, "="); ok && terminalVar(name) && safeEnvValue(value) {
+			out = append(out, sudoEnvFlag+kv)
+		}
+	}
+	return out
+}
+
+const sudoEnvFlag = "--sudo-env="
+
+const maxEnvValue = 256
+
+func terminalVar(name string) bool {
+	switch name {
+	case "TERM", "COLORTERM", "LANG", "LANGUAGE", "NO_COLOR", "CLICOLOR_FORCE", "FORCE_COLOR", "COLORFGBG", "ACCESSIBLE", "TERM_PROGRAM",
+		"REXCTL_GLYPHS", "REXCTL_NO_REX", "REXCTL_REDUCED_MOTION":
+		return true
+	}
+	rest, ok := strings.CutPrefix(name, "LC_")
+	return ok && rest != "" && strings.IndexFunc(rest, func(r rune) bool { return (r < 'A' || r > 'Z') && r != '_' }) < 0
+}
+
+func safeEnvValue(v string) bool {
+	return len(v) <= maxEnvValue && strings.IndexFunc(v, func(r rune) bool { return r < 0x20 || r == 0x7f }) < 0
+}
+
+func takeSudoEnv(args []string, fromSudo bool, setenv func(string, string) error) []string {
+	out := make([]string, 0, len(args))
+	for _, a := range args {
+		kv, ok := strings.CutPrefix(a, sudoEnvFlag)
+		if !ok {
+			out = append(out, a)
+			continue
+		}
+		name, value, ok := strings.Cut(kv, "=")
+		if fromSudo && ok && terminalVar(name) && safeEnvValue(value) {
+			_ = setenv(name, value)
+		}
+	}
+	return out
+}
+
+func (a *App) asRoot(dir string) (bool, error) { return a.asRootFor(dir, "") }
+
+func (a *App) asRootFor(dir, why string) (bool, error) {
+	if euid() == 0 {
+		return true, nil
+	}
+	if !a.UI.Interactive() {
+		return false, ui.Refused("This needs root, because root manages this instance.", "Run "+sudoAgain(dir)+".")
+	}
+	ok, err := a.UI.ConfirmWith(ui.Question{Text: "This needs root. Run it with sudo now?", Detail: why, Default: true})
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		a.UI.Info("Nothing changed.")
+		return false, nil
+	}
+	exe := absoluteBinary()
+	if exe == "" {
+		return false, ui.Refused("rexctl can't find its own file to run it with sudo.", "Run "+sudoAgain(dir)+".")
+	}
+	if err := execSudoProcess(sudoArgs(exe, os.Args[1:], dir, os.Environ())); err != nil {
+		return false, ui.Wrap(err, "Couldn't run rexctl with sudo.", "Run "+sudoAgain(dir)+".")
+	}
+	return false, nil
+}
+
+func (a *App) retryAsRoot(dir string, err error) error {
+	if !errors.Is(err, rt.ErrNeedsRoot) {
+		return err
+	}
+	ok, rerr := a.asRoot(dir)
+	if ok {
+		return err
+	}
+	return rerr
+}
+
+var errDeclined = errors.New("the question was declined")

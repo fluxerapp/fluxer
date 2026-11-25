@@ -4,6 +4,7 @@ package engine
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"os"
 	"path/filepath"
@@ -14,6 +15,8 @@ import (
 	"github.com/compose-spec/compose-go/v2/types"
 	cerrdefs "github.com/containerd/errdefs"
 	"github.com/docker/compose/v5/pkg/api"
+	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/api/types/mount"
 	"github.com/moby/moby/client"
 )
 
@@ -124,7 +127,7 @@ func (p *Project) hashlessNetworks(ctx context.Context, keys []string) ([]string
 }
 
 func (p *Project) removeServices(ctx context.Context, c *conn, services []string) error {
-	err := c.svc.Remove(ctx, p.Name, api.RemoveOptions{Services: services, Stop: true, Force: true})
+	err := c.svc.Remove(ctx, p.Name, api.RemoveOptions{Services: services, Stop: true, Force: true, Volumes: true})
 	if err != nil && !errors.Is(err, api.ErrNoResources) {
 		return p.wrap("remove", err)
 	}
@@ -252,7 +255,7 @@ func (p *Project) present(ctx context.Context, op string, services []string) err
 			return nil
 		}
 	}
-	return &Error{Op: op, Class: ClassOther, Err: ErrNoContainers}
+	return &Error{Op: op, Class: ClassOther, Err: errNoContainers}
 }
 
 func (p *Project) Stop(ctx context.Context, services ...string) error {
@@ -268,7 +271,7 @@ func (p *Project) stop(ctx context.Context, timeout *time.Duration, services []s
 	if err != nil {
 		return err
 	}
-	if err := p.present(ctx, "stop", services); errors.Is(err, ErrNoContainers) {
+	if err := p.present(ctx, "stop", services); errors.Is(err, errNoContainers) {
 		return nil
 	} else if err != nil {
 		return err
@@ -328,7 +331,7 @@ func (p *Project) finishStop(ctx context.Context, c *conn) error {
 		}
 		services := strings.Fields(string(data))
 		detailf("engine: an earlier stop of %v was interrupted, finishing it", services)
-		if err := p.present(ctx, "stop", services); errors.Is(err, ErrNoContainers) {
+		if err := p.present(ctx, "stop", services); errors.Is(err, errNoContainers) {
 			_ = os.Remove(marker)
 			return nil
 		} else if err != nil {
@@ -390,7 +393,62 @@ func (p *Project) down(ctx context.Context, volumes bool, timeout *time.Duration
 	if err := p.removeHelpers(ctx, a); err != nil {
 		return err
 	}
-	return p.wrap("down", c.svc.Down(ctx, p.Name, api.DownOptions{Project: p.modelOrNil(), RemoveOrphans: true, Volumes: volumes, Timeout: timeout}))
+	var anonymous []string
+	if volumes {
+		res, err := a.ContainerList(ctx, client.ContainerListOptions{All: true, Filters: projectFilter(p.Name)})
+		if err != nil {
+			return p.wrap("down", err)
+		}
+		anonymous = anonymousVolumes(res.Items)
+	}
+	if err := p.wrap("down", c.svc.Down(ctx, p.Name, api.DownOptions{Project: p.modelOrNil(), RemoveOrphans: true, Volumes: volumes, Timeout: timeout})); err != nil || !volumes {
+		return err
+	}
+	return p.wrap("down", p.removeLeftovers(ctx, a, anonymous))
+}
+
+func anonymousVolumes(containers []container.Summary) []string {
+	var out []string
+	for _, c := range containers {
+		for _, m := range c.Mounts {
+			if m.Type != mount.TypeVolume || len(m.Name) != 64 || slices.Contains(out, m.Name) {
+				continue
+			}
+			if _, err := hex.DecodeString(m.Name); err == nil {
+				out = append(out, m.Name)
+			}
+		}
+	}
+	slices.Sort(out)
+	return out
+}
+
+func (p *Project) removeLeftovers(ctx context.Context, a client.APIClient, anonymous []string) error {
+	for _, name := range anonymous {
+		if _, err := a.VolumeRemove(ctx, name, client.VolumeRemoveOptions{}); err != nil && !cerrdefs.IsNotFound(err) && !cerrdefs.IsConflict(err) {
+			return err
+		}
+	}
+	res, err := a.NetworkList(ctx, client.NetworkListOptions{Filters: projectFilter(p.Name)})
+	if err != nil {
+		return err
+	}
+	for _, n := range res.Items {
+		in, err := a.NetworkInspect(ctx, n.ID, client.NetworkInspectOptions{})
+		if cerrdefs.IsNotFound(err) {
+			continue
+		}
+		if err != nil {
+			return err
+		}
+		if len(in.Network.Containers) > 0 {
+			continue
+		}
+		if _, err := a.NetworkRemove(ctx, n.ID, client.NetworkRemoveOptions{}); err != nil && !cerrdefs.IsNotFound(err) && !cerrdefs.IsConflict(err) {
+			return err
+		}
+	}
+	return nil
 }
 
 func (p *Project) DownKeeping(ctx context.Context, keep ...string) error {

@@ -1,0 +1,14 @@
+http:
+  routers:
+    fluxer:
+      rule: "Host(`{{.Domain}}`)"
+      entryPoints:
+        - websecure
+      service: fluxer
+      tls:
+        certResolver: letsencrypt
+  services:
+    fluxer:
+      loadBalancer:
+        servers:
+          - url: "http://{{.Upstream}}"

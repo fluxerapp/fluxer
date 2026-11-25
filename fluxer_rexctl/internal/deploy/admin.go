@@ -13,6 +13,12 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 )
 
+const clientIPHeaderVar = "FLUXER_CLIENT_IP_HEADER_NAME"
+
+func ClientIPHeader(inst *instance.Instance) string {
+	return inst.Setting(clientIPHeaderVar)
+}
+
 func SendAdminImport(ctx context.Context, inst *instance.Instance, api *adminapi.Client) error {
 	ai := inst.State.AdminImport
 	if ai == nil || ai.SentAt != "" {

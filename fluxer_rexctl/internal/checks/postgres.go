@@ -14,8 +14,8 @@ import (
 const maxSCRAMIterations = 100000
 
 func init() {
-	Register(Check{ID: "postgres-password", Phases: Installed, Run: runPostgresPassword, Fix: fixPostgresRole, SafeFix: true})
-	Register(Check{ID: "postgres-scram", Phases: Installed, Run: runPostgresSCRAM, Fix: fixPostgresRole, SafeFix: true})
+	Register(Check{ID: "postgres-password", Phases: Installed, Run: composeOnly(runPostgresPassword), Fix: fixPostgresRole, SafeFix: true})
+	Register(Check{ID: "postgres-scram", Phases: Installed, Run: composeOnly(runPostgresSCRAM), Fix: fixPostgresRole, SafeFix: true})
 }
 
 const psqlLocal = `exec psql -X -q -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" "$@"`

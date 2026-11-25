@@ -11,20 +11,21 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 
-	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/deploy"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/release"
-	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
+	rt "github.com/fluxerapp/fluxer/fluxer_rexctl/internal/runtime"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/voice"
 )
@@ -72,7 +73,7 @@ func newVoiceJoinCmd(app *App) *cobra.Command {
 			if err := checkHTTPBind(f, voice.InterfaceAddresses()); err != nil {
 				return err
 			}
-			token, err := joinToken(c, args, f)
+			token, err := joinToken(c, app, args, f)
 			if err != nil {
 				return err
 			}
@@ -88,10 +89,11 @@ func newVoiceJoinCmd(app *App) *cobra.Command {
 	fl.IntVar(&f.HTTPPort, "http-port", 0, "port for your own proxy, with --no-edge")
 	fl.StringVar(&f.HTTPBind, "http-bind", "", "address the port for your own proxy listens on, with --no-edge (default 127.0.0.1)")
 	fl.BoolVar(&f.TokenStdin, "token-stdin", false, "read the join token from standard input")
+	fl.StringVar(&f.Runtime, "runtime", "", "where the voice server runs, systemd, docker or podman (default systemd on Debian or Ubuntu as root, otherwise a container)")
 	return c
 }
 
-func joinToken(c *cobra.Command, args []string, f *voiceFlags) (string, error) {
+func joinToken(c *cobra.Command, app *App, args []string, f *voiceFlags) (string, error) {
 	token := ""
 	switch {
 	case len(args) == 2:
@@ -106,6 +108,18 @@ func joinToken(c *cobra.Command, args []string, f *voiceFlags) (string, error) {
 		token = os.Getenv(voiceTokenEnv)
 	}
 	token = strings.TrimSpace(token)
+	if token == "" && app.UI.Interactive() {
+		field := ui.Field{Title: "Join token", Description: "From rexctl voice token on the Fluxer machine. It starts with fvj_.", Value: &token, Secret: true, Validate: func(v string) error {
+			if !voice.ValidToken(strings.TrimSpace(v)) {
+				return errors.New("that isn't a voice join token. They start with fvj_")
+			}
+			return nil
+		}}
+		if err := app.UI.Ask(c, field); err != nil {
+			return "", err
+		}
+		token = strings.TrimSpace(token)
+	}
 	if token == "" {
 		return "", ui.Usage("Pass the join token after the domain, set " + voiceTokenEnv + ", or pass --token-stdin.")
 	}
@@ -154,6 +168,8 @@ func openVoiceMachine(dir string) (*instance.Instance, bool, error) {
 }
 
 type joinPlan struct {
+	inst     *instance.Instance
+	rel      *release.Release
 	domain   string
 	disc     *voice.Discovery
 	preview  *voice.Preview
@@ -162,7 +178,6 @@ type joinPlan struct {
 	address  string
 	ipCert   bool
 	edge     string
-	edgeInst *instance.Instance
 	newEdge  bool
 	firewall host.Firewall
 	netIPv6  bool
@@ -196,8 +211,19 @@ func runVoiceJoin(ctx context.Context, app *App, domain, token string, f *voiceF
 	if err != nil {
 		return err
 	}
-	e, err := app.Engine(ctx, nil)
-	if err != nil && joinInstallsDocker(err, runtime.GOOS, f.DryRun) {
+	if err := chooseJoinRuntime(ctx, inst, fresh, f); err != nil {
+		return err
+	}
+	if err := joinBesideInstances(f); err != nil {
+		return err
+	}
+	e, err := joinEngine(ctx, inst)
+	if err != nil && joinStartsPodman(err, inst, f) {
+		e, err = startPodmanHere(ctx, app)
+		if err == nil {
+			app.engine = e
+		}
+	} else if err != nil && joinInstallsDocker(err, runtime.GOOS, f.DryRun) && inst.State.Engine.Kind != string(engine.Podman) {
 		e, err = installDockerHere(ctx, app, dir, "run the same command again", func() (bool, error) {
 			if app.UI.Yes() || !app.UI.Interactive() {
 				return true, nil
@@ -211,19 +237,32 @@ func runVoiceJoin(ctx context.Context, app *App, domain, token string, f *voiceF
 	if err != nil {
 		return err
 	}
-	plan := &joinPlan{domain: domain, disc: disc, coords: f.HasCoords, lat: f.Lat, long: f.Long}
+	if e != nil && inst.State.Runtime == instance.RuntimeContainer {
+		inst.State.Engine = instance.EngineRef{Kind: string(e.Kind), Host: e.Host, ID: e.ID}
+	}
+	plan := &joinPlan{inst: inst, domain: domain, disc: disc, coords: f.HasCoords, lat: f.Lat, long: f.Long}
 	if err := planJoin(ctx, app, client, e, inst, token, plan, f); err != nil {
 		return err
 	}
-	if err := podmanJoinRefusal(e, plan); err != nil {
+	if e != nil {
+		if err := podmanRefusal(e); err != nil {
+			return err
+		}
+	}
+	if err := rootlessEdgeRefusal(e, plan); err != nil {
+		return err
+	}
+	if plan.rel, err = voiceHostRelease(ctx, inst, plan.preview.Release); err != nil {
 		return err
 	}
 	showJoinSummary(app, plan, f)
 	if f.DryRun {
 		return nil
 	}
-	if err := confirmVoice(app, "Install this voice server?"); err != nil {
-		return err
+	if app.UI.Interactive() && !app.UI.Yes() {
+		if err := confirmVoice(app, "Install this voice server?"); err != nil {
+			return err
+		}
 	}
 	if fresh {
 		if err := os.MkdirAll(inst.Path(instance.StateDirName), 0o700); err != nil {
@@ -242,8 +281,27 @@ func runVoiceJoin(ctx context.Context, app *App, domain, token string, f *voiceF
 	return finishJoin(ctx, app, client, e, inst, token, plan, f)
 }
 
-func podmanJoinRefusal(e *engine.Engine, plan *joinPlan) error {
-	if e.Kind != engine.Podman || !olderPodman(e.Version) || plan.edgeInst != nil {
+func joinBesideInstances(f *voiceFlags) error {
+	if f.NoEdge {
+		return nil
+	}
+	for _, dir := range instance.ReadRecord(instance.OwnScope()).Instances {
+		if other, err := instance.Find(dir); err == nil && !other.State.IsVoice() {
+			return ui.Refused(fmt.Sprintf("The Fluxer instance in %s holds ports 80 and 443 on this machine.", dir), "Run rexctl voice add there to give it another voice server, or pass --no-edge and --endpoint to put this one behind your own proxy.")
+		}
+	}
+	return nil
+}
+
+func rootlessEdgeRefusal(e *engine.Engine, plan *joinPlan) error {
+	if e == nil || plan.srv.Edge != voice.EdgeOwn || !host.LowPortsBlocked(e.Rootless) {
+		return nil
+	}
+	return ui.Refused(fmt.Sprintf("Rootless %s can't open ports 80 and 443 on this machine.", e.Kind.Name()), "Run the same command again with sudo, or pass --no-edge and --endpoint to put the voice server behind your own proxy.")
+}
+
+func podmanRefusal(e *engine.Engine) error {
+	if e.Kind != engine.Podman || !olderPodman(e.Version) {
 		return nil
 	}
 	return ui.Refused(fmt.Sprintf("Podman %s doesn't start voice servers again when this machine restarts.", e.Version), fmt.Sprintf("Upgrade Podman to %s or later, or use Docker.", podmanRestartsContainers))
@@ -253,532 +311,43 @@ func joinInstallsDocker(err error, goos string, dryRun bool) bool {
 	return goos == "linux" && !dryRun && !errors.Is(err, context.Canceled) && engine.ClassOf(err) == engine.ClassUnreachable
 }
 
-func planJoin(ctx context.Context, app *App, client *voice.Client, e *engine.Engine, inst *instance.Instance, token string, plan *joinPlan, f *voiceFlags) error {
-	pctx, cancel := context.WithTimeout(ctx, 15*time.Second)
-	publicIP, _ := host.PublicIPv4(pctx)
-	cancel()
-	if f.IP != "" {
-		publicIP = f.IP
-	}
-	publicIPv6 := detectIPv6(ctx, f)
-	if publicIP == "" && publicIPv6 == "" {
-		return ui.Refused("This machine has no public IPv4 or IPv6 address that rexctl can find.", "Pass --ip or --ipv6 if the address is known.")
-	}
-	reach, err := assessJoin(app, publicIP, publicIPv6, f.IP, voice.InterfaceAddresses(), voice.DefaultRouteIPv4())
-	if err != nil {
-		return err
-	}
-	plan.reach = reach
-	plan.hostMem, plan.cpus = host.Hardware()
-	plan.preview, err = client.Preview(ctx, plan.disc.APIPublic, token, voice.PreviewRequest{
-		PublicIPv4: reach.PublicIPv4, PublicIPv6: reach.PublicIPv6, RegionID: f.Region, CPUCount: plan.cpus, MemoryBytes: plan.hostMem, RexctlVersion: app.Version,
-	})
-	if err != nil {
-		return joinError(err, plan.domain, "")
-	}
-	plan.image, plan.imageWhy = joinImage(app, plan.preview, f)
-	plan.firewall, _ = host.DetectFirewall(ctx)
-	if err := planEdge(ctx, app, e, inst, plan, f); err != nil {
-		return err
-	}
-	network := voice.MachineNetwork
-	if plan.edgeInst != nil {
-		network = plan.edgeInst.Project() + "_fluxer"
-	}
-	if err := planJoinIPv6(ctx, app, e, inst, plan, network, f); err != nil {
-		return err
-	}
-	id, err := chooseJoinID(plan.preview, f.ID, inst, voiceIDsInUse(ctx, e, inst, voice.JoinedProject("")))
-	if err != nil {
-		return err
-	}
-	if plan.edge == voice.EdgeOwn {
-		if err := chooseAddress(ctx, app, plan, id, f); err != nil {
-			return err
-		}
-	}
-	tcp, udp := f.TCPPort, f.UDPPort
-	if existing := inst.State.VoiceServer(id); existing != nil {
-		tcp, udp = existing.TCPPort, existing.UDPPort
-	}
-	if tcp == 0 || udp == 0 {
-		pt, pu := voice.PickPorts(takenVoicePorts(ctx, e, inst), freeOnHost)
-		tcp, udp = orInt(tcp, pt), orInt(udp, pu)
-	}
-	if tcp == 0 || udp == 0 {
-		return ui.Refused("No free pair of ports is left for voice on this machine.", "Pass --tcp-port and --udp-port.")
-	}
-	secret, err := voice.NewSecret()
-	if err != nil {
-		return err
-	}
-	if existing := inst.State.VoiceServer(id); existing != nil {
-		secret = existing.Secret
-	}
-	memory := f.Memory
-	if memory == "" {
-		memory = voice.MachineMemory(plan.hostMem)
-	}
-	soft := f.SoftLimit
-	if soft == 0 {
-		if plan.preview.SoftLimit != nil {
-			soft = *plan.preview.SoftLimit
-		} else {
-			soft = voice.SoftLimit(plan.cpus)
-		}
-	}
-	httpPort, httpBind := 0, ""
-	if f.NoEdge {
-		httpPort = f.HTTPPort
-		if existing := inst.State.VoiceServer(id); httpPort == 0 && existing != nil {
-			httpPort = existing.HTTPPort
-		}
-		if httpPort == 0 {
-			httpPort = pickHTTPPort(takenVoicePorts(ctx, e, inst), tcp, freeOnHost)
-		}
-		httpBind = f.HTTPBind
-		if existing := inst.State.VoiceServer(id); !f.HTTPBindSet && existing != nil {
-			httpBind = existing.HTTPBind
-		}
-	}
-	plan.srv = instance.VoiceServer{
-		ID:        id,
-		Region:    plan.preview.Region.ID,
-		Key:       voice.Key(id),
-		Secret:    secret,
-		TCPPort:   tcp,
-		UDPPort:   udp,
-		HTTPPort:  httpPort,
-		HTTPBind:  httpBind,
-		NodeIP:    plan.reach.PublicIPv4,
-		NodeIPv6:  plan.reach.PublicIPv6,
-		BindIP:    bindAddress(f.IP, voice.InterfaceAddresses()),
-		Image:     plan.image,
-		Pinned:    f.Image != "",
-		Memory:    memory,
-		SoftLimit: soft,
-		Project:   voice.JoinedProject(id),
-		Network:   network,
-		Webhook:   plan.preview.WebhookURL,
-		Instance:  plan.domain,
-		Edge:      plan.edge,
-		Joined:    true,
-		Turn:      settings.TurnServersValue(plan.preview.TurnServers),
-	}
-	if f.NoEdge {
-		plan.srv.Endpoint = strings.TrimRight(f.Endpoint, "/")
-	} else {
-		plan.srv.Endpoint = voice.Endpoint(plan.address, id)
-	}
-	if u, err := url.Parse(plan.srv.Endpoint); err == nil {
-		plan.srv.Hostname = u.Hostname()
-	}
-	return nil
-}
-
-func chooseJoinID(preview *voice.Preview, flagID string, inst *instance.Instance, taken []string) (string, error) {
-	id, err := pickJoinID(preview, flagID, inst, taken)
-	if err != nil {
-		return "", err
-	}
-	if err := checkJoinID(preview, id); err != nil {
-		return "", err
-	}
-	return id, nil
-}
-
-func checkJoinID(preview *voice.Preview, id string) error {
-	if id != voice.EdgeID && voice.ValidID(id) {
-		return nil
-	}
-	fix := "Pass --id with lowercase letters, digits and dashes."
-	if preview.ServerIDPinned {
-		fix = "Make a new token on the Fluxer machine."
-	}
-	return ui.Refused(fmt.Sprintf("rexctl can't use the server ID %q.", id), fix)
-}
-
-func pickJoinID(preview *voice.Preview, flagID string, inst *instance.Instance, taken []string) (string, error) {
-	id := preview.ServerID
-	switch {
-	case flagID != "" && preview.ServerIDPinned && flagID != id:
-		return "", ui.Refused(fmt.Sprintf("The token is for the server ID %s.", id), "Leave out --id.")
-	case flagID != "":
-		id = flagID
-	}
-	if existing := inst.State.VoiceServer(id); existing != nil {
-		if existing.NodeURL != "" {
-			return "", ui.Refused(fmt.Sprintf("This machine already runs %s.", id), "Pass --id with another ID.")
-		}
-		return id, nil
-	}
-	if !slices.Contains(taken, id) {
-		return id, nil
-	}
-	switch {
-	case preview.ServerIDPinned:
-		return "", ui.Refused(fmt.Sprintf("The token is for the server ID %s, and this machine already has a voice server or Compose project with that ID.", id), "Make a new token with another server ID on the Fluxer machine.")
-	case flagID != "":
-		return "", ui.Refused(fmt.Sprintf("This machine already has a voice server or Compose project with the ID %s.", id), "Pass --id with another ID.")
-	}
-	return voice.NextID(preview.Region.ID, taken), nil
-}
-
-func assessJoin(app *App, publicIP, publicIPv6, flagIP string, local []string, routeIP string) (voice.Reachability, error) {
-	reach := voice.Assess(publicIP, publicIPv6, local, routeIP)
-	if flagIP != "" {
-		reach.CGNAT = false
-	}
-	if reach.CGNAT && reach.PublicIPv6 != "" {
-		app.UI.Info("This machine is behind CGNAT on IPv4, a shared address that can't take incoming calls. The server uses IPv6 only.")
-		reach.PublicIPv4, reach.BehindNAT, reach.CGNAT = "", false, false
-	}
-	if reach.CGNAT {
-		return reach, ui.Refused("This machine is behind CGNAT, a shared address that can't take incoming calls.", "Pass --ip with the machine's public address if it has one of its own.")
-	}
-	return reach, nil
-}
-
-func detectIPv6(ctx context.Context, f *voiceFlags) string {
-	if f.NoIPv6 {
-		return ""
-	}
-	if f.IPv6 != "" {
-		return f.IPv6
-	}
-	pctx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	seen, _ := host.PublicIPv6(pctx)
-	cancel()
-	return voice.MachineIPv6(seen)
-}
-
-func ipv6EngineText(e *engine.Engine) string {
-	switch {
-	case e.Kind != engine.Docker:
-		return fmt.Sprintf("voice servers on IPv6 need Docker %s or later, and this machine runs %s", engine.MinDockerIPv6, e.Kind)
-	case e.Rootless:
-		return "voice servers on IPv6 need rootful Docker, and this machine runs Docker rootless"
-	}
-	return fmt.Sprintf("voice servers on IPv6 need Docker %s or later, and this machine runs Docker %s", engine.MinDockerIPv6, e.Version)
-}
-
-func planJoinIPv6(ctx context.Context, app *App, e *engine.Engine, inst *instance.Instance, plan *joinPlan, network string, f *voiceFlags) error {
-	exists, has6, err := e.NetworkIPv6(ctx, network)
-	if err != nil {
-		return engineFailure(err)
-	}
-	why, fix := "", ""
-	switch {
-	case !e.IPv6Voice():
-		why, fix = ipv6EngineText(e), fmt.Sprintf("Upgrade Docker to %s or later.", engine.MinDockerIPv6)
-	case plan.edgeInst != nil && !has6:
-		why, fix = "the network of the Fluxer instance on this machine has no IPv6", "On this machine, run rexctl config set network.ipv6 true."
-	case exists && !has6, !exists && plan.edge == voice.EdgeOwn && !plan.newEdge && inst.State.VoiceEdge != nil && !inst.State.VoiceEdge.IPv6:
-		why, fix = "the voice network on this machine was made without IPv6", "Remove the voice servers on this machine with rexctl voice remove --all, then join again."
-	case bindAddress(f.IP, voice.InterfaceAddresses()) != "":
-		why, fix = "--ip binds the ports to one IPv4 address", "Leave out --ip."
-	}
-	if plan.reach.PublicIPv6 != "" && why != "" {
-		if plan.reach.PublicIPv4 == "" {
-			return ui.Refused("This machine has only IPv6, and "+why+".", fix)
-		}
-		app.UI.Info("This machine has IPv6 too. The server offers only IPv4, because %s.", why)
-		plan.reach.PublicIPv6 = ""
-	}
-	plan.netIPv6 = plan.reach.PublicIPv6 != ""
-	return nil
-}
-
-func pickHTTPPort(taken map[host.Port]bool, tcp int, free func(int, string) bool) int {
-	for n := 7880; n < 7980; n++ {
-		if n != tcp && !taken[host.Port{Number: n, Proto: "tcp"}] && free(n, "tcp") {
-			return n
-		}
-	}
-	return 0
-}
-
-func bindAddress(ip string, local []string) string {
-	if ip != "" && slices.Contains(local, ip) {
-		return ip
-	}
-	return ""
-}
-
-func joinFirewallText(fw host.Firewall, ports int, noFirewall bool) string {
-	switch {
-	case fw == host.FirewallNone:
-		return "none found on this machine. Open the ports in your provider's firewall."
-	case noFirewall:
-		return fmt.Sprintf("%s, left alone. Open the ports in it and in your provider's firewall.", fw)
-	}
-	return fmt.Sprintf("%s, will open %d ports. Open the same %d in your provider's firewall.", fw, ports, ports)
-}
-
-func orInt(v, fallback int) int {
-	if v != 0 {
-		return v
-	}
-	return fallback
-}
-
-func joinImage(app *App, preview *voice.Preview, f *voiceFlags) (string, string) {
-	if f.Image != "" {
-		return f.Image, "from --image"
-	}
-	own := ownLiveKitImage()
-	switch {
-	case preview.Release == "" || !release.Valid(preview.Release):
-		return own, "the pin of this rexctl, because the instance runs a development build"
-	case preview.Release == ownAPIBuild():
-		return own, "matches the release the instance runs"
-	default:
-		return own, fmt.Sprintf("the pin of rexctl %s. The instance runs another release, and rexctl upgrade follows it", app.Version)
-	}
-}
-
-func planEdge(ctx context.Context, app *App, e *engine.Engine, inst *instance.Instance, plan *joinPlan, f *voiceFlags) error {
-	if f.NoEdge {
-		plan.edge = voice.EdgeNone
-		return nil
-	}
-	owners, _ := e.PublishedHostPorts(ctx)
-	holder := ""
-	for _, o := range owners {
-		if (o.Number == 443 || o.Number == 80) && o.Proto == "tcp" {
-			holder = o.Project
-		}
-	}
-	switch {
-	case holder == voice.EdgeProject:
-		plan.edge = voice.EdgeOwn
-	case holder != "":
-		for _, dir := range instance.ReadRecord(instance.OwnScope()).Instances {
-			other, err := instance.Find(dir)
-			if err == nil && !other.State.IsVoice() && other.Project() == holder {
-				if f.Hostname != "" {
-					return ui.Refused(fmt.Sprintf("Ports 80 and 443 belong to the Fluxer instance in %s. The server uses that instance's domain.", dir), "Leave out --hostname.")
-				}
-				plan.edge, plan.edgeInst = voice.EdgeInstance, other
-				plan.address = other.Domain()
-				return nil
-			}
-		}
-		return ui.Refused(fmt.Sprintf("Ports 80 and 443 belong to the Compose project %s.", holder), "Pass --no-edge and --endpoint to use your own proxy.")
-	default:
-		for _, p := range []int{80, 443} {
-			if used, owner, err := host.PortInUse("tcp", p); err == nil && used {
-				if owner == "" {
-					owner = "another program"
-				}
-				return ui.Refused(fmt.Sprintf("Port %d is in use by %s.", p, owner), "Pass --no-edge and --endpoint to use your own proxy.")
-			}
-		}
-		plan.edge, plan.newEdge = voice.EdgeOwn, true
-	}
-	return nil
-}
-
-func chooseAddress(ctx context.Context, app *App, plan *joinPlan, id string, f *voiceFlags) error {
-	pinned := ""
-	if plan.preview.Hostname != nil {
-		pinned = strings.ToLower(*plan.preview.Hostname)
-	}
-	name := strings.ToLower(strings.TrimSuffix(strings.TrimSpace(f.Hostname), "."))
-	if pinned != "" && name != "" && name != pinned {
-		return ui.Refused(fmt.Sprintf("The token is for the hostname %s.", pinned), "Leave out --hostname.")
-	}
-	if name == "" {
-		name = pinned
-	}
-	only6 := plan.reach.PublicIPv4 == ""
-	resolve := hostnameLookup()
-	check := func(host string) voice.HostnameCheck {
-		answer, err := resolve(ctx, host)
-		if err != nil {
-			return voice.HostnameMissing
-		}
-		return voice.CheckHostname(answer, plan.reach.PublicIPv4, plan.reach.PublicIPv6, voice.InterfaceAddresses())
-	}
-	if name == "" && plan.preview.SuggestedHostname != "" && check(plan.preview.SuggestedHostname).Usable() {
-		name = plan.preview.SuggestedHostname
-	}
-	if name == "" && only6 {
-		return ui.Refused("This machine has only IPv6, and a voice server on IPv6 needs a hostname.", fmt.Sprintf("Point a hostname at %s with an AAAA record, then pass it with --hostname.", plan.reach.PublicIPv6))
-	}
-	if name == "" {
-		plan.address, plan.ipCert = plan.reach.PublicIPv4, true
-		return nil
-	}
-	if pinned != "" || only6 {
-		if waitForHostname(ctx, app, name, plan.reach, check, f.DryRun, true) || f.DryRun {
-			plan.address = name
-			return nil
-		}
-		why := fmt.Sprintf("%s doesn't point at this machine yet.", name)
-		if pinned != "" {
-			why = fmt.Sprintf("The token needs the hostname %s, and it doesn't point at this machine yet.", name)
-		}
-		return ui.Refused(why, "Point it at "+addressText(plan.reach)+" with DNS only, then run the same command again.")
-	}
-	if waitForHostname(ctx, app, name, plan.reach, check, f.DryRun, false) {
-		plan.address = name
-		return nil
-	}
-	app.UI.Info("Using %s for now. Once DNS points at this machine, run rexctl voice hostname %s %s.", plan.reach.PublicIPv4, id, name)
-	plan.address, plan.ipCert = plan.reach.PublicIPv4, true
-	return nil
-}
-
-func addressText(addrs voice.Reachability) string {
-	return ui.JoinAnd(slices.DeleteFunc([]string{addrs.PublicIPv4, addrs.PublicIPv6}, func(s string) bool { return s == "" }))
-}
-
-func waitForHostname(ctx context.Context, app *App, name string, addrs voice.Reachability, check func(string) voice.HostnameCheck, dryRun, always bool) bool {
-	result := check(name)
-	if result.Usable() {
-		hostnameNote(app, name, result)
-		return true
-	}
-	switch result {
-	case voice.HostnameProxied:
-		app.UI.Warn(fmt.Sprintf("%s goes through the Cloudflare proxy.", name), "Set the record to DNS only. Calls can't go through the proxy.")
-	case voice.HostnameIPv6Elsewhere:
-		app.UI.Warn(fmt.Sprintf("%s has an AAAA record that points somewhere else.", name), "Remove that record. Let's Encrypt checks IPv6 first.")
-	default:
-		app.UI.Info("%s doesn't point at this machine yet. Add these records at your DNS provider:", name)
-		app.UI.Info("")
-		if addrs.PublicIPv4 != "" {
-			app.UI.Info("  %s.  A     %s", name, addrs.PublicIPv4)
-		}
-		if addrs.PublicIPv6 != "" {
-			app.UI.Info("  %s.  AAAA  %s", name, addrs.PublicIPv6)
-		}
-		app.UI.Info("")
-		app.UI.Info("On Cloudflare, set the records to DNS only.")
-	}
-	if dryRun || !always && (app.UI.Yes() || !app.UI.Interactive()) {
+func joinStartsPodman(err error, inst *instance.Instance, f *voiceFlags) bool {
+	if inst.State.Runtime != instance.RuntimeContainer || inst.State.Engine.Kind == string(engine.Docker) || !joinInstallsDocker(err, runtime.GOOS, f.DryRun) {
 		return false
 	}
-	if always {
-		app.UI.Info("Waiting up to 10 minutes.")
-	} else {
-		app.UI.Info("Waiting up to 10 minutes. rexctl uses the IP address after that.")
+	if _, err := exec.LookPath("podman"); err != nil {
+		return false
 	}
-	deadline := time.Now().Add(dnsWait)
-	for time.Now().Before(deadline) {
-		select {
-		case <-ctx.Done():
-			return false
-		case <-time.After(15 * time.Second):
+	return inst.State.Engine.Kind == string(engine.Podman) || !dockerInstalled()
+}
+
+func startPodmanHere(ctx context.Context, app *App) (*engine.Engine, error) {
+	rootless := os.Geteuid() != 0
+	s := host.CheckPodman(ctx, rootless, true)
+	if !s.Systemd {
+		return nil, ui.Refused("Podman's API socket isn't running.", "Start podman.socket, then run the same command again.")
+	}
+	steps := s.Steps()
+	if !host.PodmanRestartOn(ctx, rootless) {
+		steps = append(steps, host.PodmanRestartStep(rootless))
+	}
+	var e *engine.Engine
+	err := app.UI.Step(ctx, "Starting Podman's API socket", func(ctx context.Context, st *ui.Step) error {
+		if err := host.RunSteps(ctx, steps); err != nil {
+			if errors.Is(err, host.ErrNoUserSession) {
+				msg, fix := host.NoUserSession("the same command again")
+				return ui.Wrap(err, msg, fix)
+			}
+			return ui.Wrap(err, "Couldn't start Podman's API socket.", "Run the same command again with --verbose to see why.")
 		}
-		if result := check(name); result.Usable() {
-			app.UI.OK("%s points at this machine.", name)
-			hostnameNote(app, name, result)
-			return true
+		var err error
+		if e, err = engine.Connect(ctx, engine.ConnectOptions{Prefer: engine.Podman, AllowOld: true}); err != nil {
+			return rt.EngineError(engine.Podman, err)
 		}
-	}
-	return false
-}
-
-func hostnameNote(app *App, name string, result voice.HostnameCheck) {
-	switch result {
-	case voice.HostnameIPv4Front:
-		app.UI.Info("%s also has an A record for another machine. That machine has to forward ports 80 and 443 here for callers with only IPv4.", name)
-	case voice.HostnameNoA:
-		app.UI.Warn(fmt.Sprintf("%s has no A record.", name), "Callers with only IPv4 can't connect to this server until you add one that points at this machine.")
-	case voice.HostnameNoAAAA:
-		app.UI.Warn(fmt.Sprintf("%s has no AAAA record.", name), "Callers with only IPv6 can't connect to this server until you add one that points at this machine.")
-	}
-}
-
-func joinRegionText(p *voice.Preview, requested string) string {
-	region := p.Region.ID
-	if p.Region.Name != "" {
-		region += " (" + p.Region.Name + ")"
-	}
-	if p.Region.New {
-		return region + ", a new region from the token"
-	}
-	source := p.Region.Source
-	if source == "" && requested != "" && requested == p.Region.ID {
-		source = "requested"
-	}
-	if p.Region.DistanceKm == nil {
-		switch source {
-		case "token":
-			return region + ", from the token"
-		case "requested":
-			return region + ", from --region"
-		}
-		return region
-	}
-	km := *p.Region.DistanceKm
-	switch source {
-	case "nearest":
-		return region + fmt.Sprintf(", nearest existing region, %.0f km", km)
-	case "token":
-		return region + fmt.Sprintf(", from the token, %.0f km away", km)
-	case "requested":
-		return region + fmt.Sprintf(", from --region, %.0f km away", km)
-	}
-	return region + fmt.Sprintf(", %.0f km away", km)
-}
-
-func showJoinSummary(app *App, plan *joinPlan, f *voiceFlags) {
-	u := app.UI
-	s := plan.srv
-	p := plan.preview
-	region := joinRegionText(p, f.Region)
-	cert := "Let's Encrypt for " + plan.address
-	switch {
-	case s.Edge == voice.EdgeNone:
-		cert = "from your own proxy"
-	case s.Edge == voice.EdgeInstance:
-		cert = "the certificate of " + plan.address
-	case plan.ipCert:
-		cert = "Let's Encrypt IP address certificate for " + plan.address + ", renewed about every 6 days"
-	}
-	ports := []string{fmt.Sprintf("%d/tcp", s.TCPPort), fmt.Sprintf("%d/udp", s.UDPPort)}
-	if plan.newEdge {
-		ports = append(ports, "80/tcp", "443/tcp")
-	}
-	fw := joinFirewallText(plan.firewall, len(ports), f.NoFirewall)
-	ip := orNone(s.NodeIP)
-	if plan.reach.BehindNAT {
-		ip += ", behind NAT. Forward each port to the same port number on this machine."
-	}
-	rows := [][]string{
-		{"Server ID", s.ID},
-		{"Region", region},
-		{"Endpoint", s.Endpoint},
-		{"Certificate", cert},
-		{"Public IPv4", ip},
-		{"Public IPv6", orNone(s.NodeIPv6)},
-		{"Ports", strings.Join(ports, ", ")},
-		{"Firewall", fw},
-		{"LiveKit", s.Image + ", " + plan.imageWhy},
-		{"Memory limit", fmt.Sprintf("%s of %s", s.Memory, voice.HumanBytes(plan.hostMem))},
-		{"Soft limit", plural(s.SoftLimit, "connection", "connections")},
-		{"Webhook", s.Webhook},
-	}
-	if s.HTTPPort > 0 {
-		rows = append(rows, []string{"Local port", voice.HTTPAddress(s.HTTPBind, s.HTTPPort) + " for your proxy"})
-	}
-	u.Info("Voice server for %s", plan.domain)
-	u.Info("")
-	for _, r := range rows {
-		u.Info("  %-15s %s", r[0], r[1])
-	}
-	u.Info("")
-	u.Info("Change any of these with flags. Run rexctl voice join --help to see them.")
-}
-
-func orNone(v string) string {
-	if v == "" {
-		return "none"
-	}
-	return v
+		st.Done("Started Podman's API socket.")
+		return nil
+	})
+	return e, err
 }
 
 func finishJoin(ctx context.Context, app *App, client *voice.Client, e *engine.Engine, inst *instance.Instance, token string, plan *joinPlan, f *voiceFlags) error {
@@ -792,9 +361,7 @@ func finishJoin(ctx context.Context, app *App, client *voice.Client, e *engine.E
 		srv.CreatedAt = time.Now().UTC().Truncate(time.Second)
 	}
 	inst.State.Voice = append(inst.State.Voice, srv)
-	if plan.edgeInst != nil {
-		inst.State.VoiceEdge = &instance.VoiceEdge{Instance: plan.edgeInst.Dir}
-	} else if inst.State.VoiceEdge == nil && srv.Edge == voice.EdgeOwn {
+	if inst.State.VoiceEdge == nil && srv.Edge == voice.EdgeOwn {
 		inst.State.VoiceEdge = &instance.VoiceEdge{Email: f.Email, IPv6: plan.netIPv6}
 	}
 	saved := inst.State.VoiceServer(srv.ID)
@@ -802,16 +369,11 @@ func finishJoin(ctx context.Context, app *App, client *voice.Client, e *engine.E
 		return err
 	}
 	writeVoiceSysctl(ctx, app)
-	if err := writeVoiceServer(inst, saved); err != nil {
-		return ui.Wrap(err, "Couldn't write the voice server's files.", "Check that you can write to "+inst.Dir+".")
-	}
 	dirFlag := voiceDirFlag(inst.Dir)
 	undo := fmt.Sprintf("Run rexctl voice join %s <token>%s again to retry, or rexctl voice remove %s%s to undo.", plan.domain, dirFlag, srv.ID, dirFlag)
 	err := app.UI.Step(ctx, "Starting voice server "+srv.ID, func(ctx context.Context, s *ui.Step) error {
-		if saved.Edge == voice.EdgeOwn {
-			if err := ensureVoiceEdge(ctx, app, e, inst, s); err != nil {
-				return err
-			}
+		if err := ensureVoiceHost(ctx, app, inst, plan.rel, s); err != nil {
+			return err
 		}
 		if err := startVoiceServer(ctx, app, e, inst, saved, s); err != nil {
 			return err
@@ -854,7 +416,7 @@ func finishJoin(ctx context.Context, app *App, client *voice.Client, e *engine.E
 		if err != nil {
 			return err
 		}
-		s.Done("%s answers with a valid certificate.", srv.Endpoint)
+		s.Done("%s has a valid certificate.", srv.Endpoint)
 		return nil
 	})
 	if err != nil {
@@ -866,7 +428,7 @@ func finishJoin(ctx context.Context, app *App, client *voice.Client, e *engine.E
 			}
 			check = fmt.Sprintf("Check that your proxy sends %s to %s with WebSocket upgrades", path, voice.HTTPAddress(saved.HTTPBind, saved.HTTPPort))
 		}
-		return ui.Wrap(err, fmt.Sprintf("%s doesn't answer yet.", srv.Endpoint), check+", then "+strings.ToLower(undo[:1])+undo[1:])
+		return ui.Wrap(err, fmt.Sprintf("%s doesn't respond yet.", srv.Endpoint), check+", then "+strings.ToLower(undo[:1])+undo[1:])
 	}
 	joined, err := joinWithRetries(ctx, app, client, e, inst, token, plan, saved)
 	if err != nil {
@@ -883,6 +445,7 @@ func finishJoin(ctx context.Context, app *App, client *voice.Client, e *engine.E
 		return voice.TestToken(saved.Key, saved.Secret, voice.TestRoom(), time.Now()), nil
 	}, false)
 	reportTransports(app, results, true)
+	waitInstanceSees(ctx, app, inst, time.Minute)
 	app.UI.Info("Run rexctl voice test %s on the Fluxer machine to test from outside this network.", saved.ID)
 	if saved.NodeIP == "" {
 		app.UI.Info("%s", ipv6OnlyText(saved.ID, len(plan.preview.TurnServers) > 0))
@@ -942,14 +505,18 @@ func joinWithRetries(ctx context.Context, app *App, client *voice.Client, e *eng
 
 func renameJoinedServer(ctx context.Context, app *App, e *engine.Engine, inst *instance.Instance, saved *instance.VoiceServer, next string, plan *joinPlan) error {
 	old := *saved
-	if err := removeVoiceServerProject(ctx, e, &old); err != nil {
+	vs, err := engineVoice(ctx, app, inst, e)
+	if err != nil {
+		return err
+	}
+	if err := app.UI.Step(ctx, "Taking voice server "+old.ID+" out", func(ctx context.Context, s *ui.Step) error { return vs.Remove(ctx, s, old.ID) }); err != nil {
 		return err
 	}
 	unrouteVoiceServer(ctx, app, e, inst, &old)
 	_ = os.RemoveAll(voice.ServerDir(inst.Dir, old.ID))
 	saved.ID = next
 	saved.Key = voice.Key(next)
-	saved.Project = voice.JoinedProject(next)
+	saved.Project = voice.NativeChild(next)
 	if saved.Edge != voice.EdgeNone {
 		saved.Endpoint = voice.Endpoint(plan.address, next)
 	}
@@ -978,14 +545,14 @@ func renameJoinedServer(ctx context.Context, app *App, e *engine.Engine, inst *i
 
 func ipv6OnlyText(id string, turn bool) string {
 	if turn {
-		return fmt.Sprintf("This server offers only IPv6. Callers with IPv6 connect to calls on it directly. Callers with only IPv4 can join through your TURN server when it hands out IPv6 relay addresses and an A record for the hostname points at a machine that forwards ports 80 and 443 here. Run rexctl voice test %s on the Fluxer machine to check, and see the voice servers guide.", id)
+		return fmt.Sprintf("This server offers only IPv6. Callers with IPv6 connect to calls on it directly. Callers with only IPv4 can join through your TURN server when it hands out IPv6 relay addresses and an A record for the hostname points at a machine that forwards ports 80 and 443 here. Run rexctl voice test %s on the Fluxer machine to check.", id)
 	}
-	return "This server offers only IPv6. Callers with IPv6 connect to calls on it. Callers with only IPv4 can't, and your instance gives clients no TURN server. See the voice servers guide."
+	return "This server offers only IPv6. Callers with IPv6 connect to calls on it. Callers with only IPv4 can't, and your instance gives clients no TURN server."
 }
 
 func pinnedJoinError(err error, domain, id string) error {
 	if code := voice.CodeOf(err); code == voice.CodeIDInUse || code == voice.CodeKeyInUse {
-		return ui.Refused(fmt.Sprintf("%s already has a server called %s.", domain, id), "Delete it in the admin panel, or run rexctl voice token --id with another server ID for a new token.")
+		return ui.Refused(fmt.Sprintf("%s already has a server called %s.", domain, id), fmt.Sprintf("On the Fluxer machine, run rexctl voice remove %s --forget, or rexctl voice token --id with another server ID for a new token.", id))
 	}
 	return joinError(err, domain, id)
 }
@@ -1021,248 +588,38 @@ func joinError(err error, domain, id string) error {
 	return ui.Failed(fmt.Sprintf("%s refused the request (%s).", domain, api.Error()), "Run the same command again, or ask the instance's admin.")
 }
 
-func writeVoiceSysctl(ctx context.Context, app *App) {
-	if runtime.GOOS != "linux" {
-		return
-	}
-	if euid() != 0 {
-		if voice.ReadSysctl("net.core.rmem_max") != "16777216" || voice.ReadSysctl("net.core.wmem_max") != "16777216" {
-			showVoiceSysctlCommands(app)
-		}
-		return
-	}
-	if data, err := os.ReadFile(voiceSysctlFile); err != nil || string(data) != voiceSysctl {
-		if err := os.WriteFile(voiceSysctlFile, []byte(voiceSysctl), 0o644); err != nil {
-			app.UI.Detail("writing %s: %v", voiceSysctlFile, err)
-			return
-		}
-	}
-	if voice.ReadSysctl("net.core.rmem_max") == "16777216" && voice.ReadSysctl("net.core.wmem_max") == "16777216" {
-		return
-	}
-	if err := runQuietCommand(ctx, "sysctl", "-p", voiceSysctlFile); err != nil {
-		app.UI.Detail("loading %s: %v", voiceSysctlFile, err)
-	}
+const podmanRestartsContainers = "5.8.2"
+
+func olderPodman(version string) bool {
+	return version != "" && versionBelow(version, podmanRestartsContainers)
 }
 
-func showVoiceSysctlCommands(app *App) {
-	app.UI.Info("LiveKit needs larger UDP buffers for many calls, and only root can raise them. Run these commands:")
-	app.UI.Info("  printf '%s' | sudo tee %s", strings.ReplaceAll(voiceSysctl, "\n", `\n`), voiceSysctlFile)
-	app.UI.Info("  sudo sysctl -p %s", voiceSysctlFile)
-}
-
-func ensureVoiceEdge(ctx context.Context, app *App, e *engine.Engine, inst *instance.Instance, s *ui.Step) error {
-	dir := inst.Path(voice.EdgeDir)
-	if err := os.MkdirAll(filepath.Join(dir, voice.SitesDir), 0o755); err != nil {
-		return err
-	}
-	set := voiceSet(nil)
-	for _, name := range []string{voice.EdgeComposeFile, voice.EdgeCaddyfile} {
-		data, err := voice.ShippedFile(set, name)
-		if err != nil {
-			return err
-		}
-		if err := os.WriteFile(filepath.Join(dir, name), data, 0o644); err != nil {
-			return err
-		}
-	}
-	if err := writeVoiceSites(inst); err != nil {
-		return err
-	}
-	p, err := e.Load(ctx, voiceEdgeSpec(inst))
-	if err != nil {
-		return engineFailure(err)
-	}
-	if err := p.Pull(ctx, app.progress(s, "Starting")); err != nil {
-		return engineFailure(err)
-	}
-	if err := p.Up(context.WithoutCancel(ctx), engine.UpOptions{Wait: true, WaitTimeout: deploy.VoiceStartTimeout}); err != nil {
-		return ui.Wrap(engineFailure(err), "The voice edge didn't start.", "Run rexctl voice status to see why.")
-	}
-	return nil
-}
-
-func voiceEdgeSpec(inst *instance.Instance) engine.Spec {
-	env := map[string]string{"FLUXER_VOICE_NETWORK": voice.MachineNetwork}
-	if ref := ownEdgeImage(); ref != "" {
-		env[settings.ImageVars["edge"]] = ref
-	}
-	if inst.State.VoiceEdge != nil && inst.State.VoiceEdge.Email != "" {
-		env["FLUXER_VOICE_EDGE_EMAIL"] = inst.State.VoiceEdge.Email
-	}
-	if inst.State.VoiceEdge != nil && inst.State.VoiceEdge.IPv6 {
-		env["FLUXER_VOICE_NETWORK_IPV6"] = "true"
-	}
-	for _, s := range inst.State.Voice {
-		if u, err := url.Parse(s.Endpoint); err == nil && s.Edge == voice.EdgeOwn && voice.IsIPv4(u.Hostname()) {
-			env["FLUXER_VOICE_EDGE_IP"] = u.Hostname()
-		}
-	}
-	return engine.Spec{Name: voice.EdgeProject, Dir: inst.Path(voice.EdgeDir), Files: []string{voice.EdgeComposeFile}, Env: env}
-}
-
-func writeVoiceSites(inst *instance.Instance) error {
-	dir := inst.Path(voice.EdgeDir, voice.SitesDir)
-	byAddress := map[string][]string{}
-	for _, s := range inst.State.Voice {
-		if s.Edge != voice.EdgeOwn {
-			continue
-		}
-		u, err := url.Parse(s.Endpoint)
-		if err != nil {
-			continue
-		}
-		byAddress[u.Hostname()] = append(byAddress[u.Hostname()], s.ID)
-	}
-	entries, _ := os.ReadDir(dir)
-	for _, ent := range entries {
-		keep := false
-		for address := range byAddress {
-			if ent.Name() == voice.SiteFileName(address) {
-				keep = true
-			}
-		}
-		if !keep {
-			_ = os.Remove(filepath.Join(dir, ent.Name()))
-		}
-	}
-	for address, ids := range byAddress {
-		ip := strings.Trim(address, "0123456789.") == ""
-		if err := os.WriteFile(filepath.Join(dir, voice.SiteFileName(address)), voice.SiteFile(address, ids, ip), 0o644); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func routeVoiceServer(ctx context.Context, app *App, e *engine.Engine, inst *instance.Instance, srv *instance.VoiceServer) error {
-	switch srv.Edge {
-	case voice.EdgeOwn:
-		if err := writeVoiceSites(inst); err != nil {
-			return err
-		}
-		return reloadCaddy(ctx, e.Named(voice.EdgeProject, inst.Path(voice.EdgeDir)), "edge", "/etc/caddy/Caddyfile")
-	case voice.EdgeInstance:
-		target := inst
-		if inst.State.IsVoice() && inst.State.VoiceEdge != nil && inst.State.VoiceEdge.Instance != "" {
-			other, err := instance.Find(inst.State.VoiceEdge.Instance)
+func versionBelow(version, floor string) bool {
+	parse := func(v string) []int {
+		v = strings.TrimPrefix(strings.TrimSpace(v), "v")
+		v, _, _ = strings.Cut(v, "-")
+		var out []int
+		for _, part := range strings.SplitN(v, ".", 3) {
+			n, err := strconv.Atoi(part)
 			if err != nil {
-				return err
+				return nil
 			}
-			target = other
+			out = append(out, n)
 		}
-		path := filepath.Join(target.Path(instance.CaddyDropInDir), voice.DropInName(srv.ID))
-		if err := os.WriteFile(path, voice.DropIn(srv.ID), 0o644); err != nil {
-			return err
-		}
-		return reloadCaddy(ctx, e.Named(target.Project(), target.Dir), "edge", "/etc/caddy/Caddyfile")
+		return out
 	}
-	app.UI.Info("Point your proxy at %s for %s, with WebSocket upgrades and a read timeout of at least 120 seconds.", voice.HTTPAddress(srv.HTTPBind, srv.HTTPPort), srv.Endpoint)
-	if !voice.HTTPBindPrivate(srv.HTTPBind) {
-		app.UI.Warn(fmt.Sprintf("%s has no TLS of its own.", voice.HTTPAddress(srv.HTTPBind, srv.HTTPPort)), "Let only your proxy's network connect to it in your firewall.")
+	a, b := parse(version), parse(floor)
+	if a == nil || b == nil {
+		return false
 	}
-	return nil
-}
-
-func unrouteVoiceServer(ctx context.Context, app *App, e *engine.Engine, inst *instance.Instance, srv *instance.VoiceServer) {
-	switch srv.Edge {
-	case voice.EdgeOwn:
-		if err := writeVoiceSites(inst); err == nil {
-			_ = reloadCaddy(ctx, e.Named(voice.EdgeProject, inst.Path(voice.EdgeDir)), "edge", "/etc/caddy/Caddyfile")
+	for i := range b {
+		x := 0
+		if i < len(a) {
+			x = a[i]
 		}
-	case voice.EdgeInstance:
-		target := inst
-		if inst.State.IsVoice() && inst.State.VoiceEdge != nil && inst.State.VoiceEdge.Instance != "" {
-			other, err := instance.Find(inst.State.VoiceEdge.Instance)
-			if err != nil {
-				app.UI.Detail("%v", err)
-				return
-			}
-			target = other
-		}
-		_ = os.Remove(filepath.Join(target.Path(instance.CaddyDropInDir), voice.DropInName(srv.ID)))
-		if err := reloadCaddy(ctx, e.Named(target.Project(), target.Dir), "edge", "/etc/caddy/Caddyfile"); err != nil {
-			app.UI.Detail("reloading the edge: %v", err)
+		if x != b[i] {
+			return x < b[i]
 		}
 	}
-}
-
-func waitForPublicEndpoint(ctx context.Context, endpoint string, limit time.Duration) error {
-	u, err := url.Parse(endpoint)
-	if err != nil {
-		return err
-	}
-	return waitForEndpoint(ctx, voice.HTTPBase(endpoint), u.Host+portSuffix(u), false, limit)
-}
-
-func portSuffix(u *url.URL) string {
-	if u.Port() != "" {
-		return ""
-	}
-	return ":443"
-}
-
-type originState int
-
-const (
-	originUnknown originState = iota
-	originUnlisted
-	originPending
-	originAllowed
-)
-
-func voiceOriginState(ctx context.Context, client *voice.Client, domain, origin string) originState {
-	disc, err := client.Discover(ctx, domain)
-	switch {
-	case err != nil:
-		return originUnknown
-	case !disc.ListsOrigins:
-		return originUnlisted
-	case !slices.ContainsFunc(disc.VoiceOrigins, func(source string) bool { return voice.SourceCovers(source, origin) }):
-		return originPending
-	}
-	if ok, err := client.AllowsOrigin(ctx, domain, origin); err == nil && ok {
-		return originAllowed
-	}
-	return originPending
-}
-
-func endpointOrigin(endpoint string) string {
-	u, err := url.Parse(endpoint)
-	if err != nil || u.Host == "" {
-		return ""
-	}
-	return u.Scheme + "://" + u.Host
-}
-
-func waitForVoiceOrigin(ctx context.Context, app *App, client *voice.Client, domain, endpoint string) {
-	origin := endpointOrigin(endpoint)
-	if origin == "" {
-		return
-	}
-	state := originUnknown
-	deadline := time.Now().Add(3 * time.Minute)
-	for time.Now().Before(deadline) {
-		if state = voiceOriginState(ctx, client, domain, origin); state == originAllowed {
-			app.UI.OK("Browsers on %s can connect to %s.", domain, origin)
-			return
-		}
-		select {
-		case <-ctx.Done():
-			return
-		case <-time.After(5 * time.Second):
-		}
-	}
-	app.UI.Warn(fmt.Sprintf("Browsers on %s can't connect to %s yet.", domain, origin), originFix(state, domain, app.Version))
-}
-
-func originFix(state originState, domain, version string) string {
-	if state == originUnlisted {
-		target := "the latest release"
-		if release.Valid(version) {
-			target = version
-		}
-		return fmt.Sprintf("Upgrade Fluxer on %s to %s, then reload open pages.", domain, target)
-	}
-	return "Check again in a minute with rexctl voice status. Pages opened before then need a reload."
+	return false
 }

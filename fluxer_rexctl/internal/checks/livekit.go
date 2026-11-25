@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"net/netip"
 	"strings"
 	"time"
 
@@ -27,16 +28,18 @@ func runLiveKitIP(ctx context.Context, e *Env) Result {
 	if perr != nil {
 		setTo = "Make sure this machine can send UDP traffic to the internet, then run rexctl doctor."
 	}
-	nodeIP := e.value("FLUXER_LIVEKIT_NODE_IP")
-	external := !strings.EqualFold(e.value("FLUXER_LIVEKIT_USE_EXTERNAL_IP"), "false")
+	nodeIP, external := e.voiceNodeIP()
 	if !external {
 		if nodeIP == "" {
 			r := fail("Voice calls use an address that only works inside this machine.", setTo)
 			r.Fixable = perr == nil
 			return r
 		}
-		ip := net.ParseIP(nodeIP)
-		if perr == nil && ip != nil && !ip.IsPrivate() && !ip.Equal(net.ParseIP(public)) {
+		ip, err := netip.ParseAddr(nodeIP)
+		if domainIP, ok := settings.DomainIP(e.Domain); ok && err == nil && ip.Unmap() == domainIP {
+			return pass(fmt.Sprintf("Voice calls use %s, the address people open.", nodeIP))
+		}
+		if perr == nil && err == nil && publicAddress(ip.Unmap()) && nodeIP != public {
 			port := e.value("FLUXER_LIVEKIT_TCP_PORT")
 			if port == "" {
 				port = "7881"
@@ -50,8 +53,15 @@ func runLiveKitIP(ctx context.Context, e *Env) Result {
 		return pass(fmt.Sprintf("Voice calls use %s.", nodeIP))
 	}
 	var logs bytes.Buffer
-	if err := e.Project.Logs(ctx, engine.LogsOptions{Tail: 300, Stdout: &logs}, "livekit"); err != nil {
+	switch {
+	case e.Native:
+		logs.WriteString(e.nativeLogs(ctx, "livekit", 300))
+	case e.Project == nil:
 		return skip("")
+	default:
+		if err := e.Project.Logs(ctx, engine.LogsOptions{Tail: 300, Stdout: &logs}, "livekit"); err != nil {
+			return skip("")
+		}
 	}
 	if strings.Contains(strings.ToLower(logs.String()), "could not resolve external ip") {
 		r := fail("Voice calls can't find this machine's public IP address.", setTo)
@@ -59,6 +69,14 @@ func runLiveKitIP(ctx context.Context, e *Env) Result {
 		return r
 	}
 	return pass("Voice calls can find this machine's public IP address.")
+}
+
+func (e *Env) voiceNodeIP() (string, bool) {
+	nodeIP := e.value("FLUXER_LIVEKIT_NODE_IP")
+	if domainIP, ok := settings.DomainIP(e.Domain); ok && nodeIP == "" && !strings.EqualFold(e.value("FLUXER_LIVEKIT_USE_EXTERNAL_IP"), "true") {
+		return domainIP.String(), false
+	}
+	return nodeIP, !strings.EqualFold(e.value("FLUXER_LIVEKIT_USE_EXTERNAL_IP"), "false")
 }
 
 func fixLiveKitIP(ctx context.Context, e *Env) error {

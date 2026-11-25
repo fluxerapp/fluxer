@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	ServersDir      = "voice"
+	serversDir      = "voice"
 	EdgeDir         = "edge"
 	SitesDir        = "sites.d"
 	ComposeFile     = "voice.compose.yml"
@@ -31,16 +31,16 @@ const (
 	MachineProject  = "fluxer-voice"
 	EdgeProject     = "fluxer-voice-edge"
 	EdgeID          = "edge"
-	KeyPrefix       = "fluxer-"
-	PathPrefix      = "/livekit-"
+	keyPrefix       = "fluxer-"
+	pathPrefix      = "/livekit-"
 	DropInPrefix    = "voice-"
-	ContainerPort   = 7880
+	containerPort   = 7880
 	FirstTCPPort    = 7881
 	FirstUDPPort    = 7882
 	DefaultImage    = "livekit/livekit-server:v1.12.0"
 	DefaultMemory   = "2g"
-	DefaultGrace    = "15m"
-	ConnsPerCPU     = 75
+	defaultGrace    = "15m"
+	connsPerCPU     = 75
 )
 
 const (
@@ -64,20 +64,20 @@ func ProjectName(instanceProject, id string) string {
 	return instanceProject + "-voice-" + id
 }
 
-func ServerDir(dir, id string) string { return filepath.Join(dir, ServersDir, id) }
+func ServerDir(dir, id string) string { return filepath.Join(dir, serversDir, id) }
 
 func SafeDirName(id string) bool {
 	return id != "" && id != "." && id != ".." && !strings.ContainsAny(id, `/\`)
 }
 
-func Alias(id string) string { return "voice-" + id }
+func alias(id string) string { return "voice-" + id }
 
-func Key(id string) string { return KeyPrefix + id }
+func Key(id string) string { return keyPrefix + id }
 
-func Path(id string) string { return PathPrefix + id }
+func Path(id string) string { return pathPrefix + id }
 
 func InternalURL(id string) string {
-	return fmt.Sprintf("http://%s:%d", Alias(id), ContainerPort)
+	return fmt.Sprintf("http://%s:%d", alias(id), containerPort)
 }
 
 func NewSecret() (string, error) {
@@ -121,7 +121,7 @@ type Env struct {
 
 func (e Env) Values() map[string]string {
 	useExternal := "true"
-	nodeIP := NodeIPs(e.NodeIP, e.NodeIPv6)
+	nodeIP := nodeIPs(e.NodeIP, e.NodeIPv6)
 	if nodeIP != "" {
 		useExternal = "false"
 	}
@@ -139,12 +139,12 @@ func (e Env) Values() map[string]string {
 		"FLUXER_VOICE_BIND_IP":         e.BindIP,
 		"FLUXER_LIVEKIT_IMAGE":         orDefault(e.Image, DefaultImage),
 		"FLUXER_VOICE_MEMORY_LIMIT":    orDefault(e.Memory, DefaultMemory),
-		"FLUXER_VOICE_GOMEMLIMIT":      GoMemLimit(orDefault(e.Memory, DefaultMemory)),
-		"FLUXER_VOICE_STOP_GRACE":      orDefault(e.StopGrace, DefaultGrace),
+		"FLUXER_VOICE_GOMEMLIMIT":      goMemLimit(orDefault(e.Memory, DefaultMemory)),
+		"FLUXER_VOICE_STOP_GRACE":      orDefault(e.StopGrace, defaultGrace),
 	}
 	if e.HTTPPort > 0 {
 		out["FLUXER_VOICE_HTTP_PORT"] = strconv.Itoa(e.HTTPPort)
-		out["FLUXER_VOICE_HTTP_BIND"] = HTTPBindValue(e.HTTPBind)
+		out["FLUXER_VOICE_HTTP_BIND"] = httpBindValue(e.HTTPBind)
 	}
 	for k, v := range map[string]string{
 		"FLUXER_LIVEKIT_STUN_PRIMARY":   e.StunPrimary,
@@ -219,7 +219,7 @@ func ParseBytes(v string) (uint64, bool) {
 	return n, err == nil && n > 0
 }
 
-func GoMemLimit(memory string) string {
+func goMemLimit(memory string) string {
 	n, ok := ParseBytes(memory)
 	if !ok {
 		return "1700MiB"
@@ -235,7 +235,7 @@ func MachineMemory(hostBytes uint64) string {
 }
 
 func SoftLimit(cpus int) int {
-	return max(1, cpus) * ConnsPerCPU
+	return max(1, cpus) * connsPerCPU
 }
 
 func HumanBytes(n uint64) string {
@@ -258,7 +258,7 @@ func PickPorts(taken map[host.Port]bool, free func(number int, proto string) boo
 }
 
 func DropIn(id string) []byte {
-	return fmt.Appendf(nil, "handle_path %s/* {\n\timport upstream %s:%d\n}\n", Path(id), Alias(id), ContainerPort)
+	return fmt.Appendf(nil, "handle_path %s/* {\n\timport upstream %s:%d\n}\n", Path(id), alias(id), containerPort)
 }
 
 func DropInName(id string) string { return DropInPrefix + id + ".caddy" }
@@ -271,13 +271,13 @@ func SiteFile(address string, ids []string, ipCertificate bool) []byte {
 	var b strings.Builder
 	fmt.Fprintf(&b, "%s {\n", address)
 	if ipCertificate {
-		b.WriteString("\ttls {\n\t\tissuer acme {\n\t\t\tprofile shortlived\n\t\t}\n\t}\n\n")
+		b.WriteString("\ttls {\n\t\tissuer acme {\n\t\t\tprofile shortlived\n\t\t}\n\t\tissuer internal\n\t}\n\n")
 	}
 	b.WriteString("\thandle /_health {\n\t\trespond \"OK\" 200\n\t}\n")
 	sorted := slices.Clone(ids)
 	slices.Sort(sorted)
 	for _, id := range sorted {
-		fmt.Fprintf(&b, "\n\thandle_path %s/* {\n\t\timport livekit %s:%d\n\t}\n", Path(id), Alias(id), ContainerPort)
+		fmt.Fprintf(&b, "\n\thandle_path %s/* {\n\t\timport livekit %s:%d\n\t}\n", Path(id), alias(id), containerPort)
 	}
 	b.WriteString("\n\thandle {\n\t\trespond 404\n\t}\n}\n")
 	return []byte(b.String())
@@ -299,5 +299,5 @@ func Endpoint(address, id string) string {
 }
 
 func ShippedFile(set *stack.Set, name string) ([]byte, error) {
-	return stack.ReadFile(set, ServersDir+"/"+name)
+	return stack.ReadFile(set, serversDir+"/"+name)
 }

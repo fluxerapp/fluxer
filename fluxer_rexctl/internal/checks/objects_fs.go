@@ -3,6 +3,7 @@
 package checks
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -11,11 +12,10 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/native"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 )
-
-var statDisk = statFS
 
 const (
 	minNameMax      = 255
@@ -59,8 +59,12 @@ func init() {
 func runObjectsFS(_ context.Context, e *Env) Result {
 	var path string
 	switch {
+	case e.Native && e.Instance != nil && e.chosen(settings.StorageBackend) != settings.StorageFilesystem:
+		return skip("")
+	case e.Native && e.Instance != nil:
+		path, _ = native.New(e.Instance).DataDir(stack.ObjectsVolume)
 	case e.Native:
-		path = filepath.Join(e.Dir, "data", "objects")
+		path = filepath.Join(native.DataPath(cmp.Or(e.Name, native.FirstName)), "objects")
 	case e.chosen(settings.StorageBackend) == settings.StorageFilesystem:
 		path = e.stores().Data
 	default:
@@ -82,7 +86,7 @@ func ObjectsFS(path string) Result {
 		}
 		path = parent
 	}
-	info, ok := statDisk(path)
+	info, ok := statFS(path)
 	switch {
 	case !ok:
 		return skip("")
@@ -99,7 +103,7 @@ func ObjectsFS(path string) Result {
 		return warn(filesLeft(path, info)+" Each uploaded file uses one, and Fluxer stops saving uploads when almost none are left.",
 			"Delete files you don't need on that disk, or move "+path+" to a disk with more inodes.")
 	}
-	return pass("The disk for " + stack.ObjectsVolume + " can hold Fluxer's files.")
+	return pass("The disk for uploaded files works for Fluxer.")
 }
 
 func filesLeft(path string, info fsInfo) string {

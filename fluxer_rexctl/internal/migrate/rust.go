@@ -14,13 +14,14 @@ import (
 )
 
 var (
-	RustHealthTimeout = 60 * time.Second
+	rustHealthTimeout = 60 * time.Second
 	pollEvery         = 2 * time.Second
 )
 
 const pageScript = `(async()=>{const u=process.argv[1];await (await fetch(u)).arrayBuffer();` +
-	`await new Promise(r=>setTimeout(r,3000));const r=await fetch(u);const b=Buffer.from(await r.arrayBuffer());` +
-	`console.log(JSON.stringify({status:r.status,csp:r.headers.get('content-security-policy')||'',` +
+	`await new Promise(r=>setTimeout(r,3000));const r=await fetch(u);` +
+	`const b=Buffer.from(await r.arrayBuffer()).toString('latin1').replace(/nonce="[^"]*"/g,'nonce=""');` +
+	`console.log(JSON.stringify({status:r.status,csp:(r.headers.get('content-security-policy')||'').replace(/'nonce-[^']*'/g,"'nonce-'"),` +
 	`sha256:require('node:crypto').createHash('sha256').update(b).digest('hex')}))})()` +
 	`.catch(e=>{console.error(String(e&&e.message||e));process.exit(1)})`
 
@@ -40,7 +41,6 @@ func fetchPage(ctx context.Context, h Host, log Job) (page, error) {
 type RustStep struct {
 	host     Host
 	prev     map[string]string
-	late     bool
 	baseline *page
 }
 
@@ -52,10 +52,6 @@ func (s *RustStep) Option() Option    { return OptRust }
 func (s *RustStep) Writers() []string { return nil }
 
 func (s *RustStep) Preflight(ctx context.Context, r *Run) error {
-	if r.Host.Runtime() == Compose && slices.Contains(r.Picked, OptDocker) {
-		s.late = true
-		return nil
-	}
 	if err := r.Host.CheckTarget(ctx, rustOn); err != nil {
 		return err
 	}
@@ -75,11 +71,6 @@ func (s *RustStep) Switch(ctx context.Context, r *Run) error {
 	h := r.Host
 	s.host = h
 	s.prev = previous(h.Settings(), rustOn)
-	if s.late {
-		if err := h.CheckTarget(ctx, rustOn); err != nil {
-			return err
-		}
-	}
 	if err := h.Remove(ctx, stack.RustServices); err != nil {
 		return err
 	}
@@ -96,14 +87,14 @@ func (s *RustStep) Switch(ctx context.Context, r *Run) error {
 	if len(still) > 0 {
 		return fmt.Errorf("%s still run after rexctl removed them", strings.Join(still, ", "))
 	}
-	if err := h.FreePorts(ctx, RustPorts()); err != nil {
+	if err := h.FreePorts(ctx, rustPorts()); err != nil {
 		return err
 	}
 	return h.Apply(ctx, rustOn)
 }
 
 func (s *RustStep) Check(ctx context.Context, r *Run) error {
-	if err := waitHealthy(ctx, r.Host, stack.RustService, RustHealthTimeout); err != nil {
+	if err := waitHealthy(ctx, r.Host, stack.RustService, rustHealthTimeout); err != nil {
 		return err
 	}
 	if s.baseline == nil {
@@ -115,7 +106,7 @@ func (s *RustStep) Check(ctx context.Context, r *Run) error {
 	}
 	switch {
 	case after.Status != s.baseline.Status:
-		return fmt.Errorf("the app page answered %d before the change and %d after it", s.baseline.Status, after.Status)
+		return fmt.Errorf("the app page returned %d before the change and %d after it", s.baseline.Status, after.Status)
 	case after.CSP != s.baseline.CSP:
 		return fmt.Errorf("the app page's Content-Security-Policy changed")
 	case after.SHA256 != s.baseline.SHA256:
@@ -134,7 +125,7 @@ func (s *RustStep) Rollback(ctx context.Context, _ *Run) error {
 	return s.host.Apply(ctx, s.prev)
 }
 
-func RustPorts() []int { return slices.Clone(nativeChildren[stack.RustService].ports) }
+func rustPorts() []int { return slices.Clone(nativeChildren[stack.RustService].ports) }
 
 func waitHealthy(ctx context.Context, h Host, name string, timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
@@ -166,7 +157,7 @@ func unhealthy(svcs []Service, name string) []string {
 			continue
 		}
 		found = found || svc.Name == name
-		if !svc.Running || svc.Health != Healthy {
+		if !svc.Running || svc.Health != healthy {
 			bad = append(bad, svc.Name)
 		}
 	}

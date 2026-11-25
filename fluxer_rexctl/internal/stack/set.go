@@ -3,7 +3,7 @@
 package stack
 
 import (
-	"embed"
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,13 +16,15 @@ import (
 	"sync"
 
 	"github.com/compose-spec/compose-go/v2/template"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/envfile"
 	"go.yaml.in/yaml/v4"
 )
 
 const (
 	LegacyRelease = "legacy"
 	ProfilesFile  = "profiles.json"
-	VarsFile      = "vars.json"
+	SettingsFile  = "settings.json"
+	varsFile      = "vars.json"
 )
 
 type Set struct {
@@ -30,46 +32,85 @@ type Set struct {
 	Files    fs.FS
 	Profiles map[string]map[string]string
 	Vars     []string
+	Catalog  []Setting
 }
 
-//go:embed files
-var releaseFiles embed.FS
+type Setting struct {
+	Name    string   `json:"name"`
+	Default string   `json:"default,omitempty"`
+	Sized   string   `json:"sized,omitempty"`
+	PerCPU  bool     `json:"per_cpu,omitempty"`
+	Readers []string `json:"readers"`
+	Secret  bool     `json:"secret,omitempty"`
+}
 
-var embeddedSet = sync.OnceValue(func() *Set {
-	files, err := fs.Sub(releaseFiles, "files")
-	if err != nil {
-		panic(err)
-	}
-	set := &Set{Release: embeddedRelease(), Files: files, Profiles: map[string]map[string]string{}}
-	data, err := fs.ReadFile(files, ProfilesFile)
-	if err != nil {
-		panic(err)
-	}
-	if err := json.Unmarshal(data, &set.Profiles); err != nil {
-		panic(fmt.Errorf("stack: %s: %w", ProfilesFile, err))
-	}
-	if set.Vars, err = FilesVars(files); err != nil {
-		panic(err)
-	}
-	return set
-})
-
-func Embedded() *Set { return embeddedSet() }
-
-func embeddedRelease() string {
-	data := imageSetJSON
-	if p := os.Getenv(ImageSetEnv); p != "" {
-		if b, err := os.ReadFile(p); err == nil {
-			data = b
+func (s *Set) Setting(name string) (Setting, bool) {
+	for _, c := range s.Catalog {
+		if c.Name == name {
+			return c, true
 		}
 	}
-	var s struct {
-		Release string `json:"release"`
+	return Setting{}, false
+}
+
+func ParseCatalog(data []byte) ([]Setting, error) {
+	var c []Setting
+	if err := json.Unmarshal(data, &c); err != nil {
+		return nil, fmt.Errorf("stack: the settings catalog: %w", err)
 	}
-	if json.Unmarshal(data, &s) != nil || s.Release == "" {
+	if len(c) == 0 {
+		return nil, errors.New("stack: the settings catalog is empty")
+	}
+	return c, nil
+}
+
+func CatalogSet(release string, catalog []Setting) *Set {
+	vars := make([]string, len(catalog))
+	for i, c := range catalog {
+		vars[i] = c.Name
+	}
+	slices.Sort(vars)
+	return &Set{Release: release, Profiles: embeddedProfiles(), Vars: vars, Catalog: catalog}
+}
+
+func LoadCatalogSet(dir, release string) (*Set, error) {
+	data, err := os.ReadFile(filepath.Join(dir, SettingsFile))
+	if err != nil {
+		return nil, err
+	}
+	c, err := ParseCatalog(data)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", filepath.Join(dir, SettingsFile), err)
+	}
+	set := CatalogSet(release, c)
+	if data, err := os.ReadFile(filepath.Join(dir, ProfilesFile)); err == nil {
+		profiles := map[string]map[string]string{}
+		if err := json.Unmarshal(data, &profiles); err != nil {
+			return nil, fmt.Errorf("stack: %s: %w", filepath.Join(dir, ProfilesFile), err)
+		}
+		set.Profiles = profiles
+	}
+	return set, nil
+}
+
+//go:embed profiles.json
+var profilesJSON []byte
+
+var embeddedProfiles = sync.OnceValue(func() map[string]map[string]string {
+	profiles := map[string]map[string]string{}
+	if err := json.Unmarshal(profilesJSON, &profiles); err != nil {
+		panic(fmt.Errorf("stack: %s: %w", ProfilesFile, err))
+	}
+	return profiles
+})
+
+var release string
+
+func EmbeddedRelease() string {
+	if release == "" {
 		return "dev"
 	}
-	return s.Release
+	return release
 }
 
 func LoadSet(dir string) (*Set, error) {
@@ -92,11 +133,11 @@ func LoadSet(dir string) (*Set, error) {
 	} else if !errors.Is(err, fs.ErrNotExist) {
 		return nil, err
 	}
-	data, err := os.ReadFile(filepath.Join(dir, VarsFile))
+	data, err := os.ReadFile(filepath.Join(dir, varsFile))
 	switch {
 	case err == nil:
 		if err := json.Unmarshal(data, &set.Vars); err != nil {
-			return nil, fmt.Errorf("stack: %s: %w", filepath.Join(dir, VarsFile), err)
+			return nil, fmt.Errorf("stack: %s: %w", filepath.Join(dir, varsFile), err)
 		}
 	case errors.Is(err, fs.ErrNotExist):
 		if set.Vars, err = FilesVars(set.Files); err != nil {
@@ -109,6 +150,9 @@ func LoadSet(dir string) (*Set, error) {
 }
 
 func WriteSet(dir string, s *Set) error {
+	if s != nil && s.Catalog != nil {
+		return writeCatalogSet(dir, s)
+	}
 	if s == nil || s.Files == nil {
 		return errors.New("stack: no release files to write")
 	}
@@ -122,7 +166,7 @@ func WriteSet(dir string, s *Set) error {
 		if d.IsDir() {
 			return os.MkdirAll(filepath.Join(dir, filepath.FromSlash(name)), 0o755)
 		}
-		if name == ProfilesFile || name == VarsFile {
+		if name == ProfilesFile || name == varsFile {
 			return nil
 		}
 		data, err := fs.ReadFile(s.Files, name)
@@ -152,20 +196,40 @@ func WriteSet(dir string, s *Set) error {
 	if data, err = json.MarshalIndent(vars, "", "  "); err != nil {
 		return err
 	}
-	return writeReadOnly(filepath.Join(dir, VarsFile), append(data, '\n'))
+	return writeReadOnly(filepath.Join(dir, varsFile), append(data, '\n'))
+}
+
+func writeCatalogSet(dir string, s *Set) error {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
+	data, err := json.MarshalIndent(s.Catalog, "", "  ")
+	if err != nil {
+		return err
+	}
+	if err := writeReadOnly(filepath.Join(dir, SettingsFile), append(data, '\n')); err != nil {
+		return err
+	}
+	if data, err = json.MarshalIndent(s.Profiles, "", "  "); err != nil {
+		return err
+	}
+	return writeReadOnly(filepath.Join(dir, ProfilesFile), append(data, '\n'))
 }
 
 func writeReadOnly(target string, data []byte) error {
 	if err := os.Chmod(target, 0o644); err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return err
 	}
-	if err := os.WriteFile(target, data, 0o444); err != nil {
+	if err := envfile.WriteFileAtomic(target, data, false); err != nil {
 		return err
 	}
 	return os.Chmod(target, 0o444)
 }
 
 func ComposeFileNames(files fs.FS) ([]string, error) {
+	if files == nil {
+		return nil, nil
+	}
 	entries, err := fs.ReadDir(files, ".")
 	if err != nil {
 		return nil, err

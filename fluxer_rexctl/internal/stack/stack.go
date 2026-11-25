@@ -72,10 +72,10 @@ var MountedDirs = map[string][]string{
 var madeDirs = append(slices.Sorted(maps.Keys(MountedDirs)), "caddy.d/sites")
 
 var (
-	ErrUnknownOverlay  = errors.New("stack: unknown overlay")
-	ErrOverlayConflict = errors.New("stack: the proxy and tunnel overlays can't be used together")
-	ErrStoreConflict   = errors.New("stack: files on this machine and your own object store can't be used together")
-	ErrMissingFile     = errors.New("stack: the release has no such file")
+	errUnknownOverlay  = errors.New("stack: unknown overlay")
+	errOverlayConflict = errors.New("stack: the proxy and tunnel overlays can't be used together")
+	errStoreConflict   = errors.New("stack: files on this machine and your own object store can't be used together")
+	errMissingFile     = errors.New("stack: the release has no such file")
 )
 
 type Rendered struct {
@@ -86,19 +86,19 @@ type Rendered struct {
 	RestartNeeded []string
 }
 
-func NormalizeOverlays(overlays []Overlay) ([]Overlay, error) {
+func normalizeOverlays(overlays []Overlay) ([]Overlay, error) {
 	seen := make(map[Overlay]bool, len(overlays))
 	for _, o := range overlays {
 		if _, ok := OverlayFiles[o]; !ok {
-			return nil, fmt.Errorf("%w: %s", ErrUnknownOverlay, o)
+			return nil, fmt.Errorf("%w: %s", errUnknownOverlay, o)
 		}
 		seen[o] = true
 	}
 	if seen[OverlayProxy] && seen[OverlayTunnel] {
-		return nil, ErrOverlayConflict
+		return nil, errOverlayConflict
 	}
 	if seen[OverlayExternalObjectStore] && seen[OverlayFilesystemStore] {
-		return nil, ErrStoreConflict
+		return nil, errStoreConflict
 	}
 	out := make([]Overlay, 0, len(seen))
 	for _, o := range overlayOrder {
@@ -232,7 +232,7 @@ type renderedFile struct {
 }
 
 func renderFiles(set *Set, selected []Overlay, images map[string]string, project string) ([]renderedFile, []Overlay, error) {
-	overlays, err := NormalizeOverlays(selected)
+	overlays, err := normalizeOverlays(selected)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -280,25 +280,13 @@ func RenderCompose(set *Set, images map[string]string, project string) ([]byte, 
 	return nameProject(compose, project), nil
 }
 
-func Hashes(set *Set, selected []Overlay, images map[string]string, project string) (map[string]string, error) {
-	files, _, err := renderFiles(set, selected, images, project)
-	if err != nil {
-		return nil, err
-	}
-	out := make(map[string]string, len(files))
-	for _, f := range files {
-		out[f.name] = Hash(f.data)
-	}
-	return out, nil
-}
-
 func ReadFile(set *Set, name string) ([]byte, error) {
 	if set == nil || set.Files == nil {
-		return nil, fmt.Errorf("%w: %s", ErrMissingFile, name)
+		return nil, fmt.Errorf("%w: %s", errMissingFile, name)
 	}
 	data, err := fs.ReadFile(set.Files, name)
 	if errors.Is(err, fs.ErrNotExist) {
-		return nil, fmt.Errorf("%w: %s in %s", ErrMissingFile, name, set.Release)
+		return nil, fmt.Errorf("%w: %s in %s", errMissingFile, name, set.Release)
 	}
 	if err != nil {
 		return nil, err

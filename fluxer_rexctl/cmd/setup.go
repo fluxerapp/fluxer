@@ -12,14 +12,15 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/spf13/cobra"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/adminapi"
-	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/deploy"
-	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
+	rt "github.com/fluxerapp/fluxer/fluxer_rexctl/internal/runtime"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/setup"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
@@ -32,12 +33,64 @@ type setupFlags struct {
 	Name         string
 	Registration string
 	SkipEmail    bool
-	SMTPHost     string
 	SMTPPort     int
-	SMTPTLS      string
-	SMTPUsername string
-	SMTPPassFile string
-	SMTPFrom     string
+	SMTP         smtpForm
+}
+
+type smtpForm struct {
+	prefix   string
+	Host     string
+	Port     string
+	TLS      string
+	Username string
+	Password string
+	PassFile string
+	From     string
+}
+
+func (m *smtpForm) flag(name string) string { return m.prefix + name }
+
+func (m *smtpForm) fields(hide func() bool) []ui.Field {
+	return []ui.Field{
+		{Flag: m.flag("host"), FlagLabel: "--" + m.flag("host"), Title: "SMTP server", Placeholder: "smtp.example.com", Value: &m.Host, Validate: validateSetupHost, Hide: hide},
+		{Flag: m.flag("port"), FlagLabel: "--" + m.flag("port"), Title: "Port", Value: &m.Port, Default: "587", Validate: validateSetupPort, Hide: hide},
+		{Flag: m.flag("username"), Title: "SMTP username", Value: &m.Username, Optional: true, Hide: hide},
+		{Title: "SMTP password", Value: &m.Password, Secret: true, Optional: true, Hide: func() bool {
+			return hide() || strings.TrimSpace(m.Username) == "" || m.PassFile != ""
+		}},
+		{Flag: m.flag("from"), FlagLabel: "--" + m.flag("from"), Title: "Send from", Value: &m.From, Validate: validateSetupFrom, Hide: hide},
+	}
+}
+
+func (m *smtpForm) load(app *App, port int, domain string) error {
+	m.Port = strconv.Itoa(port)
+	if _, ip := settings.DomainIP(domain); m.From == "" && domain != "" && !ip {
+		m.From = "noreply@" + settings.MailDomain(domain)
+	}
+	if err := validTLS(m.TLS, m.flag("tls")); err != nil {
+		return err
+	}
+	if m.PassFile == "" {
+		return nil
+	}
+	v, err := askSecret(app, nil, m.flag("password-file"), "SMTP password", m.PassFile, nil)
+	if err != nil {
+		return err
+	}
+	m.Password = v
+	return nil
+}
+
+func (m *smtpForm) value() *setup.SMTP {
+	n, _ := strconv.Atoi(strings.TrimSpace(m.Port))
+	return &setup.SMTP{
+		Host:     strings.TrimSpace(m.Host),
+		Port:     n,
+		TLS:      m.TLS,
+		Username: strings.TrimSpace(m.Username),
+		Password: m.Password,
+		From:     strings.TrimSpace(m.From),
+	}
 }
 
 var setupFlagNames = []string{
@@ -47,19 +100,20 @@ var setupFlagNames = []string{
 
 func (f *setupFlags) bind(c *cobra.Command) {
 	fl := c.Flags()
-	fl.StringVar(&f.SignIn, "sign-in", "", "how people sign in (email or username)")
+	fl.StringVar(&f.SignIn, "sign-in", "", "how people sign in (email or username), username by default on an IP address or private name")
 	fl.StringVar(&f.Email, "admin-email", "", "email address for your admin account")
 	fl.StringVar(&f.Username, "admin-username", "", "username for your admin account")
 	fl.StringVar(&f.PasswordFile, "admin-password-file", "", "file with your admin password, or - for stdin")
 	fl.StringVar(&f.Name, "name", "", "your instance's name")
 	fl.StringVar(&f.Registration, "registration", "", "who can create an account (invite, approval, open or closed)")
 	fl.BoolVar(&f.SkipEmail, "skip-email", false, "set up email later")
-	fl.StringVar(&f.SMTPHost, "smtp-host", "", "the SMTP server")
+	f.SMTP.prefix = "smtp-"
+	fl.StringVar(&f.SMTP.Host, "smtp-host", "", "the SMTP server")
 	fl.IntVar(&f.SMTPPort, "smtp-port", 587, "the SMTP port")
-	fl.StringVar(&f.SMTPTLS, "smtp-tls", "", tlsUsage)
-	fl.StringVar(&f.SMTPUsername, "smtp-username", "", "the username for the SMTP server")
-	fl.StringVar(&f.SMTPPassFile, "smtp-password-file", "", "file with the SMTP password, or - for stdin")
-	fl.StringVar(&f.SMTPFrom, "smtp-from", "", "sender, like Example Chat <noreply@chat.example.com>")
+	fl.StringVar(&f.SMTP.TLS, "smtp-tls", "", tlsUsage)
+	fl.StringVar(&f.SMTP.Username, "smtp-username", "", "the username for the SMTP server")
+	fl.StringVar(&f.SMTP.PassFile, "smtp-password-file", "", "file with the SMTP password, or - for stdin")
+	fl.StringVar(&f.SMTP.From, "smtp-from", "", "sender, like Example Chat <noreply@chat.example.com>")
 }
 
 func (f *setupFlags) passed(c *cobra.Command) bool {
@@ -80,38 +134,24 @@ func newSetupCmd(app *App) *cobra.Command {
 	var f setupFlags
 	c := &cobra.Command{
 		Use:   "setup",
-		Short: "Create the admin account and finish setup in the terminal",
-		Args:  noArgs,
+		Short: "Create the admin and finish setup in the terminal",
+		Example: "rexctl setup\n" +
+			"rexctl setup --sign-in username --admin-username admin --admin-password-file pw.txt --name \"Example Chat\"\n" +
+			"rexctl setup token",
+		Args: noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
 			if err := oneStdinFlag(c); err != nil {
 				return err
 			}
-			ctx := c.Context()
-			inst, err := app.Instance()
-			if err != nil {
-				return err
-			}
-			return app.Locked(ctx, inst, func() error {
-				p, err := app.Named(ctx, inst)
-				if err != nil {
-					return err
-				}
-				adminID, err := runSetup(ctx, app, c, inst, p, &f, nil)
-				if err != nil {
-					return err
-				}
-				if !signInAfterSetup(ctx, app, inst, p, adminID) {
-					app.UI.Info("Sign in at %s.", inst.Origin())
-				}
-				return nil
-			})
+			return runSetupCommand(c.Context(), app, c, &f)
 		},
 	}
 	f.bind(c)
 	c.AddCommand(&cobra.Command{
-		Use:   "token",
-		Short: "Show the setup token for the browser",
-		Args:  noArgs,
+		Use:     "token",
+		Short:   "Show the setup token for the browser",
+		Example: "rexctl setup token",
+		Args:    noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
 			return runSetupToken(c.Context(), app)
 		},
@@ -119,45 +159,87 @@ func newSetupCmd(app *App) *cobra.Command {
 	return c
 }
 
+func setupClient(ctx context.Context, app *App, inst *instance.Instance) (*adminapi.Client, rt.Runtime, error) {
+	r, err := app.Runtime(ctx, inst)
+	if err != nil {
+		return nil, nil, err
+	}
+	t, err := r.Admin(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	return adminapi.New(t, app.Version), r, nil
+}
+
+func runSetupCommand(ctx context.Context, app *App, c *cobra.Command, f *setupFlags) error {
+	inst, err := app.Instance()
+	if err != nil {
+		return err
+	}
+	return app.Locked(ctx, inst, func() error {
+		client, _, err := setupClient(ctx, app, inst)
+		if err != nil {
+			return err
+		}
+		if err := setupReady(ctx, client, inst); err != nil {
+			return err
+		}
+		var st setupState
+		if err := st.load(app, f, inst.Domain()); err != nil {
+			return err
+		}
+		if !app.UI.Interactive() {
+			if err := st.missing(c); err != nil {
+				return err
+			}
+		}
+		stage := &ui.Stage{ID: "admin", Title: "Admin", Key: 'u', Fields: st.fields(c, func() bool { return false })}
+		stage.Summary = func() string { return st.summary() }
+		if err := app.UI.RunFlow(ctx, c, &ui.Flow{Title: "rexctl setup", Subtitle: inst.Domain(), Stages: []*ui.Stage{stage}}); err != nil {
+			return err
+		}
+		answers := st.answers()
+		adminID, err := runSetup(ctx, app, client, inst, &st, &answers)
+		if err != nil {
+			return err
+		}
+		if !signInAfterSetup(ctx, app, client, adminID) {
+			app.UI.Info("Sign in at %s.", inst.Origin())
+		}
+		firstInvite(ctx, app, client, answers)
+		return nil
+	})
+}
+
+func setupReady(ctx context.Context, client *adminapi.Client, inst *instance.Instance) error {
+	done, err := setup.Done(ctx, client)
+	if err != nil {
+		return ui.Wrap(err, "Couldn't connect to your instance.", "Run rexctl status to see whether it's running.")
+	}
+	if done {
+		return ui.Refused("Setup is already finished.", fmt.Sprintf("Sign in at %s.", inst.Origin()))
+	}
+	if exists, err := setup.AccountsExist(ctx, client); err == nil && exists {
+		return ui.Refused("Fluxer already has accounts, but setup isn't finished.", browserSetupFix(inst.Origin()))
+	}
+	return nil
+}
+
 func runSetupToken(ctx context.Context, app *App) error {
 	inst, err := app.Instance()
 	if err != nil {
 		return err
 	}
-	p, err := app.Named(ctx, inst)
+	client, r, err := setupClient(ctx, app, inst)
 	if err != nil {
 		return err
 	}
-	client := app.adminClient(inst, p)
 	if done, err := setup.Done(ctx, client); err == nil && done {
 		return ui.Refused("Setup is already finished.", fmt.Sprintf("Sign in at %s.", inst.Origin()))
 	}
-	if admin, _, err := setup.AccountsExist(ctx, client); err == nil && admin {
-		return ui.Refused("Your admin account already exists, but setup isn't finished.", browserSetupFix(inst.Origin(), true))
-	}
 	token := setup.Token(inst.State.Secrets)
 	if token == "" {
-		err := app.Change(ctx, inst, func(e *engine.Engine) error {
-			t, err := setup.EnsureToken(inst.State.Secrets)
-			if err != nil {
-				return err
-			}
-			if err := inst.Save(); err != nil {
-				return err
-			}
-			return app.UI.Step(ctx, "Restarting Fluxer with a new setup token", func(ctx context.Context, s *ui.Step) error {
-				if _, err := deploy.Apply(ctx, inst, e, deploy.ApplyOptions{Pull: true, OnEvent: app.progress(s, "Restarting")}); err != nil {
-					return ui.Wrap(readyFailure(ctx, inst, p, err), "Couldn't restart Fluxer with a new setup token.", "Run rexctl logs api to see why.")
-				}
-				if err := waitForFluxer(ctx, inst, p, s, "Restarting"); err != nil {
-					return err
-				}
-				token = t
-				s.Done("Restarted Fluxer with a new setup token.")
-				return nil
-			})
-		})
-		if err != nil {
+		if token, err = newSetupToken(ctx, app, inst, r); err != nil {
 			return err
 		}
 	}
@@ -166,30 +248,51 @@ func runSetupToken(ctx context.Context, app *App) error {
 	return nil
 }
 
-func runSetup(ctx context.Context, app *App, c *cobra.Command, inst *instance.Instance, p *engine.Project, f *setupFlags, pre *setup.Answers) (string, error) {
-	client := app.adminClient(inst, p)
-	done, err := setup.Done(ctx, client)
+func newSetupToken(ctx context.Context, app *App, inst *instance.Instance, r rt.Runtime) (string, error) {
+	if r.Info(ctx).Root && euid() != 0 {
+		return "", ui.Refused("A new setup token needs a restart, and this instance is managed as root.", "Run sudo rexctl setup token.")
+	}
+	app.UI.Info("A new setup token needs a restart. %s", restartLine(r.Kind(), []string{"all"}))
+	ok, err := app.UI.Confirm("Go ahead?", true)
 	if err != nil {
-		return "", ui.Wrap(err, "Couldn't connect to your instance.", "Run rexctl status to see whether it's running.")
-	}
-	if done {
-		return "", ui.Refused("Setup is already finished.", fmt.Sprintf("Sign in at %s.", inst.Origin()))
-	}
-	if admin, exists, err := setup.AccountsExist(ctx, client); err == nil && exists {
-		msg := "Fluxer already has accounts, but setup isn't finished."
-		if admin {
-			msg = "Your admin account already exists, but setup isn't finished."
-		}
-		return "", ui.Refused(msg, browserSetupFix(inst.Origin(), admin))
-	}
-	var answers setup.Answers
-	if pre != nil {
-		answers = *pre
-	} else if answers, err = askSetup(app, c, inst.Domain(), f); err != nil {
 		return "", err
 	}
+	if !ok {
+		app.UI.Info("Nothing changed.")
+		return "", errDeclined
+	}
+	var token string
+	err = app.Locked(ctx, inst, func() error {
+		t, err := setup.EnsureToken(inst.State.Secrets)
+		if err != nil {
+			return err
+		}
+		if err := inst.Save(); err != nil {
+			return ui.Wrap(err, fmt.Sprintf("Couldn't save your settings in %s.", inst.Dir), "Check that you can write to it, then try again.")
+		}
+		return app.UI.Step(ctx, "Restarting Fluxer with a new setup token", func(ctx context.Context, s *ui.Step) error {
+			if err := r.Restart(ctx, s, nil); err != nil {
+				return ui.Wrap(err, "Couldn't restart Fluxer with a new setup token.", "Run rexctl logs api to see why.")
+			}
+			token = t
+			s.Done("Restarted Fluxer with a new setup token.")
+			return nil
+		})
+	})
+	return token, err
+}
+
+func runSetup(ctx context.Context, app *App, client *adminapi.Client, inst *instance.Instance, st *setupState, pre *setup.Answers) (string, error) {
+	if err := setupReady(ctx, client, inst); err != nil {
+		return "", err
+	}
+	var err error
+	if pre == nil {
+		return "", ui.Failed("rexctl has no setup answers to use.", "Run rexctl setup.")
+	}
+	answers := *pre
 	if answers.SMTP != nil {
-		if answers.SMTP, err = testEmail(ctx, app, client, inst.Domain(), f, answers); err != nil {
+		if answers.SMTP, err = testEmail(ctx, app, client, st, answers); err != nil {
 			return "", err
 		}
 	}
@@ -215,8 +318,7 @@ func runSetup(ctx context.Context, app *App, c *cobra.Command, inst *instance.In
 		return "", setupError(err)
 	}
 	if res != nil && res.RecoveryKitPath != "" {
-		app.UI.OK("Saved your recovery kit to %s.", res.RecoveryKitPath)
-		app.UI.Info("  Keep a copy somewhere safe. You'll need it if you lose your password.")
+		app.UI.OK("Saved your recovery kit to %s. Keep a copy somewhere safe. You'll need it if you lose your password.", res.RecoveryKitPath)
 	}
 	inst.State.SetupDone = true
 	if err := inst.Save(); err != nil {
@@ -228,15 +330,24 @@ func runSetup(ctx context.Context, app *App, c *cobra.Command, inst *instance.In
 	return res.UserID, nil
 }
 
-func signInAfterSetup(ctx context.Context, app *App, inst *instance.Instance, p *engine.Project, adminID string) bool {
+func signInAfterSetup(ctx context.Context, app *App, client *adminapi.Client, adminID string) bool {
 	if adminID == "" {
 		return false
 	}
-	if err := printSignInLink(ctx, app, app.adminClient(inst, p), adminID, "you"); err != nil {
+	if err := printSignInLink(ctx, app, client, adminID, "you"); err != nil {
 		app.UI.Detail("%v", err)
 		return false
 	}
 	return true
+}
+
+func firstInvite(ctx context.Context, app *App, client *adminapi.Client, answers setup.Answers) {
+	if answers.Registration != setup.RegistrationInvite {
+		return
+	}
+	if err := createInvite(ctx, app, client, adminapi.InviteOptions{Expires: 7 * 24 * time.Hour}); err != nil {
+		app.UI.Warn("Couldn't create an invite link.", "Run rexctl invites create to make one.")
+	}
 }
 
 func setupError(err error) error {
@@ -249,64 +360,6 @@ func setupError(err error) error {
 		return ui.Wrap(err, msg, "Run rexctl setup to try again.")
 	}
 	return ui.Wrap(err, "Couldn't create your admin account.", "Run rexctl setup to try again.")
-}
-
-func askSetup(app *App, c *cobra.Command, domain string, f *setupFlags) (setup.Answers, error) {
-	var a setup.Answers
-	u := app.UI
-	if err := u.Ask(c, ui.Field{
-		Flag:  "sign-in",
-		Title: "Will people sign in with an email address or a username?",
-		Value: &f.SignIn,
-		Options: []ui.Option{
-			{Label: "Email address", Value: string(setup.SignInEmail)},
-			{Label: "Username", Value: string(setup.SignInUsername)},
-		},
-	}); err != nil {
-		return a, err
-	}
-	a.SignIn = setup.SignIn(f.SignIn)
-
-	if a.SignIn == setup.SignInEmail {
-		smtp, err := askEmail(app, c, domain, f)
-		if err != nil {
-			return a, err
-		}
-		a.SMTP = smtp
-	} else if fl := smtpFlagPassed(c); fl != "" {
-		return a, ui.Usage(fmt.Sprintf("Email only works when people sign in with an email address. Leave out --%s, or pass --sign-in email.", fl))
-	}
-
-	if a.SignIn == setup.SignInEmail {
-		if err := u.Ask(c, ui.Field{Flag: "admin-email", Title: "Your admin email address", Value: &f.Email, Validate: validateSetupEmail}); err != nil {
-			return a, err
-		}
-	}
-	if err := u.Ask(c, ui.Field{Flag: "admin-username", Title: "Your admin username", Value: &f.Username, Validate: validateSetupUsername}); err != nil {
-		return a, err
-	}
-	password, err := askSecret(app, c, "admin-password-file", "Your admin password", f.PasswordFile, validateSetupPassword)
-	if err != nil {
-		return a, err
-	}
-	if err := u.Ask(c, ui.Field{Flag: "name", Title: "What's your instance called?", Value: &f.Name, Validate: validateSetupName}); err != nil {
-		return a, err
-	}
-	if err := u.Ask(c, ui.Field{
-		Flag:    "registration",
-		Title:   "Who can create an account?",
-		Value:   &f.Registration,
-		Default: string(setup.RegistrationInvite),
-		Options: registrationOptions(f.Registration),
-	}); err != nil {
-		return a, err
-	}
-	a.Email = strings.TrimSpace(f.Email)
-	a.Username = strings.TrimSpace(f.Username)
-	a.Password = password
-	a.Name = strings.TrimSpace(f.Name)
-	a.Registration = setup.Registration(f.Registration)
-	return a, nil
 }
 
 func smtpFlagPassed(c *cobra.Command) string {
@@ -333,83 +386,14 @@ func registrationOptions(current string) []ui.Option {
 	return opts
 }
 
-func askEmail(app *App, c *cobra.Command, domain string, f *setupFlags) (*setup.SMTP, error) {
-	u := app.UI
-	if f.SkipEmail {
-		return nil, nil
-	}
-	if f.SMTPHost == "" {
-		if !u.Interactive() {
-			return nil, ui.Usage("Pass --smtp-host, or --skip-email to set up email later.")
-		}
-		choice := "yes"
-		if err := u.Ask(nil, ui.Field{
-			Title: "Can your instance send email?",
-			Value: &choice,
-			Options: []ui.Option{
-				{Label: "Yes", Value: "yes"},
-				{Label: "Later", Value: "later"},
-			},
-		}); err != nil {
-			return nil, err
-		}
-		if choice == "later" {
-			return nil, nil
-		}
-	}
-	return askSMTP(app, c, domain, f)
-}
-
-func askSMTP(app *App, c *cobra.Command, domain string, f *setupFlags) (*setup.SMTP, error) {
-	u := app.UI
-	port := strconv.Itoa(f.SMTPPort)
-	if f.SMTPFrom == "" && domain != "" {
-		f.SMTPFrom = "noreply@" + domain
-	}
-	fields := []ui.Field{
-		{Flag: "smtp-host", Title: "SMTP server", Value: &f.SMTPHost, Validate: validateSetupHost},
-		{Flag: "smtp-port", Title: "Port", Value: &port, Validate: validateSetupPort},
-	}
-	if u.Interactive() {
-		fields = append(fields, ui.Field{Flag: "smtp-username", Title: "SMTP username", Value: &f.SMTPUsername, Optional: true})
-	}
-	if err := u.Ask(c, fields...); err != nil {
-		return nil, err
-	}
-	password := ""
-	if f.SMTPPassFile != "" || (u.Interactive() && strings.TrimSpace(f.SMTPUsername) != "") {
-		var err error
-		password, err = askSecret(app, c, "smtp-password-file", "SMTP password", f.SMTPPassFile, nil)
-		if err != nil {
-			return nil, err
-		}
-	}
-	if err := u.Ask(c, ui.Field{Flag: "smtp-from", Title: "Send from", Value: &f.SMTPFrom, Validate: validateSetupFrom}); err != nil {
-		return nil, err
-	}
-	n, _ := strconv.Atoi(port)
-	f.SMTPPort = n
-	if err := validTLS(f.SMTPTLS, "smtp-tls"); err != nil {
-		return nil, err
-	}
-	return &setup.SMTP{
-		Host:     strings.TrimSpace(f.SMTPHost),
-		Port:     n,
-		TLS:      f.SMTPTLS,
-		Username: strings.TrimSpace(f.SMTPUsername),
-		Password: password,
-		From:     strings.TrimSpace(f.SMTPFrom),
-	}, nil
-}
-
-func testEmail(ctx context.Context, app *App, client *adminapi.Client, domain string, f *setupFlags, a setup.Answers) (*setup.SMTP, error) {
+func testEmail(ctx context.Context, app *App, client *adminapi.Client, st *setupState, a setup.Answers) (*setup.SMTP, error) {
 	smtp := a.SMTP
 	to := ""
 	if a.SignIn == setup.SignInEmail {
 		to = a.Email
 	}
 	for {
-		err := app.UI.Step(ctx, "Checking your email settings", func(ctx context.Context, s *ui.Step) error {
+		err := app.UI.Check(ctx, "Checking your email settings", func(ctx context.Context, s *ui.Step) error {
 			if err := setup.TestSMTP(ctx, client, *smtp, a.Name, to); err != nil {
 				return err
 			}
@@ -459,13 +443,14 @@ func testEmail(ctx context.Context, app *App, client *adminapi.Client, domain st
 			return nil, nil
 		case "plain":
 			smtp.TLS = "none"
-			f.SMTPTLS = "none"
+			st.smtp.TLS = "none"
 			continue
 		}
-		f.SMTPPassFile = ""
-		if smtp, err = askSMTP(app, nil, domain, f); err != nil {
+		st.smtp.PassFile = ""
+		if err := app.UI.Ask(nil, st.smtp.fields(func() bool { return false })...); err != nil {
 			return nil, err
 		}
+		smtp = st.smtp.value()
 	}
 }
 
@@ -544,7 +529,7 @@ func validateSetupEmail(v string) error {
 
 func validateSetupUsername(v string) error {
 	if !setupUsernamePattern.MatchString(strings.TrimSpace(v)) {
-		return setupInputError("Use up to 32 letters, numbers, dots or underscores.")
+		return setupInputError("Enter a username of up to 32 letters, numbers, dots or underscores.")
 	}
 	return nil
 }
@@ -552,15 +537,17 @@ func validateSetupUsername(v string) error {
 func validateSetupPassword(v string) error {
 	n := utf8.RuneCountInString(v)
 	if n < 8 || n > 256 {
-		return setupInputError("Use at least 8 characters.")
+		return setupInputError("Enter a password of at least 8 characters.")
 	}
 	return nil
 }
 
 func validateSetupName(v string) error {
-	n := utf8.RuneCountInString(strings.TrimSpace(v))
-	if n < 1 || n > 100 {
-		return setupInputError("Use between 1 and 100 characters.")
+	switch n := utf8.RuneCountInString(strings.TrimSpace(v)); {
+	case n == 0:
+		return setupInputError("Enter the name people see in the app.")
+	case n > 100:
+		return setupInputError("Use 100 characters or fewer.")
 	}
 	return nil
 }
@@ -587,9 +574,6 @@ func validateSetupFrom(v string) error {
 	return nil
 }
 
-func browserSetupFix(origin string, admin bool) string {
-	if admin {
-		return fmt.Sprintf("Open %s and sign in as your admin to finish setup in your browser.", origin)
-	}
+func browserSetupFix(origin string) string {
 	return fmt.Sprintf("Run rexctl setup token and enter the token at %s to finish setup in your browser.", origin)
 }

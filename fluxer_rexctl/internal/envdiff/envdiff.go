@@ -11,25 +11,25 @@ import (
 )
 
 const (
-	Prefix     = "FLUXER_SERVER_"
-	Separator  = "__"
+	prefix     = "FLUXER_SERVER_"
+	separator  = "__"
 	fileSuffix = "_FILE"
 )
 
-func Key(svc, key string) string {
-	return Prefix + strings.ToUpper(strings.ReplaceAll(svc, "-", "_")) + Separator + key
+func key(svc, key string) string {
+	return prefix + strings.ToUpper(strings.ReplaceAll(svc, "-", "_")) + separator + key
 }
 
 func Encode(envs map[string]map[string]string, process []string) (map[string]string, error) {
 	services := slices.Sorted(maps.Keys(envs))
 	keys := map[string]bool{}
 	for _, svc := range services {
-		if svc == "" || strings.Contains(svc, Separator) {
+		if svc == "" || strings.Contains(svc, separator) {
 			return nil, fmt.Errorf("envdiff: bad service name %q", svc)
 		}
 		for k := range envs[svc] {
-			if strings.HasPrefix(k, Prefix) {
-				return nil, fmt.Errorf("envdiff: %s sets %s, and %s is reserved for the merged process", svc, k, Prefix)
+			if strings.HasPrefix(k, prefix) {
+				return nil, fmt.Errorf("envdiff: %s sets %s, and %s is reserved for the merged process", svc, k, prefix)
 			}
 			if !slices.Contains(process, k) {
 				keys[k] = true
@@ -63,7 +63,7 @@ func Encode(envs map[string]map[string]string, process []string) (map[string]str
 			}
 		}
 		for k, v := range own {
-			out[Key(svc, k)] = v
+			out[key(svc, k)] = v
 		}
 	}
 	return out, nil

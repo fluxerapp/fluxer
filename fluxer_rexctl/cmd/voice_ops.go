@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
@@ -18,101 +17,66 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/adminapi"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/deploy"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
-	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/envfile"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
+	rt "github.com/fluxerapp/fluxer/fluxer_rexctl/internal/runtime"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
-	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/voice"
 )
 
-func voiceSet(inst *instance.Instance) *stack.Set {
-	if inst != nil && inst.State != nil && !inst.State.IsVoice() {
-		if set, err := inst.Set(); err == nil {
-			if _, err := voice.ShippedFile(set, voice.ComposeFile); err == nil {
-				return set
-			}
-		}
+func voiceRuntime(ctx context.Context, app *App, inst *instance.Instance) (rt.VoiceServers, error) {
+	r, err := app.Runtime(ctx, inst)
+	if err != nil {
+		return nil, err
 	}
-	return stack.Embedded()
+	return rt.VoiceOf(r), nil
+}
+
+func engineVoice(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine) (rt.VoiceServers, error) {
+	r, err := rt.OpenWith(ctx, inst, app.UI, func(ctx context.Context) (*engine.Engine, error) {
+		switch {
+		case e != nil:
+			return e, nil
+		case inst.State.IsVoice() && inst.State.Runtime == instance.RuntimeContainer:
+			return rt.VoiceEngine(ctx, inst)
+		}
+		return app.Engine(ctx, inst)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return rt.VoiceOf(r), nil
 }
 
 func writeVoiceServer(inst *instance.Instance, srv *instance.VoiceServer) error {
-	dir := voice.ServerDir(inst.Dir, srv.ID)
-	if err := os.MkdirAll(dir, 0o700); err != nil {
+	r, err := rt.Open(context.Background(), inst, nil)
+	if err != nil {
 		return err
 	}
-	if err := envfile.RestrictToOwner(dir); err != nil {
-		return err
-	}
-	set := voiceSet(inst)
-	for _, name := range []string{voice.ComposeFile, voice.HTTPComposeFile} {
-		data, err := voice.ShippedFile(set, name)
-		if err != nil {
-			return err
-		}
-		if err := os.WriteFile(filepath.Join(dir, name), data, 0o644); err != nil {
-			return err
-		}
-	}
-	return envfile.WriteFileAtomic(filepath.Join(dir, voice.EnvFile), deploy.VoiceEnv(inst, srv).File(), true)
+	return rt.VoiceOf(r).Write(srv)
 }
 
 func startVoiceServer(ctx context.Context, app *App, e *engine.Engine, inst *instance.Instance, srv *instance.VoiceServer, s *ui.Step) error {
-	if srv.Network == voice.MachineNetwork {
-		if err := e.EnsureNetwork(ctx, voice.MachineNetwork, voice.EdgeProject, "voice", srv.NodeIPv6 != ""); err != nil {
-			return engineFailure(err)
-		}
-	}
-	p, err := e.Load(ctx, deploy.VoiceSpec(inst, srv))
+	vs, err := engineVoice(ctx, app, inst, e)
 	if err != nil {
-		return engineFailure(err)
+		return err
 	}
-	if err := p.Pull(ctx, app.progress(s, "Starting")); err != nil {
-		return engineFailure(err)
+	return vs.Start(ctx, s, srv)
+}
+
+func withFix(err error, fix string) error {
+	var ee *ui.ExitError
+	if errors.As(err, &ee) {
+		out := *ee
+		out.Fix = fix
+		return &out
 	}
-	if err := p.Up(context.WithoutCancel(ctx), engine.UpOptions{RemoveOrphans: true, Wait: true, WaitTimeout: deploy.VoiceStartTimeout}); err != nil {
-		return ui.Wrap(engineFailure(err), fmt.Sprintf("The voice server %s didn't start.", srv.ID), fmt.Sprintf("Run rexctl voice status %s to see why.", srv.ID))
-	}
-	return nil
+	return ui.Wrap(err, err.Error(), fix)
 }
 
 func removeVoiceServerProject(ctx context.Context, e *engine.Engine, srv *instance.VoiceServer) error {
-	return engineFailure(e.Named(srv.Project, "").DownWithin(context.WithoutCancel(ctx), true, deploy.VoiceStopTimeout))
-}
-
-func voiceProject(e *engine.Engine, inst *instance.Instance, srv *instance.VoiceServer) *engine.Project {
-	return e.Named(srv.Project, voice.ServerDir(inst.Dir, srv.ID))
-}
-
-func ownLiveKitImage() string {
-	if images, err := stack.EmbeddedImages(); err == nil {
-		if ref, err := images.Image("livekit"); err == nil && ref != "" {
-			return ref
-		}
-	}
-	return voice.DefaultImage
-}
-
-func ownEdgeImage() string {
-	images, err := stack.EmbeddedImages()
-	if err != nil {
-		return ""
-	}
-	ref, err := images.Image("edge")
-	if err != nil || ref == "" {
-		return ""
-	}
-	shipped, err := voice.ShippedFile(stack.Embedded(), voice.EdgeComposeFile)
-	if err != nil {
-		return ""
-	}
-	def, ok := stack.ImageDefault(stack.ComposeImages(shipped)["edge"])
-	if name, _, _ := strings.Cut(ref, "@"); !ok || name != def {
-		return ""
-	}
-	return ref
+	return rt.EngineError("", e.Named(srv.Project, "").DownWithin(context.WithoutCancel(ctx), true, deploy.VoiceStopTimeout))
 }
 
 func instanceLiveKitImage(inst *instance.Instance) string {
@@ -122,7 +86,7 @@ func instanceLiveKitImage(inst *instance.Instance) string {
 			return ref
 		}
 	}
-	return ownLiveKitImage()
+	return voice.DefaultImage
 }
 
 func voicePortStrings(srv *instance.VoiceServer) []host.Port {
@@ -176,16 +140,9 @@ func takenVoicePorts(ctx context.Context, e *engine.Engine, inst *instance.Insta
 				taken[host.Port{Number: p.Number, Proto: p.Proto}] = true
 			}
 		}
-		if deploy.VoiceBundled(other) {
-			tcp, udp := 7881, 7882
-			if n, err := strconv.Atoi(other.State.Settings[settings.VoiceTCPPort]); err == nil {
-				tcp = n
-			}
-			if n, err := strconv.Atoi(other.State.Settings[settings.VoiceUDPPort]); err == nil {
-				udp = n
-			}
-			taken[host.Port{Number: tcp, Proto: "tcp"}] = true
-			taken[host.Port{Number: udp, Proto: "udp"}] = true
+		if b := deploy.BundledVoiceServer(other); b != nil {
+			taken[host.Port{Number: b.TCPPort, Proto: "tcp"}] = true
+			taken[host.Port{Number: b.UDPPort, Proto: "udp"}] = true
 		}
 	}
 	return taken
@@ -267,6 +224,7 @@ func closeVoiceFirewall(ctx context.Context, app *App, opened []string) {
 	}
 	if err := host.ClosePorts(ctx, fw, parsePorts(opened)); err != nil {
 		app.UI.Detail("closing %s: %v", strings.Join(opened, ", "), err)
+		app.UI.Warn(fmt.Sprintf("Couldn't close %s in the firewall.", portWords(parsePorts(opened))), "Close it yourself, since no voice server uses it now.")
 	}
 }
 
@@ -279,12 +237,12 @@ func moveVoiceEndpoints(ctx context.Context, app *App, inst *instance.Instance) 
 		return
 	}
 	origin := voice.WSOrigin(inst.Origin())
-	p, err := app.Named(ctx, inst)
+	api, _, err := app.Admin(ctx)
 	if err != nil {
 		app.UI.Warn(fmt.Sprintf("Couldn't move the voice servers to %s (%v).", origin, err), "Run rexctl doctor --fix to try again.")
 		return
 	}
-	moved, err := deploy.MoveVoiceEndpoints(ctx, app.adminClient(inst, p), inst)
+	moved, err := deploy.MoveVoiceEndpoints(ctx, api, inst)
 	if len(moved) > 0 {
 		app.UI.OK("Moved %s to %s.", ui.JoinAnd(moved), origin)
 	}
@@ -348,7 +306,7 @@ func followMachineIPv4(ctx context.Context, app *App, inst *instance.Instance) {
 	}
 }
 
-func moveVoicePublicIP(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, restart bool) {
+func moveVoicePublicIP(ctx context.Context, app *App, inst *instance.Instance, restart bool) {
 	moved := followVoicePublicIP(inst)
 	if len(moved) == 0 {
 		return
@@ -357,31 +315,28 @@ func moveVoicePublicIP(ctx context.Context, app *App, inst *instance.Instance, e
 		app.UI.Warn(fmt.Sprintf("Couldn't give the voice servers the new public address (%v).", err), "Run rexctl config set voice.public_ip again.")
 		return
 	}
+	vs, err := voiceRuntime(ctx, app, inst)
+	if err != nil {
+		app.UI.Warn(fmt.Sprintf("Voice servers still give clients their old address (%v).", err), "Run rexctl voice status to see why.")
+		return
+	}
 	var api *adminapi.Client
 	if restart {
-		api = app.adminClient(inst, e.Named(inst.Project(), inst.Dir))
+		if api, _, err = app.Admin(ctx); err != nil {
+			app.UI.Detail("connecting to the admin API: %v", err)
+		}
 	}
 	for _, srv := range moved {
 		var err error
 		if restart {
-			err = upgradeVoiceServer(ctx, app, e, api, inst, srv, srv.Image, defaultDrainTimeout)
+			err = upgradeVoiceServer(ctx, app, vs, api, inst, srv, srv.Image, defaultDrainTimeout)
 		} else {
-			err = writeVoiceServer(inst, srv)
+			err = vs.Write(srv)
 		}
 		if err != nil {
 			app.UI.Warn(fmt.Sprintf("Voice server %s still gives clients its old address (%v).", srv.ID, err), "Run rexctl voice status "+srv.ID+" to see why.")
 		}
 	}
-}
-
-func voiceProbeTarget(inst *instance.Instance, srv *instance.VoiceServer) (string, string) {
-	switch {
-	case srv.Edge == voice.EdgeNone:
-		return voice.LocalBase(srv.HTTPBind, srv.HTTPPort), ""
-	case inst.State.IsVoice():
-		return voice.HTTPBase(srv.Endpoint), "127.0.0.1:443"
-	}
-	return voice.InstanceEdge(srv.Endpoint, inst.State.Settings[settings.EdgeMode], inst.Setting("FLUXER_HTTPS_PORT"), inst.Setting("FLUXER_EDGE_BIND"), inst.Setting(settings.EdgeListenVar))
 }
 
 func waitForEndpoint(ctx context.Context, base, edgeAddr string, insecure bool, limit time.Duration) error {
@@ -460,37 +415,47 @@ func restoreBundledVoiceServer(ctx context.Context, app *App, inst *instance.Ins
 	if id == "" {
 		return
 	}
-	region := deploy.DefaultVoiceRegion(inst)
-	fix := fmt.Sprintf("Add %s to the region %s in the admin panel, with the key and secret in LIVEKIT_API_KEY and LIVEKIT_API_SECRET.", id, region)
-	p, err := app.Named(ctx, inst)
-	if err != nil {
-		app.UI.Warn(fmt.Sprintf("Couldn't add the bundled voice server %s (%v).", id, err), fix)
-		return
+	if err := registerBundledVoiceServer(ctx, app, inst, false); err != nil {
+		app.UI.Warn(fmt.Sprintf("Couldn't add the bundled voice server %s (%v).", id, err), fmt.Sprintf("Run rexctl voice resync %s.", id))
 	}
-	api := app.adminClient(inst, p)
+}
+
+func registerBundledVoiceServer(ctx context.Context, app *App, inst *instance.Instance, resync bool) error {
+	id := deploy.BundledVoiceServerID(inst)
+	region := deploy.DefaultVoiceRegion(inst)
+	api, _, err := app.Admin(ctx)
+	if err != nil {
+		return err
+	}
+	srv := deploy.BundledVoiceServer(inst)
+	if srv.Key == "" || srv.Secret == "" {
+		return ui.Failed(fmt.Sprintf("The bundled voice server %s has no key yet.", id), "Run rexctl restart, then try again.")
+	}
 	regions, err := api.VoiceRegions(ctx)
 	if err != nil {
-		app.UI.Warn(fmt.Sprintf("Couldn't add the bundled voice server %s (%v).", id, adminapi.Explain(err)), fix)
-		return
+		return adminapi.Explain(err)
 	}
 	for _, r := range regions {
 		for _, s := range r.Servers {
-			if s.ServerId == id {
-				return
+			if s.ServerId != id {
+				continue
 			}
+			if !resync {
+				return nil
+			}
+			if _, err := api.UpdateVoiceServer(ctx, r.Id, id, adminapi.UpdateVoiceServerRequestBody{ApiKey: &srv.Key, ApiSecret: &srv.Secret, Endpoint: &srv.Endpoint}); err != nil {
+				return adminapi.Explain(err)
+			}
+			app.UI.OK("Your instance has the key, secret and endpoint of the bundled voice server %s again.", id)
+			return nil
 		}
 	}
-	key, secret := inst.Setting("LIVEKIT_API_KEY"), inst.Setting("LIVEKIT_API_SECRET")
-	if key == "" || secret == "" {
-		app.UI.Warn(fmt.Sprintf("Couldn't add the bundled voice server %s. LIVEKIT_API_KEY or LIVEKIT_API_SECRET is empty.", id), fix)
-		return
-	}
-	body := adminapi.CreateVoiceServerRequestBody{ServerId: id, Endpoint: voice.WSOrigin(inst.Origin()) + "/livekit", ApiKey: key, ApiSecret: secret}
+	body := adminapi.CreateVoiceServerRequestBody{ServerId: id, Endpoint: srv.Endpoint, ApiKey: srv.Key, ApiSecret: srv.Secret}
 	if _, err := api.CreateVoiceServer(ctx, region, body); err != nil {
-		app.UI.Warn(fmt.Sprintf("Couldn't add the bundled voice server %s (%v).", id, adminapi.Explain(err)), fix)
-		return
+		return adminapi.Explain(err)
 	}
 	app.UI.OK("Added the bundled voice server %s to the region %s.", id, region)
+	return nil
 }
 
 func saveVoiceState(inst *instance.Instance) error {
@@ -500,17 +465,17 @@ func saveVoiceState(inst *instance.Instance) error {
 	return nil
 }
 
-func voiceLogLines(ctx context.Context, e *engine.Engine, inst *instance.Instance, srv *instance.VoiceServer, tail int) []string {
+func voiceLogLines(ctx context.Context, vs rt.VoiceServers, srv *instance.VoiceServer, tail int) []string {
 	var buf bytes.Buffer
-	if err := voiceProject(e, inst, srv).Logs(ctx, engine.LogsOptions{Tail: tail, Stdout: &buf}, "livekit"); err != nil {
+	if err := vs.Logs(ctx, &buf, srv, rt.LogOptions{Tail: tail}); err != nil {
 		return nil
 	}
 	return voice.LogLines(&buf, func(string) bool { return true })
 }
 
-func voiceWebhookLog(ctx context.Context, e *engine.Engine, inst *instance.Instance, srv *instance.VoiceServer) (string, bool) {
+func voiceWebhookLog(lines []string) (string, bool) {
 	failed, sent := "", false
-	for _, line := range voiceLogLines(ctx, e, inst, srv, 2000) {
+	for _, line := range lines {
 		lower := strings.ToLower(line)
 		switch {
 		case strings.Contains(lower, "failed to send webhook") || strings.Contains(lower, "could not send webhook"):

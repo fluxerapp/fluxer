@@ -23,54 +23,259 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/envfile"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/secrets"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/setup"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 )
 
 const (
 	ServiceUser     = "fluxer"
-	EnvFileName     = "fluxer.env"
+	envFileName     = "fluxer.env"
 	SecretsFileName = "secrets.env"
 	DataDirName     = "data"
-	ReleasesDirName = "releases"
-	CurrentLink     = "current"
+	releasesDirName = "releases"
+	currentLink     = "current"
 	PreviousLink    = "previous"
-	FluxerdPath     = "bin/fluxerd"
+	fluxerdPath     = "bin/fluxerd"
 
-	ControlSocketName  = "fluxerd.sock"
-	OperatorSocketName = "operator.sock"
-	BackupsDirName     = "backups"
+	controlSocketName  = "fluxerd.sock"
+	operatorSocketName = "operator.sock"
+	backupsDirName     = "backups"
 
-	APIAddr = "127.0.0.1:18080"
+	APIAddr         = "127.0.0.1:18080"
+	apiPort         = "18080"
+	defaultLoopback = "127.0.0.1"
+
+	FirstName        = "fluxer"
+	VoiceMachineName = "voice"
+	voiceChildPrefix = "livekit-"
+	etcRoot          = "/etc/fluxer"
+	varRoot          = "/var/lib/fluxer"
+	loopbackEnv      = "FLUXER_LOOPBACK_ADDRESS"
 
 	dataDirEnv    = "FLUXER_DATA_DIR"
 	runtimeDirEnv = "RUNTIME_DIRECTORY"
 	edgeModeEnv   = "FLUXER_EDGE_MODE"
 	edgeListenEnv = "FLUXER_EDGE_LISTEN_ADDRESS"
-	ProxyPort     = "8080"
+	edgeBindEnv   = "FLUXER_EDGE_BIND"
+
+	workerPrefix    = "FLUXER_WORKER_"
+	sizingSourceEnv = "FLUXER_SIZING_SOURCE"
+	sizingByRexctl  = "rexctl"
+
+	backupOnUpgradeEnv = "FLUXER_BACKUP_ON_UPGRADE"
+	installMethodEnv   = "FLUXER_INSTALL_METHOD"
+	upgradeCommandEnv  = "FLUXER_UPGRADE_COMMAND"
+	installedByRexctl  = "rexctl"
+
+	ContainerProxyBind = "0.0.0.0:8080"
 )
 
-var Warn = func(msg, fix string) { fmt.Fprintf(os.Stderr, "! %s\n  %s\n", msg, fix) }
-
-var (
-	ErrNotRoot   = errors.New("native: the native runtime is managed as root")
-	ErrProxyPort = errors.New("native: behind a proxy, the native runtime listens on port " + ProxyPort)
-)
+var ErrNotRoot = errors.New("native: the native runtime is managed as root")
 
 type Stack struct {
 	Inst    *instance.Instance
 	Runtime string
+	Dial    func(ctx context.Context, target string) (net.Conn, error)
+	Host    func(ctx context.Context) (state string, restarts int)
 
 	replaced string
 }
+
+const (
+	DialControl  = "control"
+	DialOperator = "operator"
+	DialAPI      = "api"
+)
 
 func New(inst *instance.Instance) *Stack {
 	return &Stack{Inst: inst}
 }
 
-func (s *Stack) Unit() string { return s.Inst.Project() + ".service" }
+func (s *Stack) fhs() bool { return s.Inst.State != nil && s.Inst.State.Layout == instance.LayoutFHS }
 
-func (s *Stack) Root() string { return s.Inst.Path(DataDirName) }
+func (s *Stack) Unit() string {
+	if s.fhs() {
+		return UnitName(s.Inst.Project())
+	}
+	return s.Inst.Project() + ".service"
+}
+
+func (s *Stack) Root() string {
+	if s.fhs() {
+		return DataPath(s.Inst.Project())
+	}
+	return s.Inst.Path(DataDirName)
+}
+
+func (s *Stack) SettingsDir() string {
+	if s.fhs() {
+		return SettingsPath(s.Inst.Project())
+	}
+	return s.Root()
+}
+
+func (s *Stack) Loopback() string {
+	if s.Inst.State != nil && s.Inst.State.Loopback != "" {
+		return s.Inst.State.Loopback
+	}
+	return defaultLoopback
+}
+
+func (s *Stack) APIAddr() string { return net.JoinHostPort(s.Loopback(), apiPort) }
+
+var InternalPorts = []int{
+	14222, 15432, 16379, 17700, 17880,
+	18080, 18081, 18082, 18083, 18084, 18085,
+	18090, 18091, 18092, 18093, 18094,
+	18333, 19333, 19334, 19335,
+}
+
+func InternalPortsFree(loopback string) []int {
+	var busy []int
+	for _, p := range InternalPorts {
+		l, err := net.Listen("tcp", net.JoinHostPort(loopback, strconv.Itoa(p)))
+		if err != nil {
+			busy = append(busy, p)
+			continue
+		}
+		_ = l.Close()
+	}
+	return busy
+}
+
+func FreeLoopback(taken []string) string {
+	for n := 2; n < 255; n++ {
+		addr := "127.0.0." + strconv.Itoa(n)
+		if slices.Contains(taken, addr) || len(InternalPortsFree(addr)) > 0 {
+			continue
+		}
+		return addr
+	}
+	return ""
+}
+
+func UnitName(name string) string {
+	if name == FirstName {
+		return FirstName + ".service"
+	}
+	return FirstName + "@" + name + ".service"
+}
+
+func DataPath(name string) string {
+	switch name {
+	case FirstName:
+		return varRoot
+	case VoiceMachineName:
+		return varRoot + "-" + VoiceMachineName
+	}
+	return filepath.Join(varRoot, name)
+}
+
+func SettingsPath(name string) string {
+	if name == FirstName {
+		return etcRoot
+	}
+	return filepath.Join(etcRoot, name)
+}
+
+var fluxerdEntries = []string{
+	"admin", "api", "app-proxy", "backups", "edge", "gateway", "gifs", "host", "livekit", "media-proxy",
+	"meilisearch", "messages", "nats", "objects", "postgres", "push", "rust", "seaweedfs", "seaweedfs-filer",
+	"seaweedfs-init", "snowflakes", "tmp", "unfurl", "users", "valkey", "voice", "certs", "caddy.d", "ca",
+}
+
+func ReservedName(name string) bool {
+	return slices.Contains(fluxerdEntries, name) || strings.HasPrefix(name, voiceChildPrefix)
+}
+
+func SettingsTaken(name string) bool {
+	_, err := os.Lstat(filepath.Join(SettingsPath(name), envFileName))
+	return err == nil
+}
+
+func NameTaken(name string) bool {
+	paths := []string{filepath.Join(SettingsPath(name), envFileName), filepath.Join("/etc/systemd/system", UnitName(name))}
+	if name != FirstName {
+		paths = append(paths, DataPath(name))
+	} else {
+		paths = append(paths, filepath.Join(varRoot, SecretsFileName))
+	}
+	for _, p := range paths {
+		if _, err := os.Lstat(p); err == nil {
+			return true
+		}
+	}
+	return false
+}
+
+func Nested(root string) []string {
+	if root != varRoot {
+		return nil
+	}
+	ents, err := os.ReadDir(root)
+	if err != nil {
+		return nil
+	}
+	var out []string
+	for _, e := range ents {
+		if !e.IsDir() || ReservedName(e.Name()) {
+			continue
+		}
+		if _, err := os.Stat(filepath.Join(SettingsPath(e.Name()), envFileName)); err == nil {
+			out = append(out, e.Name())
+		}
+	}
+	return out
+}
+
+func (s *Stack) RemoveSettings() error {
+	if !s.fhs() {
+		return nil
+	}
+	var err error
+	if s.Inst.Project() == FirstName {
+		err = os.Remove(s.EnvFile())
+		if errors.Is(err, fs.ErrNotExist) {
+			err = nil
+		}
+	} else {
+		err = os.RemoveAll(s.SettingsDir())
+	}
+	_ = os.Remove(etcRoot)
+	return err
+}
+
+func (s *Stack) RemoveData() error {
+	if err := RemoveData(s.Root()); err != nil {
+		return err
+	}
+	if s.fhs() {
+		_ = os.Remove(varRoot)
+	}
+	return nil
+}
+
+func RemoveData(root string) error {
+	keep := Nested(root)
+	if len(keep) == 0 {
+		return os.RemoveAll(root)
+	}
+	ents, err := os.ReadDir(root)
+	if err != nil {
+		return err
+	}
+	for _, e := range ents {
+		if slices.Contains(keep, e.Name()) {
+			continue
+		}
+		if err := os.RemoveAll(filepath.Join(root, e.Name())); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 func (s *Stack) RuntimeDir() string {
 	if s.Runtime != "" {
@@ -79,8 +284,10 @@ func (s *Stack) RuntimeDir() string {
 	if dir := runningRuntimeDir(context.Background(), s.Unit()); dir != "" {
 		return dir
 	}
-	return host.NativeRuntimeDir(s.Inst.Project())
+	return s.DefaultRuntimeDir()
 }
+
+func (s *Stack) DefaultRuntimeDir() string { return host.NativeRuntimeDir(s.Inst.Project(), s.fhs()) }
 
 func runningRuntimeDir(ctx context.Context, unit string) string {
 	pid, err := strconv.Atoi(unitProperty(ctx, unit, "MainPID"))
@@ -99,33 +306,39 @@ func runningRuntimeDir(ctx context.Context, unit string) string {
 	return ""
 }
 
-func (s *Stack) ControlSocket() string { return filepath.Join(s.RuntimeDir(), ControlSocketName) }
+func (s *Stack) ControlSocket() string { return filepath.Join(s.RuntimeDir(), controlSocketName) }
 
-func (s *Stack) OperatorSocket() string { return filepath.Join(s.RuntimeDir(), OperatorSocketName) }
+func (s *Stack) OperatorSocket() string { return filepath.Join(s.RuntimeDir(), operatorSocketName) }
 
-func (s *Stack) EnvFile() string { return filepath.Join(s.Root(), EnvFileName) }
+func (s *Stack) EnvFile() string { return filepath.Join(s.SettingsDir(), envFileName) }
 
 func (s *Stack) SecretsFile() string { return filepath.Join(s.Root(), SecretsFileName) }
 
-func (s *Stack) ReleasesDir() string { return s.Inst.Path(ReleasesDirName) }
+func (s *Stack) ReleasesDir() string { return s.Inst.Path(releasesDirName) }
 
 func (s *Stack) ReleaseDir(version string) string { return filepath.Join(s.ReleasesDir(), version) }
 
-func (s *Stack) Current() string { return s.Inst.Path(CurrentLink) }
+func (s *Stack) Current() string { return s.Inst.Path(currentLink) }
 
-func (s *Stack) Fluxerd() string { return filepath.Join(s.Current(), FluxerdPath) }
+func (s *Stack) Fluxerd() string { return filepath.Join(s.Current(), fluxerdPath) }
 
 func (s *Stack) BootUnit() host.BootUnit {
+	bin, _ := host.RunningBinary()
 	return host.BootUnit{
+		Binary:   bin,
 		Project:  s.Inst.Project(),
+		Unit:     s.Unit(),
 		Dir:      s.Inst.Dir,
 		Native:   true,
+		FHS:      s.fhs(),
 		User:     ServiceUser,
 		Fluxerd:  s.Fluxerd(),
 		EnvFile:  s.EnvFile(),
 		DataDir:  s.Root(),
 		CaddyDir: s.Inst.Path(instance.CaddyDropInDir),
 		CertsDir: s.Inst.Path(instance.CertsDir),
+		Stopped:  s.StoppedMarker(),
+		Voice:    s.Inst.State.IsVoice(),
 	}
 }
 
@@ -154,12 +367,25 @@ var pathKeys = []string{
 	"FLUXER_PUSH_FCM_PRIVATE_KEY_PATH",
 	"FLUXER_PUSH_FCM_SERVICE_ACCOUNT_JSON_PATH",
 	"FLUXER_EDGE_TLS",
+	"FLUXER_EDGE_ACME_CA_ROOT",
 }
 
-func TranslatePaths(env map[string]string, dir string) {
+const (
+	ContainerData  = "/var/lib/fluxer"
+	ContainerFiles = ContainerData + "/host"
+	certsPrefix    = "/certs/"
+)
+
+func PathKey(key string) bool { return slices.Contains(pathKeys, key) }
+
+func MappedPath(path string) bool {
+	return strings.HasPrefix(path, certsPrefix) || strings.HasPrefix(path, stack.NodeCADir+"/")
+}
+
+func translatePaths(env map[string]string, dir string) {
 	prefixes := [][2]string{
 		{stack.NodeCADir + "/", filepath.Join(dir, instance.CADir) + "/"},
-		{"/certs/", filepath.Join(dir, instance.CertsDir) + "/"},
+		{certsPrefix, filepath.Join(dir, instance.CertsDir) + "/"},
 	}
 	for _, k := range pathKeys {
 		v, ok := env[k]
@@ -185,65 +411,72 @@ func (s *Stack) Environment(set *stack.Set) (env, secrets map[string]string, err
 	if err != nil {
 		return nil, nil, err
 	}
-	secrets = maps.Clone(st.Secrets)
+	secrets = map[string]string{}
+	maps.Copy(secrets, st.Secrets)
 	for k, v := range secrets {
 		if env[k] == v {
 			delete(env, k)
 		}
 	}
 	delete(env, stack.SettingsLoadedVar)
+	maps.DeleteFunc(env, func(k, _ string) bool { return strings.HasPrefix(k, workerPrefix) })
+	env[sizingSourceEnv] = sizingByRexctl
+	env[backupOnUpgradeEnv] = "false"
+	env[installMethodEnv] = installedByRexctl
+	env[upgradeCommandEnv] = instance.UpgradeCommand(s.Inst.Dir)
+	if st.Loopback != "" {
+		env[loopbackEnv] = st.Loopback
+	}
 	mode := st.Settings[settings.EdgeMode]
 	if mode == "" {
 		mode = settings.EdgeBundled
 	}
 	env[edgeModeEnv] = mode
 	if mode != settings.EdgeBundled {
-		addr, err := ProxyListen(st.Settings[settings.EdgeBind])
+		bind, err := ProxyListen(st.Settings[settings.EdgeBind])
 		if err != nil {
 			return nil, nil, err
 		}
-		env[edgeListenEnv] = addr
+		host, _, _ := net.SplitHostPort(bind)
+		if st.IsContainer() {
+			bind, host = ContainerProxyBind, "0.0.0.0"
+		}
+		env[edgeBindEnv] = bind
+		env[edgeListenEnv] = host
 	}
-	TranslatePaths(env, s.Inst.Dir)
+	if st.IsContainer() {
+		translatePaths(env, ContainerFiles)
+	} else {
+		translatePaths(env, s.Inst.Dir)
+	}
 	return env, secrets, nil
 }
 
-func ProxyListen(bind string) (string, error) {
-	if bind == "" {
-		return "127.0.0.1", nil
+func (s *Stack) EdgeBind() string {
+	st := s.Inst.State
+	if st == nil || st.Settings[settings.EdgeMode] == "" || st.Settings[settings.EdgeMode] == settings.EdgeBundled {
+		return ""
 	}
-	h, port, err := net.SplitHostPort(bind)
+	bind, err := ProxyListen(st.Settings[settings.EdgeBind])
 	if err != nil {
-		return "", err
+		return ""
 	}
-	if port != ProxyPort {
-		return "", ErrProxyPort
-	}
-	if h == "" {
-		h = "0.0.0.0"
-	}
-	return h, nil
+	return bind
 }
 
-func envBytes(env map[string]string) []byte {
-	var b bytes.Buffer
-	for _, k := range slices.Sorted(maps.Keys(env)) {
-		b.WriteString(k)
-		b.WriteByte('=')
-		b.WriteString(quote(env[k]))
-		b.WriteByte('\n')
+func (s *Stack) PinEdgeBind() {
+	st := s.Inst.State
+	if mode := st.Settings[settings.EdgeMode]; mode == "" || mode == settings.EdgeBundled || strings.TrimSpace(st.Settings[settings.EdgeBind]) != "" {
+		return
 	}
-	return b.Bytes()
+	st.Settings[settings.EdgeBind] = settings.DefaultBind
 }
 
-func quote(v string) string {
-	if v != "" && !strings.ContainsFunc(v, func(r rune) bool {
-		return !(r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9' || strings.ContainsRune("-_.,:/@+=%~^", r))
-	}) {
-		return v
+func ProxyListen(bind string) (string, error) {
+	if strings.TrimSpace(bind) == "" {
+		return settings.DefaultBind, nil
 	}
-	r := strings.NewReplacer(`\`, `\\`, `"`, `\"`, "\n", `\n`, "\r", "")
-	return `"` + r.Replace(v) + `"`
+	return settings.NormaliseBind(bind)
 }
 
 type Rendered struct {
@@ -255,35 +488,65 @@ func (r Rendered) Changed() bool { return r.Env || r.Secrets }
 
 func (s *Stack) Render(set *stack.Set) (Rendered, error) {
 	var r Rendered
-	env, secrets, err := s.Environment(set)
+	old, err := envfile.LoadRaw(s.SecretsFile())
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return r, err
+	}
+	envData, secretsData, err := s.Files(set, old)
 	if err != nil {
 		return r, err
+	}
+	if s.fhs() && s.Inst.Project() != FirstName {
+		for _, dir := range []string{varRoot, etcRoot} {
+			if err := os.MkdirAll(dir, 0o755); err != nil {
+				return r, err
+			}
+		}
 	}
 	if err := os.MkdirAll(s.Root(), 0o750); err != nil {
 		return r, err
 	}
-	if r.Env, err = writeIfChanged(s.EnvFile(), envBytes(env)); err != nil {
+	if err := os.MkdirAll(s.SettingsDir(), 0o750); err != nil {
 		return r, err
 	}
-	merged := map[string]string{}
-	if old, err := envfile.Load(s.SecretsFile()); err == nil {
-		maps.Copy(merged, old.Map())
-	} else if !errors.Is(err, fs.ErrNotExist) {
+	if r.Env, err = writeIfChanged(s.EnvFile(), envData); err != nil {
 		return r, err
 	}
-	maps.Copy(merged, secrets)
-	if r.Secrets, err = writeIfChanged(s.SecretsFile(), envBytes(merged)); err != nil {
+	if r.Secrets, err = writeIfChanged(s.SecretsFile(), secretsData); err != nil {
 		return r, err
 	}
 	return r, s.chownData(s.EnvFile(), s.SecretsFile())
 }
 
-func (s *Stack) ReadSecrets() (map[string]string, error) {
-	f, err := envfile.Load(s.SecretsFile())
+func (s *Stack) Files(set *stack.Set, oldSecrets map[string]string) (envData, secretsData []byte, err error) {
+	env, secrets, err := s.Environment(set)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return f.Map(), nil
+	if envData, err = envfile.MarshalRaw(env); err != nil {
+		return nil, nil, err
+	}
+	for _, k := range fluxerdSecrets() {
+		if _, ok := secrets[k]; !ok && oldSecrets[k] != "" {
+			secrets[k] = oldSecrets[k]
+		}
+	}
+	secretsData, err = envfile.MarshalRaw(secrets)
+	return envData, secretsData, err
+}
+
+var mintedByFluxerd = []string{"FLUXER_NATS_AUTH_TOKEN", "FLUXER_VALKEY_PASSWORD", setup.TokenKey}
+
+func fluxerdSecrets() []string {
+	keys := slices.Clone(mintedByFluxerd)
+	for _, sp := range secrets.Required {
+		keys = append(keys, sp.Key)
+	}
+	return keys
+}
+
+func (s *Stack) ReadSecrets() (map[string]string, error) {
+	return envfile.LoadRaw(s.SecretsFile())
 }
 
 func writeIfChanged(path string, data []byte) (bool, error) {
@@ -293,10 +556,8 @@ func writeIfChanged(path string, data []byte) (bool, error) {
 	return true, envfile.WriteFileAtomic(path, data, true)
 }
 
-var lookupUser = user.Lookup
-
 func serviceIDs() (int, int, error) {
-	u, err := lookupUser(ServiceUser)
+	u, err := user.Lookup(ServiceUser)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -318,6 +579,11 @@ func (s *Stack) chownData(paths ...string) error {
 	uid, gid, err := serviceIDs()
 	if err != nil {
 		return fmt.Errorf("native: the account %s: %w", ServiceUser, err)
+	}
+	if s.fhs() {
+		if err := os.Lchown(s.SettingsDir(), 0, gid); err != nil {
+			return err
+		}
 	}
 	for _, p := range append([]string{s.Root()}, paths...) {
 		if err := os.Lchown(p, uid, gid); err != nil {
@@ -356,13 +622,73 @@ func (s *Stack) MountedHash() (string, error) {
 
 const mountedKey = "native"
 
-type Applied struct {
-	Restarted bool
-	Reloaded  bool
-	Started   bool
+func (s *Stack) RunsCurrent(ctx context.Context) bool { return s.runsCurrent(ctx) }
+
+func (s *Stack) runsCurrent(ctx context.Context) bool {
+	pid := unitProperty(ctx, s.Unit(), "MainPID")
+	if pid == "" || pid == "0" {
+		return false
+	}
+	running, err := os.Readlink(filepath.Join("/proc", pid, "exe"))
+	if err != nil {
+		return false
+	}
+	want, err := filepath.EvalSymlinks(s.Fluxerd())
+	return err == nil && running == want
 }
 
-func (s *Stack) Apply(ctx context.Context, set *stack.Set) (Applied, error) {
+type Applied struct {
+	Restarted bool
+	Started   bool
+	Reloaded  []string
+}
+
+type ApplyMode int
+
+const (
+	ApplyChanges ApplyMode = iota
+	ApplyRestart
+)
+
+func (s *Stack) Prepare(ctx context.Context, set *stack.Set) error {
+	if os.Geteuid() != 0 {
+		return ErrNotRoot
+	}
+	if err := EnsureUser(ctx); err != nil {
+		return err
+	}
+	s.PinEdgeBind()
+	_, err := s.Render(set)
+	return err
+}
+
+func (s *Stack) Apply(ctx context.Context, set *stack.Set, warn func(msg, fix string), mode ApplyMode) (Applied, error) {
+	return s.apply(ctx, func() (Rendered, error) {
+		s.PinEdgeBind()
+		return s.Render(set)
+	}, warn, mode)
+}
+
+func (s *Stack) ApplyVoice(ctx context.Context, env map[string]string, warn func(msg, fix string)) (Applied, error) {
+	return s.apply(ctx, func() (Rendered, error) { return s.RenderVoice(env) }, warn, ApplyChanges)
+}
+
+func (s *Stack) RenderVoice(env map[string]string) (Rendered, error) {
+	var r Rendered
+	if err := os.MkdirAll(s.Root(), 0o750); err != nil {
+		return r, err
+	}
+	data, err := envfile.MarshalRaw(env)
+	if err != nil {
+		return r, err
+	}
+	if r.Env, err = writeIfChanged(s.EnvFile(), data); err != nil {
+		return r, err
+	}
+	return r, s.chownData(s.EnvFile())
+}
+
+func (s *Stack) apply(ctx context.Context, render func() (Rendered, error), warn func(msg, fix string), mode ApplyMode) (Applied, error) {
 	var a Applied
 	if os.Geteuid() != 0 {
 		return a, ErrNotRoot
@@ -370,7 +696,7 @@ func (s *Stack) Apply(ctx context.Context, set *stack.Set) (Applied, error) {
 	if err := EnsureUser(ctx); err != nil {
 		return a, err
 	}
-	r, err := s.Render(set)
+	r, err := render()
 	if err != nil {
 		return a, err
 	}
@@ -381,8 +707,11 @@ func (s *Stack) Apply(ctx context.Context, set *stack.Set) (Applied, error) {
 	}
 	before, _ := os.ReadFile(path)
 	relaxedBefore, _ := os.ReadFile(u.NoNamespacesPath())
-	active := unitActive(ctx, s.Unit())
+	active := unitProperty(ctx, s.Unit(), "ActiveState") == "active"
 	if !active {
+		if err := s.clearStopped(); err != nil {
+			return a, err
+		}
 		_, _ = systemctlCmd(ctx, "reset-failed", s.Unit())
 	}
 	steps, err := u.InstallSteps(ctx)
@@ -395,7 +724,7 @@ func (s *Stack) Apply(ctx context.Context, set *stack.Set) (Applied, error) {
 	after, _ := os.ReadFile(path)
 	relaxed, _ := os.ReadFile(u.NoNamespacesPath())
 	if relaxed != nil && relaxedBefore == nil {
-		Warn(fmt.Sprintf("Fluxer's service runs with %s turned off, because this machine can't give it its own mount namespace.", strings.Join(host.NoNamespacesOff, " and ")),
+		warn(fmt.Sprintf("Fluxer's service runs with %s turned off, because this machine can't give it its own mount namespace.", strings.Join(host.NoNamespacesOff, " and ")),
 			fmt.Sprintf("In an LXC container, turn on nesting, then run rexctl restart to turn them back on. The setting is in %s.", u.NoNamespacesPath()))
 	}
 	mounted, err := s.MountedHash()
@@ -404,10 +733,25 @@ func (s *Stack) Apply(ctx context.Context, set *stack.Set) (Applied, error) {
 	}
 	mountedChanged := s.Inst.State.Mounted[mountedKey] != mounted
 	s.Inst.State.Mounted = map[string]string{mountedKey: mounted}
+	unitChanged := !bytes.Equal(before, after) || !bytes.Equal(relaxedBefore, relaxed)
+	restart := mode == ApplyRestart || unitChanged
+	if active && !restart && (r.Changed() || mountedChanged) {
+		restart = !s.runsCurrent(ctx)
+	}
 	switch {
 	case !active:
 		a.Started = true
-	case r.Changed() || !bytes.Equal(before, after) || !bytes.Equal(relaxedBefore, relaxed):
+	case !restart && r.Changed():
+		reloaded, err := s.Reload(ctx)
+		switch {
+		case err == nil:
+			a.Reloaded = reloaded
+			return a, nil
+		case !errors.Is(err, errRestartNeeded) && !errors.Is(err, errNoSupervisor):
+			return a, err
+		}
+		fallthrough
+	case restart:
 		if err := s.Restart(ctx); err != nil {
 			return a, err
 		}
@@ -416,7 +760,6 @@ func (s *Stack) Apply(ctx context.Context, set *stack.Set) (Applied, error) {
 		if err := systemctl(ctx, "reload", s.Unit()); err != nil {
 			return a, err
 		}
-		a.Reloaded = true
 	}
 	return a, nil
 }

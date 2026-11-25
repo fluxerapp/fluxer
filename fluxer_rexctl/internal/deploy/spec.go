@@ -28,9 +28,13 @@ const upgradeFix = "Run rexctl upgrade to put this instance on the release this 
 func ReleaseSet(inst *instance.Instance) (*stack.Set, error) {
 	set, err := inst.Set()
 	if errors.Is(err, instance.ErrNoReleaseSet) {
+		fix := upgradeFix
+		if !inst.State.RunsFluxerd() {
+			fix = "rexctl downloads them from Fluxer " + inst.State.Release + "'s release on GitHub. Check that this machine can connect to github.com, then try again."
+		}
 		return nil, &ui.ExitError{Code: ui.ExitRefused, Err: err,
 			Msg: fmt.Sprintf("rexctl can't find the files of Fluxer %s on this machine.", inst.State.Release),
-			Fix: upgradeFix}
+			Fix: fix}
 	}
 	if err != nil {
 		return nil, ui.Wrap(err, fmt.Sprintf("rexctl can't read the files of Fluxer %s.", inst.State.Release), upgradeFix)

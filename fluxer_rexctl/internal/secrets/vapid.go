@@ -17,9 +17,9 @@ const (
 )
 
 var (
-	ErrVAPIDMismatch = errors.New("vapid: public key does not match private key")
+	errVAPIDMismatch = errors.New("vapid: public key does not match private key")
 	ErrVAPIDMissing  = errors.New("vapid: no key pair")
-	ErrVAPIDInvalid  = errors.New("vapid: key has the wrong length or encoding")
+	errVAPIDInvalid  = errors.New("vapid: key has the wrong length or encoding")
 )
 
 type VAPID struct {
@@ -39,32 +39,32 @@ func GenerateVAPID() (VAPID, error) {
 }
 
 func ValidateVAPID(public, private string) error {
-	public, private = NormalizeBase64URL(public), NormalizeBase64URL(private)
+	public, private = normalizeBase64URL(public), normalizeBase64URL(private)
 	if public == "" && private == "" {
 		return ErrVAPIDMissing
 	}
 	pub, err := base64.RawURLEncoding.DecodeString(public)
 	if err != nil || len(pub) != 65 || pub[0] != 4 {
-		return ErrVAPIDInvalid
+		return errVAPIDInvalid
 	}
 	if _, err := ecdh.P256().NewPublicKey(pub); err != nil {
-		return ErrVAPIDInvalid
+		return errVAPIDInvalid
 	}
 	priv, err := base64.RawURLEncoding.DecodeString(private)
 	if err != nil || len(priv) != 32 {
-		return ErrVAPIDInvalid
+		return errVAPIDInvalid
 	}
 	key, err := ecdh.P256().NewPrivateKey(priv)
 	if err != nil {
-		return ErrVAPIDInvalid
+		return errVAPIDInvalid
 	}
 	if !bytes.Equal(key.PublicKey().Bytes(), pub) {
-		return ErrVAPIDMismatch
+		return errVAPIDMismatch
 	}
 	return nil
 }
 
-func NormalizeBase64URL(s string) string {
+func normalizeBase64URL(s string) string {
 	s = strings.TrimSpace(s)
 	s = strings.NewReplacer("+", "-", "/", "_", "=", "").Replace(s)
 	return s

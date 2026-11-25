@@ -27,7 +27,10 @@ const userWaitNetwork = "podman-user-wait-network-online.service"
 
 const StandaloneNativeUnit = "fluxerd.service"
 
-const nativeRuntimeRoot = "rexctl"
+const (
+	nativeRuntimeRoot = "rexctl"
+	fhsRuntimeRoot    = "fluxerd"
+)
 
 const (
 	noNamespacesDropIn = "no-namespaces.conf"
@@ -36,29 +39,40 @@ const (
 
 var NoNamespacesOff = []string{"PrivateTmp", "ProtectSystem"}
 
-func NativeRuntimeDir(project string) string {
-	return filepath.Join("/run", nativeRuntimeRoot, project)
+func NativeRuntimeDir(project string, fhs bool) string {
+	return filepath.Join("/run", runtimeDirName(project, fhs))
+}
+
+func runtimeDirName(project string, fhs bool) string {
+	if fhs {
+		return fhsRuntimeRoot + "/" + project
+	}
+	return nativeRuntimeRoot + "/" + project
 }
 
 var (
-	ErrNativeRootless   = errors.New("host: the native runtime needs a system unit")
+	errNativeRootless   = errors.New("host: the native runtime needs a system unit")
 	ErrStandaloneNative = errors.New("host: fluxerd.service runs or is enabled on this machine")
 )
 
 type BootUnit struct {
 	Project   string
+	Unit      string
 	Dir       string
 	Binary    string
 	Podman    bool
 	Rootless  bool
 	StopGrace time.Duration
 	Native    bool
+	FHS       bool
 	User      string
 	Fluxerd   string
 	EnvFile   string
 	DataDir   string
 	CaddyDir  string
 	CertsDir  string
+	Stopped   string
+	Voice     bool
 }
 
 type BootUnitState struct {
@@ -88,7 +102,12 @@ var (
 
 func BootUnitSupported() bool { return bootUnitSupported() }
 
-func (u BootUnit) Name() string { return u.Project + ".service" }
+func (u BootUnit) Name() string {
+	if u.Unit != "" {
+		return u.Unit
+	}
+	return u.Project + ".service"
+}
 
 func (u BootUnit) Path() (string, error) {
 	dir, err := unitDir(u.Rootless)
@@ -117,7 +136,7 @@ func (u BootUnit) NoNamespacesPath() string {
 	return filepath.Join(systemUnitDir, u.Name()+".d", noNamespacesDropIn)
 }
 
-var namespacesFail = func(ctx context.Context, dataDir string) bool {
+func namespacesFail(ctx context.Context, dataDir string) bool {
 	if !has("systemd-run") {
 		return false
 	}
@@ -168,6 +187,21 @@ func (u BootUnit) namespaceStep(ctx context.Context) (Step, bool) {
 	}, true
 }
 
+func (u BootUnit) copiesBinary() bool {
+	return !u.Rootless && u.Binary != "" && (u.Native || u.runAs() == "")
+}
+
+func RunningBinary() (string, error) {
+	bin, err := os.Executable()
+	if err != nil {
+		return "", err
+	}
+	if real, err := filepath.EvalSymlinks(bin); err == nil {
+		bin = real
+	}
+	return filepath.Abs(bin)
+}
+
 func (u BootUnit) execPath() string {
 	if u.Rootless {
 		return u.Binary
@@ -175,7 +209,7 @@ func (u BootUnit) execPath() string {
 	return LibexecBinary
 }
 
-func BootStopTimeout(grace time.Duration) time.Duration {
+func bootStopTimeout(grace time.Duration) time.Duration {
 	t := grace + time.Minute
 	if t < 3*time.Minute {
 		t = 3 * time.Minute
@@ -183,12 +217,33 @@ func BootStopTimeout(grace time.Duration) time.Duration {
 	return t
 }
 
+func (u BootUnit) stopCondition() string {
+	if u.Stopped == "" {
+		return ""
+	}
+	return fmt.Sprintf("ConditionPathExists=!%s\n", strings.ReplaceAll(u.Stopped, "%", "%%"))
+}
+
+func (u BootUnit) KeepsStopped() bool {
+	path, err := u.Path()
+	if err != nil {
+		return false
+	}
+	data, err := os.ReadFile(path)
+	return err == nil && u.Stopped != "" && strings.Contains(string(data), u.stopCondition())
+}
+
 func (u BootUnit) renderNative() string {
 	var b strings.Builder
 	b.WriteString("[Unit]\n")
-	fmt.Fprintf(&b, "Description=Fluxer in %s\n", strings.ReplaceAll(u.Dir, "%", "%%"))
+	what := "Fluxer"
+	if u.Voice {
+		what = "Fluxer voice servers"
+	}
+	fmt.Fprintf(&b, "Description=%s in %s\n", what, strings.ReplaceAll(u.Dir, "%", "%%"))
 	b.WriteString("After=network-online.target\n")
 	b.WriteString("Wants=network-online.target\n")
+	b.WriteString(u.stopCondition())
 	b.WriteString("\n[Service]\n")
 	b.WriteString("Type=notify\n")
 	b.WriteString("NotifyAccess=main\n")
@@ -197,16 +252,17 @@ func (u BootUnit) renderNative() string {
 		fmt.Fprintf(&b, "Group=%s\n", u.User)
 	}
 	fmt.Fprintf(&b, "Environment=%s\n", systemdQuote("FLUXER_DATA_DIR="+u.DataDir))
+	if !u.Voice {
+		fmt.Fprintf(&b, "ExecStartPre=-+%s upgrade --settle --dir %s\n", LibexecBinary, systemdQuote(u.Dir))
+	}
 	fmt.Fprintf(&b, "ExecStart=%s run --config %s --caddy-dir %s --certs-dir %s\n", systemdQuote(u.Fluxerd), systemdQuote(u.EnvFile), systemdQuote(u.CaddyDir), systemdQuote(u.CertsDir))
 	b.WriteString("ExecReload=/bin/kill -HUP $MAINPID\n")
 	b.WriteString("Restart=on-failure\n")
 	b.WriteString("RestartSec=5\n")
-	b.WriteString("RestartSteps=6\n")
-	b.WriteString("RestartMaxDelaySec=5min\n")
 	b.WriteString("TimeoutStartSec=15min\n")
-	b.WriteString("TimeoutStopSec=90\n")
+	b.WriteString("TimeoutStopSec=130\n")
 	b.WriteString("KillMode=mixed\n")
-	fmt.Fprintf(&b, "RuntimeDirectory=%s/%s\n", nativeRuntimeRoot, u.Project)
+	fmt.Fprintf(&b, "RuntimeDirectory=%s\n", runtimeDirName(u.Project, u.FHS))
 	b.WriteString("RuntimeDirectoryMode=0750\n")
 	b.WriteString("AmbientCapabilities=CAP_NET_BIND_SERVICE\n")
 	b.WriteString("LimitNOFILE=65536\n")
@@ -277,7 +333,7 @@ func (u BootUnit) render(waitNetwork bool, runAs string) string {
 	}
 	fmt.Fprintf(&b, "ExecStop=%s stop --boot --dir %s\n", bin, dir)
 	b.WriteString("TimeoutStartSec=15min\n")
-	fmt.Fprintf(&b, "TimeoutStopSec=%d\n", int(BootStopTimeout(u.StopGrace).Seconds()))
+	fmt.Fprintf(&b, "TimeoutStopSec=%d\n", int(bootStopTimeout(u.StopGrace).Seconds()))
 	b.WriteString("\n[Install]\n")
 	fmt.Fprintf(&b, "WantedBy=%s\n", target)
 	return b.String()
@@ -311,36 +367,29 @@ func (u BootUnit) content(ctx context.Context) string {
 	return u.render(u.Rootless && unitExists(ctx, true, userWaitNetwork), u.runAs())
 }
 
-func unitExists(ctx context.Context, rootless bool, name string) bool {
-	args := []string{"list-unit-files", "--no-legend", name}
+func systemctlOutput(ctx context.Context, rootless bool, args ...string) ([]byte, error) {
 	if rootless {
 		args = append([]string{"--user"}, args...)
 	}
-	out, err := exec.CommandContext(ctx, "systemctl", args...).Output()
+	return exec.CommandContext(ctx, "systemctl", args...).Output()
+}
+
+func unitExists(ctx context.Context, rootless bool, name string) bool {
+	out, err := systemctlOutput(ctx, rootless, "list-unit-files", "--no-legend", name)
 	return err == nil && strings.Contains(string(out), name)
 }
 
 func unitIs(ctx context.Context, rootless bool, name, state string) bool {
-	args := []string{"is-" + state, name}
-	if rootless {
-		args = append([]string{"--user"}, args...)
-	}
-	out, _ := exec.CommandContext(ctx, "systemctl", args...).Output()
+	out, _ := systemctlOutput(ctx, rootless, "is-"+state, name)
 	return strings.TrimSpace(string(out)) == state
 }
 
-func BootUnitStarting(ctx context.Context, project string) bool {
+func BootUnitStarting(ctx context.Context, name string) bool {
 	if !BootUnitSupported() {
 		return false
 	}
-	name := project + ".service"
 	for _, user := range []bool{false, true} {
-		args := []string{"is-active", name}
-		if user {
-			args = append([]string{"--user"}, args...)
-		}
-		out, _ := exec.CommandContext(ctx, "systemctl", args...).Output()
-		if strings.TrimSpace(string(out)) == "activating" {
+		if out, _ := systemctlOutput(ctx, user, "is-active", name); strings.TrimSpace(string(out)) == "activating" {
 			return true
 		}
 	}
@@ -366,7 +415,7 @@ func CheckBootUnit(ctx context.Context, u BootUnit) (BootUnitState, error) {
 		s.Stale = string(data) != u.content(ctx)
 		s.Disabled = !unitIs(ctx, u.Rootless, u.Name(), "enabled")
 	}
-	if !u.Rootless && !u.Native && u.runAs() == "" {
+	if u.copiesBinary() {
 		s.CopyStale = !sameFile(u.Binary, LibexecBinary)
 	}
 	if u.Rootless {
@@ -504,7 +553,7 @@ func (u BootUnit) writeSteps(ctx context.Context) ([]Step, string, error) {
 	old, readErr := os.ReadFile(path)
 	write := readErr != nil || !bytes.Equal(old, content)
 	var steps []Step
-	if !u.Rootless && !u.Native && (write || u.runAs() == "") && !sameFile(u.Binary, LibexecBinary) {
+	if (write || u.copiesBinary()) && !u.Rootless && u.Binary != "" && !sameFile(u.Binary, LibexecBinary) {
 		steps = append(steps, Step{
 			Do:      "Copies this rexctl to " + LibexecBinary + " for the service to use.",
 			Command: rootCmd("install " + strings.Join(installArgs(u.Binary, LibexecBinary), " ")),
@@ -538,7 +587,7 @@ func (u BootUnit) writeSteps(ctx context.Context) ([]Step, string, error) {
 
 func (u BootUnit) nativeAllowed(ctx context.Context) error {
 	if u.Rootless {
-		return ErrNativeRootless
+		return errNativeRootless
 	}
 	for _, p := range []string{u.Dir, u.Fluxerd, u.EnvFile, u.DataDir, u.CaddyDir, u.CertsDir} {
 		if !filepath.IsAbs(p) {
@@ -555,7 +604,7 @@ func StandaloneNativeInUse(ctx context.Context) bool {
 	if unitIs(ctx, false, StandaloneNativeUnit, "enabled") {
 		return true
 	}
-	out, _ := exec.CommandContext(ctx, "systemctl", "show", "-p", "ActiveState", "--value", StandaloneNativeUnit).Output()
+	out, _ := systemctlOutput(ctx, false, "show", "-p", "ActiveState", "--value", StandaloneNativeUnit)
 	switch strings.TrimSpace(string(out)) {
 	case "active", "activating", "reloading", "deactivating":
 		return true
@@ -584,7 +633,7 @@ func installBinary(ctx context.Context, system bool, src, dst string) error {
 
 func installArgs(src, dst string) []string {
 	args := []string{"-D", "-m", "0755"}
-	if uid, gid, ok := fileOwner(dst); ok {
+	if uid, gid, ok := FileOwner(dst); ok {
 		args = append(args, "-o", strconv.Itoa(uid), "-g", strconv.Itoa(gid))
 	}
 	return append(args, src, dst)
@@ -597,7 +646,7 @@ func unitFiles(project string) (map[string]bool, error) {
 		filepath.Join(systemUnitDir, upgrade):      true,
 		filepath.Join(cronDir, project+"-upgrade"): true,
 	}
-	if asRoot() {
+	if isRoot() {
 		return units, nil
 	}
 	userDir, err := unitDir(true)

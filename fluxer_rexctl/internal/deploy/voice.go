@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -39,6 +40,31 @@ func BundledVoiceServerID(inst *instance.Instance) string {
 		return ""
 	}
 	return DefaultVoiceRegion(inst) + "-server-1"
+}
+
+func BundledVoiceServer(inst *instance.Instance) *instance.VoiceServer {
+	id := BundledVoiceServerID(inst)
+	if id == "" {
+		return nil
+	}
+	port := func(key string, fallback int) int {
+		if n, err := strconv.Atoi(strings.TrimSpace(inst.State.Settings[key])); err == nil && n > 0 {
+			return n
+		}
+		return fallback
+	}
+	return &instance.VoiceServer{
+		ID:       id,
+		Region:   DefaultVoiceRegion(inst),
+		Endpoint: voice.WSOrigin(inst.Origin()) + "/livekit",
+		Key:      inst.Setting("LIVEKIT_API_KEY"),
+		Secret:   inst.Setting("LIVEKIT_API_SECRET"),
+		TCPPort:  port(settings.VoiceTCPPort, voice.FirstTCPPort),
+		UDPPort:  port(settings.VoiceUDPPort, voice.FirstUDPPort),
+		NodeIP:   strings.TrimSpace(inst.State.Settings[settings.VoicePublicIP]),
+		Edge:     voice.EdgeInstance,
+		Webhook:  "Fluxer's API",
+	}
 }
 
 const (
@@ -84,6 +110,44 @@ func VoiceSpec(inst *instance.Instance, srv *instance.VoiceServer) engine.Spec {
 		Files: files,
 		Env:   VoiceEnv(inst, srv).Values(),
 	}
+}
+
+func VoiceProbeTarget(inst *instance.Instance, srv *instance.VoiceServer) (string, string) {
+	switch {
+	case srv.Edge == voice.EdgeNone:
+		return voice.LocalBase(srv.HTTPBind, srv.HTTPPort), ""
+	case inst.State.IsVoice():
+		return voice.HTTPBase(srv.Endpoint), "127.0.0.1:443"
+	}
+	return voice.InstanceEdge(srv.Endpoint, inst.State.Settings[settings.EdgeMode], inst.Setting("FLUXER_HTTPS_PORT"), edgeBind(inst), inst.Setting(settings.EdgeListenVar))
+}
+
+func edgeBind(inst *instance.Instance) string {
+	bind := strings.TrimSpace(inst.State.Settings[settings.EdgeBind])
+	if bind == "" {
+		bind = strings.TrimSpace(inst.Setting("FLUXER_EDGE_BIND"))
+	}
+	if bind == "" && inst.State.RunsFluxerd() {
+		return settings.DefaultBind
+	}
+	if v, err := settings.NormaliseBind(bind); err == nil {
+		return v
+	}
+	return bind
+}
+
+func IPv6EngineText(e *engine.Engine) string {
+	switch {
+	case e.Kind != engine.Docker:
+		return fmt.Sprintf("voice servers on IPv6 need Docker %s or later, and this machine runs %s", engine.MinDockerIPv6, e.Kind)
+	case e.Rootless:
+		return "voice servers on IPv6 need rootful Docker, and this machine runs Docker rootless"
+	}
+	return fmt.Sprintf("voice servers on IPv6 need Docker %s or later, and this machine runs Docker %s", engine.MinDockerIPv6, e.Version)
+}
+
+func VoiceProject(e *engine.Engine, inst *instance.Instance, srv *instance.VoiceServer) *engine.Project {
+	return e.Named(srv.Project, voice.ServerDir(inst.Dir, srv.ID))
 }
 
 func StaleVoiceEndpoints(inst *instance.Instance) []string {

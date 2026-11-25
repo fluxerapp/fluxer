@@ -10,30 +10,48 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
-	"slices"
 	"strings"
 	"time"
 
 	"github.com/klauspost/compress/zstd"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/release"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 )
 
 var (
 	ErrChecksum  = errors.New("native: the download doesn't match its checksum")
-	ErrNoFluxerd = errors.New("native: the native build has no " + FluxerdPath)
-	ErrBadEntry  = errors.New("native: the native build has an unsafe path")
+	errNoFluxerd = errors.New("native: the native build has no " + fluxerdPath)
+	errBadEntry  = errors.New("native: the native build has an unsafe path")
 )
 
 var fetchClient = &http.Client{Timeout: 30 * time.Minute}
 
 func (s *Stack) Has(version string) bool {
-	info, err := os.Stat(filepath.Join(s.ReleaseDir(version), FluxerdPath))
+	info, err := os.Stat(filepath.Join(s.ReleaseDir(version), fluxerdPath))
 	return err == nil && !info.IsDir()
+}
+
+func (s *Stack) Settings(version string) (*stack.Set, error) {
+	set, err := stack.LoadCatalogSet(filepath.Join(s.ReleaseDir(version), "share"), version)
+	if errors.Is(err, fs.ErrNotExist) {
+		return settings.NativeSet(version), nil
+	}
+	return set, err
+}
+
+func (s *Stack) WriteSettings(version string) (*stack.Set, error) {
+	set, err := s.Settings(version)
+	if err != nil {
+		return nil, err
+	}
+	return set, release.WriteRelease(s.Inst, set)
 }
 
 func (s *Stack) Fetch(ctx context.Context, rel *release.Release, progress func(cur, total int64)) (string, error) {
@@ -41,12 +59,12 @@ func (s *Stack) Fetch(ctx context.Context, rel *release.Release, progress func(c
 		return "", fmt.Errorf("native: %q isn't a release version", rel.Version)
 	}
 	dir := s.ReleaseDir(rel.Version)
-	if s.Has(rel.Version) {
+	asset, distErr := rel.DistFor(runtime.GOARCH)
+	if s.Has(rel.Version) && (distErr != nil || sameDist(dir, asset)) {
 		return dir, nil
 	}
-	asset, err := rel.DistFor(runtime.GOARCH)
-	if err != nil {
-		return "", err
+	if distErr != nil {
+		return "", distErr
 	}
 	if err := os.MkdirAll(s.ReleasesDir(), 0o755); err != nil {
 		return "", err
@@ -59,17 +77,30 @@ func (s *Stack) Fetch(ctx context.Context, rel *release.Release, progress func(c
 	tmp := filepath.Join(s.ReleasesDir(), "."+rel.Version+".unpack")
 	_ = os.RemoveAll(tmp)
 	defer os.RemoveAll(tmp)
-	if err := Unpack(part, tmp); err != nil {
+	if err := unpack(part, tmp); err != nil {
 		return "", err
 	}
-	if info, err := os.Stat(filepath.Join(tmp, FluxerdPath)); err != nil || info.IsDir() {
-		return "", ErrNoFluxerd
+	if info, err := os.Stat(filepath.Join(tmp, fluxerdPath)); err != nil || info.IsDir() {
+		return "", errNoFluxerd
+	}
+	if err := os.WriteFile(filepath.Join(tmp, distMarker), []byte(strings.ToLower(asset.SHA256)+"\n"), 0o644); err != nil {
+		return "", err
 	}
 	_ = os.RemoveAll(dir)
 	if err := os.Rename(tmp, dir); err != nil {
 		return "", err
 	}
 	return dir, nil
+}
+
+const distMarker = ".dist-sha256"
+
+func sameDist(dir string, asset release.Asset) bool {
+	got, err := os.ReadFile(filepath.Join(dir, distMarker))
+	if errors.Is(err, fs.ErrNotExist) {
+		return true
+	}
+	return err == nil && strings.EqualFold(strings.TrimSpace(string(got)), asset.SHA256)
 }
 
 func download(ctx context.Context, asset release.Asset, path string, progress func(cur, total int64)) error {
@@ -122,7 +153,7 @@ func (c *counter) Read(p []byte) (int, error) {
 	return n, err
 }
 
-func Unpack(archive, dest string) error {
+func unpack(archive, dest string) error {
 	f, err := os.Open(archive)
 	if err != nil {
 		return err
@@ -166,7 +197,7 @@ func unpackEntry(root *os.Root, tr *tar.Reader, hdr *tar.Header) error {
 		return nil
 	}
 	if name == "." || !inside(name) {
-		return fmt.Errorf("%w: %s", ErrBadEntry, hdr.Name)
+		return fmt.Errorf("%w: %s", errBadEntry, hdr.Name)
 	}
 	if err := root.MkdirAll(filepath.Dir(name), 0o755); err != nil {
 		return err
@@ -188,17 +219,17 @@ func unpackEntry(root *os.Root, tr *tar.Reader, hdr *tar.Header) error {
 	case tar.TypeSymlink:
 		link := filepath.FromSlash(hdr.Linkname)
 		if filepath.IsAbs(link) || !inside(filepath.Join(filepath.Dir(name), link)) {
-			return fmt.Errorf("%w: %s -> %s", ErrBadEntry, hdr.Name, hdr.Linkname)
+			return fmt.Errorf("%w: %s -> %s", errBadEntry, hdr.Name, hdr.Linkname)
 		}
 		return root.Symlink(hdr.Linkname, name)
 	case tar.TypeLink:
 		src := filepath.Clean(filepath.FromSlash(hdr.Linkname))
 		if !inside(src) {
-			return fmt.Errorf("%w: %s -> %s", ErrBadEntry, hdr.Name, hdr.Linkname)
+			return fmt.Errorf("%w: %s -> %s", errBadEntry, hdr.Name, hdr.Linkname)
 		}
 		return root.Link(src, name)
 	}
-	return fmt.Errorf("%w: %s has type %c", ErrBadEntry, hdr.Name, hdr.Typeflag)
+	return fmt.Errorf("%w: %s has type %c", errBadEntry, hdr.Name, hdr.Typeflag)
 }
 
 func linkTarget(path string) string {
@@ -212,7 +243,7 @@ func linkTarget(path string) string {
 func (s *Stack) Running() string { return linkTarget(s.Current()) }
 
 func HoldsReleases(dir string) bool {
-	for _, name := range []string{ReleasesDirName, CurrentLink, PreviousLink} {
+	for _, name := range []string{releasesDirName, currentLink, PreviousLink} {
 		if _, err := os.Lstat(filepath.Join(dir, name)); err == nil {
 			return true
 		}
@@ -237,37 +268,8 @@ func (s *Stack) Flip(version string) error {
 func relink(path, version string) error {
 	tmp := path + ".new"
 	_ = os.Remove(tmp)
-	if err := os.Symlink(filepath.Join(ReleasesDirName, version), tmp); err != nil {
+	if err := os.Symlink(filepath.Join(releasesDirName, version), tmp); err != nil {
 		return err
 	}
 	return os.Rename(tmp, path)
-}
-
-func (s *Stack) GoBack() (string, error) {
-	prev := linkTarget(s.previous())
-	if prev == "" || !s.Has(prev) {
-		return "", fmt.Errorf("native: there's no earlier Fluxer build in %s", s.ReleasesDir())
-	}
-	if err := os.Rename(s.previous(), s.Current()); err != nil {
-		return "", err
-	}
-	return prev, nil
-}
-
-func (s *Stack) Prune() error {
-	entries, err := os.ReadDir(s.ReleasesDir())
-	if err != nil {
-		return err
-	}
-	keep := []string{s.Running(), linkTarget(s.previous())}
-	for _, e := range entries {
-		name := e.Name()
-		if strings.HasPrefix(name, ".") || slices.Contains(keep, name) {
-			continue
-		}
-		if err := os.RemoveAll(filepath.Join(s.ReleasesDir(), name)); err != nil {
-			return err
-		}
-	}
-	return nil
 }

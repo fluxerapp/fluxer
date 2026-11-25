@@ -4,18 +4,19 @@ package cmd
 
 import (
 	"context"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/checks"
-	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/deploy"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
+	rt "github.com/fluxerapp/fluxer/fluxer_rexctl/internal/runtime"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
 
-const bootServiceQuestion = "Add a systemd service that starts Fluxer with this machine? Docker already starts Fluxer again after a restart. The service also starts its services in order and stops them cleanly."
+const bootServiceQuestion = "Start Fluxer when this machine starts?"
 
 type hostStepsAnswer int
 
@@ -61,18 +62,6 @@ func parseBootServiceFlag(v string) (string, error) {
 	return "", ui.Usage("Pass --boot-service as on or off.")
 }
 
-func decideBootService(want checks.BootWant, flag string, interactive, yes bool, ask func() (bool, error)) (bool, error) {
-	switch {
-	case flag != "":
-		return flag == instance.BootServiceOn, nil
-	case want != checks.BootAsk:
-		return want == checks.BootOn, nil
-	case !interactive || yes:
-		return false, nil
-	}
-	return ask()
-}
-
 func setupBootService(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, p *engine.Project, flag string) error {
 	if e == nil || !host.BootUnitSupported() {
 		return nil
@@ -86,35 +75,38 @@ func setupBootService(ctx context.Context, app *App, inst *instance.Instance, e 
 		return err
 	}
 	want := checks.BootServiceWant(inst.State.BootService, e.Kind == engine.Podman, !s.Missing)
-	on, err := decideBootService(want, flag, app.UI.Interactive(), app.UI.Yes(), func() (bool, error) {
-		return app.UI.Confirm(bootServiceQuestion, false)
-	})
-	if err != nil {
-		return err
-	}
-	if !on {
+	switch {
+	case flag == instance.BootServiceOff || flag == "" && want == checks.BootOff:
 		return saveBootService(inst, instance.BootServiceOff)
+	case flag == instance.BootServiceOn || app.UI.Yes():
+	case !app.UI.Interactive() && want == checks.BootOn:
+		app.UI.Warn("Fluxer won't start by itself when this machine restarts.", "Run rexctl boot on when you want it to.")
+		return nil
+	case !app.UI.Interactive():
+		return saveBootService(inst, instance.BootServiceOff)
+	default:
+		on, err := app.UI.Confirm(bootServiceQuestion, true)
+		if err != nil {
+			return err
+		}
+		if !on {
+			return saveBootService(inst, instance.BootServiceOff)
+		}
 	}
-	if err := saveBootService(inst, instance.BootServiceOn); err != nil {
-		return err
-	}
-	return installBootService(ctx, app, u)
-}
-
-func installBootService(ctx context.Context, app *App, u host.BootUnit) error {
 	steps, err := u.InstallSteps(ctx)
 	if err != nil {
 		return err
 	}
-	ok, err := confirmHostSteps(app, steps, "Set up the service that starts Fluxer with this machine?")
-	if err != nil {
+	for _, st := range steps {
+		app.UI.Detail("%s", st.Do)
+		if st.Command != "" {
+			app.UI.Detail("  %s", st.Command)
+		}
+	}
+	if err := host.RunSteps(ctx, steps); err != nil {
 		return err
 	}
-	if !ok {
-		app.UI.Warn("Fluxer won't start by itself when this machine restarts.", "Run rexctl boot on when you want it to.")
-		return nil
-	}
-	return host.RunSteps(ctx, steps)
+	return saveBootService(inst, instance.BootServiceOn)
 }
 
 func saveBootService(inst *instance.Instance, v string) error {
@@ -122,36 +114,36 @@ func saveBootService(inst *instance.Instance, v string) error {
 		return nil
 	}
 	inst.State.BootService = v
-	if err := inst.Save(); err != nil {
-		return ui.Wrap(err, "Couldn't save your instance's state.", "Check that you can write to "+inst.Dir+", then try again.")
-	}
-	return nil
+	return saveInstance(inst)
 }
 
 func newBootCmd(app *App) *cobra.Command {
 	c := &cobra.Command{
-		Use:   "boot",
-		Short: "Show whether a service starts Fluxer with this machine",
-		Long:  "Show whether a systemd service starts Fluxer when this machine starts. With Docker, Docker already starts Fluxer again after a restart, and the service also starts its services in order and stops them cleanly. Podman has no daemon to do that, so it needs the service.",
-		Args:  noArgs,
+		Use:     "boot",
+		Short:   "Show whether a service starts Fluxer with this machine",
+		Long:    "Show whether a systemd service starts Fluxer when this machine starts. Docker already starts Fluxer again after a restart, and the service also starts its services in order and stops them cleanly. Podman has no daemon, so it needs the service. A systemd install always runs as a service, and this shows whether it starts with the machine.",
+		Example: "rexctl boot\nrexctl boot on\nrexctl boot off",
+		Args:    noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
 			return runBootShow(c.Context(), app)
 		},
 	}
 	on := &cobra.Command{
-		Use:   "on",
-		Short: "Start Fluxer with this machine through a systemd service",
-		Long:  "Write a systemd service that starts Fluxer when this machine starts and stops it cleanly when it shuts down. On a root install it also copies rexctl to " + host.LibexecBinary + " for the service to run. rexctl lists every change and asks first, unless you pass --yes.",
-		Args:  noArgs,
+		Use:     "on",
+		Short:   "Start Fluxer with this machine through a systemd service",
+		Long:    "Write a systemd service that starts Fluxer when this machine starts and stops it cleanly when it shuts down. On a root install it also copies rexctl to " + host.LibexecBinary + " for the service to run. On a systemd install it turns on the service that Fluxer already runs as. rexctl lists every change and asks before it makes them, unless you pass --yes.",
+		Example: "rexctl boot on\nrexctl boot on --yes",
+		Args:    noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
 			return runBootSet(c.Context(), app, instance.BootServiceOn)
 		},
 	}
 	off := &cobra.Command{
-		Use:   "off",
-		Short: "Remove the service that starts Fluxer with this machine",
-		Long:  "Remove the systemd service that starts Fluxer with this machine, and the copy of rexctl in " + host.LibexecBinary + " when nothing else uses it. With Docker, Docker still starts Fluxer again after a restart. rexctl lists every change and asks first, unless you pass --yes.",
-		Args:  noArgs,
+		Use:     "off",
+		Short:   "Remove the service that starts Fluxer with this machine",
+		Long:    "Remove the systemd service that starts Fluxer with this machine, and the copy of rexctl in " + host.LibexecBinary + " if nothing else uses it. With Docker, Docker still starts Fluxer again after a restart. On a systemd install Fluxer keeps running, but no longer starts with the machine. rexctl lists every change and asks first, unless you pass --yes.",
+		Example: "rexctl boot off\nrexctl boot off --yes",
+		Args:    noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
 			return runBootSet(c.Context(), app, instance.BootServiceOff)
 		},
@@ -160,97 +152,79 @@ func newBootCmd(app *App) *cobra.Command {
 	return c
 }
 
-func bootUnitFor(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine) (host.BootUnit, host.BootUnitState, error) {
-	var p *engine.Project
-	if loaded, err := deploy.Load(ctx, inst, e); err == nil {
-		p = loaded
-	}
-	u, err := checks.BootUnitFor(inst, e, p)
-	if err != nil {
-		return host.BootUnit{}, host.BootUnitState{}, err
-	}
-	s, err := host.CheckBootUnit(ctx, u)
-	return u, s, err
-}
-
 func runBootShow(ctx context.Context, app *App) error {
-	inst, err := app.Instance()
+	_, r, ok, err := app.instanceRuntime(ctx, false)
+	if err != nil || !ok {
+		return err
+	}
+	st, err := r.Boot().State(ctx)
 	if err != nil {
 		return err
 	}
-	e, err := app.Engine(ctx, inst)
-	if err != nil {
-		return err
-	}
-	if !host.BootUnitSupported() {
-		return ui.Refused("This machine doesn't run systemd, so rexctl can't add a service that starts Fluxer with it.", "")
-	}
-	_, s, err := bootUnitFor(ctx, app, inst, e)
-	if err != nil {
-		return err
-	}
-	if !s.Missing {
-		app.UI.OK("A service starts Fluxer with this machine (%s).", s.Path)
+	if st.Enabled {
+		app.UI.OK("Fluxer starts with this machine through %s.", st.Unit)
 		return nil
 	}
-	if e.Kind == engine.Podman {
-		app.UI.Warn("No service starts Fluxer with this machine, and Podman doesn't start it by itself.", "Run rexctl boot on.")
-		return nil
-	}
-	app.UI.OK("Docker starts Fluxer again after this machine restarts. Run rexctl boot on to also start its services in order and stop them cleanly.")
+	app.UI.Warn(strings.TrimSpace("No service starts Fluxer with this machine. "+st.Detail), "Run rexctl boot on.")
 	return nil
 }
 
 func runBootSet(ctx context.Context, app *App, v string) error {
-	inst, err := app.Instance()
-	if err != nil {
+	inst, r, ok, err := app.instanceRuntime(ctx, true)
+	if err != nil || !ok {
 		return err
 	}
-	e, err := app.Engine(ctx, inst)
-	if err != nil {
-		return err
-	}
-	if !host.BootUnitSupported() {
-		return ui.Refused("This machine doesn't run systemd, so rexctl can't add a service that starts Fluxer with it.", "")
-	}
+	on := v == instance.BootServiceOn
 	return app.Locked(ctx, inst, func() error {
-		u, _, err := bootUnitFor(ctx, app, inst, e)
+		steps, err := rt.BootSteps(ctx, bare(r), on)
 		if err != nil {
 			return err
 		}
-		if v == instance.BootServiceOn {
+		if len(steps) == 0 {
 			if err := saveBootService(inst, v); err != nil {
 				return err
 			}
-			if err := installBootService(ctx, app, u); err != nil {
-				return ui.Wrap(err, "Couldn't set up the service that starts Fluxer with this machine.", "Run rexctl boot on again.")
+			if on {
+				app.UI.OK("Fluxer already starts with this machine.")
+				return nil
 			}
-			app.UI.OK("Fluxer starts with this machine.")
+			app.UI.Info("No service starts Fluxer with this machine. Nothing changed.")
 			return nil
 		}
-		steps, err := u.RemoveSteps(ctx)
+		question := "Stop Fluxer starting with this machine?"
+		if on {
+			question = "Start Fluxer with this machine?"
+		}
+		ok, err := confirmHostSteps(app, steps, question)
 		if err != nil {
 			return err
 		}
-		steps = append(steps, host.LibexecRemoveSteps(ctx, u)...)
-		ok, err := confirmHostSteps(app, steps, "Remove the service that starts Fluxer with this machine?")
-		if err != nil {
-			return err
+		if !ok && !app.UI.Interactive() {
+			return &ui.ExitError{Code: ui.ExitUsage, Msg: question + " rexctl can't ask that here.", Fix: "Pass --yes to answer yes."}
 		}
 		if !ok {
-			return ui.Refused("Stopped without changing anything.", "Run rexctl boot off --yes to remove it without asking.")
+			app.UI.Info("Nothing changed.")
+			return nil
 		}
-		if err := host.RunSteps(ctx, steps); err != nil {
-			return ui.Wrap(err, "Couldn't remove the service that starts Fluxer with this machine.", "Run rexctl boot off again.")
+		if on {
+			err = r.Boot().Enable(ctx, nil)
+		} else {
+			err = r.Boot().Disable(ctx, nil)
+		}
+		if err != nil {
+			return ui.Wrap(err, "Couldn't change the service that starts Fluxer with this machine.", "Run rexctl boot "+v+" again.")
 		}
 		if err := saveBootService(inst, v); err != nil {
 			return err
 		}
-		if e.Kind == engine.Podman {
-			app.UI.OK("Removed the service. Run rexctl start after this machine restarts, because Podman doesn't start Fluxer by itself.")
+		if on {
+			app.UI.OK("Fluxer starts with this machine.")
 			return nil
 		}
-		app.UI.OK("Removed the service. Docker still starts Fluxer again after this machine restarts.")
+		app.UI.OK("Fluxer no longer starts with this machine through a service.")
+		if after, err := r.Boot().State(ctx); err == nil && after.Detail != "" {
+			app.UI.Info("%s", after.Detail)
+		}
 		return nil
 	})
 }

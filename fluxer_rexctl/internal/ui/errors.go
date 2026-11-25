@@ -16,11 +16,20 @@ const (
 )
 
 type ExitError struct {
-	Code int
-	Msg  string
-	Fix  string
-	Err  error
+	Code    int
+	Msg     string
+	Fix     string
+	Err     error
+	LogPath string
+	Tail    []string
+	asked   bool
 }
+
+func stoppedAtQuestion() *ExitError { return &ExitError{Code: ExitInterrupted, asked: true} }
+
+var errStopped = &ExitError{Code: ExitInterrupted}
+
+var errDeclined = &ExitError{Code: ExitOK}
 
 func (e *ExitError) Error() string {
 	if e.Msg != "" {
@@ -46,6 +55,14 @@ func MissingFlag(flag string) *ExitError {
 
 func Wrap(err error, msg, fix string) *ExitError {
 	return &ExitError{Code: ExitFailed, Msg: msg, Fix: fix, Err: err}
+}
+
+func Interrupted(resume string) *ExitError {
+	e := &ExitError{Code: ExitInterrupted, Msg: "Stopped before it finished."}
+	if resume != "" {
+		e.Fix = "Run " + resume + " to finish it."
+	}
+	return e
 }
 
 func CodeOf(err error) int {

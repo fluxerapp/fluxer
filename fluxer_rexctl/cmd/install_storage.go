@@ -10,14 +10,12 @@ import (
 	"net/netip"
 	"net/url"
 	"regexp"
-	"slices"
-	"strconv"
+	"runtime"
 	"strings"
 
 	"github.com/spf13/cobra"
 
-	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/deploy"
-	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/objectstore"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
@@ -48,10 +46,6 @@ var storageFlagNames = []string{
 
 var storageBucketVars = []string{"FLUXER_S3_BUCKET_CDN", "FLUXER_S3_BUCKET_UPLOADS", "FLUXER_S3_BUCKET_REPORTS", "FLUXER_S3_BUCKET_HARVESTS"}
 
-var storageKeys = append([]string{
-	settings.StorageEndpoint, settings.StoragePublic, settings.StorageRegion, settings.StoragePath, settings.StorageAccess, settings.StorageSecret,
-}, storageBucketVars...)
-
 var regionSuffixes = []string{".amazonaws.com.cn", ".amazonaws.com", ".backblazeb2.com", ".wasabisys.com", ".digitaloceanspaces.com", ".scw.cloud", ".your-objectstorage.com", ".linodeobjects.com"}
 
 var reservedBucketPrefixes = []string{"xn--", "sthree-", "amzn-s3-demo-"}
@@ -62,10 +56,10 @@ var bucketPrefixPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9-]*$`)
 
 func (f *storageFlags) bind(c *cobra.Command) {
 	fl := c.Flags()
-	fl.StringVar(&f.Endpoint, "storage-endpoint", "", "your own S3-compatible object store, like https://s3.example.com, instead of the bundled one")
+	fl.StringVar(&f.Endpoint, "storage-endpoint", "", "your own S3-compatible object store, like https://s3.example.com. Without it, Fluxer keeps uploads as files in its data folder")
 	fl.StringVar(&f.Public, "storage-public-endpoint", "", "the object store address browsers use, when it differs from --storage-endpoint")
 	fl.StringVar(&f.Region, "storage-region", "", "the object store region (found from --storage-endpoint when it can be)")
-	fl.BoolVar(&f.PathStyle, "storage-path-style", true, "put the bucket in the path of object store addresses instead of the host name")
+	fl.BoolVar(&f.PathStyle, "storage-path-style", true, "put the bucket in the path of object store addresses, like https://s3.example.com/bucket")
 	fl.StringVar(&f.AccessKey, "storage-access-key", "", "the object store access key")
 	fl.StringVar(&f.SecretFile, "storage-secret-key-file", "", "file with the object store secret key, or - for stdin")
 	fl.StringVar(&f.Prefix, "storage-bucket-prefix", "", "text to put before each bucket name, like chat- for chat-fluxer")
@@ -123,7 +117,7 @@ func (f *storageFlags) validate(c *cobra.Command) error {
 }
 
 func storageValidator(name string) func(string) error {
-	k, err := settings.Lookup(stack.Embedded(), nil, name, nil)
+	k, err := settings.Lookup(settings.NativeSet(stack.EmbeddedRelease()), nil, name, nil)
 	if err != nil || k.Validate == nil {
 		return func(string) error { return nil }
 	}
@@ -148,7 +142,7 @@ func validStorageEndpoint(v string) error {
 		local = ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.IsUnspecified()
 	}
 	if local {
-		return setupInputError(fmt.Sprintf("Fluxer's containers can't reach this machine at %s. Use the object store's domain name or this machine's network IP address.", host))
+		return setupInputError(fmt.Sprintf("Fluxer's containers can't connect to this machine at %s. Use the object store's domain name or this machine's network IP address.", host))
 	}
 	return nil
 }
@@ -170,7 +164,7 @@ func noUserInfo(v string) error {
 func bucketDefaults() map[string]string {
 	out := map[string]string{}
 	for _, v := range storageBucketVars {
-		if b := instance.ReleaseDefault(stack.Embedded(), v); b != "" {
+		if b := instance.ReleaseDefault(settings.NativeSet(stack.EmbeddedRelease()), v); b != "" {
 			out[v] = b
 		}
 	}
@@ -235,139 +229,183 @@ func guessRegion(endpoint string) string {
 			}
 		}
 	}
-	return instance.ReleaseDefault(stack.Embedded(), "FLUXER_S3_REGION")
+	return instance.ReleaseDefault(settings.NativeSet(stack.EmbeddedRelease()), "FLUXER_S3_REGION")
 }
 
-func (in *installer) askStorage() error {
-	u := in.app.UI
-	if !in.f.Storage.passed(in.c) {
-		if !u.Interactive() {
+const (
+	storeLocal = "local"
+	storeS3    = "s3"
+)
+
+func (in *installer) storageFields() []ui.Field {
+	f := &in.f.Storage
+	if in.store == "" {
+		in.store = storeLocal
+		if f.passed(in.c) {
+			in.store = storeS3
+		}
+	}
+	s3 := func() bool { return in.store != storeS3 }
+	return []ui.Field{
+		{
+			Title: "Where do you want to keep uploaded files?",
+			Value: &in.store,
+			Options: []ui.Option{
+				{Label: "On this machine", Value: storeLocal},
+				{Label: "An S3-compatible service", Value: storeS3, Hint: "Amazon S3, Backblaze B2, Cloudflare R2, MinIO and others"},
+			},
+			Hide: func() bool { return f.passed(in.c) },
+		},
+		{Flag: "storage-endpoint", FlagLabel: "--storage-endpoint", Title: "Object store address", Placeholder: "https://s3.example.com", Value: &f.Endpoint, Validate: validStorageEndpoint, Hide: s3},
+		{Flag: "storage-access-key", FlagLabel: "--storage-access-key", Title: "Access key", Value: &f.AccessKey, Validate: storageValidator(settings.StorageAccess), Hide: s3},
+		{Title: "Secret key", Value: &in.secret, Secret: true, Validate: storageValidator(settings.StorageSecret), Hide: func() bool { return s3() || f.SecretFile != "" }},
+		{Flag: "storage-region", FlagLabel: "--storage-region", Title: "Region", Value: &f.Region, Optional: true, DescriptionFunc: func() string {
+			if r := guessRegion(strings.TrimSpace(f.Endpoint)); r != "" {
+				return "Leave it empty to use " + r + "."
+			}
+			return ""
+		}, Validate: optional(storageValidator(settings.StorageRegion)), Hide: s3},
+		{Flag: "storage-bucket-prefix", FlagLabel: "--storage-bucket-prefix", Title: "Text to put before each bucket name", Description: "Bucket names are shared by every account on some providers. A prefix like chat- makes them yours.", Value: &f.Prefix, Optional: true, Validate: optional(validBucketPrefix), Hide: s3},
+		{Flag: "storage-public-endpoint", FlagLabel: "--storage-public-endpoint", Title: "Address browsers use, if it's different", Value: &f.Public, Optional: true, Validate: optional(validPublicEndpoint), Hide: s3},
+		{
+			Title: "How often should rexctl back up your instance?",
+			Value: &in.backups,
+			Options: []ui.Option{
+				{Label: "Every night", Value: host.ScheduleDaily, Hint: "at about 03:00"},
+				{Label: "Every week", Value: host.ScheduleWeekly, Hint: "on Sunday at about 03:00"},
+				{Label: "Not now", Value: host.ScheduleOff, Hint: "rexctl backup schedule turns it on later"},
+			},
+			Default: host.ScheduleDaily,
+			Hide:    func() bool { return !in.offersBackups() },
+		},
+	}
+}
+
+func (in *installer) offersBackups() bool {
+	return runtime.GOOS == "linux" && in.app.UI.Interactive() && !in.app.UI.Yes() && host.UpgradeScheduler() != ""
+}
+
+func (in *installer) scheduleBackups(ctx context.Context) {
+	if !in.offersBackups() || in.backups == "" || in.backups == host.ScheduleOff {
+		return
+	}
+	if _, err := setBackupSchedule(ctx, in.app, in.inst, in.backups); err != nil {
+		in.app.UI.ReportError(err)
+		return
+	}
+	in.scheduled = true
+}
+
+func (in *installer) backupsRow() []ui.KV {
+	if !in.scheduled {
+		return nil
+	}
+	when := "Every night"
+	if in.backups != host.ScheduleDaily {
+		when = "Every Sunday"
+	}
+	kept := "all kept"
+	if keep := in.inst.KeepBackups(); keep != instance.KeepAllBackups {
+		kept = fmt.Sprintf("newest %d kept", keep)
+	}
+	return []ui.KV{{Key: "Backups", Value: when + ", " + kept}}
+}
+
+func optional(check func(string) error) func(string) error {
+	return func(v string) error {
+		if strings.TrimSpace(v) == "" {
 			return nil
 		}
-		choice := "bundled"
-		if err := u.Ask(nil, ui.Field{
-			Title: "Where do you want to keep uploaded files?",
-			Value: &choice,
-			Options: []ui.Option{
-				{Label: "In Fluxer's bundled object store", Value: "bundled"},
-				{Label: "In my own S3-compatible object store", Value: "own"},
-			},
-		}); err != nil || choice == "bundled" {
-			return err
-		}
+		return check(v)
 	}
-	return in.askStorageFields(in.c)
 }
 
-func (in *installer) askStorageFields(c *cobra.Command) error {
-	u := in.app.UI
+func (in *installer) storageSummary() string {
+	where := "On this machine"
+	in.storage = nil
+	if in.store == storeS3 {
+		in.storage = in.storageChoice()
+		where = "S3-compatible service at " + in.storage.Endpoint
+	}
+	if !in.offersBackups() {
+		return where
+	}
+	switch in.backups {
+	case host.ScheduleDaily:
+		return where + ", backed up every night"
+	case host.ScheduleWeekly:
+		return where + ", backed up every week"
+	}
+	return where + ", no scheduled backups"
+}
+
+func (in *installer) storageChoice() *storageChoice {
 	f := &in.f.Storage
-	before := f.Endpoint
-	if err := u.Ask(c,
-		ui.Field{Flag: "storage-endpoint", Title: "Object store address", Value: &f.Endpoint, Default: f.Endpoint, Validate: validStorageEndpoint},
-		ui.Field{Flag: "storage-access-key", Title: "Access key", Value: &f.AccessKey, Default: f.AccessKey, Validate: storageValidator(settings.StorageAccess)},
-	); err != nil {
-		return err
-	}
-	if f.Endpoint != before && f.Region == guessRegion(strings.TrimSpace(before)) {
-		f.Region = ""
-	}
-	secret, err := askSecret(in.app, c, "storage-secret-key-file", "Secret key", f.SecretFile, storageValidator(settings.StorageSecret))
-	if err != nil {
-		return err
-	}
-	pathStyle := strconv.FormatBool(f.PathStyle)
-	region := f.Region
+	region := strings.TrimSpace(f.Region)
 	if region == "" {
 		region = guessRegion(strings.TrimSpace(f.Endpoint))
 	}
-	if err := u.Ask(c,
-		ui.Field{Flag: "storage-region", Title: "Region", Value: &f.Region, Default: region, Validate: storageValidator(settings.StorageRegion)},
-		ui.Field{Flag: "storage-bucket-prefix", Title: "Bucket name prefix, if your provider shares bucket names with other accounts", Value: &f.Prefix, Optional: true, Validate: validBucketPrefix},
-		ui.Field{
-			Flag:     "storage-path-style",
-			Title:    "Where does the bucket go in the address?",
-			Value:    &pathStyle,
-			Validate: storageValidator(settings.StoragePath),
-			Options: []ui.Option{
-				{Label: "In the path, like s3.example.com/bucket", Value: "true"},
-				{Label: "In the host name, like bucket.s3.example.com", Value: "false"},
-			},
-		},
-		ui.Field{Flag: "storage-public-endpoint", Title: "Address browsers use, if it's different", Value: &f.Public, Optional: true, Validate: validPublicEndpoint},
-	); err != nil {
-		return err
-	}
-	f.PathStyle = pathStyle == "true"
 	prefix := strings.TrimSpace(f.Prefix)
 	buckets := bucketDefaults()
 	for v, b := range buckets {
 		buckets[v] = prefix + b
 	}
-	in.storage = &storageChoice{
+	return &storageChoice{
 		Store: objectstore.Store{
 			Endpoint:  strings.TrimSpace(f.Endpoint),
-			Region:    strings.TrimSpace(f.Region),
+			Region:    region,
 			AccessKey: strings.TrimSpace(f.AccessKey),
-			SecretKey: secret,
+			SecretKey: in.secret,
 			PathStyle: f.PathStyle,
 		},
 		Public:  strings.TrimSpace(f.Public),
 		Prefix:  prefix,
 		Buckets: buckets,
 	}
-	return nil
 }
 
-func (in *installer) checkStorage(ctx context.Context) error {
+func (in *installer) checkStorage(ctx context.Context, c *ui.Checklist) error {
 	if in.storage == nil {
 		return nil
 	}
 	if in.f.DryRun {
-		in.plan = append(in.plan, fmt.Sprintf("Check that Fluxer can use the buckets %s in your object store.", ui.JoinAnd(in.storage.bucketNames())))
+		in.change(ui.PlanRun, fmt.Sprintf("Check that Fluxer can use the buckets %s", ui.JoinAnd(in.storage.bucketNames())), nil)
 		return nil
 	}
-	u := in.app.UI
 	for {
 		s := in.storage
 		buckets := s.bucketNames()
-		err := u.Step(ctx, "Checking your object store", func(ctx context.Context, st *ui.Step) error {
-			if err := s.Check(ctx, buckets); err != nil {
-				return err
+		var problem *storageProblem
+		var cause error
+		c.Check("storage", "Object store", func(ctx context.Context) (ui.State, string, error) {
+			err := s.Check(ctx, buckets)
+			if err == nil {
+				return ui.StateOK, "Fluxer can read and write the buckets " + ui.JoinAnd(buckets), nil
 			}
-			st.Done("Fluxer can read and write the buckets %s.", ui.JoinAnd(buckets))
-			return nil
+			var se *objectstore.Error
+			if !errors.As(err, &se) {
+				return ui.StateFail, "", err
+			}
+			p := in.storageFailure(se)
+			problem, cause = &p, err
+			return ui.StateFail, p.msg, nil
 		})
-		if err == nil {
+		if problem == nil {
 			return nil
 		}
-		var se *objectstore.Error
-		if !errors.As(err, &se) {
-			return err
+		in.app.UI.Detail("%v", cause)
+		if !in.app.UI.Interactive() {
+			return ui.Wrap(cause, problem.msg, problem.fix+", then run rexctl install again."+problem.hint)
 		}
-		fail := in.storageFailure(se)
-		if !u.Interactive() {
-			return ui.Wrap(err, fail.msg, fail.fix+", then run rexctl install again."+fail.hint)
-		}
-		u.Fail(fail.msg, fail.fix+"."+fail.hint)
-		u.Detail("%v", err)
-		choice := "change"
-		if err := u.Ask(nil, ui.Field{
-			Title: "What do you want to do?",
-			Value: &choice,
-			Options: []ui.Option{
-				{Label: "Change the object store settings", Value: "change"},
-				{Label: "Stop here", Value: "stop"},
-			},
-		}); err != nil {
+		choice, err := c.Recover(problem.fix+"."+problem.hint+" What do you want to do?", []ui.Option{
+			{Label: "Check again", Value: "again"},
+			{Label: "Stop here", Value: "stop"},
+		})
+		if err != nil {
 			return err
 		}
 		if choice == "stop" {
-			return ui.Refused("Stopped without changing anything.", "")
-		}
-		in.f.Storage.SecretFile = ""
-		if err := in.askStorageFields(nil); err != nil {
-			return err
+			return ui.Refused(problem.msg, problem.fix+", then run rexctl install again."+problem.hint)
 		}
 	}
 }
@@ -386,7 +424,7 @@ func (in *installer) storageFailure(se *objectstore.Error) storageProblem {
 	}
 	switch se.Problem {
 	case objectstore.Unreachable:
-		return storageProblem{msg: fmt.Sprintf("Couldn't reach your object store at %s.", s.Endpoint), fix: "Check the address and that this machine can connect to it"}
+		return storageProblem{msg: fmt.Sprintf("Couldn't connect to your object store at %s.", s.Endpoint), fix: "Check the address and that this machine can connect to it"}
 	case objectstore.Untrusted:
 		return storageProblem{
 			msg: fmt.Sprintf("This machine doesn't trust the certificate of your object store at %s.", host),
@@ -421,17 +459,14 @@ func (in *installer) storageFailure(se *objectstore.Error) storageProblem {
 			hint: in.prefixHint(),
 		}
 	}
-	return storageProblem{msg: fmt.Sprintf("Your object store answered with an error: %s.", strings.TrimSuffix(se.Error(), ".")), fix: "Check your object store settings"}
+	return storageProblem{msg: fmt.Sprintf("Your object store returned an error: %s.", strings.TrimSuffix(se.Error(), ".")), fix: "Check your object store settings"}
 }
 
 func (in *installer) prefixHint() string {
 	if in.storage.Prefix != "" {
 		return ""
 	}
-	how := "pass the prefix with --storage-bucket-prefix"
-	if in.app.UI.Interactive() {
-		how = "enter the prefix as the bucket name prefix"
-	}
+	how := "pass it with --storage-bucket-prefix"
 	return fmt.Sprintf(" If another account already has those names on your provider, create the buckets with a prefix, like chat-%s, and %s.", in.storage.bucketNames()[0], how)
 }
 
@@ -452,49 +487,4 @@ func (s *storageChoice) values() map[string]string {
 		maps.Copy(out, s.Buckets)
 	}
 	return out
-}
-
-func (in *installer) resumeStorage(ctx context.Context, inst *instance.Instance) error {
-	if !in.f.Storage.passed(in.c) {
-		return nil
-	}
-	if err := in.askStorage(); err != nil {
-		return err
-	}
-	current := map[string]string{}
-	for _, k := range storageKeys {
-		if v, ok := inst.State.Settings[k]; ok {
-			current[k] = v
-		}
-	}
-	if maps.Equal(current, in.storage.values()) {
-		return nil
-	}
-	if endpoint := current[settings.StorageEndpoint]; endpoint != "" {
-		return ui.Refused(fmt.Sprintf("This unfinished install already uses different object store settings, with the store at %s.", endpoint),
-			"Run rexctl install again without the storage options to keep them, or change them after the install with rexctl config set.")
-	}
-	if err := in.checkStorage(ctx); err != nil {
-		return err
-	}
-	want := in.storage.values()
-	changes := map[string]*string{}
-	for _, k := range slices.Sorted(maps.Keys(want)) {
-		v := want[k]
-		changes[k] = &v
-	}
-	return in.app.ChangeSettings(ctx, inst, func(e *engine.Engine) error {
-		var logPath string
-		change, err := deploy.Set(ctx, inst, e, changes, deploy.ApplyOptions{
-			Wait: true,
-			Failed: func(p *engine.Project, err error) {
-				logPath = writeFailureLog(ctx, inst, p, "start.log", err, nil)
-			},
-		})
-		if err != nil {
-			return settingsFailure(change, err, logPath)
-		}
-		in.app.UI.OK("Saved your object store settings.")
-		return nil
-	})
 }

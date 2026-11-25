@@ -86,4 +86,4 @@ jobs:
           cache-dependency-path: fluxer_rexctl/go.sum
 
       - name: every environment variable is documented
-        run: go test -count=1 ./internal/instance
+        run: go run ./internal/lint/envcoverage ..

@@ -3,19 +3,14 @@
 package cmd
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"io"
 	"net"
 	"os"
-	"os/exec"
-	"path"
-	"runtime"
 	"slices"
-	"strings"
-	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -24,235 +19,16 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/deploy"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/native"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/release"
-	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
+	rt "github.com/fluxerapp/fluxer/fluxer_rexctl/internal/runtime"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
 
 const (
-	bootLockWait   = 10 * time.Minute
-	bootRouteWait  = 2 * time.Minute
-	readyHintAfter = 3 * time.Minute
+	bootLockWait  = 10 * time.Minute
+	bootRouteWait = 2 * time.Minute
 )
-
-type logPart struct {
-	name     string
-	services []string
-}
-
-var logParts = []logPart{
-	{"web", []string{"app-proxy", "static-proxy"}},
-	{"api", []string{"api"}},
-	{"worker", []string{"worker"}},
-	{"gateway", []string{"gateway"}},
-	{"voice", []string{"livekit"}},
-	{"media", []string{"media-proxy"}},
-	{"edge", []string{"edge"}},
-	{"admin", []string{"admin"}},
-	{"push", []string{"push"}},
-	{"database", []string{"postgres"}},
-	{"search", []string{"meilisearch"}},
-	{"storage", []string{"seaweedfs", "seaweedfs-init", stack.ObjectsInitService}},
-	{"cache", []string{"valkey"}},
-	{"queue", []string{"nats"}},
-	{"internal", []string{"snowflakes", "users", "gifs", "messages", "unfurl"}},
-}
-
-func logServiceNames() []string {
-	names := make([]string, 0, len(logParts))
-	for _, p := range logParts {
-		names = append(names, p.name)
-	}
-	return names
-}
-
-func servicesForName(name string) ([]string, error) {
-	name = strings.ToLower(strings.TrimSpace(name))
-	for _, p := range logParts {
-		if p.name == name {
-			return p.services, nil
-		}
-	}
-	if slices.Contains(stack.Services, name) {
-		return []string{name}, nil
-	}
-	return nil, &ui.ExitError{
-		Code: ui.ExitUsage,
-		Msg:  fmt.Sprintf("There's no service called %s.", name),
-		Fix:  "Pick " + ui.JoinOr(logServiceNames()) + ".",
-	}
-}
-
-type rustLogs struct {
-	w    io.Writer
-	only []string
-	buf  []byte
-}
-
-func (r *rustLogs) Write(p []byte) (int, error) {
-	r.buf = append(r.buf, p...)
-	for {
-		i := bytes.IndexByte(r.buf, '\n')
-		if i < 0 {
-			return len(p), nil
-		}
-		line := string(r.buf[:i])
-		r.buf = r.buf[i+1:]
-		if msg, ok := strings.CutPrefix(line, stack.RustService+" | "); ok {
-			svc := stack.RustLogService(msg)
-			if len(r.only) > 0 && !slices.Contains(r.only, svc) {
-				continue
-			}
-			if svc != "" {
-				line = svc + " | " + msg
-			}
-		}
-		if _, err := io.WriteString(r.w, line+"\n"); err != nil {
-			return len(p), err
-		}
-	}
-}
-
-func runningPart(inst *instance.Instance, args, services []string) ([]string, error) {
-	if len(services) == 0 || deploy.VoiceBundled(inst) {
-		return services, nil
-	}
-	out := slices.DeleteFunc(slices.Clone(services), func(s string) bool { return s == "livekit" })
-	if len(out) == 0 {
-		return nil, ui.Refused(fmt.Sprintf("This instance runs without the bundled LiveKit, and %s has no logs here.", args[0]), "Run rexctl voice status to check your voice servers.")
-	}
-	return out, nil
-}
-
-func engineFailure(err error) error {
-	return engineFailureFor("", err)
-}
-
-func engineFailureFor(kind engine.Kind, err error) error {
-	if err == nil {
-		return nil
-	}
-	var ee *ui.ExitError
-	if errors.As(err, &ee) || errors.Is(err, context.Canceled) {
-		return err
-	}
-	refused := func(msg, fix string) error { return &ui.ExitError{Code: ui.ExitRefused, Msg: msg, Fix: fix, Err: err} }
-	failed := func(msg, fix string) error { return &ui.ExitError{Code: ui.ExitFailed, Msg: msg, Fix: fix, Err: err} }
-	desktop := kind != engine.Podman && runtime.GOOS != "linux"
-	name := kind.Name()
-	var e *engine.Error
-	errors.As(err, &e)
-	switch engine.ClassOf(err) {
-	case engine.ClassUnreachable:
-		if desktop {
-			return refused("Docker Desktop isn't running.", "Open Docker Desktop and wait until its engine is running, then try again.")
-		}
-		if fix := podmanSocketFix(kind); fix != "" {
-			return refused("Podman is installed, but its API socket isn't running.", fix)
-		}
-		if kind == "" {
-			return refused("Neither Docker nor Podman answers on this machine.", "Start Docker or Podman, then try again.")
-		}
-		return refused(name+" isn't running.", "Start "+name+", then try again.")
-	case engine.ClassDenied:
-		switch {
-		case runtime.GOOS == "windows":
-			return refused("This account isn't allowed to use Docker.", "Add your account to docker-users, then sign out and back in.")
-		case kind == engine.Podman:
-			return refused("This account isn't allowed to use Podman.", "Run rexctl as the account that runs Podman.")
-		}
-		return refused("This account isn't allowed to use Docker.", "Add your account to the docker group with sudo usermod -aG docker $USER, then sign out and back in.")
-	case engine.ClassWindowsContainers:
-		return refused("Docker Desktop is set to Windows containers.", "Switch Docker Desktop to Linux containers, then try again.")
-	case engine.ClassPodmanTooOld:
-		return refused(fmt.Sprintf("Fluxer keeps running, but this needs Podman %s or newer.", strings.TrimSuffix(engine.MinPodman, ".0")),
-			"Upgrade Podman, or move to Docker with rexctl backup and then rexctl restore <file> --engine docker.")
-	case engine.ClassEngineChanged:
-		other := "another engine"
-		switch {
-		case e == nil || e.Other == "":
-		case e.Other == name || desktop && e.Other == "Docker Desktop":
-			other = "a different " + e.Other + " engine"
-		default:
-			other = e.Other
-		}
-		if e != nil && e.Replaced {
-			return refused(fmt.Sprintf("The engine Fluxer uses is now %s, which doesn't have this instance's data.", other),
-				"Start the engine Fluxer was installed on. If it was reset or reinstalled, restore a backup with rexctl restore <file>.")
-		}
-		if desktop {
-			return refused("Docker Desktop isn't running, and "+other+" answers in its place.", "Open Docker Desktop and wait until its engine is running, then try again.")
-		}
-		return refused(fmt.Sprintf("Fluxer runs on %s, but %s answers in its place.", name, other), "Start the engine Fluxer runs on, or point rexctl at it with rexctl config set engine.host.")
-	case engine.ClassRateLimit:
-		registry := "The image registry"
-		if e == nil || len(e.Images) == 0 || dockerHub(e.Images) {
-			registry = "Docker Hub"
-		}
-		msg := registry + " is limiting downloads from this machine."
-		if e != nil && len(e.Images) > 0 {
-			msg = fmt.Sprintf("%s is limiting downloads from this machine and %s didn't download. Images already on this machine weren't downloaded again.", registry, ui.JoinAnd(imageNames(e.Images)))
-		}
-		if registry == "Docker Hub" {
-			return failed(msg, "Wait for Docker Hub's limit to reset, which takes up to 6 hours, then try again.")
-		}
-		return failed(msg, "Wait a while, then try again.")
-	case engine.ClassCredentials:
-		return failed("Docker's credential helper on this machine doesn't work.", "Remove credsStore from your Docker config.json, then try again.")
-	case engine.ClassAuth:
-		return failed("The image registry refused to send Fluxer's images.", "Sign in to the registry with docker login, or check images.registry with rexctl config get images.registry.")
-	case engine.ClassImageNotFound:
-		return failed("The image registry doesn't have an image Fluxer needs.", "Check the images.* settings with rexctl config list, then try again.")
-	case engine.ClassDNS:
-		return failed("This machine can't look up the image registry.", "Check this machine's DNS settings, then try again.")
-	case engine.ClassTLS:
-		return failed("rexctl couldn't make a secure connection to the image registry.", "Check this machine's clock and any proxy that inspects HTTPS, then try again.")
-	case engine.ClassProxy:
-		return failed("The proxy the engine uses refused the connection.", "Check the proxy settings of "+name+", then try again.")
-	case engine.ClassTimeout:
-		return failed("The connection timed out.", "Check this machine's internet connection, then try again.")
-	case engine.ClassDiskFull:
-		return failed("This machine ran out of disk space.", "Free up space, then try again.")
-	case engine.ClassPortInUse:
-		return failed("A port Fluxer needs is already in use on this machine.", "Run rexctl doctor to see which one.")
-	case engine.ClassAddressPools:
-		return failed("Docker has no free network addresses left for Fluxer.", "Remove the Docker networks you don't use with docker network prune, then try again.")
-	case engine.ClassSubIDs:
-		return failed("Your account has no subordinate user IDs, and Podman needs them to run Fluxer.", "Add your account to /etc/subuid and /etc/subgid, run podman system migrate, then try again.")
-	case engine.ClassDependencyFailed:
-		return failed("A Fluxer service didn't start, and the services that need it didn't start either.", "Run rexctl logs to see why.")
-	case engine.ClassVolumeChanged:
-		return refused("A data volume on this machine doesn't match what Fluxer expects, and rexctl left it alone.", "Run rexctl doctor to see what's wrong.")
-	case engine.ClassInvalidConfig:
-		return failed("rexctl can't load Fluxer's compose files.", "Run rexctl doctor to see what's wrong.")
-	case engine.ClassForeignProject:
-		return refused("Another Fluxer instance on this machine uses the same name.", "Run rexctl status --dir with that instance's folder to check it.")
-	}
-	return err
-}
-
-func dockerHub(refs []string) bool {
-	for _, ref := range refs {
-		first, _, found := strings.Cut(ref, "/")
-		if !found || first == "docker.io" || (!strings.ContainsAny(first, ".:") && first != "localhost") {
-			return true
-		}
-	}
-	return false
-}
-
-func imageNames(refs []string) []string {
-	var out []string
-	for _, ref := range refs {
-		name, _, _ := strings.Cut(ref, "@")
-		name = path.Base(name)
-		name, _, _ = strings.Cut(name, ":")
-		if !slices.Contains(out, name) {
-			out = append(out, name)
-		}
-	}
-	return out
-}
 
 func readyFailure(ctx context.Context, inst *instance.Instance, p *engine.Project, err error) error {
 	if err == nil {
@@ -276,7 +52,7 @@ func readyFailure(ctx context.Context, inst *instance.Instance, p *engine.Projec
 		return ui.Wrap(err, msg, fix)
 	}
 	if engine.ClassOf(err) != engine.ClassOther {
-		return engineFailure(err)
+		return rt.EngineError("", err)
 	}
 	var ee *ui.ExitError
 	if errors.As(err, &ee) {
@@ -300,255 +76,129 @@ func keepStartLog(ctx context.Context, inst *instance.Instance, p *engine.Projec
 	return writeFailureLog(ctx, inst, p, "start.log", err, slices.Compact(parts))
 }
 
-func waitForFluxer(ctx context.Context, inst *instance.Instance, p *engine.Project, s *ui.Step, verb string) error {
-	err := p.WaitReady(ctx, engine.DefaultReadyTimeout, showReadiness(s, verb+" Fluxer"))
-	return readyFailure(ctx, inst, p, err)
-}
-
-func showReadiness(s *ui.Step, prefix string) func(engine.Readiness) {
-	start, hinted := time.Now(), false
-	return func(r engine.Readiness) {
-		waiting := slices.Concat(r.NotReady, r.Failed)
-		slices.Sort(waiting)
-		showWaiting(s, prefix, len(r.Ready), len(r.Ready)+len(waiting), "ready", waiting)
-		if !hinted && len(waiting) > 0 && time.Since(start) >= readyHintAfter {
-			hinted = true
-			s.Info("%s", notReadyHint(waiting))
-		}
-	}
-}
-
-func notReadyHint(waiting []string) string {
-	if len(waiting) == 1 && slices.Contains(stack.Services, waiting[0]) {
-		return fmt.Sprintf("%s isn't ready after %d minutes. Run rexctl logs %s in another terminal to see why.", waiting[0], int(readyHintAfter.Minutes()), waiting[0])
-	}
-	verb := "aren't"
-	if len(waiting) == 1 {
-		verb = "isn't"
-	}
-	return fmt.Sprintf("%s %s ready after %d minutes. Run rexctl logs in another terminal to see why.", waitingFor(waiting), verb, int(readyHintAfter.Minutes()))
-}
-
-func showWaiting(s *ui.Step, prefix string, done, total int, state string, waiting []string) {
-	if len(waiting) == 0 {
-		s.Title(fmt.Sprintf("%s, %d of %d services %s", prefix, done, total, state))
-		return
-	}
-	s.Waiting(fmt.Sprintf("%s: %d of %d services %s", prefix, done, total, state), waitingFor(waiting))
-}
-
-func waitingFor(names []string) string {
-	if len(names) > 3 {
-		return fmt.Sprintf("%s and %d more", strings.Join(names[:3], ", "), len(names)-3)
-	}
-	return ui.JoinAnd(names)
-}
-
-type progress struct {
-	mu         sync.Mutex
-	app        *App
-	step       *ui.Step
-	verb       string
-	images     map[string]bool
-	layers     map[string][2]int64
-	states     map[string]string
-	samples    []byteSample
-	containers map[string]engine.Event
-	verbose    bool
-}
-
-type byteSample struct {
-	at    time.Time
-	bytes int64
-}
-
-const rateWindow = 5 * time.Second
-
 func (a *App) progress(s *ui.Step, verb string) func(engine.Event) {
-	pr := &progress{app: a, step: s, verb: verb, images: map[string]bool{}, layers: map[string][2]int64{}, states: map[string]string{}, containers: map[string]engine.Event{}, verbose: a.UI.Verbose()}
-	return pr.on
+	return rt.Progress(s, verb, a.UI)
 }
 
-func (pr *progress) showContainers() {
-	started := 0
-	var waiting []string
-	for _, ev := range pr.containers {
-		switch ev.Text {
-		case "Started", "Running", "Healthy", "Exited", "Restarted":
-			started++
-		case "Waiting":
-			started++
-			if !slices.Contains(waiting, ev.Service) {
-				waiting = append(waiting, ev.Service)
-			}
+func (a *App) instanceRuntime(ctx context.Context, root bool) (*instance.Instance, rt.Runtime, bool, error) {
+	inst, err := a.Instance()
+	if err != nil {
+		return nil, nil, false, err
+	}
+	r, err := a.Runtime(ctx, inst)
+	if err != nil {
+		return nil, nil, false, err
+	}
+	if root && r.Info(ctx).Root {
+		ok, err := a.asRoot(inst.Dir)
+		if err != nil || !ok {
+			return nil, nil, false, err
 		}
 	}
-	slices.Sort(waiting)
-	showWaiting(pr.step, pr.verb+" Fluxer", started, len(pr.containers), "started", waiting)
+	return inst, r, true, nil
 }
 
-func (pr *progress) on(ev engine.Event) {
-	pr.mu.Lock()
-	defer pr.mu.Unlock()
-	if pr.verbose {
-		pr.app.UI.Detail("%s %s", ev.ID, strings.TrimSpace(ev.Text+" "+string(ev.Status)))
+func (a *App) prepare(inst *instance.Instance) error {
+	if err := managed(inst); err != nil {
+		return err
 	}
-	done := ev.Status == engine.EventDone
-	switch {
-	case ev.Kind == "container":
-		pr.containers[ev.ID] = ev
-		pr.step.Progress(0, 0)
-		pr.step.Rate(0)
-		pr.showContainers()
-	case ev.Parent != "":
-		pr.states[ev.ID] = ev.Text
-		l, known := pr.layers[ev.ID]
-		switch {
-		case ev.Text == "Downloading" && ev.Total > 0:
-			pr.layers[ev.ID] = [2]int64{ev.Current, ev.Total}
-		case known && ev.Text != "Downloading":
-			pr.layers[ev.ID] = [2]int64{l[1], l[1]}
-		case !known && ev.Text != "Extracting" && ev.Total > 0:
-			pr.layers[ev.ID] = [2]int64{ev.Current, ev.Total}
-		}
-		pr.showPull()
-	case ev.Kind == "image" || ev.Parent == "" && ev.Total > 0:
-		pr.images[ev.ID] = pr.images[ev.ID] || done
-		if ev.Total > 0 {
-			pr.step.Title(pr.pullTitle())
-			pr.step.Progress(ev.Current, ev.Total)
-			return
-		}
-		pr.showPull()
+	if err := a.drift(inst, true, true); err != nil {
+		return err
 	}
+	if msg := deploy.Interrupted(inst); msg != "" {
+		a.UI.Warn(msg, "")
+	}
+	return nil
 }
 
-func (pr *progress) pullTitle() string {
-	title := fmt.Sprintf("Downloading Fluxer, %d of %d images", count(pr.images), len(pr.images))
-	if pr.unpacking() {
-		title += ", unpacking"
+func saveState(inst *instance.Instance, again string) error {
+	if err := inst.Save(); err != nil {
+		return ui.Wrap(err, "Couldn't save your instance's state.", "Run "+again+" again.")
 	}
-	return title
-}
-
-func (pr *progress) unpacking() bool {
-	extracting := false
-	for _, state := range pr.states {
-		switch state {
-		case "Pulling fs layer", "Waiting", "Downloading", "Verifying Checksum":
-			return false
-		case "Extracting":
-			extracting = true
-		}
-	}
-	return extracting
-}
-
-func (pr *progress) showPull() {
-	var cur, total int64
-	for _, l := range pr.layers {
-		cur, total = cur+l[0], total+l[1]
-	}
-	pr.step.Title(pr.pullTitle())
-	pr.step.Progress(cur, total)
-	if pr.unpacking() {
-		pr.samples = nil
-		pr.step.Rate(0)
-		return
-	}
-	now := time.Now()
-	pr.samples = append(pr.samples, byteSample{at: now, bytes: cur})
-	for len(pr.samples) > 1 && now.Sub(pr.samples[0].at) > rateWindow {
-		pr.samples = pr.samples[1:]
-	}
-	first := pr.samples[0]
-	if elapsed := now.Sub(first.at); elapsed >= time.Second && cur > first.bytes {
-		pr.step.Rate(int64(float64(cur-first.bytes) / elapsed.Seconds()))
-		return
-	}
-	pr.step.Rate(0)
-}
-
-func count(m map[string]bool) int {
-	n := 0
-	for _, v := range m {
-		if v {
-			n++
-		}
-	}
-	return n
+	return nil
 }
 
 func newLogsCmd(app *App) *cobra.Command {
 	var follow bool
 	var since string
+	var tail int
 	c := &cobra.Command{
-		Use:   "logs [service]",
+		Use:   "logs [part]",
 		Short: "Show logs from your instance",
-		Long: "Show logs from your instance.\n\nThe services are " + ui.JoinAnd(logServiceNames()) +
-			".\nWithout a service, rexctl shows every service.",
-		Args: maxArgs(1),
+		Long: "Show logs from your instance. Every line starts with the part it comes from.\n\nThe parts are " + ui.JoinAnd(rt.PartNames()) +
+			".\nWithout a part, rexctl shows every part.",
+		Example: "rexctl logs\nrexctl logs api --since 10m\nrexctl logs gateway -f",
+		Args:    maxArgs(1),
 		RunE: func(c *cobra.Command, args []string) error {
-			var services []string
-			if len(args) == 1 {
-				var err error
-				if services, err = servicesForName(args[0]); err != nil {
-					return err
-				}
-			}
 			ctx := c.Context()
 			inst, err := app.Instance()
 			if err != nil {
 				return err
 			}
-			if inst.State.IsNative() {
-				return runNativeLogs(ctx, app, inst, follow, since, services)
+			o := rt.LogOptions{Parts: args, Follow: follow, Since: since, Tail: tail}
+			if inst.State.IsVoice() {
+				o.Parts = nil
+				return voiceMachineLogs(ctx, app, inst, args, o)
 			}
-			p, err := app.Named(ctx, inst)
+			if _, err := rt.ServicesOf(args); err != nil {
+				return err
+			}
+			r, err := app.Runtime(ctx, inst)
 			if err != nil {
 				return err
 			}
-			if services, err = runningPart(inst, args, services); err != nil {
-				return err
+			err = showLogs(ctx, app, r, o)
+			if errors.Is(err, rt.ErrNeedsRoot) {
+				return app.retryAsRoot(inst.Dir, err)
 			}
-			var inRust []string
-			if len(services) > 0 {
-				if services, inRust = stack.ModeServices(inst.State.Settings, services); len(services) == 0 {
-					return ui.Refused(fmt.Sprintf("This instance runs without %s, so it has no logs here.", args[0]), "Run rexctl status to see what runs.")
-				}
-			}
-			out := app.UI.Stdout()
-			if stack.RustSingle(inst.State.Settings) {
-				out = &rustLogs{w: out, only: inRust}
-			}
-			opts := engine.LogsOptions{Follow: follow, Since: since, Stdout: out}
-			if since == "" {
-				opts.Tail = 200
-			}
-			if err := p.Logs(ctx, opts, services...); err != nil {
-				if ctx.Err() != nil {
-					return nil
-				}
-				return ui.Wrap(engineFailure(err), "Couldn't read the logs.", "Run rexctl status to check your instance.")
-			}
-			return nil
+			return err
 		},
 	}
 	c.Flags().BoolVarP(&follow, "follow", "f", false, "keep printing new lines")
 	c.Flags().StringVar(&since, "since", "", "show lines newer than this, like 10m or 2h")
+	c.Flags().IntVarP(&tail, "tail", "n", 200, "how many lines to show from the end of each log")
 	return c
 }
 
+func showLogs(ctx context.Context, app *App, r rt.Runtime, o rt.LogOptions) error {
+	if app.UI.Tier() != ui.TierLive {
+		return r.Logs(ctx, app.UI.Stdout(), o)
+	}
+	pr, pw := io.Pipe()
+	done := make(chan error, 1)
+	var ended atomic.Bool
+	lctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	go func() {
+		err := r.Logs(lctx, pw, o)
+		ended.Store(true)
+		pw.CloseWithError(err)
+		done <- err
+	}()
+	verr := app.UI.LogView(ctx, pr, ui.LogOptions{Title: "Logs", Parts: o.Parts, Follow: o.Follow})
+	quit := !ended.Load()
+	cancel()
+	pr.Close()
+	if err := <-done; err != nil && !quit && !errors.Is(err, io.ErrClosedPipe) {
+		return err
+	}
+	return verr
+}
+
 func newStartCmd(app *App) *cobra.Command {
-	return newBootableCmd(app, "start", "Start your instance", runStart, runBootStart)
+	c := newBootableCmd(app, "start", "Start your instance", runStart, runBootStart)
+	c.Long = "Start Fluxer and wait until every part is ready. A stopped instance stays stopped, also after this machine restarts, until you run rexctl start."
+	c.Example = "rexctl start\nrexctl start --dir /opt/fluxer"
+	return c
 }
 
 func newBootableCmd(app *App, use, short string, run, bootRun func(context.Context, *App) error) *cobra.Command {
 	var boot bool
 	c := &cobra.Command{
-		Use:   use,
-		Short: short,
-		Args:  noArgs,
+		Use:                   use,
+		Short:                 short,
+		Args:                  noArgs,
+		DisableFlagsInUseLine: true,
 		RunE: func(c *cobra.Command, _ []string) error {
 			if boot {
 				return bootRun(c.Context(), app)
@@ -562,47 +212,51 @@ func newBootableCmd(app *App, use, short string, run, bootRun func(context.Conte
 }
 
 func runStart(ctx context.Context, app *App) error {
-	inst, err := app.Instance()
-	if err != nil {
+	inst, r, ok, err := app.instanceRuntime(ctx, true)
+	if err != nil || !ok {
 		return err
 	}
-	if inst.State.IsNative() {
-		return runNativeStart(ctx, app, inst)
-	}
-	return app.Change(ctx, inst, func(e *engine.Engine) error {
-		if inst.State.Stopped {
-			inst.State.Stopped = false
-			if err := inst.Save(); err != nil {
-				return ui.Wrap(err, "Couldn't save your instance's state.", "Check that you can write to "+inst.Dir+", then try again.")
-			}
+	return startInstance(ctx, app, inst, r)
+}
+
+func startInstance(ctx context.Context, app *App, inst *instance.Instance, r rt.Runtime) error {
+	return app.LockedWaiting(ctx, inst, func() error {
+		if msg, fix, ok := inst.RestoreUnfinished(); ok {
+			return ui.Refused(msg, fix)
 		}
-		p := e.Named(inst.Project(), inst.Dir)
-		err := app.UI.Step(ctx, "Starting Fluxer", func(ctx context.Context, s *ui.Step) error {
-			if e.TooOld {
-				if err := p.Start(ctx); err != nil {
-					return engineFailure(err)
-				}
-			} else if _, err := deploy.Apply(ctx, inst, e, deploy.ApplyOptions{Pull: true, OnEvent: app.progress(s, "Starting")}); err != nil {
-				return readyFailure(ctx, inst, p, err)
-			}
-			if err := waitForFluxer(ctx, inst, p, s, "Starting"); err != nil {
+		if err := app.prepare(inst); err != nil {
+			return err
+		}
+		if r.Kind() == rt.Native {
+			if err := fetchMissingRelease(ctx, app, inst); err != nil {
 				return err
 			}
-			startLocalVoiceServers(ctx, app, inst, e)
-			moveVoiceEndpoints(ctx, app, inst)
+		}
+		err := app.UI.Step(ctx, "Starting Fluxer", func(ctx context.Context, s *ui.Step) error {
+			if err := r.Start(ctx, s, rt.StartOptions{}); err != nil {
+				return err
+			}
+			if err := r.Voice().StartAll(ctx, s); err != nil {
+				s.Warn("The voice servers on this machine didn't start.", "Run rexctl voice status to see why.")
+				app.UI.Detail("%v", err)
+			}
 			s.Done("Started Fluxer at %s.", inst.Origin())
 			return nil
 		})
 		if err != nil {
 			return err
 		}
-		if inst.State.Installing {
-			inst.State.Installing = false
-			if err := inst.Save(); err != nil {
-				return ui.Wrap(err, "Couldn't save your instance's state.", "Check that you can write to "+inst.Dir+", then try again.")
+		if inst.State.Stopped || inst.State.Installing {
+			inst.State.Stopped, inst.State.Installing = false, false
+			if err := saveState(inst, "rexctl start"); err != nil {
+				return err
 			}
 		}
-		app.sendAdminImport(ctx, inst, p)
+		if c, err := app.runtimeAdmin(ctx, inst, r); err != nil {
+			app.UI.Detail("%v", err)
+		} else {
+			app.importAdmins(ctx, inst, c)
+		}
 		return nil
 	})
 }
@@ -610,7 +264,7 @@ func runStart(ctx context.Context, app *App) error {
 func bootInstance(app *App) (*instance.Instance, error) {
 	dir, err := app.Dir()
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 	if _, err := instance.Find(dir); errors.Is(err, instance.ErrNotFound) || errors.Is(err, instance.ErrLegacy) {
 		return nil, nil
@@ -618,13 +272,21 @@ func bootInstance(app *App) (*instance.Instance, error) {
 	return app.Instance()
 }
 
-func runBootStart(ctx context.Context, app *App) error {
+func bootCompose(ctx context.Context, app *App) (*instance.Instance, error) {
 	inst, err := bootInstance(app)
 	if err != nil || inst == nil {
-		return err
+		return nil, err
 	}
-	if inst.State.Stopped || inst.State.Ejected != nil || inst.State.IsNative() {
-		return nil
+	if rt.KindOf(inst) != rt.Compose || inst.State.Ejected != nil {
+		return nil, nil
+	}
+	return inst, nil
+}
+
+func runBootStart(ctx context.Context, app *App) error {
+	inst, err := bootCompose(ctx, app)
+	if err != nil || inst == nil || inst.State.Stopped {
+		return err
 	}
 	if !bootStackUp(ctx, app, inst) {
 		waitForRoute(ctx, bootRouteWait)
@@ -664,17 +326,17 @@ func bootStack(ctx context.Context, app *App, inst *instance.Instance) error {
 			return err
 		}
 		if e.TooOld {
-			return engineFailure(e.Named(inst.Project(), inst.Dir).Start(ctx))
+			return rt.EngineError("", e.Named(inst.Project(), inst.Dir).Start(ctx))
 		}
 		if u := inst.State.Upgrade; u != nil && phaseIndex(u.Phase) >= phaseIndex(release.PhaseRecreated) {
 			next, err := release.SnapshotState(inst, u.To)
 			if err != nil {
-				return ui.Wrap(err, fmt.Sprintf("Couldn't read the state of Fluxer %s.", release.Short(u.To)), "Run rexctl doctor to see what's wrong.")
+				return ui.Wrap(err, fmt.Sprintf("Couldn't read the state of Fluxer %s.", u.To), "Run rexctl doctor to see what's wrong.")
 			}
 			next.Engine = inst.State.Engine
 			p, err := deploy.Load(ctx, &instance.Instance{Dir: inst.Dir, State: next}, e)
 			if err != nil {
-				return engineFailure(err)
+				return rt.EngineError("", err)
 			}
 			if err := p.Up(context.WithoutCancel(ctx), engine.UpOptions{RemoveOrphans: true, Wait: true, WaitTimeout: engine.DefaultReadyTimeout}); err != nil {
 				return readyFailure(ctx, inst, p, err)
@@ -682,13 +344,17 @@ func bootStack(ctx context.Context, app *App, inst *instance.Instance) error {
 			return inst.DropRootCopies(ctx, true)
 		}
 		if p, err := deploy.Load(ctx, inst, e); err == nil && stackRunning(ctx, p) {
-			app.sendAdminImport(ctx, inst, p)
+			app.importAdmins(ctx, inst, app.adminClient(inst, p))
 			return nil
 		}
-		if _, err := deploy.Apply(ctx, inst, e, deploy.ApplyOptions{Wait: true}); err != nil {
-			return readyFailure(ctx, inst, e.Named(inst.Project(), inst.Dir), err)
+		r, err := app.Runtime(ctx, inst)
+		if err != nil {
+			return err
 		}
-		app.sendAdminImport(ctx, inst, e.Named(inst.Project(), inst.Dir))
+		if err := r.Start(ctx, nil, rt.StartOptions{Boot: true}); err != nil {
+			return err
+		}
+		app.importAdmins(ctx, inst, app.adminClient(inst, e.Named(inst.Project(), inst.Dir)))
 		return nil
 	})
 }
@@ -764,36 +430,36 @@ func defaultRoute() bool {
 
 func newStopCmd(app *App) *cobra.Command {
 	c := newBootableCmd(app, "stop", "Stop your instance", runStop, runBootStop)
-	c.Long = "Stop Fluxer and keep its containers. Fluxer stays stopped until you run rexctl start. To remove the containers too, run rexctl down."
+	c.Long = "Stop Fluxer but keep everything it runs with. It stays stopped, also after a restart, until you run rexctl start. To also remove its containers or runtime files, run rexctl down."
+	c.Example = "rexctl stop\nrexctl stop --dir /opt/fluxer"
 	return c
 }
 
+func announceVoice(s *ui.Step, inst *instance.Instance, verb string) {
+	switch n := len(inst.State.Voice); {
+	case n == 1:
+		s.Info("%s the voice server %s too. Calls on it end.", verb, inst.State.Voice[0].ID)
+	case n > 1:
+		s.Info("%s %d voice servers too. Calls on them end.", verb, n)
+	}
+}
+
 func runStop(ctx context.Context, app *App) error {
-	inst, err := app.Instance()
-	if err != nil {
+	inst, r, ok, err := app.instanceRuntime(ctx, true)
+	if err != nil || !ok {
 		return err
 	}
-	if inst.State.IsNative() {
-		return runNativeStop(ctx, app, inst, false)
-	}
-	return app.Locked(ctx, inst, func() error {
+	return app.LockedWaiting(ctx, inst, func() error {
 		if err := managed(inst); err != nil {
 			return err
 		}
-		p, err := app.Named(ctx, inst)
-		if err != nil {
-			return err
-		}
-		err = app.UI.Step(ctx, "Stopping Fluxer", func(ctx context.Context, s *ui.Step) error {
-			switch n := len(inst.State.Voice); {
-			case n == 1:
-				s.Info("Stopping the voice server %s too. Calls on it end.", inst.State.Voice[0].ID)
-			case n > 1:
-				s.Info("Stopping %d voice servers too. Calls on them end.", n)
+		err := app.UI.Step(ctx, "Stopping Fluxer", func(ctx context.Context, s *ui.Step) error {
+			announceVoice(s, inst, "Stopping")
+			if err := r.Stop(ctx, s); err != nil {
+				return err
 			}
-			stopLocalVoiceServers(ctx, app, inst, p.Engine)
-			if err := p.Stop(ctx); err != nil {
-				return ui.Wrap(engineFailure(err), "Couldn't stop Fluxer.", "Run rexctl status to see what's still running.")
+			if err := r.Voice().StopAll(ctx, s); err != nil {
+				app.UI.Detail("%v", err)
 			}
 			s.Done("Stopped Fluxer.")
 			return nil
@@ -802,8 +468,8 @@ func runStop(ctx context.Context, app *App) error {
 			return err
 		}
 		inst.State.Stopped = true
-		if err := inst.Save(); err != nil {
-			return ui.Wrap(err, "Couldn't save your instance's state.", "Run rexctl stop again.")
+		if err := saveState(inst, "rexctl stop"); err != nil {
+			return err
 		}
 		app.UI.Info("Run rexctl start to start it again.")
 		return nil
@@ -812,10 +478,11 @@ func runStop(ctx context.Context, app *App) error {
 
 func newDownCmd(app *App) *cobra.Command {
 	return &cobra.Command{
-		Use:   "down",
-		Short: "Stop your instance and remove its containers",
-		Long:  "Stop Fluxer and remove its containers and networks, like docker compose down. Your data, settings, backups and images stay. Fluxer stays stopped until you run rexctl start, which creates the containers again.",
-		Args:  noArgs,
+		Use:     "down",
+		Short:   "Stop your instance and remove what it runs in",
+		Long:    "Stop Fluxer and remove its containers and networks, or on a systemd install its runtime files. Your data, settings, backups and images stay. Fluxer stays stopped until you run rexctl start, which sets everything up again.",
+		Example: "rexctl down\nrexctl down --dir /opt/fluxer",
+		Args:    noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
 			return runDown(c.Context(), app)
 		},
@@ -823,46 +490,38 @@ func newDownCmd(app *App) *cobra.Command {
 }
 
 func runDown(ctx context.Context, app *App) error {
-	inst, err := app.Instance()
-	if err != nil {
+	inst, r, ok, err := app.instanceRuntime(ctx, true)
+	if err != nil || !ok {
 		return err
-	}
-	if inst.State.IsNative() {
-		return runNativeStop(ctx, app, inst, true)
 	}
 	return app.Locked(ctx, inst, func() error {
 		if err := managed(inst); err != nil {
 			return err
 		}
-		p, err := app.Named(ctx, inst)
-		if err != nil {
-			return err
+		title, done := "Removing Fluxer's containers", "Stopped Fluxer and removed its containers and networks."
+		switch r.Kind() {
+		case rt.Native:
+			title, done = "Stopping Fluxer", "Stopped Fluxer and cleared its runtime files."
+		case rt.Container:
+			title, done = "Stopping Fluxer", "Stopped Fluxer's container."
 		}
-		if p.Engine.TooOld {
-			return ui.Refused("rexctl can't create Fluxer's containers again with this version of Podman.", "Run rexctl stop to stop Fluxer and keep its containers.")
-		}
-		err = app.UI.Step(ctx, "Removing Fluxer's containers", func(ctx context.Context, s *ui.Step) error {
-			switch n := len(inst.State.Voice); {
-			case n == 1:
-				s.Info("Removing the voice server %s too. Calls on it end.", inst.State.Voice[0].ID)
-			case n > 1:
-				s.Info("Removing %d voice servers too. Calls on them end.", n)
+		err := app.UI.Step(ctx, title, func(ctx context.Context, s *ui.Step) error {
+			announceVoice(s, inst, "Removing")
+			if err := r.Voice().StopAll(ctx, s); err != nil {
+				app.UI.Detail("%v", err)
 			}
-			eachVoiceServer(app, inst, "removing", func(srv *instance.VoiceServer) error {
-				return voiceProject(p.Engine, inst, srv).DownWithin(context.WithoutCancel(ctx), false, deploy.VoiceStopTimeout)
-			})
-			if err := p.Down(ctx, false); err != nil {
-				return ui.Wrap(engineFailure(err), "Couldn't remove Fluxer's containers.", "Run rexctl status to see what's still running.")
+			if err := r.Down(ctx, s); err != nil {
+				return err
 			}
-			s.Done("Stopped Fluxer and removed its containers and networks.")
+			s.Done("%s", done)
 			return nil
 		})
 		if err != nil {
 			return err
 		}
 		inst.State.Stopped = true
-		if err := inst.Save(); err != nil {
-			return ui.Wrap(err, "Couldn't save your instance's state.", "Run rexctl down again.")
+		if err := saveState(inst, "rexctl down"); err != nil {
+			return err
 		}
 		app.UI.Info("Your data and settings are kept. Run rexctl start to start Fluxer again.")
 		return nil
@@ -870,12 +529,9 @@ func runDown(ctx context.Context, app *App) error {
 }
 
 func runBootStop(ctx context.Context, app *App) error {
-	inst, err := bootInstance(app)
+	inst, err := bootCompose(ctx, app)
 	if err != nil || inst == nil {
 		return err
-	}
-	if inst.State.Ejected != nil || inst.State.IsNative() {
-		return nil
 	}
 	e, err := app.Engine(ctx, inst)
 	if err != nil {
@@ -886,63 +542,88 @@ func runBootStop(ctx context.Context, app *App) error {
 		app.UI.Detail("%v", err)
 		p = e.Named(inst.Project(), inst.Dir)
 	}
-	return engineFailure(p.Stop(context.WithoutCancel(ctx)))
+	return rt.EngineError("", p.Stop(context.WithoutCancel(ctx)))
 }
 
 func newRestartCmd(app *App) *cobra.Command {
 	return &cobra.Command{
-		Use:   "restart",
-		Short: "Restart your instance",
-		Args:  noArgs,
-		RunE: func(c *cobra.Command, _ []string) error {
+		Use:     "restart [part...]",
+		Short:   "Restart your instance or some of its parts",
+		Long:    "Restart Fluxer, or only the parts you pass, and wait until each one is ready.\n\nThe parts are " + ui.JoinAnd(rt.PartNames()) + ".",
+		Example: "rexctl restart\nrexctl restart api\nrexctl restart web gateway",
+		RunE: func(c *cobra.Command, args []string) error {
 			ctx := c.Context()
 			inst, err := app.Instance()
 			if err != nil {
 				return err
 			}
-			if inst.State.IsNative() {
-				return runNativeRestart(ctx, app, inst)
+			if inst.State.IsVoice() {
+				if len(args) > 0 {
+					return ui.Usage("On a voice machine, rexctl restart restarts every voice server. Run rexctl voice restart <id> to restart one.")
+				}
+				return voiceMachineRestart(ctx, app, inst)
 			}
-			return app.Change(ctx, inst, func(e *engine.Engine) error {
-				return app.UI.Step(ctx, "Restarting Fluxer", func(ctx context.Context, s *ui.Step) error {
-					if _, err := deploy.Apply(ctx, inst, e, deploy.ApplyOptions{Pull: true, OnEvent: app.progress(s, "Restarting")}); err != nil && engine.ClassOf(err) != engine.ClassDependencyFailed {
-						return readyFailure(ctx, inst, e.Named(inst.Project(), inst.Dir), err)
-					}
-					p, err := deploy.Load(ctx, inst, e)
-					if err != nil {
-						return engineFailure(err)
-					}
-					if err := p.RestartWatched(context.WithoutCancel(ctx), app.progress(s, "Restarting")); err != nil {
-						return ui.Wrap(engineFailure(err), "Couldn't restart Fluxer.", "Run rexctl logs to see why.")
-					}
-					if err := waitForFluxer(ctx, inst, p, s, "Restarting"); err != nil {
-						return err
-					}
-					startLocalVoiceServers(ctx, app, inst, e)
-					moveVoiceEndpoints(ctx, app, inst)
-					if inst.State.Stopped {
-						inst.State.Stopped = false
-						if err := inst.Save(); err != nil {
-							return ui.Wrap(err, "Couldn't save your instance's state.", "Run rexctl restart again.")
-						}
-					}
-					s.Done("Restarted Fluxer.")
-					return nil
-				})
-			})
+			if _, err := rt.ServicesOf(args); err != nil {
+				return err
+			}
+			return runRestart(ctx, app, args)
 		},
 	}
 }
 
-func podmanSocketFix(kind engine.Kind) string {
-	if runtime.GOOS != "linux" || (kind != "" && kind != engine.Podman) {
-		return ""
+func runRestart(ctx context.Context, app *App, parts []string) error {
+	inst, r, ok, err := app.instanceRuntime(ctx, true)
+	if err != nil || !ok {
+		return err
 	}
-	if _, err := exec.LookPath("podman"); err != nil {
-		return ""
+	return app.LockedWaiting(ctx, inst, func() error {
+		if err := app.prepare(inst); err != nil {
+			return err
+		}
+		title, done := "Restarting Fluxer", "Restarted Fluxer."
+		if len(parts) > 0 {
+			title, done = "Restarting "+ui.JoinAnd(parts), "Restarted "+ui.JoinAnd(parts)+"."
+		}
+		err := app.UI.Step(ctx, title, func(ctx context.Context, s *ui.Step) error {
+			if err := r.Restart(ctx, s, parts); err != nil {
+				return err
+			}
+			if len(parts) == 0 {
+				if err := r.Voice().StartAll(ctx, s); err != nil {
+					app.UI.Detail("%v", err)
+				}
+			}
+			s.Done("%s", done)
+			return nil
+		})
+		if err != nil || len(parts) > 0 || !inst.State.Stopped {
+			return err
+		}
+		inst.State.Stopped = false
+		return saveState(inst, "rexctl restart")
+	})
+}
+
+func fetchMissingRelease(ctx context.Context, app *App, inst *instance.Instance) error {
+	n := native.New(inst)
+	if _, err := os.Stat(n.Fluxerd()); err == nil {
+		return nil
 	}
-	if os.Geteuid() == 0 {
-		return "Run systemctl enable --now podman.socket, then try again."
+	rel, err := nativeRelease(ctx, inst.State.Release, "Run rexctl start on a machine Fluxer has a native build for.")
+	if err != nil {
+		return err
 	}
-	return "Run systemctl --user enable --now podman.socket, then try again."
+	return app.UI.Step(ctx, "Downloading Fluxer", func(ctx context.Context, s *ui.Step) error {
+		if _, err := n.Fetch(ctx, rel, s.Progress); err != nil {
+			return rt.NativeError(err, "Couldn't download Fluxer.")
+		}
+		if err := n.Flip(rel.Version); err != nil {
+			return rt.NativeError(err, "Couldn't unpack Fluxer.")
+		}
+		if _, err := n.WriteSettings(rel.Version); err != nil {
+			return rt.NativeError(err, "Couldn't read the settings of Fluxer "+rel.Version+".")
+		}
+		s.Done("Downloaded Fluxer %s.", rel.Version)
+		return nil
+	})
 }

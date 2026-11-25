@@ -46,7 +46,7 @@ func expiryText(expiresAt *string) string {
 	}
 	t = t.Local()
 	if time.Until(t) < 24*time.Hour {
-		return t.Format("15:04 on 2 January")
+		return t.Format("15:04 MST on 2 January")
 	}
 	return t.Format("2 January")
 }
@@ -58,17 +58,31 @@ func expiryWhen(rfc string) string {
 	}
 	t = t.Local()
 	if time.Until(t) < 24*time.Hour {
-		return t.Format("at 15:04 on 2 January")
+		return t.Format("at 15:04 MST on 2 January")
 	}
 	return t.Format("on 2 January")
 }
 
 func newInvitesCmd(app *App) *cobra.Command {
-	c := &cobra.Command{Use: "invites", Short: "Manage invite links for new accounts", Args: noArgs}
+	c := &cobra.Command{
+		Use:   "invites",
+		Short: "Manage invite links for new accounts",
+		Example: `rexctl invites create --uses 5 --expires 2d --label "book club"
+rexctl invites list`,
+		Args: noArgs,
+	}
 
 	var uses int
 	var expires, label string
-	create := &cobra.Command{Use: "create", Short: "Create an invite link", Args: noArgs}
+	create := &cobra.Command{
+		Use:   "create",
+		Short: "Create an invite link",
+		Long:  "Create an invite link that lets people create an account while registration is set to invite. Send the link to the people you want to invite.",
+		Example: `rexctl invites create
+rexctl invites create --uses 0 --expires never
+rexctl invites create --uses 10 --expires 12h --label "launch party"`,
+		Args: noArgs,
+	}
 	create.Flags().IntVar(&uses, "uses", 1, "how many people can use the link, or 0 for no limit")
 	create.Flags().StringVar(&expires, "expires", "7d", "how long the link works, like 12h, 7d or never")
 	create.Flags().StringVar(&label, "label", "", "a note to help you recognise the link")
@@ -81,32 +95,11 @@ func newInvitesCmd(app *App) *cobra.Command {
 			return err
 		}
 		return adminWrite(c, app, func(ctx context.Context, api *adminapi.Client, _ *instance.Instance) error {
-			cfg, err := api.Config(ctx)
-			if err != nil {
-				return err
-			}
-			if !cfg.Registration.AdminRegistrationUrlsEnabled {
-				return ui.Refused("Invite links are turned off on your instance.", "Run rexctl registration set invite to turn them on.")
-			}
-			inv, err := api.CreateInvite(ctx, adminapi.InviteOptions{Uses: uses, Expires: ttl, Label: label})
-			if err != nil {
-				return err
-			}
-			who := "any number of people"
-			if uses > 0 {
-				who = plural(uses, "person", "people")
-			}
-			if inv.ExpiresAt == nil {
-				app.UI.OK("Created an invite for %s. It never expires.", who)
-			} else {
-				app.UI.OK("Created an invite for %s. It expires %s.", who, expiryWhen(*inv.ExpiresAt))
-			}
-			printLink(app, inv.URL)
-			return nil
+			return createInvite(ctx, app, api, adminapi.InviteOptions{Uses: uses, Expires: ttl, Label: label})
 		})
 	}
 
-	list := &cobra.Command{Use: "list", Short: "List invite links", Args: noArgs}
+	list := &cobra.Command{Use: "list", Short: "List invite links", Example: "rexctl invites list\nrexctl invites list --json", Args: noArgs}
 	app.jsonFlag(list)
 	list.RunE = func(c *cobra.Command, _ []string) error {
 		return adminRead(c, app, func(ctx context.Context, api *adminapi.Client, inst *instance.Instance) error {
@@ -134,7 +127,7 @@ func newInvitesCmd(app *App) *cobra.Command {
 		})
 	}
 
-	revoke := &cobra.Command{Use: "revoke <id>", Short: "Stop an invite link from working", Args: exactArgs("the invite ID")}
+	revoke := &cobra.Command{Use: "revoke <id>", Short: "Stop an invite link from working", Example: "rexctl invites revoke 1234567890", Args: exactArgs("the invite ID")}
 	revoke.RunE = func(c *cobra.Command, args []string) error {
 		return adminWrite(c, app, func(ctx context.Context, api *adminapi.Client, _ *instance.Instance) error {
 			if err := api.RevokeInvite(ctx, args[0]); err != nil {
@@ -147,4 +140,29 @@ func newInvitesCmd(app *App) *cobra.Command {
 
 	c.AddCommand(create, list, revoke)
 	return c
+}
+
+func createInvite(ctx context.Context, app *App, api *adminapi.Client, opts adminapi.InviteOptions) error {
+	cfg, err := api.Config(ctx)
+	if err != nil {
+		return err
+	}
+	if !cfg.Registration.AdminRegistrationUrlsEnabled {
+		return ui.Refused("Invite links are turned off on your instance.", "Run rexctl registration set invite to turn them on.")
+	}
+	inv, err := api.CreateInvite(ctx, opts)
+	if err != nil {
+		return err
+	}
+	who := "any number of people"
+	if opts.Uses > 0 {
+		who = plural(opts.Uses, "person", "people")
+	}
+	if inv.ExpiresAt == nil {
+		app.UI.OK("Created an invite for %s. It never expires.", who)
+	} else {
+		app.UI.OK("Created an invite for %s. It expires %s.", who, expiryWhen(*inv.ExpiresAt))
+	}
+	printLink(app, inv.URL)
+	return nil
 }

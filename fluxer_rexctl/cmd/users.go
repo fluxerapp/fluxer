@@ -77,38 +77,71 @@ func userStatus(u adminapi.User) string {
 	return strings.Join(parts, ", ")
 }
 
+func listUsers(c *cobra.Command, app *App, search string, admins bool, limit int) error {
+	return adminRead(c, app, func(ctx context.Context, api *adminapi.Client, _ *instance.Instance) error {
+		users, total, err := api.ListUsers(ctx, search, admins, limit)
+		if err != nil {
+			return err
+		}
+		if app.Flags.JSON {
+			return app.UI.JSON(users)
+		}
+		if len(users) == 0 {
+			app.UI.Info("No accounts match.")
+			return nil
+		}
+		rows := make([][]string, 0, len(users))
+		for _, u := range users {
+			rows = append(rows, []string{u.Username, u.Email, u.ID, shortDate(u.CreatedAt), userStatus(u)})
+		}
+		app.UI.Table([]string{"Username", "Email", "ID", "Joined", "Status"}, rows)
+		switch {
+		case total <= len(users):
+		case admins:
+			app.UI.Info("Showing the first %s. Pass --limit 0 to list them all.", plural(len(users), "admin", "admins"))
+		default:
+			app.UI.Info("Showing %d of about %s. Pass --limit 0 to list them all, or --search to find one.", len(users), plural(total, "account", "accounts"))
+		}
+		return nil
+	})
+}
+
 func newUsersCmd(app *App) *cobra.Command {
-	c := &cobra.Command{Use: "users", Short: "Manage accounts on your instance", Args: noArgs}
+	c := &cobra.Command{
+		Use:   "users",
+		Short: "Manage accounts on your instance",
+		Example: `rexctl users list --search alice
+rexctl users reset-link alice
+rexctl users ban spammer --reason spam`,
+		Args: noArgs,
+	}
 
 	var search string
 	var admins bool
-	list := &cobra.Command{Use: "list", Short: "List accounts", Args: noArgs}
+	var limit int
+	list := &cobra.Command{
+		Use:   "list",
+		Short: "List accounts",
+		Example: `rexctl users list
+rexctl users list --search alice
+rexctl users list --admins --json`,
+		Args: noArgs,
+	}
 	list.Flags().StringVar(&search, "search", "", "only show accounts that match this text")
 	list.Flags().BoolVar(&admins, "admins", false, "only show admins")
+	list.Flags().IntVar(&limit, "limit", 50, "show at most this many accounts, or 0 for all. With --json it lists them all unless you pass --limit")
 	app.jsonFlag(list)
 	list.RunE = func(c *cobra.Command, _ []string) error {
-		return adminRead(c, app, func(ctx context.Context, api *adminapi.Client, _ *instance.Instance) error {
-			users, err := api.ListUsers(ctx, search, admins)
-			if err != nil {
-				return err
-			}
-			if app.Flags.JSON {
-				return app.UI.JSON(users)
-			}
-			if len(users) == 0 {
-				app.UI.Info("No accounts match.")
-				return nil
-			}
-			rows := make([][]string, 0, len(users))
-			for _, u := range users {
-				rows = append(rows, []string{u.Username, u.Email, u.ID, shortDate(u.CreatedAt), userStatus(u)})
-			}
-			app.UI.Table([]string{"Username", "Email", "ID", "Joined", "Status"}, rows)
-			return nil
-		})
+		if limit < 0 {
+			return ui.Usage("Pass --limit as 0 or more.")
+		}
+		if app.Flags.JSON && !flagSet(c, "limit") {
+			limit = 0
+		}
+		return listUsers(c, app, search, admins, limit)
 	}
 
-	show := &cobra.Command{Use: "show <user>", Short: "Show one account", Args: exactArgs(userArg)}
+	show := &cobra.Command{Use: "show <user>", Short: "Show one account", Example: "rexctl users show alice\nrexctl users show alice@example.com --json", Args: exactArgs(userArg)}
 	app.jsonFlag(show)
 	show.RunE = func(c *cobra.Command, args []string) error {
 		return adminRead(c, app, func(ctx context.Context, api *adminapi.Client, _ *instance.Instance) error {
@@ -150,7 +183,7 @@ func newUsersCmd(app *App) *cobra.Command {
 
 	var email string
 	var admin bool
-	create := &cobra.Command{Use: "create <username>", Short: "Create an account and print a link to set its password", Args: exactArgs("a username")}
+	create := &cobra.Command{Use: "create <username>", Short: "Create an account and print a password link", Example: "rexctl users create alice --email alice@example.com\nrexctl users create bob --admin", Args: exactArgs("a username")}
 	create.Flags().StringVar(&email, "email", "", "email address for the account")
 	create.Flags().BoolVar(&admin, "admin", false, "make the account an admin")
 	create.RunE = func(c *cobra.Command, args []string) error {
@@ -169,14 +202,14 @@ func newUsersCmd(app *App) *cobra.Command {
 				app.UI.OK("Created %s.", created.User.Username)
 			}
 			if created.ResetLink != "" {
-				app.UI.Info("Send them this link to set a password.")
+				app.UI.Info("%s", strings.TrimSpace("Send them this link to set a password. "+worksOnceUntil(created.ResetExpires)))
 				printLink(app, created.ResetLink)
 			}
 			return nil
 		})
 	}
 
-	resetLink := &cobra.Command{Use: "reset-link <user>", Short: "Print a link to set a new password", Args: exactArgs(userArg)}
+	resetLink := &cobra.Command{Use: "reset-link <user>", Short: "Print a link to set a new password", Example: "rexctl users reset-link alice", Args: exactArgs(userArg)}
 	resetLink.RunE = func(c *cobra.Command, args []string) error {
 		return adminWrite(c, app, func(ctx context.Context, api *adminapi.Client, _ *instance.Instance) error {
 			u, err := api.ResolveUser(ctx, args[0])
@@ -192,7 +225,7 @@ func newUsersCmd(app *App) *cobra.Command {
 				return err
 			}
 			if t, err := time.Parse(time.RFC3339, expires); err == nil {
-				app.UI.OK("Made a link for %s to set a new password. It works until %s.", u.Username, t.Local().Format("15:04 on 2 January"))
+				app.UI.OK("Made a link for %s to set a new password. %s", u.Username, worksOnceUntil(t))
 			} else {
 				app.UI.OK("Made a link for %s to set a new password.", u.Username)
 			}
@@ -201,7 +234,7 @@ func newUsersCmd(app *App) *cobra.Command {
 		})
 	}
 
-	signOut := &cobra.Command{Use: "sign-out <user>", Short: "Sign an account out everywhere", Args: exactArgs(userArg)}
+	signOut := &cobra.Command{Use: "sign-out <user>", Short: "Sign an account out everywhere", Example: "rexctl users sign-out alice", Args: exactArgs(userArg)}
 	signOut.RunE = func(c *cobra.Command, args []string) error {
 		return adminWrite(c, app, func(ctx context.Context, api *adminapi.Client, _ *instance.Instance) error {
 			u, err := api.ResolveUser(ctx, args[0])
@@ -221,7 +254,7 @@ func newUsersCmd(app *App) *cobra.Command {
 		})
 	}
 
-	disableMFA := &cobra.Command{Use: "disable-mfa <user>", Short: "Turn off two-factor authentication for an account", Args: exactArgs(userArg)}
+	disableMFA := &cobra.Command{Use: "disable-mfa <user>", Short: "Turn off two-factor authentication for an account", Example: "rexctl users disable-mfa alice", Args: exactArgs(userArg)}
 	disableMFA.RunE = func(c *cobra.Command, args []string) error {
 		return adminWrite(c, app, func(ctx context.Context, api *adminapi.Client, _ *instance.Instance) error {
 			u, err := api.ResolveUser(ctx, args[0])
@@ -242,7 +275,14 @@ func newUsersCmd(app *App) *cobra.Command {
 
 	var reason string
 	var deleteMessages bool
-	ban := &cobra.Command{Use: "ban <user>", Short: "Ban an account", Args: exactArgs(userArg)}
+	ban := &cobra.Command{
+		Use:   "ban <user>",
+		Short: "Ban an account",
+		Long:  "Ban an account so it can't sign in. With --delete-messages, Fluxer also deletes everything the account posted, in the background.",
+		Example: `rexctl users ban spammer --reason spam
+rexctl users ban spammer --reason spam --delete-messages --yes`,
+		Args: exactArgs(userArg),
+	}
 	ban.Flags().StringVar(&reason, "reason", "", "why you're banning them, one of "+ui.JoinOr(adminapi.BanReasonNames()))
 	ban.Flags().BoolVar(&deleteMessages, "delete-messages", false, "also delete their messages")
 	ban.RunE = func(c *cobra.Command, args []string) error {
@@ -286,7 +326,8 @@ func newUsersCmd(app *App) *cobra.Command {
 				return err
 			}
 			if !ok {
-				return ui.Refused(fmt.Sprintf("Didn't ban %s.", u.Username), "")
+				app.UI.Info("Nothing changed.")
+				return nil
 			}
 			if err := api.Ban(ctx, u.ID, why, ""); err != nil {
 				return err
@@ -309,7 +350,7 @@ func newUsersCmd(app *App) *cobra.Command {
 		})
 	}
 
-	unban := &cobra.Command{Use: "unban <user>", Short: "Lift a ban", Args: exactArgs(userArg)}
+	unban := &cobra.Command{Use: "unban <user>", Short: "Lift a ban", Example: "rexctl users unban alice", Args: exactArgs(userArg)}
 	unban.RunE = func(c *cobra.Command, args []string) error {
 		return adminWrite(c, app, func(ctx context.Context, api *adminapi.Client, _ *instance.Instance) error {
 			u, err := api.ResolveUser(ctx, args[0])
@@ -329,7 +370,7 @@ func newUsersCmd(app *App) *cobra.Command {
 	}
 
 	var confirm string
-	del := &cobra.Command{Use: "delete <user>", Short: "Delete an account and its data", Args: exactArgs(userArg)}
+	del := &cobra.Command{Use: "delete <user>", Short: "Delete an account and its data", Example: "rexctl users delete alice\nrexctl users delete alice --confirm chat.example.com", Args: exactArgs(userArg)}
 	confirmFlag(del, &confirm)
 	del.RunE = func(c *cobra.Command, args []string) error {
 		return adminWrite(c, app, func(ctx context.Context, api *adminapi.Client, inst *instance.Instance) error {
@@ -362,4 +403,11 @@ func newUsersCmd(app *App) *cobra.Command {
 
 	c.AddCommand(list, show, create, resetLink, signOut, disableMFA, ban, unban, del)
 	return c
+}
+
+func worksOnceUntil(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+	return "It works once, until " + t.Local().Format("15:04 MST on 2 January") + "."
 }

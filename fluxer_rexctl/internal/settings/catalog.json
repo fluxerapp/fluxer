@@ -1,0 +1,4649 @@
+[
+  {
+    "name": "DISCOVERY_REFRESH_INTERVAL_MS",
+    "default": "5000",
+    "readers": [
+      "app-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_ACCOUNT_IDENTITY",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64",
+    "readers": [
+      "unfurl"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_ADMIN_BASE_PATH",
+    "default": "/admin",
+    "readers": [
+      "admin",
+      "api",
+      "edge",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_ADMIN_ENDPOINT",
+    "default": "${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}}${FLUXER_ADMIN_BASE_PATH:-/admin}",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_ADMIN_OAUTH_CLIENT_SECRET",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_ADMIN_SECRET_KEY_BASE",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_ADMIN_SSO_CLIENT_ID",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_ADMIN_SSO_CLIENT_SECRET",
+    "readers": [
+      "admin"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_ADMIN_SSO_DISPLAY_NAME",
+    "readers": [
+      "admin"
+    ]
+  },
+  {
+    "name": "FLUXER_ADMIN_SSO_ISSUER",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_ADMIN_SSO_ONLY",
+    "readers": [
+      "admin"
+    ]
+  },
+  {
+    "name": "FLUXER_AGE_POLICY_ENABLED",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_AGE_POLICY_RESTRICTED_REGIONS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_API_CLIENT_ENDPOINT",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_API_DISCOVERY_PUBLIC_ENDPOINT",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_API_DONATION_PROXY_KEY",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_API_EMBEDDED_WORKER",
+    "default": "false",
+    "readers": [
+      "api"
+    ]
+  },
+  {
+    "name": "FLUXER_API_ENDPOINT",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_API_HEADERS_TIMEOUT_MS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_API_IP_BAN_EXEMPT_IPS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_API_MAX_CONCURRENT_FORM_UPLOADS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_API_MAX_INFLIGHT_REQUESTS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_API_NODE_HEAP_MB",
+    "sized": "640",
+    "readers": [
+      "api"
+    ]
+  },
+  {
+    "name": "FLUXER_API_NODE_OPTIONS",
+    "readers": [
+      "api"
+    ]
+  },
+  {
+    "name": "FLUXER_API_POSTGRES_MAX_CONNECTIONS",
+    "default": "25",
+    "sized": "15",
+    "readers": [
+      "api"
+    ]
+  },
+  {
+    "name": "FLUXER_API_PRESIGNED_ATTACHMENT_UPLOADS_ENABLED",
+    "default": "true",
+    "readers": [
+      "api"
+    ]
+  },
+  {
+    "name": "FLUXER_API_PRESIGNED_HARVEST_DOWNLOADS_ENABLED",
+    "default": "false",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_API_REQUEST_TIMEOUT_MS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_API_STORAGE_CHANGE_FEED_ENABLED",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_API_STORAGE_CHANGE_FEED_SKIP_BUCKETS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_API_STORAGE_CHANGE_FEED_STREAM",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_API_TRUSTED_CALLERS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_API_UNFURL_IGNORED_HOSTS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_API_WORKER_LANE_CONCURRENCY_OVERRIDES",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_APP_ENDPOINT",
+    "default": "${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}}",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_APP_FAVICON_DARK_URL",
+    "readers": [
+      "admin",
+      "api",
+      "app-proxy",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_APP_FAVICON_URL",
+    "readers": [
+      "admin",
+      "api",
+      "app-proxy",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_APP_HEALTHCHECK_RETRIES",
+    "default": "30",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_APP_HEALTHCHECK_START_PERIOD",
+    "default": "90s",
+    "readers": [
+      "api",
+      "gateway"
+    ]
+  },
+  {
+    "name": "FLUXER_APP_ICON_URL",
+    "readers": [
+      "admin",
+      "api",
+      "app-proxy",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_APP_LOGO_URL",
+    "readers": [
+      "admin",
+      "api",
+      "app-proxy",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_APP_ORIGIN_ALIASES",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_APP_PRODUCT_NAME",
+    "readers": [
+      "admin",
+      "api",
+      "app-proxy",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_APP_PROXY_HEALTHCHECK_INTERVAL",
+    "default": "30s",
+    "readers": [
+      "app-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_APP_PROXY_INDEX_UPSTREAM_URL",
+    "readers": [
+      "app-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_APP_PROXY_MANIFEST_SCOPE_EXTENSIONS",
+    "readers": [
+      "app-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_APP_PROXY_SAME_ORIGIN_HOSTS",
+    "readers": [
+      "app-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_APP_SIGN_IN_BACKDROP_URL",
+    "readers": [
+      "admin",
+      "api",
+      "app-proxy",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_APP_STATUS_PAGE_INCIDENT_HISTORY_URL",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_APP_STATUS_PAGE_URL",
+    "readers": [
+      "admin",
+      "api",
+      "app-proxy",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_APP_SYMBOL_URL",
+    "readers": [
+      "admin",
+      "api",
+      "app-proxy",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_APP_THEME_COLOR",
+    "readers": [
+      "admin",
+      "api",
+      "app-proxy",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_APP_WORDMARK_URL",
+    "readers": [
+      "admin",
+      "api",
+      "app-proxy",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_AUTH_BLUESKY_CLIENT_NAME",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_AUTH_BLUESKY_CLIENT_URI",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_AUTH_BLUESKY_ENABLED",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_AUTH_BLUESKY_KEYS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_AUTH_BLUESKY_LOGO_URI",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_AUTH_BLUESKY_POLICY_URI",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_AUTH_BLUESKY_TOS_URI",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_AUTO_JOIN_INVITE_CODE",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_BACKUP_HOUR",
+    "default": "3",
+    "readers": [
+      "backups"
+    ]
+  },
+  {
+    "name": "FLUXER_BACKUP_KEEP",
+    "default": "7",
+    "readers": [
+      "backups"
+    ]
+  },
+  {
+    "name": "FLUXER_BACKUP_ON_UPGRADE",
+    "default": "true",
+    "readers": [
+      "backups"
+    ]
+  },
+  {
+    "name": "FLUXER_BACKUP_SCHEDULE",
+    "default": "off",
+    "readers": [
+      "backups"
+    ]
+  },
+  {
+    "name": "FLUXER_BLOCKLIST_FEEDS_ENABLED",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_BREACHED_PASSWORD_CHECK_ENABLED",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_CACHE_PURGE_ADAPTER",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_CACHE_PURGE_CONTROLLER_ENDPOINT",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_CACHE_PURGE_CONTROLLER_TIMEOUT_MS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_CACHE_PURGE_CONTROLLER_TOKEN",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_CACHE_PURGE_HTTP_ENDPOINT",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_CACHE_PURGE_HTTP_TIMEOUT_MS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_CACHE_PURGE_HTTP_TOKEN",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_CADDY_SITE_ADDRESS",
+    "default": "${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}",
+    "readers": [
+      "edge"
+    ]
+  },
+  {
+    "name": "FLUXER_CLAMAV_ENABLED",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_CLAMAV_FAIL_OPEN",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_CLAMAV_HOST",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_CLAMAV_PORT",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_CLIENT_IP_HEADER_NAME",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_CONNECTION_INITIATION_SECRET",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_CSP_EXTRA_CONNECT_SRC",
+    "readers": [
+      "app-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_CSP_EXTRA_DEFAULT_SRC",
+    "readers": [
+      "app-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_CSP_EXTRA_FONT_SRC",
+    "readers": [
+      "app-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_CSP_EXTRA_FRAME_SRC",
+    "readers": [
+      "app-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_CSP_EXTRA_IMG_SRC",
+    "readers": [
+      "app-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_CSP_EXTRA_MANIFEST_SRC",
+    "readers": [
+      "app-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_CSP_EXTRA_MEDIA_SRC",
+    "readers": [
+      "app-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_CSP_EXTRA_SCRIPT_SRC",
+    "readers": [
+      "app-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_CSP_EXTRA_STYLE_SRC",
+    "readers": [
+      "app-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_CSP_EXTRA_WORKER_SRC",
+    "readers": [
+      "app-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_CSP_REPORT_URI",
+    "readers": [
+      "app-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_DELETION_GRACE_PERIOD_HOURS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_DISCOVERY_ENABLED",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_DISCOVERY_MIN_MEMBER_COUNT",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_DOMAIN",
+    "readers": [
+      "admin",
+      "api",
+      "edge",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_EDGE_ACME_CA",
+    "readers": [
+      "edge"
+    ]
+  },
+  {
+    "name": "FLUXER_EDGE_ACME_CA_ROOT",
+    "readers": [
+      "edge"
+    ]
+  },
+  {
+    "name": "FLUXER_EDGE_BIND",
+    "default": "127.0.0.1:8080",
+    "readers": [
+      "edge"
+    ]
+  },
+  {
+    "name": "FLUXER_EDGE_ENCODE",
+    "default": "zstd gzip",
+    "readers": [
+      "edge"
+    ]
+  },
+  {
+    "name": "FLUXER_EDGE_GLOBAL_OPTIONS",
+    "readers": [
+      "edge"
+    ]
+  },
+  {
+    "name": "FLUXER_EDGE_LISTEN_ADDRESS",
+    "readers": [
+      "edge"
+    ]
+  },
+  {
+    "name": "FLUXER_EDGE_PROTOCOLS",
+    "default": "h1 h2 h3",
+    "readers": [
+      "edge"
+    ]
+  },
+  {
+    "name": "FLUXER_EDGE_SITE_ADDRESS",
+    "default": "${FLUXER_CADDY_SITE_ADDRESS:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}}",
+    "readers": [
+      "edge"
+    ]
+  },
+  {
+    "name": "FLUXER_EDGE_TLS",
+    "readers": [
+      "edge"
+    ]
+  },
+  {
+    "name": "FLUXER_EDGE_TRUSTED_PROXIES",
+    "default": "127.0.0.1/32",
+    "readers": [
+      "edge"
+    ]
+  },
+  {
+    "name": "FLUXER_EMAIL_APP_BASE_URL",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_EMAIL_DELIVERY",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_EMAIL_ENABLED",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_EMAIL_FALLBACK_DOMAINS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_EMAIL_FALLBACK_SMTP_HEADERS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_EMAIL_FALLBACK_SMTP_HOST",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_EMAIL_FALLBACK_SMTP_PASSWORD",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_EMAIL_FALLBACK_SMTP_PORT",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_EMAIL_FALLBACK_SMTP_TLS_MODE",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_EMAIL_FALLBACK_SMTP_USERNAME",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_EMAIL_FROM_EMAIL",
+    "default": "noreply@${FLUXER_DOMAIN:-}",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_EMAIL_FROM_NAME",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_EMAIL_PROVIDER",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_EMAIL_REPLY_TO_EMAIL",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_EMAIL_SMTP_HOST",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_EMAIL_SMTP_PASSWORD",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_EMAIL_SMTP_PORT",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_EMAIL_SMTP_SECURE",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_EMAIL_SMTP_TLS_MODE",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_EMAIL_SMTP_USERNAME",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_EMAIL_WEBHOOK_SECRET",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_ERLANG_COOKIE",
+    "readers": [
+      "gateway"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS",
+    "readers": [
+      "gateway"
+    ]
+  },
+  {
+    "name": "FLUXER_ERLANG_DIRTY_IO_SCHEDULERS",
+    "readers": [
+      "gateway"
+    ]
+  },
+  {
+    "name": "FLUXER_ERLANG_SCHEDULERS",
+    "readers": [
+      "gateway"
+    ]
+  },
+  {
+    "name": "FLUXER_ERLANG_SCHEDULERS_MAX",
+    "readers": [
+      "gateway"
+    ]
+  },
+  {
+    "name": "FLUXER_ERLANG_SCHEDULERS_MIN",
+    "readers": [
+      "gateway"
+    ]
+  },
+  {
+    "name": "FLUXER_GATEWAY_ENDPOINT",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_GATEWAY_GUILD_VISITOR_SESSIONS_FLOOR",
+    "readers": [
+      "gateway"
+    ]
+  },
+  {
+    "name": "FLUXER_GATEWAY_GUILD_VISITOR_SESSIONS_MAX",
+    "readers": [
+      "gateway"
+    ]
+  },
+  {
+    "name": "FLUXER_GATEWAY_GUILD_VISITOR_SESSIONS_PER_IP",
+    "readers": [
+      "gateway"
+    ]
+  },
+  {
+    "name": "FLUXER_GATEWAY_GUILD_VISITOR_SESSIONS_PER_MEMBER",
+    "readers": [
+      "gateway"
+    ]
+  },
+  {
+    "name": "FLUXER_GATEWAY_GUILD_VISITOR_SESSIONS_PER_USER",
+    "readers": [
+      "gateway"
+    ]
+  },
+  {
+    "name": "FLUXER_GATEWAY_HTTP_FAILURE_THRESHOLD",
+    "readers": [
+      "gateway"
+    ]
+  },
+  {
+    "name": "FLUXER_GATEWAY_HTTP_RECOVERY_TIMEOUT_MS",
+    "readers": [
+      "gateway"
+    ]
+  },
+  {
+    "name": "FLUXER_GATEWAY_HTTP_RPC_MAX_CONCURRENCY",
+    "readers": [
+      "gateway"
+    ]
+  },
+  {
+    "name": "FLUXER_GATEWAY_LOGGER_LEVEL",
+    "readers": [
+      "gateway"
+    ]
+  },
+  {
+    "name": "FLUXER_GATEWAY_MEDIA_PROXY_ENDPOINT",
+    "default": "${FLUXER_MEDIA_ENDPOINT:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}}/media}",
+    "readers": [
+      "gateway"
+    ]
+  },
+  {
+    "name": "FLUXER_GATEWAY_NATS_RPC_MAX_HANDLERS",
+    "readers": [
+      "gateway"
+    ]
+  },
+  {
+    "name": "FLUXER_GATEWAY_PRESENCE_PUSH_BUFFER_MAX_BYTES",
+    "readers": [
+      "gateway"
+    ]
+  },
+  {
+    "name": "FLUXER_GATEWAY_PRESENCE_PUSH_BUFFER_MAX_ENTRIES",
+    "readers": [
+      "gateway"
+    ]
+  },
+  {
+    "name": "FLUXER_GATEWAY_PUSH_ENABLED",
+    "readers": [
+      "gateway"
+    ]
+  },
+  {
+    "name": "FLUXER_GATEWAY_PUSH_ENROLLED_CLEAR_NOTIFICATIONS_ENABLED",
+    "readers": [
+      "gateway"
+    ]
+  },
+  {
+    "name": "FLUXER_GATEWAY_PUSH_OUTBOX_REQUEST_TIMEOUT_MS",
+    "readers": [
+      "gateway"
+    ]
+  },
+  {
+    "name": "FLUXER_GATEWAY_RPC_AUTH_TOKEN",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_GATEWAY_STATIC_CDN_ENDPOINT",
+    "default": "${FLUXER_STATIC_CDN_ENDPOINT:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}}}",
+    "readers": [
+      "gateway"
+    ]
+  },
+  {
+    "name": "FLUXER_GATEWAY_ZSTD_WINDOW_LOG",
+    "readers": [
+      "gateway"
+    ]
+  },
+  {
+    "name": "FLUXER_GEOIP_DB_PATH",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_GIFS_SHARD_CACHE_MAX_BYTES",
+    "default": "134217728",
+    "sized": "67108864",
+    "readers": [
+      "gifs"
+    ]
+  },
+  {
+    "name": "FLUXER_GIFT_DOMAIN",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_GIFT_ENDPOINT",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_GIF_SERVICE_NATS_CLIENT_NAME",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_GIF_SERVICE_REGISTER_SHARE_TIMEOUT_MS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_GIF_SERVICE_TIMEOUT_MS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_HEALTHCHECK_INTERVAL",
+    "default": "10s",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "livekit",
+      "meilisearch",
+      "messages",
+      "postgres",
+      "push",
+      "seaweedfs",
+      "seaweedfs-init",
+      "snowflakes",
+      "unfurl",
+      "users",
+      "valkey"
+    ]
+  },
+  {
+    "name": "FLUXER_HEALTHCHECK_RETRIES",
+    "default": "10",
+    "readers": [
+      "app-proxy",
+      "livekit",
+      "media-proxy",
+      "meilisearch",
+      "postgres",
+      "seaweedfs-init",
+      "valkey"
+    ]
+  },
+  {
+    "name": "FLUXER_HEALTHCHECK_START_PERIOD",
+    "default": "60s",
+    "readers": [
+      "app-proxy",
+      "livekit",
+      "media-proxy",
+      "meilisearch",
+      "postgres",
+      "seaweedfs-init",
+      "valkey"
+    ]
+  },
+  {
+    "name": "FLUXER_HEALTHCHECK_TIMEOUT",
+    "default": "5s",
+    "readers": [
+      "admin",
+      "api",
+      "app-proxy",
+      "gateway",
+      "gifs",
+      "livekit",
+      "media-proxy",
+      "meilisearch",
+      "messages",
+      "postgres",
+      "push",
+      "seaweedfs",
+      "seaweedfs-init",
+      "snowflakes",
+      "unfurl",
+      "users",
+      "valkey"
+    ]
+  },
+  {
+    "name": "FLUXER_HTTPS_PORT",
+    "default": "443",
+    "readers": [
+      "edge"
+    ]
+  },
+  {
+    "name": "FLUXER_HTTP_PORT",
+    "default": "80",
+    "readers": [
+      "edge"
+    ]
+  },
+  {
+    "name": "FLUXER_INSTALL_METHOD",
+    "readers": [
+      "api",
+      "updates"
+    ]
+  },
+  {
+    "name": "FLUXER_INSTANCE_SETUP_CONFIGURED",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_INVITE_DOMAIN",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_INVITE_ENDPOINT",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_IP_BAN_REFRESH_INTERVAL_MS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_KLIPY_API_KEY",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_KV_MODE",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_KV_POSTGRES_MAX_BYTES",
+    "sized": "536870912",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_KV_POSTGRES_MAX_CONNECTIONS",
+    "sized": "15",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_KV_URL",
+    "default": "redis://valkey:6379/0",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_LIVEKIT_BUNDLED",
+    "default": "true",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_LIVEKIT_DEFAULT_REGION",
+    "default": "{\"id\":\"default\",\"name\":\"Default\",\"emoji\":\"🌍\",\"latitude\":0,\"longitude\":0}",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_LIVEKIT_ENABLED",
+    "default": "true",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_LIVEKIT_GOMEMLIMIT",
+    "default": "435MiB",
+    "sized": "272MiB",
+    "readers": [
+      "livekit"
+    ]
+  },
+  {
+    "name": "FLUXER_LIVEKIT_INTERNAL_URL",
+    "default": "http://livekit:7880",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_LIVEKIT_LOG_LEVEL",
+    "default": "info",
+    "readers": [
+      "livekit"
+    ]
+  },
+  {
+    "name": "FLUXER_LIVEKIT_NODE_IP",
+    "readers": [
+      "livekit"
+    ]
+  },
+  {
+    "name": "FLUXER_LIVEKIT_STUN_PRIMARY",
+    "default": "stun.l.google.com:19302",
+    "readers": [
+      "livekit"
+    ]
+  },
+  {
+    "name": "FLUXER_LIVEKIT_STUN_SECONDARY",
+    "default": "stun1.l.google.com:19302",
+    "readers": [
+      "livekit"
+    ]
+  },
+  {
+    "name": "FLUXER_LIVEKIT_TCP_PORT",
+    "default": "7881",
+    "readers": [
+      "livekit"
+    ]
+  },
+  {
+    "name": "FLUXER_LIVEKIT_TURN_SERVERS",
+    "default": "[]",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "livekit",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_LIVEKIT_UDP_PORT",
+    "default": "7882",
+    "readers": [
+      "livekit"
+    ]
+  },
+  {
+    "name": "FLUXER_LIVEKIT_URL",
+    "default": "${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}:${FLUXER_PUBLIC_PORT:-443}}/livekit",
+    "readers": [
+      "admin",
+      "api",
+      "app-proxy",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_LIVEKIT_USE_EXTERNAL_IP",
+    "default": "true",
+    "readers": [
+      "livekit"
+    ]
+  },
+  {
+    "name": "FLUXER_MALLOC_ARENA_MAX",
+    "default": "2",
+    "per_cpu": true,
+    "readers": [
+      "admin",
+      "gifs",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_MARKETING_ENDPOINT",
+    "default": "${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}}",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_ENDPOINT",
+    "default": "${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}}/media",
+    "readers": [
+      "admin",
+      "api",
+      "app-proxy",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE",
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64",
+    "readers": [
+      "api",
+      "media-proxy"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_CORS_ALLOWED_ORIGINS",
+    "default": "${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}:${FLUXER_PUBLIC_PORT:-443}}",
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_CORS_MODE",
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_HEALTHCHECK_INTERVAL",
+    "default": "30s",
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_MAX_ENCODE_DURATION_MS",
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_MAX_ENCODE_FRAMES",
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_MAX_NATIVE_TRANSFORMS",
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_NSFW_THRESHOLD",
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT",
+    "default": "${FLUXER_MEDIA_ENDPOINT:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}}/media}",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_READ_ONLY",
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_SECRET_KEY",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_SHUTDOWN_GRACE_MS",
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_SOCKET_IO_TIMEOUT_MS",
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_TOKIO_WORKER_THREADS",
+    "default": "4",
+    "per_cpu": true,
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_TRANSFORM_CACHE_BYTES",
+    "sized": "67108864",
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_TRANSFORM_CACHE_MAX_ENTRY_BYTES",
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_TRANSFORM_CACHE_TTL_MS",
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_TRANSFORM_TIMEOUT_MS",
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_BUFFERED_RETRY_BYTES",
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_BUFFERED_RETRY_TOTAL_BYTES",
+    "sized": "67108864",
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_ENDPOINT",
+    "default": "${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}}/media",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_KEEP_DIRECT_COUNTRIES",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_S3_TIMEOUT_MS",
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_CHUNK_BYTES",
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_DIR",
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES",
+    "default": "2147483648",
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_TOKEN_TTL_SECS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_MEDIA_PROXY_WORKER_QUEUE_CAPACITY",
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_MEILISEARCH_ENV",
+    "default": "production",
+    "readers": [
+      "meilisearch"
+    ]
+  },
+  {
+    "name": "FLUXER_MEILISEARCH_LOG_LEVEL",
+    "default": "WARN",
+    "readers": [
+      "meilisearch"
+    ]
+  },
+  {
+    "name": "FLUXER_MEILISEARCH_MAX_INDEXING_MEMORY",
+    "default": "256mb",
+    "sized": "128mb",
+    "readers": [
+      "meilisearch"
+    ]
+  },
+  {
+    "name": "FLUXER_MEILISEARCH_MAX_INDEXING_THREADS",
+    "default": "2",
+    "sized": "1",
+    "readers": [
+      "meilisearch"
+    ]
+  },
+  {
+    "name": "FLUXER_MEILISEARCH_NO_ANALYTICS",
+    "default": "true",
+    "readers": [
+      "meilisearch"
+    ]
+  },
+  {
+    "name": "FLUXER_MESSAGES_POSTGRES_MAX_CONNECTIONS",
+    "default": "20",
+    "sized": "4",
+    "readers": [
+      "messages"
+    ]
+  },
+  {
+    "name": "FLUXER_NATS_AUTH_TOKEN",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_NATS_GOMEMLIMIT",
+    "default": "200MiB",
+    "readers": [
+      "nats"
+    ]
+  },
+  {
+    "name": "FLUXER_NATS_JETSTREAM_URL",
+    "default": "${FLUXER_NATS_URL:-nats://nats:4222}",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_NATS_MAX_FILE_STORE",
+    "default": "10GB",
+    "readers": [
+      "nats"
+    ]
+  },
+  {
+    "name": "FLUXER_NATS_MAX_MEMORY_STORE",
+    "default": "64MB",
+    "readers": [
+      "nats"
+    ]
+  },
+  {
+    "name": "FLUXER_NATS_URL",
+    "default": "nats://nats:4222",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_NODE_EXTRA_CA_CERTS",
+    "default": "/etc/ssl/certs/ca-certificates.crt",
+    "readers": [
+      "api"
+    ]
+  },
+  {
+    "name": "FLUXER_NSFW_SERVICE_ENDPOINT",
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS",
+    "default": "${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}}",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_PASSKEY_RP_ID",
+    "default": "${FLUXER_DOMAIN:-}",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_PASSKEY_RP_NAME",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_AUTOVACUUM_ANALYZE_SCALE_FACTOR",
+    "default": "0.02",
+    "readers": [
+      "postgres"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_AUTOVACUUM_MAX_WORKERS",
+    "default": "3",
+    "readers": [
+      "postgres"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_AUTOVACUUM_VACUUM_COST_LIMIT",
+    "default": "2000",
+    "readers": [
+      "postgres"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_AUTOVACUUM_VACUUM_SCALE_FACTOR",
+    "default": "0.05",
+    "readers": [
+      "postgres"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_AUTOVACUUM_WORK_MEM",
+    "default": "128MB",
+    "readers": [
+      "postgres"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_BGWRITER_DELAY",
+    "default": "50ms",
+    "readers": [
+      "postgres"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_BGWRITER_LRU_MAXPAGES",
+    "default": "1000",
+    "readers": [
+      "postgres"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_CHECKPOINT_COMPLETION_TARGET",
+    "default": "0.9",
+    "readers": [
+      "postgres"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_DATABASE",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "postgres",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_DEFAULT_STATISTICS_TARGET",
+    "default": "200",
+    "readers": [
+      "postgres"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_EFFECTIVE_CACHE_SIZE",
+    "default": "2GB",
+    "sized": "768MB",
+    "readers": [
+      "postgres"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_EFFECTIVE_IO_CONCURRENCY",
+    "default": "200",
+    "readers": [
+      "postgres"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_HOST",
+    "default": "postgres",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_JIT",
+    "default": "off",
+    "readers": [
+      "postgres"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_KV_TABLE",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_MAINTENANCE_WORK_MEM",
+    "default": "256MB",
+    "readers": [
+      "postgres"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_MAX_PARALLEL_WORKERS",
+    "default": "8",
+    "readers": [
+      "postgres"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_MAX_PARALLEL_WORKERS_PER_GATHER",
+    "default": "2",
+    "readers": [
+      "postgres"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_MAX_WAL_SIZE",
+    "default": "2GB",
+    "readers": [
+      "postgres"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_MIN_WAL_SIZE",
+    "default": "80MB",
+    "readers": [
+      "postgres"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_PORT",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_PREPARED_STATEMENTS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_RANDOM_PAGE_COST",
+    "default": "1.1",
+    "readers": [
+      "postgres"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_SERVER_MAX_CONNECTIONS",
+    "default": "150",
+    "readers": [
+      "postgres"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_SHARED_BUFFERS",
+    "default": "512MB",
+    "sized": "192MB",
+    "readers": [
+      "postgres"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_SHARED_PRELOAD_LIBRARIES",
+    "default": "pg_stat_statements",
+    "readers": [
+      "postgres"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_SSL",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_SSL_CA",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_TRACK_IO_TIMING",
+    "default": "on",
+    "readers": [
+      "postgres"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_URL",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_USERNAME",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "postgres",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_WAL_BUFFERS",
+    "default": "16MB",
+    "readers": [
+      "postgres"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_WAL_COMPRESSION",
+    "default": "zstd",
+    "readers": [
+      "postgres"
+    ]
+  },
+  {
+    "name": "FLUXER_POSTGRES_WORK_MEM",
+    "default": "8MB",
+    "sized": "4MB",
+    "readers": [
+      "postgres"
+    ]
+  },
+  {
+    "name": "FLUXER_PROFILE_PSEUDONYM_SECRET",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_PUBLIC_ORIGIN",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_PUBLIC_PORT",
+    "default": "443",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_PUBLIC_SCHEME",
+    "default": "https",
+    "readers": [
+      "admin",
+      "api",
+      "edge",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_PUSH_APNS_APPS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_PUSH_APNS_DEFAULT_ENVIRONMENT",
+    "readers": [
+      "push"
+    ]
+  },
+  {
+    "name": "FLUXER_PUSH_APNS_ENABLED",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_PUSH_APNS_KEY_ID",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_PUSH_APNS_PRIVATE_KEY",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_PUSH_APNS_PRIVATE_KEY_PATH",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_PUSH_APNS_TEAM_ID",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_PUSH_FCM_APPS",
+    "readers": [
+      "push"
+    ]
+  },
+  {
+    "name": "FLUXER_PUSH_FCM_CLIENT_EMAIL",
+    "readers": [
+      "push"
+    ]
+  },
+  {
+    "name": "FLUXER_PUSH_FCM_ENABLED",
+    "readers": [
+      "push"
+    ]
+  },
+  {
+    "name": "FLUXER_PUSH_FCM_PRIVATE_KEY",
+    "readers": [
+      "push"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_PUSH_FCM_PRIVATE_KEY_PATH",
+    "readers": [
+      "push"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_PUSH_FCM_PROJECT_ID",
+    "readers": [
+      "push"
+    ]
+  },
+  {
+    "name": "FLUXER_PUSH_FCM_SERVICE_ACCOUNT_JSON_PATH",
+    "readers": [
+      "push"
+    ]
+  },
+  {
+    "name": "FLUXER_PUSH_FCM_TOKEN_URI",
+    "readers": [
+      "push"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_PUSH_SERVICE_APNS_BASE_URL",
+    "readers": [
+      "push"
+    ]
+  },
+  {
+    "name": "FLUXER_PUSH_SERVICE_FCM_BASE_URL",
+    "readers": [
+      "push"
+    ]
+  },
+  {
+    "name": "FLUXER_PUSH_SERVICE_MANAGED_RELAY_HOSTS",
+    "readers": [
+      "push"
+    ]
+  },
+  {
+    "name": "FLUXER_PUSH_SERVICE_OWN_RELAY_HOSTS",
+    "readers": [
+      "push"
+    ]
+  },
+  {
+    "name": "FLUXER_PUSH_SERVICE_PRIVATE_HOSTS",
+    "readers": [
+      "push"
+    ]
+  },
+  {
+    "name": "FLUXER_PUSH_SERVICE_QUEUE_CAPACITY",
+    "readers": [
+      "push"
+    ]
+  },
+  {
+    "name": "FLUXER_PUSH_SERVICE_RELAY_CONSENT_ACCEPTED",
+    "readers": [
+      "push"
+    ]
+  },
+  {
+    "name": "FLUXER_PUSH_SERVICE_SEND_CONCURRENCY",
+    "readers": [
+      "push"
+    ]
+  },
+  {
+    "name": "FLUXER_REPORT_RETENTION_DAYS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_REPORT_RETENTION_DRY_RUN",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_RESTART_POLICY",
+    "default": "unless-stopped",
+    "readers": [
+      "fluxerd"
+    ]
+  },
+  {
+    "name": "FLUXER_RUST_PROCESS",
+    "readers": [
+      "fluxerd"
+    ]
+  },
+  {
+    "name": "FLUXER_RUST_SERVER_TOKIO_WORKER_THREADS",
+    "default": "2",
+    "per_cpu": true,
+    "readers": [
+      "rust"
+    ]
+  },
+  {
+    "name": "FLUXER_S3_ACCESS_KEY",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "seaweedfs-init",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_S3_BUCKET_CDN",
+    "default": "fluxer",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "seaweedfs-init",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_S3_BUCKET_HARVESTS",
+    "default": "fluxer-harvests",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "seaweedfs-init",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_S3_BUCKET_REPORTS",
+    "default": "fluxer-reports",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "seaweedfs-init",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_S3_BUCKET_UPLOADS",
+    "default": "fluxer-uploads",
+    "readers": [
+      "admin",
+      "api",
+      "app-proxy",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "seaweedfs-init",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_S3_ENDPOINT",
+    "default": "http://seaweedfs:8333",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_S3_FORCE_PATH_STYLE",
+    "default": "true",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_S3_PUBLIC_ENDPOINT",
+    "default": "${FLUXER_S3_ENDPOINT:-http://seaweedfs:8333}",
+    "readers": [
+      "admin",
+      "api",
+      "app-proxy",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_S3_READ_BUCKET",
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_S3_READ_BUCKET_STYLE",
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_S3_READ_ENDPOINT",
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_S3_READ_SIGNED",
+    "default": "true",
+    "readers": [
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_S3_REGION",
+    "default": "us-east-1",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_S3_SECRET_KEY",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "seaweedfs-init",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_S3_SESSION_TOKEN",
+    "readers": [
+      "media-proxy"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_SEARCH_ENGINE",
+    "default": "meilisearch",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_SEARCH_PASSWORD",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_SEARCH_TLS_REJECT_UNAUTHORIZED",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_SEARCH_URL",
+    "default": "http://meilisearch:7700",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_SEARCH_USERNAME",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_SEAWEEDFS_GARBAGE_THRESHOLD",
+    "default": "0.1",
+    "readers": [
+      "seaweedfs"
+    ]
+  },
+  {
+    "name": "FLUXER_SEAWEEDFS_GOMEMLIMIT",
+    "default": "1536MiB",
+    "sized": "380MiB",
+    "readers": [
+      "seaweedfs"
+    ]
+  },
+  {
+    "name": "FLUXER_SEAWEEDFS_HEALTHCHECK_RETRIES",
+    "default": "20",
+    "readers": [
+      "seaweedfs"
+    ]
+  },
+  {
+    "name": "FLUXER_SEAWEEDFS_HEALTHCHECK_START_PERIOD",
+    "default": "60s",
+    "readers": [
+      "seaweedfs"
+    ]
+  },
+  {
+    "name": "FLUXER_SEAWEEDFS_INIT_ATTEMPTS",
+    "default": "60",
+    "readers": [
+      "seaweedfs-init"
+    ]
+  },
+  {
+    "name": "FLUXER_SEAWEEDFS_S3_CONCURRENT_UPLOADS",
+    "default": "5",
+    "readers": [
+      "seaweedfs"
+    ]
+  },
+  {
+    "name": "FLUXER_SEAWEEDFS_TELEMETRY",
+    "default": "false",
+    "readers": [
+      "seaweedfs"
+    ]
+  },
+  {
+    "name": "FLUXER_SEAWEEDFS_UPLOADS_TTL",
+    "default": "1d",
+    "readers": [
+      "api",
+      "seaweedfs-init"
+    ]
+  },
+  {
+    "name": "FLUXER_SEAWEEDFS_VOLUME_GROWTH",
+    "default": "1",
+    "readers": [
+      "seaweedfs"
+    ]
+  },
+  {
+    "name": "FLUXER_SEAWEEDFS_VOLUME_MAX",
+    "default": "10000",
+    "readers": [
+      "seaweedfs"
+    ]
+  },
+  {
+    "name": "FLUXER_SEAWEEDFS_VOLUME_SIZE_LIMIT_MB",
+    "default": "1024",
+    "readers": [
+      "seaweedfs"
+    ]
+  },
+  {
+    "name": "FLUXER_SETUP_TOKEN",
+    "readers": [
+      "api"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_SNOWFLAKE_SERVICE_BATCH_SIZE",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_SNOWFLAKE_SERVICE_LOW_WATERMARK",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_SNOWFLAKE_SERVICE_MAX_BUFFER_AGE_MS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_SNOWFLAKE_SERVICE_NATS_CLIENT_NAME",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_SNOWFLAKE_SERVICE_REQUEST_TIMEOUT_MS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_SSO_ALLOWED_DOMAINS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_SSO_ALLOW_PRIVATE_ADDRESSES",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_SSO_AUTO_PROVISION",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_SSO_CLIENT_ID",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_SSO_CLIENT_SECRET",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_SSO_DISPLAY_NAME",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_SSO_ENABLED",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_SSO_ENFORCED",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_SSO_ISSUER",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_SSO_SCOPE",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_STATIC_CDN_DOMAIN",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_STATIC_CDN_ENDPOINT",
+    "readers": [
+      "admin",
+      "api",
+      "app-proxy",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_STORAGE_BACKEND",
+    "readers": [
+      "admin",
+      "api",
+      "fluxerd",
+      "media-proxy"
+    ]
+  },
+  {
+    "name": "FLUXER_STORAGE_READ_ONLY",
+    "readers": [
+      "api"
+    ]
+  },
+  {
+    "name": "FLUXER_STORAGE_UPLOADS_TTL",
+    "default": "1d",
+    "readers": [
+      "api"
+    ]
+  },
+  {
+    "name": "FLUXER_STRIPE_ENABLED",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_STRIPE_LEGACY_PRICES",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_STRIPE_PRICES",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_STRIPE_SECRET_KEY",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_STRIPE_WEBHOOK_SECRET",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_SUDO_MODE_SECRET",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_SVC_CACHE_MAX_ENTRIES",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_SVC_CACHE_TTL_MS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_SVC_HEALTHCHECK_START_PERIOD",
+    "default": "60s",
+    "readers": [
+      "admin",
+      "gifs",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_SVC_MAX_CONCURRENT_REQUESTS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_SVC_NATS_URL",
+    "default": "${FLUXER_NATS_URL:-nats://nats:4222}",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_TAG_STYLE",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_TOKIO_WORKER_THREADS",
+    "default": "2",
+    "per_cpu": true,
+    "readers": [
+      "admin",
+      "app-proxy",
+      "gifs",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_TRUST_CLIENT_IP_HEADER",
+    "default": "true",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_UPDATE_CHECK",
+    "default": "false",
+    "readers": [
+      "updates"
+    ]
+  },
+  {
+    "name": "FLUXER_UPDATE_CHECK_URL",
+    "default": "https://fluxer.dev/releases.json",
+    "readers": [
+      "updates"
+    ]
+  },
+  {
+    "name": "FLUXER_UPGRADE_COMMAND",
+    "readers": [
+      "updates"
+    ]
+  },
+  {
+    "name": "FLUXER_USERS_POSTGRES_MAX_CONNECTIONS",
+    "default": "20",
+    "sized": "4",
+    "readers": [
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_USERS_SERVICE_INFLIGHT_MAX_ENTRIES",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_USERS_SERVICE_NATS_CLIENT_NAME",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_USERS_SERVICE_TIMEOUT_MS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_VALKEY_APPENDFSYNC",
+    "default": "everysec",
+    "readers": [
+      "valkey"
+    ]
+  },
+  {
+    "name": "FLUXER_VALKEY_MAXMEMORY",
+    "default": "192mb",
+    "sized": "128mb",
+    "readers": [
+      "valkey"
+    ]
+  },
+  {
+    "name": "FLUXER_VALKEY_MAXMEMORY_POLICY",
+    "default": "noeviction",
+    "readers": [
+      "valkey"
+    ]
+  },
+  {
+    "name": "FLUXER_VALKEY_SAVE",
+    "readers": [
+      "valkey"
+    ]
+  },
+  {
+    "name": "FLUXER_VAPID_EMAIL",
+    "default": "admin@${FLUXER_DOMAIN:-}",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_VAPID_PRIVATE_KEY",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "FLUXER_VAPID_PUBLIC_KEY",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_VISIONARIES_GUILD_ID",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_VISIONARIES_GUILD_VISIONARY_ROLE_ID",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_VOICE_HEALTH_INTERVAL_MS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_VOICE_JOIN_ALLOW_PRIVATE_ENDPOINTS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_VOICE_P2P_STUN_URLS",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_VOICE_PARTICIPANT_SWEEP_DRY_RUN",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_VOICE_PARTICIPANT_SWEEP_ENABLED",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "FLUXER_YOUTUBE_API_KEY",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "HTTPS_PROXY",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "HTTP_PROXY",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "LIVEKIT_API_KEY",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "livekit",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "LIVEKIT_API_SECRET",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "livekit",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "LOGGER_LEVEL",
+    "readers": [
+      "gateway"
+    ]
+  },
+  {
+    "name": "LOG_LEVEL",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "MEILI_MASTER_KEY",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "meilisearch",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "NO_PROXY",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  },
+  {
+    "name": "POSTGRES_PASSWORD",
+    "readers": [
+      "admin",
+      "api",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "postgres",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ],
+    "secret": true
+  },
+  {
+    "name": "RUST_LOG",
+    "readers": [
+      "admin",
+      "api",
+      "app-proxy",
+      "gateway",
+      "gifs",
+      "media-proxy",
+      "messages",
+      "push",
+      "snowflakes",
+      "unfurl",
+      "users"
+    ]
+  }
+]

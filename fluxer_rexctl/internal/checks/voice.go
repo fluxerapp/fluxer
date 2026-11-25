@@ -17,7 +17,6 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
-	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/voice"
 )
@@ -43,44 +42,52 @@ func (e *Env) voiceServers() []instance.VoiceServer {
 	return e.Instance.State.Voice
 }
 
-func (e *Env) voiceProbeTarget(s instance.VoiceServer) (string, string) {
-	switch {
-	case s.Edge == voice.EdgeNone:
-		return voice.LocalBase(s.HTTPBind, s.HTTPPort), ""
-	case e.Instance.State.IsVoice():
-		return voice.HTTPBase(s.Endpoint), "127.0.0.1:443"
-	}
-	return voice.InstanceEdge(s.Endpoint, e.setting(settings.EdgeMode), e.value("FLUXER_HTTPS_PORT"), e.value("FLUXER_EDGE_BIND"), e.value(settings.EdgeListenVar))
-}
-
-func (e *Env) voiceProject(s instance.VoiceServer) *engine.Project {
-	return e.Engine.Named(s.Project, voice.ServerDir(e.Instance.Dir, s.ID))
-}
-
 func (e *Env) voiceLogs(ctx context.Context, s instance.VoiceServer, tail int) string {
+	if e.Native {
+		return e.nativeLogs(ctx, voice.NativeChild(s.ID), tail)
+	}
 	var buf bytes.Buffer
-	if err := e.voiceProject(s).Logs(ctx, engine.LogsOptions{Tail: tail, Stdout: &buf}, "livekit"); err != nil {
+	if err := deploy.VoiceProject(e.Engine, e.Instance, &s).Logs(ctx, engine.LogsOptions{Tail: tail, Stdout: &buf}, "livekit"); err != nil {
 		return ""
 	}
 	return buf.String()
 }
 
+func (e *Env) nativeLogs(ctx context.Context, child string, tail int) string {
+	var buf bytes.Buffer
+	if err := e.stack().Logs(ctx, engine.LogsOptions{Tail: tail, Stdout: &buf}, child); err != nil {
+		return ""
+	}
+	return buf.String()
+}
+
+func (e *Env) runsVoice() bool { return e.Engine != nil || e.Native && e.Instance != nil }
+
+func (e *Env) voiceServerUp(ctx context.Context, s instance.VoiceServer) bool {
+	if e.Native {
+		cs, err := e.containers(ctx)
+		return err == nil && slices.ContainsFunc(cs, func(c engine.Container) bool {
+			return c.Service == voice.NativeChild(s.ID) && c.State == "running" && (c.Health == "" || c.Health == "healthy")
+		})
+	}
+	cs, err := deploy.VoiceProject(e.Engine, e.Instance, &s).PS(ctx)
+	return err == nil && len(cs) > 0 && cs[0].State == "running" && (cs[0].Health == "" || cs[0].Health == "healthy")
+}
+
 func runVoiceServers(ctx context.Context, e *Env) Result {
 	servers := e.voiceServers()
-	if len(servers) == 0 || e.Engine == nil {
+	if len(servers) == 0 || !e.runsVoice() {
 		return skip("")
 	}
 	var bad []string
 	for _, s := range servers {
-		cs, err := e.voiceProject(s).PS(ctx)
-		healthy := err == nil && len(cs) > 0 && cs[0].State == "running" && (cs[0].Health == "" || cs[0].Health == "healthy")
-		if !healthy {
+		if !e.voiceServerUp(ctx, s) {
 			bad = append(bad, s.ID+" isn't running")
 			continue
 		}
-		base, dial := e.voiceProbeTarget(s)
+		base, dial := deploy.VoiceProbeTarget(e.Instance, &s)
 		if err := voice.ProbeThroughEdge(ctx, base, dial, true); err != nil {
-			bad = append(bad, s.ID+" doesn't answer through the edge")
+			bad = append(bad, s.ID+" doesn't respond through the edge")
 		}
 	}
 	if len(bad) > 0 {
@@ -89,9 +96,9 @@ func runVoiceServers(ctx context.Context, e *Env) Result {
 		return r
 	}
 	if len(servers) == 1 {
-		return pass("The voice server runs and answers.")
+		return pass("The voice server runs and responds.")
 	}
-	return pass(fmt.Sprintf("All %d voice servers run and answer.", len(servers)))
+	return pass(fmt.Sprintf("All %d voice servers run and respond.", len(servers)))
 }
 
 func runVoiceEndpoints(_ context.Context, e *Env) Result {
@@ -120,7 +127,7 @@ func runVoiceEndpoints(_ context.Context, e *Env) Result {
 
 func fixVoiceEndpoints(ctx context.Context, e *Env) error {
 	if e.Admin == nil {
-		return ErrNoFix
+		return errNoFix
 	}
 	origin := voice.WSOrigin(e.Instance.Origin())
 	var steps []host.Step
@@ -139,8 +146,11 @@ func fixVoiceEndpoints(ctx context.Context, e *Env) error {
 
 func runVoicePorts(ctx context.Context, e *Env) Result {
 	servers := e.voiceServers()
-	if len(servers) == 0 || e.Engine == nil {
+	if len(servers) == 0 || !e.runsVoice() {
 		return skip("")
+	}
+	if e.Native {
+		return runNativeVoicePorts(ctx, servers)
 	}
 	owners, err := e.Engine.PublishedHostPorts(ctx)
 	if err != nil {
@@ -184,9 +194,35 @@ func runVoicePorts(ctx context.Context, e *Env) Result {
 	return pass("Every voice port is published. Check that your provider's firewall lets them in too.")
 }
 
+func runNativeVoicePorts(ctx context.Context, servers []instance.VoiceServer) Result {
+	var problems []string
+	var ports []host.Port
+	for _, s := range servers {
+		for _, p := range []host.Port{{Number: s.TCPPort, Proto: "tcp"}, {Number: s.UDPPort, Proto: "udp"}} {
+			ports = append(ports, p)
+			if used, _, err := host.PortInUse(p.Proto, p.Number); err == nil && !used {
+				problems = append(problems, fmt.Sprintf("%s of %s isn't open", p, s.ID))
+			}
+		}
+	}
+	if fw, err := host.DetectFirewall(ctx); err == nil && fw != host.FirewallNone {
+		if closed, err := host.ClosedPorts(ctx, fw, ports); err == nil {
+			for _, p := range closed {
+				problems = append(problems, fmt.Sprintf("%s is closed in %s", p, fw))
+			}
+		}
+	}
+	if len(problems) > 0 {
+		r := fail(strings.Join(problems, ", ")+".", "Open the ports in the firewall on this machine and at your provider, and run rexctl voice status.")
+		r.Details = problems
+		return r
+	}
+	return pass("Every voice port is open on this machine. Check that your provider's firewall lets them in too.")
+}
+
 func runVoiceNodeIP(ctx context.Context, e *Env) Result {
 	servers := e.voiceServers()
-	if len(servers) == 0 || e.Engine == nil {
+	if len(servers) == 0 || !e.runsVoice() {
 		return skip("")
 	}
 	public4, err4 := host.PublicIPv4(ctx)
@@ -233,14 +269,18 @@ func runVoiceTLS(ctx context.Context, e *Env) Result {
 		case err != nil:
 			problems = append(problems, fmt.Sprintf("%s has no valid certificate (%v)", s.Endpoint, err))
 		case time.Until(exp) < 48*time.Hour:
-			problems = append(problems, fmt.Sprintf("the certificate of %s expires %s", s.Endpoint, exp.Local().Format("2 January 15:04")))
+			problems = append(problems, fmt.Sprintf("the certificate of %s expires %s", s.Endpoint, exp.Local().Format("2 January at 15:04 MST")))
 		}
 	}
 	if checked == 0 {
 		return skip("")
 	}
 	if len(problems) > 0 {
-		return fail(strings.Join(problems, ", ")+".", "Check that ports 80 and 443 are open to the internet. docker logs fluxer-voice-edge-edge-1 shows the ACME error.")
+		logs := "docker logs fluxer-voice-edge-edge-1"
+		if e.Instance.State.IsNative() || e.Instance.State.IsContainer() {
+			logs = "rexctl logs"
+		}
+		return fail(strings.Join(problems, ", ")+".", "Check that ports 80 and 443 are open to the internet. "+logs+" shows the ACME error.")
 	}
 	return pass("Voice certificates are valid for more than 2 days.")
 }
@@ -284,7 +324,7 @@ func runVoiceRegistration(ctx context.Context, e *Env) Result {
 
 func runVoiceWebhook(ctx context.Context, e *Env) Result {
 	servers := e.voiceServers()
-	if len(servers) == 0 || e.Engine == nil {
+	if len(servers) == 0 || !e.runsVoice() {
 		return skip("")
 	}
 	client := &voice.Client{HTTP: voiceHTTP}
@@ -308,7 +348,7 @@ func runVoiceWebhook(ctx context.Context, e *Env) Result {
 		}
 	}
 	if len(problems) > 0 {
-		fix := "Check that the webhook URL answers, and that no firewall or bot protection in front of the instance blocks it."
+		fix := "Check that the webhook URL responds, and that no firewall or bot protection in front of the instance blocks it."
 		if rejected {
 			fix = "Put the server's own secret back in the admin panel. It's FLUXER_VOICE_API_SECRET in voice/<id>/.env in " + e.Instance.Dir + "."
 		}
@@ -350,7 +390,7 @@ func webhookProblem(ctx context.Context, client *voice.Client, s instance.VoiceS
 	case rejected:
 		return fmt.Sprintf("%s rejects webhooks signed with the secret of %s", target, s.ID), webhookSecret
 	case status < 200 || status > 299:
-		return fmt.Sprintf("%s answers webhooks from %s with HTTP %d", target, s.ID, status), webhookDown
+		return fmt.Sprintf("%s gets webhooks from %s and returns HTTP %d", target, s.ID, status), webhookDown
 	}
 	return "", webhookOK
 }

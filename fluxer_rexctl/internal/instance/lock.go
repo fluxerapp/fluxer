@@ -22,7 +22,7 @@ func (i *Instance) Lock(ctx context.Context) (*Lock, error) {
 	if err := os.MkdirAll(i.StateDir(), 0o700); err != nil {
 		return nil, err
 	}
-	path := i.Path(StateDirName, LockFileName)
+	path := i.Path(StateDirName, lockFileName)
 	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0o600)
 	if err != nil {
 		return nil, err

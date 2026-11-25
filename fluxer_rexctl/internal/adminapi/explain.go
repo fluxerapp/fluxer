@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"slices"
 	"strings"
@@ -31,12 +32,14 @@ func Explain(err error) error {
 	var invalid *InvalidValueError
 	var banBlocks *BanBlocksDeletionError
 	switch {
-	case errors.Is(err, ErrSchemaMismatch):
+	case errors.Is(err, errSchemaMismatch):
 		return &ui.ExitError{Code: ui.ExitRefused, Msg: "This rexctl and the Fluxer running here don't match.", Fix: "Run rexctl upgrade.", Err: err}
-	case errors.Is(err, ErrNoFullReindex):
+	case errors.Is(err, errNoFullReindex):
 		return &ui.ExitError{Code: ui.ExitRefused, Msg: "The Fluxer release running here can't rebuild search in one go.", Fix: `Run rexctl upgrade, or use the "Reindex" buttons on the admin panel's search index page and "Refresh Channel Messages" on each community's page there.`, Err: err}
-	case errors.Is(err, ErrSearchOff):
+	case errors.Is(err, errSearchOff):
 		return &ui.ExitError{Code: ui.ExitFailed, Msg: "Search is turned off on this instance.", Fix: "Run rexctl doctor to see what's wrong.", Err: err}
+	case PermissionDenied(err):
+		return &ui.ExitError{Code: ui.ExitRefused, Msg: "Only root can connect to Fluxer on this machine.", Fix: "Run the command again with sudo.", Err: err}
 	case errors.Is(err, ErrNoRelay):
 		return &ui.ExitError{Code: ui.ExitRefused, Msg: "The Fluxer release running here can't take commands from rexctl.", Fix: "Run rexctl upgrade.", Err: err}
 	case errors.As(err, &relay):
@@ -56,7 +59,7 @@ func Explain(err error) error {
 	case errors.As(err, &pending):
 		return ui.Failed(fmt.Sprintf("Nobody waiting for approval has the ID %s.", pending.ID), "Run rexctl registration pending to see who is waiting.")
 	case errors.As(err, &unknown):
-		fix := "Run rexctl config list to see every setting."
+		fix := "Run rexctl config list --all to see every setting."
 		if len(unknown.Similar) > 0 && len(unknown.Similar) <= 3 {
 			fix = "Did you mean " + ui.JoinOr(unknown.Similar) + "?"
 		}
@@ -67,6 +70,10 @@ func Explain(err error) error {
 		return explainAPI(api)
 	}
 	return ui.Wrap(err, "Something went wrong talking to Fluxer.", "Run rexctl logs api to see why.")
+}
+
+func PermissionDenied(err error) bool {
+	return errors.Is(err, fs.ErrPermission)
 }
 
 func sentence(s string) string {
@@ -98,32 +105,32 @@ func explainAPI(e *APIError) error {
 	return &ui.ExitError{Code: ui.ExitFailed, Msg: msg, Fix: fieldFix(e.Fields), Err: e}
 }
 
-const SSOPrivateFix = "If the provider is on your own network, run rexctl config set sso.allow_private_addresses true, then try again."
+const ssoPrivateFix = "If the provider is on your own network, run rexctl config set sso.allow_private_addresses true, then try again."
 
-const SSOHostnameFix = "Check the hostname is spelled right and resolves from the Fluxer server."
+const ssoHostnameFix = "Check the hostname is spelled right and resolves from the Fluxer server."
 
-const SSODiscoveryFix = "Check sso.issuer with rexctl config get sso.issuer, or turn on Require SSO once the provider is back."
+const ssoDiscoveryFix = "Check sso.issuer with rexctl config get sso.issuer, or turn on Require SSO once the provider is back."
 
-const SSOIssuerRequiredFix = "Set it with rexctl config set sso.issuer <issuer URL>, or turn SSO off with rexctl config set sso.enabled false."
+const ssoIssuerRequiredFix = "Set it with rexctl config set sso.issuer <issuer URL>, or turn SSO off with rexctl config set sso.enabled false."
 
-const SSOIssuerChangeFix = "If it's the same provider at a new address, run rexctl config set sso.issuer <issuer URL> --migrate-identities. If it's a different provider, use --no-migrate-identities."
+const ssoIssuerChangeFix = "If it's the same provider at a new address, run rexctl config set sso.issuer <issuer URL> --migrate-identities. If it's a different provider, use --no-migrate-identities."
 
 var ssoURLFields = []string{"issuer", "authorization_url", "token_url", "userinfo_url", "jwks_url"}
 
 func fieldFix(fields []FieldError) string {
 	for _, f := range fields {
 		if f.Code == "URL_NOT_PUBLICLY_ROUTABLE" && slices.Contains(ssoURLFields, f.Path) {
-			return SSOPrivateFix
+			return ssoPrivateFix
 		}
 		switch f.Code {
 		case "URL_HOSTNAME_NOT_RESOLVABLE":
-			return SSOHostnameFix
+			return ssoHostnameFix
 		case "SSO_DISCOVERY_FAILED":
-			return SSODiscoveryFix
+			return ssoDiscoveryFix
 		case "SSO_ISSUER_REQUIRED":
-			return SSOIssuerRequiredFix
+			return ssoIssuerRequiredFix
 		case "SSO_ISSUER_CHANGE_HAS_IDENTITIES":
-			return SSOIssuerChangeFix
+			return ssoIssuerChangeFix
 		}
 	}
 	return ""

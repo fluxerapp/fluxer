@@ -21,8 +21,6 @@ const generatedSchema = 3
 
 const LayoutSchema = generatedSchema
 
-var euid = os.Geteuid
-
 func (i *Instance) OldLayout() bool {
 	return i.State != nil && i.State.rootLayout
 }

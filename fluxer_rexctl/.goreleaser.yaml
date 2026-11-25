@@ -16,7 +16,7 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - -s -w -X main.version={{ .Version }} -X main.commit={{ .ShortCommit }}
+      - -s -w -X main.version={{ .Version }} -X main.commit={{ .ShortCommit }} -X github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack.release={{ .Version }} -X github.com/fluxerapp/fluxer/fluxer_rexctl/internal/runtime.imageDigest={{ index .Env "FLUXER_IMAGE_DIGEST" }}
     mod_timestamp: "{{ .CommitTimestamp }}"
     goos:
       - linux
@@ -33,7 +33,7 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - -s -w -X main.version={{ .Version }} -X main.commit={{ .ShortCommit }}
+      - -s -w -X main.version={{ .Version }} -X main.commit={{ .ShortCommit }} -X github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack.release={{ .Version }} -X github.com/fluxerapp/fluxer/fluxer_rexctl/internal/runtime.imageDigest={{ index .Env "FLUXER_IMAGE_DIGEST" }}
     mod_timestamp: "{{ .CommitTimestamp }}"
     goos:
       - windows

@@ -18,8 +18,8 @@ func newUseCmd(app *App) *cobra.Command {
 		Use:   "use [folder]",
 		Short: "Show or change which instance rexctl uses",
 		Long: "Show which instance rexctl uses when you don't pass --dir and aren't in an instance folder, or pass a folder to use that instance from now on. " +
-			"rexctl remembers each instance it installs. You only need this with more than one instance or one installed by an older rexctl. " +
-			"Each account has its own choice. Root's choice also applies to accounts that have no instance of their own. " +
+			"rexctl remembers each instance it installs. You only need this with more than one instance or one installed by an older rexctl.\n\n" +
+			"Each account makes its own choice, and the choice root makes also applies to any account that has no instance of its own.\n\n" +
 			"As root, rexctl refuses an instance folder that other accounts can write to. It still uses a folder you pick when other accounts can change a folder above it, and it warns you about that. " +
 			"The services rexctl sets up for starting and upgrading Fluxer always pass their own folder, and this choice doesn't change them.",
 		Args: maxArgs(1),

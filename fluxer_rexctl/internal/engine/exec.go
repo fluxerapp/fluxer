@@ -12,7 +12,6 @@ import (
 	"io"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	cerrdefs "github.com/containerd/errdefs"
@@ -93,6 +92,10 @@ func (p *Project) Exec(ctx context.Context, service string, o ExecOptions, comma
 	if err != nil {
 		return err
 	}
+	return execIn(ctx, c, id, o, command)
+}
+
+func execIn(ctx context.Context, c client.APIClient, id string, o ExecOptions, command []string) error {
 	cmd := command
 	pidFile := ""
 	if o.KillOnCancel {
@@ -229,24 +232,12 @@ func (p *Project) Helper(ctx context.Context, o HelperOptions) error {
 		}
 		mounts = append(mounts, mount.Mount{Type: mount.TypeVolume, Source: p.volumeName(ctx, c, m.Volume), Target: m.Target, ReadOnly: m.ReadOnly})
 	}
-	for attempt := 1; ; attempt++ {
-		out := &deliveredWriter{}
-		err := p.runHelper(ctx, c, image, mounts, binds, o, out)
-		if attempt == 1 && out.n.Load() == 0 && o.Stdin == nil && errors.Is(err, ErrHelperStalled) {
-			detailf("engine: helper stalled before it sent any output, starting it again")
-			continue
-		}
-		if attempt > 1 && errors.Is(err, ErrHelperStalled) {
-			return &Error{Op: "helper", Class: ClassOther, Err: fmt.Errorf("%w, also after rexctl started a fresh one", ErrHelperStalled)}
-		}
-		return err
-	}
+	return p.runHelper(ctx, c, image, mounts, binds, o)
 }
 
 type deliveredWriter struct {
 	mu     sync.Mutex
 	w      io.Writer
-	n      atomic.Int64
 	closed bool
 }
 
@@ -256,9 +247,7 @@ func (d *deliveredWriter) Write(b []byte) (int, error) {
 	if d.closed {
 		return 0, ErrHelperStalled
 	}
-	n, err := d.w.Write(b)
-	d.n.Add(int64(n))
-	return n, err
+	return d.w.Write(b)
 }
 
 func (d *deliveredWriter) close() {
@@ -267,7 +256,7 @@ func (d *deliveredWriter) close() {
 	d.mu.Unlock()
 }
 
-func (p *Project) runHelper(ctx context.Context, c client.APIClient, image string, mounts []mount.Mount, binds []string, o HelperOptions, out *deliveredWriter) error {
+func (p *Project) runHelper(ctx context.Context, c client.APIClient, image string, mounts []mount.Mount, binds []string, o HelperOptions) error {
 	if err := p.removeHelpers(ctx, c); err != nil {
 		return err
 	}
@@ -313,27 +302,24 @@ func (p *Project) runHelper(ctx context.Context, c client.APIClient, image strin
 		return &Error{Op: "helper", Class: ClassOf(err), Err: err}
 	}
 	defer att.Close()
+	tail := &tailBuffer{}
+	out := &deliveredWriter{w: orDiscard(o.Stdout)}
+	errOut := &deliveredWriter{w: io.MultiWriter(tail, orDiscard(o.Stderr))}
+	now := time.Now()
+	act := &activity{start: now, last: now}
+	stderr := &heartbeatFilter{w: errOut}
+	done := stream(att.HijackedResponse, o.Stdin, act.writer(out), act.writer(stderr))
+	wait := c.ContainerWait(ctx, id, client.ContainerWaitOptions{Condition: container.WaitConditionNextExit})
 	if _, err := c.ContainerStart(ctx, id, client.ContainerStartOptions{}); err != nil {
 		return &Error{Op: "helper", Class: ClassOf(err), Err: err}
 	}
-	tail := &tailBuffer{}
-	errOut := &deliveredWriter{w: io.MultiWriter(tail, orDiscard(o.Stderr))}
-	out.w = orDiscard(o.Stdout)
-	now := time.Now()
-	act := &activity{start: now, last: now}
 	go act.watch(ctx, func(cause error) {
 		out.close()
 		errOut.close()
 		stop(cause)
 	})
-	wait := c.ContainerWait(ctx, id, client.ContainerWaitOptions{Condition: container.WaitConditionNotRunning})
-	stderr := &heartbeatFilter{w: errOut}
-	defer func() { out.n.Add(errOut.n.Load()) }()
-	done := stream(att.HijackedResponse, o.Stdin, act.writer(out), act.writer(stderr))
-	exited := pollExit(ctx, c, id)
 	var code int64
 	select {
-	case code = <-exited:
 	case res := <-wait.Result:
 		if res.Error != nil && res.Error.Message != "" {
 			return &Error{Op: "helper", Class: ClassOther, Err: errors.New(res.Error.Message)}
@@ -368,31 +354,6 @@ func drainStream(done <-chan error, act *activity, stderr *heartbeatFilter) {
 			}
 		}
 	}
-}
-
-func pollExit(ctx context.Context, c client.APIClient, id string) <-chan int64 {
-	out := make(chan int64, 1)
-	go func() {
-		t := time.NewTicker(10 * time.Second)
-		defer t.Stop()
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-t.C:
-			}
-			in, err := c.ContainerInspect(ctx, id, client.ContainerInspectOptions{})
-			if err != nil || in.Container.State == nil {
-				continue
-			}
-			if st := in.Container.State; st.Status == container.StateExited || st.Status == container.StateDead {
-				detailf("engine: helper %s exited but the engine never reported it, using its exit code", id)
-				out <- int64(st.ExitCode)
-				return
-			}
-		}
-	}()
-	return out
 }
 
 func (p *Project) removeHelpers(ctx context.Context, c client.APIClient) error {

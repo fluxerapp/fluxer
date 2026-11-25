@@ -4,6 +4,6 @@
 
 package migrate
 
-func FreeBytes(string) (int64, bool) { return 0, false }
+func freeBytes(string) (int64, bool) { return 0, false }
 
 func device(string) (uint64, bool) { return 0, false }

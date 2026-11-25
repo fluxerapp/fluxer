@@ -21,8 +21,6 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
 
-var ErrDeclined = errors.New("deploy: the change was declined")
-
 var errIPv6NotApplied = errors.New("deploy: the network kept its old IPv6 setting")
 
 var derivedVars = map[string][]string{
@@ -50,12 +48,12 @@ func Promised(set *stack.Set, custom []byte, k settings.Key) []string {
 	return settings.Services(set, custom, append(slices.Clone(k.Vars), derivedVars[k.Name]...))
 }
 
-func Lookup(set *stack.Set, custom []byte, name string) (settings.Key, error) {
+func lookup(set *stack.Set, custom []byte, held map[string]string, name string) (settings.Key, error) {
 	vars, err := settings.Vars(set, custom)
 	if err != nil {
 		return settings.Key{}, ui.Wrap(err, fmt.Sprintf("rexctl can't read %s.", instance.CustomCompose), "Fix the file, then try again.")
 	}
-	k, err := settings.Lookup(set, vars, name, nil)
+	k, err := settings.Lookup(set, settings.WithHeld(vars, held), name, nil)
 	if err != nil {
 		return settings.Key{}, keyError(err)
 	}
@@ -71,12 +69,15 @@ func keyError(err error) error {
 }
 
 type Prepared struct {
-	Set       *stack.Set
-	Keys      []string
-	Settings  map[string]string
-	Secrets   map[string]string
-	Preview   Preview
-	Unchanged bool
+	Set        *stack.Set
+	Keys       []string
+	Settings   map[string]string
+	Secrets    map[string]string
+	Preview    Preview
+	Unchanged  bool
+	Engine     bool
+	EngineHost string
+	planned    *Preview
 }
 
 func Changeable(inst *instance.Instance) error {
@@ -95,16 +96,19 @@ func Prepare(inst *instance.Instance, changes map[string]*string) (*Prepared, er
 	if err != nil {
 		return nil, err
 	}
+	if v, ok := changes[settings.EngineHost]; ok {
+		return prepareEngineHost(inst, rs, keys, v)
+	}
 	custom, err := CustomFile(inst)
 	if err != nil {
 		return nil, err
 	}
 	st := inst.State
 	next := maps.Clone(st.Settings)
-	var promised, changed []string
+	var changed []string
 	repairs := true
 	for _, name := range keys {
-		k, err := Lookup(rs, custom, name)
+		k, err := lookup(rs, custom, st.Settings, name)
 		if err != nil {
 			return nil, err
 		}
@@ -112,6 +116,11 @@ func Prepare(inst *instance.Instance, changes map[string]*string) (*Prepared, er
 			return nil, fmt.Errorf("deploy: %s is an instance setting", name)
 		}
 		v := changes[name]
+		if v != nil && name == settings.EdgeBind {
+			if norm, err := settings.NormaliseBind(*v); err == nil {
+				v = &norm
+			}
+		}
 		current, had := st.Settings[name]
 		broken := brokenVAPID(st, name)
 		repairs = repairs && (broken || had && validate(k, current) != nil)
@@ -135,7 +144,6 @@ func Prepare(inst *instance.Instance, changes map[string]*string) (*Prepared, er
 					"Restore a backup made with the value you want with rexctl restore.")
 			}
 			changed = append(changed, name)
-			promised = append(promised, Promised(rs, custom, k)...)
 		}
 	}
 	if maps.Equal(next, st.Settings) {
@@ -149,7 +157,6 @@ func Prepare(inst *instance.Instance, changes map[string]*string) (*Prepared, er
 			return nil, err
 		}
 	}
-	slices.Sort(promised)
 	nextSecrets, err := signingSecrets(rs, st, next)
 	if err != nil {
 		return nil, err
@@ -159,7 +166,7 @@ func Prepare(inst *instance.Instance, changes map[string]*string) (*Prepared, er
 	if _, err := Environment(rs, &withSecrets, next); err != nil {
 		return nil, err
 	}
-	return &Prepared{Set: rs, Keys: keys, Settings: next, Secrets: nextSecrets, Preview: Preview{Keys: changed, Promised: slices.Compact(promised)}}, nil
+	return &Prepared{Set: rs, Keys: keys, Settings: next, Secrets: nextSecrets, Preview: Preview{Keys: changed}}, nil
 }
 
 func brokenVAPID(st *instance.State, name string) bool {
@@ -179,20 +186,49 @@ func Set(ctx context.Context, inst *instance.Instance, e *engine.Engine, changes
 	if err := Changeable(inst); err != nil {
 		return nil, err
 	}
-	if _, ok := changes[settings.EngineHost]; ok {
-		if len(changes) > 1 {
-			return nil, ui.Usage("Change engine.host on its own, without other settings.")
+	pr, err := Prepare(inst, changes)
+	if err != nil {
+		return nil, err
+	}
+	return SetPrepared(ctx, inst, e, pr, o)
+}
+
+func prepareEngineHost(inst *instance.Instance, rs *stack.Set, keys []string, v *string) (*Prepared, error) {
+	if len(keys) > 1 {
+		return nil, ui.Usage("Change engine.host on its own, without other settings.")
+	}
+	host := ""
+	if v != nil {
+		k, _ := namedKey(settings.EngineHost)
+		if err := validate(k, *v); err != nil {
+			return nil, err
 		}
+		host = *v
+	}
+	p := &Prepared{Set: rs, Keys: keys, Engine: true, EngineHost: host, Unchanged: host == inst.State.Engine.Host}
+	if !p.Unchanged {
+		p.Preview = Preview{Keys: keys}
+	}
+	return p, nil
+}
+
+func namedKey(name string) (settings.Key, bool) {
+	for _, k := range settings.Named() {
+		if k.Name == name {
+			return k, true
+		}
+	}
+	return settings.Key{}, false
+}
+
+func SetPrepared(ctx context.Context, inst *instance.Instance, e *engine.Engine, pr *Prepared, o ApplyOptions) (*Change, error) {
+	if pr.Engine {
 		if err := refuseUpgrade(inst); err != nil {
 			return nil, err
 		}
-		return setEngineHost(ctx, inst, e, changes[settings.EngineHost])
+		return setEngineHost(ctx, inst, e, pr.EngineHost)
 	}
 	if err := checkDrift(inst, false); err != nil {
-		return nil, err
-	}
-	pr, err := Prepare(inst, changes)
-	if err != nil {
 		return nil, err
 	}
 	if pr.Unchanged {
@@ -200,20 +236,17 @@ func Set(ctx context.Context, inst *instance.Instance, e *engine.Engine, changes
 	}
 	st := inst.State
 	rs, next, nextSecrets, preview := pr.Set, pr.Settings, pr.Secrets, pr.Preview
-	changed, keys := preview.Keys, pr.Keys
-	withSecrets := *st
-	withSecrets.Secrets = nextSecrets
-	newEnv, err := Environment(rs, &withSecrets, next)
-	if err != nil {
-		return nil, err
-	}
+	changed := preview.Keys
 	if st.Upgrade != nil {
+		withSecrets := *st
+		withSecrets.Secrets = nextSecrets
+		newEnv, err := Environment(rs, &withSecrets, next)
+		if err != nil {
+			return nil, err
+		}
 		oldEnv, _ := Environment(rs, st, st.Settings)
 		if err := checkPorts(ctx, e, inst.Project(), oldEnv, newEnv, changed, next[settings.EdgeMode]); err != nil {
 			return nil, err
-		}
-		if o.Confirm != nil && !o.Confirm(preview) {
-			return nil, ErrDeclined
 		}
 		st.Settings, st.Secrets = next, nextSecrets
 		if err := save(inst); err != nil {
@@ -221,58 +254,21 @@ func Set(ctx context.Context, inst *instance.Instance, e *engine.Engine, changes
 		}
 		return &Change{Keys: changed}, nil
 	}
-	oldEnv, err := Environment(rs, st, st.Settings)
-	if err != nil {
-		return nil, err
-	}
-	staged, err := stageOverlays(inst, rs, next)
+	pl, err := preflight(ctx, inst, e, pr, true, o.OnEvent)
 	if err != nil {
 		return nil, err
 	}
 	rendered := false
 	defer func() {
 		if !rendered {
-			for _, p := range staged {
-				os.Remove(p)
-			}
+			pl.discard()
 		}
 	}()
-	newP, err := e.Load(ctx, engine.Spec{Name: inst.Project(), Dir: inst.Dir, Files: composeFiles(inst, next), Env: newEnv})
-	if err != nil {
-		return nil, &ui.ExitError{Code: ui.ExitRefused, Err: err,
-			Msg: "Fluxer can't start with that value.",
-			Fix: fmt.Sprintf("Run rexctl config get %s to see what it takes, then try again.", keys[0])}
-	}
-	oldP, err := e.Load(ctx, engine.Spec{Name: inst.Project(), Dir: inst.Dir, Files: composeFiles(inst, st.Settings), Env: oldEnv})
-	if err != nil {
-		return nil, err
-	}
-	if err := checkPostgres(oldP, newP); err != nil {
-		return nil, err
-	}
-	live, err := running(ctx, inst, e)
-	if err != nil {
-		return nil, err
-	}
-	ipv6 := parseBool(st.Settings[settings.IPv6]) != parseBool(next[settings.IPv6])
-	if live {
-		if err := oldP.Pull(ctx, o.OnEvent); err != nil {
-			return nil, err
-		}
-		plan, err := newP.Plan(ctx)
-		if err != nil {
-			return nil, err
-		}
-		preview.Restarts, preview.Removes, preview.Networks = restarted(plan), slices.Clone(plan.Remove), slices.Clone(plan.Networks)
-		if ipv6 {
-			preview.Restarts = newP.Services()
-		}
-	}
-	if err := checkPorts(ctx, e, inst.Project(), oldEnv, newEnv, changed, next[settings.EdgeMode]); err != nil {
-		return nil, err
-	}
-	if o.Confirm != nil && !o.Confirm(preview) {
-		return nil, ErrDeclined
+	oldP, newP, live, ipv6 := pl.oldP, pl.newP, pl.live, pl.ipv6
+	preview = pl.preview
+	if pr.planned != nil && grew(*pr.planned, preview) {
+		return nil, ui.Refused("The newest Fluxer images restart more of Fluxer than rexctl showed you, so nothing changed.",
+			"Run the same command again to see what it restarts now.")
 	}
 
 	if !live {
@@ -338,6 +334,97 @@ func Set(ctx context.Context, inst *instance.Instance, e *engine.Engine, changes
 		return nil, err
 	}
 	return &Change{Keys: changed, Restarted: preview.Restarts, Removed: preview.Removes, Applied: true, VoiceDown: attachVoice(ctx, e, detached)}, nil
+}
+
+func Plan(ctx context.Context, inst *instance.Instance, e *engine.Engine, pr *Prepared) (Preview, error) {
+	if pr.Unchanged || pr.Engine || inst.State.Upgrade != nil {
+		return pr.Preview, nil
+	}
+	pl, err := preflight(ctx, inst, e, pr, false, nil)
+	if err != nil {
+		return pr.Preview, err
+	}
+	pl.discard()
+	planned := pl.preview
+	pr.planned = &planned
+	return pl.preview, nil
+}
+
+func grew(before, after Preview) bool {
+	outside := func(next, prev []string) bool {
+		return slices.ContainsFunc(next, func(s string) bool { return !slices.Contains(prev, s) })
+	}
+	return outside(after.Restarts, before.Restarts) || outside(after.Removes, before.Removes) || outside(after.Networks, before.Networks)
+}
+
+type planned struct {
+	oldP, newP *engine.Project
+	live, ipv6 bool
+	preview    Preview
+	staged     []string
+}
+
+func (pl *planned) discard() {
+	for _, p := range pl.staged {
+		os.Remove(p)
+	}
+}
+
+func preflight(ctx context.Context, inst *instance.Instance, e *engine.Engine, pr *Prepared, pull bool, onEvent func(engine.Event)) (pl *planned, err error) {
+	st := inst.State
+	pl = &planned{preview: pr.Preview}
+	withSecrets := *st
+	withSecrets.Secrets = pr.Secrets
+	newEnv, err := Environment(pr.Set, &withSecrets, pr.Settings)
+	if err != nil {
+		return nil, err
+	}
+	oldEnv, err := Environment(pr.Set, st, st.Settings)
+	if err != nil {
+		return nil, err
+	}
+	if pl.staged, err = stageOverlays(inst, pr.Set, pr.Settings); err != nil {
+		return nil, err
+	}
+	defer func() {
+		if err != nil {
+			pl.discard()
+			pl = nil
+		}
+	}()
+	pl.newP, err = e.Load(ctx, engine.Spec{Name: inst.Project(), Dir: inst.Dir, Files: composeFiles(inst, pr.Settings), Env: newEnv})
+	if err != nil {
+		return pl, &ui.ExitError{Code: ui.ExitRefused, Err: err,
+			Msg: "Fluxer can't start with that value.",
+			Fix: fmt.Sprintf("Run rexctl config get %s to see what it takes, then try again.", pr.Keys[0])}
+	}
+	if pl.oldP, err = e.Load(ctx, engine.Spec{Name: inst.Project(), Dir: inst.Dir, Files: composeFiles(inst, st.Settings), Env: oldEnv}); err != nil {
+		return pl, err
+	}
+	if err = checkPostgres(pl.oldP, pl.newP); err != nil {
+		return pl, err
+	}
+	if pl.live, err = running(ctx, inst, e); err != nil {
+		return pl, err
+	}
+	pl.ipv6 = parseBool(st.Settings[settings.IPv6]) != parseBool(pr.Settings[settings.IPv6])
+	if pl.live {
+		if pull {
+			if err = pl.oldP.Pull(ctx, onEvent); err != nil {
+				return pl, err
+			}
+		}
+		var plan *engine.Plan
+		if plan, err = pl.newP.Plan(ctx); err != nil {
+			return pl, err
+		}
+		pl.preview.Restarts, pl.preview.Removes, pl.preview.Networks = restarted(plan), slices.Clone(plan.Remove), slices.Clone(plan.Networks)
+		if pl.ipv6 {
+			pl.preview.Restarts = pl.newP.Services()
+		}
+	}
+	err = checkPorts(ctx, e, inst.Project(), oldEnv, newEnv, pr.Preview.Keys, pr.Settings[settings.EdgeMode])
+	return pl, err
 }
 
 func signingSecrets(rs *stack.Set, st *instance.State, next map[string]string) (map[string]string, error) {
@@ -460,10 +547,10 @@ func checkPostgres(oldP, newP *engine.Project) error {
 		fmt.Sprintf("Use a Postgres %d image. rexctl upgrade moves the database to a new major version when a release needs it.", was))
 }
 
-func setEngineHost(ctx context.Context, inst *instance.Instance, e *engine.Engine, v *string) (*Change, error) {
+func setEngineHost(ctx context.Context, inst *instance.Instance, e *engine.Engine, v string) (*Change, error) {
 	keys := []string{settings.EngineHost}
 	st := inst.State
-	if v == nil {
+	if v == "" {
 		if st.Engine.Host == "" {
 			return &Change{Keys: keys, Unchanged: true}, nil
 		}
@@ -473,19 +560,12 @@ func setEngineHost(ctx context.Context, inst *instance.Instance, e *engine.Engin
 		}
 		return &Change{Keys: keys, Applied: true}, nil
 	}
-	for _, k := range settings.Named() {
-		if k.Name == settings.EngineHost {
-			if err := validate(k, *v); err != nil {
-				return nil, err
-			}
-		}
-	}
-	if *v == st.Engine.Host {
+	if v == st.Engine.Host {
 		return &Change{Keys: keys, Unchanged: true}, nil
 	}
-	target, err := engine.Connect(ctx, engine.ConnectOptions{Host: *v, AllowOld: true})
+	target, err := engine.Connect(ctx, engine.ConnectOptions{Host: v, AllowOld: true})
 	if err != nil {
-		return nil, ui.Wrap(err, fmt.Sprintf("rexctl can't connect to an engine at %s.", *v), "Check the address and that the engine is running, then try again.")
+		return nil, ui.Wrap(err, fmt.Sprintf("rexctl can't connect to an engine at %s.", v), "Check the address and that the engine is running, then try again.")
 	}
 	defer target.Close()
 	if target.ID != e.ID {
@@ -501,7 +581,7 @@ func setEngineHost(ctx context.Context, inst *instance.Instance, e *engine.Engin
 			return nil, ui.Refused("That engine has none of this instance's data.", "Move the instance with rexctl backup, then rexctl restore on the other engine.")
 		}
 	}
-	st.Engine = instance.EngineRef{Kind: string(target.Kind), Host: *v, ID: target.ID}
+	st.Engine = instance.EngineRef{Kind: string(target.Kind), Host: v, ID: target.ID}
 	if err := save(inst); err != nil {
 		return nil, err
 	}
@@ -526,10 +606,6 @@ func validate(k settings.Key, v string) error {
 	return ui.Usage(fmt.Sprintf("%s can't be %s. %s", k.Name, shown, err.Error()))
 }
 
-func (p Preview) Larger() bool {
-	return len(p.Networks) > 0 || !subset(p.Restarts, p.Promised) || !subset(p.Removes, p.Promised)
-}
-
 func (p Preview) Notes() []string {
 	var out []string
 	for _, k := range settings.Named() {
@@ -538,17 +614,6 @@ func (p Preview) Notes() []string {
 		}
 	}
 	return out
-}
-
-func (p Preview) NeedsConfirm() bool { return p.Larger() || len(p.Notes()) > 0 }
-
-func subset(items, of []string) bool {
-	for _, s := range items {
-		if !slices.Contains(of, s) {
-			return false
-		}
-	}
-	return true
 }
 
 func parseBool(v string) bool {

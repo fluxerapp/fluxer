@@ -9,6 +9,7 @@ import (
 	"maps"
 	"os"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"slices"
 	"strings"
@@ -20,7 +21,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/voice"
 )
 
-const StateSchema = generatedSchema + 3
+const StateSchema = generatedSchema + 5
 
 var ErrNewerState = errors.New("instance: state was written by a newer rexctl")
 
@@ -30,10 +31,13 @@ type State struct {
 	Project         string            `json:"project"`
 	Engine          EngineRef         `json:"engine"`
 	Runtime         string            `json:"runtime"`
+	Layout          string            `json:"layout,omitempty"`
+	Loopback        string            `json:"loopback,omitempty"`
 	Release         string            `json:"release"`
 	PreviousRelease string            `json:"previous_release"`
 	PreviousBackup  string            `json:"previous_backup,omitempty"`
 	FailedRelease   string            `json:"failed_release"`
+	RolledBackFrom  string            `json:"rolled_back_from,omitempty"`
 	Upgrade         *Upgrade          `json:"upgrade"`
 	Pending         *Pending          `json:"pending"`
 	Images          Images            `json:"images"`
@@ -42,6 +46,7 @@ type State struct {
 	AdminImport     *AdminImport      `json:"admin_import"`
 	SetupDone       bool              `json:"setup_done"`
 	Installing      bool              `json:"installing,omitempty"`
+	Restoring       string            `json:"restoring,omitempty"`
 	Stopped         bool              `json:"stopped"`
 	Rendered        map[string]string `json:"rendered"`
 	Mounted         map[string]string `json:"mounted"`
@@ -52,9 +57,15 @@ type State struct {
 	BackupDir       string            `json:"backup_dir,omitempty"`
 	KeepBackups     int               `json:"keep_backups,omitempty"`
 	NotifyURL       string            `json:"notify_url,omitempty"`
+	MoveNotice      string            `json:"move_notice,omitempty"`
+	MovedFrom       *MovedFrom        `json:"moved_from,omitempty"`
 	BootService     string            `json:"boot_service,omitempty"`
+	ExtraHosts      []string          `json:"extra_hosts,omitempty"`
 	Voice           []VoiceServer     `json:"voice,omitempty"`
 	VoiceEdge       *VoiceEdge        `json:"voice_edge,omitempty"`
+	Firewall        []OpenedPort      `json:"firewall,omitempty"`
+	ProxiedBy       string            `json:"proxied_by,omitempty"`
+	Interrupted     *Interrupted      `json:"interrupted,omitempty"`
 	InstalledAt     time.Time         `json:"installed_at"`
 	UpdatedAt       time.Time         `json:"updated_at"`
 
@@ -65,14 +76,27 @@ type State struct {
 
 const KindVoice = "voice"
 
+type MovedFrom struct {
+	Dir         string       `json:"dir"`
+	At          time.Time    `json:"at"`
+	AutoUpgrade bool         `json:"auto_upgrade,omitempty"`
+	Firewall    []OpenedPort `json:"firewall,omitempty"`
+}
+
 const (
-	BootServiceOn  = "on"
-	BootServiceOff = "off"
-	RuntimeCompose = "compose"
-	RuntimeNative  = "native"
+	BootServiceOn    = "on"
+	BootServiceOff   = "off"
+	RuntimeCompose   = "compose"
+	RuntimeNative    = "native"
+	RuntimeContainer = "container"
+	LayoutFHS        = "fhs"
 )
 
 func (s *State) IsNative() bool { return s != nil && s.Runtime == RuntimeNative }
+
+func (s *State) IsContainer() bool { return s != nil && s.Runtime == RuntimeContainer }
+
+func (s *State) RunsFluxerd() bool { return s.IsNative() || s.IsContainer() }
 
 type VoiceServer struct {
 	ID        string    `json:"id"`
@@ -111,6 +135,19 @@ type VoiceEdge struct {
 	Opened   []string `json:"opened,omitempty"`
 	Instance string   `json:"instance,omitempty"`
 	IPv6     bool     `json:"ipv6,omitempty"`
+}
+
+type OpenedPort struct {
+	Firewall string `json:"firewall"`
+	Number   int    `json:"number"`
+	Proto    string `json:"proto"`
+	Source   string `json:"source,omitempty"`
+}
+
+type Interrupted struct {
+	Op          string    `json:"op"`
+	At          time.Time `json:"at"`
+	LeftStopped bool      `json:"left_stopped,omitempty"`
 }
 
 func (s *State) IsVoice() bool { return s != nil && s.Kind == KindVoice }
@@ -162,12 +199,15 @@ type EngineRef struct {
 	ID   string `json:"id"`
 }
 
+func (r EngineRef) Rootless() bool { return strings.Contains(r.Host, "/run/user/") }
+
 type Upgrade struct {
 	From       string    `json:"from"`
 	To         string    `json:"to"`
 	Phase      string    `json:"phase"`
 	Backup     string    `json:"backup,omitempty"`
 	BackFailed bool      `json:"back_failed,omitempty"`
+	NoWayBack  bool      `json:"no_way_back,omitempty"`
 	Sites      []string  `json:"sites,omitempty"`
 	StartedAt  time.Time `json:"started_at"`
 }
@@ -237,10 +277,10 @@ func parseStateRepairing(data []byte, dir string, repairing []string) (*State, e
 		return nil, ErrNewerState
 	}
 	if head.Project == "" {
-		return nil, fmt.Errorf("instance: the state in %s names no project", dir)
+		return nil, fmt.Errorf("instance: the state in %s has no project", dir)
 	}
 	if !projectName.MatchString(head.Project) {
-		return nil, fmt.Errorf("instance: the state in %s names the project %q: %w", dir, head.Project, ErrBadProject)
+		return nil, fmt.Errorf("instance: the state in %s has the project name %q: %w", dir, head.Project, errBadProject)
 	}
 	s, err := parseState(data, dir, repairing)
 	if err != nil {
@@ -256,13 +296,17 @@ func parseStateRepairing(data []byte, dir string, repairing []string) (*State, e
 	return s, nil
 }
 
-var stateFields = map[string]bool{
-	"schema": true, "project": true, "engine": true, "release": true, "previous_release": true, "previous_backup": true, "failed_release": true,
-	"upgrade": true, "pending": true, "images": true, "settings": true, "secrets": true, "admin_import": true,
-	"setup_done": true, "installing": true, "stopped": true, "rendered": true, "mounted": true, "left_in_root": true, "moved_sites": true, "ejected": true, "moved_to": true,
-	"installed_at": true, "updated_at": true, "backup_dir": true, "keep_backups": true, "notify_url": true, "boot_service": true,
-	"kind": true, "voice": true, "voice_edge": true, "runtime": true,
-}
+var stateFields = func() map[string]bool {
+	out := map[string]bool{}
+	t := reflect.TypeFor[State]()
+	for i := range t.NumField() {
+		name, _, _ := strings.Cut(t.Field(i).Tag.Get("json"), ",")
+		if name != "" && name != "-" {
+			out[name] = true
+		}
+	}
+	return out
+}()
 
 func parseState(data []byte, dir string, repairing []string) (*State, error) {
 	var raw map[string]json.RawMessage

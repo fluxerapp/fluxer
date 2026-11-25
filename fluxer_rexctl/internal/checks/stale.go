@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	Register(Check{ID: "stale-containers", Phases: Installed, Run: runStale, Fix: fixStale, SafeFix: true})
+	Register(Check{ID: "stale-containers", Phases: Installed, Run: composeOnly(runStale), Fix: fixStale, SafeFix: true})
 }
 
 func (e *Env) staleServices(ctx context.Context) ([]string, error) {

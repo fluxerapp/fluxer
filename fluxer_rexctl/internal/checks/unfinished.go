@@ -15,6 +15,7 @@ import (
 func init() {
 	Register(Check{ID: "pending-change", Phases: Installed, Run: runPendingChange, Fix: fixPendingChange, SafeFix: true})
 	Register(Check{ID: "upgrade-unfinished", Phases: Installed, Run: runUpgradeUnfinished})
+	Register(Check{ID: "restore-unfinished", Phases: Installed, Run: runRestoreUnfinished})
 }
 
 func runPendingChange(ctx context.Context, e *Env) Result {
@@ -32,7 +33,7 @@ func runPendingChange(ctx context.Context, e *Env) Result {
 }
 
 func fixPendingChange(ctx context.Context, e *Env) error {
-	if e.state() == nil || e.Engine == nil {
+	if e.state() == nil || e.Engine == nil && e.Resolve == nil {
 		return errNoProject
 	}
 	st := e.state()
@@ -54,7 +55,11 @@ func fixPendingChange(ctx context.Context, e *Env) error {
 	return e.run(ctx, append(steps, host.Step{
 		Do: do,
 		Run: func(ctx context.Context) error {
-			if err := deploy.Resolve(ctx, e.Instance, e.Engine); err != nil {
+			resolve := e.Resolve
+			if resolve == nil {
+				resolve = func(ctx context.Context) error { return deploy.Resolve(ctx, e.Instance, e.Engine) }
+			}
+			if err := resolve(ctx); err != nil {
 				return err
 			}
 			e.env = nil
@@ -69,4 +74,21 @@ func runUpgradeUnfinished(ctx context.Context, e *Env) Result {
 		return skip("")
 	}
 	return fail(fmt.Sprintf("The upgrade to %s didn't finish.", st.Upgrade.To), release.UnfinishedFix(st.Upgrade))
+}
+
+func runRestoreUnfinished(ctx context.Context, e *Env) Result {
+	msg, fix, ok := e.Instance.RestoreUnfinished()
+	if !ok {
+		return skip("")
+	}
+	return fail(msg, fix)
+}
+
+func notWhileRestoring(run func(context.Context, *Env) Result) func(context.Context, *Env) Result {
+	return func(ctx context.Context, e *Env) Result {
+		if _, _, ok := e.Instance.RestoreUnfinished(); ok {
+			return skip("")
+		}
+		return run(ctx, e)
+	}
 }

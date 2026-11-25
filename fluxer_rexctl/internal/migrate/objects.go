@@ -14,12 +14,12 @@ import (
 )
 
 var (
-	ErrObjectsNotEmpty = errors.New("migrate: the folder for the files isn't empty")
-	ErrObjectsSpace    = errors.New("migrate: not enough free space for the files")
-	ErrStagingDevice   = errors.New("migrate: the staging folder is on another disk")
+	errObjectsNotEmpty = errors.New("migrate: the folder for the files isn't empty")
+	errObjectsSpace    = errors.New("migrate: not enough free space for the files")
+	errStagingDevice   = errors.New("migrate: the staging folder is on another disk")
 )
 
-const SpaceFactor = 1.1
+const spaceFactor = 1.1
 
 var objectsAllowed = []string{".layout", ".staging", ".meta", "lost+found"}
 
@@ -32,12 +32,12 @@ func CheckObjectsDir(root string) error {
 	default:
 		for _, e := range entries {
 			if !slices.Contains(objectsAllowed, e.Name()) {
-				return fmt.Errorf("%w: %s holds %s", ErrObjectsNotEmpty, root, e.Name())
+				return fmt.Errorf("%w: %s holds %s", errObjectsNotEmpty, root, e.Name())
 			}
 		}
 		if a, ok := device(root); ok {
 			if b, ok := device(filepath.Join(root, ".staging")); ok && a != b {
-				return fmt.Errorf("%w: %s", ErrStagingDevice, filepath.Join(root, ".staging"))
+				return fmt.Errorf("%w: %s", errStagingDevice, filepath.Join(root, ".staging"))
 			}
 		}
 	}
@@ -45,13 +45,13 @@ func CheckObjectsDir(root string) error {
 }
 
 func CheckSpace(source, target string) error {
-	used, err := DirBytes(source)
+	used, err := dirBytes(source)
 	if err != nil {
 		return err
 	}
-	free, ok := FreeBytes(existing(target))
-	if need := int64(float64(used) * SpaceFactor); ok && free < need {
-		return fmt.Errorf("%w: %s free, %s needed", ErrObjectsSpace, ui.Bytes(free), ui.Bytes(need))
+	free, ok := freeBytes(existing(target))
+	if need := int64(float64(used) * spaceFactor); ok && free < need {
+		return fmt.Errorf("%w: %s free, %s needed", errObjectsSpace, ui.Bytes(free), ui.Bytes(need))
 	}
 	return nil
 }
@@ -69,7 +69,7 @@ func existing(path string) string {
 	}
 }
 
-func DirBytes(root string) (int64, error) {
+func dirBytes(root string) (int64, error) {
 	var n int64
 	err := filepath.WalkDir(root, func(_ string, d fs.DirEntry, err error) error {
 		if errors.Is(err, fs.ErrNotExist) {

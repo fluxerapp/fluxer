@@ -17,8 +17,8 @@ import (
 
 const (
 	StorageReadOnlyVar = "FLUXER_STORAGE_READ_ONLY"
-	GeoIPBucket        = "fluxer-geoip"
-	AttachmentChecks   = 50
+	geoIPBucket        = "fluxer-geoip"
+	attachmentChecks   = 50
 )
 
 var (
@@ -37,11 +37,11 @@ var (
 	ErrWritesOpen    = errors.New("migrate: new uploads are stored as files only")
 	ErrNotSwitched   = errors.New("migrate: this change wasn't made by rexctl migrate")
 	ErrAlreadyOpen   = errors.New("migrate: uploads are already open")
-	ErrNoNewBackup   = errors.New("migrate: no backup since the change")
-	ErrExternalS3    = errors.New("migrate: uploads are in your own object store")
-	ErrUndoElsewhere = errors.New("migrate: the move off SeaweedFS was made before the instance left Docker")
+	errNoNewBackup   = errors.New("migrate: no backup since the change")
+	errExternalS3    = errors.New("migrate: uploads are in your own object store")
+	ErrUndoElsewhere = errors.New("migrate: the move off SeaweedFS was made before the move to the new layout")
 	ErrNoSeaweedFS   = errors.New("migrate: SeaweedFS's data is no longer here")
-	ErrSharedBucket  = errors.New("migrate: the uploads bucket shares its name with another bucket")
+	errSharedBucket  = errors.New("migrate: the uploads bucket shares its name with another bucket")
 )
 
 const attachmentScript = `(async()=>{const fs=require('node:fs'),path=require('node:path');` +
@@ -102,7 +102,7 @@ func (r storageReport) totals() (objects int, bytes int64) {
 	return objects, bytes
 }
 
-func CheckBuckets(env map[string]string) error {
+func checkBuckets(env map[string]string) error {
 	names := map[string]string{}
 	for _, v := range bucketVars {
 		names[v[0]] = strings.TrimSpace(env[v[0]])
@@ -113,11 +113,11 @@ func CheckBuckets(env map[string]string) error {
 	uploads := names["FLUXER_S3_BUCKET_UPLOADS"]
 	for _, v := range bucketVars {
 		if v[0] != "FLUXER_S3_BUCKET_UPLOADS" && names[v[0]] == uploads {
-			return fmt.Errorf("%w: FLUXER_S3_BUCKET_UPLOADS and %s are both %q", ErrSharedBucket, v[0], uploads)
+			return fmt.Errorf("%w: FLUXER_S3_BUCKET_UPLOADS and %s are both %q", errSharedBucket, v[0], uploads)
 		}
 	}
-	if uploads == GeoIPBucket {
-		return fmt.Errorf("%w: FLUXER_S3_BUCKET_UPLOADS is %q", ErrSharedBucket, GeoIPBucket)
+	if uploads == geoIPBucket {
+		return fmt.Errorf("%w: FLUXER_S3_BUCKET_UPLOADS is %q", errSharedBucket, geoIPBucket)
 	}
 	return nil
 }
@@ -137,13 +137,13 @@ func (s *StorageStep) Writers() []string { return storageWriters }
 func (s *StorageStep) Preflight(ctx context.Context, r *Run) error {
 	h := r.Host
 	if strings.TrimSpace(h.Settings()[settings.StorageEndpoint]) != "" {
-		return fmt.Errorf("%w at storage.endpoint, and this change moves files out of the bundled SeaweedFS", ErrExternalS3)
+		return fmt.Errorf("%w at storage.endpoint, and this change moves files out of the bundled SeaweedFS", errExternalS3)
 	}
 	env, err := h.Env(nil)
 	if err != nil {
 		return err
 	}
-	if err := CheckBuckets(env); err != nil {
+	if err := checkBuckets(env); err != nil {
 		return err
 	}
 	if err := h.CheckTarget(ctx, storageOn); err != nil {
@@ -170,7 +170,7 @@ func (s *StorageStep) Migrate(ctx context.Context, r *Run) error {
 func (s *StorageStep) Verify(context.Context, *Run) error { return nil }
 
 func (s *StorageStep) run(ctx context.Context, r *Run) (storageReport, error) {
-	args := []string{ImportStorage, "--root", r.Host.ObjectsRoot()}
+	args := []string{importStorage, "--root", r.Host.ObjectsRoot()}
 	var rep storageReport
 	if err := runJSON(ctx, r.Host.Importer(), Job{Args: args, Objects: true, Stderr: r.Log}, &rep); err != nil {
 		return rep, err
@@ -183,17 +183,20 @@ func (s *StorageStep) run(ctx context.Context, r *Run) (storageReport, error) {
 
 func (s *StorageStep) Switch(ctx context.Context, r *Run) error {
 	s.prev = previous(r.Host.Settings(), storageOn)
+	r.State.Storage = &Switched{At: r.now(), Runtime: r.Host.Runtime(), Previous: s.prev}
+	if err := r.record(); err != nil {
+		return err
+	}
 	if err := r.Host.Apply(ctx, storageOn); err != nil {
 		return err
 	}
 	s.switched = true
-	r.State.Storage = &Switched{At: r.now(), Runtime: r.Host.Runtime(), Previous: s.prev}
 	return nil
 }
 
 func (s *StorageStep) Check(ctx context.Context, r *Run) error {
 	var rep attachmentReport
-	j := Job{Script: attachmentScript, Args: []string{strconv.Itoa(AttachmentChecks)}, Objects: true, Stderr: r.Log}
+	j := Job{Script: attachmentScript, Args: []string{strconv.Itoa(attachmentChecks)}, Objects: true, Stderr: r.Log}
 	if err := runJSON(ctx, r.Host.Importer(), j, &rep); err != nil {
 		return fmt.Errorf("checking attachments through media-proxy: %w", err)
 	}

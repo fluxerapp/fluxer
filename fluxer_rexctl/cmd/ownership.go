@@ -40,10 +40,9 @@ func giveFilesBack(app *App, inst *instance.Instance) {
 }
 
 func saveFailed(inst *instance.Instance, err error, msg, command string) error {
-	again := "run " + command + " again."
 	switch {
 	case noSpace(err):
-		return ui.Wrap(err, msg, "The disk is full. Free up space, then "+again)
+		return ui.Wrap(err, msg, "The disk is full. "+thenAgain("Free up space", command))
 	case errors.Is(err, fs.ErrPermission):
 		who := accountName(euid())
 		if euid() == 0 {
@@ -60,7 +59,9 @@ func saveFailed(inst *instance.Instance, err error, msg, command string) error {
 				path = pe.Path
 			}
 		}
-		return ui.Wrap(err, msg, fmt.Sprintf("rexctl isn't allowed to write %s. %s, then %s", path, chownFix(who, dir), again))
+		return ui.Wrap(err, msg, fmt.Sprintf("rexctl isn't allowed to write %s. %s", path, thenAgain(chownFix(who, dir), command)))
+	case command == "":
+		return ui.Wrap(err, msg, "")
 	}
 	return ui.Wrap(err, msg, fmt.Sprintf("Run %s --verbose to see why.", command))
 }

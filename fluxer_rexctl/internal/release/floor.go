@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	ErrEngineTooOld = errors.New("release: the engine is older than the release needs")
-	ErrOlderSchema  = errors.New("release: the release can't read this instance's state")
+	errEngineTooOld = errors.New("release: the engine is older than the release needs")
+	errOlderSchema  = errors.New("release: the release can't read this instance's state")
 )
 
 type EngineTooOldError struct {
@@ -27,7 +27,7 @@ func (e *EngineTooOldError) Error() string {
 	return fmt.Sprintf("release: %s needs %s %s or newer, the engine has %s", e.Release, e.Kind, e.Need, e.Have)
 }
 
-func (e *EngineTooOldError) Is(target error) bool { return target == ErrEngineTooOld }
+func (e *EngineTooOldError) Is(target error) bool { return target == errEngineTooOld }
 
 type OlderSchemaError struct {
 	Have    int
@@ -39,7 +39,7 @@ func (e *OlderSchemaError) Error() string {
 	return fmt.Sprintf("release: %s reads state schema %d, this instance has %d", e.Release, e.Reads, e.Have)
 }
 
-func (e *OlderSchemaError) Is(target error) bool { return target == ErrOlderSchema }
+func (e *OlderSchemaError) Is(target error) bool { return target == errOlderSchema }
 
 func CheckTarget(e *engine.Engine, to *Release, have int) error {
 	if to == nil {

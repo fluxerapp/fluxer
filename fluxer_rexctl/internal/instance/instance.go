@@ -25,8 +25,8 @@ import (
 var (
 	ErrNotFound     = errors.New("instance: not found")
 	ErrLegacy       = errors.New("instance: made by the old installer")
-	ErrExists       = errors.New("instance: already exists")
-	ErrBadProject   = errors.New("instance: project names use lowercase letters, digits, dashes and underscores")
+	errExists       = errors.New("instance: already exists")
+	errBadProject   = errors.New("instance: project names use lowercase letters, digits, dashes and underscores")
 	ErrNoReleaseSet = errors.New("instance: the files for this release are missing")
 )
 
@@ -35,9 +35,9 @@ const (
 	CustomCompose  = settings.CustomFile
 	StateDirName   = ".rexctl"
 	StateFileName  = "state.json"
-	LockFileName   = "lock"
+	lockFileName   = "lock"
 	ReleasesDir    = "releases"
-	StackDir       = "stack"
+	stackDir       = "stack"
 	BackupsDir     = "backups"
 	CertsDir       = "certs"
 	CADir          = "ca"
@@ -47,8 +47,6 @@ const (
 	DefaultKeepBackups = 3
 	KeepAllBackups     = -1
 )
-
-var legacyComposeNames = []string{"compose.yaml", "compose.yml", "docker-compose.yml", "docker-compose.yaml"}
 
 var projectName = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]*$`)
 
@@ -65,9 +63,11 @@ var rootHome = func() (string, error) {
 	return u.HomeDir, nil
 }
 
+const systemDir = "/opt/fluxer"
+
 func DefaultDir() (string, error) {
 	if asRoot() {
-		return "/opt/fluxer", nil
+		return systemDir, nil
 	}
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -76,10 +76,16 @@ func DefaultDir() (string, error) {
 	return filepath.Join(home, "fluxer"), nil
 }
 
-func Fallback() (string, error) {
+func fallback() (string, error) {
 	dir, err := DefaultDir()
-	if err != nil || present(dir) || !asRoot() {
+	if err != nil || present(dir) {
 		return dir, err
+	}
+	if !asRoot() {
+		if rootManaged(systemDir) {
+			return systemDir, nil
+		}
+		return dir, nil
 	}
 	if home, err := rootHome(); err == nil && filepath.IsAbs(home) && present(filepath.Join(home, "fluxer")) {
 		return filepath.Join(home, "fluxer"), nil
@@ -119,13 +125,22 @@ func isLegacy(dir string) bool {
 	if exists(filepath.Join(dir, StateDirName, StateFileName)) || !exists(filepath.Join(dir, EnvFileName)) {
 		return false
 	}
-	for _, name := range legacyComposeNames {
+	for _, name := range defaultComposeNames {
 		if exists(filepath.Join(dir, name)) {
 			return true
 		}
 	}
 	env, _ := envfile.Load(filepath.Join(dir, EnvFileName))
 	return env != nil && env.Value("COMPOSE_FILE") != ""
+}
+
+func rootManaged(dir string) bool {
+	info, err := os.Stat(filepath.Join(dir, StateDirName))
+	if err != nil || !info.IsDir() {
+		return false
+	}
+	uid, ok := ownerOf(info)
+	return ok && uid == 0
 }
 
 func exists(path string) bool {
@@ -135,7 +150,7 @@ func exists(path string) bool {
 
 func Create(dir, project string) (*Instance, error) {
 	if !projectName.MatchString(project) {
-		return nil, ErrBadProject
+		return nil, errBadProject
 	}
 	dir, err := filepath.Abs(dir)
 	if err != nil {
@@ -143,13 +158,13 @@ func Create(dir, project string) (*Instance, error) {
 	}
 	i := &Instance{Dir: dir}
 	if exists(i.StatePath()) {
-		return nil, ErrExists
+		return nil, errExists
 	}
 	if isLegacy(dir) {
 		return nil, ErrLegacy
 	}
 	if exists(i.Path(EnvFileName)) {
-		return nil, ErrExists
+		return nil, errExists
 	}
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return nil, err
@@ -186,7 +201,7 @@ func (i *Instance) ReleaseDir(version string) string {
 }
 
 func (i *Instance) SetDir(version string) string {
-	return filepath.Join(i.ReleaseDir(version), StackDir)
+	return filepath.Join(i.ReleaseDir(version), stackDir)
 }
 
 func (i *Instance) BackupDir() string {
@@ -212,10 +227,19 @@ func (i *Instance) Project() string {
 
 func (i *Instance) Set() (*stack.Set, error) {
 	release := i.State.Release
-	if embedded := stack.Embedded(); release == "" || release == embedded.Release {
-		return embedded, nil
+	if i.State.RunsFluxerd() {
+		return i.nativeSet(release)
+	}
+	if release == "" {
+		return nil, ErrNoReleaseSet
 	}
 	set, err := stack.LoadSet(i.SetDir(release))
+	if errors.Is(err, fs.ErrNotExist) && FetchSet != nil {
+		if ferr := FetchSet(release, i.SetDir(release)); ferr != nil {
+			return nil, fmt.Errorf("%w: %s: %w", ErrNoReleaseSet, release, ferr)
+		}
+		set, err = stack.LoadSet(i.SetDir(release))
+	}
 	if err == nil {
 		return set, nil
 	}
@@ -223,6 +247,19 @@ func (i *Instance) Set() (*stack.Set, error) {
 		return nil, err
 	}
 	return nil, fmt.Errorf("%w: %s", ErrNoReleaseSet, release)
+}
+
+var FetchSet func(release, dir string) error
+
+func (i *Instance) nativeSet(release string) (*stack.Set, error) {
+	if release == "" {
+		release = stack.EmbeddedRelease()
+	}
+	set, err := stack.LoadCatalogSet(i.SetDir(release), release)
+	if errors.Is(err, fs.ErrNotExist) {
+		return settings.NativeSet(release), nil
+	}
+	return set, err
 }
 
 func (i *Instance) Custom() ([]byte, error) {
@@ -265,15 +302,21 @@ func (i *Instance) Setting(name string) string {
 		return v
 	}
 	custom, _ := i.Custom()
-	return composeDefault(set, custom, env, name)
+	return releaseDefault(set, custom, env, name)
 }
 
-func composeDefault(set *stack.Set, custom []byte, env map[string]string, name string) string {
-	defs := composeDefaults(setFiles(set, custom))[name]
-	if len(defs) == 0 {
+func releaseDefault(set *stack.Set, custom []byte, env map[string]string, name string) string {
+	def := ""
+	if set.Catalog != nil {
+		s, _ := set.Setting(name)
+		def = s.Default
+	} else if defs := composeDefaults(setFiles(set, custom))[name]; len(defs) > 0 {
+		def = defs[0]
+	}
+	if def == "" {
 		return ""
 	}
-	v, ok := interpolate(defs[0], env)
+	v, ok := interpolate(def, env)
 	if !ok {
 		return ""
 	}
@@ -304,7 +347,7 @@ func setFiles(set *stack.Set, custom []byte) [][]byte {
 }
 
 func (i *Instance) Domain() string {
-	return i.Setting("FLUXER_DOMAIN")
+	return settings.NormalDomain(i.Setting("FLUXER_DOMAIN"))
 }
 
 func (i *Instance) Origin() string {
@@ -323,7 +366,7 @@ func (i *Instance) Origin() string {
 	if port == "" || (scheme == "https" && port == "443") || (scheme == "http" && port == "80") {
 		return scheme + "://" + domain
 	}
-	return scheme + "://" + net.JoinHostPort(domain, port)
+	return scheme + "://" + net.JoinHostPort(settings.BareHost(domain), port)
 }
 
 func (i *Instance) Overlays() []stack.Overlay {
@@ -376,5 +419,5 @@ func removeIfExists(path string) error {
 }
 
 func ReleaseDefault(set *stack.Set, name string) string {
-	return composeDefault(set, nil, nil, name)
+	return releaseDefault(set, nil, nil, name)
 }

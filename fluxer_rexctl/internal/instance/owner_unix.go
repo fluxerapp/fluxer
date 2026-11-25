@@ -27,7 +27,7 @@ var ownerOf = func(info os.FileInfo) (int, bool) {
 }
 
 func (i *Instance) giveToOwner(path string) error {
-	if euid() != 0 {
+	if os.Geteuid() != 0 {
 		return nil
 	}
 	r, err := os.OpenRoot(i.Dir)

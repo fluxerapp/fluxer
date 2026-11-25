@@ -2,6 +2,10 @@
 
 package host
 
+import "io/fs"
+
 func dirOwner(string) string { return "" }
 
-func fileOwner(string) (int, int, bool) { return 0, 0, false }
+func FileOwner(string) (int, int, bool) { return 0, 0, false }
+
+func OwnerOf(fs.FileInfo) (int, int, bool) { return 0, 0, false }

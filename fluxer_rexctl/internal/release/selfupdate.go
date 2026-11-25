@@ -27,8 +27,8 @@ const maxArchiveBytes = 256 << 20
 
 var (
 	ErrChecksum           = errors.New("release: the download doesn't match its checksum")
-	ErrNoBinary           = errors.New("release: the archive has no rexctl binary")
-	ErrBadAsset           = errors.New("release: the asset has no URL or checksum")
+	errNoBinary           = errors.New("release: the archive has no rexctl binary")
+	errBadAsset           = errors.New("release: the asset has no URL or checksum")
 	selfPath, selfPathErr = executablePath()
 )
 
@@ -55,7 +55,7 @@ func SelfUpdate(ctx context.Context, a Asset) error {
 	}
 	want, err := hex.DecodeString(strings.TrimSpace(a.SHA256))
 	if err != nil || len(want) != sha256.Size || a.URL == "" {
-		return ErrBadAsset
+		return errBadAsset
 	}
 	archive, err := download(ctx, a.URL)
 	if err != nil {
@@ -127,7 +127,7 @@ func extractTarGz(archive []byte) ([]byte, error) {
 	for {
 		h, err := tr.Next()
 		if errors.Is(err, io.EOF) {
-			return nil, ErrNoBinary
+			return nil, errNoBinary
 		}
 		if err != nil {
 			return nil, err
@@ -155,5 +155,5 @@ func extractZip(archive []byte) ([]byte, error) {
 		defer rc.Close()
 		return io.ReadAll(io.LimitReader(rc, maxArchiveBytes))
 	}
-	return nil, ErrNoBinary
+	return nil, errNoBinary
 }

@@ -24,7 +24,7 @@ const RecordFileName = "instances.json"
 var MachineRecordPath = "/etc/rexctl/" + RecordFileName
 
 var (
-	asRoot  = func() bool { return runtime.GOOS != "windows" && euid() == 0 }
+	asRoot  = func() bool { return runtime.GOOS != "windows" && os.Geteuid() == 0 }
 	rootUID = 0
 )
 
@@ -219,7 +219,7 @@ func (r Record) pruned() Record {
 func (r Record) remember(dir string, makeDefault bool) Record {
 	dir = clean(dir)
 	if r.Empty() && !makeDefault {
-		if fb, err := Fallback(); err == nil && present(fb) && !same(fb, dir) {
+		if fb, err := fallback(); err == nil && present(fb) && !same(fb, dir) {
 			r = Record{Default: clean(fb), Instances: []string{clean(fb)}}
 		}
 	}
@@ -258,7 +258,7 @@ func (r Record) Encode() []byte {
 	return append(data, '\n')
 }
 
-func SaveRecord(s Scope, r Record) error {
+func saveRecord(s Scope, r Record) error {
 	path := RecordPath(s)
 	if path == "" {
 		return errors.New("instance: no place to record instances on this system")
@@ -311,7 +311,7 @@ func updateRecord(s Scope, fn func(Record) Record) error {
 	if slices.Equal(next.Encode(), r.Encode()) {
 		return nil
 	}
-	return SaveRecord(s, next)
+	return saveRecord(s, next)
 }
 
 func Remember(s Scope, dir string, makeDefault bool) error {
@@ -407,7 +407,7 @@ func Resolve(flag string) (l Located, err error) {
 			_ = updateRecord(s, Record.pruned)
 		}
 	}
-	dir, err := Fallback()
+	dir, err := fallback()
 	if err == nil && asRoot() && !present(dir) {
 		if l, ok, err := sudoerInstance(); ok || err != nil {
 			return l, err
@@ -482,7 +482,7 @@ func RootNamed(dir string) (string, error) {
 	uid := sudoUID()
 	shared := ""
 	for _, p := range []string{filepath.Join(abs, StateDirName, StateFileName), filepath.Join(abs, StateDirName), abs} {
-		real := resolved(p)
+		real := RealPath(p)
 		info, err := os.Stat(real)
 		switch {
 		case errors.Is(err, fs.ErrNotExist):
@@ -497,7 +497,7 @@ func RootNamed(dir string) (string, error) {
 	for _, w := range []struct {
 		path string
 		stat func(string) (os.FileInfo, error)
-	}{{abs, os.Lstat}, {resolved(abs), os.Stat}} {
+	}{{abs, os.Lstat}, {RealPath(abs), os.Stat}} {
 		above, err := sharedAbove(w.path, w.stat, uid)
 		if err != nil {
 			if u, ok := err.(*UntrustedError); ok {
@@ -566,7 +566,7 @@ func untrustedPart(path string, trusted func(os.FileInfo, int) bool) (string, bo
 	if p, shared := untrustedWalk(abs, os.Lstat, trusted); p != "" {
 		return p, shared
 	}
-	return untrustedWalk(resolved(abs), os.Stat, trusted)
+	return untrustedWalk(RealPath(abs), os.Stat, trusted)
 }
 
 func untrustedWalk(path string, stat func(string) (os.FileInfo, error), trusted func(os.FileInfo, int) bool) (string, bool) {
@@ -595,10 +595,6 @@ func untrustedWalk(path string, stat func(string) (os.FileInfo, error), trusted 
 }
 
 func RealPath(path string) string {
-	return resolved(path)
-}
-
-func resolved(path string) string {
 	abs, err := filepath.Abs(path)
 	if err != nil {
 		return filepath.Clean(path)
@@ -651,4 +647,26 @@ func same(a, b string) bool {
 		return strings.EqualFold(a, b)
 	}
 	return a == b
+}
+
+func Others(dir string) []*Instance {
+	own := RealPath(dir)
+	var out []*Instance
+	seen := map[string]bool{}
+	for _, d := range ReadRecord(OwnScope()).Instances {
+		real := RealPath(d)
+		if real == own || seen[real] {
+			continue
+		}
+		seen[real] = true
+		if inst, err := Find(d); err == nil && inst.State != nil && RealPath(inst.Dir) != own {
+			out = append(out, inst)
+		}
+	}
+	return out
+}
+
+func Recorded(dir string) bool {
+	own := RealPath(dir)
+	return slices.ContainsFunc(ReadRecord(OwnScope()).Instances, func(d string) bool { return RealPath(d) == own })
 }

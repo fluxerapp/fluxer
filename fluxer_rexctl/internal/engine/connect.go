@@ -105,22 +105,22 @@ func Connect(ctx context.Context, opts ConnectOptions) (*Engine, error) {
 		if err == nil {
 			if opts.ID != "" && e.ID != opts.ID {
 				c.close()
-				return nil, &Error{Op: "connect", Class: ClassEngineChanged, Other: e.DisplayName(), Replaced: true, Err: fmt.Errorf("%s answers as engine %s, not the engine %s this instance uses", opts.Host, e.ID, opts.ID)}
+				return nil, &Error{Op: "connect", Class: ClassEngineChanged, Other: e.DisplayName(), Replaced: true, Err: fmt.Errorf("%s responds as engine %s, not the engine %s this instance uses", opts.Host, e.ID, opts.ID)}
 			}
 			return finish(e, c, opts)
 		}
 		if opts.ID == "" {
 			return nil, err
 		}
-		detailf("engine: %s did not answer, looking for engine %s elsewhere", opts.Host, opts.ID)
+		detailf("engine: %s did not respond, looking for engine %s elsewhere", opts.Host, opts.ID)
 		e, c, found, other := findByID(ctx, opts)
 		if found {
 			return finish(e, c, opts)
 		}
 		if other != nil {
-			return nil, &Error{Op: "connect", Class: ClassEngineChanged, Other: other.DisplayName(), Err: fmt.Errorf("the engine %s at %s does not answer, and %s at %s is another engine", opts.ID, opts.Host, other.ID, other.Host)}
+			return nil, &Error{Op: "connect", Class: ClassEngineChanged, Other: other.DisplayName(), Err: fmt.Errorf("the engine %s at %s does not respond, and %s at %s is another engine", opts.ID, opts.Host, other.ID, other.Host)}
 		}
-		return nil, &Error{Op: "connect", Class: classOrUnreachable(err), Err: fmt.Errorf("the engine %s at %s does not answer: %w", opts.ID, opts.Host, err)}
+		return nil, &Error{Op: "connect", Class: classOrUnreachable(err), Err: fmt.Errorf("the engine %s at %s does not respond: %w", opts.ID, opts.Host, err)}
 	}
 	var firstErr error
 	for _, host := range candidates(opts.Prefer) {
@@ -137,7 +137,7 @@ func Connect(ctx context.Context, opts ConnectOptions) (*Engine, error) {
 		}
 	}
 	if firstErr == nil {
-		firstErr = &Error{Op: "connect", Class: ClassUnreachable, Err: errors.New("no engine answers")}
+		firstErr = &Error{Op: "connect", Class: ClassUnreachable, Err: errors.New("no engine responds")}
 	}
 	return nil, firstErr
 }
@@ -258,7 +258,7 @@ func socketPath(host string) (string, bool) {
 func dial(ctx context.Context, host string) (*Engine, *conn, error) {
 	if p, ok := socketPath(host); ok {
 		if _, err := os.Stat(p); errors.Is(err, os.ErrNotExist) {
-			return nil, nil, &Error{Op: "connect", Class: ClassUnreachable, Err: fmt.Errorf("nothing answers at %s", host)}
+			return nil, nil, &Error{Op: "connect", Class: ClassUnreachable, Err: fmt.Errorf("nothing responds at %s", host)}
 		}
 	}
 	cli, err := command.NewDockerCli(command.WithOutputStream(io.Discard), command.WithErrorStream(io.Discard))
@@ -373,8 +373,6 @@ func contextFor(host string) string {
 	}
 	return ""
 }
-
-func HostPlatform() string { return platform(runtime.GOARCH) }
 
 func platform(arch string) string {
 	switch strings.ToLower(arch) {

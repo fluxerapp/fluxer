@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"maps"
 	"reflect"
 	"slices"
@@ -17,9 +16,9 @@ import (
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/adminapi"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/deploy"
-	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
+	rt "github.com/fluxerapp/fluxer/fluxer_rexctl/internal/runtime"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
@@ -42,7 +41,7 @@ func describeType(k adminapi.ConfigKey) string {
 	case "json":
 		return "JSON"
 	case "secret":
-		return "a secret. Pass - to read it from stdin"
+		return "a secret"
 	case "integer":
 		return "a whole number"
 	case "boolean":
@@ -51,50 +50,31 @@ func describeType(k adminapi.ConfigKey) string {
 	if len(k.Options) > 0 {
 		return ui.JoinOr(k.Options)
 	}
-	switch k.Type {
-	case "number":
+	if k.Type == "number" {
 		return "a number"
-	}
-	return "text"
-}
-
-var deploymentTypes = map[string]string{
-	"hostname": "a domain name, like chat.example.com",
-	"address":  "an address and port, like 127.0.0.1:8080",
-	"port":     "a port number",
-	"list":     "a comma-separated list",
-	"ip":       "an IP address, or nothing to let Fluxer find it",
-	"url":      "a full address that starts with https://",
-	"bool":     "true or false",
-	"secret":   "a secret. Pass - to read it from stdin",
-	"image":    "an image reference, like postgres:16-alpine",
-	"registry": "a registry host, like registry.example.com",
-	"endpoint": "an engine address, like " + settings.EngineExample(),
-}
-
-func describeDeployType(k settings.Key) string {
-	if len(k.Options) > 0 {
-		return ui.JoinOr(k.Options)
-	}
-	if k.Secret {
-		return deploymentTypes["secret"]
-	}
-	if t, ok := deploymentTypes[k.Type]; ok {
-		return t
 	}
 	return "text"
 }
 
 type configView struct {
 	inst   *instance.Instance
+	rt     rt.Runtime
 	set    *stack.Set
 	custom []byte
 	vars   []string
 	schema []adminapi.ConfigKey
 }
 
-func loadConfigView(app *App, repairing []string) (*configView, error) {
+func loadConfigView(ctx context.Context, app *App, repairing []string) (*configView, error) {
 	inst, err := app.InstanceRepairing(repairing)
+	if err != nil {
+		return nil, err
+	}
+	return configViewOf(ctx, app, inst)
+}
+
+func configViewOf(ctx context.Context, app *App, inst *instance.Instance) (*configView, error) {
+	r, err := app.Runtime(ctx, inst)
 	if err != nil {
 		return nil, err
 	}
@@ -108,13 +88,13 @@ func loadConfigView(app *App, repairing []string) (*configView, error) {
 	}
 	vars, err := settings.Vars(set, custom)
 	if err != nil {
-		return nil, ui.Wrap(err, fmt.Sprintf("rexctl can't read %s.", instance.CustomCompose), "Fix the file, then try again.")
+		return nil, ui.Wrap(err, fmt.Sprintf("rexctl can't read %s.", instance.CustomCompose), "Run rexctl config edit --compose to fix it.")
 	}
 	schema, err := adminapi.ConfigSchema()
 	if err != nil {
 		return nil, err
 	}
-	return &configView{inst: inst, set: set, custom: custom, vars: vars, schema: schema}, nil
+	return &configView{inst: inst, rt: r, set: set, custom: custom, vars: settings.WithHeld(vars, inst.State.Settings), schema: schema}, nil
 }
 
 func (v *configView) lookup(name string) (settings.Key, error) {
@@ -123,7 +103,13 @@ func (v *configView) lookup(name string) (settings.Key, error) {
 	if errors.As(err, &se) {
 		return settings.Key{}, &ui.ExitError{Code: ui.ExitUsage, Msg: se.Problem, Fix: se.Fix, Err: err}
 	}
-	return k, err
+	if err != nil {
+		return k, err
+	}
+	if ok, why := v.rt.Settings().Supports(k.Name); !ok {
+		return settings.Key{}, &ui.ExitError{Code: ui.ExitRefused, Msg: why, Fix: "Run rexctl config list to see the settings this instance has.", Err: rt.ErrUnsupported}
+	}
+	return k, nil
 }
 
 func (v *configView) value(k settings.Key) string {
@@ -176,51 +162,11 @@ func (v *configView) applies(k settings.Key) string {
 	if k.Name == settings.EngineHost {
 		return "Next command"
 	}
-	return restartText(deploy.Promised(v.set, v.custom, k))
+	return restartText(v.restarts(k))
 }
 
-func partsOf(services []string) []string {
-	var parts []string
-	for _, p := range logParts {
-		for _, svc := range p.services {
-			if slices.Contains(services, svc) && !slices.Contains(parts, p.name) {
-				parts = append(parts, p.name)
-			}
-		}
-	}
-	return parts
-}
-
-func extraRestartText(p deploy.Preview) string {
-	promised := partsOf(p.Promised)
-	if len(promised) > 2 {
-		return ""
-	}
-	all := partsOf(append(slices.Clone(p.Restarts), p.Removes...))
-	var extra []string
-	for _, part := range all {
-		if !slices.Contains(promised, part) {
-			extra = append(extra, part)
-		}
-	}
-	switch {
-	case len(all) > 2:
-		return "This restarts all of Fluxer."
-	case len(extra) == 0:
-		return "This also restarts other Fluxer services."
-	}
-	return "This also restarts " + ui.JoinAnd(extra) + "."
-}
-
-func restartText(services []string) string {
-	parts := partsOf(services)
-	switch {
-	case len(parts) == 0:
-		return "Right away"
-	case len(parts) > 2:
-		return "Restarts Fluxer"
-	}
-	return "Restarts " + ui.JoinAnd(parts)
+func (v *configView) restarts(k settings.Key) []string {
+	return partsOf(deploy.Promised(v.set, v.custom, k))
 }
 
 var rexctlKeyHelp = map[string]string{
@@ -252,8 +198,34 @@ type configRow struct {
 	Value    any      `json:"value"`
 	Default  any      `json:"default,omitempty"`
 	Secret   bool     `json:"secret"`
+	Changed  bool     `json:"changed"`
+	Group    string   `json:"group"`
+	Applies  string   `json:"applies"`
 	Restarts []string `json:"restarts"`
+	Takes    string   `json:"takes"`
 	Help     string   `json:"help,omitempty"`
+	Options  []string `json:"options,omitempty"`
+	common   bool
+}
+
+func (r configRow) shown() string {
+	if r.Value == nil {
+		return ""
+	}
+	if set, ok := r.Value.(bool); ok && r.Secret {
+		if set {
+			return "set"
+		}
+		return ""
+	}
+	if s, ok := r.Value.(string); ok {
+		return s
+	}
+	b, err := json.Marshal(r.Value)
+	if err != nil {
+		return fmt.Sprint(r.Value)
+	}
+	return string(b)
 }
 
 func (v *configView) row(k settings.Key, reveal bool) configRow {
@@ -262,20 +234,48 @@ func (v *configView) row(k settings.Key, reveal bool) configRow {
 	if reveal {
 		shown = value
 	}
-	r := configRow{Key: k.Name, Kind: "deployment", Type: k.Type, Value: shown, Secret: k.Secret, Help: keyHelp(k), Restarts: []string{}}
+	r := configRow{Key: k.Name, Kind: "deployment", Type: k.Type, Value: shown, Secret: k.Secret, Help: keyHelp(k),
+		Restarts: []string{}, Group: settings.Group(k.Name), Applies: v.applies(k), Takes: settings.Describe(k), Options: k.Options,
+		common: k.Kind != settings.Raw && (!strings.HasPrefix(k.Name, "images.") || k.Name == settings.ImagesRegistry)}
+	if section := instance.EnvSection(k.Name); k.Kind == settings.Raw && section != "" {
+		r.Group = settings.SectionGroup(section)
+	}
 	if k.Name != settings.EngineHost {
-		r.Restarts = deploy.Promised(v.set, v.custom, k)
+		r.Restarts = v.restarts(k)
+		if r.Restarts == nil {
+			r.Restarts = []string{}
+		}
 	}
 	if def := v.defaultOf(k); def != "" {
 		r.Default = settings.Mask(k, def)
+	}
+	_, chosen := v.inst.State.Settings[k.Name]
+	r.Changed = chosen || k.Name == settings.EngineHost && v.inst.State.Engine.Host != ""
+	return r
+}
+
+func instanceRow(k adminapi.ConfigKey) configRow {
+	r := configRow{Key: k.Key, Kind: "instance", Type: k.Type, Value: k.Value, Default: k.Default, Secret: k.Type == "secret",
+		Restarts: []string{}, Help: k.Help, Group: settings.Group(k.Key), Applies: "Right away", Takes: describeType(k), Options: k.Options,
+		common: slices.Contains(commonInstanceKeys, k.Key)}
+	r.Changed = k.Default != nil && !sameValue(k.Value, k.Default)
+	if r.Secret {
+		r.Changed = k.Value == true
 	}
 	return r
 }
 
 func (v *configView) deploymentKeys() []settings.Key {
 	var out []settings.Key
+	supported := func(name string) bool {
+		ok, _ := v.rt.Settings().Supports(name)
+		return ok
+	}
 	for _, k := range settings.Named() {
-		if _, err := settings.Lookup(v.set, v.vars, k.Name, nil); err == nil {
+		if k.Hidden {
+			continue
+		}
+		if _, err := settings.Lookup(v.set, v.vars, k.Name, nil); err == nil && supported(k.Name) {
 			out = append(out, k)
 		}
 	}
@@ -290,7 +290,7 @@ func (v *configView) deploymentKeys() []settings.Key {
 	}
 	slices.Sort(raw)
 	for _, name := range slices.Compact(raw) {
-		if name == stack.SettingsLoadedVar {
+		if name == stack.SettingsLoadedVar || !supported(name) {
 			continue
 		}
 		k, err := settings.Lookup(v.set, v.vars, name, nil)
@@ -301,52 +301,167 @@ func (v *configView) deploymentKeys() []settings.Key {
 	return out
 }
 
+func (v *configView) rows(ctx context.Context, app *App) ([]configRow, error) {
+	var rows []configRow
+	for _, k := range v.deploymentKeys() {
+		r := v.row(k, false)
+		if _, generated := v.inst.State.Secrets[k.Name]; generated && k.Kind == settings.Raw {
+			if _, chosen := v.inst.State.Settings[k.Name]; !chosen {
+				r.Value = "generated"
+			}
+		}
+		rows = append(rows, r)
+	}
+	instanceKeys, apiErr := instanceValues(ctx, app)
+	for _, k := range instanceKeys {
+		rows = append(rows, instanceRow(k))
+	}
+	return rows, apiErr
+}
+
+var commonInstanceKeys = []string{
+	adminapi.RegistrationModeKey, "registration.allowed_email_domains", "captcha.provider",
+	"accounts.date_of_birth", "accounts.inactivity_deletion.mode",
+	"app_public.branding.product_name", "app_public.branding.theme_color", "app_public.branding.logo_url", "app_public.branding.icon_url",
+	"app_public.legal.terms_url", "app_public.legal.privacy_url", "app_public.legal.guidelines_url",
+	"integrations.email.delivery", "integrations.email.from_email", "integrations.email.from_name",
+	"integrations.email.smtp.host", "integrations.email.smtp.port", "integrations.email.smtp.username", "integrations.email.smtp.password",
+	"sso.enabled", "policy.guild_create_access", "policy.direct_messages_disabled", "media.attachment_decay.enabled", "notice", "voice_p2p.enabled",
+}
+
+type listFilter struct {
+	text    string
+	changed bool
+	all     bool
+}
+
+func (f listFilter) keep(r configRow) bool {
+	if f.changed && !r.Changed {
+		return false
+	}
+	if f.text == "" {
+		return f.all || f.changed || r.common || r.Changed
+	}
+	t := strings.ToLower(f.text)
+	return strings.Contains(strings.ToLower(r.Key), t) || strings.Contains(strings.ToLower(r.Help), t) || strings.EqualFold(r.Group, f.text)
+}
+
 func newConfigCmd(app *App) *cobra.Command {
-	c := &cobra.Command{Use: "config", Short: "Read and change Fluxer's settings", Args: noArgs}
-	c.AddCommand(newConfigListCmd(app), newConfigGetCmd(app), newConfigSetCmd(app), newConfigUnsetCmd(app), newConfigEditCmd(app), newConfigRenderCmd(app))
+	c := &cobra.Command{
+		Use:   "config",
+		Short: "Read and change Fluxer's settings",
+		Long:  "Read and change Fluxer's settings. On a terminal, rexctl config opens a browser of every setting, grouped by what it changes. Pick one to see what it takes and change it.",
+		Example: `rexctl config
+rexctl config list email
+rexctl config set registration.mode invite`,
+		Args: noArgs,
+	}
+	app.jsonFlag(c)
+	c.RunE = func(c *cobra.Command, _ []string) error {
+		if app.UI.Interactive() && !app.Flags.JSON {
+			return browseConfig(c, app)
+		}
+		return listConfig(c.Context(), app, listFilter{})
+	}
+	c.AddCommand(newConfigListCmd(app), newConfigGetCmd(app), newConfigSetCmd(app), newConfigUnsetCmd(app), newConfigEditCmd(app), newConfigRenderCmd(app), newConfigRotateCmd(app))
 	return c
 }
 
 func newConfigListCmd(app *App) *cobra.Command {
-	list := &cobra.Command{Use: "list", Short: "List every setting with its value and help", Args: noArgs}
+	var f listFilter
+	list := &cobra.Command{
+		Use:   "list [filter]",
+		Short: "List settings with their values, grouped by what they change",
+		Long:  "List the settings people change most and the ones you changed, with their values, grouped into Network, Email, Voice, Storage, Accounts, Branding and Advanced.\n\nPass --all to list every setting. Pass a word to search every setting for ones whose name or help has it, or a group name to show one group.",
+		Example: `rexctl config list
+rexctl config list --all
+rexctl config list voice
+rexctl config list --changed`,
+		Args: maxArgs(1),
+	}
+	list.Flags().BoolVar(&f.changed, "changed", false, "only show settings that differ from their defaults")
+	list.Flags().BoolVar(&f.all, "all", false, "list every setting")
 	app.jsonFlag(list)
-	list.RunE = func(c *cobra.Command, _ []string) error {
-		ctx := c.Context()
-		v, err := loadConfigView(app, nil)
-		if err != nil {
-			return err
+	list.RunE = func(c *cobra.Command, args []string) error {
+		if len(args) == 1 {
+			f.text = strings.TrimSpace(args[0])
 		}
-		var rows []configRow
-		var table [][]string
-		for _, k := range v.deploymentKeys() {
-			r := v.row(k, false)
-			if _, generated := v.inst.State.Secrets[k.Name]; generated && k.Kind == settings.Raw {
-				if _, chosen := v.inst.State.Settings[k.Name]; !chosen {
-					r.Value = "generated"
-				}
-			}
-			rows = append(rows, r)
-			table = append(table, []string{r.Key, clip(fmt.Sprint(r.Value)), v.applies(k), firstSentence(r.Help)})
-		}
-		instanceKeys, apiErr := instanceValues(ctx, app)
-		for _, k := range instanceKeys {
-			rows = append(rows, configRow{Key: k.Key, Kind: "instance", Type: k.Type, Value: k.Value, Default: k.Default,
-				Secret: k.Type == "secret", Restarts: []string{}, Help: k.Help})
-			table = append(table, []string{k.Key, clip(adminapi.FormatValue(k)), "Right away", k.Help})
-		}
-		if app.Flags.JSON {
-			return app.UI.JSON(rows)
-		}
-		app.UI.Table([]string{"Setting", "Value", "Applies", "Help"}, table)
-		if errors.Is(apiErr, adminapi.ErrNoRelay) {
-			app.UI.Info("The other settings need a newer Fluxer release. Run rexctl upgrade to see them.")
-		} else if apiErr != nil {
-			app.UI.Info("The other settings need Fluxer running. Run rexctl start to see them.")
-			app.UI.Detail("%v", apiErr)
-		}
-		return nil
+		return listConfig(c.Context(), app, f)
 	}
 	return list
+}
+
+func listConfig(ctx context.Context, app *App, f listFilter) error {
+	inst, err := app.InstanceRepairing(nil)
+	if err != nil {
+		return err
+	}
+	if moved := inst.Moved(); moved != nil {
+		return movedConfig(app, moved)
+	}
+	v, err := configViewOf(ctx, app, inst)
+	if err != nil {
+		return err
+	}
+	all, apiErr := v.rows(ctx, app)
+	rows := []configRow{}
+	for _, r := range all {
+		if f.keep(r) {
+			rows = append(rows, r)
+		}
+	}
+	if app.Flags.JSON {
+		return app.UI.JSON(rows)
+	}
+	if len(rows) == 0 {
+		switch {
+		case f.changed && f.text == "":
+			app.UI.Info("Every setting has its default value.")
+		case f.changed:
+			app.UI.Info("None of the settings you changed match %s. Run rexctl config list %s to see them all.", f.text, f.text)
+		default:
+			app.UI.Info("No setting matches %s. Run rexctl config list --all to see every setting.", f.text)
+		}
+	}
+	for _, group := range settings.Groups {
+		var table [][]string
+		for _, r := range rows {
+			if r.Group == group {
+				table = append(table, []string{r.Key, clip(r.shown()), r.Applies, firstSentence(r.Help)})
+			}
+		}
+		if len(table) == 0 {
+			continue
+		}
+		app.UI.Section(group)
+		app.UI.Table([]string{"Setting", "Value", "Applies", "Help"}, table)
+	}
+	if hidden := len(all) - len(rows); f.text == "" && !f.all && !f.changed && hidden > 0 {
+		app.UI.Info("These are the settings people change most. Run rexctl config list --all to see %d more.", hidden)
+	}
+	explainInstanceKeys(app, v.inst, apiErr)
+	return nil
+}
+
+func movedConfig(app *App, moved *instance.MovedError) error {
+	if app.Flags.JSON {
+		return app.UI.JSON([]configRow{})
+	}
+	app.UI.Info("Fluxer runs from %s now, and its settings live with that instance. Run %s to see them.", moved.To, runThere(moved.To, "config", "list"))
+	return nil
+}
+
+func explainInstanceKeys(app *App, inst *instance.Instance, apiErr error) {
+	switch {
+	case apiErr == nil:
+	case errors.Is(apiErr, adminapi.ErrNoRelay):
+		app.UI.Info("The other settings need a newer Fluxer release. Run rexctl upgrade to see them.")
+	case adminapi.PermissionDenied(apiErr):
+		app.UI.Info("The other settings need root on this machine. Run %s to see them.", sudoAgain(inst.Dir))
+	default:
+		app.UI.Info("The other settings need Fluxer running. Run rexctl start to see them.")
+		app.UI.Detail("%v", apiErr)
+	}
 }
 
 func instanceValues(ctx context.Context, app *App) ([]adminapi.ConfigKey, error) {
@@ -359,11 +474,18 @@ func instanceValues(ctx context.Context, app *App) ([]adminapi.ConfigKey, error)
 
 func newConfigGetCmd(app *App) *cobra.Command {
 	var reveal bool
-	get := &cobra.Command{Use: "get <key>", Short: "Show one setting", Args: exactArgs("a setting name")}
+	get := &cobra.Command{
+		Use:   "get <setting>",
+		Short: "Show a setting, what it takes and when it applies",
+		Example: `rexctl config get edge.bind
+rexctl config get storage.secret_key --reveal`,
+		Args: exactArgs("a setting name"),
+	}
 	app.jsonFlag(get)
 	get.Flags().BoolVar(&reveal, "reveal", false, "print a secret rexctl keeps")
 	get.RunE = func(c *cobra.Command, args []string) error {
-		v, err := loadConfigView(app, nil)
+		ctx := c.Context()
+		v, err := loadConfigView(ctx, app, nil)
 		if err != nil {
 			return err
 		}
@@ -372,10 +494,7 @@ func newConfigGetCmd(app *App) *cobra.Command {
 			return err
 		}
 		if k.Kind == settings.Instance {
-			if reveal {
-				return ui.Usage(fmt.Sprintf("Fluxer doesn't show %s once it's saved.", k.Name))
-			}
-			return getInstanceKey(c, app, k.Name)
+			return getInstanceKey(ctx, app, v, k.Name, reveal)
 		}
 		r := v.row(k, reveal)
 		if app.Flags.JSON {
@@ -390,42 +509,46 @@ func newConfigGetCmd(app *App) *cobra.Command {
 		if k.Secret && value == "" {
 			shown = "not set"
 		}
-		rows := [][]string{{"Value", shown}, {"Takes", describeDeployType(k)}}
-		if r.Default != nil {
-			rows = append(rows, []string{"Default", fmt.Sprint(r.Default)})
-		}
-		rows = append(rows, []string{"Applies", v.applies(k)})
-		if r.Help != "" {
-			rows = append(rows, []string{"Help", r.Help})
-		}
-		app.UI.Table([]string{"Setting", k.Name}, rows)
+		showSetting(app, r, shown)
 		return nil
 	}
 	return get
 }
 
-func getInstanceKey(c *cobra.Command, app *App, name string) error {
-	return adminRead(c, app, func(ctx context.Context, api *adminapi.Client, _ *instance.Instance) error {
-		values, err := api.ConfigValues(ctx)
-		if err != nil {
-			return err
-		}
-		k, err := adminapi.FindConfigKey(values, name)
-		if err != nil {
-			return err
-		}
-		if app.Flags.JSON {
-			return app.UI.JSON(configRow{Key: k.Key, Kind: "instance", Type: k.Type, Value: k.Value, Default: k.Default,
-				Secret: k.Type == "secret", Restarts: []string{}, Help: k.Help})
-		}
-		rows := [][]string{{"Value", adminapi.FormatValue(k)}, {"Takes", describeType(k)}}
-		if k.Default != nil {
-			rows = append(rows, []string{"Default", fmt.Sprint(k.Default)})
-		}
-		rows = append(rows, []string{"Applies", "Right away"}, []string{"Help", k.Help})
-		app.UI.Table([]string{"Setting", k.Key}, rows)
+func showSetting(app *App, r configRow, shown string) {
+	rows := [][]string{{"Value", shown}, {"Takes", r.Takes}}
+	if r.Default != nil {
+		rows = append(rows, []string{"Default", fmt.Sprint(r.Default)})
+	}
+	rows = append(rows, []string{"Applies", r.Applies}, []string{"Group", r.Group})
+	if r.Help != "" {
+		rows = append(rows, []string{"Help", r.Help})
+	}
+	app.UI.Table([]string{"Setting", r.Key}, rows)
+}
+
+func getInstanceKey(ctx context.Context, app *App, v *configView, name string, reveal bool) error {
+	values, err := instanceValues(ctx, app)
+	if err != nil {
+		return adminapi.Explain(err)
+	}
+	k, err := adminapi.FindConfigKey(values, name)
+	if err != nil {
+		return adminapi.Explain(err)
+	}
+	if reveal && k.Type == "secret" {
+		return ui.Refused(fmt.Sprintf("Fluxer doesn't show %s once it's saved.", k.Key), fmt.Sprintf("Set a new value with rexctl config set %s.", k.Key))
+	}
+	r := instanceRow(k)
+	if app.Flags.JSON {
+		return app.UI.JSON(r)
+	}
+	if reveal {
+		app.UI.Result(adminapi.FormatValue(k))
 		return nil
-	})
+	}
+	showSetting(app, r, adminapi.FormatValue(k))
+	return nil
 }
 
 type configChange struct {
@@ -433,11 +556,22 @@ type configChange struct {
 	value *string
 }
 
-func parseSetArgs(app *App, args []string) ([]configChange, error) {
+func parseSetArgs(c *cobra.Command, app *App, v *configView, args []string) ([]configChange, error) {
 	var out []configChange
-	if len(args) == 2 && !strings.Contains(args[0], "=") {
+	switch {
+	case len(args) == 1 && !strings.Contains(args[0], "="):
+		k, err := v.lookup(args[0])
+		if err != nil {
+			return nil, err
+		}
+		value, err := askSettingValue(c.Context(), app, v, k)
+		if err != nil {
+			return nil, err
+		}
+		return []configChange{{name: k.Name, value: value}}, nil
+	case len(args) == 2 && !strings.Contains(args[0], "="):
 		out = []configChange{{name: args[0], value: &args[1]}}
-	} else {
+	default:
 		for _, a := range args {
 			name, value, ok := strings.Cut(a, "=")
 			if !ok || strings.TrimSpace(name) == "" {
@@ -461,13 +595,9 @@ func parseSetArgs(app *App, args []string) ([]configChange, error) {
 			return nil, ui.Usage("Only one setting can read its value from stdin.")
 		}
 		stdin = true
-		data, err := io.ReadAll(app.UI.Stdin())
+		value, err := readSecret(app, "-", out[i].name)
 		if err != nil {
-			return nil, ui.Failed("Couldn't read the value from stdin.", "Pass the value again.")
-		}
-		value := strings.TrimRight(string(data), "\r\n")
-		if value == "" {
-			return nil, ui.Usage(fmt.Sprintf("The value for %s on stdin is empty.", out[i].name))
+			return nil, err
 		}
 		out[i].value = &value
 	}
@@ -476,8 +606,12 @@ func parseSetArgs(app *App, args []string) ([]configChange, error) {
 
 func newConfigSetCmd(app *App) *cobra.Command {
 	set := &cobra.Command{
-		Use:   "set <key> <value> | <key>=<value>...",
+		Use:   "set <setting> [value] | <setting>=<value>...",
 		Short: "Change one or more settings",
+		Long:  "Change one or more settings. Leave the value out on a terminal and rexctl asks for it, with what the setting takes and its current value. Pass - as the value to read a secret from stdin, which keeps it out of your shell history.",
+		Example: `rexctl config set registration.mode invite
+rexctl config set edge.bind=127.0.0.1:8081 edge.trusted_proxies=10.0.0.5
+rexctl config set storage.secret_key -`,
 		Args: func(c *cobra.Command, args []string) error {
 			if len(args) == 0 {
 				return ui.Usage("Pass a setting and its value.")
@@ -490,7 +624,19 @@ func newConfigSetCmd(app *App) *cobra.Command {
 	set.Flags().BoolVar(&noMigrate, "no-migrate-identities", false, "when sso.issuer changes, leave SSO links on the old issuer")
 	set.MarkFlagsMutuallyExclusive("migrate-identities", "no-migrate-identities")
 	set.RunE = func(c *cobra.Command, args []string) error {
-		changes, err := parseSetArgs(app, args)
+		v, err := loadConfigView(c.Context(), app, nil)
+		if err != nil {
+			return err
+		}
+		changes, err := parseSetArgs(c, app, v, args)
+		if errors.Is(err, errKeptSettings) {
+			app.UI.Info("Nothing changed.")
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		restore, err := stagePEMFiles(v, changes)
 		if err != nil {
 			return err
 		}
@@ -498,15 +644,45 @@ func newConfigSetCmd(app *App) *cobra.Command {
 		if migrate || noMigrate {
 			extra = map[string]any{"sso": map[string]any{"migrate_identities": migrate}}
 		}
-		return runConfigChange(c.Context(), app, changes, extra)
+		if err := runConfigChange(c.Context(), app, changes, extra); err != nil {
+			restore()
+			return err
+		}
+		return nil
 	}
 	return set
 }
 
+func stagePEMFiles(v *configView, changes []configChange) (func(), error) {
+	var undo []func()
+	restore := func() {
+		for _, u := range slices.Backward(undo) {
+			u()
+		}
+	}
+	for i, ch := range changes {
+		k, err := v.lookup(ch.name)
+		if err != nil || k.Type != "pem" || strings.TrimSpace(*ch.value) == "" {
+			continue
+		}
+		u, err := savePEM(strings.TrimSpace(*ch.value), v.inst.Path(instance.CertsDir), settings.ACMERootFile, "Pass the path to a PEM file on this machine.")
+		if err != nil {
+			restore()
+			return nil, err
+		}
+		undo = append(undo, u)
+		value := settings.CertsMountPoint + settings.ACMERootFile
+		changes[i].value = &value
+	}
+	return restore, nil
+}
+
 func newConfigUnsetCmd(app *App) *cobra.Command {
 	unset := &cobra.Command{
-		Use:   "unset <key>...",
+		Use:   "unset <setting>...",
 		Short: "Go back to the default for one or more settings",
+		Example: `rexctl config unset edge.trusted_proxies
+rexctl config unset memory.profile disk.profile`,
 		Args: func(c *cobra.Command, args []string) error {
 			if len(args) == 0 {
 				return ui.Usage("Pass a setting name.")
@@ -525,20 +701,44 @@ func newConfigUnsetCmd(app *App) *cobra.Command {
 }
 
 func runConfigChange(ctx context.Context, app *App, changes []configChange, extra map[string]any) error {
+	err := changeConfig(ctx, app, changes, extra)
+	if errors.Is(err, errKeptSettings) {
+		app.UI.Info("Nothing changed.")
+		return nil
+	}
+	return err
+}
+
+func changeConfig(ctx context.Context, app *App, changes []configChange, extra map[string]any) error {
 	typed := make([]string, 0, len(changes))
 	for _, ch := range changes {
 		typed = append(typed, ch.name)
 	}
-	v, err := loadConfigView(app, typed)
+	v, err := loadConfigView(ctx, app, typed)
 	if err != nil {
 		return err
 	}
+	deployment, admin, err := v.split(changes)
+	if err != nil {
+		return err
+	}
+	if len(deployment) > 0 {
+		if err := managed(v.inst); err != nil {
+			return err
+		}
+	}
+	return app.Locked(ctx, v.inst, func() error {
+		return applyConfig(ctx, app, v.inst, v.rt, deployment, admin, extra)
+	})
+}
+
+func (v *configView) split(changes []configChange) (map[string]*string, []adminChange, error) {
 	deployment := map[string]*string{}
 	var admin []adminChange
 	for _, ch := range changes {
 		k, err := v.lookup(ch.name)
 		if err != nil {
-			return err
+			return nil, nil, err
 		}
 		if k.Kind != settings.Instance {
 			deployment[k.Name] = ch.value
@@ -546,82 +746,83 @@ func runConfigChange(ctx context.Context, app *App, changes []configChange, extr
 		}
 		ac, err := parseAdminChange(v.schema, k.Name, ch.value)
 		if err != nil {
-			return err
+			return nil, nil, err
 		}
 		admin = append(admin, ac)
 	}
-	finish := func(change *deploy.Change) error {
-		sent, err := applyAdminChanges(ctx, app, v.inst, admin, extra)
-		if err != nil {
-			return err
-		}
-		reportConfigChange(app, change, deployment, sent, v.inst.State.Upgrade != nil)
-		names := slices.Collect(maps.Keys(deployment))
-		for _, ac := range admin {
-			names = append(names, ac.key.Key)
-		}
-		removed, err := instance.SettleEnv(v.inst, names)
-		if err != nil {
-			return ui.Wrap(err, "Couldn't remove the .env file rexctl doesn't read.", "Delete "+v.inst.Path(instance.EnvFileName)+" yourself.")
-		}
-		if removed != "" {
-			app.UI.Info("Removed %s. You changed every setting in it with rexctl.", removed)
-		}
-		return nil
-	}
-	if len(deployment) == 0 {
-		return app.Locked(ctx, v.inst, func() error { return finish(nil) })
-	}
-	if v.inst.State.IsNative() {
-		return app.Locked(ctx, v.inst, func() error {
-			change, err := applyNativeSettings(ctx, app, v.inst, deployment)
-			if err != nil {
-				return err
-			}
-			return finish(change)
-		})
-	}
-	return app.ChangeSettings(ctx, v.inst, func(e *engine.Engine) error {
-		change, err := applySettings(ctx, app, v.inst, e, deployment, "Applying the new settings")
-		if err != nil {
-			return err
-		}
-		return finish(change)
-	})
+	return deployment, admin, nil
 }
 
-func reportConfigChange(app *App, change *deploy.Change, values map[string]*string, admin []adminChange, upgrading bool) {
-	var keys []string
-	if change != nil && !change.Unchanged {
-		keys = change.Keys
+func applyConfig(ctx context.Context, app *App, inst *instance.Instance, r rt.Runtime, deployment map[string]*string, admin []adminChange, extra map[string]any) error {
+	if err := twoSchedules(r, inst, deployment); err != nil {
+		return err
 	}
+	var change *deploy.Change
+	if len(deployment) > 0 {
+		var err error
+		if change, err = applyDeployment(ctx, app, inst, r, deployment, "Applying the new settings"); err != nil {
+			return err
+		}
+	}
+	sent, err := applyAdminChanges(ctx, app, inst, admin, extra)
+	if err != nil {
+		return err
+	}
+	reportConfigChange(app, change, sent, inst.State.Upgrade != nil)
+	names := slices.Collect(maps.Keys(deployment))
+	for _, ac := range admin {
+		names = append(names, ac.key.Key)
+	}
+	removed, err := instance.SettleEnv(inst, names)
+	if err != nil {
+		return ui.Wrap(err, "Couldn't remove the .env file rexctl doesn't read.", "Check that you can write to "+inst.Dir+", then try again.")
+	}
+	if removed != "" {
+		app.UI.Info("Removed %s. You changed every setting in it with rexctl.", removed)
+	}
+	return nil
+}
+
+func reportConfigChange(app *App, change *deploy.Change, admin []adminChange, upgrading bool) {
+	changed := change != nil && !change.Unchanged
 	switch {
-	case len(keys) == 0 && len(admin) == 0:
+	case !changed && len(admin) == 0:
 		app.UI.OK("Nothing to change.")
 		return
-	case len(keys)+len(admin) > 1:
-		app.UI.OK("Saved %d settings.", len(keys)+len(admin))
+	case len(admin) > 1:
+		app.UI.OK("Saved %d settings.", len(admin))
 	case len(admin) == 1:
 		app.UI.OK("%s", admin[0].done())
-	default:
-		app.UI.OK("%s", deploymentDone(keys[0], values[keys[0]]))
 	}
 	switch {
-	case len(keys) > 0 && upgrading:
+	case changed && upgrading:
 		app.UI.Info("rexctl upgrade uses the new setting when it finishes.")
-	case len(keys) > 0 && !change.Applied:
+	case changed && !change.Applied:
 		app.UI.Info("Fluxer uses the new settings the next time it starts.")
 	}
 }
 
 func deploymentDone(name string, value *string) string {
 	switch {
+	case name == settings.TurnServersVar && value == nil:
+		return "Fluxer uses no TURN servers now."
+	case name == settings.TurnServersVar:
+		return "Saved the list of TURN servers."
 	case value == nil:
 		return fmt.Sprintf("%s is back to its default.", name)
 	case settings.SecretName(name) || name == settings.StorageSecret:
 		return fmt.Sprintf("Saved %s.", name)
 	}
-	return fmt.Sprintf("Set %s to %s.", name, clip(settings.Mask(settings.Key{Name: name}, *value)))
+	shown := *value
+	if strings.TrimSpace(shown) == "" {
+		return fmt.Sprintf("Cleared %s.", name)
+	}
+	if name == settings.EdgeBind {
+		if norm, err := settings.NormaliseBind(shown); err == nil {
+			shown = norm
+		}
+	}
+	return fmt.Sprintf("Set %s to %s.", name, clip(settings.Mask(settings.Key{Name: name}, shown)))
 }
 
 type adminChange struct {
@@ -651,10 +852,13 @@ func parseAdminChange(schema []adminapi.ConfigKey, name string, raw *string) (ad
 		return adminChange{}, adminapi.Explain(err)
 	}
 	if raw == nil {
-		if !k.Nullable {
-			return adminChange{}, ui.Refused(fmt.Sprintf("Fluxer can't clear %s.", k.Key), fmt.Sprintf("Set another value with rexctl config set %s <value>.", k.Key))
+		switch {
+		case k.Nullable:
+			return adminChange{key: k, patch: adminapi.ConfigPatch(k.Key, nil)}, nil
+		case k.Default != nil:
+			return adminChange{key: k, value: k.Default, patch: adminapi.ConfigPatch(k.Key, k.Default)}, nil
 		}
-		return adminChange{key: k, patch: adminapi.ConfigPatch(k.Key, nil)}, nil
+		return adminChange{}, ui.Refused(fmt.Sprintf("rexctl doesn't know the default for %s, so it can't go back to it.", k.Key), fmt.Sprintf("Set the value you want with rexctl config set %s <value>.", k.Key))
 	}
 	if k.Key == adminapi.RegistrationModeKey {
 		mode := strings.ToLower(strings.TrimSpace(*raw))
@@ -733,132 +937,8 @@ func sameValue(a, b any) bool {
 	return reflect.DeepEqual(na, nb)
 }
 
-type setResult struct {
-	change *deploy.Change
-	err    error
-}
-
-func applySettings(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, changes map[string]*string, title string) (*deploy.Change, error) {
-	closePorts, err := openPorts(ctx, app, inst, changes)
-	if err != nil {
-		return nil, err
-	}
-	ask := make(chan deploy.Preview)
-	answer := make(chan bool)
-	done := make(chan setResult, 1)
-	var logPath string
-	opts := deploy.ApplyOptions{
-		Failed: func(p *engine.Project, err error) {
-			logPath = writeFailureLog(ctx, inst, p, "start.log", err, nil)
-		},
-		Wait: true,
-		Confirm: func(p deploy.Preview) bool {
-			ask <- p
-			return <-answer
-		},
-		OnEvent: func(ev engine.Event) {
-			if ev.Text != "" {
-				app.UI.Detail("%s %s", ev.ID, ev.Text)
-			}
-		},
-	}
-	go func() {
-		change, err := deploy.Set(ctx, inst, e, changes, opts)
-		done <- setResult{change, err}
-	}()
-	var r setResult
-	select {
-	case r = <-done:
-	case p := <-ask:
-		ok, err := confirmPreview(app, p)
-		answer <- ok && err == nil
-		if err != nil {
-			<-done
-			return nil, err
-		}
-		if ok {
-			_ = app.UI.Step(ctx, title, func(context.Context, *ui.Step) error {
-				r = <-done
-				return nil
-			})
-		} else {
-			r = <-done
-		}
-	}
-	if r.change != nil && len(r.change.VoiceDown) > 0 {
-		ids := ui.JoinAnd(r.change.VoiceDown)
-		if r.change.Applied || r.err != nil {
-			app.UI.Warn(fmt.Sprintf("Voice servers %s didn't start again.", ids), "Run rexctl voice status to see why.")
-		} else {
-			app.UI.Info("Stopped voice servers %s. They start again with Fluxer.", ids)
-		}
-	}
-	if errors.Is(r.err, deploy.ErrDeclined) {
-		return nil, &ui.ExitError{Code: ui.ExitRefused, Msg: "rexctl left your settings as they were.", Err: r.err}
-	}
-	if r.err != nil {
-		return nil, settingsFailure(r.change, r.err, logPath)
-	}
-	if r.change.Applied && !r.change.Unchanged {
-		closePorts()
-		moveVoiceEndpoints(ctx, app, inst)
-	}
-	if _, ok := changes[settings.VoicePublicIP]; ok && !r.change.Unchanged {
-		moveVoicePublicIP(ctx, app, inst, e, r.change.Applied)
-	}
-	if _, ok := changes[settings.TurnServersVar]; ok && r.change.Applied && !r.change.Unchanged && len(inst.State.Voice) > 0 {
-		upgradeLocalVoiceServers(ctx, app, inst, e)
-	}
-	if _, ok := changes[settings.VoiceBundled]; ok && r.change.Applied && !r.change.Unchanged {
-		restoreBundledVoiceServer(ctx, app, inst)
-	}
-	return r.change, nil
-}
-
-func settingsFailure(change *deploy.Change, err error, logPath string) error {
-	var ee *ui.ExitError
-	if errors.As(err, &ee) {
-		return err
-	}
-	switch {
-	case change != nil && change.Reverted:
-		fix := "Run rexctl logs to see why."
-		if logPath != "" {
-			fix = "Read " + logPath + " to see why."
-		}
-		return ui.Wrap(err, "Fluxer didn't start with the new settings. rexctl put the old ones back.", fix)
-	case change != nil:
-		return ui.Wrap(err, "Fluxer didn't start with the new settings, and rexctl couldn't put the old ones back.", "Run rexctl doctor to see what's wrong.")
-	}
-	return engineFailure(err)
-}
-
-func confirmPreview(app *App, p deploy.Preview) (bool, error) {
-	if !p.NeedsConfirm() {
-		return true, nil
-	}
-	for _, note := range p.Notes() {
-		app.UI.Info("%s", note)
-	}
-	if p.Larger() {
-		if len(p.Networks) > 0 {
-			app.UI.Info("Fluxer restarts completely to change its network.")
-		} else {
-			if text := extraRestartText(p); text != "" {
-				app.UI.Info("%s", text)
-			}
-		}
-		if app.UI.Verbose() {
-			app.UI.Detail("restarts: %s", strings.Join(p.Restarts, ", "))
-			app.UI.Detail("removes: %s", strings.Join(p.Removes, ", "))
-			app.UI.Detail("networks: %s", strings.Join(p.Networks, ", "))
-		}
-	}
-	return app.UI.Confirm("Go ahead?", true)
-}
-
-func openPorts(ctx context.Context, app *App, inst *instance.Instance, changes map[string]*string) (func(), error) {
-	nothing := func() {}
+func openPorts(ctx context.Context, app *App, inst *instance.Instance, changes map[string]*string) (func(*deploy.Change, error), error) {
+	nothing := func(*deploy.Change, error) {}
 	opened, closed, err := deploy.PortChanges(inst, changes)
 	if err != nil || (len(opened) == 0 && len(closed) == 0) {
 		return nothing, err
@@ -871,6 +951,7 @@ func openPorts(ctx context.Context, app *App, inst *instance.Instance, changes m
 	if err != nil {
 		return nothing, nil
 	}
+	var mine []host.Port
 	if len(blocked) > 0 {
 		ok, err := app.UI.Confirm(fmt.Sprintf("Open port %s in the firewall on this machine?", deploy.PortList(blocked)), true)
 		if err != nil {
@@ -880,10 +961,23 @@ func openPorts(ctx context.Context, app *App, inst *instance.Instance, changes m
 			app.UI.Warn(fmt.Sprintf("Port %s stays closed in the firewall on this machine.", deploy.PortList(blocked)), "Open it before people connect.")
 		} else if err := host.OpenPorts(ctx, fw, blocked); err != nil {
 			return nothing, ui.Wrap(err, "Couldn't open the port.", fmt.Sprintf("Open port %s in the firewall yourself, then try again.", deploy.PortList(blocked)))
+		} else {
+			mine = blocked
 		}
 	}
-	return func() {
-		if len(closed) == 0 {
+	return func(change *deploy.Change, failed error) {
+		if failed != nil {
+			if len(mine) == 0 {
+				return
+			}
+			if err := host.ClosePorts(context.WithoutCancel(ctx), fw, mine); err != nil {
+				app.UI.Warn(fmt.Sprintf("Couldn't close port %s again.", deploy.PortList(mine)), "Close it in the firewall yourself.")
+				return
+			}
+			app.UI.Info("Closed port %s in the firewall again.", deploy.PortList(mine))
+			return
+		}
+		if change == nil || !change.Applied || change.Unchanged || len(closed) == 0 {
 			return
 		}
 		ok, err := app.UI.Confirm(fmt.Sprintf("Close port %s in the firewall? Fluxer doesn't use it any more.", deploy.PortList(closed)), true)
@@ -899,7 +993,8 @@ func openPorts(ctx context.Context, app *App, inst *instance.Instance, changes m
 func newConfigRenderCmd(app *App) *cobra.Command {
 	return &cobra.Command{
 		Use:    "render",
-		Short:  "Print the Compose project rexctl runs, with secrets hidden",
+		Short:  "Print what rexctl runs Fluxer with, with secrets hidden",
+		Long:   "Print what rexctl runs Fluxer with, with secrets hidden. That's the Compose project for a Docker or Podman instance, and the settings fluxerd starts with for a systemd install.",
 		Hidden: true,
 		Args:   noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
@@ -907,29 +1002,11 @@ func newConfigRenderCmd(app *App) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			s, err := deploy.Spec(inst)
+			r, err := app.Runtime(c.Context(), inst)
 			if err != nil {
 				return err
 			}
-			for name, value := range s.Env {
-				_, generated := inst.State.Secrets[name]
-				if generated || settings.SecretName(name) {
-					s.Env[name] = settings.Masked
-				} else {
-					s.Env[name] = settings.Mask(settings.Key{Name: name}, value)
-				}
-			}
-			var e engine.Engine
-			p, err := e.Load(c.Context(), s)
-			if err != nil {
-				return ui.Wrap(err, "rexctl can't read Fluxer's files.", "Run rexctl doctor to see what's wrong.")
-			}
-			out, err := p.Model.MarshalYAML()
-			if err != nil {
-				return err
-			}
-			app.UI.Result(string(out))
-			return nil
+			return r.Settings().Render(c.Context(), app.UI.Stdout())
 		},
 	}
 }

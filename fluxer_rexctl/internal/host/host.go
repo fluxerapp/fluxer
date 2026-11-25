@@ -26,9 +26,7 @@ type Info struct {
 func Detect(ctx context.Context, dir string) (*Info, error) {
 	info := &Info{OS: runtime.GOOS, Arch: runtime.GOARCH, Root: isRoot()}
 	if info.OS == "linux" {
-		if data, err := os.ReadFile("/etc/os-release"); err == nil {
-			info.Distro, info.DistroVersion = parseOSRelease(data)
-		}
+		info.Distro, info.DistroVersion = OSRelease()
 		if data, err := os.ReadFile("/proc/sys/kernel/osrelease"); err == nil {
 			info.WSL = strings.Contains(strings.ToLower(string(data)), "microsoft")
 		}
@@ -44,6 +42,14 @@ func Detect(ctx context.Context, dir string) (*Info, error) {
 
 func isRoot() bool {
 	return runtime.GOOS != "windows" && os.Geteuid() == 0
+}
+
+func OSRelease() (id, version string) {
+	data, err := os.ReadFile("/etc/os-release")
+	if err != nil {
+		return "", ""
+	}
+	return parseOSRelease(data)
 }
 
 func parseOSRelease(data []byte) (id, version string) {

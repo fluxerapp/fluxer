@@ -26,10 +26,6 @@ const (
 
 var OneShot = map[string]bool{"seaweedfs-init": true, ObjectsInitService: true}
 
-var Volumes = []string{
-	"edge-data", "edge-config", "postgres-data", ValkeyVolume, "nats-data", "meilisearch-data", SeaweedFSVolume, ObjectsVolume,
-}
-
 var BackupVolumes = []string{SeaweedFSVolume, ObjectsVolume, ValkeyVolume, "nats-data", "meilisearch-data"}
 
 type DataMount struct {
@@ -52,6 +48,10 @@ func FilesystemStorage(settings map[string]string) bool {
 
 func KVPostgres(settings map[string]string) bool {
 	return strings.TrimSpace(settings["kv.mode"]) == "postgres"
+}
+
+func ExternalPostgres(settings map[string]string) bool {
+	return strings.TrimSpace(settings["FLUXER_POSTGRES_URL"]) != ""
 }
 
 func UploadsVolume(settings map[string]string) string {
@@ -81,7 +81,7 @@ func SkippedVolumes(settings map[string]string) []string {
 	return out
 }
 
-var PublishedPorts = []Port{
+var publishedPorts = []Port{
 	{Number: 80, Proto: "tcp"},
 	{Number: 443, Proto: "tcp"},
 	{Number: 443, Proto: "udp"},
@@ -101,9 +101,9 @@ const (
 )
 
 func Ports(env map[string]string) []Port {
-	out := make([]Port, 0, len(PublishedPorts))
+	out := make([]Port, 0, len(publishedPorts))
 	bundled := VoiceBundled(env[VoiceBundledKey])
-	for _, p := range PublishedPorts {
+	for _, p := range publishedPorts {
 		key := ""
 		switch {
 		case p.Number == 7881 && p.Proto == "tcp":

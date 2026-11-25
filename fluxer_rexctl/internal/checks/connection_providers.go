@@ -15,7 +15,7 @@ func init() {
 }
 
 func runConnectionProviders(ctx context.Context, e *Env) Result {
-	return connectionProviders(ctx, e, e.exec)
+	return connectionProviders(ctx, e, e.apiExec)
 }
 
 func connectionProviders(ctx context.Context, e *Env, run execFunc) Result {
@@ -39,7 +39,7 @@ func connectionProviders(ctx context.Context, e *Env, run execFunc) Result {
 		if !ok {
 			continue
 		}
-		r := probeResult(p, in.Discovery, connectionProviderTarget(string(provider.Id)))
+		r := probeResult(p, in.Discovery, connectionProviderTarget(string(provider.Id)), e.containerEngine())
 		if r.Status != Pass {
 			return r
 		}

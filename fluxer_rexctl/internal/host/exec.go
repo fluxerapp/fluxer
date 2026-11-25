@@ -17,6 +17,21 @@ import (
 
 var ErrNeedsRoot = errors.New("host: needs root or sudo")
 
+var ErrNoSudo = errors.New("host: this account can't use sudo")
+
+type NoSudoError struct {
+	Command string
+}
+
+func (e *NoSudoError) Error() string {
+	if e.Command == "" {
+		return "this needs an account that can use sudo"
+	}
+	return "this needs an account that can use sudo, so run " + e.Command + " as root"
+}
+
+func (e *NoSudoError) Unwrap() error { return ErrNoSudo }
+
 var (
 	holdMu   sync.Mutex
 	holdTerm = func() func() { return func() {} }
@@ -32,6 +47,13 @@ func authenticate(ctx context.Context, sudo string) error {
 	if exec.CommandContext(ctx, sudo, "-n", "true").Run() == nil {
 		return nil
 	}
+	probe := exec.CommandContext(ctx, sudo, "-n", "-v")
+	probe.Env = append(os.Environ(), "LC_ALL=C")
+	var said bytes.Buffer
+	probe.Stderr = &said
+	if probe.Run() != nil && (strings.Contains(said.String(), "may not run sudo") || strings.Contains(said.String(), "I'm afraid I can't do that")) {
+		return ErrNoSudo
+	}
 	holdMu.Lock()
 	hold := holdTerm
 	holdMu.Unlock()
@@ -45,10 +67,8 @@ func authenticate(ctx context.Context, sudo string) error {
 	return nil
 }
 
-var asRoot = isRoot
-
 func privileged(name string, args ...string) (string, []string, error) {
-	if asRoot() {
+	if isRoot() {
 		return name, args, nil
 	}
 	sudo, err := exec.LookPath("sudo")

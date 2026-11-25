@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-const DockerInstallScript = "https://get.docker.com"
+const dockerInstallScript = "https://get.docker.com"
 
 var ErrRelogin = errors.New("host: log out and back in to use docker")
 
@@ -24,7 +24,7 @@ var dockerDistros = []string{"ubuntu", "debian", "raspbian", "fedora", "centos",
 var scriptClient = &http.Client{
 	CheckRedirect: func(req *http.Request, via []*http.Request) error {
 		if req.URL.Scheme != "https" {
-			return fmt.Errorf("%s redirected to non-https %s", DockerInstallScript, req.URL.Redacted())
+			return fmt.Errorf("%s redirected to non-https %s", dockerInstallScript, req.URL.Redacted())
 		}
 		if len(via) >= 10 {
 			return errors.New("stopped after 10 redirects")
@@ -82,7 +82,7 @@ func InstallDocker(ctx context.Context, info *Info, log func(string)) error {
 func downloadScript(ctx context.Context) (string, error) {
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, DockerInstallScript, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, dockerInstallScript, nil)
 	if err != nil {
 		return "", err
 	}
@@ -92,7 +92,7 @@ func downloadScript(ctx context.Context) (string, error) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("%s returned %d", DockerInstallScript, resp.StatusCode)
+		return "", fmt.Errorf("%s returned %d", dockerInstallScript, resp.StatusCode)
 	}
 	dir, err := os.MkdirTemp("", "rexctl-docker-")
 	if err != nil {
@@ -109,7 +109,7 @@ func downloadScript(ctx context.Context) (string, error) {
 		err = cerr
 	}
 	if err == nil && n == 0 {
-		err = fmt.Errorf("%s returned an empty script", DockerInstallScript)
+		err = fmt.Errorf("%s returned an empty script", dockerInstallScript)
 	}
 	if err != nil {
 		os.RemoveAll(dir)

@@ -99,7 +99,7 @@ func lookup(m map[string]any, path string) (any, bool) {
 	return cur, true
 }
 
-func FillValues(keys []ConfigKey, cfg map[string]any) []ConfigKey {
+func fillValues(keys []ConfigKey, cfg map[string]any) []ConfigKey {
 	out := make([]ConfigKey, len(keys))
 	for i, k := range keys {
 		if k.Type == "secret" {
@@ -126,7 +126,7 @@ func (c *Client) ConfigValues(ctx context.Context) ([]ConfigKey, error) {
 	if err != nil {
 		return nil, err
 	}
-	return FillValues(keys, cfg), nil
+	return fillValues(keys, cfg), nil
 }
 
 type InvalidValueError struct {

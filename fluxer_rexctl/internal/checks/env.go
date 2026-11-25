@@ -8,8 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"maps"
-	"math"
-	"net"
+	"net/netip"
 	"os"
 	"os/exec"
 	"runtime"
@@ -23,11 +22,10 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
 
-var ErrNoFix = errors.New("checks: this check has no fix")
-
-const defaultBind = "127.0.0.1:8080"
+var errNoFix = errors.New("checks: this check has no fix")
 
 type edgeMode int
 
@@ -42,21 +40,8 @@ func (e *Env) prepare(ctx context.Context) {
 		return
 	}
 	e.prepared = true
-	if e.Instance != nil {
-		if e.Dir == "" {
-			e.Dir = e.Instance.Dir
-		}
-		if e.Domain == "" {
-			e.Domain = e.value("FLUXER_DOMAIN")
-		}
-		if e.Bind == "" {
-			e.Bind = e.value("FLUXER_EDGE_BIND")
-		}
-	}
-	if e.Bind == "" {
-		e.Bind = defaultBind
-	}
-	if e.Engine == nil && e.engineErr == nil {
+	e.fillAddress()
+	if e.Engine == nil && e.engineErr == nil && !e.Native {
 		opts := engine.ConnectOptions{AllowOld: true}
 		if st := e.state(); st != nil {
 			opts.Host, opts.ID, opts.Prefer = st.Engine.Host, st.Engine.ID, engine.Kind(st.Engine.Kind)
@@ -75,6 +60,23 @@ func (e *Env) prepare(ctx context.Context) {
 		if info, err := host.Detect(ctx, e.Dir); err == nil {
 			e.Host = info
 		}
+	}
+}
+
+func (e *Env) fillAddress() {
+	if e.Instance != nil {
+		if e.Dir == "" {
+			e.Dir = e.Instance.Dir
+		}
+		if e.Domain == "" {
+			e.Domain = e.value("FLUXER_DOMAIN")
+		}
+		if e.Bind == "" {
+			e.Bind = e.value("FLUXER_EDGE_BIND")
+		}
+	}
+	if e.Bind == "" {
+		e.Bind = settings.DefaultBind
 	}
 }
 
@@ -243,8 +245,12 @@ func (e *Env) stageAdmin(key, value string) {
 	e.env = nil
 }
 
-func (e *Env) stageEnvImport() {
-	e.stageStep(".env", host.Step{Do: "Deletes .env from " + e.Instance.Dir + " once the settings are applied."})
+func (e *Env) stageEnvImport(unused []string) {
+	do := "Deletes .env from " + e.Instance.Dir + " once the settings are applied."
+	if len(unused) > 0 {
+		do += " Fluxer doesn't use " + ui.JoinAnd(unused) + "."
+	}
+	e.stageStep(".env", host.Step{Do: do})
 	e.importEnv = true
 }
 
@@ -294,7 +300,7 @@ func Commit(ctx context.Context, e *Env, o deploy.ApplyOptions) error {
 	if !e.Staged() {
 		return nil
 	}
-	if e.Instance == nil || e.Instance.State == nil || e.Engine == nil {
+	if e.Instance == nil || e.Instance.State == nil || (e.Engine == nil && e.ApplySettings == nil) {
 		return errNoProject
 	}
 	st := e.Instance.State
@@ -336,9 +342,12 @@ func Commit(ctx context.Context, e *Env, o deploy.ApplyOptions) error {
 		}
 	}
 	var err error
-	if len(staged) > 0 {
+	switch {
+	case e.Engine == nil:
+		err = e.ApplySettings(ctx, staged)
+	case len(staged) > 0:
 		_, err = deploy.Set(ctx, e.Instance, e.Engine, staged, o)
-	} else {
+	default:
 		_, err = deploy.Apply(ctx, e.Instance, e.Engine, o)
 	}
 	if err != nil {
@@ -421,11 +430,14 @@ func (e *Env) containers(ctx context.Context) ([]engine.Container, error) {
 		return e.ps, e.psErr
 	}
 	e.psDone = true
-	if e.Project == nil {
+	switch {
+	case e.Native && e.Instance != nil:
+		e.ps, e.psErr = e.stack().PS(ctx)
+	case e.Project == nil:
 		e.psErr = errNoProject
-		return nil, e.psErr
+	default:
+		e.ps, e.psErr = e.Project.PS(ctx)
 	}
-	e.ps, e.psErr = e.Project.PS(ctx)
 	return e.ps, e.psErr
 }
 
@@ -470,13 +482,42 @@ func (e *Env) publicAddress(ctx context.Context) (string, error) {
 
 func privateDomain(domain string) bool {
 	d := strings.ToLower(strings.TrimSuffix(domain, "."))
+	if ip, ok := settings.DomainIP(d); ok {
+		return !publicAddress(ip)
+	}
 	if d == "" || d == "localhost" || !strings.Contains(d, ".") {
 		return true
 	}
-	if net.ParseIP(d) != nil {
-		return true
-	}
 	return hasDomainSuffix(d, privateSuffixes)
+}
+
+var nonPublicRanges = []netip.Prefix{
+	netip.MustParsePrefix("100.64.0.0/10"),
+	netip.MustParsePrefix("192.0.0.0/24"),
+	netip.MustParsePrefix("192.0.2.0/24"),
+	netip.MustParsePrefix("198.18.0.0/15"),
+	netip.MustParsePrefix("198.51.100.0/24"),
+	netip.MustParsePrefix("203.0.113.0/24"),
+	netip.MustParsePrefix("240.0.0.0/4"),
+	netip.MustParsePrefix("64:ff9b::/96"),
+	netip.MustParsePrefix("64:ff9b:1::/48"),
+	netip.MustParsePrefix("100::/64"),
+	netip.MustParsePrefix("2001:db8::/32"),
+	netip.MustParsePrefix("2002::/16"),
+	netip.MustParsePrefix("3fff::/20"),
+	netip.MustParsePrefix("fec0::/10"),
+}
+
+func publicAddress(ip netip.Addr) bool {
+	if !ip.IsGlobalUnicast() || ip.IsPrivate() {
+		return false
+	}
+	for _, p := range nonPublicRanges {
+		if p.Contains(ip) {
+			return false
+		}
+	}
+	return true
 }
 
 var (
@@ -500,10 +541,6 @@ func hasDomainSuffix(domain string, suffixes []string) bool {
 		}
 	}
 	return false
-}
-
-func gb(bytes uint64) string {
-	return fmt.Sprintf("%d GB", int(math.Round(float64(bytes)/(1<<30))))
 }
 
 func day(t time.Time) string { return t.Local().Format("2 January") }
@@ -532,6 +569,12 @@ func fixable(r Result) Result {
 }
 
 func (e *Env) up(ctx context.Context) error {
+	if e.Native && e.Instance != nil && e.ApplySettings != nil {
+		return e.run(ctx, host.Step{
+			Do:  "Writes Fluxer's files from your settings and restarts Fluxer.",
+			Run: func(ctx context.Context) error { return e.ApplySettings(ctx, nil) },
+		})
+	}
 	if e.Instance == nil || e.Engine == nil {
 		return errNoProject
 	}

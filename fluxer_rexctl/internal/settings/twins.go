@@ -33,6 +33,15 @@ var Twins = map[string]string{
 	"FLUXER_EMAIL_SMTP_TLS_MODE":                  "integrations.email.smtp.tls_mode",
 	"FLUXER_EMAIL_SMTP_USERNAME":                  "integrations.email.smtp.username",
 	"FLUXER_KLIPY_API_KEY":                        "integrations.gif.klipy_api_key",
+	"FLUXER_SSO_ALLOWED_DOMAINS":                  "sso.allowed_domains",
+	"FLUXER_SSO_AUTO_PROVISION":                   "sso.auto_provision",
+	"FLUXER_SSO_CLIENT_ID":                        "sso.client_id",
+	"FLUXER_SSO_CLIENT_SECRET":                    "sso.client_secret",
+	"FLUXER_SSO_DISPLAY_NAME":                     "sso.display_name",
+	"FLUXER_SSO_ENABLED":                          "sso.enabled",
+	"FLUXER_SSO_ENFORCED":                         "sso.enforced",
+	"FLUXER_SSO_ISSUER":                           "sso.issuer",
+	"FLUXER_SSO_SCOPE":                            "sso.scope",
 	"FLUXER_STRIPE_ENABLED":                       "billing.enabled",
 	"FLUXER_STRIPE_LEGACY_PRICES":                 "billing.legacy_prices",
 	"FLUXER_STRIPE_PRICES":                        "billing.prices",
@@ -46,7 +55,7 @@ var twinVars = map[string]string{
 	"integrations.email.smtp.tls_mode": "FLUXER_EMAIL_SMTP_TLS_MODE",
 }
 
-func TwinVar(adminKey string) (string, bool) {
+func twinVar(adminKey string) (string, bool) {
 	if v, ok := twinVars[adminKey]; ok {
 		return v, true
 	}

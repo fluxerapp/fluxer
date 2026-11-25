@@ -22,10 +22,13 @@ import (
 	"go.yaml.in/yaml/v4"
 	"golang.org/x/term"
 
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/adminapi"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/deploy"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/envfile"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/native"
+	rt "github.com/fluxerapp/fluxer/fluxer_rexctl/internal/runtime"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
@@ -40,23 +43,27 @@ var errNotAsked = errors.New("cmd: no one to ask")
 var yamlLine = regexp.MustCompile(`\bL(\d+)\.C\d+`)
 
 func newConfigEditCmd(app *App) *cobra.Command {
-	return &cobra.Command{
+	var compose bool
+	c := &cobra.Command{
 		Use:   "edit",
-		Short: "Edit " + instance.CustomCompose + ", check it and apply it",
-		Long: "Opens " + instance.CustomCompose + " in $VISUAL or $EDITOR. rexctl checks the file, says which services restart and applies it once you agree. " +
-			"Your file stays as it was until it passes the check. " +
-			"On a native instance, it opens the settings rexctl keeps for Fluxer as setting=value lines instead, checks them as rexctl config set does and restarts Fluxer with them.",
+		Short: "Edit your settings in an editor, check them and apply them",
+		Long: "Opens the settings you changed from their defaults as setting=value lines in $VISUAL or $EDITOR. Add a line for any other setting rexctl config set takes, or remove one to go back to its default. rexctl checks them as rexctl config set does, says what restarts and applies them once you agree.\n\n" +
+			"Nothing changes until your draft passes the check. With --compose, it opens " + instance.CustomCompose + " instead, for changes to Fluxer's containers that no setting covers.",
+		Example: `rexctl config edit
+EDITOR=vim rexctl config edit
+rexctl config edit --compose`,
 		Args: noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
-			return runConfigEdit(c.Context(), app)
+			return runConfigEdit(c.Context(), app, compose)
 		},
 	}
+	c.Flags().BoolVar(&compose, "compose", false, "edit "+instance.CustomCompose+", the Compose overrides of a Docker or Podman instance")
+	return c
 }
 
-var openEditor = func(ctx context.Context, path string) error {
+func openEditor(ctx context.Context, path, fix string) error {
 	if !term.IsTerminal(int(os.Stdin.Fd())) {
-		return &ui.ExitError{Code: ui.ExitUsage, Msg: "rexctl config edit needs a terminal.",
-			Fix: "Edit " + instance.CustomCompose + " in your instance folder yourself, then run rexctl restart."}
+		return &ui.ExitError{Code: ui.ExitUsage, Msg: "rexctl config edit needs a terminal.", Fix: fix}
 	}
 	editor, ok := editorCommand()
 	if !ok {
@@ -124,14 +131,14 @@ func splitCommand(s string) []string {
 	return out
 }
 
-var askEdit = func(u *ui.UI, question string, def bool) (bool, error) {
+func askEdit(u *ui.UI, question string, def bool) (bool, error) {
 	if u.Yes() || !u.Interactive() {
 		return false, errNotAsked
 	}
 	return u.Confirm(question, def)
 }
 
-func runConfigEdit(ctx context.Context, app *App) error {
+func runConfigEdit(ctx context.Context, app *App, compose bool) error {
 	inst, err := app.Instance()
 	if err != nil {
 		return err
@@ -142,23 +149,40 @@ func runConfigEdit(ctx context.Context, app *App) error {
 	if inst.State.Upgrade != nil {
 		return ui.Refused("An upgrade of this instance hasn't finished.", "Run rexctl upgrade to finish it, then try again.")
 	}
-	if inst.State.IsNative() {
-		if err := nativeRoot(inst.Dir); err != nil {
+	r, err := app.Runtime(ctx, inst)
+	if err != nil {
+		return err
+	}
+	if !compose {
+		if err := rt.CanChangeSettings(r); err != nil {
 			return err
 		}
-		return app.Locked(ctx, inst, func() error { return editNativeSettings(ctx, app, inst) })
+		return declinedEdit(app, app.Locked(ctx, inst, func() error { return editSettings(ctx, app, inst, r) }))
 	}
-	return app.Locked(ctx, inst, func() error {
+	if r.Kind() != rt.Compose {
+		return &ui.ExitError{Code: ui.ExitRefused, Msg: "This instance has no Compose files to change.", Fix: "Run rexctl config edit to change its settings.", Err: rt.ErrUnsupported}
+	}
+	return declinedEdit(app, app.Locked(ctx, inst, func() error {
 		e, err := app.guard(ctx, inst, true)
 		if err != nil {
 			return err
 		}
 		return editCustom(ctx, app, inst, e)
-	})
+	}))
 }
 
+func declinedEdit(app *App, err error) error {
+	if errors.Is(err, errEditDeclined) {
+		app.UI.Info("Nothing changed.")
+		return nil
+	}
+	return err
+}
+
+var errEditDeclined = errors.New("cmd: the edit was declined")
+
 func keptAsItWas() error {
-	return ui.Refused(fmt.Sprintf("Kept %s as it was.", instance.CustomCompose), "")
+	return errEditDeclined
 }
 
 func editCustom(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine) (err error) {
@@ -194,7 +218,7 @@ func editCustom(ctx context.Context, app *App, inst *instance.Instance, e *engin
 	failed := false
 	for {
 		began := time.Now()
-		if err := openEditor(ctx, draft); err != nil {
+		if err := openEditor(ctx, draft, "Run rexctl config edit --compose in a terminal."); err != nil {
 			return err
 		}
 		next, err := os.ReadFile(draft)
@@ -223,7 +247,10 @@ func editCustom(ctx context.Context, app *App, inst *instance.Instance, e *engin
 			app.UI.Info("  %s", line)
 		}
 		again, err := askEdit(app.UI, "Edit it again? No keeps the file as it was.", true)
-		if errors.Is(err, errNotAsked) || err == nil && !again {
+		if errors.Is(err, errNotAsked) {
+			return ui.Refused(fmt.Sprintf("Kept %s as it was.", instance.CustomCompose), "Fix the problem above, then run rexctl config edit --compose again.")
+		}
+		if err == nil && !again {
 			return keptAsItWas()
 		}
 		if err != nil {
@@ -279,8 +306,7 @@ func checkCustom(ctx context.Context, inst *instance.Instance, draft string, dat
 	if err != nil {
 		return err.Error()
 	}
-	var none engine.Engine
-	if _, err := none.Load(ctx, s); err != nil {
+	if _, err := engine.Load(ctx, s); err != nil {
 		return composeProblem(err)
 	}
 	return ""
@@ -308,13 +334,12 @@ func risksOf(ctx context.Context, inst *instance.Instance, draft string) (custom
 	if err != nil {
 		return r, err
 	}
-	var none engine.Engine
-	merged, err := none.Load(ctx, s)
+	merged, err := engine.Load(ctx, s)
 	if err != nil {
 		return r, err
 	}
 	s.Files = s.Files[:len(s.Files)-1]
-	base, err := none.Load(ctx, s)
+	base, err := engine.Load(ctx, s)
 	if err != nil {
 		return r, err
 	}
@@ -355,7 +380,7 @@ func risksOf(ctx context.Context, inst *instance.Instance, draft string) (custom
 func confirmRisks(ctx context.Context, app *App, inst *instance.Instance, draft string) error {
 	r, err := risksOf(ctx, inst, draft)
 	if err != nil {
-		return ui.Wrap(err, fmt.Sprintf("rexctl can't compare %s with Fluxer's own files.", instance.CustomCompose), "Run rexctl config edit --verbose to see why.")
+		return ui.Wrap(err, fmt.Sprintf("rexctl can't compare %s with Fluxer's own files.", instance.CustomCompose), "Run rexctl config edit --compose --verbose to see why.")
 	}
 	for _, line := range r.changes {
 		app.UI.Warn(fmt.Sprintf("With your change, %s.", line), "")
@@ -367,7 +392,7 @@ func confirmRisks(ctx context.Context, app *App, inst *instance.Instance, draft 
 		app.UI.Warn(fmt.Sprintf("With your change, %s.", ui.JoinAnd(r.removals)), "Fluxer may lose data or stop working without them.")
 		ok, err := askEdit(app.UI, "Remove them anyway?", false)
 		if errors.Is(err, errNotAsked) {
-			return ui.Refused(fmt.Sprintf("rexctl doesn't remove volumes or networks of Fluxer's services without asking. Kept %s as it was.", instance.CustomCompose), "Run rexctl config edit in a terminal, without --yes, to confirm.")
+			return ui.Refused(fmt.Sprintf("rexctl doesn't remove volumes or networks of Fluxer's services without asking. Kept %s as it was.", instance.CustomCompose), "Run rexctl config edit --compose in a terminal, without --yes, to confirm.")
 		}
 		if err != nil {
 			return err
@@ -418,7 +443,7 @@ func unchangedSince(path string, start []byte, existed bool) error {
 	if existed && err == nil && bytes.Equal(now, start) || !existed && errors.Is(err, fs.ErrNotExist) {
 		return nil
 	}
-	return ui.Refused(fmt.Sprintf("%s changed while you were editing it.", instance.CustomCompose), "Run rexctl config edit again to start from the new file.")
+	return ui.Refused(fmt.Sprintf("%s changed while you were editing it.", instance.CustomCompose), "Run rexctl config edit --compose again to start from the new file.")
 }
 
 func applyCustom(ctx context.Context, app *App, inst *instance.Instance, e *engine.Engine, draft string, start []byte, existed bool, data []byte) error {
@@ -430,7 +455,7 @@ func applyCustom(ctx context.Context, app *App, inst *instance.Instance, e *engi
 			return err
 		}
 		if p, err = e.Load(ctx, s); err != nil {
-			return engineFailure(err)
+			return rt.EngineError("", err)
 		}
 		if plan, err := p.Plan(ctx); err == nil {
 			for _, line := range planLines(plan) {
@@ -490,7 +515,19 @@ func applyCustom(ctx context.Context, app *App, inst *instance.Instance, e *engi
 	return err
 }
 
-const nativeSettingsDraft = "settings.env"
+const settingsDraftName = "settings.env"
+
+func operatorChosen(r rt.Runtime, chosen map[string]string) map[string]string {
+	if r.Kind() == rt.Compose {
+		return chosen
+	}
+	shown := maps.Clone(chosen)
+	maps.DeleteFunc(shown, func(k, v string) bool {
+		pin, ok := native.Pinned[k]
+		return ok && v == pin
+	})
+	return shown
+}
 
 func settingsDraft(chosen map[string]string) []byte {
 	var b bytes.Buffer
@@ -511,7 +548,7 @@ func draftChanges(chosen map[string]string, data []byte) (map[string]*string, st
 			return nil, fmt.Sprintf("Line %d isn't a setting=value line.", i+1)
 		}
 	}
-	f, err := envfile.Parse(nativeSettingsDraft, data)
+	f, err := envfile.Parse(settingsDraftName, data)
 	if err != nil {
 		return nil, err.Error()
 	}
@@ -530,23 +567,48 @@ func draftChanges(chosen map[string]string, data []byte) (map[string]*string, st
 	return changes, ""
 }
 
-func settingsProblem(inst *instance.Instance, changes map[string]*string) string {
-	err := refuseDockerOnly(changes)
-	if err == nil {
-		_, err = deploy.Prepare(inst, changes)
+func settingsProblem(ctx context.Context, v *configView, inst *instance.Instance, r rt.Runtime, changes map[string]*string) (map[string]*string, []adminChange, string) {
+	var all []configChange
+	for _, k := range slices.Sorted(maps.Keys(changes)) {
+		all = append(all, configChange{name: k, value: changes[k]})
+	}
+	deployment, admin, err := v.split(all)
+	if err == nil && len(deployment) > 0 {
+		var p *deploy.Prepared
+		p, err = deploy.Prepare(inst, deployment)
+		if err == nil && !p.Unchanged {
+			err = r.Settings().Validate(ctx, p)
+		}
 	}
 	var ee *ui.ExitError
 	switch {
 	case err == nil:
-		return ""
+		return deployment, admin, ""
 	case errors.As(err, &ee) && ee.Msg != "":
-		return strings.TrimSpace(ee.Msg + "\n" + ee.Fix)
+		lines := append([]string{ee.Msg}, ee.Tail...)
+		if ee.Fix != "" {
+			lines = append(lines, ee.Fix)
+		}
+		return nil, nil, strings.Join(lines, "\n")
 	}
-	return err.Error()
+	return nil, nil, err.Error()
 }
 
-func editNativeSettings(ctx context.Context, app *App, inst *instance.Instance) (err error) {
-	start := settingsDraft(inst.State.Settings)
+func editSettings(ctx context.Context, app *App, inst *instance.Instance, r rt.Runtime) (err error) {
+	v, err := loadConfigView(ctx, app, nil)
+	if err != nil {
+		return err
+	}
+	chosen := map[string]string{}
+	maps.Copy(chosen, operatorChosen(r, inst.State.Settings))
+	if values, err := instanceValues(ctx, app); err == nil {
+		for _, k := range values {
+			if row := instanceRow(k); row.Changed && !row.Secret {
+				chosen[k.Key] = adminapi.FormatValue(k)
+			}
+		}
+	}
+	start := settingsDraft(chosen)
 	draft, err := newDraft(inst, "settings-*.env", start)
 	if err != nil {
 		return ui.Wrap(err, "Couldn't make a copy to edit.", "Check that you can write to "+inst.Dir+", then try again.")
@@ -560,17 +622,18 @@ func editNativeSettings(ctx context.Context, app *App, inst *instance.Instance) 
 			os.Remove(draft)
 			return
 		}
-		kept, kerr := keepDraft(inst, draft, nativeSettingsDraft)
+		kept, kerr := keepDraft(inst, draft, settingsDraftName)
 		if kerr != nil {
 			kept = draft
 		}
 		app.UI.Info("Your draft is in %s.", kept)
 	}()
-	kept := ui.Refused("Kept your settings as they were.", "")
 	failed := false
-	var changes map[string]*string
+	var deployment map[string]*string
+	var admin []adminChange
 	for {
-		if err := openEditor(ctx, draft); err != nil {
+		began := time.Now()
+		if err := openEditor(ctx, draft, "Run rexctl config set <setting> <value> to change a setting without an editor."); err != nil {
 			return err
 		}
 		next, err := os.ReadFile(draft)
@@ -579,17 +642,19 @@ func editNativeSettings(ctx context.Context, app *App, inst *instance.Instance) 
 		}
 		same := bytes.Equal(next, after)
 		after = next
-		var problem string
-		changes, problem = draftChanges(inst.State.Settings, after)
+		changes, problem := draftChanges(chosen, after)
 		if problem == "" && len(changes) == 0 {
 			app.UI.OK("Nothing changed.")
+			if time.Since(began) < quickEditor {
+				app.UI.Info("If your editor opens a window, use code --wait.")
+			}
 			return nil
 		}
 		if failed && same {
-			return kept
+			return errEditDeclined
 		}
 		if problem == "" {
-			problem = settingsProblem(inst, changes)
+			deployment, admin, problem = settingsProblem(ctx, v, inst, r, changes)
 		}
 		if problem == "" {
 			break
@@ -600,17 +665,19 @@ func editNativeSettings(ctx context.Context, app *App, inst *instance.Instance) 
 			app.UI.Info("  %s", line)
 		}
 		again, err := askEdit(app.UI, "Edit it again? No keeps the settings as they were.", true)
-		if errors.Is(err, errNotAsked) || err == nil && !again {
-			return kept
+		if errors.Is(err, errNotAsked) {
+			return ui.Refused("Kept your settings as they were.", "Fix the problem above, then run rexctl config edit again.")
+		}
+		if err == nil && !again {
+			return errEditDeclined
 		}
 		if err != nil {
 			return err
 		}
 	}
-	change, err := applyNativeSettings(ctx, app, inst, changes)
-	if err != nil {
-		return err
+	err = applyConfig(ctx, app, inst, r, deployment, admin, nil)
+	if errors.Is(err, errKeptSettings) {
+		return errEditDeclined
 	}
-	reportConfigChange(app, change, changes, nil, inst.State.Upgrade != nil)
-	return nil
+	return err
 }

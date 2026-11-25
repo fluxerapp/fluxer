@@ -1,0 +1,9 @@
+tunnel: fluxer
+
+ingress:
+  - hostname: {{.Domain}}
+    service: http://{{.Upstream}}
+    originRequest:
+      connectTimeout: 30s
+      keepAliveTimeout: 1h
+  - service: http_status:404

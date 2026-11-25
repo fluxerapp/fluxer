@@ -16,7 +16,7 @@ type Foreign struct {
 }
 
 func (i *Instance) GiveFilesToOwner() error {
-	if euid() != 0 {
+	if os.Geteuid() != 0 {
 		return nil
 	}
 	r, err := os.OpenRoot(i.Dir)
@@ -64,7 +64,7 @@ func (i *Instance) GiveFilesToOwner() error {
 }
 
 func (i *Instance) ForeignFile() (Foreign, bool) {
-	me := euid()
+	me := os.Geteuid()
 	if me == 0 {
 		return Foreign{}, false
 	}

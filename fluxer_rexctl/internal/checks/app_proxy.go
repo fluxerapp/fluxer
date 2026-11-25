@@ -4,11 +4,13 @@ package checks
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
 
 func init() {
@@ -20,10 +22,10 @@ func (e *Env) appProxy() string {
 }
 
 func runAppProxy(ctx context.Context, e *Env) Result {
-	if e.Instance == nil || !e.running(ctx, "edge") || !e.running(ctx, e.appProxy()) {
+	if e.Instance == nil || !e.edgeUp(ctx) || !e.running(ctx, e.appProxy()) {
 		return skip("")
 	}
-	out, err := e.exec(ctx, "edge", "", "wget", "-q", "-O", "/dev/null", "http://app-proxy:8080/")
+	out, err := e.webApp(ctx)
 	if err == nil {
 		return pass("The web app loads.")
 	}
@@ -35,11 +37,32 @@ func runAppProxy(ctx context.Context, e *Env) Result {
 	return r
 }
 
+func (e *Env) webApp(ctx context.Context) (string, error) {
+	if !e.Native {
+		return e.exec(ctx, "edge", "", "wget", "-q", "-O", "/dev/null", "http://app-proxy:8080/")
+	}
+	code, _, err := e.viaEdge(ctx, "/")
+	if err == nil && (code < 200 || code > 399) {
+		return fmt.Sprintf("HTTP %d", code), fmt.Errorf("the web app returned HTTP %d", code)
+	}
+	if err != nil {
+		return err.Error(), err
+	}
+	return "", nil
+}
+
 func fixAppProxy(ctx context.Context, e *Env) error {
+	svc := e.appProxy()
+	if e.Native && e.Restart != nil && e.Parts != nil {
+		parts := e.Parts([]string{svc})
+		return e.run(ctx, host.Step{
+			Do:  "Restarts " + ui.JoinAnd(parts) + ".",
+			Run: func(ctx context.Context) error { return e.Restart(ctx, parts) },
+		})
+	}
 	if e.Project == nil {
 		return errNoProject
 	}
-	svc := e.appProxy()
 	do := "Restarts app-proxy."
 	if svc != "app-proxy" {
 		do = "Restarts " + svc + ", which runs app-proxy."

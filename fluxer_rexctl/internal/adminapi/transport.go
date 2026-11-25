@@ -22,9 +22,9 @@ import (
 )
 
 const (
-	RelayService = "api"
-	RelayPath    = "/usr/src/app/fluxer_api/bin/operator-relay.mjs"
-	RelayNode    = "node"
+	relayService = "api"
+	relayPath    = "/usr/src/app/fluxer_api/bin/operator-relay.mjs"
+	relayNode    = "node"
 )
 
 type Target string
@@ -64,7 +64,7 @@ type ExecTransport struct {
 }
 
 func NewExec(p *engine.Project) *ExecTransport {
-	return &ExecTransport{Project: p, HostUser: HostUser()}
+	return &ExecTransport{Project: p, HostUser: hostUser()}
 }
 
 func (t *ExecTransport) Do(ctx context.Context, req Request) (*Response, error) {
@@ -76,17 +76,17 @@ func (t *ExecTransport) Do(ctx context.Context, req Request) (*Response, error) 
 		return nil, err
 	}
 	var stdout, stderr bytes.Buffer
-	err = t.Project.Exec(ctx, RelayService, engine.ExecOptions{
+	err = t.Project.Exec(ctx, relayService, engine.ExecOptions{
 		Stdin:  bytes.NewReader(payload),
 		Stdout: &stdout,
 		Stderr: &stderr,
-	}, RelayNode, RelayPath)
+	}, relayNode, relayPath)
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
 	if err != nil {
-		if missing := stderr.String(); strings.Contains(missing, "Cannot find module") && strings.Contains(missing, RelayPath) {
-			return nil, &RelayError{Detail: "this Fluxer release has no " + RelayPath, Err: ErrNoRelay}
+		if missing := stderr.String(); strings.Contains(missing, "Cannot find module") && strings.Contains(missing, relayPath) {
+			return nil, &RelayError{Detail: "this Fluxer release has no " + relayPath, Err: ErrNoRelay}
 		}
 		return nil, &RelayError{Detail: firstLine(stderr.String(), err.Error()), Err: err}
 	}
@@ -107,10 +107,17 @@ type HostTransport struct {
 	APIAddr        string
 	ClientIPHeader string
 	HostUser       string
+	Dial           func(ctx context.Context, target string) (net.Conn, error)
+}
+
+func (t *HostTransport) dialer(target string) func(ctx context.Context, _, _ string) (net.Conn, error) {
+	return func(ctx context.Context, _, _ string) (net.Conn, error) {
+		return t.Dial(ctx, target)
+	}
 }
 
 func NewHost(socket, apiAddr, clientIPHeader string) *HostTransport {
-	return &HostTransport{Socket: socket, APIAddr: apiAddr, ClientIPHeader: clientIPHeader, HostUser: HostUser()}
+	return &HostTransport{Socket: socket, APIAddr: apiAddr, ClientIPHeader: clientIPHeader, HostUser: hostUser()}
 }
 
 func (t *HostTransport) Do(ctx context.Context, req Request) (*Response, error) {
@@ -118,7 +125,7 @@ func (t *HostTransport) Do(ctx context.Context, req Request) (*Response, error) 
 		req.HostUser = t.HostUser
 	}
 	if !strings.HasPrefix(req.Path, "/") {
-		return nil, &RelayError{Detail: "path must start with /", Err: ErrBadRequest}
+		return nil, &RelayError{Detail: "path must start with /", Err: errBadRequest}
 	}
 	headers := http.Header{}
 	for k, v := range req.Headers {
@@ -129,7 +136,7 @@ func (t *HostTransport) Do(ctx context.Context, req Request) (*Response, error) 
 	switch req.Target {
 	case TargetOperator:
 		if req.Path != "/admin" && !strings.HasPrefix(req.Path, "/admin/") {
-			return nil, &RelayError{Detail: "the operator target serves /admin paths only", Err: ErrBadRequest}
+			return nil, &RelayError{Detail: "the operator target serves /admin paths only", Err: errBadRequest}
 		}
 		if req.HostUser != "" {
 			headers.Set(hostUserHeader, req.HostUser)
@@ -139,6 +146,9 @@ func (t *HostTransport) Do(ctx context.Context, req Request) (*Response, error) 
 			var d net.Dialer
 			return d.DialContext(ctx, "unix", socket)
 		}}
+		if t.Dial != nil {
+			client.Transport = &http.Transport{DisableKeepAlives: true, DialContext: t.dialer(string(TargetOperator))}
+		}
 		base = "http://operator"
 	case TargetLoopback:
 		name := t.ClientIPHeader
@@ -148,8 +158,11 @@ func (t *HostTransport) Do(ctx context.Context, req Request) (*Response, error) 
 		if headers.Get(name) == "" {
 			headers.Set(name, "127.0.0.1")
 		}
+		if t.Dial != nil {
+			client.Transport = &http.Transport{DisableKeepAlives: true, DialContext: t.dialer("api")}
+		}
 	default:
-		return nil, &RelayError{Detail: fmt.Sprintf("unknown target %s", req.Target), Err: ErrBadRequest}
+		return nil, &RelayError{Detail: fmt.Sprintf("unknown target %s", req.Target), Err: errBadRequest}
 	}
 	var body io.Reader
 	switch {
@@ -194,7 +207,7 @@ func (t *HostTransport) Do(ctx context.Context, req Request) (*Response, error) 
 	if err != nil {
 		return nil, &RelayError{Detail: err.Error(), Err: err}
 	}
-	out := &Response{Status: resp.StatusCode, Headers: map[string]string{}, APIVersion: resp.Header.Get("X-Fluxer-Version"), SchemaMajor: SchemaMajor}
+	out := &Response{Status: resp.StatusCode, Headers: map[string]string{}, APIVersion: resp.Header.Get("X-Fluxer-Version"), SchemaMajor: schemaMajor}
 	for k, v := range resp.Header {
 		out.Headers[strings.ToLower(k)] = strings.Join(v, ", ")
 	}
@@ -224,7 +237,7 @@ func firstLine(s, fallback string) string {
 	return s
 }
 
-func HostUser() string {
+func hostUser() string {
 	for _, key := range []string{"SUDO_USER", "USER", "USERNAME"} {
 		if v := strings.TrimSpace(os.Getenv(key)); v != "" {
 			return v
@@ -287,6 +300,6 @@ func fieldName(path string) string {
 
 var ErrNoRelay = errors.New("adminapi: this Fluxer release has no operator relay")
 
-var ErrBadRequest = errors.New("adminapi: the request can't be sent")
+var errBadRequest = errors.New("adminapi: the request can't be sent")
 
-var ErrSchemaMismatch = errors.New("adminapi: rexctl and Fluxer versions differ")
+var errSchemaMismatch = errors.New("adminapi: rexctl and Fluxer versions differ")

@@ -15,7 +15,6 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/backup"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
-	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/release"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
 
@@ -46,7 +45,7 @@ func keepSearchReadable(ctx context.Context, app *App, inst *instance.Instance, 
 	if err := p.Stop(ctx, searchService); err != nil {
 		return err
 	}
-	name := capitalise(fluxerName(release.Short(version)))
+	name := ui.Capitalise(fluxerName(version))
 	list, _ := backup.List(inst.BackupDir())
 	if b := backupFor(inst, list, version); b != nil {
 		err := backup.RestoreVolume(ctx, b.Path, inst, p, searchVolume)
@@ -95,13 +94,15 @@ func searchVersion(ref string) ([2]int, bool) {
 }
 
 func newSearchCmd(app *App) *cobra.Command {
-	c := &cobra.Command{Use: "search", Short: "Manage search on your instance", Args: noArgs}
+	c := &cobra.Command{Use: "search", Short: "Manage search on your instance", Example: "rexctl search reindex\nrexctl search reindex --no-wait", Args: noArgs}
 	var noWait bool
 	reindex := &cobra.Command{
 		Use:   "reindex",
 		Short: "Rebuild search from your data",
 		Long:  "Rebuild every search index from your data, with the messages in every channel and DM. Search shows partial results until it finishes. If a rebuild is already running, rexctl follows that one, and stopping rexctl doesn't stop the rebuild.",
-		Args:  noArgs,
+		Example: `rexctl search reindex
+rexctl search reindex --no-wait`,
+		Args: noArgs,
 	}
 	reindex.Flags().BoolVar(&noWait, "no-wait", false, "start the rebuild and return without waiting for it")
 	reindex.RunE = func(c *cobra.Command, _ []string) error {
@@ -140,9 +141,9 @@ func followReindex(ctx context.Context, app *App, api *adminapi.Client, jobID st
 			case "failed":
 				msg := "Rebuilding search failed."
 				if st.Error != "" {
-					msg = "Rebuilding search failed. " + sentenceOf(st.Error)
+					msg = "Rebuilding search failed. " + sentence(st.Error)
 				}
-				return ui.Failed(msg, "Run rexctl logs worker to see why, then run rexctl search reindex again.")
+				return ui.Failed(msg, "Run rexctl logs api to see why, then run rexctl search reindex again.")
 			case "not_found":
 				return ui.Failed("rexctl lost track of the rebuild.", "Run rexctl search reindex again.")
 			}

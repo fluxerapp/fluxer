@@ -29,14 +29,17 @@ const (
 	PhasePulled      = "pulled"
 	PhaseBackedUp    = "backed-up"
 	PhaseMigrated    = "migrated"
+	PhaseSwitching   = "switching"
 	PhaseRecreated   = "recreated"
+	PhaseRestoring   = "restoring"
 	PhaseVerified    = "verified"
+	PhaseGoingBack   = "going-back"
 )
 
-var Phases = []string{PhaseResolved, PhaseSelfUpdated, PhasePulled, PhaseBackedUp, PhaseMigrated, PhaseRecreated, PhaseVerified}
+var Phases = []string{PhaseResolved, PhaseSelfUpdated, PhasePulled, PhaseBackedUp, PhaseMigrated, PhaseSwitching, PhaseRecreated, PhaseRestoring, PhaseVerified}
 
 var (
-	ErrTooOld         = errors.New("release: current version is older than min_from")
+	errTooOld         = errors.New("release: current version is older than min_from")
 	ErrUnknownVersion = errors.New("release: no such version")
 	ErrBadResponse    = errors.New("release: the resolver sent an unexpected response")
 	ErrNoNativeBuild  = errors.New("release: no native build for this machine")
@@ -56,6 +59,7 @@ type Release struct {
 	MinPodman     string  `json:"min_podman,omitempty"`
 	MinDocker     string  `json:"min_docker,omitempty"`
 	StateSchema   int     `json:"state_schema,omitempty"`
+	ComposeLast   string  `json:"compose_last,omitempty"`
 	Assets        []Asset `json:"assets"`
 	Dist          []Asset `json:"dist,omitempty"`
 }
@@ -72,7 +76,7 @@ func (e *TooOldError) Error() string {
 
 func (e *TooOldError) Command() string { return "rexctl upgrade --to " + e.MinFrom }
 
-func (e *TooOldError) Is(target error) bool { return target == ErrTooOld }
+func (e *TooOldError) Is(target error) bool { return target == errTooOld }
 
 type NoNativeBuildError struct {
 	Version string
@@ -189,14 +193,6 @@ func Compare(a, b string) int {
 		}
 	}
 	return 0
-}
-
-func Short(v string) string {
-	p, ok := parse(v)
-	if !ok {
-		return v
-	}
-	return fmt.Sprintf("%d.%d", p[0], p[1])
 }
 
 func CheckPath(from string, to *Release) error {

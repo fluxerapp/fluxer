@@ -89,7 +89,7 @@ func (w *archiveWriter) addBytes(name string, mode int64, data []byte) error {
 func (w *archiveWriter) finish(m *Manifest) error {
 	m.Format = formatFull
 	if m.WithoutUploads() {
-		m.Format = FormatVersion
+		m.Format = formatVersion
 	}
 	m.Entries = append([]Entry{}, w.entries...)
 	if m.Volumes == nil {
@@ -99,10 +99,10 @@ func (w *archiveWriter) finish(m *Manifest) error {
 	if err != nil {
 		return err
 	}
-	if err := w.addBytes(ManifestName, 0o600, data); err != nil {
+	if err := w.addBytes(manifestName, 0o600, data); err != nil {
 		return err
 	}
-	if err := w.addBytes(SumsName, 0o600, sums(append(m.Entries, entryFor(ManifestName, data)))); err != nil {
+	if err := w.addBytes(sumsName, 0o600, sums(append(m.Entries, entryFor(manifestName, data)))); err != nil {
 		return err
 	}
 	if err := w.tw.Close(); err != nil {
@@ -250,7 +250,7 @@ func parseManifest(data []byte) (*Manifest, error) {
 	if m.Format < 1 {
 		return nil, ErrNotBackup
 	}
-	if m.Format > FormatVersion {
+	if m.Format > formatVersion {
 		return &m, ErrNewer
 	}
 	return &m, nil
@@ -316,14 +316,14 @@ func Verify(path string) (*Manifest, error) {
 			return nil
 		}
 		switch hdr.Name {
-		case ManifestName:
+		case manifestName:
 			if hdr.Size != int64(len(data)) {
 				return fmt.Errorf("%w: the index doesn't match the manifest", ErrDamaged)
 			}
 			sum, err := hashReader(r)
 			manifestSum = sum
 			return err
-		case SumsName:
+		case sumsName:
 			sum, err := hashReader(r)
 			sumsSum = sum
 			return err
@@ -363,8 +363,8 @@ func Verify(path string) (*Manifest, error) {
 			return m, fmt.Errorf("%w: %s doesn't match its checksum", ErrDamaged, want.Path)
 		}
 	}
-	if want := sha256.Sum256(sums(append(m.Entries, entryFor(ManifestName, data)))); !bytes.Equal(sumsSum, want[:]) {
-		return m, fmt.Errorf("%w: %s doesn't match the manifest", ErrDamaged, SumsName)
+	if want := sha256.Sum256(sums(append(m.Entries, entryFor(manifestName, data)))); !bytes.Equal(sumsSum, want[:]) {
+		return m, fmt.Errorf("%w: %s doesn't match the manifest", ErrDamaged, sumsName)
 	}
 	return m, nil
 }
@@ -378,10 +378,10 @@ func hashReader(r io.Reader) ([]byte, error) {
 }
 
 func volumeOf(name string) (string, string, bool) {
-	if !strings.HasPrefix(name, VolumesPrefix) {
+	if !strings.HasPrefix(name, volumesPrefix) {
 		return "", "", false
 	}
-	rest := strings.TrimPrefix(name, VolumesPrefix)
+	rest := strings.TrimPrefix(name, volumesPrefix)
 	vol, inner, _ := strings.Cut(rest, "/")
 	if vol == "" {
 		return "", "", false

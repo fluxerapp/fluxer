@@ -61,12 +61,12 @@ func SplitListenAddress(values map[string]string, skip []string) ([]string, erro
 			continue
 		}
 		ports[key] = v
-		if validPort(v) == nil {
+		if ValidPort(v) == nil {
 			continue
 		}
 		host, port, err := net.SplitHostPort(strings.TrimSpace(v))
 		ip := net.ParseIP(host)
-		if err != nil || ip == nil || validPort(port) != nil {
+		if err != nil || ip == nil || ValidPort(port) != nil {
 			continue
 		}
 		addresses[key], ports[key] = ip.String(), port

@@ -4,7 +4,6 @@ package checks
 
 import (
 	"context"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -14,21 +13,10 @@ import (
 )
 
 func init() {
-	Register(Check{ID: "boot-unit", Phases: Installed, Run: runBootUnit, Fix: fixBootUnit})
+	Register(Check{ID: "boot-unit", Phases: Installed, Run: byRuntime(runBootUnit, runFluxerBoot), Fix: byRuntime(fixBootUnit, fixFluxerBoot)})
 }
 
-func RunningBinary() (string, error) {
-	bin, err := os.Executable()
-	if err != nil {
-		return "", err
-	}
-	if real, err := filepath.EvalSymlinks(bin); err == nil {
-		bin = real
-	}
-	return filepath.Abs(bin)
-}
-
-func StopGrace(p *engine.Project) time.Duration {
+func stopGrace(p *engine.Project) time.Duration {
 	var longest time.Duration
 	if p == nil || p.Model == nil {
 		return longest
@@ -42,7 +30,7 @@ func StopGrace(p *engine.Project) time.Duration {
 }
 
 func BootUnitFor(inst *instance.Instance, e *engine.Engine, p *engine.Project) (host.BootUnit, error) {
-	bin, err := RunningBinary()
+	bin, err := host.RunningBinary()
 	if err != nil {
 		return host.BootUnit{}, err
 	}
@@ -56,7 +44,7 @@ func BootUnitFor(inst *instance.Instance, e *engine.Engine, p *engine.Project) (
 		Binary:    bin,
 		Podman:    e.Kind == engine.Podman,
 		Rootless:  e.Rootless,
-		StopGrace: StopGrace(p),
+		StopGrace: stopGrace(p),
 	}, nil
 }
 

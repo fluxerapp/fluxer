@@ -18,6 +18,7 @@ const (
 	userFlagDisabled  = uint64(1) << 38
 	userFlagDeleted   = uint64(1) << 34
 	listPageSize      = 100
+	resolvePages      = 50
 )
 
 type User struct {
@@ -83,7 +84,7 @@ func toUser(u UserAdminResponseSchema) User {
 		Admin:     len(u.Acls) > 0,
 		Banned:    bannedNow(u.TempBannedUntil),
 		MFA:       u.HasTotp || len(u.AuthenticatorTypes) > 0,
-		CreatedAt: SnowflakeTime(u.Id),
+		CreatedAt: snowflakeTime(u.Id),
 
 		deletionFinished: deletionFinished(u),
 	}
@@ -117,7 +118,7 @@ func bannedNow(until *string) bool {
 	return err != nil || t.After(time.Now())
 }
 
-func SnowflakeTime(id string) string {
+func snowflakeTime(id string) string {
 	n, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
 		return ""
@@ -135,8 +136,9 @@ func deletionFinished(u UserAdminResponseSchema) bool {
 	return isDeleted(u) && u.PendingDeletionAt == nil
 }
 
-func (c *Client) ListUsers(ctx context.Context, search string, admins bool) ([]User, error) {
+func (c *Client) ListUsers(ctx context.Context, search string, admins bool, limit int) ([]User, int, error) {
 	out := []User{}
+	total := 0
 	for offset := 0; ; offset += listPageSize {
 		q := map[string]string{"limit": strconv.Itoa(listPageSize), "offset": strconv.Itoa(offset)}
 		if search != "" {
@@ -147,16 +149,22 @@ func (c *Client) ListUsers(ctx context.Context, search string, admins bool) ([]U
 		}
 		var resp SearchUsersResponse
 		if err := c.Call(ctx, http.MethodGet, "/admin/users", q, nil, &resp); err != nil {
-			return nil, err
+			return nil, 0, err
+		}
+		if offset == 0 && !admins {
+			total = int(resp.Total)
 		}
 		for _, u := range resp.Users {
 			if isDeleted(u) || (admins && len(u.Acls) == 0) {
 				continue
 			}
+			if limit > 0 && len(out) == limit {
+				return out, max(total, len(out)+1), nil
+			}
 			out = append(out, toUser(u))
 		}
 		if len(resp.Users) < listPageSize {
-			return out, nil
+			return out, len(out), nil
 		}
 	}
 }
@@ -198,19 +206,25 @@ func (c *Client) resolve(ctx context.Context, ref string) (*UserAdminResponseSch
 	default:
 		query["q"] = ref
 	}
-	var resp SearchUsersResponse
-	if err := c.Call(ctx, http.MethodGet, "/admin/users", query, nil, &resp); err != nil {
-		return nil, err
-	}
 	var matches []UserAdminResponseSchema
-	for _, u := range resp.Users {
-		if isDeleted(u) {
-			continue
+	for offset := 0; ; offset += listPageSize {
+		query["offset"] = strconv.Itoa(offset)
+		var resp SearchUsersResponse
+		if err := c.Call(ctx, http.MethodGet, "/admin/users", query, nil, &resp); err != nil {
+			return nil, err
 		}
-		if query["q"] != "" && !strings.EqualFold(u.Username, ref) {
-			continue
+		for _, u := range resp.Users {
+			if isDeleted(u) {
+				continue
+			}
+			if query["q"] != "" && !strings.EqualFold(u.Username, ref) {
+				continue
+			}
+			matches = append(matches, u)
 		}
-		matches = append(matches, u)
+		if query["q"] == "" || len(resp.Users) < listPageSize || offset >= resolvePages*listPageSize {
+			break
+		}
 	}
 	switch len(matches) {
 	case 0:
@@ -248,8 +262,9 @@ func (c *Client) ShowUser(ctx context.Context, ref string) (*UserDetail, error) 
 }
 
 type CreatedUser struct {
-	User      User
-	ResetLink string
+	User         User
+	ResetLink    string
+	ResetExpires time.Time
 }
 
 func (c *Client) CreateUser(ctx context.Context, username, email string, admin bool) (*CreatedUser, error) {
@@ -264,7 +279,7 @@ func (c *Client) CreateUser(ctx context.Context, username, email string, admin b
 	if err := c.Call(ctx, http.MethodPost, "/admin/users", nil, req, &resp); err != nil {
 		return nil, err
 	}
-	return &CreatedUser{User: toUser(resp.User), ResetLink: resp.PasswordReset.Url}, nil
+	return &CreatedUser{User: toUser(resp.User), ResetLink: resp.PasswordReset.Url, ResetExpires: resp.PasswordReset.ExpiresAt}, nil
 }
 
 func (c *Client) ResetLink(ctx context.Context, id string) (string, string, error) {

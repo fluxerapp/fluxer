@@ -13,13 +13,12 @@ import (
 	cerrdefs "github.com/containerd/errdefs"
 	"github.com/distribution/reference"
 	"github.com/docker/compose/v5/pkg/api"
-	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/api/types/volume"
 	"github.com/moby/moby/client"
 )
 
-var ErrNoContainers = errors.New("engine: the project has no containers")
+var errNoContainers = errors.New("engine: the project has no containers")
 
 func projectFilter(project string) client.Filters {
 	return make(client.Filters).Add("label", api.ProjectLabel+"="+project)
@@ -127,6 +126,23 @@ func (e *Engine) Volumes(ctx context.Context, project string) ([]Volume, error) 
 	return out, nil
 }
 
+func (e *Engine) Networks(ctx context.Context, project string) ([]string, error) {
+	c, err := e.api()
+	if err != nil {
+		return nil, err
+	}
+	res, err := c.NetworkList(ctx, client.NetworkListOptions{Filters: projectFilter(project)})
+	if err != nil {
+		return nil, &Error{Op: "networks", Class: ClassOf(err), Err: err}
+	}
+	out := make([]string, 0, len(res.Items))
+	for _, n := range res.Items {
+		out = append(out, n.Name)
+	}
+	slices.Sort(out)
+	return out, nil
+}
+
 func projectVolumes(ctx context.Context, c client.APIClient, project string) ([]volume.Volume, error) {
 	if project == "" {
 		res, err := c.VolumeList(ctx, client.VolumeListOptions{})
@@ -229,7 +245,7 @@ func (e *Engine) LocalImage(ctx context.Context, ref string) (string, bool, erro
 
 func Stores(dir string, e *Engine, prefer Kind) Roots {
 	if e == nil {
-		r := PlannedRoots(prefer)
+		r := plannedRoots(prefer)
 		if r.Data == "" {
 			return Roots{Data: dir, Images: dir}
 		}
@@ -270,22 +286,22 @@ func (e *Engine) LocalDiffIDs(ctx context.Context) (map[string]bool, error) {
 	return out, nil
 }
 
-func (e *Engine) PullNeed(ctx context.Context, set stack.ImageSet, refs []string, sizes map[string]uint64) uint64 {
-	local, _ := e.LocalDiffIDs(ctx)
-	var missing []string
+func (e *Engine) PullNeed(ctx context.Context, refs []string, sizes map[string]uint64) uint64 {
 	var need uint64
 	for _, ref := range refs {
 		if _, found, err := e.LocalImage(ctx, ref); err == nil && found {
 			continue
 		}
-		if _, known := set.LayersFor(e.Platform, ref); !known && sizes[ref] > 0 {
+		if sizes[ref] > 0 {
 			need += 2 * sizes[ref]
 			continue
 		}
-		missing = append(missing, ref)
+		need += ImageGuess
 	}
-	return need + set.Need(e.Platform, missing, local)
+	return need
 }
+
+const ImageGuess = 1 << 30
 
 func (e *Engine) UniqueSize(ctx context.Context, refs []string) (uint64, error) {
 	c, err := e.api()

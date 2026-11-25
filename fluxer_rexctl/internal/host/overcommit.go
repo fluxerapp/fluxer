@@ -21,7 +21,7 @@ const (
 	OvercommitLocked
 )
 
-var ErrOvercommitUnchanged = errors.New("vm.overcommit_memory didn't change")
+var errOvercommitUnchanged = errors.New("vm.overcommit_memory didn't change")
 
 var overcommitPath = "/proc/sys/vm/overcommit_memory"
 
@@ -75,7 +75,7 @@ func FreeMemory() uint64 {
 
 func overcommitChanged() error {
 	if s := Overcommit(); s == OvercommitOff || s == OvercommitLocked {
-		return ErrOvercommitUnchanged
+		return errOvercommitUnchanged
 	}
 	return nil
 }

@@ -43,7 +43,7 @@ var unusableIPv6 = []netip.Prefix{
 	netip.MustParsePrefix("3fff::/20"),
 }
 
-func IsCloudflare(addr string) bool {
+func isCloudflare(addr string) bool {
 	ip, err := netip.ParseAddr(addr)
 	if err != nil {
 		return false
@@ -56,7 +56,7 @@ func IsCloudflare(addr string) bool {
 	return false
 }
 
-func IsCGNAT(addr string) bool {
+func isCGNAT(addr string) bool {
 	ip, err := netip.ParseAddr(addr)
 	return err == nil && cgnatRange.Contains(ip.Unmap())
 }
@@ -99,7 +99,7 @@ func DefaultRouteIPv6() string {
 	return ""
 }
 
-func TemporaryIPv6() []string {
+func temporaryIPv6() []string {
 	data, err := os.ReadFile("/proc/net/if_inet6")
 	if err != nil {
 		return nil
@@ -147,7 +147,7 @@ func GlobalIPv6(addr string) bool {
 	return true
 }
 
-func UsableIPv6(addr string, local, temporary []string) bool {
+func usableIPv6(addr string, local, temporary []string) bool {
 	if !GlobalIPv6(addr) {
 		return false
 	}
@@ -155,8 +155,8 @@ func UsableIPv6(addr string, local, temporary []string) bool {
 	return slices.Contains(local, ip) && !slices.Contains(temporary, ip)
 }
 
-func StableIPv6(observed string, local, temporary []string) string {
-	if UsableIPv6(observed, local, temporary) {
+func stableIPv6(observed string, local, temporary []string) string {
+	if usableIPv6(observed, local, temporary) {
 		return netip.MustParseAddr(observed).String()
 	}
 	seen, err := netip.ParseAddr(observed)
@@ -165,7 +165,7 @@ func StableIPv6(observed string, local, temporary []string) string {
 	}
 	net64, _ := seen.Prefix(64)
 	for _, a := range local {
-		if ip, err := netip.ParseAddr(a); err == nil && net64.Contains(ip) && UsableIPv6(a, local, temporary) {
+		if ip, err := netip.ParseAddr(a); err == nil && net64.Contains(ip) && usableIPv6(a, local, temporary) {
 			return ip.String()
 		}
 	}
@@ -173,11 +173,11 @@ func StableIPv6(observed string, local, temporary []string) string {
 }
 
 func MachineIPv6(observed string) string {
-	local, temporary := InterfaceAddresses(), TemporaryIPv6()
+	local, temporary := InterfaceAddresses(), temporaryIPv6()
 	if observed != "" {
-		return StableIPv6(observed, local, temporary)
+		return stableIPv6(observed, local, temporary)
 	}
-	return StableIPv6(DefaultRouteIPv6(), local, temporary)
+	return stableIPv6(DefaultRouteIPv6(), local, temporary)
 }
 
 const (
@@ -199,7 +199,7 @@ func FamilyOf(ipv4, ipv6 string) string {
 	return FamilyNone
 }
 
-func NodeIPs(ipv4, ipv6 string) string {
+func nodeIPs(ipv4, ipv6 string) string {
 	var parts []string
 	for _, ip := range []string{ipv4, ipv6} {
 		if ip != "" {
@@ -219,7 +219,7 @@ type Reachability struct {
 func Assess(publicIPv4, publicIPv6 string, local []string, routeIP string) Reachability {
 	r := Reachability{PublicIPv4: publicIPv4, PublicIPv6: publicIPv6}
 	r.BehindNAT = publicIPv4 != "" && !slices.Contains(local, publicIPv4)
-	r.CGNAT = publicIPv4 != "" && IsCGNAT(routeIP)
+	r.CGNAT = publicIPv4 != "" && isCGNAT(routeIP)
 	return r
 }
 
@@ -281,7 +281,7 @@ func doh(ctx context.Context, hc *http.Client, server, name, kind string) ([]str
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("voice: %s answered %d", server, resp.StatusCode)
+		return nil, fmt.Errorf("voice: %s returned %d", server, resp.StatusCode)
 	}
 	var body struct {
 		Status int `json:"Status"`
@@ -322,7 +322,7 @@ func (h HostnameCheck) Usable() bool {
 
 func CheckHostname(answer DNSAnswer, publicIPv4, publicIPv6 string, ownIPv6 []string) HostnameCheck {
 	all := slices.Concat(answer.A, answer.AAAA)
-	if len(all) > 0 && !slices.ContainsFunc(all, func(a string) bool { return !IsCloudflare(a) }) {
+	if len(all) > 0 && !slices.ContainsFunc(all, func(a string) bool { return !isCloudflare(a) }) {
 		return HostnameProxied
 	}
 	own := func(a string) bool {
@@ -390,7 +390,7 @@ func HTTPBase(endpoint string) string {
 	return strings.TrimRight(u.String(), "/")
 }
 
-const DefaultHTTPBind = "127.0.0.1"
+const defaultHTTPBind = "127.0.0.1"
 
 func LocalBase(bind string, httpPort int) string {
 	return "http://" + net.JoinHostPort(dialHost(bind), strconv.Itoa(httpPort))
@@ -398,14 +398,14 @@ func LocalBase(bind string, httpPort int) string {
 
 func HTTPAddress(bind string, httpPort int) string {
 	if bind == "" {
-		bind = DefaultHTTPBind
+		bind = defaultHTTPBind
 	}
 	return net.JoinHostPort(bind, strconv.Itoa(httpPort))
 }
 
-func HTTPBindValue(bind string) string {
+func httpBindValue(bind string) string {
 	if bind == "" {
-		return DefaultHTTPBind
+		return defaultHTTPBind
 	}
 	if a, err := netip.ParseAddr(bind); err == nil && a.Is6() {
 		return "[" + a.String() + "]"
@@ -419,7 +419,7 @@ func NormalHTTPBind(bind string) (string, bool) {
 		return "", false
 	}
 	a = a.Unmap()
-	if a.String() == DefaultHTTPBind {
+	if a.String() == defaultHTTPBind {
 		return "", true
 	}
 	return a.String(), true
@@ -447,7 +447,7 @@ func HTTPBindOnMachine(bind string, local []string) bool {
 func dialHost(bind string) string {
 	a, err := netip.ParseAddr(bind)
 	if err != nil || a.IsUnspecified() {
-		return DefaultHTTPBind
+		return defaultHTTPBind
 	}
 	return a.String()
 }
@@ -456,7 +456,7 @@ func InstanceEdge(endpoint, mode, httpsPort, bind, listen string) (string, strin
 	base := HTTPBase(endpoint)
 	switch mode {
 	case settings.EdgeProxy, settings.EdgeTunnel:
-		addr := "127.0.0.1:8080"
+		addr := settings.DefaultBind
 		if mode == settings.EdgeTunnel {
 			addr = "127.0.0.1:80"
 		}
@@ -532,7 +532,7 @@ func ProbeThroughEdge(ctx context.Context, base, dialAddr string, insecure bool)
 	defer resp.Body.Close()
 	body, _ := io.ReadAll(io.LimitReader(resp.Body, 64))
 	if resp.StatusCode != http.StatusOK || strings.TrimSpace(string(body)) != "OK" {
-		return fmt.Errorf("voice: %s answered %d", target, resp.StatusCode)
+		return fmt.Errorf("voice: %s returned %d", target, resp.StatusCode)
 	}
 	return nil
 }
@@ -595,7 +595,7 @@ func ListRooms(ctx context.Context, base, dialAddr, key, secret string, insecure
 	}
 	defer tr.CloseIdleConnections()
 	now := time.Now()
-	token := SignHS256(secret, map[string]any{
+	token := signHS256(secret, map[string]any{
 		"iss":   key,
 		"nbf":   now.Add(-10 * time.Second).Unix(),
 		"exp":   now.Add(time.Minute).Unix(),
@@ -614,7 +614,7 @@ func ListRooms(ctx context.Context, base, dialAddr, key, secret string, insecure
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return RoomLoad{}, fmt.Errorf("voice: the room service answered %d", resp.StatusCode)
+		return RoomLoad{}, fmt.Errorf("voice: the room service returned %d", resp.StatusCode)
 	}
 	var body struct {
 		Rooms []struct {
@@ -628,7 +628,7 @@ func ListRooms(ctx context.Context, base, dialAddr, key, secret string, insecure
 	}
 	var load RoomLoad
 	for _, r := range body.Rooms {
-		if strings.HasPrefix(r.Name, TestRoomPrefix) {
+		if strings.HasPrefix(r.Name, testRoomPrefix) {
 			continue
 		}
 		load.Rooms++

@@ -14,7 +14,7 @@ import (
 
 const (
 	DiskProfileSmall  = "small"
-	SmallDiskBytes    = 16_000_000_000
+	smallDiskBytes    = 16_000_000_000
 	defaultSpoolBytes = 2 << 30
 	smallSpoolBytes   = 512 << 20
 
@@ -30,7 +30,7 @@ const (
 )
 
 func DiskProfileFor(capacity uint64) string {
-	if capacity > 0 && capacity < SmallDiskBytes {
+	if capacity > 0 && capacity < smallDiskBytes {
 		return DiskProfileSmall
 	}
 	return ""
@@ -57,13 +57,12 @@ func DiskSizingKeys() []string {
 }
 
 func GrowthCap(set *Set, env map[string]string) uint64 {
-	compose, err := ReadFile(set, ComposeFile)
-	if err != nil {
+	value, logged, ok := sizedValue(set, env)
+	if !ok {
 		return 0
 	}
-	value := sizedValue(compose, env)
 	files, _ := strconv.ParseUint(value(LogMaxFileVar), 10, 64)
-	logs := uint64(loggedServices(compose)) * files * uint64(parseMiB(value(LogMaxSizeVar))) * mib
+	logs := uint64(logged) * files * uint64(parseMiB(value(LogMaxSizeVar))) * mib
 	wal := uint64(parseMiB(value(MaxWALSizeVar))) * mib
 	spool, _ := strconv.ParseUint(value(SpoolTotalVar), 10, 64)
 	nats := uint64(parseMiB(value(natsStoreVar))) * mib
@@ -71,20 +70,32 @@ func GrowthCap(set *Set, env map[string]string) uint64 {
 }
 
 func WALCap(set *Set, env map[string]string) uint64 {
-	compose, err := ReadFile(set, ComposeFile)
-	if err != nil {
+	value, _, ok := sizedValue(set, env)
+	if !ok {
 		return 0
 	}
-	return uint64(parseMiB(sizedValue(compose, env)(MaxWALSizeVar))) * mib
+	return uint64(parseMiB(value(MaxWALSizeVar))) * mib
 }
 
-func sizedValue(compose []byte, env map[string]string) func(string) string {
+func sizedValue(set *Set, env map[string]string) (value func(string) string, logged int, ok bool) {
+	def := func(k string) string {
+		s, _ := set.Setting(k)
+		return s.Default
+	}
+	if set.Catalog == nil {
+		compose, err := ReadFile(set, ComposeFile)
+		if err != nil {
+			return nil, 0, false
+		}
+		def = func(k string) string { return composeDefault(compose, k) }
+		logged = loggedServices(compose)
+	}
 	return func(k string) string {
 		if v := strings.TrimSpace(env[k]); v != "" {
 			return v
 		}
-		return composeDefault(compose, k)
-	}
+		return def(k)
+	}, logged, true
 }
 
 func composeDefault(compose []byte, name string) string {

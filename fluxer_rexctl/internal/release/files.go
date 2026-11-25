@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	StackDirName  = "stack"
+	stackDirName  = "stack"
 	snapshotState = "state.json"
 	imagesFile    = "images.json"
 	unknownName   = "before-rexctl"
@@ -60,8 +60,8 @@ func Dir(inst *instance.Instance, version string) string {
 	return inst.ReleaseDir(DirName(version))
 }
 
-func StackDir(inst *instance.Instance, version string) string {
-	return filepath.Join(Dir(inst, version), StackDirName)
+func stackDir(inst *instance.Instance, version string) string {
+	return filepath.Join(Dir(inst, version), stackDirName)
 }
 
 func private(version string) bool {
@@ -84,8 +84,8 @@ func WriteRelease(inst *instance.Instance, set *stack.Set) error {
 	if set == nil || set.Release == "" {
 		return errors.New("release: the release set has no name")
 	}
-	dir := StackDir(inst, set.Release)
-	if exists(filepath.Join(dir, stack.ProfilesFile)) {
+	dir := stackDir(inst, set.Release)
+	if set.Catalog == nil && exists(filepath.Join(dir, stack.ProfilesFile)) {
 		return nil
 	}
 	return stack.WriteSet(dir, set)
@@ -111,7 +111,7 @@ func HasSnapshot(inst *instance.Instance, version string) bool {
 	if !exists(filepath.Join(dir, snapshotState)) {
 		return false
 	}
-	return exists(filepath.Join(dir, StackDirName, stack.ProfilesFile))
+	return exists(filepath.Join(dir, stackDirName, stack.ProfilesFile))
 }
 
 func SnapshotState(inst *instance.Instance, version string) (*instance.State, error) {
@@ -127,39 +127,39 @@ func SnapshotState(inst *instance.Instance, version string) (*instance.State, er
 }
 
 func LoadSet(inst *instance.Instance, version string) (*stack.Set, error) {
-	set, err := stack.LoadSet(StackDir(inst, version))
+	if inst.State.RunsFluxerd() {
+		set, err := stack.LoadCatalogSet(stackDir(inst, version), version)
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil, ErrNoSnapshot
+		}
+		return set, err
+	}
+	set, err := stack.LoadSet(stackDir(inst, version))
 	if errors.Is(err, fs.ErrNotExist) {
 		return nil, ErrNoSnapshot
 	}
 	return set, err
 }
 
-type Restored struct {
-	Files    []string
-	Settings []string
-	Restart  []string
-}
-
-func Restore(inst *instance.Instance, version string) (*Restored, error) {
+func Restore(inst *instance.Instance, version string) error {
 	if !HasSnapshot(inst, version) {
-		return nil, ErrNoSnapshot
+		return ErrNoSnapshot
 	}
 	saved, err := SnapshotState(inst, version)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	set, err := LoadSet(inst, version)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if len(saved.Images.Refs) == 0 && Valid(version) {
-		return nil, fmt.Errorf("release: the snapshot of %s records no images", version)
+		return fmt.Errorf("release: the snapshot of %s records no images", version)
 	}
 	r, err := inst.Render(set, stack.OverlaysFor(saved.Settings), saved.Images.Refs)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	out := &Restored{Files: r.Changed, Restart: r.RestartNeeded, Settings: changedKeys(inst.State.Settings, saved.Settings)}
 	for k, v := range inst.State.Secrets {
 		if _, ok := saved.Secrets[k]; !ok {
 			saved.Secrets[k] = v
@@ -170,10 +170,10 @@ func Restore(inst *instance.Instance, version string) (*Restored, error) {
 	inst.State.Settings = saved.Settings
 	inst.State.Secrets = saved.Secrets
 	inst.State.Rendered = r.Hashes
-	return out, nil
+	return nil
 }
 
-func changedKeys(a, b map[string]string) []string {
+func ChangedKeys(a, b map[string]string) []string {
 	var out []string
 	for k, v := range a {
 		if w, ok := b[k]; !ok || w != v {
@@ -353,22 +353,6 @@ func ImageSizes(inst *instance.Instance, version string) map[string]uint64 {
 	return list.Sizes
 }
 
-func RecordImageSizes(inst *instance.Instance, version string, sizes map[string]uint64) error {
-	list, err := readImages(inst, version)
-	if err != nil {
-		return err
-	}
-	if list.Sizes == nil {
-		list.Sizes = map[string]uint64{}
-	}
-	maps.Copy(list.Sizes, sizes)
-	data, err := json.MarshalIndent(list, "", "  ")
-	if err != nil {
-		return err
-	}
-	return writeFile(filepath.Join(Dir(inst, version), imagesFile), append(data, '\n'), private(version))
-}
-
 func KeptImages(inst *instance.Instance) []string {
 	entries, _ := os.ReadDir(inst.Path(instance.StateDirName, instance.ReleasesDir))
 	var out []string
@@ -402,30 +386,6 @@ func CheckPostgres(fromRef, toRef string) error {
 		return &PostgresMajorError{From: from, To: to}
 	}
 	return nil
-}
-
-func OnlyIn(inst *instance.Instance, version string, keep ...string) []string {
-	refs, err := Images(inst, version)
-	if err != nil {
-		return nil
-	}
-	kept := map[string]bool{}
-	for _, r := range inst.State.Images.Refs {
-		kept[r] = true
-	}
-	for _, v := range keep {
-		other, _ := Images(inst, v)
-		for _, r := range other {
-			kept[r] = true
-		}
-	}
-	var out []string
-	for _, r := range refs {
-		if !kept[r] && !slices.Contains(out, r) {
-			out = append(out, r)
-		}
-	}
-	return out
 }
 
 func PruneOlder(ctx context.Context, inst *instance.Instance, e *engine.Engine) error {
@@ -509,17 +469,19 @@ func removeAll(dir string) error {
 	return os.RemoveAll(dir)
 }
 
-func Switched(u *instance.Upgrade) bool {
+func switched(u *instance.Upgrade) bool {
 	return slices.Index(Phases, u.Phase) >= slices.Index(Phases, PhaseRecreated)
 }
 
 func UnfinishedFix(u *instance.Upgrade) string {
 	switch {
-	case u.BackFailed && u.Backup != "":
-		return fmt.Sprintf("Run rexctl upgrade to start Fluxer %s again, or rexctl rollback --restore-database to restore the backup from before the upgrade.", u.To)
-	case u.BackFailed:
-		return fmt.Sprintf("Run rexctl upgrade to start Fluxer %s again.", u.To)
-	case !Switched(u):
+	case u.Phase == PhaseGoingBack && u.NoWayBack:
+		return fmt.Sprintf("Fluxer %s already updated the data and there's no backup from before. Run rexctl logs to see why it didn't start, fix the cause, then run rexctl upgrade to start it again.", u.To)
+	case u.Phase == PhaseGoingBack:
+		return fmt.Sprintf("Run rexctl upgrade to finish going back to Fluxer %s.", u.From)
+	case u.Phase == PhaseRestoring:
+		return fmt.Sprintf("Run rexctl rollback to finish restoring the backup on Fluxer %s.", u.To)
+	case !switched(u):
 		return fmt.Sprintf("Run rexctl upgrade to finish it, or rexctl rollback to stop it and stay on Fluxer %s.", u.From)
 	}
 	return "Run rexctl upgrade to finish it, or rexctl rollback to go back."

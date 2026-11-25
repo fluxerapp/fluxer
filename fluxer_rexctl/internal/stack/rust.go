@@ -19,8 +19,8 @@ import (
 
 const (
 	RustService      = "rust"
-	RustServicesVar  = "FLUXER_SERVER_SERVICES"
-	RustAdminPort    = 18083
+	rustServicesVar  = "FLUXER_SERVER_SERVICES"
+	rustAdminPort    = 18083
 	rustSvcPortVar   = "FLUXER_SVC_PORT"
 	rustAdminPortVar = "FLUXER_ADMIN_PORT"
 )
@@ -47,7 +47,7 @@ var rustInherited = []string{
 	"SSL_CERT_FILE", "NODE_EXTRA_CA_CERTS", "RUST_LOG",
 }
 
-var RustProcessKeys = append([]string{"PATH", "HOME", "TMPDIR", "TOKIO_WORKER_THREADS", "MALLOC_ARENA_MAX", "LD_PRELOAD", "MALLOC_CONF"}, rustInherited...)
+var rustProcessKeys = append([]string{"PATH", "HOME", "TMPDIR", "TOKIO_WORKER_THREADS", "MALLOC_ARENA_MAX", "LD_PRELOAD", "MALLOC_CONF"}, rustInherited...)
 
 func RustSingle(settings map[string]string) bool {
 	return strings.TrimSpace(settings["rust.process"]) == "single"
@@ -60,7 +60,7 @@ func RunsIn(name string, single bool) string {
 	return name
 }
 
-func RustServiceEnvs(files [][]byte) (map[string]map[string]string, error) {
+func rustServiceEnvs(files [][]byte) (map[string]map[string]string, error) {
 	out := map[string]map[string]string{}
 	for _, svc := range RustServices {
 		out[svc] = maps.Clone(rustImageEnv[svc])
@@ -92,19 +92,19 @@ func singleProcessEnv(envs map[string]map[string]string) map[string]map[string]s
 			env[rustSvcPortVar] = strconv.Itoa(port)
 		}
 		if svc == "admin" {
-			env[rustAdminPortVar] = strconv.Itoa(RustAdminPort)
+			env[rustAdminPortVar] = strconv.Itoa(rustAdminPort)
 		}
 		out[svc] = env
 	}
 	return out
 }
 
-func RustEnv(files [][]byte) (map[string]string, error) {
-	envs, err := RustServiceEnvs(files)
+func rustEnv(files [][]byte) (map[string]string, error) {
+	envs, err := rustServiceEnvs(files)
 	if err != nil {
 		return nil, err
 	}
-	merged, err := envdiff.Encode(singleProcessEnv(envs), RustProcessKeys)
+	merged, err := envdiff.Encode(singleProcessEnv(envs), rustProcessKeys)
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +174,7 @@ func envOf(n *yaml.Node) (map[string]string, error) {
 }
 
 func renderRustOverlay(overlay []byte, files [][]byte) ([]byte, error) {
-	env, err := RustEnv(files)
+	env, err := rustEnv(files)
 	if err != nil {
 		return nil, err
 	}

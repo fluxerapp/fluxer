@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -18,18 +17,23 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/backup"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
-	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
+	rt "github.com/fluxerapp/fluxer/fluxer_rexctl/internal/runtime"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
 
 func newBackupCmd(app *App) *cobra.Command {
+	var scheduled bool
+	var stamp string
 	c := &cobra.Command{
 		Use:   "backup",
 		Short: "Back up your instance",
-		Long:  "Back up your instance in one file that restores on this machine or a new one. It has the database, search data and uploads that Fluxer stores itself. Fluxer pauses while uploads are copied.",
+		Long:  "Back up your instance in one file that restores on this machine or a new one, with the database, search data and uploads that Fluxer stores itself. Fluxer pauses during the copy.",
 		Args:  noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
-			return runBackup(c.Context(), app)
+			if scheduled {
+				return runScheduledBackup(c.Context(), app, stamp)
+			}
+			return runBackup(c.Context(), app, "manual")
 		},
 	}
 	list := &cobra.Command{
@@ -37,7 +41,7 @@ func newBackupCmd(app *App) *cobra.Command {
 		Short: "List your backups",
 		Args:  noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
-			return runBackupList(app)
+			return runBackupList(c.Context(), app)
 		},
 	}
 	app.jsonFlag(list)
@@ -75,105 +79,109 @@ func newBackupCmd(app *App) *cobra.Command {
 	}
 	app.jsonFlag(location)
 	app.jsonFlag(keep)
-	c.AddCommand(list, verify, location, keep)
+	c.AddCommand(list, verify, location, keep, newBackupScheduleCmd(app), newBackupCopyCmd(app))
+	c.Flags().BoolVar(&scheduled, "scheduled", false, "mark the backup as one the schedule made")
+	_ = c.Flags().MarkHidden("scheduled")
+	c.Flags().StringVar(&stamp, "for", "", "the instance a scheduled backup belongs to")
+	_ = c.Flags().MarkHidden("for")
 	return c
 }
 
-func runBackup(ctx context.Context, app *App) error {
+func runBackup(ctx context.Context, app *App, reason string) error {
 	inst, err := app.Instance()
 	if err != nil {
 		return err
 	}
-	if inst.State.IsNative() {
-		return runNativeBackup(ctx, app, inst)
-	}
-	p, err := app.Named(ctx, inst)
-	if err != nil {
-		return err
+	if inst.State.IsVoice() {
+		return voiceMachineBackup(app, inst)
 	}
 	return app.Locked(ctx, inst, func() error {
-		running, down := runningParts(ctx, p)
-		if running {
-			app.UI.Info("Fluxer stops for about a minute while rexctl copies your uploads.")
-		}
-		if !running || inst.State.Stopped {
-			down = nil
-		}
-		var info *backup.Info
-		paused := false
-		err := app.UI.Step(ctx, "Backing up your instance", func(ctx context.Context, s *ui.Step) error {
-			var err error
-			info, err = backup.Create(ctx, inst, p, backup.CreateOptions{
-				Reason:  "manual",
-				OnEvent: app.progress(s, "Starting"),
-				Progress: func(stage string) {
-					if stage == backup.StageStarting {
-						paused = true
-					}
-					if t := backupStageTitle(stage); t != "" {
-						s.Title(t)
-					}
-				},
-			})
-			if err != nil {
-				return err
-			}
-			s.Done("Backed up your instance (%s).", ui.Bytes(info.SizeBytes))
-			return nil
-		})
+		r, err := app.Runtime(ctx, inst)
 		if err != nil {
-			return backupCreateErr(inst, err)
+			return err
 		}
-		if paused {
-			err := app.UI.Step(ctx, "Waiting for Fluxer to start again", func(ctx context.Context, s *ui.Step) error {
-				if err := p.WaitReady(ctx, engine.DefaultReadyTimeout, showReadiness(s, "Starting Fluxer again"), down...); err != nil {
-					return err
-				}
-				s.Done("Fluxer is running again.")
-				return nil
-			})
-			if errors.Is(err, context.Canceled) {
-				return err
-			}
-			if err != nil {
-				fix := "Run rexctl doctor to find out why."
-				var nr *engine.NotReadyError
-				if errors.As(err, &nr) {
-					if path := keepStartLog(ctx, inst, p, err, nr); path != "" {
-						fix = "Read " + path + " to see why."
-					}
-				}
-				return ui.Wrap(err, fmt.Sprintf("Saved the backup to %s, but Fluxer didn't start again.", info.Path), fix)
-			}
-		}
-		if m, err := backup.ReadManifest(info.Path); err == nil {
-			warnBackupSkipped(app, m)
-		}
-		if len(down) > 0 {
-			app.UI.Warn(fmt.Sprintf("These services weren't running before the backup and are still stopped: %s.", strings.Join(down, ", ")), "Run rexctl start to start them.")
+		path, err := backupWith(ctx, app, inst, r, rt.BackupOptions{Reason: reason}, nil, "Backing up your instance")
+		if err != nil {
+			return err
 		}
 		pruneBackups(app, inst)
-		app.UI.Result(info.Path)
+		app.UI.Result(path)
 		return nil
 	})
 }
 
-func backupStageTitle(stage string) string {
-	switch stage {
-	case backup.StageFiles:
-		return "Copying your settings"
-	case backup.StageDatabase:
-		return "Saving the database"
-	case backup.StageStopping:
-		return "Pausing Fluxer to copy uploads"
-	case backup.StageVolumes:
-		return "Copying uploads and search data while Fluxer is paused"
-	case backup.StageStarting:
-		return "Starting Fluxer again"
-	case backup.StageCompressing:
-		return "Compressing the backup while Fluxer runs"
+func backupWith(ctx context.Context, app *App, inst *instance.Instance, r rt.Runtime, o rt.BackupOptions, plan *rt.BackupPlan, title string) (string, error) {
+	if plan == nil {
+		if p, err := r.Backups().Plan(ctx, o); err == nil {
+			plan = &p
+		}
 	}
-	return ""
+	if plan != nil && len(plan.PauseParts) > 0 {
+		what := "Fluxer's " + ui.JoinAnd(plan.PauseParts) + " parts pause while rexctl copies uploads and search data, then start again by themselves."
+		switch {
+		case len(plan.PauseParts) == 1:
+			what = "Fluxer's " + plan.PauseParts[0] + " part pauses while rexctl copies uploads and search data, then starts again by itself."
+		case len(plan.PauseParts) > 4:
+			what = "Fluxer pauses while rexctl copies uploads and search data, then starts again by itself."
+		}
+		app.UI.Card(ui.Card{
+			Title: "Fluxer pauses for about " + aboutDuration(plan.PauseFor),
+			Tone:  ui.ToneWarn,
+			Body:  []string{what + " The rest of the backup runs while Fluxer is up."},
+		})
+	}
+	var path string
+	err := app.UI.Step(ctx, title, func(ctx context.Context, s *ui.Step) error {
+		var err error
+		if path, err = r.Backups().Create(ctx, s, o); err != nil {
+			return err
+		}
+		size := int64(0)
+		if info, err := os.Stat(path); err == nil {
+			size = info.Size()
+		}
+		s.Done("Backed up your instance (%s).", ui.Bytes(size))
+		return nil
+	})
+	var again *rt.StartAgainError
+	switch {
+	case errors.As(err, &again) && errors.Is(err, context.Canceled):
+		return "", &ui.ExitError{Code: ui.ExitInterrupted, Msg: fmt.Sprintf("Saved the backup to %s, then stopped waiting for Fluxer to start again.", again.Path), Fix: "Run rexctl status to check that Fluxer is running.", Err: err}
+	case errors.As(err, &again):
+		return "", ui.Wrap(err, fmt.Sprintf("Saved the backup to %s, but Fluxer didn't start again.", again.Path), startAgainFix(ctx, app, inst, again.Err))
+	case err != nil:
+		return "", backupCreateErr(inst, err)
+	}
+	if m, err := backup.ReadManifest(path); err == nil {
+		warnBackupSkipped(app, m)
+	}
+	return path, nil
+}
+
+func startAgainFix(ctx context.Context, app *App, inst *instance.Instance, err error) string {
+	var nr *engine.NotReadyError
+	if !errors.As(err, &nr) {
+		return "Run rexctl doctor to find out why."
+	}
+	if p, perr := app.Named(ctx, inst); perr == nil {
+		if path := keepStartLog(ctx, inst, p, err, nr); path != "" {
+			return "Read " + path + " to see why."
+		}
+	}
+	return "Run rexctl logs to see why."
+}
+
+func aboutDuration(d time.Duration) string {
+	minutes := int((d + 30*time.Second) / time.Minute)
+	switch {
+	case minutes <= 1:
+		return "a minute"
+	case minutes < 60:
+		return fmt.Sprintf("%d minutes", minutes)
+	case minutes < 90:
+		return "an hour"
+	}
+	return fmt.Sprintf("%d hours", (minutes+30)/60)
 }
 
 func warnBackupSkipped(app *App, m *backup.Manifest) {
@@ -192,6 +200,7 @@ func backupCreateErr(inst *instance.Instance, err error) error {
 	var dump *backup.DumpError
 	var stopped *backup.InterruptedError
 	var compress *backup.CompressError
+	var unknown *backup.SpaceUnknownError
 	switch {
 	case errors.As(err, &stopped) && stopped.Restarted:
 		return &ui.ExitError{Code: ui.ExitInterrupted, Msg: "Cancelled the backup. Fluxer is running again.", Err: err}
@@ -200,12 +209,15 @@ func backupCreateErr(inst *instance.Instance, err error) error {
 	case errors.As(err, &ee), errors.Is(err, context.Canceled):
 		return err
 	case errors.Is(err, backup.ErrNeverStarted):
-		return ui.Refused("Fluxer hasn't started on this machine yet, and there's nothing to back up.", "Run rexctl start, then run rexctl backup.")
+		return &ui.ExitError{Code: ui.ExitRefused, Msg: "Fluxer hasn't started on this machine yet, and there's nothing to back up.", Fix: "Run rexctl start, then run rexctl backup.", Err: err}
 	case errors.As(err, &missing):
+		name := engine.Kind(inst.State.Engine.Kind).Name()
 		return ui.Failed(
-			fmt.Sprintf("rexctl can't find your database data. It looked for the Docker volume %s and for a bind mount on the postgres service.", missing.Volume),
-			"Run docker volume ls to see your volumes, then run rexctl backup again.",
+			fmt.Sprintf("rexctl can't find your database data. It looked for the %s volume %s and for a bind mount on the postgres service.", name, missing.Volume),
+			fmt.Sprintf("Run %s volume ls to see your volumes, then run rexctl backup again.", strings.ToLower(name)),
 		)
+	case errors.As(err, &unknown):
+		return ui.Wrap(err, fmt.Sprintf("rexctl can't read how much free disk space %s has.", unknown.Dir), "Check that the folder is on a mounted disk you can open, then run rexctl backup again.")
 	case errors.As(err, &disk):
 		return ui.Failed(
 			fmt.Sprintf("There isn't enough free space for a backup. It needs about %s and %s is free.", ui.Bytes(int64(disk.Need)), ui.Bytes(int64(disk.Available))),
@@ -214,34 +226,37 @@ func backupCreateErr(inst *instance.Instance, err error) error {
 	case errors.As(err, &dump):
 		return ui.Wrap(fmt.Errorf("%w %s", err, dump.Output), "Couldn't save the database.", "Run rexctl doctor to find the problem.")
 	case engine.ClassOf(err) != engine.ClassOther:
-		return engineFailure(err)
+		return rt.EngineError("", err)
 	}
 	return ui.Wrap(err, "Couldn't back up your instance.", "Run rexctl backup again with --verbose to see why.")
 }
 
-func runningParts(ctx context.Context, p *engine.Project) (bool, []string) {
-	cs, err := p.PS(ctx)
+func fetchOwnBackups(ctx context.Context, app *App, inst *instance.Instance) {
+	if k := rt.KindOf(inst); k != rt.Container && k != rt.Native || inst.State.Ejected != nil {
+		return
+	}
+	r, err := app.Runtime(ctx, inst)
 	if err != nil {
-		return true, nil
+		app.UI.Detail("%v", err)
+		return
 	}
-	running := false
-	var stopped []string
-	for _, c := range cs {
-		switch {
-		case c.State == "running":
-			running = true
-		case !stack.OneShot[c.Service] && !slices.Contains(stopped, c.Service):
-			stopped = append(stopped, c.Service)
-		}
+	got, err := rt.FetchOwnBackups(ctx, r, inst.BackupDir())
+	if err != nil {
+		app.UI.Warn("Couldn't copy Fluxer's own backups into "+inst.BackupDir()+".", "Run the command again with --verbose to see why.")
+		app.UI.Detail("%v", err)
+		return
 	}
-	return running, stopped
+	if len(got) > 0 && !app.Flags.JSON {
+		app.UI.Info("Copied %d of Fluxer's own backups to %s.", len(got), inst.BackupDir())
+	}
 }
 
-func runBackupList(app *App) error {
+func runBackupList(ctx context.Context, app *App) error {
 	inst, err := app.Instance()
 	if err != nil {
 		return err
 	}
+	fetchOwnBackups(ctx, app, inst)
 	list, err := backup.List(inst.BackupDir())
 	if err != nil {
 		return ui.Wrap(err, fmt.Sprintf("Couldn't read %s.", inst.BackupDir()), "Check that you can open that folder, then try again.")
@@ -273,7 +288,7 @@ func backupReason(b backup.Info) string {
 
 func runBackupVerify(ctx context.Context, app *App, arg string) error {
 	path := resolveBackupPath(app, arg)
-	return app.UI.Step(ctx, "Checking the backup", func(ctx context.Context, s *ui.Step) error {
+	return app.UI.Check(ctx, "Checking the backup", func(ctx context.Context, s *ui.Step) error {
 		m, err := backup.Verify(path)
 		if err != nil {
 			return backupFileErr(path, err)
@@ -312,7 +327,7 @@ func backupFileErr(path string, err error) error {
 	case errors.As(err, &ee), errors.Is(err, context.Canceled):
 		return err
 	case errors.Is(err, os.ErrNotExist):
-		return ui.Failed(fmt.Sprintf("There's no file at %s.", path), "Run rexctl backup list to see your backups.")
+		return ui.Refused(fmt.Sprintf("There's no file at %s.", path), "Run rexctl backup list to see your backups.")
 	case errors.Is(err, backup.ErrNewer):
 		return ui.Refused("This backup was made by a newer version of rexctl.", "Run rexctl upgrade, then try again.")
 	case errors.Is(err, backup.ErrNotBackup):
@@ -324,12 +339,12 @@ func backupFileErr(path string, err error) error {
 }
 
 func backupTime(t time.Time) string {
-	return t.UTC().Format("2 January 2006 at 15:04 UTC")
+	return t.Local().Format("2 January 2006 at 15:04 MST")
 }
 
 func pruneBackups(app *App, inst *instance.Instance) {
 	keep := inst.KeepBackups()
-	if keep == instance.KeepAllBackups || inst.State == nil {
+	if keep == instance.KeepAllBackups || inst.State == nil || inst.State.Restoring != "" {
 		return
 	}
 	dir := inst.BackupDir()
@@ -420,29 +435,24 @@ func runBackupLocation(ctx context.Context, app *App, arg string) error {
 		return ui.Usage("Pass the full path of the folder, for example /mnt/backups/fluxer.")
 	}
 	dir := filepath.Clean(arg)
-	if why := backupLocationProblem(ctx, app, inst, dir); why != "" {
-		return ui.Refused(why, "Pick a folder outside your instance's data, then try again.")
-	}
-	if err := os.MkdirAll(dir, 0o700); err != nil {
-		return ui.Wrap(err, fmt.Sprintf("Couldn't make %s.", dir), "Check that you can make folders there, then try again.")
-	}
-	if err := os.Chmod(dir, 0o700); err != nil {
-		return ui.Wrap(err, fmt.Sprintf("Couldn't change who can open %s.", dir), "Check that you own that folder, then try again.")
-	}
-	probe, err := os.CreateTemp(dir, ".rexctl-write-")
-	if err != nil {
-		return ui.Wrap(err, fmt.Sprintf("Couldn't save files in %s.", dir), "Check that you can change files in that folder, then try again.")
-	}
-	probe.Close()
-	os.Remove(probe.Name())
-	old := inst.BackupDir()
 	return app.Locked(ctx, inst, func() error {
+		r, err := app.Runtime(ctx, inst)
+		if err != nil {
+			return err
+		}
+		if err := backupLocationProblem(ctx, app, inst, r, dir); err != nil {
+			return err
+		}
+		if err := makeBackupDir(dir); err != nil {
+			return err
+		}
+		old := inst.BackupDir()
 		inst.State.BackupDir = dir
 		if dir == filepath.Clean(inst.Path(instance.BackupsDir)) {
 			inst.State.BackupDir = ""
 		}
-		if err := inst.Save(); err != nil {
-			return ui.Wrap(err, "Couldn't save your instance's state.", "Check that you can write to "+inst.Dir+", then try again.")
+		if err := saveInstance(inst); err != nil {
+			return err
 		}
 		app.UI.OK("New backups go to %s.", dir)
 		if old != dir {
@@ -456,31 +466,72 @@ func runBackupLocation(ctx context.Context, app *App, arg string) error {
 	})
 }
 
-func backupLocationProblem(ctx context.Context, app *App, inst *instance.Instance, dir string) string {
-	if filepath.Clean(inst.Dir) == dir {
-		return fmt.Sprintf("%s is your instance folder, and every backup copies the files in it.", dir)
+func makeBackupDir(dir string) error {
+	info, err := os.Stat(dir)
+	switch {
+	case err == nil && !info.IsDir():
+		return ui.Refused(fmt.Sprintf("%s is a file, not a folder.", dir), "Pick a folder, then try again.")
+	case errors.Is(err, os.ErrNotExist):
+		if err := os.MkdirAll(dir, 0o700); err != nil {
+			return ui.Wrap(err, fmt.Sprintf("Couldn't make %s.", dir), "Check that you can make folders there, then try again.")
+		}
+		if err := os.Chmod(dir, 0o700); err != nil {
+			return ui.Wrap(err, fmt.Sprintf("Couldn't change who can open %s.", dir), "Check that you own that folder, then try again.")
+		}
+	case err != nil:
+		return ui.Wrap(err, fmt.Sprintf("Couldn't open %s.", dir), "Check that you can open that folder, then try again.")
+	}
+	probe, err := os.CreateTemp(dir, ".rexctl-write-")
+	if err != nil {
+		return ui.Wrap(err, fmt.Sprintf("Couldn't save files in %s.", dir), "Check that you can change files in that folder, then try again.")
+	}
+	probe.Close()
+	os.Remove(probe.Name())
+	return nil
+}
+
+func backupLocationProblem(ctx context.Context, app *App, inst *instance.Instance, r rt.Runtime, dir string) error {
+	refuse := func(why string) error {
+		return ui.Refused(why, "Pick a folder outside your instance's data, then try again.")
+	}
+	real := instance.RealPath(dir)
+	if instance.RealPath(inst.Dir) == real {
+		return refuse(fmt.Sprintf("%s is your instance folder, and every backup copies the files in it.", dir))
 	}
 	for _, sub := range []string{instance.StateDirName, instance.CertsDir, instance.CADir, instance.CaddyDropInDir} {
-		if within(inst.Path(sub), dir) {
-			return fmt.Sprintf("%s is inside %s, which every backup copies.", dir, inst.Path(sub))
+		if within(instance.RealPath(inst.Path(sub)), real) {
+			return refuse(fmt.Sprintf("%s is inside %s, which every backup copies.", dir, inst.Path(sub)))
 		}
+	}
+	if r.Kind() == rt.Container {
+		return nil
+	}
+	if r.Kind() == rt.Native {
+		data := r.Info(ctx).DataDir
+		if within(instance.RealPath(data), real) {
+			return refuse(fmt.Sprintf("%s is inside %s, where Fluxer keeps its data.", dir, data))
+		}
+		if p := instance.RootPath(dir, false); p != "" {
+			return ui.Refused(fmt.Sprintf("Backups hold every secret of your instance, and accounts other than root can change %s.", p), "Pick a folder that root owns and only root can change.")
+		}
+		return nil
 	}
 	p, err := app.Named(ctx, inst)
 	if err != nil {
-		return ""
+		return nil
 	}
 	vols, err := p.Engine.Volumes(ctx, p.Name)
 	if err != nil {
-		return ""
+		return nil
 	}
 	for _, v := range vols {
 		for _, root := range []string{v.Mountpoint, v.Device} {
-			if root != "" && within(root, dir) {
-				return fmt.Sprintf("%s is inside your instance's %s volume.", dir, v.Name)
+			if root != "" && within(instance.RealPath(root), real) {
+				return refuse(fmt.Sprintf("%s is inside your instance's %s volume.", dir, v.Name))
 			}
 		}
 	}
-	return ""
+	return nil
 }
 
 func within(root, dir string) bool {
@@ -523,8 +574,8 @@ func runBackupKeep(ctx context.Context, app *App, arg string) error {
 		if keep == instance.DefaultKeepBackups {
 			inst.State.KeepBackups = 0
 		}
-		if err := inst.Save(); err != nil {
-			return ui.Wrap(err, "Couldn't save your instance's state.", "Check that you can write to "+inst.Dir+", then try again.")
+		if err := saveInstance(inst); err != nil {
+			return err
 		}
 		if keep == instance.KeepAllBackups {
 			app.UI.OK("rexctl keeps every backup.")

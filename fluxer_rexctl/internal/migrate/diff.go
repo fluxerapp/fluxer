@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"maps"
+	"math"
 	"slices"
 	"strconv"
 	"strings"
@@ -24,11 +25,11 @@ import (
 //go:embed measurements.json
 var measurementsJSON []byte
 
-const MeasurementsSchema = 1
+const measurementsSchema = 1
 
 const (
-	LoadIdle = "idle"
-	LoadBusy = "load"
+	loadIdle = "idle"
+	loadBusy = "load"
 )
 
 type Measurements struct {
@@ -64,14 +65,14 @@ func LoadMeasurements() (Measurements, error) {
 	if err := json.Unmarshal(measurementsJSON, &m); err != nil {
 		return Measurements{}, fmt.Errorf("migrate: measurements: %w", err)
 	}
-	if m.Schema != MeasurementsSchema {
-		return Measurements{}, fmt.Errorf("migrate: measurements schema %d, rexctl reads %d", m.Schema, MeasurementsSchema)
+	if m.Schema != measurementsSchema {
+		return Measurements{}, fmt.Errorf("migrate: measurements schema %d, rexctl reads %d", m.Schema, measurementsSchema)
 	}
 	for _, r := range m.Runs {
 		if r.Runtime != Compose && r.Runtime != Native {
 			return Measurements{}, fmt.Errorf("migrate: measurements: runtime %q", r.Runtime)
 		}
-		if r.Load != LoadIdle && r.Load != LoadBusy {
+		if r.Load != loadIdle && r.Load != loadBusy {
 			return Measurements{}, fmt.Errorf("migrate: measurements: load %q", r.Load)
 		}
 		for _, o := range r.Options {
@@ -216,11 +217,11 @@ func NativeChildren(done []Option, voice bool) []string {
 }
 
 func NativeVoice(chosen map[string]string) bool {
-	env, err := settings.Effective(stack.Embedded(), chosen, nil, nil)
+	env, err := settings.Effective(settings.NativeSet(stack.EmbeddedRelease()), chosen, nil, nil)
 	if err != nil {
 		return false
 	}
-	return strings.TrimSpace(env[LiveKitEnabledVar]) == "true" && stack.VoiceBundled(env[stack.VoiceBundledKey])
+	return strings.TrimSpace(env[settings.LiveKitEnabled]) == "true" && stack.VoiceBundled(env[stack.VoiceBundledKey])
 }
 
 const (
@@ -296,10 +297,10 @@ func BuildDiff(m Measurements, runtime Runtime, done, opts []Option, before, aft
 	to, next := Target(runtime, done, opts...)
 	d := Diff{
 		Options:    Order(opts),
-		Before:     m.Lookup(runtime, done, LoadIdle),
-		After:      m.Lookup(to, next, LoadIdle),
-		BeforeBusy: m.Lookup(runtime, done, LoadBusy),
-		AfterBusy:  m.Lookup(to, next, LoadBusy),
+		Before:     m.Lookup(runtime, done, loadIdle),
+		After:      m.Lookup(to, next, loadIdle),
+		BeforeBusy: m.Lookup(runtime, done, loadBusy),
+		AfterBusy:  m.Lookup(to, next, loadBusy),
 		Removed:    before.minus(after),
 	}
 	if runtime == Compose && to == Native {
@@ -442,16 +443,18 @@ type Paint struct {
 	Saving func(string) string
 	Cost   func(string) string
 	Rule   string
+	Full   string
+	Empty  string
 }
 
-func PlainPaint() Paint {
+func plainPaint() Paint {
 	same := func(s string) string { return s }
-	return Paint{Title: same, Dim: same, Saving: same, Cost: same, Rule: "-"}
+	return Paint{Title: same, Dim: same, Saving: same, Cost: same, Rule: "-", Full: "#", Empty: "."}
 }
 
-func ThemePaint(t ui.Theme) Paint {
+func themePaint(t ui.Theme) Paint {
 	r := func(st lipgloss.Style) func(string) string { return func(s string) string { return st.Render(s) } }
-	return Paint{Title: r(t.Heading), Dim: r(t.Dim), Saving: r(t.OK), Cost: r(t.Warn), Rule: "─"}
+	return Paint{Title: r(t.Heading), Dim: r(t.Dim), Saving: r(t.OK), Cost: r(t.Warn), Rule: "─", Full: "━", Empty: "─"}
 }
 
 func (p Paint) tone(c Cell) string {
@@ -534,6 +537,7 @@ func (d Diff) Lines(p Paint) []string {
 	out = append(out, "")
 	if rows := d.rows(); len(rows) > 0 {
 		out = append(out, grid(p, []string{"Typical", "Now", "After", "Change"}, rows, nil)...)
+		out = append(out, d.bars(p)...)
 	} else {
 		out = append(out, indent+p.Dim("Typical figures: not measured yet."))
 	}
@@ -545,9 +549,31 @@ func (d Diff) Lines(p Paint) []string {
 	out = append(out, section(p, moved, d.movedRows())...)
 	out = append(out, section(p, "Goes away", d.removedRows())...)
 	if leavesDocker {
-		out = append(out, "", indent+p.Dim("The data in these volumes moves into the new instance's data folder. The Docker instance stays stopped, with its volumes and images, until you remove it."))
+		out = append(out, "", indent+p.Dim("The data in these volumes moves into the new instance's data folder. The old containers stay stopped, with their volumes and images, until you remove them."))
 	}
 	return out
+}
+
+const barWidth = 24
+
+func (d Diff) bars(p Paint) []string {
+	before, after := float64(d.Before.MemoryBytes), float64(d.After.MemoryBytes)
+	top := max(before, after)
+	if top <= 0 {
+		return nil
+	}
+	fill := p.Dim
+	switch {
+	case after < before:
+		fill = p.Saving
+	case after > before:
+		fill = p.Cost
+	}
+	row := func(label string, v float64, paint func(string) string) string {
+		n := int(math.Round(v / top * barWidth))
+		return indent + indent + p.Dim(label) + "   " + paint(strings.Repeat(p.Full, n)) + p.Dim(strings.Repeat(p.Empty, barWidth-n)) + "   " + size(v)
+	}
+	return []string{"", indent + "Memory when idle", row("Now  ", before, p.Dim), row("After", after, fill)}
 }
 
 func section(p Paint, title string, rows [][2]string) []string {
@@ -601,9 +627,12 @@ func Show(u *ui.UI, lines []string) {
 
 func Paints(u *ui.UI) Paint {
 	if u.Mode() != ui.ModeRich {
-		return PlainPaint()
+		return plainPaint()
 	}
-	return ThemePaint(u.Theme())
+	p := themePaint(u.Theme())
+	g := u.Glyphs()
+	p.Full, p.Empty = g.BarFull, g.BarEmpty
+	return p
 }
 
 func BasisLines(p Paint, m Measurements) []string {

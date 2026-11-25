@@ -3,7 +3,6 @@
 package envfile
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"os"
@@ -35,8 +34,6 @@ type File struct {
 	path  string
 	lines []line
 }
-
-func New(path string) *File { return &File{path: path} }
 
 func Load(path string) (*File, error) {
 	data, err := os.ReadFile(path)
@@ -255,19 +252,6 @@ func (f *File) Duplicates() []*DuplicateKeyError {
 		}
 	}
 	return out
-}
-
-func (f *File) Bytes() []byte {
-	var b bytes.Buffer
-	for _, l := range f.lines {
-		b.WriteString(l.raw)
-		b.WriteByte('\n')
-	}
-	return b.Bytes()
-}
-
-func (f *File) Save() error {
-	return WriteFileAtomic(f.path, f.Bytes(), true)
 }
 
 func Quote(value string) string {

@@ -107,3 +107,14 @@ func joinedText(err error) string {
 	walk(err)
 	return b.String()
 }
+
+func InUse(err error) bool {
+	if err == nil {
+		return false
+	}
+	if cerrdefs.IsConflict(err) {
+		return true
+	}
+	text := strings.ToLower(joinedText(err))
+	return strings.Contains(text, "is being used by") || strings.Contains(text, "image is in use") || strings.Contains(text, "used by container")
+}

@@ -8,6 +8,8 @@ import (
 	"net"
 	"net/url"
 	"strings"
+
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 )
 
 const originVar = "FLUXER_PUBLIC_ORIGIN"
@@ -22,11 +24,11 @@ func (e *Env) derivedOrigin() string {
 		scheme = "https"
 	}
 	port := e.value("FLUXER_PUBLIC_PORT")
-	domain := strings.ToLower(e.Domain)
+	domain := settings.NormalDomain(strings.ToLower(e.Domain))
 	if port == "" || (scheme == "https" && port == "443") || (scheme == "http" && port == "80") {
 		return scheme + "://" + domain
 	}
-	return scheme + "://" + net.JoinHostPort(domain, port)
+	return scheme + "://" + net.JoinHostPort(settings.BareHost(domain), port)
 }
 
 func (e *Env) composeOrigin() string {
@@ -46,7 +48,7 @@ func normalOrigin(s string) string {
 	host := strings.ToLower(u.Hostname())
 	port := u.Port()
 	if port == "" || (scheme == "https" && port == "443") || (scheme == "http" && port == "80") {
-		return scheme + "://" + host
+		return scheme + "://" + settings.NormalDomain(host)
 	}
 	return scheme + "://" + net.JoinHostPort(host, port)
 }

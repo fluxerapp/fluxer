@@ -51,6 +51,7 @@ type gen struct {
 	schemas map[string]*schema
 	resp    *schema
 	keys    []key
+	missing []string
 }
 
 func (g *gen) nullable(s *schema) bool {
@@ -186,37 +187,10 @@ func (g *gen) walk(s *schema, path []string) {
 		}
 	}
 	if desc == "" {
-		desc = humanize(path)
+		g.missing = append(g.missing, name)
 	}
 	k.Help = strings.TrimSuffix(strings.TrimSpace(strings.SplitN(desc, "\n", 2)[0]), ".")
 	g.keys = append(g.keys, k)
-}
-
-var acronyms = map[string]string{
-	"url": "URL", "urls": "URLs", "uri": "URI", "id": "ID", "ids": "IDs", "mb": "MB", "css": "CSS",
-	"sso": "SSO", "smtp": "SMTP", "api": "API", "ip": "IP", "rpc": "RPC", "jwks": "JWKS", "gif": "GIF",
-	"e2ee": "E2EE", "p2p": "P2P", "tos": "terms",
-}
-
-func humanize(path []string) string {
-	segs := path[len(path)-1:]
-	if len(path) > 1 {
-		segs = path[len(path)-2:]
-	}
-	var words []string
-	for _, seg := range segs {
-		for _, w := range strings.Split(seg, "_") {
-			if a, ok := acronyms[w]; ok {
-				w = a
-			}
-			words = append(words, w)
-		}
-	}
-	out := strings.Join(words, " ")
-	if out == "" {
-		return ""
-	}
-	return strings.ToUpper(out[:1]) + out[1:]
 }
 
 func main() {
@@ -241,6 +215,10 @@ func main() {
 		os.Exit(1)
 	}
 	g.walk(req, nil)
+	if len(g.missing) > 0 {
+		fmt.Fprintf(os.Stderr, "schemagen: these settings have no description in the spec: %s\n", strings.Join(g.missing, ", "))
+		os.Exit(1)
+	}
 	out, err := json.MarshalIndent(g.keys, "", "  ")
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)

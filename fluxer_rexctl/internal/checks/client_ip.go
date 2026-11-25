@@ -8,6 +8,8 @@ import (
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 )
 
 const (
@@ -42,8 +44,11 @@ func runClientIP(ctx context.Context, e *Env) Result {
 		return pass("People who use your instance show their own IP addresses.")
 	}
 	fix := "Turn on IPv6 for Docker on this machine, then run rexctl restart."
-	if e.mode() != modeBundled {
+	switch {
+	case e.mode() != modeBundled:
 		fix = "Make your proxy set the X-Forwarded-For header, then run rexctl doctor."
+	case e.Native:
+		fix = "If a proxy or tunnel forwards traffic to this machine, run rexctl proxy on to tell rexctl about it."
 	}
 	return warn(fmt.Sprintf("Everyone who used your instance this week has the IP address %s.", ip), fix)
 }
@@ -93,7 +98,7 @@ func (e *Env) ownAddress(ctx context.Context, ip string) bool {
 	}
 	lookupCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	addrs, _ := net.DefaultResolver.LookupIPAddr(lookupCtx, e.Domain)
+	addrs, _ := net.DefaultResolver.LookupIPAddr(lookupCtx, settings.BareHost(e.Domain))
 	for _, a := range addrs {
 		if a.IP.Equal(parsed) {
 			return true

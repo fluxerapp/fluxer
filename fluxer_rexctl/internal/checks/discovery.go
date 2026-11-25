@@ -6,9 +6,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net"
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/native"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 )
 
 const (
@@ -28,7 +34,7 @@ type discoveryDoc struct {
 }
 
 func runDiscovery(ctx context.Context, e *Env) Result {
-	if e.Instance == nil || e.Domain == "" || !e.running(ctx, "edge") || !e.running(ctx, "api") {
+	if e.Instance == nil || e.Domain == "" || !e.edgeUp(ctx) || !e.running(ctx, "api") {
 		return skip("")
 	}
 	out, err := e.discoveryDoc(ctx)
@@ -62,7 +68,30 @@ func runDiscovery(ctx context.Context, e *Env) Result {
 }
 
 func (e *Env) discoveryDoc(ctx context.Context) (string, error) {
-	return e.exec(ctx, "edge", "", "wget", "-q", "-O", "-", "http://127.0.0.1:8088/.well-known/fluxer")
+	if !e.Native {
+		return e.exec(ctx, "edge", "", "wget", "-q", "-O", "-", "http://127.0.0.1:8088/.well-known/fluxer")
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://"+e.stack().APIAddr()+"/.well-known/fluxer", nil)
+	if err != nil {
+		return "", err
+	}
+	req.Host = e.Domain
+	client := e.localClient()
+	if st := e.stack(); st.Dial != nil {
+		client.Transport.(*http.Transport).DialContext = func(ctx context.Context, _, _ string) (net.Conn, error) {
+			return st.Dial(ctx, native.DialAPI)
+		}
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err.Error(), err
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	if resp.StatusCode != http.StatusOK {
+		return string(body), fmt.Errorf("the api returned HTTP %d", resp.StatusCode)
+	}
+	return string(body), nil
 }
 
 func endpointHost(s string) string {
@@ -70,7 +99,7 @@ func endpointHost(s string) string {
 	if err != nil {
 		return ""
 	}
-	return u.Hostname()
+	return settings.NormalDomain(u.Hostname())
 }
 
 func fixDiscovery(ctx context.Context, e *Env) error { return e.up(ctx) }

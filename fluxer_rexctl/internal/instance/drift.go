@@ -111,33 +111,11 @@ func (r *EnvDrift) Fix() string {
 	if len(r.Unused) == 0 {
 		return "Run rexctl doctor --fix to keep these values and remove the file, or change them with these commands. rexctl removes the file once you've set each of them:"
 	}
-	unused := fmt.Sprintf("Fluxer doesn't use %s. Run rexctl config list to find the setting you meant and change it with rexctl config set.", ui.JoinAnd(r.Unused))
+	unused := fmt.Sprintf("Fluxer doesn't use %s. If you meant another setting, find it with rexctl config list and change it with rexctl config set.", ui.JoinAnd(r.Unused))
 	if len(r.Changes) == 0 {
-		return unused + " Then delete " + r.Path + "."
+		return unused + " Run rexctl doctor --fix to remove the file."
 	}
-	return unused + " Change the others with these commands, then delete " + r.Path + ":"
-}
-
-func KeepEdited(inst *Instance, name string) (string, error) {
-	data, err := os.ReadFile(inst.Path(name))
-	if err != nil {
-		return "", err
-	}
-	dst := name + ".mine"
-	for n := 2; ; n++ {
-		existing, err := os.ReadFile(inst.Path(dst))
-		if errors.Is(err, fs.ErrNotExist) || (err == nil && bytes.Equal(existing, data)) {
-			break
-		}
-		if err != nil {
-			return "", err
-		}
-		dst = fmt.Sprintf("%s.mine.%d", name, n)
-	}
-	if err := envfile.WriteFileAtomic(inst.Path(dst), data, false); err != nil {
-		return "", err
-	}
-	return dst, nil
+	return unused + " Run rexctl doctor --fix to keep the other values and remove the file, or change them with these commands:"
 }
 
 func SettleEnv(inst *Instance, set []string) (string, error) {
@@ -158,17 +136,6 @@ func SettleEnv(inst *Instance, set []string) (string, error) {
 
 func RemoveEnv(inst *Instance) error {
 	return removeIfExists(inst.Path(EnvFileName))
-}
-
-func copyPrivate(src, dst string) error {
-	data, err := os.ReadFile(src)
-	if err != nil {
-		return err
-	}
-	if err := os.MkdirAll(filepath.Dir(dst), 0o700); err != nil {
-		return err
-	}
-	return envfile.WriteFileAtomic(dst, data, true)
 }
 
 const (
@@ -210,7 +177,7 @@ func KeepEdits(inst *Instance) ([]Edit, error) {
 		if inst.OldLayout() {
 			w = stack.Plain(name, w)
 		}
-		out = append(out, Edit{Name: name, Copy: kept, Diff: ShortDiff(w, data)})
+		out = append(out, Edit{Name: name, Copy: kept, Diff: shortDiff(w, data)})
 	}
 	return out, nil
 }
@@ -234,7 +201,7 @@ func keepEdit(inst *Instance, name string, data []byte) (string, error) {
 	return path, envfile.WriteFileAtomic(path, data, false)
 }
 
-func ShortDiff(from, to []byte) []string {
+func shortDiff(from, to []byte) []string {
 	a, b := splitLines(from), splitLines(to)
 	lcs := make([][]int, len(a)+1)
 	for i := range lcs {

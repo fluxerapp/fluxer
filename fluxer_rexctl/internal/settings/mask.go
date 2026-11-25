@@ -37,12 +37,12 @@ func Mask(key Key, value string) string {
 		return Masked
 	}
 	if key.Name == TurnServersVar || slices.Contains(key.Vars, TurnServersVar) {
-		return MaskTurnServers(value)
+		return maskTurnServers(value)
 	}
 	return maskUserinfo(value)
 }
 
-func MaskTurnServers(value string) string {
+func maskTurnServers(value string) string {
 	var list []map[string]any
 	if err := json.Unmarshal([]byte(value), &list); err != nil {
 		return Masked

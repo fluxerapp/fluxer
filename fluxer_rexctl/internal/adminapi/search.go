@@ -18,8 +18,8 @@ type SearchReindexStatus struct {
 }
 
 var (
-	ErrNoFullReindex = errors.New("adminapi: this Fluxer release can't rebuild every search index at once")
-	ErrSearchOff     = errors.New("adminapi: search is turned off")
+	errNoFullReindex = errors.New("adminapi: this Fluxer release can't rebuild every search index at once")
+	errSearchOff     = errors.New("adminapi: search is turned off")
 )
 
 func (c *Client) ReindexSearch(ctx context.Context) (string, error) {
@@ -30,9 +30,9 @@ func (c *Client) ReindexSearch(ctx context.Context) (string, error) {
 	var api *APIError
 	switch {
 	case errors.As(err, &api) && api.Status == http.StatusBadRequest:
-		return "", ErrNoFullReindex
+		return "", errNoFullReindex
 	case errors.As(err, &api) && api.Code == "FEATURE_TEMPORARILY_DISABLED":
-		return "", ErrSearchOff
+		return "", errSearchOff
 	case err != nil:
 		return "", err
 	}

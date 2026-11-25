@@ -16,7 +16,7 @@ import (
 )
 
 func init() {
-	Register(Check{ID: "services", Phases: Installed, Run: runServices, Fix: fixServices, SafeFix: true})
+	Register(Check{ID: "services", Phases: Installed, Run: notWhileRestoring(byRuntime(runServices, runFluxerService)), Fix: byRuntime(fixServices, fixFluxerService), SafeFix: true})
 }
 
 type ServiceState struct {
@@ -80,12 +80,15 @@ func serviceStates(expected []string, containers []engine.Container) []ServiceSt
 }
 
 func (e *Env) serviceStates(ctx context.Context) ([]ServiceState, error) {
-	if e.Project == nil {
+	if e.Project == nil && !e.Native {
 		return nil, errNoProject
 	}
 	containers, err := e.containers(ctx)
 	if err != nil {
 		return nil, err
+	}
+	if e.Project == nil {
+		return serviceStates(expectedServices(&engine.Project{}, containers), containers), nil
 	}
 	return serviceStates(expectedServices(e.Project, containers), containers), nil
 }

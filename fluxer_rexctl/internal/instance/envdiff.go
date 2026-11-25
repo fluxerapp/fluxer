@@ -125,23 +125,3 @@ func hasUserinfo(v string) bool {
 	host, _, _ := strings.Cut(rest, "/")
 	return strings.Contains(host, "@")
 }
-
-func applyChanges(s *State, changes []EnvChange) {
-	for _, c := range changes {
-		switch c.Kind {
-		case ChangeSecret:
-			s.Secrets[c.Key] = c.Value
-		case ChangeAdmin:
-			if s.AdminImport == nil {
-				s.AdminImport = &AdminImport{Values: map[string]string{}}
-			}
-			if s.AdminImport.Values == nil {
-				s.AdminImport.Values = map[string]string{}
-			}
-			s.AdminImport.Values[c.Key] = c.Value
-			s.AdminImport.SentAt = ""
-		default:
-			s.Settings[c.Key] = c.Value
-		}
-	}
-}

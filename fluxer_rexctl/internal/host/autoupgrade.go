@@ -5,11 +5,11 @@ package host
 import (
 	"bufio"
 	"bytes"
+	"cmp"
 	"context"
 	"fmt"
 	"hash/fnv"
 	"os"
-	"os/exec"
 	"os/user"
 	"path/filepath"
 	"runtime"
@@ -34,7 +34,12 @@ const (
 
 const UpgradeWindow = 30 * time.Minute
 
-const BackupFull = "full"
+const SelfOnlyFlag = "rexctl-only"
+
+const (
+	backupFull = "full"
+	backupOff  = "off"
+)
 
 const FullBackupMonthly = "monthly"
 
@@ -63,6 +68,7 @@ func UpgradeScheduler() Scheduler {
 type AutoUpgrade struct {
 	Scheduler  Scheduler
 	Project    string
+	Unit       string
 	Domain     string
 	Dir        string
 	Binary     string
@@ -70,7 +76,6 @@ type AutoUpgrade struct {
 	Rootless   bool
 	At         string
 	Day        string
-	Backup     string
 	FullBackup string
 	Log        string
 }
@@ -318,14 +323,11 @@ func every(day int) string {
 }
 
 func (a AutoUpgrade) upgradeArgs() string {
-	if a.Backup == "" || a.Backup == BackupFull {
-		return "upgrade --yes"
-	}
-	return "upgrade --yes --backup " + a.Backup
+	return "upgrade --yes"
 }
 
 func (a AutoUpgrade) service(runAs string) string {
-	after := []string{a.Project + ".service"}
+	after := []string{cmp.Or(a.Unit, a.Project+".service")}
 	if a.FullBackup != "" {
 		after = append(after, a.BackupServiceName())
 	}
@@ -341,6 +343,9 @@ func (a AutoUpgrade) service(runAs string) string {
 	b.WriteString("Type=oneshot\n")
 	if runAs != "" {
 		fmt.Fprintf(&b, "User=%s\n", runAs)
+	}
+	if runAs != "" && !a.Rootless {
+		fmt.Fprintf(&b, "ExecStartPre=-+%s upgrade --%s --quiet --dir %s\n", systemdQuote(a.Binary), SelfOnlyFlag, systemdQuote(a.Dir))
 	}
 	fmt.Fprintf(&b, "ExecStart=%s %s --dir %s\n", systemdQuote(a.Binary), a.upgradeArgs(), systemdQuote(a.Dir))
 	if runAs != "" {
@@ -594,36 +599,6 @@ func removeUnits(ctx context.Context, a AutoUpgrade, paths []string, timer strin
 	return true, systemctlRun(ctx, a.Rootless, "daemon-reload")
 }
 
-func DropBackupFlag(ctx context.Context, a AutoUpgrade) (bool, error) {
-	paths, err := a.Paths()
-	if err != nil {
-		return false, err
-	}
-	data, err := os.ReadFile(paths[0])
-	if os.IsNotExist(err) {
-		return false, nil
-	}
-	if err != nil {
-		return false, err
-	}
-	backup := serviceBackup(data)
-	if backup == BackupFull {
-		return false, nil
-	}
-	full := bytes.ReplaceAll(data, []byte(" upgrade --yes --backup "+backup+" "), []byte(" upgrade --yes "))
-	if bytes.Equal(full, data) {
-		return false, fmt.Errorf("host: couldn't find --backup %s in %s", backup, paths[0])
-	}
-	userScope := a.Scheduler == Systemd && a.Rootless
-	if _, err := writeHostFile(ctx, userScope, paths[0], full); err != nil {
-		return false, err
-	}
-	if a.Scheduler == Systemd {
-		return true, systemctlRun(ctx, a.Rootless, "daemon-reload")
-	}
-	return true, nil
-}
-
 func CheckAutoUpgrade(ctx context.Context, a AutoUpgrade, now time.Time) (AutoUpgradeState, error) {
 	paths, err := a.Paths()
 	if err != nil {
@@ -668,7 +643,7 @@ func CheckAutoUpgrade(ctx context.Context, a AutoUpgrade, now time.Time) (AutoUp
 		return s, nil
 	}
 	s.Day, s.At = timerSchedule(data)
-	s.Backup = BackupFull
+	s.Backup = backupFull
 	if service, err := os.ReadFile(paths[0]); err == nil {
 		s.Backup = serviceBackup(service)
 	}
@@ -701,13 +676,10 @@ func monthlyRunPassed(since, now time.Time, at string) bool {
 
 func systemctlShow(ctx context.Context, rootless bool, unit string, props ...string) map[string]string {
 	args := []string{"show", unit}
-	if rootless {
-		args = append([]string{"--user"}, args...)
-	}
 	for _, p := range props {
 		args = append(args, "-p", p)
 	}
-	out, _ := exec.CommandContext(ctx, "systemctl", args...).Output()
+	out, _ := systemctlOutput(ctx, rootless, args...)
 	return parseShow(out)
 }
 
@@ -792,13 +764,16 @@ func cronSchedule(data []byte) (string, string) {
 func serviceBackup(data []byte) string {
 	for _, line := range strings.Split(string(data), "\n") {
 		f := strings.Fields(line)
-		for i := 0; i+1 < len(f); i++ {
-			if f[i] == "--backup" {
+		for i := range f {
+			switch {
+			case f[i] == "--no-backup":
+				return backupOff
+			case f[i] == "--backup" && i+1 < len(f):
 				return f[i+1]
 			}
 		}
 	}
-	return BackupFull
+	return backupFull
 }
 
 func cronExit(log string) (bool, int) {

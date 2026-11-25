@@ -26,6 +26,15 @@ func (e *Engine) Named(name, dir string) *Project {
 }
 
 func (e *Engine) Load(ctx context.Context, s Spec) (*Project, error) {
+	p, err := Load(ctx, s)
+	if err != nil {
+		return nil, err
+	}
+	p.Engine = e
+	return p, nil
+}
+
+func Load(ctx context.Context, s Spec) (*Project, error) {
 	files := absFiles(s)
 	for _, f := range files {
 		if err := refuseUnsupported(f); err != nil {
@@ -43,6 +52,25 @@ func (e *Engine) Load(ctx context.Context, s Spec) (*Project, error) {
 		if len(svc.EnvFiles) > 0 {
 			return nil, &Error{Op: "load", Class: ClassInvalidConfig, Err: fmt.Errorf("service %s reads an env_file, which rexctl doesn't support", name)}
 		}
+	}
+	return labelled(s, model), nil
+}
+
+func (e *Engine) LoadPublished(ctx context.Context, s Spec) (*Project, error) {
+	model, err := loadModel(ctx, s)
+	if err != nil {
+		return nil, err
+	}
+	if model, err = model.WithServicesEnvironmentResolved(true); err != nil {
+		return nil, &Error{Op: "load", Class: ClassInvalidConfig, Err: err}
+	}
+	p := labelled(s, model)
+	p.Engine = e
+	return p, nil
+}
+
+func labelled(s Spec, model *types.Project) *Project {
+	for name, svc := range model.Services {
 		svc.CustomLabels = map[string]string{
 			api.ProjectLabel:     model.Name,
 			api.ServiceLabel:     name,
@@ -54,7 +82,7 @@ func (e *Engine) Load(ctx context.Context, s Spec) (*Project, error) {
 		model.Services[name] = svc
 	}
 	model = model.WithoutUnnecessaryResources()
-	return &Project{Engine: e, Name: model.Name, Dir: s.Dir, Model: model}, nil
+	return &Project{Name: model.Name, Dir: s.Dir, Model: model}
 }
 
 func absFiles(s Spec) []string {

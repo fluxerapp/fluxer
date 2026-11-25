@@ -6,10 +6,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"net/url"
 	"os"
 	"os/exec"
-	"reflect"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
@@ -17,19 +18,15 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/adminapi"
-	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/checks"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/deploy"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/native"
+	rt "github.com/fluxerapp/fluxer/fluxer_rexctl/internal/runtime"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
-)
-
-const (
-	docsURL                = "https://docs.fluxer.com/operator/"
-	changeHowFluxerRunsURL = docsURL + "running/#change-how-fluxer-runs"
 )
 
 type GlobalFlags struct {
@@ -41,25 +38,26 @@ type GlobalFlags struct {
 }
 
 type App struct {
-	Version string
-	Commit  string
-	Flags   GlobalFlags
-	UI      *ui.UI
-	exit    int
-	outcome string
-	putBack []string
-	held    *instance.Instance
-	engine  *engine.Engine
-	warned  bool
-	located *instance.Located
-	command string
+	Version    string
+	Commit     string
+	Flags      GlobalFlags
+	UI         *ui.UI
+	exit       int
+	outcome    string
+	moveNotice string
+	putBack    []string
+	held       *instance.Instance
+	engine     *engine.Engine
+	warned     bool
+	located    *instance.Located
+	command    string
 
 	keepLayout bool
 }
 
 func (a *App) init(c *cobra.Command) {
 	a.command = c.CommandPath()
-	a.UI = ui.New(ui.Options{
+	a.UI.SetOptions(ui.Options{
 		Context: c.Context(),
 		Yes:     a.Flags.Yes,
 		JSON:    a.Flags.JSON,
@@ -231,16 +229,6 @@ func (a *App) forget(dir string) {
 	}
 }
 
-func (a *App) takeOverCommand() string {
-	if a.Flags.Dir != "" {
-		return "rexctl takeover --dir " + a.Flags.Dir
-	}
-	if dir := a.pickedDir(); dir != "" {
-		return "rexctl takeover --dir " + dir
-	}
-	return "rexctl takeover"
-}
-
 func (a *App) Instance() (*instance.Instance, error) {
 	return a.InstanceRepairing(nil)
 }
@@ -258,7 +246,10 @@ func (a *App) InstanceRepairing(keys []string) (*instance.Instance, error) {
 			return nil, err
 		}
 		if inst.State.IsVoice() && !voiceCommandAllowed(a.command) {
-			return nil, ui.Refused(fmt.Sprintf("%s holds voice servers that joined %s, not a Fluxer instance.", dir, voiceInstances(inst)), "On a voice machine, use rexctl voice status, rexctl doctor or rexctl upgrade.")
+			return nil, voiceMachineRefusal(dir, inst)
+		}
+		if legacyCompose(inst) && legacyCommandRefused(a.command) {
+			return nil, legacyRefusal()
 		}
 		a.warnUnknown(inst)
 		if len(keys) == 0 {
@@ -270,16 +261,25 @@ func (a *App) InstanceRepairing(keys []string) (*instance.Instance, error) {
 		if other := ownersInstance(); other != "" && a.located != nil && a.located.From == instance.FromFallback {
 			return nil, ui.Refused(fmt.Sprintf("There's no Fluxer instance in %s, and there's one in %s.", dir, other), "Pass --dir "+shellWord(other)+" if you mean that one.")
 		}
+		if tool := handMadeFluxer(context.Background(), dir); tool != "" {
+			return nil, ui.Refused(fmt.Sprintf("There's no Fluxer instance from rexctl in %s. The Fluxer on this machine runs on %s without rexctl, and rexctl can't manage it.", dir, tool), "Keep managing it with the same "+strings.ToLower(tool)+" commands you set it up with.")
+		}
 		return nil, ui.Refused(fmt.Sprintf("There's no Fluxer instance in %s.", dir), "Run rexctl install, or pass --dir.")
 	case errors.Is(err, instance.ErrLegacy):
-		return nil, ui.Refused(fmt.Sprintf("rexctl doesn't manage the instance in %s yet.", dir), "Run "+a.takeOverCommand()+" to hand it to rexctl.")
+		return nil, preRexctlRefusal(context.Background(), dir)
 	case errors.Is(err, instance.ErrNewerState):
 		return nil, ui.Refused(fmt.Sprintf("A newer rexctl manages the instance in %s.", dir), "Download the latest rexctl, then try again.")
 	case errors.As(err, &se):
 		return nil, settingRefusal(dir, se)
 	}
 	if uid, ok := (&instance.Instance{Dir: dir}).OwnerUID(); ok && uid == 0 && euid() != 0 {
-		return nil, ui.Wrap(err, fmt.Sprintf("rexctl can't read the instance in %s, because root manages it.", dir), "Run "+sudoAgain(dir)+".")
+		if !a.UI.Interactive() {
+			return nil, ui.Wrap(err, fmt.Sprintf("rexctl can't read the instance in %s, because root manages it.", dir), "Run "+sudoAgain(dir)+".")
+		}
+		if _, err := a.asRoot(dir); err != nil {
+			return nil, err
+		}
+		return nil, errDeclined
 	}
 	return nil, ui.Wrap(err, fmt.Sprintf("rexctl can't read the instance in %s.", dir), "Run rexctl as the account that installed Fluxer.")
 }
@@ -349,34 +349,26 @@ func rootlessEngine(inst *instance.Instance) (string, string, bool) {
 	return engine.Kind(pin.Kind).Name(), accountName(uid), true
 }
 
-func socketOwner(host string) (int, bool) {
-	u, err := url.Parse(host)
+func socketOwner(addr string) (int, bool) {
+	u, err := url.Parse(addr)
 	if err != nil || u.Scheme != "unix" {
 		return 0, false
 	}
-	return fileOwner(u.Path)
-}
-
-func fileOwner(path string) (int, bool) {
-	info, err := os.Stat(path)
-	if err != nil {
-		return 0, false
-	}
-	v := reflect.Indirect(reflect.ValueOf(info.Sys()))
-	if v.Kind() != reflect.Struct {
-		return 0, false
-	}
-	f := v.FieldByName("Uid")
-	if !f.IsValid() || !f.CanUint() {
-		return 0, false
-	}
-	return int(f.Uint()), true
+	uid, _, ok := host.FileOwner(u.Path)
+	return uid, ok
 }
 
 func (a *App) Engine(ctx context.Context, inst *instance.Instance) (*engine.Engine, error) {
-	if inst != nil && inst.State.IsNative() {
-		return nil, a.composeOnly()
+	switch rt.KindOf(inst) {
+	case rt.Native:
+		return nil, rt.NeedsContainers(a.command)
+	case rt.Container:
+		return nil, rt.NeedsCompose(a.command)
 	}
+	return a.anyEngine(ctx, inst)
+}
+
+func (a *App) anyEngine(ctx context.Context, inst *instance.Instance) (*engine.Engine, error) {
 	if err := rootlessGuard(inst); err != nil {
 		return nil, err
 	}
@@ -391,9 +383,9 @@ func (a *App) Engine(ctx context.Context, inst *instance.Instance) (*engine.Engi
 	e, err := engine.Connect(ctx, opts)
 	if err != nil {
 		if inst != nil && inst.State != nil {
-			return nil, engineFailureFor(engine.Kind(inst.State.Engine.Kind), err)
+			return nil, rt.EngineError(engine.Kind(inst.State.Engine.Kind), err)
 		}
-		return nil, engineFailure(err)
+		return nil, rt.EngineError("", err)
 	}
 	a.engine = e
 	if a.held != nil && a.held == inst {
@@ -402,6 +394,25 @@ func (a *App) Engine(ctx context.Context, inst *instance.Instance) (*engine.Engi
 		}
 	}
 	return e, nil
+}
+
+func (a *App) Runtime(ctx context.Context, inst *instance.Instance) (rt.Runtime, error) {
+	if err := rootlessGuard(inst); err != nil {
+		return nil, err
+	}
+	r, err := rt.OpenWith(ctx, inst, a.UI, func(ctx context.Context) (*engine.Engine, error) {
+		switch {
+		case rt.KindOf(inst) == rt.Container && inst.State.IsVoice():
+			return rt.VoiceEngine(ctx, inst)
+		case rt.KindOf(inst) == rt.Container:
+			return a.anyEngine(ctx, inst)
+		}
+		return a.Engine(ctx, inst)
+	})
+	if err != nil || r.Kind() != rt.Compose {
+		return r, err
+	}
+	return composeRuntime{Runtime: r, app: a, inst: inst}, nil
 }
 
 func (a *App) pin(inst *instance.Instance, e *engine.Engine) error {
@@ -414,8 +425,8 @@ func (a *App) pin(inst *instance.Instance, e *engine.Engine) error {
 		return nil
 	}
 	inst.State.Engine = next
-	if err := inst.Save(); err != nil {
-		return ui.Wrap(err, "Couldn't save your instance's state.", "Check that you can write to "+inst.Dir+", then try again.")
+	if err := saveInstance(inst); err != nil {
+		return err
 	}
 	if cur.Host != "" && cur.Host != e.Host {
 		a.UI.Detail("The engine moved from %s to %s.", cur.Host, e.Host)
@@ -436,46 +447,76 @@ func (a *App) Admin(ctx context.Context) (*adminapi.Client, *instance.Instance, 
 	if err != nil {
 		return nil, nil, err
 	}
-	if inst.State.IsNative() {
-		return a.adminClient(inst, nil), inst, nil
-	}
-	p, err := a.Named(ctx, inst)
+	r, err := a.Runtime(ctx, inst)
 	if err != nil {
 		return nil, nil, err
 	}
-	return a.adminClient(inst, p), inst, nil
+	t, err := r.Admin(ctx)
+	if errors.Is(err, rt.ErrNeedsRoot) {
+		ok, rerr := a.asRoot(inst.Dir)
+		switch {
+		case rerr != nil:
+			return nil, nil, rerr
+		case ok:
+			return nil, nil, err
+		}
+		return nil, nil, errDeclined
+	}
+	if err != nil {
+		return nil, nil, err
+	}
+	return a.adminFor(inst, t), inst, nil
 }
 
 func (a *App) adminClient(inst *instance.Instance, p *engine.Project) *adminapi.Client {
-	var t adminapi.Transport
-	if inst.State.IsNative() {
-		t = nativeTransport(inst)
-	} else {
-		t = adminapi.NewExec(p)
+	return a.adminFor(inst, adminapi.NewExec(p))
+}
+
+func (a *App) instanceAdmin(ctx context.Context, inst *instance.Instance) (*adminapi.Client, error) {
+	r, err := a.Runtime(ctx, inst)
+	if err != nil {
+		return nil, err
 	}
+	return a.runtimeAdmin(ctx, inst, r)
+}
+
+func (a *App) runtimeAdmin(ctx context.Context, inst *instance.Instance, r rt.Runtime) (*adminapi.Client, error) {
+	t, err := r.Admin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return a.adminFor(inst, t), nil
+}
+
+func (a *App) adminFor(inst *instance.Instance, t adminapi.Transport) *adminapi.Client {
 	c := adminapi.New(t, a.Version)
 	c.OnSkew = func(apiVersion string) {
-		if inst.State != nil && (inst.State.Release == a.Version || inst.State.Upgrade != nil && inst.State.Upgrade.To == a.Version) {
+		if inst.State != nil && (inst.State.Release == a.Version || inst.State.Upgrade != nil && inst.State.Upgrade.To == a.Version) || legacyCompose(inst) {
 			return
+		}
+		if inst.State != nil && inst.State.Release != "" {
+			apiVersion = inst.State.Release
 		}
 		if inst.State != nil && inst.State.FailedRelease == a.Version {
 			a.UI.Warn(fmt.Sprintf("rexctl is %s and Fluxer is still %s. The upgrade to %s didn't start.", a.Version, apiVersion, a.Version), "")
 			return
 		}
+		if inst.State != nil && inst.State.RolledBackFrom == a.Version {
+			a.UI.Info("Fluxer went back from %s to %s. Once the problem is fixed, rexctl upgrade goes forward again.", a.Version, apiVersion)
+			return
+		}
 		fix := "Run rexctl upgrade."
 		if inst.State != nil && inst.State.Ejected != nil {
-			fix = "Run rexctl takeover, then rexctl upgrade."
+			fix = takeoverFixOffline
 		}
 		a.UI.Warn(fmt.Sprintf("rexctl is %s and Fluxer is %s.", a.Version, apiVersion), fix)
 	}
 	return c
 }
 
-var bootStarting = host.BootUnitStarting
-
 func (a *App) Locked(ctx context.Context, inst *instance.Instance, fn func() error) error {
 	l, err := inst.Lock(ctx)
-	if errors.Is(err, instance.ErrLocked) && bootStarting(ctx, inst.Project()) {
+	if errors.Is(err, instance.ErrLocked) && host.BootUnitStarting(ctx, bootUnitName(inst)) {
 		l, err = a.waitForBootStart(ctx, inst)
 	}
 	if errors.Is(err, instance.ErrLocked) {
@@ -485,6 +526,13 @@ func (a *App) Locked(ctx context.Context, inst *instance.Instance, fn func() err
 		return err
 	}
 	return a.holding(ctx, inst, l, fn)
+}
+
+func bootUnitName(inst *instance.Instance) string {
+	if inst.State.IsNative() {
+		return native.New(inst).Unit()
+	}
+	return inst.Project() + ".service"
 }
 
 func (a *App) lockedNow(ctx context.Context, inst *instance.Instance, fn func() error) error {
@@ -499,20 +547,44 @@ func (a *App) lockedNow(ctx context.Context, inst *instance.Instance, fn func() 
 }
 
 func (a *App) waitForBootStart(ctx context.Context, inst *instance.Instance) (*instance.Lock, error) {
+	deadline := time.Now().Add(bootLockWait)
+	return a.waitForLock(ctx, inst, "Waiting for Fluxer to finish starting", "Fluxer finished starting.", func() bool {
+		return time.Now().Before(deadline) && host.BootUnitStarting(ctx, bootUnitName(inst))
+	})
+}
+
+func (a *App) LockedWaiting(ctx context.Context, inst *instance.Instance, fn func() error) error {
+	l, err := inst.Lock(ctx)
+	if errors.Is(err, instance.ErrLocked) {
+		was := inst.State.Runtime
+		l, err = a.waitForLock(ctx, inst, "Waiting for another rexctl command to finish", "The other rexctl command finished.", func() bool { return true })
+		if err == nil {
+			err = reload(inst)
+			if err == nil && inst.State.Runtime != was {
+				err = ui.Refused("The other rexctl command moved this instance to another runtime.", "Run the same command again.")
+			}
+			if err != nil {
+				l.Release()
+			}
+		}
+	}
+	if err != nil {
+		return err
+	}
+	return a.holding(ctx, inst, l, fn)
+}
+
+func (a *App) waitForLock(ctx context.Context, inst *instance.Instance, title, done string, keepWaiting func() bool) (*instance.Lock, error) {
 	var l *instance.Lock
-	err := a.UI.Step(ctx, "Waiting for Fluxer to finish starting", func(ctx context.Context, s *ui.Step) error {
-		deadline := time.Now().Add(bootLockWait)
+	err := a.UI.Step(ctx, title, func(ctx context.Context, s *ui.Step) error {
 		for {
 			got, err := inst.Lock(ctx)
 			if err == nil {
 				l = got
-				s.Done("Fluxer finished starting.")
+				s.Done("%s", done)
 				return nil
 			}
-			if !errors.Is(err, instance.ErrLocked) {
-				return err
-			}
-			if time.Now().After(deadline) || !bootStarting(ctx, inst.Project()) {
+			if !errors.Is(err, instance.ErrLocked) || !keepWaiting() {
 				return err
 			}
 			select {
@@ -547,8 +619,8 @@ func (a *App) holding(ctx context.Context, inst *instance.Instance, l *instance.
 
 var errUnitBinariesDeclined = errors.New("the services that start Fluxer still need their copy of rexctl updated")
 
-var refreshUnitBinaries = func(ctx context.Context, a *App, inst *instance.Instance) error {
-	bin, err := checks.RunningBinary()
+func refreshUnitBinaries(ctx context.Context, a *App, inst *instance.Instance) error {
+	bin, err := host.RunningBinary()
 	if err != nil {
 		return err
 	}
@@ -598,8 +670,11 @@ func (a *App) change(ctx context.Context, inst *instance.Instance, withEnv bool,
 }
 
 func (a *App) guard(ctx context.Context, inst *instance.Instance, withEnv bool) (*engine.Engine, error) {
-	if inst.State.IsNative() {
-		return nil, a.composeOnly()
+	switch rt.KindOf(inst) {
+	case rt.Native:
+		return nil, rt.NeedsContainers(a.command)
+	case rt.Container:
+		return nil, rt.NeedsCompose(a.command)
 	}
 	if err := managed(inst); err != nil {
 		return nil, err
@@ -616,7 +691,7 @@ func (a *App) guard(ctx context.Context, inst *instance.Instance, withEnv bool) 
 	}
 	interrupted := deploy.Interrupted(inst)
 	if err := deploy.Resolve(ctx, inst, e); err != nil {
-		return nil, engineFailure(err)
+		return nil, rt.EngineError("", err)
 	}
 	if interrupted != "" {
 		a.UI.Warn(interrupted, "")
@@ -630,15 +705,36 @@ func managed(inst *instance.Instance) error {
 	var moved *instance.MovedError
 	switch {
 	case errors.As(err, &moved):
-		return movedRefusal(moved)
+		return movedRefusal(inst, moved)
 	case errors.As(err, &ej):
 		return &ui.ExitError{Code: ui.ExitRefused, Msg: ej.Error(), Fix: ej.Fix(), Err: err}
 	}
 	return err
 }
 
-func movedRefusal(moved *instance.MovedError) *ui.ExitError {
-	return &ui.ExitError{Code: ui.ExitRefused, Msg: moved.Error(), Fix: "To manage it, run " + sudoRun(moved.To, "status") + ".", Err: moved}
+func movedStatus(moved *instance.MovedError) (string, bool) {
+	return runThere(moved.To, "status"), withoutSudo(moved.To)
+}
+
+func withoutSudo(dir string) bool {
+	to, err := instance.Find(dir)
+	return euid() == 0 || (err == nil && !rootOwned(to))
+}
+
+func runThere(dir string, args ...string) string {
+	if withoutSudo(dir) {
+		return strings.Join(append(append([]string{"rexctl"}, args...), "--dir", shellWord(dir)), " ")
+	}
+	return sudoRun(dir, args...)
+}
+
+func movedRefusal(old *instance.Instance, moved *instance.MovedError) *ui.ExitError {
+	status, reachable := movedStatus(moved)
+	fix := "To manage it, run " + status + "."
+	if reachable && !moved.CleanedUp && !oneWayMove(old, moved.Release) {
+		fix += " To go back, run rexctl migrate --undo there."
+	}
+	return &ui.ExitError{Code: ui.ExitRefused, Msg: moved.Error(), Fix: fix, Err: moved}
 }
 
 func (a *App) drift(inst *instance.Instance, clean, withEnv bool) error {
@@ -669,7 +765,7 @@ func (a *App) drift(inst *instance.Instance, clean, withEnv bool) error {
 	if r.Env != nil && r.Env.Same {
 		if clean {
 			if err := instance.RemoveEnv(inst); err != nil {
-				return ui.Wrap(err, "Couldn't remove the .env file rexctl doesn't read.", "Delete "+r.Env.Path+" yourself, then try again.")
+				return ui.Wrap(err, "Couldn't remove the .env file rexctl doesn't read.", "Check that you can write to "+inst.Dir+", or run the command again with sudo.")
 			}
 			a.UI.Info("Removed %s, which only held settings rexctl already keeps.", r.Env.Path)
 		}
@@ -710,7 +806,7 @@ func (a *App) replacePodmanCompose(ctx context.Context, inst *instance.Instance,
 	p := e.Named(inst.Project(), inst.Dir)
 	containers, err := p.PS(ctx)
 	if err != nil {
-		return engineFailure(err)
+		return rt.EngineError("", err)
 	}
 	found := false
 	for _, c := range containers {
@@ -735,21 +831,21 @@ func (a *App) replacePodmanCompose(ctx context.Context, inst *instance.Instance,
 	return a.UI.Step(ctx, "Replacing podman-compose's containers", func(ctx context.Context, s *ui.Step) error {
 		ctx = context.WithoutCancel(ctx)
 		if err := p.RemovePodmanCompose(ctx); err != nil {
-			return engineFailure(err)
+			return rt.EngineError("", err)
 		}
 		if err := p.Down(ctx, false); err != nil {
-			return engineFailure(err)
+			return rt.EngineError("", err)
 		}
 		s.Done("Replaced podman-compose's containers.")
 		return nil
 	})
 }
 
-func (a *App) sendAdminImport(ctx context.Context, inst *instance.Instance, p *engine.Project) {
+func (a *App) importAdmins(ctx context.Context, inst *instance.Instance, c *adminapi.Client) {
 	if a.held != inst {
 		return
 	}
-	if err := deploy.SendAdminImport(ctx, inst, a.adminClient(inst, p)); err != nil {
+	if err := deploy.SendAdminImport(ctx, inst, c); err != nil {
 		a.UI.Detail("%v", err)
 	}
 }
@@ -767,13 +863,55 @@ func noArgs(c *cobra.Command, args []string) error {
 		return nil
 	}
 	if c.HasAvailableSubCommands() {
+		fix := fmt.Sprintf("Run %s --help to see every command.", c.CommandPath())
+		if near := nearestCommand(c, args[0]); near != "" {
+			fix = fmt.Sprintf("Did you mean %s %s? Run %s --help to see every command.", c.CommandPath(), near, c.CommandPath())
+		}
 		return &ui.ExitError{
 			Code: ui.ExitUsage,
 			Msg:  fmt.Sprintf("%s has no %s command.", c.CommandPath(), args[0]),
-			Fix:  fmt.Sprintf("Run %s --help to see every command.", c.CommandPath()),
+			Fix:  fix,
 		}
 	}
 	return ui.Usage(fmt.Sprintf("%s takes no arguments.", c.CommandPath()))
+}
+
+func nearestCommand(c *cobra.Command, typed string) string {
+	best, bestDist := "", 3
+	for _, sub := range c.Commands() {
+		if !sub.IsAvailableCommand() {
+			continue
+		}
+		if d := editDistance(strings.ToLower(typed), sub.Name()); d < bestDist {
+			best, bestDist = sub.Name(), d
+		}
+	}
+	return best
+}
+
+func editDistance(a, b string) int {
+	x, y := []rune(a), []rune(b)
+	d := make([][]int, len(x)+1)
+	for i := range d {
+		d[i] = make([]int, len(y)+1)
+		d[i][0] = i
+	}
+	for j := range d[0] {
+		d[0][j] = j
+	}
+	for i := 1; i <= len(x); i++ {
+		for j := 1; j <= len(y); j++ {
+			cost := 1
+			if x[i-1] == y[j-1] {
+				cost = 0
+			}
+			d[i][j] = min(d[i-1][j]+1, d[i][j-1]+1, d[i-1][j-1]+cost)
+			if i > 1 && j > 1 && x[i-1] == y[j-2] && x[i-2] == y[j-1] {
+				d[i][j] = min(d[i][j], d[i-2][j-2]+1)
+			}
+		}
+	}
+	return d[len(x)][len(y)]
 }
 
 func exactArgs(names ...string) cobra.PositionalArgs {
@@ -808,4 +946,51 @@ func maxArgs(n int) cobra.PositionalArgs {
 		}
 		return nil
 	}
+}
+
+func handMadeFluxer(ctx context.Context, dir string) string {
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+	for tool, name := range map[string]string{"docker": "Docker", "podman": "Podman"} {
+		if _, err := exec.LookPath(tool); err != nil {
+			continue
+		}
+		out, err := exec.CommandContext(ctx, tool, "ps", "-a", "--format", `{{.Image}}	{{.Label "`+rt.LabelManagedBy+`"}}	{{.Label "`+composeWorkingDir+`"}}`).Output()
+		if err != nil {
+			continue
+		}
+		if unmanagedFluxer(string(out), insideRexctl) {
+			return name
+		}
+	}
+	if _, err := os.Stat(filepath.Join(dir, "fluxer.env")); err == nil {
+		return "Docker or Podman"
+	}
+	return ""
+}
+
+const composeWorkingDir = "com.docker.compose.project.working_dir"
+
+func unmanagedFluxer(ps string, fromRexctl func(string) bool) bool {
+	for _, line := range strings.Split(ps, "\n") {
+		fields := append(strings.Split(strings.TrimSpace(line), "\t"), "", "")
+		image, label, wd := fields[0], fields[1], fields[2]
+		if strings.HasPrefix(image, rt.ImageRepo) && label == "" && (wd == "" || !fromRexctl(wd)) {
+			return true
+		}
+	}
+	return false
+}
+
+func insideRexctl(dir string) bool {
+	for d := filepath.Clean(dir); filepath.IsAbs(d); d = filepath.Dir(d) {
+		_, err := os.Stat(filepath.Join(d, instance.StateDirName, instance.StateFileName))
+		if !errors.Is(err, fs.ErrNotExist) {
+			return true
+		}
+		if d == filepath.Dir(d) {
+			return false
+		}
+	}
+	return false
 }

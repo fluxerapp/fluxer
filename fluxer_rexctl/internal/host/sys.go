@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-var ErrNoPublicIP = errors.New("host: no STUN server answered")
+var errNoPublicIP = errors.New("host: no STUN server responded")
 
 var stunServers = []string{
 	"stun.cloudflare.com:3478",
@@ -29,7 +29,7 @@ const (
 )
 
 func PublicIP(ctx context.Context) (string, error) {
-	var last error = ErrNoPublicIP
+	var last error = errNoPublicIP
 	for _, network := range []string{"udp4", "udp6"} {
 		for _, server := range stunServers {
 			ip, err := stunQuery(ctx, network, server)
@@ -42,7 +42,19 @@ func PublicIP(ctx context.Context) (string, error) {
 			}
 		}
 	}
-	return "", fmt.Errorf("%w: %v", ErrNoPublicIP, last)
+	return "", fmt.Errorf("%w: %v", errNoPublicIP, last)
+}
+
+func OutboundIPv4() string {
+	conn, err := net.Dial("udp4", "1.1.1.1:53")
+	if err != nil {
+		return ""
+	}
+	defer conn.Close()
+	if a, ok := conn.LocalAddr().(*net.UDPAddr); ok {
+		return a.IP.String()
+	}
+	return ""
 }
 
 func PublicIPv4(ctx context.Context) (string, error) {
@@ -54,7 +66,7 @@ func PublicIPv6(ctx context.Context) (string, error) {
 }
 
 func publicIPOver(ctx context.Context, network string) (string, error) {
-	var last error = ErrNoPublicIP
+	var last error = errNoPublicIP
 	for _, server := range stunServers {
 		ip, err := stunQuery(ctx, network, server)
 		if err == nil {
@@ -65,7 +77,7 @@ func publicIPOver(ctx context.Context, network string) (string, error) {
 			return "", ctx.Err()
 		}
 	}
-	return "", fmt.Errorf("%w: %v", ErrNoPublicIP, last)
+	return "", fmt.Errorf("%w: %v", errNoPublicIP, last)
 }
 
 func stunQuery(ctx context.Context, network, server string) (net.IP, error) {

@@ -24,7 +24,7 @@ const (
 	KindRSA
 )
 
-const Unset = "CHANGE_ME"
+const unset = "CHANGE_ME"
 
 type Spec struct {
 	Key      string
@@ -54,7 +54,7 @@ var Required = []Spec{
 	{Key: VAPIDPrivateKey, Kind: KindVAPID, Stateful: true},
 }
 
-var ErrStatefulMissing = errors.New("secrets: a key that guards stored data is missing")
+var errStatefulMissing = errors.New("secrets: a key that guards stored data is missing")
 
 type StatefulMissingError struct {
 	Keys []string
@@ -64,7 +64,7 @@ func (e *StatefulMissingError) Error() string {
 	return fmt.Sprintf("this instance has no value for %s and its existing data needs the old value", strings.Join(e.Keys, ", "))
 }
 
-func (e *StatefulMissingError) Unwrap() error { return ErrStatefulMissing }
+func (e *StatefulMissingError) Unwrap() error { return errStatefulMissing }
 
 func Hex(nBytes int) (string, error) {
 	b := make([]byte, nBytes)
@@ -104,7 +104,7 @@ func Base64(nBytes int) (string, error) {
 	return base64.StdEncoding.EncodeToString(b), nil
 }
 
-func RSAKey() (string, error) {
+func rsaKey() (string, error) {
 	key, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		return "", err
@@ -118,10 +118,10 @@ func RSAKey() (string, error) {
 
 func IsUnset(value string) bool {
 	v := strings.TrimSpace(value)
-	return v == "" || v == Unset
+	return v == "" || v == unset
 }
 
-func Generate(s Spec) (string, error) {
+func generate(s Spec) (string, error) {
 	switch s.Kind {
 	case KindHex32:
 		return Hex(32)
@@ -130,7 +130,7 @@ func Generate(s Spec) (string, error) {
 	case KindBase64_32:
 		return Base64(32)
 	case KindRSA:
-		return RSAKey()
+		return rsaKey()
 	case KindFixed:
 		return s.Fixed, nil
 	}
@@ -153,7 +153,7 @@ func Mint(values map[string]string, haveVolumes bool) ([]string, error) {
 			vapidMissing = true
 			continue
 		}
-		v, err := Generate(s)
+		v, err := generate(s)
 		if err != nil {
 			return written, err
 		}

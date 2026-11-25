@@ -22,9 +22,9 @@ import (
 )
 
 const (
-	TokenPrefix   = "fvj_"
-	NodeAudience  = "fluxer-voice-node"
-	NodePath      = "/voice/node"
+	tokenPrefix   = "fvj_"
+	nodeAudience  = "fluxer-voice-node"
+	nodePath      = "/voice/node"
 	nodeTokenLife = 2 * time.Minute
 
 	FeatureServerAddresses = "server_addresses"
@@ -45,7 +45,7 @@ const (
 )
 
 func ValidToken(token string) bool {
-	rest, ok := strings.CutPrefix(token, TokenPrefix)
+	rest, ok := strings.CutPrefix(token, tokenPrefix)
 	if !ok {
 		return false
 	}
@@ -299,28 +299,28 @@ func (c *Client) node(ctx context.Context, method, nodeURL, key, secret string, 
 			return err
 		}
 	}
-	token := NodeToken(key, secret, method, body, time.Now())
+	token := nodeToken(key, secret, method, body, time.Now())
 	return c.doRaw(ctx, method, nodeURL, map[string]string{"Authorization": "Bearer " + token}, body, out)
 }
 
-func NodeToken(key, secret, method string, body []byte, now time.Time) string {
+func nodeToken(key, secret, method string, body []byte, now time.Time) string {
 	digest := ""
 	if len(body) > 0 {
 		sum := sha256.Sum256(body)
 		digest = base64.StdEncoding.EncodeToString(sum[:])
 	}
-	return SignHS256(secret, map[string]any{
+	return signHS256(secret, map[string]any{
 		"iss":    key,
-		"aud":    NodeAudience,
+		"aud":    nodeAudience,
 		"method": method,
-		"path":   NodePath,
+		"path":   nodePath,
 		"sha256": digest,
 		"iat":    now.Unix(),
 		"exp":    now.Add(nodeTokenLife).Unix(),
 	})
 }
 
-func SignHS256(secret string, claims map[string]any) string {
+func signHS256(secret string, claims map[string]any) string {
 	enc := base64.RawURLEncoding
 	header, _ := json.Marshal(map[string]string{"alg": "HS256", "typ": "JWT"})
 	payload, _ := json.Marshal(claims)
@@ -393,7 +393,7 @@ func (c *Client) doRaw(ctx context.Context, method, target string, headers map[s
 func (c *Client) TestWebhook(ctx context.Context, target, key, secret string, now time.Time) (int, time.Time, error) {
 	body, err := json.Marshal(map[string]any{
 		"event":     "room_started",
-		"id":        "EV_" + strings.TrimPrefix(TestRoom(), TestRoomPrefix),
+		"id":        "EV_" + strings.TrimPrefix(TestRoom(), testRoomPrefix),
 		"createdAt": strconv.FormatInt(now.Unix(), 10),
 		"room":      map[string]any{"name": TestRoom()},
 	})
@@ -401,7 +401,7 @@ func (c *Client) TestWebhook(ctx context.Context, target, key, secret string, no
 		return 0, time.Time{}, err
 	}
 	sum := sha256.Sum256(body)
-	token := SignHS256(secret, map[string]any{
+	token := signHS256(secret, map[string]any{
 		"iss":    key,
 		"nbf":    now.Add(-10 * time.Second).Unix(),
 		"exp":    now.Add(time.Minute).Unix(),
@@ -432,10 +432,10 @@ func (c *Client) AllowsOrigin(ctx context.Context, domain, origin string) (bool,
 		return false, err
 	}
 	resp.Body.Close()
-	return ConnectSrcAllows(resp.Header.Values("Content-Security-Policy"), origin), nil
+	return connectSrcAllows(resp.Header.Values("Content-Security-Policy"), origin), nil
 }
 
-func ConnectSrcAllows(policies []string, origin string) bool {
+func connectSrcAllows(policies []string, origin string) bool {
 	for _, policy := range policies {
 		for _, directive := range strings.Split(policy, ";") {
 			fields := strings.Fields(directive)

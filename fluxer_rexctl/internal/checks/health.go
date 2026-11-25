@@ -6,6 +6,7 @@ import (
 	"cmp"
 	"context"
 	"crypto/tls"
+	"io"
 	"net"
 	"net/http"
 	"slices"
@@ -71,7 +72,7 @@ func (e *Env) localClient() *http.Client {
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
 			Proxy:           nil,
-			TLSClientConfig: &tls.Config{ServerName: e.Domain, InsecureSkipVerify: true},
+			TLSClientConfig: &tls.Config{ServerName: settings.BareHost(e.Domain), InsecureSkipVerify: true},
 		},
 		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
 	}
@@ -81,15 +82,14 @@ func runHealth(ctx context.Context, e *Env) Result {
 	if e.Instance == nil {
 		return skip("")
 	}
-	states, err := e.serviceStates(ctx)
-	if err != nil || !slices.ContainsFunc(states, func(s ServiceState) bool { return s.Name == "edge" && s.Running() }) {
+	if !e.edgeUp(ctx) {
 		return skip("")
 	}
-	if !e.edgePublished() {
+	if !e.Native && !e.edgePublished() {
 		if !answersInsideEdge(ctx, e) {
-			return fail("Fluxer doesn't answer inside the edge container.", "Run rexctl logs edge to see why.")
+			return fail("Fluxer doesn't respond inside the edge container.", "Run rexctl logs edge to see why.")
 		}
-		return pass("Fluxer answers inside the edge container.")
+		return pass("Fluxer responds inside the edge container.")
 	}
 	client := e.localClient()
 	answered := false
@@ -105,23 +105,64 @@ func runHealth(ctx context.Context, e *Env) Result {
 		}
 		resp.Body.Close()
 		if resp.StatusCode == http.StatusOK {
-			return pass("Fluxer answers on this machine.")
+			return pass("Fluxer responds on this machine.")
 		}
 		if strings.HasPrefix(u, "https://") {
 			answered = true
 			continue
 		}
 		if !answered && resp.StatusCode >= 300 && resp.StatusCode < 400 {
-			return pass("Fluxer answers on this machine.")
+			return pass("Fluxer responds on this machine.")
 		}
 	}
 	if answered {
-		return fail("Fluxer's web server answers with an error.", "Run rexctl logs api to see why.")
+		return fail("Fluxer's web server returns an error.", "Run rexctl logs api to see why.")
 	}
-	if answersInsideEdge(ctx, e) {
-		return warn("Fluxer answers inside the edge container, but not on this machine's ports 80 and 443.", "That's fine if your own reverse proxy forwards to the edge container. Run rexctl proxy on to tell rexctl about it.")
+	if !e.Native && answersInsideEdge(ctx, e) {
+		return warn("Fluxer responds inside the edge container, but not on this machine's ports 80 and 443.", "That's fine if your own reverse proxy forwards to the edge container. Run rexctl proxy on to tell rexctl about it.")
 	}
-	return fail("Fluxer doesn't answer on this machine.", "Run rexctl logs edge to see why.")
+	if e.Native {
+		return fail("Fluxer doesn't respond on this machine.", "Run rexctl logs to see why.")
+	}
+	return fail("Fluxer doesn't respond on this machine.", "Run rexctl logs edge to see why.")
+}
+
+func (e *Env) viaEdge(ctx context.Context, path string) (int, string, error) {
+	client := e.localClient()
+	err := errNoProject
+	for _, u := range e.healthURLs() {
+		req, rerr := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimSuffix(u, "/_health")+path, nil)
+		if rerr != nil {
+			err = rerr
+			continue
+		}
+		req.Host = e.Domain
+		resp, derr := client.Do(req)
+		if derr != nil {
+			err = derr
+			continue
+		}
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+		resp.Body.Close()
+		return resp.StatusCode, string(body), nil
+	}
+	return 0, "", err
+}
+
+func EdgeStarting(ctx context.Context, e *Env) bool {
+	e.fillAddress()
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	code, body, err := e.viaEdge(ctx, "/_health")
+	return err == nil && code == http.StatusServiceUnavailable && strings.HasPrefix(body, "Fluxer is starting")
+}
+
+func (e *Env) edgeUp(ctx context.Context) bool {
+	if e.Native {
+		return e.stack().UnitState(ctx) == "active"
+	}
+	states, err := e.serviceStates(ctx)
+	return err == nil && slices.ContainsFunc(states, func(s ServiceState) bool { return s.Name == "edge" && s.Running() })
 }
 
 func answersInsideEdge(ctx context.Context, e *Env) bool {

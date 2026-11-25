@@ -150,6 +150,61 @@ func checkPortsFree(ctx context.Context, e *engine.Engine, self string, ports []
 	return nil
 }
 
+func CheckHostPorts(ctx context.Context, inst *instance.Instance, pr *Prepared) error {
+	if pr == nil || pr.Unchanged || pr.Engine {
+		return nil
+	}
+	st := inst.State
+	withSecrets := *st
+	withSecrets.Secrets = pr.Secrets
+	newEnv, err := Environment(pr.Set, &withSecrets, pr.Settings)
+	if err != nil {
+		return err
+	}
+	oldEnv, err := Environment(pr.Set, st, st.Settings)
+	if err != nil {
+		return err
+	}
+	mode := pr.Settings[settings.EdgeMode]
+	if portKeyChanged(pr.Preview.Keys) {
+		if err := checkPortsDistinct(effectivePorts(newEnv, mode)); err != nil {
+			return err
+		}
+	}
+	held := map[host.Port]bool{}
+	for _, p := range listened(oldEnv, st.Settings) {
+		held[p] = true
+	}
+	var added []host.Port
+	for _, p := range listened(newEnv, pr.Settings) {
+		if !held[p] {
+			added = append(added, p)
+		}
+	}
+	return checkPortsFree(ctx, nil, "", added)
+}
+
+func listened(env, chosen map[string]string) []host.Port {
+	mode := chosen[settings.EdgeMode]
+	var out []host.Port
+	for _, r := range effectivePorts(env, mode) {
+		out = append(out, r.Port)
+	}
+	if mode != settings.EdgeProxy && mode != settings.EdgeTunnel {
+		return out
+	}
+	bind := chosen[settings.EdgeBind]
+	if bind == "" {
+		bind = settings.DefaultBind
+	}
+	if _, raw, err := net.SplitHostPort(bind); err == nil {
+		if n, err := strconv.Atoi(raw); err == nil && n > 0 && n <= 65535 {
+			out = append(out, host.Port{Number: n, Proto: "tcp"})
+		}
+	}
+	return out
+}
+
 type portRole struct {
 	host.Port
 	subject string
