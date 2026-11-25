@@ -38,7 +38,7 @@ import {
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button, ButtonVariant} from '@app/features/ui/button/Button';
-import {TextInput} from '@app/features/ui/components/form/FormInput';
+import {Input} from '@app/features/ui/components/form/FormInput';
 import {ArrowLeftIcon, ArrowRightIcon} from '@app/features/ui/icons/DirectionalIcons';
 import {SteppedCarousel} from '@app/features/ui/stepped_carousel/SteppedCarousel';
 import {flxElementClassName} from '@app/lib/react';
@@ -479,7 +479,7 @@ export const InstanceSelector = observer(function InstanceSelector({
 					className={flxElementClassName(styles.inputContainer)}
 					data-flx="auth.flow.instance-selector.input-container"
 				>
-					<TextInput
+					<Input
 						ref={inputRef}
 						value={value}
 						onChange={handleInputChange}

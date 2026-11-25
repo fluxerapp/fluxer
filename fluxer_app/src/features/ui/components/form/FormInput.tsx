@@ -354,8 +354,6 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
 Input.displayName = 'Input';
 
-export const TextInput = Input;
-
 const BaseTextarea = React.forwardRef<HTMLTextAreaElement, TextareaAutosizeProps>(({className, ...rest}, ref) => (
 	<TextareaAutosize
 		data-flx="ui.form.input.base-textarea.input"

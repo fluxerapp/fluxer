@@ -79,7 +79,6 @@ const ResourceAuthContent = observer(function ResourceAuthContent<T>({
 	const safeRedirect = safeRedirectTarget(params.get('redirect_to'));
 	const state = config.useResource(id, runtimeSnapshot);
 	useFluxerDocumentTitle(config.documentTitle(i18n));
-	// Registration keeps the standard auth card presentation even while resource loading blocks the form.
 	useAuthPresentation({variant: AuthCardVariant.STANDARD, enabled: mode === 'register'});
 	const onLoginComplete = useCallback(async () => {
 		const completion = config.onComplete(id, i18n, runtimeSnapshot);
