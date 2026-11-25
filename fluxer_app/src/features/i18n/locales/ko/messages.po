@@ -11018,6 +11018,11 @@ msgstr "{names}(님)에게 연결할 수 없습니다."
 msgid "Couldn't connect to a Fluxer instance at {domain}. Check the address and that the instance is online."
 msgstr "{domain}에서 Fluxer 인스턴스에 연결할 수 없습니다. 주소를 확인하고 인스턴스가 온라인 상태인지 확인하세요."
 
+#. Instance selector error shown when no Fluxer instance answered at an IP address or a name that only works on a local network, where the instance often uses a certificate it signed itself. The certificate comes over plain HTTP, so the fingerprint check guards against a swapped file. Domain and certificate URL are interpolated.
+#: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
+msgid "Couldn't connect to a Fluxer instance at {domain}. Check the address and that the instance is online. If the instance signs its own certificate, download it from {certificateUrl}, check that its SHA-256 fingerprint matches the one the instance's admin gives you, install it on this device, then try again."
+msgstr ""
+
 #. Toast shown when joining a voice channel fails because the connection timed out or the transport dropped.
 #: src/features/voice/engine/media_engine_facade/shared.ts
 msgid "Couldn't connect to voice. Please try again."
@@ -27087,6 +27092,11 @@ msgstr "패스키"
 msgid "Passkeys are not available on this device. On a computer, connect a security key and try again, or use another sign-in method."
 msgstr "이 기기에서는 안전키를 사용할 수 없습니다. 컴퓨터에서 보안 키를 연결하고 다시 시도하거나 다른 로그인 방법을 사용하세요."
 
+#. Short note next to the passkey settings on a self-hosted instance opened at an IP address such as 192.0.2.10 instead of a domain name such as chat.example.com. Browsers refuse passkeys there.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts
+msgid "Passkeys need a domain name. Browsers don't allow them on a page opened at an IP address, like this one."
+msgstr ""
+
 #. Sudo (re-auth) modal body shown on unsigned macOS desktop bundles where passkeys cannot work. Direct the user to install the signed client.
 #: src/features/auth/components/modals/SudoVerificationModal.tsx
 msgid "Passkeys require a signed macOS bundle with a valid application identifier. Install the signed desktop client and retry."
@@ -36816,10 +36826,10 @@ msgstr "유효한 색상이 아닌 것 같아요. HEX, rgb(), hsl() 또는 CSS �
 msgid "That doesn't look like a valid URL."
 msgstr "유효한 URL이 아닌 것 같아요."
 
-#. Instance selector error shown when the typed address cannot be an address at all. Example instance domain is interpolated.
+#. Instance selector error shown when the typed address cannot be an address at all. Example instance domain is interpolated. Keep the IP address as written.
 #: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
-msgid "That doesn't look like an instance address. Try a domain such as {exampleInstanceDomain}."
-msgstr "그것은 인스턴스 주소가 아닌 것 같습니다. {exampleInstanceDomain}과 같은 도메인을 사용해 보세요."
+msgid "That doesn't look like an instance address. Try a domain such as {exampleInstanceDomain} or an IP address such as 192.168.1.20."
+msgstr ""
 
 #. Body of the accept-friend-request error modal when the request no longer exists.
 #: src/features/relationship/components/alerts/RelationshipErrorModalUtils.tsx

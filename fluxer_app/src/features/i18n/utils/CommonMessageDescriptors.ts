@@ -946,6 +946,11 @@ export const MEDIA_NEEDS_HTTPS_DESCRIPTOR = msg({
 	comment:
 		'Shown on a self-hosted instance opened over plain HTTP when someone tries to use the microphone, camera or screen sharing, which browsers block there. HTTPS is a technical term, keep it as is.',
 });
+export const PASSKEYS_NEED_DOMAIN_DESCRIPTOR = msg({
+	message: "Passkeys need a domain name. Browsers don't allow them on a page opened at an IP address, like this one.",
+	comment:
+		'Short note next to the passkey settings on a self-hosted instance opened at an IP address such as 192.0.2.10 instead of a domain name such as chat.example.com. Browsers refuse passkeys there.',
+});
 export const FEATURE_NEEDS_HTTPS_DESCRIPTOR = msg({
 	message: "Browsers only allow this on sites that use HTTPS, and this instance doesn't use HTTPS.",
 	comment:

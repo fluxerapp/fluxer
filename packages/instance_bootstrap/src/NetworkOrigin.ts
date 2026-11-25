@@ -79,6 +79,11 @@ function networkOriginCandidate(trimmed: string): string {
 	if (NETWORK_PROTOCOL_PREFIX.test(trimmed)) {
 		return trimmed;
 	}
+	const authorityEnd = trimmed.search(AUTHORITY_TERMINATOR);
+	const authority = authorityEnd < 0 ? trimmed : trimmed.slice(0, authorityEnd);
+	if (authority.split(':').length > 2 && !authority.startsWith('[')) {
+		return `${CanonicalNetworkProtocol.HTTPS}//[${authority}]${trimmed.slice(authority.length)}`;
+	}
 	return `${CanonicalNetworkProtocol.HTTPS}//${trimmed}`;
 }
 
@@ -129,4 +134,29 @@ export function normalizeCanonicalNetworkEndpoint(value: unknown, rule: Canonica
 
 export function normalizeHTTPNetworkOrigin(value: unknown): string | null {
 	return normalizeCanonicalNetworkEndpoint(value, NETWORK_ORIGIN_ONLY_RULE);
+}
+
+const PRIVATE_NAME_SUFFIXES = [
+	'.localhost',
+	'.local',
+	'.test',
+	'.internal',
+	'.lan',
+	'.home.arpa',
+	'.example',
+	'.invalid',
+];
+
+export function selfSignedRootCertificateURL(address: string): string | null {
+	const origin = normalizeHTTPNetworkOrigin(address);
+	if (origin == null) {
+		return null;
+	}
+	const host = new URL(origin).hostname;
+	const ip = host.startsWith('[') || /^\d{1,3}(\.\d{1,3}){3}$/u.test(host);
+	const privateName = !host.includes('.') || PRIVATE_NAME_SUFFIXES.some((suffix) => host.endsWith(suffix));
+	if (!ip && !privateName) {
+		return null;
+	}
+	return `${CanonicalNetworkProtocol.HTTP}//${host}/fluxer-root.crt`;
 }

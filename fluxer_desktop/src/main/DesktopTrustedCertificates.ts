@@ -97,6 +97,17 @@ function readCertificates(): Promise<DesktopCertificates> {
 	return certificates;
 }
 
+const TRUST_REREAD_INTERVAL_MS = 10_000;
+let lastForgotten = 0;
+
+export function forgetDesktopTrustedCertificates(): boolean {
+	if (closing || certificates === null || Date.now() - lastForgotten < TRUST_REREAD_INTERVAL_MS) return false;
+	lastForgotten = Date.now();
+	certificateStores = null;
+	certificates = null;
+	return true;
+}
+
 export function prewarmSystemCertificateStore(): void {
 	void readCertificateStores();
 }

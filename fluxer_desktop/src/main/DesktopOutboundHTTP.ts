@@ -16,7 +16,10 @@ import {
 	resolveDesktopSessionProxy,
 	sendThroughDesktopSession,
 } from '@electron/main/DesktopSessionHTTP';
-import {resolveDesktopTrustedCertificates} from '@electron/main/DesktopTrustedCertificates';
+import {
+	forgetDesktopTrustedCertificates,
+	resolveDesktopTrustedCertificates,
+} from '@electron/main/DesktopTrustedCertificates';
 import {normalizeHTTPNetworkOrigin} from '@fluxer/instance_bootstrap/src/NetworkOrigin';
 import {isPublicIpAddress, parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
 
@@ -571,6 +574,20 @@ interface DesktopSecureAgents {
 	readonly originRequest: https.Agent;
 }
 
+const UNTRUSTED_CERTIFICATE_CODES = new Set([
+	'UNABLE_TO_VERIFY_LEAF_SIGNATURE',
+	'UNABLE_TO_GET_ISSUER_CERT',
+	'UNABLE_TO_GET_ISSUER_CERT_LOCALLY',
+	'SELF_SIGNED_CERT_IN_CHAIN',
+	'DEPTH_ZERO_SELF_SIGNED_CERT',
+	'CERT_UNTRUSTED',
+]);
+
+function isUntrustedCertificateError(error: unknown): boolean {
+	const code = (error as NodeJS.ErrnoException | null)?.code;
+	return typeof code === 'string' && UNTRUSTED_CERTIFICATE_CODES.has(code);
+}
+
 export class DesktopOutboundHTTP {
 	private readonly httpAgent = new HappyEyeballsHttpAgent({
 		keepAlive: true,
@@ -779,6 +796,15 @@ export class DesktopOutboundHTTP {
 			}),
 		};
 		return this.secureAgents;
+	}
+
+	private forgetTrust(): void {
+		if (this.trustedCertificates !== undefined || this.secureAgents === null || !forgetDesktopTrustedCertificates()) {
+			return;
+		}
+		this.secureAgents.request.destroy();
+		this.secureAgents.originRequest.destroy();
+		this.secureAgents = null;
 	}
 
 	public cleanup(): void {
@@ -1186,6 +1212,9 @@ export class DesktopOutboundHTTP {
 					settle();
 					if (isUnreachableAddressError(error)) {
 						this.markBindingUnreachable(binding);
+					}
+					if (isUntrustedCertificateError(error)) {
+						this.forgetTrust();
 					}
 					reject(error);
 				});

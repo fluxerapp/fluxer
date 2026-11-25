@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {FEATURE_NEEDS_HTTPS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {isPageOnIPAddress} from '@app/features/auth/PasskeyAvailability';
+import {
+	FEATURE_NEEDS_HTTPS_DESCRIPTOR,
+	PASSKEYS_NEED_DOMAIN_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {isInsecureBrowserContext} from '@app/features/platform/utils/SecureContext';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -92,6 +96,9 @@ export function describePasskeyError(i18n: I18n, error: unknown, rpId: string | 
 	}
 	if (!(error instanceof Error)) {
 		return null;
+	}
+	if (isPageOnIPAddress()) {
+		return withErrorName(i18n._(PASSKEYS_NEED_DOMAIN_DESCRIPTOR), error.name);
 	}
 	const code = errorCode(error);
 	switch (error.name) {

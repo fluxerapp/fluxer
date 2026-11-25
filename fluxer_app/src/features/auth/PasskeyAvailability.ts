@@ -17,12 +17,20 @@ function hostFromEndpoint(endpoint: string | undefined): string | null {
 	}
 }
 
+export function isIPAddressHost(host: string): boolean {
+	return host.includes(':') || /^\d+(\.\d+){3}$/.test(host);
+}
+
+export function isPageOnIPAddress(): boolean {
+	return globalThis.window != null && isIPAddressHost(window.location.hostname);
+}
+
 function resolvePasskeyRelyingPartyId(snapshot: RuntimeConfigSnapshot | null | undefined): string | null {
 	const host = hostFromEndpoint(snapshot?.webAppEndpoint);
 	if (host == null) {
 		return null;
 	}
-	if (host.includes(':') || /^\d+(\.\d+){3}$/.test(host)) {
+	if (isIPAddressHost(host)) {
 		return null;
 	}
 	const labels = host.split('.');

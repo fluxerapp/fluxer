@@ -8,9 +8,11 @@ import {BackupCodesViewModal} from '@app/features/auth/components/modals/BackupC
 import {MfaTotpDisableModal} from '@app/features/auth/components/modals/MfaTotpDisableModal';
 import {MfaTotpEnableModal} from '@app/features/auth/components/modals/MfaTotpEnableModal';
 import {PasskeyNameModal} from '@app/features/auth/components/modals/PasskeyNameModal';
+import {isPageOnIPAddress} from '@app/features/auth/PasskeyAvailability';
 import {startPasskeyRegistration} from '@app/features/auth/utils/PasskeyRegistrationFlow';
 import {
 	FEATURE_NEEDS_HTTPS_DESCRIPTOR,
+	PASSKEYS_NEED_DOMAIN_DESCRIPTOR,
 	TWO_FACTOR_AUTHENTICATION_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -39,6 +41,7 @@ import * as DateUtils from '@app/features/user/utils/DateFormatting';
 import {pushApiErrorModal} from '@app/lib/forms';
 import {AccountVerificationNeeds, TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
 import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
+import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -157,7 +160,13 @@ export const SecurityTabContent: React.FC<SecurityTabProps> = observer(
 		const needsEmailVerification = !mfaGate.allowed && mfaGate.need === AccountVerificationNeeds.CONFIRM_EMAIL;
 		const hasReachedPasskeyLimit = passkeys.length >= 10;
 		const canAddSecurityCredential = !needsEmailVerification;
-		const passkeysBlocked = isInsecureBrowserContext();
+		let passkeysBlockedReason: MessageDescriptor | null = null;
+		if (isInsecureBrowserContext()) {
+			passkeysBlockedReason = FEATURE_NEEDS_HTTPS_DESCRIPTOR;
+		} else if (isPageOnIPAddress()) {
+			passkeysBlockedReason = PASSKEYS_NEED_DOMAIN_DESCRIPTOR;
+		}
+		const passkeysBlocked = passkeysBlockedReason != null;
 		const canAddPasskey = canAddSecurityCredential && !hasReachedPasskeyLimit && !passkeysBlocked;
 		const handleAddPasskey = () => {
 			if (!canAddPasskey) {
@@ -402,8 +411,8 @@ export const SecurityTabContent: React.FC<SecurityTabProps> = observer(
 				<AccountSecurityCard
 					title={<Trans>Passkeys</Trans>}
 					description={
-						passkeysBlocked ? (
-							i18n._(FEATURE_NEEDS_HTTPS_DESCRIPTOR)
+						passkeysBlockedReason != null ? (
+							i18n._(passkeysBlockedReason)
 						) : (
 							<Trans>Use passkeys to sign in without a password</Trans>
 						)
