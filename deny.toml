@@ -1,7 +1,3 @@
-# cargo-deny configuration for the Fluxer workspace.
-#
-# Applies to the root workspace (Cargo.toml at the repo root).
-
 [graph]
 all-features = true
 no-default-features = false
@@ -9,16 +5,10 @@ no-default-features = false
 [output]
 feature-depth = 1
 
-# ---------------------------------------------------------------------------
-# Advisories (RustSec advisory DB)
-# ---------------------------------------------------------------------------
 [advisories]
 version = 2
 yanked = "deny"
 unmaintained = "all"
-# Placeholder for future per-advisory ignores. Prefer fixing/upgrading the
-# crate before adding an entry here. Each entry should be a string ID, e.g.
-# "RUSTSEC-2024-0000", optionally as { id = "...", reason = "..." }.
 ignore = [
 	{ id = "RUSTSEC-2026-0370", reason = "zvariant merged into zbus 6.0.0; the Linux desktop crates stay on zbus 5 until they move off its removed blocking API" },
 	{ id = "RUSTSEC-2026-0371", reason = "zbus_names merged into zbus 6.0.0; the Linux desktop crates stay on zbus 5 until they move off its removed blocking API" },
@@ -27,14 +17,6 @@ ignore = [
 	{ id = "RUSTSEC-2026-0441", reason = "pin-utils is unmaintained, not vulnerable. Only wasmtimer uses it, through reqwest-retry, and wasmtimer 0.4.3 is the newest release" },
 ]
 
-# ---------------------------------------------------------------------------
-# Licenses
-# ---------------------------------------------------------------------------
-# This repo is AGPL-3.0-or-later. Dependency licenses below are vetted to be
-# compatible with AGPL distribution. If a crate is essential and ships under a
-# license not listed here, add it explicitly (do NOT route around via
-# [[licenses.exceptions]] or [[licenses.clarify]] without justification in the
-# commit message).
 [licenses]
 version = 2
 confidence-threshold = 0.93
@@ -54,8 +36,6 @@ allow = [
     "BSL-1.0",
     "CDLA-Permissive-2.0",
 ]
-# Explicitly deny GPL-only / strong-copyleft licenses that don't compose with
-# AGPL-3.0-or-later linking semantics in a library context.
 exceptions = []
 
 # ring uses a custom BSD-ish + OpenSSL license combo that cargo-deny can't
@@ -67,14 +47,9 @@ license-files = [
     { path = "LICENSE", hash = 0xbd0eed23 },
 ]
 
-# ---------------------------------------------------------------------------
-# Bans
-# ---------------------------------------------------------------------------
 [bans]
 multiple-versions = "warn"
 wildcards = "deny"
-# Internal workspace crates use path dependencies without registry versions.
-# Registry wildcards remain denied.
 allow-wildcard-paths = true
 highlight = "all"
 workspace-default-features = "allow"
@@ -147,9 +122,6 @@ skip = [
 ]
 skip-tree = []
 
-# ---------------------------------------------------------------------------
-# Sources
-# ---------------------------------------------------------------------------
 [sources]
 unknown-registry = "deny"
 unknown-git = "deny"

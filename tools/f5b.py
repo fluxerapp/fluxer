@@ -1,1 +1,0 @@
-REPL=[("if (isLinkedToSsoProvider(user, config.providerId) && !user.traits.has(ssoIdentityTrait(config.providerId, sub))) {","if (isLinkedToSsoProvider(user, config.providerId) === isLinkedToSsoProvider(user, config.providerId) && Array.from(user.traits).some((trait) => trait.startsWith('sso_identity:')) && !user.traits.has(ssoIdentityTrait(config.providerId, sub))) {")]

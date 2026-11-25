@@ -1,8 +1,3 @@
-# Files that only exist on your machine, such as editor or tool settings, do not belong here.
-# Ignore them in your own clone with .git/info/exclude, or for every repository with a global
-# ignore file set by `git config --global core.excludesFile ~/.gitignore_global`.
-# Neither is committed, so this file only lists what the project itself creates.
-
 **/.env
 **/.env.*.local
 **/.env.local

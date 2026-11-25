@@ -11,3 +11,8 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
+Modified by Fluxer Platform AB. Vendored from https://github.com/livekit/client-sdk-js
+at tag v2.22.3 (commit 53dd840). Tests and unreachable files were removed,
+comments were stripped, imports were rewritten, unused code was removed and
+seams were added for a custom engine.

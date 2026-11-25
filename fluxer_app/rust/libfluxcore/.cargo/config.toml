@@ -1,10 +1,5 @@
 [target.wasm32-unknown-unknown]
 rustflags = ["-C", "link-arg=--export-memory"]
 
-# The gateway only ever compresses outbound frames at level 3 (ZSTD dfast) and
-# levels 1-2 (ZSTD fast). Exclude every higher match-finder from the zstd-sys C
-# build so the streaming compressor does not pull libzstd's large optimal-parse
-# code into the wasm bundle. These defines are read by the cc crate when it
-# compiles zstd-sys for the wasm target. Decompression is unaffected.
 [env]
 CFLAGS_wasm32_unknown_unknown = "-DZSTD_EXCLUDE_GREEDY_BLOCK_COMPRESSOR -DZSTD_EXCLUDE_LAZY_BLOCK_COMPRESSOR -DZSTD_EXCLUDE_LAZY2_BLOCK_COMPRESSOR -DZSTD_EXCLUDE_BTLAZY2_BLOCK_COMPRESSOR -DZSTD_EXCLUDE_BTOPT_BLOCK_COMPRESSOR -DZSTD_EXCLUDE_BTULTRA_BLOCK_COMPRESSOR"

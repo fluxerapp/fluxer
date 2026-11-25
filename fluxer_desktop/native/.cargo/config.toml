@@ -1,20 +1,4 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-#
-# Statically link the Microsoft C/C++ runtime into every native Rust addon we
-# ship on Windows. Without this, the .node imports VCRUNTIME140.dll and the
-# msvcp/msvcr family, which require the VC++ 2015-2022 redistributable to be
-# installed system-wide. Fresh Windows boxes (and Windows IoT / LTSC variants)
-# don't have it, so dlopen fails with ERR_DLOPEN_FAILED "The specified module
-# could not be found." even though the .node file itself is present.
-#
-# +crt-static makes the runtime part of the .node itself. Universal CRT API
-# sets (api-ms-win-crt-*.dll) are guaranteed present on Windows 10+ and remain
-# dynamic; only the VC++-specific layer goes static.
-#
-# Scoped per-target so Linux and macOS builds are unaffected. Cargo walks
-# parent directories looking for `.cargo/config.toml`, so this file applies to
-# every crate under `fluxer_desktop/native/` even though each addon has its
-# own `[workspace]`.
 
 [target.x86_64-pc-windows-msvc]
 rustflags = ["-C", "target-feature=+crt-static", "-C", "link-arg=/DEPENDENTLOADFLAG:0x800"]

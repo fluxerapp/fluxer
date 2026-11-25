@@ -6,7 +6,6 @@ ARG BUNDLE_LOCAL_ASSETS="true"
 ARG APP_ASSETS_REF=app-assets
 ARG APP_ASSETS_PLATFORM=$BUILDPLATFORM
 
-# ---------- Stage 1: Build the SPA (fluxer_app) ----------
 FROM node:26-trixie-slim AS app-build
 
 ARG BUILD_VERSION
@@ -105,8 +104,6 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
 	--mount=type=cache,target=/usr/local/cargo/git \
 	cd fluxer_app && pnpm build
 
-# ---------- Stage 2: The one canonical asset tree every architecture serves ----------
-# Stage for CI to extract the full dist (docker bake app-dist target)
 FROM alpine:3.24 AS app-dist
 COPY --from=app-build /usr/src/app/fluxer_app/dist /dist
 
@@ -133,7 +130,6 @@ RUN --mount=type=bind,from=app-dist,source=/dist,target=/dist \
 
 FROM --platform=${APP_ASSETS_PLATFORM} ${APP_ASSETS_REF} AS app-static
 
-# ---------- Stage 3: Build the Rust proxy binary ----------
 FROM rust:1.98.1-trixie@sha256:a8a5f0a1e5fe7dfe1d352591e4a1c7dd2c08fd70475cae872cf3458ba0df0546 AS rust-builder
 
 
@@ -164,7 +160,6 @@ RUN printf '%s\n' \
 RUN cargo build --release -p fluxer_app_proxy \
 	&& cp target/release/fluxer_app_proxy /usr/local/bin/fluxer-app-proxy
 
-# ---------- Stage 4: Runtime ----------
 FROM debian:trixie-slim
 
 ARG BUILD_VERSION=""

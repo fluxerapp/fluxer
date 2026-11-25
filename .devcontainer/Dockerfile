@@ -183,7 +183,6 @@ RUN if ! getent group "${USER_GID}" >/dev/null; then groupadd --gid "${USER_GID}
 
 COPY --from=seaweedfs /usr/bin/weed /usr/local/bin/weed
 
-# Dependency of direnv extension
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
 		direnv
