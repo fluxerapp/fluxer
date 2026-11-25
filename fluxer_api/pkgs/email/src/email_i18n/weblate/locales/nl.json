@@ -142,7 +142,7 @@
 		"subject": "Je jaarlijkse donatie aan {product_name} wordt verlengd op {chargeAt, date, long}"
 	},
 	"dsa_report_resolved": {
-		"about": "{target, select, message_community {Je hebt op {reportedAt, date, long} een bericht gemeld in #{channelName} in \"{communityName}\".} message_dm {Je hebt op {reportedAt, date, long} een bericht in een direct gesprek gemeld.} message {Je hebt op {reportedAt, date, long} een bericht gemeld.} user {Je hebt op {reportedAt, date, long} het account \"{username}\" gemeld.} community {Je hebt op {reportedAt, date, long} de community \"{communityName}\" gemeld.} other {Je hebt ons op {reportedAt, date, long} een melding gestuurd.}}",
+		"about": "{target, select, message_community {Je hebt op {reportedAt, date, long} een bericht gemeld in #{channelName} in \"{communityName}\".} message_dm {Je hebt op {reportedAt, date, long} een bericht in een DM gemeld.} message {Je hebt op {reportedAt, date, long} een bericht gemeld.} user {Je hebt op {reportedAt, date, long} het account \"{username}\" gemeld.} community {Je hebt op {reportedAt, date, long} de community \"{communityName}\" gemeld.} other {Je hebt ons op {reportedAt, date, long} een melding gestuurd.}}",
 		"comment_label": "Opmerking van ons team",
 		"footer_reason": "Je hebt deze e-mail ontvangen omdat je een melding op grond van de Digital Services Act hebt ingediend op {product_name}.",
 		"intro": "{outcome, select, removed {We hebben het verwijderd, omdat het onze regels overtrad.} restricted {Het account overtrad onze regels, en we hebben maatregelen genomen. Om ieders privacy te beschermen, vertellen we niet welke maatregel dat was.} action_taken {Het overtrad onze regels, en we hebben maatregelen genomen. Om ieders privacy te beschermen, vertellen we niet welke maatregel dat was.} no_violation {{concern, select, self_harm {Fijn dat je naar die persoon omkijkt. Ons team heeft het bekeken. Zeggen dat je je somber of onveilig voelt, is niet tegen onze regels, dus we hebben niets verwijderd, maar we kunnen de persoon wel informatie over hulp sturen. We delen nooit wie een melding heeft gedaan. Denk je dat iemand in direct gevaar is? Bel dan het lokale alarmnummer.} other {Ons team heeft het bekeken en vond dat het niet tegen onze regels ingaat, dus we hebben geen maatregelen genomen. Een melding kan wel tot andere stappen leiden, bijvoorbeeld dat we de persoon informatie over hulp sturen. We delen nooit wie een melding heeft gedaan.}}} other {We hebben je melding afgesloten.}}",
@@ -229,7 +229,7 @@
 		"why_title": "Waarom"
 	},
 	"gift_chargeback_notification": {
-		"billing_resumed": "Omdat het cadeau is verwijderd, betaal je vanaf vandaag weer voor je {plan, select, yearly {jaarabonnement} other {maandabonnement}} op {premiumName}. Je krijgt een apart betaalbewijs voor deze betaling. Je kunt op elk moment opzeggen onder “Abonnement beheren”.",
+		"billing_resumed": "Omdat het cadeau is verwijderd, betaal je vanaf vandaag weer voor je {plan, select, yearly {jaarabonnement} other {maandabonnement}} op {premiumName}. Je krijgt een apart betaalbewijs voor deze betaling. Je kunt op elk moment opzeggen onder \"Abonnement beheren\".",
 		"footer_reason": "Je hebt deze e-mail ontvangen omdat voordelen zijn verwijderd uit je {product_name}-account.",
 		"intro": "De betaling voor een cadeaucode die je hebt ingewisseld is teruggedraaid, dus we hebben de voordelen verwijderd die de code aan je account had toegevoegd.",
 		"manage_cta": "Je abonnement beheren",
@@ -336,7 +336,7 @@
 		"product_label": "Product",
 		"product_value": "{quantity, plural, one {{product_name} Operator Pass} other {# {product_name} Operator Passes}}",
 		"reverse_charge": "Er is geen btw in rekening gebracht, omdat de btw is verlegd. De details staan op de factuur.",
-		"seller": "Verkoper: Fluxer Platform AB, 559537-3993, statutaire zetel Haninge, Zweden, {sellerAddress}, {sellerPhone}, <mail>{sellerEmail}</mail>",
+		"seller": "De verkoper is Fluxer Platform AB (org.nr. 559537-3993), een Zweeds bedrijf met statutaire zetel in Haninge. Je kunt ons schrijven op {sellerAddress}, bellen op {sellerPhone} of mailen naar <mail>{sellerEmail}</mail>.",
 		"signoff": "Het team van {product_name}",
 		"subject": "Je betaalbewijs voor de {product_name} Operator Pass",
 		"tax_added": "Er is {taxFormatted} btw bij de prijs opgeteld",
@@ -397,7 +397,7 @@
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {Je Operator-badge staat op je profiel. Je kunt hem verbergen in je <settings>instellingen</settings>.} other {Je Operator-badge is verborgen. Je kunt hem laten zien via je <settings>instellingen</settings>.}}",
 		"cta": "Fluxer Labs openen",
-		"footer_reason": "Je ontvangt deze e-mail omdat je de Operator Pass die bij Visionary hoort hebt aangezet op je {product_name}-account.",
+		"footer_reason": "Je hebt deze e-mail ontvangen omdat je de Operator Pass die bij Visionary hoort hebt aangezet op je {product_name}-account.",
 		"intro": "Je Operator Pass staat aan. Je certificaat zit als bijlage bij deze e-mail, en je kunt het opnieuw downloaden in je <settings>instellingen</settings>. Bewaar ook zelf een kopie, omdat we de onze verwijderen als je account wordt verwijderd.",
 		"labs_line": "{member, select, yes {Je hebt de Operator-rol in Fluxer Labs.} other {Bij je Operator Pass hoort de Operator-rol in Fluxer Labs. Je hebt die zolang dit account in Fluxer Labs zit.}}",
 		"signoff": "Het team van {product_name}",
@@ -446,7 +446,7 @@
 		"footer_reason": "Je hebt deze e-mail ontvangen vanwege een beslissing over je vermelding op de Operators-muur van {product_name}.",
 		"ground": "Artikel 6.2 van de gebruiksvoorwaarden",
 		"ground_label": "Grondslag",
-		"intro": "We hebben het citaat van je plek op de Operators-muur gehaald. De rest van je plek blijft zoals hij is, en je badge en je aankoop veranderen niet.",
+		"intro": "We hebben het citaat uit je vermelding op de Operators-muur gehaald. De rest van je vermelding blijft zoals die is, en je badge en je aankoop veranderen niet.",
 		"next": "Je kunt in je <settings>instellingen</settings> een nieuw citaat toevoegen dat de communityrichtlijnen volgt.",
 		"reason_label": "Reden",
 		"reason_value": "{reason, select, impersonation {Doet zich voor als iemand anders} rights {Gebruikt andermans tekst zonder de rechten daarop} age_suitability {Niet geschikt voor jongere gebruikers} other {Overtreedt de communityrichtlijnen}}",
@@ -536,7 +536,7 @@
 		"footer_reason": "Je hebt deze e-mail ontvangen omdat je je {premiumName}-abonnement hebt opgezegd.",
 		"heading": "Opzegging ontvangen",
 		"intro": "We hebben op {receivedFormatted} je verzoek ontvangen om je {plan, select, yearly {jaarabonnement} other {maandabonnement}} op {premiumName} op te zeggen.",
-		"lead": "Van gedachten veranderd? Je kunt je abonnement vóór {endsAt, date, long} hervatten onder “Abonnement beheren”.",
+		"lead": "Van gedachten veranderd? Je kunt je abonnement vóór {endsAt, date, long} hervatten onder \"Abonnement beheren\".",
 		"preheader": "Je houdt {premiumName} tot {endsAt, date, long}",
 		"reference_line": "Referentie: {reference}",
 		"seller": "Verkoper: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
@@ -572,7 +572,7 @@
 		"footer_reason": "Je hebt deze e-mail ontvangen omdat je een {premiumName}-cadeau hebt ingewisseld.",
 		"heading": "Cadeau toegevoegd",
 		"intro": "De tijd die je cadeau hebt gekregen, is toegevoegd. Je betaalt niets voor je {plan, select, yearly {jaarabonnement} other {maandabonnement}} op {premiumName} tot {trialEnd, date, long}.",
-		"lead": "Je kunt tot die datum op elk moment opzeggen onder “Abonnement beheren”.",
+		"lead": "Je kunt tot die datum op elk moment opzeggen onder \"Abonnement beheren\".",
 		"preheader": "Je betaalt niets tot {trialEnd, date, long}",
 		"seller": "Verkoper: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
 		"signoff": "Het team van {product_name}",
@@ -586,7 +586,7 @@
 		"heading": "{reason, select, action_required {Je bank vraagt je een betaling te bevestigen} other {Je betaling voor {premiumName} is niet gelukt}}",
 		"intro": "{reason, select, action_required {Je bank vraagt je de verlengingsbetaling voor je {premiumName}-abonnement te bevestigen.} other {We konden de verlengingsbetaling voor je {premiumName}-abonnement niet afschrijven.}} {access, select, yes {Je houdt {premiumName} tot {accessEndsAt, date, long}.} other {}}",
 		"intro_change": "{reason, select, action_required {Je bank vraagt je de betaling voor de wijziging van je {premiumName}-abonnement te bevestigen.} other {We konden de betaling voor de wijziging van je {premiumName}-abonnement niet afschrijven.}} {access, select, yes {Je houdt {premiumName} tot {accessEndsAt, date, long}.} other {}}",
-		"manage_link": "Werk je betaalmethode bij onder “Abonnement beheren”",
+		"manage_link": "Werk je betaalmethode bij onder \"Abonnement beheren\"",
 		"note": "{reply, select, yes {Hulp nodig? Beantwoord dan deze e-mail.} other {Hulp nodig? Neem dan contact op met de beheerders van deze instantie.}}",
 		"preheader": "{reason, select, action_required {Bevestig {amountFormatted} voor {premiumName}} other {We konden {amountFormatted} voor {premiumName} niet afschrijven}}",
 		"reminder_subject": "Herinnering: bevestig je betaling voor {premiumName}",
@@ -604,7 +604,7 @@
 		"footer_reason": "Je hebt deze e-mail ontvangen omdat je hebt betaald voor {premiumName} op {product_name}.",
 		"form_body": "Aan Fluxer Platform AB, {sellerAddress}, <mail>{sellerEmail}</mail>:\nHierbij herroep ik mijn overeenkomst voor {premiumName}, gekocht op {paidAt, date, long}.\nFactuurnummer: {invoiceNumber}\nNaam:\nAdres:\nDatum:\nHandtekening (alleen op papier):",
 		"form_title": "Modelformulier voor herroeping",
-		"gift_note": "Je cadeaulink staat in je instellingen onder “Cadeaus”. Kopieer hem daar en stuur hem naar de persoon aan wie je {premiumName} wilt geven. Iedereen met de link kan hem inwisselen.",
+		"gift_note": "Je cadeaulink staat in je instellingen onder \"Cadeaus\". Kopieer hem daar en stuur hem naar de persoon aan wie je {premiumName} wilt geven. Iedereen met de link kan hem inwisselen.",
 		"heading": "{gift, select, yes {Betaalbewijs voor je {premiumName}-cadeau} other {Betaalbewijs voor {premiumName}}}",
 		"intro": "{document, select, yes {{gift, select, yes {Bedankt voor je aankoop van een {premiumName}-cadeau.} other {Bedankt voor je betaling.}}} other {{gift, select, yes {Bedankt voor je aankoop van een {premiumName}-cadeau. Deze e-mail is je betaalbewijs.} other {Bedankt voor je betaling. Deze e-mail is je betaalbewijs.}}}}",
 		"invoice_label": "Factuurnummer",
@@ -612,13 +612,13 @@
 		"paid_label": "Betaald bedrag",
 		"period_label": "Periode",
 		"period_value": "{periodStart, date, long} tot\n{periodEnd, date, long}",
-		"plan_body": "{renewal, select, month {{premiumName} wordt elke maand verlengd voor {renewalFormatted}{renewalTax, select, included { inclusief btw} added { plus btw} other {}} totdat je opzegt. Je kunt altijd opzeggen onder “Abonnement beheren” op de {premiumName}-pagina, en je houdt {premiumName} tot het einde van de periode waarvoor je hebt betaald.} year {{premiumName} wordt elk jaar verlengd voor {renewalFormatted}{renewalTax, select, included { inclusief btw} added { plus btw} other {}} totdat je opzegt. Je kunt altijd opzeggen onder “Abonnement beheren” op de {premiumName}-pagina, en je houdt {premiumName} tot het einde van de periode waarvoor je hebt betaald.} other {Dit cadeau is een eenmalige aankoop. Het wordt niet verlengd en er wordt niets meer afgeschreven.}}",
+		"plan_body": "{renewal, select, month {{premiumName} wordt elke maand verlengd voor {renewalFormatted}{renewalTax, select, included { inclusief btw} added { plus btw} other {}} totdat je opzegt. Je kunt altijd opzeggen onder \"Abonnement beheren\" op de {premiumName}-pagina, en je houdt {premiumName} tot het einde van de periode waarvoor je hebt betaald.} year {{premiumName} wordt elk jaar verlengd voor {renewalFormatted}{renewalTax, select, included { inclusief btw} added { plus btw} other {}} totdat je opzegt. Je kunt altijd opzeggen onder \"Abonnement beheren\" op de {premiumName}-pagina, en je houdt {premiumName} tot het einde van de periode waarvoor je hebt betaald.} other {Dit cadeau is een eenmalige aankoop. Het wordt niet verlengd en er wordt niets meer afgeschreven.}}",
 		"plan_title": "{gift, select, yes {Je cadeau} other {Je abonnement}}",
 		"preheader": "{amountFormatted} betaald voor {premiumName}",
 		"product_label": "Product",
 		"product_value": "{plan, select, monthly {{premiumName}, maandelijks} yearly {{premiumName}, jaarlijks} gift_1_month {{premiumName}-cadeau, 1 maand} gift_1_year {{premiumName}-cadeau, 1 jaar} other {{premiumName}}}",
 		"reverse_charge": "Er is geen btw in rekening gebracht, omdat de btw is verlegd. De details staan op de factuur.",
-		"seller": "Verkoper: Fluxer Platform AB, 559537-3993, statutaire zetel Haninge, Zweden, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"seller": "De verkoper is Fluxer Platform AB (org.nr. 559537-3993), een Zweeds bedrijf met statutaire zetel in Haninge. Je kunt ons schrijven op {sellerAddress} of mailen naar <mail>{sellerEmail}</mail>.",
 		"signoff": "Het team van {product_name}",
 		"subject": "{gift, select, yes {Betaalbewijs voor je {product_name} {premiumName}-cadeau} other {Je betaalbewijs voor {product_name} {premiumName}}}",
 		"tax_added": "Er is {taxFormatted} btw bij de prijs opgeteld",
@@ -669,7 +669,7 @@
 	},
 	"plutonium_withdrawal_receipt": {
 		"currency_label": "Valuta",
-		"footer_reason": "Je ontvangt deze e-mail omdat je een aankoop van {premiumName} op {product_name} hebt herroepen.",
+		"footer_reason": "Je hebt deze e-mail ontvangen omdat je een aankoop van {premiumName} op {product_name} hebt herroepen.",
 		"intro": "We hebben je herroeping ontvangen op {receivedAt, date, long} om {receivedAt, time, short}.",
 		"name_label": "Naam",
 		"note": "Bewaar deze e-mail als bevestiging dat we je herroeping hebben ontvangen.",
@@ -693,16 +693,16 @@
 	"registration_approved": {
 		"cta": "Inloggen bij {product_name}",
 		"footer_reason": "Je hebt deze e-mail ontvangen omdat dit adres is gebruikt voor een {product_name}-account.",
-		"intro": "Je aanmelding bij {product_name} is goedgekeurd. Je kunt nu inloggen.",
+		"intro": "Je registratie bij {product_name} is goedgekeurd. Je kunt nu inloggen.",
 		"signoff": "Het team van {product_name}",
 		"subject": "Je {product_name}-account is goedgekeurd"
 	},
 	"registration_pending": {
-		"cta": "Aanmeldingen in afwachting bekijken",
+		"cta": "Registraties in afwachting bekijken",
 		"footer_reason": "Je hebt deze e-mail ontvangen omdat je nieuwe accounts op {product_name} kunt goedkeuren.",
 		"intro": "Nieuwe accounts op {product_name} wachten op goedkeuring.",
 		"signoff": "Het team van {product_name}",
-		"subject": "Nieuwe aanmeldingen wachten op goedkeuring op {product_name}"
+		"subject": "Nieuwe registraties wachten op goedkeuring op {product_name}"
 	},
 	"report_received": {
 		"footer_reason": "Je hebt deze e-mail ontvangen omdat je een melding op grond van de Digital Services Act hebt ingediend op {product_name}.",
@@ -713,7 +713,7 @@
 		"subject": "We hebben je melding op {product_name} ontvangen"
 	},
 	"report_resolved": {
-		"about": "{target, select, message_community {Je hebt op {reportedAt, date, long} een bericht gemeld in #{channelName} in \"{communityName}\".} message_dm {Je hebt op {reportedAt, date, long} een bericht in een direct gesprek gemeld.} message {Je hebt op {reportedAt, date, long} een bericht gemeld.} user {Je hebt op {reportedAt, date, long} het account \"{username}\" gemeld.} community {Je hebt op {reportedAt, date, long} de community \"{communityName}\" gemeld.} other {Je hebt ons op {reportedAt, date, long} een melding gestuurd.}}",
+		"about": "{target, select, message_community {Je hebt op {reportedAt, date, long} een bericht gemeld in #{channelName} in \"{communityName}\".} message_dm {Je hebt op {reportedAt, date, long} een bericht in een DM gemeld.} message {Je hebt op {reportedAt, date, long} een bericht gemeld.} user {Je hebt op {reportedAt, date, long} het account \"{username}\" gemeld.} community {Je hebt op {reportedAt, date, long} de community \"{communityName}\" gemeld.} other {Je hebt ons op {reportedAt, date, long} een melding gestuurd.}}",
 		"comment_label": "Opmerking van ons team",
 		"footer_reason": "Je hebt deze e-mail ontvangen omdat je een melding hebt ingediend op {product_name}.",
 		"intro": "{outcome, select, removed {We hebben het verwijderd, omdat het onze regels overtrad.} restricted {Het account overtrad onze regels, en we hebben maatregelen genomen. Om ieders privacy te beschermen, vertellen we niet welke maatregel dat was.} action_taken {Het overtrad onze regels, en we hebben maatregelen genomen. Om ieders privacy te beschermen, vertellen we niet welke maatregel dat was.} no_violation {{concern, select, self_harm {Fijn dat je naar die persoon omkijkt. Ons team heeft het bekeken. Zeggen dat je je somber of onveilig voelt, is niet tegen onze regels, dus we hebben niets verwijderd, maar we kunnen de persoon wel informatie over hulp sturen. We delen nooit wie een melding heeft gedaan. Denk je dat iemand in direct gevaar is? Bel dan het lokale alarmnummer.} other {Ons team heeft het bekeken en vond dat het niet tegen onze regels ingaat, dus we hebben geen maatregelen genomen. Een melding kan wel tot andere stappen leiden, bijvoorbeeld dat we de persoon informatie over hulp sturen. We delen nooit wie een melding heeft gedaan.}}} other {We hebben je melding afgesloten.}}",
