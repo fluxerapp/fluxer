@@ -2,9 +2,12 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ARG SOURCE=export
-ARG DIST=fluxer-*-linux-*.tar.zst
 
-FROM erlang:28.5.0.8-slim@sha256:45e0fcffac25a41ed047898a57c7913cc69b5114c1aea0db12c85ed4b1164d77 AS toolchain
+FROM ubuntu:22.04@sha256:9abcaffc92a5279fff3a6a41635c0800ea33e528425fb389658806476e7defde AS toolchain
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    CC=gcc-12 \
+    CXX=g++-12
 
 COPY tools/dist/toolchain.sh /usr/local/src/fluxer-dist/toolchain.sh
 RUN /usr/local/src/fluxer-dist/toolchain.sh /opt/toolchain \
@@ -18,7 +21,7 @@ RUN useradd --create-home --uid 1000 build \
 COPY fluxer_media_proxy/tools/install-native-deps.sh /usr/local/src/fluxer-dist/install-native-deps.sh
 
 USER build
-RUN /usr/local/src/fluxer-dist/install-native-deps.sh /opt/native
+RUN FLUXER_NATIVE_BUNDLE=1 /usr/local/src/fluxer-dist/install-native-deps.sh /opt/native
 USER root
 
 FROM native AS build
@@ -45,7 +48,8 @@ FROM scratch AS export
 COPY --from=build /out/*.tar.zst /out/SHA256SUMS /
 
 FROM scratch AS fromdist
-ARG DIST
+ARG TARGETARCH
+ARG DIST=fluxer-*-linux-${TARGETARCH}.tar.zst
 COPY --from=dist ${DIST} /
 
 FROM ${SOURCE} AS release
@@ -63,7 +67,8 @@ RUN --mount=type=bind,from=release,target=/dist \
     mkdir -p /stage; \
     tar --zstd -xf "$1" -C /stage --no-same-owner; \
     if [ -e /stage/bin ]; then mv /stage /release; else mv /stage/* /release; fi; \
-    test -x /release/bin/fluxerd
+    test -x /release/bin/fluxerd; \
+    rm -f /release/bin/weed /release/bin/valkey-server /release/bin/valkey-cli
 
 FROM debian:trixie-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2 AS runtime
 
@@ -92,9 +97,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && sed -ri 's/^#?[[:space:]]*create_main_cluster[[:space:]]*=.*/create_main_cluster = false/' \
         /etc/postgresql-common/createcluster.conf \
     && grep -q '^create_main_cluster = false$' /etc/postgresql-common/createcluster.conf \
-    && apt-get install -y --no-install-recommends tini libcap2-bin $(cat /run/runtime-packages) \
-    && rm -f /usr/lib/*/libheif.so.1* \
-    && ldconfig \
+    && apt-get install -y --no-install-recommends tini postgresql-17 $(cat /run/runtime-packages) \
     && test ! -e /etc/postgresql/17/main
 
 COPY --from=unpack /release /opt/fluxer/current
@@ -102,24 +105,26 @@ COPY --from=unpack /release /opt/fluxer/current
 RUN groupadd --gid 65532 fluxer \
     && useradd --uid 65532 --gid 65532 --home-dir /var/lib/fluxer --no-create-home --shell /usr/sbin/nologin fluxer \
     && install -d -o 65532 -g 65532 -m 0700 /var/lib/fluxer /run/fluxer \
-    && setcap cap_net_bind_service=+p /opt/fluxer/current/bin/fluxerd \
     && for f in /opt/fluxer/current/bin/* /opt/fluxer/current/gateway/erts-*/bin/beam.smp; do \
-        out="$(LD_LIBRARY_PATH=/opt/fluxer/current/lib ldd "$f" 2>&1)" || continue; \
+        out="$(ldd "$f" 2>&1)" || continue; \
         if printf '%s\n' "$out" | grep 'not found'; then echo "$f has unresolved libraries" >&2; exit 1; fi; \
     done
 
 ENV FLUXER_DATA_DIR=/var/lib/fluxer
+ENV FLUXER_CONTAINER=1
+ENV PATH=/opt/fluxer/current/bin:$PATH
 ENV BUILD_VERSION="${BUILD_VERSION}"
 
 USER 65532:65532
 WORKDIR /var/lib/fluxer
 VOLUME /var/lib/fluxer
 
-EXPOSE 80 443 443/udp 7881 7882/udp
+EXPOSE 80 443 443/udp 8080 7881 7882/udp
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=300s --retries=3 \
     CMD ["/opt/fluxer/current/bin/fluxerd", "health"]
 
 STOPSIGNAL SIGTERM
 
-ENTRYPOINT ["/usr/bin/tini", "--", "/opt/fluxer/current/bin/fluxerd", "run"]
+ENTRYPOINT ["/usr/bin/tini", "--", "/opt/fluxer/current/bin/fluxerd"]
+CMD ["run"]

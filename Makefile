@@ -7,6 +7,8 @@ INTO ?=
 IMAGE ?= fluxer:dev
 SOURCE ?=
 DIST ?=
+BUILD_CC ?= gcc-12
+BUILD_CXX ?= g++-12
 
 .PHONY: toolchain native-deps dist image clean-build
 
@@ -15,10 +17,10 @@ toolchain:
 
 native-deps:
 	@if [ "$$(id -u)" = 0 ]; then echo "run make native-deps as a normal user, install-native-deps.sh registers its prefix system-wide when run as root" >&2; exit 1; fi
-	fluxer_media_proxy/tools/install-native-deps.sh '$(NATIVE)'
+	CC='$(BUILD_CC)' CXX='$(BUILD_CXX)' FLUXER_NATIVE_BUNDLE=1 fluxer_media_proxy/tools/install-native-deps.sh '$(NATIVE)'
 
 dist:
-	FLUXER_TOOLCHAIN='$(TOOLCHAIN)' FLUXER_NATIVE_PREFIX='$(NATIVE)' PROFILE='$(PROFILE)' \
+	CC='$(BUILD_CC)' CXX='$(BUILD_CXX)' FLUXER_TOOLCHAIN='$(TOOLCHAIN)' FLUXER_NATIVE_PREFIX='$(NATIVE)' PROFILE='$(PROFILE)' \
 		tools/dist/build.sh $(if $(ONLY),--only '$(ONLY)') $(if $(INTO),--into '$(INTO)') '$(DIST_DIR)'
 
 image:

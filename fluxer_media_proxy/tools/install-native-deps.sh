@@ -3,6 +3,7 @@
 set -euo pipefail
 
 PREFIX="${1:-/usr/local}"
+BUNDLE="${FLUXER_NATIVE_BUNDLE:-0}"
 
 FFMPEG_VERSION=9.0.2
 FFMPEG_SHA256=8c3850283eb25fa026482078a04051e0be17347b09ef81a0849bec15a96e002e
@@ -11,6 +12,26 @@ FFMPEG_URL="https://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.xz"
 LIBHEIF_VERSION=1.23.7
 LIBHEIF_SHA256=f7483e818503ea6224c8863e4a56ac02c7089021a98472c811c12aa19faf2475
 LIBHEIF_URL="https://github.com/strukturag/libheif/releases/download/v${LIBHEIF_VERSION}/libheif-${LIBHEIF_VERSION}.tar.gz"
+
+DAV1D_VERSION=1.5.3
+DAV1D_SHA256=e099f53253f6c247580c554d53a13f1040638f2066edc3c740e4c2f15174ce22
+DAV1D_URL="https://code.videolan.org/videolan/dav1d/-/archive/${DAV1D_VERSION}/dav1d-${DAV1D_VERSION}.tar.bz2"
+
+HIGHWAY_VERSION=1.3.0
+HIGHWAY_SHA256=07b3c1ba2c1096878a85a31a5b9b3757427af963b1141ca904db2f9f4afe0bc2
+HIGHWAY_URL="https://github.com/google/highway/archive/refs/tags/${HIGHWAY_VERSION}.tar.gz"
+
+LIBJXL_VERSION=0.11.2
+LIBJXL_SHA256=ab38928f7f6248e2a98cc184956021acb927b16a0dee71b4d260dc040a4320ea
+LIBJXL_URL="https://github.com/libjxl/libjxl/archive/refs/tags/v${LIBJXL_VERSION}.tar.gz"
+
+CGIF_VERSION=0.5.4
+CGIF_SHA256=83a70a15bc2da41f081a44ebc58ee48e2e1d524a6d3fdb4a24064afa08d5ad4d
+CGIF_URL="https://github.com/dloebl/cgif/archive/refs/tags/v${CGIF_VERSION}.tar.gz"
+
+VIPS_VERSION=8.18.7
+VIPS_SHA256=5baaead3b0bb20ffdb9e9ff09aa9fda08620923df77b63b436654cb5e0b3bf94
+VIPS_URL="https://github.com/libvips/libvips/releases/download/v${VIPS_VERSION}/vips-${VIPS_VERSION}.tar.xz"
 
 LIBAVFILTER_FLOOR=11.0.100
 LIBHEIF_FLOOR=1.23.0
@@ -21,6 +42,7 @@ LCMS2_FLOOR=2.8
 LIBHEIF_FLOOR_REASON="src/native_shim/heif_pixels.c compiles a different HEIF decode path below 1.21 and below 1.23, so every environment must be at least ${LIBHEIF_FLOOR}"
 
 FFMPEG_BUILD_MODULES="zlib dav1d aom"
+VIPS_BUILD_MODULES="glib-2.0 expat libjpeg libpng libwebp libtiff-4 libexif librsvg-2.0 lcms2 imagequant"
 LIBHEIF_BUILD_MODULES="libde265 dav1d aom"
 REQUIRED_DECODERS="apng gif h264 hevc vp8 vp9 libdav1d libaom-av1 mjpeg png webp bmp aac mp3float vorbis opus flac alac pcm_s16le"
 REQUIRED_ENCODERS="gif"
@@ -122,7 +144,7 @@ require_build_modules() {
     local module
     for module in $1; do
         pc --exists "$module" \
-            || die "build dependency ${module} is missing: install zlib1g-dev libdav1d-dev libaom-dev libde265-dev"
+            || die "build dependency ${module} is missing: run tools/dist/toolchain.sh, or install zlib1g-dev libdav1d-dev libaom-dev libde265-dev"
     done
 }
 
@@ -133,6 +155,77 @@ fetch_source() {
     verify_sha256 "$archive" "$sha256"
     mkdir -p "$destination"
     tar -xf "$archive" -C "$destination" --strip-components=1
+}
+
+meson_build() {
+    local name="$1"
+    shift
+    meson setup "${WORKDIR}/${name}/build" "${WORKDIR}/${name}" \
+        --prefix="$PREFIX" --libdir=lib --buildtype=release --default-library=shared "$@"
+    ninja -C "${WORKDIR}/${name}/build" -j "$JOBS"
+    ninja -C "${WORKDIR}/${name}/build" install
+}
+
+cmake_build() {
+    local name="$1"
+    shift
+    cmake -S "${WORKDIR}/${name}" -B "${WORKDIR}/${name}/build" \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX="$PREFIX" \
+        -DCMAKE_INSTALL_LIBDIR=lib \
+        -DCMAKE_PREFIX_PATH="$PREFIX" \
+        -DBUILD_SHARED_LIBS=ON \
+        -DBUILD_TESTING=OFF \
+        "$@"
+    cmake --build "${WORKDIR}/${name}/build" -j "$JOBS"
+    cmake --install "${WORKDIR}/${name}/build"
+}
+
+build_dav1d() {
+    fetch_source "$DAV1D_URL" "$DAV1D_SHA256" "${WORKDIR}/dav1d.tar.bz2" "${WORKDIR}/dav1d"
+    meson_build dav1d -Denable_tools=false -Denable_examples=false -Denable_tests=false -Denable_docs=false
+}
+
+build_highway() {
+    fetch_source "$HIGHWAY_URL" "$HIGHWAY_SHA256" "${WORKDIR}/highway.tar.gz" "${WORKDIR}/highway"
+    cmake_build highway -DHWY_ENABLE_CONTRIB=OFF -DHWY_ENABLE_EXAMPLES=OFF -DHWY_ENABLE_TESTS=OFF
+}
+
+build_libjxl() {
+    fetch_source "$LIBJXL_URL" "$LIBJXL_SHA256" "${WORKDIR}/libjxl.tar.gz" "${WORKDIR}/libjxl"
+    cmake_build libjxl \
+        -DJPEGXL_FORCE_SYSTEM_BROTLI=ON \
+        -DJPEGXL_FORCE_SYSTEM_HWY=ON \
+        -DJPEGXL_FORCE_SYSTEM_LCMS2=ON \
+        -DJPEGXL_ENABLE_SKCMS=OFF \
+        -DJPEGXL_ENABLE_TOOLS=OFF \
+        -DJPEGXL_ENABLE_JPEGLI=OFF \
+        -DJPEGXL_ENABLE_DOXYGEN=OFF \
+        -DJPEGXL_ENABLE_MANPAGES=OFF \
+        -DJPEGXL_ENABLE_BENCHMARK=OFF \
+        -DJPEGXL_ENABLE_EXAMPLES=OFF \
+        -DJPEGXL_ENABLE_JNI=OFF \
+        -DJPEGXL_ENABLE_SJPEG=OFF \
+        -DJPEGXL_ENABLE_OPENEXR=OFF
+}
+
+build_cgif() {
+    fetch_source "$CGIF_URL" "$CGIF_SHA256" "${WORKDIR}/cgif.tar.gz" "${WORKDIR}/cgif"
+    meson_build cgif -Dexamples=false -Dtests=false
+}
+
+build_vips() {
+    require_build_modules "$VIPS_BUILD_MODULES"
+    fetch_source "$VIPS_URL" "$VIPS_SHA256" "${WORKDIR}/vips.tar.xz" "${WORKDIR}/vips"
+    meson_build vips \
+        -Ddeprecated=false -Dexamples=false -Dcplusplus=false -Ddocs=false -Dcpp-docs=false \
+        -Dmodules=disabled -Dintrospection=disabled -Dvapi=false \
+        -Dcgif=enabled -Dexif=enabled -Dheif=enabled -Dimagequant=enabled -Djpeg=enabled -Djpeg-xl=enabled \
+        -Dlcms=enabled -Dpng=enabled -Drsvg=enabled -Dtiff=enabled -Dwebp=enabled -Dzlib=enabled -Dhighway=enabled \
+        -Dnsgif=true -Dspng=disabled -Dquantizr=disabled -Dorc=disabled -Dfontconfig=disabled -Dpangocairo=disabled \
+        -Darchive=disabled -Dcfitsio=disabled -Dfftw=disabled -Dmagick=disabled -Dmatio=disabled -Dnifti=disabled \
+        -Dopenexr=disabled -Dopenjpeg=disabled -Dopenslide=disabled -Dpdfium=disabled -Dpoppler=disabled \
+        -Draw=disabled -Duhdr=disabled
 }
 
 build_ffmpeg() {
@@ -147,7 +240,8 @@ build_ffmpeg() {
             --prefix="$PREFIX" \
             --disable-debug --disable-doc --disable-static --enable-shared --enable-pic \
             --disable-programs --enable-ffmpeg \
-            --enable-libaom --enable-libdav1d
+            --enable-libaom --enable-libdav1d \
+            --disable-avdevice --disable-xlib --disable-libxcb
         make -j"$JOBS"
         make install
     )
@@ -243,11 +337,25 @@ if [ "$(uname -s)" = "Darwin" ]; then
     exit 0
 fi
 
-verify_linux_floors
+if [ "$BUNDLE" != 1 ]; then
+    verify_linux_floors
+fi
 
 JOBS="$(nproc 2>/dev/null || echo 4)"
 WORKDIR="$(mktemp -d)"
 trap 'rm -rf "$WORKDIR"' EXIT
+export PKG_CONFIG_PATH="${PREFIX}/lib/pkgconfig:${PREFIX}/lib64/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+
+if [ "$BUNDLE" = 1 ]; then
+    need_command meson
+    need_command ninja
+    if installed_here dav1d && pc --exact-version="$DAV1D_VERSION" dav1d; then
+        log "dav1d ${DAV1D_VERSION} already installed under ${PREFIX}"
+    else
+        log "building dav1d ${DAV1D_VERSION} into ${PREFIX}"
+        build_dav1d
+    fi
+fi
 
 if installed_here libavfilter && pc --atleast-version="$LIBAVFILTER_FLOOR" libavfilter && [ -x "${PREFIX}/bin/ffmpeg" ]; then
     log "libavfilter $(pc --modversion libavfilter) already installed under ${PREFIX}"
@@ -261,6 +369,35 @@ if installed_here libheif && pc --exact-version="$LIBHEIF_VERSION" libheif; then
 else
     log "building libheif ${LIBHEIF_VERSION} into ${PREFIX}"
     build_libheif
+fi
+
+if [ "$BUNDLE" = 1 ]; then
+    if installed_here libhwy && pc --exact-version="$HIGHWAY_VERSION" libhwy; then
+        log "highway ${HIGHWAY_VERSION} already installed under ${PREFIX}"
+    else
+        log "building highway ${HIGHWAY_VERSION} into ${PREFIX}"
+        build_highway
+    fi
+    if installed_here libjxl && pc --exact-version="$LIBJXL_VERSION" libjxl; then
+        log "libjxl ${LIBJXL_VERSION} already installed under ${PREFIX}"
+    else
+        log "building libjxl ${LIBJXL_VERSION} into ${PREFIX}"
+        build_libjxl
+    fi
+    if installed_here cgif && pc --exact-version="$CGIF_VERSION" cgif; then
+        log "cgif ${CGIF_VERSION} already installed under ${PREFIX}"
+    else
+        log "building cgif ${CGIF_VERSION} into ${PREFIX}"
+        build_cgif
+    fi
+    if installed_here vips && pc --exact-version="$VIPS_VERSION" vips; then
+        log "libvips ${VIPS_VERSION} already installed under ${PREFIX}"
+    else
+        log "building libvips ${VIPS_VERSION} into ${PREFIX}"
+        build_vips
+    fi
+    installed_here vips || die "libvips must resolve from ${PREFIX}"
+    verify_linux_floors
 fi
 
 register_library_path

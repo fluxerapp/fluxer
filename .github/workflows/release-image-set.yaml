@@ -9,13 +9,13 @@ on:
         type: string
         required: false
         default: ""
-      from-tag:
-        description: "Image tag every component is read from (v1 snapshots today's moving tags, a CalVer pins a coordinated build)"
+      commit:
+        description: "Commit on main to release, the head of the dispatched ref when empty"
         type: string
         required: false
-        default: "v1"
-      component-versions:
-        description: "Per-component overrides, one <image>=<version> entry per line (for example fluxer-api=2026.830.191141)"
+        default: ""
+      compose-last:
+        description: "The last release for compose installs, in place of deploy/compose-last, and released less than 14 days ago is allowed"
         type: string
         required: false
         default: ""
@@ -35,6 +35,8 @@ defaults:
 
 env:
   GHCR_OWNER: ${{ github.repository_owner }}
+  IMAGE: ghcr.io/${{ github.repository_owner }}/fluxer
+  CHARTS: ghcr.io/${{ github.repository_owner }}/charts
 
 jobs:
   approve:
@@ -47,103 +49,47 @@ jobs:
       - name: approved
         run: echo "Image set release approved."
 
-  manifest:
-    name: resolve the image set
+  version:
+    name: resolve the version and commit
     needs: approve
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
-      contents: write
-      packages: read
+      contents: read
     outputs:
       version: ${{ steps.vars.outputs.build_version }}
-      bundle_commit: ${{ steps.resolve.outputs.bundle_commit }}
+      commit: ${{ steps.commit.outputs.commit }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        env:
-          GIT_CONFIG_GLOBAL: ${{ runner.temp }}/gitconfig
+        with:
+          ref: ${{ inputs.commit || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: check the commit is on main
+        id: commit
+        run: |
+          set -euo pipefail
+          commit="$(git rev-parse --verify 'HEAD^{commit}')"
+          if ! git merge-base --is-ancestor "${commit}" origin/main; then
+            echo "${commit} is not on main, so it can't be released" >&2
+            exit 1
+          fi
+          echo "commit=${commit}" >> "${GITHUB_OUTPUT}"
       - name: Set up Rust toolchain (CI helpers)
         uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
         with:
           toolchain: "1.98.1"
-      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
-      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ github.token }}
-      - name: Create token
-        id: create-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
-        with:
-          client-id: ${{ vars.FLUXER_CI_APP_ID }}
-          private-key: ${{ secrets.FLUXER_CI_APP_KEY }}
-          owner: fluxerapp
-          repositories: fluxer
-          permission-contents: write
-          permission-packages: read
-
       - name: set variables
         id: vars
         env:
-          GH_TOKEN: ${{ steps.create-token.outputs.token }}
           BUILD_VERSION: ${{ inputs['build-version'] }}
         run: >-
           tools/ci/run.sh resolve-calver
           --github-output
 
-      - name: resolve release image set
-        id: resolve
-        env:
-          GH_TOKEN: ${{ steps.create-token.outputs.token }}
-          VERSION: ${{ steps.vars.outputs.build_version }}
-          FROM_TAG: ${{ inputs['from-tag'] }}
-          COMPONENT_VERSIONS: ${{ inputs['component-versions'] }}
-        run: |
-          set -euo pipefail
-          args=(
-            image-set resolve
-            --version "${VERSION}"
-            --registry "ghcr.io/${GHCR_OWNER}"
-            --from-tag "${FROM_TAG}"
-            --out-dir release-out
-            --github-output
-          )
-          while IFS= read -r entry; do
-            entry="$(echo "$entry" | xargs)"
-            if [ -n "$entry" ]; then
-              args+=( --component-version "$entry" )
-            fi
-          done <<< "${COMPONENT_VERSIONS}"
-          tools/ci/run.sh "${args[@]}"
-
-      - name: verify release image set
-        env:
-          VERSION: ${{ steps.vars.outputs.build_version }}
-        run: >-
-          tools/ci/run.sh image-set verify
-          --manifest "release-out/fluxer-release-${VERSION}.json"
-
-      - name: check bundle commit
-        env:
-          BUNDLE_COMMIT: ${{ steps.resolve.outputs.bundle_commit }}
-        run: |
-          set -euo pipefail
-          if [ -z "${BUNDLE_COMMIT}" ]; then
-            echo "image-set resolve reported no bundle commit" >&2
-            exit 1
-          fi
-
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: release-out
-          path: release-out/
-          if-no-files-found: error
-          retention-days: 7
-
   native:
     name: build the native ${{ matrix.arch }} release
-    needs: manifest
+    needs: version
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 150
     permissions:
@@ -158,22 +104,13 @@ jobs:
           - arch: arm64
             runner: ubuntu-24.04-arm
     env:
-      VERSION: ${{ needs.manifest.outputs.version }}
-      BUNDLE_COMMIT: ${{ needs.manifest.outputs.bundle_commit }}
+      VERSION: ${{ needs.version.outputs.version }}
       ARCH: ${{ matrix.arch }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: ${{ needs.manifest.outputs.bundle_commit }}
+          ref: ${{ needs.version.outputs.commit }}
           persist-credentials: false
-
-      - name: check the bundle commit can build the native release
-        run: |
-          set -euo pipefail
-          if [ ! -f packaging/monolith/Dockerfile ] || [ ! -f tools/dist/build.sh ]; then
-            echo "${BUNDLE_COMMIT} has no packaging/monolith/Dockerfile or tools/dist/build.sh, so this image set cannot ship a native release" >&2
-            exit 1
-          fi
 
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
       - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f
@@ -207,7 +144,7 @@ jobs:
           provenance: false
           outputs: type=local,dest=${{ runner.temp }}/native
           build-args: |
-            BUILD_VERSION=${{ needs.manifest.outputs.version }}
+            BUILD_VERSION=${{ needs.version.outputs.version }}
           cache-from: type=registry,ref=ghcr.io/${{ env.GHCR_OWNER }}/fluxer-native:buildcache-${{ matrix.arch }}
         env:
           DOCKER_BUILD_SUMMARY: false
@@ -236,7 +173,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: native-${{ matrix.arch }}
-          path: ${{ runner.temp }}/native/fluxer-${{ needs.manifest.outputs.version }}-linux-${{ matrix.arch }}.tar.zst
+          path: ${{ runner.temp }}/native/fluxer-${{ needs.version.outputs.version }}-linux-${{ matrix.arch }}.tar.zst
           if-no-files-found: error
           compression-level: 0
           retention-days: 7
@@ -244,8 +181,9 @@ jobs:
   rexctl:
     name: build rexctl
     needs:
-      - manifest
+      - version
       - native
+      - image-index
     runs-on: ubuntu-24.04
     environment: builds
     timeout-minutes: 30
@@ -255,59 +193,14 @@ jobs:
       id-token: write
       attestations: write
     env:
-      VERSION: ${{ needs.manifest.outputs.version }}
-      BUNDLE_COMMIT: ${{ needs.manifest.outputs.bundle_commit }}
+      VERSION: ${{ needs.version.outputs.version }}
       JSIGN_VERSION: "7.5"
       JSIGN_SHA256: 602a51c3545a6dc4fb99bd2ea7152b26d1345916d0c93ddfbd5936cb735af91c
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: ${{ needs.manifest.outputs.bundle_commit }}
+          ref: ${{ needs.version.outputs.commit }}
           persist-credentials: false
-
-      - name: check the bundle commit has rexctl
-        run: |
-          set -euo pipefail
-          if [ ! -f fluxer_rexctl/.goreleaser.yaml ]; then
-            echo "${BUNDLE_COMMIT} has no fluxer_rexctl/.goreleaser.yaml, so this image set cannot ship rexctl" >&2
-            exit 1
-          fi
-
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
-        with:
-          name: release-out
-          path: release-out
-
-      - name: embed the image set
-        run: |
-          set -euo pipefail
-          python3 - <<'EOF'
-          import json, os, re, sys
-          version = os.environ["VERSION"]
-          manifest = json.load(open(f"release-out/fluxer-release-{version}.json"))
-          compose = open(f"release-out/fluxer-release-{version}.yml").read()
-          images = {c["component"]: f'{c["image"]}@{c["digest"]}' for c in manifest["components"]}
-          versions = {c["component"]: c["build_version"] for c in manifest["components"]}
-          pattern = re.compile(r"^  ([a-z0-9-]+):\n    image: \S*/([a-z0-9-]+)@\$\{[A-Z0-9_]+:-(sha256:[0-9a-f]{64})\}$", re.M)
-          services = {}
-          builds = {}
-          for service, component, digest in pattern.findall(compose):
-              ref = images.get(component)
-              if ref is None or not ref.endswith("@" + digest):
-                  sys.exit(f"service {service} does not match component {component} in the manifest")
-              services[service] = ref
-              builds[service] = versions[component]
-          if not services or len(services) != compose.count("\n    image: "):
-              sys.exit("could not map every service in the compose override to an image")
-          if "fluxer-server" not in images:
-              sys.exit("the manifest has no fluxer-server image for the rust service in rust-server.compose.yml")
-          services["rust"] = images["fluxer-server"]
-          builds["rust"] = versions["fluxer-server"]
-          with open("fluxer_rexctl/internal/stack/imageset.json", "w") as f:
-              json.dump({"release": version, "images": dict(sorted(services.items())), "builds": dict(sorted(builds.items()))}, f, indent=2)
-              f.write("\n")
-          print(f"embedded {len(services)} service images for {version}")
-          EOF
 
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
         with:
@@ -315,20 +208,12 @@ jobs:
           check-latest: true
           cache-dependency-path: fluxer_rexctl/go.sum
 
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
-        with:
-          path: ${{ runner.temp }}/layer-sizes.json
-          key: layer-sizes-${{ github.run_id }}
-          restore-keys: layer-sizes-
-
-      - name: add image sizes to the image set and also pin 3rd party images
-        working-directory: fluxer_rexctl
-        env:
-          GHCR_TOKEN: ${{ github.token }}
-        run: go run ./internal/stack/layersizes -pin -set internal/stack/imageset.json -cache "${RUNNER_TEMP}/layer-sizes.json"
-
       - name: govulncheck
         working-directory: fluxer_rexctl
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+
+      - name: govulncheck fluxerd
+        working-directory: fluxer_native
         run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
 
       - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6
@@ -368,6 +253,16 @@ jobs:
           echo "JSIGN_JAR=${jar}" >> "${GITHUB_ENV}"
           echo "REXCTL_WINDOWS_SIGNER=${signer}" >> "${GITHUB_ENV}"
 
+      - name: check the image digest rexctl pins
+        env:
+          DIGEST: ${{ needs.image-index.outputs.digest }}
+        run: |
+          set -euo pipefail
+          if [[ ! "${DIGEST}" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+            echo "the image index digest is '${DIGEST}', so rexctl can't pin the image" >&2
+            exit 1
+          fi
+
       - name: build, sign and check rexctl
         uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94
         with:
@@ -376,7 +271,8 @@ jobs:
           workdir: fluxer_rexctl
           args: release --clean --skip=publish,validate
         env:
-          GORELEASER_CURRENT_TAG: v${{ needs.manifest.outputs.version }}
+          GORELEASER_CURRENT_TAG: v${{ needs.version.outputs.version }}
+          FLUXER_IMAGE_DIGEST: ${{ needs.image-index.outputs.digest }}
           AZURE_ARTIFACT_SIGNING_ENDPOINT: ${{ secrets.AZURE_ARTIFACT_SIGNING_ENDPOINT }}
           AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME: ${{ secrets.AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME }}
           AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME: ${{ secrets.AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME }}
@@ -401,6 +297,8 @@ jobs:
         working-directory: fluxer_rexctl/dist
         env:
           IDENTITY: ${{ github.server_url }}/${{ github.workflow_ref }}
+          GH_TOKEN: ${{ github.token }}
+          NAMED_COMPOSE_LAST: ${{ inputs.compose-last }}
         run: |
           set -euo pipefail
           for target in linux_amd64.tar.gz linux_arm64.tar.gz darwin_amd64.tar.gz darwin_arm64.tar.gz windows_amd64.zip windows_arm64.zip; do
@@ -425,24 +323,46 @@ jobs:
               size = struct.unpack_from("<I", data, directories + 4 * 8 + 4)[0]
               if size == 0:
                   sys.exit(f"{path} is not signed")
-              print(f"{path} carries an Authenticode signature")
+              print(f"{path} has an Authenticode signature")
           EOF
-          ./rexctl_linux_amd64_v1/rexctl version --json --dir "${RUNNER_TEMP}" | python3 -c '
-          import json, sys
+          compose_last="$(gh api --paginate 'repos/fluxerapp/fluxer/releases?per_page=100' \
+            --jq '.[] | select(.tag_name | startswith("fluxer-release@")) | select(any(.assets[]; .name | startswith("fluxer-compose-"))) | .tag_name | ltrimstr("fluxer-release@")' \
+            | sort -t. -k1,1n -k2,2n -k3,3n | tail -n 1)"
+          if [ -z "${compose_last}" ]; then
+            echo "no fluxer-release has a compose bundle, so compose_last can't be set" >&2
+            exit 1
+          fi
+          named="${NAMED_COMPOSE_LAST}"
+          if [ -z "${named}" ] && [ -f "${GITHUB_WORKSPACE}/deploy/compose-last" ]; then
+            named="$(tr -d '[:space:]' < "${GITHUB_WORKSPACE}/deploy/compose-last")"
+          fi
+          if [ -z "${named}" ]; then
+            echo "Name the last release for compose installs in deploy/compose-last or the compose-last input" >&2
+            exit 1
+          fi
+          if [ "${named}" != "${compose_last}" ]; then
+            echo "The newest release with a compose bundle is ${compose_last}, but ${named} is named as the last one for compose installs" >&2
+            exit 1
+          fi
+          if [ -z "${NAMED_COMPOSE_LAST}" ]; then
+            gh api "repos/fluxerapp/fluxer/releases/tags/fluxer-release@${named}" --jq .published_at | python3 -c '
+          import datetime, sys
+          published = datetime.datetime.fromisoformat(sys.stdin.read().strip().replace("Z", "+00:00"))
+          age = datetime.datetime.now(datetime.timezone.utc) - published
+          if age < datetime.timedelta(days=14):
+              sys.exit(f"fluxer-release@{sys.argv[1]} came out {age.days} days ago, and compose installs need 14 days on it before this release. Pass it as the compose-last input to release anyway")
+          ' "${named}"
+          fi
+          ./rexctl_linux_amd64_v1/rexctl version --json --dir "${RUNNER_TEMP}" | COMPOSE_LAST="${compose_last}" python3 -c '
+          import json, os, sys
           v = json.load(sys.stdin)
-          json.dump({"min_from": "", "schema_changed": True, "min_podman": v["min_podman"], "min_docker": v["min_docker"], "state_schema": v["state_schema"]}, open("rexctl-release.json", "w"))
+          installs, version = v["installs"], os.environ["VERSION"]
+          if installs != version:
+              sys.exit(f"rexctl installs Fluxer {installs}, expected {version}")
+          json.dump({"min_from": "", "schema_changed": True, "min_podman": v["min_podman"], "min_docker": v["min_docker"], "state_schema": v["state_schema"], "compose_last": os.environ["COMPOSE_LAST"]}, open("rexctl-release.json", "w"))
           '
           mkdir -p ../release
           cp rexctl_"${VERSION}"_* checksums.txt checksums.txt.sigstore.json rexctl-release.json ../release/
-
-      - name: write the compose bundle
-        working-directory: fluxer_rexctl
-        run: |
-          set -euo pipefail
-          out="${RUNNER_TEMP}/fluxer-compose"
-          go run . bundle --out "${out}"
-          tar -czf "release/fluxer-compose-${VERSION}.tar.gz" -C "${out}" .
-          tar -tzf "release/fluxer-compose-${VERSION}.tar.gz"
 
       - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6
         with:
@@ -455,16 +375,253 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-  publish:
-    name: publish the image set
+  image:
+    name: build the ${{ matrix.arch }} image
     needs:
-      - manifest
+      - version
+      - native
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      ARCH: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ needs.version.outputs.commit }}
+          persist-credentials: false
+
+      - name: resolve source date
+        id: source
+        run: echo "date=$(TZ=UTC git log -1 --no-show-signature --pretty=%cd --date=format-local:%Y-%m-%dT%H:%M:%SZ)" >> "${GITHUB_OUTPUT}"
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: native-${{ matrix.arch }}
+          path: ${{ runner.temp }}/dist
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
+
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: push the image by digest
+        id: push
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc
+        with:
+          context: .
+          file: packaging/monolith/Dockerfile
+          target: runtime
+          platforms: linux/${{ matrix.arch }}
+          sbom: true
+          provenance: mode=max
+          outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true
+          build-contexts: dist=${{ runner.temp }}/dist
+          build-args: |
+            SOURCE=fromdist
+            BUILD_VERSION=${{ needs.version.outputs.version }}
+            SOURCE_SHA=${{ needs.version.outputs.commit }}
+            SOURCE_DATE=${{ steps.source.outputs.date }}
+        env:
+          DOCKER_BUILD_SUMMARY: false
+          DOCKER_BUILD_RECORD_UPLOAD: false
+
+      - name: smoke test the pushed image
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          set -euo pipefail
+          docker pull --platform "linux/${ARCH}" "${IMAGE}@${DIGEST}"
+          tools/dist/image-smoke.sh "${IMAGE}@${DIGEST}"
+
+      - name: record the digest
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          set -euo pipefail
+          mkdir -p "${RUNNER_TEMP}/digest"
+          printf '%s\n' "${DIGEST}" > "${RUNNER_TEMP}/digest/${ARCH}"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: digest-${{ matrix.arch }}
+          path: ${{ runner.temp }}/digest/${{ matrix.arch }}
+          if-no-files-found: error
+          retention-days: 7
+
+  image-index:
+    name: tag and sign the image
+    needs:
+      - version
+      - image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    outputs:
+      digest: ${{ steps.index.outputs.digest }}
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ needs.version.outputs.commit }}
+          persist-credentials: false
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: digest-*
+          path: ${{ runner.temp }}/digest
+          merge-multiple: true
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6
+        with:
+          cosign-release: v3.1.3
+
+      - name: tag the image for both platforms
+        id: index
+        run: |
+          set -euo pipefail
+          refs=()
+          for arch in amd64 arm64; do
+            refs+=("${IMAGE}@$(cat "${RUNNER_TEMP}/digest/${arch}")")
+          done
+          docker buildx imagetools create -t "${IMAGE}:${VERSION}" "${refs[@]}"
+          tools/dist/image-check.sh "${IMAGE}:${VERSION}"
+          digest="$(docker buildx imagetools inspect "${IMAGE}:${VERSION}" --format '{{json .Manifest}}' | python3 -c 'import json, sys; print(json.load(sys.stdin)["digest"])')"
+          echo "digest=${digest}" >> "${GITHUB_OUTPUT}"
+
+      - name: sign the image
+        env:
+          DIGEST: ${{ steps.index.outputs.digest }}
+          IDENTITY: ${{ github.server_url }}/${{ github.workflow_ref }}
+        run: |
+          set -euo pipefail
+          cosign sign --yes "${IMAGE}@${DIGEST}"
+          cosign verify "${IMAGE}@${DIGEST}" \
+            --certificate-identity "${IDENTITY}" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com >/dev/null
+
+      - name: stamp the docker files
+        run: tools/dist/docker-files.sh "${IMAGE}:${VERSION}" "${RUNNER_TEMP}/docker"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: docker
+          path: ${{ runner.temp }}/docker/
+          if-no-files-found: error
+          retention-days: 7
+
+  chart:
+    name: package and sign the chart
+    needs:
+      - version
+      - image-index
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      HELM_VERSION: v3.19.0
+      HELM_SHA256: a7f81ce08007091b86d8bd696eb4d86b8d0f2e1b9f6c714be62f82f96a594496
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ needs.version.outputs.commit }}
+          persist-credentials: false
+
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6
+        with:
+          cosign-release: v3.1.3
+
+      - name: install Helm
+        run: |
+          set -euo pipefail
+          mkdir -p "${RUNNER_TEMP}/bin"
+          cd "${RUNNER_TEMP}"
+          curl -fsSLo helm.tgz "https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz"
+          echo "${HELM_SHA256}  helm.tgz" | sha256sum -c -
+          tar -xzf helm.tgz linux-amd64/helm
+          mv linux-amd64/helm bin/helm
+          echo "${RUNNER_TEMP}/bin" >> "${GITHUB_PATH}"
+
+      - name: push the chart
+        id: push
+        env:
+          TOKEN: ${{ github.token }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+          helm package deploy/helm/fluxer --version "${VERSION}" --app-version "${VERSION}" -d "${RUNNER_TEMP}/chart"
+          helm template fluxer "${RUNNER_TEMP}/chart/fluxer-${VERSION}.tgz" --set domain=chat.fluxer.test | grep -qF "image: ${IMAGE}:${VERSION}"
+          echo "${TOKEN}" | helm registry login ghcr.io -u "${ACTOR}" --password-stdin
+          helm push "${RUNNER_TEMP}/chart/fluxer-${VERSION}.tgz" "oci://${CHARTS}" 2>&1 | tee "${RUNNER_TEMP}/push.log"
+          digest="$(sed -n 's/^Digest: //p' "${RUNNER_TEMP}/push.log")"
+          [[ "${digest}" == sha256:* ]] || { echo "helm push printed no digest" >&2; exit 1; }
+          echo "digest=${digest}" >> "${GITHUB_OUTPUT}"
+
+      - name: sign the chart
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+          IDENTITY: ${{ github.server_url }}/${{ github.workflow_ref }}
+          TOKEN: ${{ github.token }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+          echo "${TOKEN}" | cosign login ghcr.io -u "${ACTOR}" --password-stdin
+          cosign sign --yes "${CHARTS}/fluxer@${DIGEST}"
+          cosign verify "${CHARTS}/fluxer@${DIGEST}" \
+            --certificate-identity "${IDENTITY}" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com >/dev/null
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: chart
+          path: ${{ runner.temp }}/chart/
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: publish the release
+    needs:
+      - version
       - native
       - rexctl
+      - image-index
+      - chart
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
       contents: write
+      packages: write
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
     steps:
       - name: Create token
         id: create-token
@@ -478,11 +635,6 @@ jobs:
 
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
-          name: release-out
-          path: release-out
-
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
-        with:
           name: rexctl
           path: rexctl
 
@@ -492,20 +644,74 @@ jobs:
           path: native
           merge-multiple: true
 
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: docker
+          path: docker
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: chart
+          path: chart
+
+      - name: check the image and chart can be pulled without signing in
+        run: |
+          set -euo pipefail
+          token="$(curl -fsS "https://ghcr.io/token?scope=repository:${GHCR_OWNER}/fluxer:pull" | python3 -c 'import json, sys; print(json.load(sys.stdin)["token"])')"
+          if ! curl -fsS -o /dev/null -H "Authorization: Bearer ${token}" \
+            -H 'Accept: application/vnd.oci.image.index.v1+json' \
+            "https://ghcr.io/v2/${GHCR_OWNER}/fluxer/manifests/${VERSION}"; then
+            echo "${IMAGE}:${VERSION} can't be pulled without signing in. Make the fluxer package public in the organisation's package settings, then re-run this job." >&2
+            exit 1
+          fi
+          token="$(curl -fsS "https://ghcr.io/token?scope=repository:${GHCR_OWNER}/charts/fluxer:pull" | python3 -c 'import json, sys; print(json.load(sys.stdin)["token"])')"
+          if ! curl -fsS -o /dev/null -H "Authorization: Bearer ${token}" \
+            -H 'Accept: application/vnd.oci.image.manifest.v1+json' \
+            "https://ghcr.io/v2/${GHCR_OWNER}/charts/fluxer/manifests/${VERSION}"; then
+            echo "${CHARTS}/fluxer:${VERSION} can't be pulled without signing in. Make the charts/fluxer package public in the organisation's package settings, then re-run this job." >&2
+            exit 1
+          fi
+
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ steps.create-token.outputs.token }}
-          VERSION: ${{ needs.manifest.outputs.version }}
-          BUNDLE_COMMIT: ${{ needs.manifest.outputs.bundle_commit }}
+          COMMIT: ${{ needs.version.outputs.commit }}
         run: |
           set -euo pipefail
-          gh release create "fluxer-release@${VERSION}" \
-            --repo fluxerapp/fluxer \
-            --target "${BUNDLE_COMMIT}" \
-            --title "fluxer-release ${VERSION}" \
-            --latest=true \
-            --notes "" \
-            "release-out/fluxer-release-${VERSION}.json" \
-            "release-out/fluxer-release-${VERSION}.yml" \
-            rexctl/* \
-            native/*
+          assets=(rexctl/* native/* docker/compose.yaml docker/fluxer.env chart/fluxer-*.tgz)
+          if gh release view "fluxer-release@${VERSION}" --repo fluxerapp/fluxer >/dev/null 2>&1; then
+            gh release upload "fluxer-release@${VERSION}" --repo fluxerapp/fluxer --clobber "${assets[@]}"
+            gh release edit "fluxer-release@${VERSION}" --repo fluxerapp/fluxer --latest
+          else
+            gh release create "fluxer-release@${VERSION}" \
+              --repo fluxerapp/fluxer \
+              --target "${COMMIT}" \
+              --title "fluxer-release ${VERSION}" \
+              --latest=true \
+              --notes "" \
+              "${assets[@]}"
+          fi
+          latest="$(gh api repos/fluxerapp/fluxer/releases/latest --jq .tag_name)"
+          if [ "${latest}" != "fluxer-release@${VERSION}" ]; then
+            echo "GitHub marks ${latest} as the latest release, so releases/latest/download no longer gets fluxer-release@${VERSION}" >&2
+            exit 1
+          fi
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: move the latest tag to this release
+        env:
+          DIGEST: ${{ needs.image-index.outputs.digest }}
+        run: |
+          set -euo pipefail
+          docker buildx imagetools create -t "${IMAGE}:latest" "${IMAGE}@${DIGEST}"
+          latest="$(docker buildx imagetools inspect "${IMAGE}:latest" --format '{{json .Manifest}}' | python3 -c 'import json, sys; print(json.load(sys.stdin)["digest"])')"
+          if [ "${latest}" != "${DIGEST}" ]; then
+            echo "${IMAGE}:latest is ${latest}, expected ${DIGEST}" >&2
+            exit 1
+          fi

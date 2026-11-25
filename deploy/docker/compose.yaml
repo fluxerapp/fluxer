@@ -1,0 +1,20 @@
+services:
+  fluxer:
+    image: ghcr.io/fluxerapp/fluxer:${FLUXER_VERSION:?Download compose.yaml from https://github.com/fluxerapp/fluxer/releases/latest instead of the source tree}
+    restart: unless-stopped
+    stop_grace_period: 130s
+    env_file: fluxer.env
+    environment:
+      FLUXER_INSTALL_METHOD: compose
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+      - "7881:7881"
+      - "7882:7882/udp"
+    volumes:
+      - fluxer-data:/var/lib/fluxer
+
+volumes:
+  fluxer-data:
+    name: fluxer-data

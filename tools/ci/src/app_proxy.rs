@@ -689,15 +689,16 @@ mod tests {
     }
 
     #[test]
-    fn self_hosted_workflow_keeps_assets_same_origin() {
-        let workflow = include_str!("../../../.github/workflows/build-app-proxy-self-hosted.yaml");
-        for entry in [
-            "PUBLIC_ASSET_BASE_URL: \"\"",
-            "BUNDLE_LOCAL_ASSETS: \"true\"",
-        ] {
+    fn self_hosted_dist_keeps_assets_same_origin() {
+        let build = include_str!("../../../tools/dist/build.sh");
+        let line = build
+            .lines()
+            .find(|l| l.contains("pnpm --filter fluxer_app build"))
+            .expect("tools/dist/build.sh builds the app");
+        for entry in ["PUBLIC_ASSET_BASE_URL=\"\"", "BUNDLE_LOCAL_ASSETS=true"] {
             assert!(
-                workflow.contains(entry),
-                "a self-hosted dist that inherits the hosted CDN default would ship index.html pointing at fluxerstatic.com, so the workflow must set {entry}"
+                line.contains(entry),
+                "a self-hosted dist that inherits the hosted CDN default would ship index.html pointing at fluxerstatic.com, so tools/dist/build.sh must set {entry}"
             );
         }
     }

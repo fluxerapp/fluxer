@@ -14,3 +14,11 @@ ffmpeg/COPYING.LGPLv2.1 any license 246041b6ecf9bc32d718a62c57877c78b5eb397b6467
 ffmpeg/LICENSE.md any license 2e1d16c72fd74e12063776371da757322f8b77589386532f4fd8634bde7de1af https://raw.githubusercontent.com/FFmpeg/FFmpeg/n9.0.2/LICENSE.md
 libheif/COPYING any license fa81ce652315b013359d6e8e4744335f31a50c7c192907176d3632f78a3b4596 https://raw.githubusercontent.com/strukturag/libheif/v1.23.7/COPYING
 erlang-otp/LICENSE.txt any license 809fa1ed21450f59827d1e9aec720bbc4b687434fa22283c6cb5dd82a47ab9c0 https://raw.githubusercontent.com/erlang/otp/OTP-28.5.0.8/LICENSE.txt
+libvips/LICENSE any license dc626520dcd53a22f727af3ee42c770e56c97a64fe3adb063799d8ab032fe551 https://raw.githubusercontent.com/libvips/libvips/v8.18.7/LICENSE
+dav1d/COPYING any license dd92c3c2247c5651606fc23a5e2d6a1ebc5ace9a3e49cbde0e12f05ad1cb1ee5 https://code.videolan.org/videolan/dav1d/-/raw/1.5.3/COPYING
+highway/LICENSE any license 43070e2d4e532684de521b885f385d0841030efa2b1a20bafb76133a5e1379c1 https://raw.githubusercontent.com/google/highway/1.3.0/LICENSE
+highway/LICENSE-BSD3 any license d25e82e26acd42ca3ccc9993622631163425b869b9e16284226d534cff6470f2 https://raw.githubusercontent.com/google/highway/1.3.0/LICENSE-BSD3
+libjxl/LICENSE any license 8405932022a556380c2d8c272eff154a923feb197233f348ce5f7334fb0a5ede https://raw.githubusercontent.com/libjxl/libjxl/v0.11.2/LICENSE
+libjxl/PATENTS any license 91915f8ae056a68a3c5bdf05d9f6f78bb6903e27a8ca3a8434c9e4ac87300575 https://raw.githubusercontent.com/libjxl/libjxl/v0.11.2/PATENTS
+cgif/LICENSE any license 7264dede477abab4ac3fe8236beb8153845c04ccd33b18f281085087e219fc6d https://raw.githubusercontent.com/dloebl/cgif/v0.5.4/LICENSE
+openssl/LICENSE.txt any license 7d5450cb2d142651b8afa315b5f238efc805dad827d91ba367d8516bc9d49e7a https://raw.githubusercontent.com/openssl/openssl/openssl-3.5.9/LICENSE.txt

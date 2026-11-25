@@ -10,14 +10,17 @@ PNPM_VERSION=11.27.0
 OTP_VERSION=28.5.0.8
 OTP_SHA256=8a696e15bcbe5d57197b1f4c03c92d415f9fd9af70f9222a05911c8a5463cba6
 GLEAM_VERSION=1.19.2
+OPENSSL_VERSION=3.5.9
+OPENSSL_SHA256=603f5602e2eef00d77fbd429d34dcd5822bb301757a1bc9cdb24c670f1eb859a
 GO_VERSION=1.27.3
 
 APT_PACKAGES=(
-    build-essential pkg-config cmake nasm yasm git curl ca-certificates xz-utils zstd python3 brotli clang llvm
-    libssl-dev zlib1g-dev libcurl4-openssl-dev
-    libvips-dev libwebp-dev liblcms2-dev libyuv-dev libde265-dev libdav1d-dev libaom-dev
+    build-essential gcc-12 g++-12 pkg-config cmake meson ninja-build nasm yasm git curl ca-certificates xz-utils bzip2 zstd
+    python3 brotli clang llvm patchelf perl libncurses-dev
+    libssl-dev zlib1g-dev libbz2-dev liblzma-dev
+    libwebp-dev liblcms2-dev libyuv-dev libde265-dev libaom-dev libbrotli-dev
+    libglib2.0-dev libexpat1-dev libjpeg-dev libpng-dev libgif-dev libexif-dev libtiff-dev librsvg2-dev libimagequant-dev
 )
-OTP_APT_PACKAGES=(libncurses-dev)
 
 log() { printf '==> %s\n' "$*" >&2; }
 
@@ -31,6 +34,8 @@ die() {
     exit 64
 }
 [ "$(uname -s)" = Linux ] || die "toolchain.sh installs Linux toolchains only"
+[ "$(. /etc/os-release && echo "$ID $VERSION_ID")" = "ubuntu 22.04" ] \
+    || die "the release tarball builds on Ubuntu 22.04, so it runs on every supported release. Build it with docker buildx build -f packaging/monolith/Dockerfile --target export --output dist . instead"
 
 case "$(uname -m)" in
 x86_64 | amd64)
@@ -78,7 +83,7 @@ fetch() {
 }
 
 otp_version() {
-    erl -noshell -eval '{ok, V} = file:read_file(filename:join([code:root_dir(), "releases", erlang:system_info(otp_release), "OTP_VERSION"])), io:put_chars(string:trim(V)), halt().' 2>/dev/null || true
+    "$PREFIX/bin/erl" -noshell -eval '{ok, V} = file:read_file(filename:join([code:root_dir(), "releases", erlang:system_info(otp_release), "OTP_VERSION"])), io:put_chars(string:trim(V)), halt().' 2>/dev/null || true
 }
 
 missing_packages() {
@@ -143,6 +148,20 @@ install_go() {
     ln -sfn ../go/bin/gofmt "$PREFIX/bin/gofmt"
 }
 
+install_openssl() {
+    local tarball src="$work/openssl"
+    tarball="$(fetch "https://github.com/openssl/openssl/releases/download/openssl-${OPENSSL_VERSION}/openssl-${OPENSSL_VERSION}.tar.gz" "$OPENSSL_SHA256")"
+    rm -rf "$PREFIX/openssl"
+    mkdir -p "$src"
+    tar -xzf "$tarball" -C "$src" --strip-components=1
+    (
+        cd "$src"
+        ./Configure --prefix="$PREFIX/openssl" --libdir=lib --openssldir=/usr/lib/ssl no-shared no-tests no-docs -fPIC
+        make -j"$JOBS"
+        make install_sw
+    )
+}
+
 install_otp() {
     local tarball src="$work/otp" tool
     tarball="$(fetch "https://github.com/erlang/otp/releases/download/OTP-${OTP_VERSION}/otp_src_${OTP_VERSION}.tar.gz" "$OTP_SHA256")"
@@ -151,7 +170,8 @@ install_otp() {
     tar -xzf "$tarball" -C "$src" --strip-components=1
     (
         cd "$src"
-        ./configure --prefix="$PREFIX/otp" --without-javac --without-jinterface --without-wx --without-odbc
+        ./configure --prefix="$PREFIX/otp" --without-javac --without-jinterface --without-wx --without-odbc \
+            --with-ssl="$PREFIX/openssl" --disable-dynamic-ssl-lib
         make -j"$JOBS"
         make install
     )
@@ -172,24 +192,21 @@ install_gleam() {
 
 mkdir -p "$PREFIX/bin"
 
-need_otp=0
-[ "$(otp_version)" = "$OTP_VERSION" ] || need_otp=1
-
-if [ "$need_otp" = 1 ]; then
-    install_apt_packages "${APT_PACKAGES[@]}" "${OTP_APT_PACKAGES[@]}"
-else
-    install_apt_packages "${APT_PACKAGES[@]}"
-fi
-
+install_apt_packages "${APT_PACKAGES[@]}"
 install_rust
 install_node
 install_go
-if [ "$need_otp" = 1 ]; then
+if [ "$("$PREFIX/openssl/bin/openssl" version 2>/dev/null | cut -d' ' -f2)" != "$OPENSSL_VERSION" ]; then
+    log "building OpenSSL ${OPENSSL_VERSION} into $PREFIX/openssl"
+    install_openssl
+    rm -rf "$PREFIX/otp"
+fi
+if [ "$(otp_version)" != "$OTP_VERSION" ]; then
     log "building OTP ${OTP_VERSION} into $PREFIX/otp"
     install_otp
 fi
-[ "$(otp_version)" = "$OTP_VERSION" ] || die "erl on PATH does not report OTP ${OTP_VERSION}"
+[ "$(otp_version)" = "$OTP_VERSION" ] || die "$PREFIX/bin/erl does not report OTP ${OTP_VERSION}"
 install_gleam
 
 log "toolchain ready in $PREFIX"
-log "rust $(rustc --version), node $(node --version), pnpm $(pnpm --version), $(go version), OTP $(otp_version), $(gleam --version)"
+log "rust $(rustc --version), node $(node --version), pnpm $(pnpm --version), $(go version), OTP $(otp_version) with OpenSSL ${OPENSSL_VERSION}, $(gleam --version)"

@@ -176,23 +176,10 @@ pnpm_install() {
 require_native() {
     [ -n "$native" ] || die "set FLUXER_NATIVE_PREFIX to the install-native-deps.sh prefix"
     [ -f "$native/lib/pkgconfig/libheif.pc" ] || die "no libheif in $native, run make native-deps first"
-    need pkg-config ldd
+    need pkg-config
     local prefix
     prefix="$(PKG_CONFIG_PATH="$native/lib/pkgconfig" pkg-config --variable=prefix libheif)"
     [ "$prefix" = "$native" ] || die "libheif resolves to $prefix instead of $native"
-}
-
-check_media_ldd() {
-    local listing bad
-    listing="$(LD_LIBRARY_PATH="$dist/lib" ldd "$dist/bin/fluxer-media-proxy")"
-    printf '%s\n' "$listing" >&2
-    if grep -q 'not found' <<<"$listing"; then
-        die "fluxer-media-proxy has unresolved libraries"
-    fi
-    grep -qF "libheif.so.1 => $dist/lib/libheif.so.1 " <<<"$listing" \
-        || die "libheif.so.1 does not resolve from $dist/lib"
-    bad="$(grep -E '^[[:space:]]*lib(heif|av[a-z]+|sw[a-z]+)\.so' <<<"$listing" | grep -vF " => $dist/lib/" || true)"
-    [ -z "$bad" ] || die "media libraries resolve outside $dist/lib: $bad"
 }
 
 check_admin_assets() {
@@ -229,9 +216,6 @@ build_rust() {
     fi
     if selected media-proxy; then
         rm -rf "${dist:?}/lib"
-        mkdir -p "$dist/lib"
-        cp -a "$native"/lib/*.so.* "$dist/lib/"
-        check_media_ldd
     fi
 }
 
@@ -269,6 +253,7 @@ build_gateway() {
     install -m 0644 "${erts%/*}/bin/start.boot" "$gw/bin/start.boot"
     install -m 0644 "$here/gateway/vm.args" "$gw/config/vm.args"
     install -m 0644 "$here/gateway/sys.config" "$gw/config/sys.config"
+    install -m 0644 "$here/gateway/inetrc" "$gw/config/inetrc"
     install -m 0755 "$here/gateway/fluxer_gateway.sh" "$gw/bin/fluxer_gateway"
     ROOTDIR="$gw" BINDIR="$bundled/bin" EMU=beam PROGNAME=erl "$bundled/bin/erlexec" -noshell -pa "$gw"/packages/*/ebin -eval '
         Mods = [list_to_atom(M) || M <- init:get_plain_arguments()],
@@ -340,6 +325,8 @@ build_fluxerd() {
     need go
     local licenses="$dist/share/LICENSES/fluxerd" module dir file
     (cd "$repo/fluxer_native" && CGO_ENABLED=0 GOTOOLCHAIN=local go build -trimpath -ldflags='-s -w' -o "$dist/bin/fluxerd" ./cmd/fluxerd)
+    mkdir -p "$dist/share"
+    "$dist/bin/fluxerd" print-env --catalog --json >"$dist/share/settings.json"
     rm -rf "$licenses"
     install -D -m 0644 "$(go env GOROOT)/LICENSE" "$licenses/go/LICENSE"
     while read -r module dir; do
@@ -350,9 +337,16 @@ build_fluxerd() {
     done < <(cd "$repo/fluxer_native" && GOTOOLCHAIN=local go list -deps -f '{{with .Module}}{{.Path}} {{.Dir}}{{end}}' ./cmd/fluxerd | sort -u | sed '/^$/d')
 }
 
+bundle_libs() {
+    need ldd readelf patchelf python3
+    LD_LIBRARY_PATH="$dist/lib${native:+:$native/lib}" python3 "$here/elf.py" bundle "$dist"
+}
+
 build_share() {
-    install -D -m 0755 "$repo/packaging/install.sh" "$dist/share/install.sh"
     install -D -m 0644 "$repo/packaging/runtime-packages" "$dist/share/runtime-packages"
+    install -D -m 0644 "$repo/packaging/fonts.conf" "$dist/share/fonts.conf"
+    install -D -m 0644 /dev/null "$dist/share/gdk-pixbuf-loaders.cache"
+    install -d -m 0755 "$dist/share/gio-modules"
     install -D -m 0644 "$repo/packaging/systemd/fluxerd.service" "$dist/share/systemd/fluxerd.service"
     install -D -m 0644 "$repo/LICENSE" "$dist/share/LICENSES/fluxer/LICENSE"
 }
@@ -362,11 +356,11 @@ verify_layout() {
     local required=(
         bin/fluxerd bin/node bin/valkey-server bin/valkey-cli bin/weed bin/meilisearch bin/livekit-server
         lib/libheif.so.1
-        gateway/bin/fluxer_gateway gateway/bin/start.boot gateway/config/vm.args gateway/config/sys.config
+        gateway/bin/fluxer_gateway gateway/bin/start.boot gateway/config/vm.args gateway/config/sys.config gateway/config/inetrc
         gateway/packages/fluxer_gateway/ebin gateway/packages/fluxer_gateway/priv/gateway_nif.so
         api/package.json api/node_modules api/dist/AppEntrypoint.js api/bin
         app/static/index.html app/static/avatars app/static/web
-        share/install.sh share/runtime-packages share/systemd/fluxerd.service share/LICENSES/fluxer/LICENSE
+        share/runtime-packages share/fonts.conf share/gdk-pixbuf-loaders.cache share/gio-modules share/systemd/fluxerd.service share/settings.json share/LICENSES/fluxer/LICENSE
         tsconfigs
     )
     for part in "${RUST_PARTS[@]}"; do
@@ -380,6 +374,7 @@ verify_layout() {
     missing=()
     while IFS= read -r path; do missing+=("${path#"$dist"/}"); done < <(escaping_links "${TOP_LEVEL[@]/#/$dist/}")
     [ "${#missing[@]}" -eq 0 ] || die "these links point outside $dist, installers refuse them: ${missing[*]}"
+    python3 "$here/elf.py" check "$dist"
 }
 
 pack() {
@@ -406,4 +401,5 @@ if selected valkey; then run "valkey" build_valkey; fi
 if selected thirdparty; then run "third-party binaries" build_thirdparty; fi
 if selected fluxerd; then run "fluxerd" build_fluxerd; fi
 if selected share; then run "share" build_share; fi
+run "shared libraries" bundle_libs
 if [ "$pack" = 1 ]; then run "tarball" pack; fi
