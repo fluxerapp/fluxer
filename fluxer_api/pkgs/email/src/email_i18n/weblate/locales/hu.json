@@ -1,34 +1,34 @@
 {
 	"account_deletion_cancelled": {
-		"footer_reason": "Ezt az e-mailt azért kaptad, mert visszavonták {product_name}-fiókod törlését.",
-		"intro": "Visszavontuk {product_name}-fiókod ütemezett törlését.",
+		"footer_reason": "Ezt az e-mailt azért kaptad, mert visszavonták a(z) {product_name}-fiókod törlését.",
+		"intro": "Visszavontuk a(z) {product_name}-fiókod ütemezett törlését.",
 		"note": "{reply, select, yes {Ha nem te voltál, válaszolj erre az e-mailre.} other {Ha nem te voltál, fordulj ennek a példánynak az adminisztrátoraihoz.}}",
 		"signoff": "{product_name} csapata",
-		"subject": "Nem töröljük {product_name}-fiókodat"
+		"subject": "Nem töröljük a(z) {product_name}-fiókodat"
 	},
 	"account_deletion_completed": {
-		"footer_reason": "Ezt az e-mailt azért kaptad, mert kérted a {product_name}-fiókod törlését.",
-		"intro": "A kérésednek megfelelően töröltük a {product_name}-fiókodat.",
+		"footer_reason": "Ezt az e-mailt azért kaptad, mert kérted a(z) {product_name}-fiókod törlését.",
+		"intro": "A kérésednek megfelelően töröltük a(z) {product_name}-fiókodat.",
 		"note": "Az üzeneteidet a választásodtól függően töröltük, vagy már nem kapcsolódnak hozzád. Ha újra szeretnéd használni a(z) {product_name} szolgáltatást, létrehozhatsz egy új fiókot.",
 		"signoff": "{product_name} csapata",
-		"subject": "{product_name}-fiókodat töröltük"
+		"subject": "A(z) {product_name}-fiókodat töröltük"
 	},
 	"account_deletion_scheduled_inactivity": {
-		"footer_reason": "Ezt az e-mailt azért kaptad, mert {product_name}-fiókod hosszú ideje inaktív.",
-		"intro": "{product_name}-fiókod hosszú ideje inaktív, ezért {deletion_date} napján töröljük.",
+		"footer_reason": "Ezt az e-mailt azért kaptad, mert a(z) {product_name}-fiókod hosszú ideje inaktív.",
+		"intro": "A(z) {product_name}-fiókod hosszú ideje inaktív, ezért {deletion_date} napján töröljük.",
 		"note": "{reply, select, yes {Ha meg szeretnéd tartani, jelentkezz be addig. Kérdésed van? Válaszolj erre az e-mailre.} other {Ha meg szeretnéd tartani, jelentkezz be addig. Ha kérdésed van, fordulj ennek a példánynak az adminisztrátoraihoz.}}",
 		"signoff": "{product_name} csapata",
-		"subject": "Töröljük inaktív {product_name}-fiókodat"
+		"subject": "Töröljük az inaktív {product_name}-fiókodat"
 	},
 	"account_deletion_scheduled_requested": {
-		"footer_reason": "Ezt az e-mailt azért kaptad, mert kérted {product_name}-fiókod törlését.",
-		"intro": "Kérésednek megfelelően {deletion_date} napján töröljük {product_name}-fiókodat.",
+		"footer_reason": "Ezt az e-mailt azért kaptad, mert kérted a(z) {product_name}-fiókod törlését.",
+		"intro": "A kérésednek megfelelően {deletion_date} napján töröljük a(z) {product_name}-fiókodat.",
 		"note": "{reply, select, yes {Ha meg szeretnéd tartani, jelentkezz be addig. Ha nem te kérted, válaszolj erre az e-mailre.} other {Ha meg szeretnéd tartani, jelentkezz be addig. Ha nem te kérted, fordulj ennek a példánynak az adminisztrátoraihoz.}}",
 		"signoff": "{product_name} csapata",
-		"subject": "{product_name}-fiókodat {deletion_date} napján töröljük"
+		"subject": "A(z) {product_name}-fiókodat {deletion_date} napján töröljük"
 	},
 	"bulk_message_deletion_completed": {
-		"footer_reason": "Ezt az e-mailt azért kaptad, mert üzenettörlést kértek a {product_name}-fiókodhoz.",
+		"footer_reason": "Ezt az e-mailt azért kaptad, mert üzenettörlést kértek a(z) {product_name}-fiókodhoz.",
 		"intro": "Befejeztük az üzeneteid törlését. Eltávolítottunk {message_count, plural, =0 {0 üzenetet} one {# üzenetet} other {# üzenetet}} {channel_count, plural, =0 {0 helyről} one {# helyről} other {# helyről}}.",
 		"note": "{reply, select, yes {Ha nem te kérted ezt, azonnal változtasd meg a jelszavadat, és válaszolj erre az e-mailre.} other {Ha nem te kérted ezt, azonnal változtasd meg a jelszavadat, és fordulj ennek a példánynak az adminisztrátoraihoz.}}",
 		"signoff": "{product_name} csapata",
@@ -37,11 +37,11 @@
 	"donation_cancellation_confirmation": {
 		"charge_line_v2": "Többet nem vonunk le tőled.",
 		"cta": "Adomány kezelése",
-		"ends_line": "Rendszeres adományod {endsAt, date, long} napján véget ér.",
+		"ends_line": "A rendszeres adományod {endsAt, date, long} napján véget ér.",
 		"footer_reason": "Ezt az e-mailt azért kaptad, mert lemondtad a(z) {product_name} részére szóló rendszeres adományodat.",
 		"heading": "Megkaptuk a lemondást",
 		"intro": "Megkaptuk a(z) {product_name} részére szóló rendszeres adományod lemondására vonatkozó kérésedet. Beérkezés időpontja: {receivedFormatted}.",
-		"preheader": "Rendszeres adományod {endsAt, date, long} napján véget ér",
+		"preheader": "A rendszeres adományod {endsAt, date, long} napján véget ér",
 		"reference_line": "Hivatkozási szám: {reference}",
 		"seller": "Eladó: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
 		"signoff": "{product_name} csapata",
@@ -71,7 +71,7 @@
 		"lead": "{interval, select, month {Minden fizetésről e-mailben küldünk nyugtát.} year {Minden fizetésről e-mailben küldünk nyugtát.} other {Ez az e-mail a nyugtád.}}",
 		"reference_label": "Hivatkozási szám",
 		"signoff": "{product_name} csapata",
-		"subject": "Köszönjük, hogy adományoddal támogatod a {product_name} működését"
+		"subject": "Köszönjük a(z) {product_name} részére adott adományodat"
 	},
 	"donation_magic_link": {
 		"cta": "Adományok kezelése",
@@ -80,7 +80,7 @@
 		"intro": "Ezzel a linkkel kezelheted vagy lemondhatod az ismétlődő adományodat, és frissítheted a fizetési módodat.",
 		"note": "Ha nem te kérted ezt a linket, figyelmen kívül hagyhatod ezt az e-mailt.",
 		"signoff": "{product_name} csapata",
-		"subject": "A {product_name} működését támogató adományaid kezelése"
+		"subject": "A(z) {product_name} részére szóló adományaid kezelése"
 	},
 	"donation_payment_failed": {
 		"amount_label": "Összeg",
@@ -136,7 +136,7 @@
 		"heading": "Hamarosan megújul az adományod",
 		"intro": "A(z) {product_name} részére szóló éves adományod {chargeAt, date, long} napján automatikusan megújul, hacsak addig le nem mondod.",
 		"keep_line": "Ha lemondod, többet nem vonunk le tőled.",
-		"preheader": "Éves adományod {chargeAt, date, long} napján megújul",
+		"preheader": "Az éves adományod {chargeAt, date, long} napján megújul",
 		"seller": "Eladó: Fluxer Platform AB, 559537-3993, {sellerAddress}, <mail>{sellerEmail}</mail>",
 		"signoff": "{product_name} csapata",
 		"subject": "A(z) {product_name} részére szóló éves adományod {chargeAt, date, long} napján megújul"
@@ -144,21 +144,21 @@
 	"dsa_report_resolved": {
 		"about": "{target, select, message_community {Ez a(z) „{communityName}” közösség #{channelName} csatornájában lévő üzenetről szóló bejelentésedre vonatkozik (beküldve: {reportedAt, date, long}).} message_dm {Ez egy közvetlen üzenetről szóló bejelentésedre vonatkozik (beküldve: {reportedAt, date, long}).} message {Ez egy üzenetről szóló bejelentésedre vonatkozik (beküldve: {reportedAt, date, long}).} user {Ez a(z) „{username}” fiókról szóló bejelentésedre vonatkozik (beküldve: {reportedAt, date, long}).} community {Ez a(z) „{communityName}” közösségről szóló bejelentésedre vonatkozik (beküldve: {reportedAt, date, long}).} other {Ez a nekünk küldött bejelentésedre vonatkozik (beküldve: {reportedAt, date, long}).}}",
 		"comment_label": "Megjegyzés a csapatunktól",
-		"footer_reason": "Ezt az e-mailt azért kaptad, mert digitális szolgáltatásokról szóló rendelet szerinti bejelentést tettél a {product_name} felületén.",
+		"footer_reason": "Ezt az e-mailt azért kaptad, mert digitális szolgáltatásokról szóló rendelet szerinti bejelentést tettél a(z) {product_name} felületén.",
 		"intro": "{outcome, select, removed {Eltávolítottuk a bejelentett tartalmat, mert megsértette a szabályainkat.} restricted {A fiók megsértette a szabályainkat, ezért intézkedtünk. Mindenki magánszférájának védelme érdekében nem osztjuk meg, milyen intézkedést hoztunk.} action_taken {A bejelentett tartalom megsértette a szabályainkat, ezért intézkedtünk. Mindenki magánszférájának védelme érdekében nem osztjuk meg, milyen intézkedést hoztunk.} no_violation {{concern, select, self_harm {Köszönjük, hogy odafigyelsz rá. A csapatunk átnézte a bejelentést. Ha valaki arról beszél, hogy maga alatt van vagy nem érzi magát biztonságban, az nem sérti a szabályainkat, ezért nem távolítottunk el semmit, de küldhetünk neki információt arról, hol kaphat segítséget. Soha nem osztjuk meg, ki küldte a bejelentést. Ha úgy gondolod, hogy valaki közvetlen veszélyben van, hívd a helyi segélyhívó számot.} other {A csapatunk átnézte a bejelentést, és úgy találta, hogy nem sérti a szabályainkat, ezért nem intézkedtünk. Egy bejelentés ettől még más lépésekhez is vezethet, például ahhoz, hogy információt küldünk az illetőnek arról, hol kaphat segítséget. Soha nem osztjuk meg, ki küldte a bejelentést.}}} other {Lezártuk a bejelentésedet.}}",
 		"note": "{reply, select, yes {Ha nem értesz egyet, 60 napon belül válaszolj erre az e-mailre.} other {{appeals_email, select, null {} other {Ha nem értesz egyet, 60 napon belül írj a(z) <mail>{appeals_email}</mail> címre, és add meg a bejelentés azonosítóját.}}}}{appeals_email, select, null {} other { Az EU-ban egy tanúsított <dsa>peren kívüli vitarendezési testülethez</dsa> is fordulhatsz, vagy panaszt tehetsz az országod digitális szolgáltatási koordinátoránál.}}",
 		"report_label": "Bejelentés azonosítója",
 		"signoff": "{product_name} csapata",
-		"subject": "Átnéztük a {product_name} felületén tett bejelentésedet",
-		"thanks": "{outcome, select, removed {Köszönjük a bejelentést. Az ilyen bejelentések segítenek abban, hogy a {product_name} mindenki számára biztonságos maradjon.} restricted {Köszönjük a bejelentést. Az ilyen bejelentések segítenek abban, hogy a {product_name} mindenki számára biztonságos maradjon.} action_taken {Köszönjük a bejelentést. Az ilyen bejelentések segítenek abban, hogy a {product_name} mindenki számára biztonságos maradjon.} other {Köszönjük, hogy szóltál. Továbbra is jelents be mindent, ami aggaszt, akkor is, ha végül kiderül, hogy nem sérti a szabályainkat.}}"
+		"subject": "Átnéztük a(z) {product_name} felületén tett bejelentésedet",
+		"thanks": "{outcome, select, removed {Köszönjük a bejelentést. Az ilyen bejelentések segítenek abban, hogy a(z) {product_name} mindenki számára biztonságos maradjon.} restricted {Köszönjük a bejelentést. Az ilyen bejelentések segítenek abban, hogy a(z) {product_name} mindenki számára biztonságos maradjon.} action_taken {Köszönjük a bejelentést. Az ilyen bejelentések segítenek abban, hogy a(z) {product_name} mindenki számára biztonságos maradjon.} other {Köszönjük, hogy szóltál. Továbbra is jelents be mindent, ami aggaszt, akkor is, ha végül kiderül, hogy nem sérti a szabályainkat.}}"
 	},
 	"dsa_report_verification": {
 		"expiry": "Ez a kód {minutes, plural, one {# perc} other {# perc}} múlva lejár.",
-		"footer_reason": "Ezt az e-mailt azért kaptad, mert ezt a címet adták meg egy digitális szolgáltatásokról szóló rendelet (DSA) bejelentési űrlapon a {product_name} felületén.",
+		"footer_reason": "Ezt az e-mailt azért kaptad, mert ezt a címet adták meg egy digitális szolgáltatásokról szóló rendelet (DSA) bejelentési űrlapon a(z) {product_name} felületén.",
 		"intro": "Ezzel a kóddal küldheted el a(z) {product_name} részére a digitális szolgáltatásokról szóló rendelet szerinti bejelentésedet.",
 		"note": "Ha nem te kérted, figyelmen kívül hagyhatod ezt az e-mailt.",
 		"signoff": "{product_name} biztonsági csapata",
-		"subject": "{product_name}-kódod egy DSA-bejelentéshez"
+		"subject": "A(z) {product_name}-kódod egy DSA-bejelentéshez"
 	},
 	"email_change_new": {
 		"expiry": "Ez a kód {minutes, plural, one {# perc} other {# perc}} múlva lejár.",
@@ -166,34 +166,34 @@
 		"intro": "Írd be ezt a kódot az alkalmazásban az új e-mail-címed megerősítéséhez.",
 		"note": "Ha nem te kérted, figyelmen kívül hagyhatod ezt az e-mailt.",
 		"signoff": "{product_name} csapata",
-		"subject": "Erősítsd meg új {product_name} e-mail-címedet"
+		"subject": "Erősítsd meg a(z) {product_name}-fiókod új e-mail-címét"
 	},
 	"email_change_original": {
 		"expiry": "Ez a kód {minutes, plural, one {# perc} other {# perc}} múlva lejár.",
-		"footer_reason": "Azért kaptad ezt az e-mailt, mert valaki kérte a {product_name}-fiókod e-mail-címének megváltoztatását.",
-		"intro": "{product_name}-fiókod e-mail-címének módosításához írd be ezt a kódot az alkalmazásban.",
+		"footer_reason": "Azért kaptad ezt az e-mailt, mert valaki kérte a(z) {product_name}-fiókod e-mail-címének megváltoztatását.",
+		"intro": "A(z) {product_name}-fiókod e-mail-címének módosításához írd be ezt a kódot az alkalmazásban.",
 		"note": "Ha nem te kérted, most változtasd meg a jelszavadat.",
 		"signoff": "{product_name} csapata",
-		"subject": "Erősítsd meg {product_name}-fiókod e-mail-címének módosítását"
+		"subject": "Erősítsd meg a(z) {product_name}-fiókod e-mail-címének módosítását"
 	},
 	"email_change_revert": {
 		"cta": "Visszavonás és a fiók védelme",
-		"footer_reason": "Ezt az e-mailt azért kaptad, mert ez volt a {product_name}-fiókod e-mail-címe a módosítás előtt.",
-		"intro": "{product_name}-fiókod e-mail-címe megváltozott.",
+		"footer_reason": "Ezt az e-mailt azért kaptad, mert ez volt a(z) {product_name}-fiókod e-mail-címe a módosítás előtt.",
+		"intro": "A(z) {product_name}-fiókod e-mail-címe megváltozott.",
 		"lead": "Ha nem te voltál, vond vissza a módosítást, és védd meg a fiókodat.",
 		"new_email_label": "Új e-mail-cím",
 		"note": "Ezzel visszaáll a korábbi e-mail-címed, mindenhol kijelentkeztetünk, kikapcsoljuk a kétlépcsős azonosítást, és új jelszót kell beállítanod.",
 		"signoff": "{product_name} biztonsági csapata",
-		"subject": "{product_name}-fiókod e-mail-címe megváltozott"
+		"subject": "A(z) {product_name}-fiókod e-mail-címe megváltozott"
 	},
 	"email_verification": {
 		"cta": "E-mail-cím megerősítése",
 		"expiry": "Ez a link 24 óra múlva lejár.",
 		"footer_reason": "Azért kaptad ezt az e-mailt, mert ezt a címet egy {product_name}-fiókhoz használták.",
-		"intro": "Erősítsd meg ezt az e-mail-címet, hogy befejezd {product_name}-fiókod beállítását.",
+		"intro": "Erősítsd meg ezt az e-mail-címet, hogy befejezd a(z) {product_name}-fiókod beállítását.",
 		"note": "Ha nem hoztál létre {product_name}-fiókot, figyelmen kívül hagyhatod ezt az e-mailt.",
 		"signoff": "{product_name} csapata",
-		"subject": "Erősítsd meg {product_name}-fiókod e-mail-címét"
+		"subject": "Erősítsd meg a(z) {product_name}-fiókod e-mail-címét"
 	},
 	"email_verification_code": {
 		"expiry": "Ez a kód {minutes, plural, one {# perc} other {# perc}} múlva lejár.",
@@ -201,22 +201,22 @@
 		"intro": "Írd be ezt a kódot az alkalmazásban az e-mail-címed megerősítéséhez.",
 		"note": "Ezt a kódot ne oszd meg senkivel. A(z) {product_name} munkatársai soha nem kérik el. Ha nem adtad hozzá ezt az e-mail-címet egy fiókhoz, figyelmen kívül hagyhatod ezt az e-mailt.",
 		"signoff": "{product_name} csapata",
-		"subject": "A(z) {product_name} e-mail-címének visszaigazoló kódja"
+		"subject": "A(z) {product_name} e-mail-megerősítő kódod"
 	},
 	"enforcement_ended": {
 		"content_removed": "{content_removed, select, yes {Az általunk eltávolított tartalmat nem lehet visszaállítani.} other {}}",
-		"footer_reason": "Ezt az e-mailt azért kaptad, mert megváltozott egy {product_name}-fiókodat érintő döntés.",
+		"footer_reason": "Ezt az e-mailt azért kaptad, mert megváltozott egy döntés, amely a(z) {product_name}-fiókodat érinti.",
 		"intro": "{outcome, select, reversed {{decision_id, select, null {Újra megvizsgáltunk egy fiókodat érintő döntést, és visszavontuk.} other {Újra megvizsgáltuk a(z) {decision_id} azonosítójú döntést, és visszavontuk.}} Elnézést kérünk a kellemetlenségért.} other {{decision_id, select, null {Feloldottuk a fiókodat érintő korlátozást.} other {Feloldottuk a(z) {decision_id} azonosítójú döntésen alapuló korlátozást.}}}}{restores_access, select, yes { Újra bejelentkezhetsz, és használhatod a(z) {product_name} szolgáltatást.} other {}}",
 		"signoff": "{product_name} csapata",
 		"statement": "{statement, select, null {} other {Megjegyzés a csapatunktól: {statement}}}",
-		"subject": "{outcome, select, reversed {Visszavontunk egy {product_name}-fiókodat érintő döntést} other {Véget ért egy {product_name}-fiókodat érintő korlátozás}}"
+		"subject": "{outcome, select, reversed {Visszavontunk egy döntést, amely a(z) {product_name}-fiókodat érintette} other {Véget ért egy korlátozás a(z) {product_name}-fiókodon}}"
 	},
 	"enforcement_notice": {
 		"appeal_body": "{appeals_email, select, null {} other {{reply, select, yes {Ha szerinted tévedtünk, válaszolj erre az e-mailre eddig: {appeal_deadline}.} other {Ha szerinted tévedtünk, írj a(z) <mail>{appeals_email}</mail> címre eddig: {appeal_deadline}, és add meg a döntés azonosítóját.}} A fellebbezés ingyenes, és mindegyiket egy ember vizsgálja meg.}}",
 		"appeal_title": "Így fellebbezhetsz",
 		"decision_label": "Döntésazonosító",
 		"effects": "{effects}",
-		"footer_reason": "Ezt az e-mailt azért kaptad, mert döntést hoztunk {product_name}-fiókodról.",
+		"footer_reason": "Ezt az e-mailt azért kaptad, mert döntést hoztunk a(z) {product_name}-fiókodról.",
 		"how_body": "{how_we_decided}",
 		"how_title": "Hogyan döntöttünk",
 		"intro": "{summary}",
@@ -224,13 +224,13 @@
 		"rule_label": "Szabály",
 		"signoff": "{product_name} csapata",
 		"statement": "{statement, select, null {} other {Megjegyzés a csapatunktól: {statement}}}",
-		"subject": "{neutral, select, yes {Tájékoztatás {product_name}-fiókodról} other {{kind_label, select, warning {Figyelmeztetés {product_name}-fiókoddal kapcsolatban} suspension {{product_name}-fiókod fel van függesztve} ban {{product_name}-fiókod véglegesen fel van függesztve} closure {{product_name}-fiókod le van zárva} feature_limit {Néhány funkció korlátozva van {product_name}-fiókodon} content_removal {Eltávolítottunk üzeneteket, amelyeket a(z) {product_name} felületén küldtél} profile_reset {Visszaállítottuk {product_name}-profilod egyes részeit} community_removal {Eltávolítottuk a közösségedet a(z) {product_name} felületéről} bot {Tájékoztatás a botodról a(z) {product_name} felületén} other {Tájékoztatás {product_name}-fiókodról}}}}",
+		"subject": "{neutral, select, yes {Tájékoztatás a(z) {product_name}-fiókodról} other {{kind_label, select, warning {Figyelmeztetés a(z) {product_name}-fiókoddal kapcsolatban} suspension {A(z) {product_name}-fiókod fel van függesztve} ban {A(z) {product_name}-fiókod véglegesen fel van függesztve} closure {A(z) {product_name}-fiókod le van zárva} feature_limit {Néhány funkció korlátozva van a(z) {product_name}-fiókodon} content_removal {Eltávolítottunk üzeneteket, amelyeket a(z) {product_name} felületén küldtél} profile_reset {Visszaállítottuk a(z) {product_name}-profilod egyes részeit} community_removal {Eltávolítottuk a közösségedet a(z) {product_name} felületéről} bot {Tájékoztatás a botodról a(z) {product_name} felületén} other {Tájékoztatás a(z) {product_name}-fiókodról}}}}",
 		"why_body": "{facts}",
-		"why_title": "Miért"
+		"why_title": "Indoklás"
 	},
 	"gift_chargeback_notification": {
 		"billing_resumed": "Mivel az ajándékot eltávolítottuk, {plan, select, yearly {az éves} other {a havi}} {premiumName} előfizetésed díját mától újra felszámítjuk. A terhelésről külön nyugtát kapsz. Az előfizetést bármikor lemondhatod az „Előfizetés kezelése” részben.",
-		"footer_reason": "Azért kaptad ezt az e-mailt, mert előnyök szűntek meg a {product_name}-fiókodban.",
+		"footer_reason": "Azért kaptad ezt az e-mailt, mert előnyök szűntek meg a(z) {product_name}-fiókodban.",
 		"intro": "Egy általad beváltott ajándékkód kifizetését visszaterhelték, ezért eltávolítottuk azokat az előnyöket, amelyeket a fiókodhoz adott.",
 		"manage_cta": "Előfizetés kezelése",
 		"note": "{reply, select, yes {Ha szerinted ez tévedés, válaszolj erre az e-mailre, és írd meg, mit tudsz az ajándékkódról.} other {Ha szerinted ez tévedés, fordulj ennek a példánynak az adminisztrátoraihoz, és mondd el nekik, mit tudsz az ajándékkódról.}}",
@@ -240,8 +240,8 @@
 	"harvest_completed": {
 		"cta": "Adataid letöltése",
 		"expiry": "Töltsd le {expiresAt, date, long} előtt.",
-		"footer_reason": "Ezt az e-mailt azért kaptad, mert adatexportálást kértek a {product_name}-fiókodhoz.",
-		"intro": "A {product_name} adatexportod letölthető.",
+		"footer_reason": "Ezt az e-mailt azért kaptad, mert adatexportálást kértek a(z) {product_name}-fiókodhoz.",
+		"intro": "A(z) {product_name} adatexportod letölthető.",
 		"messages": "{totalMessages, number}",
 		"messages_label": "Üzenetek",
 		"note": "{reply, select, yes {Ha nem te kérted ezt az exportot, azonnal változtasd meg a jelszavadat, és válaszolj erre az e-mailre.} other {Ha nem te kérted ezt az exportot, azonnal változtasd meg a jelszavadat, és fordulj ennek a példánynak az adminisztrátoraihoz.}}",
@@ -251,18 +251,18 @@
 		"subject": "Elkészült a(z) {product_name} adatexportod"
 	},
 	"inactivity_warning": {
-		"cta": "Bejelentkezés: {product_name}",
-		"footer_reason": "Ezt az e-mailt azért kaptad, mert {product_name}-fiókod hosszú ideje inaktív.",
-		"intro": "{product_name}-fiókod {lastActiveDate, date, long} óta inaktív. Jelentkezz be {deletionDate, date, long} előtt, különben töröljük.",
+		"cta": "Bejelentkezés ide: {product_name}",
+		"footer_reason": "Ezt az e-mailt azért kaptad, mert a(z) {product_name}-fiókod hosszú ideje inaktív.",
+		"intro": "A(z) {product_name}-fiókod {lastActiveDate, date, long} óta inaktív. Jelentkezz be {deletionDate, date, long} előtt, különben töröljük.",
 		"note": "{reply, select, yes {Ha nemrég használtad a(z) {product_name} szolgáltatást, válaszolj erre az e-mailre.} other {Ha nemrég használtad a(z) {product_name} szolgáltatást, fordulj ennek a példánynak az adminisztrátoraihoz.}}",
 		"signoff": "{product_name} csapata",
-		"subject": "Jelentkezz be, hogy megtartsd {product_name}-fiókodat"
+		"subject": "Jelentkezz be, hogy megtartsd a(z) {product_name}-fiókodat"
 	},
 	"ip_authorization": {
 		"cta": "IP-cím engedélyezése",
 		"expiry": "Ez a link 30 perc múlva lejár.",
-		"footer_reason": "Ezt az e-mailt azért kaptad, mert valaki új IP-címről próbált bejelentkezni {product_name}-fiókodba.",
-		"intro": "Valaki új IP-címről próbált bejelentkezni {product_name}-fiókodba.",
+		"footer_reason": "Ezt az e-mailt azért kaptad, mert valaki új IP-címről próbált bejelentkezni a(z) {product_name}-fiókodba.",
+		"intro": "Valaki új IP-címről próbált bejelentkezni a(z) {product_name}-fiókodba.",
 		"ip_label": "IP-cím",
 		"lead": "Ha te voltál, engedélyezd ezt az IP-címet.",
 		"location_label": "Helyszín",
@@ -272,16 +272,16 @@
 	},
 	"mfa_backup_codes_view": {
 		"expiry": "Ez a kód {minutes, plural, one {# perc} other {# perc}} múlva lejár.",
-		"footer_reason": "Azért kaptad ezt az e-mailt, mert valaki kérte a {product_name}-fiókod biztonsági kódjainak megtekintését.",
-		"intro": "{product_name} biztonsági kódjaid megtekintéséhez írd be ezt a kódot az alkalmazásban.",
+		"footer_reason": "Azért kaptad ezt az e-mailt, mert valaki kérte a(z) {product_name}-fiókod biztonsági kódjainak megtekintését.",
+		"intro": "A(z) {product_name}-fiókod biztonsági kódjainak megtekintéséhez írd be ezt a kódot az alkalmazásban.",
 		"note": "Ha nem te kérted, lehet, hogy valaki hozzáfér a fiókodhoz. Most változtasd meg a jelszavadat.",
 		"signoff": "{product_name} csapata",
-		"subject": "Erősítsd meg {product_name}-fiókod biztonsági kódjainak megtekintését"
+		"subject": "Erősítsd meg a(z) {product_name}-fiókod biztonsági kódjainak megtekintését"
 	},
 	"operator_pass_offer_accepted": {
 		"footer_reason": "Azért kaptad ezt az e-mailt, mert továbbadtál egy Operator Passt a(z) {product_name} szolgáltatásban.",
 		"intro": "{recipientName} elfogadta a továbbadott Operator Passodat, és az már a fiókjában van.",
-		"note": "{remainingCount, plural, =0 {{visionary, select, yes {Nem maradt Operator Passod, ezért a jelvényed és a fali bejegyzésed megszűnt. Az '#'operators csatornát a Visionaryd révén megtartod.} other {Nem maradt Operator Passod, ezért a jelvényed, a fali bejegyzésed és az '#'operators megszűnt.}}} =1 {# Operator Passod maradt.} other {# Operator Passod maradt.}}",
+		"note": "{remainingCount, plural, =0 {{visionary, select, yes {Nem maradt Operator Passod, ezért a jelvényed és a fali megjelenésed megszűnt. Az '#'operators csatornát a Visionaryd révén megtartod.} other {Nem maradt Operator Passod, ezért a jelvényed, a fali megjelenésed és az '#'operators csatorna is megszűnt.}}} =1 {# Operator Passod maradt.} other {# Operator Passod maradt.}}",
 		"signoff": "{product_name} csapata",
 		"subject": "{recipientName} elfogadta a(z) {product_name} Operator Passodat"
 	},
@@ -306,25 +306,25 @@
 		"dispute_facts": "Úgy ítéltük meg, hogy a(z) {disputeId} azonosítójú fizetési vita nem volt megalapozott, elmondtuk, miért, és határidőt adtunk a visszavonására ({deadline, date, long}), a vita pedig azzal zárult, hogy a bankod visszafizette neked az összeget. Azok a passok, amelyekért ez a fizetés szólt, megszűntek, és ez a fiók nem vásárolhat és nem kaphat újra passt.",
 		"dispute_rule": "Az Operator Pass feltételeinek 9. pontja",
 		"facts_label": "Tények, amelyekre támaszkodtunk",
-		"footer_reason": "Ezt az e-mailt az Operator Passoddal kapcsolatos döntés miatt kaptad, amely a {product_name}-fiókodat érinti.",
+		"footer_reason": "Ezt az e-mailt az Operator Passoddal kapcsolatos döntés miatt kaptad, amely a(z) {product_name}-fiókodat érinti.",
 		"ground": "Az Operator Pass feltételeinek 8. pontja",
 		"ground_label": "Jogalap",
-		"intro": "{scope, select, permanent {Véglegesen eltávolítottuk az Operator Passodhoz tartozó dolgokat.} other {Eltávolítottuk az Operator Passodhoz tartozó dolgokat {until, date, long} napjáig, amikor az eredeti jelvénydátumoddal együtt visszakapod őket.}} {visionary, select, yes {Ez érinti a fali bejegyzésedet, a jelvényedet és az Operator-szerepkört. Az #operators csatornát a Visionaryd révén megtartod.} other {Ez érinti a fali bejegyzésedet, a jelvényedet, az #operators csatornát és az Operator-szerepkört.}} {cause, select, dispute {A tanúsítványnak azokat az oldalait, amelyekért ez a fizetés szólt, érvénytelenítettük, és már nem tölthetők le, a {product_name}-fiókodat pedig nem függesztettük fel.} other {Az Operator-tanúsítványodat ez nem érinti, és a {product_name}-fiókodat nem függesztettük fel.}}",
+		"intro": "{scope, select, permanent {Véglegesen eltávolítottuk az Operator Passodhoz tartozó dolgokat.} other {Eltávolítottuk az Operator Passodhoz tartozó dolgokat {until, date, long} napjáig, amikor az eredeti jelvénydátumoddal együtt visszakapod őket.}} {visionary, select, yes {Ez érinti a fali megjelenésedet, a jelvényedet és az Operator-szerepkört. Az #operators csatornát a Visionaryd révén megtartod.} other {Ez érinti a fali megjelenésedet, a jelvényedet, az #operators csatornát és az Operator-szerepkört.}} {cause, select, dispute {A tanúsítványnak azokat az oldalait, amelyekért ez a fizetés szólt, érvénytelenítettük, és már nem tölthetők le, a(z) {product_name}-fiókodat pedig nem függesztettük fel.} other {Az Operator-tanúsítványodat ez nem érinti, és a(z) {product_name}-fiókodat nem függesztettük fel.}}",
 		"redress_v2": "Bírósághoz is fordulhatsz. Ha az EU-ban vagy, egy tanúsított <dsa>peren kívüli vitarendezési testülethez</dsa> is fordulhatsz. Ha az EU-ban vagy az EGT-ben fogyasztó vagy, a vitát a svéd Nemzeti Fogyasztói Vitarendezési Testület (<arn>ARN</arn>, Box 174, 101 23 Stockholm, Svédország) elé is viheted.",
 		"refund": "{scope, select, permanent {Amíg ez a döntés érvényben van, nem vásárolhatod meg és nem kaphatod meg újra az Operator Passt. } other {}}{cause, select, dispute {Ezért az eltávolításért nem adunk visszatérítést, mert a bankod már visszaadta neked a befizetést.} other {Ezért az eltávolításért nem adunk visszatérítést, mert az Operator Pass ára csak az Operator-tanúsítványt fizeti meg, és annak eltávolítása, ami a passhoz jár, nem érvényteleníti a tanúsítványt.}} Ha még elállhatsz a vásárlástól, ez a döntés ezt a jogodat nem veszi el.",
 		"rule_label": "Szabály",
 		"signoff": "{product_name} csapata",
-		"subject": "Eltávolítottuk a {product_name} Operator Passodhoz tartozó dolgokat"
+		"subject": "Eltávolítottuk a(z) {product_name} Operator Passodhoz tartozó dolgokat"
 	},
 	"operator_pass_purchase_confirmation": {
 		"bonus_heading": "A passod mellé",
-		"bonus_line_v2": "Az Operator-jelvény, egy hely az Operators-falon, az #operators csatorna a {labs_name} közösségben és még más is a passhoz tartozik.",
+		"bonus_line_v2": "Az Operator-jelvény, egy hely az Operators-falon, az #operators csatorna a(z) {labs_name} közösségben és még más is a passhoz tartozik.",
 		"boxes_heading": "Amibe beleegyeztél",
 		"currency_label": "Pénznem",
-		"delivery_box": "{consentAt, date, long}, {consentAt, time, short} időpontban a fizetéskor a feltételek {termsVersion} verziója alapján bejelölted ezt a négyzetet.",
+		"delivery_box": "{consentAt, date, long}, {consentAt, time, short} időpontban a fizetéskor a feltételek {termsVersion} jelű verziója szerint bejelölted ezt a négyzetet.",
 		"document_attached": "{business, select, yes {A(z) {documentNumber} számú számlát PDF formátumban csatoltuk ehhez az e-mailhez.} other {A(z) {documentNumber} számú nyugtát PDF formátumban csatoltuk ehhez az e-mailhez.}}",
 		"footer_reason": "Ezt az e-mailt azért kaptad, mert Operator Passt vásároltál a(z) {product_name} szolgáltatásban.",
-		"intro": "{document, select, yes {Köszönjük a rendelésedet. Az általad elfogadott Operator Pass feltételeket ({termsVersion}. verzió) PDF-ben csatoltuk.} other {Köszönjük a rendelésedet. Ez az e-mail a nyugtád, az általad elfogadott Operator Pass feltételeket ({termsVersion}. verzió) pedig PDF-ben csatoltuk.}}",
+		"intro": "{document, select, yes {Köszönjük a rendelésedet. Az általad elfogadott Operator Pass-feltételeket (verzió: {termsVersion}) PDF-ben csatoltuk.} other {Köszönjük a rendelésedet. Ez az e-mail a nyugtád, az általad elfogadott Operator Pass-feltételeket (verzió: {termsVersion}) pedig PDF-ben csatoltuk.}}",
 		"order_date_label": "Rendelés dátuma",
 		"order_date_value": "{orderDate, date, long}",
 		"order_number_label": "Rendelésszám",
@@ -336,9 +336,9 @@
 		"product_label": "Termék",
 		"product_value": "{quantity, plural, one {{product_name} Operator Pass} other {# db {product_name} Operator Pass}}",
 		"reverse_charge": "Nem számítottunk fel áfát, mert fordított adózás alkalmazandó. A részleteket a számlán találod.",
-		"seller": "Eladó: Fluxer Platform AB, 559537-3993, székhely Haninge, Svédország, {sellerAddress}, {sellerPhone}, <mail>{sellerEmail}</mail>",
+		"seller": "Az eladó a Fluxer Platform AB (cégjegyzékszám: 559537-3993), egy haningei székhelyű svéd cég. Postán ezen a címen érsz el minket: {sellerAddress}, telefonon ezen a számon: {sellerPhone}, e-mailben pedig itt: <mail>{sellerEmail}</mail>.",
 		"signoff": "{product_name} csapata",
-		"subject": "A(z) {product_name} Operator Pass nyugtád",
+		"subject": "Nyugta a(z) {product_name} Operator Pass-vásárlásodról",
 		"tax_added": "Az árhoz {taxFormatted} adót számítottunk fel",
 		"tax_included": "Az összeg {taxFormatted} adót tartalmaz",
 		"terms_link": "Az Operator Pass feltételei",
@@ -346,7 +346,7 @@
 		"wall_status_v2": "{wallOptOut, select, yes {Úgy döntöttél, hogy nem szerepelsz az Operators-falon. A nevedet a <settings>beállításaidban</settings> adhatod hozzá.} other {Az Operators-falon {wallName} néven szerepelsz. Ezt a <settings>beállításaidban</settings> módosíthatod, vagy ott le is kerülhetsz a falról.}}",
 		"withdrawal_country_v4": "{quantity, plural, =1 {Fizetéskor azt kérted, hogy azonnal kézbesítsük a tanúsítványodat. A vásárlásodra a feltételek 12. pontja vonatkozik, ezért {withdrawalEndsOn, date, long} napjáig a kézbesítés után is elállhatsz, és a teljes összeget visszakapod. Használd a vásárlás melletti „Elállás a szerződéstől” lehetőséget a <settings>beállításaidban</settings>.} other {Fizetéskor azt kérted, hogy azonnal kézbesítsük a tanúsítványaidat. A vásárlásodra a feltételek 12. pontja vonatkozik, ezért {withdrawalEndsOn, date, long} napjáig a kézbesítés után is elállhatsz, és a teljes összeget visszakapod. Használd a vásárlás melletti „Elállás a szerződéstől” lehetőséget a <settings>beállításaidban</settings>.}}",
 		"withdrawal_heading": "Elállási jog",
-		"withdrawal_waiver": "{quantity, plural, =1 {Fizetéskor azt kérted, hogy azonnal kézbesítsük a tanúsítványodat, és megerősítetted, hogy a kézbesítéssel elveszíted az elállási jogodat. Közvetlenül ezután az e-mail után kézbesítjük, így ettől kezdve nem állhatsz el a vásárlástól. Ha a tanúsítvány nem érkezik meg vagy hibás, a törvény továbbra is véd.} other {Fizetéskor azt kérted, hogy azonnal kézbesítsük a tanúsítványaidat, és megerősítetted, hogy a kézbesítéssel elveszíted az elállási jogodat. Közvetlenül ezután az e-mail után kézbesítjük őket, így ettől kezdve nem állhatsz el a vásárlástól. Ha valamelyik tanúsítvány nem érkezik meg vagy hibás, a törvény továbbra is véd.}}"
+		"withdrawal_waiver": "{quantity, plural, =1 {Fizetéskor azt kérted, hogy azonnal kézbesítsük a tanúsítványodat, és megerősítetted, hogy a kézbesítéssel elveszíted az elállási jogodat. Közvetlenül ennek az e-mailnek az elküldése után kézbesítjük, így ettől kezdve nem állhatsz el a vásárlástól. Ha a tanúsítvány nem érkezik meg vagy hibás, a törvény továbbra is véd.} other {Fizetéskor azt kérted, hogy azonnal kézbesítsük a tanúsítványaidat, és megerősítetted, hogy a kézbesítéssel elveszíted az elállási jogodat. Közvetlenül ennek az e-mailnek az elküldése után kézbesítjük őket, így ettől kezdve nem állhatsz el a vásárlástól. Ha valamelyik tanúsítvány nem érkezik meg vagy hibás, a törvény továbbra is véd.}}"
 	},
 	"operator_pass_purchase_refused": {
 		"credit_note_attached": "A visszatérítés jóváíró számláját PDF formátumban csatoltuk ehhez az e-mailhez.",
@@ -377,20 +377,20 @@
 	},
 	"operator_pass_removal_notice": {
 		"facts_label": "Tények, amelyekre támaszkodtunk",
-		"footer_reason": "Ezt az e-mailt az Operator Passoddal kapcsolatos döntés miatt kaptad, amely a {product_name}-fiókodat érinti.",
+		"footer_reason": "Ezt az e-mailt az Operator Passoddal kapcsolatos döntés miatt kaptad, amely a(z) {product_name}-fiókodat érinti.",
 		"ground": "Az Operator Pass feltételeinek 8. pontja",
 		"ground_label": "Jogalap",
-		"intro": "Véglegesen el kívánjuk távolítani az Operator Passodhoz tartozó dolgokat. {replyDays, plural, one {# napod} other {# napod}} van válaszolni, mielőtt döntünk.",
+		"intro": "Véglegesen el kívánjuk távolítani az Operator Passodhoz tartozó dolgokat. {replyDays, plural, one {# napod} other {# napod}} van arra, hogy válaszolj, mielőtt döntünk.",
 		"next_v2": "Ha az eltávolítás mellett döntünk, e-mailben elküldjük a döntést és azt, hogyan fellebbezhetsz ellene. Ha az EU-ban vagy az EGT-ben fogyasztó vagy, az eltávolítással kapcsolatos vitát a svéd Nemzeti Fogyasztói Vitarendezési Testület (<arn>ARN</arn>, Box 174, 101 23 Stockholm, Svédország) elé is viheted.",
-		"reply": "{reply, select, yes {Válaszolj erre az e-mailre, és írj meg mindent, amit tudnunk kell.} other {Fordulj ennek a példánynak az adminisztrátoraihoz, és mondj el nekik mindent, amit tudnunk kell.}} Csapatunk egyik tagja minden választ elolvas, mielőtt döntünk. {visionary, select, yes {Addig a fali megjelenésed, a jelvényed és az Operator szerepkör változatlan marad. Az #operators csatornát a Visionaryd révén megtartod.} other {Addig a fali megjelenésed, a jelvényed, az #operators csatorna és az Operator szerepkör változatlan marad.}}",
+		"reply": "{reply, select, yes {Válaszolj erre az e-mailre, és írj meg mindent, amit tudnunk kell.} other {Fordulj ennek a példánynak az adminisztrátoraihoz, és mondj el nekik mindent, amit tudnunk kell.}} Csapatunk egyik tagja minden választ elolvas, mielőtt döntünk. {visionary, select, yes {Addig a fali megjelenésed, a jelvényed és az Operator-szerepkör változatlan marad. Az #operators csatornát a Visionaryd révén megtartod.} other {Addig a fali megjelenésed, a jelvényed, az #operators csatorna és az Operator-szerepkör változatlan marad.}}",
 		"rule_label": "Szabály",
 		"signoff": "{product_name} csapata",
 		"subject": "El kívánjuk távolítani a(z) {product_name} Operator Passodhoz tartozó dolgokat"
 	},
 	"operator_pass_revoked": {
 		"footer_reason": "Azért kaptad ezt az e-mailt, mert megszűnt egy Operator Pass a(z) {product_name}-fiókodban.",
-		"intro": "{cause, select, dispute {Egy általad kapott Operator Pass kifizetését fizetési vita során visszaterhelték, ezért a pass megszűnt. Ez nem olyasmi miatt történt, amit te tettél.} withdrawal {Egy általad kapott Operator Pass vásárlója elállt a vásárlástól, ezért a pass megszűnt. Ez nem olyasmi miatt történt, amit te tettél.} visionary {A Visionaryd megszűnt, ezért a hozzá járó Operator Pass is megszűnt. Nyilvántartásunkban a tanúsítványa érvénytelenítve van.} other {Egy általad kapott Operator Pass kifizetését visszatérítették, ezért a pass megszűnt. Ez nem olyasmi miatt történt, amit te tettél.}}",
-		"note": "{lastPass, select, yes {{visionary, select, yes {Ez volt az utolsó passod, ezért a jelvényed és a fali megjelenésed megszűnt. Az #operators csatornát a Visionaryd révén megtartod.} other {Ez volt az utolsó passod, ezért a jelvényed, a fali megjelenésed és az #operators megszűnt.}}} other {A többi passod megmarad.}}",
+		"intro": "{cause, select, dispute {Egy általad kapott Operator Pass kifizetését fizetési vita során visszaterhelték, ezért a pass megszűnt. Ez nem olyasmi miatt történt, amit te tettél.} withdrawal {Egy általad kapott Operator Pass vásárlója elállt a vásárlástól, ezért a pass megszűnt. Ez nem olyasmi miatt történt, amit te tettél.} visionary {A Visionaryd megszűnt, ezért a hozzá járó Operator Pass is megszűnt. A nyilvántartásunkban a tanúsítványa érvénytelenítve van.} other {Egy általad kapott Operator Pass kifizetését visszatérítették, ezért a pass megszűnt. Ez nem olyasmi miatt történt, amit te tettél.}}",
+		"note": "{lastPass, select, yes {{visionary, select, yes {Ez volt az utolsó passod, ezért a jelvényed és a fali megjelenésed megszűnt. Az #operators csatornát a Visionaryd révén megtartod.} other {Ez volt az utolsó passod, ezért a jelvényed, a fali megjelenésed és az #operators csatorna is megszűnt.}}} other {A többi passod megmarad.}}",
 		"signoff": "{product_name} csapata",
 		"subject": "Megszűnt egy Operator Pass a(z) {product_name}-fiókodban"
 	},
@@ -401,7 +401,7 @@
 		"intro": "Az Operator Passod be van kapcsolva. A tanúsítványodat csatoltuk, és a <settings>beállításaidban</settings> újra letöltheted. Tarts meg egy saját másolatot is, mert a miénket töröljük, ha a fiókodat törlik.",
 		"labs_line": "{member, select, yes {Operator-szerepköröd van a Fluxer Labs közösségben.} other {Az Operator Passodhoz Operator-szerepkör jár a Fluxer Labs közösségben. Akkor a tiéd, amikor ez a fiók a Fluxer Labs tagja.}}",
 		"signoff": "{product_name} csapata",
-		"subject": "A {product_name} Operator-tanúsítványod",
+		"subject": "A(z) {product_name} Operator-tanúsítványod",
 		"terms_attached": "Az általad elfogadott Operator Pass-feltételeket (verzió: {termsVersion}) PDF-ként csatoltuk.",
 		"terms_link": "Az Operator Pass feltételei",
 		"wall_line": "{wallOptOut, select, yes {Úgy döntöttél, hogy nem szerepelsz az Operators-falon. A nevedet a <settings>beállításaidban</settings> adhatod hozzá.} other {Az Operators-falon {wallName} néven szerepelsz. Ezt a <settings>beállításaidban</settings> módosíthatod, vagy ott le is kerülhetsz a falról.}}"
@@ -414,13 +414,13 @@
 		"footer_reason": "Ezt az e-mailt a(z) {product_name} Operators-falán való megjelenéseddel kapcsolatos döntés miatt kaptad.",
 		"ground": "Az Operator Pass feltételeinek 3.1. pontja",
 		"ground_label": "Jogalap",
-		"intro": "Egyelőre levettük a megjelenésedet az Operators-falról. A passaid, a jelvényed és a vásárlásod változatlan marad.",
+		"intro": "Egyelőre levettünk az Operators-falról. A passaid, a jelvényed és a vásárlásod változatlan marad.",
 		"next": "A megjelenésed ugyanakkora méretben és ugyanazon a helyen tér vissza, ha újra megjelenítjük, vagy ha a fellebbezésed sikeres.",
 		"reason_label": "Indok",
 		"reason_value": "{reason, select, impersonation {Más személynek adja ki magát} rights {Jogosultság nélkül használ nevet vagy képet} age_suitability {Nem alkalmas fiatalabb felhasználóknak} other {Sérti a közösségi irányelveket}}",
 		"redress_v2": "Bírósághoz is fordulhatsz. Ha az EU-ban vagy, egy tanúsított <dsa>peren kívüli vitarendezési testülethez</dsa> is fordulhatsz. Ha az EU-ban vagy az EGT-ben fogyasztó vagy, a vitát a svéd Nemzeti Fogyasztói Vitarendezési Testület (<arn>ARN</arn>, Box 174, 101 23 Stockholm, Svédország) elé is viheted.",
 		"signoff": "{product_name} csapata",
-		"subject": "Egyelőre levettük a megjelenésedet a(z) {product_name} Operators-faláról"
+		"subject": "Egyelőre levettünk a(z) {product_name} Operators-faláról"
 	},
 	"operator_pass_wall_name_replaced": {
 		"appeal_body_v2": "{reply, select, yes {Válaszolj erre az e-mailre 60 napon belül, és írd meg, miért nem értesz egyet. Ez ingyenes, és a csapatunk egyik tagja elolvassa a fellebbezésedet, és dönt róla.} other {Fordulj ennek a példánynak az adminisztrátoraihoz 60 napon belül, és mondd el nekik, miért nem értesz egyet.}}",
@@ -431,7 +431,7 @@
 		"ground": "Az Operator Pass feltételeinek 3.1. pontja",
 		"ground_label": "Jogalap",
 		"intro": "{target, select, avatar {Levettük a profilképedet az Operators-falról.} both {Levettük a nevedet és a profilképedet az Operators-falról.} other {Levettük a nevedet az Operators-falról.}} {shown, select, previous {A fal a korábbi nevedet és profilképedet mutatja.} other {Amíg nem küldesz újat, a fal az Operator szót és az alapértelmezett profilképet mutatja.}} A helyed a falon, a mérete és a jelvényed változatlan marad, és ez a vásárlásodat nem érinti.",
-		"next": "Új nevet vagy avatart a <settings>beállításaidban</settings> küldhetsz.",
+		"next": "Új nevet vagy profilképet a <settings>beállításaidban</settings> küldhetsz.",
 		"reason_label": "Indok",
 		"reason_value": "{reason, select, impersonation {Más személynek adja ki magát} rights {Jogosultság nélkül használ nevet vagy képet} age_suitability {Nem alkalmas fiatalabb felhasználóknak} other {Sérti a közösségi irányelveket}}",
 		"redress_v2": "Bírósághoz is fordulhatsz. Ha az EU-ban vagy, egy tanúsított <dsa>peren kívüli vitarendezési testülethez</dsa> is fordulhatsz. Ha az EU-ban vagy az EGT-ben fogyasztó vagy, a vitát a svéd Nemzeti Fogyasztói Vitarendezési Testület (<arn>ARN</arn>, Box 174, 101 23 Stockholm, Svédország) elé is viheted.",
@@ -459,15 +459,15 @@
 		"bonus_heading": "A passod mellé",
 		"certificate_line": "Az Operator-tanúsítványodat csatoltuk ehhez az e-mailhez. A Fluxer-beállításaidban újra letöltheted. Tarts meg egy saját másolatot is, mert a miénket töröljük, ha a fiókodat törlik.",
 		"cta": "Fluxer Labs megnyitása",
-		"delivered_label": "Teljesítve",
+		"delivered_label": "Kézbesítve",
 		"delivered_value": "{deliveredAt, date, long}",
 		"footer_reason": "Azért kaptad ezt az e-mailt, mert egy Operator Pass került a(z) {product_name}-fiókodba.",
-		"intro": "Köszönjük, hogy támogatod a {product_name} projektet. Elkészült az Operator-tanúsítványod.",
+		"intro": "Köszönjük, hogy támogatod a(z) {product_name} projektet. Elkészült az Operator-tanúsítványod.",
 		"labs_line_v2": "{labs, select, visionary {Operator-szerepkört kaptál a Fluxer Labs közösségben. Az #operators csatornát a Visionaryd révén már eléred.} member {Operator-szerepkört kaptál, és eléred az #operators csatornát a Fluxer Labs közösségben.} other {Az Operator Passodhoz Operator-szerepkör és az #operators csatorna jár a Fluxer Labs közösségben. Ezek akkor a tieid, amikor ez a fiók a Fluxer Labs tagja.}}",
 		"order_number_label": "Rendelésszám",
 		"pass_count_label": "Operator Passok",
 		"signoff": "{founderName} és a(z) {product_name} csapata",
-		"subject": "A {product_name} Operator-tanúsítványod",
+		"subject": "A(z) {product_name} Operator-tanúsítványod",
 		"terms_link": "Az Operator Pass feltételei",
 		"wall_line_v2": "{wallOptOut, select, yes {Úgy döntöttél, hogy nem szerepelsz az Operators-falon. A nevedet a <settings>beállításaidban</settings> adhatod hozzá.} other {Az Operators-falon {wallName} néven szerepelsz. Ezt a <settings>beállításaidban</settings> módosíthatod, vagy ott le is kerülhetsz a falról.}}"
 	},
@@ -476,7 +476,7 @@
 		"credit_note_label": "Jóváíró számla száma",
 		"currency_label": "Pénznem",
 		"footer_reason": "Ezt az e-mailt azért kaptad, mert elálltál egy Operator Pass-vásárlástól a(z) {product_name} szolgáltatásban.",
-		"intro": "Elállásodat {receivedAt, date, long} napján, {receivedAt, time, short} órakor kaptuk meg.",
+		"intro": "Az elállásodat {receivedAt, date, long} napján, {receivedAt, time, short} órakor kaptuk meg.",
 		"name_label": "Név",
 		"note": "Őrizd meg ezt az e-mailt annak igazolásaként, hogy megkaptuk az elállási nyilatkozatodat.",
 		"order_date_label": "Rendelés dátuma",
@@ -489,36 +489,36 @@
 	},
 	"password_change_verification": {
 		"expiry": "Ez a kód {minutes, plural, one {# perc} other {# perc}} múlva lejár.",
-		"footer_reason": "Ezt az e-mailt azért kaptad, mert valaki jelszómódosítást kért a {product_name}-fiókodhoz.",
-		"intro": "{product_name}-jelszavad módosításához írd be ezt a kódot az alkalmazásban.",
+		"footer_reason": "Ezt az e-mailt azért kaptad, mert valaki jelszómódosítást kért a(z) {product_name}-fiókodhoz.",
+		"intro": "A(z) {product_name}-jelszavad módosításához írd be ezt a kódot az alkalmazásban.",
 		"note": "Ha nem te kérted, lehet, hogy valaki hozzáfér a fiókodhoz. Most változtasd meg a jelszavadat, és kapcsold be a kétlépcsős azonosítást.",
 		"signoff": "{product_name} csapata",
-		"subject": "Erősítsd meg {product_name}-fiókod jelszavának módosítását"
+		"subject": "Erősítsd meg a(z) {product_name}-fiókod jelszavának módosítását"
 	},
 	"password_reset": {
 		"cta": "Új jelszó beállítása",
 		"expiry": "Ez a link 1 óra múlva lejár.",
-		"footer_reason": "Ezt az e-mailt azért kaptad, mert jelszó-visszaállítást kértek a {product_name}-fiókodhoz.",
-		"intro": "Kérted {product_name}-jelszavad visszaállítását.",
+		"footer_reason": "Ezt az e-mailt azért kaptad, mert jelszó-visszaállítást kértek a(z) {product_name}-fiókodhoz.",
+		"intro": "Kérted a(z) {product_name}-jelszavad visszaállítását.",
 		"ip_label": "IP-cím",
 		"location_label": "Helyszín",
 		"note": "Ha nem te kérted, figyelmen kívül hagyhatod ezt az e-mailt.",
 		"signoff": "{product_name} csapata",
-		"subject": "Állítsd vissza {product_name}-fiókod jelszavát"
+		"subject": "Állítsd vissza a(z) {product_name}-fiókod jelszavát"
 	},
 	"payment_dispute_warning": {
 		"amount_label": "Vitatott összeg",
 		"appeal_body_v2": "{reply, select, yes {Válaszolj erre az e-mailre 60 napon belül, és írd meg, miért nem értesz egyet. Ez ingyenes, és a csapatunk egyik tagja elolvassa a fellebbezésedet, és dönt róla.} other {{appeals_email, select, null {Fordulj ennek a példánynak az adminisztrátoraihoz, és mondd el nekik, miért.} other {Írj a(z) <mail>{appeals_email}</mail> címre, és írd meg, miért.}}}} Ha a vita jogos volt, nem teszünk semmit a fiókod ellen.",
 		"appeal_title": "Ha szerinted tévedtünk",
 		"currency_label": "Pénznem",
-		"deadline_body": "Ha a vitát nem vonod vissza {warningDate, date, long} előtt, és az azzal zárul, hogy visszakapod a pénzt, véglegesen töröljük {product_name}-fiókodat. A törölt fiók nem állítható helyre. Ha megszüntetjük a fiókodat, más {product_name}-fiókot sem hozhatsz létre és nem használhatsz.",
-		"deadline_body_operator_pass": "Ha a vitát nem vonod vissza {warningDate, date, long} előtt, és az azzal zárul, hogy visszakapod a pénzt, azok a passok megszűnnek, amelyeket ez a fizetés fedezett, és az Operator Passhoz tartozó dolgokat végleg eltávolítjuk a fiókodból. A fiókoddal ezután nem vásárolhatsz és nem fogadhatsz több pass-t. A fiókod többi része változatlan marad.",
+		"deadline_body": "Ha a vitát nem vonod vissza {warningDate, date, long} előtt, és az azzal zárul, hogy visszakapod a pénzt, véglegesen töröljük a(z) {product_name}-fiókodat. A törölt fiók nem állítható helyre. Ha megszüntetjük a fiókodat, más {product_name}-fiókot sem hozhatsz létre és nem használhatsz.",
+		"deadline_body_operator_pass": "Ha a vitát nem vonod vissza {warningDate, date, long} előtt, és az azzal zárul, hogy visszakapod a pénzt, azok a passok megszűnnek, amelyeket ez a fizetés fedezett, és az Operator Passhoz tartozó dolgokat végleg eltávolítjuk a fiókodból. A fiókoddal ezután nem vásárolhatsz és nem fogadhatsz több passt. A fiókod többi része változatlan marad.",
 		"deadline_label": "A vitát eddig vond vissza",
 		"deadline_value": "{warningDate, date, long}",
-		"footer_reason": "Ezt az e-mailt a {product_name}-fiókodat érintő fizetési vita miatt kaptad.",
+		"footer_reason": "Ezt az e-mailt a(z) {product_name}-fiókodat érintő fizetési vita miatt kaptad.",
 		"ground": "{product, select, plutonium {A szolgáltatási feltételek 4.4. pontja} other {Az Operator Pass feltételeinek 9. pontja}}",
 		"ground_label": "Jogalap",
-		"intro": "Vitattad {product, select, plutonium {a Plutonium kifizetésedet} other {az Operator Pass kifizetésedet}} a bankodnál vagy a kártyakibocsátódnál. Csapatunk egyik tagja a feltételeink alapján megvizsgálta a vitát, és indokolatlannak találta.",
+		"intro": "Vitattad {product, select, plutonium {a Plutonium-fizetésedet} other {az Operator Pass-fizetésedet}} a bankodnál vagy a kártyakibocsátódnál. Csapatunk egyik tagja a feltételeink alapján megvizsgálta a vitát, és indokolatlannak találta.",
 		"next_body": "Ha te fizettél, megkérheted a bankodat vagy a kártyakibocsátódat, hogy vonja vissza a vitát. Ha a vitát visszavonják, vagy úgy zárul le, hogy nem kapod vissza a pénzt, a fiókodat semmi sem érinti. Amíg a vita le nem zárul, semmit sem vásárolhatsz a(z) {product_name} szolgáltatásban.{privacy_email, select, null {} other { Az adataidról bármikor kérhetsz másolatot, ha írsz a(z) <mail>{privacy_email}</mail> címre.}}",
 		"next_title": "Mi történik most",
 		"order_date_label": "Rendelés dátuma",
@@ -595,7 +595,7 @@
 	},
 	"plutonium_payment_receipt": {
 		"consent_body": "{consentAt, date, long} napján kérted, hogy a(z) {premiumName} azonnal induljon el. Azt is tudomásul vetted, hogy az elállási határidő végéig továbbra is elállhatsz a szerződéstől, és a teljes összeget visszakapod.",
-		"consent_body_pro_rata": "{gift, select, yes {{consentAt, date, long} napon azt kérted, hogy ez a {premiumName} ajándék a kód beváltásakor azonnal induljon el. Azt is megerősítetted, hogy ha 14 napon belül elállsz, mindent visszakapsz, ha a kódot még nem váltották be, ellenkező esetben pedig kifizeted azokat a napokat, amikor a megajándékozottnál megvolt a {premiumName}, és a többit visszakapod.} other {{consentAt, date, long} napon azt kérted, hogy a {premiumName} azonnal induljon el. Azt is megerősítetted, hogy ha 14 napon belül elállsz, kifizeted azokat a napokat, amikor megvolt a {premiumName}, és a többit visszakapod, valamint hogy a szolgáltatás teljes teljesítése után már nem állhatsz el.}}",
+		"consent_body_pro_rata": "{gift, select, yes {{consentAt, date, long} napján azt kérted, hogy ez a(z) {premiumName}-ajándék a kód beváltásakor azonnal induljon el. Azt is megerősítetted, hogy ha 14 napon belül elállsz, mindent visszakapsz, ha a kódot még nem váltották be, ellenkező esetben pedig kifizeted azokat a napokat, amikor a megajándékozottnál megvolt a(z) {premiumName}, és a többit visszakapod.} other {{consentAt, date, long} napján azt kérted, hogy a(z) {premiumName} azonnal induljon el. Azt is megerősítetted, hogy ha 14 napon belül elállsz, kifizeted azokat a napokat, amikor megvolt a(z) {premiumName}, és a többit visszakapod, valamint hogy a szolgáltatás teljes teljesítése után már nem állhatsz el.}}",
 		"consent_title": "Azonnali kezdés",
 		"credit_label": "Felhasznált jóváírás",
 		"date_label": "Fizetés dátuma",
@@ -606,7 +606,7 @@
 		"form_title": "Elállási nyilatkozat",
 		"gift_note": "Az ajándéklinket a beállításaidban, az „Ajándékok” részben találod. Másold ki onnan, és küldd el annak, akinek {premiumName} előfizetést szeretnél ajándékozni. Bárki beválthatja, akinél megvan a link.",
 		"heading": "{gift, select, yes {Nyugta a(z) {premiumName} ajándékodról} other {Nyugta a(z) {premiumName} fizetésedről}}",
-		"intro": "{document, select, yes {{gift, select, yes {Köszönjük, hogy {premiumName} ajándékot vásároltál.} other {Köszönjük a fizetésedet.}}} other {{gift, select, yes {Köszönjük, hogy {premiumName} ajándékot vásároltál. Ez az e-mail a nyugtád.} other {Köszönjük a fizetésedet. Ez az e-mail a nyugtád.}}}}",
+		"intro": "{document, select, yes {{gift, select, yes {Köszönjük, hogy {premiumName}-ajándékot vásároltál.} other {Köszönjük a fizetésedet.}}} other {{gift, select, yes {Köszönjük, hogy {premiumName}-ajándékot vásároltál. Ez az e-mail a nyugtád.} other {Köszönjük a fizetésedet. Ez az e-mail a nyugtád.}}}}",
 		"invoice_label": "Számla száma",
 		"manage_link": "Előfizetés kezelése",
 		"paid_label": "Fizetett összeg",
@@ -618,7 +618,7 @@
 		"product_label": "Termék",
 		"product_value": "{plan, select, monthly {{premiumName}, havi} yearly {{premiumName}, éves} gift_1_month {{premiumName} ajándék, 1 hónap} gift_1_year {{premiumName} ajándék, 1 év} other {{premiumName}}}",
 		"reverse_charge": "Nem számítottunk fel áfát, mert fordított adózás alkalmazandó. A részleteket a számlán találod.",
-		"seller": "Eladó: Fluxer Platform AB, 559537-3993, székhely Haninge, Svédország, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"seller": "Az eladó a Fluxer Platform AB (cégjegyzékszám: 559537-3993), egy haningei székhelyű svéd cég. Postán ezen a címen érsz el minket: {sellerAddress}, e-mailben pedig itt: <mail>{sellerEmail}</mail>.",
 		"signoff": "{product_name} csapata",
 		"subject": "{gift, select, yes {A(z) {product_name} {premiumName} ajándék nyugtája} other {A(z) {product_name} {premiumName} nyugtád}}",
 		"tax_added": "Az árhoz {taxFormatted} adót számítottunk fel",
@@ -626,7 +626,7 @@
 		"total_label": "Végösszeg",
 		"withdrawal_body": "{withdrawalEndsAt, date, long} napjáig elállhatsz ettől a vásárlástól, és a teljes összeget visszakapod. Az elálláshoz válaszolj erre az e-mailre, vagy írj a(z) <mail>{sellerEmail}</mail> címre, és jelezd, hogy elállsz a szerződéstől. Használhatod a lenti nyilatkozatmintát, de nem kötelező.",
 		"withdrawal_body_brazil": "{withdrawalEndsAt, date, long} napon Acre-i idő szerint 23:59-ig (UTC-5) elállhatsz ettől a vásárlástól, és mindent visszakapsz, amit fizettél. Az elálláshoz válaszolj erre az e-mailre, vagy írj a(z) <mail>{sellerEmail}</mail> címre, és jelezd, hogy elállsz. Használhatod az alábbi űrlapot, de nem kötelező.{gift, select, yes {} other { Ugyanannak a csomagnak az automatikus megújítása nem indít új elállási határidőt.}}",
-		"withdrawal_body_pro_rata": "{withdrawalEndsAt, date, long} napig elállhatsz ettől a vásárlástól. {gift, select, yes {Ha a kódot még nem váltották be, mindent visszatérítünk, amit fizettél. Ha beváltották, a kifizetett összeget térítjük vissza, levonva azoknak a napoknak a részét, amikor a megajándékozottnál megvolt a {premiumName}.} other {Ha így teszel, visszatérítjük a kifizetett összeget, levonva azoknak a napoknak a részét, amikor megvolt a {premiumName}. Ugyanannak a csomagnak az automatikus megújítása nem indít új elállási időszakot.}} Az elálláshoz használd az \"Elállás a szerződéstől\" gombot a {premiumName} oldalon a \"Felhasználói beállítások\" alatt, vagy válaszolj erre az e-mailre, vagy írj a(z) <mail>{sellerEmail}</mail> címre, és jelezd, hogy elállsz. Használhatod az alábbi űrlapot, de nem kötelező.",
+		"withdrawal_body_pro_rata": "{withdrawalEndsAt, date, long} napjáig elállhatsz ettől a vásárlástól. {gift, select, yes {Ha a kódot még nem váltották be, mindent visszatérítünk, amit fizettél. Ha beváltották, a kifizetett összeget térítjük vissza, levonva azoknak a napoknak a részét, amikor a megajándékozottnál megvolt a(z) {premiumName}.} other {Ha így teszel, visszatérítjük a kifizetett összeget, levonva azoknak a napoknak a részét, amikor megvolt a(z) {premiumName}. Ugyanannak a csomagnak az automatikus megújítása nem indít új elállási időszakot.}} Az elálláshoz használd az „Elállás a szerződéstől” gombot a(z) {premiumName} oldalán a „Felhasználói beállítások” alatt, vagy válaszolj erre az e-mailre, vagy írj a(z) <mail>{sellerEmail}</mail> címre, és jelezd, hogy elállsz. Használhatod az alábbi űrlapot, de nem kötelező.",
 		"withdrawal_note": "Az alkalmazásban a visszatérítés gomb a fizetés után 3 napig működik. Ez az elállási jogodon felül jár, és nem helyettesíti azt.",
 		"withdrawal_title": "Elállási jog"
 	},
@@ -670,13 +670,13 @@
 	"plutonium_withdrawal_receipt": {
 		"currency_label": "Pénznem",
 		"footer_reason": "Azért kaptad ezt az e-mailt, mert elálltál egy {premiumName}-vásárlástól a(z) {product_name} szolgáltatásban.",
-		"intro": "Elállásodat {receivedAt, date, long} napján, {receivedAt, time, short} órakor kaptuk meg.",
+		"intro": "Az elállásodat {receivedAt, date, long} napján, {receivedAt, time, short} órakor kaptuk meg.",
 		"name_label": "Név",
 		"note": "Őrizd meg ezt az e-mailt annak igazolásaként, hogy megkaptuk az elállási nyilatkozatodat.",
 		"reference_label": "Hivatkozási szám",
 		"refund": "{gift, select, yes {Az ajándékkód nem működik tovább, és ha valaki beváltotta, elveszíti az általa adott időt.} other {A(z) {premiumName}-előfizetésed véget ért, és nem újul meg.}} {refund, select, manual {A(z) {amountFormatted} visszatérítését nem tudtuk automatikusan elindítani, ezért a csapatunk egyik tagja {brazil, select, yes {azonnal} other {14 napon belül}} visszautalja az összeget arra a kártyára vagy számlára, amellyel fizettél.} other {Elindítottuk a(z) {amountFormatted} teljes visszatérítését arra a kártyára vagy számlára, amellyel fizettél. A bankodtól függően általában 5–10 munkanap, mire megjelenik.}} Amikor a visszatérítés elkészül, e-mailben elküldjük a jóváíró számlát.",
 		"refund_label": "Visszatérítés",
-		"refund_pro_rata": "{gift, select, yes {Az ajándékkód nem működik tovább, és ha valaki beváltotta, elveszíti az általa adott időt.} other {A(z) {premiumName}-előfizetésed véget ért, és nem újul meg.}} {refund, select, manual {A(z) {amountFormatted} visszatérítését nem tudtuk automatikusan elindítani, ezért a csapatunk egyik tagja {brazil, select, yes {azonnal} other {14 napon belül}} visszautalja az összeget arra a kártyára vagy számlára, amellyel fizettél.} other {Elindítottuk {amountFormatted} visszatérítését arra a kártyára vagy számlára, amellyel fizettél. Ez a kifizetett összeg, levonva azoknak a napoknak a részét, amikor a {premiumName} használatban volt. Bankodtól függően általában 5–10 munkanap, mire megjelenik.}} Amikor a visszatérítés elkészül, e-mailben elküldjük a jóváíró számlát.",
+		"refund_pro_rata": "{gift, select, yes {Az ajándékkód nem működik tovább, és ha valaki beváltotta, elveszíti az általa adott időt.} other {A(z) {premiumName}-előfizetésed véget ért, és nem újul meg.}} {refund, select, manual {A(z) {amountFormatted} visszatérítését nem tudtuk automatikusan elindítani, ezért a csapatunk egyik tagja {brazil, select, yes {azonnal} other {14 napon belül}} visszautalja az összeget arra a kártyára vagy számlára, amellyel fizettél.} other {Elindítottuk a(z) {amountFormatted} összeg visszatérítését arra a kártyára vagy számlára, amellyel fizettél. Ez a kifizetett összeg, levonva azoknak a napoknak a részét, amikor a(z) {premiumName} használatban volt. A bankodtól függően általában 5–10 munkanap, mire megjelenik.}} Amikor a visszatérítés elkészül, e-mailben elküldjük a jóváíró számlát.",
 		"signoff": "{product_name} csapata",
 		"statement_label": "Az elállásod",
 		"statement_value": "{gift, select, yes {Elállok a(z) {purchasedAt, date, long} napon vásárolt {premiumName}-ajándékra vonatkozó szerződésemtől.} other {Elállok a(z) {purchasedAt, date, long} napon kifizetett {premiumName}-előfizetésre vonatkozó szerződésemtől.}}",
@@ -691,7 +691,7 @@
 		"subject": "A(z) {product_name} megerősítő kódod"
 	},
 	"registration_approved": {
-		"cta": "Bejelentkezés: {product_name}",
+		"cta": "Bejelentkezés ide: {product_name}",
 		"footer_reason": "Azért kaptad ezt az e-mailt, mert ezt a címet egy {product_name}-fiókhoz használták.",
 		"intro": "A(z) {product_name} regisztrációdat jóváhagyták. Most már bejelentkezhetsz.",
 		"signoff": "{product_name} csapata",
@@ -699,43 +699,43 @@
 	},
 	"registration_pending": {
 		"cta": "Függő regisztrációk áttekintése",
-		"footer_reason": "Ezt az e-mailt azért kaptad, mert jóváhagyhatsz új fiókokat a {product_name} felületén.",
+		"footer_reason": "Ezt az e-mailt azért kaptad, mert jóváhagyhatsz új fiókokat a(z) {product_name} felületén.",
 		"intro": "Új fiókok várnak jóváhagyásra itt: {product_name}.",
 		"signoff": "{product_name} csapata",
 		"subject": "Új regisztrációk várnak jóváhagyásra itt: {product_name}"
 	},
 	"report_received": {
-		"footer_reason": "Ezt az e-mailt azért kaptad, mert digitális szolgáltatásokról szóló rendelet szerinti bejelentést tettél a {product_name} felületén.",
-		"intro": "Megkaptuk a digitális szolgáltatásokról szóló rendelet (DSA) szerinti bejelentésedet a {product_name} felületén. A bejelentés tárgya: {targetKind, select, message {egy üzenet} user {egy fiók} guild {egy közösség} other {tartalom}}.",
+		"footer_reason": "Ezt az e-mailt azért kaptad, mert digitális szolgáltatásokról szóló rendelet szerinti bejelentést tettél a(z) {product_name} felületén.",
+		"intro": "Megkaptuk a digitális szolgáltatásokról szóló rendelet (DSA) szerinti bejelentésedet a(z) {product_name} felületén. A bejelentés tárgya: {targetKind, select, message {egy üzenet} user {egy fiók} guild {egy közösség} other {tartalom}}.",
 		"next": "Erre a címre írunk, amint döntöttünk.",
 		"report_label": "Bejelentés azonosítója",
 		"signoff": "{product_name} biztonsági csapata",
-		"subject": "Megkaptuk a {product_name} felületén tett bejelentésedet"
+		"subject": "Megkaptuk a(z) {product_name} felületén tett bejelentésedet"
 	},
 	"report_resolved": {
 		"about": "{target, select, message_community {Ez a(z) „{communityName}” közösség #{channelName} csatornájában lévő üzenetről szóló bejelentésedre vonatkozik (beküldve: {reportedAt, date, long}).} message_dm {Ez egy közvetlen üzenetről szóló bejelentésedre vonatkozik (beküldve: {reportedAt, date, long}).} message {Ez egy üzenetről szóló bejelentésedre vonatkozik (beküldve: {reportedAt, date, long}).} user {Ez a(z) „{username}” fiókról szóló bejelentésedre vonatkozik (beküldve: {reportedAt, date, long}).} community {Ez a(z) „{communityName}” közösségről szóló bejelentésedre vonatkozik (beküldve: {reportedAt, date, long}).} other {Ez a nekünk küldött bejelentésedre vonatkozik (beküldve: {reportedAt, date, long}).}}",
 		"comment_label": "Megjegyzés a csapatunktól",
-		"footer_reason": "Ezt az e-mailt azért kaptad, mert bejelentést tettél a {product_name} felületén.",
+		"footer_reason": "Ezt az e-mailt azért kaptad, mert bejelentést tettél a(z) {product_name} felületén.",
 		"intro": "{outcome, select, removed {Eltávolítottuk a bejelentett tartalmat, mert megsértette a szabályainkat.} restricted {A fiók megsértette a szabályainkat, ezért intézkedtünk. Mindenki magánszférájának védelme érdekében nem osztjuk meg, milyen intézkedést hoztunk.} action_taken {A bejelentett tartalom megsértette a szabályainkat, ezért intézkedtünk. Mindenki magánszférájának védelme érdekében nem osztjuk meg, milyen intézkedést hoztunk.} no_violation {{concern, select, self_harm {Köszönjük, hogy odafigyelsz rá. A csapatunk átnézte a bejelentést. Ha valaki arról beszél, hogy maga alatt van vagy nem érzi magát biztonságban, az nem sérti a szabályainkat, ezért nem távolítottunk el semmit, de küldhetünk neki információt arról, hol kaphat segítséget. Soha nem osztjuk meg, ki küldte a bejelentést. Ha úgy gondolod, hogy valaki közvetlen veszélyben van, hívd a helyi segélyhívó számot.} other {A csapatunk átnézte a bejelentést, és úgy találta, hogy nem sérti a szabályainkat, ezért nem intézkedtünk. Egy bejelentés ettől még más lépésekhez is vezethet, például ahhoz, hogy információt küldünk az illetőnek arról, hol kaphat segítséget. Soha nem osztjuk meg, ki küldte a bejelentést.}}} other {Lezártuk a bejelentésedet.}}",
 		"note": "{reply, select, yes {Ha nem értesz egyet, 60 napon belül válaszolj erre az e-mailre.} other {{appeals_email, select, null {} other {Ha nem értesz egyet, 60 napon belül írj a(z) <mail>{appeals_email}</mail> címre, és add meg a bejelentés azonosítóját.}}}}{appeals_email, select, null {} other { Az EU-ban egy tanúsított <dsa>peren kívüli vitarendezési testülethez</dsa> is fordulhatsz, vagy panaszt tehetsz az országod digitális szolgáltatási koordinátoránál.}}",
 		"report_label": "Bejelentés azonosítója",
 		"signoff": "{product_name} csapata",
-		"subject": "Átnéztük a {product_name} felületén tett bejelentésedet",
-		"thanks": "{outcome, select, removed {Köszönjük a bejelentést. Az ilyen bejelentések segítenek abban, hogy a {product_name} mindenki számára biztonságos maradjon.} restricted {Köszönjük a bejelentést. Az ilyen bejelentések segítenek abban, hogy a {product_name} mindenki számára biztonságos maradjon.} action_taken {Köszönjük a bejelentést. Az ilyen bejelentések segítenek abban, hogy a {product_name} mindenki számára biztonságos maradjon.} other {Köszönjük, hogy szóltál. Továbbra is jelents be mindent, ami aggaszt, akkor is, ha végül kiderül, hogy nem sérti a szabályainkat.}}"
+		"subject": "Átnéztük a(z) {product_name} felületén tett bejelentésedet",
+		"thanks": "{outcome, select, removed {Köszönjük a bejelentést. Az ilyen bejelentések segítenek abban, hogy a(z) {product_name} mindenki számára biztonságos maradjon.} restricted {Köszönjük a bejelentést. Az ilyen bejelentések segítenek abban, hogy a(z) {product_name} mindenki számára biztonságos maradjon.} action_taken {Köszönjük a bejelentést. Az ilyen bejelentések segítenek abban, hogy a(z) {product_name} mindenki számára biztonságos maradjon.} other {Köszönjük, hogy szóltál. Továbbra is jelents be mindent, ami aggaszt, akkor is, ha végül kiderül, hogy nem sérti a szabályainkat.}}"
 	},
 	"self_deletion_scheduled": {
-		"footer_reason": "Ezt az e-mailt azért kaptad, mert kérted a {product_name}-fiókod törlését.",
-		"intro": "Kérésednek megfelelően {deletionDate, date, long} napján töröljük {product_name}-fiókodat.",
+		"footer_reason": "Ezt az e-mailt azért kaptad, mert kérted a(z) {product_name}-fiókod törlését.",
+		"intro": "A kérésednek megfelelően {deletionDate, date, long} napján töröljük a(z) {product_name}-fiókodat.",
 		"note": "Ha nem te kérted, addig jelentkezz be a törlés visszavonásához, és változtasd meg a jelszavadat.",
 		"signoff": "{product_name} csapata",
-		"subject": "{product_name}-fiókodat {deletionDate, date, long} napján töröljük"
+		"subject": "A(z) {product_name}-fiókodat {deletionDate, date, long} napján töröljük"
 	},
 	"sign_in_code": {
 		"device_label": "Eszköz",
 		"expiry": "Ez a kód {minutes, plural, one {# perc} other {# perc}} múlva lejár.",
-		"footer_reason": "Ezt az e-mailt azért kaptad, mert valaki ezzel a címmel kért bejelentkezést a {product_name} szolgáltatásba.",
+		"footer_reason": "Ezt az e-mailt azért kaptad, mert valaki ezzel a címmel kért bejelentkezést a(z) {product_name} szolgáltatásba.",
 		"intro": "Ezzel a kóddal jelentkezhetsz be a(z) {product_name} szolgáltatásba.",
-		"location_label": "Kérve innen",
+		"location_label": "A kérés helye",
 		"note": "Ezt a kódot ne oszd meg senkivel. A(z) {product_name} munkatársai soha nem kérik el. Ha nem próbáltál meg bejelentkezni, figyelmen kívül hagyhatod ezt az e-mailt.",
 		"signoff": "{product_name} csapata",
 		"subject": "A(z) {product_name} bejelentkezési kódod"
@@ -744,8 +744,8 @@
 		"device_label": "Eszköz",
 		"expiry": "Ez a kód {minutes, plural, one {# perc} other {# perc}} múlva lejár.",
 		"footer_reason": "Ezt az e-mailt azért kaptad, mert valaki ezzel a címmel kért egy {product_name}-fiók létrehozását.",
-		"intro": "Ezzel a kóddal fejezheted be {product_name}-fiókod létrehozását.",
-		"location_label": "Kérve innen",
+		"intro": "Ezzel a kóddal fejezheted be a(z) {product_name}-fiókod létrehozását.",
+		"location_label": "A kérés helye",
 		"note": "Ezt a kódot ne oszd meg senkivel. A(z) {product_name} munkatársai soha nem kérik el. Ha nem próbáltál meg fiókot létrehozni, figyelmen kívül hagyhatod ezt az e-mailt.",
 		"signoff": "{product_name} csapata",
 		"subject": "A(z) {product_name} regisztrációs kódod"

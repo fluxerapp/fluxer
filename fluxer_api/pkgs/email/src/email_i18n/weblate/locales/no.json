@@ -28,9 +28,9 @@
 		"subject": "{product_name}-kontoen din blir slettet {deletion_date}"
 	},
 	"bulk_message_deletion_completed": {
-		"footer_reason": "Du mottok denne e-posten fordi det ble bedt om sletting av en melding for din {product_name}-konto.",
+		"footer_reason": "Du mottok denne e-posten fordi det ble bedt om sletting av meldinger på {product_name}-kontoen din.",
 		"intro": "Vi er ferdige med å slette meldingene dine. Vi fjernet {message_count, plural, =0 {0 meldinger} one {# melding} other {# meldinger}} fra {channel_count, plural, =0 {0 steder} one {# sted} other {# steder}}.",
-		"note": "{reply, select, yes {Hvis du ikke ba om dette, bytt passord nå og svar på denne e-posten.} other {Hvis du ikke ba om dette, bytt passord nå og kontakt administratorene av denne instansen.}}",
+		"note": "{reply, select, yes {Hvis du ikke ba om dette, bytt passord nå og svar på denne e-posten.} other {Hvis du ikke ba om dette, bytt passord nå og kontakt administratorene for denne instansen.}}",
 		"signoff": "{product_name}-teamet",
 		"subject": "Vi er ferdige med å slette meldingene dine i {product_name}"
 	},
@@ -65,7 +65,7 @@
 		"currency_label": "Valuta",
 		"date_label": "Betalingsdato",
 		"date_value": "{paidAt, date, long}",
-		"document_attached": "Kvitteringen for donasjonen din {documentNumber} er lagt ved denne e-posten som PDF.",
+		"document_attached": "Kvittering {documentNumber} for donasjonen din er lagt ved denne e-posten som PDF.",
 		"footer_reason": "Du mottok denne e-posten fordi du donerte til {product_name} med denne e-postadressen.",
 		"intro": "{interval, select, month {Den månedlige donasjonen din til {product_name} er satt opp.} year {Den årlige donasjonen din til {product_name} er satt opp.} other {Vi har mottatt donasjonen din til {product_name}.}}",
 		"lead": "{interval, select, month {Vi sender deg en kvittering på e-post for hver betaling.} year {Vi sender deg en kvittering på e-post for hver betaling.} other {Denne e-posten er kvitteringen din.}}",
@@ -77,14 +77,14 @@
 		"cta": "Administrer donasjoner",
 		"expiry": "Denne lenken utløper om {minutes, plural, one {# minutt} other {# minutter}}.",
 		"footer_reason": "Du mottok denne e-posten fordi det ble bedt om en lenke til giverportalen for denne e-postadressen.",
-		"intro": "Bruk denne lenken til å administrere eller avslutte en gjentakende donasjon og oppdatere betalingsmåten din.",
+		"intro": "Bruk denne lenken til å administrere eller avslutte en fast donasjon og oppdatere betalingsmåten din.",
 		"note": "Hvis du ikke ba om denne lenken, kan du ignorere denne e-posten.",
 		"signoff": "{product_name}-teamet",
 		"subject": "Administrer {product_name}-bidragene dine"
 	},
 	"donation_payment_failed": {
 		"amount_label": "Beløp",
-		"date_label": "Betalingsforsøk",
+		"date_label": "Dato for betalingsforsøket",
 		"date_value": "{attemptedAt, date, long}",
 		"footer_reason": "Du mottok denne e-posten fordi en betaling for den faste donasjonen din til {product_name} krever handling fra deg.",
 		"heading": "{reason, select, action_required {Banken din ber deg bekrefte en betaling} other {Betalingen av donasjonen din gikk ikke gjennom}}",
@@ -93,14 +93,14 @@
 		"manage_link": "Administrer donasjonene dine",
 		"note": "{reply, select, yes {Trenger du hjelp, kan du svare på denne e-posten.} other {Trenger du hjelp, kan du kontakte administratorene for denne instansen.}}",
 		"preheader": "{reason, select, action_required {Bekreft {amountFormatted} for donasjonen din} other {Vi kunne ikke trekke {amountFormatted} for donasjonen din}}",
-		"reminder_subject": "Påminnelse: Bekreft betalingen av donasjonen din",
+		"reminder_subject": "Påminnelse om å bekrefte betalingen av donasjonen din",
 		"signoff": "{product_name}-teamet",
 		"subject": "{reason, select, action_required {Bekreft betalingen av donasjonen din til {product_name}} other {Betalingen av donasjonen din til {product_name} gikk ikke gjennom}}"
 	},
 	"donation_receipt": {
 		"date_label": "Betalingsdato",
 		"date_value": "{paidAt, date, long}",
-		"document_attached": "Kvitteringen for donasjonen din {documentNumber} er lagt ved denne e-posten som PDF.",
+		"document_attached": "Kvittering {documentNumber} for donasjonen din er lagt ved denne e-posten som PDF.",
 		"footer_reason": "{interval, select, year {Du mottok denne e-posten fordi du donerer til {product_name} hvert år.} other {Du mottok denne e-posten fordi du donerer til {product_name} hver måned.}}",
 		"heading": "Kvittering for donasjonen din",
 		"intro": "{document, select, yes {{interval, select, year {Takk for den årlige donasjonen din.} other {Takk for den månedlige donasjonen din.}}} other {{interval, select, year {Takk for den årlige donasjonen din. Denne e-posten er kvitteringen din.} other {Takk for den månedlige donasjonen din. Denne e-posten er kvitteringen din.}}}}",
@@ -142,10 +142,10 @@
 		"subject": "Den årlige donasjonen din til {product_name} fornyes {chargeAt, date, long}"
 	},
 	"dsa_report_resolved": {
-		"about": "{target, select, message_community {Du rapporterte en melding i #{channelName} i «{communityName}» den {reportedAt, date, long}.} message_dm {Du rapporterte en melding i en privat samtale den {reportedAt, date, long}.} message {Du rapporterte en melding den {reportedAt, date, long}.} user {Du rapporterte kontoen «{username}» den {reportedAt, date, long}.} community {Du rapporterte fellesskapet «{communityName}» den {reportedAt, date, long}.} other {Du sendte oss en rapport den {reportedAt, date, long}.}}",
+		"about": "{target, select, message_community {Du rapporterte en melding i #{channelName} i «{communityName}» den {reportedAt, date, long}.} message_dm {Du rapporterte en melding i en direktemelding den {reportedAt, date, long}.} message {Du rapporterte en melding den {reportedAt, date, long}.} user {Du rapporterte kontoen «{username}» den {reportedAt, date, long}.} community {Du rapporterte fellesskapet «{communityName}» den {reportedAt, date, long}.} other {Du sendte oss en rapport den {reportedAt, date, long}.}}",
 		"comment_label": "Merknad fra teamet vårt",
 		"footer_reason": "Du mottok denne e-posten fordi du sendte inn en rapport i henhold til Digital Services Act på {product_name}.",
-		"intro": "{outcome, select, removed {Vi fjernet det fordi det brøt reglene våre.} restricted {Kontoen brøt reglene våre, og vi har grepet inn. For å beskytte alles personvern forteller vi ikke hvordan vi grep inn.} action_taken {Det brøt reglene våre, og vi har grepet inn. For å beskytte alles personvern forteller vi ikke hvordan vi grep inn.} no_violation {{concern, select, self_harm {Takk for at du bryr deg om vedkommende. Teamet vårt har sett på det. Å snakke om å ha det tungt eller føle seg utrygg bryter ikke reglene våre, så vi har ikke fjernet noe, men vi kan sende personen informasjon om hvor de kan få hjelp. Vi forteller aldri hvem som sendte en rapport. Hvis du tror at noen er i umiddelbar fare, ring det lokale nødnummeret.} other {Teamet vårt har sett på det og kom fram til at det ikke bryter reglene våre, så vi har ikke grepet inn. En rapport kan likevel føre til andre tiltak, for eksempel at vi sender personen informasjon om hvor de kan få hjelp. Vi forteller aldri hvem som sendte en rapport.}}} other {Vi har avsluttet rapporten din.}}",
+		"intro": "{outcome, select, removed {Vi fjernet det fordi det brøt reglene våre.} restricted {Kontoen brøt reglene våre, og vi har grepet inn. For å beskytte alles personvern forteller vi ikke hvordan vi grep inn.} action_taken {Det brøt reglene våre, og vi har grepet inn. For å beskytte alles personvern forteller vi ikke hvordan vi grep inn.} no_violation {{concern, select, self_harm {Takk for at du bryr deg om vedkommende. Teamet vårt har sett på det. Å snakke om å ha det tungt eller føle seg utrygg bryter ikke reglene våre, så vi har ikke fjernet noe, men vi kan sende personen informasjon om hvor vedkommende kan få hjelp. Vi forteller aldri hvem som sendte en rapport. Hvis du tror at noen er i umiddelbar fare, ring det lokale nødnummeret.} other {Teamet vårt har sett på det og kom fram til at det ikke bryter reglene våre, så vi har ikke grepet inn. En rapport kan likevel føre til andre tiltak, for eksempel at vi sender personen informasjon om hvor vedkommende kan få hjelp. Vi forteller aldri hvem som sendte en rapport.}}} other {Vi har avsluttet rapporten din.}}",
 		"note": "{reply, select, yes {Hvis du er uenig, kan du svare på denne e-posten innen 60 dager.} other {{appeals_email, select, null {} other {Hvis du er uenig, kan du sende en e-post til <mail>{appeals_email}</mail> innen 60 dager og oppgi rapport-ID-en.}}}}{appeals_email, select, null {} other { I EU kan du også gå til et sertifisert <dsa>organ for utenrettslig tvisteløsning</dsa> eller klage til koordinatoren for digitale tjenester i landet ditt.}}",
 		"report_label": "Rapport-ID",
 		"signoff": "{product_name}-teamet",
@@ -190,7 +190,7 @@
 		"cta": "Bekreft e-postadresse",
 		"expiry": "Denne lenken utløper om 24 timer.",
 		"footer_reason": "Du mottok denne e-posten fordi denne adressen ble brukt for en {product_name}-konto.",
-		"intro": "Bekreft denne e-postadressen for å gjøre ferdig {product_name}-kontoen din.",
+		"intro": "Bekreft denne e-postadressen for å fullføre oppsettet av {product_name}-kontoen din.",
 		"note": "Hvis du ikke opprettet en {product_name}-konto, kan du ignorere denne e-posten.",
 		"signoff": "{product_name}-teamet",
 		"subject": "Bekreft e-postadressen din for {product_name}"
@@ -199,9 +199,9 @@
 		"expiry": "Denne koden utløper om {minutes, plural, one {# minutt} other {# minutter}}.",
 		"footer_reason": "Du mottok denne e-posten fordi denne adressen ble lagt til en {product_name}-konto.",
 		"intro": "Skriv inn denne koden i appen for å bekrefte e-postadressen din.",
-		"note": "Ikke del denne koden med noen. Ansatte i {product_name} vil aldri be om den. Hvis du ikke la til denne e-postadressen i en konto, kan du ignorere denne e-posten.",
+		"note": "Ikke del denne koden med noen. Ansatte hos {product_name} vil aldri be om den. Hvis du ikke la til denne e-postadressen i en konto, kan du ignorere denne e-posten.",
 		"signoff": "{product_name}-teamet",
-		"subject": "Din bekreftelseskode for {product_name}-e-post"
+		"subject": "Koden din for å bekrefte e-postadressen på {product_name}"
 	},
 	"enforcement_ended": {
 		"content_removed": "{content_removed, select, yes {Innhold vi har fjernet, kan ikke gjenopprettes.} other {}}",
@@ -230,7 +230,7 @@
 	},
 	"gift_chargeback_notification": {
 		"billing_resumed": "Fordi gaven ble fjernet, betaler du igjen for {plan, select, yearly {årsabonnementet} other {månedsabonnementet}} ditt på {premiumName} fra i dag. Du får en egen kvittering for betalingen. Du kan si opp abonnementet når som helst under «Administrer abonnement».",
-		"footer_reason": "Du mottok denne e-posten fordi fordeler ble fjernet fra din {product_name}-konto.",
+		"footer_reason": "Du mottok denne e-posten fordi fordeler ble fjernet fra {product_name}-kontoen din.",
 		"intro": "Betalingen for en gavekode du løste inn, ble tilbakeført, så vi har fjernet fordelene den ga kontoen din.",
 		"manage_cta": "Administrer abonnementet ditt",
 		"note": "{reply, select, yes {Hvis du tror dette er en feil, kan du svare på denne e-posten og fortelle oss hva du vet om gavekoden.} other {Hvis du tror dette er en feil, kan du kontakte administratorene for denne instansen og fortelle dem hva du vet om gavekoden.}}",
@@ -240,8 +240,8 @@
 	"harvest_completed": {
 		"cta": "Last ned dataene dine",
 		"expiry": "Last den ned før {expiresAt, date, long}.",
-		"footer_reason": "Du mottok denne e-posten fordi en dataeksport ble forespurt for din {product_name}-konto.",
-		"intro": "Din {product_name}-dataeksport er klar til nedlasting.",
+		"footer_reason": "Du mottok denne e-posten fordi det ble bedt om en dataeksport for {product_name}-kontoen din.",
+		"intro": "{product_name}-dataeksporten din er klar til nedlasting.",
 		"messages": "{totalMessages, number}",
 		"messages_label": "Meldinger",
 		"note": "{reply, select, yes {Hvis du ikke ba om denne eksporten, bør du endre passordet ditt nå og svare på denne e-posten.} other {Hvis du ikke ba om denne eksporten, bør du endre passordet ditt nå og kontakte administratorene for denne instansen.}}",
@@ -268,7 +268,7 @@
 		"location_label": "Sted",
 		"note": "Hvis det ikke var deg, bytt passord nå.",
 		"signoff": "{product_name}-teamet",
-		"subject": "Godkjenn en pålogging på {product_name} fra en ny IP-adresse"
+		"subject": "Godkjenn en innlogging på {product_name} fra en ny IP-adresse"
 	},
 	"mfa_backup_codes_view": {
 		"expiry": "Denne koden utløper om {minutes, plural, one {# minutt} other {# minutter}}.",
@@ -280,8 +280,8 @@
 	},
 	"operator_pass_offer_accepted": {
 		"footer_reason": "Du mottok denne e-posten fordi du ga et Operator Pass videre på {product_name}.",
-		"intro": "{recipientName} har tatt imot passet du ga videre, og det ligger nå på kontoen deres.",
-		"note": "{remainingCount, plural, =0 {{visionary, select, yes {Du har ingen Operator Pass igjen, så merket og oppføringen din på veggen er borte. Du beholder '#'operators gjennom Visionary-en din.} other {Du har ingen Operator Pass igjen, så merket, oppføringen din på veggen og '#'operators er borte.}}} =1 {Du har # Operator Pass igjen.} other {Du har # Operator Pass igjen.}}",
+		"intro": "{recipientName} har tatt imot passet du ga videre, og det ligger nå på kontoen til vedkommende.",
+		"note": "{remainingCount, plural, =0 {{visionary, select, yes {Du har ingen Operator Pass igjen, så merket og oppføringen din på veggen er borte. Du beholder '#'operators gjennom Visionary-statusen din.} other {Du har ingen Operator Pass igjen, så merket, oppføringen din på veggen og '#'operators er borte.}}} =1 {Du har # Operator Pass igjen.} other {Du har # Operator Pass igjen.}}",
 		"signoff": "{product_name}-teamet",
 		"subject": "{recipientName} har tatt imot ditt {product_name} Operator Pass"
 	},
@@ -309,7 +309,7 @@
 		"footer_reason": "Du mottok denne e-posten på grunn av en avgjørelse om Operator Pass for kontoen din hos {product_name}.",
 		"ground": "Paragraf 8 i vilkårene for Operator Pass",
 		"ground_label": "Grunnlag",
-		"intro": "{scope, select, permanent {Vi har fjernet det som følger med ditt Operator Pass, permanent.} other {Vi har fjernet det som følger med ditt Operator Pass, frem til {until, date, long}, da det kommer tilbake med den opprinnelige datoen på merket ditt.}} {visionary, select, yes {Dette omfatter oppføringen din på veggen, merket og Operator-rollen. Du beholder #operators gjennom Visionary-en din.} other {Dette omfatter oppføringen din på veggen, merket, #operators og Operator-rollen.}} {cause, select, dispute {Sertifikatsidene som betalingen gjaldt, er annullert og kan ikke lastes ned lenger, og {product_name}-kontoen din er ikke suspendert.} other {Operator-sertifikatet ditt påvirkes ikke, og {product_name}-kontoen din er ikke suspendert.}}",
+		"intro": "{scope, select, permanent {Vi har for godt fjernet det som følger med ditt Operator Pass.} other {Vi har fjernet det som følger med ditt Operator Pass frem til {until, date, long}. Da kommer det tilbake med den opprinnelige datoen på merket ditt.}} {visionary, select, yes {Dette omfatter oppføringen din på veggen, merket og Operator-rollen. Du beholder #operators gjennom Visionary-statusen din.} other {Dette omfatter oppføringen din på veggen, merket, #operators og Operator-rollen.}} {cause, select, dispute {Sertifikatsidene som betalingen gjaldt, er annullert og kan ikke lastes ned lenger, og {product_name}-kontoen din er ikke suspendert.} other {Operator-sertifikatet ditt påvirkes ikke, og {product_name}-kontoen din er ikke suspendert.}}",
 		"redress_v2": "Du kan også gå til domstolene. Hvis du er i EU, kan du bruke et sertifisert <dsa>organ for utenrettslig tvisteløsning</dsa>. Hvis du er forbruker i EU eller EØS, kan du også bringe tvisten inn for Sveriges nasjonale nemnd for forbrukertvister (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Sverige.",
 		"refund": "{scope, select, permanent {Du kan ikke kjøpe eller motta Operator Pass igjen så lenge denne avgjørelsen gjelder. } other {}}{cause, select, dispute {Vi gir ingen refusjon for denne fjerningen, fordi banken din allerede har betalt beløpet tilbake til deg.} other {Vi gir ingen refusjon for denne fjerningen, fordi prisen for Operator Pass bare betaler for Operator-sertifikatet, og det å fjerne det som følger med passet, annullerer ikke sertifikatet.}} Hvis du fortsatt kan angre kjøpet, tar ikke denne avgjørelsen fra deg den muligheten.",
 		"rule_label": "Regel",
@@ -336,7 +336,7 @@
 		"product_label": "Produkt",
 		"product_value": "{quantity, plural, one {{product_name} Operator Pass} other {# {product_name} Operator Pass}}",
 		"reverse_charge": "Det er ikke beregnet mva. fordi omvendt avgiftsplikt gjelder. Detaljene står på fakturaen.",
-		"seller": "Selger: Fluxer Platform AB, 559537-3993, sete Haninge, Sverige, {sellerAddress}, {sellerPhone}, <mail>{sellerEmail}</mail>",
+		"seller": "Selger er Fluxer Platform AB (org.nr. 559537-3993), et svensk selskap med sete i Haninge. Skriv til oss på {sellerAddress}, ring {sellerPhone} eller send e-post til <mail>{sellerEmail}</mail>.",
 		"signoff": "{product_name}-teamet",
 		"subject": "Kvitteringen din for {product_name} Operator Pass",
 		"tax_added": "Mva. på {taxFormatted} er lagt til prisen",
@@ -365,7 +365,7 @@
 		"footer_reason": "Du mottok denne e-posten fordi en betaling for Operator Pass på {product_name} ble refundert.",
 		"heading": "Refusjon av {amountFormatted}",
 		"intro": "Vi har refundert {amountFormatted} for kjøpet ditt av Operator Pass til kortet eller kontoen du betalte med. Det tar vanligvis 5 til 10 virkedager før pengene vises, avhengig av banken din.",
-		"lead": "{delivered, select, no {{passCount, plural, =1 {Vi hadde ikke levert sertifikatet ditt ennå, så ingenting annet endres på kontoen din.} other {Vi hadde ikke levert sertifikatene dine ennå, så ingenting annet endres på kontoen din.}}} other {{passCount, plural, =0 {Denne refusjonen avsluttet ingen av passene dine, så ingenting annet endres på kontoen din.} other {{passCount, plural, =1 {Passet er avsluttet.} other {# pass er avsluttet.}} {lastPass, select, yes {{visionary, select, yes {Merket ditt og oppføringen din på veggen er også avsluttet. Du beholder '#'operators gjennom Visionary-en din.} other {Merket ditt, oppføringen din på veggen og '#'operators er også avsluttet.}}} other {De andre passene dine blir værende.}}}}}}",
+		"lead": "{delivered, select, no {{passCount, plural, one {Vi hadde ikke levert sertifikatet ditt ennå, så ingenting annet endres på kontoen din.} other {Vi hadde ikke levert sertifikatene dine ennå, så ingenting annet endres på kontoen din.}}} other {{passCount, plural, =0 {Denne refusjonen avsluttet ingen av passene dine, så ingenting annet endres på kontoen din.} other {{passCount, plural, one {Passet er avsluttet.} other {# pass er avsluttet.}} {lastPass, select, yes {{visionary, select, yes {Merket ditt og oppføringen din på veggen er også avsluttet. Du beholder '#'operators gjennom Visionary-statusen din.} other {Merket ditt, oppføringen din på veggen og '#'operators er også avsluttet.}}} other {De andre passene dine blir værende.}}}}}}",
 		"note": "{reply, select, yes {Spørsmål om denne refusjonen? Svar på denne e-posten.} other {Har du spørsmål om denne refusjonen, kan du kontakte administratorene for denne instansen.}}",
 		"order_date_label": "Bestillingsdato",
 		"order_date_value": "{orderDate, date, long}",
@@ -377,27 +377,27 @@
 	},
 	"operator_pass_removal_notice": {
 		"facts_label": "Fakta vi har lagt til grunn",
-		"footer_reason": "Du mottok denne e-posten på grunn av en avgjørelse om Operator Pass på din {product_name}-konto.",
+		"footer_reason": "Du mottok denne e-posten på grunn av en avgjørelse om Operator Pass på {product_name}-kontoen din.",
 		"ground": "Paragraf 8 i vilkårene for Operator Pass",
 		"ground_label": "Grunnlag",
-		"intro": "Vi planlegger å fjerne det som følger med ditt Operator Pass, for godt. Du har {replyDays, plural, one {# dag} other {# dager}} på deg til å svare før vi bestemmer oss.",
+		"intro": "Vi planlegger å fjerne det som følger med ditt Operator Pass for godt. Du har {replyDays, plural, one {# dag} other {# dager}} på deg til å svare før vi bestemmer oss.",
 		"next_v2": "Hvis vi går videre, sender vi deg avgjørelsen på e-post og forteller hvordan du kan klage på den. Hvis du er forbruker i EU eller EØS, kan du også bringe en tvist om en fjerning inn for Sveriges nasjonale nemnd for forbrukertvister (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Sverige.",
-		"reply": "{reply, select, yes {Svar på denne e-posten og fortell oss alt vi bør vite.} other {Kontakt administratorene for denne instansen og fortell dem alt vi bør vite.}} En person i teamet vårt leser hvert svar før vi bestemmer oss. {visionary, select, yes {Inntil da forblir oppføringen din på veggen, merket ditt og Operator-rollen som de er. Du beholder #operators gjennom Visionary-en din.} other {Inntil da forblir oppføringen din på veggen, merket ditt, #operators og Operator-rollen som de er.}}",
+		"reply": "{reply, select, yes {Svar på denne e-posten og fortell oss alt vi bør vite.} other {Kontakt administratorene for denne instansen og fortell dem alt vi bør vite.}} En person i teamet vårt leser hvert svar før vi bestemmer oss. {visionary, select, yes {Inntil da forblir oppføringen din på veggen, merket ditt og Operator-rollen som de er. Du beholder #operators gjennom Visionary-statusen din.} other {Inntil da forblir oppføringen din på veggen, merket ditt, #operators og Operator-rollen som de er.}}",
 		"rule_label": "Regel",
 		"signoff": "{product_name}-teamet",
 		"subject": "Vi planlegger å fjerne det som følger med ditt {product_name} Operator Pass"
 	},
 	"operator_pass_revoked": {
 		"footer_reason": "Du mottok denne e-posten fordi et Operator Pass på {product_name}-kontoen din ble avsluttet.",
-		"intro": "{cause, select, dispute {Betalingen for et Operator Pass du har mottatt, ble tilbakeført i en betalingstvist, så passet er avsluttet. Dette skyldes ikke noe du har gjort.} withdrawal {Kjøperen av et Operator Pass du har mottatt, angret kjøpet, så passet er avsluttet. Dette skyldes ikke noe du har gjort.} visionary {Visionary-en din er avsluttet, så Operator Pass som fulgte med, er også avsluttet. I våre registre er sertifikatet annullert.} other {Betalingen for et Operator Pass du har mottatt, ble refundert, så passet er avsluttet. Dette skyldes ikke noe du har gjort.}}",
-		"note": "{lastPass, select, yes {{visionary, select, yes {Det var det siste passet ditt, så merket ditt og oppføringen din på veggen er borte. Du beholder #operators gjennom Visionary-en din.} other {Det var det siste passet ditt, så merket ditt, oppføringen din på veggen og #operators er borte.}}} other {De andre passene dine blir værende.}}",
+		"intro": "{cause, select, dispute {Betalingen for et Operator Pass du har mottatt, ble tilbakeført i en betalingstvist, så passet er avsluttet. Dette skyldes ikke noe du har gjort.} withdrawal {Kjøperen av et Operator Pass du har mottatt, angret kjøpet, så passet er avsluttet. Dette skyldes ikke noe du har gjort.} visionary {Visionary-statusen din er avsluttet, så Operator Pass som fulgte med, er også avsluttet. I våre registre er sertifikatet annullert.} other {Betalingen for et Operator Pass du har mottatt, ble refundert, så passet er avsluttet. Dette skyldes ikke noe du har gjort.}}",
+		"note": "{lastPass, select, yes {{visionary, select, yes {Det var det siste passet ditt, så merket ditt og oppføringen din på veggen er borte. Du beholder #operators gjennom Visionary-statusen din.} other {Det var det siste passet ditt, så merket ditt, oppføringen din på veggen og #operators er borte.}}} other {De andre passene dine blir værende.}}",
 		"signoff": "{product_name}-teamet",
 		"subject": "Et Operator Pass på {product_name}-kontoen din er avsluttet"
 	},
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {Operator-merket ditt vises på profilen din. Du kan skjule det i <settings>innstillingene</settings> dine.} other {Operator-merket ditt er skjult. Du kan vise det i <settings>innstillingene</settings> dine.}}",
 		"cta": "Åpne Fluxer Labs",
-		"footer_reason": "Du mottar denne e-posten fordi du slo på Operator Pass som følger med Visionary på {product_name}-kontoen din.",
+		"footer_reason": "Du mottok denne e-posten fordi du slo på Operator Pass som følger med Visionary på {product_name}-kontoen din.",
 		"intro": "Operator Pass er slått på. Sertifikatet ditt er vedlagt, og du kan laste det ned igjen i <settings>innstillingene</settings> dine. Ta vare på din egen kopi også, fordi vi sletter vår hvis kontoen din blir slettet.",
 		"labs_line": "{member, select, yes {Du har Operator-rollen i Fluxer Labs.} other {Med Operator Pass følger Operator-rollen i Fluxer Labs. Du har den når denne kontoen er i Fluxer Labs.}}",
 		"signoff": "{product_name}-teamet",
@@ -446,7 +446,7 @@
 		"footer_reason": "Du mottok denne e-posten på grunn av en avgjørelse om oppføringen din på Operators-veggen til {product_name}.",
 		"ground": "Paragraf 6.2 i vilkårene for bruk",
 		"ground_label": "Grunnlag",
-		"intro": "Vi fjernet sitatet fra plassen din på Operators-veggen. Resten av plassen din forblir som den er, og merket ditt og kjøpet ditt påvirkes ikke.",
+		"intro": "Vi fjernet sitatet fra oppføringen din på Operators-veggen. Resten av oppføringen forblir som den er, og merket ditt og kjøpet ditt påvirkes ikke.",
 		"next": "Du kan legge til et nytt sitat som følger retningslinjene for fellesskapet, i <settings>innstillingene</settings> dine.",
 		"reason_label": "Begrunnelse",
 		"reason_value": "{reason, select, impersonation {Utgir seg for å være noen andre} rights {Bruker andres tekst uten rettighetene til den} age_suitability {Passer ikke for yngre brukere} other {Bryter retningslinjene for fellesskapet}}",
@@ -461,9 +461,9 @@
 		"cta": "Åpne Fluxer Labs",
 		"delivered_label": "Levert",
 		"delivered_value": "{deliveredAt, date, long}",
-		"footer_reason": "Du mottok denne e-posten fordi et Operator Pass ble lagt til din {product_name}-konto.",
+		"footer_reason": "Du mottok denne e-posten fordi et Operator Pass ble lagt til på {product_name}-kontoen din.",
 		"intro": "Takk for at du støtter {product_name}. Operator-sertifikatet ditt er klart.",
-		"labs_line_v2": "{labs, select, visionary {Du har Operator-rollen i Fluxer Labs. #operators har du allerede gjennom Visionary-en din.} member {Du har Operator-rollen og #operators i Fluxer Labs.} other {Med Operator Pass følger Operator-rollen og #operators i Fluxer Labs. Du har dem når denne kontoen er i Fluxer Labs.}}",
+		"labs_line_v2": "{labs, select, visionary {Du har Operator-rollen i Fluxer Labs. #operators har du allerede gjennom Visionary-statusen din.} member {Du har Operator-rollen og #operators i Fluxer Labs.} other {Med Operator Pass følger Operator-rollen og #operators i Fluxer Labs. Du har dem når denne kontoen er i Fluxer Labs.}}",
 		"order_number_label": "Ordrenummer",
 		"pass_count_label": "Antall Operator Pass",
 		"signoff": "{founderName} og {product_name}-teamet",
@@ -479,10 +479,10 @@
 		"intro": "Vi mottok angremeldingen din {receivedAt, date, long} kl. {receivedAt, time, short}.",
 		"name_label": "Navn",
 		"note": "Ta vare på denne e-posten som bekreftelse på at vi har mottatt angremeldingen din.",
-		"order_date_label": "Ordredato",
+		"order_date_label": "Bestillingsdato",
 		"order_date_value": "{orderDate, date, long}",
 		"order_number_label": "Ordrenummer",
-		"refund": "{refund, select, dispute {Banken din åpnet først en betalingstvist for dette kjøpet, så vi godtok tvisten, og banken din betaler hele beløpet på {amountFormatted} tilbake til deg.} already {Vi hadde allerede refundert {amountFormatted} for dette kjøpet til betalingsmåten din, så det trengtes ingen ny refusjon.} other {Vi har startet en full refusjon av {amountFormatted} til betalingsmåten din. Banken din viser den vanligvis innen 5 til 10 virkedager.}} {delivered, select, no {{passCount, plural, =1 {Vi hadde ikke levert sertifikatet ditt ennå, så ingenting annet endres på kontoen din.} other {Vi hadde ikke levert sertifikatene dine ennå, så ingenting annet endres på kontoen din.}}} other {{passCount, plural, =1 {Passet er avsluttet.} other {# pass er avsluttet.}} {lastPass, select, yes {{visionary, select, yes {Merket ditt og oppføringen din på veggen er også avsluttet. Du beholder #operators gjennom Visionary-en din.} other {Merket ditt, oppføringen din på veggen og #operators er også avsluttet.}}} other {De andre passene dine blir værende.}}}}",
+		"refund": "{refund, select, dispute {Banken din åpnet først en betalingstvist for dette kjøpet, så vi godtok tvisten, og banken din betaler hele beløpet på {amountFormatted} tilbake til deg.} already {Vi hadde allerede refundert {amountFormatted} for dette kjøpet til betalingsmåten din, så det trengtes ingen ny refusjon.} other {Vi har startet en full refusjon av {amountFormatted} til betalingsmåten din. Banken din viser den vanligvis innen 5 til 10 virkedager.}} {delivered, select, no {{passCount, plural, one {Vi hadde ikke levert sertifikatet ditt ennå, så ingenting annet endres på kontoen din.} other {Vi hadde ikke levert sertifikatene dine ennå, så ingenting annet endres på kontoen din.}}} other {{passCount, plural, one {Passet er avsluttet.} other {# pass er avsluttet.}} {lastPass, select, yes {{visionary, select, yes {Merket ditt og oppføringen din på veggen er også avsluttet. Du beholder #operators gjennom Visionary-statusen din.} other {Merket ditt, oppføringen din på veggen og #operators er også avsluttet.}}} other {De andre passene dine blir værende.}}}}",
 		"refund_label": "Refusjon",
 		"signoff": "{product_name}-teamet",
 		"subject": "Vi har mottatt angremeldingen din for {product_name} Operator Pass"
@@ -498,7 +498,7 @@
 	"password_reset": {
 		"cta": "Angi nytt passord",
 		"expiry": "Denne lenken utløper om 1 time.",
-		"footer_reason": "Du mottok denne e-posten fordi en tilbakestilling av passord ble forespurt for din {product_name}-konto.",
+		"footer_reason": "Du mottok denne e-posten fordi det ble bedt om tilbakestilling av passordet på {product_name}-kontoen din.",
 		"intro": "Du ba om å tilbakestille {product_name}-passordet ditt.",
 		"ip_label": "IP-adresse",
 		"location_label": "Sted",
@@ -521,7 +521,7 @@
 		"intro": "Du bestred {product, select, plutonium {betalingen din for Plutonium} other {betalingen din for Operator Pass}} hos banken eller kortselskapet ditt. En person fra teamet vårt vurderte tvisten opp mot vilkårene våre og fant den uberettiget.",
 		"next_body": "Hvis du foretok denne betalingen, kan du be banken eller kortselskapet ditt om å trekke tilbake tvisten. Hvis tvisten trekkes tilbake eller avsluttes uten at du får pengene tilbake, skjer det ingenting med kontoen din. Til tvisten er avsluttet, kan du ikke kjøpe noe på {product_name}.{privacy_email, select, null {} other { Du kan når som helst be om en kopi av dataene dine ved å skrive til <mail>{privacy_email}</mail>.}}",
 		"next_title": "Hva som skjer nå",
-		"order_date_label": "Ordredato",
+		"order_date_label": "Bestillingsdato",
 		"order_date_value": "{orderDate, date, long}",
 		"order_number_label": "Ordrenummer",
 		"signoff": "{product_name}-teamet",
@@ -580,7 +580,7 @@
 	},
 	"plutonium_payment_failed": {
 		"amount_label": "Beløp",
-		"date_label": "Betalingsforsøk",
+		"date_label": "Dato for betalingsforsøket",
 		"date_value": "{attemptedAt, date, long}",
 		"footer_reason": "Du mottok denne e-posten fordi en betaling for {premiumName}-abonnementet ditt på {product_name} krever handling fra deg.",
 		"heading": "{reason, select, action_required {Banken din ber deg bekrefte en betaling} other {Betalingen din for {premiumName} gikk ikke gjennom}}",
@@ -589,13 +589,13 @@
 		"manage_link": "Oppdater betalingsmåten din under «Administrer abonnement»",
 		"note": "{reply, select, yes {Trenger du hjelp, kan du svare på denne e-posten.} other {Trenger du hjelp, kan du kontakte administratorene for denne instansen.}}",
 		"preheader": "{reason, select, action_required {Bekreft {amountFormatted} for {premiumName}} other {Vi kunne ikke trekke {amountFormatted} for {premiumName}}}",
-		"reminder_subject": "Påminnelse: Bekreft betalingen din for {premiumName}",
+		"reminder_subject": "Påminnelse om å bekrefte betalingen din for {premiumName}",
 		"signoff": "{product_name}-teamet",
 		"subject": "{reason, select, action_required {Bekreft betalingen din for {product_name} {premiumName}} other {Betalingen din for {product_name} {premiumName} gikk ikke gjennom}}"
 	},
 	"plutonium_payment_receipt": {
 		"consent_body": "Den {consentAt, date, long} ba du om at {premiumName} skulle starte med en gang. Du bekreftet også at du fortsatt kan angre kjøpet og få hele beløpet tilbake frem til angrefristen din går ut.",
-		"consent_body_pro_rata": "{gift, select, yes {{consentAt, date, long} ba du om at denne {premiumName}-gaven skulle starte så snart koden blir løst inn. Du bekreftet også at hvis du angrer innen 14 dager, får du alt tilbake hvis koden ikke er løst inn, og ellers betaler du for dagene mottakeren hadde {premiumName}, og får resten tilbake.} other {{consentAt, date, long} ba du om at {premiumName} skulle starte med en gang. Du bekreftet også at hvis du angrer innen 14 dager, betaler du for dagene du hadde {premiumName}, og får resten tilbake, og at du ikke lenger kan angre når tjenesten er levert i sin helhet.}}",
+		"consent_body_pro_rata": "{gift, select, yes {Den {consentAt, date, long} ba du om at denne {premiumName}-gaven skulle starte så snart koden blir løst inn. Du bekreftet også at hvis du angrer innen 14 dager, får du alt tilbake hvis koden ikke er løst inn, og ellers betaler du for dagene mottakeren hadde {premiumName}, og får resten tilbake.} other {Den {consentAt, date, long} ba du om at {premiumName} skulle starte med en gang. Du bekreftet også at hvis du angrer innen 14 dager, betaler du for dagene du hadde {premiumName}, og får resten tilbake, og at du ikke lenger kan angre når tjenesten er levert i sin helhet.}}",
 		"consent_title": "Oppstart med en gang",
 		"credit_label": "Brukt tilgodehavende",
 		"date_label": "Betalingsdato",
@@ -618,15 +618,15 @@
 		"product_label": "Produkt",
 		"product_value": "{plan, select, monthly {{premiumName}, månedlig} yearly {{premiumName}, årlig} gift_1_month {{premiumName}-gave, 1 måned} gift_1_year {{premiumName}-gave, 1 år} other {{premiumName}}}",
 		"reverse_charge": "Det er ikke beregnet mva. fordi omvendt avgiftsplikt gjelder. Detaljene står på fakturaen.",
-		"seller": "Selger: Fluxer Platform AB, 559537-3993, sete Haninge, Sverige, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"seller": "Selger er Fluxer Platform AB (org.nr. 559537-3993), et svensk selskap med sete i Haninge. Skriv til oss på {sellerAddress} eller send e-post til <mail>{sellerEmail}</mail>.",
 		"signoff": "{product_name}-teamet",
 		"subject": "{gift, select, yes {Kvitteringen din for {product_name} {premiumName} som gave} other {Kvitteringen din for {product_name} {premiumName}}}",
 		"tax_added": "Mva. på {taxFormatted} er lagt til prisen",
 		"tax_included": "Herav mva. {taxFormatted}",
 		"total_label": "Totalt",
 		"withdrawal_body": "Du kan angre dette kjøpet frem til {withdrawalEndsAt, date, long} og få hele beløpet tilbake. Hvis du vil angre, kan du svare på denne e-posten eller skrive til <mail>{sellerEmail}</mail> og si fra om at du angrer kjøpet. Du kan bruke skjemaet nedenfor, men du trenger ikke.",
-		"withdrawal_body_brazil": "Du kan angre dette kjøpet til kl. 23.59 Acre-tid (UTC-5) {withdrawalEndsAt, date, long} og få tilbake alt du betalte. For å angre svarer du på denne e-posten eller skriver til <mail>{sellerEmail}</mail> og sier at du angrer. Du kan bruke skjemaet nedenfor, men du må ikke.{gift, select, yes {} other { En automatisk fornyelse av det samme abonnementet starter ikke en ny angrefrist.}}",
-		"withdrawal_body_pro_rata": "Du kan angre dette kjøpet til og med {withdrawalEndsAt, date, long}. {gift, select, yes {Hvis koden ikke er løst inn, refunderer vi alt du betalte. Hvis den er det, refunderer vi det du betalte, minus andelen for dagene mottakeren hadde {premiumName}.} other {Hvis du gjør det, refunderer vi det du betalte, minus andelen for dagene du hadde {premiumName}. En automatisk fornyelse av samme abonnement starter ingen ny angrefrist.}} For å angre bruker du \"Angre avtalen her\" på {premiumName}-siden i \"Brukerinnstillinger\", eller svarer på denne e-posten eller skriver til <mail>{sellerEmail}</mail> og sier at du angrer. Du kan bruke skjemaet nedenfor, men du må ikke.",
+		"withdrawal_body_brazil": "Du kan angre dette kjøpet til kl. 23.59 Acre-tid (UTC-5) {withdrawalEndsAt, date, long} og få tilbake alt du betalte. For å angre svarer du på denne e-posten eller skriver til <mail>{sellerEmail}</mail> og sier at du angrer. Du kan bruke skjemaet nedenfor, men du trenger ikke.{gift, select, yes {} other { En automatisk fornyelse av det samme abonnementet starter ikke en ny angrefrist.}}",
+		"withdrawal_body_pro_rata": "Du kan angre dette kjøpet til og med {withdrawalEndsAt, date, long}. {gift, select, yes {Hvis koden ikke er løst inn, refunderer vi alt du betalte. Hvis den er det, refunderer vi det du betalte, minus andelen for dagene mottakeren hadde {premiumName}.} other {Hvis du gjør det, refunderer vi det du betalte, minus andelen for dagene du hadde {premiumName}. En automatisk fornyelse av samme abonnement starter ingen ny angrefrist.}} For å angre bruker du «Angre avtalen her» på {premiumName}-siden i «Brukerinnstillinger», eller svarer på denne e-posten eller skriver til <mail>{sellerEmail}</mail> og sier at du angrer. Du kan bruke skjemaet nedenfor, men du trenger ikke.",
 		"withdrawal_note": "Refusjonsknappen i appen fungerer i 3 dager etter en betaling. Den kommer i tillegg til angreretten din og erstatter den ikke.",
 		"withdrawal_title": "Angrerett"
 	},
@@ -669,14 +669,14 @@
 	},
 	"plutonium_withdrawal_receipt": {
 		"currency_label": "Valuta",
-		"footer_reason": "Du fikk denne e-posten fordi du angret et kjøp av {premiumName} på {product_name}.",
+		"footer_reason": "Du mottok denne e-posten fordi du angret et kjøp av {premiumName} på {product_name}.",
 		"intro": "Vi mottok angremeldingen din {receivedAt, date, long} kl. {receivedAt, time, short}.",
 		"name_label": "Navn",
 		"note": "Ta vare på denne e-posten som bekreftelse på at vi har mottatt angremeldingen din.",
 		"reference_label": "Referanse",
-		"refund": "{gift, select, yes {Gavekoden slutter å virke, og hvis noen har løst den inn, mister de tiden den ga.} other {{premiumName}-abonnementet ditt er avsluttet og fornyes ikke.}} {refund, select, manual {Vi fikk ikke startet refusjonen på {amountFormatted} automatisk, så en person i teamet vårt betaler beløpet tilbake til kortet eller kontoen du betalte med {brazil, select, yes {med en gang} other {innen 14 dager}}.} other {Vi har startet full refusjon av {amountFormatted} til kortet eller kontoen du betalte med. Det tar vanligvis 5 til 10 virkedager før pengene vises, avhengig av banken din.}} Når refusjonen er ferdig, sender vi deg kreditnotaen på e-post.",
+		"refund": "{gift, select, yes {Gavekoden slutter å virke, og hvis noen har løst den inn, mister vedkommende tiden den ga.} other {{premiumName}-abonnementet ditt er avsluttet og fornyes ikke.}} {refund, select, manual {Vi fikk ikke startet refusjonen på {amountFormatted} automatisk, så en person i teamet vårt betaler beløpet tilbake til kortet eller kontoen du betalte med {brazil, select, yes {med en gang} other {innen 14 dager}}.} other {Vi har startet full refusjon av {amountFormatted} til kortet eller kontoen du betalte med. Det tar vanligvis 5 til 10 virkedager før pengene vises, avhengig av banken din.}} Når refusjonen er ferdig, sender vi deg kreditnotaen på e-post.",
 		"refund_label": "Refusjon",
-		"refund_pro_rata": "{gift, select, yes {Gavekoden slutter å virke, og hvis noen har løst den inn, mister de tiden den ga.} other {{premiumName}-abonnementet ditt er avsluttet og fornyes ikke.}} {refund, select, manual {Vi fikk ikke startet refusjonen på {amountFormatted} automatisk, så en person i teamet vårt betaler beløpet tilbake til kortet eller kontoen du betalte med {brazil, select, yes {med en gang} other {innen 14 dager}}.} other {Vi har startet en refusjon på {amountFormatted} til kortet eller kontoen du betalte med. Det er det du betalte, minus andelen for dagene {premiumName} var i bruk. Det tar vanligvis 5 til 10 virkedager før den vises, avhengig av banken din.}} Når refusjonen er ferdig, sender vi deg kreditnotaen på e-post.",
+		"refund_pro_rata": "{gift, select, yes {Gavekoden slutter å virke, og hvis noen har løst den inn, mister vedkommende tiden den ga.} other {{premiumName}-abonnementet ditt er avsluttet og fornyes ikke.}} {refund, select, manual {Vi fikk ikke startet refusjonen på {amountFormatted} automatisk, så en person i teamet vårt betaler beløpet tilbake til kortet eller kontoen du betalte med {brazil, select, yes {med en gang} other {innen 14 dager}}.} other {Vi har startet en refusjon på {amountFormatted} til kortet eller kontoen du betalte med. Det er det du betalte, minus andelen for dagene {premiumName} var i bruk. Det tar vanligvis 5 til 10 virkedager før den vises, avhengig av banken din.}} Når refusjonen er ferdig, sender vi deg kreditnotaen på e-post.",
 		"signoff": "{product_name}-teamet",
 		"statement_label": "Angremeldingen din",
 		"statement_value": "{gift, select, yes {Jeg angrer avtalen min om {premiumName}-gaven som jeg kjøpte {purchasedAt, date, long}.} other {Jeg angrer avtalen min om {premiumName}-abonnementet som jeg betalte {purchasedAt, date, long}.}}",
@@ -684,11 +684,11 @@
 	},
 	"reauth_code": {
 		"expiry": "Denne koden utløper om {minutes, plural, one {# minutt} other {# minutter}}.",
-		"footer_reason": "Du mottok denne e-posten fordi en endring i din {product_name}-konto krevde en bekreftelseskode.",
+		"footer_reason": "Du mottok denne e-posten fordi en endring på {product_name}-kontoen din krevde en bekreftelseskode.",
 		"intro": "Skriv inn denne koden i appen for å bekrefte at det er deg før du endrer kontoen din.",
-		"note": "Ikke del denne koden med noen. Ansatte i {product_name} vil aldri be om den. Hvis du ikke ba om den, kan noen bruke kontoen din. Logg ut av alle økter og sjekk sikkerheten på kontoen din.",
+		"note": "Ikke del denne koden med noen. Ansatte hos {product_name} vil aldri be om den. Hvis du ikke ba om den, kan noen bruke kontoen din. Logg ut av alle økter og sjekk sikkerheten på kontoen din.",
 		"signoff": "{product_name}-teamet",
-		"subject": "Din bekreftelseskode for {product_name}"
+		"subject": "Bekreftelseskoden din for {product_name}"
 	},
 	"registration_approved": {
 		"cta": "Logg inn på {product_name}",
@@ -713,10 +713,10 @@
 		"subject": "Vi har mottatt {product_name}-rapporten din"
 	},
 	"report_resolved": {
-		"about": "{target, select, message_community {Du rapporterte en melding i #{channelName} i «{communityName}» den {reportedAt, date, long}.} message_dm {Du rapporterte en melding i en privat samtale den {reportedAt, date, long}.} message {Du rapporterte en melding den {reportedAt, date, long}.} user {Du rapporterte kontoen «{username}» den {reportedAt, date, long}.} community {Du rapporterte fellesskapet «{communityName}» den {reportedAt, date, long}.} other {Du sendte oss en rapport den {reportedAt, date, long}.}}",
+		"about": "{target, select, message_community {Du rapporterte en melding i #{channelName} i «{communityName}» den {reportedAt, date, long}.} message_dm {Du rapporterte en melding i en direktemelding den {reportedAt, date, long}.} message {Du rapporterte en melding den {reportedAt, date, long}.} user {Du rapporterte kontoen «{username}» den {reportedAt, date, long}.} community {Du rapporterte fellesskapet «{communityName}» den {reportedAt, date, long}.} other {Du sendte oss en rapport den {reportedAt, date, long}.}}",
 		"comment_label": "Merknad fra teamet vårt",
 		"footer_reason": "Du mottok denne e-posten fordi du sendte inn en rapport på {product_name}.",
-		"intro": "{outcome, select, removed {Vi fjernet det fordi det brøt reglene våre.} restricted {Kontoen brøt reglene våre, og vi har grepet inn. For å beskytte alles personvern forteller vi ikke hvordan vi grep inn.} action_taken {Det brøt reglene våre, og vi har grepet inn. For å beskytte alles personvern forteller vi ikke hvordan vi grep inn.} no_violation {{concern, select, self_harm {Takk for at du bryr deg om vedkommende. Teamet vårt har sett på det. Å snakke om å ha det tungt eller føle seg utrygg bryter ikke reglene våre, så vi har ikke fjernet noe, men vi kan sende personen informasjon om hvor de kan få hjelp. Vi forteller aldri hvem som sendte en rapport. Hvis du tror at noen er i umiddelbar fare, ring det lokale nødnummeret.} other {Teamet vårt har sett på det og kom fram til at det ikke bryter reglene våre, så vi har ikke grepet inn. En rapport kan likevel føre til andre tiltak, for eksempel at vi sender personen informasjon om hvor de kan få hjelp. Vi forteller aldri hvem som sendte en rapport.}}} other {Vi har avsluttet rapporten din.}}",
+		"intro": "{outcome, select, removed {Vi fjernet det fordi det brøt reglene våre.} restricted {Kontoen brøt reglene våre, og vi har grepet inn. For å beskytte alles personvern forteller vi ikke hvordan vi grep inn.} action_taken {Det brøt reglene våre, og vi har grepet inn. For å beskytte alles personvern forteller vi ikke hvordan vi grep inn.} no_violation {{concern, select, self_harm {Takk for at du bryr deg om vedkommende. Teamet vårt har sett på det. Å snakke om å ha det tungt eller føle seg utrygg bryter ikke reglene våre, så vi har ikke fjernet noe, men vi kan sende personen informasjon om hvor vedkommende kan få hjelp. Vi forteller aldri hvem som sendte en rapport. Hvis du tror at noen er i umiddelbar fare, ring det lokale nødnummeret.} other {Teamet vårt har sett på det og kom fram til at det ikke bryter reglene våre, så vi har ikke grepet inn. En rapport kan likevel føre til andre tiltak, for eksempel at vi sender personen informasjon om hvor vedkommende kan få hjelp. Vi forteller aldri hvem som sendte en rapport.}}} other {Vi har avsluttet rapporten din.}}",
 		"note": "{reply, select, yes {Hvis du er uenig, kan du svare på denne e-posten innen 60 dager.} other {{appeals_email, select, null {} other {Hvis du er uenig, kan du sende en e-post til <mail>{appeals_email}</mail> innen 60 dager og oppgi rapport-ID-en.}}}}{appeals_email, select, null {} other { I EU kan du også gå til et sertifisert <dsa>organ for utenrettslig tvisteløsning</dsa> eller klage til koordinatoren for digitale tjenester i landet ditt.}}",
 		"report_label": "Rapport-ID",
 		"signoff": "{product_name}-teamet",
@@ -736,18 +736,18 @@
 		"footer_reason": "Du mottok denne e-posten fordi noen ba om å logge inn på {product_name} med denne adressen.",
 		"intro": "Bruk denne koden til å logge inn på {product_name}.",
 		"location_label": "Forespurt fra",
-		"note": "Ikke del denne koden med noen. Ansatte i {product_name} vil aldri be om den. Hvis du ikke prøvde å logge inn, kan du ignorere denne e-posten.",
+		"note": "Ikke del denne koden med noen. Ansatte hos {product_name} vil aldri be om den. Hvis du ikke prøvde å logge inn, kan du ignorere denne e-posten.",
 		"signoff": "{product_name}-teamet",
-		"subject": "Din {product_name}-påloggingskode"
+		"subject": "Innloggingskoden din for {product_name}"
 	},
 	"sign_up_code": {
 		"device_label": "Enhet",
 		"expiry": "Denne koden utløper om {minutes, plural, one {# minutt} other {# minutter}}.",
 		"footer_reason": "Du mottok denne e-posten fordi noen ba om å opprette en {product_name}-konto med denne adressen.",
-		"intro": "Bruk denne koden til å gjøre ferdig {product_name}-kontoen din.",
+		"intro": "Bruk denne koden til å fullføre opprettelsen av {product_name}-kontoen din.",
 		"location_label": "Forespurt fra",
-		"note": "Ikke del denne koden med noen. Ansatte i {product_name} vil aldri be om den. Hvis du ikke prøvde å opprette en konto, kan du ignorere denne e-posten.",
+		"note": "Ikke del denne koden med noen. Ansatte hos {product_name} vil aldri be om den. Hvis du ikke prøvde å opprette en konto, kan du ignorere denne e-posten.",
 		"signoff": "{product_name}-teamet",
-		"subject": "Din registreringskode for {product_name}"
+		"subject": "Registreringskoden din for {product_name}"
 	}
 }

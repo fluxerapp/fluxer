@@ -32,7 +32,7 @@
 		"intro": "Am terminat de șters mesajele tale. Am eliminat {message_count, plural, =0 {0 mesaje} one {# mesaj} few {# mesaje} other {# de mesaje}} din {channel_count, plural, =0 {0 locuri} one {# loc} few {# locuri} other {# de locuri}}.",
 		"note": "{reply, select, yes {Dacă nu ai cerut asta, schimbă-ți parola acum și răspunde la acest e-mail.} other {Dacă nu ai cerut asta, schimbă-ți parola acum și contactează administratorii acestei instanțe.}}",
 		"signoff": "Echipa {product_name}",
-		"subject": "Am terminat de șters mesajele tale {product_name}"
+		"subject": "Am terminat de șters mesajele tale de pe {product_name}"
 	},
 	"donation_cancellation_confirmation": {
 		"charge_line_v2": "Nu îți vom mai percepe nimic.",
@@ -93,7 +93,7 @@
 		"manage_link": "Gestionează donațiile",
 		"note": "{reply, select, yes {Dacă ai nevoie de ajutor, răspunde la acest e-mail.} other {Dacă ai nevoie de ajutor, contactează administratorii acestei instanțe.}}",
 		"preheader": "{reason, select, action_required {Confirmă plata de {amountFormatted} pentru donația ta} other {Nu am putut încasa {amountFormatted} pentru donația ta}}",
-		"reminder_subject": "Memento: confirmă plata donației tale",
+		"reminder_subject": "Nu uita să confirmi plata donației tale",
 		"signoff": "Echipa {product_name}",
 		"subject": "{reason, select, action_required {Confirmă plata donației tale către {product_name}} other {Plata donației tale către {product_name} nu a reușit}}"
 	},
@@ -142,7 +142,7 @@
 		"subject": "Donația ta anuală către {product_name} se reînnoiește pe {chargeAt, date, long}"
 	},
 	"dsa_report_resolved": {
-		"about": "{target, select, message_community {Ai raportat un mesaj din #{channelName} din „{communityName}” pe {reportedAt, date, long}.} message_dm {Ai raportat un mesaj dintr-o conversație privată pe {reportedAt, date, long}.} message {Ai raportat un mesaj pe {reportedAt, date, long}.} user {Ai raportat contul „{username}” pe {reportedAt, date, long}.} community {Ai raportat comunitatea „{communityName}” pe {reportedAt, date, long}.} other {Ne-ai trimis un raport pe {reportedAt, date, long}.}}",
+		"about": "{target, select, message_community {Ai raportat un mesaj din #{channelName} din „{communityName}” pe {reportedAt, date, long}.} message_dm {Ai raportat un mesaj direct pe {reportedAt, date, long}.} message {Ai raportat un mesaj pe {reportedAt, date, long}.} user {Ai raportat contul „{username}” pe {reportedAt, date, long}.} community {Ai raportat comunitatea „{communityName}” pe {reportedAt, date, long}.} other {Ne-ai trimis un raport pe {reportedAt, date, long}.}}",
 		"comment_label": "Notă de la echipa noastră",
 		"footer_reason": "Ai primit acest e-mail deoarece ai trimis un raport conform Regulamentului privind serviciile digitale pe {product_name}.",
 		"intro": "{outcome, select, removed {Am eliminat conținutul pentru că încălca regulile noastre.} restricted {Contul a încălcat regulile noastre și am luat măsuri. Pentru a proteja confidențialitatea tuturor, nu spunem ce măsuri am luat.} action_taken {Ce ai raportat a încălcat regulile noastre și am luat măsuri. Pentru a proteja confidențialitatea tuturor, nu spunem ce măsuri am luat.} no_violation {{concern, select, self_harm {Îți mulțumim că ai grijă de această persoană. Echipa noastră a analizat raportul. Când cineva vorbește despre cât de greu îi este sau despre faptul că nu se simte în siguranță, asta nu încalcă regulile noastre, așa că nu am eliminat nimic, dar este posibil să îi trimitem persoanei resurse de sprijin. Nu dezvăluim niciodată cine a trimis un raport. Dacă crezi că cineva este în pericol imediat, sună la numărul local de urgență.} other {Echipa noastră a analizat raportul și a constatat că ce ai raportat nu încalcă regulile noastre, așa că nu am luat măsuri. Un raport poate duce totuși la alți pași, de exemplu trimiterea unor resurse de sprijin persoanei respective. Nu dezvăluim niciodată cine a trimis un raport.}}} other {Am închis raportul tău.}}",
@@ -213,7 +213,7 @@
 	},
 	"enforcement_notice": {
 		"appeal_body": "{appeals_email, select, null {} other {{reply, select, yes {Dacă crezi că am greșit, răspunde la acest e-mail până la {appeal_deadline}.} other {Dacă crezi că am greșit, scrie-ne la <mail>{appeals_email}</mail> până la {appeal_deadline} și include ID-ul deciziei.}} Contestațiile sunt gratuite, iar fiecare este analizată de o persoană.}}",
-		"appeal_title": "Cum poți contesta decizia",
+		"appeal_title": "Cum depui o contestație",
 		"decision_label": "ID decizie",
 		"effects": "{effects}",
 		"footer_reason": "Ai primit acest e-mail deoarece am luat o decizie privind contul tău {product_name}.",
@@ -224,7 +224,7 @@
 		"rule_label": "Regulă",
 		"signoff": "Echipa {product_name}",
 		"statement": "{statement, select, null {} other {Notă de la echipa noastră: {statement}}}",
-		"subject": "{neutral, select, yes {O actualizare despre contul tău {product_name}} other {{kind_label, select, warning {Un avertisment privind contul tău {product_name}} suspension {Contul tău {product_name} este suspendat} ban {Contul tău {product_name} este suspendat permanent} closure {Contul tău {product_name} este închis} feature_limit {Unele funcții ale contului tău {product_name} sunt limitate} content_removal {Am eliminat mesaje pe care le-ai trimis pe {product_name}} profile_reset {Am resetat unele părți ale profilului tău {product_name}} community_removal {Am eliminat comunitatea ta de pe {product_name}} bot {O actualizare despre botul tău de pe {product_name}} other {O actualizare despre contul tău {product_name}}}}}",
+		"subject": "{neutral, select, yes {O actualizare despre contul tău {product_name}} other {{kind_label, select, warning {Un avertisment privind contul tău {product_name}} suspension {Contul tău {product_name} este suspendat} ban {Contul tău {product_name} este banat} closure {Contul tău {product_name} este închis} feature_limit {Unele funcții ale contului tău {product_name} sunt limitate} content_removal {Am eliminat mesaje pe care le-ai trimis pe {product_name}} profile_reset {Am resetat unele părți ale profilului tău {product_name}} community_removal {Am eliminat comunitatea ta de pe {product_name}} bot {O actualizare despre botul tău de pe {product_name}} other {O actualizare despre contul tău {product_name}}}}}",
 		"why_body": "{facts}",
 		"why_title": "De ce"
 	},
@@ -281,7 +281,7 @@
 	"operator_pass_offer_accepted": {
 		"footer_reason": "Ai primit acest e-mail pentru că ai dat mai departe un Operator Pass pe {product_name}.",
 		"intro": "{recipientName} a acceptat Operator Pass-ul pe care l-ai dat mai departe, iar acesta este acum în contul său.",
-		"note": "{remainingCount, plural, =0 {{visionary, select, yes {Nu mai ai niciun Operator Pass, așa că insigna și înscrierea ta pe perete au dispărut. Păstrezi '#'operators prin Visionary-ul tău.} other {Nu mai ai niciun Operator Pass, așa că insigna, înscrierea ta pe perete și '#'operators au dispărut.}}} =1 {Mai ai # Operator Pass.} few {Mai ai # Operator Pass.} other {Mai ai # de Operator Pass.}}",
+		"note": "{remainingCount, plural, =0 {{visionary, select, yes {Nu mai ai niciun Operator Pass, așa că insigna și înscrierea ta pe perete au dispărut. Păstrezi '#'operators prin statutul tău Visionary.} other {Nu mai ai niciun Operator Pass, așa că insigna, înscrierea ta pe perete și '#'operators au dispărut.}}} one {Mai ai # Operator Pass.} few {Mai ai # Operator Pass-uri.} other {Mai ai # de Operator Pass-uri.}}",
 		"signoff": "Echipa {product_name}",
 		"subject": "{recipientName} a acceptat Operator Pass-ul tău {product_name}"
 	},
@@ -293,7 +293,7 @@
 	},
 	"operator_pass_offer_received": {
 		"cta": "Vezi oferta",
-		"footer_reason": "Ai primit acest e-mail pentru că cineva ți-a propus un Operator Pass pe {product_name}.",
+		"footer_reason": "Ai primit acest e-mail pentru că cineva ți-a oferit un Operator Pass pe {product_name}.",
 		"intro": "{senderName} vrea să-ți dea mai departe unul dintre Operator Pass-urile sale.",
 		"lead_v2": "Acceptă-l sau refuză-l în {product_name}. Dacă îl accepți, se mută imediat la tine.",
 		"signoff": "Echipa {product_name}",
@@ -309,7 +309,7 @@
 		"footer_reason": "Ai primit acest e-mail din cauza unei decizii legate de Operator Pass pentru contul tău {product_name}.",
 		"ground": "Secțiunea 8 din termenii Operator Pass",
 		"ground_label": "Temei",
-		"intro": "{scope, select, permanent {Am eliminat definitiv ce vine cu Operator Pass-ul tău.} other {Am eliminat ce vine cu Operator Pass-ul tău până pe {until, date, long}, când revine cu data inițială a insignei tale.}} {visionary, select, yes {Asta include înscrierea ta pe perete, insigna și rolul Operator. Păstrezi #operators prin Visionary-ul tău.} other {Asta include înscrierea ta pe perete, insigna, #operators și rolul Operator.}} {cause, select, dispute {Paginile certificatului plătite prin acea plată au fost anulate și nu mai pot fi descărcate, iar contul tău {product_name} nu este suspendat.} other {Certificatul tău Operator nu este afectat, iar contul tău {product_name} nu este suspendat.}}",
+		"intro": "{scope, select, permanent {Am eliminat definitiv ce vine cu Operator Pass-ul tău.} other {Am eliminat ce vine cu Operator Pass-ul tău până pe {until, date, long}, când revine cu data inițială a insignei tale.}} {visionary, select, yes {Asta include înscrierea ta pe perete, insigna și rolul Operator. Păstrezi #operators prin statutul tău Visionary.} other {Asta include înscrierea ta pe perete, insigna, #operators și rolul Operator.}} {cause, select, dispute {Paginile certificatului plătite prin acea plată au fost anulate și nu mai pot fi descărcate, iar contul tău {product_name} nu este suspendat.} other {Certificatul tău Operator nu este afectat, iar contul tău {product_name} nu este suspendat.}}",
 		"redress_v2": "Te poți adresa și instanței. Dacă ești în UE, te poți adresa unui <dsa>organism certificat de soluționare extrajudiciară a litigiilor</dsa>. Dacă ești consumator în UE sau în SEE, poți duce disputa și la Comisia Națională pentru Litigii de Consum din Suedia (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Suedia.",
 		"refund": "{scope, select, permanent {Nu poți cumpăra sau primi din nou Operator Pass cât timp această decizie rămâne în vigoare. } other {}}{cause, select, dispute {Nu oferim nicio rambursare pentru această eliminare, pentru că banca ta ți-a returnat deja plata.} other {Nu oferim nicio rambursare pentru această eliminare, pentru că prețul Operator Pass plătește doar certificatul Operator, iar eliminarea a ceea ce vine cu pass-ul nu anulează certificatul.}} Dacă încă te poți retrage din achiziție, această decizie nu îți ia acest drept.",
 		"rule_label": "Regula",
@@ -336,7 +336,7 @@
 		"product_label": "Produs",
 		"product_value": "{quantity, plural, one {{product_name} Operator Pass} few {# {product_name} Operator Pass-uri} other {# de {product_name} Operator Pass-uri}}",
 		"reverse_charge": "Nu s-a aplicat TVA, deoarece se aplică taxarea inversă. Detaliile sunt pe factură.",
-		"seller": "Vânzător: Fluxer Platform AB, 559537-3993, sediu social Haninge, Suedia, {sellerAddress}, {sellerPhone}, <mail>{sellerEmail}</mail>",
+		"seller": "Vânzătorul este Fluxer Platform AB (nr. de înregistrare 559537-3993), o companie suedeză cu sediul social în Haninge. Ne poți scrie la {sellerAddress}, ne poți suna la {sellerPhone} sau ne poți trimite un e-mail la <mail>{sellerEmail}</mail>.",
 		"signoff": "Echipa {product_name}",
 		"subject": "Chitanța pentru {product_name} Operator Pass",
 		"tax_added": "La preț s-au adăugat taxe de {taxFormatted}",
@@ -344,7 +344,7 @@
 		"terms_link": "Termenii Operator Pass",
 		"unit_price_label": "Preț per pass",
 		"wall_status_v2": "{wallOptOut, select, yes {Ai ales să nu apari pe peretele Operators. Îți poți adăuga numele din <settings>setări</settings>.} other {Apari pe peretele Operators ca {wallName}. Poți schimba numele sau poți părăsi peretele din <settings>setări</settings>.}}",
-		"withdrawal_country_v4": "{quantity, plural, =1 {La plată ne-ai cerut să îți livrăm certificatul imediat. Secțiunea 12 din termeni se aplică achiziției tale, așa că te poți retrage până pe {withdrawalEndsOn, date, long} și poți primi banii înapoi integral, chiar și după livrare. Folosește „Retrageți-vă din contract aici” lângă cumpărare în <settings>setările</settings> tale.} other {La plată ne-ai cerut să îți livrăm certificatele imediat. Secțiunea 12 din termeni se aplică achiziției tale, așa că te poți retrage până pe {withdrawalEndsOn, date, long} și poți primi banii înapoi integral, chiar și după livrare. Folosește „Retrageți-vă din contract aici” lângă cumpărare în <settings>setările</settings> tale.}}",
+		"withdrawal_country_v4": "{quantity, plural, =1 {La plată ne-ai cerut să îți livrăm certificatul imediat. Secțiunea 12 din termeni se aplică achiziției tale, așa că te poți retrage până pe {withdrawalEndsOn, date, long} și poți primi banii înapoi integral, chiar și după livrare. Folosește „Retrage-te din contract aici” lângă cumpărare în <settings>setările</settings> tale.} other {La plată ne-ai cerut să îți livrăm certificatele imediat. Secțiunea 12 din termeni se aplică achiziției tale, așa că te poți retrage până pe {withdrawalEndsOn, date, long} și poți primi banii înapoi integral, chiar și după livrare. Folosește „Retrage-te din contract aici” lângă cumpărare în <settings>setările</settings> tale.}}",
 		"withdrawal_heading": "Dreptul de retragere",
 		"withdrawal_waiver": "{quantity, plural, =1 {La plată ne-ai cerut să îți livrăm certificatul imediat și ai confirmat că îți pierzi dreptul de retragere după ce este livrat. Îl livrăm imediat după acest e-mail, așa că de atunci nu te mai poți retrage din cumpărare. Dacă certificatul nu este livrat sau are un defect, legea te protejează în continuare.} other {La plată ne-ai cerut să îți livrăm certificatele imediat și ai confirmat că îți pierzi dreptul de retragere după ce sunt livrate. Le livrăm imediat după acest e-mail, așa că de atunci nu te mai poți retrage din cumpărare. Dacă vreun certificat nu este livrat sau are un defect, legea te protejează în continuare.}}"
 	},
@@ -365,7 +365,7 @@
 		"footer_reason": "Ai primit acest e-mail deoarece o plată pentru Operator Pass pe {product_name} a fost rambursată.",
 		"heading": "Rambursare de {amountFormatted}",
 		"intro": "Ți-am rambursat {amountFormatted} pentru achiziția Operator Pass pe cardul sau în contul cu care ai plătit. De obicei, banii apar în 5–10 zile lucrătoare, în funcție de banca ta.",
-		"lead": "{delivered, select, no {{passCount, plural, =1 {Încă nu îți livraserăm certificatul, așa că nimic altceva nu se schimbă în contul tău.} other {Încă nu îți livraserăm certificatele, așa că nimic altceva nu se schimbă în contul tău.}}} other {{passCount, plural, =0 {Această rambursare nu a încheiat niciunul dintre pass-urile tale, așa că nimic altceva nu se schimbă în contul tău.} other {{passCount, plural, =1 {Pass-ul s-a încheiat.} few {# pass-uri s-au încheiat.} other {# de pass-uri s-au încheiat.}} {lastPass, select, yes {{visionary, select, yes {S-au încheiat și insigna și înscrierea de pe perete. Păstrezi '#'operators prin Visionary-ul tău.} other {S-au încheiat și insigna, înscrierea de pe perete și '#'operators.}}} other {Celelalte pass-uri rămân.}}}}}}",
+		"lead": "{delivered, select, no {{passCount, plural, one {Încă nu îți livraserăm certificatul, așa că nimic altceva nu se schimbă în contul tău.} few {Încă nu îți livraserăm certificatele, așa că nimic altceva nu se schimbă în contul tău.} other {Încă nu îți livraserăm certificatele, așa că nimic altceva nu se schimbă în contul tău.}}} other {{passCount, plural, =0 {Această rambursare nu a încheiat niciunul dintre pass-urile tale, așa că nimic altceva nu se schimbă în contul tău.} one {{passCount, plural, one {Pass-ul s-a încheiat.} few {# pass-uri s-au încheiat.} other {# de pass-uri s-au încheiat.}} {lastPass, select, yes {{visionary, select, yes {S-au încheiat și insigna și înscrierea de pe perete. Păstrezi '#'operators prin statutul tău Visionary.} other {S-au încheiat și insigna, înscrierea de pe perete și '#'operators.}}} other {Celelalte pass-uri rămân.}}} few {{passCount, plural, one {Pass-ul s-a încheiat.} few {# pass-uri s-au încheiat.} other {# de pass-uri s-au încheiat.}} {lastPass, select, yes {{visionary, select, yes {S-au încheiat și insigna și înscrierea de pe perete. Păstrezi '#'operators prin statutul tău Visionary.} other {S-au încheiat și insigna, înscrierea de pe perete și '#'operators.}}} other {Celelalte pass-uri rămân.}}} other {{passCount, plural, one {Pass-ul s-a încheiat.} few {# pass-uri s-au încheiat.} other {# de pass-uri s-au încheiat.}} {lastPass, select, yes {{visionary, select, yes {S-au încheiat și insigna și înscrierea de pe perete. Păstrezi '#'operators prin statutul tău Visionary.} other {S-au încheiat și insigna, înscrierea de pe perete și '#'operators.}}} other {Celelalte pass-uri rămân.}}}}}}",
 		"note": "{reply, select, yes {Întrebări despre această rambursare? Răspunde la acest e-mail.} other {Dacă ai întrebări despre această rambursare, contactează administratorii acestei instanțe.}}",
 		"order_date_label": "Data comenzii",
 		"order_date_value": "{orderDate, date, long}",
@@ -382,22 +382,22 @@
 		"ground_label": "Temei",
 		"intro": "Intenționăm să îți retragem definitiv ce vine cu Operator Pass-ul. Ai la dispoziție {replyDays, plural, one {# zi} few {# zile} other {# de zile}} ca să răspunzi înainte să decidem.",
 		"next_v2": "Dacă mergem mai departe, îți trimitem pe e-mail decizia și modul în care o poți contesta. Dacă ești consumator în UE sau în SEE, poți duce o dispută privind retragerea și la Comisia Națională pentru Litigii de Consum din Suedia (<arn>ARN</arn>), Box 174, 101 23 Stockholm, Suedia.",
-		"reply": "{reply, select, yes {Răspunde la acest e-mail și spune-ne orice ar trebui să știm.} other {Contactează administratorii acestei instanțe și spune-le orice ar trebui să știm.}} O persoană din echipa noastră citește fiecare răspuns înainte să decidem. {visionary, select, yes {Până atunci, înscrierea de pe perete, insigna și rolul Operator rămân așa cum sunt. Păstrezi #operators prin Visionary-ul tău.} other {Până atunci, înscrierea de pe perete, insigna, #operators și rolul Operator rămân așa cum sunt.}}",
+		"reply": "{reply, select, yes {Răspunde la acest e-mail și spune-ne orice ar trebui să știm.} other {Contactează administratorii acestei instanțe și spune-le orice ar trebui să știm.}} O persoană din echipa noastră citește fiecare răspuns înainte să decidem. {visionary, select, yes {Până atunci, înscrierea de pe perete, insigna și rolul Operator rămân așa cum sunt. Păstrezi #operators prin statutul tău Visionary.} other {Până atunci, înscrierea de pe perete, insigna, #operators și rolul Operator rămân așa cum sunt.}}",
 		"rule_label": "Regula",
 		"signoff": "Echipa {product_name}",
 		"subject": "Intenționăm să îți retragem ce vine cu {product_name} Operator Pass"
 	},
 	"operator_pass_revoked": {
 		"footer_reason": "Ai primit acest e-mail pentru că un Operator Pass din contul tău {product_name} s-a încheiat.",
-		"intro": "{cause, select, dispute {Plata pentru un Operator Pass pe care l-ai primit a fost anulată printr-o dispută de plată, așa că pass-ul s-a încheiat. Nu are legătură cu nimic din ce ai făcut.} withdrawal {Persoana care a cumpărat un Operator Pass pe care l-ai primit s-a retras din achiziție, așa că pass-ul s-a încheiat. Nu are legătură cu nimic din ce ai făcut.} visionary {Visionary-ul tău s-a încheiat, așa că și Operator Pass-ul inclus s-a încheiat. În evidențele noastre, certificatul lui apare ca anulat.} other {Plata pentru un Operator Pass pe care l-ai primit a fost rambursată, așa că pass-ul s-a încheiat. Nu are legătură cu nimic din ce ai făcut.}}",
-		"note": "{lastPass, select, yes {{visionary, select, yes {Era ultimul tău pass, așa că insigna și înscrierea de pe perete au dispărut. Păstrezi #operators prin Visionary-ul tău.} other {Era ultimul tău pass, așa că insigna, înscrierea de pe perete și #operators au dispărut.}}} other {Celelalte pass-uri rămân.}}",
+		"intro": "{cause, select, dispute {Plata pentru un Operator Pass pe care l-ai primit a fost anulată printr-o dispută de plată, așa că pass-ul s-a încheiat. Nu are legătură cu nimic din ce ai făcut.} withdrawal {Persoana care a cumpărat un Operator Pass pe care l-ai primit s-a retras din achiziție, așa că pass-ul s-a încheiat. Nu are legătură cu nimic din ce ai făcut.} visionary {Statutul tău Visionary s-a încheiat, așa că și Operator Pass-ul inclus s-a încheiat. În evidențele noastre, certificatul lui apare ca anulat.} other {Plata pentru un Operator Pass pe care l-ai primit a fost rambursată, așa că pass-ul s-a încheiat. Nu are legătură cu nimic din ce ai făcut.}}",
+		"note": "{lastPass, select, yes {{visionary, select, yes {Era ultimul tău pass, așa că insigna și înscrierea de pe perete au dispărut. Păstrezi #operators prin statutul tău Visionary.} other {Era ultimul tău pass, așa că insigna, înscrierea de pe perete și #operators au dispărut.}}} other {Celelalte pass-uri rămân.}}",
 		"signoff": "Echipa {product_name}",
 		"subject": "Un Operator Pass din contul tău {product_name} s-a încheiat"
 	},
 	"operator_pass_visionary_turned_on": {
 		"badge_line": "{badge, select, yes {Insigna ta Operator apare pe profil. O poți ascunde din <settings>setări</settings>.} other {Insigna ta Operator e ascunsă. O poți afișa din <settings>setări</settings>.}}",
 		"cta": "Deschide Fluxer Labs",
-		"footer_reason": "Primești acest e-mail pentru că ai activat Operator Pass-ul care vine cu Visionary pe contul tău {product_name}.",
+		"footer_reason": "Ai primit acest e-mail pentru că ai activat Operator Pass-ul inclus în Visionary în contul tău {product_name}.",
 		"intro": "Operator Pass-ul tău e activat. Certificatul e atașat și îl poți descărca din nou din <settings>setări</settings>. Păstrează și o copie a ta, pentru că noi o ștergem pe a noastră dacă îți este șters contul.",
 		"labs_line": "{member, select, yes {Ai rolul Operator în Fluxer Labs.} other {Cu Operator Pass-ul tău vine rolul Operator în Fluxer Labs. Îl ai oricând acest cont este în Fluxer Labs.}}",
 		"signoff": "Echipa {product_name}",
@@ -446,7 +446,7 @@
 		"footer_reason": "Ai primit acest e-mail din cauza unei decizii privind înscrierea ta de pe peretele Operators {product_name}.",
 		"ground": "Secțiunea 6.2 din termenii și condițiile de utilizare",
 		"ground_label": "Temei",
-		"intro": "Am scos citatul de pe locul tău de pe peretele Operators. Restul locului tău rămâne așa cum este, iar insigna și achiziția ta nu sunt afectate.",
+		"intro": "Am scos citatul din înscrierea ta de pe peretele Operators. Restul înscrierii rămâne așa cum este, iar insigna și achiziția ta nu sunt afectate.",
 		"next": "Poți adăuga un citat nou care respectă regulile comunității din <settings>setări</settings>.",
 		"reason_label": "Motiv",
 		"reason_value": "{reason, select, impersonation {Se dă drept altcineva} rights {Folosește textul altcuiva fără a avea drepturile asupra lui} age_suitability {Nu este potrivit pentru utilizatorii mai tineri} other {Încalcă regulile comunității}}",
@@ -463,7 +463,7 @@
 		"delivered_value": "{deliveredAt, date, long}",
 		"footer_reason": "Ai primit acest e-mail deoarece un Operator Pass a fost adăugat în contul tău {product_name}.",
 		"intro": "Îți mulțumim că susții {product_name}. Certificatul tău Operator este gata.",
-		"labs_line_v2": "{labs, select, visionary {Ai rolul Operator în Fluxer Labs. Ai deja #operators prin Visionary-ul tău.} member {Ai rolul Operator și #operators în Fluxer Labs.} other {Cu Operator Pass-ul tău vin rolul Operator și #operators în Fluxer Labs. Le ai oricând acest cont este în Fluxer Labs.}}",
+		"labs_line_v2": "{labs, select, visionary {Ai rolul Operator în Fluxer Labs. Ai deja #operators prin statutul tău Visionary.} member {Ai rolul Operator și #operators în Fluxer Labs.} other {Cu Operator Pass-ul tău vin rolul Operator și #operators în Fluxer Labs. Le ai oricând acest cont este în Fluxer Labs.}}",
 		"order_number_label": "Număr comandă",
 		"pass_count_label": "Operator Pass-uri",
 		"signoff": "{founderName} și echipa {product_name}",
@@ -482,10 +482,10 @@
 		"order_date_label": "Data comenzii",
 		"order_date_value": "{orderDate, date, long}",
 		"order_number_label": "Număr comandă",
-		"refund": "{refund, select, dispute {Banca ta a deschis mai întâi o dispută privind plata pentru această achiziție, așa că am acceptat disputa, iar banca îți returnează suma integrală de {amountFormatted}.} already {Îți rambursaserăm deja suma de {amountFormatted} pentru această achiziție către metoda ta de plată, așa că nu a fost nevoie de o nouă rambursare.} other {Am inițiat rambursarea integrală a sumei de {amountFormatted} către metoda ta de plată. De obicei, banca ta o afișează în 5–10 zile lucrătoare.}} {delivered, select, no {{passCount, plural, =1 {Încă nu îți livraserăm certificatul, așa că nimic altceva nu se schimbă în contul tău.} other {Încă nu îți livraserăm certificatele, așa că nimic altceva nu se schimbă în contul tău.}}} other {{passCount, plural, =1 {Pass-ul s-a încheiat.} few {# pass-uri s-au încheiat.} other {# de pass-uri s-au încheiat.}} {lastPass, select, yes {{visionary, select, yes {S-au încheiat și insigna și înscrierea de pe perete. Păstrezi #operators prin Visionary-ul tău.} other {S-au încheiat și insigna, înscrierea de pe perete și #operators.}}} other {Celelalte pass-uri rămân.}}}}",
+		"refund": "{refund, select, dispute {Banca ta a deschis mai întâi o dispută privind plata pentru această achiziție, așa că am acceptat disputa, iar banca îți returnează suma integrală de {amountFormatted}.} already {Îți rambursaserăm deja suma de {amountFormatted} pentru această achiziție către metoda ta de plată, așa că nu a fost nevoie de o nouă rambursare.} other {Am inițiat rambursarea integrală a sumei de {amountFormatted} către metoda ta de plată. De obicei, banca ta o afișează în 5–10 zile lucrătoare.}} {delivered, select, no {{passCount, plural, one {Încă nu îți livraserăm certificatul, așa că nimic altceva nu se schimbă în contul tău.} few {Încă nu îți livraserăm certificatele, așa că nimic altceva nu se schimbă în contul tău.} other {Încă nu îți livraserăm certificatele, așa că nimic altceva nu se schimbă în contul tău.}}} other {{passCount, plural, one {Pass-ul s-a încheiat.} few {# pass-uri s-au încheiat.} other {# de pass-uri s-au încheiat.}} {lastPass, select, yes {{visionary, select, yes {S-au încheiat și insigna și înscrierea de pe perete. Păstrezi #operators prin statutul tău Visionary.} other {S-au încheiat și insigna, înscrierea de pe perete și #operators.}}} other {Celelalte pass-uri rămân.}}}}",
 		"refund_label": "Rambursare",
 		"signoff": "Echipa {product_name}",
-		"subject": "Am primit retragerea ta din {product_name} Operator Pass"
+		"subject": "Am primit retragerea ta din achiziția {product_name} Operator Pass"
 	},
 	"password_change_verification": {
 		"expiry": "Acest cod expiră în {minutes, plural, one {# minut} few {# minute} other {# de minute}}.",
@@ -589,13 +589,13 @@
 		"manage_link": "Actualizează metoda de plată din „Gestionează abonamentul”",
 		"note": "{reply, select, yes {Dacă ai nevoie de ajutor, răspunde la acest e-mail.} other {Dacă ai nevoie de ajutor, contactează administratorii acestei instanțe.}}",
 		"preheader": "{reason, select, action_required {Confirmă plata de {amountFormatted} pentru {premiumName}} other {Nu am putut încasa {amountFormatted} pentru {premiumName}}}",
-		"reminder_subject": "Memento: confirmă plata pentru {premiumName}",
+		"reminder_subject": "Nu uita să confirmi plata pentru {premiumName}",
 		"signoff": "Echipa {product_name}",
 		"subject": "{reason, select, action_required {Confirmă plata pentru {product_name} {premiumName}} other {Plata pentru {product_name} {premiumName} nu a reușit}}"
 	},
 	"plutonium_payment_receipt": {
 		"consent_body": "Pe {consentAt, date, long} ai cerut ca {premiumName} să înceapă imediat. Ai confirmat și că te poți retrage în continuare, cu rambursare integrală, până la sfârșitul perioadei de retragere.",
-		"consent_body_pro_rata": "{gift, select, yes {Pe {consentAt, date, long} ai cerut ca acest cadou {premiumName} să înceapă imediat ce codul este revendicat. Ai confirmat și că, dacă te retragi în 14 zile, primești totul înapoi dacă codul nu a fost revendicat, iar altfel plătești zilele în care destinatarul a avut {premiumName} și primești restul înapoi.} other {Pe {consentAt, date, long} ai cerut ca {premiumName} să înceapă imediat. Ai confirmat și că, dacă te retragi în 14 zile, plătești zilele în care ai avut {premiumName} și primești restul înapoi și că nu te mai poți retrage după ce serviciul a fost prestat integral.}}",
+		"consent_body_pro_rata": "{gift, select, yes {Pe {consentAt, date, long} ai cerut ca acest cadou {premiumName} să înceapă imediat ce codul este valorificat. Ai confirmat și că, dacă te retragi în 14 zile, primești totul înapoi dacă codul nu a fost valorificat, iar altfel plătești zilele în care destinatarul a avut {premiumName} și primești restul înapoi.} other {Pe {consentAt, date, long} ai cerut ca {premiumName} să înceapă imediat. Ai confirmat și că, dacă te retragi în 14 zile, plătești zilele în care ai avut {premiumName} și primești restul înapoi și că nu te mai poți retrage după ce serviciul a fost prestat integral.}}",
 		"consent_title": "Începere imediată",
 		"credit_label": "Credit folosit",
 		"date_label": "Data plății",
@@ -604,9 +604,9 @@
 		"footer_reason": "Ai primit acest e-mail deoarece ai plătit pentru {premiumName} pe {product_name}.",
 		"form_body": "Către Fluxer Platform AB, {sellerAddress}, <mail>{sellerEmail}</mail>:\nVă informez prin prezenta că mă retrag din contractul pentru {premiumName}, încheiat pe {paidAt, date, long}.\nNumăr factură: {invoiceNumber}\nNume:\nAdresă:\nData:\nSemnătura (doar pe hârtie):",
 		"form_title": "Formular de retragere",
-		"gift_note": "Linkul cadoului se află în setări, la „Cadouri”. Copiază-l de acolo și trimite-l persoanei căreia vrei să îi dăruiești {premiumName}. Oricine are linkul îl poate folosi.",
+		"gift_note": "Linkul cadoului se află în setări, la „Cadouri”. Copiază-l de acolo și trimite-l persoanei căreia vrei să îi dăruiești {premiumName}. Oricine are linkul îl poate valorifica.",
 		"heading": "{gift, select, yes {Chitanța pentru cadoul tău {premiumName}} other {Chitanța pentru {premiumName}}}",
-		"intro": "{document, select, yes {{gift, select, yes {Îți mulțumim că ai cumpărat {premiumName} cadou.} other {Îți mulțumim pentru plată.}}} other {{gift, select, yes {Îți mulțumim că ai cumpărat {premiumName} cadou. Acest e-mail este chitanța ta.} other {Îți mulțumim pentru plată. Acest e-mail este chitanța ta.}}}}",
+		"intro": "{document, select, yes {{gift, select, yes {Îți mulțumim că ai cumpărat un cadou {premiumName}.} other {Îți mulțumim pentru plată.}}} other {{gift, select, yes {Îți mulțumim că ai cumpărat un cadou {premiumName}. Acest e-mail este chitanța ta.} other {Îți mulțumim pentru plată. Acest e-mail este chitanța ta.}}}}",
 		"invoice_label": "Număr factură",
 		"manage_link": "Gestionează abonamentul",
 		"paid_label": "Sumă plătită",
@@ -618,7 +618,7 @@
 		"product_label": "Produs",
 		"product_value": "{plan, select, monthly {{premiumName}, lunar} yearly {{premiumName}, anual} gift_1_month {{premiumName} cadou, 1 lună} gift_1_year {{premiumName} cadou, 1 an} other {{premiumName}}}",
 		"reverse_charge": "Nu s-a aplicat TVA, deoarece se aplică taxarea inversă. Detaliile sunt pe factură.",
-		"seller": "Vânzător: Fluxer Platform AB, 559537-3993, sediu social Haninge, Suedia, {sellerAddress}, <mail>{sellerEmail}</mail>",
+		"seller": "Vânzătorul este Fluxer Platform AB (nr. de înregistrare 559537-3993), o companie suedeză cu sediul social în Haninge. Ne poți scrie la {sellerAddress} sau ne poți trimite un e-mail la <mail>{sellerEmail}</mail>.",
 		"signoff": "Echipa {product_name}",
 		"subject": "{gift, select, yes {Chitanța pentru cadoul {product_name} {premiumName}} other {Chitanța ta pentru {product_name} {premiumName}}}",
 		"tax_added": "La preț s-au adăugat taxe de {taxFormatted}",
@@ -626,7 +626,7 @@
 		"total_label": "Total",
 		"withdrawal_body": "Te poți retrage din această achiziție până la {withdrawalEndsAt, date, long} și primești banii înapoi integral. Ca să te retragi, răspunde la acest e-mail sau scrie la <mail>{sellerEmail}</mail> și spune-ne că te retragi. Poți folosi formularul de mai jos, dar nu este obligatoriu.",
 		"withdrawal_body_brazil": "Te poți retrage din această achiziție până la ora 23:59, ora statului Acre (UTC-5), pe {withdrawalEndsAt, date, long} și primești înapoi tot ce ai plătit. Ca să te retragi, răspunde la acest e-mail sau scrie la <mail>{sellerEmail}</mail> și spune-ne că te retragi. Poți folosi formularul de mai jos, dar nu e obligatoriu.{gift, select, yes {} other { Reînnoirea automată a aceluiași plan nu începe o nouă perioadă de retragere.}}",
-		"withdrawal_body_pro_rata": "Te poți retrage din această achiziție până pe {withdrawalEndsAt, date, long}. {gift, select, yes {Dacă codul nu a fost revendicat, îți rambursăm tot ce ai plătit. Dacă a fost, îți rambursăm ce ai plătit minus partea pentru zilele în care destinatarul a avut {premiumName}.} other {Dacă o faci, îți rambursăm ce ai plătit minus partea pentru zilele în care ai avut {premiumName}. Reînnoirea automată a aceluiași plan nu începe o nouă perioadă de retragere.}} Ca să te retragi, folosește \"Retrageți-vă din contract aici\" pe pagina {premiumName} din \"Setări utilizator\" sau răspunde la acest e-mail ori scrie la <mail>{sellerEmail}</mail> și spune-ne că te retragi. Poți folosi formularul de mai jos, dar nu e obligatoriu.",
+		"withdrawal_body_pro_rata": "Te poți retrage din această achiziție până pe {withdrawalEndsAt, date, long}. {gift, select, yes {Dacă codul nu a fost valorificat, îți rambursăm tot ce ai plătit. Dacă a fost, îți rambursăm ce ai plătit minus partea pentru zilele în care destinatarul a avut {premiumName}.} other {Dacă o faci, îți rambursăm ce ai plătit minus partea pentru zilele în care ai avut {premiumName}. Reînnoirea automată a aceluiași plan nu începe o nouă perioadă de retragere.}} Ca să te retragi, folosește „Retrage-te din contract aici” pe pagina {premiumName} din „Setări utilizator” sau răspunde la acest e-mail ori scrie la <mail>{sellerEmail}</mail> și spune-ne că te retragi. Poți folosi formularul de mai jos, dar nu e obligatoriu.",
 		"withdrawal_note": "Butonul de rambursare din aplicație funcționează timp de 3 zile după o plată. Este un avantaj în plus față de dreptul tău de retragere și nu îl înlocuiește.",
 		"withdrawal_title": "Dreptul de retragere"
 	},
@@ -674,9 +674,9 @@
 		"name_label": "Nume",
 		"note": "Păstrează acest e-mail drept confirmare că am primit retragerea ta.",
 		"reference_label": "Referință",
-		"refund": "{gift, select, yes {Codul cadou nu mai funcționează, iar dacă cineva l-a folosit, pierde timpul pe care i l-a dat.} other {Abonamentul tău {premiumName} s-a încheiat și nu se mai reînnoiește.}} {refund, select, manual {Nu am putut porni automat rambursarea sumei de {amountFormatted}, așa că o persoană din echipa noastră o va trimite pe cardul sau în contul cu care ai plătit {brazil, select, yes {imediat} other {în 14 zile}}.} other {Am pornit rambursarea integrală a sumei de {amountFormatted} pe cardul sau în contul cu care ai plătit. De obicei, banii apar în 5–10 zile lucrătoare, în funcție de banca ta.}} După ce rambursarea se finalizează, îți trimitem nota de credit pe e-mail.",
+		"refund": "{gift, select, yes {Codul cadou nu mai funcționează, iar dacă cineva l-a valorificat, pierde timpul pe care i l-a dat.} other {Abonamentul tău {premiumName} s-a încheiat și nu se mai reînnoiește.}} {refund, select, manual {Nu am putut porni automat rambursarea sumei de {amountFormatted}, așa că o persoană din echipa noastră o va trimite pe cardul sau în contul cu care ai plătit {brazil, select, yes {imediat} other {în 14 zile}}.} other {Am pornit rambursarea integrală a sumei de {amountFormatted} pe cardul sau în contul cu care ai plătit. De obicei, banii apar în 5–10 zile lucrătoare, în funcție de banca ta.}} După ce rambursarea se finalizează, îți trimitem nota de credit pe e-mail.",
 		"refund_label": "Rambursare",
-		"refund_pro_rata": "{gift, select, yes {Codul cadou nu mai funcționează, iar dacă cineva l-a folosit, pierde timpul pe care i l-a dat.} other {Abonamentul tău {premiumName} s-a încheiat și nu se mai reînnoiește.}} {refund, select, manual {Nu am putut porni automat rambursarea sumei de {amountFormatted}, așa că o persoană din echipa noastră o va trimite pe cardul sau în contul cu care ai plătit {brazil, select, yes {imediat} other {în 14 zile}}.} other {Am inițiat o rambursare de {amountFormatted} pe cardul sau contul cu care ai plătit. Este suma plătită minus partea pentru zilele în care {premiumName} a fost folosit. De obicei apare în 5–10 zile lucrătoare, în funcție de bancă.}} După ce rambursarea se finalizează, îți trimitem nota de credit pe e-mail.",
+		"refund_pro_rata": "{gift, select, yes {Codul cadou nu mai funcționează, iar dacă cineva l-a valorificat, pierde timpul pe care i l-a dat.} other {Abonamentul tău {premiumName} s-a încheiat și nu se mai reînnoiește.}} {refund, select, manual {Nu am putut porni automat rambursarea sumei de {amountFormatted}, așa că o persoană din echipa noastră o va trimite pe cardul sau în contul cu care ai plătit {brazil, select, yes {imediat} other {în 14 zile}}.} other {Am inițiat o rambursare de {amountFormatted} pe cardul sau în contul cu care ai plătit. Este suma plătită minus partea pentru zilele în care {premiumName} a fost folosit. De obicei, banii apar în 5–10 zile lucrătoare, în funcție de banca ta.}} După ce rambursarea se finalizează, îți trimitem nota de credit pe e-mail.",
 		"signoff": "Echipa {product_name}",
 		"statement_label": "Retragerea ta",
 		"statement_value": "{gift, select, yes {Mă retrag din contractul pentru cadoul {premiumName} cumpărat pe {purchasedAt, date, long}.} other {Mă retrag din contractul pentru abonamentul {premiumName} plătit pe {purchasedAt, date, long}.}}",
@@ -702,7 +702,7 @@
 		"footer_reason": "Ai primit acest e-mail deoarece poți aproba conturi noi pe {product_name}.",
 		"intro": "Conturi noi pe {product_name} așteaptă aprobarea.",
 		"signoff": "Echipa {product_name}",
-		"subject": "Înscrieri noi așteaptă aprobarea pe {product_name}"
+		"subject": "Înregistrări noi așteaptă aprobarea pe {product_name}"
 	},
 	"report_received": {
 		"footer_reason": "Ai primit acest e-mail deoarece ai trimis un raport conform Regulamentului privind serviciile digitale pe {product_name}.",
@@ -713,7 +713,7 @@
 		"subject": "Am primit raportul tău de pe {product_name}"
 	},
 	"report_resolved": {
-		"about": "{target, select, message_community {Ai raportat un mesaj din #{channelName} din „{communityName}” pe {reportedAt, date, long}.} message_dm {Ai raportat un mesaj dintr-o conversație privată pe {reportedAt, date, long}.} message {Ai raportat un mesaj pe {reportedAt, date, long}.} user {Ai raportat contul „{username}” pe {reportedAt, date, long}.} community {Ai raportat comunitatea „{communityName}” pe {reportedAt, date, long}.} other {Ne-ai trimis un raport pe {reportedAt, date, long}.}}",
+		"about": "{target, select, message_community {Ai raportat un mesaj din #{channelName} din „{communityName}” pe {reportedAt, date, long}.} message_dm {Ai raportat un mesaj direct pe {reportedAt, date, long}.} message {Ai raportat un mesaj pe {reportedAt, date, long}.} user {Ai raportat contul „{username}” pe {reportedAt, date, long}.} community {Ai raportat comunitatea „{communityName}” pe {reportedAt, date, long}.} other {Ne-ai trimis un raport pe {reportedAt, date, long}.}}",
 		"comment_label": "Notă de la echipa noastră",
 		"footer_reason": "Ai primit acest e-mail deoarece ai trimis un raport pe {product_name}.",
 		"intro": "{outcome, select, removed {Am eliminat conținutul pentru că încălca regulile noastre.} restricted {Contul a încălcat regulile noastre și am luat măsuri. Pentru a proteja confidențialitatea tuturor, nu spunem ce măsuri am luat.} action_taken {Ce ai raportat a încălcat regulile noastre și am luat măsuri. Pentru a proteja confidențialitatea tuturor, nu spunem ce măsuri am luat.} no_violation {{concern, select, self_harm {Îți mulțumim că ai grijă de această persoană. Echipa noastră a analizat raportul. Când cineva vorbește despre cât de greu îi este sau despre faptul că nu se simte în siguranță, asta nu încalcă regulile noastre, așa că nu am eliminat nimic, dar este posibil să îi trimitem persoanei resurse de sprijin. Nu dezvăluim niciodată cine a trimis un raport. Dacă crezi că cineva este în pericol imediat, sună la numărul local de urgență.} other {Echipa noastră a analizat raportul și a constatat că ce ai raportat nu încalcă regulile noastre, așa că nu am luat măsuri. Un raport poate duce totuși la alți pași, de exemplu trimiterea unor resurse de sprijin persoanei respective. Nu dezvăluim niciodată cine a trimis un raport.}}} other {Am închis raportul tău.}}",
