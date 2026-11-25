@@ -410,13 +410,6 @@ export class SnapshotReducer {
 			case 'PRESENCE_UPDATE':
 				this.applyPresenceUpdate(emit, dispatch.data);
 				return;
-			case 'PRESENCE_UPDATE_BULK': {
-				const payload = dispatch.data;
-				for (const presence of payload.presences) {
-					this.applyPresenceUpdate(emit, {...presence, guild_id: payload.guild_id ?? presence.guild_id});
-				}
-				return;
-			}
 			case 'FAVORITE_MEME_CREATE':
 				this.accountReducer.applyFavoriteMemeCreate(emit, dispatch.data);
 				return;

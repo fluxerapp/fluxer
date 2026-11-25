@@ -34,7 +34,6 @@ import type {GuildRoleUpdateBulkPayload} from '@app/features/guild/events/GuildR
 import type {GuildStickersUpdatePayload} from '@app/features/guild/events/GuildStickersUpdate';
 import type {PassiveUpdatesPayload} from '@app/features/guild/events/PassiveUpdates';
 import type {MessageAckPayload} from '@app/features/messaging/events/MessageAck';
-import type {PresenceUpdateBulkPayload} from '@app/features/presence/events/PresenceUpdateBulk';
 import type {RelationshipWire} from '@app/features/relationship/models/Relationship';
 import type {AuthSessionChangePayload} from '@app/features/user/events/AuthSessionChange';
 import type {UserNoteUpdatePayload} from '@app/features/user/events/UserNoteUpdate';
@@ -121,7 +120,6 @@ interface SnapshotDispatchDataMap {
 	readonly RELATIONSHIP_REMOVE: SnapshotRelationshipRemovePayload;
 	readonly USER_UPDATE: UserUpdatePayload;
 	readonly PRESENCE_UPDATE: PresenceRecord;
-	readonly PRESENCE_UPDATE_BULK: PresenceUpdateBulkPayload;
 	readonly FAVORITE_MEME_CREATE: FavoriteMemeWire;
 	readonly FAVORITE_MEME_UPDATE: FavoriteMemeWire;
 	readonly FAVORITE_MEME_DELETE: FavoriteMemeDeletePayload;
@@ -173,7 +171,6 @@ const SnapshotDispatchEvent = Object.freeze({
 	RELATIONSHIP_REMOVE: 'RELATIONSHIP_REMOVE',
 	USER_UPDATE: 'USER_UPDATE',
 	PRESENCE_UPDATE: 'PRESENCE_UPDATE',
-	PRESENCE_UPDATE_BULK: 'PRESENCE_UPDATE_BULK',
 	FAVORITE_MEME_CREATE: 'FAVORITE_MEME_CREATE',
 	FAVORITE_MEME_UPDATE: 'FAVORITE_MEME_UPDATE',
 	FAVORITE_MEME_DELETE: 'FAVORITE_MEME_DELETE',

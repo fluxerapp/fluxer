@@ -52,7 +52,6 @@ import {handleSavedMessageDelete} from '@app/features/messaging/events/SavedMess
 import {handleTypingStart} from '@app/features/messaging/events/TypingStart';
 import {handleOperatorPassUpdate} from '@app/features/premium/events/OperatorPassUpdate';
 import {handlePresenceUpdate} from '@app/features/presence/events/PresenceUpdate';
-import {handlePresenceUpdateBulk} from '@app/features/presence/events/PresenceUpdateBulk';
 import {handleRelationshipAdd} from '@app/features/relationship/events/RelationshipAdd';
 import {handleRelationshipRemove} from '@app/features/relationship/events/RelationshipRemove';
 import {handleRelationshipUpdate} from '@app/features/relationship/events/RelationshipUpdate';
@@ -164,7 +163,6 @@ export function createHandlerRegistry(): GatewayHandlerRegistry {
 	registry.set('SAVED_MESSAGE_CREATE', handleSavedMessageCreate as GatewayEventHandler);
 	registry.set('SAVED_MESSAGE_DELETE', handleSavedMessageDelete as GatewayEventHandler);
 	registry.set('PRESENCE_UPDATE', handlePresenceUpdate as GatewayEventHandler);
-	registry.set('PRESENCE_UPDATE_BULK', handlePresenceUpdateBulk as GatewayEventHandler);
 	registry.set('VOICE_STATE_UPDATE', handleVoiceStateUpdate as GatewayEventHandler);
 	registry.set('VOICE_SERVER_UPDATE', handleVoiceServerUpdate as GatewayEventHandler);
 	registry.set('VOICE_SIGNAL', handleVoiceSignal as GatewayEventHandler);
