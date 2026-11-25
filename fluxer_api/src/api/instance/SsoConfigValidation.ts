@@ -177,9 +177,6 @@ export async function validateSsoPublicOutboundUrl(rawUrl: string, fieldName: st
 			unresolvable ? ValidationErrorCodes.URL_HOSTNAME_NOT_RESOLVABLE : ValidationErrorCodes.URL_NOT_PUBLICLY_ROUTABLE,
 		);
 	}
-	// Return the caller's exact input rather than parsedUrl.toString(), which would normalize
-	// the URL (e.g. appending a trailing slash) and break exact-match comparisons such as the
-	// OIDC issuer check in jwtVerify. Invalid URLs have already thrown above.
 	return rawUrl;
 }
 

@@ -38,7 +38,7 @@ function ensureDiscoveryEnabled(): void {
 	}
 }
 
-function mapDiscoveryRowToResponse(row: GuildDiscoveryRow) {
+export function mapDiscoveryRowToResponse(row: GuildDiscoveryRow) {
 	return {
 		guild_id: row.guild_id.toString(),
 		status: row.status,

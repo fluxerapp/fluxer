@@ -29,7 +29,6 @@ export interface RouteRateLimitConfig {
 const TEST_ENABLE_RATE_LIMITS_HEADER = 'x-fluxer-test-enable-rate-limits';
 const INTERNAL_KEY_HEADER = 'x-fluxer-internal-key';
 const FORWARDED_CLIENT_IP_HEADER = 'x-fluxer-client-ip';
-const LEGACY_FORWARDED_CLIENT_IP_HEADER = 'x-fluxer-donor-ip';
 
 export function shouldEnforceRateLimits(ctx: Context<HonoEnv>): boolean {
 	if (!Config.dev.testModeEnabled) {
@@ -70,7 +69,7 @@ function isTrustedCallerForBucket(ctx: Context<HonoEnv>, bucket: string): boolea
 
 export function getTrustedForwardedClientIp(ctx: Context<HonoEnv>, bucket: string): string | null {
 	if (!isTrustedCallerForBucket(ctx, bucket)) return null;
-	const rawHeader = ctx.req.header(FORWARDED_CLIENT_IP_HEADER) ?? ctx.req.header(LEGACY_FORWARDED_CLIENT_IP_HEADER);
+	const rawHeader = ctx.req.header(FORWARDED_CLIENT_IP_HEADER);
 	const headerValue = rawHeader?.split(',', 1)[0].trim();
 	if (!headerValue) return null;
 	return parseIpAddress(headerValue)?.normalized ?? null;

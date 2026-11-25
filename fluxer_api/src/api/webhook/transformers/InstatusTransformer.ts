@@ -26,37 +26,23 @@ const COLOUR_MAINTENANCE = 0x3b82f6 as const;
 const COLOUR_NEUTRAL = 0x5c6bc0 as const;
 
 const STATUS_LABELS: Record<string, string> = {
-	// Page.
 	UP: 'All systems operational',
 	HASISSUES: 'Has issues',
-	// Component.
 	OPERATIONAL: 'Operational',
 	UNDERMAINTENANCE: 'Under maintenance',
 	DEGRADEDPERFORMANCE: 'Degraded performance',
 	PARTIALOUTAGE: 'Partial outage',
 	MAJOROUTAGE: 'Major outage',
-	// Incident.
 	INVESTIGATING: 'Investigating',
 	IDENTIFIED: 'Identified',
 	MONITORING: 'Monitoring',
 	RESOLVED: 'Resolved',
-	// Maintenance.
-	/**
-	 * @remarks Documented but not observable. May have swapped to `PLANNED` at some point.
-	 */
 	NOTSTARTEDYET: 'Scheduled',
-	/**
-	 * @remarks Undocumented but observable. May be `NOTSTARTEDYET`'s replacement.
-	 */
 	PLANNED: 'Planned',
 	INPROGRESS: 'In progress',
 	COMPLETED: 'Completed',
 };
 
-/**
- * @remarks Instatus is inconsistent about casing. `page.status_indicator` arrives as
- * SCREAMINGCASE ("UP") whilst incident and maintenance statuses arrive in title case.
- */
 function normaliseStatusToken(status: string): string {
 	return status.toUpperCase().replace(/[^A-Z]/g, '');
 }
@@ -66,18 +52,15 @@ function humaniseStatus(status: string): string {
 }
 
 const STATUS_COLOURS: Record<string, number> = {
-	// Component.
 	OPERATIONAL: COLOUR_OPERATIONAL,
 	UNDERMAINTENANCE: COLOUR_MAINTENANCE,
 	DEGRADEDPERFORMANCE: COLOUR_DEGRADED,
 	PARTIALOUTAGE: COLOUR_PARTIAL_OUTAGE,
 	MAJOROUTAGE: COLOUR_MAJOR_OUTAGE,
-	// Incident.
 	INVESTIGATING: COLOUR_MAJOR_OUTAGE,
 	IDENTIFIED: COLOUR_PARTIAL_OUTAGE,
 	MONITORING: COLOUR_DEGRADED,
 	RESOLVED: COLOUR_OPERATIONAL,
-	// Maintenance.
 	NOTSTARTEDYET: COLOUR_MAINTENANCE,
 	PLANNED: COLOUR_MAINTENANCE,
 	INPROGRESS: COLOUR_MAINTENANCE,

@@ -5,6 +5,7 @@ import {recordAdminRead, recordAdminWrite} from '@app/api/admin/AdminAuditRecord
 import {formatOwnerFields} from '@app/api/admin/models/GuildTypes';
 import {createGuildID} from '@app/api/BrandedTypes';
 import type {GuildDiscoveryRow} from '@app/api/database/types/GuildDiscoveryTypes';
+import {mapDiscoveryRowToResponse} from '@app/api/guild/controllers/GuildDiscoveryController';
 import {mapGuildFeatures} from '@app/api/guild/GuildFeatureUtils';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import {Logger} from '@app/api/Logger';
@@ -34,22 +35,6 @@ import {
 } from '@fluxer/schema/src/domains/guild/GuildDiscoverySchemas';
 
 const DISCOVERY_LISTING_FIELDS = ['description', 'category_type', 'primary_language', 'custom_tags'] as const;
-
-function mapRowToApplicationResponse(row: GuildDiscoveryRow) {
-	return {
-		guild_id: row.guild_id.toString(),
-		status: row.status,
-		description: row.description,
-		category_type: row.category_type,
-		primary_language: row.primary_language ?? null,
-		custom_tags: row.custom_tags ?? [],
-		applied_at: row.applied_at.toISOString(),
-		reviewed_at: row.reviewed_at?.toISOString() ?? null,
-		review_reason: row.review_reason ?? null,
-		removed_at: row.removed_at?.toISOString() ?? null,
-		removal_reason: row.removal_reason ?? null,
-	};
-}
 
 interface GuildEnrichment {
 	name: string;
@@ -195,7 +180,7 @@ export function DiscoveryAdminController(app: HonoApp) {
 				action: approved ? 'approve_discovery_application' : 'reject_discovery_application',
 				metadata: {status: data.status},
 			});
-			return ctx.json(mapRowToApplicationResponse(row));
+			return ctx.json(mapDiscoveryRowToResponse(row));
 		},
 	);
 	app.get(
@@ -388,7 +373,7 @@ export function DiscoveryAdminController(app: HonoApp) {
 					status: row.status,
 				},
 			});
-			return ctx.json(mapRowToApplicationResponse(row));
+			return ctx.json(mapDiscoveryRowToResponse(row));
 		},
 	);
 	app.delete(
@@ -418,7 +403,7 @@ export function DiscoveryAdminController(app: HonoApp) {
 				targetId: guildId,
 				action: 'remove_discovery_listing',
 			});
-			return ctx.json(mapRowToApplicationResponse(row));
+			return ctx.json(mapDiscoveryRowToResponse(row));
 		},
 	);
 }

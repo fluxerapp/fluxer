@@ -138,10 +138,9 @@ describe('RateLimitMiddleware trusted callers', () => {
 		const harness = buildTrustedHarness(DonationRateLimitConfigs.DONATION_MANAGE);
 
 		await callTrustedRoute(harness, {'x-fluxer-internal-key': BUGS_KEY, 'x-fluxer-client-ip': FORWARDED_IP});
-		await callTrustedRoute(harness, {'x-fluxer-internal-key': BUGS_KEY, 'x-fluxer-donor-ip': FORWARDED_IP});
 
-		expect(harness.service.globalIdentifiers).toEqual([`ip:${CALLER_IP}`, `ip:${CALLER_IP}`]);
-		expect(harness.service.buckets).toEqual([`ip:${CALLER_IP}:donation:manage`, `ip:${CALLER_IP}:donation:manage`]);
+		expect(harness.service.globalIdentifiers).toEqual([`ip:${CALLER_IP}`]);
+		expect(harness.service.buckets).toEqual([`ip:${CALLER_IP}:donation:manage`]);
 	});
 
 	test('ignores the donation key on oauth:token', async () => {
@@ -152,33 +151,14 @@ describe('RateLimitMiddleware trusted callers', () => {
 		expect(harness.service.buckets).toEqual([`ip:${CALLER_IP}:oauth:token`]);
 	});
 
-	test('accepts the donation key on its routes with the new and the old address header', async () => {
+	test('accepts the donation key on its routes', async () => {
 		for (const routeConfig of Object.values(DonationRateLimitConfigs)) {
 			const harness = buildTrustedHarness(routeConfig);
 
 			await callTrustedRoute(harness, {'x-fluxer-internal-key': DONATION_KEY, 'x-fluxer-client-ip': FORWARDED_IP});
-			await callTrustedRoute(harness, {
-				'x-fluxer-internal-key': DONATION_KEY,
-				'x-fluxer-donor-ip': OTHER_FORWARDED_IP,
-			});
 
-			expect(harness.service.buckets).toEqual([
-				`ip:${FORWARDED_IP}:${routeConfig.bucket}`,
-				`ip:${OTHER_FORWARDED_IP}:${routeConfig.bucket}`,
-			]);
+			expect(harness.service.buckets).toEqual([`ip:${FORWARDED_IP}:${routeConfig.bucket}`]);
 		}
-	});
-
-	test('prefers the new address header when both are sent', async () => {
-		const harness = buildTrustedHarness(DonationRateLimitConfigs.DONATION_MANAGE);
-
-		await callTrustedRoute(harness, {
-			'x-fluxer-internal-key': DONATION_KEY,
-			'x-fluxer-client-ip': FORWARDED_IP,
-			'x-fluxer-donor-ip': OTHER_FORWARDED_IP,
-		});
-
-		expect(harness.service.buckets).toEqual([`ip:${FORWARDED_IP}:donation:manage`]);
 	});
 
 	test('ignores a wrong key of the same or a different length, and a missing key', async () => {
