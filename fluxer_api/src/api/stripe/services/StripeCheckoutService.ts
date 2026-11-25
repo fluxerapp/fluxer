@@ -24,6 +24,7 @@ import {
 	resolveDistributionRule,
 } from '@app/api/stripe/DistributionPricing';
 import type {ProductInfo, ProductRegistry} from '@app/api/stripe/ProductRegistry';
+import {getStripeCheckoutLocale} from '@app/api/stripe/StripeCheckoutLocale';
 import {ensureStripeCustomer, isStripeResourceMissingError} from '@app/api/stripe/StripeCustomer';
 import {getPortalConfigurationId} from '@app/api/stripe/StripePortalConfiguration';
 import {getCachedStripePriceSummary, type StripePriceSummary} from '@app/api/stripe/StripePriceSummaryCache';
@@ -289,6 +290,7 @@ export class StripeCheckoutService {
 		const checkoutParams: CheckoutSessionCreateParams = {
 			customer: customerId,
 			client_reference_id: userId.toString(),
+			locale: getStripeCheckoutLocale(user.locale),
 			metadata: checkoutMetadata,
 			...(billing.termsConsentRequired ? {consent_collection: {terms_of_service: 'required'}} : {}),
 			...checkoutCustomText({
