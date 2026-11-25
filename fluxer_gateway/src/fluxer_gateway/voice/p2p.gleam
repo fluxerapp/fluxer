@@ -121,9 +121,18 @@ pub fn participant_cap(max: Option(Int)) -> Int {
 
 pub fn reports_rejection(reason: GatewayError) -> Bool {
   case reason {
-    error.VoiceP2pConsentRequired
-    | error.VoiceP2pUnavailable
-    | error.VoiceChannelFull -> True
+    error.VoicePermissionDenied
+    | error.VoiceModeratorMissingConnect
+    | error.VoiceMemberTimedOut
+    | error.VoiceChannelFull
+    | error.VoiceConnectionLimitReached
+    | error.VoiceUnclaimedAccount
+    | error.VoiceAccountVerificationRequired
+    | error.VoiceCameraUserLimit
+    | error.VoiceE2eeRequired
+    | error.VoiceTokenFailed
+    | error.VoiceP2pConsentRequired
+    | error.VoiceP2pUnavailable -> True
     _ -> False
   }
 }
