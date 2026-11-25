@@ -369,7 +369,7 @@ export function OAuth2Controller(app: HonoApp) {
 		},
 	);
 	app.delete(
-		'/oauth2/@me/authorizations/:applicationId',
+		'/oauth2/@me/authorizations/:application_id',
 		RateLimitMiddleware(RateLimitConfigs.OAUTH_INTROSPECT),
 		LoginRequired,
 		DefaultUserOnly,
@@ -386,7 +386,7 @@ export function OAuth2Controller(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const user = ctx.get('user');
-			const applicationId = ctx.req.valid('param').applicationId;
+			const applicationId = ctx.req.valid('param').application_id;
 			await ctx.get('oauth2RequestService').deleteAuthorization(user.id, applicationId);
 			return ctx.body(null, 204);
 		},

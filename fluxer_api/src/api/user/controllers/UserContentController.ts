@@ -253,7 +253,7 @@ export function UserContentController(app: HonoApp) {
 		},
 	);
 	app.get(
-		'/users/@me/harvest/:harvestId',
+		'/users/@me/harvest/:harvest_id',
 		RateLimitMiddleware(RateLimitConfigs.USER_HARVEST_STATUS),
 		LoginRequired,
 		DefaultUserOnly,
@@ -269,7 +269,7 @@ export function UserContentController(app: HonoApp) {
 				'Retrieves detailed status information for a specific data harvest. Shows progress, completion status, and other metadata about the harvest request.',
 		}),
 		async (ctx) => {
-			const {harvestId} = ctx.req.valid('param');
+			const {harvest_id: harvestId} = ctx.req.valid('param');
 			const harvest = await ctx.get('userContentRequestService').getHarvestStatus({
 				userId: ctx.get('user').id,
 				harvestId,
@@ -278,7 +278,7 @@ export function UserContentController(app: HonoApp) {
 		},
 	);
 	app.get(
-		'/harvest-downloads/:harvestId',
+		'/harvest-downloads/:harvest_id',
 		RateLimitMiddleware(RateLimitConfigs.USER_HARVEST_DOWNLOAD_FILE),
 		Validator('param', HarvestIdParam),
 		Validator('query', HarvestDownloadQuery, (result, ctx) =>
@@ -296,7 +296,7 @@ export function UserContentController(app: HonoApp) {
 				'Streams a completed data harvest archive. Authorised by a signed, expiring token rather than a session, so the link works from the harvest completion email. Only active when presigned harvest downloads are disabled.',
 		}),
 		async (ctx) => {
-			const {harvestId} = ctx.req.valid('param');
+			const {harvest_id: harvestId} = ctx.req.valid('param');
 			const {token} = ctx.req.valid('query');
 			try {
 				const result = await ctx.get('userContentRequestService').streamHarvestDownload({
@@ -330,7 +330,7 @@ export function UserContentController(app: HonoApp) {
 		},
 	);
 	app.get(
-		'/users/@me/harvest/:harvestId/download',
+		'/users/@me/harvest/:harvest_id/download',
 		RateLimitMiddleware(RateLimitConfigs.USER_HARVEST_DOWNLOAD),
 		LoginRequired,
 		DefaultUserOnly,
@@ -346,7 +346,7 @@ export function UserContentController(app: HonoApp) {
 				'Retrieves the download URL for a completed data harvest. The URL is temporary and expires after a set time. Can only be accessed for completed harvests.',
 		}),
 		async (ctx) => {
-			const {harvestId} = ctx.req.valid('param');
+			const {harvest_id: harvestId} = ctx.req.valid('param');
 			const result = await ctx.get('userContentRequestService').getHarvestDownloadUrl({
 				userId: ctx.get('user').id,
 				harvestId,

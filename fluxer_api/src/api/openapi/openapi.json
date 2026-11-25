@@ -11768,7 +11768,7 @@
 				]
 			}
 		},
-		"/harvest-downloads/{harvestId}": {
+		"/harvest-downloads/{harvest_id}": {
 			"get": {
 				"operationId": "download_data_harvest_archive",
 				"summary": "Download data harvest archive",
@@ -11816,7 +11816,7 @@
 				"description": "Streams a completed data harvest archive. Authorised by a signed, expiring token rather than a session, so the link works from the harvest completion email. Only active when presigned harvest downloads are disabled.",
 				"parameters": [
 					{
-						"name": "harvestId",
+						"name": "harvest_id",
 						"in": "path",
 						"required": true,
 						"schema": {"description": "The ID of the harvest request", "$ref": "#/components/schemas/SnowflakeType"},
@@ -12771,7 +12771,7 @@
 				}
 			}
 		},
-		"/oauth2/@me/authorizations/{applicationId}": {
+		"/oauth2/@me/authorizations/{application_id}": {
 			"delete": {
 				"operationId": "delete_user_oauth2_authorization",
 				"summary": "Revoke OAuth2 authorization",
@@ -12821,7 +12821,7 @@
 				"security": [{"sessionToken": []}],
 				"parameters": [
 					{
-						"name": "applicationId",
+						"name": "application_id",
 						"in": "path",
 						"required": true,
 						"schema": {"description": "The ID of the application", "$ref": "#/components/schemas/SnowflakeType"},
@@ -21239,7 +21239,7 @@
 				"security": [{"sessionToken": []}]
 			}
 		},
-		"/users/@me/harvest/{harvestId}": {
+		"/users/@me/harvest/{harvest_id}": {
 			"get": {
 				"operationId": "get_data_harvest_status",
 				"summary": "Get data harvest status",
@@ -21292,7 +21292,7 @@
 				"security": [{"sessionToken": []}],
 				"parameters": [
 					{
-						"name": "harvestId",
+						"name": "harvest_id",
 						"in": "path",
 						"required": true,
 						"schema": {"description": "The ID of the harvest request", "$ref": "#/components/schemas/SnowflakeType"},
@@ -21301,7 +21301,7 @@
 				]
 			}
 		},
-		"/users/@me/harvest/{harvestId}/download": {
+		"/users/@me/harvest/{harvest_id}/download": {
 			"get": {
 				"operationId": "get_data_harvest_download_url",
 				"summary": "Get data harvest download URL",
@@ -21354,7 +21354,7 @@
 				"security": [{"sessionToken": []}],
 				"parameters": [
 					{
-						"name": "harvestId",
+						"name": "harvest_id",
 						"in": "path",
 						"required": true,
 						"schema": {"description": "The ID of the harvest request", "$ref": "#/components/schemas/SnowflakeType"},

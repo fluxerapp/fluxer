@@ -101,7 +101,7 @@ export const TargetIdParam = z.object({
 export type TargetIdParam = z.infer<typeof TargetIdParam>;
 
 export const ApplicationAuthorizationIdParam = z.object({
-	applicationId: SnowflakeType.describe('The ID of the application'),
+	application_id: SnowflakeType.describe('The ID of the application'),
 });
 
 export type ApplicationAuthorizationIdParam = z.infer<typeof ApplicationAuthorizationIdParam>;
@@ -199,7 +199,7 @@ export const JobIdParam = z.object({
 export type JobIdParam = z.infer<typeof JobIdParam>;
 
 export const HarvestIdParam = z.object({
-	harvestId: SnowflakeType.describe('The ID of the harvest request'),
+	harvest_id: SnowflakeType.describe('The ID of the harvest request'),
 });
 
 export type HarvestIdParam = z.infer<typeof HarvestIdParam>;
