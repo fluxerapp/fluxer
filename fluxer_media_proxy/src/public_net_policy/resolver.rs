@@ -54,8 +54,6 @@ impl Resolve for PinnedDnsResolver {
     }
 }
 
-// reqwest and the hyper connector box this rejection behind errors of their own, so the source
-// chain is the only way back to the decision the resolver made.
 pub fn is_pinned_dns_failure(error: &(dyn std::error::Error + 'static)) -> bool {
     let mut current = Some(error);
     while let Some(error) = current {

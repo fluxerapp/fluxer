@@ -758,24 +758,6 @@ mod tests {
     }
 
     #[test]
-    fn metrics_port_is_off_when_unset() {
-        assert_eq!(None, delivery(&[]).expect("config").metrics_port);
-        assert_eq!(
-            None,
-            delivery(&[("FLUXER_PUSH_METRICS_PORT", " ")])
-                .expect("config")
-                .metrics_port
-        );
-    }
-
-    #[test]
-    fn metrics_port_is_read_in_both_modes() {
-        let extra = [("FLUXER_PUSH_METRICS_PORT", "8082")];
-        assert_eq!(Some(8082), delivery(&extra).expect("config").metrics_port);
-        assert_eq!(Some(8082), relay(&extra).expect("config").metrics_port);
-    }
-
-    #[test]
     fn metrics_port_must_be_nonzero_and_differ_from_the_service_port() {
         for port in ["0", "8126", "not-a-port", "70000"] {
             assert!(

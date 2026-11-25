@@ -141,10 +141,6 @@ pub(in crate::server) fn coalesced_work_result<T>(result: anyhow::Result<T>) -> 
 }
 
 pub(in crate::server) fn transform_error_is_timeout(error: &anyhow::Error) -> bool {
-    // A shed admission is reported as a timeout: the old era had one admission semaphore whose
-    // exhaustion surfaced as TimedSemaphoreError::RequestTimeout, so every caller answered 504
-    // with its own timeout reason code. Giving a full queue its own class moves the transform
-    // routes to 503 and metadata SVG rasterize to 400.
     let admission = error.downcast_ref::<TimedSemaphoreError>();
     error.downcast_ref::<MediaError>() == Some(&MediaError::RequestTimeout)
         || admission == Some(&TimedSemaphoreError::RequestTimeout)

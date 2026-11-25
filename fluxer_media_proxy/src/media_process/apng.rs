@@ -461,8 +461,6 @@ pub(super) fn encode_animated_apng(
     let mut sequence_number = 0u32;
     let mut encoded_frames = 0usize;
     for frame_index in 0..frame_count {
-        // Overrunning the encode deadline shortens the animation instead of failing the request;
-        // the flush headroom is reserved so the frames already written still reach the client.
         if ensure_deadline_pending(deadline).is_err() {
             break;
         }

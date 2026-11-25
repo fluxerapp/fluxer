@@ -23,8 +23,6 @@ pub(super) enum ExternalStreamDecision {
     Buffer,
 }
 
-// A passthrough streams on the strength of its content type alone. An upstream that declares no
-// length still streams; the declared length only decides whether the response can name one.
 pub(super) fn external_stream_decision(
     allow_stream: bool,
     content_length: Option<u64>,

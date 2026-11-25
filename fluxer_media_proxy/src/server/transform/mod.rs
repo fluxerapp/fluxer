@@ -748,8 +748,6 @@ pub(in crate::server) struct CachedTransformProbe<'a> {
     pub(in crate::server) params: &'a HashMap<String, String>,
 }
 
-// Answers a repeat transform from the cache without the caller fetching the source
-// bytes again, so a hot remote asset costs one upstream fetch per cache lifetime.
 pub(in crate::server) fn cached_transform_response(
     runtime: &TransformRuntime,
     probe: CachedTransformProbe<'_>,

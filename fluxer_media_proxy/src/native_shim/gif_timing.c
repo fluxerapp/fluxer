@@ -228,8 +228,6 @@ int fluxer_read_gif_frame_delays(const uint8_t *bytes, size_t len,
         }
         int status = skip_gif_image_block(bytes, len, &offset, &block_count);
         if (status != FLUXER_NATIVE_STATUS_OK) return status;
-        /* A frame with no Graphics Control Extension declares no delay, which renders at the
-         * 100 ms browser default rather than the fast-frame minimum. */
         int delay_cs = has_pending_delay
                      ? pending_delay_cs
                      : FLUXER_DEFAULT_ANIMATION_FRAME_DELAY_MS / 10;

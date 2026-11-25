@@ -263,8 +263,6 @@ fn svg_rasterize_failed_response(cache_identity: &str) -> Response {
     )
 }
 
-/// Resolves the object's full length, preferring what the store already reported on the streamed
-/// reply so the common path never needs a second upstream request.
 async fn passthrough_total_len(
     app: &Arc<AppState>,
     bucket: &str,

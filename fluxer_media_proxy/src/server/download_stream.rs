@@ -42,8 +42,6 @@ impl DownloadStreamPolicy {
         }
     }
 
-    // Only the external route feeds the overrun counter: a stored object that outruns its own
-    // Content-Length is a store bug, not the misbehaving-origin signal that series tracks.
     pub(in crate::server) fn for_external(
         socket_io_timeout_ms: NonZeroU64,
         overruns: Arc<ExternalMetrics>,

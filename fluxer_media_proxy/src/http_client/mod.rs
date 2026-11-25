@@ -99,10 +99,6 @@ impl Default for HTTPClientOptions {
 }
 
 pub fn build_raw(options: HTTPClientOptions) -> Result<reqwest::Client, reqwest::Error> {
-    // System proxy discovery stays on. HTTP_PROXY, HTTPS_PROXY, ALL_PROXY and NO_PROXY are part
-    // of the deployment's egress configuration, so an operator who funnels egress through a
-    // gateway gets storage reads and external fetches routed through it. The healthcheck probe
-    // is the one client that opts out, because it only ever dials this process on loopback.
     let mut builder = reqwest::Client::builder()
         .connect_timeout(Duration::from_millis(options.connect_timeout_ms.get()))
         .redirect(reqwest::redirect::Policy::none())

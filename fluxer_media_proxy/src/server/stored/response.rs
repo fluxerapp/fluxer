@@ -53,9 +53,6 @@ pub(super) fn streaming_media_response(response: StreamingMediaResponse<'_>) -> 
     } else {
         StatusCode::OK
     };
-    // Advertise the range the store actually satisfied, not one recomputed locally: an origin is
-    // free to answer a different span than the client asked for, and Content-Range must describe
-    // the bytes in this body.
     let effective_byte_range = if status == StatusCode::PARTIAL_CONTENT {
         object.byte_range
     } else {

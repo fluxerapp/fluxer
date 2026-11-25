@@ -54,8 +54,6 @@ const EXTERNAL_HINT_CACHE_ENTRIES: u64 = 4096;
 
 pub(in crate::server) type ExternalHintCache = moka::sync::Cache<String, ExternalHint>;
 
-// What the origin last served for a url, so a repeat transform of a hot embed can be
-// answered from the transform cache instead of downloading the origin asset again.
 #[derive(Clone)]
 pub(in crate::server) struct ExternalHint {
     url: String,
@@ -303,9 +301,6 @@ pub(in crate::server) async fn serve_external(
     serve_fetched_external(prepared, fetched).await
 }
 
-// Unlike the object store, a third-party origin answers a GET by sending a body the proxy
-// then discards, and an untrusted content type makes the proxy buffer that body in full.
-// A metadata-only probe is worth its own upstream HEAD here.
 async fn external_head_passthrough(
     app: &AppState,
     url: &str,

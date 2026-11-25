@@ -79,9 +79,6 @@ impl Store {
         bucket: &str,
         key: &str,
     ) -> Result<HeadResult, StorageError> {
-        // A HEAD is a read, so it follows the same endpoint and signing policy as a body read.
-        // Sending it to the write origin instead would bypass the configured read endpoint and
-        // attach credentials to a read the operator configured as unsigned.
         let url = self.s3_read_url(bucket, key)?;
         let headers = self.read_headers(bucket, Method::HEAD, &url, &[])?;
         let response = self.client.head(&url).headers(headers).send().await?;

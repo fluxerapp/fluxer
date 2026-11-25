@@ -40,7 +40,6 @@ impl NSFWFrameOutput {
             .try_reserve_exact(self.expected)
             .map_err(|_| NSFWFrameCopyError::AllocationFailed)?;
         for slot in self.slots.iter().take(self.expected) {
-            // a sample the native decoder could not reach leaves its slot empty
             let Some(data) = NonNull::new(slot.data.cast::<u8>()) else {
                 if slot.len != 0 {
                     return Err(NSFWFrameCopyError::InvalidOutput);

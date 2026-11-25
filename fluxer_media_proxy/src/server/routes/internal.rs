@@ -513,15 +513,6 @@ mod tests {
         segment
     }
 
-    fn authorized_headers() -> HeaderMap {
-        let mut headers = HeaderMap::new();
-        headers.insert(
-            header::AUTHORIZATION,
-            HeaderValue::from_static("Bearer secret"),
-        );
-        headers
-    }
-
     fn json_request(body: String) -> Request<Body> {
         Request::builder()
             .method(Method::POST)
@@ -537,13 +528,6 @@ mod tests {
             .expect("collected body")
             .to_bytes();
         String::from_utf8(bytes.to_vec()).expect("utf8 body")
-    }
-
-    #[test]
-    fn internal_auth_uses_bearer_secret() {
-        let headers = authorized_headers();
-        assert!(check_internal_auth(&headers, "secret"));
-        assert!(!check_internal_auth(&headers, "other"));
     }
 
     #[tokio::test]

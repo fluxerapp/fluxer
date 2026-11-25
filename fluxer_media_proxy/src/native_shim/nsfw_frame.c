@@ -957,9 +957,6 @@ static int fluxer_nsfw_decode_targets(
             continue;
         }
         if (fluxer_nsfw_sample_failure_fatal(status)) return status;
-        /* A sample the decoder cannot reach falls back to the last frame it did
-           decode, and otherwise leaves its slot empty, so the samples that did
-           decode still reach the classifier. */
         if (group.next < limit && outputs[group.next].data == NULL) {
             (void)fluxer_nsfw_emit_candidate(&group);
         }

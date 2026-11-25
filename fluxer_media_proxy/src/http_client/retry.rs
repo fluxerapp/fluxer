@@ -93,8 +93,6 @@ fn retryable_status(status: StatusCode) -> Option<Retryable> {
 }
 
 fn retryable_error(error: &MiddlewareError) -> Option<Retryable> {
-    // A pinned-resolver rejection is a policy decision, not a transient fault, and retrying it only
-    // repeats the same lookup against a name the caller supplied.
     if crate::public_net_policy::is_pinned_dns_failure(error) {
         return Some(Retryable::Fatal);
     }
