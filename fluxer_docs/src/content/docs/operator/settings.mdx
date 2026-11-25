@@ -48,7 +48,7 @@ Fluxer creates these on its first start and keeps them in its data folder, so ba
 </div>
 <div class="flx-setting" id="fluxer_admin_oauth_client_secret">
 <dt>`FLUXER_ADMIN_OAUTH_CLIENT_SECRET`</dt>
-<dd>The OAuth2 client secret the admin panel uses to sign in through the API. The api and admin services must have the same value. Keep it secret.</dd>
+<dd>The OAuth2 client secret the admin panel uses to sign in through the API. Keep it secret.</dd>
 </div>
 <div class="flx-setting" id="fluxer_admin_secret_key_base">
 <dt>`FLUXER_ADMIN_SECRET_KEY_BASE`</dt>
@@ -64,19 +64,19 @@ Fluxer creates these on its first start and keeps them in its data folder, so ba
 </div>
 <div class="flx-setting" id="fluxer_gateway_rpc_auth_token">
 <dt>`FLUXER_GATEWAY_RPC_AUTH_TOKEN`</dt>
-<dd>The token the api, worker, gateway and push services use to authenticate internal calls to each other. Every service must have the same value. Keep it secret.</dd>
+<dd>The token the api, worker, gateway and push services use to authenticate internal calls to each other. Keep it secret.</dd>
 </div>
 <div class="flx-setting" id="fluxer_media_proxy_secret_key">
 <dt>`FLUXER_MEDIA_PROXY_SECRET_KEY`</dt>
-<dd>The key that signs the `/external/` URLs for third-party media, such as link preview images and GIF results. The API also uses it to call the media proxy's internal endpoints. It doesn't sign uploaded attachments, which use `FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64`. The api, worker, media-proxy, gifs and unfurl services must have the same value, so change it on all of them and restart them together. Changing it doesn't affect anything stored, but proxy URLs that were already handed out stop working, such as link preview images in clients that are open, until they reload. Keep the value secret.</dd>
+<dd>The key that signs the `/external/` URLs for third-party media, such as link preview images and GIF results. The API also uses it to call the media proxy's internal endpoints. It doesn't sign uploaded attachments, which use `FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64`. Changing it doesn't affect anything stored, but proxy URLs that were already handed out stop working, such as link preview images in clients that are open, until they reload. Keep the value secret.</dd>
 </div>
 <div class="flx-setting" id="fluxer_media_proxy_upload_relay_secret_base64">
 <dt>`FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64`</dt>
-<dd>The key that signs upload relay tokens, as standard base64 that decodes to at least 32 bytes. The api, worker and media-proxy services must have the same value. Keep it secret.</dd>
+<dd>The key that signs upload relay tokens, as standard base64 that decodes to at least 32 bytes. Keep it secret.</dd>
 </div>
 <div class="flx-setting" id="fluxer_profile_pseudonym_secret">
 <dt>`FLUXER_PROFILE_PSEUDONYM_SECRET`</dt>
-<dd>The key Fluxer uses to derive the placeholder name and tag that others see while an account's profile is hidden. The api, worker and users services must have the same value. Changing it gives every hidden profile a new placeholder. Keep it secret.</dd>
+<dd>The key Fluxer uses to derive the placeholder name and tag that others see while an account's profile is hidden. Changing it gives every hidden profile a new placeholder. Keep it secret.</dd>
 </div>
 <div class="flx-setting" id="fluxer_s3_access_key">
 <dt>`FLUXER_S3_ACCESS_KEY`</dt>
@@ -221,7 +221,7 @@ By default Fluxer listens on ports 80 and 443 and gets its own certificate for y
 <div class="flx-setting" id="fluxer_edge_bind">
 <dt>`FLUXER_EDGE_BIND`</dt>
 <dd class="flx-setting-default">Default `127.0.0.1:8080`</dd>
-<dd>The address your reverse proxy or tunnel connects to. rexctl also calls it `edge.bind`.</dd>
+<dd>The address your reverse proxy or tunnel connects to in proxy and tunnel mode. In the Fluxer image the default is `0.0.0.0:8080`, and you limit who can connect where you publish the port. rexctl also calls it `edge.bind`.</dd>
 </div>
 <div class="flx-setting" id="fluxer_edge_encode">
 <dt>`FLUXER_EDGE_ENCODE`</dt>
@@ -428,15 +428,15 @@ A new instance keeps uploads as plain files in its data folder. To use an S3-com
 </div>
 <div class="flx-setting" id="fluxer_api_storage_change_feed_enabled">
 <dt>`FLUXER_API_STORAGE_CHANGE_FEED_ENABLED`</dt>
-<dd>Whether the api and worker services publish a record of each object store write and delete they make to a NATS JetStream stream. Uploads written by the media proxy relay or sent directly to the store by clients are not in it. Use `true` or `false`. When it's empty, the feed is off.</dd>
+<dd>Whether the api and worker services publish a record of each object store write and delete they make to a NATS JetStream stream. Uploads written by the media proxy relay or sent directly to the store by clients are not in it. Use `true` or `false`. When it's empty, Fluxer publishes no records.</dd>
 </div>
 <div class="flx-setting" id="fluxer_api_storage_change_feed_skip_buckets">
 <dt>`FLUXER_API_STORAGE_CHANGE_FEED_SKIP_BUCKETS`</dt>
-<dd>Buckets the storage change feed leaves out, separated by commas, or `none` to leave out no bucket. When it's empty, the feed leaves out the uploads bucket.</dd>
+<dd>Buckets left out of these records, separated by commas, or `none` to leave out no bucket. When it's empty, Fluxer leaves out the uploads bucket.</dd>
 </div>
 <div class="flx-setting" id="fluxer_api_storage_change_feed_stream">
 <dt>`FLUXER_API_STORAGE_CHANGE_FEED_STREAM`</dt>
-<dd>The JetStream stream the storage change feed publishes to, in letters, digits, underscores or hyphens. When it's empty, Fluxer uses `STORAGE_CHANGES`.</dd>
+<dd>The JetStream stream these records go to, in letters, digits, underscores or hyphens. When it's empty, Fluxer uses `STORAGE_CHANGES`.</dd>
 </div>
 <div class="flx-setting" id="fluxer_s3_bucket_cdn">
 <dt>`FLUXER_S3_BUCKET_CDN`</dt>
@@ -590,7 +590,7 @@ Fluxer runs its own PostgreSQL unless you set `FLUXER_POSTGRES_URL` for a databa
 </div>
 <div class="flx-setting" id="fluxer_search_password">
 <dt>`FLUXER_SEARCH_PASSWORD`</dt>
-<dd>The basic auth password for Elasticsearch. Fluxer uses it only when `FLUXER_SEARCH_API_KEY` is empty, the same as `FLUXER_SEARCH_USERNAME`. Keep it secret.</dd>
+<dd>The basic auth password for Elasticsearch. Fluxer uses it only when `MEILI_MASTER_KEY` is empty, the same as `FLUXER_SEARCH_USERNAME`. Keep it secret.</dd>
 </div>
 <div class="flx-setting" id="fluxer_search_tls_reject_unauthorized">
 <dt>`FLUXER_SEARCH_TLS_REJECT_UNAUTHORIZED`</dt>
@@ -602,7 +602,7 @@ Fluxer runs its own PostgreSQL unless you set `FLUXER_POSTGRES_URL` for a databa
 </div>
 <div class="flx-setting" id="fluxer_search_username">
 <dt>`FLUXER_SEARCH_USERNAME`</dt>
-<dd>The basic auth username for Elasticsearch. Fluxer uses it only when `FLUXER_SEARCH_API_KEY` is empty.</dd>
+<dd>The basic auth username for Elasticsearch. Fluxer uses it only when `MEILI_MASTER_KEY` is empty.</dd>
 </div>
 <div class="flx-setting" id="fluxer_snowflake_service_batch_size">
 <dt>`FLUXER_SNOWFLAKE_SERVICE_BATCH_SIZE`</dt>
@@ -1523,7 +1523,7 @@ rexctl sizes most of these from the memory and CPUs of the machine. Without rexc
 <div class="flx-setting" id="fluxer_gifs_shard_cache_max_bytes">
 <dt>`FLUXER_GIFS_SHARD_CACHE_MAX_BYTES`</dt>
 <dd class="flx-setting-default">Default `67108864`, 64 MiB</dd>
-<dd>How many bytes the gifs service may use for its cache, at least `16777216`, which is 16 MiB. Keep it below `FLUXER_GIFS_MEMORY_LIMIT`.</dd>
+<dd>How many bytes the gifs service may use for its cache, at least `16777216`, which is 16 MiB.</dd>
 </div>
 <div class="flx-setting" id="fluxer_kv_postgres_max_bytes">
 <dt>`FLUXER_KV_POSTGRES_MAX_BYTES`</dt>
@@ -1538,7 +1538,7 @@ rexctl sizes most of these from the memory and CPUs of the machine. Without rexc
 <div class="flx-setting" id="fluxer_livekit_gomemlimit">
 <dt>`FLUXER_LIVEKIT_GOMEMLIMIT`</dt>
 <dd class="flx-setting-default">Default `272MiB`</dd>
-<dd>The soft memory limit of the Go runtime in LiveKit, set as its `GOMEMLIMIT`. Keep it below `FLUXER_LIVEKIT_MEMORY_LIMIT`.</dd>
+<dd>The soft memory limit of the Go runtime in LiveKit, set as its `GOMEMLIMIT`.</dd>
 </div>
 <div class="flx-setting" id="fluxer_malloc_arena_max">
 <dt>`FLUXER_MALLOC_ARENA_MAX`</dt>
@@ -1551,7 +1551,7 @@ rexctl sizes most of these from the memory and CPUs of the machine. Without rexc
 <div class="flx-setting" id="fluxer_meilisearch_max_indexing_memory">
 <dt>`FLUXER_MEILISEARCH_MAX_INDEXING_MEMORY`</dt>
 <dd class="flx-setting-default">Default `128mb`</dd>
-<dd>The memory Meilisearch aims to stay under while indexing, set as its `MEILI_MAX_INDEXING_MEMORY`, such as `512mb`. Meilisearch can go a little over it. Keep it well below `FLUXER_MEILISEARCH_MEMORY_LIMIT`.</dd>
+<dd>The memory Meilisearch aims to stay under while indexing, set as its `MEILI_MAX_INDEXING_MEMORY`, such as `512mb`. Meilisearch can go a little over it.</dd>
 </div>
 <div class="flx-setting" id="fluxer_meilisearch_max_indexing_threads">
 <dt>`FLUXER_MEILISEARCH_MAX_INDEXING_THREADS`</dt>
@@ -1740,7 +1740,7 @@ Only installs with Valkey or SeaweedFS read these.
 <div class="flx-setting" id="fluxer_seaweedfs_gomemlimit">
 <dt>`FLUXER_SEAWEEDFS_GOMEMLIMIT`</dt>
 <dd class="flx-setting-default">Default `380MiB`</dd>
-<dd>The soft memory limit of the Go runtime in SeaweedFS, set as its `GOMEMLIMIT`. Go can't see the service limit. Keep this at 75 to 85 percent of `FLUXER_SEAWEEDFS_MEMORY_LIMIT` and raise both together.</dd>
+<dd>The soft memory limit of the Go runtime in SeaweedFS, set as its `GOMEMLIMIT`. Go can't see how much memory the other parts use, so keep it well below the memory of the machine.</dd>
 </div>
 <div class="flx-setting" id="fluxer_seaweedfs_init_attempts">
 <dt>`FLUXER_SEAWEEDFS_INIT_ATTEMPTS`</dt>
@@ -1750,7 +1750,7 @@ Only installs with Valkey or SeaweedFS read these.
 <div class="flx-setting" id="fluxer_seaweedfs_s3_concurrent_uploads">
 <dt>`FLUXER_SEAWEEDFS_S3_CONCURRENT_UPLOADS`</dt>
 <dd class="flx-setting-default">Default `5`</dd>
-<dd>How many uploads the bundled object store writes at once, set as its `-s3.concurrentFileUploadLimit`. More uploads wait for a free slot. Each upload in progress uses up to 32 MB of memory in SeaweedFS. Raise `FLUXER_SEAWEEDFS_MEMORY_LIMIT` before you raise this.</dd>
+<dd>How many uploads the bundled object store writes at once, set as its `-s3.concurrentFileUploadLimit`. More uploads wait for a free slot. Each upload in progress uses up to 32 MB of memory in SeaweedFS.</dd>
 </div>
 <div class="flx-setting" id="fluxer_seaweedfs_telemetry">
 <dt>`FLUXER_SEAWEEDFS_TELEMETRY`</dt>
@@ -1785,7 +1785,7 @@ Only installs with Valkey or SeaweedFS read these.
 <div class="flx-setting" id="fluxer_valkey_maxmemory">
 <dt>`FLUXER_VALKEY_MAXMEMORY`</dt>
 <dd class="flx-setting-default">Default `128mb`</dd>
-<dd>Valkey `maxmemory`, the most memory Valkey may use for stored data. The append-only file buffer and memory fragmentation come on top. Keep it below `FLUXER_VALKEY_MEMORY_LIMIT`.</dd>
+<dd>Valkey `maxmemory`, the most memory Valkey may use for stored data. The append-only file buffer and memory fragmentation come on top.</dd>
 </div>
 <div class="flx-setting" id="fluxer_valkey_maxmemory_policy">
 <dt>`FLUXER_VALKEY_MAXMEMORY_POLICY`</dt>

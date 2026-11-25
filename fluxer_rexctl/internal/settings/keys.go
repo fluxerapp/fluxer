@@ -174,7 +174,7 @@ func buildNamed() []Key {
 		{Name: EdgeMode, Type: "choice", Options: []string{EdgeBundled, EdgeProxy, EdgeTunnel}, Validate: oneOf(EdgeBundled, EdgeProxy, EdgeTunnel),
 			Help: "Whether Fluxer serves HTTPS itself or runs behind your reverse proxy or a tunnel"},
 		{Name: EdgeBind, Type: "address", Vars: []string{"FLUXER_EDGE_BIND"}, Validate: validBind,
-			Help: "The address your reverse proxy or tunnel connects to"},
+			Help: "The address your reverse proxy or tunnel connects to in proxy and tunnel mode"},
 		{Name: EdgeProxyKind, Type: "choice", Options: []string{ProxyLocal, ProxyRemote, ProxyTunnel, ProxyOverlay, ProxyInstance}, Validate: oneOf(ProxyLocal, ProxyRemote, ProxyTunnel, ProxyOverlay, ProxyInstance),
 			Help: "What is in front of Fluxer behind a proxy"},
 		{Name: EdgeListen, Type: "ip", Vars: []string{EdgeListenVar}, Validate: validIP,
