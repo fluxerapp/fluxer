@@ -34935,11 +34935,27 @@
 					"discriminator": {"type": "string", "description": "The discriminator of the user"},
 					"global_name": {"description": "The global display name of the user", "type": ["string", "null"]},
 					"avatar": {"description": "The avatar hash of the user", "type": ["string", "null"]},
+					"avatar_color": {
+						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
+						"description": "The default avatar color of the user"
+					},
+					"bot": {"type": "boolean", "description": "Whether the user is a bot"},
+					"system": {"type": "boolean", "description": "Whether the user is a system user"},
 					"email": {"description": "The email address of the user", "type": ["string", "null"]},
 					"verified": {"description": "Whether the user has verified their email", "type": ["boolean", "null"]},
 					"flags": {"$ref": "#/components/schemas/PublicUserFlags", "description": "The user flags"}
 				},
-				"required": ["sub", "id", "username", "discriminator", "global_name", "avatar"],
+				"required": [
+					"sub",
+					"id",
+					"username",
+					"discriminator",
+					"global_name",
+					"avatar",
+					"avatar_color",
+					"bot",
+					"system"
+				],
 				"additionalProperties": false
 			},
 			"RevokeRequestForm": {
@@ -34994,7 +35010,6 @@
 						"description": "The client identifier for the token",
 						"$ref": "#/components/schemas/SnowflakeStringType"
 					},
-					"username": {"description": "The username of the token owner", "type": "string"},
 					"token_type": {"description": "The type of token", "type": "string"},
 					"exp": {"description": "The expiration timestamp in seconds", "$ref": "#/components/schemas/Int32Type"},
 					"iat": {"description": "The issued-at timestamp in seconds", "$ref": "#/components/schemas/Int32Type"},
@@ -35270,13 +35285,9 @@
 							"icon": {"description": "The icon hash of the application", "type": ["string", "null"]},
 							"description": {"description": "The description of the application", "type": ["string", "null"]},
 							"bot_public": {"type": "boolean", "description": "Whether the bot can be invited by anyone"},
-							"bot_require_code_grant": {
-								"type": "boolean",
-								"description": "Whether the bot requires OAuth2 code grant"
-							},
-							"flags": {"$ref": "#/components/schemas/ApplicationFlags"}
+							"bot_require_code_grant": {"type": "boolean", "description": "Whether the bot requires OAuth2 code grant"}
 						},
-						"required": ["id", "name", "icon", "description", "bot_public", "bot_require_code_grant", "flags"],
+						"required": ["id", "name", "icon", "description", "bot_public", "bot_require_code_grant"],
 						"additionalProperties": false,
 						"description": "The application associated with the token"
 					},
@@ -35291,6 +35302,10 @@
 						"description": "The user associated with the token",
 						"type": "object",
 						"properties": {
+							"sub": {
+								"description": "The subject identifier of the user",
+								"$ref": "#/components/schemas/SnowflakeStringType"
+							},
 							"id": {
 								"description": "The unique identifier of the user",
 								"$ref": "#/components/schemas/SnowflakeStringType"
@@ -35303,13 +35318,24 @@
 								"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
 								"description": "The default avatar color of the user"
 							},
-							"bot": {"description": "Whether the user is a bot", "type": "boolean"},
-							"system": {"description": "Whether the user is a system user", "type": "boolean"},
+							"bot": {"type": "boolean", "description": "Whether the user is a bot"},
+							"system": {"type": "boolean", "description": "Whether the user is a system user"},
 							"flags": {"$ref": "#/components/schemas/PublicUserFlags", "description": "The user flags"},
 							"email": {"description": "The email address of the user", "type": ["string", "null"]},
 							"verified": {"description": "Whether the user has verified their email", "type": ["boolean", "null"]}
 						},
-						"required": ["id", "username", "discriminator", "global_name", "avatar", "avatar_color", "flags"],
+						"required": [
+							"sub",
+							"id",
+							"username",
+							"discriminator",
+							"global_name",
+							"avatar",
+							"avatar_color",
+							"bot",
+							"system",
+							"flags"
+						],
 						"additionalProperties": false
 					}
 				},
@@ -44453,14 +44479,6 @@
 				},
 				"required": ["countryCode", "regionCode"],
 				"additionalProperties": false
-			},
-			"ApplicationFlags": {
-				"type": "integer",
-				"minimum": 0,
-				"maximum": 2147483647,
-				"description": "The application flags",
-				"format": "int32",
-				"x-bitflagValues": []
 			},
 			"OAuth2AuthorizationResponse": {
 				"type": "object",

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ApplicationFlags, BotFlags, BotFlagsDescriptions} from '@fluxer/constants/src/BotConstants';
+import {BotFlags, BotFlagsDescriptions} from '@fluxer/constants/src/BotConstants';
 import {MAX_APPLICATION_REDIRECT_URIS} from '@fluxer/constants/src/LimitConstants';
 import {PublicUserFlags, PublicUserFlagsDescriptions} from '@fluxer/constants/src/UserConstants';
 import {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
@@ -200,6 +200,9 @@ export const OAuth2UserInfoResponse = z.object({
 	discriminator: z.string().describe('The discriminator of the user'),
 	global_name: z.string().nullable().describe('The global display name of the user'),
 	avatar: z.string().nullable().describe('The avatar hash of the user'),
+	avatar_color: Int32Type.nullable().describe('The default avatar color of the user'),
+	bot: z.boolean().describe('Whether the user is a bot'),
+	system: z.boolean().describe('Whether the user is a system user'),
 	email: z.string().nullable().optional().describe('The email address of the user'),
 	verified: z.boolean().nullable().optional().describe('Whether the user has verified their email'),
 	flags: createBitflagInt32Type(
@@ -216,7 +219,6 @@ export const OAuth2IntrospectResponse = z.object({
 	active: z.boolean().describe('Whether the token is currently active'),
 	scope: z.string().optional().describe('The space-separated list of scopes'),
 	client_id: SnowflakeStringType.optional().describe('The client identifier for the token'),
-	username: z.string().optional().describe('The username of the token owner'),
 	token_type: z.string().optional().describe('The type of token'),
 	exp: Int32Type.optional().describe('The expiration timestamp in seconds'),
 	iat: Int32Type.optional().describe('The issued-at timestamp in seconds'),
@@ -240,21 +242,21 @@ export const OAuth2MeResponse = z.object({
 			description: z.string().nullable().describe('The description of the application'),
 			bot_public: z.boolean().describe('Whether the bot can be invited by anyone'),
 			bot_require_code_grant: z.boolean().describe('Whether the bot requires OAuth2 code grant'),
-			flags: createBitflagInt32Type(ApplicationFlags, 'The application flags', undefined, 'ApplicationFlags'),
 		})
 		.describe('The application associated with the token'),
 	scopes: z.array(z.string()).max(50).describe('The list of granted OAuth2 scopes'),
 	expires: z.string().describe('The expiration timestamp of the token'),
 	user: z
 		.object({
+			sub: SnowflakeStringType.describe('The subject identifier of the user'),
 			id: SnowflakeStringType.describe('The unique identifier of the user'),
 			username: z.string().describe('The username of the user'),
 			discriminator: z.string().describe('The discriminator of the user'),
 			global_name: z.string().nullable().describe('The global display name of the user'),
 			avatar: z.string().nullable().describe('The avatar hash of the user'),
 			avatar_color: Int32Type.nullable().describe('The default avatar color of the user'),
-			bot: z.boolean().optional().describe('Whether the user is a bot'),
-			system: z.boolean().optional().describe('Whether the user is a system user'),
+			bot: z.boolean().describe('Whether the user is a bot'),
+			system: z.boolean().describe('Whether the user is a system user'),
 			flags: createBitflagInt32Type(PublicUserFlags, PublicUserFlagsDescriptions, 'The user flags', 'PublicUserFlags'),
 			email: z.string().nullable().optional().describe('The email address of the user'),
 			verified: z.boolean().nullable().optional().describe('Whether the user has verified their email'),

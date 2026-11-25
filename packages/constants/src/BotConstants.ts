@@ -2,7 +2,6 @@
 
 import {PublicUserFlags} from '@fluxer/constants/src/UserConstants';
 
-export const ApplicationFlags = {} as const;
 export const BotFlags = {
 	FRIENDLY_BOT: PublicUserFlags.FRIENDLY_BOT,
 	FRIENDLY_BOT_MANUAL_APPROVAL: PublicUserFlags.FRIENDLY_BOT_MANUAL_APPROVAL,

@@ -362,15 +362,16 @@ export class OAuth2RequestService {
 			}
 			const scopes = filterOAuth2Scopes(tokenData.scope);
 			const expiresAt = new Date(tokenData.createdAt.getTime() + ACCESS_TOKEN_TTL_SECONDS * 1000);
+			const botUser = await findBotUser(this.apiContext.services.users, application);
+			const bot = botUser ? mapBotProfileToResponse(botUser) : null;
 			const response: OAuth2MeResponse = {
 				application: {
 					id: application.applicationId.toString(),
 					name: application.name,
-					icon: null,
-					description: null,
+					icon: bot?.avatar ?? null,
+					description: bot?.bio ?? null,
 					bot_public: application.botIsPublic,
 					bot_require_code_grant: application.botRequireCodeGrant,
-					flags: 0,
 				},
 				scopes,
 				expires: expiresAt.toISOString(),
@@ -408,7 +409,7 @@ export class OAuth2RequestService {
 			id: application.applicationId.toString(),
 			name: application.name,
 			icon: bot?.avatar ?? null,
-			description: null,
+			description: bot?.bio ?? null,
 			redirect_uris: Array.from(application.oauth2RedirectUris),
 			scopes,
 			bot_public: application.botIsPublic || isOwner,
@@ -508,7 +509,7 @@ export class OAuth2RequestService {
 					id: string;
 					name: string;
 					icon: string | null;
-					description: null;
+					description: string | null;
 					bot_public: boolean;
 				};
 			}
@@ -529,6 +530,7 @@ export class OAuth2RequestService {
 					const nonBotScopes = new Set(filterOAuth2Scopes(token.scope).filter((s) => s !== 'bot'));
 					if (nonBotScopes.size > 0) {
 						const botUser = await findBotUser(this.apiContext.services.users, application);
+						const bot = botUser ? mapBotProfileToResponse(botUser) : null;
 						appMap.set(appIdStr, {
 							applicationId: appIdStr,
 							scopes: nonBotScopes,
@@ -536,8 +538,8 @@ export class OAuth2RequestService {
 							application: {
 								id: application.applicationId.toString(),
 								name: application.name,
-								icon: botUser ? mapUserToPartialResponse(botUser).avatar : null,
-								description: null,
+								icon: bot?.avatar ?? null,
+								description: bot?.bio ?? null,
 								bot_public: application.botIsPublic,
 							},
 						});
