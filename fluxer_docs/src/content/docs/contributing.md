@@ -108,5 +108,6 @@ The desktop release workflows set both, and the web app release sets only `BUILD
 - Report bugs and request features at [feedback.fluxer.com](https://feedback.fluxer.com).
 - Report security problems privately through [fluxer.com/security](https://fluxer.com/security), never in public.
 - Translate Fluxer on [Weblate](https://weblate.fluxer.tools). Pull requests that change translations aren't accepted.
+- [Fund Fluxer's open source work](https://fluxer.com/help/fund-fluxer) with a donation or, for organisations, a grant.
 
-The [code of conduct](https://github.com/fluxerapp/fluxer/blob/main/.github/CODE_OF_CONDUCT.md) applies to everything you do in the Fluxer repository, and feedback.fluxer.com has its own [code of conduct](https://feedback.fluxer.com/conduct).
+The [code of conduct](/code-of-conduct/) applies to everything you do in the Fluxer repository, and feedback.fluxer.com has its own [code of conduct](https://feedback.fluxer.com/conduct).

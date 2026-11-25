@@ -82,6 +82,7 @@ const legalLinks = [
 	{label: 'Privacy policy', link: 'https://fluxer.com/privacy'},
 	{label: 'Community guidelines', link: 'https://fluxer.com/guidelines'},
 	{label: 'Security policy', link: 'https://fluxer.com/security'},
+	{label: 'Governance', link: 'https://fluxer.com/governance'},
 	{label: 'Company information', link: 'https://fluxer.com/company-information'},
 ];
 
@@ -190,7 +191,13 @@ export default defineConfig({
 					items: [
 						{
 							label: 'Getting started',
-							items: [{label: 'Introduction', link: '/'}, 'authentication', 'snowflakes', 'contributing'],
+							items: [
+								{label: 'Introduction', link: '/'},
+								'authentication',
+								'snowflakes',
+								'contributing',
+								'code-of-conduct',
+							],
 						},
 						{
 							label: 'Topics',

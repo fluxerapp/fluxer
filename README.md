@@ -146,6 +146,7 @@ Full setup notes, including canary, are in the [Linux repositories documentation
 - [Downloads][docs-downloads]
 - [Self-hosting][docs-selfhost]
 - [Contributing][docs-contributing]
+- [Code of conduct][docs-conduct]
 
 ## Funding
 
@@ -166,7 +167,7 @@ keeps its own terms, listed in
 [fluxer_static/THIRD_PARTY_LICENSES.md](./fluxer_static/THIRD_PARTY_LICENSES.md).
 
 Use of the Fluxer name and logo is covered by the
-[name and marks policy](./.github/GOVERNANCE.md#name-and-marks).
+[name and marks policy](https://fluxer.com/governance#name-and-marks).
 
 [win-setup-x64]: https://pkgs.fluxer.com/desktop/stable/win32/x64/latest/setup
 [win-setup-arm64]: https://pkgs.fluxer.com/desktop/stable/win32/arm64/latest/setup
@@ -194,3 +195,4 @@ Use of the Fluxer name and logo is covered by the
 [docs-linux]: https://docs.fluxer.com/downloads/linux-repositories/
 [docs-selfhost]: https://docs.fluxer.com/operator/
 [docs-contributing]: https://docs.fluxer.com/contributing/
+[docs-conduct]: https://docs.fluxer.com/code-of-conduct/
