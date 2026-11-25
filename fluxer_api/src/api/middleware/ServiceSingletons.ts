@@ -429,7 +429,9 @@ export const getEntranceSoundService = singleton(
 export const getEntranceSoundPlayService = singleton(
 	() => new EntranceSoundPlayService(getEntranceSoundService(), getGatewayService(), getChannelRepository()),
 );
-export const getGatewayRequestService = singleton(() => new GatewayRequestService(getBotAuthService()));
+export const getGatewayRequestService = singleton(
+	() => new GatewayRequestService(getBotAuthService(), getGuildRepository()),
+);
 export const getGuildDiscoveryService = singleton(
 	() =>
 		new GuildDiscoveryService(

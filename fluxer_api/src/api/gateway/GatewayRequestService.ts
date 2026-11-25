@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Config} from '@app/api/Config';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {BotAuthService} from '@app/api/oauth/BotAuthService';
 import {InvalidGatewayAuthTokenError} from '@fluxer/errors/src/domains/auth/InvalidGatewayAuthTokenError';
 import {MissingGatewayAuthorizationError} from '@fluxer/errors/src/domains/auth/MissingGatewayAuthorizationError';
 import type {GatewayBotResponse as GatewayBotResponseType} from '@fluxer/schema/src/domains/gateway/GatewaySchemas';
+
+const GUILDS_PER_SHARD = 2500;
 
 type TokenType = 'user' | 'bot' | 'unknown';
 
@@ -27,7 +30,10 @@ function extractToken(authHeader: string | null): string {
 }
 
 export class GatewayRequestService {
-	constructor(private readonly botAuthService: BotAuthService) {}
+	constructor(
+		private readonly botAuthService: BotAuthService,
+		private readonly guildRepository: Pick<GuildRepository, 'countUserGuilds'>,
+	) {}
 
 	async getBotGatewayInfo(authHeader: string | null): Promise<GatewayBotResponseType> {
 		const token = extractToken(authHeader);
@@ -38,10 +44,14 @@ export class GatewayRequestService {
 		if (tokenType !== 'bot') {
 			throw new InvalidGatewayAuthTokenError();
 		}
-		await this.botAuthService.validateBotToken(token);
+		const botUserId = await this.botAuthService.validateBotToken(token);
+		if (!botUserId) {
+			throw new InvalidGatewayAuthTokenError();
+		}
+		const guildCount = await this.guildRepository.countUserGuilds(botUserId);
 		return {
 			url: Config.endpoints.gateway,
-			shards: 1,
+			shards: Math.max(1, Math.ceil(guildCount / GUILDS_PER_SHARD)),
 			session_start_limit: {
 				total: 1000,
 				remaining: 999,
