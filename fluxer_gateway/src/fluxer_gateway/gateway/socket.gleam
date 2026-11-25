@@ -95,7 +95,8 @@ pub opaque type Message {
 type Pending {
   Idle
   Starting(identify: Identify, timeout: Int)
-  Resuming(timeout: Int, session: SessionId, accepted: Bool)
+  Resuming(timeout: Int, session: SessionId, accepted: Bool, resumed: Bool)
+  AwaitingResumed(timeout: Int)
   Rebinding(timeout: Int)
   Holding(identify: Identify, retry: Option(Int), throttled: Bool)
 }
@@ -375,7 +376,7 @@ pub fn paused(state: State) -> Bool {
 
 fn awaiting_reply(state: State) -> Bool {
   case state.pending {
-    Starting(..) | Resuming(..) | Rebinding(..) -> True
+    Starting(..) | Resuming(..) | AwaitingResumed(..) | Rebinding(..) -> True
     Idle | Holding(..) -> False
   }
 }
@@ -407,8 +408,10 @@ fn connection_state(state: State) -> ConnectionState {
     Open, None, Starting(..) -> socket_metrics.Identifying
     Open, None, Resuming(..) -> socket_metrics.Resuming
     Open, None, Holding(..) -> socket_metrics.Held
-    Open, None, Idle | Open, None, Rebinding(..) ->
-      socket_metrics.AwaitingIdentify
+    Open, None, Idle
+    | Open, None, AwaitingResumed(..)
+    | Open, None, Rebinding(..)
+    -> socket_metrics.AwaitingIdentify
   }
 }
 
@@ -514,7 +517,11 @@ fn session_key(state: State) -> Option(SessionId) {
 
 fn holds_payloads(state: State) -> Bool {
   case state.pending {
-    Starting(..) | Resuming(..) | Holding(..) | Rebinding(..) -> True
+    Starting(..)
+    | Resuming(..)
+    | AwaitingResumed(..)
+    | Holding(..)
+    | Rebinding(..) -> True
     Idle -> False
   }
 }
@@ -522,7 +529,11 @@ fn holds_payloads(state: State) -> Bool {
 fn defers(state: State, op: Opcode) -> Bool {
   case op, state.pending {
     opcode.Heartbeat, _ -> False
-    _, Starting(..) | _, Resuming(..) | _, Rebinding(..) -> True
+    _, Starting(..)
+    | _, Resuming(..)
+    | _, AwaitingResumed(..)
+    | _, Rebinding(..)
+    -> True
     opcode.Identify, Holding(..) | opcode.Resume, Holding(..) -> False
     _, Holding(..) -> True
     _, Idle -> False
@@ -882,7 +893,8 @@ fn retry_held_identify(state: State) -> State {
         True -> start_unless_draining(state, ident)
         False -> schedule_retry(state)
       }
-    Idle | Starting(..) | Resuming(..) | Rebinding(..) -> state
+    Idle | Starting(..) | Resuming(..) | AwaitingResumed(..) | Rebinding(..) ->
+      state
   }
 }
 
@@ -925,7 +937,12 @@ fn handle_resume(
               )
               State(
                 ..state,
-                pending: Resuming(timeout:, session: id, accepted: False),
+                pending: Resuming(
+                  timeout:,
+                  session: id,
+                  accepted: False,
+                  resumed: False,
+                ),
                 resume_at: Some(clock.monotonic_ms()),
               )
             }
@@ -997,6 +1014,8 @@ fn open_info(state: State, message: Message) -> State {
             "Session unavailable",
           )
         }
+        AwaitingResumed(timeout:) if timeout == token ->
+          replay_deferred(State(..state, pending: Idle))
         _ -> state
       }
     RetryIdentify(token) ->
@@ -1027,9 +1046,14 @@ fn outbox(state: State, message: SocketMsg) -> State {
     Some(Attached(ref:, ..)), _ if ref.id == message.session ->
       deliver(state, message)
     Some(_), _ -> state
-    None, Resuming(timeout:, session:, ..) if session == message.session ->
+    None, Resuming(timeout:, session:, resumed:, ..)
+      if session == message.session
+    ->
       deliver(
-        State(..state, pending: Resuming(timeout:, session:, accepted: True)),
+        State(
+          ..state,
+          pending: Resuming(timeout:, session:, accepted: True, resumed:),
+        ),
         message,
       )
     None, Resuming(..) -> state
@@ -1133,6 +1157,7 @@ fn send_session_frame(state: State, frame: Outbound) -> State {
           reconnect_if_draining(state)
           State(
             ..state,
+            pending: resumed_sent(state.pending),
             resume_at: elapsed(
               state.resume_at,
               socket_metrics.resume_to_resumed,
@@ -1150,6 +1175,15 @@ fn send_session_frame(state: State, frame: Outbound) -> State {
     session.ReconnectFrame, Error(Nil) -> close_for_drain(state)
     _, Ok(state) -> state
     _, Error(Nil) -> state
+  }
+}
+
+fn resumed_sent(pending: Pending) -> Pending {
+  case pending {
+    Resuming(timeout:, session:, accepted:, ..) ->
+      Resuming(timeout:, session:, accepted:, resumed: True)
+    AwaitingResumed(..) -> Idle
+    Idle | Starting(..) | Rebinding(..) | Holding(..) -> pending
   }
 }
 
@@ -1282,7 +1316,7 @@ fn start_failed(
 
 fn resume_reply(state: State, reply: Result(SessionRef, ResumeError)) -> State {
   case state.pending, state.attached {
-    Resuming(..), None -> {
+    Resuming(timeout:, resumed:, ..), None -> {
       let state = State(..state, pending: Idle)
       socket_metrics.resume_finished(case reply {
         Ok(_) -> socket_metrics.Resumed
@@ -1293,8 +1327,12 @@ fn resume_reply(state: State, reply: Result(SessionRef, ResumeError)) -> State {
           metrics.counter("fluxer_gateway_session_resumes_total", [], 1)
           rollout_metrics.count(rollout_metrics.resumed, [], 1)
           garbage_collect()
+          let pending = case resumed {
+            True -> Idle
+            False -> AwaitingResumed(timeout:)
+          }
           State(
-            ..attach(state, session_ref),
+            ..attach(State(..state, pending:), session_ref),
             heartbeat: heartbeat.acked(clock.system_ms()),
           )
         }
@@ -1323,7 +1361,12 @@ fn down_message(state: State, down: process.Down) -> State {
           rollout_metrics.count(rollout_metrics.identify_after_crash, [], 1)
         False -> Nil
       }
-      let state = State(..reset_voice(state), attached: None, acks: no_acks)
+      let pending = case state.pending {
+        AwaitingResumed(..) -> Idle
+        other -> other
+      }
+      let state =
+        State(..reset_voice(state), attached: None, acks: no_acks, pending:)
       send_invalid_session(state, "session_down")
     }
     _, _ -> state
