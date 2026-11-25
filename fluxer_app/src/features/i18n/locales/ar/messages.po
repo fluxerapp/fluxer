@@ -1134,7 +1134,7 @@ msgstr "{count, plural, =0 {∞ بلا حدود} zero {# مشارك} one {مشا
 #. Shown when hovering a CSS selector in the quick CSS editor.
 #: src/features/theme_settings/editor/CssHover.ts
 msgid "{count, plural, =0 {Matches nothing in the app right now} one {Matches # element in the app right now} other {Matches # elements in the app right now}}"
-msgstr "{count, plural, =0 {لا يطابق أي عنصر في التطبيق الآن} one {يطابق # عنصر في التطبيق الآن} other {يطابق # عناصر في التطبيق الآن}}"
+msgstr "{count, plural, =0 {لا يطابق أي عنصر في التطبيق الآن} zero {يطابق # عناصر في التطبيق الآن} one {يطابق # عنصر في التطبيق الآن} two {يطابق عنصرين في التطبيق الآن} few {يطابق # عناصر في التطبيق الآن} many {يطابق # عنصرًا في التطبيق الآن} other {يطابق # عناصر في التطبيق الآن}}"
 
 #. Row in the list of Operator Passes for passes the account bought in one purchase. {count} is how many passes of that purchase are in the row, {date} the purchase date without a time, such as Nov 20, 2026.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
@@ -1210,17 +1210,17 @@ msgstr "{count, plural, zero {# رسالة محظورة} one {رسالة محظ�
 #. Shown next to the "Colors and fonts" section title in Settings > Themes. How many colors and fonts the user changed.
 #: src/features/theme_settings/components/ColorsAndFontsSection.tsx
 msgid "{count, plural, one {# changed} other {# changed}}"
-msgstr "{count, plural, one {# تغيير} other {# تغيير}}"
+msgstr "{count, plural, zero {# تغيير} one {# تغيير} two {تغييران} few {# تغييرات} many {# تغييرًا} other {# تغيير}}"
 
 #. Body of the confirmation shown before an announcement channel is converted back into a text channel. {count} is the number of channels, in this or other communities, that follow it and get copies of its published messages. Those channels stop getting copies after the conversion.
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx
 msgid "{count, plural, one {# channel follows} other {# channels follow}} this channel. Converting it to a text channel removes those follows."
-msgstr "{count, plural, one {# قناة تتابع} other {# قناة تتابع}} هذه القناة. تحويلها إلى قناة نصية سيزيل تلك المتابعات."
+msgstr "{count, plural, zero {# قناة تتابع} one {# قناة تتابع} two {قناتان تتابعان} few {# قنوات تتابع} many {# قناةً تتابع} other {# قناة تتابع}} هذه القناة. تحويلها إلى قناة نصية سيزيل تلك المتابعات."
 
 #. Shown in the status bar of the quick CSS editor while text is selected.
 #: src/features/theme_settings/components/QuickCssStatusBar.tsx
 msgid "{count, plural, one {# character selected} other {# characters selected}}"
-msgstr "{count, plural, one {تم تحديد # حرف} other {تم تحديد # أحرف}}"
+msgstr "{count, plural, zero {تم تحديد # أحرف} one {تم تحديد # حرف} two {تم تحديد حرفين} few {تم تحديد # أحرف} many {تم تحديد # حرفًا} other {تم تحديد # أحرف}}"
 
 #. Screen-reader status text in Explore. {count} is the total number of matching communities.
 #: src/features/discovery/discovery/DiscoveryPage.tsx
@@ -1230,7 +1230,7 @@ msgstr "{count, plural, zero {لم يُعثر على أي مجتمع} one {تم 
 #. Heading above the list of communities whose direct message setting differs from the default, in the privacy setup modal.
 #: src/features/user/components/modals/PrivacySetupModal.tsx
 msgid "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
-msgstr "{count, plural, one {# مجتمع لديه إعداد خاص به} other {# مجتمعات لديها إعداد خاص بها}}"
+msgstr "{count, plural, zero {# مجتمعات لديها إعداد خاص بها} one {# مجتمع لديه إعداد خاص به} two {مجتمعان لديهما إعداد خاص بهما} few {# مجتمعات لديها إعداد خاص بها} many {# مجتمعًا لديها إعداد خاص بها} other {# مجتمعات لديها إعداد خاص بها}}"
 
 #: src/features/app/components/layout/GuildsLayout.tsx
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
@@ -1244,7 +1244,7 @@ msgstr "{count, plural, zero {# اتصال} one {اتصال واحد} two {ات�
 #. Button in the status bar of the quick CSS editor that opens the list of problems.
 #: src/features/theme_settings/components/QuickCssStatusBar.tsx
 msgid "{count, plural, one {# error} other {# errors}}"
-msgstr "{count, plural, one {# خطأ} other {# أخطاء}}"
+msgstr "{count, plural, zero {# أخطاء} one {# خطأ} two {خطآن} few {# أخطاء} many {# خطأً} other {# أخطاء}}"
 
 #. Attachment summary in the forward modal message preview when the message has no images or videos. count is the number of attached files.
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx
@@ -1265,7 +1265,7 @@ msgstr "{count, plural, zero {# صورة} one {# صورة} two {# صورتين} 
 #. Status under the forum search box once results are in.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "{count, plural, one {# matching post} other {# matching posts}}"
-msgstr "{count, plural, one {# منشور مطابق} other {# منشورات مطابقة}}"
+msgstr "{count, plural, zero {# منشورات مطابقة} one {# منشور مطابق} two {منشوران مطابقان} few {# منشورات مطابقة} many {# منشورًا مطابقًا} other {# منشورات مطابقة}}"
 
 #: src/features/channel/components/ChannelSourcePreview.tsx
 #: src/features/channel/components/direct_message/DMListItem.tsx
@@ -1278,12 +1278,12 @@ msgstr "{count, plural, zero {# عضو} one {عضو واحد} two {عضوان} f
 #. Message count on a thread chip and in the thread browser. count is the number of messages.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "{count, plural, one {# message} other {# messages}}"
-msgstr "{count, plural, one {# رسالة} other {# رسائل}}"
+msgstr "{count, plural, zero {# رسائل} one {# رسالة} two {رسالتان} few {# رسائل} many {# رسالة} other {# رسائل}}"
 
 #. Last quick switcher row in another account section. count is how many more unread or mentioned channels that account has. accountName is the account display name.
 #: src/features/search/state/QuickSwitcherAccountResults.ts
 msgid "{count, plural, one {# more in {accountName}} other {# more in {accountName}}}"
-msgstr "{count, plural, one {# المزيد في {accountName}} other {# المزيد في {accountName}}}"
+msgstr "{count, plural, zero {# المزيد في {accountName}} one {# المزيد في {accountName}} two {# المزيد في {accountName}} few {# المزيد في {accountName}} many {# المزيد في {accountName}} other {# المزيد في {accountName}}}"
 
 #. Activity log item that stands in for the permission names left out of a long list. It is the last item of a list joined with "and", for example "Send messages, Manage roles, and 3 more permissions". The app joins the list and adds the commas and the word for "and" in your language, so do not add them here. It counts the other permissions in the same list. It never means that permissions were added. {count} is an ICU plural with the number of permissions left out, and # shows that number.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts
@@ -1297,7 +1297,7 @@ msgstr "{count, plural, zero {# مجتمع مشترك} one {مجتمع مشتر�
 #. Label on a joined forum post card with unread messages. count is the number of unread messages.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "{count, plural, one {# new message} other {# new messages}}"
-msgstr "{count, plural, one {# رسالة جديدة} other {# رسائل جديدة}}"
+msgstr "{count, plural, zero {# رسائل جديدة} one {# رسالة جديدة} two {رسالتان جديدتان} few {# رسائل جديدة} many {# رسالة جديدة} other {# رسائل جديدة}}"
 
 #. Short label in the footer of a forum post card, meaning "# new messages". count is the number of unread messages. Keep it as short as possible. It shares one line with the message count and the time.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
@@ -1339,7 +1339,7 @@ msgstr "{count, plural, zero {# ثانية} one {ثانية واحدة} two {ث�
 #. Option of the "Tab size" setting in the quick CSS editor.
 #: src/features/theme_settings/components/QuickCssEditorSettings.tsx
 msgid "{count, plural, one {# space} other {# spaces}}"
-msgstr "{count, plural, one {# مسافة} other {# مسافات}}"
+msgstr "{count, plural, zero {# مسافات} one {# مسافة} two {مسافتان} few {# مسافات} many {# مسافة} other {# مسافات}}"
 
 #. Screen-reader live-region announcement listing the number of message search suggestions. Preserve {count}; it is inserted by code.
 #: src/features/channel/components/message_search_bar/MessageSearchBar.tsx
@@ -1354,7 +1354,7 @@ msgstr "{count, plural, zero {# مقطع فيديو} one {# مقطع فيديو}
 #. Button in the status bar of the quick CSS editor that opens the list of problems.
 #: src/features/theme_settings/components/QuickCssStatusBar.tsx
 msgid "{count, plural, one {# warning} other {# warnings}}"
-msgstr "{count, plural, one {# تحذير} other {# تحذيرات}}"
+msgstr "{count, plural, zero {# تحذيرات} one {# تحذير} two {تحذيران} few {# تحذيرات} many {# تحذيرًا} other {# تحذيرات}}"
 
 #. Compact age label shown beside a list row (DM list, invite list). count is a number of days; the "d" is an abbreviation of "days". Keep it as short as possible; it sits in a narrow column.
 #: src/features/ui/utils/ShortRelativeTimeLabels.ts
@@ -1400,7 +1400,7 @@ msgstr "{count, plural, zero {+# شارة إضافية، عرض الكل} one {+
 #. Short muted line under a row of Operator Passes in the Operator Pass settings. {numbers} is the six-digit number of the certificate page of each pass in the row, such as 000123 or 000123, 000124. {count} is how many numbers there are. Use the usual abbreviation for number in your language, as on a certificate.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
 msgid "{count, plural, one {Certificate No. {numbers}} other {Certificate Nos. {numbers}}}"
-msgstr "{count, plural, one {رقم الشهادة {numbers}} other {أرقام الشهادات {numbers}}}"
+msgstr "{count, plural, zero {أرقام الشهادات {numbers}} one {رقم الشهادة {numbers}} two {أرقام الشهادات {numbers}} few {أرقام الشهادات {numbers}} many {أرقام الشهادات {numbers}} other {أرقام الشهادات {numbers}}}"
 
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreviewFooter.tsx
 msgid "{count, plural, one {Collapse (# line)} other {Collapse (# lines)}}"
@@ -1808,12 +1808,12 @@ msgstr "{length, plural, zero {لا مشاهدين} one {مشاهد واحد} tw
 #. Tooltip of the line and column button in the status bar of the quick CSS editor.
 #: src/features/theme_settings/components/QuickCssStatusBar.tsx
 msgid "{lines, plural, one {# line} other {# lines}} and {characters, plural, one {# character} other {# characters}}"
-msgstr "{lines, plural, one {# سطر} other {# أسطر}} و {characters, plural, one {# حرف} other {# أحرف}}"
+msgstr "{lines, plural, zero {# أسطر} one {# سطر} two {سطران} few {# أسطر} many {# سطرًا} other {# أسطر}} و {characters, plural, zero {# أحرف} one {# حرف} two {حرفان} few {# أحرف} many {# حرفًا} other {# أحرف}}"
 
 #. Shown in the "Quick CSS" section in Settings > Themes. How long the quick CSS of the edited theme is.
 #: src/features/theme_settings/components/QuickCssSection.tsx
 msgid "{lines, plural, one {# line} other {# lines}} of quick CSS."
-msgstr "{lines, plural, one {# سطر} other {# أسطر}} من CSS السريع."
+msgstr "{lines, plural, zero {# أسطر} one {# سطر} two {سطران} few {# أسطر} many {# سطرًا} other {# أسطر}} من CSS السريع."
 
 #: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx
 msgid "{matchCount, plural, one {# match} other {# matches}}"
@@ -1834,7 +1834,7 @@ msgstr "{mentionCount, plural, zero {# إشارة} one {إشارة واحدة} t
 #. Summary in the inbox for the other signed-in accounts. mentionCount is the total number of mentions and accountCount is how many other accounts have mentions.
 #: src/features/messaging/components/popouts/inbox/OtherAccountsInboxSection.tsx
 msgid "{mentionCount, plural, one {# mention} other {# mentions}} on {accountCount, plural, one {# other account} other {# other accounts}}"
-msgstr "{mentionCount, plural, one {# إشارة} other {# إشارات}} على {accountCount, plural, one {# حساب آخر} other {# حسابات أخرى}}"
+msgstr "{mentionCount, plural, zero {# إشارات} one {# إشارة} two {إشارتان} few {# إشارات} many {# إشارة} other {# إشارات}} على {accountCount, plural, zero {# حسابات أخرى} one {# حساب آخر} two {حسابين آخرين} few {# حسابات أخرى} many {# حسابًا آخر} other {# حسابات أخرى}}"
 
 #. Current value and track label of the space between message groups slider, for example 16px.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx
@@ -2372,7 +2372,7 @@ msgstr "{tenSeconds} ثوانٍ"
 #. Template preview summary listing how many text channels, forum channels, voice channels, categories, and roles will be imported. Used when the template has at least one forum or media channel.
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 msgid "{textChannelCount, plural, one {# text channel} other {# text channels}}, {forumChannelCount, plural, one {# forum channel} other {# forum channels}}, {voiceChannelCount, plural, one {# voice channel} other {# voice channels}}, {categoryCount, plural, one {# category} other {# categories}}, {roleCount, plural, one {# role} other {# roles}}"
-msgstr "{textChannelCount, plural, one {# قناة نصية} other {# قنوات نصية}}، {forumChannelCount, plural, one {# قناة منتدى} other {# قنوات منتدى}}، {voiceChannelCount, plural, one {# قناة صوتية} other {# قنوات صوتية}}، {categoryCount, plural, one {# فئة} other {# فئات}}، {roleCount, plural, one {# دور} other {# أدوار}}"
+msgstr "{textChannelCount, plural, zero {# قنوات نصية} one {# قناة نصية} two {قناتان نصيتان} few {# قنوات نصية} many {# قناة نصية} other {# قنوات نصية}}، {forumChannelCount, plural, zero {# قنوات منتدى} one {# قناة منتدى} two {قناتا منتدى} few {# قنوات منتدى} many {# قناة منتدى} other {# قنوات منتدى}}، {voiceChannelCount, plural, zero {# قنوات صوتية} one {# قناة صوتية} two {قناتان صوتيتان} few {# قنوات صوتية} many {# قناة صوتية} other {# قنوات صوتية}}، {categoryCount, plural, zero {# فئات} one {# فئة} two {فئتان} few {# فئات} many {# فئة} other {# فئات}}، {roleCount, plural, zero {# أدوار} one {# دور} two {دوران} few {# أدوار} many {# دورًا} other {# أدوار}}"
 
 #. Template preview summary listing how many text channels, voice channels, categories, and roles will be imported.
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
@@ -5663,7 +5663,7 @@ msgstr "الصوت والفيديو"
 #. Description under the P2P calls only switch in voice channel settings. maxParticipants is the participant cap, a number from 2 to 4.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Audio and video go directly between participants, up to {maxParticipants, plural, one {# person} other {# people}}. Everyone agrees before joining and can see each other's IP address."
-msgstr "يتم إرسال الصوت والفيديو مباشرة بين المشاركين، بحد أقصى {maxParticipants, plural, one {# شخص} other {# أشخاص}}. يوافق الجميع قبل الانضمام ويمكنهم رؤية عنوان IP الخاص بكل منهم."
+msgstr "يتم إرسال الصوت والفيديو مباشرة بين المشاركين، بحد أقصى {maxParticipants, plural, zero {# أشخاص} one {# شخص} two {شخصين} few {# أشخاص} many {# شخصًا} other {# أشخاص}}. يوافق الجميع قبل الانضمام ويمكنهم رؤية عنوان IP الخاص بكل منهم."
 
 #. Lead sentence of the P2P call dialog explaining peer-to-peer mode.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
@@ -13275,7 +13275,7 @@ msgstr "أطلب تسليم شهادتي الآن. أشتري للشركة صا�
 #. Required checkbox in the Operator Pass checkout dialog when buying one pass from Brazil or in Brazilian reais. The buyer asks for the certificate PDF to be delivered right after payment. A buyer who has a billing address in Brazil or pays in reais (the Brazilian currency) keeps the right to withdraw for {days} days after delivery. A buyer who enters the CNPJ of a company sees a different text, so this one never needs a business exception. The billing address is not where the buyer happens to be. Nothing in this text takes the right away from anyone, so never add a sentence about losing it. Consumer law text, translate faithfully and keep every condition. Withdraw means the consumer right of withdrawal (pt-BR: desistir), never taking money out.
 #: src/features/premium/components/operator_pass/checkout/CheckoutAgreeStage.tsx
 msgid "Deliver my certificate now. If I have a billing address in Brazil or pay in reais, I can still withdraw within {days, plural, one {# day} other {# days}} of delivery and get a full refund."
-msgstr "أطلب تسليم شهادتي الآن. إذا كان لديّ عنوان فوترة في البرازيل أو أدفع بالريال البرازيلي، يمكنني الانسحاب خلال {days, plural, one {# يوم} two {# يومين} few {# أيام} many {# يومًا} other {# يوم}} من التسليم واسترداد المبلغ كاملًا."
+msgstr "أطلب تسليم شهادتي الآن. إذا كان لديّ عنوان فوترة في البرازيل أو أدفع بالريال البرازيلي، يمكنني الانسحاب خلال {days, plural, zero {# يوم} one {# يوم} two {# يومين} few {# أيام} many {# يومًا} other {# يوم}} من التسليم واسترداد المبلغ كاملًا."
 
 #. Required checkbox in the Operator Pass checkout dialog when buying more than one pass. The buyer asks for the certificate PDF pages to be delivered right after payment, before the statutory withdrawal period ends, and confirms that the right of withdrawal is lost on delivery. Consumer law text, translate faithfully and keep every condition. Withdraw means the consumer right of withdrawal, never taking money out.
 #: src/features/premium/components/operator_pass/checkout/CheckoutAgreeStage.tsx
@@ -13290,7 +13290,7 @@ msgstr "أطلب تسليم شهاداتي الآن. أشتري للشركة ص�
 #. Required checkbox in the Operator Pass checkout dialog when buying more than one pass from Brazil or in Brazilian reais. The buyer asks for the certificate PDF pages to be delivered right after payment. A buyer who has a billing address in Brazil or pays in reais (the Brazilian currency) keeps the right to withdraw from each pass for {days} days after delivery. A buyer who enters the CNPJ of a company sees a different text, so this one never needs a business exception. The billing address is not where the buyer happens to be. Nothing in this text takes the right away from anyone, so never add a sentence about losing it. Consumer law text, translate faithfully and keep every condition. Withdraw means the consumer right of withdrawal (pt-BR: desistir), never taking money out.
 #: src/features/premium/components/operator_pass/checkout/CheckoutAgreeStage.tsx
 msgid "Deliver my certificates now. If I have a billing address in Brazil or pay in reais, I can still withdraw from each pass within {days, plural, one {# day} other {# days}} of delivery and get a full refund."
-msgstr "أطلب تسليم شهاداتي الآن. إذا كان لديّ عنوان فوترة في البرازيل أو أدفع بالريال البرازيلي، يمكنني الانسحاب من كل Pass خلال {days, plural, one {# يوم} two {# يومين} few {# أيام} many {# يومًا} other {# يوم}} من التسليم واسترداد المبلغ كاملًا."
+msgstr "أطلب تسليم شهاداتي الآن. إذا كان لديّ عنوان فوترة في البرازيل أو أدفع بالريال البرازيلي، يمكنني الانسحاب من كل Pass خلال {days, plural, zero {# يوم} one {# يوم} two {# يومين} few {# أيام} many {# يومًا} other {# يوم}} من التسليم واسترداد المبلغ كاملًا."
 
 #. Group heading for followed announcement channels that post into one channel. targetChannelName is that channel, without the leading #.
 #: src/features/guild/components/modals/guild_tabs/GuildWebhooksTab.tsx
@@ -19517,12 +19517,12 @@ msgstr "إذا نسيت كلمة مرورك، فهذه المجموعة هي ا�
 #. Line in the Operator Pass checkout dialog right above the button that opens the payment page, shown to buyers who appear to be in Brazil or who pay in Brazilian reais when buying more than one pass. A buyer who has a billing address in Brazil or pays in reais (the Brazilian currency) keeps the right to withdraw from each pass for {days} days after delivery. A buyer who enters the CNPJ of a company sees a different text, so this one never needs a business exception. The billing address is not where the buyer happens to be. Nothing in this text takes the right away from anyone, so never add a sentence about losing it. Consumer law text, translate faithfully and keep every condition. Withdraw means the consumer right of withdrawal (pt-BR: desistir), never taking money out.
 #: src/features/premium/components/operator_pass/checkout/CheckoutAgreeStage.tsx
 msgid "If you have a billing address in Brazil or pay in reais, you can withdraw from each pass within {days, plural, one {# day} other {# days}} of delivery and get a full refund."
-msgstr "إذا كان لديك عنوان فوترة في البرازيل أو تدفع بالريال البرازيلي، يمكنك الانسحاب من كل Pass خلال {days, plural, one {# يوم} two {# يومين} few {# أيام} many {# يومًا} other {# يوم}} من التسليم واسترداد المبلغ كاملًا."
+msgstr "إذا كان لديك عنوان فوترة في البرازيل أو تدفع بالريال البرازيلي، يمكنك الانسحاب من كل Pass خلال {days, plural, zero {# يوم} one {# يوم} two {# يومين} few {# أيام} many {# يومًا} other {# يوم}} من التسليم واسترداد المبلغ كاملًا."
 
 #. Line in the Operator Pass checkout dialog right above the button that opens the payment page, shown to buyers who appear to be in Brazil or who pay in Brazilian reais. A buyer who has a billing address in Brazil or pays in reais (the Brazilian currency) keeps the right to withdraw for {days} days after delivery. A buyer who enters the CNPJ of a company sees a different text, so this one never needs a business exception. The billing address is not where the buyer happens to be. Nothing in this text takes the right away from anyone, so never add a sentence about losing it. Consumer law text, translate faithfully and keep every condition. Withdraw means the consumer right of withdrawal (pt-BR: desistir), never taking money out.
 #: src/features/premium/components/operator_pass/checkout/CheckoutAgreeStage.tsx
 msgid "If you have a billing address in Brazil or pay in reais, you can withdraw within {days, plural, one {# day} other {# days}} of delivery and get a full refund."
-msgstr "إذا كان لديك عنوان فوترة في البرازيل أو تدفع بالريال البرازيلي، يمكنك الانسحاب خلال {days, plural, one {# يوم} two {# يومين} few {# أيام} many {# يومًا} other {# يوم}} من التسليم واسترداد المبلغ كاملًا."
+msgstr "إذا كان لديك عنوان فوترة في البرازيل أو تدفع بالريال البرازيلي، يمكنك الانسحاب خلال {days, plural, zero {# يوم} one {# يوم} two {# يومين} few {# أيام} many {# يومًا} other {# يوم}} من التسليم واسترداد المبلغ كاملًا."
 
 #. Help on the setup token screen, followed by a terminal command. rexctl is a name that must not be translated.
 #: src/features/app/components/setup/SetupTokenStep.tsx
@@ -21786,7 +21786,7 @@ msgstr "مرتبط"
 #. Toast after importing CSS files or a folder on the desktop app. The themes stay linked to the files on disk and update when the file is saved.
 #: src/features/theme_settings/components/YourThemesSection.tsx
 msgid "Linked {length, plural, one {# theme file} other {# theme files}}. Changes you save to them apply right away."
-msgstr "ملفات الثيمات المرتبطة {length, plural, one {# ملف ثيم} other {# ملف ثيم}}. التغييرات التي تحفظها عليها تُطبّق فورًا."
+msgstr "ملفات الثيمات المرتبطة {length, plural, zero {# ملف ثيم} one {# ملف ثيم} two {ملفا ثيم} few {# ملفات ثيم} many {# ملف ثيم} other {# ملف ثيم}}. التغييرات التي تحفظها عليها تُطبّق فورًا."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts
@@ -25336,8 +25336,9 @@ msgstr "لا يمكن لأحد فتح الملاحظات الشخصية أو ا�
 
 #. Description of the invite-only registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
+#, fuzzy
 msgid "Nobody can sign up on their own. You make invite links in the admin panel and send them to people."
-msgstr ""
+msgstr "لا يمكن لأحد التسجيل بنفسه. تنشئ روابط تسجيل في لوحة الإدارة وترسلها إلى الأشخاص."
 
 #. Empty-state text in the channel and chat message reactions sheet.
 #: src/features/channel/components/MessageReactionsSheet.tsx
@@ -29650,8 +29651,9 @@ msgid "Registration is currently closed."
 msgstr "التسجيل مغلق حالياً."
 
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
+#, fuzzy
 msgid "Registration is currently closed. Use an invite link from an admin to create an account."
-msgstr ""
+msgstr "التسجيل مغلق حاليًا. استخدم رابط تسجيل من أحد المسؤولين لإنشاء حساب."
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Regular button"
@@ -37399,7 +37401,7 @@ msgstr "توقف مصدر مشاركة الشاشة عن إرسال الفيدي
 #. Sentences after the privacy sentence in the Operator Pass checkout dialog that name the company selling the pass and how to reach it. Fluxer Platform AB is the company name and 559537-3993 its Swedish registration number, keep both as is. Haninge is the Swedish municipality where the company has its registered seat and stays as is. Translate registered seat with the legal term your language uses for the registered seat of a company. The address, phone number and email address are filled in and stay as is. Use the same word for seller as on a receipt.
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx
 msgid "The seller is Fluxer Platform AB (reg. no. 559537-3993), a Swedish company with its registered seat in Haninge. Write to us at {OPERATOR_PASS_SELLER_ADDRESS}, call {OPERATOR_PASS_SELLER_PHONE} or email {SUPPORT_EMAIL}."
-msgstr ""
+msgstr "البائع هو Fluxer Platform AB (رقم التسجيل 559537-3993)، وهي شركة سويدية مقرها القانوني في Haninge. راسلنا على العنوان {OPERATOR_PASS_SELLER_ADDRESS}، أو اتصل بنا على الرقم {OPERATOR_PASS_SELLER_PHONE}، أو أرسل بريدًا إلكترونيًا إلى {SUPPORT_EMAIL}."
 
 #. Setup wizard body explaining what the setup token is for.
 #: src/features/app/components/setup/SetupTokenStep.tsx
@@ -39135,8 +39137,9 @@ msgstr "لإنشاء ويب هوك، افتح <0>{channelWebhooksSettingsPath}</
 
 #. Last setup wizard screen when only invited people can sign up.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
+#, fuzzy
 msgid "To let people in, make an invite link in the admin panel."
-msgstr ""
+msgstr "للسماح للأشخاص بالدخول، أنشئ رابط تسجيل في لوحة الإدارة."
 
 #. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
@@ -40748,7 +40751,7 @@ msgstr "رسائل غير مقروءة"
 #. Summary in the inbox when the other signed-in accounts have unread messages but no mentions. accountCount is how many other accounts have activity.
 #: src/features/messaging/components/popouts/inbox/OtherAccountsInboxSection.tsx
 msgid "Unread messages on {accountCount, plural, one {# other account} other {# other accounts}}"
-msgstr "رسائل غير مقروءة على {accountCount, plural, one {# حساب آخر} other {# حسابات أخرى}}"
+msgstr "رسائل غير مقروءة على {accountCount, plural, zero {# حسابات أخرى} one {# حساب آخر} two {حسابين آخرين} few {# حسابات أخرى} many {# حسابًا آخر} other {# حسابات أخرى}}"
 
 #. Accessibility description of the Windows taskbar overlay badge, read by screen readers. {count} is the number of unread messages, already formatted for the locale.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
@@ -40827,7 +40830,7 @@ msgstr "حتى {max} في كل عملية شراء."
 #. Bullet point in the P2P call dialog. maxParticipants is the participant cap of a peer-to-peer call, a number from 2 to 4.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Up to {maxParticipants, plural, one {# person} other {# people}}."
-msgstr "حتى {maxParticipants, plural, one {# شخص} other {# أشخاص}}."
+msgstr "حتى {maxParticipants, plural, zero {# أشخاص} one {# شخص} two {شخصين} few {# أشخاص} many {# شخصًا} other {# أشخاص}}."
 
 #. Plutonium page comparison value for paid video quality. Keep 4K and FPS as written.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
@@ -44074,7 +44077,7 @@ msgstr "يمكنك تسجيل الدخول إلى هذا الحساب باستخ
 #. Cooldown notice in the new thread pane when the parent channel has slowmode. seconds is the wait time.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "You can start another thread in {seconds, plural, one {# second} other {# seconds}}."
-msgstr "يمكنك بدء محادثة أخرى خلال {seconds, plural, one {# ثانية} other {# ثوانٍ}}."
+msgstr "يمكنك بدء محادثة أخرى خلال {seconds, plural, zero {# ثوانٍ} one {# ثانية} two {ثانيتين} few {# ثوانٍ} many {# ثانية} other {# ثوانٍ}}."
 
 #. Invite page subtext shown when community admins pause invites. Explains that account actions still work.
 #: src/features/invite/utils/InviteMessageDescriptors.ts

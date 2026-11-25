@@ -25336,8 +25336,9 @@ msgstr "ไม่มีใครเปิดหรือเขียนบัน
 
 #. Description of the invite-only registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
+#, fuzzy
 msgid "Nobody can sign up on their own. You make invite links in the admin panel and send them to people."
-msgstr ""
+msgstr "ไม่มีใครสมัครเองได้ คุณสร้างลิงก์ลงทะเบียนในแผงผู้ดูแลระบบแล้วส่งให้ผู้คน"
 
 #. Empty-state text in the channel and chat message reactions sheet.
 #: src/features/channel/components/MessageReactionsSheet.tsx
@@ -29650,8 +29651,9 @@ msgid "Registration is currently closed."
 msgstr "การลงทะเบียนปิดให้บริการชั่วคราว"
 
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
+#, fuzzy
 msgid "Registration is currently closed. Use an invite link from an admin to create an account."
-msgstr ""
+msgstr "ขณะนี้ปิดการลงทะเบียนอยู่ ใช้ลิงก์ลงทะเบียนจากผู้ดูแลระบบเพื่อสร้างบัญชี"
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Regular button"
@@ -37399,7 +37401,7 @@ msgstr "แหล่งที่มาของการแชร์หน้า
 #. Sentences after the privacy sentence in the Operator Pass checkout dialog that name the company selling the pass and how to reach it. Fluxer Platform AB is the company name and 559537-3993 its Swedish registration number, keep both as is. Haninge is the Swedish municipality where the company has its registered seat and stays as is. Translate registered seat with the legal term your language uses for the registered seat of a company. The address, phone number and email address are filled in and stay as is. Use the same word for seller as on a receipt.
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx
 msgid "The seller is Fluxer Platform AB (reg. no. 559537-3993), a Swedish company with its registered seat in Haninge. Write to us at {OPERATOR_PASS_SELLER_ADDRESS}, call {OPERATOR_PASS_SELLER_PHONE} or email {SUPPORT_EMAIL}."
-msgstr ""
+msgstr "ผู้ขายคือ Fluxer Platform AB (เลขทะเบียน 559537-3993) บริษัทสวีเดนซึ่งมีที่ตั้งสำนักงานใหญ่อยู่ที่ Haninge ส่งจดหมายถึงเราได้ที่ {OPERATOR_PASS_SELLER_ADDRESS} โทรหาเราที่ {OPERATOR_PASS_SELLER_PHONE} หรือส่งอีเมลไปที่ {SUPPORT_EMAIL}"
 
 #. Setup wizard body explaining what the setup token is for.
 #: src/features/app/components/setup/SetupTokenStep.tsx
@@ -39135,8 +39137,9 @@ msgstr "หากต้องการสร้าง webhook ให้เปิ
 
 #. Last setup wizard screen when only invited people can sign up.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
+#, fuzzy
 msgid "To let people in, make an invite link in the admin panel."
-msgstr ""
+msgstr "หากต้องการให้ผู้คนเข้ามา ให้สร้างลิงก์ลงทะเบียนในแผงผู้ดูแลระบบ"
 
 #. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx

@@ -1134,7 +1134,7 @@ msgstr "{count, plural, =0 {∞ Без ограничений} one {# участ
 #. Shown when hovering a CSS selector in the quick CSS editor.
 #: src/features/theme_settings/editor/CssHover.ts
 msgid "{count, plural, =0 {Matches nothing in the app right now} one {Matches # element in the app right now} other {Matches # elements in the app right now}}"
-msgstr "{count, plural, =0 {Сейчас ничего не совпадает в приложении} one {Сейчас совпадает # элемент в приложении} other {Сейчас совпадает # элементов в приложении}}"
+msgstr "{count, plural, =0 {Сейчас ничего не совпадает в приложении} one {Сейчас совпадает # элемент в приложении} few {Сейчас совпадают # элемента в приложении} many {Сейчас совпадает # элементов в приложении} other {Сейчас совпадает # элементов в приложении}}"
 
 #. Row in the list of Operator Passes for passes the account bought in one purchase. {count} is how many passes of that purchase are in the row, {date} the purchase date without a time, such as Nov 20, 2026.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
@@ -1210,7 +1210,7 @@ msgstr "{count, plural, one {# заблокированное сообщение
 #. Shown next to the "Colors and fonts" section title in Settings > Themes. How many colors and fonts the user changed.
 #: src/features/theme_settings/components/ColorsAndFontsSection.tsx
 msgid "{count, plural, one {# changed} other {# changed}}"
-msgstr "{count, plural, one {# изменение} other {# изменений}}"
+msgstr "{count, plural, one {# изменение} few {# изменения} many {# изменений} other {# изменений}}"
 
 #. Body of the confirmation shown before an announcement channel is converted back into a text channel. {count} is the number of channels, in this or other communities, that follow it and get copies of its published messages. Those channels stop getting copies after the conversion.
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx
@@ -1220,7 +1220,7 @@ msgstr "{count, plural, one {# канал подписан} few {# канала 
 #. Shown in the status bar of the quick CSS editor while text is selected.
 #: src/features/theme_settings/components/QuickCssStatusBar.tsx
 msgid "{count, plural, one {# character selected} other {# characters selected}}"
-msgstr "{count, plural, one {Выделен # символ} other {Выделено # символов}}"
+msgstr "{count, plural, one {Выделен # символ} few {Выделено # символа} many {Выделено # символов} other {Выделено # символов}}"
 
 #. Screen-reader status text in Explore. {count} is the total number of matching communities.
 #: src/features/discovery/discovery/DiscoveryPage.tsx
@@ -1230,7 +1230,7 @@ msgstr "{count, plural, one {Найдено # сообщество} few {Най�
 #. Heading above the list of communities whose direct message setting differs from the default, in the privacy setup modal.
 #: src/features/user/components/modals/PrivacySetupModal.tsx
 msgid "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
-msgstr "{count, plural, one {# сообщество имеет свои настройки} other {# сообществ имеют свои настройки}}"
+msgstr "{count, plural, one {# сообщество имеет свои настройки} few {# сообщества имеют свои настройки} many {# сообществ имеют свои настройки} other {# сообществ имеют свои настройки}}"
 
 #: src/features/app/components/layout/GuildsLayout.tsx
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
@@ -1244,7 +1244,7 @@ msgstr "{count, plural, one {# подключение} few {# подключен
 #. Button in the status bar of the quick CSS editor that opens the list of problems.
 #: src/features/theme_settings/components/QuickCssStatusBar.tsx
 msgid "{count, plural, one {# error} other {# errors}}"
-msgstr "{count, plural, one {# ошибка} other {# ошибок}}"
+msgstr "{count, plural, one {# ошибка} few {# ошибки} many {# ошибок} other {# ошибок}}"
 
 #. Attachment summary in the forward modal message preview when the message has no images or videos. count is the number of attached files.
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx
@@ -1265,7 +1265,7 @@ msgstr "{count, plural, one {# изображение} few {# изображен
 #. Status under the forum search box once results are in.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "{count, plural, one {# matching post} other {# matching posts}}"
-msgstr "{count, plural, one {# подходящий пост} other {# подходящих постов}}"
+msgstr "{count, plural, one {# подходящий пост} few {# подходящих поста} many {# подходящих постов} other {# подходящих постов}}"
 
 #: src/features/channel/components/ChannelSourcePreview.tsx
 #: src/features/channel/components/direct_message/DMListItem.tsx
@@ -1278,12 +1278,12 @@ msgstr "{count, plural, one {# участник} few {# участника} many
 #. Message count on a thread chip and in the thread browser. count is the number of messages.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "{count, plural, one {# message} other {# messages}}"
-msgstr "{count, plural, one {# сообщение} other {# сообщений}}"
+msgstr "{count, plural, one {# сообщение} few {# сообщения} many {# сообщений} other {# сообщений}}"
 
 #. Last quick switcher row in another account section. count is how many more unread or mentioned channels that account has. accountName is the account display name.
 #: src/features/search/state/QuickSwitcherAccountResults.ts
 msgid "{count, plural, one {# more in {accountName}} other {# more in {accountName}}}"
-msgstr "{count, plural, one {# ещё в {accountName}} other {# ещё в {accountName}}}"
+msgstr "{count, plural, one {# ещё в {accountName}} few {# ещё в {accountName}} many {# ещё в {accountName}} other {# ещё в {accountName}}}"
 
 #. Activity log item that stands in for the permission names left out of a long list. It is the last item of a list joined with "and", for example "Send messages, Manage roles, and 3 more permissions". The app joins the list and adds the commas and the word for "and" in your language, so do not add them here. It counts the other permissions in the same list. It never means that permissions were added. {count} is an ICU plural with the number of permissions left out, and # shows that number.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts
@@ -1297,7 +1297,7 @@ msgstr "{count, plural, one {# общее сообщество} few {# общи�
 #. Label on a joined forum post card with unread messages. count is the number of unread messages.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "{count, plural, one {# new message} other {# new messages}}"
-msgstr "{count, plural, one {# новое сообщение} other {# новых сообщений}}"
+msgstr "{count, plural, one {# новое сообщение} few {# новых сообщения} many {# новых сообщений} other {# новых сообщений}}"
 
 #. Short label in the footer of a forum post card, meaning "# new messages". count is the number of unread messages. Keep it as short as possible. It shares one line with the message count and the time.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
@@ -1339,7 +1339,7 @@ msgstr "{count, plural, one {# секунда} few {# секунды} many {# с
 #. Option of the "Tab size" setting in the quick CSS editor.
 #: src/features/theme_settings/components/QuickCssEditorSettings.tsx
 msgid "{count, plural, one {# space} other {# spaces}}"
-msgstr "{count, plural, one {# пробел} other {# пробела}}"
+msgstr "{count, plural, one {# пробел} few {# пробела} many {# пробелов} other {# пробела}}"
 
 #. Screen-reader live-region announcement listing the number of message search suggestions. Preserve {count}; it is inserted by code.
 #: src/features/channel/components/message_search_bar/MessageSearchBar.tsx
@@ -1354,7 +1354,7 @@ msgstr "{count, plural, one {# видео} few {# видео} many {# видео
 #. Button in the status bar of the quick CSS editor that opens the list of problems.
 #: src/features/theme_settings/components/QuickCssStatusBar.tsx
 msgid "{count, plural, one {# warning} other {# warnings}}"
-msgstr "{count, plural, one {# предупреждение} other {# предупреждений}}"
+msgstr "{count, plural, one {# предупреждение} few {# предупреждения} many {# предупреждений} other {# предупреждений}}"
 
 #. Compact age label shown beside a list row (DM list, invite list). count is a number of days; the "d" is an abbreviation of "days". Keep it as short as possible; it sits in a narrow column.
 #: src/features/ui/utils/ShortRelativeTimeLabels.ts
@@ -1400,7 +1400,7 @@ msgstr "{count, plural, one {+# значок, показать все} few {+# �
 #. Short muted line under a row of Operator Passes in the Operator Pass settings. {numbers} is the six-digit number of the certificate page of each pass in the row, such as 000123 or 000123, 000124. {count} is how many numbers there are. Use the usual abbreviation for number in your language, as on a certificate.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
 msgid "{count, plural, one {Certificate No. {numbers}} other {Certificate Nos. {numbers}}}"
-msgstr "{count, plural, one {Сертификат № {numbers}} other {Сертификаты № {numbers}}}"
+msgstr "{count, plural, one {Сертификат № {numbers}} few {Сертификаты № {numbers}} many {Сертификаты № {numbers}} other {Сертификаты № {numbers}}}"
 
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreviewFooter.tsx
 msgid "{count, plural, one {Collapse (# line)} other {Collapse (# lines)}}"
@@ -1808,12 +1808,12 @@ msgstr "{length, plural, one {# зритель} few {# зрителя} many {# �
 #. Tooltip of the line and column button in the status bar of the quick CSS editor.
 #: src/features/theme_settings/components/QuickCssStatusBar.tsx
 msgid "{lines, plural, one {# line} other {# lines}} and {characters, plural, one {# character} other {# characters}}"
-msgstr "{lines, plural, one {# строка} other {# строк}} и {characters, plural, one {# символ} other {# символов}}"
+msgstr "{lines, plural, one {# строка} few {# строки} many {# строк} other {# строк}} и {characters, plural, one {# символ} few {# символа} many {# символов} other {# символов}}"
 
 #. Shown in the "Quick CSS" section in Settings > Themes. How long the quick CSS of the edited theme is.
 #: src/features/theme_settings/components/QuickCssSection.tsx
 msgid "{lines, plural, one {# line} other {# lines}} of quick CSS."
-msgstr "{lines, plural, one {# строка} other {# строк}} CSS."
+msgstr "{lines, plural, one {# строка} few {# строки} many {# строк} other {# строк}} CSS."
 
 #: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx
 msgid "{matchCount, plural, one {# match} other {# matches}}"
@@ -1834,7 +1834,7 @@ msgstr "{mentionCount, plural, one {# упоминание} few {# упомин�
 #. Summary in the inbox for the other signed-in accounts. mentionCount is the total number of mentions and accountCount is how many other accounts have mentions.
 #: src/features/messaging/components/popouts/inbox/OtherAccountsInboxSection.tsx
 msgid "{mentionCount, plural, one {# mention} other {# mentions}} on {accountCount, plural, one {# other account} other {# other accounts}}"
-msgstr "{mentionCount, plural, one {# упоминание} other {# упоминаний}} в {accountCount, plural, one {# другом аккаунте} other {# других аккаунтах}}"
+msgstr "{mentionCount, plural, one {# упоминание} few {# упоминания} many {# упоминаний} other {# упоминаний}} в {accountCount, plural, one {# другом аккаунте} few {# других аккаунтах} many {# других аккаунтах} other {# других аккаунтах}}"
 
 #. Current value and track label of the space between message groups slider, for example 16px.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx
@@ -2372,7 +2372,7 @@ msgstr "{tenSeconds} секунд"
 #. Template preview summary listing how many text channels, forum channels, voice channels, categories, and roles will be imported. Used when the template has at least one forum or media channel.
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 msgid "{textChannelCount, plural, one {# text channel} other {# text channels}}, {forumChannelCount, plural, one {# forum channel} other {# forum channels}}, {voiceChannelCount, plural, one {# voice channel} other {# voice channels}}, {categoryCount, plural, one {# category} other {# categories}}, {roleCount, plural, one {# role} other {# roles}}"
-msgstr "{textChannelCount, plural, one {# текстовый канал} other {# текстовых каналов}}, {forumChannelCount, plural, one {# форумный канал} other {# форумных каналов}}, {voiceChannelCount, plural, one {# голосовой канал} other {# голосовых каналов}}, {categoryCount, plural, one {# категория} other {# категорий}}, {roleCount, plural, one {# роль} other {# ролей}}"
+msgstr "{textChannelCount, plural, one {# текстовый канал} few {# текстовых канала} many {# текстовых каналов} other {# текстовых каналов}}, {forumChannelCount, plural, one {# форумный канал} few {# форумных канала} many {# форумных каналов} other {# форумных каналов}}, {voiceChannelCount, plural, one {# голосовой канал} few {# голосовых канала} many {# голосовых каналов} other {# голосовых каналов}}, {categoryCount, plural, one {# категория} few {# категории} many {# категорий} other {# категорий}}, {roleCount, plural, one {# роль} few {# роли} many {# ролей} other {# ролей}}"
 
 #. Template preview summary listing how many text channels, voice channels, categories, and roles will be imported.
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
@@ -5663,7 +5663,7 @@ msgstr "Аудио и видео"
 #. Description under the P2P calls only switch in voice channel settings. maxParticipants is the participant cap, a number from 2 to 4.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Audio and video go directly between participants, up to {maxParticipants, plural, one {# person} other {# people}}. Everyone agrees before joining and can see each other's IP address."
-msgstr "Аудио и видео передаются напрямую между участниками, максимум {maxParticipants, plural, one {# человек} other {# человека}}. Все соглашаются перед подключением и могут видеть IP-адрес друг друга."
+msgstr "Аудио и видео передаются напрямую между участниками, максимум {maxParticipants, plural, one {# человек} few {# человека} many {# человек} other {# человека}}. Все соглашаются перед подключением и могут видеть IP-адрес друг друга."
 
 #. Lead sentence of the P2P call dialog explaining peer-to-peer mode.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
@@ -21786,7 +21786,7 @@ msgstr "Связанные"
 #. Toast after importing CSS files or a folder on the desktop app. The themes stay linked to the files on disk and update when the file is saved.
 #: src/features/theme_settings/components/YourThemesSection.tsx
 msgid "Linked {length, plural, one {# theme file} other {# theme files}}. Changes you save to them apply right away."
-msgstr "Связано {length, plural, one {# файл темы} other {# файлов темы}}. Изменения, которые вы сохраните, применятся сразу."
+msgstr "Связано {length, plural, one {# файл темы} few {# файла темы} many {# файлов темы} other {# файлов темы}}. Изменения, которые вы сохраните, применятся сразу."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts
@@ -25336,8 +25336,9 @@ msgstr "Никто не может открывать личные заметк�
 
 #. Description of the invite-only registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
+#, fuzzy
 msgid "Nobody can sign up on their own. You make invite links in the admin panel and send them to people."
-msgstr ""
+msgstr "Никто не может зарегистрироваться сам. Вы создаёте ссылки для регистрации в панели администратора и отправляете их людям."
 
 #. Empty-state text in the channel and chat message reactions sheet.
 #: src/features/channel/components/MessageReactionsSheet.tsx
@@ -29650,8 +29651,9 @@ msgid "Registration is currently closed."
 msgstr "Регистрация временно закрыта."
 
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
+#, fuzzy
 msgid "Registration is currently closed. Use an invite link from an admin to create an account."
-msgstr ""
+msgstr "Регистрация сейчас закрыта. Чтобы создать аккаунт, используйте регистрационную ссылку от администратора."
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Regular button"
@@ -37399,7 +37401,7 @@ msgstr "Источник демонстрации экрана прекрати�
 #. Sentences after the privacy sentence in the Operator Pass checkout dialog that name the company selling the pass and how to reach it. Fluxer Platform AB is the company name and 559537-3993 its Swedish registration number, keep both as is. Haninge is the Swedish municipality where the company has its registered seat and stays as is. Translate registered seat with the legal term your language uses for the registered seat of a company. The address, phone number and email address are filled in and stay as is. Use the same word for seller as on a receipt.
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx
 msgid "The seller is Fluxer Platform AB (reg. no. 559537-3993), a Swedish company with its registered seat in Haninge. Write to us at {OPERATOR_PASS_SELLER_ADDRESS}, call {OPERATOR_PASS_SELLER_PHONE} or email {SUPPORT_EMAIL}."
-msgstr ""
+msgstr "Продавец — Fluxer Platform AB (рег. № 559537-3993), шведская компания с местом нахождения в Haninge. Напишите нам по адресу {OPERATOR_PASS_SELLER_ADDRESS}, позвоните по номеру {OPERATOR_PASS_SELLER_PHONE} или отправьте электронное письмо на {SUPPORT_EMAIL}."
 
 #. Setup wizard body explaining what the setup token is for.
 #: src/features/app/components/setup/SetupTokenStep.tsx
@@ -39135,8 +39137,9 @@ msgstr "Чтобы создать вебхук, откройте <0>{channelWebh
 
 #. Last setup wizard screen when only invited people can sign up.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
+#, fuzzy
 msgid "To let people in, make an invite link in the admin panel."
-msgstr ""
+msgstr "Чтобы впустить людей, создайте ссылку для регистрации в панели администратора."
 
 #. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
@@ -40748,7 +40751,7 @@ msgstr "Непрочитанные сообщения"
 #. Summary in the inbox when the other signed-in accounts have unread messages but no mentions. accountCount is how many other accounts have activity.
 #: src/features/messaging/components/popouts/inbox/OtherAccountsInboxSection.tsx
 msgid "Unread messages on {accountCount, plural, one {# other account} other {# other accounts}}"
-msgstr "Непрочитанные сообщения в {accountCount, plural, one {# другом аккаунте} other {# других аккаунтах}}"
+msgstr "Непрочитанные сообщения в {accountCount, plural, one {# другом аккаунте} few {# других аккаунтах} many {# других аккаунтах} other {# других аккаунтах}}"
 
 #. Accessibility description of the Windows taskbar overlay badge, read by screen readers. {count} is the number of unread messages, already formatted for the locale.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
@@ -44074,7 +44077,7 @@ msgstr "Ты можешь входить в этот аккаунт через �
 #. Cooldown notice in the new thread pane when the parent channel has slowmode. seconds is the wait time.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "You can start another thread in {seconds, plural, one {# second} other {# seconds}}."
-msgstr "Вы можете начать новый тред через {seconds, plural, one {# секунду} other {# секунд}}."
+msgstr "Вы можете начать новый тред через {seconds, plural, one {# секунду} few {# секунды} many {# секунд} other {# секунд}}."
 
 #. Invite page subtext shown when community admins pause invites. Explains that account actions still work.
 #: src/features/invite/utils/InviteMessageDescriptors.ts

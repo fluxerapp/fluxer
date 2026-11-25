@@ -326,12 +326,12 @@ msgstr "{actor} vytvořil webhook {name} v kanálu {channel}"
 #. Activity log summary for several messages that were deleted together when the channel was not recorded. {actor} is the member who deleted them, shown as a clickable user chip, or the word System. {count} is an ICU plural with the number of deleted messages, and # shows that number.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts
 msgid "{actor} deleted {count, plural, one {# message} other {# messages}}"
-msgstr "{actor} smazal {count, plural, one {# zprávu} few {# zprávy} other {# zpráv}}"
+msgstr "{actor} smazal {count, plural, one {# zprávu} few {# zprávy} many {# zpráv} other {# zpráv}}"
 
 #. Activity log summary for several messages that were deleted together. {actor} is the member who deleted them, shown as a clickable user chip, or the word System. {count} is an ICU plural with the number of deleted messages, and # shows that number. {channel} is the channel the messages were in, shown as a channel name chip, or the deleted-channel label when the channel no longer exists.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts
 msgid "{actor} deleted {count, plural, one {# message} other {# messages}} in {channel}"
-msgstr "{actor} smazal {count, plural, one {# zprávu} few {# zprávy} other {# zpráv}} v kanálu {channel}"
+msgstr "{actor} smazal {count, plural, one {# zprávu} few {# zprávy} many {# zpráv} other {# zpráv}} v kanálu {channel}"
 
 #. Activity log summary for one message that was deleted when the channel was not recorded. {actor} is the member who deleted it, shown as a clickable user chip, or the word System.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts
@@ -1134,7 +1134,7 @@ msgstr "{count, plural, =0 {∞ Bez omezení} one {# účastník} few {# účast
 #. Shown when hovering a CSS selector in the quick CSS editor.
 #: src/features/theme_settings/editor/CssHover.ts
 msgid "{count, plural, =0 {Matches nothing in the app right now} one {Matches # element in the app right now} other {Matches # elements in the app right now}}"
-msgstr "{count, plural, =0 {Teď v aplikaci neodpovídá ničemu} one {Teď v aplikaci odpovídá # prvek} other {Teď v aplikaci odpovídá # prvků}}"
+msgstr "{count, plural, =0 {Teď v aplikaci neodpovídá ničemu} one {Teď v aplikaci odpovídá # prvek} few {Teď v aplikaci odpovídají # prvky} many {Teď v aplikaci odpovídá # prvků} other {Teď v aplikaci odpovídá # prvků}}"
 
 #. Row in the list of Operator Passes for passes the account bought in one purchase. {count} is how many passes of that purchase are in the row, {date} the purchase date without a time, such as Nov 20, 2026.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
@@ -1210,17 +1210,17 @@ msgstr "{count, plural, one {# zablokovaná zpráva} few {# zablokované zprávy
 #. Shown next to the "Colors and fonts" section title in Settings > Themes. How many colors and fonts the user changed.
 #: src/features/theme_settings/components/ColorsAndFontsSection.tsx
 msgid "{count, plural, one {# changed} other {# changed}}"
-msgstr "{count, plural, one {# změna} other {# změn}}"
+msgstr "{count, plural, one {# změna} few {# změny} many {# změn} other {# změn}}"
 
 #. Body of the confirmation shown before an announcement channel is converted back into a text channel. {count} is the number of channels, in this or other communities, that follow it and get copies of its published messages. Those channels stop getting copies after the conversion.
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx
 msgid "{count, plural, one {# channel follows} other {# channels follow}} this channel. Converting it to a text channel removes those follows."
-msgstr "{count, plural, one {# kanál ho sleduje} other {# kanálů ho sleduje}} tento kanál. Převedením na textový kanál se tito sledující odeberou."
+msgstr "{count, plural, one {# kanál sleduje} few {# kanály sledují} many {# kanálu sleduje} other {# kanálů sleduje}} tento kanál. Převedením na textový kanál se tito sledující odeberou."
 
 #. Shown in the status bar of the quick CSS editor while text is selected.
 #: src/features/theme_settings/components/QuickCssStatusBar.tsx
 msgid "{count, plural, one {# character selected} other {# characters selected}}"
-msgstr "{count, plural, one {Vybrán # znak} other {Vybráno # znaků}}"
+msgstr "{count, plural, one {Vybrán # znak} few {Vybrány # znaky} many {Vybráno # znaků} other {Vybráno # znaků}}"
 
 #. Screen-reader status text in Explore. {count} is the total number of matching communities.
 #: src/features/discovery/discovery/DiscoveryPage.tsx
@@ -1230,7 +1230,7 @@ msgstr "{count, plural, one {Nalezena # komunita} few {Nalezeny # komunity} many
 #. Heading above the list of communities whose direct message setting differs from the default, in the privacy setup modal.
 #: src/features/user/components/modals/PrivacySetupModal.tsx
 msgid "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
-msgstr "{count, plural, one {# komunita má vlastní nastavení} other {# komunity mají vlastní nastavení}}"
+msgstr "{count, plural, one {# komunita má vlastní nastavení} few {# komunity mají vlastní nastavení} many {# komunity má vlastní nastavení} other {# komunit má vlastní nastavení}}"
 
 #: src/features/app/components/layout/GuildsLayout.tsx
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
@@ -1239,12 +1239,12 @@ msgstr "{count, plural, one {# komunita je dočasně nedostupná kvůli poruše 
 #. Displayed value for the voice channel connection limit slider.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx
 msgid "{count, plural, one {# connection} other {# connections}}"
-msgstr "{count, plural, one {# připojení} other {# připojení}}"
+msgstr "{count, plural, one {# připojení} few {# připojení} many {# připojení} other {# připojení}}"
 
 #. Button in the status bar of the quick CSS editor that opens the list of problems.
 #: src/features/theme_settings/components/QuickCssStatusBar.tsx
 msgid "{count, plural, one {# error} other {# errors}}"
-msgstr "{count, plural, one {# chyba} other {# chyb}}"
+msgstr "{count, plural, one {# chyba} few {# chyby} many {# chyb} other {# chyb}}"
 
 #. Attachment summary in the forward modal message preview when the message has no images or videos. count is the number of attached files.
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx
@@ -1265,7 +1265,7 @@ msgstr "{count, plural, one {# obrázek} few {# obrázky} many {# obrázku} othe
 #. Status under the forum search box once results are in.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "{count, plural, one {# matching post} other {# matching posts}}"
-msgstr "{count, plural, one {# odpovídající příspěvek} other {# odpovídajících příspěvků}}"
+msgstr "{count, plural, one {# odpovídající příspěvek} few {# odpovídající příspěvky} many {# odpovídajících příspěvků} other {# odpovídajících příspěvků}}"
 
 #: src/features/channel/components/ChannelSourcePreview.tsx
 #: src/features/channel/components/direct_message/DMListItem.tsx
@@ -1278,17 +1278,17 @@ msgstr "{count, plural, one {# člen} few {# členové} many {# člena} other {#
 #. Message count on a thread chip and in the thread browser. count is the number of messages.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "{count, plural, one {# message} other {# messages}}"
-msgstr "{count, plural, one {# zpráva} other {# zpráv}}"
+msgstr "{count, plural, one {# zpráva} few {# zprávy} many {# zpráv} other {# zpráv}}"
 
 #. Last quick switcher row in another account section. count is how many more unread or mentioned channels that account has. accountName is the account display name.
 #: src/features/search/state/QuickSwitcherAccountResults.ts
 msgid "{count, plural, one {# more in {accountName}} other {# more in {accountName}}}"
-msgstr "{count, plural, one {# další v {accountName}} other {# dalších v {accountName}}}"
+msgstr "{count, plural, one {# další v {accountName}} few {# další v {accountName}} many {# dalších v {accountName}} other {# dalších v {accountName}}}"
 
 #. Activity log item that stands in for the permission names left out of a long list. It is the last item of a list joined with "and", for example "Send messages, Manage roles, and 3 more permissions". The app joins the list and adds the commas and the word for "and" in your language, so do not add them here. It counts the other permissions in the same list. It never means that permissions were added. {count} is an ICU plural with the number of permissions left out, and # shows that number.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts
 msgid "{count, plural, one {# more permission} other {# more permissions}}"
-msgstr "{count, plural, one {# další oprávnění} few {# další oprávnění} other {# dalších oprávnění}}"
+msgstr "{count, plural, one {# další oprávnění} few {# další oprávnění} many {# dalších oprávnění} other {# dalších oprávnění}}"
 
 #: src/features/channel/components/direct_message/DMWelcomeSection.tsx
 msgid "{count, plural, one {# mutual community} other {# mutual communities}}"
@@ -1297,7 +1297,7 @@ msgstr "{count, plural, one {# společná komunita} few {# společné komunity} 
 #. Label on a joined forum post card with unread messages. count is the number of unread messages.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "{count, plural, one {# new message} other {# new messages}}"
-msgstr "{count, plural, one {# nová zpráva} other {# nových zpráv}}"
+msgstr "{count, plural, one {# nová zpráva} few {# nové zprávy} many {# nových zpráv} other {# nových zpráv}}"
 
 #. Short label in the footer of a forum post card, meaning "# new messages". count is the number of unread messages. Keep it as short as possible. It shares one line with the message count and the time.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
@@ -1339,7 +1339,7 @@ msgstr "{count, plural, one {# sekunda} few {# sekundy} many {# sekundy} other {
 #. Option of the "Tab size" setting in the quick CSS editor.
 #: src/features/theme_settings/components/QuickCssEditorSettings.tsx
 msgid "{count, plural, one {# space} other {# spaces}}"
-msgstr "{count, plural, one {# mezera} other {# mezer}}"
+msgstr "{count, plural, one {# mezera} few {# mezery} many {# mezer} other {# mezer}}"
 
 #. Screen-reader live-region announcement listing the number of message search suggestions. Preserve {count}; it is inserted by code.
 #: src/features/channel/components/message_search_bar/MessageSearchBar.tsx
@@ -1354,37 +1354,37 @@ msgstr "{count, plural, one {# video} few {# videa} many {# videa} other {# vide
 #. Button in the status bar of the quick CSS editor that opens the list of problems.
 #: src/features/theme_settings/components/QuickCssStatusBar.tsx
 msgid "{count, plural, one {# warning} other {# warnings}}"
-msgstr "{count, plural, one {# varování} other {# varování}}"
+msgstr "{count, plural, one {# varování} few {# varování} many {# varování} other {# varování}}"
 
 #. Compact age label shown beside a list row (DM list, invite list). count is a number of days; the "d" is an abbreviation of "days". Keep it as short as possible; it sits in a narrow column.
 #: src/features/ui/utils/ShortRelativeTimeLabels.ts
 msgctxt "short-relative-time"
 msgid "{count, plural, one {#d} other {#d}}"
-msgstr "{count, plural, one {# d.} other {# d.}}"
+msgstr "{count, plural, one {# d.} few {# d.} many {# d.} other {# d.}}"
 
 #. Compact age label shown beside a list row (DM list, invite list). count is a number of hours; the "h" is an abbreviation of "hours". Keep it as short as possible; it sits in a narrow column.
 #: src/features/ui/utils/ShortRelativeTimeLabels.ts
 msgctxt "short-relative-time"
 msgid "{count, plural, one {#h} other {#h}}"
-msgstr "{count, plural, one {# h} other {# h}}"
+msgstr "{count, plural, one {# h} few {# h} many {# h} other {# h}}"
 
 #. Compact age label shown beside a list row (DM list, invite list). count is a number of minutes; the "m" is an abbreviation of "minutes". Keep it as short as possible; it sits in a narrow column.
 #: src/features/ui/utils/ShortRelativeTimeLabels.ts
 msgctxt "short-relative-time"
 msgid "{count, plural, one {#m} other {#m}}"
-msgstr "{count, plural, one {# min} other {# min}}"
+msgstr "{count, plural, one {# min} few {# min} many {# min} other {# min}}"
 
 #. Compact age label shown beside a list row (DM list, invite list). count is a number of months; the "mo" is an abbreviation of "months". Keep it as short as possible; it sits in a narrow column.
 #: src/features/ui/utils/ShortRelativeTimeLabels.ts
 msgctxt "short-relative-time"
 msgid "{count, plural, one {#mo} other {#mo}}"
-msgstr "{count, plural, one {# měs.} other {# měs.}}"
+msgstr "{count, plural, one {# měs.} few {# měs.} many {# měs.} other {# měs.}}"
 
 #. Compact age label shown beside a list row (DM list, invite list). count is a number of weeks; the "w" is an abbreviation of "weeks". Keep it as short as possible; it sits in a narrow column.
 #: src/features/ui/utils/ShortRelativeTimeLabels.ts
 msgctxt "short-relative-time"
 msgid "{count, plural, one {#w} other {#w}}"
-msgstr "{count, plural, one {# t.} other {# t.}}"
+msgstr "{count, plural, one {# t.} few {# t.} many {# t.} other {# t.}}"
 
 #. Compact age label shown beside a list row (DM list, invite list). count is a number of years; the "y" is an abbreviation of "years". Keep it as short as possible; it sits in a narrow column.
 #: src/features/ui/utils/ShortRelativeTimeLabels.ts
@@ -1400,7 +1400,7 @@ msgstr "{count, plural, one {+# další odznak, zobrazit vše} few {+# další o
 #. Short muted line under a row of Operator Passes in the Operator Pass settings. {numbers} is the six-digit number of the certificate page of each pass in the row, such as 000123 or 000123, 000124. {count} is how many numbers there are. Use the usual abbreviation for number in your language, as on a certificate.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
 msgid "{count, plural, one {Certificate No. {numbers}} other {Certificate Nos. {numbers}}}"
-msgstr "{count, plural, one {Certifikát č. {numbers}} other {Certifikáty č. {numbers}}}"
+msgstr "{count, plural, one {Certifikát č. {numbers}} few {Certifikáty č. {numbers}} many {Certifikáty č. {numbers}} other {Certifikáty č. {numbers}}}"
 
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreviewFooter.tsx
 msgid "{count, plural, one {Collapse (# line)} other {Collapse (# lines)}}"
@@ -1432,7 +1432,7 @@ msgstr "{count, plural, one {Skrýt # zařízení} few {Skrýt # zařízení} ma
 
 #: src/features/voice/components/compact_voice_call_view/useConnectionLabel.ts
 msgid "{count, plural, one {In call} other {# in call}}"
-msgstr "{count, plural, one {V hovoru} other {# v hovoru}}"
+msgstr "{count, plural, one {V hovoru} few {# v hovoru} many {# v hovoru} other {# v hovoru}}"
 
 #: src/features/channel/components/channel_header_components/CallButtons.tsx
 msgid "{count, plural, one {Join video call (# participant)} other {Join video call (# participants)}}"
@@ -1452,17 +1452,17 @@ msgstr "{count, plural, one {Zobrazit # zařízení} few {Zobrazit # zařízení
 
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx
 msgid "{count, plural, one {Sign out # device} other {Sign out # devices}}"
-msgstr "{count, plural, one {Odhlásit # zařízení} other {Odhlásit # zařízení}}"
+msgstr "{count, plural, one {Odhlásit # zařízení} few {Odhlásit # zařízení} many {Odhlásit # zařízení} other {Odhlásit # zařízení}}"
 
 #. Activity log detail under a created or deleted invite link. It records the use limit the invite was made with, not how many times it was used. {count} is an ICU plural with the most times the invite could be used before it stopped working.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts
 msgid "{count, plural, one {The invite was limited to # use} other {The invite was limited to # uses}}"
-msgstr "{count, plural, one {Pozvánka byla omezena na # použití} few {Pozvánka byla omezena na # použití} other {Pozvánka byla omezena na # použití}}"
+msgstr "{count, plural, one {Pozvánka byla omezena na # použití} few {Pozvánka byla omezena na # použití} many {Pozvánka byla omezena na # použití} other {Pozvánka byla omezena na # použití}}"
 
 #. Activity log detail under a deleted invite link. {count} is an ICU plural with how many times the invite had been used before it was deleted.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts
 msgid "{count, plural, one {The invite was used # time} other {The invite was used # times}}"
-msgstr "{count, plural, one {Pozvánka byla použita #krát} few {Pozvánka byla použita #krát} other {Pozvánka byla použita #krát}}"
+msgstr "{count, plural, one {Pozvánka byla použita #krát} few {Pozvánka byla použita #krát} many {Pozvánka byla použita #krát} other {Pozvánka byla použita #krát}}"
 
 #. Body text of the emoji upload progress modal. {count} is the number of emojis being uploaded.
 #: src/features/emoji/components/modals/EmojiUploadModal.tsx
@@ -1480,11 +1480,11 @@ msgstr "{count, plural, one {V inventáři dárků na vás čeká nový dárkov�
 
 #: src/features/voice/components/alerts/VoiceConnectionConfirmModal.tsx
 msgid "{count, plural, one {You're already connected to this voice channel from # other device. What would you like to do?} other {You're already connected to this voice channel from # other devices. What would you like to do?}}"
-msgstr "{count, plural, one {Už jste připojeni k tomuto hlasovému kanálu z # dalšího zařízení. Co chcete dělat?} other {Už jste připojeni k tomuto hlasovému kanálu z # dalších zařízení. Co chcete dělat?}}"
+msgstr "{count, plural, one {Už jste připojeni k tomuto hlasovému kanálu z # dalšího zařízení. Co chcete dělat?} few {Už jste připojeni k tomuto hlasovému kanálu z # dalších zařízení. Co chcete dělat?} many {Už jste připojeni k tomuto hlasovému kanálu z # dalších zařízení. Co chcete dělat?} other {Už jste připojeni k tomuto hlasovému kanálu z # dalších zařízení. Co chcete dělat?}}"
 
 #: src/features/voice/components/alerts/VoiceConnectionConfirmModal.tsx
 msgid "{count, plural, one {You're already using the one allowed connection for this voice channel. Switch to this device or cancel.} other {You're already using all # allowed connections for this voice channel. Switch to this device or cancel.}}"
-msgstr "{count, plural, one {Pro tento hlasový kanál už používáte jediné povolené připojení. Přepněte na toto zařízení, nebo akci zrušte.} other {Pro tento hlasový kanál už používáte všechna povolená připojení (#). Přepněte na toto zařízení, nebo akci zrušte.}}"
+msgstr "{count, plural, one {Pro tento hlasový kanál už používáte jediné povolené připojení. Přepněte na toto zařízení, nebo akci zrušte.} few {Pro tento hlasový kanál už používáte všechna povolená připojení (#). Přepněte na toto zařízení, nebo akci zrušte.} many {Pro tento hlasový kanál už používáte všechna povolená připojení (#). Přepněte na toto zařízení, nebo akci zrušte.} other {Pro tento hlasový kanál už používáte všechna povolená připojení (#). Přepněte na toto zařízení, nebo akci zrušte.}}"
 
 #: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx
 msgid "{count, plural, one {You're at the cap of # saved media item. Remove one to add another.} other {You're at the cap of # saved media items. Remove one to add another.}}"
@@ -1808,12 +1808,12 @@ msgstr "{length, plural, one {# sledující} few {# sledující} many {# sleduj�
 #. Tooltip of the line and column button in the status bar of the quick CSS editor.
 #: src/features/theme_settings/components/QuickCssStatusBar.tsx
 msgid "{lines, plural, one {# line} other {# lines}} and {characters, plural, one {# character} other {# characters}}"
-msgstr "{lines, plural, one {# řádek} other {# řádků}} a {characters, plural, one {# znak} other {# znaků}}"
+msgstr "{lines, plural, one {# řádek} few {# řádky} many {# řádků} other {# řádků}} a {characters, plural, one {# znak} few {# znaky} many {# znaků} other {# znaků}}"
 
 #. Shown in the "Quick CSS" section in Settings > Themes. How long the quick CSS of the edited theme is.
 #: src/features/theme_settings/components/QuickCssSection.tsx
 msgid "{lines, plural, one {# line} other {# lines}} of quick CSS."
-msgstr "{lines, plural, one {# řádek} other {# řádků}} rychlého CSS."
+msgstr "{lines, plural, one {# řádek} few {# řádky} many {# řádků} other {# řádků}} rychlého CSS."
 
 #: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx
 msgid "{matchCount, plural, one {# match} other {# matches}}"
@@ -1834,7 +1834,7 @@ msgstr "{mentionCount, plural, one {# zmínka} few {# zmínky} many {# zmínky} 
 #. Summary in the inbox for the other signed-in accounts. mentionCount is the total number of mentions and accountCount is how many other accounts have mentions.
 #: src/features/messaging/components/popouts/inbox/OtherAccountsInboxSection.tsx
 msgid "{mentionCount, plural, one {# mention} other {# mentions}} on {accountCount, plural, one {# other account} other {# other accounts}}"
-msgstr "{mentionCount, plural, one {# zmínka} other {# zmínek}} na {accountCount, plural, one {# jiném účtu} other {# jiných účtech}}"
+msgstr "{mentionCount, plural, one {# zmínka} few {# zmínky} many {# zmínek} other {# zmínek}} na {accountCount, plural, one {# jiném účtu} few {# jiných účtech} many {# jiných účtech} other {# jiných účtech}}"
 
 #. Current value and track label of the space between message groups slider, for example 16px.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx
@@ -2244,7 +2244,7 @@ msgstr "{providerName} se otevře ve vašem prohlížeči. Přihlaste se tam a p
 #. Reaction tooltip. Preserve {emojiName}, {reactors}; they are inserted by code. {reactorCount} is how many people reacted, for verb agreement. Order the parts so the emoji never reads as the one doing the reacting.
 #: src/features/messaging/utils/ReactionUtils.ts
 msgid "{reactorCount, plural, one {{emojiName} reacted by {reactors}} other {{emojiName} reacted by {reactors}}}"
-msgstr "{reactorCount, plural, one {{reactors} zareagoval(a) pomocí emoji {emojiName}} other {{reactors} zareagovali pomocí emoji {emojiName}}}"
+msgstr "{reactorCount, plural, one {{reactors} zareagoval(a) pomocí emoji {emojiName}} few {{reactors} zareagovali pomocí emoji {emojiName}} many {{reactors} zareagovali pomocí emoji {emojiName}} other {{reactors} zareagovali pomocí emoji {emojiName}}}"
 
 #. Download progress in the desktop update window. {received} and {total} are already formatted numbers of megabytes. Use the local abbreviation for megabytes.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
@@ -2372,7 +2372,7 @@ msgstr "{tenSeconds} sekund"
 #. Template preview summary listing how many text channels, forum channels, voice channels, categories, and roles will be imported. Used when the template has at least one forum or media channel.
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 msgid "{textChannelCount, plural, one {# text channel} other {# text channels}}, {forumChannelCount, plural, one {# forum channel} other {# forum channels}}, {voiceChannelCount, plural, one {# voice channel} other {# voice channels}}, {categoryCount, plural, one {# category} other {# categories}}, {roleCount, plural, one {# role} other {# roles}}"
-msgstr "{textChannelCount, plural, one {# textový kanál} other {# textových kanálů}}, {forumChannelCount, plural, one {# kanál fóra} other {# kanálů fóra}}, {voiceChannelCount, plural, one {# hlasový kanál} other {# hlasových kanálů}}, {categoryCount, plural, one {# kategorie} other {# kategorií}}, {roleCount, plural, one {# role} other {# rolí}}"
+msgstr "{textChannelCount, plural, one {# textový kanál} few {# textové kanály} many {# textových kanálů} other {# textových kanálů}}, {forumChannelCount, plural, one {# kanál fóra} few {# kanály fóra} many {# kanálů fóra} other {# kanálů fóra}}, {voiceChannelCount, plural, one {# hlasový kanál} few {# hlasové kanály} many {# hlasových kanálů} other {# hlasových kanálů}}, {categoryCount, plural, one {# kategorie} few {# kategorie} many {# kategorií} other {# kategorií}}, {roleCount, plural, one {# role} few {# role} many {# rolí} other {# rolí}}"
 
 #. Template preview summary listing how many text channels, voice channels, categories, and roles will be imported.
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
@@ -4647,7 +4647,7 @@ msgstr "Povolená přesměrování"
 #. Activity log detail row under a created voice channel that allows a non-default number of simultaneous connections, such as several devices, from each member. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {count} is an ICU plural with the number of connections allowed per member.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts
 msgid "Allowed up to {count, plural, one {# connection} other {# connections}} per member"
-msgstr "Povoleno až {count, plural, one {# připojení} few {# připojení} other {# připojení}} na člena"
+msgstr "Povoleno až {count, plural, one {# připojení} few {# připojení} many {# připojení} other {# připojení}} na člena"
 
 #. Description under the mature content switch in the edit group settings. Only the group owner sees it.
 #: src/features/channel/components/modals/GroupMatureContentSwitch.tsx
@@ -5663,7 +5663,7 @@ msgstr "Zvuk a video"
 #. Description under the P2P calls only switch in voice channel settings. maxParticipants is the participant cap, a number from 2 to 4.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Audio and video go directly between participants, up to {maxParticipants, plural, one {# person} other {# people}}. Everyone agrees before joining and can see each other's IP address."
-msgstr "Zvuk a video jdou přímo mezi účastníky, až pro {maxParticipants, plural, one {# osobu} few {# osoby} other {# osob}}. Všichni se před připojením shodnou a uvidí IP adresy ostatních."
+msgstr "Zvuk a video jdou přímo mezi účastníky, až pro {maxParticipants, plural, one {# osobu} few {# osoby} many {# osob} other {# osob}}. Všichni se před připojením shodnou a uvidí IP adresy ostatních."
 
 #. Lead sentence of the P2P call dialog explaining peer-to-peer mode.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
@@ -13275,7 +13275,7 @@ msgstr "Žádám o okamžité dodání certifikátu. Kupuji pro firmu s CNPJ, kt
 #. Required checkbox in the Operator Pass checkout dialog when buying one pass from Brazil or in Brazilian reais. The buyer asks for the certificate PDF to be delivered right after payment. A buyer who has a billing address in Brazil or pays in reais (the Brazilian currency) keeps the right to withdraw for {days} days after delivery. A buyer who enters the CNPJ of a company sees a different text, so this one never needs a business exception. The billing address is not where the buyer happens to be. Nothing in this text takes the right away from anyone, so never add a sentence about losing it. Consumer law text, translate faithfully and keep every condition. Withdraw means the consumer right of withdrawal (pt-BR: desistir), never taking money out.
 #: src/features/premium/components/operator_pass/checkout/CheckoutAgreeStage.tsx
 msgid "Deliver my certificate now. If I have a billing address in Brazil or pay in reais, I can still withdraw within {days, plural, one {# day} other {# days}} of delivery and get a full refund."
-msgstr "Žádám o okamžité dodání certifikátu. Pokud mám fakturační adresu v Brazílii nebo platím v brazilských realech, mohu stále odstoupit do {days, plural, one {# dne} few {# dnů} other {# dní}} od dodání a dostanu plnou částku zpět."
+msgstr "Žádám o okamžité dodání certifikátu. Pokud mám fakturační adresu v Brazílii nebo platím v brazilských realech, mohu stále odstoupit do {days, plural, one {# dne} few {# dnů} many {# dní} other {# dní}} od dodání a dostanu plnou částku zpět."
 
 #. Required checkbox in the Operator Pass checkout dialog when buying more than one pass. The buyer asks for the certificate PDF pages to be delivered right after payment, before the statutory withdrawal period ends, and confirms that the right of withdrawal is lost on delivery. Consumer law text, translate faithfully and keep every condition. Withdraw means the consumer right of withdrawal, never taking money out.
 #: src/features/premium/components/operator_pass/checkout/CheckoutAgreeStage.tsx
@@ -13290,7 +13290,7 @@ msgstr "Žádám o okamžité dodání certifikátů. Kupuji pro firmu s CNPJ, k
 #. Required checkbox in the Operator Pass checkout dialog when buying more than one pass from Brazil or in Brazilian reais. The buyer asks for the certificate PDF pages to be delivered right after payment. A buyer who has a billing address in Brazil or pays in reais (the Brazilian currency) keeps the right to withdraw from each pass for {days} days after delivery. A buyer who enters the CNPJ of a company sees a different text, so this one never needs a business exception. The billing address is not where the buyer happens to be. Nothing in this text takes the right away from anyone, so never add a sentence about losing it. Consumer law text, translate faithfully and keep every condition. Withdraw means the consumer right of withdrawal (pt-BR: desistir), never taking money out.
 #: src/features/premium/components/operator_pass/checkout/CheckoutAgreeStage.tsx
 msgid "Deliver my certificates now. If I have a billing address in Brazil or pay in reais, I can still withdraw from each pass within {days, plural, one {# day} other {# days}} of delivery and get a full refund."
-msgstr "Žádám o okamžité dodání certifikátů. Pokud mám fakturační adresu v Brazílii nebo platím v brazilských realech, mohu stále odstoupit od každého passu do {days, plural, one {# dne} few {# dnů} other {# dní}} od dodání a dostanu plnou částku zpět."
+msgstr "Žádám o okamžité dodání certifikátů. Pokud mám fakturační adresu v Brazílii nebo platím v brazilských realech, mohu stále odstoupit od každého passu do {days, plural, one {# dne} few {# dnů} many {# dní} other {# dní}} od dodání a dostanu plnou částku zpět."
 
 #. Group heading for followed announcement channels that post into one channel. targetChannelName is that channel, without the leading #.
 #: src/features/guild/components/modals/guild_tabs/GuildWebhooksTab.tsx
@@ -19517,12 +19517,12 @@ msgstr "Pokud zapomenete heslo, tato sada je jediný způsob, jak se dostat zpě
 #. Line in the Operator Pass checkout dialog right above the button that opens the payment page, shown to buyers who appear to be in Brazil or who pay in Brazilian reais when buying more than one pass. A buyer who has a billing address in Brazil or pays in reais (the Brazilian currency) keeps the right to withdraw from each pass for {days} days after delivery. A buyer who enters the CNPJ of a company sees a different text, so this one never needs a business exception. The billing address is not where the buyer happens to be. Nothing in this text takes the right away from anyone, so never add a sentence about losing it. Consumer law text, translate faithfully and keep every condition. Withdraw means the consumer right of withdrawal (pt-BR: desistir), never taking money out.
 #: src/features/premium/components/operator_pass/checkout/CheckoutAgreeStage.tsx
 msgid "If you have a billing address in Brazil or pay in reais, you can withdraw from each pass within {days, plural, one {# day} other {# days}} of delivery and get a full refund."
-msgstr "Pokud máte fakturační adresu v Brazílii nebo platíte v brazilských realech, můžete od každého passu odstoupit do {days, plural, one {# dne} few {# dnů} other {# dní}} od dodání a dostanete plnou částku zpět."
+msgstr "Pokud máte fakturační adresu v Brazílii nebo platíte v brazilských realech, můžete od každého passu odstoupit do {days, plural, one {# dne} few {# dnů} many {# dní} other {# dní}} od dodání a dostanete plnou částku zpět."
 
 #. Line in the Operator Pass checkout dialog right above the button that opens the payment page, shown to buyers who appear to be in Brazil or who pay in Brazilian reais. A buyer who has a billing address in Brazil or pays in reais (the Brazilian currency) keeps the right to withdraw for {days} days after delivery. A buyer who enters the CNPJ of a company sees a different text, so this one never needs a business exception. The billing address is not where the buyer happens to be. Nothing in this text takes the right away from anyone, so never add a sentence about losing it. Consumer law text, translate faithfully and keep every condition. Withdraw means the consumer right of withdrawal (pt-BR: desistir), never taking money out.
 #: src/features/premium/components/operator_pass/checkout/CheckoutAgreeStage.tsx
 msgid "If you have a billing address in Brazil or pay in reais, you can withdraw within {days, plural, one {# day} other {# days}} of delivery and get a full refund."
-msgstr "Pokud máte fakturační adresu v Brazílii nebo platíte v brazilských realech, můžete odstoupit do {days, plural, one {# dne} few {# dnů} other {# dní}} od dodání a dostanete plnou částku zpět."
+msgstr "Pokud máte fakturační adresu v Brazílii nebo platíte v brazilských realech, můžete odstoupit do {days, plural, one {# dne} few {# dnů} many {# dní} other {# dní}} od dodání a dostanete plnou částku zpět."
 
 #. Help on the setup token screen, followed by a terminal command. rexctl is a name that must not be translated.
 #: src/features/app/components/setup/SetupTokenStep.tsx
@@ -21652,7 +21652,7 @@ msgstr "Omezeno zmiňování této role na členy s oprávněním zmiňovat jako
 #. Activity log detail row under a created or updated voice channel that now has a maximum number of people who can join it at once. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {count} is an ICU plural with that maximum.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts
 msgid "Limited the channel to {count, plural, one {# user} other {# users}}"
-msgstr "Kanál omezen na {count, plural, one {# uživatele} few {# uživatele} other {# uživatelů}}"
+msgstr "Kanál omezen na {count, plural, one {# uživatele} few {# uživatele} many {# uživatelů} other {# uživatelů}}"
 
 #. Button in the status bar of the quick CSS editor. Selecting it moves to another line.
 #: src/features/theme_settings/components/QuickCssStatusBar.tsx
@@ -21786,7 +21786,7 @@ msgstr "Propojeno"
 #. Toast after importing CSS files or a folder on the desktop app. The themes stay linked to the files on disk and update when the file is saved.
 #: src/features/theme_settings/components/YourThemesSection.tsx
 msgid "Linked {length, plural, one {# theme file} other {# theme files}}. Changes you save to them apply right away."
-msgstr "Propojený soubor {length, plural, one {# motiv} other {# motivů}}. Změny, které do nich uložíte, se projeví okamžitě."
+msgstr "Propojený soubor {length, plural, one {# motiv} few {# motivy} many {# motivů} other {# motivů}}. Změny, které do nich uložíte, se projeví okamžitě."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts
@@ -25336,8 +25336,9 @@ msgstr "Nikdo nemůže otevřít osobní poznámky ani do nich psát."
 
 #. Description of the invite-only registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
+#, fuzzy
 msgid "Nobody can sign up on their own. You make invite links in the admin panel and send them to people."
-msgstr ""
+msgstr "Nikdo se nemůže zaregistrovat sám. V administraci vytváříte registrační odkazy a posíláte je lidem."
 
 #. Empty-state text in the channel and chat message reactions sheet.
 #: src/features/channel/components/MessageReactionsSheet.tsx
@@ -29650,8 +29651,9 @@ msgid "Registration is currently closed."
 msgstr "Registrace je momentálně uzavřená."
 
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
+#, fuzzy
 msgid "Registration is currently closed. Use an invite link from an admin to create an account."
-msgstr ""
+msgstr "Registrace je momentálně uzavřena. K vytvoření účtu použijte registrační odkaz od administrátora."
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Regular button"
@@ -33786,7 +33788,7 @@ msgstr "Zobrazit chat"
 #. Tooltip and aria label on the compact call-view chat pill button when chat is hidden and has unread messages. {count} is the unread message count.
 #: src/features/voice/components/compact_voice_call_view/CompactCallHeightToggleButton.tsx
 msgid "Show chat with {count, plural, one {# unread message} other {# unread messages}}"
-msgstr "Zobrazit chat s {count, plural, one {# nepřečtenou zprávou} other {# nepřečtenými zprávami}}"
+msgstr "Zobrazit chat s {count, plural, one {# nepřečtenou zprávou} few {# nepřečtenými zprávami} many {# nepřečtenými zprávami} other {# nepřečtenými zprávami}}"
 
 #. Row in the quick CSS editor shortcuts dialog.
 #: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
@@ -34406,7 +34408,7 @@ msgstr "Odhlásit se"
 #. Danger button in the devices tab. Signs out the currently selected devices.
 #: src/features/user/components/modals/tabs/DevicesTab.tsx
 msgid "Sign out {deviceCount, plural, one {# device} other {# devices}}"
-msgstr "Odhlásit {deviceCount, plural, one {# zařízení} other {# zařízení}}"
+msgstr "Odhlásit {deviceCount, plural, one {# zařízení} few {# zařízení} many {# zařízení} other {# zařízení}}"
 
 #. Security modal title for revoking every saved login session except the current one.
 #. Settings search entry label. Names the settings search entry in the settings UI.
@@ -37399,7 +37401,7 @@ msgstr "Zdroj sdílení obrazovky přestal odesílat video, takže bylo ukončen
 #. Sentences after the privacy sentence in the Operator Pass checkout dialog that name the company selling the pass and how to reach it. Fluxer Platform AB is the company name and 559537-3993 its Swedish registration number, keep both as is. Haninge is the Swedish municipality where the company has its registered seat and stays as is. Translate registered seat with the legal term your language uses for the registered seat of a company. The address, phone number and email address are filled in and stay as is. Use the same word for seller as on a receipt.
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx
 msgid "The seller is Fluxer Platform AB (reg. no. 559537-3993), a Swedish company with its registered seat in Haninge. Write to us at {OPERATOR_PASS_SELLER_ADDRESS}, call {OPERATOR_PASS_SELLER_PHONE} or email {SUPPORT_EMAIL}."
-msgstr ""
+msgstr "Prodávajícím je Fluxer Platform AB (reg. č. 559537-3993), švédská společnost se sídlem v Haninge. Napište nám na adresu {OPERATOR_PASS_SELLER_ADDRESS}, zavolejte na číslo {OPERATOR_PASS_SELLER_PHONE} nebo pošlete e-mail na {SUPPORT_EMAIL}."
 
 #. Setup wizard body explaining what the setup token is for.
 #: src/features/app/components/setup/SetupTokenStep.tsx
@@ -38902,7 +38904,7 @@ msgstr "Tímto trvale smažete všechny zprávy, které jste kdy v tomto vlákn�
 #. Security warning explaining that selected saved login sessions will be signed out.
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx
 msgid "This will sign out the selected {sessionCount, plural, one {device} other {devices}} from your account. You will need to sign in again on each device."
-msgstr "{sessionCount, plural, one {Tímto se vybrané zařízení odhlásí z vašeho účtu. Budete se na něm muset znovu přihlásit.} other {Tímto se vybraná zařízení odhlásí z vašeho účtu. Na každém z nich se budete muset znovu přihlásit.}}"
+msgstr "{sessionCount, plural, one {Tímto se vybrané zařízení odhlásí z vašeho účtu. Budete se na něm muset znovu přihlásit.} few {Tímto se vybraná zařízení odhlásí z vašeho účtu. Na každém z nich se budete muset znovu přihlásit.} many {Tímto se vybraná zařízení odhlásí z vašeho účtu. Na každém z nich se budete muset znovu přihlásit.} other {Tímto se vybraná zařízení odhlásí z vašeho účtu. Na každém z nich se budete muset znovu přihlásit.}}"
 
 #. Confirm dialog detail text for the destructive reset action. appName is the desktop app name. Reassures users that server-side data is safe.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
@@ -39135,8 +39137,9 @@ msgstr "Chcete-li vytvořit webhook, otevřete <0>{channelWebhooksSettingsPath}<
 
 #. Last setup wizard screen when only invited people can sign up.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
+#, fuzzy
 msgid "To let people in, make an invite link in the admin panel."
-msgstr ""
+msgstr "Chcete-li lidi pustit dovnitř, vytvořte v administraci registrační odkaz."
 
 #. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
@@ -40446,12 +40449,12 @@ msgstr "Odpojit"
 #: src/features/channel/components/EmojiPicker.tsx
 #: src/features/channel/components/MobileEmojiPicker.tsx
 msgid "Unlock {lockedEmojiCount, plural, one {# custom emoji} other {# custom emojis}} from {communityCount, plural, one {# community} other {# communities}} with {PREMIUM_PRODUCT_NAME}."
-msgstr "Odemkněte {lockedEmojiCount, plural, one {# vlastní emoji} other {# vlastní emoji}} z {communityCount, plural, one {# komunity} few {# komunit} many {# komunit} other {# komunit}} s {PREMIUM_PRODUCT_NAME}."
+msgstr "Odemkněte {lockedEmojiCount, plural, one {# vlastní emoji} few {# vlastní emoji} many {# vlastní emoji} other {# vlastní emoji}} z {communityCount, plural, one {# komunity} few {# komunit} many {# komunit} other {# komunit}} s {PREMIUM_PRODUCT_NAME}."
 
 #: src/features/channel/components/MobileStickersPicker.tsx
 #: src/features/channel/components/StickersPicker.tsx
 msgid "Unlock {lockedStickerCount, plural, one {# sticker} other {# stickers}} from {stickerCommunityCount, plural, one {# community} other {# communities}} with {PREMIUM_PRODUCT_NAME}."
-msgstr "Odemkněte {lockedStickerCount, plural, one {# samolepku} few {# samolepky} many {# samolepky} other {# samolepek}} z {stickerCommunityCount, plural, one {# komunity} other {# komunit}} s {PREMIUM_PRODUCT_NAME}."
+msgstr "Odemkněte {lockedStickerCount, plural, one {# samolepku} few {# samolepky} many {# samolepky} other {# samolepek}} z {stickerCommunityCount, plural, one {# komunity} few {# komunit} many {# komunit} other {# komunit}} s {PREMIUM_PRODUCT_NAME}."
 
 #. Premium upsell banner shown in emoji and sticker pickers.
 #: src/features/channel/components/PremiumUpsellBanner.tsx
@@ -40748,7 +40751,7 @@ msgstr "Nepřečtené zprávy"
 #. Summary in the inbox when the other signed-in accounts have unread messages but no mentions. accountCount is how many other accounts have activity.
 #: src/features/messaging/components/popouts/inbox/OtherAccountsInboxSection.tsx
 msgid "Unread messages on {accountCount, plural, one {# other account} other {# other accounts}}"
-msgstr "Nezobrazené zprávy na {accountCount, plural, one {# jiném účtu} other {# jiných účtech}}"
+msgstr "Nezobrazené zprávy na {accountCount, plural, one {# jiném účtu} few {# jiných účtech} many {# jiných účtech} other {# jiných účtech}}"
 
 #. Accessibility description of the Windows taskbar overlay badge, read by screen readers. {count} is the number of unread messages, already formatted for the locale.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
@@ -40827,7 +40830,7 @@ msgstr "Nejvýše {max} v jednom nákupu."
 #. Bullet point in the P2P call dialog. maxParticipants is the participant cap of a peer-to-peer call, a number from 2 to 4.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Up to {maxParticipants, plural, one {# person} other {# people}}."
-msgstr "Až {maxParticipants, plural, one {# osoba} other {# osob}}."
+msgstr "Až {maxParticipants, plural, one {# osoba} few {# osoby} many {# osob} other {# osob}}."
 
 #. Plutonium page comparison value for paid video quality. Keep 4K and FPS as written.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
@@ -41157,7 +41160,7 @@ msgstr "Pouze nahraná videa"
 #. Filename-like progress label for a temporary message attachment while multiple selected files are uploading.
 #: src/features/messaging/utils/UploadingAttachmentLabelUtils.ts
 msgid "Uploading {count, plural, one {# file} other {# files}}"
-msgstr "Nahrávání {count, plural, one {# souboru} other {# souborů}}"
+msgstr "Nahrávání {count, plural, one {# souboru} few {# souborů} many {# souborů} other {# souborů}}"
 
 #: src/features/emoji/components/modals/EmojiUploadModal.tsx
 msgid "Uploading emojis"
@@ -44074,7 +44077,7 @@ msgstr "K tomuto účtu se můžeš přihlásit přes jednotné přihlášení."
 #. Cooldown notice in the new thread pane when the parent channel has slowmode. seconds is the wait time.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "You can start another thread in {seconds, plural, one {# second} other {# seconds}}."
-msgstr "Další vlákno můžete zahájit za {seconds, plural, one {# sekundu} other {# sekund}}."
+msgstr "Další vlákno můžete zahájit za {seconds, plural, one {# sekundu} few {# sekundy} many {# sekund} other {# sekund}}."
 
 #. Invite page subtext shown when community admins pause invites. Explains that account actions still work.
 #: src/features/invite/utils/InviteMessageDescriptors.ts

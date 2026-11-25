@@ -37392,7 +37392,7 @@ msgstr ""
 #. Sentences after the privacy sentence in the Operator Pass checkout dialog that name the company selling the pass and how to reach it. Fluxer Platform AB is the company name and 559537-3993 its Swedish registration number, keep both as is. Haninge is the Swedish municipality where the company has its registered seat and stays as is. Translate registered seat with the legal term your language uses for the registered seat of a company. The address, phone number and email address are filled in and stay as is. Use the same word for seller as on a receipt.
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx
 msgid "The seller is Fluxer Platform AB (reg. no. 559537-3993), a Swedish company with its registered seat in Haninge. Write to us at {OPERATOR_PASS_SELLER_ADDRESS}, call {OPERATOR_PASS_SELLER_PHONE} or email {SUPPORT_EMAIL}."
-msgstr ""
+msgstr "বিক্রেতা হলো Fluxer Platform AB (নিবন্ধন নম্বর 559537-3993), একটি সুইডিশ কোম্পানি, যার নিবন্ধিত কার্যালয় Haninge-এ। {OPERATOR_PASS_SELLER_ADDRESS} ঠিকানায় আমাদের লিখুন, {OPERATOR_PASS_SELLER_PHONE} নম্বরে কল করুন অথবা {SUPPORT_EMAIL} ঠিকানায় ইমেল করুন।"
 
 #. Setup wizard body explaining what the setup token is for.
 #: src/features/app/components/setup/SetupTokenStep.tsx

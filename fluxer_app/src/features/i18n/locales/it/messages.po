@@ -59,7 +59,7 @@ msgstr "[Messaggio originale eliminato]"
 #. placeholder {0}: guild.member_count
 #: src/features/discovery/discovery/DiscoveryGuildCard.tsx
 msgid "{0, plural, one {# member} other {# members}}"
-msgstr "{0, plural, one {# membro} other {# membri}}"
+msgstr "{0, plural, one {# membro} many {# membri} other {# membri}}"
 
 #. Screen reader announcement in the composer when two people are typing. {a} and {b} are their display names.
 #: src/features/typing/rolling/RollingTypingText.tsx
@@ -326,12 +326,12 @@ msgstr "{actor} ha creato il webhook {name} in {channel}"
 #. Activity log summary for several messages that were deleted together when the channel was not recorded. {actor} is the member who deleted them, shown as a clickable user chip, or the word System. {count} is an ICU plural with the number of deleted messages, and # shows that number.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts
 msgid "{actor} deleted {count, plural, one {# message} other {# messages}}"
-msgstr "{actor} ha eliminato {count, plural, one {# messaggio} other {# messaggi}}"
+msgstr "{actor} ha eliminato {count, plural, one {# messaggio} many {# messaggi} other {# messaggi}}"
 
 #. Activity log summary for several messages that were deleted together. {actor} is the member who deleted them, shown as a clickable user chip, or the word System. {count} is an ICU plural with the number of deleted messages, and # shows that number. {channel} is the channel the messages were in, shown as a channel name chip, or the deleted-channel label when the channel no longer exists.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts
 msgid "{actor} deleted {count, plural, one {# message} other {# messages}} in {channel}"
-msgstr "{actor} ha eliminato {count, plural, one {# messaggio} other {# messaggi}} in {channel}"
+msgstr "{actor} ha eliminato {count, plural, one {# messaggio} many {# messaggi} other {# messaggi}} in {channel}"
 
 #. Activity log summary for one message that was deleted when the channel was not recorded. {actor} is the member who deleted it, shown as a clickable user chip, or the word System.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts
@@ -939,7 +939,7 @@ msgstr "{amount} ({currency})"
 #. Unsaved-changes banner text in the authorized apps tab. Counts selected apps that will be revoked.
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx
 msgid "{appCount, plural, one {# app selected for access revocation} other {# apps selected for access revocation}}"
-msgstr "{appCount, plural, one {# app selezionata per la revoca dell’accesso} other {# app selezionate per la revoca dell’accesso}}"
+msgstr "{appCount, plural, one {# app selezionata per la revoca dell’accesso} many {# app selezionate per la revoca dell’accesso} other {# app selezionate per la revoca dell’accesso}}"
 
 #. Security warning in the confirmation dialog for revoking OAuth application authorizations. appCount is the number of selected applications.
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx
@@ -1076,7 +1076,7 @@ msgstr "{categoryLabel}, {count, plural, one {# community} many {# community} ot
 #. Short label in the unread channels content. Preserve placeholders {channelHeading}, {mentionCount}; they are inserted by code.
 #: src/features/app/components/floating/UnreadChannelsContent.tsx
 msgid "{channelHeading}, {mentionCount, plural, one {# mention} other {# mentions}}"
-msgstr "{channelHeading}, {mentionCount, plural, one {# menzione} other {# menzioni}}"
+msgstr "{channelHeading}, {mentionCount, plural, one {# menzione} many {# menzioni} other {# menzioni}}"
 
 #. Context under a mention from another account in the inbox. channelName is the channel name and communityName is the community name. Keep the middle dot between the two names.
 #: src/features/messaging/components/popouts/inbox/OtherAccountsInboxSection.tsx
@@ -1129,25 +1129,25 @@ msgstr "{context} · {accountName}"
 #. Displayed value for the voice channel participant limit slider. ∞ is the infinity symbol.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx
 msgid "{count, plural, =0 {∞ No limit} one {# participant} other {# participants}}"
-msgstr "{count, plural, =0 {∞ Nessun limite} one {# partecipante} other {# partecipanti}}"
+msgstr "{count, plural, =0 {∞ Nessun limite} one {# partecipante} many {# partecipanti} other {# partecipanti}}"
 
 #. Shown when hovering a CSS selector in the quick CSS editor.
 #: src/features/theme_settings/editor/CssHover.ts
 msgid "{count, plural, =0 {Matches nothing in the app right now} one {Matches # element in the app right now} other {Matches # elements in the app right now}}"
-msgstr "{count, plural, =0 {Non corrisponde a nulla nell'app al momento} one {Corrisponde a # elemento nell'app al momento} other {Corrisponde a # elementi nell'app al momento}}"
+msgstr "{count, plural, =0 {Non corrisponde a nulla nell'app al momento} one {Corrisponde a # elemento nell'app al momento} many {Corrisponde a # elementi nell'app al momento} other {Corrisponde a # elementi nell'app al momento}}"
 
 #. Row in the list of Operator Passes for passes the account bought in one purchase. {count} is how many passes of that purchase are in the row, {date} the purchase date without a time, such as Nov 20, 2026.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
 msgid "{count, plural, =1 {Bought {date}} other {# passes, bought {date}}}"
-msgstr "{count, plural, =1 {Acquistato il {date}} other {# pass, acquistati il {date}}}"
+msgstr "{count, plural, =1 {Acquistato il {date}} many {# pass, acquistati il {date}} other {# pass, acquistati il {date}}}"
 
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreview.tsx
 msgid "{count, plural, one {... (# line left)} other {... (# lines left)}}"
-msgstr "{count, plural, one {... (# riga rimanente)} other {... (# righe rimanenti)}}"
+msgstr "{count, plural, one {... (# riga rimanente)} many {... (# righe rimanenti)} other {... (# righe rimanenti)}}"
 
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreview.tsx
 msgid "{count, plural, one {... (# row left)} other {... (# rows left)}}"
-msgstr "{count, plural, one {... (# riga rimanente)} other {... (# righe rimanenti)}}"
+msgstr "{count, plural, one {... (# riga rimanente)} many {... (# righe rimanenti)} other {... (# righe rimanenti)}}"
 
 #. Whole sentence spoken aloud by text-to-speech for a message that contains only attachments. {authorName} is the sender nickname, {count} the attachment count.
 #: src/features/voice/utils/VoiceTtsUtils.tsx
@@ -1186,86 +1186,86 @@ msgstr "{count, plural, one {{countLabel} anno} many {{countLabel} anni} other {
 
 #: src/features/channel/components/channel_header_components/developer_tools/StateSummaryMenu.tsx
 msgid "{count, plural, one {# active override} other {# active overrides}}"
-msgstr "{count, plural, one {# override attivo} other {# override attivi}}"
+msgstr "{count, plural, one {# override attivo} many {# override attivi} other {# override attivi}}"
 
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx
 msgid "{count, plural, one {# active subscription} other {# active subscriptions}}"
-msgstr "{count, plural, one {# abbonamento attivo} other {# abbonamenti attivi}}"
+msgstr "{count, plural, one {# abbonamento attivo} many {# abbonamenti attivi} other {# abbonamenti attivi}}"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts
 msgid "{count, plural, one {# attachment} other {# attachments}}"
-msgstr "{count, plural, one {# allegato} other {# allegati}}"
+msgstr "{count, plural, one {# allegato} many {# allegati} other {# allegati}}"
 
 #. Read out by screen readers while typing in the badge filter of the "Badges" profile settings, with the number of badges that match.
 #: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
 msgid "{count, plural, one {# badge matches} other {# badges match}}"
-msgstr "{count, plural, one {# badge corrisponde} other {# badge corrispondono}}"
+msgstr "{count, plural, one {# badge corrisponde} many {# badge corrispondono} other {# badge corrispondono}}"
 
 #. Label on the collapsed block in the message list that hides messages from blocked users. count is how many messages are hidden; clicking the label reveals them.
 #: src/features/channel/components/BlockedMessageGroups.tsx
 msgid "{count, plural, one {# blocked message} other {# blocked messages}}"
-msgstr "{count, plural, one {# messaggio bloccato} other {# messaggi bloccati}}"
+msgstr "{count, plural, one {# messaggio bloccato} many {# messaggi bloccati} other {# messaggi bloccati}}"
 
 #. Shown next to the "Colors and fonts" section title in Settings > Themes. How many colors and fonts the user changed.
 #: src/features/theme_settings/components/ColorsAndFontsSection.tsx
 msgid "{count, plural, one {# changed} other {# changed}}"
-msgstr "{count, plural, one {# modificato} other {# modificati}}"
+msgstr "{count, plural, one {# modificato} many {# modificati} other {# modificati}}"
 
 #. Body of the confirmation shown before an announcement channel is converted back into a text channel. {count} is the number of channels, in this or other communities, that follow it and get copies of its published messages. Those channels stop getting copies after the conversion.
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx
 msgid "{count, plural, one {# channel follows} other {# channels follow}} this channel. Converting it to a text channel removes those follows."
-msgstr "{count, plural, one {# canale segue} other {# canali seguono}} questo canale. La conversione in un canale di testo rimuoverà quei seguiti."
+msgstr "{count, plural, one {# canale segue} many {# canali seguono} other {# canali seguono}} questo canale. La conversione in un canale di testo rimuoverà quei seguiti."
 
 #. Shown in the status bar of the quick CSS editor while text is selected.
 #: src/features/theme_settings/components/QuickCssStatusBar.tsx
 msgid "{count, plural, one {# character selected} other {# characters selected}}"
-msgstr "{count, plural, one {# carattere selezionato} other {# caratteri selezionati}}"
+msgstr "{count, plural, one {# carattere selezionato} many {# caratteri selezionati} other {# caratteri selezionati}}"
 
 #. Screen-reader status text in Explore. {count} is the total number of matching communities.
 #: src/features/discovery/discovery/DiscoveryPage.tsx
 msgid "{count, plural, one {# community found} other {# communities found}}"
-msgstr "{count, plural, one {# community trovata} other {# community trovate}}"
+msgstr "{count, plural, one {# community trovata} many {# community trovate} other {# community trovate}}"
 
 #. Heading above the list of communities whose direct message setting differs from the default, in the privacy setup modal.
 #: src/features/user/components/modals/PrivacySetupModal.tsx
 msgid "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
-msgstr "{count, plural, one {# community ha un'impostazione personalizzata} other {# community hanno impostazioni personalizzate}}"
+msgstr "{count, plural, one {# community ha un'impostazione personalizzata} many {# community hanno impostazioni personalizzate} other {# community hanno impostazioni personalizzate}}"
 
 #: src/features/app/components/layout/GuildsLayout.tsx
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
-msgstr "{count, plural, one {# community è temporaneamente non disponibile a causa di un malfunzionamento del condensatore di flusso.} other {# community sono temporaneamente non disponibili a causa di un malfunzionamento del condensatore di flusso.}}"
+msgstr "{count, plural, one {# community è temporaneamente non disponibile a causa di un malfunzionamento del condensatore di flusso.} many {# community sono temporaneamente non disponibili a causa di un malfunzionamento del condensatore di flusso.} other {# community sono temporaneamente non disponibili a causa di un malfunzionamento del condensatore di flusso.}}"
 
 #. Displayed value for the voice channel connection limit slider.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx
 msgid "{count, plural, one {# connection} other {# connections}}"
-msgstr "{count, plural, one {# connessione} other {# connessioni}}"
+msgstr "{count, plural, one {# connessione} many {# connessioni} other {# connessioni}}"
 
 #. Button in the status bar of the quick CSS editor that opens the list of problems.
 #: src/features/theme_settings/components/QuickCssStatusBar.tsx
 msgid "{count, plural, one {# error} other {# errors}}"
-msgstr "{count, plural, one {# errore} other {# errori}}"
+msgstr "{count, plural, one {# errore} many {# errori} other {# errori}}"
 
 #. Attachment summary in the forward modal message preview when the message has no images or videos. count is the number of attached files.
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx
 msgid "{count, plural, one {# file} other {# files}}"
-msgstr "{count, plural, one {# file} other {# file}}"
+msgstr "{count, plural, one {# file} many {# file} other {# file}}"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/AccountPremiumMenu.tsx
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts
 msgid "{count, plural, one {# gift} other {# gifts}}"
-msgstr "{count, plural, one {# regalo} other {# regali}}"
+msgstr "{count, plural, one {# regalo} many {# regali} other {# regali}}"
 
 #. Attachment summary in the forward modal message preview when the message has images and no videos. count is the number of images.
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx
 msgid "{count, plural, one {# image} other {# images}}"
-msgstr "{count, plural, one {# immagine} other {# immagini}}"
+msgstr "{count, plural, one {# immagine} many {# immagini} other {# immagini}}"
 
 #. Status under the forum search box once results are in.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "{count, plural, one {# matching post} other {# matching posts}}"
-msgstr "{count, plural, one {# post corrispondente} other {# post corrispondenti}}"
+msgstr "{count, plural, one {# post corrispondente} many {# post corrispondenti} other {# post corrispondenti}}"
 
 #: src/features/channel/components/ChannelSourcePreview.tsx
 #: src/features/channel/components/direct_message/DMListItem.tsx
@@ -1273,31 +1273,31 @@ msgstr "{count, plural, one {# post corrispondente} other {# post corrispondenti
 #: src/features/user/components/modals/MutualItemsSheet.tsx
 #: src/features/user/components/modals/user_profile_modal/MutualGroupItem.tsx
 msgid "{count, plural, one {# member} other {# members}}"
-msgstr "{count, plural, one {# membro} other {# membri}}"
+msgstr "{count, plural, one {# membro} many {# membri} other {# membri}}"
 
 #. Message count on a thread chip and in the thread browser. count is the number of messages.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "{count, plural, one {# message} other {# messages}}"
-msgstr "{count, plural, one {# messaggio} other {# messaggi}}"
+msgstr "{count, plural, one {# messaggio} many {# messaggi} other {# messaggi}}"
 
 #. Last quick switcher row in another account section. count is how many more unread or mentioned channels that account has. accountName is the account display name.
 #: src/features/search/state/QuickSwitcherAccountResults.ts
 msgid "{count, plural, one {# more in {accountName}} other {# more in {accountName}}}"
-msgstr "{count, plural, one {# altro in {accountName}} other {# altri in {accountName}}}"
+msgstr "{count, plural, one {# altro in {accountName}} many {# altri in {accountName}} other {# altri in {accountName}}}"
 
 #. Activity log item that stands in for the permission names left out of a long list. It is the last item of a list joined with "and", for example "Send messages, Manage roles, and 3 more permissions". The app joins the list and adds the commas and the word for "and" in your language, so do not add them here. It counts the other permissions in the same list. It never means that permissions were added. {count} is an ICU plural with the number of permissions left out, and # shows that number.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts
 msgid "{count, plural, one {# more permission} other {# more permissions}}"
-msgstr "{count, plural, one {# altro permesso} other {# altri permessi}}"
+msgstr "{count, plural, one {# altro permesso} many {# altri permessi} other {# altri permessi}}"
 
 #: src/features/channel/components/direct_message/DMWelcomeSection.tsx
 msgid "{count, plural, one {# mutual community} other {# mutual communities}}"
-msgstr "{count, plural, one {# community in comune} other {# community in comune}}"
+msgstr "{count, plural, one {# community in comune} many {# community in comune} other {# community in comune}}"
 
 #. Label on a joined forum post card with unread messages. count is the number of unread messages.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "{count, plural, one {# new message} other {# new messages}}"
-msgstr "{count, plural, one {# nuovo messaggio} other {# nuovi messaggi}}"
+msgstr "{count, plural, one {# nuovo messaggio} many {# nuovi messaggi} other {# nuovi messaggi}}"
 
 #. Short label in the footer of a forum post card, meaning "# new messages". count is the number of unread messages. Keep it as short as possible. It shares one line with the message count and the time.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
@@ -1308,38 +1308,38 @@ msgstr ""
 #. Heading of the list of Operator Passes in the Operator Pass settings, and the count of passes an account has. Operator Pass is a product name, keep it as is.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
 msgid "{count, plural, one {# Operator Pass} other {# Operator Passes}}"
-msgstr "{count, plural, one {# Operator Pass} other {# Operator Pass}}"
+msgstr "{count, plural, one {# Operator Pass} many {# Operator Pass} other {# Operator Pass}}"
 
 #: src/features/messaging/utils/ReactionUtils.ts
 msgid "{count, plural, one {# other} other {# others}}"
-msgstr "{count, plural, one {# altro} other {# altri}}"
+msgstr "{count, plural, one {# altro} many {# altri} other {# altri}}"
 
 #: src/features/voice/components/VoiceCallView.tsx
 msgid "{count, plural, one {# participant in call} other {# participants in call}}"
-msgstr "{count, plural, one {# partecipante alla chiamata} other {# partecipanti alla chiamata}}"
+msgstr "{count, plural, one {# partecipante alla chiamata} many {# partecipanti alla chiamata} other {# partecipanti alla chiamata}}"
 
 #. Label on the collapsed block in the message list that hides suspected spam. count is how many messages are hidden; clicking the label reveals them.
 #: src/features/channel/components/BlockedMessageGroups.tsx
 msgid "{count, plural, one {# potential spammer message} other {# potential spammer messages}}"
-msgstr "{count, plural, one {# messaggio da potenziale spammer} other {# messaggi da potenziali spammer}}"
+msgstr "{count, plural, one {# messaggio da potenziale spammer} many {# messaggi da potenziali spammer} other {# messaggi da potenziali spammer}}"
 
 #: src/features/app/components/shared/MessageReactionsContent.tsx
 #: src/features/channel/components/MessageReactions.tsx
 msgid "{count, plural, one {# reaction} other {# reactions}}"
-msgstr "{count, plural, one {# reazione} other {# reazioni}}"
+msgstr "{count, plural, one {# reazione} many {# reazioni} other {# reazioni}}"
 
 #: src/features/channel/components/MessageReactionsSheet.tsx
 msgid "{count, plural, one {# reactor} other {# reactors}}"
-msgstr "{count, plural, one {# persona che ha reagito} other {# persone che hanno reagito}}"
+msgstr "{count, plural, one {# persona che ha reagito} many {# persone che hanno reagito} other {# persone che hanno reagito}}"
 
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx
 msgid "{count, plural, one {# second} other {# seconds}}"
-msgstr "{count, plural, one {# secondo} other {# secondi}}"
+msgstr "{count, plural, one {# secondo} many {# secondi} other {# secondi}}"
 
 #. Option of the "Tab size" setting in the quick CSS editor.
 #: src/features/theme_settings/components/QuickCssEditorSettings.tsx
 msgid "{count, plural, one {# space} other {# spaces}}"
-msgstr "{count, plural, one {# spazio} other {# spazi}}"
+msgstr "{count, plural, one {# spazio} many {# spazi} other {# spazi}}"
 
 #. Screen-reader live-region announcement listing the number of message search suggestions. Preserve {count}; it is inserted by code.
 #: src/features/channel/components/message_search_bar/MessageSearchBar.tsx
@@ -1349,12 +1349,12 @@ msgstr "{count, plural, one {# suggerimento disponibile} many {# suggerimenti di
 #. Attachment summary in the forward modal message preview when the message has videos and no images. count is the number of videos.
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx
 msgid "{count, plural, one {# video} other {# videos}}"
-msgstr "{count, plural, one {# video} other {# video}}"
+msgstr "{count, plural, one {# video} many {# video} other {# video}}"
 
 #. Button in the status bar of the quick CSS editor that opens the list of problems.
 #: src/features/theme_settings/components/QuickCssStatusBar.tsx
 msgid "{count, plural, one {# warning} other {# warnings}}"
-msgstr "{count, plural, one {# avviso} other {# avvisi}}"
+msgstr "{count, plural, one {# avviso} many {# avvisi} other {# avvisi}}"
 
 #. Compact age label shown beside a list row (DM list, invite list). count is a number of days; the "d" is an abbreviation of "days". Keep it as short as possible; it sits in a narrow column.
 #: src/features/ui/utils/ShortRelativeTimeLabels.ts
@@ -1395,74 +1395,74 @@ msgstr "{count, plural, one {# anno} many {# anni} other {# anni}}"
 #. Screen reader label for the +3 style button that opens the full list of badges. It starts with the same +3 text that is shown on the button, so voice control users can say it.
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "{count, plural, one {+# more badge, show all} other {+# more badges, show all}}"
-msgstr "{count, plural, one {+# altro badge, mostra tutti} other {+# altri badge, mostra tutti}}"
+msgstr "{count, plural, one {+# altro badge, mostra tutti} many {+# altri badge, mostra tutti} other {+# altri badge, mostra tutti}}"
 
 #. Short muted line under a row of Operator Passes in the Operator Pass settings. {numbers} is the six-digit number of the certificate page of each pass in the row, such as 000123 or 000123, 000124. {count} is how many numbers there are. Use the usual abbreviation for number in your language, as on a certificate.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
 msgid "{count, plural, one {Certificate No. {numbers}} other {Certificate Nos. {numbers}}}"
-msgstr "{count, plural, one {Certificato n. {numbers}} other {Certificati n. {numbers}}}"
+msgstr "{count, plural, one {Certificato n. {numbers}} many {Certificati n. {numbers}} other {Certificati n. {numbers}}}"
 
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreviewFooter.tsx
 msgid "{count, plural, one {Collapse (# line)} other {Collapse (# lines)}}"
-msgstr "{count, plural, one {Comprimi (# riga)} other {Comprimi (# righe)}}"
+msgstr "{count, plural, one {Comprimi (# riga)} many {Comprimi (# righe)} other {Comprimi (# righe)}}"
 
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreviewFooter.tsx
 msgid "{count, plural, one {Collapse (# row)} other {Collapse (# rows)}}"
-msgstr "{count, plural, one {Comprimi (# riga)} other {Comprimi (# righe)}}"
+msgstr "{count, plural, one {Comprimi (# riga)} many {Comprimi (# righe)} other {Comprimi (# righe)}}"
 
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreviewFooter.tsx
 msgid "{count, plural, one {Expand (# line)} other {Expand (# lines)}}"
-msgstr "{count, plural, one {Espandi (# riga)} other {Espandi (# righe)}}"
+msgstr "{count, plural, one {Espandi (# riga)} many {Espandi (# righe)} other {Espandi (# righe)}}"
 
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreviewFooter.tsx
 msgid "{count, plural, one {Expand (# row)} other {Expand (# rows)}}"
-msgstr "{count, plural, one {Espandi (# riga)} other {Espandi (# righe)}}"
+msgstr "{count, plural, one {Espandi (# riga)} many {Espandi (# righe)} other {Espandi (# righe)}}"
 
 #: src/features/voice/components/VoiceParticipantTile.tsx
 msgid "{count, plural, one {Expand # other device} other {Expand # other devices}}"
-msgstr "{count, plural, one {Espandi # altro dispositivo} other {Espandi # altri dispositivi}}"
+msgstr "{count, plural, one {Espandi # altro dispositivo} many {Espandi # altri dispositivi} other {Espandi # altri dispositivi}}"
 
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelInfoHeader.tsx
 msgid "{count, plural, one {Group DM · # member} other {Group DM · # members}}"
-msgstr "{count, plural, one {DM di gruppo · # membro} other {DM di gruppo · # membri}}"
+msgstr "{count, plural, one {DM di gruppo · # membro} many {DM di gruppo · # membri} other {DM di gruppo · # membri}}"
 
 #: src/features/app/components/layout/GroupedVoiceParticipant.tsx
 msgid "{count, plural, one {Hide # device} other {Hide # devices}}"
-msgstr "{count, plural, one {Nascondi # dispositivo} other {Nascondi # dispositivi}}"
+msgstr "{count, plural, one {Nascondi # dispositivo} many {Nascondi # dispositivi} other {Nascondi # dispositivi}}"
 
 #: src/features/voice/components/compact_voice_call_view/useConnectionLabel.ts
 msgid "{count, plural, one {In call} other {# in call}}"
-msgstr "{count, plural, one {In chiamata} other {# in chiamata}}"
+msgstr "{count, plural, one {In chiamata} many {# in chiamata} other {# in chiamata}}"
 
 #: src/features/channel/components/channel_header_components/CallButtons.tsx
 msgid "{count, plural, one {Join video call (# participant)} other {Join video call (# participants)}}"
-msgstr "{count, plural, one {Partecipa alla videochiamata (# partecipante)} other {Partecipa alla videochiamata (# partecipanti)}}"
+msgstr "{count, plural, one {Partecipa alla videochiamata (# partecipante)} many {Partecipa alla videochiamata (# partecipanti)} other {Partecipa alla videochiamata (# partecipanti)}}"
 
 #: src/features/voice/components/VoiceParticipantTile.tsx
 msgid "{count, plural, one {Keep watching # stream and add this one} other {Keep watching # streams and add this one}}"
-msgstr "{count, plural, one {Continua a guardare # stream e aggiungi questo} other {Continua a guardare # stream e aggiungi questo}}"
+msgstr "{count, plural, one {Continua a guardare # stream e aggiungi questo} many {Continua a guardare # stream e aggiungi questo} other {Continua a guardare # stream e aggiungi questo}}"
 
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx
 msgid "{count, plural, one {Revoke # app} other {Revoke # apps}}"
-msgstr "{count, plural, one {Revoca l’accesso a # app} other {Revoca l’accesso a # app}}"
+msgstr "{count, plural, one {Revoca l’accesso a # app} many {Revoca l’accesso a # app} other {Revoca l’accesso a # app}}"
 
 #: src/features/app/components/layout/GroupedVoiceParticipant.tsx
 msgid "{count, plural, one {Show # device} other {Show # devices}}"
-msgstr "{count, plural, one {Mostra # dispositivo} other {Mostra # dispositivi}}"
+msgstr "{count, plural, one {Mostra # dispositivo} many {Mostra # dispositivi} other {Mostra # dispositivi}}"
 
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx
 msgid "{count, plural, one {Sign out # device} other {Sign out # devices}}"
-msgstr "{count, plural, one {Disconnetti # dispositivo} other {Disconnetti # dispositivi}}"
+msgstr "{count, plural, one {Disconnetti # dispositivo} many {Disconnetti # dispositivi} other {Disconnetti # dispositivi}}"
 
 #. Activity log detail under a created or deleted invite link. It records the use limit the invite was made with, not how many times it was used. {count} is an ICU plural with the most times the invite could be used before it stopped working.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts
 msgid "{count, plural, one {The invite was limited to # use} other {The invite was limited to # uses}}"
-msgstr "{count, plural, one {L'invito è stato limitato a # utilizzo} other {L'invito è stato limitato a # utilizzi}}"
+msgstr "{count, plural, one {L'invito è stato limitato a # utilizzo} many {L'invito è stato limitato a # utilizzi} other {L'invito è stato limitato a # utilizzi}}"
 
 #. Activity log detail under a deleted invite link. {count} is an ICU plural with how many times the invite had been used before it was deleted.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts
 msgid "{count, plural, one {The invite was used # time} other {The invite was used # times}}"
-msgstr "{count, plural, one {L'invito è stato utilizzato # volta} other {L'invito è stato utilizzato # volte}}"
+msgstr "{count, plural, one {L'invito è stato utilizzato # volta} many {L'invito è stato utilizzato # volte} other {L'invito è stato utilizzato # volte}}"
 
 #. Body text of the emoji upload progress modal. {count} is the number of emojis being uploaded.
 #: src/features/emoji/components/modals/EmojiUploadModal.tsx
@@ -1471,28 +1471,28 @@ msgstr "{count, plural, one {Caricamento di # emoji in corso. Potrebbe richieder
 
 #: src/features/messaging/components/alerts/TooManyAttachmentsModal.tsx
 msgid "{count, plural, one {You can only upload # file at a time. Try again with fewer files.} other {You can only upload # files at a time. Try again with fewer files.}}"
-msgstr "{count, plural, one {Puoi caricare solo # file alla volta. Riprova con meno file.} other {Puoi caricare solo # file alla volta. Riprova con meno file.}}"
+msgstr "{count, plural, one {Puoi caricare solo # file alla volta. Riprova con meno file.} many {Puoi caricare solo # file alla volta. Riprova con meno file.} other {Puoi caricare solo # file alla volta. Riprova con meno file.}}"
 
 #. Nagbar body shown when the user has unread gift inventory items. {count} is the unread gift count.
 #: src/features/app/components/layout/app_layout/nagbars/GiftInventoryNagbar.tsx
 msgid "{count, plural, one {You have a new gift code waiting in your gift inventory.} other {You have # new gift codes waiting in your gift inventory.}}"
-msgstr "{count, plural, one {Hai un nuovo codice regalo in attesa nel tuo inventario regali.} other {Hai # nuovi codici regalo in attesa nel tuo inventario regali.}}"
+msgstr "{count, plural, one {Hai un nuovo codice regalo in attesa nel tuo inventario regali.} many {Hai # nuovi codici regalo in attesa nel tuo inventario regali.} other {Hai # nuovi codici regalo in attesa nel tuo inventario regali.}}"
 
 #: src/features/voice/components/alerts/VoiceConnectionConfirmModal.tsx
 msgid "{count, plural, one {You're already connected to this voice channel from # other device. What would you like to do?} other {You're already connected to this voice channel from # other devices. What would you like to do?}}"
-msgstr "{count, plural, one {Sei già connesso a questo canale vocale da un altro dispositivo. Cosa vuoi fare?} other {Sei già connesso a questo canale vocale da # altri dispositivi. Cosa vuoi fare?}}"
+msgstr "{count, plural, one {Sei già connesso a questo canale vocale da un altro dispositivo. Cosa vuoi fare?} many {Sei già connesso a questo canale vocale da # altri dispositivi. Cosa vuoi fare?} other {Sei già connesso a questo canale vocale da # altri dispositivi. Cosa vuoi fare?}}"
 
 #: src/features/voice/components/alerts/VoiceConnectionConfirmModal.tsx
 msgid "{count, plural, one {You're already using the one allowed connection for this voice channel. Switch to this device or cancel.} other {You're already using all # allowed connections for this voice channel. Switch to this device or cancel.}}"
-msgstr "{count, plural, one {Stai già usando l'unica connessione consentita per questo canale vocale. Passa a questo dispositivo o annulla.} other {Stai già usando tutte le # connessioni consentite per questo canale vocale. Passa a questo dispositivo o annulla.}}"
+msgstr "{count, plural, one {Stai già usando l'unica connessione consentita per questo canale vocale. Passa a questo dispositivo o annulla.} many {Stai già usando tutte le # connessioni consentite per questo canale vocale. Passa a questo dispositivo o annulla.} other {Stai già usando tutte le # connessioni consentite per questo canale vocale. Passa a questo dispositivo o annulla.}}"
 
 #: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx
 msgid "{count, plural, one {You're at the cap of # saved media item. Remove one to add another.} other {You're at the cap of # saved media items. Remove one to add another.}}"
-msgstr "{count, plural, one {Hai raggiunto il limite di # elemento multimediale salvato. Rimuovine uno per aggiungerne un altro.} other {Hai raggiunto il limite di # elementi multimediali salvati. Rimuovine uno per aggiungerne un altro.}}"
+msgstr "{count, plural, one {Hai raggiunto il limite di # elemento multimediale salvato. Rimuovine uno per aggiungerne un altro.} many {Hai raggiunto il limite di # elementi multimediali salvati. Rimuovine uno per aggiungerne un altro.} other {Hai raggiunto il limite di # elementi multimediali salvati. Rimuovine uno per aggiungerne un altro.}}"
 
 #: src/features/guild/components/alerts/MaxGuildsModal.tsx
 msgid "{count, plural, one {You're in # community, the most you can join. Leave a community before joining another one.} other {You're in # communities, the most you can join. Leave a community before joining another one.}}"
-msgstr "{count, plural, one {Hai raggiunto il numero massimo di community a cui puoi unirti (# community). Lascia una community prima di unirti a un'altra.} other {Hai raggiunto il numero massimo di community a cui puoi unirti (# community). Lascia una community prima di unirti a un'altra.}}"
+msgstr "{count, plural, one {Hai raggiunto il numero massimo di community a cui puoi unirti (# community). Lascia una community prima di unirti a un'altra.} many {Hai raggiunto il numero massimo di community a cui puoi unirti (# community). Lascia una community prima di unirti a un'altra.} other {Hai raggiunto il numero massimo di community a cui puoi unirti (# community). Lascia una community prima di unirti a un'altra.}}"
 
 #. Note under the Operator Pass total when buying more than one pass. {count} is the number of passes, 2 or more, and {price} the price of one pass with currency, including tax. The passes are paid once and never renew.
 #: src/features/premium/components/operator_pass/checkout/OperatorPassPriceBlock.tsx
@@ -1507,7 +1507,7 @@ msgstr "{dayLabel} alle {timeString}"
 #. Generic duration label for a whole number of days.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "{days, plural, one {# day} other {# days}}"
-msgstr "{days, plural, one {# giorno} other {# giorni}}"
+msgstr "{days, plural, one {# giorno} many {# giorni} other {# giorni}}"
 
 #. Text under a generated invite link. {days} is how long the link stays valid, in whole days.
 #: src/features/invite/components/modals/InviteModal.tsx
@@ -1562,22 +1562,22 @@ msgstr "{duration} indietro rispetto a te"
 #. Gift duration label. PREMIUM_PRODUCT_NAME is the paid plan name.
 #: src/features/gift/utils/GiftUtils.ts
 msgid "{durationQuantity, plural, one {# day} other {# days}} of {premiumProductName}"
-msgstr "{durationQuantity, plural, one {# giorno} other {# giorni}} di {premiumProductName}"
+msgstr "{durationQuantity, plural, one {# giorno} many {# giorni} other {# giorni}} di {premiumProductName}"
 
 #. Gift duration label. PREMIUM_PRODUCT_NAME is the paid plan name.
 #: src/features/gift/utils/GiftUtils.ts
 msgid "{durationQuantity, plural, one {# month} other {# months}} of {premiumProductName}"
-msgstr "{durationQuantity, plural, one {# mese} other {# mesi}} di {premiumProductName}"
+msgstr "{durationQuantity, plural, one {# mese} many {# mesi} other {# mesi}} di {premiumProductName}"
 
 #. Gift duration label. PREMIUM_PRODUCT_NAME is the paid plan name.
 #: src/features/gift/utils/GiftUtils.ts
 msgid "{durationQuantity, plural, one {# week} other {# weeks}} of {premiumProductName}"
-msgstr "{durationQuantity, plural, one {# settimana} other {# settimane}} di {premiumProductName}"
+msgstr "{durationQuantity, plural, one {# settimana} many {# settimane} other {# settimane}} di {premiumProductName}"
 
 #. Gift duration label. PREMIUM_PRODUCT_NAME is the paid plan name.
 #: src/features/gift/utils/GiftUtils.ts
 msgid "{durationQuantity, plural, one {# year} other {# years}} of {premiumProductName}"
-msgstr "{durationQuantity, plural, one {# anno} other {# anni}} di {premiumProductName}"
+msgstr "{durationQuantity, plural, one {# anno} many {# anni} other {# anni}} di {premiumProductName}"
 
 #. Accessible label for the avatar status badge; placeholder is the localized status name.
 #: src/features/app/components/shared/GroupDMAvatar.tsx
@@ -1663,7 +1663,7 @@ msgstr "{formats}. Massimo {maxSize}. Consigliato: {recommendedSize}. {note}"
 
 #: src/features/auth/flow/InviteHeader.tsx
 msgid "{formattedMemberCount} {memberCount, plural, one {member} other {members}}"
-msgstr "{formattedMemberCount} {memberCount, plural, one {membro} other {membri}}"
+msgstr "{formattedMemberCount} {memberCount, plural, one {membro} many {membri} other {membri}}"
 
 #: src/features/auth/flow/InviteHeader.tsx
 msgid "{formattedPresenceCount} online"
@@ -1693,7 +1693,7 @@ msgstr "Canali di {guildName}"
 
 #: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx
 msgid "{hiddenConnectionCount, plural, one {Expand # other device} other {Expand # other devices}}"
-msgstr "{hiddenConnectionCount, plural, one {Espandi # altro dispositivo} other {Espandi # altri dispositivi}}"
+msgstr "{hiddenConnectionCount, plural, one {Espandi # altro dispositivo} many {Espandi # altri dispositivi} other {Espandi # altri dispositivi}}"
 
 #. Review value for the email service. host is the SMTP server and from is the sender address.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
@@ -1702,24 +1702,24 @@ msgstr "{host}, mittente {from}"
 
 #: src/features/channel/components/guild_members_page/GuildMembersPageFormatting.ts
 msgid "{hours, plural, one {# hour ago} other {# hours ago}}"
-msgstr "{hours, plural, one {# ora fa} other {# ore fa}}"
+msgstr "{hours, plural, one {# ora fa} many {# ore fa} other {# ore fa}}"
 
 #. Duration phrase in the profile timezone section. hours is a positive integer.
 #. Generic duration label for a whole number of hours.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 #: src/features/user/components/popouts/UserProfileShared.tsx
 msgid "{hours, plural, one {# hour} other {# hours}}"
-msgstr "{hours, plural, one {# ora} other {# ore}}"
+msgstr "{hours, plural, one {# ora} many {# ore} other {# ore}}"
 
 #. Duration phrase in the profile timezone section. hours and minutes are positive integers.
 #: src/features/user/components/popouts/UserProfileShared.tsx
 msgid "{hours, plural, one {# hour} other {# hours}} {minutes, plural, one {# minute} other {# minutes}}"
-msgstr "{hours, plural, one {# ora} other {# ore}} {minutes, plural, one {# minuto} other {# minuti}}"
+msgstr "{hours, plural, one {# ora} many {# ore} other {# ore}} {minutes, plural, one {# minuto} many {# minuti} other {# minuti}}"
 
 #. Generic duration label for an interval that includes hours and remaining minutes.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "{hours, plural, one {# hour} other {# hours}} and {minutes, plural, one {# minute} other {# minutes}}"
-msgstr "{hours, plural, one {# ora} other {# ore}} e {minutes, plural, one {# minuto} other {# minuti}}"
+msgstr "{hours, plural, one {# ora} many {# ore} other {# ore}} e {minutes, plural, one {# minuto} many {# minuti} other {# minuti}}"
 
 #. Text under a generated invite link. {hours} is how long the link stays valid, in whole hours.
 #: src/features/invite/components/modals/InviteModal.tsx
@@ -1729,7 +1729,7 @@ msgstr "{hours, plural, one {Il tuo link d'invito scade tra # ora.} many {Il tuo
 #. Attachment summary in the forward modal message preview when the message has both images and videos. imageCount and videoCount are the number of each.
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx
 msgid "{imageCount, plural, one {# image} other {# images}}, {videoCount, plural, one {# video} other {# videos}}"
-msgstr "{imageCount, plural, one {# immagine} other {# immagini}}, {videoCount, plural, one {# video} other {# video}}"
+msgstr "{imageCount, plural, one {# immagine} many {# immagini} other {# immagini}}, {videoCount, plural, one {# video} many {# video} other {# video}}"
 
 #. Explanation shown when the selected instance advertises no web app endpoint. Instance name is interpolated.
 #: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx
@@ -1808,21 +1808,21 @@ msgstr "{length, plural, one {# spettatore} many {# spettatori} other {# spettat
 #. Tooltip of the line and column button in the status bar of the quick CSS editor.
 #: src/features/theme_settings/components/QuickCssStatusBar.tsx
 msgid "{lines, plural, one {# line} other {# lines}} and {characters, plural, one {# character} other {# characters}}"
-msgstr "{lines, plural, one {# riga} other {# righe}} e {characters, plural, one {# carattere} other {# caratteri}}"
+msgstr "{lines, plural, one {# riga} many {# righe} other {# righe}} e {characters, plural, one {# carattere} many {# caratteri} other {# caratteri}}"
 
 #. Shown in the "Quick CSS" section in Settings > Themes. How long the quick CSS of the edited theme is.
 #: src/features/theme_settings/components/QuickCssSection.tsx
 msgid "{lines, plural, one {# line} other {# lines}} of quick CSS."
-msgstr "{lines, plural, one {# riga} other {# righe}} di CSS rapido."
+msgstr "{lines, plural, one {# riga} many {# righe} other {# righe}} di CSS rapido."
 
 #: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx
 msgid "{matchCount, plural, one {# match} other {# matches}}"
-msgstr "{matchCount, plural, one {# corrispondenza} other {# corrispondenze}}"
+msgstr "{matchCount, plural, one {# corrispondenza} many {# corrispondenze} other {# corrispondenze}}"
 
 #. Community tooltip stat showing the total member count. memberCount is already localized for display; rawMemberCount controls plural grammar.
 #: src/features/app/components/layout/sidebar_nav/GuildListItemTooltip.tsx
 msgid "{memberCount} {rawMemberCount, plural, one {member} other {members}}"
-msgstr "{memberCount} {rawMemberCount, plural, one {membro} other {membri}}"
+msgstr "{memberCount} {rawMemberCount, plural, one {membro} many {membri} other {membri}}"
 
 #. Accessible label suffix for the mention count on an inbox row for another account.
 #. Generic aria-label for an unread-mentions badge. Preserve {mentionCount}.
@@ -1834,7 +1834,7 @@ msgstr "{mentionCount, plural, one {# menzione} many {# menzioni} other {# menzi
 #. Summary in the inbox for the other signed-in accounts. mentionCount is the total number of mentions and accountCount is how many other accounts have mentions.
 #: src/features/messaging/components/popouts/inbox/OtherAccountsInboxSection.tsx
 msgid "{mentionCount, plural, one {# mention} other {# mentions}} on {accountCount, plural, one {# other account} other {# other accounts}}"
-msgstr "{mentionCount, plural, one {# menzione} other {# menzioni}} su {accountCount, plural, one {# altro account} other {# altri account}}"
+msgstr "{mentionCount, plural, one {# menzione} many {# menzioni} other {# menzioni}} su {accountCount, plural, one {# altro account} many {# altri account} other {# altri account}}"
 
 #. Current value and track label of the space between message groups slider, for example 16px.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx
@@ -1843,7 +1843,7 @@ msgstr "{messageGroupSpacing}px"
 
 #: src/features/channel/components/guild_members_page/GuildMembersPageFormatting.ts
 msgid "{minutes, plural, one {# minute ago} other {# minutes ago}}"
-msgstr "{minutes, plural, one {# minuto fa} other {# minuti fa}}"
+msgstr "{minutes, plural, one {# minuto fa} many {# minuti fa} other {# minuti fa}}"
 
 #. Generic duration label for a whole number of minutes.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
@@ -1853,12 +1853,12 @@ msgstr "{minutes, plural, one {# minuto} many {# minuti} other {# minuti}}"
 #. Generic duration label for a short interval that includes minutes and remaining seconds.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "{minutes, plural, one {# minute} other {# minutes}} and {seconds, plural, one {# second} other {# seconds}}"
-msgstr "{minutes, plural, one {# minuto} other {# minuti}} e {seconds, plural, one {# secondo} other {# secondi}}"
+msgstr "{minutes, plural, one {# minuto} many {# minuti} other {# minuti}} e {seconds, plural, one {# secondo} many {# secondi} other {# secondi}}"
 
 #. Alert on the setup token screen after too many wrong setup tokens came from the same network. minutes is how long until they can try again.
 #: src/features/app/components/setup/SetupTokenStep.tsx
 msgid "{minutes, plural, one {Too many wrong setup tokens were tried from your network. Try again in # minute.} other {Too many wrong setup tokens were tried from your network. Try again in # minutes.}}"
-msgstr "{minutes, plural, one {Dalla tua rete sono stati provati troppi token di configurazione sbagliati. Riprova tra # minuto.} other {Dalla tua rete sono stati provati troppi token di configurazione sbagliati. Riprova tra # minuti.}}"
+msgstr "{minutes, plural, one {Dalla tua rete sono stati provati troppi token di configurazione sbagliati. Riprova tra # minuto.} many {Dalla tua rete sono stati provati troppi token di configurazione sbagliati. Riprova tra # minuti.} other {Dalla tua rete sono stati provati troppi token di configurazione sbagliati. Riprova tra # minuti.}}"
 
 #. Text under a generated invite link. {minutes} is how long the link stays valid, in whole minutes.
 #: src/features/invite/components/modals/InviteModal.tsx
@@ -1873,7 +1873,7 @@ msgstr "{monthlyPrice}/mese"
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts
 msgid "{months, plural, one {# month} other {# months}}"
-msgstr "{months, plural, one {# mese} other {# mesi}}"
+msgstr "{months, plural, one {# mese} many {# mesi} other {# mesi}}"
 
 #. Tray menu account item when the signed-in accounts are on more than one instance. {name} is the account name, {host} is the instance address.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
@@ -2244,7 +2244,7 @@ msgstr "{providerName} si apre nel tuo browser. Accedi lì per collegare il tuo 
 #. Reaction tooltip. Preserve {emojiName}, {reactors}; they are inserted by code. {reactorCount} is how many people reacted, for verb agreement. Order the parts so the emoji never reads as the one doing the reacting.
 #: src/features/messaging/utils/ReactionUtils.ts
 msgid "{reactorCount, plural, one {{emojiName} reacted by {reactors}} other {{emojiName} reacted by {reactors}}}"
-msgstr "{reactorCount, plural, one {La reazione {emojiName} è stata usata da {reactors}} other {La reazione {emojiName} è stata usata da {reactors}}}"
+msgstr "{reactorCount, plural, one {La reazione {emojiName} è stata usata da {reactors}} many {La reazione {emojiName} è stata usata da {reactors}} other {La reazione {emojiName} è stata usata da {reactors}}}"
 
 #. Download progress in the desktop update window. {received} and {total} are already formatted numbers of megabytes. Use the local abbreviation for megabytes.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
@@ -2274,13 +2274,13 @@ msgstr "{remaining, plural, one {# carattere rimanente} many {# caratteri rimane
 
 #: src/features/lexical/composer/nodes/SlashOptionalHintPill.tsx
 msgid "{remaining, plural, one {+# more} other {+# more}}"
-msgstr "{remaining, plural, one {+# altro} other {+# altri}}"
+msgstr "{remaining, plural, one {+# altro} many {+# altri} other {+# altri}}"
 
 #. Member count on the community card that opens from a published message copy. renderedMemberCount is the formatted count.
 #: src/features/channel/components/CrosspostCommunityCard.tsx
 #: src/features/channel/components/InviteEmbed.tsx
 msgid "{renderedMemberCount} {memberCount, plural, one {member} other {members}}"
-msgstr "{renderedMemberCount} {memberCount, plural, one {membro} other {membri}}"
+msgstr "{renderedMemberCount} {memberCount, plural, one {membro} many {membri} other {membri}}"
 
 #. Presence summary on the community card that opens from a published message copy. renderedOnlineCount is a formatted count of online members.
 #: src/features/channel/components/CrosspostCommunityCard.tsx
@@ -2372,7 +2372,7 @@ msgstr "{tenSeconds} secondi"
 #. Template preview summary listing how many text channels, forum channels, voice channels, categories, and roles will be imported. Used when the template has at least one forum or media channel.
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 msgid "{textChannelCount, plural, one {# text channel} other {# text channels}}, {forumChannelCount, plural, one {# forum channel} other {# forum channels}}, {voiceChannelCount, plural, one {# voice channel} other {# voice channels}}, {categoryCount, plural, one {# category} other {# categories}}, {roleCount, plural, one {# role} other {# roles}}"
-msgstr "{textChannelCount, plural, one {# canale di testo} other {# canali di testo}}, {forumChannelCount, plural, one {# canale forum} other {# canali forum}}, {voiceChannelCount, plural, one {# canale vocale} other {# canali vocali}}, {categoryCount, plural, one {# categoria} other {# categorie}}, {roleCount, plural, one {# ruolo} other {# ruoli}}"
+msgstr "{textChannelCount, plural, one {# canale di testo} many {# canali di testo} other {# canali di testo}}, {forumChannelCount, plural, one {# canale forum} many {# canali forum} other {# canali forum}}, {voiceChannelCount, plural, one {# canale vocale} many {# canali vocali} other {# canali vocali}}, {categoryCount, plural, one {# categoria} many {# categorie} other {# categorie}}, {roleCount, plural, one {# ruolo} many {# ruoli} other {# ruoli}}"
 
 #. Template preview summary listing how many text channels, voice channels, categories, and roles will be imported.
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
@@ -2407,7 +2407,7 @@ msgstr "{threeHours} ore"
 #. Result count header in the channel search results panel. Plural cases describe the result count.
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx
 msgid "{total, plural, one {# result} other {# results}}"
-msgstr "{total, plural, one {# risultato} other {# risultati}}"
+msgstr "{total, plural, one {# risultato} many {# risultati} other {# risultati}}"
 
 #. Time window preset label shown as a standalone duration in option lists. The number is interpolated.
 #: src/features/app/config/TimeWindowPresets.ts
@@ -2426,7 +2426,7 @@ msgstr "{unreadCount, number}+ nuovi da {shortTime}"
 
 #: src/features/channel/components/NewMessagesBar.tsx
 msgid "{unreadCount, plural, one {# new message} other {# new messages}} since {compactTime}"
-msgstr "{unreadCount, plural, one {# nuovo messaggio} other {# nuovi messaggi}} da {compactTime}"
+msgstr "{unreadCount, plural, one {# nuovo messaggio} many {# nuovi messaggi} other {# nuovi messaggi}} da {compactTime}"
 
 #. Label in the channel and chat new messages bar. Preserve {unreadCount}, {shortTime}; they are inserted by code.
 #: src/features/channel/components/NewMessagesBar.tsx
@@ -4077,7 +4077,7 @@ msgstr "Aggiunto {createdDate}, mai utilizzato"
 #. Toast after adding one or more desktop local file references for theme CSS.
 #: src/features/theme_settings/components/AssetsSection.tsx
 msgid "Added {length, plural, one {# local file reference} other {# local file references}}."
-msgstr "{length, plural, one {Aggiunto # riferimento a un file locale.} other {Aggiunti # riferimenti a file locali.}}"
+msgstr "{length, plural, one {Aggiunto # riferimento a un file locale.} many {Aggiunti # riferimenti a file locali.} other {Aggiunti # riferimenti a file locali.}}"
 
 #. Activity log detail line under a community settings update, shown when the community got a chat embed background, the image shown behind its invite embeds in chat, where it had none. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
@@ -4370,7 +4370,7 @@ msgstr "Fatto"
 #. Summary row value on the confirm step when the community filter is in exclude mode.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx
 msgid "All except {count, plural, one {# community} other {# communities}}"
-msgstr "Tutte tranne {count, plural, one {# community} other {# community}}"
+msgstr "Tutte tranne {count, plural, one {# community} many {# community} other {# community}}"
 
 #. File type filter in the desktop save dialog on Windows and Linux that shows files of any type.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
@@ -4647,7 +4647,7 @@ msgstr "Reindirizzamenti consentiti"
 #. Activity log detail row under a created voice channel that allows a non-default number of simultaneous connections, such as several devices, from each member. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {count} is an ICU plural with the number of connections allowed per member.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts
 msgid "Allowed up to {count, plural, one {# connection} other {# connections}} per member"
-msgstr "Consentite fino a {count, plural, one {# connessione} other {# connessioni}} per membro"
+msgstr "Consentite fino a {count, plural, one {# connessione} many {# connessioni} other {# connessioni}} per membro"
 
 #. Description under the mature content switch in the edit group settings. Only the group owner sees it.
 #: src/features/channel/components/modals/GroupMatureContentSwitch.tsx
@@ -5663,7 +5663,7 @@ msgstr "Audio e video"
 #. Description under the P2P calls only switch in voice channel settings. maxParticipants is the participant cap, a number from 2 to 4.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Audio and video go directly between participants, up to {maxParticipants, plural, one {# person} other {# people}}. Everyone agrees before joining and can see each other's IP address."
-msgstr "Audio e video passano direttamente tra i partecipanti, fino a {maxParticipants, plural, one {# persona} other {# persone}}. Tutti concordano prima di unirsi e possono vedere l'indirizzo IP di ciascuno."
+msgstr "Audio e video passano direttamente tra i partecipanti, fino a {maxParticipants, plural, one {# persona} many {# persone} other {# persone}}. Tutti concordano prima di unirsi e possono vedere l'indirizzo IP di ciascuno."
 
 #. Lead sentence of the P2P call dialog explaining peer-to-peer mode.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
@@ -7074,7 +7074,7 @@ msgstr "Creando un account, accetti i <0>termini di servizio</0>. L'<1>informati
 #. Line directly above the payment button in the Operator Pass checkout dialog on an instance that links no terms of service. The linked text names the Operator Pass terms document. {OPERATOR_PASS_NAME} is a product name and stays untranslated.
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx
 msgid "By paying, you agree to the <0>{OPERATOR_PASS_NAME} terms</0>."
-msgstr "Pagando, accetti i <0>termini dell'{OPERATOR_PASS_NAME}</0>."
+msgstr "Pagando, accetti i <0>termini dell’{OPERATOR_PASS_NAME}</0>."
 
 #. Line directly above the payment button in the Operator Pass checkout dialog. Both linked texts name legal documents: the terms of service and the Operator Pass terms. {OPERATOR_PASS_NAME} is a product name and stays untranslated. Capitalize the linked texts the way your language does in the middle of a sentence.
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx
@@ -13275,7 +13275,7 @@ msgstr "Consegnate subito il mio certificato. Acquisto per l'azienda con il CNPJ
 #. Required checkbox in the Operator Pass checkout dialog when buying one pass from Brazil or in Brazilian reais. The buyer asks for the certificate PDF to be delivered right after payment. A buyer who has a billing address in Brazil or pays in reais (the Brazilian currency) keeps the right to withdraw for {days} days after delivery. A buyer who enters the CNPJ of a company sees a different text, so this one never needs a business exception. The billing address is not where the buyer happens to be. Nothing in this text takes the right away from anyone, so never add a sentence about losing it. Consumer law text, translate faithfully and keep every condition. Withdraw means the consumer right of withdrawal (pt-BR: desistir), never taking money out.
 #: src/features/premium/components/operator_pass/checkout/CheckoutAgreeStage.tsx
 msgid "Deliver my certificate now. If I have a billing address in Brazil or pay in reais, I can still withdraw within {days, plural, one {# day} other {# days}} of delivery and get a full refund."
-msgstr "Consegnate subito il mio certificato. Se ho un indirizzo di fatturazione in Brasile o pago in real brasiliani, posso comunque recedere entro {days, plural, one {# giorno} other {# giorni}} dalla consegna e ottenere un rimborso completo."
+msgstr "Consegnate subito il mio certificato. Se ho un indirizzo di fatturazione in Brasile o pago in real brasiliani, posso comunque recedere entro {days, plural, one {# giorno} many {# giorni} other {# giorni}} dalla consegna e ottenere un rimborso completo."
 
 #. Required checkbox in the Operator Pass checkout dialog when buying more than one pass. The buyer asks for the certificate PDF pages to be delivered right after payment, before the statutory withdrawal period ends, and confirms that the right of withdrawal is lost on delivery. Consumer law text, translate faithfully and keep every condition. Withdraw means the consumer right of withdrawal, never taking money out.
 #: src/features/premium/components/operator_pass/checkout/CheckoutAgreeStage.tsx
@@ -13290,7 +13290,7 @@ msgstr "Consegnate subito i miei certificati. Acquisto per l'azienda con il CNPJ
 #. Required checkbox in the Operator Pass checkout dialog when buying more than one pass from Brazil or in Brazilian reais. The buyer asks for the certificate PDF pages to be delivered right after payment. A buyer who has a billing address in Brazil or pays in reais (the Brazilian currency) keeps the right to withdraw from each pass for {days} days after delivery. A buyer who enters the CNPJ of a company sees a different text, so this one never needs a business exception. The billing address is not where the buyer happens to be. Nothing in this text takes the right away from anyone, so never add a sentence about losing it. Consumer law text, translate faithfully and keep every condition. Withdraw means the consumer right of withdrawal (pt-BR: desistir), never taking money out.
 #: src/features/premium/components/operator_pass/checkout/CheckoutAgreeStage.tsx
 msgid "Deliver my certificates now. If I have a billing address in Brazil or pay in reais, I can still withdraw from each pass within {days, plural, one {# day} other {# days}} of delivery and get a full refund."
-msgstr "Consegnate subito i miei certificati. Se ho un indirizzo di fatturazione in Brasile o pago in real brasiliani, posso comunque recedere da ogni pass entro {days, plural, one {# giorno} other {# giorni}} dalla consegna e ottenere un rimborso completo."
+msgstr "Consegnate subito i miei certificati. Se ho un indirizzo di fatturazione in Brasile o pago in real brasiliani, posso comunque recedere da ogni pass entro {days, plural, one {# giorno} many {# giorni} other {# giorni}} dalla consegna e ottenere un rimborso completo."
 
 #. Group heading for followed announcement channels that post into one channel. targetChannelName is that channel, without the leading #.
 #: src/features/guild/components/modals/guild_tabs/GuildWebhooksTab.tsx
@@ -17197,7 +17197,7 @@ msgstr "Fluxer ha smesso di controllare se il browser ha approvato l'accesso. No
 #. Shown in the modal that applies a shared theme when the theme points at files the app will not load.
 #: src/features/theme/components/modals/ThemeAcceptModal.tsx
 msgid "Fluxer won't load {count, plural, one {# file} other {# files}} that this theme links to on other sites."
-msgstr "Fluxer non caricherà {count, plural, one {# file} other {# file}} su altri siti a cui rimanda questo tema."
+msgstr "Fluxer non caricherà {count, plural, one {# file} many {# file} other {# file}} su altri siti a cui rimanda questo tema."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts
@@ -19517,12 +19517,12 @@ msgstr "Se dimentichi la password, questo kit è l'unico modo per rientrare nel 
 #. Line in the Operator Pass checkout dialog right above the button that opens the payment page, shown to buyers who appear to be in Brazil or who pay in Brazilian reais when buying more than one pass. A buyer who has a billing address in Brazil or pays in reais (the Brazilian currency) keeps the right to withdraw from each pass for {days} days after delivery. A buyer who enters the CNPJ of a company sees a different text, so this one never needs a business exception. The billing address is not where the buyer happens to be. Nothing in this text takes the right away from anyone, so never add a sentence about losing it. Consumer law text, translate faithfully and keep every condition. Withdraw means the consumer right of withdrawal (pt-BR: desistir), never taking money out.
 #: src/features/premium/components/operator_pass/checkout/CheckoutAgreeStage.tsx
 msgid "If you have a billing address in Brazil or pay in reais, you can withdraw from each pass within {days, plural, one {# day} other {# days}} of delivery and get a full refund."
-msgstr "Se hai un indirizzo di fatturazione in Brasile o paghi in real brasiliani, puoi recedere da ogni pass entro {days, plural, one {# giorno} other {# giorni}} dalla consegna e ottenere un rimborso completo."
+msgstr "Se hai un indirizzo di fatturazione in Brasile o paghi in real brasiliani, puoi recedere da ogni pass entro {days, plural, one {# giorno} many {# giorni} other {# giorni}} dalla consegna e ottenere un rimborso completo."
 
 #. Line in the Operator Pass checkout dialog right above the button that opens the payment page, shown to buyers who appear to be in Brazil or who pay in Brazilian reais. A buyer who has a billing address in Brazil or pays in reais (the Brazilian currency) keeps the right to withdraw for {days} days after delivery. A buyer who enters the CNPJ of a company sees a different text, so this one never needs a business exception. The billing address is not where the buyer happens to be. Nothing in this text takes the right away from anyone, so never add a sentence about losing it. Consumer law text, translate faithfully and keep every condition. Withdraw means the consumer right of withdrawal (pt-BR: desistir), never taking money out.
 #: src/features/premium/components/operator_pass/checkout/CheckoutAgreeStage.tsx
 msgid "If you have a billing address in Brazil or pay in reais, you can withdraw within {days, plural, one {# day} other {# days}} of delivery and get a full refund."
-msgstr "Se hai un indirizzo di fatturazione in Brasile o paghi in real brasiliani, puoi recedere entro {days, plural, one {# giorno} other {# giorni}} dalla consegna e ottenere un rimborso completo."
+msgstr "Se hai un indirizzo di fatturazione in Brasile o paghi in real brasiliani, puoi recedere entro {days, plural, one {# giorno} many {# giorni} other {# giorni}} dalla consegna e ottenere un rimborso completo."
 
 #. Help on the setup token screen, followed by a terminal command. rexctl is a name that must not be translated.
 #: src/features/app/components/setup/SetupTokenStep.tsx
@@ -19776,12 +19776,12 @@ msgstr "Importa un file .css per iniziare, oppure scrivi il tuo CSS in CSS rapid
 #. Completion text in the favorite GIF import modal. importedCount is the number added; skippedCount is the number skipped.
 #: src/features/channel/components/pickers/gif/ImportFavoriteGifsModal.tsx
 msgid "Import complete. Added {importedCount, plural, one {# GIF} other {# GIFs}}, skipped {skippedCount, number} (duplicates or over the limit)."
-msgstr "Importazione completata. {importedCount, plural, one {Aggiunta # GIF.} other {Aggiunte # GIF.}} GIF ignorate: {skippedCount, number} (già presenti o limite raggiunto)."
+msgstr "Importazione completata. {importedCount, plural, one {Aggiunta # GIF.} many {Aggiunte # GIF.} other {Aggiunte # GIF.}} GIF ignorate: {skippedCount, number} (già presenti o limite raggiunto)."
 
 #. Completion text in the favorite GIF import modal. importedCount is the number added.
 #: src/features/channel/components/pickers/gif/ImportFavoriteGifsModal.tsx
 msgid "Import complete. Added {importedCount, plural, one {# GIF} other {# GIFs}}."
-msgstr "Importazione completata. {importedCount, plural, one {Aggiunta # GIF.} other {Aggiunte # GIF.}}"
+msgstr "Importazione completata. {importedCount, plural, one {Aggiunta # GIF.} many {Aggiunte # GIF.} other {Aggiunte # GIF.}}"
 
 #. Title of the native file picker that imports CSS theme files on the desktop app. Imported files stay linked and update live when saved.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
@@ -19852,12 +19852,12 @@ msgstr "Informazioni importanti"
 #. Toast after importing one or more CSS files into the theme library.
 #: src/features/theme_settings/components/YourThemesSection.tsx
 msgid "Imported {length, plural, one {# theme file} other {# theme files}}."
-msgstr "{length, plural, one {Importato # file di tema.} other {Importati # file di tema.}}"
+msgstr "{length, plural, one {Importato # file di tema.} many {Importati # file di tema.} other {Importati # file di tema.}}"
 
 #. Toast after importing a theme library file.
 #: src/features/theme_settings/components/ShareAndBackUpSection.tsx
 msgid "Imported {themes, plural, one {# theme} other {# themes}} and {assets, plural, one {# asset} other {# assets}}."
-msgstr "Importati {themes, plural, one {# tema} other {# temi}} e {assets, plural, one {# risorsa} other {# risorse}}."
+msgstr "Importati {themes, plural, one {# tema} many {# temi} other {# temi}} e {assets, plural, one {# risorsa} many {# risorse} other {# risorse}}."
 
 #. Progress text in the favorite GIF import modal. processedCount is completed URLs, totalCount is queued URLs, importedCount is successfully added GIFs.
 #: src/features/channel/components/pickers/gif/ImportFavoriteGifsModal.tsx
@@ -20051,7 +20051,7 @@ msgstr "Password errata."
 #. Error text in the security key PIN modal shown after a wrong PIN, with the remaining attempt count. Keep the tone plain and specific.
 #: src/features/auth/components/modals/PasskeyPinModal.tsx
 msgid "Incorrect PIN. {retriesRemaining, plural, one {# attempt} other {# attempts}} left before the security key locks."
-msgstr "PIN errato. {retriesRemaining, plural, one {Rimane # tentativo} other {Rimangono # tentativi}} prima che la chiave di sicurezza si blocchi."
+msgstr "PIN errato. {retriesRemaining, plural, one {Rimane # tentativo} many {Rimangono # tentativi} other {Rimangono # tentativi}} prima che la chiave di sicurezza si blocchi."
 
 #. Error text in the security key PIN modal shown after a wrong PIN. Keep the tone plain and specific.
 #: src/features/auth/components/modals/PasskeyPinModal.tsx
@@ -21652,7 +21652,7 @@ msgstr "Limitate le menzioni di questo ruolo ai membri con il permesso di menzio
 #. Activity log detail row under a created or updated voice channel that now has a maximum number of people who can join it at once. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {count} is an ICU plural with that maximum.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts
 msgid "Limited the channel to {count, plural, one {# user} other {# users}}"
-msgstr "Limitato il canale a {count, plural, one {# utente} other {# utenti}}"
+msgstr "Limitato il canale a {count, plural, one {# utente} many {# utenti} other {# utenti}}"
 
 #. Button in the status bar of the quick CSS editor. Selecting it moves to another line.
 #: src/features/theme_settings/components/QuickCssStatusBar.tsx
@@ -21786,7 +21786,7 @@ msgstr "Collegato"
 #. Toast after importing CSS files or a folder on the desktop app. The themes stay linked to the files on disk and update when the file is saved.
 #: src/features/theme_settings/components/YourThemesSection.tsx
 msgid "Linked {length, plural, one {# theme file} other {# theme files}}. Changes you save to them apply right away."
-msgstr "File collegato {length, plural, one {# tema} other {# temi}}. Le modifiche salvate verranno applicate subito."
+msgstr "File collegato {length, plural, one {# tema} many {# temi} other {# temi}}. Le modifiche salvate verranno applicate subito."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts
@@ -25336,8 +25336,9 @@ msgstr "Nessuno può aprire le note personali o scriverci."
 
 #. Description of the invite-only registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
+#, fuzzy
 msgid "Nobody can sign up on their own. You make invite links in the admin panel and send them to people."
-msgstr ""
+msgstr "Nessuno può registrarsi da solo. Crei link di registrazione nel pannello di amministrazione e li invii alle persone."
 
 #. Empty-state text in the channel and chat message reactions sheet.
 #: src/features/channel/components/MessageReactionsSheet.tsx
@@ -25958,7 +25959,7 @@ msgstr "Stato online"
 #. Summary row value on the confirm step when the community filter is in include-only mode.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx
 msgid "Only {count, plural, one {# community} other {# communities}}"
-msgstr "Solo {count, plural, one {# community} other {# community}}"
+msgstr "Solo {count, plural, one {# community} many {# community} other {# community}}"
 
 #. Thread notification option that notifies only for mentions.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
@@ -29650,8 +29651,9 @@ msgid "Registration is currently closed."
 msgstr "La registrazione è attualmente chiusa."
 
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
+#, fuzzy
 msgid "Registration is currently closed. Use an invite link from an admin to create an account."
-msgstr ""
+msgstr "La registrazione è attualmente chiusa. Usa un link di registrazione fornito da un amministratore per creare un account."
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Regular button"
@@ -31194,7 +31196,7 @@ msgstr "Revoca"
 #. Danger button in the authorized apps tab. Revokes the currently selected authorized applications.
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx
 msgid "Revoke {appCount, plural, one {# app} other {# apps}}"
-msgstr "Revoca l’accesso a {appCount, plural, one {# app} other {# app}}"
+msgstr "Revoca l’accesso a {appCount, plural, one {# app} many {# app} other {# app}}"
 
 #. Short danger action label in the authorized apps tab. Keep it concise.
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx
@@ -33786,7 +33788,7 @@ msgstr "Mostra chat"
 #. Tooltip and aria label on the compact call-view chat pill button when chat is hidden and has unread messages. {count} is the unread message count.
 #: src/features/voice/components/compact_voice_call_view/CompactCallHeightToggleButton.tsx
 msgid "Show chat with {count, plural, one {# unread message} other {# unread messages}}"
-msgstr "Mostra chat con {count, plural, one {# messaggio non letto} other {# messaggi non letti}}"
+msgstr "Mostra chat con {count, plural, one {# messaggio non letto} many {# messaggi non letti} other {# messaggi non letti}}"
 
 #. Row in the quick CSS editor shortcuts dialog.
 #: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
@@ -34406,7 +34408,7 @@ msgstr "Esci"
 #. Danger button in the devices tab. Signs out the currently selected devices.
 #: src/features/user/components/modals/tabs/DevicesTab.tsx
 msgid "Sign out {deviceCount, plural, one {# device} other {# devices}}"
-msgstr "Disconnetti {deviceCount, plural, one {# dispositivo} other {# dispositivi}}"
+msgstr "Disconnetti {deviceCount, plural, one {# dispositivo} many {# dispositivi} other {# dispositivi}}"
 
 #. Security modal title for revoking every saved login session except the current one.
 #. Settings search entry label. Names the settings search entry in the settings UI.
@@ -37068,12 +37070,12 @@ msgstr "Il tag #0000 è riservato agli abbonati Visionary. Visionary non è più
 #. Sentence after the line that starts with By paying in the Operator Pass checkout dialog on an instance that links no privacy policy. The linked text names the Operator Pass privacy notice, which covers the certificate name, the checkout record and the name and avatar people send for the Operators' wall. People never agree to it, it only informs. {OPERATOR_PASS_NAME} is a product name and stays untranslated. Capitalize the linked text the way your language does at its position in the sentence.
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx
 msgid "The <0>{OPERATOR_PASS_NAME} privacy notice</0> explains how we handle your data."
-msgstr "L'<0>avviso sulla privacy dell'{OPERATOR_PASS_NAME}</0> spiega come trattiamo i tuoi dati."
+msgstr "L'<0>avviso sulla privacy dell’{OPERATOR_PASS_NAME}</0> spiega come trattiamo i tuoi dati."
 
 #. Sentence after the line that starts with By paying in the Operator Pass checkout dialog. Both linked texts name legal documents: the privacy policy and the Operator Pass privacy notice, which covers the certificate name, the checkout record and the name and avatar people send for the Operators' wall. People never agree to either, they only inform. {OPERATOR_PASS_NAME} is a product name and stays untranslated. Capitalize the linked texts the way your language does at their position in the sentence.
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx
 msgid "The <0>privacy policy</0> and the <1>{OPERATOR_PASS_NAME} privacy notice</1> explain how we handle your data."
-msgstr "L'<0>informativa sulla privacy</0> e l'<1>avviso sulla privacy dell'{OPERATOR_PASS_NAME}</1> spiegano come trattiamo i tuoi dati."
+msgstr "L'<0>informativa sulla privacy</0> e l'<1>avviso sulla privacy dell’{OPERATOR_PASS_NAME}</1> spiegano come trattiamo i tuoi dati."
 
 #. Notice right above the Create account button when the instance only has a privacy policy. It only informs, people never agree to it.
 #: src/features/auth/flow/RegistrationLegalNotice.tsx
@@ -37399,7 +37401,7 @@ msgstr "La sorgente della condivisione dello schermo ha smesso di inviare video,
 #. Sentences after the privacy sentence in the Operator Pass checkout dialog that name the company selling the pass and how to reach it. Fluxer Platform AB is the company name and 559537-3993 its Swedish registration number, keep both as is. Haninge is the Swedish municipality where the company has its registered seat and stays as is. Translate registered seat with the legal term your language uses for the registered seat of a company. The address, phone number and email address are filled in and stay as is. Use the same word for seller as on a receipt.
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx
 msgid "The seller is Fluxer Platform AB (reg. no. 559537-3993), a Swedish company with its registered seat in Haninge. Write to us at {OPERATOR_PASS_SELLER_ADDRESS}, call {OPERATOR_PASS_SELLER_PHONE} or email {SUPPORT_EMAIL}."
-msgstr ""
+msgstr "Il venditore è Fluxer Platform AB (n. di registrazione 559537-3993), una società svedese con sede legale a Haninge. Scrivici a {OPERATOR_PASS_SELLER_ADDRESS}, chiamaci al {OPERATOR_PASS_SELLER_PHONE} o inviaci un'email a {SUPPORT_EMAIL}."
 
 #. Setup wizard body explaining what the setup token is for.
 #: src/features/app/components/setup/SetupTokenStep.tsx
@@ -38902,7 +38904,7 @@ msgstr "Questo eliminerà definitivamente ogni messaggio che hai inviato in ques
 #. Security warning explaining that selected saved login sessions will be signed out.
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx
 msgid "This will sign out the selected {sessionCount, plural, one {device} other {devices}} from your account. You will need to sign in again on each device."
-msgstr "Questa operazione disconnetterà {sessionCount, plural, one {il dispositivo selezionato} other {i dispositivi selezionati}} dal tuo account. Dovrai accedere di nuovo su ciascun dispositivo."
+msgstr "Questa operazione disconnetterà {sessionCount, plural, one {il dispositivo selezionato} many {i dispositivi selezionati} other {i dispositivi selezionati}} dal tuo account. Dovrai accedere di nuovo su ciascun dispositivo."
 
 #. Confirm dialog detail text for the destructive reset action. appName is the desktop app name. Reassures users that server-side data is safe.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
@@ -39135,8 +39137,9 @@ msgstr "Per creare un webhook, apri <0>{channelWebhooksSettingsPath}</0>. Puoi c
 
 #. Last setup wizard screen when only invited people can sign up.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
+#, fuzzy
 msgid "To let people in, make an invite link in the admin panel."
-msgstr ""
+msgstr "Per far entrare le persone, crea un link di registrazione nel pannello di amministrazione."
 
 #. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
@@ -39299,7 +39302,7 @@ msgstr "Mappa le immagini HDR all'intervallo standard, riducendo la luminosità 
 #. Shown on the browser sign-in page and in the desktop app after too many wrong or reused sign-in codes from the same network. minutes is how long until signing in works again.
 #: src/features/auth/flow/browser_handoff/HandoffErrorMessages.ts
 msgid "Too many attempts from your network. Try again in {minutes, plural, one {# minute} other {# minutes}}."
-msgstr "Troppi tentativi dalla tua rete. Riprova tra {minutes, plural, one {# minuto} other {# minuti}}."
+msgstr "Troppi tentativi dalla tua rete. Riprova tra {minutes, plural, one {# minuto} many {# minuti} other {# minuti}}."
 
 #. Inline error on the email or code step of the DSA report flow when the verification code send was rate limited. {duration} is a localized duration such as "45 seconds" or "12 minutes".
 #: src/features/moderation/components/pages/ReportPage.tsx
@@ -40446,12 +40449,12 @@ msgstr "Scollega"
 #: src/features/channel/components/EmojiPicker.tsx
 #: src/features/channel/components/MobileEmojiPicker.tsx
 msgid "Unlock {lockedEmojiCount, plural, one {# custom emoji} other {# custom emojis}} from {communityCount, plural, one {# community} other {# communities}} with {PREMIUM_PRODUCT_NAME}."
-msgstr "Sblocca {lockedEmojiCount, plural, one {# emoji personalizzata} other {# emoji personalizzate}} da {communityCount, plural, one {# community} other {# community}} con {PREMIUM_PRODUCT_NAME}."
+msgstr "Sblocca {lockedEmojiCount, plural, one {# emoji personalizzata} many {# emoji personalizzate} other {# emoji personalizzate}} da {communityCount, plural, one {# community} many {# community} other {# community}} con {PREMIUM_PRODUCT_NAME}."
 
 #: src/features/channel/components/MobileStickersPicker.tsx
 #: src/features/channel/components/StickersPicker.tsx
 msgid "Unlock {lockedStickerCount, plural, one {# sticker} other {# stickers}} from {stickerCommunityCount, plural, one {# community} other {# communities}} with {PREMIUM_PRODUCT_NAME}."
-msgstr "Sblocca {lockedStickerCount, plural, one {# sticker} other {# sticker}} da {stickerCommunityCount, plural, one {# community} other {# community}} con {PREMIUM_PRODUCT_NAME}."
+msgstr "Sblocca {lockedStickerCount, plural, one {# sticker} many {# sticker} other {# sticker}} da {stickerCommunityCount, plural, one {# community} many {# community} other {# community}} con {PREMIUM_PRODUCT_NAME}."
 
 #. Premium upsell banner shown in emoji and sticker pickers.
 #: src/features/channel/components/PremiumUpsellBanner.tsx
@@ -40748,7 +40751,7 @@ msgstr "Messaggi non letti"
 #. Summary in the inbox when the other signed-in accounts have unread messages but no mentions. accountCount is how many other accounts have activity.
 #: src/features/messaging/components/popouts/inbox/OtherAccountsInboxSection.tsx
 msgid "Unread messages on {accountCount, plural, one {# other account} other {# other accounts}}"
-msgstr "Messaggi non letti su {accountCount, plural, one {# altro account} other {# altri account}}"
+msgstr "Messaggi non letti su {accountCount, plural, one {# altro account} many {# altri account} other {# altri account}}"
 
 #. Accessibility description of the Windows taskbar overlay badge, read by screen readers. {count} is the number of unread messages, already formatted for the locale.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
@@ -40827,7 +40830,7 @@ msgstr "Fino a {max} per acquisto."
 #. Bullet point in the P2P call dialog. maxParticipants is the participant cap of a peer-to-peer call, a number from 2 to 4.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Up to {maxParticipants, plural, one {# person} other {# people}}."
-msgstr "Fino a {maxParticipants, plural, one {# persona} other {# persone}}."
+msgstr "Fino a {maxParticipants, plural, one {# persona} many {# persone} other {# persone}}."
 
 #. Plutonium page comparison value for paid video quality. Keep 4K and FPS as written.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
@@ -41122,7 +41125,7 @@ msgstr "Carica il tuo messaggio come file"
 #. Toast after uploading one or more theme asset files.
 #: src/features/theme_settings/components/AssetsSection.tsx
 msgid "Uploaded {length, plural, one {# theme asset} other {# theme assets}}."
-msgstr "{length, plural, one {Caricata # risorsa del tema.} other {Caricate # risorse del tema.}}"
+msgstr "{length, plural, one {Caricata # risorsa del tema.} many {Caricate # risorse del tema.} other {Caricate # risorse del tema.}}"
 
 #. Heading in the "Assets" section in Settings > Themes.
 #: src/features/theme_settings/components/AssetsSection.tsx
@@ -41157,7 +41160,7 @@ msgstr "Solo video caricati"
 #. Filename-like progress label for a temporary message attachment while multiple selected files are uploading.
 #: src/features/messaging/utils/UploadingAttachmentLabelUtils.ts
 msgid "Uploading {count, plural, one {# file} other {# files}}"
-msgstr "Caricamento di {count, plural, one {# file} other {# file}}"
+msgstr "Caricamento di {count, plural, one {# file} many {# file} other {# file}}"
 
 #: src/features/emoji/components/modals/EmojiUploadModal.tsx
 msgid "Uploading emojis"
@@ -42238,7 +42241,7 @@ msgstr "Visualizza i download"
 #. Screen reader label of the titlebar button that opens the downloads panel, used while downloads are running. {count} is the number of downloads in progress.
 #: src/features/app/components/layout/NativeDownloads.tsx
 msgid "View downloads. {count, plural, one {# download in progress} other {# downloads in progress}}"
-msgstr "Visualizza i download. {count, plural, one {# download in corso} other {# download in corso}}"
+msgstr "Visualizza i download. {count, plural, one {# download in corso} many {# download in corso} other {# download in corso}}"
 
 #: src/features/user/components/popouts/UserProfileShared.tsx
 msgid "View full profile"
@@ -44074,7 +44077,7 @@ msgstr "Puoi accedere a questo account con l'accesso singolo."
 #. Cooldown notice in the new thread pane when the parent channel has slowmode. seconds is the wait time.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "You can start another thread in {seconds, plural, one {# second} other {# seconds}}."
-msgstr "Puoi avviare un altro thread tra {seconds, plural, one {# secondo} other {# secondi}}."
+msgstr "Puoi avviare un altro thread tra {seconds, plural, one {# secondo} many {# secondi} other {# secondi}}."
 
 #. Invite page subtext shown when community admins pause invites. Explains that account actions still work.
 #: src/features/invite/utils/InviteMessageDescriptors.ts

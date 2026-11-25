@@ -1283,7 +1283,7 @@ msgstr "{count, plural, one {# ileti} other {# ileti}}"
 #. Last quick switcher row in another account section. count is how many more unread or mentioned channels that account has. accountName is the account display name.
 #: src/features/search/state/QuickSwitcherAccountResults.ts
 msgid "{count, plural, one {# more in {accountName}} other {# more in {accountName}}}"
-msgstr "{count, plural, one {{count} tane daha {accountName} içinde} other {{count} tane daha {accountName} içinde}}"
+msgstr "{count, plural, one {# tane daha {accountName} içinde} other {# tane daha {accountName} içinde}}"
 
 #. Activity log item that stands in for the permission names left out of a long list. It is the last item of a list joined with "and", for example "Send messages, Manage roles, and 3 more permissions". The app joins the list and adds the commas and the word for "and" in your language, so do not add them here. It counts the other permissions in the same list. It never means that permissions were added. {count} is an ICU plural with the number of permissions left out, and # shows that number.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts
@@ -25336,8 +25336,9 @@ msgstr "Kimse kişisel notları açamaz veya onlara yazamaz."
 
 #. Description of the invite-only registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
+#, fuzzy
 msgid "Nobody can sign up on their own. You make invite links in the admin panel and send them to people."
-msgstr ""
+msgstr "Kimse kendi başına kaydolamaz. Yönetici panelinde kayıt bağlantıları oluşturur ve insanlara gönderirsiniz."
 
 #. Empty-state text in the channel and chat message reactions sheet.
 #: src/features/channel/components/MessageReactionsSheet.tsx
@@ -29650,8 +29651,9 @@ msgid "Registration is currently closed."
 msgstr "Kayıt şu anda kapalıdır."
 
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
+#, fuzzy
 msgid "Registration is currently closed. Use an invite link from an admin to create an account."
-msgstr ""
+msgstr "Kayıt şu anda kapalı. Hesap oluşturmak için bir yöneticiden aldığınız kayıt bağlantısını kullanın."
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Regular button"
@@ -37399,7 +37401,7 @@ msgstr "Ekran paylaşımı kaynağı video göndermeyi durdurdu, bu nedenle ekra
 #. Sentences after the privacy sentence in the Operator Pass checkout dialog that name the company selling the pass and how to reach it. Fluxer Platform AB is the company name and 559537-3993 its Swedish registration number, keep both as is. Haninge is the Swedish municipality where the company has its registered seat and stays as is. Translate registered seat with the legal term your language uses for the registered seat of a company. The address, phone number and email address are filled in and stay as is. Use the same word for seller as on a receipt.
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx
 msgid "The seller is Fluxer Platform AB (reg. no. 559537-3993), a Swedish company with its registered seat in Haninge. Write to us at {OPERATOR_PASS_SELLER_ADDRESS}, call {OPERATOR_PASS_SELLER_PHONE} or email {SUPPORT_EMAIL}."
-msgstr ""
+msgstr "Satıcı, şirket merkezi Haninge'de bulunan bir İsveç şirketi olan Fluxer Platform AB'dir (sicil no. 559537-3993). Bize {OPERATOR_PASS_SELLER_ADDRESS} adresine yazabilir, {OPERATOR_PASS_SELLER_PHONE} numarasından arayabilir veya {SUPPORT_EMAIL} adresine e-posta gönderebilirsiniz."
 
 #. Setup wizard body explaining what the setup token is for.
 #: src/features/app/components/setup/SetupTokenStep.tsx
@@ -39135,8 +39137,9 @@ msgstr "Webhook oluşturmak için <0>{channelWebhooksSettingsPath}</0> bölümü
 
 #. Last setup wizard screen when only invited people can sign up.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
+#, fuzzy
 msgid "To let people in, make an invite link in the admin panel."
-msgstr ""
+msgstr "Kullanıcıları içeri almak için yönetici panelinde bir kayıt bağlantısı oluşturun."
 
 #. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
@@ -39299,7 +39302,7 @@ msgstr "HDR görüntüleri standart aralığa ton eşleyerek en yüksek parlakl�
 #. Shown on the browser sign-in page and in the desktop app after too many wrong or reused sign-in codes from the same network. minutes is how long until signing in works again.
 #: src/features/auth/flow/browser_handoff/HandoffErrorMessages.ts
 msgid "Too many attempts from your network. Try again in {minutes, plural, one {# minute} other {# minutes}}."
-msgstr "Ağınızdan çok fazla deneme yapıldı. {minutes, plural, other {# dakika}} sonra tekrar deneyin."
+msgstr "Ağınızdan çok fazla deneme yapıldı. {minutes, plural, one {# dakika} other {# dakika}} sonra tekrar deneyin."
 
 #. Inline error on the email or code step of the DSA report flow when the verification code send was rate limited. {duration} is a localized duration such as "45 seconds" or "12 minutes".
 #: src/features/moderation/components/pages/ReportPage.tsx

@@ -22733,7 +22733,7 @@ msgstr "Medelstor (standard)"
 #. Accessible name of a skin tone choice in the emoji picker.
 #: src/features/channel/components/emoji_picker/SkinToneSelector.tsx
 msgid "Medium skin tone"
-msgstr "Medium skin tone"
+msgstr "Mellanfärgad hudton"
 
 #. Accessible name of a skin tone choice in the emoji picker.
 #: src/features/channel/components/emoji_picker/SkinToneSelector.tsx
@@ -25336,8 +25336,9 @@ msgstr "Ingen kan öppna eller skriva i personliga anteckningar."
 
 #. Description of the invite-only registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
+#, fuzzy
 msgid "Nobody can sign up on their own. You make invite links in the admin panel and send them to people."
-msgstr ""
+msgstr "Ingen kan registrera sig på egen hand. Du skapar registreringslänkar i adminpanelen och skickar dem till folk."
 
 #. Empty-state text in the channel and chat message reactions sheet.
 #: src/features/channel/components/MessageReactionsSheet.tsx
@@ -29650,8 +29651,9 @@ msgid "Registration is currently closed."
 msgstr "Registreringen är för närvarande stängd."
 
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
+#, fuzzy
 msgid "Registration is currently closed. Use an invite link from an admin to create an account."
-msgstr ""
+msgstr "Registreringen är för närvarande stängd. Använd en registreringslänk från en administratör för att skapa ett konto."
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Regular button"
@@ -37399,7 +37401,7 @@ msgstr "Skärmdelningskällan slutade skicka video, så din skärmdelning har st
 #. Sentences after the privacy sentence in the Operator Pass checkout dialog that name the company selling the pass and how to reach it. Fluxer Platform AB is the company name and 559537-3993 its Swedish registration number, keep both as is. Haninge is the Swedish municipality where the company has its registered seat and stays as is. Translate registered seat with the legal term your language uses for the registered seat of a company. The address, phone number and email address are filled in and stay as is. Use the same word for seller as on a receipt.
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx
 msgid "The seller is Fluxer Platform AB (reg. no. 559537-3993), a Swedish company with its registered seat in Haninge. Write to us at {OPERATOR_PASS_SELLER_ADDRESS}, call {OPERATOR_PASS_SELLER_PHONE} or email {SUPPORT_EMAIL}."
-msgstr ""
+msgstr "Säljaren är Fluxer Platform AB (org.nr 559537-3993), ett svenskt aktiebolag med säte i Haninge. Skriv till oss på {OPERATOR_PASS_SELLER_ADDRESS}, ring {OPERATOR_PASS_SELLER_PHONE} eller mejla {SUPPORT_EMAIL}."
 
 #. Setup wizard body explaining what the setup token is for.
 #: src/features/app/components/setup/SetupTokenStep.tsx
@@ -39135,8 +39137,9 @@ msgstr "För att skapa en webhook, öppna <0>{channelWebhooksSettingsPath}</0>. 
 
 #. Last setup wizard screen when only invited people can sign up.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
+#, fuzzy
 msgid "To let people in, make an invite link in the admin panel."
-msgstr ""
+msgstr "Skapa en registreringslänk i adminpanelen för att släppa in folk."
 
 #. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx

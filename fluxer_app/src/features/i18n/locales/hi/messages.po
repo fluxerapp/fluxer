@@ -25336,8 +25336,9 @@ msgstr "कोई भी निजी नोट्स खोल या उनम
 
 #. Description of the invite-only registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
+#, fuzzy
 msgid "Nobody can sign up on their own. You make invite links in the admin panel and send them to people."
-msgstr ""
+msgstr "कोई खुद साइन अप नहीं कर सकता। आप एडमिन पैनल में रजिस्ट्रेशन लिंक बनाते हैं और लोगों को भेजते हैं।"
 
 #. Empty-state text in the channel and chat message reactions sheet.
 #: src/features/channel/components/MessageReactionsSheet.tsx
@@ -29650,8 +29651,9 @@ msgid "Registration is currently closed."
 msgstr "पंजीकरण वर्तमान में बंद है।"
 
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
+#, fuzzy
 msgid "Registration is currently closed. Use an invite link from an admin to create an account."
-msgstr ""
+msgstr "फ़िलहाल रजिस्ट्रेशन बंद है। अकाउंट बनाने के लिए किसी एडमिन से मिला रजिस्ट्रेशन लिंक इस्तेमाल करें।"
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Regular button"
@@ -37399,7 +37401,7 @@ msgstr "स्क्रीन शेयर स्रोत ने वीडि�
 #. Sentences after the privacy sentence in the Operator Pass checkout dialog that name the company selling the pass and how to reach it. Fluxer Platform AB is the company name and 559537-3993 its Swedish registration number, keep both as is. Haninge is the Swedish municipality where the company has its registered seat and stays as is. Translate registered seat with the legal term your language uses for the registered seat of a company. The address, phone number and email address are filled in and stay as is. Use the same word for seller as on a receipt.
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx
 msgid "The seller is Fluxer Platform AB (reg. no. 559537-3993), a Swedish company with its registered seat in Haninge. Write to us at {OPERATOR_PASS_SELLER_ADDRESS}, call {OPERATOR_PASS_SELLER_PHONE} or email {SUPPORT_EMAIL}."
-msgstr ""
+msgstr "विक्रेता Fluxer Platform AB (पंजीकरण संख्या 559537-3993) है, जो स्वीडन की एक कंपनी है और जिसका पंजीकृत कार्यालय Haninge में है। हमें {OPERATOR_PASS_SELLER_ADDRESS} पर पत्र लिखें, {OPERATOR_PASS_SELLER_PHONE} पर कॉल करें या {SUPPORT_EMAIL} पर ईमेल करें।"
 
 #. Setup wizard body explaining what the setup token is for.
 #: src/features/app/components/setup/SetupTokenStep.tsx
@@ -39135,8 +39137,9 @@ msgstr "वेबहुक बनाने के लिए, <0>{channelWebhooks
 
 #. Last setup wizard screen when only invited people can sign up.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
+#, fuzzy
 msgid "To let people in, make an invite link in the admin panel."
-msgstr ""
+msgstr "लोगों को अंदर आने देने के लिए एडमिन पैनल में रजिस्ट्रेशन लिंक बनाएं।"
 
 #. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx

@@ -22738,12 +22738,12 @@ msgstr "Medium hudfarge"
 #. Accessible name of a skin tone choice in the emoji picker.
 #: src/features/channel/components/emoji_picker/SkinToneSelector.tsx
 msgid "Medium-dark skin tone"
-msgstr "Medium-dark skin tone"
+msgstr "Middels mørk hudfarge"
 
 #. Accessible name of a skin tone choice in the emoji picker.
 #: src/features/channel/components/emoji_picker/SkinToneSelector.tsx
 msgid "Medium-light skin tone"
-msgstr "Medium-light hudfarge"
+msgstr "Middels lys hudfarge"
 
 #. Accessible label for the actions menu button on a member row.
 #: src/features/channel/components/guild_members_page/MemberTableRow.tsx
@@ -25336,8 +25336,9 @@ msgstr "Ingen kan åpne eller skrive i personlige notater."
 
 #. Description of the invite-only registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
+#, fuzzy
 msgid "Nobody can sign up on their own. You make invite links in the admin panel and send them to people."
-msgstr ""
+msgstr "Ingen kan registrere seg på egen hånd. Du lager registreringslenker i administrasjonspanelet og sender dem til folk."
 
 #. Empty-state text in the channel and chat message reactions sheet.
 #: src/features/channel/components/MessageReactionsSheet.tsx
@@ -29650,8 +29651,9 @@ msgid "Registration is currently closed."
 msgstr "Registrering er for øyeblikket stengt."
 
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
+#, fuzzy
 msgid "Registration is currently closed. Use an invite link from an admin to create an account."
-msgstr ""
+msgstr "Registrering er stengt for øyeblikket. Bruk en registreringslenke fra en administrator for å opprette en konto."
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Regular button"
@@ -37399,7 +37401,7 @@ msgstr "Kilden for skjermdelingen sluttet å sende video, så skjermdelingen ble
 #. Sentences after the privacy sentence in the Operator Pass checkout dialog that name the company selling the pass and how to reach it. Fluxer Platform AB is the company name and 559537-3993 its Swedish registration number, keep both as is. Haninge is the Swedish municipality where the company has its registered seat and stays as is. Translate registered seat with the legal term your language uses for the registered seat of a company. The address, phone number and email address are filled in and stay as is. Use the same word for seller as on a receipt.
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx
 msgid "The seller is Fluxer Platform AB (reg. no. 559537-3993), a Swedish company with its registered seat in Haninge. Write to us at {OPERATOR_PASS_SELLER_ADDRESS}, call {OPERATOR_PASS_SELLER_PHONE} or email {SUPPORT_EMAIL}."
-msgstr ""
+msgstr "Selgeren er Fluxer Platform AB (org.nr. 559537-3993), et svensk aksjeselskap med forretningskommune Haninge. Skriv til oss på {OPERATOR_PASS_SELLER_ADDRESS}, ring {OPERATOR_PASS_SELLER_PHONE} eller send e-post til {SUPPORT_EMAIL}."
 
 #. Setup wizard body explaining what the setup token is for.
 #: src/features/app/components/setup/SetupTokenStep.tsx
@@ -39135,8 +39137,9 @@ msgstr "For å opprette en webhook, åpne <0>{channelWebhooksSettingsPath}</0>. 
 
 #. Last setup wizard screen when only invited people can sign up.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
+#, fuzzy
 msgid "To let people in, make an invite link in the admin panel."
-msgstr ""
+msgstr "Lag en registreringslenke i administrasjonspanelet for å slippe folk inn."
 
 #. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx

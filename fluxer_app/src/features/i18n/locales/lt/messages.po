@@ -59,7 +59,7 @@ msgstr "[Originali žinutė ištrinta]"
 #. placeholder {0}: guild.member_count
 #: src/features/discovery/discovery/DiscoveryGuildCard.tsx
 msgid "{0, plural, one {# member} other {# members}}"
-msgstr "{0, plural, one {# narys} few {# nariai} other {# narių}}"
+msgstr "{0, plural, one {# narys} few {# nariai} many {# narių} other {# narių}}"
 
 #. Screen reader announcement in the composer when two people are typing. {a} and {b} are their display names.
 #: src/features/typing/rolling/RollingTypingText.tsx
@@ -326,12 +326,12 @@ msgstr "{actor} sukūrė webhooką {name} kanale {channel}"
 #. Activity log summary for several messages that were deleted together when the channel was not recorded. {actor} is the member who deleted them, shown as a clickable user chip, or the word System. {count} is an ICU plural with the number of deleted messages, and # shows that number.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts
 msgid "{actor} deleted {count, plural, one {# message} other {# messages}}"
-msgstr "{actor} ištrynė {count, plural, one {# žinutę} few {# žinutes} other {# žinučių}}"
+msgstr "{actor} ištrynė {count, plural, one {# žinutę} few {# žinutes} many {# žinučių} other {# žinučių}}"
 
 #. Activity log summary for several messages that were deleted together. {actor} is the member who deleted them, shown as a clickable user chip, or the word System. {count} is an ICU plural with the number of deleted messages, and # shows that number. {channel} is the channel the messages were in, shown as a channel name chip, or the deleted-channel label when the channel no longer exists.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts
 msgid "{actor} deleted {count, plural, one {# message} other {# messages}} in {channel}"
-msgstr "{actor} ištrynė {count, plural, one {# žinutę} few {# žinutes} other {# žinučių}} kanale {channel}"
+msgstr "{actor} ištrynė {count, plural, one {# žinutę} few {# žinutes} many {# žinučių} other {# žinučių}} kanale {channel}"
 
 #. Activity log summary for one message that was deleted when the channel was not recorded. {actor} is the member who deleted it, shown as a clickable user chip, or the word System.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts
@@ -939,7 +939,7 @@ msgstr "{amount} ({currency})"
 #. Unsaved-changes banner text in the authorized apps tab. Counts selected apps that will be revoked.
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx
 msgid "{appCount, plural, one {# app selected for access revocation} other {# apps selected for access revocation}}"
-msgstr "{appCount, plural, one {# programa pasirinkta prieigai atšaukti} few {# programos pasirinktos prieigai atšaukti} other {# programų pasirinkta prieigai atšaukti}}"
+msgstr "{appCount, plural, one {# programa pasirinkta prieigai atšaukti} few {# programos pasirinktos prieigai atšaukti} many {# programų pasirinkta prieigai atšaukti} other {# programų pasirinkta prieigai atšaukti}}"
 
 #. Security warning in the confirmation dialog for revoking OAuth application authorizations. appCount is the number of selected applications.
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx
@@ -1076,7 +1076,7 @@ msgstr "{categoryLabel}, {count, plural, one {# bendruomenė} few {# bendruomen�
 #. Short label in the unread channels content. Preserve placeholders {channelHeading}, {mentionCount}; they are inserted by code.
 #: src/features/app/components/floating/UnreadChannelsContent.tsx
 msgid "{channelHeading}, {mentionCount, plural, one {# mention} other {# mentions}}"
-msgstr "{channelHeading}, {mentionCount, plural, one {# paminėjimas} few {# paminėjimai} other {# paminėjimų}}"
+msgstr "{channelHeading}, {mentionCount, plural, one {# paminėjimas} few {# paminėjimai} many {# paminėjimų} other {# paminėjimų}}"
 
 #. Context under a mention from another account in the inbox. channelName is the channel name and communityName is the community name. Keep the middle dot between the two names.
 #: src/features/messaging/components/popouts/inbox/OtherAccountsInboxSection.tsx
@@ -1129,12 +1129,12 @@ msgstr "{context} · {accountName}"
 #. Displayed value for the voice channel participant limit slider. ∞ is the infinity symbol.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx
 msgid "{count, plural, =0 {∞ No limit} one {# participant} other {# participants}}"
-msgstr "{count, plural, =0 {∞ Neribota} one {# dalyvis} few {# dalyviai} other {# dalyvių}}"
+msgstr "{count, plural, =0 {∞ Neribota} one {# dalyvis} few {# dalyviai} many {# dalyvių} other {# dalyvių}}"
 
 #. Shown when hovering a CSS selector in the quick CSS editor.
 #: src/features/theme_settings/editor/CssHover.ts
 msgid "{count, plural, =0 {Matches nothing in the app right now} one {Matches # element in the app right now} other {Matches # elements in the app right now}}"
-msgstr "{count, plural, =0 {Šiuo metu nieko programėlėje neatitinka} one {Šiuo metu programėlėje atitinka # elementą} other {Šiuo metu programėlėje atitinka # elementus}}"
+msgstr "{count, plural, =0 {Šiuo metu nieko programėlėje neatitinka} one {Šiuo metu programėlėje atitinka # elementą} few {Šiuo metu programėlėje atitinka # elementus} many {Šiuo metu programėlėje atitinka # elementų} other {Šiuo metu programėlėje atitinka # elementų}}"
 
 #. Row in the list of Operator Passes for passes the account bought in one purchase. {count} is how many passes of that purchase are in the row, {date} the purchase date without a time, such as Nov 20, 2026.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
@@ -1143,16 +1143,16 @@ msgstr "{count, plural, =1 {Pirkta {date}} one {# leidimas, pirktas {date}} few 
 
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreview.tsx
 msgid "{count, plural, one {... (# line left)} other {... (# lines left)}}"
-msgstr "{count, plural, one {... (liko # eilutė)} few {... (liko # eilutės)} other {... (liko # eilučių)}}"
+msgstr "{count, plural, one {... (liko # eilutė)} few {... (liko # eilutės)} many {... (liko # eilučių)} other {... (liko # eilučių)}}"
 
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreview.tsx
 msgid "{count, plural, one {... (# row left)} other {... (# rows left)}}"
-msgstr "{count, plural, one {... (liko # eilutė)} few {... (liko # eilutės)} other {... (liko # eilučių)}}"
+msgstr "{count, plural, one {... (liko # eilutė)} few {... (liko # eilutės)} many {... (liko # eilučių)} other {... (liko # eilučių)}}"
 
 #. Whole sentence spoken aloud by text-to-speech for a message that contains only attachments. {authorName} is the sender nickname, {count} the attachment count.
 #: src/features/voice/utils/VoiceTtsUtils.tsx
 msgid "{count, plural, one {{authorName} sent an attachment} other {{authorName} sent # attachments}}"
-msgstr "{count, plural, one {{authorName} išsiuntė # priedą} few {{authorName} išsiuntė # priedus} other {{authorName} išsiuntė # priedų}}"
+msgstr "{count, plural, one {{authorName} išsiuntė # priedą} few {{authorName} išsiuntė # priedus} many {{authorName} išsiuntė # priedų} other {{authorName} išsiuntė # priedų}}"
 
 #. Duration label component for an elapsed call. countLabel is a formatted count.
 #: src/features/channel/components/CallMessage.tsx
@@ -1186,16 +1186,16 @@ msgstr "{count, plural, one {{countLabel} metai} few {{countLabel} metai} many {
 
 #: src/features/channel/components/channel_header_components/developer_tools/StateSummaryMenu.tsx
 msgid "{count, plural, one {# active override} other {# active overrides}}"
-msgstr "{count, plural, one {# aktyvus pakeitimas} few {# aktyvūs pakeitimai} other {# aktyvių pakeitimų}}"
+msgstr "{count, plural, one {# aktyvus pakeitimas} few {# aktyvūs pakeitimai} many {# aktyvių pakeitimų} other {# aktyvių pakeitimų}}"
 
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx
 msgid "{count, plural, one {# active subscription} other {# active subscriptions}}"
-msgstr "{count, plural, one {# aktyvi prenumerata} few {# aktyvios prenumeratos} other {# aktyvių prenumeratų}}"
+msgstr "{count, plural, one {# aktyvi prenumerata} few {# aktyvios prenumeratos} many {# aktyvių prenumeratų} other {# aktyvių prenumeratų}}"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts
 msgid "{count, plural, one {# attachment} other {# attachments}}"
-msgstr "{count, plural, one {# priedas} few {# priedai} other {# priedų}}"
+msgstr "{count, plural, one {# priedas} few {# priedai} many {# priedų} other {# priedų}}"
 
 #. Read out by screen readers while typing in the badge filter of the "Badges" profile settings, with the number of badges that match.
 #: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
@@ -1205,46 +1205,46 @@ msgstr "{count, plural, one {# ženklelis atitinka} few {# ženkleliai atitinka}
 #. Label on the collapsed block in the message list that hides messages from blocked users. count is how many messages are hidden; clicking the label reveals them.
 #: src/features/channel/components/BlockedMessageGroups.tsx
 msgid "{count, plural, one {# blocked message} other {# blocked messages}}"
-msgstr "{count, plural, one {# užblokuota žinutė} few {# užblokuotos žinutės} other {# užblokuotų žinučių}}"
+msgstr "{count, plural, one {# užblokuota žinutė} few {# užblokuotos žinutės} many {# užblokuotų žinučių} other {# užblokuotų žinučių}}"
 
 #. Shown next to the "Colors and fonts" section title in Settings > Themes. How many colors and fonts the user changed.
 #: src/features/theme_settings/components/ColorsAndFontsSection.tsx
 msgid "{count, plural, one {# changed} other {# changed}}"
-msgstr "{count, plural, one {# pakeistas} other {# pakeisti}}"
+msgstr "{count, plural, one {# pakeistas} few {# pakeisti} many {# pakeistų} other {# pakeistų}}"
 
 #. Body of the confirmation shown before an announcement channel is converted back into a text channel. {count} is the number of channels, in this or other communities, that follow it and get copies of its published messages. Those channels stop getting copies after the conversion.
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx
 msgid "{count, plural, one {# channel follows} other {# channels follow}} this channel. Converting it to a text channel removes those follows."
-msgstr "{count, plural, one {# kanalas jį seka} other {# kanalai jį seka}} šį kanalą. Konvertavus jį į tekstinį kanalą, tie sekimai bus pašalinti."
+msgstr "{count, plural, one {# kanalas seka} few {# kanalai seka} many {# kanalo seka} other {# kanalų seka}} šį kanalą. Konvertavus jį į tekstinį kanalą, tie sekimai bus pašalinti."
 
 #. Shown in the status bar of the quick CSS editor while text is selected.
 #: src/features/theme_settings/components/QuickCssStatusBar.tsx
 msgid "{count, plural, one {# character selected} other {# characters selected}}"
-msgstr "{count, plural, one {Pažymėtas # simbolis} other {Pažymėti # simboliai}}"
+msgstr "{count, plural, one {Pažymėtas # simbolis} few {Pažymėti # simboliai} many {Pažymėta # simbolių} other {Pažymėta # simbolių}}"
 
 #. Screen-reader status text in Explore. {count} is the total number of matching communities.
 #: src/features/discovery/discovery/DiscoveryPage.tsx
 msgid "{count, plural, one {# community found} other {# communities found}}"
-msgstr "{count, plural, one {Rasta # bendruomenė} few {Rastos # bendruomenės} other {Rasta # bendruomenių}}"
+msgstr "{count, plural, one {Rasta # bendruomenė} few {Rastos # bendruomenės} many {Rasta # bendruomenių} other {Rasta # bendruomenių}}"
 
 #. Heading above the list of communities whose direct message setting differs from the default, in the privacy setup modal.
 #: src/features/user/components/modals/PrivacySetupModal.tsx
 msgid "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
-msgstr "{count, plural, one {# bendruomenė turi savo nustatymą} other {# bendruomenių turi savo nustatymą}}"
+msgstr "{count, plural, one {# bendruomenė turi savo nustatymą} few {# bendruomenės turi savo nustatymą} many {# bendruomenių turi savo nustatymą} other {# bendruomenių turi savo nustatymą}}"
 
 #: src/features/app/components/layout/GuildsLayout.tsx
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
-msgstr "{count, plural, one {# bendruomenė laikinai nepasiekiama dėl srauto kondensatoriaus gedimo.} few {# bendruomenės laikinai nepasiekiamos dėl srauto kondensatoriaus gedimo.} other {# bendruomenių laikinai nepasiekiama dėl srauto kondensatoriaus gedimo.}}"
+msgstr "{count, plural, one {# bendruomenė laikinai nepasiekiama dėl srauto kondensatoriaus gedimo.} few {# bendruomenės laikinai nepasiekiamos dėl srauto kondensatoriaus gedimo.} many {# bendruomenių laikinai nepasiekiama dėl srauto kondensatoriaus gedimo.} other {# bendruomenių laikinai nepasiekiama dėl srauto kondensatoriaus gedimo.}}"
 
 #. Displayed value for the voice channel connection limit slider.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx
 msgid "{count, plural, one {# connection} other {# connections}}"
-msgstr "{count, plural, one {# ryšys} few {# ryšiai} other {# ryšių}}"
+msgstr "{count, plural, one {# ryšys} few {# ryšiai} many {# ryšių} other {# ryšių}}"
 
 #. Button in the status bar of the quick CSS editor that opens the list of problems.
 #: src/features/theme_settings/components/QuickCssStatusBar.tsx
 msgid "{count, plural, one {# error} other {# errors}}"
-msgstr "{count, plural, one {# klaida} other {# klaidos}}"
+msgstr "{count, plural, one {# klaida} few {# klaidos} many {# klaidų} other {# klaidų}}"
 
 #. Attachment summary in the forward modal message preview when the message has no images or videos. count is the number of attached files.
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx
@@ -1255,7 +1255,7 @@ msgstr "{count, plural, one {# failas} few {# failai} many {# failo} other {# fa
 #: src/features/channel/components/channel_header_components/developer_tools/AccountPremiumMenu.tsx
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts
 msgid "{count, plural, one {# gift} other {# gifts}}"
-msgstr "{count, plural, one {# dovana} few {# dovanos} other {# dovanų}}"
+msgstr "{count, plural, one {# dovana} few {# dovanos} many {# dovanų} other {# dovanų}}"
 
 #. Attachment summary in the forward modal message preview when the message has images and no videos. count is the number of images.
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx
@@ -1265,7 +1265,7 @@ msgstr "{count, plural, one {# vaizdas} few {# vaizdai} many {# vaizdo} other {#
 #. Status under the forum search box once results are in.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "{count, plural, one {# matching post} other {# matching posts}}"
-msgstr "{count, plural, one {# atitinkantis įrašas} other {# atitinkantys įrašai}}"
+msgstr "{count, plural, one {# atitinkantis įrašas} few {# atitinkantys įrašai} many {# atitinkančių įrašų} other {# atitinkančių įrašų}}"
 
 #: src/features/channel/components/ChannelSourcePreview.tsx
 #: src/features/channel/components/direct_message/DMListItem.tsx
@@ -1273,31 +1273,31 @@ msgstr "{count, plural, one {# atitinkantis įrašas} other {# atitinkantys įra
 #: src/features/user/components/modals/MutualItemsSheet.tsx
 #: src/features/user/components/modals/user_profile_modal/MutualGroupItem.tsx
 msgid "{count, plural, one {# member} other {# members}}"
-msgstr "{count, plural, one {# narys} few {# nariai} other {# narių}}"
+msgstr "{count, plural, one {# narys} few {# nariai} many {# narių} other {# narių}}"
 
 #. Message count on a thread chip and in the thread browser. count is the number of messages.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "{count, plural, one {# message} other {# messages}}"
-msgstr "{count, plural, one {# pranešimas} other {# pranešimai}}"
+msgstr "{count, plural, one {# pranešimas} few {# pranešimai} many {# pranešimų} other {# pranešimų}}"
 
 #. Last quick switcher row in another account section. count is how many more unread or mentioned channels that account has. accountName is the account display name.
 #: src/features/search/state/QuickSwitcherAccountResults.ts
 msgid "{count, plural, one {# more in {accountName}} other {# more in {accountName}}}"
-msgstr "{count, plural, one {# daugiau {accountName} paskyroje} other {# daugiau {accountName} paskyroje}}"
+msgstr "{count, plural, one {# daugiau {accountName} paskyroje} few {# daugiau {accountName} paskyroje} many {# daugiau {accountName} paskyroje} other {# daugiau {accountName} paskyroje}}"
 
 #. Activity log item that stands in for the permission names left out of a long list. It is the last item of a list joined with "and", for example "Send messages, Manage roles, and 3 more permissions". The app joins the list and adds the commas and the word for "and" in your language, so do not add them here. It counts the other permissions in the same list. It never means that permissions were added. {count} is an ICU plural with the number of permissions left out, and # shows that number.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts
 msgid "{count, plural, one {# more permission} other {# more permissions}}"
-msgstr "{count, plural, one {# papildomas leidimas} few {# papildomi leidimai} other {# papildomų leidimų}}"
+msgstr "{count, plural, one {# papildomas leidimas} few {# papildomi leidimai} many {# papildomų leidimų} other {# papildomų leidimų}}"
 
 #: src/features/channel/components/direct_message/DMWelcomeSection.tsx
 msgid "{count, plural, one {# mutual community} other {# mutual communities}}"
-msgstr "{count, plural, one {# bendra bendruomenė} few {# bendros bendruomenės} other {# bendrų bendruomenių}}"
+msgstr "{count, plural, one {# bendra bendruomenė} few {# bendros bendruomenės} many {# bendrų bendruomenių} other {# bendrų bendruomenių}}"
 
 #. Label on a joined forum post card with unread messages. count is the number of unread messages.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "{count, plural, one {# new message} other {# new messages}}"
-msgstr "{count, plural, one {# nauja žinutė} other {# naujos žinutės}}"
+msgstr "{count, plural, one {# nauja žinutė} few {# naujos žinutės} many {# naujų žinučių} other {# naujų žinučių}}"
 
 #. Short label in the footer of a forum post card, meaning "# new messages". count is the number of unread messages. Keep it as short as possible. It shares one line with the message count and the time.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
@@ -1312,34 +1312,34 @@ msgstr "{count, plural, one {# Operator Pass leidimas} few {# Operator Pass leid
 
 #: src/features/messaging/utils/ReactionUtils.ts
 msgid "{count, plural, one {# other} other {# others}}"
-msgstr "{count, plural, one {# kitas} few {# kiti} other {# kitų}}"
+msgstr "{count, plural, one {# kitas} few {# kiti} many {# kitų} other {# kitų}}"
 
 #: src/features/voice/components/VoiceCallView.tsx
 msgid "{count, plural, one {# participant in call} other {# participants in call}}"
-msgstr "{count, plural, one {# dalyvis skambutyje} few {# dalyviai skambutyje} other {# dalyvių skambutyje}}"
+msgstr "{count, plural, one {# dalyvis skambutyje} few {# dalyviai skambutyje} many {# dalyvių skambutyje} other {# dalyvių skambutyje}}"
 
 #. Label on the collapsed block in the message list that hides suspected spam. count is how many messages are hidden; clicking the label reveals them.
 #: src/features/channel/components/BlockedMessageGroups.tsx
 msgid "{count, plural, one {# potential spammer message} other {# potential spammer messages}}"
-msgstr "{count, plural, one {# galima šlamšto siuntėjo žinutė} few {# galimos šlamšto siuntėjo žinutės} other {# galimų šlamšto siuntėjo žinučių}}"
+msgstr "{count, plural, one {# galima šlamšto siuntėjo žinutė} few {# galimos šlamšto siuntėjo žinutės} many {# galimų šlamšto siuntėjo žinučių} other {# galimų šlamšto siuntėjo žinučių}}"
 
 #: src/features/app/components/shared/MessageReactionsContent.tsx
 #: src/features/channel/components/MessageReactions.tsx
 msgid "{count, plural, one {# reaction} other {# reactions}}"
-msgstr "{count, plural, one {# reakcija} few {# reakcijos} other {# reakcijų}}"
+msgstr "{count, plural, one {# reakcija} few {# reakcijos} many {# reakcijų} other {# reakcijų}}"
 
 #: src/features/channel/components/MessageReactionsSheet.tsx
 msgid "{count, plural, one {# reactor} other {# reactors}}"
-msgstr "{count, plural, one {# reakcija} few {# reakcijos} other {# reakcijų}}"
+msgstr "{count, plural, one {# reakcija} few {# reakcijos} many {# reakcijų} other {# reakcijų}}"
 
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx
 msgid "{count, plural, one {# second} other {# seconds}}"
-msgstr "{count, plural, one {# sekundė} few {# sekundės} other {# sekundžių}}"
+msgstr "{count, plural, one {# sekundė} few {# sekundės} many {# sekundžių} other {# sekundžių}}"
 
 #. Option of the "Tab size" setting in the quick CSS editor.
 #: src/features/theme_settings/components/QuickCssEditorSettings.tsx
 msgid "{count, plural, one {# space} other {# spaces}}"
-msgstr "{count, plural, one {# tarpas} other {# tarpai}}"
+msgstr "{count, plural, one {# tarpas} few {# tarpai} many {# tarpų} other {# tarpų}}"
 
 #. Screen-reader live-region announcement listing the number of message search suggestions. Preserve {count}; it is inserted by code.
 #: src/features/channel/components/message_search_bar/MessageSearchBar.tsx
@@ -1354,7 +1354,7 @@ msgstr "{count, plural, one {# vaizdo įrašas} few {# vaizdo įrašai} many {# 
 #. Button in the status bar of the quick CSS editor that opens the list of problems.
 #: src/features/theme_settings/components/QuickCssStatusBar.tsx
 msgid "{count, plural, one {# warning} other {# warnings}}"
-msgstr "{count, plural, one {# įspėjimas} other {# įspėjimai}}"
+msgstr "{count, plural, one {# įspėjimas} few {# įspėjimai} many {# įspėjimų} other {# įspėjimų}}"
 
 #. Compact age label shown beside a list row (DM list, invite list). count is a number of days; the "d" is an abbreviation of "days". Keep it as short as possible; it sits in a narrow column.
 #: src/features/ui/utils/ShortRelativeTimeLabels.ts
@@ -1400,74 +1400,74 @@ msgstr "{count, plural, one {+# ženklelis daugiau, rodyti visus} few {+# ženkl
 #. Short muted line under a row of Operator Passes in the Operator Pass settings. {numbers} is the six-digit number of the certificate page of each pass in the row, such as 000123 or 000123, 000124. {count} is how many numbers there are. Use the usual abbreviation for number in your language, as on a certificate.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
 msgid "{count, plural, one {Certificate No. {numbers}} other {Certificate Nos. {numbers}}}"
-msgstr "{count, plural, one {Sertifikato Nr. {numbers}} other {Sertifikatų Nr. {numbers}}}"
+msgstr "{count, plural, one {Sertifikato Nr. {numbers}} few {Sertifikatų Nr. {numbers}} many {Sertifikatų Nr. {numbers}} other {Sertifikatų Nr. {numbers}}}"
 
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreviewFooter.tsx
 msgid "{count, plural, one {Collapse (# line)} other {Collapse (# lines)}}"
-msgstr "{count, plural, one {Sutraukti (# eilutė)} few {Sutraukti (# eilutės)} other {Sutraukti (# eilučių)}}"
+msgstr "{count, plural, one {Sutraukti (# eilutė)} few {Sutraukti (# eilutės)} many {Sutraukti (# eilučių)} other {Sutraukti (# eilučių)}}"
 
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreviewFooter.tsx
 msgid "{count, plural, one {Collapse (# row)} other {Collapse (# rows)}}"
-msgstr "{count, plural, one {Sutraukti (# eilutė)} few {Sutraukti (# eilutės)} other {Sutraukti (# eilučių)}}"
+msgstr "{count, plural, one {Sutraukti (# eilutė)} few {Sutraukti (# eilutės)} many {Sutraukti (# eilučių)} other {Sutraukti (# eilučių)}}"
 
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreviewFooter.tsx
 msgid "{count, plural, one {Expand (# line)} other {Expand (# lines)}}"
-msgstr "{count, plural, one {Išskleisti (# eilutė)} few {Išskleisti (# eilutės)} other {Išskleisti (# eilučių)}}"
+msgstr "{count, plural, one {Išskleisti (# eilutė)} few {Išskleisti (# eilutės)} many {Išskleisti (# eilučių)} other {Išskleisti (# eilučių)}}"
 
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreviewFooter.tsx
 msgid "{count, plural, one {Expand (# row)} other {Expand (# rows)}}"
-msgstr "{count, plural, one {Išskleisti (# eilutė)} few {Išskleisti (# eilutės)} other {Išskleisti (# eilučių)}}"
+msgstr "{count, plural, one {Išskleisti (# eilutė)} few {Išskleisti (# eilutės)} many {Išskleisti (# eilučių)} other {Išskleisti (# eilučių)}}"
 
 #: src/features/voice/components/VoiceParticipantTile.tsx
 msgid "{count, plural, one {Expand # other device} other {Expand # other devices}}"
-msgstr "{count, plural, one {Išskleisti # kitą įrenginį} few {Išskleisti # kitus įrenginius} other {Išskleisti # kitų įrenginių}}"
+msgstr "{count, plural, one {Išskleisti # kitą įrenginį} few {Išskleisti # kitus įrenginius} many {Išskleisti # kitų įrenginių} other {Išskleisti # kitų įrenginių}}"
 
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelInfoHeader.tsx
 msgid "{count, plural, one {Group DM · # member} other {Group DM · # members}}"
-msgstr "{count, plural, one {Grupės DM · # narys} few {Grupės DM · # nariai} other {Grupės DM · # narių}}"
+msgstr "{count, plural, one {Grupės DM · # narys} few {Grupės DM · # nariai} many {Grupės DM · # narių} other {Grupės DM · # narių}}"
 
 #: src/features/app/components/layout/GroupedVoiceParticipant.tsx
 msgid "{count, plural, one {Hide # device} other {Hide # devices}}"
-msgstr "{count, plural, one {Slėpti # įrenginį} few {Slėpti # įrenginius} other {Slėpti # įrenginių}}"
+msgstr "{count, plural, one {Slėpti # įrenginį} few {Slėpti # įrenginius} many {Slėpti # įrenginių} other {Slėpti # įrenginių}}"
 
 #: src/features/voice/components/compact_voice_call_view/useConnectionLabel.ts
 msgid "{count, plural, one {In call} other {# in call}}"
-msgstr "{count, plural, one {Skambutyje: #} few {Skambutyje: #} other {Skambutyje: #}}"
+msgstr "{count, plural, one {Skambutyje: #} few {Skambutyje: #} many {Skambutyje: #} other {Skambutyje: #}}"
 
 #: src/features/channel/components/channel_header_components/CallButtons.tsx
 msgid "{count, plural, one {Join video call (# participant)} other {Join video call (# participants)}}"
-msgstr "{count, plural, one {Prisijungti prie vaizdo skambučio (# dalyvis)} few {Prisijungti prie vaizdo skambučio (# dalyviai)} other {Prisijungti prie vaizdo skambučio (# dalyvių)}}"
+msgstr "{count, plural, one {Prisijungti prie vaizdo skambučio (# dalyvis)} few {Prisijungti prie vaizdo skambučio (# dalyviai)} many {Prisijungti prie vaizdo skambučio (# dalyvių)} other {Prisijungti prie vaizdo skambučio (# dalyvių)}}"
 
 #: src/features/voice/components/VoiceParticipantTile.tsx
 msgid "{count, plural, one {Keep watching # stream and add this one} other {Keep watching # streams and add this one}}"
-msgstr "{count, plural, one {Toliau žiūrėti # srautą ir pridėti šį} few {Toliau žiūrėti # srautus ir pridėti šį} other {Toliau žiūrėti # srautų ir pridėti šį}}"
+msgstr "{count, plural, one {Toliau žiūrėti # srautą ir pridėti šį} few {Toliau žiūrėti # srautus ir pridėti šį} many {Toliau žiūrėti # srautų ir pridėti šį} other {Toliau žiūrėti # srautų ir pridėti šį}}"
 
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx
 msgid "{count, plural, one {Revoke # app} other {Revoke # apps}}"
-msgstr "{count, plural, one {Atšaukti # programą} few {Atšaukti # programas} other {Atšaukti # programų}}"
+msgstr "{count, plural, one {Atšaukti # programą} few {Atšaukti # programas} many {Atšaukti # programų} other {Atšaukti # programų}}"
 
 #: src/features/app/components/layout/GroupedVoiceParticipant.tsx
 msgid "{count, plural, one {Show # device} other {Show # devices}}"
-msgstr "{count, plural, one {Rodyti # įrenginį} few {Rodyti # įrenginius} other {Rodyti # įrenginių}}"
+msgstr "{count, plural, one {Rodyti # įrenginį} few {Rodyti # įrenginius} many {Rodyti # įrenginių} other {Rodyti # įrenginių}}"
 
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx
 msgid "{count, plural, one {Sign out # device} other {Sign out # devices}}"
-msgstr "{count, plural, one {Atsijungti nuo # įrenginio} other {Atsijungti nuo # įrenginių}}"
+msgstr "{count, plural, one {Atsijungti nuo # įrenginio} few {Atsijungti nuo # įrenginių} many {Atsijungti nuo # įrenginių} other {Atsijungti nuo # įrenginių}}"
 
 #. Activity log detail under a created or deleted invite link. It records the use limit the invite was made with, not how many times it was used. {count} is an ICU plural with the most times the invite could be used before it stopped working.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts
 msgid "{count, plural, one {The invite was limited to # use} other {The invite was limited to # uses}}"
-msgstr "{count, plural, one {Kvietimas buvo apribotas iki # panaudojimo} few {Kvietimas buvo apribotas iki # panaudojimų} other {Kvietimas buvo apribotas iki # panaudojimų}}"
+msgstr "{count, plural, one {Kvietimas buvo apribotas iki # panaudojimo} few {Kvietimas buvo apribotas iki # panaudojimų} many {Kvietimas buvo apribotas iki # panaudojimų} other {Kvietimas buvo apribotas iki # panaudojimų}}"
 
 #. Activity log detail under a deleted invite link. {count} is an ICU plural with how many times the invite had been used before it was deleted.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts
 msgid "{count, plural, one {The invite was used # time} other {The invite was used # times}}"
-msgstr "{count, plural, one {Kvietimas buvo panaudotas # kartą} few {Kvietimas buvo panaudotas # kartus} other {Kvietimas buvo panaudotas # kartų}}"
+msgstr "{count, plural, one {Kvietimas buvo panaudotas # kartą} few {Kvietimas buvo panaudotas # kartus} many {Kvietimas buvo panaudotas # kartų} other {Kvietimas buvo panaudotas # kartų}}"
 
 #. Body text of the emoji upload progress modal. {count} is the number of emojis being uploaded.
 #: src/features/emoji/components/modals/EmojiUploadModal.tsx
 msgid "{count, plural, one {Uploading # emoji. This may take a little while.} other {Uploading # emojis. This may take a little while.}}"
-msgstr "{count, plural, one {Įkeliamas # jaustukas. Tai gali šiek tiek užtrukti.} few {Įkeliami # jaustukai. Tai gali šiek tiek užtrukti.} other {Įkeliama # jaustukų. Tai gali šiek tiek užtrukti.}}"
+msgstr "{count, plural, one {Įkeliamas # jaustukas. Tai gali šiek tiek užtrukti.} few {Įkeliami # jaustukai. Tai gali šiek tiek užtrukti.} many {Įkeliama # jaustukų. Tai gali šiek tiek užtrukti.} other {Įkeliama # jaustukų. Tai gali šiek tiek užtrukti.}}"
 
 #: src/features/messaging/components/alerts/TooManyAttachmentsModal.tsx
 msgid "{count, plural, one {You can only upload # file at a time. Try again with fewer files.} other {You can only upload # files at a time. Try again with fewer files.}}"
@@ -1476,23 +1476,23 @@ msgstr "{count, plural, one {Vienu metu galite įkelti tik # failą. Bandykite d
 #. Nagbar body shown when the user has unread gift inventory items. {count} is the unread gift count.
 #: src/features/app/components/layout/app_layout/nagbars/GiftInventoryNagbar.tsx
 msgid "{count, plural, one {You have a new gift code waiting in your gift inventory.} other {You have # new gift codes waiting in your gift inventory.}}"
-msgstr "{count, plural, one {Jūsų dovanų inventoriuje laukia # naujas dovanos kodas.} few {Jūsų dovanų inventoriuje laukia # nauji dovanų kodai.} other {Jūsų dovanų inventoriuje laukia # naujų dovanų kodų.}}"
+msgstr "{count, plural, one {Jūsų dovanų inventoriuje laukia # naujas dovanos kodas.} few {Jūsų dovanų inventoriuje laukia # nauji dovanų kodai.} many {Jūsų dovanų inventoriuje laukia # naujų dovanų kodų.} other {Jūsų dovanų inventoriuje laukia # naujų dovanų kodų.}}"
 
 #: src/features/voice/components/alerts/VoiceConnectionConfirmModal.tsx
 msgid "{count, plural, one {You're already connected to this voice channel from # other device. What would you like to do?} other {You're already connected to this voice channel from # other devices. What would you like to do?}}"
-msgstr "{count, plural, one {Jau esate prisijungę prie šio balso kanalo iš # kito įrenginio. Ką norėtumėte daryti?} other {Jau esate prisijungę prie šio balso kanalo iš # kitų įrenginių. Ką norėtumėte daryti?}}"
+msgstr "{count, plural, one {Jau esate prisijungę prie šio balso kanalo iš # kito įrenginio. Ką norėtumėte daryti?} few {Jau esate prisijungę prie šio balso kanalo iš # kitų įrenginių. Ką norėtumėte daryti?} many {Jau esate prisijungę prie šio balso kanalo iš # kitų įrenginių. Ką norėtumėte daryti?} other {Jau esate prisijungę prie šio balso kanalo iš # kitų įrenginių. Ką norėtumėte daryti?}}"
 
 #: src/features/voice/components/alerts/VoiceConnectionConfirmModal.tsx
 msgid "{count, plural, one {You're already using the one allowed connection for this voice channel. Switch to this device or cancel.} other {You're already using all # allowed connections for this voice channel. Switch to this device or cancel.}}"
-msgstr "{count, plural, one {Jau naudojate # leidžiamą prisijungimą prie šio balso kanalo. Perjunkite į šį įrenginį arba atšaukite.} few {Jau naudojate visus # leidžiamus prisijungimus prie šio balso kanalo. Perjunkite į šį įrenginį arba atšaukite.} other {Jau naudojate visus # leidžiamų prisijungimų prie šio balso kanalo. Perjunkite į šį įrenginį arba atšaukite.}}"
+msgstr "{count, plural, one {Jau naudojate # leidžiamą prisijungimą prie šio balso kanalo. Perjunkite į šį įrenginį arba atšaukite.} few {Jau naudojate visus # leidžiamus prisijungimus prie šio balso kanalo. Perjunkite į šį įrenginį arba atšaukite.} many {Jau naudojate visus # leidžiamų prisijungimų prie šio balso kanalo. Perjunkite į šį įrenginį arba atšaukite.} other {Jau naudojate visus # leidžiamų prisijungimų prie šio balso kanalo. Perjunkite į šį įrenginį arba atšaukite.}}"
 
 #: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx
 msgid "{count, plural, one {You're at the cap of # saved media item. Remove one to add another.} other {You're at the cap of # saved media items. Remove one to add another.}}"
-msgstr "{count, plural, one {Pasiekėte # išsaugoto medijos elemento ribą. Pašalinkite vieną, kad pridėtumėte kitą.} few {Pasiekėte # išsaugotų medijos elementų ribą. Pašalinkite vieną, kad pridėtumėte kitą.} other {Pasiekėte # išsaugotų medijos elementų ribą. Pašalinkite vieną, kad pridėtumėte kitą.}}"
+msgstr "{count, plural, one {Pasiekėte # išsaugoto medijos elemento ribą. Pašalinkite vieną, kad pridėtumėte kitą.} few {Pasiekėte # išsaugotų medijos elementų ribą. Pašalinkite vieną, kad pridėtumėte kitą.} many {Pasiekėte # išsaugotų medijos elementų ribą. Pašalinkite vieną, kad pridėtumėte kitą.} other {Pasiekėte # išsaugotų medijos elementų ribą. Pašalinkite vieną, kad pridėtumėte kitą.}}"
 
 #: src/features/guild/components/alerts/MaxGuildsModal.tsx
 msgid "{count, plural, one {You're in # community, the most you can join. Leave a community before joining another one.} other {You're in # communities, the most you can join. Leave a community before joining another one.}}"
-msgstr "{count, plural, one {Pasiekėte maksimalų bendruomenių, prie kurių galite prisijungti, skaičių (# bendruomenė). Palikite bendruomenę prieš prisijungdami prie kitos.} few {Pasiekėte maksimalų bendruomenių, prie kurių galite prisijungti, skaičių (# bendruomenės). Palikite bendruomenę prieš prisijungdami prie kitos.} other {Pasiekėte maksimalų bendruomenių, prie kurių galite prisijungti, skaičių (# bendruomenių). Palikite bendruomenę prieš prisijungdami prie kitos.}}"
+msgstr "{count, plural, one {Pasiekėte maksimalų bendruomenių, prie kurių galite prisijungti, skaičių (# bendruomenė). Palikite bendruomenę prieš prisijungdami prie kitos.} few {Pasiekėte maksimalų bendruomenių, prie kurių galite prisijungti, skaičių (# bendruomenės). Palikite bendruomenę prieš prisijungdami prie kitos.} many {Pasiekėte maksimalų bendruomenių, prie kurių galite prisijungti, skaičių (# bendruomenių). Palikite bendruomenę prieš prisijungdami prie kitos.} other {Pasiekėte maksimalų bendruomenių, prie kurių galite prisijungti, skaičių (# bendruomenių). Palikite bendruomenę prieš prisijungdami prie kitos.}}"
 
 #. Note under the Operator Pass total when buying more than one pass. {count} is the number of passes, 2 or more, and {price} the price of one pass with currency, including tax. The passes are paid once and never renew.
 #: src/features/premium/components/operator_pass/checkout/OperatorPassPriceBlock.tsx
@@ -1507,12 +1507,12 @@ msgstr "{dayLabel} {timeString}"
 #. Generic duration label for a whole number of days.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "{days, plural, one {# day} other {# days}}"
-msgstr "{days, plural, one {# diena} few {# dienos} other {# dienų}}"
+msgstr "{days, plural, one {# diena} few {# dienos} many {# dienų} other {# dienų}}"
 
 #. Text under a generated invite link. {days} is how long the link stays valid, in whole days.
 #: src/features/invite/components/modals/InviteModal.tsx
 msgid "{days, plural, one {Your invite link expires in # day.} other {Your invite link expires in # days.}}"
-msgstr "{days, plural, one {Jūsų kvietimo nuoroda baigs galioti po # dienos.} few {Jūsų kvietimo nuoroda baigs galioti po # dienų.} other {Jūsų kvietimo nuoroda baigs galioti po # dienų.}}"
+msgstr "{days, plural, one {Jūsų kvietimo nuoroda baigs galioti po # dienos.} few {Jūsų kvietimo nuoroda baigs galioti po # dienų.} many {Jūsų kvietimo nuoroda baigs galioti po # dienų.} other {Jūsų kvietimo nuoroda baigs galioti po # dienų.}}"
 
 #. Audio device label for a default route with the concrete microphone or speaker endpoint in parentheses. defaultDeviceLabel is already localized, for example "Windows Default".
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
@@ -1562,22 +1562,22 @@ msgstr "{duration} anksčiau nei pas jus"
 #. Gift duration label. PREMIUM_PRODUCT_NAME is the paid plan name.
 #: src/features/gift/utils/GiftUtils.ts
 msgid "{durationQuantity, plural, one {# day} other {# days}} of {premiumProductName}"
-msgstr "{durationQuantity, plural, one {# diena} few {# dienos} other {# dienų}} {premiumProductName} prenumeratos"
+msgstr "{durationQuantity, plural, one {# diena} few {# dienos} many {# dienų} other {# dienų}} {premiumProductName} prenumeratos"
 
 #. Gift duration label. PREMIUM_PRODUCT_NAME is the paid plan name.
 #: src/features/gift/utils/GiftUtils.ts
 msgid "{durationQuantity, plural, one {# month} other {# months}} of {premiumProductName}"
-msgstr "{durationQuantity, plural, one {# mėnuo} few {# mėnesiai} other {# mėnesių}} {premiumProductName} prenumeratos"
+msgstr "{durationQuantity, plural, one {# mėnuo} few {# mėnesiai} many {# mėnesių} other {# mėnesių}} {premiumProductName} prenumeratos"
 
 #. Gift duration label. PREMIUM_PRODUCT_NAME is the paid plan name.
 #: src/features/gift/utils/GiftUtils.ts
 msgid "{durationQuantity, plural, one {# week} other {# weeks}} of {premiumProductName}"
-msgstr "{durationQuantity, plural, one {# savaitė} few {# savaitės} other {# savaičių}} {premiumProductName} prenumeratos"
+msgstr "{durationQuantity, plural, one {# savaitė} few {# savaitės} many {# savaičių} other {# savaičių}} {premiumProductName} prenumeratos"
 
 #. Gift duration label. PREMIUM_PRODUCT_NAME is the paid plan name.
 #: src/features/gift/utils/GiftUtils.ts
 msgid "{durationQuantity, plural, one {# year} other {# years}} of {premiumProductName}"
-msgstr "{durationQuantity, plural, one {# metai} few {# metai} other {# metų}} {premiumProductName} prenumeratos"
+msgstr "{durationQuantity, plural, one {# metai} few {# metai} many {# metų} other {# metų}} {premiumProductName} prenumeratos"
 
 #. Accessible label for the avatar status badge; placeholder is the localized status name.
 #: src/features/app/components/shared/GroupDMAvatar.tsx
@@ -1663,7 +1663,7 @@ msgstr "{formats}. Maksimalus dydis: {maxSize}. Rekomenduojama: {recommendedSize
 
 #: src/features/auth/flow/InviteHeader.tsx
 msgid "{formattedMemberCount} {memberCount, plural, one {member} other {members}}"
-msgstr "{formattedMemberCount} {memberCount, plural, one {narys} few {nariai} other {narių}}"
+msgstr "{formattedMemberCount} {memberCount, plural, one {narys} few {nariai} many {narių} other {narių}}"
 
 #: src/features/auth/flow/InviteHeader.tsx
 msgid "{formattedPresenceCount} online"
@@ -1693,7 +1693,7 @@ msgstr "Bendruomenės {guildName} kanalai"
 
 #: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx
 msgid "{hiddenConnectionCount, plural, one {Expand # other device} other {Expand # other devices}}"
-msgstr "{hiddenConnectionCount, plural, one {Išskleisti # kitą įrenginį} few {Išskleisti # kitus įrenginius} other {Išskleisti # kitų įrenginių}}"
+msgstr "{hiddenConnectionCount, plural, one {Išskleisti # kitą įrenginį} few {Išskleisti # kitus įrenginius} many {Išskleisti # kitų įrenginių} other {Išskleisti # kitų įrenginių}}"
 
 #. Review value for the email service. host is the SMTP server and from is the sender address.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
@@ -1702,14 +1702,14 @@ msgstr "{host}, siuntėjas {from}"
 
 #: src/features/channel/components/guild_members_page/GuildMembersPageFormatting.ts
 msgid "{hours, plural, one {# hour ago} other {# hours ago}}"
-msgstr "prieš {hours, plural, one {# valandą} few {# valandas} other {# valandų}}"
+msgstr "prieš {hours, plural, one {# valandą} few {# valandas} many {# valandų} other {# valandų}}"
 
 #. Duration phrase in the profile timezone section. hours is a positive integer.
 #. Generic duration label for a whole number of hours.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 #: src/features/user/components/popouts/UserProfileShared.tsx
 msgid "{hours, plural, one {# hour} other {# hours}}"
-msgstr "{hours, plural, one {# valanda} few {# valandos} other {# valandų}}"
+msgstr "{hours, plural, one {# valanda} few {# valandos} many {# valandų} other {# valandų}}"
 
 #. Duration phrase in the profile timezone section. hours and minutes are positive integers.
 #: src/features/user/components/popouts/UserProfileShared.tsx
@@ -1719,12 +1719,12 @@ msgstr "{hours, plural, one {# valanda} few {# valandos} many {# valandos} other
 #. Generic duration label for an interval that includes hours and remaining minutes.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "{hours, plural, one {# hour} other {# hours}} and {minutes, plural, one {# minute} other {# minutes}}"
-msgstr "{hours, plural, one {# valanda} few {# valandos} other {# valandų}} ir {minutes, plural, one {# minutė} few {# minutės} other {# minučių}}"
+msgstr "{hours, plural, one {# valanda} few {# valandos} many {# valandų} other {# valandų}} ir {minutes, plural, one {# minutė} few {# minutės} many {# minučių} other {# minučių}}"
 
 #. Text under a generated invite link. {hours} is how long the link stays valid, in whole hours.
 #: src/features/invite/components/modals/InviteModal.tsx
 msgid "{hours, plural, one {Your invite link expires in # hour.} other {Your invite link expires in # hours.}}"
-msgstr "{hours, plural, one {Jūsų kvietimo nuoroda baigs galioti po # valandos.} few {Jūsų kvietimo nuoroda baigs galioti po # valandų.} other {Jūsų kvietimo nuoroda baigs galioti po # valandų.}}"
+msgstr "{hours, plural, one {Jūsų kvietimo nuoroda baigs galioti po # valandos.} few {Jūsų kvietimo nuoroda baigs galioti po # valandų.} many {Jūsų kvietimo nuoroda baigs galioti po # valandų.} other {Jūsų kvietimo nuoroda baigs galioti po # valandų.}}"
 
 #. Attachment summary in the forward modal message preview when the message has both images and videos. imageCount and videoCount are the number of each.
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx
@@ -1808,21 +1808,21 @@ msgstr "{length, plural, one {# žiūrovas} few {# žiūrovai} many {# žiūrovo
 #. Tooltip of the line and column button in the status bar of the quick CSS editor.
 #: src/features/theme_settings/components/QuickCssStatusBar.tsx
 msgid "{lines, plural, one {# line} other {# lines}} and {characters, plural, one {# character} other {# characters}}"
-msgstr "{lines, plural, one {# eilutė} other {# eilutės}} ir {characters, plural, one {# simbolis} other {# simboliai}}"
+msgstr "{lines, plural, one {# eilutė} few {# eilutės} many {# eilučių} other {# eilučių}} ir {characters, plural, one {# simbolis} few {# simboliai} many {# simbolių} other {# simbolių}}"
 
 #. Shown in the "Quick CSS" section in Settings > Themes. How long the quick CSS of the edited theme is.
 #: src/features/theme_settings/components/QuickCssSection.tsx
 msgid "{lines, plural, one {# line} other {# lines}} of quick CSS."
-msgstr "{lines, plural, one {# eilutė} other {# eilučių}} spartaus CSS."
+msgstr "{lines, plural, one {# eilutė} few {# eilutės} many {# eilučių} other {# eilučių}} spartaus CSS."
 
 #: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx
 msgid "{matchCount, plural, one {# match} other {# matches}}"
-msgstr "{matchCount, plural, one {# atitikmuo} few {# atitikmenys} other {# atitikmenų}}"
+msgstr "{matchCount, plural, one {# atitikmuo} few {# atitikmenys} many {# atitikmenų} other {# atitikmenų}}"
 
 #. Community tooltip stat showing the total member count. memberCount is already localized for display; rawMemberCount controls plural grammar.
 #: src/features/app/components/layout/sidebar_nav/GuildListItemTooltip.tsx
 msgid "{memberCount} {rawMemberCount, plural, one {member} other {members}}"
-msgstr "{memberCount} {rawMemberCount, plural, one {narys} few {nariai} other {narių}}"
+msgstr "{memberCount} {rawMemberCount, plural, one {narys} few {nariai} many {narių} other {narių}}"
 
 #. Accessible label suffix for the mention count on an inbox row for another account.
 #. Generic aria-label for an unread-mentions badge. Preserve {mentionCount}.
@@ -1834,7 +1834,7 @@ msgstr "{mentionCount, plural, one {# paminėjimas} few {# paminėjimai} many {#
 #. Summary in the inbox for the other signed-in accounts. mentionCount is the total number of mentions and accountCount is how many other accounts have mentions.
 #: src/features/messaging/components/popouts/inbox/OtherAccountsInboxSection.tsx
 msgid "{mentionCount, plural, one {# mention} other {# mentions}} on {accountCount, plural, one {# other account} other {# other accounts}}"
-msgstr "{mentionCount, plural, one {# paminėjimas} other {# paminėjimai}} {accountCount, plural, one {vienoje paskyroje} other {# kitose paskyrose}}"
+msgstr "{mentionCount, plural, one {# paminėjimas} few {# paminėjimai} many {# paminėjimų} other {# paminėjimų}} {accountCount, plural, one {# kitoje paskyroje} few {# kitose paskyrose} many {# kitose paskyrose} other {# kitose paskyrose}}"
 
 #. Current value and track label of the space between message groups slider, for example 16px.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx
@@ -1843,7 +1843,7 @@ msgstr "{messageGroupSpacing} px"
 
 #: src/features/channel/components/guild_members_page/GuildMembersPageFormatting.ts
 msgid "{minutes, plural, one {# minute ago} other {# minutes ago}}"
-msgstr "prieš {minutes, plural, one {# minutę} few {# minutes} other {# minučių}}"
+msgstr "prieš {minutes, plural, one {# minutę} few {# minutes} many {# minučių} other {# minučių}}"
 
 #. Generic duration label for a whole number of minutes.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
@@ -1853,7 +1853,7 @@ msgstr "{minutes, plural, one {# minutė} few {# minutės} many {# minutės} oth
 #. Generic duration label for a short interval that includes minutes and remaining seconds.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "{minutes, plural, one {# minute} other {# minutes}} and {seconds, plural, one {# second} other {# seconds}}"
-msgstr "{minutes, plural, one {# minutė} few {# minutės} other {# minučių}} ir {seconds, plural, one {# sekundė} few {# sekundės} other {# sekundžių}}"
+msgstr "{minutes, plural, one {# minutė} few {# minutės} many {# minučių} other {# minučių}} ir {seconds, plural, one {# sekundė} few {# sekundės} many {# sekundžių} other {# sekundžių}}"
 
 #. Alert on the setup token screen after too many wrong setup tokens came from the same network. minutes is how long until they can try again.
 #: src/features/app/components/setup/SetupTokenStep.tsx
@@ -1863,7 +1863,7 @@ msgstr "{minutes, plural, one {Iš jūsų tinklo išbandyta per daug neteisingų
 #. Text under a generated invite link. {minutes} is how long the link stays valid, in whole minutes.
 #: src/features/invite/components/modals/InviteModal.tsx
 msgid "{minutes, plural, one {Your invite link expires in # minute.} other {Your invite link expires in # minutes.}}"
-msgstr "{minutes, plural, one {Jūsų kvietimo nuoroda baigs galioti po # minutės.} few {Jūsų kvietimo nuoroda baigs galioti po # minučių.} other {Jūsų kvietimo nuoroda baigs galioti po # minučių.}}"
+msgstr "{minutes, plural, one {Jūsų kvietimo nuoroda baigs galioti po # minutės.} few {Jūsų kvietimo nuoroda baigs galioti po # minučių.} many {Jūsų kvietimo nuoroda baigs galioti po # minučių.} other {Jūsų kvietimo nuoroda baigs galioti po # minučių.}}"
 
 #. Compact monthly price on the Plutonium page hero. Preserve the monthlyPrice placeholder exactly. The price is shown bold and any text around it in a lighter style, so keep the period words outside the placeholder.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
@@ -1873,7 +1873,7 @@ msgstr "{monthlyPrice}/mėn."
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts
 msgid "{months, plural, one {# month} other {# months}}"
-msgstr "{months, plural, one {# mėnuo} few {# mėnesiai} other {# mėnesių}}"
+msgstr "{months, plural, one {# mėnuo} few {# mėnesiai} many {# mėnesių} other {# mėnesių}}"
 
 #. Tray menu account item when the signed-in accounts are on more than one instance. {name} is the account name, {host} is the instance address.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
@@ -2244,7 +2244,7 @@ msgstr "„{providerName}“ atsidaro jūsų naršyklėje. Prisijunkite ten, kad
 #. Reaction tooltip. Preserve {emojiName}, {reactors}; they are inserted by code. {reactorCount} is how many people reacted, for verb agreement. Order the parts so the emoji never reads as the one doing the reacting.
 #: src/features/messaging/utils/ReactionUtils.ts
 msgid "{reactorCount, plural, one {{emojiName} reacted by {reactors}} other {{emojiName} reacted by {reactors}}}"
-msgstr "{reactorCount, plural, one {{reactors} pridėjo reakciją {emojiName}} other {{reactors} pridėjo reakciją {emojiName}}}"
+msgstr "{reactorCount, plural, one {{reactors} pridėjo reakciją {emojiName}} few {{reactors} pridėjo reakciją {emojiName}} many {{reactors} pridėjo reakciją {emojiName}} other {{reactors} pridėjo reakciją {emojiName}}}"
 
 #. Download progress in the desktop update window. {received} and {total} are already formatted numbers of megabytes. Use the local abbreviation for megabytes.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
@@ -2274,7 +2274,7 @@ msgstr "{remaining, plural, one {Liko # simbolis} few {Liko # simboliai} many {L
 
 #: src/features/lexical/composer/nodes/SlashOptionalHintPill.tsx
 msgid "{remaining, plural, one {+# more} other {+# more}}"
-msgstr "{remaining, plural, one {+# daugiau} other {+# daugiau}}"
+msgstr "{remaining, plural, one {+# daugiau} few {+# daugiau} many {+# daugiau} other {+# daugiau}}"
 
 #. Member count on the community card that opens from a published message copy. renderedMemberCount is the formatted count.
 #: src/features/channel/components/CrosspostCommunityCard.tsx
@@ -2338,7 +2338,7 @@ msgstr "{seconds, plural, one {# sekundė} few {# sekundės} many {# sekundės} 
 #. Text under a generated invite link. {seconds} is how long the link stays valid, in whole seconds.
 #: src/features/invite/components/modals/InviteModal.tsx
 msgid "{seconds, plural, one {Your invite link expires in # second.} other {Your invite link expires in # seconds.}}"
-msgstr "{seconds, plural, one {Jūsų kvietimo nuoroda baigs galioti po # sekundės.} few {Jūsų kvietimo nuoroda baigs galioti po # sekundžių.} other {Jūsų kvietimo nuoroda baigs galioti po # sekundžių.}}"
+msgstr "{seconds, plural, one {Jūsų kvietimo nuoroda baigs galioti po # sekundės.} few {Jūsų kvietimo nuoroda baigs galioti po # sekundžių.} many {Jūsų kvietimo nuoroda baigs galioti po # sekundžių.} other {Jūsų kvietimo nuoroda baigs galioti po # sekundžių.}}"
 
 #: src/features/auth/flow/GiftHeader.tsx
 msgid "{sender} sent you a gift"
@@ -2372,7 +2372,7 @@ msgstr "{tenSeconds} sekundžių"
 #. Template preview summary listing how many text channels, forum channels, voice channels, categories, and roles will be imported. Used when the template has at least one forum or media channel.
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 msgid "{textChannelCount, plural, one {# text channel} other {# text channels}}, {forumChannelCount, plural, one {# forum channel} other {# forum channels}}, {voiceChannelCount, plural, one {# voice channel} other {# voice channels}}, {categoryCount, plural, one {# category} other {# categories}}, {roleCount, plural, one {# role} other {# roles}}"
-msgstr "{textChannelCount, plural, one {# teksto kanalas} other {# teksto kanalai}}, {forumChannelCount, plural, one {# forumo kanalas} other {# forumo kanalai}}, {voiceChannelCount, plural, one {# balso kanalas} other {# balso kanalai}}, {categoryCount, plural, one {# kategorija} other {# kategorijos}}, {roleCount, plural, one {# vaidmuo} other {# vaidmenys}}"
+msgstr "{textChannelCount, plural, one {# teksto kanalas} few {# teksto kanalai} many {# teksto kanalų} other {# teksto kanalų}}, {forumChannelCount, plural, one {# forumo kanalas} few {# forumo kanalai} many {# forumo kanalų} other {# forumo kanalų}}, {voiceChannelCount, plural, one {# balso kanalas} few {# balso kanalai} many {# balso kanalų} other {# balso kanalų}}, {categoryCount, plural, one {# kategorija} few {# kategorijos} many {# kategorijų} other {# kategorijų}}, {roleCount, plural, one {# vaidmuo} few {# vaidmenys} many {# vaidmenų} other {# vaidmenų}}"
 
 #. Template preview summary listing how many text channels, voice channels, categories, and roles will be imported.
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
@@ -4647,7 +4647,7 @@ msgstr "Leidžiami nukreipimai"
 #. Activity log detail row under a created voice channel that allows a non-default number of simultaneous connections, such as several devices, from each member. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {count} is an ICU plural with the number of connections allowed per member.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts
 msgid "Allowed up to {count, plural, one {# connection} other {# connections}} per member"
-msgstr "Leidžiama iki {count, plural, one {# ryšio} few {# ryšių} other {# ryšių}} vienam nariui"
+msgstr "Leidžiama iki {count, plural, one {# ryšio} few {# ryšių} many {# ryšių} other {# ryšių}} vienam nariui"
 
 #. Description under the mature content switch in the edit group settings. Only the group owner sees it.
 #: src/features/channel/components/modals/GroupMatureContentSwitch.tsx
@@ -5663,7 +5663,7 @@ msgstr "Garsas ir vaizdas"
 #. Description under the P2P calls only switch in voice channel settings. maxParticipants is the participant cap, a number from 2 to 4.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Audio and video go directly between participants, up to {maxParticipants, plural, one {# person} other {# people}}. Everyone agrees before joining and can see each other's IP address."
-msgstr "Garso ir vaizdo įrašai siunčiami tiesiogiai tarp dalyvių, iki {maxParticipants, plural, one {# asmuo} other {# žmonės}}. Visi sutinka prieš prisijungdami ir gali matyti vieni kitų IP adresus."
+msgstr "Garso ir vaizdo įrašai siunčiami tiesiogiai tarp dalyvių, iki {maxParticipants, plural, one {# asmuo} few {# žmonės} many {# žmonių} other {# žmonių}}. Visi sutinka prieš prisijungdami ir gali matyti vieni kitų IP adresus."
 
 #. Lead sentence of the P2P call dialog explaining peer-to-peer mode.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
@@ -13275,7 +13275,7 @@ msgstr "Pristatykite mano sertifikatą dabar. Perku įmonei su mano įvestu CNPJ
 #. Required checkbox in the Operator Pass checkout dialog when buying one pass from Brazil or in Brazilian reais. The buyer asks for the certificate PDF to be delivered right after payment. A buyer who has a billing address in Brazil or pays in reais (the Brazilian currency) keeps the right to withdraw for {days} days after delivery. A buyer who enters the CNPJ of a company sees a different text, so this one never needs a business exception. The billing address is not where the buyer happens to be. Nothing in this text takes the right away from anyone, so never add a sentence about losing it. Consumer law text, translate faithfully and keep every condition. Withdraw means the consumer right of withdrawal (pt-BR: desistir), never taking money out.
 #: src/features/premium/components/operator_pass/checkout/CheckoutAgreeStage.tsx
 msgid "Deliver my certificate now. If I have a billing address in Brazil or pay in reais, I can still withdraw within {days, plural, one {# day} other {# days}} of delivery and get a full refund."
-msgstr "Pristatykite mano sertifikatą dabar. Jei mano atsiskaitymo adresas yra Brazilijoje arba moku Brazilijos realais, vis tiek galiu atsisakyti sutarties per {days, plural, one {# dieną} few {# dienas} other {# dienų}} nuo pristatymo ir atgauti visą sumą."
+msgstr "Pristatykite mano sertifikatą dabar. Jei mano atsiskaitymo adresas yra Brazilijoje arba moku Brazilijos realais, vis tiek galiu atsisakyti sutarties per {days, plural, one {# dieną} few {# dienas} many {# dienų} other {# dienų}} nuo pristatymo ir atgauti visą sumą."
 
 #. Required checkbox in the Operator Pass checkout dialog when buying more than one pass. The buyer asks for the certificate PDF pages to be delivered right after payment, before the statutory withdrawal period ends, and confirms that the right of withdrawal is lost on delivery. Consumer law text, translate faithfully and keep every condition. Withdraw means the consumer right of withdrawal, never taking money out.
 #: src/features/premium/components/operator_pass/checkout/CheckoutAgreeStage.tsx
@@ -13290,7 +13290,7 @@ msgstr "Pristatykite mano sertifikatus dabar. Perku įmonei su mano įvestu CNPJ
 #. Required checkbox in the Operator Pass checkout dialog when buying more than one pass from Brazil or in Brazilian reais. The buyer asks for the certificate PDF pages to be delivered right after payment. A buyer who has a billing address in Brazil or pays in reais (the Brazilian currency) keeps the right to withdraw from each pass for {days} days after delivery. A buyer who enters the CNPJ of a company sees a different text, so this one never needs a business exception. The billing address is not where the buyer happens to be. Nothing in this text takes the right away from anyone, so never add a sentence about losing it. Consumer law text, translate faithfully and keep every condition. Withdraw means the consumer right of withdrawal (pt-BR: desistir), never taking money out.
 #: src/features/premium/components/operator_pass/checkout/CheckoutAgreeStage.tsx
 msgid "Deliver my certificates now. If I have a billing address in Brazil or pay in reais, I can still withdraw from each pass within {days, plural, one {# day} other {# days}} of delivery and get a full refund."
-msgstr "Pristatykite mano sertifikatus dabar. Jei mano atsiskaitymo adresas yra Brazilijoje arba moku Brazilijos realais, vis tiek galiu atsisakyti kiekvieno leidimo per {days, plural, one {# dieną} few {# dienas} other {# dienų}} nuo pristatymo ir atgauti visą sumą."
+msgstr "Pristatykite mano sertifikatus dabar. Jei mano atsiskaitymo adresas yra Brazilijoje arba moku Brazilijos realais, vis tiek galiu atsisakyti kiekvieno leidimo per {days, plural, one {# dieną} few {# dienas} many {# dienų} other {# dienų}} nuo pristatymo ir atgauti visą sumą."
 
 #. Group heading for followed announcement channels that post into one channel. targetChannelName is that channel, without the leading #.
 #: src/features/guild/components/modals/guild_tabs/GuildWebhooksTab.tsx
@@ -17197,7 +17197,7 @@ msgstr "Fluxer nustojo tikrinti, ar naršyklė patvirtino šį prisijungimą. Ji
 #. Shown in the modal that applies a shared theme when the theme points at files the app will not load.
 #: src/features/theme/components/modals/ThemeAcceptModal.tsx
 msgid "Fluxer won't load {count, plural, one {# file} other {# files}} that this theme links to on other sites."
-msgstr "Fluxer neįkels {count, plural, one {# failo} few {# failų} other {# failų}} iš kitų svetainių, į kurias nukreipia ši tema."
+msgstr "Fluxer neįkels {count, plural, one {# failo} few {# failų} many {# failų} other {# failų}} iš kitų svetainių, į kurias nukreipia ši tema."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts
@@ -19518,12 +19518,12 @@ msgstr "Jei pamiršite slaptažodį, šis rinkinys yra vienintelis būdas grįž
 #. Line in the Operator Pass checkout dialog right above the button that opens the payment page, shown to buyers who appear to be in Brazil or who pay in Brazilian reais when buying more than one pass. A buyer who has a billing address in Brazil or pays in reais (the Brazilian currency) keeps the right to withdraw from each pass for {days} days after delivery. A buyer who enters the CNPJ of a company sees a different text, so this one never needs a business exception. The billing address is not where the buyer happens to be. Nothing in this text takes the right away from anyone, so never add a sentence about losing it. Consumer law text, translate faithfully and keep every condition. Withdraw means the consumer right of withdrawal (pt-BR: desistir), never taking money out.
 #: src/features/premium/components/operator_pass/checkout/CheckoutAgreeStage.tsx
 msgid "If you have a billing address in Brazil or pay in reais, you can withdraw from each pass within {days, plural, one {# day} other {# days}} of delivery and get a full refund."
-msgstr "Jei jūsų atsiskaitymo adresas yra Brazilijoje arba mokate Brazilijos realais, galite atsisakyti kiekvieno leidimo per {days, plural, one {# dieną} few {# dienas} other {# dienų}} nuo pristatymo ir atgauti visą sumą."
+msgstr "Jei jūsų atsiskaitymo adresas yra Brazilijoje arba mokate Brazilijos realais, galite atsisakyti kiekvieno leidimo per {days, plural, one {# dieną} few {# dienas} many {# dienų} other {# dienų}} nuo pristatymo ir atgauti visą sumą."
 
 #. Line in the Operator Pass checkout dialog right above the button that opens the payment page, shown to buyers who appear to be in Brazil or who pay in Brazilian reais. A buyer who has a billing address in Brazil or pays in reais (the Brazilian currency) keeps the right to withdraw for {days} days after delivery. A buyer who enters the CNPJ of a company sees a different text, so this one never needs a business exception. The billing address is not where the buyer happens to be. Nothing in this text takes the right away from anyone, so never add a sentence about losing it. Consumer law text, translate faithfully and keep every condition. Withdraw means the consumer right of withdrawal (pt-BR: desistir), never taking money out.
 #: src/features/premium/components/operator_pass/checkout/CheckoutAgreeStage.tsx
 msgid "If you have a billing address in Brazil or pay in reais, you can withdraw within {days, plural, one {# day} other {# days}} of delivery and get a full refund."
-msgstr "Jei jūsų atsiskaitymo adresas yra Brazilijoje arba mokate Brazilijos realais, galite atsisakyti sutarties per {days, plural, one {# dieną} few {# dienas} other {# dienų}} nuo pristatymo ir atgauti visą sumą."
+msgstr "Jei jūsų atsiskaitymo adresas yra Brazilijoje arba mokate Brazilijos realais, galite atsisakyti sutarties per {days, plural, one {# dieną} few {# dienas} many {# dienų} other {# dienų}} nuo pristatymo ir atgauti visą sumą."
 
 #. Help on the setup token screen, followed by a terminal command. rexctl is a name that must not be translated.
 #: src/features/app/components/setup/SetupTokenStep.tsx
@@ -19777,12 +19777,12 @@ msgstr "Importuokite .css failą, kad pradėtumėte, arba rašykite savo CSS gre
 #. Completion text in the favorite GIF import modal. importedCount is the number added; skippedCount is the number skipped.
 #: src/features/channel/components/pickers/gif/ImportFavoriteGifsModal.tsx
 msgid "Import complete. Added {importedCount, plural, one {# GIF} other {# GIFs}}, skipped {skippedCount, number} (duplicates or over the limit)."
-msgstr "Importavimas baigtas. Pridėta {importedCount, plural, one {# GIF} other {# GIF}}, praleista {skippedCount, number} (pasikartojantys arba pasiektas limitas)."
+msgstr "Importavimas baigtas. Pridėta {importedCount, plural, one {# GIF} few {# GIF} many {# GIF} other {# GIF}}, praleista {skippedCount, number} (pasikartojantys arba pasiektas limitas)."
 
 #. Completion text in the favorite GIF import modal. importedCount is the number added.
 #: src/features/channel/components/pickers/gif/ImportFavoriteGifsModal.tsx
 msgid "Import complete. Added {importedCount, plural, one {# GIF} other {# GIFs}}."
-msgstr "Importavimas baigtas. Pridėta {importedCount, plural, one {# GIF} other {# GIF}}."
+msgstr "Importavimas baigtas. Pridėta {importedCount, plural, one {# GIF} few {# GIF} many {# GIF} other {# GIF}}."
 
 #. Title of the native file picker that imports CSS theme files on the desktop app. Imported files stay linked and update live when saved.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
@@ -19853,12 +19853,12 @@ msgstr "Svarbi informacija"
 #. Toast after importing one or more CSS files into the theme library.
 #: src/features/theme_settings/components/YourThemesSection.tsx
 msgid "Imported {length, plural, one {# theme file} other {# theme files}}."
-msgstr "{length, plural, one {Importuotas # temos failas} few {Importuoti # temos failai} other {Importuota # temos failų}}."
+msgstr "{length, plural, one {Importuotas # temos failas} few {Importuoti # temos failai} many {Importuota # temos failų} other {Importuota # temos failų}}."
 
 #. Toast after importing a theme library file.
 #: src/features/theme_settings/components/ShareAndBackUpSection.tsx
 msgid "Imported {themes, plural, one {# theme} other {# themes}} and {assets, plural, one {# asset} other {# assets}}."
-msgstr "Importuota {themes, plural, one {# tema} few {# temos} other {# temų}} ir {assets, plural, one {# elementas} few {# elementai} other {# elementų}}."
+msgstr "Importuota {themes, plural, one {# tema} few {# temos} many {# temų} other {# temų}} ir {assets, plural, one {# elementas} few {# elementai} many {# elementų} other {# elementų}}."
 
 #. Progress text in the favorite GIF import modal. processedCount is completed URLs, totalCount is queued URLs, importedCount is successfully added GIFs.
 #: src/features/channel/components/pickers/gif/ImportFavoriteGifsModal.tsx
@@ -20052,7 +20052,7 @@ msgstr "Neteisingas slaptažodis."
 #. Error text in the security key PIN modal shown after a wrong PIN, with the remaining attempt count. Keep the tone plain and specific.
 #: src/features/auth/components/modals/PasskeyPinModal.tsx
 msgid "Incorrect PIN. {retriesRemaining, plural, one {# attempt} other {# attempts}} left before the security key locks."
-msgstr "Neteisingas PIN kodas. Liko {retriesRemaining, plural, one {# bandymas} few {# bandymai} other {# bandymų}}, po to saugos raktas bus užrakintas."
+msgstr "Neteisingas PIN kodas. Liko {retriesRemaining, plural, one {# bandymas} few {# bandymai} many {# bandymų} other {# bandymų}}, po to saugos raktas bus užrakintas."
 
 #. Error text in the security key PIN modal shown after a wrong PIN. Keep the tone plain and specific.
 #: src/features/auth/components/modals/PasskeyPinModal.tsx
@@ -21653,7 +21653,7 @@ msgstr "Paminėti šį vaidmenį leista tik nariams, turintiems leidimą paminė
 #. Activity log detail row under a created or updated voice channel that now has a maximum number of people who can join it at once. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {count} is an ICU plural with that maximum.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts
 msgid "Limited the channel to {count, plural, one {# user} other {# users}}"
-msgstr "Kanalas apribotas iki {count, plural, one {# naudotojo} few {# naudotojų} other {# naudotojų}}"
+msgstr "Kanalas apribotas iki {count, plural, one {# naudotojo} few {# naudotojų} many {# naudotojų} other {# naudotojų}}"
 
 #. Button in the status bar of the quick CSS editor. Selecting it moves to another line.
 #: src/features/theme_settings/components/QuickCssStatusBar.tsx
@@ -21787,7 +21787,7 @@ msgstr "Susietas"
 #. Toast after importing CSS files or a folder on the desktop app. The themes stay linked to the files on disk and update when the file is saved.
 #: src/features/theme_settings/components/YourThemesSection.tsx
 msgid "Linked {length, plural, one {# theme file} other {# theme files}}. Changes you save to them apply right away."
-msgstr "Susieti {length, plural, one {# temos failas} other {# temos failai}}. Jums juos pakeitus, pakeitimai bus pritaikyti iš karto."
+msgstr "Susieti {length, plural, one {# temos failas} few {# temos failai} many {# temos failų} other {# temos failų}}. Jums juos pakeitus, pakeitimai bus pritaikyti iš karto."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts
@@ -25337,8 +25337,9 @@ msgstr "Niekas negali atidaryti asmeninių užrašų ar juose rašyti."
 
 #. Description of the invite-only registration mode in the setup wizard.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
+#, fuzzy
 msgid "Nobody can sign up on their own. You make invite links in the admin panel and send them to people."
-msgstr ""
+msgstr "Niekas negali užsiregistruoti pats. Administratoriaus skydelyje kuriate registracijos nuorodas ir siunčiate jas žmonėms."
 
 #. Empty-state text in the channel and chat message reactions sheet.
 #: src/features/channel/components/MessageReactionsSheet.tsx
@@ -25959,7 +25960,7 @@ msgstr "Prisijungimo būsena"
 #. Summary row value on the confirm step when the community filter is in include-only mode.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx
 msgid "Only {count, plural, one {# community} other {# communities}}"
-msgstr "Tik {count, plural, one {# bendruomenė} few {# bendruomenės} other {# bendruomenių}}"
+msgstr "Tik {count, plural, one {# bendruomenė} few {# bendruomenės} many {# bendruomenių} other {# bendruomenių}}"
 
 #. Thread notification option that notifies only for mentions.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
@@ -29651,8 +29652,9 @@ msgid "Registration is currently closed."
 msgstr "Registracija šiuo metu yra uždaryta."
 
 #: src/features/auth/flow/AuthRegisterFormCore.tsx
+#, fuzzy
 msgid "Registration is currently closed. Use an invite link from an admin to create an account."
-msgstr ""
+msgstr "Registracija šiuo metu uždaryta. Norėdami sukurti paskyrą, naudokite administratoriaus suteiktą registracijos nuorodą."
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Regular button"
@@ -33787,7 +33789,7 @@ msgstr "Rodyti pokalbį"
 #. Tooltip and aria label on the compact call-view chat pill button when chat is hidden and has unread messages. {count} is the unread message count.
 #: src/features/voice/components/compact_voice_call_view/CompactCallHeightToggleButton.tsx
 msgid "Show chat with {count, plural, one {# unread message} other {# unread messages}}"
-msgstr "Rodyti pokalbį (yra {count, plural, one {# neperskaityta žinutė} few {# neperskaitytos žinutės} other {# neperskaitytų žinučių}})"
+msgstr "Rodyti pokalbį (yra {count, plural, one {# neperskaityta žinutė} few {# neperskaitytos žinutės} many {# neperskaitytų žinučių} other {# neperskaitytų žinučių}})"
 
 #. Row in the quick CSS editor shortcuts dialog.
 #: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
@@ -34250,7 +34252,7 @@ msgstr "Nariai, turintys šį vaidmenį, rodomi atskirame narių sąrašo skyriu
 #. Subtitle under the community members page heading. displayedCount is how many rows the table currently shows; totalCount is how many members the community has.
 #: src/features/channel/components/guild_members_page/MembersTableToolbar.tsx
 msgid "Showing {displayedCount, number} of {totalCount, plural, one {# total member} other {# total members}}"
-msgstr "Rodoma {displayedCount, number} iš {totalCount, plural, one {# nario} few {# narių} other {# narių}}"
+msgstr "Rodoma {displayedCount, number} iš {totalCount, plural, one {# nario} few {# narių} many {# narių} other {# narių}}"
 
 #. Extra note in the chat embed background asset upload source modal.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildEmbedSplashUploadField.tsx
@@ -34407,7 +34409,7 @@ msgstr "Atsijungti"
 #. Danger button in the devices tab. Signs out the currently selected devices.
 #: src/features/user/components/modals/tabs/DevicesTab.tsx
 msgid "Sign out {deviceCount, plural, one {# device} other {# devices}}"
-msgstr "Atsijungti nuo {deviceCount, plural, one {# įrenginio} few {# įrenginių} other {# įrenginių}}"
+msgstr "Atsijungti nuo {deviceCount, plural, one {# įrenginio} few {# įrenginių} many {# įrenginių} other {# įrenginių}}"
 
 #. Security modal title for revoking every saved login session except the current one.
 #. Settings search entry label. Names the settings search entry in the settings UI.
@@ -34777,17 +34779,17 @@ msgstr "Lėtasis režimas įjungtas"
 #. Modal body shown when slowmode blocks sending a message. {minutes} and {seconds} are the two parts of the remaining wait.
 #: src/features/slowmode/components/alerts/SlowmodeRateLimitedModal.tsx
 msgid "Slowmode is on. Wait {minutes, plural, one {# minute} other {# minutes}} and {seconds, plural, one {# second} other {# seconds}} before sending another."
-msgstr "Lėtasis režimas įjungtas. Prieš siųsdami kitą žinutę palaukite {minutes, plural, one {# minutę} few {# minutes} other {# minučių}} ir {seconds, plural, one {# sekundę} few {# sekundes} other {# sekundžių}}."
+msgstr "Lėtasis režimas įjungtas. Prieš siųsdami kitą žinutę palaukite {minutes, plural, one {# minutę} few {# minutes} many {# minučių} other {# minučių}} ir {seconds, plural, one {# sekundę} few {# sekundes} many {# sekundžių} other {# sekundžių}}."
 
 #. Modal body shown when slowmode blocks sending a message. {minutes} is the remaining wait, a whole number of minutes.
 #: src/features/slowmode/components/alerts/SlowmodeRateLimitedModal.tsx
 msgid "Slowmode is on. Wait {minutes, plural, one {# minute} other {# minutes}} before sending another."
-msgstr "Lėtasis režimas įjungtas. Prieš siųsdami kitą žinutę palaukite {minutes, plural, one {# minutę} few {# minutes} other {# minučių}}."
+msgstr "Lėtasis režimas įjungtas. Prieš siųsdami kitą žinutę palaukite {minutes, plural, one {# minutę} few {# minutes} many {# minučių} other {# minučių}}."
 
 #. Modal body shown when slowmode blocks sending a message. {seconds} is the remaining wait, under a minute.
 #: src/features/slowmode/components/alerts/SlowmodeRateLimitedModal.tsx
 msgid "Slowmode is on. Wait {seconds, plural, one {# second} other {# seconds}} before sending another."
-msgstr "Lėtasis režimas įjungtas. Prieš siųsdami kitą žinutę palaukite {seconds, plural, one {# sekundę} few {# sekundes} other {# sekundžių}}."
+msgstr "Lėtasis režimas įjungtas. Prieš siųsdami kitą žinutę palaukite {seconds, plural, one {# sekundę} few {# sekundes} many {# sekundžių} other {# sekundžių}}."
 
 #. Tooltip on the composer slowmode indicator when the reader is free to send. Preserve {durationLabel}; it is inserted by code.
 #: src/features/channel/components/SlowmodeIndicator.tsx
@@ -37400,7 +37402,7 @@ msgstr "Ekrano bendrinimo šaltinis nustojo siųsti vaizdą, todėl ekrano bendr
 #. Sentences after the privacy sentence in the Operator Pass checkout dialog that name the company selling the pass and how to reach it. Fluxer Platform AB is the company name and 559537-3993 its Swedish registration number, keep both as is. Haninge is the Swedish municipality where the company has its registered seat and stays as is. Translate registered seat with the legal term your language uses for the registered seat of a company. The address, phone number and email address are filled in and stay as is. Use the same word for seller as on a receipt.
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx
 msgid "The seller is Fluxer Platform AB (reg. no. 559537-3993), a Swedish company with its registered seat in Haninge. Write to us at {OPERATOR_PASS_SELLER_ADDRESS}, call {OPERATOR_PASS_SELLER_PHONE} or email {SUPPORT_EMAIL}."
-msgstr ""
+msgstr "Pardavėjas yra Fluxer Platform AB (reg. Nr. 559537-3993), Švedijos bendrovė, kurios buveinė yra Haninge savivaldybėje. Rašykite mums adresu {OPERATOR_PASS_SELLER_ADDRESS}, skambinkite telefonu {OPERATOR_PASS_SELLER_PHONE} arba siųskite el. laišką adresu {SUPPORT_EMAIL}."
 
 #. Setup wizard body explaining what the setup token is for.
 #: src/features/app/components/setup/SetupTokenStep.tsx
@@ -38903,7 +38905,7 @@ msgstr "Tai visam laikui ištrins kiekvieną jūsų kada nors šiame pokalbyje i
 #. Security warning explaining that selected saved login sessions will be signed out.
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx
 msgid "This will sign out the selected {sessionCount, plural, one {device} other {devices}} from your account. You will need to sign in again on each device."
-msgstr "Tai atjungs {sessionCount, plural, one {pasirinktą įrenginį} few {pasirinktus įrenginius} other {pasirinktus įrenginius}} nuo jūsų paskyros. Kiekviename įrenginyje reikės prisijungti iš naujo."
+msgstr "Tai atjungs {sessionCount, plural, one {pasirinktą įrenginį} few {pasirinktus įrenginius} many {pasirinktus įrenginius} other {pasirinktus įrenginius}} nuo jūsų paskyros. Kiekviename įrenginyje reikės prisijungti iš naujo."
 
 #. Confirm dialog detail text for the destructive reset action. appName is the desktop app name. Reassures users that server-side data is safe.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
@@ -39136,8 +39138,9 @@ msgstr "Norėdami sukurti webhooką, atidarykite <0>{channelWebhooksSettingsPath
 
 #. Last setup wizard screen when only invited people can sign up.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
+#, fuzzy
 msgid "To let people in, make an invite link in the admin panel."
-msgstr ""
+msgstr "Norėdami įleisti žmones, sukurkite registracijos nuorodą administratoriaus skydelyje."
 
 #. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
@@ -40447,12 +40450,12 @@ msgstr "Atjungti"
 #: src/features/channel/components/EmojiPicker.tsx
 #: src/features/channel/components/MobileEmojiPicker.tsx
 msgid "Unlock {lockedEmojiCount, plural, one {# custom emoji} other {# custom emojis}} from {communityCount, plural, one {# community} other {# communities}} with {PREMIUM_PRODUCT_NAME}."
-msgstr "Atrakinkite {lockedEmojiCount, plural, one {# pasirinktinį jaustuką} few {# pasirinktinius jaustukus} other {# pasirinktinių jaustukų}} iš {communityCount, plural, one {# bendruomenės} few {# bendruomenių} other {# bendruomenių}} su „{PREMIUM_PRODUCT_NAME}“."
+msgstr "Atrakinkite {lockedEmojiCount, plural, one {# pasirinktinį jaustuką} few {# pasirinktinius jaustukus} many {# pasirinktinių jaustukų} other {# pasirinktinių jaustukų}} iš {communityCount, plural, one {# bendruomenės} few {# bendruomenių} many {# bendruomenių} other {# bendruomenių}} su „{PREMIUM_PRODUCT_NAME}“."
 
 #: src/features/channel/components/MobileStickersPicker.tsx
 #: src/features/channel/components/StickersPicker.tsx
 msgid "Unlock {lockedStickerCount, plural, one {# sticker} other {# stickers}} from {stickerCommunityCount, plural, one {# community} other {# communities}} with {PREMIUM_PRODUCT_NAME}."
-msgstr "Atrakinkite {lockedStickerCount, plural, one {# lipduką} few {# lipdukus} other {# lipdukų}} iš {stickerCommunityCount, plural, one {# bendruomenės} few {# bendruomenių} other {# bendruomenių}} su „{PREMIUM_PRODUCT_NAME}“."
+msgstr "Atrakinkite {lockedStickerCount, plural, one {# lipduką} few {# lipdukus} many {# lipdukų} other {# lipdukų}} iš {stickerCommunityCount, plural, one {# bendruomenės} few {# bendruomenių} many {# bendruomenių} other {# bendruomenių}} su „{PREMIUM_PRODUCT_NAME}“."
 
 #. Premium upsell banner shown in emoji and sticker pickers.
 #: src/features/channel/components/PremiumUpsellBanner.tsx
@@ -40749,7 +40752,7 @@ msgstr "Neperskaitytos žinutės"
 #. Summary in the inbox when the other signed-in accounts have unread messages but no mentions. accountCount is how many other accounts have activity.
 #: src/features/messaging/components/popouts/inbox/OtherAccountsInboxSection.tsx
 msgid "Unread messages on {accountCount, plural, one {# other account} other {# other accounts}}"
-msgstr "Neskaitytų žinučių {accountCount, plural, one {# kitą paskyrą} other {# kitų paskyrų}}"
+msgstr "Neskaitytų žinučių {accountCount, plural, one {# kitoje paskyroje} few {# kitose paskyrose} many {# kitose paskyrose} other {# kitose paskyrose}}"
 
 #. Accessibility description of the Windows taskbar overlay badge, read by screen readers. {count} is the number of unread messages, already formatted for the locale.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
@@ -40828,7 +40831,7 @@ msgstr "Iki {max} per vieną pirkimą."
 #. Bullet point in the P2P call dialog. maxParticipants is the participant cap of a peer-to-peer call, a number from 2 to 4.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Up to {maxParticipants, plural, one {# person} other {# people}}."
-msgstr "Iki {maxParticipants, plural, one {# asmens} other {# asmenų}}."
+msgstr "Iki {maxParticipants, plural, one {# asmens} few {# asmenų} many {# asmenų} other {# asmenų}}."
 
 #. Plutonium page comparison value for paid video quality. Keep 4K and FPS as written.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
@@ -41123,7 +41126,7 @@ msgstr "Įkelti žinutę kaip failą"
 #. Toast after uploading one or more theme asset files.
 #: src/features/theme_settings/components/AssetsSection.tsx
 msgid "Uploaded {length, plural, one {# theme asset} other {# theme assets}}."
-msgstr "{length, plural, one {Įkeltas # temos išteklius} few {Įkelti # temos ištekliai} other {Įkelta # temos išteklių}}."
+msgstr "{length, plural, one {Įkeltas # temos išteklius} few {Įkelti # temos ištekliai} many {Įkelta # temos išteklių} other {Įkelta # temos išteklių}}."
 
 #. Heading in the "Assets" section in Settings > Themes.
 #: src/features/theme_settings/components/AssetsSection.tsx
@@ -41158,7 +41161,7 @@ msgstr "Tik įkelti vaizdo įrašai"
 #. Filename-like progress label for a temporary message attachment while multiple selected files are uploading.
 #: src/features/messaging/utils/UploadingAttachmentLabelUtils.ts
 msgid "Uploading {count, plural, one {# file} other {# files}}"
-msgstr "{count, plural, one {Įkeliamas # failas} few {Įkeliami # failai} other {Įkeliama # failų}}"
+msgstr "{count, plural, one {Įkeliamas # failas} few {Įkeliami # failai} many {Įkeliama # failų} other {Įkeliama # failų}}"
 
 #: src/features/emoji/components/modals/EmojiUploadModal.tsx
 msgid "Uploading emojis"
@@ -42239,7 +42242,7 @@ msgstr "Peržiūrėti atsisiuntimus"
 #. Screen reader label of the titlebar button that opens the downloads panel, used while downloads are running. {count} is the number of downloads in progress.
 #: src/features/app/components/layout/NativeDownloads.tsx
 msgid "View downloads. {count, plural, one {# download in progress} other {# downloads in progress}}"
-msgstr "Peržiūrėti atsisiuntimus. {count, plural, one {Vykdomas # atsisiuntimas} few {Vykdomi # atsisiuntimai} other {Vykdoma # atsisiuntimų}}"
+msgstr "Peržiūrėti atsisiuntimus. {count, plural, one {Vykdomas # atsisiuntimas} few {Vykdomi # atsisiuntimai} many {Vykdoma # atsisiuntimų} other {Vykdoma # atsisiuntimų}}"
 
 #: src/features/user/components/popouts/UserProfileShared.tsx
 msgid "View full profile"
@@ -43016,7 +43019,7 @@ msgstr "Sukursime atsisiunčiamą archyvą, atitinkantį toliau pateiktus filtru
 #. Success toast shown after a data export job is queued when no email can reach the account.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx
 msgid "We'll process this as soon as possible. Check back here to download your archive when it's ready."
-msgstr "Apчниu apdorosime kuo greičiau. Grįžkite čia, kad atsisiųstumėte savo archyvą, kai jis bus paruoštas."
+msgstr "Užklausą apdorosime kuo greičiau. Grįžkite čia, kad atsisiųstumėte savo archyvą, kai jis bus paruoštas."
 
 #. Success toast shown after a bulk message deletion job is queued.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx
@@ -44075,7 +44078,7 @@ msgstr "Prie šios paskyros gali prisijungti vienkartiniu prisijungimu."
 #. Cooldown notice in the new thread pane when the parent channel has slowmode. seconds is the wait time.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "You can start another thread in {seconds, plural, one {# second} other {# seconds}}."
-msgstr "Galėsite pradėti kitą temą po {seconds, plural, one {# sekundės} other {# sekundžių}}."
+msgstr "Galėsite pradėti kitą temą po {seconds, plural, one {# sekundės} few {# sekundžių} many {# sekundžių} other {# sekundžių}}."
 
 #. Invite page subtext shown when community admins pause invites. Explains that account actions still work.
 #: src/features/invite/utils/InviteMessageDescriptors.ts
@@ -44393,22 +44396,22 @@ msgstr "Visą sumą atgausite į pradinį mokėjimo būdą. Leidimas baigiasi da
 #. Modal body shown when the free bookmarks limit is reached and Plutonium would increase it. {count} is the free cap, {premiumCount} the Plutonium cap.
 #: src/features/app/components/alerts/MaxBookmarksModal.tsx
 msgid "You have {count, plural, one {# bookmark} other {# bookmarks}}, the most you can have for free. With {premiumProductName} you can have up to {premiumCount, plural, one {# bookmark} other {# bookmarks}}, or you can remove one to add another."
-msgstr "{count, plural, one {Pasiekėte nemokamą # žymės ribą} few {Pasiekėte nemokamą # žymių ribą} other {Pasiekėte nemokamą # žymių ribą}}. Su {premiumProductName} riba padidėja iki {premiumCount, plural, one {# žymės} few {# žymių} other {# žymių}}. Arba pašalinkite vieną, kad pridėtumėte kitą."
+msgstr "{count, plural, one {Pasiekėte nemokamą # žymės ribą} few {Pasiekėte nemokamą # žymių ribą} many {Pasiekėte nemokamą # žymių ribą} other {Pasiekėte nemokamą # žymių ribą}}. Su {premiumProductName} riba padidėja iki {premiumCount, plural, one {# žymės} few {# žymių} many {# žymių} other {# žymių}}. Arba pašalinkite vieną, kad pridėtumėte kitą."
 
 #. Modal body shown when the bookmarks limit is reached on a self-hosted instance with no upgrade path. {count} is the bookmark cap.
 #: src/features/app/components/alerts/MaxBookmarksModal.tsx
 msgid "You have {count, plural, one {# bookmark} other {# bookmarks}}, the most your instance admin allows. Remove one to add another."
-msgstr "{count, plural, one {Pasiekėte # žymės ribą} few {Pasiekėte # žymių ribą} other {Pasiekėte # žymių ribą}}. Šią ribą nustato jūsų instancijos administratorius. Pašalinkite vieną, kad pridėtumėte kitą."
+msgstr "{count, plural, one {Pasiekėte # žymės ribą} few {Pasiekėte # žymių ribą} many {Pasiekėte # žymių ribą} other {Pasiekėte # žymių ribą}}. Šią ribą nustato jūsų instancijos administratorius. Pašalinkite vieną, kad pridėtumėte kitą."
 
 #. Modal body shown when the free favorite-memes limit is reached and Plutonium would increase it. {count} is the free cap, {premiumCount} the Plutonium cap.
 #: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx
 msgid "You have {count, plural, one {# saved media item} other {# saved media items}}, the most you can have for free. With {premiumProductName} you can have up to {premiumCount, plural, one {# saved media item} other {# saved media items}}."
-msgstr "{count, plural, one {Pasiekėte nemokamą # išsaugoto medijos elemento ribą} few {Pasiekėte nemokamą # išsaugotų medijos elementų ribą} other {Pasiekėte nemokamą # išsaugotų medijos elementų ribą}}. Su {premiumProductName} riba padidėja iki {premiumCount, plural, one {# išsaugoto medijos elemento} few {# išsaugotų medijos elementų} other {# išsaugotų medijos elementų}}."
+msgstr "{count, plural, one {Pasiekėte nemokamą # išsaugoto medijos elemento ribą} few {Pasiekėte nemokamą # išsaugotų medijos elementų ribą} many {Pasiekėte nemokamą # išsaugotų medijos elementų ribą} other {Pasiekėte nemokamą # išsaugotų medijos elementų ribą}}. Su {premiumProductName} riba padidėja iki {premiumCount, plural, one {# išsaugoto medijos elemento} few {# išsaugotų medijos elementų} many {# išsaugotų medijos elementų} other {# išsaugotų medijos elementų}}."
 
 #. Modal body shown when the favorite-memes limit is reached on a self-hosted instance with no Plutonium upgrade path. {count} is the saved media cap.
 #: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx
 msgid "You have {count, plural, one {# saved media item} other {# saved media items}}, the most your instance admin allows."
-msgstr "{count, plural, one {Pasiekėte # išsaugoto medijos elemento ribą} few {Pasiekėte # išsaugotų medijos elementų ribą} other {Pasiekėte # išsaugotų medijos elementų ribą}}. Šią ribą nustato jūsų instancijos administratorius."
+msgstr "{count, plural, one {Pasiekėte # išsaugoto medijos elemento ribą} few {Pasiekėte # išsaugotų medijos elementų ribą} many {Pasiekėte # išsaugotų medijos elementų ribą} other {Pasiekėte # išsaugotų medijos elementų ribą}}. Šią ribą nustato jūsų instancijos administratorius."
 
 #. Body of the error modal shown when the user is banned from a community in Explore.
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx
@@ -44696,7 +44699,7 @@ msgstr "Jau esate Visionary"
 #. Modal body shown when the bookmarks limit is reached and Plutonium is unavailable on this instance. {count} is the bookmark cap.
 #: src/features/app/components/alerts/MaxBookmarksModal.tsx
 msgid "You're at {count, plural, one {# bookmark} other {# bookmarks}}. Remove one to add another."
-msgstr "{count, plural, one {Pasiekėte # žymės ribą} few {Pasiekėte # žymių ribą} other {Pasiekėte # žymių ribą}}. Pašalinkite vieną, kad pridėtumėte kitą."
+msgstr "{count, plural, one {Pasiekėte # žymės ribą} few {Pasiekėte # žymių ribą} many {Pasiekėte # žymių ribą} other {Pasiekėte # žymių ribą}}. Pašalinkite vieną, kad pridėtumėte kitą."
 
 #. Short label in the max bookmarks modal.
 #: src/features/app/components/alerts/MaxBookmarksModal.tsx
@@ -45134,7 +45137,7 @@ msgstr "Jūsų bendruomenė įtraukta į skiltį „Naršyti“. Galite atnaujin
 #. Warning in the Explore tab in community settings when the community is below the minimum size. The plural count is the minimum number of members required to be listed.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
 msgid "Your community needs at least {minMemberCount, plural, one {# member} other {# members}} before it can be listed in Explore."
-msgstr "Jūsų bendruomenėje turi būti bent {minMemberCount, plural, one {# narys} few {# nariai} other {# narių}}, kad ją būtų galima įtraukti į skiltį „Naršyti“."
+msgstr "Jūsų bendruomenėje turi būti bent {minMemberCount, plural, one {# narys} few {# nariai} many {# narių} other {# narių}}, kad ją būtų galima įtraukti į skiltį „Naršyti“."
 
 #. Explains the public Operator Pass count. Each valid pass counts once per account, including purchases passed on. The badge is the Operator badge and the wall is the Operators' wall.
 #: src/features/premium/utils/OperatorPassRecognitionMessages.ts
