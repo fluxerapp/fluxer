@@ -189,3 +189,21 @@ sequenceDiagram
 
 En el MVP el handshake es opcional: la allowlist y las claves fijadas bastan.
 El endpoint de identidad sirve para rotación de claves y diagnóstico.
+
+---
+
+## 8. Implementación de la Etapa 3
+
+- `POST /federation/v1/events` valida `x-fluxer-key-id` y `x-fluxer-origin`, verifica la firma con la clave fijada del par y persiste en `federation_inbox` con clave `(origin, event_id)`.
+- El `202` se devuelve solo después de la escritura durable. Los duplicados devuelven `202` sin reaplicar.
+- La aplicación es best-effort tras el ACK: `MessageCreate` se despacha por gateway al canal `FLUXER_FEDERATION_TEST_CHANNEL_ID`.
+- Si no hay canal de prueba, el evento queda `applied` sin despacho. La persistencia local del mensaje remoto y el mapeo de entidades quedan para etapas posteriores.
+
+---
+
+## 9. Robustez de la Etapa 4
+
+- Cursor `federation:inbox:last_seq:<origin>` en KV: un evento nuevo con `seq` menor o igual al último aceptado se rechaza como `replayed_seq`.
+- Worker `reconcileFederationInbox` cada 30s reaplica eventos que quedaron en `received`.
+- Métricas: `fluxer_api_federation_incoming_total`, `fluxer_api_federation_applied_total` y `fluxer_api_federation_outbox_total`.
+- Límites: 1 MiB por petición y 4000 caracteres de contenido federado.

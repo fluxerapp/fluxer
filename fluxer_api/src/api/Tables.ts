@@ -147,6 +147,12 @@ import {
 	type EnforcementReviewQueueRow,
 } from '@app/api/database/types/EnforcementTypes';
 import {
+	FEDERATION_INBOX_COLUMNS,
+	FEDERATION_OUTBOX_COLUMNS,
+	type FederationInboxRow,
+	type FederationOutboxRow,
+} from '@app/api/database/types/FederationTypes';
+import {
 	GUILD_DISCOVERY_BY_STATUS_COLUMNS,
 	GUILD_DISCOVERY_COLUMNS,
 	type GuildDiscoveryByStatusRow,
@@ -1402,6 +1408,19 @@ export const JobsActive = defineTable<JobActiveRow, 'job_id'>({
 	name: 'jobs_active',
 	columns: JOB_ACTIVE_COLUMNS,
 	primaryKey: ['job_id'],
+});
+export const FederationOutbox = defineTable<FederationOutboxRow, 'target_instance_id' | 'event_id'>({
+	name: 'federation_outbox',
+	columns: FEDERATION_OUTBOX_COLUMNS,
+	primaryKey: ['target_instance_id', 'event_id'],
+	partitionKey: ['target_instance_id'],
+});
+export const FederationInbox = defineTable<FederationInboxRow, 'origin' | 'event_id'>({
+	name: 'federation_inbox',
+	columns: FEDERATION_INBOX_COLUMNS,
+	primaryKey: ['origin', 'event_id'],
+	partitionKey: ['origin'],
+	defaultTtlSeconds: seconds('30 days'),
 });
 export const AttachmentUploadTracesByKey = defineTable<AttachmentUploadTraceByKeyRow, 'upload_key'>({
 	name: 'attachment_upload_traces_by_key',

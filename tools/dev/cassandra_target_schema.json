@@ -10433,6 +10433,120 @@
 			],
 			"primary_key": "((month), document_id)",
 			"options": ""
+		},
+		{
+			"name": "federation_outbox",
+			"columns": [
+				{
+					"name": "target_instance_id",
+					"type": "text"
+				},
+				{
+					"name": "event_id",
+					"type": "text"
+				},
+				{
+					"name": "origin",
+					"type": "text"
+				},
+				{
+					"name": "seq",
+					"type": "bigint"
+				},
+				{
+					"name": "type",
+					"type": "text"
+				},
+				{
+					"name": "payload",
+					"type": "text"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "next_attempt_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "attempts",
+					"type": "int"
+				},
+				{
+					"name": "last_error",
+					"type": "text"
+				},
+				{
+					"name": "last_attempt_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((target_instance_id), event_id)",
+			"options": "CLUSTERING ORDER BY (event_id ASC)"
+		},
+		{
+			"name": "federation_inbox",
+			"columns": [
+				{
+					"name": "event_id",
+					"type": "text"
+				},
+				{
+					"name": "origin",
+					"type": "text"
+				},
+				{
+					"name": "seq",
+					"type": "bigint"
+				},
+				{
+					"name": "type",
+					"type": "text"
+				},
+				{
+					"name": "payload",
+					"type": "text"
+				},
+				{
+					"name": "payload_hash",
+					"type": "text"
+				},
+				{
+					"name": "prev_hash",
+					"type": "text"
+				},
+				{
+					"name": "signature",
+					"type": "text"
+				},
+				{
+					"name": "key_id",
+					"type": "text"
+				},
+				{
+					"name": "occurred_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "received_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "status",
+					"type": "text"
+				},
+				{
+					"name": "error_reason",
+					"type": "text"
+				},
+				{
+					"name": "applied_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((origin), event_id)",
+			"options": "CLUSTERING ORDER BY (event_id ASC)"
 		}
 	],
 	"indexes": []

@@ -16,6 +16,14 @@ import {DonationRepository} from '@app/api/donation/DonationRepository';
 import {createEmailProvider} from '@app/api/email/EmailProviderFactory';
 import {EnforcementDecisionRepository} from '@app/api/enforcement/EnforcementDecisionRepository';
 import {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRepository';
+import {getFederationConfig} from '@app/api/federation/FederationConfig';
+import {FederationInboxCursor} from '@app/api/federation/FederationInboxCursor';
+import {FederationInboxRepository} from '@app/api/federation/FederationInboxRepository';
+import {FederationInboxApplicationService} from '@app/api/federation/FederationInboxApplicationService';
+import {FederationIncomingService} from '@app/api/federation/FederationIncomingService';
+import {FederationOutboxRepository} from '@app/api/federation/FederationOutboxRepository';
+import {FederationOutboxService} from '@app/api/federation/FederationOutboxService';
+import {HttpFederationTransport} from '@app/api/federation/FederationTransport';
 import {GatewayRequestService} from '@app/api/gateway/GatewayRequestService';
 import {createNatsGifProvider} from '@app/api/gif/NatsGifProvider';
 import {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
@@ -116,6 +124,37 @@ import {RateLimitService} from '@pkgs/rate_limit/src/RateLimitService';
 import type {IVirusScanService} from '@pkgs/virus_scan/src/IVirusScanService';
 
 export const getUserRepository = singleton(() => new UserRepository(getKVClient()));
+export const getFederationOutboxService = singleton(() => {
+	const config = getFederationConfig();
+	return new FederationOutboxService({
+		config,
+		repository: new FederationOutboxRepository(),
+		kv: getKVClient(),
+		transport: new HttpFederationTransport({timeoutMs: config.timeoutMs, keyId: config.keyId}),
+		logger: Logger,
+	});
+});
+export const getFederationInboxRepository = singleton(() => new FederationInboxRepository());
+export const getFederationInboxApplicationService = singleton(
+	() =>
+		new FederationInboxApplicationService(
+			getFederationConfig(),
+			getFederationInboxRepository(),
+			getChannelRepository(),
+			getGatewayService(),
+			Logger,
+		),
+);
+export const getFederationIncomingService = singleton(() => {
+	const config = getFederationConfig();
+	return new FederationIncomingService(
+		config,
+		getFederationInboxRepository(),
+		Logger,
+		(event) => getFederationInboxApplicationService().apply(event),
+		new FederationInboxCursor(getKVClient()),
+	);
+});
 export const getGuildRepository = singleton(() => new GuildRepository());
 export const getChannelRepository = singleton(() => new ChannelRepository());
 export const getInviteRepository = singleton(() => new InviteRepository());

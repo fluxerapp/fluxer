@@ -21,6 +21,7 @@ import countBulkMessageDeletionTargets from '@app/api/worker/tasks/CountBulkMess
 import crosspostMessage from '@app/api/worker/tasks/CrosspostMessage';
 import crosspostMessageChunk from '@app/api/worker/tasks/CrosspostMessageChunk';
 import deleteUserMessagesInGuildByTime from '@app/api/worker/tasks/DeleteUserMessagesInGuildByTime';
+import deliverFederationOutbox from '@app/api/worker/tasks/DeliverFederationOutbox';
 import drainActivitySpool from '@app/api/worker/tasks/DrainActivitySpool';
 import endExpiredPlannedJoinWaves from '@app/api/worker/tasks/EndExpiredPlannedJoinWaves';
 import expireAttachments from '@app/api/worker/tasks/ExpireAttachments';
@@ -68,6 +69,7 @@ import processStorePurchaseRefreshQueue from '@app/api/worker/tasks/ProcessStore
 import processStripeWebhook from '@app/api/worker/tasks/ProcessStripeWebhook';
 import prunePostgresKvTtl from '@app/api/worker/tasks/PrunePostgresKvTtl';
 import reconcileAttachmentDecay from '@app/api/worker/tasks/ReconcileAttachmentDecay';
+import reconcileFederationInbox from '@app/api/worker/tasks/ReconcileFederationInbox';
 import reconcileUserPayments from '@app/api/worker/tasks/ReconcileUserPayments';
 import recordOperatorPassDelivery from '@app/api/worker/tasks/RecordOperatorPassDelivery';
 import refreshSearchIndex from '@app/api/worker/tasks/RefreshSearchIndex';
@@ -127,6 +129,8 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	crosspostMessage,
 	crosspostMessageChunk,
 	deleteUserMessagesInGuildByTime,
+	deliverFederationOutbox,
+	reconcileFederationInbox,
 	drainActivitySpool,
 	endGuildVisitsForCode: endGuildVisitsForCodeTask,
 	endUnassignedGuildVisits: endUnassignedGuildVisitsTask,

@@ -26,6 +26,7 @@ import type {IVoiceRoomStore} from '@app/api/infrastructure/IVoiceRoomStore';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {InviteRepository} from '@app/api/invite/InviteRepository';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {getFederationOutboxService} from '@app/api/middleware/ServiceSingletons';
 import type {User} from '@app/api/models/User';
 import type {ReadStateService} from '@app/api/read_state/ReadStateService';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
@@ -150,6 +151,7 @@ export class ChannelService {
 			messagePersistenceService,
 			attachmentUploadTraceRepository,
 			limitConfigService,
+			getFederationOutboxService(),
 		);
 		this.interactions = new MessageInteractionService(
 			channelRepository,

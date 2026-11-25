@@ -8,6 +8,7 @@ import {
 	stopCassandraWriteCapture,
 } from '@app/api/database/capture/CassandraWriteCaptureLifecycle';
 import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from '@app/api/database/PostgresKvQueryExecutor';
+import {getFederationConfig} from '@app/api/federation/FederationConfig';
 import {
 	activityEventsPublishing,
 	jetStreamActivityPublisher,
@@ -91,6 +92,14 @@ function startWorkerMetricsServer(port: number): ServerType {
 
 function registerCronJobs(cron: CronScheduler, jobsStreamMaxAgeMs: number, kvClient: IKVProvider): void {
 	cron.upsert('processAssetDeletionQueue', 'processAssetDeletionQueue', {}, '0 */5 * * * *', {ledger: false});
+	cron.upsert('deliverFederationOutbox', 'deliverFederationOutbox', {}, '*/5 * * * * *', {
+		ledger: false,
+		enabled: () => getFederationConfig().enabled,
+	});
+	cron.upsert('reconcileFederationInbox', 'reconcileFederationInbox', {}, '*/30 * * * * *', {
+		ledger: false,
+		enabled: () => getFederationConfig().enabled,
+	});
 	if (Config.cachePurge.adapter !== 'none') {
 		cron.upsert('processCachePurgeQueue', 'processCachePurgeQueue', {}, '*/10 * * * * *', {ledger: false});
 	}

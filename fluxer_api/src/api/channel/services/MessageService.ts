@@ -20,6 +20,7 @@ import {MessageValidationService} from '@app/api/channel/services/message/Messag
 import {MessageWriteLock} from '@app/api/channel/services/message/MessageWriteLock';
 import {ThreadMessageActivity} from '@app/api/channel/services/message/ThreadMessageActivity';
 import type {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRepository';
+import type {FederationOutboxService} from '@app/api/federation/FederationOutboxService';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
@@ -72,6 +73,7 @@ export class MessageService {
 		persistenceService: MessagePersistenceService,
 		attachmentUploadTraceRepository: AttachmentUploadTraceRepository,
 		limitConfigService: LimitConfigService,
+		federationOutbox: FederationOutboxService,
 	) {
 		this.validation = new MessageValidationService(limitConfigService);
 		this.writeLock = new MessageWriteLock(cacheService, channelRepository.messages);
@@ -136,6 +138,7 @@ export class MessageService {
 			limitConfigService,
 			messageWriteLock: this.writeLock,
 			crosspostPropagation: this.crosspostPropagation,
+			federationOutbox,
 		});
 		this.edit = new MessageEditService({
 			channelRepository,

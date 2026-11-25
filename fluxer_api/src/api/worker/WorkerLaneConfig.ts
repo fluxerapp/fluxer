@@ -87,6 +87,8 @@ const LANE_CONFIG = {
 			'expireReportSnapshots',
 			'clearAuthenticatedReporterEmails',
 			'expireStaleJobs',
+			'deliverFederationOutbox',
+			'reconcileFederationInbox',
 			'indexChannelMessages',
 			'indexGuildMembers',
 			'processAssetDeletionQueue',

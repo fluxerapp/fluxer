@@ -178,13 +178,18 @@ Añadir a `config/env/development.env` y a la documentación del operador:
 ```
 FLUXER_FEDERATION_ENABLED=false
 FLUXER_FEDERATION_INSTANCE_ID=localhost
-FLUXER_FEDERATION_PUBLIC_BASE_URL=http://localhost:8088
 FLUXER_FEDERATION_PRIVATE_KEY=<base64 ed25519>
 FLUXER_FEDERATION_KEY_ID=<id corto>
 FLUXER_FEDERATION_PEERS=<json allowlist>
-FLUXER_FEDERATION_RETENTION_DAYS=30
+FLUXER_FEDERATION_TEST_CHANNEL_ID=<canal local de prueba>
 FLUXER_FEDERATION_TIMEOUT_MS=10000
+FLUXER_FEDERATION_MAX_ATTEMPTS=10
+FLUXER_FEDERATION_RETRY_BASE_MS=1000
+FLUXER_FEDERATION_RETRY_MAX_MS=3600000
 ```
+
+Cada entrada de `FLUXER_FEDERATION_PEERS` incluye `instance_id`, `base_url` y
+`public_key` (Ed25519 en base64url).
 
 Nunca hardcodear claves. En desarrollo, claves de prueba fuera de git.
 
@@ -343,15 +348,29 @@ evento grande, reloj desviado, clave revocada, tombstone.
 
 ## 10. Plan por etapas
 
-1. **Etapa 0 — este documento y el diagrama.** Revisar y cerrar decisiones.
-2. **Etapa 1 — criptografía y envelope.** Generar claves, canonicalizar, firmar,
-   verificar y probar con dos procesos de prueba sin entidades de Fluxer.
-3. **Etapa 2 — outbox de salida.** Enganchar `MessageSendService`, persistir
-   eventos, worker con reintentos. Receptor simulado.
-4. **Etapa 3 — inbox de entrada.** Ruta HTTP, dedupe, verificación, aplicación a
-   un canal de prueba y despacho por gateway.
-5. **Etapa 4 — robustez.** Caídas, duplicados, firmas inválidas, cursores,
-   métricas, límites y documentación.
+1. **Etapa 0 — este documento y el diagrama.** Hecha.
+2. **Etapa 1 — criptografía y envelope.** Hecha en
+   `fluxer_api/src/api/federation/FederationCrypto.ts` y
+   `fluxer_api/src/api/federation/FederationEvent.ts`, con 22 pruebas en los
+   archivos `*.test.ts` del mismo directorio. Incluye claves Ed25519, canonicalización
+   JCS, envelope firmado, hash de payload, cadena `prev_hash`, ventana de reloj y
+   cursor de secuencia.
+3. **Etapa 2 — outbox de salida.** Hecha en
+   `fluxer_api/src/api/federation/FederationConfig.ts`, `FederationOutboxRepository.ts`,
+   `FederationTransport.ts`, `FederationOutboxService.ts`, `DeliverFederationOutbox.ts` y sus tests.
+   Integra outbox durable en Cassandra (`federation_outbox`), enganche en `MessageSendService`,
+   worker de drenado por cron (lane `batch`, cada 5s), transporte HTTP POST y reintentos con backoff.
+4. **Etapa 3 — inbox de entrada.** Hecha en `FederationInboxRepository.ts`,
+   `FederationIncomingService.ts`, `FederationInboxApplicationService.ts` y `FederationController.ts`.
+   Incluye ruta `POST /federation/v1/events`, verificación Ed25519 con clave fijada por par,
+   dedupe `(origin, event_id)`, persistencia durable antes del `202`, y despacho de
+   `MESSAGE_CREATE` al canal de prueba configurado (`FLUXER_FEDERATION_TEST_CHANNEL_ID`).
+5. **Etapa 4 — robustez.** Hecha la base: cursor de secuencia por origen en KV,
+   dedupe y replay, límite de tamaño y longitud, métricas Prometheus de entrada,
+   aplicación y outbox, y worker de reconciliación (`reconcileFederationInbox`,
+   cada 30s) para eventos que quedaron en `received` tras una caída. La indexación
+   de pendientes usa un barrido acotado por origen; una tabla índice dedicada queda
+   como mejora si el volumen crece.
 6. **Etapa 5 — después.** Emojis/recursos por hash, descubrimiento, autoridad de
    cuentas, medios.
 
@@ -390,3 +409,9 @@ pnpm dev                               # levantar la instancia
 Antes de implementar, confirmar que una instancia local arranca y que se puede
 enviar un mensaje. Después, crear la segunda instancia con otro puerto y otro
 `FLUXER_FEDERATION_INSTANCE_ID`.
+
+Para ejecutar solo las pruebas de la Etapa 1:
+
+```sh
+pnpm --filter fluxer_api exec vitest run src/api/federation
+```

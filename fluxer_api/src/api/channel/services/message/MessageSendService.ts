@@ -47,6 +47,7 @@ import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import type {MessageAttachment, MessageReference} from '@app/api/database/types/MessageTypes';
 import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRepository';
+import type {FederationOutboxService} from '@app/api/federation/FederationOutboxService';
 import type {GatewayChannelMention, IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
@@ -111,6 +112,7 @@ interface MessageSendServiceDeps {
 	limitConfigService: LimitConfigService;
 	messageWriteLock: MessageWriteLock;
 	crosspostPropagation: CrosspostPropagation;
+	federationOutbox: FederationOutboxService;
 }
 
 interface SendMessageResult {
@@ -886,6 +888,10 @@ export class MessageSendService {
 					});
 					if (!suppressDelivery) {
 						await this.settlePostCreateWork(messageId, [
+							{
+								step: 'enqueue_federation',
+								promise: this.deps.federationOutbox.enqueueMessageCreated({message, channel, guild, user}),
+							},
 							{
 								step: 'update_dm_recipients',
 								promise: this.deps.processingService.updateDMRecipients({channel, channelId, messageId, requestCache}),
