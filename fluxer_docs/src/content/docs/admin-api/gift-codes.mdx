@@ -52,7 +52,7 @@ The request records a `generate_gift_codes` [audit entry](/admin-api/#admin-audi
 The rate limit is 30 requests per minute, on the `admin:code:generation` bucket.
 
 :::caution[The codes are returned once]
-Save the response. No Admin API route lists the codes later. If a request fails partway, codes generated before the failure stay redeemable but aren't returned, so a retry creates additional codes. To stop a code you still have from working, [revoke it](#revoke-a-gift-code).
+Save the response. No Admin API route lists the codes later. If a request fails partway, codes generated before the failure stay redeemable but aren't returned, so a retry creates more codes. To stop a code you still have from working, [revoke it](#revoke-a-gift-code).
 :::
 
 ## Revoke a gift code

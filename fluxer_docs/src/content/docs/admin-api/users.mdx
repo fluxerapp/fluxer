@@ -6,7 +6,7 @@ description: Admin API routes for reading and changing accounts, their sessions,
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-These routes read and change any account on the instance. Each field group has its own route and [ACL](/admin-api/#acl-registry), and every route except [Get current Admin user](#get-current-admin-user) records an [Admin audit entry](/admin-api/#admin-audit-entry-object), reads included.
+These routes look up and change any account on the instance. Each field group has its own route and [ACL](/admin-api/#acl-registry), and every route except [Get current Admin user](#get-current-admin-user) records an [Admin audit entry](/admin-api/#admin-audit-entry-object), reads included.
 
 On an instance where members sign in with a username, the email routes return 400 `EMAIL_UNAVAILABLE_ON_INSTANCE` and you reset a password with [Create password reset link](#create-password-reset-link), which also works on an email instance that doesn't send email. On routes that record an [enforcement decision](/admin-api/enforcement/), the `X-Audit-Log-Reason` header is required and becomes the decision's first note. [Block a user's avatar](/admin-api/blocklists/#block-a-users-current-avatar) with the blocklist routes.
 
@@ -881,7 +881,7 @@ Replaces the [custom badges](/admin-api/badges/) given to the account and return
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | response body | The badges were replaced |
-| 400 | [error response](/admin-api/#error-response) | `MAX_BADGES` when the list adds a badge and holds more than `max_per_user` of the [badge settings](/admin-api/badges/#badge-settings-object) |
+| 400 | [error response](/admin-api/#error-response) | `MAX_BADGES` when the list adds a badge and has more than `max_per_user` of the [badge settings](/admin-api/badges/#badge-settings-object) |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_BADGE` when an ID isn't a user badge, or `UNKNOWN_USER` |
 
 A list that only removes badges always works, even when the account still has more than the limit after a limit was lowered.
@@ -1694,7 +1694,7 @@ Lists exactly the messages a shred of these entries deletes, without deleting an
 | skipped | array[object] | Each entry a shred leaves alone, with `channel_id`, `message_id` and a `reason` of `not_found`, `other_author` or `duplicate` |
 | preview_token | string | Pass this with the shred |
 
-<sup>1</sup> `content` holds the first 200 characters of the message
+<sup>1</sup> `content` has the first 200 characters of the message
 
 ### Response
 

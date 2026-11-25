@@ -107,7 +107,7 @@ The current account as its owner sees it, returned by [Get current user](/http-a
 | premium_grace_ends_at<sup>1</sup> | ?ISO8601 timestamp | When premium access ends after `premium_until` passes, or null |
 | premium_discriminator<sup>1</sup> <sup>4</sup> | boolean | Whether the discriminator was picked with premium |
 | hidden_profile_badges<sup>1</sup> | array[string] | The [badge keys](#hiding-badges) hidden from other people, sorted |
-| premium_badge_hidden<sup>1</sup> | boolean | Deprecated. Whether the premium badge the account holds is in the hidden list |
+| premium_badge_hidden<sup>1</sup> | boolean | Deprecated. Whether the premium badge the account has is in the hidden list |
 | premium_badge_masked<sup>1</sup> | boolean | Whether a lifetime badge shows as a subscription badge |
 | premium_badge_timestamp_hidden<sup>1</sup> | boolean | Whether the premium start date is hidden from the profile |
 | premium_badge_sequence_hidden<sup>1</sup> | boolean | Deprecated. Whether the Visionary ID is in the hidden list |
@@ -526,7 +526,7 @@ Returned by [Get user profile](#get-user-profile). When profile privacy restrict
 | premium_since?<sup>2</sup> | ISO8601 timestamp | When the target's premium started |
 | premium_lifetime_sequence?<sup>2</sup> | integer | The target's lifetime premium sequence number |
 | profile_badges | array[[profile badge](#profile-badge-object) object] | The badges to show, in order |
-| hidden_profile_badge_count?<sup>5</sup> | integer | How many badges you hold that are [hidden](#hiding-badges) |
+| hidden_profile_badge_count?<sup>5</sup> | integer | How many badges you have that are [hidden](#hiding-badges) |
 | mutual_friends?<sup>3</sup> | array[[partial user](#partial-user-object) object] | Your mutual friends with the target |
 | mutual_guilds?<sup>3</sup> | array[[mutual guild](#mutual-guild-object) object] | The guilds you and the target share |
 | connected_accounts<sup>4</sup> | array[[connection](/http-api/connections/#connection-object) object] | The target's verified connections you can see |
@@ -592,7 +592,7 @@ Your own profile follows the same rules and shows what other people see. `label`
 
 ### Hiding badges
 
-Every badge an account holds can be hidden from other people. The account's `hidden_profile_badges` lists the keys of the hidden badges, using the same values as `key`, and [Modify current user](/http-api/users/current-user/#modify-current-user) replaces it. A built-in badge's key is its `kind`, and a custom badge's key is `custom:{id}`.
+Every badge an account has can be hidden from other people. The account's `hidden_profile_badges` lists the keys of the hidden badges, using the same values as `key`, and [Modify current user](/http-api/users/current-user/#modify-current-user) replaces it. A built-in badge's key is its `kind`, and a custom badge's key is `custom:{id}`.
 
 | Key | Badge |
 | --- | --- |
@@ -606,7 +606,7 @@ Every badge an account holds can be hidden from other people. The account's `hid
 | `premium` | Premium on a self-hosted instance |
 | `custom:{id}` | A custom badge |
 
-A hidden badge is dropped from `profile_badges`. Hiding `staff`, `partner` or `bug_hunter` also clears that bit from the account's `flags` in every user object other people get. Hiding the key of the premium badge the account holds drops that badge even when a Visionary badge is masked as a subscription, and leaves the premium fields out of the full profile.
+A hidden badge is dropped from `profile_badges`. Hiding `staff`, `partner` or `bug_hunter` also clears that bit from the account's `flags` in every user object other people get. Hiding the key of the premium badge the account has drops that badge even when a Visionary badge is masked as a subscription, and leaves the premium fields out of the full profile.
 
 Staff in the [Admin API](/admin-api/users/#admin-profile-badge-object) still see every badge, with hidden ones marked.
 

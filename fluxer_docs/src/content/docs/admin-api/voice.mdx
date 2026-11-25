@@ -124,7 +124,7 @@ Every API node checks every active server on its own.
 
 ## Draining
 
-A server with `draining` set gets no new calls. Calls already on it keep going, and people who join those calls still land on it. `rexctl` sets it while it upgrades or removes a server. Unlike `is_active` false, draining never splits a call in two.
+A server with `draining` set gets no new calls. Calls already on it keep going, and people who join those calls are still placed on it. `rexctl` sets it while it upgrades or removes a server. Unlike `is_active` false, draining never splits a call in two.
 
 ## Soft connection limits
 
@@ -140,7 +140,7 @@ Setting a channel's `rtc_region` or a call's `region` to a hidden region returns
 
 <RouteHeader method="GET" path="/v1/admin/voice/regions" auditReason />
 
-Returns every [Admin voice region](#admin-voice-region-object) object, sorted by name. Requires `voice:region:list`.
+Returns every [Admin voice region](#admin-voice-region-object) object, sorted by name. You need `voice:region:list`.
 
 ### Query parameters
 
@@ -166,7 +166,7 @@ The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 
 <RouteHeader method="GET" path="/v1/admin/voice/regions/{region_id}" auditReason />
 
-Returns one [Admin voice region](#admin-voice-region-object) object. Requires `voice:region:list`.
+Returns one [Admin voice region](#admin-voice-region-object) object. You need `voice:region:list`.
 
 ### Query parameters
 
@@ -192,7 +192,7 @@ The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 
 <RouteHeader method="POST" path="/v1/admin/voice/regions" auditReason />
 
-Creates a region, and an `id` already in use overwrites that region. Requires `voice:region:create`.
+Creates a region, and an `id` already in use overwrites that region. You need `voice:region:create`.
 
 ### JSON body
 
@@ -228,7 +228,7 @@ The rate limit is 100 requests per minute, on the `admin:guild:modify` bucket.
 
 <RouteHeader method="PATCH" path="/v1/admin/voice/regions/{region_id}" auditReason />
 
-Updates a region, and an array you send replaces the stored one. Requires `voice:region:update`.
+Updates a region, and an array you send replaces the stored one. You need `voice:region:update`.
 
 ### JSON body
 
@@ -264,7 +264,7 @@ The rate limit is 100 requests per minute, on the `admin:guild:modify` bucket.
 
 <RouteHeader method="DELETE" path="/v1/admin/voice/regions/{region_id}" auditReason />
 
-Deletes a region and every server in it. Sessions on those servers stay connected, but Fluxer can't mute or disconnect them. Requires `voice:region:delete`.
+Deletes a region and every server in it. Sessions on those servers stay connected, but Fluxer can't mute or disconnect them. You need `voice:region:delete`.
 
 :::danger[Keep a copy of the server credentials]
 The LiveKit API keys and secrets are deleted with the servers, and no read returns them.
@@ -289,7 +289,7 @@ The rate limit is 100 requests per minute, on the `admin:guild:modify` bucket.
 
 <RouteHeader method="GET" path="/v1/admin/voice/regions/{region_id}/servers" auditReason />
 
-Returns every [Admin voice server](#admin-voice-server-object) object in a region. Requires `voice:server:list`.
+Returns every [Admin voice server](#admin-voice-server-object) object in a region. You need `voice:server:list`.
 
 ### Response body
 
@@ -309,7 +309,7 @@ The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 
 <RouteHeader method="GET" path="/v1/admin/voice/regions/{region_id}/servers/{server_id}" auditReason />
 
-Returns one [Admin voice server](#admin-voice-server-object) object. Requires `voice:server:list`.
+Returns one [Admin voice server](#admin-voice-server-object) object. You need `voice:server:list`.
 
 ### Response body
 
@@ -329,7 +329,7 @@ The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 
 <RouteHeader method="POST" path="/v1/admin/voice/regions/{region_id}/servers" auditReason />
 
-Adds a server to a region. Requires `voice:server:create`.
+Adds a server to a region. You need `voice:server:create`.
 
 ### JSON body
 
@@ -375,7 +375,7 @@ The rate limit is 100 requests per minute, on the `admin:guild:modify` bucket.
 
 <RouteHeader method="PATCH" path="/v1/admin/voice/regions/{region_id}/servers/{server_id}" auditReason />
 
-Updates a server, and an array you send replaces the stored one. Requires `voice:server:update`.
+Updates a server, and an array you send replaces the stored one. You need `voice:server:update`.
 
 ### JSON body
 
@@ -420,7 +420,7 @@ The rate limit is 100 requests per minute, on the `admin:guild:modify` bucket.
 
 <RouteHeader method="DELETE" path="/v1/admin/voice/regions/{region_id}/servers/{server_id}" auditReason />
 
-Deletes a server and its stored credentials. Sessions on it stay connected, but Fluxer can't mute or disconnect them. Requires `voice:server:delete`.
+Deletes a server and its stored credentials. Sessions on it stay connected, but Fluxer can't mute or disconnect them. You need `voice:server:delete`.
 
 ### Response body
 
@@ -441,7 +441,7 @@ The rate limit is 100 requests per minute, on the `admin:guild:modify` bucket.
 
 <RouteHeader method="POST" path="/v1/admin/voice/regions/{region_id}/servers/{server_id}/test-token" auditReason />
 
-Signs a LiveKit token for a hidden, audio only participant in a throwaway room whose name starts with `rexctl-test-`. The token works for 60 seconds. `rexctl voice test` uses it to test a server from outside its network, and Fluxer ignores webhooks for these rooms. Requires `voice:server:update`.
+Signs a LiveKit token for a hidden, audio-only participant in a throwaway room whose name starts with `rexctl-test-`. The token works for 60 seconds. `rexctl voice test` uses it to test a server from outside its network, and Fluxer ignores webhooks for these rooms. You need `voice:server:update`.
 
 ### Response body
 
@@ -544,7 +544,7 @@ The rate limit is 100 requests per minute, on the `admin:guild:modify` bucket.
 
 <RouteHeader method="GET" path="/v1/admin/voice/join-tokens" />
 
-Lists the tokens of the last 7 days, newest first, without their secrets. Requires `voice:join_token:list`.
+Lists the tokens of the last 7 days, newest first, without their secrets. You need `voice:join_token:list`.
 
 ### Response body
 
@@ -558,7 +558,7 @@ The rate limit is on the `admin:lookup` bucket.
 
 <RouteHeader method="DELETE" path="/v1/admin/voice/join-tokens/{token_id}" auditReason />
 
-Stops a pending token from working. Requires `voice:join_token:revoke`.
+Stops a pending token from working. You need `voice:join_token:revoke`.
 
 ### Response body
 

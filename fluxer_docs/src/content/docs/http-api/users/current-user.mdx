@@ -1,12 +1,12 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Current user
-description: Routes that read and change the account making the request.
+description: Routes that get and change the account making the request.
 ---
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-These routes read and change the account that made the request, a [user object](/http-api/users/#user-object). Every route except [Get current user](#get-current-user) needs a user session and doesn't accept bot or OAuth2 tokens. Changing credentials and the account lifecycle routes need [sudo mode](/http-api/users/mfa/#sudo-mode).
+These routes get and change the account that made the request, a [user object](/http-api/users/#user-object). Every route except [Get current user](#get-current-user) needs a user session and doesn't accept bot or OAuth2 tokens. Changing credentials and the account lifecycle routes need [sudo mode](/http-api/users/mfa/#sudo-mode).
 
 ## Guild entry object
 
@@ -398,7 +398,7 @@ The rate limit is 20 requests per minute, on the `user:update` bucket.
 
 <RouteHeader method="POST" path="/v1/users/@me/profile-badges/preview" />
 
-Returns the account's [profile badges](/http-api/users/#profile-badge-object) as others would see them with the given settings, and every badge the account holds with whether those settings hide it. Nothing is saved.
+Returns the account's [profile badges](/http-api/users/#profile-badge-object) as others would see them with the given settings, and every badge the account has with whether those settings hide it. Nothing is saved.
 
 ### JSON body
 

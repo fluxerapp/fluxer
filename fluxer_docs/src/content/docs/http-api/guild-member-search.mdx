@@ -89,7 +89,7 @@ One page of search results.
 
 <RouteHeader method="POST" path="/v1/guilds/{guild_id}/members-search" bot />
 
-Returns a [guild member search response](#guild-member-search-response-object) object. You need at least one of the `MANAGE_GUILD`, `MANAGE_ROLES`, `MANAGE_NICKNAMES`, `BAN_MEMBERS`, `MODERATE_MEMBERS` or `KICK_MEMBERS` [permissions](/http-api/permissions/). In a guild that requires MFA, you also need an enrolled authenticator if you hold any of them other than `MANAGE_NICKNAMES`, unless you own the guild.
+Returns a [guild member search response](#guild-member-search-response-object) object. You need at least one of the `MANAGE_GUILD`, `MANAGE_ROLES`, `MANAGE_NICKNAMES`, `BAN_MEMBERS`, `MODERATE_MEMBERS` or `KICK_MEMBERS` [permissions](/http-api/permissions/). In a guild that requires MFA, you also need an enrolled authenticator if you have any of them other than `MANAGE_NICKNAMES`, unless you own the guild.
 
 ### JSON body
 
@@ -98,7 +98,7 @@ Returns a [guild member search response](#guild-member-search-response-object) o
 | query? | string | The text matched against username, discriminator, global name, nickname and user ID (max 100 characters) |
 | limit? | integer | The maximum number of results to return (1-100, default 25) |
 | offset? | integer | The number of matching results to skip (minimum 0, default 0) |
-| role_ids? | array[snowflake] | The role IDs a matched member must all hold (max 10) |
+| role_ids? | array[snowflake] | The role IDs a matched member must all have (max 10) |
 | joined_at_gte? | integer | Only members who joined at or after this time, in Unix seconds |
 | joined_at_lte? | integer | Only members who joined at or before this time, in Unix seconds |
 | join_source_type?<sup>1</sup> | array[integer] | The [join source types](#join-source-types) to include (max 10) |

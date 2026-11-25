@@ -168,7 +168,7 @@ Fetches a media URL, stores a copy and returns the new meme. Sends [Favorite Mem
 
 <sup>1</sup> Defaults to the stored `filename`, truncated to 100 characters
 
-<sup>2</sup> Used only when both are set and `gif_provider` matches the provider configured on the instance. Otherwise Fluxer reads the slug from `url`
+<sup>2</sup> Used only when both are set and `gif_provider` matches the provider configured on the instance. Otherwise Fluxer takes the slug from `url`
 
 <sup>3</sup> Stored only when the URL resolved to a provider GIF and the map is not empty
 
@@ -209,7 +209,7 @@ Copies one attachment or embed asset from a message you can read into your colle
 | --- | --- | --- |
 | 201 | [meme](#meme-object) object | The meme was created |
 | 400 | [error response](/http-api/#error-response) | `INVALID_FORM_BODY`<sup>3</sup> when the body or selection fails validation |
-| 400 | [error response](/http-api/#error-response) | `MEDIA_METADATA_ERROR` when the media cannot be read |
+| 400 | [error response](/http-api/#error-response) | `MEDIA_METADATA_ERROR` when the media cannot be loaded |
 | 400 | [error response](/http-api/#error-response) | `MAX_FAVORITE_MEMES` when the collection is full |
 | 403 | [error response](/http-api/#error-response) | `MISSING_PERMISSIONS`, `MISSING_ACCESS` or `NSFW_CONTENT_AGE_RESTRICTED` when you can't see the channel or it's age restricted |
 

@@ -534,8 +534,8 @@ These errors can come from any Admin route.
 | 400 | [error response](#error-response) | `INVALID_FORM_BODY` when the path, query or body is invalid |
 | 401 | [error response](#error-response) | `UNAUTHORIZED` when the credential is missing, invalid or a bot token |
 | 403 | [error response](#error-response) | `ACCESS_DENIED` for an access token from an OAuth2 application other than Admin |
-| 403 | [error response](#error-response) | `MISSING_PERMISSIONS` when the account holds neither `admin:authenticate` nor `*` |
-| 403 | [error response](#error-response) | `MISSING_ACL` when the caller holds none of the route's ACLs |
+| 403 | [error response](#error-response) | `MISSING_PERMISSIONS` when the account has neither `admin:authenticate` nor `*` |
+| 403 | [error response](#error-response) | `MISSING_ACL` when the caller has none of the route's ACLs |
 | 429 | [error response](#error-response) | `RATE_LIMITED` when a rate limit is hit |
 
 Admin rate limits count each account and credential type separately, and an Admin API key never shares its owner's session limits. The headers and the global limit are the same as in [Rate limits](/topics/rate-limits/).
