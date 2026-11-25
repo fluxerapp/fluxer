@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import path from 'node:path';
+import {t} from '@electron/main/MainI18n';
 import type {FileFilter} from 'electron';
 
 function fileExtension(filePath: string): string {
@@ -9,11 +10,14 @@ function fileExtension(filePath: string): string {
 
 export function saveDialogFilters(defaultPath: string): Array<FileFilter> {
 	const extension = fileExtension(defaultPath);
-	const allFiles: FileFilter = {name: 'All files', extensions: ['*']};
+	const allFiles: FileFilter = {name: t('desktop.saveDialog.allFiles'), extensions: ['*']};
 	if (!extension) {
 		return [allFiles];
 	}
-	return [{name: `${extension.toUpperCase()} file`, extensions: [extension]}, allFiles];
+	return [
+		{name: t('desktop.saveDialog.fileType', {extension: extension.toUpperCase()}), extensions: [extension]},
+		allFiles,
+	];
 }
 
 export function withDefaultExtension(filePath: string, defaultPath: string): string {

@@ -44,14 +44,14 @@ function buildTemplate(): Array<MenuItemConstructorOptions> {
 					},
 				},
 				{type: 'separator'},
-				{role: 'services'},
+				{role: 'services', label: t('desktop.appMenu.services')},
 				{type: 'separator'},
 				{
 					role: 'hide',
 					label: t('desktop.appMenu.hide', {appName}),
 				},
-				{role: 'hideOthers'},
-				{role: 'unhide'},
+				{role: 'hideOthers', label: t('desktop.appMenu.hideOthers')},
+				{role: 'unhide', label: t('desktop.appMenu.showAll')},
 				{type: 'separator'},
 				{
 					role: 'quit',
@@ -63,7 +63,7 @@ function buildTemplate(): Array<MenuItemConstructorOptions> {
 	template.push({
 		label: t('desktop.appMenu.file'),
 		submenu: isMac
-			? [{role: 'close'}]
+			? [{role: 'close', label: t('desktop.appMenu.close')}]
 			: [
 					{
 						label: t('desktop.appMenu.preferencesPlain'),
@@ -195,6 +195,7 @@ function buildTemplate(): Array<MenuItemConstructorOptions> {
 	});
 	template.push({
 		label: t('desktop.appMenu.window'),
+		...(isMac ? {role: 'window' as const} : {}),
 		submenu: [
 			isMac
 				? {role: 'minimize', label: t('desktop.appMenu.minimize')}
@@ -209,12 +210,7 @@ function buildTemplate(): Array<MenuItemConstructorOptions> {
 					},
 			{role: 'zoom', label: t('desktop.appMenu.zoomWindow')},
 			...(isMac
-				? [
-						{type: 'separator' as const},
-						{role: 'front' as const},
-						{type: 'separator' as const},
-						{role: 'window' as const},
-					]
+				? [{type: 'separator' as const}, {role: 'front' as const, label: t('desktop.appMenu.bringAllToFront')}]
 				: [
 						{
 							label: t('desktop.appMenu.close'),

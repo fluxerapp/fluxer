@@ -941,10 +941,20 @@ msgstr "{amount} ({currency})"
 msgid "{appCount, plural, one {# app selected for access revocation} other {# apps selected for access revocation}}"
 msgstr "{appCount, plural, one {Erişimi iptal edilmek üzere # uygulama seçildi} other {Erişimi iptal edilmek üzere # uygulama seçildi}}"
 
+#. Tooltip on the desktop tray or menu bar icon while there are unread messages. {appName} is the desktop app name (typically Fluxer). {description} is the unread summary, such as "Unread messages: 3". Change the separator only if your language needs it.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "{appName} - {description}"
+msgstr ""
+
 #. Native desktop dialog headline on installs that cannot update themselves. {version} is the new version number.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "{appName} {version} is available."
 msgstr "{appName} {version} sürümü mevcut."
+
+#. Title of the desktop window that holds the popped out Quick CSS editor. {appName} is the desktop app name (typically Fluxer). Use the same term for Quick CSS as in Settings > Themes.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "{appName} | Quick CSS"
+msgstr ""
 
 #. Body of the native dialog shown when the desktop app has repeatedly failed to load. {appName} is the desktop app name (typically Fluxer). The app keeps retrying on its own while the dialog is open.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
@@ -981,6 +991,11 @@ msgstr "{appName} güncellemeleri kontrol edemedi."
 msgid "{appName} couldn't finish updating."
 msgstr "{appName} güncellemeyi tamamlayamadı."
 
+#. Explanation in the desktop update window when the update server cannot be reached and the app cannot open without an update. {appName} is the desktop app name (typically Fluxer).
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "{appName} couldn't reach its update server to download app files. Check your internet connection, proxy or firewall. {appName} keeps retrying."
+msgstr ""
+
 #. Title of the native error dialog shown when the desktop app cannot boot. {appName} is the desktop app name (typically Fluxer).
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "{appName} failed to start"
@@ -990,6 +1005,11 @@ msgstr "{appName} başlatılamadı"
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "{appName} is up to date."
 msgstr "{appName} güncel."
+
+#. Title of the small desktop window that checks for and installs updates before the app opens. {appName} is the desktop app name (typically Fluxer).
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "{appName} Updater"
+msgstr ""
 
 #. Native desktop dialog body under the update available headline when only the app files update. The window reloads and the app itself keeps running.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
@@ -1589,6 +1609,11 @@ msgstr "{expressionName} bu topluluğa özel bir ifade. Üyeler burada kullanabi
 #: src/features/expressions/components/ExpressionInfoCard.tsx
 msgid "{expressionName} is a custom sticker from this community. Members can use it here."
 msgstr "{expressionName} bu topluluğa özel bir çıkartmadır. Üyeler burada kullanabilir."
+
+#. File type filter in the desktop save dialog on Windows and Linux. {extension} is an uppercase file extension such as PNG or PDF.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "{extension} file"
+msgstr ""
 
 #. Time window preset label shown as a standalone duration in option lists. The number is interpolated.
 #: src/features/app/config/TimeWindowPresets.ts
@@ -2210,6 +2235,16 @@ msgstr "{providerName} tarayıcınızda açılır. Hesabınızı bağlamak için
 msgid "{reactorCount, plural, one {{emojiName} reacted by {reactors}} other {{emojiName} reacted by {reactors}}}"
 msgstr "{reactorCount, plural, one {{reactors} {emojiName} ile tepki verdi} other {{reactors} {emojiName} ile tepki verdi}}"
 
+#. Download progress in the desktop update window. {received} and {total} are already formatted numbers of megabytes. Use the local abbreviation for megabytes.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "{received} of {total} MB"
+msgstr ""
+
+#. Download progress with the current speed in the desktop update window. {received} and {total} are already formatted numbers of megabytes. {speed} is a formatted speed such as "2.4 MB/s". Use the local abbreviation for megabytes.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "{received} of {total} MB, {speed}"
+msgstr ""
+
 #. Client info web build identifier line. Example: "Canary Web 2026.518.0". Preserve placeholders.
 #. Client info web build identifier shown after the desktop build when the web and desktop channels differ. Example: "Stable Web 2026.518.0". Preserve placeholders.
 #: src/features/app/components/dialogs/components/ClientInfo.tsx
@@ -2466,6 +2501,16 @@ msgstr "{username} bir arama başlattı."
 #: src/features/messaging/utils/SystemMessageUtils.tsx
 msgid "{username} started a thread: {threadName}"
 msgstr "{username} bir başlık başlattı: {threadName}"
+
+#. Download speed in kilobytes per second in the desktop update window. {value} is an already formatted number. Use the local abbreviation.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "{value} KB/s"
+msgstr ""
+
+#. Download speed in megabytes per second in the desktop update window. {value} is an already formatted number. Use the local abbreviation.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "{value} MB/s"
+msgstr ""
 
 #. Screen reader value for the chat font size and group spacing sliders, shown on screen as 16px.
 #: src/features/user/components/modals/tabs/appearance_tab/ScalingTab.tsx
@@ -2933,6 +2978,11 @@ msgstr "bir dakika"
 #: src/features/updater/commands/UpdaterModalCommands.tsx
 msgid "A new desktop version is available. Download the installer, then run it to update {productName}."
 msgstr "Yeni bir masaüstü sürümü mevcut. Kurulum dosyasını indirin ve ardından {productName}'ı güncellemek için çalıştırın."
+
+#. Status line in the desktop update window when this version of the desktop app is too old to continue. A Download update button is shown below. {appName} is the desktop app name (typically Fluxer).
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "A new version of {appName} is required"
+msgstr ""
 
 #. Hint under the username field at sign-up on instances where usernames get a number tag. example is the username the person typed followed by a sample tag, such as anna#1234.
 #: src/features/auth/flow/identifier_first/AuthIdentifierProfileStep.tsx
@@ -4305,6 +4355,11 @@ msgstr "Her şey hazır"
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx
 msgid "All except {count, plural, one {# community} other {# communities}}"
 msgstr "Şu {count, plural, one {# topluluk} other {# topluluk}} hariç hepsi"
+
+#. File type filter in the desktop save dialog on Windows and Linux that shows files of any type.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "All files"
+msgstr ""
 
 #. Tab label in the friends list showing all friends.
 #: src/features/channel/components/friends/views/FriendsList.tsx
@@ -6780,6 +6835,11 @@ msgstr "Marka"
 msgid "Brightness"
 msgstr "Parlaklık"
 
+#. macOS Window menu item that brings every window of the desktop app to the front. Use the standard macOS term.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Bring all to front"
+msgstr ""
+
 #. Plutonium page perk card body about global emojis and stickers.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
 msgid "Bring custom emojis and stickers from any of your communities into every chat and community you're in."
@@ -7225,6 +7285,11 @@ msgstr "{path} bulunamadı. Son yüklenen sürüm kullanılıyor."
 #: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx
 msgid "Can't paste image here"
 msgstr "Görsel buraya yapıştırılamıyor"
+
+#. Status line in the desktop update window when the update server cannot be reached. {appName} is the desktop app name (typically Fluxer).
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Can't reach the {appName} update server"
+msgstr ""
 
 #. Shown for a linked theme in Settings > Themes when its CSS file exists but cannot be read, for example because it is too large or access was removed. {path} is the full path of the CSS file.
 #: src/features/theme_settings/utils/LinkedThemeFile.ts
@@ -8306,6 +8371,11 @@ msgstr "Onay kutuları"
 #: src/features/ui/action_menu/items/ExpressionMenuConfig.ts
 msgid "Checking access..."
 msgstr "Erişim kontrol ediliyor..."
+
+#. Status line in the desktop update window shown while the app looks for updates before it opens.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Checking for updates…"
+msgstr ""
 
 #. Loading state in the screen-share picker while checking macOS screen recording permission.
 #: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx
@@ -10587,6 +10657,11 @@ msgstr "Ayrıntıları kopyala"
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
 msgid "Copy device ID"
 msgstr "Cihaz kimliğini kopyala"
+
+#. Small link button in the desktop update window that copies technical details about the update problem to the clipboard, for a support request.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Copy diagnostics"
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts
@@ -14336,6 +14411,11 @@ msgstr "Kaynak haritalarını indir"
 msgid "Download source maps so stack traces and the developer tools point at real source"
 msgstr "Geliştirici araçlarının gerçek kaynaklara işaret etmesi için kaynak haritalarını indir"
 
+#. Status line in the desktop update window when an update download stopped making progress. {seconds} counts down each second. Use the short unit for seconds so the text reads well for any number, because plural forms are not available here.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Download stalled. Retrying in {seconds} sec…"
+msgstr ""
+
 #. Nagbar button label in the desktop app that opens the desktop app download page.
 #: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx
 msgid "Download the app"
@@ -14346,10 +14426,20 @@ msgstr "Uygulamayı indir"
 msgid "Download the new version to update {appName}."
 msgstr "Yeni sürümü indirin ve {appName} uygulamasını güncelleyin."
 
+#. Button in the desktop update window that opens the download page for the new version of the desktop app in the browser.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Download update"
+msgstr ""
+
 #. Media context menu action that downloads a video attachment.
 #: src/features/ui/action_menu/items/MediaMenuData.tsx
 msgid "Download video"
 msgstr "Videoyu indir"
+
+#. Status line in the desktop update window while update packages download. {current} is the package being downloaded and {total} is the number of packages. Both are already formatted numbers.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Downloading update {current} of {total}…"
+msgstr ""
 
 #. Heading of the downloads panel.
 #: src/features/app/components/layout/NativeDownloads.tsx
@@ -18969,6 +19059,11 @@ msgstr "Sessize alınmış kanallar varsayılan olarak gizlensin mi?"
 msgid "Hide my stream preview thumbnail"
 msgstr "Yayın önizleme küçük resmimi gizle"
 
+#. macOS app menu item that hides every other app window. Use the standard macOS term.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Hide others"
+msgstr ""
+
 #. Tooltip / aria label on the participants-panel toggle in the voice call view (currently visible).
 #: src/features/voice/components/VoiceCallLayoutContent.tsx
 msgid "Hide participants"
@@ -20113,6 +20208,11 @@ msgstr "Yeni uygulamayı yükle"
 #: src/features/updater/commands/UpdaterModalCommands.tsx
 msgid "Installed version: {currentVersion}."
 msgstr "Yüklü sürüm: {currentVersion}."
+
+#. Status line in the desktop update window while update packages install. {current} is the package being installed and {total} is the number of packages. Both are already formatted numbers.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Installing update {current} of {total}…"
+msgstr ""
 
 #. Label for the server address in the printed or downloaded recovery kit.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx
@@ -25323,6 +25423,11 @@ msgstr "Atanmadı"
 msgid "Not available"
 msgstr "Belirtilmemiş"
 
+#. Explanation in the desktop update window when the computer has no free disk space left for the update files.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Not enough disk space to install the update"
+msgstr ""
+
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
 msgid "Not enough members"
 msgstr "Yeterli üye yok"
@@ -26347,6 +26452,11 @@ msgstr "Temalar'da Aç"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Open link"
 msgstr "Bağlantıyı aç"
+
+#. Small link button in the desktop update window that opens the folder with the desktop app log files.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Open logs"
+msgstr ""
 
 #. Accessible label for the plus button that opens the textarea attachment and customization menu.
 #: src/features/channel/components/channel_textarea/shared.ts
@@ -28995,6 +29105,12 @@ msgstr "Sessiz"
 msgid "Quit"
 msgstr "Çık"
 
+#. Button in the desktop update window that closes the desktop app. Imperative verb.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgctxt "desktop-update-window"
+msgid "Quit"
+msgstr ""
+
 #. macOS / tray menu item that fully quits the desktop app.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "Quit {appName}"
@@ -30891,6 +31007,11 @@ msgstr "Şimdi yeniden başlat"
 msgid "Restart to update"
 msgstr "Güncellemek için yeniden başlat"
 
+#. Status line in the desktop update window right before the desktop app restarts to apply an update.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Restarting to finish the update…"
+msgstr ""
+
 #: src/features/auth/components/pages/EmailRevertPage.tsx
 msgid "Restore account"
 msgstr "Hesabı geri yükle"
@@ -30917,6 +31038,11 @@ msgstr "Davetler yeniden başlatıldı"
 #: src/features/platform/components/loadable/LoadableComponent.tsx
 msgid "Retry"
 msgstr "Yeniden dene"
+
+#. Button in the desktop update window that tries the update again right away.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Retry now"
+msgstr ""
 
 #: src/features/auth/components/pages/ForgotPasswordPage.tsx
 msgid "Return to sign-in"
@@ -32778,6 +32904,12 @@ msgstr "Belirteç dosyasını sun"
 msgid "Service incident nagbar"
 msgstr "Hizmet kesintisi bildirimi"
 
+#. macOS app menu submenu that lists system Services for the selected text. Use the standard macOS term.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgctxt "macos-app-menu"
+msgid "Services"
+msgstr ""
+
 #. Section heading in the voice connection status popout for current call/session debug stats.
 #: src/features/voice/components/voice_connection_status/shared.ts
 msgid "Session"
@@ -33586,6 +33718,12 @@ msgstr "Sesli sohbette aktif olan arkadaşları öne çıkarmak için ana ekrand
 #: src/features/messaging/components/popouts/inbox/OtherAccountsInboxSection.tsx
 msgid "Show activity on other accounts"
 msgstr "Diğer hesaplardaki etkinliği göster"
+
+#. macOS app menu item that shows the windows of every hidden app again. Use the standard macOS term.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgctxt "macos-app-menu"
+msgid "Show all"
+msgstr ""
 
 #. Tooltip for the +3 style button that opens the full list of badges.
 #: src/features/user/utils/UserMessageDescriptors.ts
@@ -35426,6 +35564,16 @@ msgstr "Bu role sahip üyeler ayrı olarak gösterilmeye başlandı"
 #: src/features/app/components/layout/NativeDownloads.tsx
 msgid "Starting"
 msgstr "Başlatılıyor"
+
+#. Status line in the desktop update window when the app opens without checking for updates because the update server cannot be reached.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Starting offline…"
+msgstr ""
+
+#. Status line in the desktop update window while the desktop app opens after checking for updates.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Starting…"
+msgstr ""
 
 #. SMTP encryption option that upgrades only when the mail server offers STARTTLS.
 #: src/features/app/components/setup/SetupEmailSteps.tsx
@@ -38085,6 +38233,11 @@ msgstr "Bu görsel kaydedilmedi. Tekrar denemek için “Devam et” düğmesine
 msgid "This install is managed by your system. Update {productName} from your software center or package manager."
 msgstr "Bu kurulum sisteminiz tarafından yönetiliyor. {productName} uygulamasını yazılım merkezinden veya paket yöneticisinden güncelleyin."
 
+#. Status line in the desktop update window when the installed desktop app is missing files it needs to start. {appName} is the desktop app name (typically Fluxer).
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "This installation is incomplete. Reinstall {appName}"
+msgstr ""
+
 #. Setup wizard explanation of why the sign-in method is fixed: accounts already exist.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 msgid "This instance already has accounts, so how people sign in can't change anymore. To use a different sign-in method, start again with an empty database."
@@ -40662,11 +40815,6 @@ msgstr "30 FPS ile 720p'ye kadar"
 msgid "Update {appName} from your software center."
 msgstr "Yazılım merkezinizden {appName}'i güncelleyin."
 
-#. Tray menu item shown only while a desktop update is waiting. Clicking it installs the update. {appName} is the desktop app name (typically Fluxer).
-#: src/features/platform/utils/DesktopLocaleBridge.ts
-msgid "Update {appName} now"
-msgstr "Şimdi {appName} uygulamasını güncelle"
-
 #. Native desktop dialog body under the headline announcing a new version, shown on a Linux install managed by a package manager such as a deb, rpm or AUR package. {appName} is the desktop app name (typically Fluxer).
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "Update {appName} with your package manager, or download the new version."
@@ -40692,6 +40840,11 @@ msgstr "Uygulamayı güncelle"
 msgid "Update available"
 msgstr "Güncelleme mevcut"
 
+#. Status line in the desktop update window when an update attempt failed. {seconds} counts down each second. Use the short unit for seconds so the text reads well for any number, because plural forms are not available here.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Update failed. Retrying in {seconds} sec…"
+msgstr ""
+
 #: src/features/user/components/modals/CustomStatusModal.tsx
 msgid "Update my status"
 msgstr "Durumumu güncelle"
@@ -40707,6 +40860,11 @@ msgstr "Şimdi güncelle"
 #: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx
 msgid "Update passkey"
 msgstr "Geçiş anahtarını güncelle"
+
+#. Status line in the desktop update window when the app cannot open until a required update installs. A Retry now button is shown below.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Update required to continue"
+msgstr ""
 
 #. Short label in the settings dialog mobile settings view.
 #: src/features/app/components/dialogs/components/MobileSettingsView.tsx
@@ -40757,6 +40915,11 @@ msgstr "Güncellemeler yolda!"
 #: src/features/webhook/components/FollowedChannelListItem.tsx
 msgid "Updates from this channel will stop arriving here. Messages already delivered stay. You can follow it again from the announcement channel."
 msgstr "Bu kanaldan güncellemeler burada görünmeyecek. Zaten gönderilmiş mesajlar kalacaktır. Duyuru kanalından tekrar takip edebilirsiniz."
+
+#. Status line in the desktop update window while a new version of the desktop app downloads. {appName} is the desktop app name (typically Fluxer).
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Updating {appName}…"
+msgstr ""
 
 #. Short label in the channel and chat gif picker grid item. Keep it concise.
 #: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx
@@ -41773,6 +41936,11 @@ msgstr "Kimlik doğrulama formu"
 msgid "Verify it's you"
 msgstr "Kimliğinizi doğrulayın"
 
+#. Status line in the desktop update window while downloaded update files are checked.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Verifying files…"
+msgstr ""
+
 #: src/features/auth/components/pages/ResetPasswordPage.tsx
 msgid "Verifying your reset link…"
 msgstr "Sıfırlama bağlantınız doğrulanıyor…"
@@ -42482,6 +42650,11 @@ msgstr "Onay bekleniyor"
 #: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx
 msgid "Waiting for connection..."
 msgstr "Bağlantı bekleniyor..."
+
+#. Status line in the desktop update window on macOS while the system asks the user to allow access to the local network.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Waiting for local network permission…"
+msgstr ""
 
 #: src/features/auth/components/modals/SudoVerificationModal.tsx
 msgid "Waiting for passkey…"

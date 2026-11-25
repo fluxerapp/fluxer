@@ -62,6 +62,32 @@ const ACTION_CHANNELS = new Map([
 	['download', SPLASH_OPEN_DOWNLOAD_CHANNEL],
 	['quit', SPLASH_QUIT_CHANNEL],
 ]);
+const DEFAULT_STRINGS = Object.freeze({
+	windowTitle: 'Fluxer Updater',
+	checkingForUpdates: 'Checking for updates…',
+	downloadingUpdates: 'Downloading update {current} of {total}…',
+	installingUpdates: 'Installing update {current} of {total}…',
+	verifying: 'Verifying files…',
+	downloadStalled: 'Download stalled. Retrying in {seconds} sec…',
+	updateFailed: 'Update failed. Retrying in {seconds} sec…',
+	shellUpdateDownloading: 'Updating Fluxer…',
+	shellUpdateRestarting: 'Restarting to finish the update…',
+	blockedUpdateRequired: 'Update required to continue',
+	blockedUpdateUnreachable: "Can't reach the Fluxer update server",
+	blockedShellUpdate: 'A new version of Fluxer is required',
+	blockedUnsupportedBuild: 'This installation is incomplete. Reinstall Fluxer',
+	launching: 'Starting…',
+	unreachableLaunch: 'Starting offline…',
+	waitingLocalNetwork: 'Waiting for local network permission…',
+	downloadAmount: '{received} of {total} MB',
+	downloadAmountWithSpeed: '{received} of {total} MB, {speed}',
+	speedMegabytes: '{value} MB/s',
+	speedKilobytes: '{value} KB/s',
+	openLogs: 'Open logs',
+	copyDiagnostics: 'Copy diagnostics',
+	copied: 'Copied',
+});
+const PLACEHOLDER_PATTERN = /\{(\w+)\}/g;
 const DEFAULT_STATE = Object.freeze({
 	status: SplashStatus.CHECKING_FOR_UPDATES,
 	current: null,
@@ -73,6 +99,8 @@ const DEFAULT_STATE = Object.freeze({
 	bytesPerSecond: null,
 	action: null,
 	message: null,
+	locale: 'en-US',
+	strings: DEFAULT_STRINGS,
 });
 
 let splashState = null;
@@ -81,39 +109,70 @@ let countdownTimer = null;
 let splashStartedAt = Number.POSITIVE_INFINITY;
 let diagnosticsRevealTimer = null;
 let diagnosticsCopiedTimer = null;
+let diagnosticsCopied = false;
+
+function getString(state, name) {
+	const strings = state.strings ?? DEFAULT_STRINGS;
+	const value = strings[name];
+	return typeof value === 'string' && value.length > 0 ? value : DEFAULT_STRINGS[name];
+}
+
+function formatString(state, name, values) {
+	return getString(state, name).replace(PLACEHOLDER_PATTERN, (match, key) =>
+		Object.hasOwn(values, key) ? values[key] : match,
+	);
+}
+
+function createNumberFormat(state, options) {
+	try {
+		return new Intl.NumberFormat(state.locale, options);
+	} catch {
+		return new Intl.NumberFormat(undefined, options);
+	}
+}
+
+function formatInteger(state, value) {
+	return createNumberFormat(state, {maximumFractionDigits: 0}).format(value ?? 0);
+}
 
 function getStatusText(state) {
 	switch (state.status) {
 		case SplashStatus.DOWNLOADING_UPDATES:
-			return `Downloading update ${state.current ?? 0} of ${state.total ?? 0}…`;
+			return formatString(state, 'downloadingUpdates', {
+				current: formatInteger(state, state.current),
+				total: formatInteger(state, state.total),
+			});
 		case SplashStatus.INSTALLING_UPDATES:
-			return `Installing update ${state.current ?? 0} of ${state.total ?? 0}…`;
+			return formatString(state, 'installingUpdates', {
+				current: formatInteger(state, state.current),
+				total: formatInteger(state, state.total),
+			});
 		case SplashStatus.VERIFYING:
-			return 'Verifying files…';
+			return getString(state, 'verifying');
 		case SplashStatus.DOWNLOAD_STALLED:
-			return `Download stalled. Retrying in ${state.seconds ?? 0} sec…`;
+			return formatString(state, 'downloadStalled', {seconds: formatInteger(state, state.seconds)});
 		case SplashStatus.UPDATE_FAILURE:
-			return `Update failed. Retrying in ${state.seconds ?? 0} sec…`;
+			return formatString(state, 'updateFailed', {seconds: formatInteger(state, state.seconds)});
 		case SplashStatus.SHELL_UPDATE_DOWNLOADING:
-			return 'Updating Fluxer…';
+			return getString(state, 'shellUpdateDownloading');
 		case SplashStatus.SHELL_UPDATE_RESTARTING:
-			return 'Restarting to finish the update…';
+			return getString(state, 'shellUpdateRestarting');
 		case SplashStatus.BLOCKED_UPDATE_REQUIRED:
-			return 'Update required to continue';
+			return getString(state, 'blockedUpdateRequired');
 		case SplashStatus.BLOCKED_UPDATE_UNREACHABLE:
-			return "Can't reach the Fluxer update server";
+			return getString(state, 'blockedUpdateUnreachable');
 		case SplashStatus.BLOCKED_SHELL_UPDATE:
-			return 'A new version of Fluxer is required';
+			return getString(state, 'blockedShellUpdate');
 		case SplashStatus.BLOCKED_UNSUPPORTED_BUILD:
-			return 'This installation is incomplete. Reinstall Fluxer';
+			return getString(state, 'blockedUnsupportedBuild');
 		case SplashStatus.LAUNCHING:
-			return 'Starting…';
+			return getString(state, 'launching');
 		case SplashStatus.UNREACHABLE_LAUNCH:
-			return 'Starting offline…';
+			return getString(state, 'unreachableLaunch');
 		case SplashStatus.WAITING_LOCAL_NETWORK:
-			return 'Waiting for local network permission…';
+			return getString(state, 'waitingLocalNetwork');
 		default:
-			return 'Checking for updates…';
+			return getString(state, 'checkingForUpdates');
 	}
 }
 
@@ -129,24 +188,37 @@ function toProgressPercent(state) {
 	return Math.min(100, Math.max(0, state.progress));
 }
 
-function formatMegabytes(bytes) {
-	const megabytes = bytes / BYTES_PER_MEGABYTE;
-	return megabytes >= 10 ? String(Math.round(megabytes)) : megabytes.toFixed(1);
+function formatOneDecimal(state, value) {
+	return createNumberFormat(state, {minimumFractionDigits: 1, maximumFractionDigits: 1}).format(value);
 }
 
-function formatSpeed(bytesPerSecond) {
+function formatMegabytes(state, bytes) {
+	const megabytes = bytes / BYTES_PER_MEGABYTE;
+	return megabytes >= 10 ? formatInteger(state, Math.round(megabytes)) : formatOneDecimal(state, megabytes);
+}
+
+function formatSpeed(state, bytesPerSecond) {
 	if (bytesPerSecond >= BYTES_PER_MEGABYTE) {
-		return `${(bytesPerSecond / BYTES_PER_MEGABYTE).toFixed(1)} MB/s`;
+		return formatString(state, 'speedMegabytes', {value: formatOneDecimal(state, bytesPerSecond / BYTES_PER_MEGABYTE)});
 	}
-	return `${Math.max(0, Math.round(bytesPerSecond / BYTES_PER_KILOBYTE))} KB/s`;
+	return formatString(state, 'speedKilobytes', {
+		value: formatInteger(state, Math.max(0, Math.round(bytesPerSecond / BYTES_PER_KILOBYTE))),
+	});
 }
 
 function getMetricsText(state) {
 	if (state.status !== SplashStatus.DOWNLOADING_UPDATES && state.status !== SplashStatus.DOWNLOAD_STALLED) return '';
 	if (state.receivedBytes === null || state.totalBytes === null || state.totalBytes === 0) return '';
-	const amount = `${formatMegabytes(state.receivedBytes)} of ${formatMegabytes(state.totalBytes)} MB`;
-	if (state.status !== SplashStatus.DOWNLOADING_UPDATES || state.bytesPerSecond === null) return amount;
-	return `${amount}, ${formatSpeed(state.bytesPerSecond)}`;
+	const received = formatMegabytes(state, state.receivedBytes);
+	const total = formatMegabytes(state, state.totalBytes);
+	if (state.status !== SplashStatus.DOWNLOADING_UPDATES || state.bytesPerSecond === null) {
+		return formatString(state, 'downloadAmount', {received, total});
+	}
+	return formatString(state, 'downloadAmountWithSpeed', {
+		received,
+		total,
+		speed: formatSpeed(state, state.bytesPerSecond),
+	});
 }
 
 function shouldShowDiagnostics(state) {
@@ -222,20 +294,22 @@ function buildDiagnosticsRow() {
 	const row = createNode('div', 'splash-diagnostics');
 	const openLogs = createNode('button', 'splash-diagnostics-link');
 	openLogs.setAttribute('data-action', 'open-logs');
-	openLogs.textContent = 'Open logs';
+	openLogs.textContent = getString(DEFAULT_STATE, 'openLogs');
 	openLogs.addEventListener('click', () => {
 		ipcRenderer.send(SPLASH_OPEN_LOGS_CHANNEL);
 	});
 	const copy = createNode('button', 'splash-diagnostics-link');
 	copy.setAttribute('data-action', 'copy-diagnostics');
-	copy.textContent = 'Copy diagnostics';
+	copy.textContent = getString(DEFAULT_STATE, 'copyDiagnostics');
 	copy.addEventListener('click', () => {
 		ipcRenderer.send(SPLASH_COPY_DIAGNOSTICS_CHANNEL);
-		copy.textContent = 'Copied';
+		diagnosticsCopied = true;
+		render();
 		if (diagnosticsCopiedTimer != null) clearTimeout(diagnosticsCopiedTimer);
 		diagnosticsCopiedTimer = setTimeout(() => {
 			diagnosticsCopiedTimer = null;
-			copy.textContent = 'Copy diagnostics';
+			diagnosticsCopied = false;
+			render();
 		}, DIAGNOSTICS_COPIED_MS);
 	});
 	row.appendChild(openLogs);
@@ -246,6 +320,10 @@ function buildDiagnosticsRow() {
 function reconcileDiagnostics(mount, state) {
 	const row = mount.querySelector('.splash-diagnostics');
 	if (row == null) return;
+	const openLogs = row.querySelector('[data-action="open-logs"]');
+	if (openLogs != null) openLogs.textContent = getString(state, 'openLogs');
+	const copy = row.querySelector('[data-action="copy-diagnostics"]');
+	if (copy != null) copy.textContent = getString(state, diagnosticsCopied ? 'copied' : 'copyDiagnostics');
 	if (shouldShowDiagnostics(state)) {
 		row.classList.add('is-visible');
 	} else {
@@ -294,6 +372,8 @@ function render() {
 	const mount = document.getElementById(SPLASH_MOUNT_ID);
 	if (mount == null) return;
 	const state = splashState ?? DEFAULT_STATE;
+	document.documentElement.lang = typeof state.locale === 'string' ? state.locale : DEFAULT_STATE.locale;
+	document.title = getString(state, 'windowTitle');
 	if (!splashBuilt) {
 		splashBuilt = true;
 		buildSplashLayout(mount);

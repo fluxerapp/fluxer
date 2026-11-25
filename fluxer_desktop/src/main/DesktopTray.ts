@@ -349,7 +349,7 @@ function resolveTrayIcon(): {key: string; image: Electron.NativeImage} | null {
 
 function getTrayToolTip(): string {
 	const description = describeUnreadBadge(trayUnreadBadge);
-	return description ? `${APP_NAME} - ${description}` : APP_NAME;
+	return description ? t('desktop.tray.toolTipWithUnread', {appName: APP_NAME, description}) : APP_NAME;
 }
 
 function syncTrayIcon(force: boolean): void {

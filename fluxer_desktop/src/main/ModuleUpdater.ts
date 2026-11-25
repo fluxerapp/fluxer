@@ -109,6 +109,12 @@ const MODULE_UPDATER_REPORT_SAMPLE_RATES: Readonly<Record<ModuleUpdaterReportTyp
 
 export {ModuleUpdaterBlockReason};
 
+export const ModuleUpdaterDetail = Object.freeze({
+	STORAGE_FULL: 'storage-full',
+} as const);
+
+export type ModuleUpdaterDetail = (typeof ModuleUpdaterDetail)[keyof typeof ModuleUpdaterDetail];
+
 export interface ModuleUpdaterSplashState {
 	readonly status: ModuleUpdaterStatus;
 	readonly current: number | null;
@@ -116,7 +122,7 @@ export interface ModuleUpdaterSplashState {
 	readonly progress: number | null;
 	readonly seconds: number | null;
 	readonly moduleName: string | null;
-	readonly detail: string | null;
+	readonly detail: ModuleUpdaterDetail | null;
 	readonly receivedBytes: number | null;
 	readonly totalBytes: number | null;
 	readonly bytesPerSecond: number | null;
@@ -530,7 +536,7 @@ export class ModuleUpdater {
 				this.reportFailure(error);
 				this.lastError = describeErrorChain(error);
 				this.lastErrorAt = this.now();
-				const detail = isStorageFullError(error) ? 'Not enough disk space to install the update' : null;
+				const detail = isStorageFullError(error) ? ModuleUpdaterDetail.STORAGE_FULL : null;
 				const updateServerUnreachable = !isRejectedManifestError(error) && isUpdateServerUnreachable(error);
 				if (this.downloadProgressed) {
 					backoff.reset();
@@ -986,7 +992,11 @@ export class ModuleUpdater {
 			detail = null,
 			error = null,
 			updateServerUnreachable = false,
-		}: {readonly detail?: string | null; readonly error?: unknown; readonly updateServerUnreachable?: boolean} = {},
+		}: {
+			readonly detail?: ModuleUpdaterDetail | null;
+			readonly error?: unknown;
+			readonly updateServerUnreachable?: boolean;
+		} = {},
 	): ModuleUpdaterOutcome {
 		this.report({type: ModuleUpdaterReportType.BLOCKED, message: `${reason}: ${message}`, error});
 		this.emit(ModuleUpdaterStatus.BLOCKED_UPDATE_REQUIRED, {detail});
@@ -1232,7 +1242,7 @@ export class ModuleUpdater {
 			readonly progress?: number;
 			readonly seconds?: number;
 			readonly moduleName?: string;
-			readonly detail?: string | null;
+			readonly detail?: ModuleUpdaterDetail | null;
 			readonly receivedBytes?: number;
 			readonly totalBytes?: number;
 			readonly bytesPerSecond?: number;

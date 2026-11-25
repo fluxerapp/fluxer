@@ -3,6 +3,7 @@
 import {pathToFileURL} from 'node:url';
 import {createChildLogger} from '@electron/common/Logger';
 import {getDesktopDistributionPath} from '@electron/main/DesktopDistributionPath';
+import {getNativeLocale, t} from '@electron/main/MainI18n';
 import {isModuleLaunchGranted} from '@electron/main/ModuleBootHandoff';
 import {app, BrowserWindow, type IpcMainEvent, ipcMain, nativeTheme} from 'electron';
 
@@ -11,7 +12,7 @@ const SPLASH_WINDOW_HEIGHT_DARWIN = 300;
 const SPLASH_WINDOW_HEIGHT_DEFAULT = 350;
 const SPLASH_BACKGROUND_COLOR = '#1a1a1a';
 const SPLASH_ACTION_LABEL_MAX_LENGTH = 48;
-const SPLASH_MESSAGE_MAX_LENGTH = 160;
+const SPLASH_MESSAGE_MAX_LENGTH = 320;
 const SPLASH_PROGRESS_MAX = 100;
 
 const SPLASH_READY_WATCHDOG_MS = 3000;
@@ -56,14 +57,52 @@ type SplashActionKind = (typeof SplashActionKind)[keyof typeof SplashActionKind]
 
 export interface SplashActionDescriptor {
 	readonly kind: SplashActionKind;
+}
+
+interface SerializedSplashAction {
+	readonly kind: SplashActionKind;
 	readonly label: string;
 }
 
 export const SplashAction = Object.freeze({
-	RETRY: Object.freeze({kind: SplashActionKind.RETRY, label: 'Retry now'}),
-	DOWNLOAD: Object.freeze({kind: SplashActionKind.DOWNLOAD, label: 'Download update'}),
-	QUIT: Object.freeze({kind: SplashActionKind.QUIT, label: 'Quit'}),
+	RETRY: Object.freeze({kind: SplashActionKind.RETRY}),
+	DOWNLOAD: Object.freeze({kind: SplashActionKind.DOWNLOAD}),
+	QUIT: Object.freeze({kind: SplashActionKind.QUIT}),
 } as const satisfies Readonly<Record<string, SplashActionDescriptor>>);
+
+const SPLASH_ACTION_LABEL_KEYS: Readonly<Record<SplashActionKind, string>> = Object.freeze({
+	[SplashActionKind.RETRY]: 'desktop.splash.retryNow',
+	[SplashActionKind.DOWNLOAD]: 'desktop.splash.downloadUpdate',
+	[SplashActionKind.QUIT]: 'desktop.splash.quit',
+});
+
+const SPLASH_STRING_KEYS = Object.freeze({
+	windowTitle: 'desktop.splash.windowTitle',
+	checkingForUpdates: 'desktop.splash.checkingForUpdates',
+	downloadingUpdates: 'desktop.splash.downloadingUpdates',
+	installingUpdates: 'desktop.splash.installingUpdates',
+	verifying: 'desktop.splash.verifying',
+	downloadStalled: 'desktop.splash.downloadStalled',
+	updateFailed: 'desktop.splash.updateFailed',
+	shellUpdateDownloading: 'desktop.splash.shellUpdateDownloading',
+	shellUpdateRestarting: 'desktop.splash.shellUpdateRestarting',
+	blockedUpdateRequired: 'desktop.splash.blockedUpdateRequired',
+	blockedUpdateUnreachable: 'desktop.splash.blockedUpdateUnreachable',
+	blockedShellUpdate: 'desktop.splash.blockedShellUpdate',
+	blockedUnsupportedBuild: 'desktop.splash.blockedUnsupportedBuild',
+	launching: 'desktop.splash.launching',
+	unreachableLaunch: 'desktop.splash.unreachableLaunch',
+	waitingLocalNetwork: 'desktop.splash.waitingLocalNetwork',
+	downloadAmount: 'desktop.splash.downloadAmount',
+	downloadAmountWithSpeed: 'desktop.splash.downloadAmountWithSpeed',
+	speedMegabytes: 'desktop.splash.speedMegabytes',
+	speedKilobytes: 'desktop.splash.speedKilobytes',
+	openLogs: 'desktop.splash.openLogs',
+	copyDiagnostics: 'desktop.splash.copyDiagnostics',
+	copied: 'desktop.splash.copied',
+} as const);
+
+type SplashStrings = {readonly [Name in keyof typeof SPLASH_STRING_KEYS]: string};
 
 export interface SplashState {
 	readonly status: SplashStatus;
@@ -87,8 +126,10 @@ interface SerializedSplashState {
 	readonly receivedBytes: number | null;
 	readonly totalBytes: number | null;
 	readonly bytesPerSecond: number | null;
-	readonly action: SplashActionDescriptor | null;
+	readonly action: SerializedSplashAction | null;
 	readonly message: string | null;
+	readonly locale: string;
+	readonly strings: SplashStrings;
 }
 
 type SplashListener = () => void;
@@ -128,12 +169,20 @@ function toSplashText(value: string | null | undefined, maxLength: number): stri
 	return trimmed.slice(0, maxLength);
 }
 
-function toSplashAction(action: SplashActionDescriptor | null | undefined): SplashActionDescriptor | null {
+function toSplashAction(action: SplashActionDescriptor | null | undefined): SerializedSplashAction | null {
 	if (action == null || typeof action !== 'object') return null;
 	if (!SPLASH_ACTION_KINDS.has(action.kind)) return null;
-	const label = toSplashText(action.label, SPLASH_ACTION_LABEL_MAX_LENGTH);
+	const label = toSplashText(t(SPLASH_ACTION_LABEL_KEYS[action.kind]), SPLASH_ACTION_LABEL_MAX_LENGTH);
 	if (label == null) return null;
 	return {kind: action.kind, label};
+}
+
+function resolveSplashStrings(): SplashStrings {
+	const strings = {} as Record<keyof typeof SPLASH_STRING_KEYS, string>;
+	for (const [name, key] of Object.entries(SPLASH_STRING_KEYS) as Array<[keyof typeof SPLASH_STRING_KEYS, string]>) {
+		strings[name] = t(key);
+	}
+	return strings;
 }
 
 function serializeSplashState(state: SplashState): SerializedSplashState {
@@ -148,6 +197,8 @@ function serializeSplashState(state: SplashState): SerializedSplashState {
 		bytesPerSecond: toSplashCount(state.bytesPerSecond),
 		action: toSplashAction(state.action),
 		message: toSplashText(state.message, SPLASH_MESSAGE_MAX_LENGTH),
+		locale: getNativeLocale(),
+		strings: resolveSplashStrings(),
 	};
 }
 
@@ -195,10 +246,11 @@ function registerSplashIpc(): void {
 	splashIpcRegistered = true;
 	ipcMain.on(DESKTOP_SPLASH_READY_CHANNEL, (event) => {
 		if (!isSplashSender(event)) return;
+		event.sender.send(
+			DESKTOP_SPLASH_STATE_CHANNEL,
+			lastSerializedState ?? serializeSplashState({status: SplashStatus.CHECKING_FOR_UPDATES}),
+		);
 		showSplashWindow('ready');
-		if (lastSerializedState != null) {
-			event.sender.send(DESKTOP_SPLASH_STATE_CHANNEL, lastSerializedState);
-		}
 	});
 	ipcMain.on(DESKTOP_SPLASH_RETRY_NOW_CHANNEL, (event) => {
 		if (!isSplashSender(event)) return;
