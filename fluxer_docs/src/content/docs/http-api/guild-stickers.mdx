@@ -6,7 +6,7 @@ description: Guild sticker objects and the routes to list, create, clone, update
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A sticker is an image a guild stores for its members to send with a message. Names, descriptions, tags and images must pass the instance's content policy, and blocked content returns `CONTENT_BLOCKED`. To look up a sticker without being in its guild, see [Get sticker metadata](/http-api/expressions/#get-sticker-metadata).
+A sticker is an image a guild stores for its members to send with a message. Names, descriptions, tags and images must pass the instance's content policy, and blocked content returns `CONTENT_BLOCKED`. To look up a sticker without being in its guild, use [Get sticker metadata](/http-api/expressions/#get-sticker-metadata).
 
 ## Guild sticker object
 
@@ -126,7 +126,7 @@ Fluxer creates the items in order, and each one succeeds or fails on its own. Th
 | 200 | [sticker bulk create response](#sticker-bulk-create-response-object) object | Every item was attempted |
 | 400 | [error response](/http-api/#error-response) | The body, the item count or any item's fields fail validation |
 
-The rate limit is 6 requests per minute, on the `guild:sticker:bulk_create::guild_id` bucket.
+The `guild:sticker:bulk_create::guild_id` bucket allows 6 requests per minute.
 
 ## Clone guild sticker
 
@@ -158,7 +158,7 @@ The rate limit is 10 requests per 30 seconds, on the `guild:sticker:clone::guild
 Updates the name, description and tags of a sticker and returns it. To replace the image, create a new sticker. The uploader needs [CREATE_EXPRESSIONS](/http-api/permissions/) and anyone else needs [MANAGE_EXPRESSIONS](/http-api/permissions/). Fluxer sends a [Guild Stickers Update](/gateway/events/#guild-stickers-update) event.
 
 :::caution[Every request writes `description` and `tags`]
-Omitting `description` or `tags` clears the stored value. Send the current value of both when you change only one field.
+Omitting `description` or `tags` clears the stored value. Send the current value of both when you change only one.
 :::
 
 ### JSON body
@@ -202,4 +202,4 @@ Without `purge`, the image stays available through the [Media Proxy](/media-prox
 | 403 | [error response](/http-api/#error-response) | `MISSING_ACCESS` when `purge` is set and the guild lacks `EXPRESSION_PURGE_ALLOWED` |
 | 404 | [error response](/http-api/#error-response) | `UNKNOWN_STICKER` when the sticker isn't in the guild |
 
-The rate limit is 10 requests per 30 seconds, on the `guild:sticker:delete::guild_id` bucket. The daily rate limit is 300 requests per day, on the `guild:sticker:delete:daily::guild_id` bucket.
+The rate limit is 10 requests per 30 seconds, on the `guild:sticker:delete::guild_id` bucket. The `guild:sticker:delete:daily::guild_id` bucket allows 300 requests per day for each guild.

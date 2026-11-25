@@ -1,0 +1,127 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Synology
+description: You run Fluxer on a Synology NAS in Container Manager, behind DSM's reverse proxy.
+---
+
+import {Steps} from '@astrojs/starlight/components';
+
+## Short version
+
+A Synology NAS with an x86-64 or ARM64 processor and DSM 7.2 or later with Container Manager, 2 GB of memory at least and 4 GB for a busy instance, and a domain. Create a project from `compose.yaml` and `fluxer.env`, and add a reverse proxy rule in DSM.
+
+It takes about 20 minutes.
+
+## What this changes
+
+- One Container Manager project called `fluxer`, with one container and one Docker volume called `fluxer-data` for the data.
+- A folder such as `/volume1/docker/fluxer` with `compose.yaml` and `fluxer.env`.
+- A reverse proxy rule in DSM for your domain, to port 8080 on the NAS, and a Let's Encrypt certificate for the domain in DSM.
+- Ports 7881 on TCP and 7882 on UDP for voice.
+- Port forwards on your router for ports 80, 443, 7881 and 7882 to the NAS.
+
+## Before you start
+
+- Check the [requirements](/operator/requirements/). Container Manager runs only on x86-64 and ARM64 models. Fluxer runs on a 2 GB model for a few people and has more room with 4 GB.
+- DSM uses ports 80 and 443, so Fluxer runs in proxy mode behind it.
+- A domain or subdomain for Fluxer, and a way for people outside your home to [connect to the NAS](#open-the-nas-to-the-internet). Behind CGNAT, use [Cloudflare Tunnel](/operator/platforms/cloudflare-tunnel/) or [Tailscale](/operator/platforms/tailscale/) instead.
+- A Btrfs or ext4 volume works for the data.
+
+## Install
+
+<Steps>
+
+1. Download `compose.yaml` and `fluxer.env` from the [latest release](https://github.com/fluxerapp/fluxer/releases/latest) to your computer. Then set your domain and proxy mode in `fluxer.env`.
+
+   ```sh title="fluxer.env"
+   FLUXER_DOMAIN=chat.example.com
+   FLUXER_EDGE_MODE=proxy
+   FLUXER_UPGRADE_COMMAND=In Container Manager, set the image tag in the project's compose.yaml to {version} and choose Build
+   ```
+
+   `FLUXER_UPGRADE_COMMAND` is the step the admin panel shows for an upgrade.
+
+   In `compose.yaml`, replace the five lines under `ports` with these three.
+
+   ```yaml title="compose.yaml"
+   services:
+     fluxer:
+       ports:
+         - "127.0.0.1:8080:8080"
+         - "7881:7881"
+         - "7882:7882/udp"
+   ```
+
+   The `ports` list in `compose.yaml` has `127.0.0.1:8080:8080`.
+
+2. In File Station, make the folder `docker/fluxer` and upload both files to it.
+
+3. In Container Manager, create a project called `fluxer` with the `docker/fluxer` folder and the existing `compose.yaml`. Skip the web portal settings and finish.
+
+   The first start pulls the image and takes a few minutes, then the project runs.
+
+4. [Open the NAS to the internet](#open-the-nas-to-the-internet) and get a certificate for your domain.
+
+   Control Panel, Security, Certificate then shows a valid certificate for your domain.
+
+5. In Control Panel, open Login Portal, Advanced, Reverse Proxy, and create a rule. The source is HTTPS, your domain and port 443. The destination is HTTP, `localhost` and port 8080. Under Custom Header, add WebSocket. Then, under Control Panel, Security, Certificate, choose Settings and pick your domain's certificate for this rule.
+
+   The Fluxer setup wizard opens at `https://chat.example.com`.
+
+6. Print the setup token. In Container Manager, open Container, select the `fluxer-fluxer-1` container, open Action, Open terminal, and create a terminal with `bash`, then run `fluxerd setup-token`.
+
+   Over SSH, which you turn on under Control Panel, Terminal and SNMP, run this.
+
+   ```sh
+   sudo docker exec fluxer-fluxer-1 fluxerd setup-token
+   ```
+
+   Paste the token and create the first admin account. The wizard asks whether people [sign in with a username or an email address](/operator/sign-in/), and this can't change later.
+
+7. [Invite people](/operator/running/#invite-people) with an invite link.
+
+</Steps>
+
+## Open the NAS to the internet
+
+- Give the NAS a fixed address on your network, either in DSM under Control Panel, Network, Network Interface, or with a DHCP reservation on your home router.
+- On your router, forward TCP ports 80 and 443 and TCP port 7881 and UDP port 7882 to the NAS. DSM needs port 80 for Let's Encrypt, and its reverse proxy serves port 443.
+- If your home's public address changes, set up a free `synology.me` name under Control Panel, External Access, DDNS, and point your domain at it with a `CNAME` record. With a fixed address, use an `A` record.
+- Get the certificate under Control Panel, Security, Certificate. Choose Add, then "Add a new certificate", then "Get a certificate from Let's Encrypt", and enter your domain.
+
+If the address your router shows on its own status page differs from the one `ifconfig.me` shows, your provider uses CGNAT and forwarding can't work. Use [Cloudflare Tunnel](/operator/platforms/cloudflare-tunnel/) or [Tailscale](/operator/platforms/tailscale/) instead.
+
+## On your home network without a domain
+
+Fluxer can also run on the NAS's own address, such as `192.168.1.20`, and sign its own certificate. Devices on your home network can then open it, and nobody outside can. DSM keeps ports 80 and 443, so Fluxer uses 8080 and 8443.
+
+```sh title="fluxer.env"
+FLUXER_DOMAIN=192.168.1.20
+FLUXER_PUBLIC_PORT=8443
+```
+
+Leave out `FLUXER_EDGE_MODE`. In `compose.yaml`, replace the five lines under `ports` with the four lines below, which move the web ports to 8080 and 8443.
+
+```yaml title="compose.yaml"
+services:
+  fluxer:
+    ports:
+      - "8080:80"
+      - "8443:443"
+      - "7881:7881"
+      - "7882:7882/udp"
+```
+
+Open `https://192.168.1.20:8443` with your own address. Browsers show a certificate warning until you [install Fluxer's root certificate](/operator/requirements/#trusting-fluxers-own-authority) on each device. Each device can download the certificate file from `http://192.168.1.20:8080/fluxer-root.crt` with any browser.
+
+## Upgrade and back up
+
+To upgrade, change the tag on the `image` line of the project's `compose.yaml` to the new version, and choose Build in the project.
+
+To back up, create a shared folder called `backups` under Control Panel, Shared Folder, and run this over SSH. The archive is written as root.
+
+```sh
+sudo docker exec fluxer-fluxer-1 fluxerd backup --out - | sudo tee /volume1/backups/fluxer-backup.tar.zst > /dev/null
+```
+
+Copy the archive to another machine with Hyper Backup or another tool.

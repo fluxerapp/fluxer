@@ -1,0 +1,85 @@
+---
+// SPDX-License-Identifier: AGPL-3.0-or-later
+import {Icon} from '@astrojs/starlight/components';
+import {withBase} from '@/components/Sections';
+
+interface Choice {
+	id: string;
+	label: string;
+	title: string;
+	text: string;
+	action: string;
+	href: string;
+}
+
+const choices: ReadonlyArray<Choice> = [
+	{
+		id: 'linux',
+		label: 'A Linux machine or VPS',
+		title: 'Docker',
+		text: 'Most people start with Docker, which runs Fluxer as one container on 64-bit Linux.',
+		action: 'Install with Docker',
+		href: '/operator/docker/',
+	},
+	{
+		id: 'nas',
+		label: 'A NAS or home server',
+		title: 'NAS and home servers',
+		text: 'Synology, Unraid, TrueNAS, QNAP, CasaOS and ZimaOS have platform guides. Umbrel and YunoHost have no Fluxer app or package yet, and their guides show how to run Fluxer on another machine or VM.',
+		action: 'See the NAS guides',
+		href: '/operator/platforms/#nas-and-home-servers',
+	},
+	{
+		id: 'debian',
+		label: 'Debian or Ubuntu, no containers',
+		title: 'Linux with systemd',
+		text: 'rexctl installs Fluxer as a systemd service.',
+		action: 'Install on Linux with systemd',
+		href: '/operator/linux/',
+	},
+	{
+		id: 'kubernetes',
+		label: 'A Kubernetes cluster',
+		title: 'Kubernetes',
+		text: 'The Helm chart installs Fluxer as one pod, behind your ingress or your Gateway API.',
+		action: 'Install on Kubernetes',
+		href: '/operator/kubernetes/',
+	},
+	{
+		id: 'desktop',
+		label: 'A Mac or Windows PC',
+		title: 'Docker Desktop',
+		text: 'Docker Desktop runs Fluxer on a Mac or a Windows PC, for a small instance or to try it.',
+		action: 'Use Docker Desktop',
+		href: '/operator/platforms/docker-desktop/',
+	},
+];
+---
+
+<div class="flx-picker not-content">
+	<fieldset class="flx-picker-choices">
+		<legend>Where will Fluxer run?</legend>
+		{
+			choices.map((choice, index) => (
+				<label class="flx-picker-choice">
+					<input type="radio" name="flx-setup" value={choice.id} checked={index === 0} />
+					<span>{choice.label}</span>
+				</label>
+			))
+		}
+	</fieldset>
+	<div class="flx-picker-answers" aria-live="polite">
+		{
+			choices.map((choice) => (
+				<div class="flx-picker-answer" data-answer={choice.id}>
+					<p class="flx-picker-title">{choice.title}</p>
+					<p class="flx-picker-text">{choice.text}</p>
+					<a class="flx-button" href={withBase(choice.href)}>
+						{choice.action}
+						<Icon name="right-arrow" size="1rem" class="rtl:flip" />
+					</a>
+				</div>
+			))
+		}
+	</div>
+</div>

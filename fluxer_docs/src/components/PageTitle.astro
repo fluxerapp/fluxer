@@ -1,0 +1,71 @@
+---
+// SPDX-License-Identifier: AGPL-3.0-or-later
+import {lastCommitDate} from '@/components/LastUpdated';
+import {isHome, isNotFound, sectionOf} from '@/components/Sections';
+
+const PAGE_TITLE_ID = '_top';
+
+type Entry = (typeof Astro.locals.starlightRoute.sidebar)[number];
+
+const generators: Record<string, string> = {
+	'operator/rexctl': 'fluxer_rexctl/cmd/docs.go',
+	'operator/settings': 'fluxer_rexctl/cmd/docs_settings.go',
+};
+const {id, entry, sidebar, editUrl} = Astro.locals.starlightRoute;
+const lastUpdated = entry.filePath !== undefined ? lastCommitDate(entry.filePath) : undefined;
+const section = sectionOf(id);
+const showRow = !isHome(id) && !isNotFound(id) && section !== undefined;
+
+function groupOf(entries: ReadonlyArray<Entry>, parent: string | undefined): string | undefined {
+	for (const item of entries) {
+		if (item.type === 'link' && item.isCurrent) {
+			return parent;
+		}
+		if (item.type === 'group') {
+			const found = groupOf(item.entries, parent ?? item.label);
+			if (found !== undefined) {
+				return found;
+			}
+		}
+	}
+	return undefined;
+}
+
+const root = sidebar.find((item) => item.type === 'group' && item.label === section);
+const group = root?.type === 'group' ? groupOf(root.entries, undefined) : undefined;
+const generator = generators[id];
+const edit = generator !== undefined ? `https://github.com/fluxerapp/fluxer/edit/main/${generator}` : editUrl?.href;
+const updated = lastUpdated?.toLocaleDateString('en-GB', {
+	day: 'numeric',
+	month: 'long',
+	year: 'numeric',
+	timeZone: 'UTC',
+});
+---
+
+{
+	showRow && (
+		<div class="flx-crumbs not-content" data-pagefind-ignore>
+			<p>
+				{section}
+				{group !== undefined && <span aria-hidden="true"> / </span>}
+				{group !== undefined && <span>{group}</span>}
+			</p>
+			{(updated !== undefined || edit !== undefined) && (
+				<p class="flx-crumbs-meta">
+					{updated !== undefined && lastUpdated !== undefined && (
+						<span>
+							Updated <time datetime={lastUpdated.toISOString()}>{updated}</time>
+						</span>
+					)}
+					{edit !== undefined && (
+						<a href={edit} rel="noopener">
+							Edit on GitHub
+						</a>
+					)}
+				</p>
+			)}
+		</div>
+	)
+}
+<h1 id={PAGE_TITLE_ID} data-pagefind-ignore data-pagefind-meta="title">{entry.data.title}</h1>

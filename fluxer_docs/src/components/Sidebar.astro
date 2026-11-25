@@ -1,24 +1,185 @@
 ---
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import Default from '@astrojs/starlight/components/Sidebar.astro';
-import Search from '@astrojs/starlight/components/Search.astro';
-import SiteTitle from '@astrojs/starlight/components/SiteTitle.astro';
-import SocialIcons from '@astrojs/starlight/components/SocialIcons.astro';
+import SidebarSublist from '@astrojs/starlight/components/SidebarSublist.astro';
+import {isHome, isNotFound, sectionOf, sections, withBase} from '@/components/Sections';
 import ThemeSelect from '@/components/ThemeSelect.astro';
+
+type Entry = (typeof Astro.locals.starlightRoute.sidebar)[number];
+
+const {id, sidebar} = Astro.locals.starlightRoute;
+const current = sectionOf(id);
+const overview = isHome(id) || isNotFound(id);
+
+const groups = sidebar.filter((entry) => entry.type === 'group');
+const scoped = groups.filter((group) => overview || group.label === current);
+
+function identity(entries: ReadonlyArray<Entry>): string {
+	return entries
+		.map((entry) => (entry.type === 'group' ? entry.label + identity(entry.entries) : entry.label + entry.href))
+		.join('');
+}
+
+function sidebarHash(value: string): string {
+	let hash = 0;
+	for (let i = 0; i < value.length; i++) {
+		hash = (hash << 5) - hash + value.charCodeAt(i);
+	}
+	return (hash >>> 0).toString(36).padStart(7, '0');
+}
+
+const hash = sidebarHash(`${overview ? 'overview' : 'section'}:${identity(scoped)}`);
+
+function firstLink(entry: Entry): string | undefined {
+	if (entry.type === 'link') {
+		return entry.href;
+	}
+	for (const child of entry.entries) {
+		const href = firstLink(child);
+		if (href !== undefined) {
+			return href;
+		}
+	}
+	return undefined;
+}
+
+function shortList(group: Entry): Array<{label: string; href: string; current: boolean}> {
+	if (group.type !== 'group') {
+		return [];
+	}
+	const out: Array<{label: string; href: string; current: boolean}> = [];
+	for (const entry of group.entries) {
+		const href = firstLink(entry);
+		if (href !== undefined) {
+			out.push({label: entry.label, href, current: entry.type === 'link' && entry.isCurrent});
+		}
+	}
+	return out;
+}
 ---
 
-<flx-sidebar-head>
-	<flx-sidebar-brand>
-		<SiteTitle />
-		<flx-sidebar-actions>
-			<flx-sidebar-social>
-				<SocialIcons />
-			</flx-sidebar-social>
-			<ThemeSelect />
-		</flx-sidebar-actions>
-	</flx-sidebar-brand>
-	<flx-sidebar-search>
-		<Search />
-	</flx-sidebar-search>
-</flx-sidebar-head>
-<Default />
+<flx-sidebar-mobile class="md:sl-hidden">
+	<nav aria-label="Docs sections">
+		<ul class="flx-mobile-links">
+			{
+				sections.map((section) => (
+					<li>
+						<a href={withBase(section.href)} aria-current={current === section.label ? 'true' : undefined}>
+							{section.label}
+						</a>
+					</li>
+				))
+			}
+			<li><a href="https://fluxer.com/donate" rel="noopener">Donate</a></li>
+			<li><a href="https://fluxer.com/pass" rel="noopener">Operator Pass</a></li>
+			<li><a href="https://fluxer.com" rel="noopener">fluxer.com</a></li>
+			<li><a href="https://github.com/fluxerapp/fluxer" rel="noopener">GitHub</a></li>
+		</ul>
+	</nav>
+	<div class="flx-mobile-theme">
+		<span class="flx-mobile-theme-label" aria-hidden="true">Appearance</span>
+		<ThemeSelect />
+	</div>
+</flx-sidebar-mobile>
+<sl-sidebar-state-persist data-hash={hash}>
+	<script is:inline aria-hidden="true">
+		(() => {
+			try {
+				if (!matchMedia('(min-width: 50em)').matches) return;
+				const target = document.querySelector('sl-sidebar-state-persist');
+				const state = JSON.parse(sessionStorage.getItem('sl-sidebar-state') || '0');
+				if (!target || !state || target.dataset.hash !== state.hash) return;
+				window._starlightScrollRestore = state.scroll;
+				customElements.define(
+					'sl-sidebar-restore',
+					class extends HTMLElement {
+						connectedCallback() {
+							try {
+								const index = parseInt(this.dataset.index || '');
+								const details = this.closest('details');
+								if (details && typeof state.open[index] === 'boolean') details.open = state.open[index];
+							} catch {}
+						}
+					},
+				);
+			} catch {}
+		})();
+	</script>
+	{
+		scoped.map((group) => (
+			<section class="flx-sidebar-section" aria-labelledby={`flx-sidebar-${group.label}`}>
+				<h2 class="flx-sidebar-heading" id={`flx-sidebar-${group.label}`}>
+					{group.label}
+				</h2>
+				{overview || (group.type === 'group' && group.entries.every((entry) => entry.type === 'link')) ? (
+					<ul class="top-level flx-sidebar-short">
+						{shortList(group).map((item) => (
+							<li>
+								<a href={item.href} class="large" aria-current={item.current ? 'page' : undefined}>
+									<span>{item.label}</span>
+								</a>
+							</li>
+						))}
+					</ul>
+				) : (
+					group.type === 'group' && <SidebarSublist sublist={group.entries} />
+				)}
+			</section>
+		))
+	}
+	<script is:inline aria-hidden="true">
+		(() => {
+			const scroller = document.getElementById('starlight__sidebar');
+			if (!window._starlightScrollRestore || !scroller) return;
+			scroller.scrollTop = window._starlightScrollRestore;
+			scroller.dataset.restored = '';
+			delete window._starlightScrollRestore;
+		})();
+	</script>
+	<script is:inline aria-hidden="true">
+		addEventListener('pagehide', () => {
+			try {
+				const target = document.querySelector('sl-sidebar-state-persist');
+				const scroller = document.getElementById('starlight__sidebar');
+				if (!target || !scroller) return;
+				const open = [];
+				for (const point of target.querySelectorAll('sl-sidebar-restore')) {
+					const details = point.closest('details');
+					const index = parseInt(point.dataset.index || '');
+					if (details && !Number.isNaN(index)) open[index] = details.open;
+				}
+				sessionStorage.setItem(
+					'sl-sidebar-state',
+					JSON.stringify({hash: target.dataset.hash, open, scroll: scroller.scrollTop}),
+				);
+			} catch {}
+		});
+	</script>
+</sl-sidebar-state-persist>
+<script is:inline aria-hidden="true">
+	(() => {
+		try {
+			const pane = document.getElementById('starlight__sidebar');
+			const link = pane && pane.querySelector('.sidebar-content a[aria-current="page"]');
+			if (!link) return;
+			const restored = pane.dataset.restored !== undefined;
+			delete pane.dataset.restored;
+			const show = () => {
+				const box = pane.getBoundingClientRect();
+				if (box.height === 0) return;
+				const item = link.getBoundingClientRect();
+				if (item.top < box.top || item.bottom > box.bottom) {
+					pane.scrollTop += item.top - box.top - (box.height - item.height) / 2;
+				}
+			};
+			if (!restored) show();
+			pane.addEventListener('beforetoggle', (event) => {
+				if (event.newState === 'open') requestAnimationFrame(show);
+			});
+		} catch {}
+	})();
+</script>
+<style>
+	sl-sidebar-state-persist {
+		display: contents;
+	}
+</style>

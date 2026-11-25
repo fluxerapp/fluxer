@@ -1,0 +1,89 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: MicroK8s
+description: You run Fluxer on MicroK8s with the Helm chart, its ingress, cert-manager and hostpath-storage addons, and voice on host ports.
+---
+
+import {Steps} from '@astrojs/starlight/components';
+
+## Short version
+
+One machine with 2 CPU cores, 2 GB of memory at least and 4 GB for a busy instance, and 20 GB of free disk, and a domain that points at it. Install MicroK8s, turn on four addons and install the chart, in about 15 minutes.
+
+## What this changes
+
+- MicroK8s, with its ingress controller on ports 80 and 443 of the node, CoreDNS, hostpath storage and cert-manager. The data is under `/var/snap/microk8s/common/default-storage` on the node, and deleting the PersistentVolumeClaim deletes that data.
+- A ClusterIssuer called `letsencrypt`.
+- Fluxer in the `fluxer` namespace, [the same as on any cluster](/operator/kubernetes/#what-this-changes), with voice on host ports 7881 and 7882 of the MicroK8s node.
+
+## Before you start
+
+Check the [requirements](/operator/requirements/). Open ports 80 and 443 on TCP, 7881 on TCP and 7882 on UDP in any firewall in front of the machine. Nothing else may use ports 80 and 443.
+
+## Install
+
+<Steps>
+
+1. Install MicroK8s and its addons, then give Helm the kubeconfig.
+
+   ```sh
+   sudo snap install microk8s --classic
+   sudo microk8s status --wait-ready
+   sudo microk8s enable dns hostpath-storage ingress cert-manager
+   sudo snap install helm --classic
+   mkdir -p ~/.kube && sudo microk8s config > ~/.kube/config && chmod 600 ~/.kube/config
+   ```
+
+   `sudo microk8s status` lists the four addons under `enabled`. Snap updates MicroK8s by itself, and the pod can restart when it does. `sudo snap refresh --hold microk8s` stops those updates until you update it yourself.
+
+2. Add a Let's Encrypt issuer that uses the `public` ingress class.
+
+   ```yaml title="issuer.yaml"
+   apiVersion: cert-manager.io/v1
+   kind: ClusterIssuer
+   metadata:
+     name: letsencrypt
+   spec:
+     acme:
+       server: https://acme-v02.api.letsencrypt.org/directory
+       privateKeySecretRef:
+         name: letsencrypt
+       solvers:
+         - http01:
+             ingress:
+               ingressClassName: public
+   ```
+
+   Apply it with `sudo microk8s kubectl apply -f issuer.yaml`. `sudo microk8s kubectl get clusterissuer` shows `True` under READY.
+
+3. Install Fluxer.
+
+   ```sh
+   helm install fluxer oci://ghcr.io/fluxerapp/charts/fluxer \
+     --namespace fluxer --create-namespace \
+     --set domain=chat.example.com \
+     --set ingress.className=public \
+     --set ingress.annotations."cert-manager\.io/cluster-issuer"=letsencrypt
+   sudo microk8s kubectl -n fluxer rollout status statefulset/fluxer --timeout 15m
+   ```
+
+   In MicroK8s 1.35 the ingress addon runs Traefik, with the IngressClasses `public`, `nginx` and `traefik`, and WebSockets need no annotations. Traefik ends an upload that takes longer than 60 seconds to arrive, so raise [its read timeout](/operator/upload-limits/#reverse-proxy-body-size) for slow uploads.
+
+   Older MicroK8s releases ran ingress-nginx. There, add these two lines to the `helm install` command so uploads work.
+
+   ```sh
+     --set ingress.annotations."nginx\.ingress\.kubernetes\.io/proxy-body-size"=512m \
+     --set ingress.annotations."nginx\.ingress\.kubernetes\.io/proxy-read-timeout"=3600
+   ```
+
+   The rollout prints `partitioned roll out complete`, and about a minute later cert-manager has fetched a Let's Encrypt certificate for your domain.
+
+4. Print the setup token.
+
+   ```sh
+   sudo microk8s kubectl -n fluxer exec fluxer-0 -- fluxerd setup-token
+   ```
+
+   Open your domain and paste the token to create the first admin account.
+
+</Steps>

@@ -10,7 +10,9 @@ OAuth2 lets a user give an application access to their account, and the same con
 
 ## Authorization code grant
 
-1. Send the user's browser to [Authorize application](#authorize-application). When the user approves on the consent screen, Fluxer sends the browser to your `redirect_uri` with a `code` and your `state`.
+## Authorisation code grant
+
+1. Send the user's browser to [Authorise application](#authorize-application). When the user approves on the consent screen, Fluxer sends the browser back to your `redirect_uri` with a `code` and your `state`.
 2. Exchange the code at [Exchange OAuth2 token](#exchange-oauth2-token) with your client credentials to get an access token and a refresh token. Every third-party application gets a refresh token.
 3. Send the access token as `Authorization: Bearer <token>`. Before the access token expires, exchange the refresh token for a new pair.
 
@@ -26,7 +28,7 @@ If you don't refresh within 30 days, the refresh token expires and the user has 
 
 PKCE supports only the `S256` method. Send `code_challenge` together with `code_challenge_method=S256`. Fluxer rejects `plain` with a validation error. At [Grant OAuth2 consent](#grant-oauth2-consent), a challenge without a method or a method without a challenge gets `invalid_request`. With `prompt=none`, the same mistakes redirect with `error=consent_required`. When the code has a challenge, the token exchange needs the matching `code_verifier`.
 
-The token, introspection and revocation routes take an `application/x-www-form-urlencoded` or `multipart/form-data` body. Authenticate your application with HTTP Basic or with the `client_id` and `client_secret` fields. Introspection and revocation return `invalid_request` when credentials are in both the `Authorization` header and the body.
+The token, introspection and revocation routes take an `application/x-www-form-urlencoded` or `multipart/form-data` body. Authenticate your application with HTTP Basic or with the `client_id` and `client_secret` fields. When credentials are in both the `Authorization` header and the body, introspection and revocation return `invalid_request` as the error.
 
 [Grant OAuth2 consent](#grant-oauth2-consent) and the routes under `/oauth2/@me/authorizations` need the user's own token. A bot token or OAuth2 access token gets 403 `ACCESS_DENIED`.
 
@@ -120,11 +122,9 @@ The user that [Get OAuth2 user information](#get-oauth2-user-information) return
 | email? | ?string | The email address, null without the `email` scope |
 | verified? | ?boolean | Whether the email address is verified, sent only with the `email` scope |
 | flags? | integer | The [public user flags](/http-api/users/#public-user-flags) |
-| avatar_color<sup>1</sup> | ?integer | The default avatar color |
-| bot<sup>1</sup> | boolean | Whether the account is a bot |
-| system<sup>1</sup> | boolean | Whether the account is a system user |
-
-<sup>1</sup> Always sent, but the response schema does not declare it
+| avatar_color | ?integer | The default avatar colour |
+| bot | boolean | Whether the account is a bot |
+| system | boolean | Whether the account is a system user |
 
 ## OAuth2 introspection object
 
@@ -137,13 +137,12 @@ Whether a token is active, and what it grants.
 | active | boolean | Whether the token is valid and was issued to your application |
 | scope? | string | The granted scopes, separated by spaces |
 | client_id? | snowflake | The ID of the application |
-| username? | string | Never sent |
 | token_type? | string | The token type, `Bearer` for an access token or `refresh_token` for a refresh token |
 | exp? | integer | When the access token expires, in Unix seconds |
 | iat? | integer | When the token was issued, in Unix seconds |
 | sub? | snowflake | The ID of the user |
 
-An inactive token returns only `active: false`. An active token has every other field except `username`, and a refresh token has no `exp`.
+An inactive token returns only `active: false`. An active token has every other field, and a refresh token has no `exp`.
 
 ## Current OAuth2 authorization object
 
@@ -168,11 +167,10 @@ The application in a [current OAuth2 authorization](#current-oauth2-authorizatio
 | --- | --- | --- |
 | id | snowflake | The ID of the application |
 | name | string | The name of the application |
-| icon | ?string | Always null |
-| description | ?string | Always null |
+| icon | ?string | The avatar hash of the application's bot |
+| description | ?string | The bio of the application's bot |
 | bot_public | boolean | Whether anyone can install the bot |
 | bot_require_code_grant | boolean | Whether installing the bot needs a full code grant |
-| flags | integer | Always 0 |
 
 ## OAuth2 authorized user object
 
@@ -188,14 +186,12 @@ The user in a [current OAuth2 authorization](#current-oauth2-authorization-objec
 | global_name | ?string | The display name |
 | avatar | ?string | The avatar hash |
 | avatar_color | ?integer | The default avatar color |
-| bot? | boolean | Whether the account is a bot |
-| system? | boolean | Whether the account is a system user |
+| bot | boolean | Whether the account is a bot |
+| system | boolean | Whether the account is a system user |
 | flags | integer | The [public user flags](/http-api/users/#public-user-flags) |
 | email? | ?string | The email address, null without the `email` scope |
 | verified? | ?boolean | Whether the email address is verified, sent only with the `email` scope |
-| sub<sup>1</sup> | snowflake | The ID of the user, the same as `id` |
-
-<sup>1</sup> Always sent, but the response schema does not declare it
+| sub | snowflake | The ID of the user, the same as `id` |
 
 ## OAuth2 authorization object
 
@@ -209,7 +205,7 @@ One application the current user has authorized.
 | scopes<sup>1</sup> | array[string] | The scopes the user granted to it |
 | authorized_at | ISO8601 timestamp | When the oldest current refresh token for the application was issued |
 
-<sup>1</sup> Can include `bot` or values you don't recognize, which you should ignore
+<sup>1</sup> Can include `bot` or values you don't recognise, which you should ignore
 
 ## Authorized application object
 
@@ -222,7 +218,7 @@ The application in an [OAuth2 authorization](#oauth2-authorization-object).
 | id | snowflake | The ID of the application |
 | name | string | The name of the application |
 | icon | ?string | The avatar hash of the application's bot |
-| description | ?string | Always null |
+| description | ?string | The bio of the application's bot |
 | bot_public | boolean | Whether anyone can install the bot |
 
 ## OAuth2 consent response object
@@ -367,7 +363,7 @@ The rate limit is 120 requests per minute, on the `oauth:introspect` bucket.
 
 <RouteHeader method="POST" path="/v1/oauth2/introspect" />
 
-Returns an [OAuth2 introspection](#oauth2-introspection-object) object for an access or refresh token. A token is inactive when it was issued to another application or its user can't sign in.
+Returns an [OAuth2 introspection](#oauth2-introspection-object) object for an access or refresh token. A token is inactive when it was issued to another application or when its user can't sign in.
 
 ### Form body
 
@@ -416,7 +412,9 @@ The rate limit is 120 requests per minute, on the `oauth:revoke` bucket.
 
 <RouteHeader method="GET" path="/v1/oauth2/@me" />
 
-Returns the [current OAuth2 authorization](#current-oauth2-authorization-object) for the OAuth2 access token you send. It needs no scope.
+Returns the [current OAuth2 authorisation](#current-oauth2-authorization-object) for the OAuth2 access token you send, and needs no scope.
+
+<a id="get-current-oauth2-authorization-response"></a>
 
 ### Response
 
@@ -443,7 +441,7 @@ The rate limit is 60 requests per minute, on the `oauth_dev:clients:list` bucket
 
 ## Revoke OAuth2 authorization
 
-<RouteHeader method="DELETE" path="/v1/oauth2/@me/authorizations/{applicationId}" />
+<RouteHeader method="DELETE" path="/v1/oauth2/@me/authorizations/{application_id}" />
 
 Deletes every token the current user has for one application. A bot the application installed stays where it is.
 

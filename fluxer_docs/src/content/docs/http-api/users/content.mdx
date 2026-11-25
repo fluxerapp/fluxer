@@ -6,7 +6,7 @@ description: Recent mentions, saved messages and deletion of your own messages.
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-Recent mentions and saved messages are private lists that only the account that owns them can read. Two more routes delete the messages you wrote. For data archives see [Data harvests](/http-api/users/data-harvest/).
+Recent mentions and saved messages are private lists that only the account that owns them can read. Two more routes delete the messages you wrote. To download a copy of all your data, [request a data export](/http-api/users/data-harvest/).
 
 Only user tokens can call these routes, and Fluxer rejects a bot or OAuth2 bearer token with 403 `ACCESS_DENIED`.
 
@@ -205,7 +205,7 @@ The sudo fields are the [sudo verification object](/http-api/users/mfa/#sudo-ver
 | 400 | [error response](/http-api/#error-response) | An `end_date` not after `start_date`, no `include_*` field true, or a wrong sudo proof |
 | 403 | [error response](/http-api/#error-response) | `SUDO_MODE_REQUIRED` when no accepted proof is present |
 
-The rate limit is 5 requests per 30 minutes, on the `user:messages:bulk_delete_mine_filtered` bucket.
+The `user:messages:bulk_delete_mine_filtered` bucket allows 5 requests per 30 minutes.
 
 ## Request bulk message deletion
 

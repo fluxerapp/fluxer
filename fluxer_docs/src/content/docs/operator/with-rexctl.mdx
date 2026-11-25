@@ -1,0 +1,125 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: rexctl helper
+description: rexctl is an optional helper that installs, upgrades, backs up and looks after Fluxer on Docker, Podman or systemd.
+tag: not for Kubernetes
+---
+
+rexctl is an optional helper for running Fluxer on one machine. It installs Fluxer, then upgrades it, backs it up, changes settings and manages people.
+
+## What it manages
+
+- It installs Fluxer in one Docker or Podman container, or as a systemd service.
+- On Docker and Podman you can [stop using it](#stop-using-rexctl) whenever you want.
+- A systemd install stays managed by rexctl.
+- It manages only the instances it installed.
+- It can't take over a Fluxer started with `docker run`, the compose file or Quadlet.
+
+## Install rexctl
+
+Run this on Linux or macOS.
+
+As root, rexctl goes in `/usr/local/bin`, and as any other user in `~/.local/bin`.
+
+```sh
+curl -fsSL https://fluxer.dev/install.sh | sh
+```
+
+The script checks the download against the release's checksums, installs rexctl and starts `rexctl install` in the same terminal.
+
+A systemd install needs rexctl to run as root. With `sudo`, the script only installs rexctl, then prints the command that sets up Fluxer.
+
+```sh
+curl -fsSL https://fluxer.dev/install.sh | sudo sh
+sudo rexctl install
+```
+
+On Docker or Podman, rexctl runs as the account that installed Fluxer. The automatic upgrades it sets up run as that account too.
+
+On Windows, run this in PowerShell.
+
+```powershell
+irm https://fluxer.dev/install.ps1 | iex
+```
+
+To put rexctl in another folder, set `REXCTL_INSTALL_DIR`.
+
+```sh
+curl -fsSL https://fluxer.dev/install.sh | REXCTL_INSTALL_DIR=$HOME/bin sh
+```
+
+## Install Fluxer
+
+```sh
+rexctl install
+```
+
+rexctl checks the machine, then asks these questions. Nothing changes until you confirm.
+
+1. Your domain or IP address.
+2. Whether a proxy is in front of Fluxer.
+3. Whether Fluxer starts with the machine, on Docker and systemd.
+4. Where to keep uploads.
+5. How often to back up.
+6. Where to create your admin account.
+
+When you create the admin account in the terminal, rexctl also asks you these. In the browser, the setup wizard asks them instead.
+
+- How people sign in.
+- Whether Fluxer can send email, when people sign in with an email address.
+- The admin account.
+- The instance name.
+- Who can create an account.
+
+### Where Fluxer runs
+
+`--runtime` chooses where Fluxer runs.
+
+| Flag | Runs | Default |
+| --- | --- | --- |
+| `--runtime systemd` | One systemd service, as in the [Linux with systemd](/operator/linux/) guide | On Debian 12 or later, or Ubuntu 22.04 or later, as root |
+| `--runtime docker` | One Docker container, as in the [Docker](/operator/docker/) guide | Anywhere else with Docker |
+| `--runtime podman` | One Podman container | On a machine with Podman and no Docker, except as root on those Debian and Ubuntu releases |
+
+A new instance lets only people with an invite link create an account, and rexctl creates the first one if setup finishes in the terminal. `rexctl registration set` changes that.
+
+## Day to day
+
+| Command | What it does |
+| --- | --- |
+| `rexctl status` | Shows how Fluxer is doing, and whether a newer release is out once you run `rexctl config set FLUXER_UPDATE_CHECK true` |
+| `rexctl logs` | Shows the logs, and `rexctl logs api` one part's logs |
+| `rexctl doctor` | Finds problems, and `rexctl doctor --fix` fixes them |
+| `rexctl upgrade` | Upgrades now, and `rexctl auto-upgrade on` daily or weekly |
+| `rexctl rollback` | Goes back to the release before the last upgrade, with the backup from before it when the upgrade changed your data |
+| `rexctl backup` | Backs up, and `rexctl backup schedule daily` backs up every day |
+| `rexctl backup copy-to backup@storage.example.org:/srv/fluxer` | Copies backups into that folder on the other host |
+| `rexctl restore` | Restores a backup |
+| `rexctl config set FLUXER_SEARCH_ENGINE none` | Changes a setting |
+| `rexctl proxy on` | Puts a proxy in front |
+| `rexctl invites create --uses 10 --expires 7d` | Creates an invite link |
+| `rexctl admins add alex` | Makes someone an instance admin |
+| `rexctl users reset-link alex` | Helps someone back into their account |
+| `rexctl voice add` | Adds a voice server next to Fluxer on a systemd install, and `rexctl voice token` lets a voice server on another machine join |
+
+`--help` on any command prints [its flags](/operator/rexctl/). On systemd, root manages the instance, so run every rexctl command with `sudo`. On Docker or Podman, run rexctl as the account that installed Fluxer, and leave out `sudo` with Podman without root. When a command needs root, rexctl offers to run itself with `sudo`.
+
+rexctl keeps its own record of each install and the settings file it writes.
+
+Change them only through rexctl, with `rexctl config set` and the other commands, so the next upgrade keeps your changes.
+
+## Stop using rexctl
+
+On a Docker or Podman install, `rexctl detach` writes the same compose file and settings file that each release publishes into the instance folder, starts Fluxer from them and stops managing the instance. Your data stays in the same volume.
+
+From then on, you [run it like any other Docker install](/operator/docker/). `rexctl detach` refuses a systemd install, which stays on rexctl's unit `fluxer.service`.
+
+## Remove Fluxer
+
+```sh
+rexctl uninstall
+```
+
+rexctl lists what goes and what stays before it changes anything. It removes Fluxer and its data, and asks whether to keep your backups. Your backups stay unless you choose to delete them or pass `--delete-backups`.
+
+`--keep-data` keeps the data too. To stop Fluxer and keep everything, run `rexctl stop`.

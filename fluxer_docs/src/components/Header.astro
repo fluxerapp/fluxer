@@ -1,10 +1,51 @@
 ---
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import SiteTitle from '@astrojs/starlight/components/SiteTitle.astro';
+import {Icon} from '@astrojs/starlight/components';
+import Search from '@astrojs/starlight/components/Search.astro';
+import FluxerMark from '@/components/FluxerMark.astro';
+import {sectionOf, sections, withBase} from '@/components/Sections';
 import ThemeSelect from '@/components/ThemeSelect.astro';
+
+const current = sectionOf(Astro.locals.starlightRoute.id);
 ---
 
 <flx-header>
-	<SiteTitle />
-	<ThemeSelect />
+	<a class="flx-brand" href={withBase('/')}>
+		<FluxerMark />
+		<span class="sr-only">docs</span>
+	</a>
+	<nav class="flx-header-nav" aria-label="Docs sections">
+		<ul class="flx-header-links">
+			{
+				sections.map((section) => (
+					<li>
+						<a
+							class="flx-header-link"
+							href={withBase(section.href)}
+							aria-current={current === section.label ? 'true' : undefined}
+						>
+							{section.label}
+						</a>
+					</li>
+				))
+			}
+			<li class="flx-header-home">
+				<a class="flx-header-link" href="https://fluxer.com" rel="noopener">
+					fluxer.com<Icon name="external" size="0.875rem" class="flx-external" />
+					<span class="sr-only">(leaves the docs)</span>
+				</a>
+			</li>
+		</ul>
+	</nav>
+	<div class="flx-header-tools">
+		<a class="flx-header-link flx-header-support" href="https://fluxer.com/donate" rel="noopener">Donate</a>
+		<a class="flx-header-pass" href="https://fluxer.com/pass" rel="noopener">Operator Pass</a>
+		<div class="flx-header-search">
+			<Search />
+		</div>
+		<a class="flx-header-icon" href="https://github.com/fluxerapp/fluxer" rel="noopener" aria-label="Fluxer on GitHub">
+			<Icon name="github" size="1.25rem" />
+		</a>
+		<ThemeSelect />
+	</div>
 </flx-header>

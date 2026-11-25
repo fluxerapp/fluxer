@@ -6,7 +6,13 @@ description: The Media Proxy read paths with their parameters and statuses.
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-Each route here returns one stored or external file. The paths are unversioned and are under the `endpoints.media` base URL from [instance discovery](/http-api/instance/#instance-endpoints-object), except [Get static object](#get-static-object), which uses `endpoints.static_cdn`. Every route accepts `GET` and `HEAD` and has no rate limit.
+Each route here returns one stored or external file.
+
+## Base URLs
+
+- The paths are unversioned and are under the `endpoints.media` base URL from [instance discovery](/http-api/instance/#instance-endpoints-object).
+- [Get static object](#get-static-object) is under the `endpoints.static_cdn` base URL.
+- Every route accepts `GET` and `HEAD` and has no rate limit.
 
 ## Common responses
 
@@ -20,7 +26,11 @@ Every route can also return these statuses.
 | 413 | Payload Too Large | The route has to hold an object larger than 500 MiB in memory |
 | 502 | Bad Gateway | The object store could not be read |
 
-Attachments without a transformation, entrance sounds and static objects stream the stored bytes and have no size limit. Every route accepts `Range` when it returns the stored bytes unchanged. A transformed response ignores `Range` and is always complete. See [Byte ranges](/media-proxy/overview/#byte-ranges) for the 206 and 416 headers.
+### Sizes and ranges
+
+- Attachments without a transformation, entrance sounds and static objects stream the stored bytes and have no size limit.
+- Every route accepts `Range` when it returns the stored bytes unchanged. A satisfiable [range](/media-proxy/overview/#byte-ranges) returns 206, and an unsatisfiable one returns 416.
+- A transformed response ignores `Range` and is always complete.
 
 ## Get attachment
 
@@ -53,8 +63,8 @@ Not every parameter starts a [transformation](/media-proxy/transformations/#when
 | 200 | Complete media representation | The attachment was returned |
 | 206 | Selected media bytes | One range over the stored bytes is satisfiable |
 | 400 | Bad Request | The path, a dimension, the format or the transformation is invalid, or the transformation failed |
-| 404 | This content is no longer available. | The signed attachment URL policy refuses the signature, or the object does not exist under `enforce` |
-| 416 | empty | A range over the stored bytes is unsatisfiable |
+| 404 | `This content is no longer available.` | The signed attachment URL policy refuses the signature, or the object does not exist under `enforce` |
+| 416 | Empty | A range over the stored bytes is unsatisfiable |
 | 503 | Service Unavailable | Fluxer has no transformation capacity free |
 | 504 | Gateway Timeout | The transformation timed out |
 
@@ -77,7 +87,7 @@ The signature covers only the target and works until `FLUXER_MEDIA_PROXY_SECRET_
 | animated? | boolean | Whether animated output is requested |
 | download? | boolean | Whether the response has attachment disposition |
 
-When no transformation runs, Fluxer forwards `Range` to the origin, which can respond with 200 or 206.
+When no transformation runs, Fluxer forwards `Range` to the origin, which can respond with 200 or with 206.
 
 ### Response
 
@@ -88,7 +98,7 @@ When no transformation runs, Fluxer forwards `Range` to the origin, which can re
 | 400 | Bad Request | The path, target, redirect or transformation is invalid or not allowed |
 | 401 | Unauthorized | The signature is invalid |
 | 413 | Payload Too Large | The origin sent more than 500 MiB |
-| 416 | empty | A local range is unsatisfiable |
+| 416 | Empty | A local range is unsatisfiable |
 | 502 | Bad Gateway | The origin failed, was unreachable or redirected too many times |
 | 503 | Service Unavailable | Fluxer could not allocate a buffer for the origin body or has no transformation capacity free |
 | 504 | Gateway Timeout | The transformation timed out |
@@ -105,13 +115,26 @@ Returns a theme stylesheet written by the [themes resource](/http-api/themes/) a
 
 <RouteHeader method="GET" path="/entrance-sounds/{user_id}/{filename}" unauthenticated />
 
-Returns the audio of an [entrance sound](/http-api/entrance-sounds/). `filename` is `{hash}.{ext}` with the hash from the API and an extension of `mp3`, `ogg`, `m4a` or `wav`.
+Returns the audio of an [entrance sound](/http-api/entrance-sounds/). `filename` is `{hash}.{ext}`, with the hash from the API and one of the extensions `mp3`, `ogg`, `m4a` or `wav`.
 
 ## Image asset contract
 
 The image routes below all take the same query parameters and return the same statuses. Build the URL from the `endpoints.media` base URL, the route path, the hash from the resource object and an extension. An `a_` hash means the asset is animated.
 
-The extension sets the output format and is one of `png`, `jpg`, `jpeg`, `webp`, `gif`, `apng`, `avif`, `heic`, `heif`, `jxl` or `svg`, in upper or lower case. Each route uses one [size class](/media-proxy/transformations/#asset-size-selection).
+The extension sets the output format, in upper or lower case. Each route uses one [size class](/media-proxy/transformations/#asset-size-selection) for its sizes.
+
+| Extension | Format |
+| --- | --- |
+| `png` | PNG |
+| `jpg`, `jpeg` | JPEG |
+| `webp` | WebP |
+| `gif` | GIF |
+| `apng` | APNG |
+| `avif` | AVIF |
+| `heic` | HEIC |
+| `heif` | HEIF |
+| `jxl` | JPEG XL |
+| `svg` | SVG |
 
 ### Query parameters
 
@@ -133,7 +156,7 @@ An unknown or invalid query value uses the default.
 | 206 | Selected asset bytes | One range over the stored bytes is satisfiable |
 | 400 | Bad Request | The path makes an unsafe storage key |
 | 404 | Not Found | The path is not a valid asset path or the asset does not exist |
-| 416 | empty | A range over the stored bytes is unsatisfiable |
+| 416 | Empty | A range over the stored bytes is unsatisfiable |
 | 500 | Transcode Failed | A required transcode failed and the source can't be shown as it is |
 | 503 | Service Unavailable | Fluxer has no transformation capacity free |
 | 504 | Gateway Timeout | The transformation timed out |
@@ -231,4 +254,4 @@ These paths are for the instance itself and aren't published by instance discove
 | `/_strip` | POST | Removes metadata from an uploaded image, video or audio file for the HTTP API |
 | `/_audio_duration` | POST | Returns the length of an uploaded audio file for the HTTP API |
 
-The six `POST` endpoints need `Authorization: Bearer {FLUXER_MEDIA_PROXY_SECRET_KEY}` and return 401 without it.
+Without `Authorization: Bearer {FLUXER_MEDIA_PROXY_SECRET_KEY}`, the six `POST` endpoints return 401 Unauthorized.

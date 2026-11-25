@@ -25,23 +25,3 @@ export const radioCanadaBigFont: AstroFontFamily = {
 	subsets: ['latin', 'latin-ext'],
 	weights: ['400 700'],
 };
-
-export const notoSansFont: AstroFontFamily = {
-	cssVariable: '--font-noto-sans',
-	fallbacks: [],
-	name: 'Noto Sans',
-	provider: fontsource,
-	styles: ['normal'],
-	subsets: ['cyrillic', 'cyrillic-ext', 'devanagari', 'greek', 'greek-ext', 'vietnamese'],
-	weights: ['400 700'],
-};
-
-export const jetBrainsMonoFont: AstroFontFamily = {
-	cssVariable: '--font-jetbrains-mono',
-	fallbacks: [],
-	name: 'JetBrains Mono',
-	provider: fontsource,
-	styles: ['normal'],
-	subsets: ['latin', 'latin-ext'],
-	weights: ['400 700'],
-};

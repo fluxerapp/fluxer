@@ -35,7 +35,7 @@ Every route here needs membership of the guild, and a target that isn't a member
 
 <sup>3</sup> True for a moderator mute and while a communication timeout is active
 
-<sup>4</sup> The time can be in the past, and the [communication timeout](/http-api/permissions/#communication-timeout) is only active while it's in the future
+<sup>4</sup> The time can be in the past, and the [communication timeout](/http-api/permissions/#communication-timeout) is only active until that time
 
 <sup>5</sup> Omitted when the value is 0
 
@@ -99,7 +99,7 @@ The request body for [Modify current guild member](#modify-current-guild-member)
 
 <sup>5</sup> Null or a past time clears the timeout, and a time more than 365.25 days ahead returns `TIMEOUT_CANNOT_EXCEED_365_DAYS`
 
-<sup>6</sup> A `connection_id` that isn't one of the member's connections returns 400 `USER_NOT_IN_VOICE`
+<sup>6</sup> A `connection_id` that isn't one of the member's voice connections returns 400 `USER_NOT_IN_VOICE` instead
 
 ## List guild members
 
@@ -225,7 +225,7 @@ The rate limit is 20 requests per 10 seconds, on the `guild:member:update::guild
 
 <RouteHeader method="DELETE" path="/v1/guilds/{guild_id}/members/{user_id}" bot auditReason />
 
-Removes a member from the guild. You need [KICK_MEMBERS](/http-api/permissions/), an [elevated permission](/http-api/permissions/#elevated-permissions), and a higher role than the target. Removing yourself or the owner returns 404 `UNKNOWN_MEMBER`.
+Removes a member from the guild. You need [KICK_MEMBERS](/http-api/permissions/), an [elevated permission](/http-api/permissions/#elevated-permissions), and a higher role than the target. Removing yourself or the guild owner returns 404 `UNKNOWN_MEMBER` instead.
 
 ### Response
 
@@ -312,4 +312,4 @@ Removes one role from a member. The rules are the same as [Add guild member role
 
 Fluxer sends [Guild Member Update](/gateway/events/#guild-member-update).
 
-The rate limit is 20 requests per 10 seconds, on the `guild:member:role:remove::guild_id` bucket.
+The `guild:member:role:remove::guild_id` bucket allows 20 requests per 10 seconds.

@@ -10,11 +10,11 @@ A meme is an image, video or audio file you save to your account. Fluxer keeps i
 
 ## Limits
 
-You can save up to `max_favorite_memes` memes (default 50) with up to `max_favorite_meme_tags` tags each (default 10). See [instance limits](/http-api/instance/#limit-keys). Fluxer compares the stored bytes, and saving a file you already have returns `MEDIA_ALREADY_IN_FAVORITE_MEMES`, even from a different URL or message.
+You can save up to [`max_favorite_memes`](/http-api/instance/#limit-keys) memes (default 50) with up to `max_favorite_meme_tags` tags each (default 10). Fluxer compares the stored bytes, and saving a file you already have returns `MEDIA_ALREADY_IN_FAVORITE_MEMES`, even from a different URL or message.
 
 ## Meme object
 
-A meme object is one saved file. You can change only `name`, `alt_text` and `tags` after you save it.
+A meme object is one saved file, and you can change only its `name`, `alt_text` and `tags` after you save it.
 
 ### Structure
 
@@ -41,7 +41,7 @@ A meme object is one saved file. You can change only `name`, `alt_text` and `tag
 | placeholder | ?string | The thumbhash placeholder recorded at save time |
 | nsfw | boolean | Whether the media is flagged as explicit, from the source message or the media scan |
 
-<sup>1</sup> A new [signed attachment URL](/http-api/messages/#signed-attachment-urls) on every read, or an [attachment URL on the API](/http-api/messages/#attachment-urls-on-the-api) that only you can open
+<sup>1</sup> A new [signed attachment URL](/http-api/messages/#signed-attachment-urls) on every read, or an [attachment URL on the API](/http-api/messages/#attachment-urls-on-the-api) that you alone can open
 
 <sup>2</sup> Both are set or both are null. The value is `klipy` or `tenor`
 
@@ -132,7 +132,7 @@ One entry for one URL submitted to [Resolve GIF URLs](#resolve-gif-urls).
 
 <sup>3</sup> Empty when Fluxer can't find the GIF
 
-<sup>4</sup> Empty when unknown. Treat an empty value as `image/gif`
+<sup>4</sup> Empty when unknown, and an empty value means `image/gif`
 
 ## List memes
 
@@ -199,7 +199,7 @@ Copies one attachment or embed asset from a message you can read into your colle
 | alt_text?<sup>2</sup> | ?string | The accessibility description of the media (0-500 characters) |
 | tags? | ?array[string] | The search tags to store, each 1-30 characters |
 
-<sup>1</sup> Send at least one of these keys. If both are null, Fluxer takes the first attachment, then the first usable embed. From an embed, Fluxer uses its image, then its video, then its thumbnail
+<sup>1</sup> Send at least one of these keys. If both are null, Fluxer takes the first attachment, then the first usable embed. From an embed, Fluxer takes the image, then the video, then the thumbnail
 
 <sup>2</sup> Defaults to the selected attachment's own description when omitted, null or blank
 

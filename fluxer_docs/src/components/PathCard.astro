@@ -1,0 +1,22 @@
+---
+// SPDX-License-Identifier: AGPL-3.0-or-later
+import {Icon} from '@astrojs/starlight/components';
+import {withBase} from '@/components/Sections';
+
+interface Props {
+	href: string;
+	title: string;
+	description?: string;
+}
+
+const {href, title, description} = Astro.props;
+const external = /^https?:\/\//u.test(href);
+---
+
+<li class="flx-path">
+	<a class="flx-card" href={withBase(href)} rel={external ? 'noopener' : undefined}>
+		<span class="flx-card-title">{title}</span>
+		{description && <span class="flx-card-text">{description}</span>}
+		<Icon name="right-arrow" size="1.125rem" class="flx-card-arrow rtl:flip" />
+	</a>
+</li>

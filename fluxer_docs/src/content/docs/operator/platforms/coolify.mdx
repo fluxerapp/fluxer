@@ -1,0 +1,76 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Coolify
+description: You run Fluxer on Coolify as a Docker Compose resource behind Coolify's proxy.
+---
+
+import {Steps} from '@astrojs/starlight/components';
+
+## Short version
+
+A server managed by Coolify 4, with its Traefik or Caddy proxy, and a domain that points at it. Add a Docker Compose resource from the file below, set the domain on the `fluxer` service and deploy. It takes about 15 minutes.
+
+## What this changes
+
+- One Docker Compose resource, one container, and a volume for `/var/lib/fluxer`.
+- A route in Coolify's proxy from your domain to port 8080 of the container.
+- Ports 7881 on TCP and 7882 on UDP for voice.
+
+## Before you start
+
+Check the [requirements](/operator/requirements/).
+
+Coolify's proxy uses ports 80 and 443 and gets the certificate, so Fluxer runs in proxy mode. Open ports 7881 and 7882 in the firewall in front of the server, so that calls work.
+
+## Install
+
+<Steps>
+
+1. In your project, choose New Resource, then "Docker Compose Empty", and paste this.
+
+   ```yaml title="compose.yaml"
+   services:
+     fluxer:
+       image: ghcr.io/fluxerapp/fluxer:{{FLUXER_VERSION}}
+       restart: unless-stopped
+       stop_grace_period: 130s
+       environment:
+         FLUXER_DOMAIN: ${SERVICE_FQDN_FLUXER_8080}
+         FLUXER_EDGE_MODE: proxy
+         FLUXER_UPGRADE_COMMAND: "In Coolify, set the image tag to {version} and deploy again"
+         FLUXER_BACKUP_SCHEDULE: daily
+       ports:
+         - "7881:7881"
+         - "7882:7882/udp"
+       volumes:
+         - fluxer-data:/var/lib/fluxer
+
+   volumes:
+     fluxer-data:
+   ```
+
+2. Set the domain of the `fluxer` service to `https://chat.example.com:8080`.
+
+   Coolify routes your domain to port 8080 of the container. It also passes the domain to Fluxer as `FLUXER_DOMAIN`, without `https://` or a port.
+
+   Coolify's proxy connects from a private Docker address, and Fluxer trusts it.
+
+3. Deploy.
+
+   After a few minutes, Coolify shows the resource as running and healthy.
+
+4. Open the terminal of the `fluxer` container in Coolify and print the setup token.
+
+   ```sh
+   fluxerd setup-token
+   ```
+
+   Open your domain and paste the token to create the first admin account.
+
+</Steps>
+
+## Upgrade and back up
+
+To upgrade, change the tag on the `image` line to the new version and deploy again. The `FLUXER_UPGRADE_COMMAND` line makes the admin panel show this step, with the new version filled in, when a new release is out and you have turned on the daily [release check](/operator/upgrades/#turning-the-check-on).
+
+Coolify's own scheduled database backups don't include Fluxer, because PostgreSQL runs inside the Fluxer container. With `FLUXER_BACKUP_SCHEDULE: daily` in the compose file, Fluxer writes a [backup](/operator/backups/) into `/var/lib/fluxer/backups` in its volume every day. Copy those archives off the server, for example to another machine with rsync.

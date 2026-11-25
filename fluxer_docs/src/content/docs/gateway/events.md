@@ -4,7 +4,7 @@ title: Gateway events
 description: Every Gateway Dispatch event with its payload and who receives it.
 ---
 
-A Dispatch tells a [Gateway](/gateway/overview/) session that something changed or replies to one of its commands. It has [opcode](/gateway/opcodes-and-close-codes/#opcodes) 0, an event name in `t` and the payload in `d`.
+A Dispatch tells a [Gateway](/gateway/overview/) session that something changed or replies to one of its commands. It has [opcode](/gateway/opcodes-and-close-codes/#opcodes) 0, an event name in `t` and the event payload in `d`.
 
 ## Dispatch envelope
 
@@ -30,7 +30,7 @@ A Dispatch tells a [Gateway](/gateway/overview/) session that something changed 
 
 [Event filtering](/gateway/event-filtering/) decides which sessions receive each Dispatch. A user session without the [`CHANNEL_THREADS`](/gateway/threads/#session-flag) flag also gets reduced payloads and no thread events.
 
-Most guild events have a `guild_id`. [Guild Create](#guild-create), [Guild Sync](#guild-sync) and [Guild Delete](#guild-delete) use `id`, and [Guild Counts Update](#guild-counts-update) and [Channel Member Counts Update](#channel-member-counts-update) put `guild_id` on each entry.
+Most guild events have a `guild_id`. [Guild Create](#guild-create), [Guild Sync](#guild-sync) and [Guild Delete](#guild-delete) use `id`, and [Guild Counts Update](#guild-counts-update) and [Channel Member Counts Update](#channel-member-counts-update) have `guild_id` on each entry.
 
 The session that made a change receives the Dispatch like any other session. The one exception is a guild-channel reaction, where the request's `session_id` excludes that session from [Message Reaction Add](#message-reaction-add) and [Message Reaction Remove](#message-reaction-remove).
 
@@ -42,7 +42,7 @@ The session that made a change receives the Dispatch like any other session. The
 - [Thread List Sync](/gateway/threads/#thread-list-sync)
 - [Thread Member List Update](/gateway/threads/#thread-member-list-update)
 
-[Limits and rate limits](/gateway/limits-and-rate-limits/#replay-and-backpressure) explains when an oversized Dispatch is not kept.
+A single Dispatch over about 2 MiB is sent but [never kept for replay](/gateway/limits-and-rate-limits/#replay-and-backpressure).
 
 ## Dispatch events
 
@@ -69,10 +69,12 @@ The session that made a change receives the Dispatch like any other session. The
 | [Favorite Meme Create](#favorite-meme-create) | The current user saves a meme |
 | [Favorite Meme Update](#favorite-meme-update) | One of the current user's memes changes |
 | [Favorite Meme Delete](#favorite-meme-delete) | The current user deletes a meme |
+| [Operator Pass Update](#operator-pass-update) | The current user's Operator Passes change, on fluxer.com only |
 | [Guild Create](#guild-create) | A guild becomes available to the session |
 | [Guild Sync](#guild-sync) | A subscribed session receives the guild's full current state again |
 | [Guild Update](#guild-update) | A guild's configuration changes |
 | [Guild Delete](#guild-delete) | A guild leaves the session's visibility or becomes unavailable |
+| [Guild Health Update](#guild-health-update) | A connected guild slows down or recovers |
 | [Guild Role Create](#guild-role-create) | A role is created in a guild |
 | [Guild Role Update](#guild-role-update) | One role changed |
 | [Guild Role Update Bulk](#guild-role-update-bulk) | Several roles changed at once |
@@ -105,7 +107,6 @@ The session that made a change receives the Dispatch like any other session. The
 | [Guild Ban Add](#guild-ban-add) | A guild ban is created |
 | [Guild Ban Remove](#guild-ban-remove) | A guild ban is removed |
 | [Presence Update](#presence-update) | One visible presence changes |
-| [Presence Update Bulk](#presence-update-bulk) | Online presences of a guild that was unavailable |
 | [Passive Updates](#passive-updates) | Channel `last_message_id` values or voice states changed for one passive session |
 | [Message Create](#message-create) | A visible message is created |
 | [Message Update](#message-update) | A message changed |
@@ -169,7 +170,7 @@ The session's initial state, sent once after a successful [Identify](/gateway/co
 
 <sup>3</sup> Always empty for a bot session
 
-Shortly after Ready, the session gets a [Call Create](#call-create) for each private channel with an active call.
+Shortly after Ready, the session gets a [Call Create](#call-create) for each private channel with a call.
 
 #### Guild ready object
 
@@ -192,11 +193,11 @@ The guild state in Ready, [Guild Create](#guild-create) and [Guild Sync](#guild-
 | unavailable? | boolean | Whether the guild is unavailable |
 | visiting? | boolean | Whether the account is [visiting](/http-api/guilds/#visiting-guilds) the guild without being a member |
 | unavailable_hidden? | boolean | Whether an unavailable guild is hidden from the client |
-| threads?<sup>3</sup> | array[[thread](/http-api/threads/#thread-object) object] | Active threads, as [Guild threads](/gateway/threads/#guild-threads) describes |
+| threads?<sup>3</sup> | array[[thread](/http-api/threads/#thread-object) object] | [Active threads](/gateway/threads/#guild-threads) the user joined and can view, or every one a bot can view |
 
 <sup>1</sup> Only the session's own member and the members in `voice_states`. Use [Request Guild Members](/gateway/commands/#request-guild-members) or a member list from [Lazy Request](/gateway/commands/#lazy-request) for the rest
 
-<sup>2</sup> Presences arrive as [Presence Update](#presence-update) and [Presence Update Bulk](#presence-update-bulk)
+<sup>2</sup> Presences arrive as [Presence Update](#presence-update)
 
 <sup>3</sup> Only for a session with [thread access](/gateway/threads/#session-flag)
 
@@ -367,6 +368,10 @@ The current user deleted a meme.
 | --- | --- | --- |
 | meme_id | snowflake | The deleted meme |
 
+### <span id="operator-pass-update"></span>OPERATOR_PASS_UPDATE
+
+The current user's Operator Passes or Pass it on offers changed. Only fluxer.com sends this event. The payload is the same object that `GET /v1/operator-pass/passes` returns, with the passes the account has and its open offers.
+
 ## Guilds and channels
 
 ### <span id="guild-create"></span>GUILD_CREATE
@@ -399,6 +404,15 @@ The session lost a guild, or the guild became unavailable.
 <sup>1</sup> Only when the guild itself was deleted
 
 Without `unavailable`, delete everything you store for the guild. With `unavailable: true`, keep it as unavailable until a [Guild Create](#guild-create) arrives.
+
+### <span id="guild-health-update"></span>GUILD_HEALTH_UPDATE
+
+A connected guild started or stopped responding slowly. While a guild is degraded, its events can arrive late. Fluxer sends this after Ready for every guild that is already degraded.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | Guild the update is about |
+| degraded | boolean | Whether the guild is degraded. Fluxer sends `false` once it recovers |
 
 ### <span id="guild-role-create"></span>GUILD_ROLE_CREATE
 
@@ -477,7 +491,7 @@ A channel was deleted or the session can no longer see it. The payload is the [c
 
 ### <span id="channel-recipient-add"></span>CHANNEL_RECIPIENT_ADD
 
-A user joined a group direct message the session is in.
+A user joined a group direct message that the session is in.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -486,7 +500,7 @@ A user joined a group direct message the session is in.
 
 ### <span id="channel-recipient-remove"></span>CHANNEL_RECIPIENT_REMOVE
 
-A user left a group direct message the session is in.
+A user left a group direct message that the session is in.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -614,7 +628,7 @@ A ban was removed.
 
 ### <span id="presence-update"></span>PRESENCE_UPDATE
 
-A visible presence changed. The payload is a [presence object](#presence-object). You get presences for friends, group direct message recipients and the guild members you name in a [Lazy Request](/gateway/commands/#lazy-request), as [Presence subscriptions](/gateway/event-filtering/#presence-subscriptions) describes.
+A visible presence changed. The payload is a [presence object](#presence-object). You get [presences](/gateway/event-filtering/#presence-subscriptions) for friends, group direct message recipients and the guild members you list in `members` of a [Lazy Request](/gateway/commands/#lazy-request).
 
 #### Presence object
 
@@ -638,15 +652,6 @@ A visible presence changed. The payload is a [presence object](#presence-object)
 | emoji_id | ?snowflake | Custom emoji ID |
 | emoji_name | ?string | Unicode emoji, or the custom emoji's name |
 | emoji_animated | boolean | Whether the custom emoji is animated |
-
-### <span id="presence-update-bulk"></span>PRESENCE_UPDATE_BULK
-
-The online presences of a guild that was unavailable, sent right after the [Guild Create](#guild-create) that restores it.
-
-| Field | Type | Description |
-| --- | --- | --- |
-| guild_id | snowflake | Guild the presences belong to |
-| presences | array[[presence object](#presence-object)] | Up to 500 presences, split across several events when there are more |
 
 ### <span id="passive-updates"></span>PASSIVE_UPDATES
 
@@ -738,7 +743,7 @@ A user reacted to a message.
 | id? | snowflake | Custom emoji ID, absent for a Unicode emoji |
 | animated?<sup>1</sup> | boolean | Whether the custom emoji is animated |
 
-<sup>1</sup> Only on the first reaction with that emoji on the message. An absent `animated` does not mean `false`.
+<sup>1</sup> Only on the first reaction with that emoji on the message, and an absent `animated` does not mean `false`.
 
 ### <span id="message-reaction-add-many"></span>MESSAGE_REACTION_ADD_MANY
 
@@ -796,7 +801,7 @@ Every reaction with one emoji was removed from a message.
 
 ### <span id="typing-start"></span>TYPING_START
 
-A user started typing. [Typing is decided separately](/gateway/event-filtering/#typing-is-decided-separately) explains which sessions get it.
+A user started typing. The [Lazy Request](/gateway/commands/#lazy-request) `typing` value for the guild decides which sessions get it, and without one it follows the [active state](/gateway/event-filtering/#active-and-passive-guilds).
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -858,7 +863,7 @@ A participant's voice state changed. The payload is a [voice state object](#voic
 
 ### <span id="voice-server-update"></span>VOICE_SERVER_UPDATE
 
-The session got a voice grant, sent only to the session that asked. A LiveKit grant has `token` and `endpoint`. A peer-to-peer grant has `p2p: true` and `ice_servers`, and you follow [Peer-to-peer voice](#peer-to-peer-voice). [Voice](/voice/) has the rest.
+The session got a voice grant, sent only to the session that asked. A LiveKit grant has `token` and `endpoint`. A peer-to-peer grant has `p2p: true` and `ice_servers`, and you [connect to each peer over WebRTC](#peer-to-peer-voice). [Connect to LiveKit](/voice/) with a LiveKit grant.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -885,7 +890,7 @@ A new grant comes when the connection opens, moves to another channel or changes
 | --- | --- | --- |
 | urls | array[string] | The `stun:` URLs of one server |
 
-Fluxer never gives out a TURN server, and peers that can't connect to each other directly can't call.
+Fluxer never gives out a TURN server. Peers that can't connect to each other directly can't call each other.
 
 #### Peer-to-peer voice
 
@@ -902,7 +907,7 @@ Fluxer decides each join from the channel's state and the `p2p` value in the [Vo
 
 <sup>1</sup> Refused with `VOICE_P2P_UNAVAILABLE` when Fluxer declines peer-to-peer for this join
 
-A refusal arrives as a [Gateway Error](/gateway/opcodes-and-close-codes/#gateway-error) and changes nothing. On `VOICE_P2P_CONSENT_REQUIRED`, ask the user and send the join again with `p2p: true` if they agree. The participant cap is `max_participants` from the [peer-to-peer voice configuration](/admin-api/instance/#peer-to-peer-voice-configuration-object), between 2 and 4.
+A refusal arrives as a [Gateway Error](/gateway/opcodes-and-close-codes/#gateway-error) and changes nothing. On `VOICE_P2P_CONSENT_REQUIRED`, ask the user and send the join again with `p2p: true` if they agree. The participant cap is `max_participants` from the [peer-to-peer voice configuration](/admin-api/instance/#peer-to-peer-voice-configuration-object), a number from 2 to 4.
 
 Fluxer never switches a call to LiveKit on its own. Only a participant sending `p2p: false` for its own connection, or a region change through [Modify call region](/http-api/calls/#modify-call-region) or [Modify channel](/http-api/channels/#modify-channel), switches it. The call stays on LiveKit until it empties. A guild voice channel with `rtc_p2p` set never switches.
 
@@ -979,7 +984,7 @@ A call ended or became unavailable. Keep an unavailable call until a new [Call C
 
 ### <span id="guild-counts-update"></span>GUILD_COUNTS_UPDATE
 
-The answer to [Request Guild Counts](/gateway/commands/#request-guild-counts). A guild that isn't connected or didn't respond in time has no entry.
+The answer to [Request Guild Counts](/gateway/commands/#request-guild-counts). A guild that isn't connected or didn't respond in time has no entry in it.
 
 | Field | Type | Description |
 | --- | --- | --- |

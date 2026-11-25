@@ -10,7 +10,7 @@ The Admin API lets you manage accounts, guilds, messages and configuration on yo
 
 ## Authentication
 
-Send one of these credentials in the `Authorization` header. [Authentication](/authentication/) has the token formats.
+Send one of these credentials in the `Authorization` header, in its [token format](/authentication/).
 
 | Credential | Header value |
 | --- | --- |
@@ -75,7 +75,7 @@ Each route needs one or more ACLs, and the caller needs at least one of them. Th
 | ban:avatar_hash:add | Adds and updates `avatar-hash` blocklist entries |
 | ban:avatar_hash:check | Reads the `avatar-hash` blocklist |
 | ban:avatar_hash:remove | Removes `avatar-hash` blocklist entries |
-| ban:profile_substring:add | Adds and updates `profile-substring` blocklist entries |
+| ban:profile_substring:add | Adds `profile-substring` blocklist entries and updates them |
 | ban:profile_substring:check | Reads the `profile-substring` blocklist |
 | ban:profile_substring:remove | Removes `profile-substring` blocklist entries |
 | bulk:add:guild_members | Queues the bulk guild member addition task |
@@ -397,8 +397,8 @@ These entries have `access` set to `write`.
 | bulk_schedule_deletion | A bulk account deletion schedule was queued or applied |
 | bulk_update_guild_features | A bulk guild feature change was queued or applied |
 | bulk_update_user_flags | A bulk account flag change was queued or applied |
-| cancel_bulk_message_deletion | A bulk message deletion an account scheduled for itself was canceled |
-| cancel_deletion | A scheduled account deletion was canceled |
+| cancel_bulk_message_deletion | A bulk message deletion an account scheduled for itself was cancelled |
+| cancel_deletion | A scheduled account deletion was cancelled |
 | cancel_job | Cancellation of a job was requested |
 | change_dob | A date of birth was changed |
 | change_email | An email address was changed |
@@ -537,7 +537,7 @@ These errors can come from any Admin route.
 | 403 | [error response](#error-response) | `MISSING_ACL` when the caller holds none of the route's ACLs |
 | 429 | [error response](#error-response) | `RATE_LIMITED` when a rate limit is hit |
 
-Admin rate limits count each account and credential type separately, and an Admin API key never shares its owner's session limits. See [Rate limits](/topics/rate-limits/) for the headers and the global limit.
+Admin rate limits count each account and credential type separately, and an Admin API key never shares its owner's session limits. The headers and the global limit are the same as in [Rate limits](/topics/rate-limits/).
 
 ## List ACLs
 

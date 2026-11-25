@@ -1,36 +1,59 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
-title: Upload size limits
-description: Change how large attachments can be for people and bots on your instance.
-sidebar:
-  label: Upload limits
+title: Upload limits
+description: You change how large attachments can be for people and bots on your instance.
 ---
 
-Attachment sizes come from two [limit keys](/http-api/instance/#limit-keys). `max_attachment_file_size` is the largest file anyone can attach. `max_bot_attachment_file_size` is the largest file a bot can attach, and a bot gets the lower of the two. By default, people with premium can attach files up to 500 MiB and people without it up to 25 MiB, and bots can attach files up to 50 MiB.
+Upload limits set the largest file people and bots can attach on your instance. You change them in the admin panel or through the admin API.
 
-You can change both keys under Limit Config in the admin panel sidebar or with [Replace limit configuration](/admin-api/instance/#replace-limit-configuration).
+## Default limits
 
-## Pick the rule to edit
+Two [limit keys](/http-api/instance/#limit-keys) set attachment sizes. `max_attachment_file_size` is for everyone, and `max_bot_attachment_file_size` is for bots. A bot gets the lower of the two.
 
-Which rule to edit depends on the instance's [premium mode](/admin-api/instance/#premium-modes).
+| Who | Default |
+| --- | --- |
+| Everyone | 500 MiB |
+| People without premium, in the premium mode `mirror` | 25 MiB |
+| Bots | 50 MiB |
 
-| Premium mode | Rule for people | Rule for bots |
-| --- | --- | --- |
-| everyone | `default` | `default` |
-| mirror | `default` for people without premium and `premium` for people with it | `premium` or `default` |
+## Change a limit
 
-Bots always count as having premium, and when a rule with a filter matches, Fluxer uses the higher of its value and the value from `default`. Raising `max_bot_attachment_file_size` in either rule raises it for every bot.
+1. In the admin panel, open "Limit Config", or use [Replace limit configuration](/admin-api/instance/#replace-limit-configuration).
+2. Open the rule for your [premium mode](/admin-api/instance/#premium-modes). With `everyone`, edit the `default` rule. With `mirror`, `default` is for people without premium and `premium` is for people with it.
+3. Enter the new size in bytes, not megabytes, and press "Save Changes".
 
-To raise the bot limit for one bot, give the bot a trait with [Set user traits](/admin-api/users/#set-user-traits) and add a rule for that trait that sets `max_bot_attachment_file_size`. To go above `max_attachment_file_size`, which is 500 MiB for bots by default, set `max_attachment_file_size` in the same rule too. A rule for a trait can raise a limit above the value in `default` but can't lower it.
+## Limits for bots
 
-## Large files and the upload relay
+Bots count as having premium.
 
-The web and desktop apps upload files to storage before they send the message. Each part is a twentieth of the file, but never smaller than 10 MiB or larger than 64 MiB. Files above about 625 GiB use larger parts so they stay within 10,000 parts. When the [upload relay](/media-proxy/upload-relay/) is in use, `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES` limits each part and not the whole file. With the default of 500 MiB, you only need to raise it for files above about 4.8 TiB.
+Raising `max_bot_attachment_file_size` in either rule raises it for every bot.
 
-## Multipart messages
+To raise it for one bot, give the bot a trait with [Set user traits](/admin-api/users/#set-user-traits) and add a rule for that trait.
 
-Bots and other clients can also attach files in a multipart message. The API streams each file to storage while it arrives and doesn't keep whole files in memory. When a file goes over its limit, the API stops saving it and reads up to 64 MiB more of the body for up to 30 seconds, so the client is done sending when the error arrives. If more than that is left, the API answers right away and closes the connection, and some clients report a connection reset instead of the error. The whole request has to finish within `FLUXER_API_REQUEST_TIMEOUT_MS`, which is 120 seconds by default. For files of hundreds of MiB, clients should upload first.
+## Large files
 
-`FLUXER_API_MAX_CONCURRENT_FORM_UPLOADS` sets how many files the API streams to storage at once, which is 16 by default. Plan for up to about 25 MiB of memory for each, so the default adds up to about 400 MiB to what the API uses. When all of them are busy, the next file waits up to 10 seconds and then fails with 503 and a `Retry-After` header.
+The apps send large files in parts of 10 to 64 MiB, and in larger parts for a file over 625 GiB.
 
-Your proxy's body size limit also applies to multipart messages. The Helm chart sets `nginx.ingress.kubernetes.io/proxy-body-size` to `512m` on its ingress, and the [nginx example](/operator/reverse-proxy/) uses `client_max_body_size 512m`. Uploading first sends each part in its own request, and these limits apply to one part at a time.
+When the [upload relay](/media-proxy/upload-relay/) is in use, `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES` limits the size of one part. Its default of 500 MiB is enough for files up to about 4.8 TiB.
+
+## Reverse proxy body size
+
+A file in a [multipart message](/topics/uploads/) has to fit in your proxy's body size limit. The nginx and Apache rows are for [our nginx and Apache configs](/operator/reverse-proxy/#configs-for-each-proxy).
+
+| Proxy | Body size limit |
+| --- | --- |
+| nginx | 512 MiB |
+| Apache | 512 MiB |
+| Caddy | No limit by default |
+| Traefik | No limit by default |
+| ingress-nginx on Kubernetes | 1 MiB until you raise it |
+
+ingress-nginx stopped getting releases in March 2026. On a cluster that still runs it, set the body size annotation to a larger size.
+
+```yaml title="values.yaml"
+ingress:
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 512m
+```
+
+Traefik 3 has no body size limit, but ends a request when its body takes longer than 60 seconds to arrive, which a large file on a slow connection can do. Raise `transport.respondingTimeouts.readTimeout` on its entry points, such as to `600s`, which is the value the [k3s install](/operator/platforms/k3s/#install) sets.

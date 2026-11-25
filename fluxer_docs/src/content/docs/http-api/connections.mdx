@@ -67,8 +67,8 @@ The flags decide which viewers see the connection on the owner's profile, using 
 
 Fluxer checks the proof once, when the connection is created. Use either method.
 
-- Publish a TXT record at `_fluxer.<domain>` with the value `fluxer-verification=<token>`.
-- Serve the token alone, without the prefix, at `https://<domain>/.well-known/fluxer-verification` with a 2xx status. Fluxer follows up to three HTTPS redirects to the same path on the domain with or without `www.`.
+- Publish a TXT record at `_fluxer.<domain>` with the value `fluxer-verification=<token>` in it.
+- Serve the token alone, without the prefix, at `https://<domain>/.well-known/fluxer-verification` with a 2xx status. Fluxer follows up to three HTTPS redirects to the same path on the domain, with or without `www.` in front.
 
 ## Bluesky authorization object
 
@@ -99,7 +99,7 @@ The rate limit is 60 requests per minute, on the `connection:list` bucket.
 
 <RouteHeader method="POST" path="/v1/users/@me/connections" />
 
-Starts domain verification and returns a [connection verification object](#connection-verification-object), without creating a connection.
+Starts domain verification and returns a [connection verification object](#connection-verification-object), without creating a connection yet.
 
 ### JSON body
 
@@ -277,7 +277,7 @@ Returns the instance's atproto OAuth client metadata. Bluesky fetches this docum
 | 200 | client metadata document | Bluesky connections are enabled |
 | 404 | `{"error": "Bluesky OAuth is not enabled"}` | Bluesky connections are not enabled on the instance |
 
-The rate limit is 60 requests per minute, on the `connection:bluesky:client_document` bucket.
+The `connection:bluesky:client_document` bucket allows 60 requests per minute.
 
 ## Get Bluesky JWKS
 
@@ -292,4 +292,4 @@ Returns the instance's public OAuth signing keys as a JSON Web Key Set.
 | 200 | JSON Web Key Set | Bluesky connections are enabled |
 | 404 | `{"error": "Bluesky OAuth is not enabled"}` | Bluesky connections are not enabled on the instance |
 
-The rate limit is 60 requests per minute, on the `connection:bluesky:client_document` bucket.
+The `connection:bluesky:client_document` bucket allows 60 requests per minute.

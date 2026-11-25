@@ -58,7 +58,7 @@ At most one of `ALL_MESSAGES`, `ONLY_MENTIONS` and `NO_MESSAGES` is set. With no
 
 <RouteHeader method="PUT" path="/v1/channels/{channel_id}/thread-members/@me" bot />
 
-Adds you to a thread and sends a [Thread Members Update](/gateway/threads/#thread-members-update) event. You need to be able to view the thread, and to be a thread moderator if it is locked. Joining a locked thread also needs an enrolled authenticator when the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated, unless you own the guild.
+Adds you to a thread and sends a [Thread Members Update](/gateway/threads/#thread-members-update) event. You need to be able to view the thread, and to be a thread moderator if it is locked. Joining a locked thread also needs an enrolled authenticator when the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated, unless you are the owner of the guild.
 
 ### Response
 
@@ -71,7 +71,7 @@ Adds you to a thread and sends a [Thread Members Update](/gateway/threads/#threa
 | 400 | [error response](/http-api/#error-response) | `TWO_FACTOR_REQUIRED` when the caller needs an authenticator |
 | 403 | [error response](/http-api/#error-response) | `MISSING_ACCESS` when the caller cannot view the thread |
 
-The rate limit is 10 requests per 10 seconds, on the `channel:thread:member:put::channel_id` bucket.
+The `channel:thread:member:put::channel_id` bucket allows 10 requests per 10 seconds.
 
 ## Add thread member
 
@@ -91,7 +91,7 @@ Adds a guild member to a thread and sends a [Thread Members Update](/gateway/thr
 | 403 | [error response](/http-api/#error-response) | `COMMUNICATION_DISABLED` when the caller is timed out |
 | 404 | [error response](/http-api/#error-response) | `UNKNOWN_MEMBER` when the target is not a guild member |
 
-Adding another user posts a `RECIPIENT_ADD` message that mentions the target and sends [Message Create](/gateway/events/#message-create) for it. The rate limit is 10 requests per 10 seconds, on the `channel:thread:member:put::channel_id` bucket.
+Adding another user posts a `RECIPIENT_ADD` message that mentions the target and sends [Message Create](/gateway/events/#message-create) for it. The `channel:thread:member:put::channel_id` bucket allows 10 requests per 10 seconds.
 
 ## Leave thread
 
@@ -107,7 +107,7 @@ Removes you from a thread and sends a [Thread Members Update](/gateway/threads/#
 | 400 | [error response](/http-api/#error-response) | `THREAD_ARCHIVED` when the thread is archived |
 | 404 | [error response](/http-api/#error-response) | `UNKNOWN_THREAD_MEMBER` when the caller is not a member |
 
-The rate limit is 10 requests per 10 seconds, on the `channel:thread:member:delete::channel_id` bucket.
+The `channel:thread:member:delete::channel_id` bucket allows 10 requests per 10 seconds.
 
 ## Remove thread member
 
@@ -125,13 +125,13 @@ Removes a member from a thread and sends a [Thread Members Update](/gateway/thre
 | 403 | [error response](/http-api/#error-response) | `COMMUNICATION_DISABLED` when the caller is timed out |
 | 404 | [error response](/http-api/#error-response) | `UNKNOWN_THREAD_MEMBER` when the target is not a member |
 
-Fluxer posts a `RECIPIENT_REMOVE` message that mentions the target and sends [Message Create](/gateway/events/#message-create) for it. The rate limit is 10 requests per 10 seconds, on the `channel:thread:member:delete::channel_id` bucket.
+Fluxer posts a `RECIPIENT_REMOVE` message that mentions the target and sends [Message Create](/gateway/events/#message-create) for it. The `channel:thread:member:delete::channel_id` bucket allows 10 requests per 10 seconds.
 
 ## Get thread member
 
 <RouteHeader method="GET" path="/v1/channels/{channel_id}/thread-members/{user_id}" bot />
 
-Returns the [thread member object](#thread-member-object) of a user. Only bots can call it, and users get 404 `NOT_FOUND`.
+Returns the [thread member object](#thread-member-object) of a user. Only bots can call it. Users who call it get a 404 `NOT_FOUND` error.
 
 ### Query parameters
 
@@ -146,7 +146,7 @@ Returns the [thread member object](#thread-member-object) of a user. Only bots c
 | 200 | [thread member](#thread-member-object) object | The member was returned |
 | 404 | [error response](/http-api/#error-response) | `UNKNOWN_THREAD_MEMBER` when the user is not a member |
 
-The rate limit is 40 requests per 10 seconds, on the `channel:thread:member:get::channel_id` bucket.
+The `channel:thread:member:get::channel_id` bucket allows 40 requests per 10 seconds.
 
 ## List thread members
 
@@ -168,7 +168,7 @@ Returns the [thread member objects](#thread-member-object) of a thread in ascend
 | --- | --- | --- |
 | 200 | array[[thread member](#thread-member-object) object] | The members were returned |
 
-The rate limit is 20 requests per 10 seconds, on the `channel:thread:members:list::channel_id` bucket.
+The `channel:thread:members:list::channel_id` bucket allows 20 requests per 10 seconds.
 
 ## Modify thread member settings
 
@@ -184,7 +184,7 @@ Changes your notification settings for a thread you joined and sends a [Thread M
 | muted? | boolean | Whether the thread is muted |
 | mute_config? | ?[guild mute configuration input](/http-api/users/settings/#guild-mute-configuration-input-object) object | The mute expiry of the thread, or null to clear it |
 
-<sup>1</sup> Replaces the three notification flags and keeps `HAS_INTERACTED`. A value of 0 clears them
+<sup>1</sup> Replaces the three notification flags and keeps `HAS_INTERACTED`, and 0 clears them
 
 ### Response
 
@@ -196,4 +196,4 @@ Changes your notification settings for a thread you joined and sends a [Thread M
 | 403 | [error response](/http-api/#error-response) | `ACCESS_DENIED` when the caller is a bot |
 | 404 | [error response](/http-api/#error-response) | `UNKNOWN_THREAD_MEMBER` when the caller is not a member |
 
-The rate limit is 10 requests per 10 seconds, on the `channel:thread:member:settings::channel_id` bucket.
+The `channel:thread:member:settings::channel_id` bucket allows 10 requests per 10 seconds.

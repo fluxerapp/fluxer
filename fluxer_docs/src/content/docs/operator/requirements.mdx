@@ -1,0 +1,133 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Requirements
+description: A Fluxer instance needs a 64-bit Linux machine with enough disk, open ports, and a domain or IP address that people open it at.
+---
+
+Fluxer needs a 64-bit Linux machine with enough disk and open ports, and a domain or an IP address that people use to open Fluxer in their browser.
+
+## Machine
+
+Fluxer runs on 64-bit Linux on amd64 (x86-64) or arm64. The container image has both, and Docker Desktop runs it on macOS and Windows.
+
+A small instance, for friends or a club, needs at least 2 CPU cores, 20 GB of free disk and 2 GB of memory, and a busy instance needs 4 GB of memory. rexctl warns below 3.5 GiB and refuses below 1.5 GiB. Idle, with voice and search on, Fluxer uses about 550 MiB.
+
+For a larger instance, start with more than the minimum and watch these.
+
+- Memory. rexctl sizes the database and caches from the machine's memory, and without rexctl they keep their [default sizes](/operator/settings/#memory-and-performance). The Helm chart asks for 1 GiB and allows up to 3 GiB, and you raise `resources.limits.memory` when the pod gets near it.
+- CPU. Calls and image uploads use the most CPU, and video calls and screen sharing the most bandwidth. If calls slow the machine, move them to [voice servers](/operator/voice-servers/) elsewhere.
+- Disk. Uploads use the most disk, and the search index and backups grow with use too. The [file storage settings](/operator/settings/#file-storage) move uploads to an S3-compatible store. Alert at 80% full.
+- Database connections. With the default pool sizes, Fluxer opens up to 39 connections to PostgreSQL, so give [your own database](/operator/kubernetes/#your-own-postgresql) enough room for them.
+- Threads. Fluxer sizes its threads from the CPUs it can use, up to 16 for the gateway. On Kubernetes, they are capped by `resources.limits.cpu`.
+
+We don't publish sizes for larger instances yet. An instance is one process tree and [can't run as two copies](/operator/how-it-works/#availability), and it can't grow past one machine.
+
+## Disk
+
+Keep Fluxer's data folder on a local disk with a Linux file system like ext4, XFS or Btrfs. An SSD works much better than a hard disk or an SD card.
+
+- Never put the database on NFS or SMB. PostgreSQL can lose data there.
+- No NTFS or FAT, and on Windows no folder under `/mnt/c` in WSL.
+- On a Raspberry Pi, use an SSD over USB or NVMe for the data, not the SD card.
+
+## Domain or IP address
+
+People open Fluxer at its own domain or subdomain, such as `chat.example.com`, or at the machine's IPv4 or IPv6 address. We recommend a domain. On an IP address, passkeys don't work, most mail providers refuse Fluxer's default sender address, and on a private address each device has to trust Fluxer's own certificate authority before browser notifications work. [What works differently on an IP address](#ip-differences) has the details.
+
+### With a domain
+
+Point an `A` record for the domain at the machine's IPv4 address. With systemd or Kubernetes, also add an `AAAA` record if the machine has IPv6. On Docker, leave out the `AAAA` record unless a [reverse proxy is in front](/operator/docker/#ipv6). Fluxer gets a Let's Encrypt certificate by itself when ports 80 and 443 are open from the internet. Behind a reverse proxy or tunnel, your proxy gets the certificate for Fluxer.
+
+A name that only works on your own network, such as `chat.home.arpa`, gets a certificate from Fluxer's own authority, and each device then needs to trust that authority.
+
+Without a domain of your own, you can use a free name from sslip.io or nip.io, such as `203-0-113-10.sslip.io`. It points at a public IPv4 address, works with `rexctl install` and gets a Let's Encrypt certificate the same way as any other domain does.
+
+### With an IP address
+
+You can set `FLUXER_DOMAIN` to the machine's IPv4 or IPv6 address, such as `203.0.113.10` or `2001:db8::10`. `rexctl install`, Docker, Podman and a [systemd install by hand](/operator/linux-manual/) all take one. The [Helm chart](/operator/kubernetes/#ingress-or-gateway-api) takes one and switches to bundled mode by itself. Behind an Ingress or HTTPRoute it needs a domain name.
+
+```sh title="fluxer.env"
+FLUXER_DOMAIN=203.0.113.10
+```
+
+A public address gets a Let's Encrypt certificate that every browser trusts, once ports 80 and 443 are open to it from the internet. Until then, Fluxer uses a certificate from its own authority and tries Let's Encrypt again within a day. A certificate for an IP address lasts about six days, and Fluxer renews it automatically.
+
+An IPv6 address goes in square brackets in the address bar and in links, as in `https://[2001:db8::10]`. In `FLUXER_DOMAIN` you can write it with or without them, and Fluxer adds them to every link it builds.
+
+A private address, such as `192.168.1.20`, `10.0.0.5`, `100.64.0.5` or `fd00::5`, gets a certificate from Fluxer's own authority. Browsers show a certificate warning until the device trusts that authority. A name that only works on your own network, such as `chat.lan`, gets a certificate from the same authority.
+
+### Trusting Fluxer's own authority
+
+Each device can download the authority's certificate from `http://<your address>/fluxer-root.crt`, such as `http://192.168.1.20/fluxer-root.crt`. `rexctl install` and `rexctl status` show that link, a QR code for it and the certificate's SHA-256 fingerprint, and save the certificate as `fluxer-root.crt` in the install folder. Before you trust the file, check that its fingerprint matches.
+
+The link uses plain HTTP, so someone else on the network could swap the file, and the fingerprint check catches that. On a computer, `openssl x509 -noout -fingerprint -sha256 -in fluxer-root.crt` prints the fingerprint. Keychain Access on macOS and the certificate details on iPhone and Android show it too. A device that trusts this authority accepts any certificate the authority signs, for any site, so only trust the authority of your own instance, or of an instance whose admin you know.
+
+Without rexctl, copy the certificate off the machine yourself. On Docker, run this command in the folder that has `compose.yaml`.
+
+```sh
+docker compose cp fluxer:/var/lib/fluxer/edge/caddy/pki/authorities/local/root.crt fluxer-root.crt
+```
+
+Under systemd, copy `/var/lib/fluxer/edge/caddy/pki/authorities/local/root.crt` as root, because only root and the `fluxer` account Fluxer runs as can open it.
+
+On Kubernetes, run this command with your own pod name in place of `fluxer-0`.
+
+```sh
+kubectl exec fluxer-0 -- cat /var/lib/fluxer/edge/caddy/pki/authorities/local/root.crt > fluxer-root.crt
+```
+
+Then install it on each device that opens Fluxer, and restart the browser.
+
+- Windows. Open the file, click "Install Certificate", pick "Local Machine" and put it in "Trusted Root Certification Authorities".
+- macOS. Open the file to add it to the login keychain, then open it in Keychain Access, expand "Trust" and set "When using this certificate" to "Always Trust".
+- iPhone and iPad. Open the link in Safari and allow the download. Install the profile in Settings under "Profile Downloaded", then turn on full trust for it in Settings, General, About, "Certificate Trust Settings" at the bottom.
+- Android. Download the file, then open Settings, search for "CA certificate" and install the file you downloaded. The menus differ a little between phone makers.
+- Linux. Copy it to `/usr/local/share/ca-certificates/` and run `sudo update-ca-certificates` on Debian and Ubuntu, or copy it to `/etc/pki/ca-trust/source/anchors/` and run `sudo update-ca-trust` on Fedora.
+- Firefox. Firefox keeps its own list on every system. Import the file under Settings, Privacy & Security, "View Certificates", "Authorities".
+
+A backup includes the authority and its private key, so keep backups as private as the machine. Devices that trust the authority keep trusting Fluxer after you restore the backup on the same machine or on a new one.
+
+<a id="ip-differences"></a>A few things work differently on an IP address.
+
+- Passkeys don't work, because browsers only tie a passkey to a domain.
+- On a private address, web push notifications in the browser need the device to trust Fluxer's authority. Clicking through the browser's warning isn't enough.
+- The default email sender is `noreply@[203.0.113.10]`, and most mail providers refuse to send from an address like that. When you [turn on email](/operator/email/), set `FLUXER_EMAIL_FROM_EMAIL` to an address on a domain you send mail from.
+- When `rexctl install` puts a Fluxer on a public IP address behind another Fluxer on the same machine, browsers that open the address send no server name. The first Fluxer then picks the certificate by the address the connection arrived on, or by the one address in its `default_sni` global option. If a cloud provider routes the address to the machine without putting it on a network interface, `rexctl install` warns you and shows the `FLUXER_EDGE_GLOBAL_OPTIONS` value that fixes it. That fix works for one address per machine, and only works when the first Fluxer uses a domain name and has no other option in `FLUXER_EDGE_GLOBAL_OPTIONS`.
+- On Docker's default network, every visitor who connects over IPv6 shows up with the same address, and rate limits and bans treat them as one person. With an IPv6 address on Docker, turn on [IPv6 on the Docker network](https://docs.docker.com/engine/daemon/ipv6/) or install with systemd instead.
+
+With `FLUXER_PUBLIC_SCHEME=http` and `FLUXER_PUBLIC_PORT=80`, Fluxer serves plain HTTP with no certificate. Messages and uploads work, but browsers turn off the microphone, camera, screen sharing, voice messages, notifications and passkeys in the web app. Browsers keep all of them on `http://localhost` and `http://127.0.0.1`, which only work on the machine that runs Fluxer.
+
+## Ports
+
+| Port | Protocol | What it is for |
+| --- | --- | --- |
+| 80 | TCP | Certificate checks and the redirect to HTTPS |
+| 443 | TCP | The web app, the API and the gateway |
+| 443 | UDP | HTTP/3, optional |
+| 7881 | TCP | Voice and video |
+| 7882 | UDP | Voice and video |
+| 8080 | TCP | Plain HTTP for your own proxy, in proxy mode only, on `127.0.0.1` |
+
+Open every port but 8080 in each firewall in front of the machine, such as your hosting provider's, and forward them from your router at home. Keep 8080 closed to the internet.
+
+Voice and video calls always connect to the machine directly on ports 7881 and 7882, also when Fluxer is behind a proxy or tunnel.
+
+## Software
+
+| Way to run Fluxer | You need |
+| --- | --- |
+| [Docker](/operator/docker/) | Docker Engine 24 or later with the Compose plugin, or Podman 4.6 or later (5.4 or later with rexctl) |
+| [Linux with systemd](/operator/linux/) | Debian 12 or later, or Ubuntu 22.04 or later, with systemd, as root, and PostgreSQL 14 or later from Debian, Ubuntu or apt.postgresql.org |
+| [Kubernetes](/operator/kubernetes/) | Kubernetes 1.29 or later, Helm 3.14 or later, Helm 4 included, and a default StorageClass |
+
+On any other Linux, use Docker.
+
+With `FLUXER_POSTGRES_URL`, your own database needs PostgreSQL 14 or later.
+
+## Optional
+
+- An [SMTP account](/operator/email/), so Fluxer can send email for password resets and address checks.
+- Spare bandwidth for [more voice servers](/operator/voice-servers/).
+- Storage elsewhere for [copies of your backups](/operator/backups/#copy-backups-off-the-machine).
+
+Fluxer connects to Let's Encrypt, two STUN servers and the pages people link to. It connects to [other services](/operator/how-it-works/#connections-fluxer-makes), such as `fluxer.dev` for the daily release check, only when you turn them on. It also works [behind an outgoing proxy](/operator/how-it-works/#behind-a-proxy-or-on-a-locked-down-network) or offline.

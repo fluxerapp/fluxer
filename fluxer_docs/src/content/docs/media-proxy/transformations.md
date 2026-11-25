@@ -18,10 +18,10 @@ An image asset request always transforms, unless the requested format matches th
 
 | Field | Type | Description |
 | --- | --- | --- |
-| width? | integer | The output width for an attachment or signed external request (see [allowed dimensions](#allowed-dimensions)) |
-| height? | integer | The output height for an attachment or signed external request (see [allowed dimensions](#allowed-dimensions)) |
+| width? | integer | The output width for an attachment or signed external request, [from 1 through 16,384](#allowed-dimensions) |
+| height? | integer | The output height for an attachment or signed external request, [from 1 through 16,384](#allowed-dimensions) |
 | size? | integer | The requested square edge for an image asset request, snapped to the [size ladder](#allowed-dimensions) |
-| format?<sup>1</sup> | string | The output format, see [attachment and external formats](#attachment-and-external-formats) and [image asset formats](#image-asset-formats) |
+| format?<sup>1</sup> | string | The output format, one of the [attachment and external formats](#attachment-and-external-formats) or the [image asset formats](#image-asset-formats) |
 | quality? | string | The [quality profile](#quality) |
 | animated? | boolean | Whether animated output is requested |
 | effort?<sup>2</sup> | integer | The WebP encoder effort for an attachment request |
@@ -35,7 +35,7 @@ A repeated parameter uses its last value, and an unknown parameter is ignored. `
 
 ## Allowed dimensions
 
-`width` and `height` are free integers from 1 through 16,384, and any other value returns 400.
+`width` and `height` are free integers from 1 through 16,384. Any other value returns 400.
 
 `size` selects from a fixed ladder: 16, 20, 22, 24, 28, 32, 40, 44, 48, 56, 60, 64, 80, 96, 100, 128, 160, 240, 256, 300, 320, 480, 512, 600, 640, 1024, 1280, 1536, 2048, 3072, 4096, 8192, and 16,384. A requested value snaps up to the next rung (641 selects 1024), and a value above 16,384 selects 16,384.
 
@@ -43,7 +43,7 @@ A repeated parameter uses its last value, and an unknown parameter is ignored. `
 
 Transformations never enlarge an image. `width` or `height` alone scales proportionally.
 
-A cover crop scales a still image to fill the rectangle and crops it from the center. It applies when an attachment or signed external request has both `width` and `height`, and to every emoji and sticker asset. Other image assets fit inside the square.
+A cover crop scales a still image to fill the rectangle and crops it from the centre. It applies when an attachment or signed external request has both `width` and `height`, and to every emoji and sticker asset. Other image assets fit inside the square.
 
 Animated output always fits the whole frame without cropping.
 
@@ -53,12 +53,12 @@ An asset request snaps `size` to the ladder and clamps it to the range of its as
 
 | Asset class | Routes | Range |
 | --- | --- | --- |
-| Icon | avatars, icons, guild member avatars | 128 through 1024 |
-| Banner | banners, splashes, embed splashes, guild member banners | 480 through 2400 |
-| Role icon | role icons | 16 through 512 |
-| Emoji | emojis | 32 through 512 |
-| Sticker | stickers | 128 through 512 |
-| Branding | branding, sign-in backdrops | 16 through 4096 |
+| Icon | avatars, icons, guild member avatars | 128 through 1024 px |
+| Banner | banners, splashes, embed splashes, guild member banners | 480 through 2400 px |
+| Role icon | role icons | 16 through 512 px |
+| Emoji | emojis | 32 through 512 px |
+| Sticker | stickers | 128 through 512 px |
+| Branding | branding, sign-in backdrops | 16 through 4096 px |
 
 An absent `size` resolves to 128 before clamping, which gives a banner 480. A branding asset with no `size` is the exception and keeps its original size.
 

@@ -1,0 +1,1850 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Settings reference
+description: Lists every Fluxer setting, each spelled the same on every way of running it.
+---
+
+Every setting has one name, whichever way you run Fluxer. A setting without a default is off, or Fluxer works out its value from the other settings.
+
+## Where settings go
+
+| How you run Fluxer | Where settings go |
+| --- | --- |
+| Docker without rexctl | `fluxer.env` |
+| systemd without rexctl | `/etc/fluxer/fluxer.env` |
+| Kubernetes | Under `config` in the Helm chart |
+| rexctl | [`rexctl config set`](/operator/configuration/) |
+
+## Required
+
+Only this setting is required. Fluxer makes its own passwords and keys when it first starts.
+
+<dl class="flx-settings">
+<div class="flx-setting" id="fluxer_domain">
+<dt>`FLUXER_DOMAIN`</dt>
+<dd>The domain or IP address Fluxer runs on. rexctl also calls it `domain`.</dd>
+</div>
+</dl>
+
+## First admin account
+
+Fluxer creates the setup token on its first start. `fluxerd setup-token` prints it.
+
+<dl class="flx-settings">
+<div class="flx-setting" id="fluxer_setup_token">
+<dt>`FLUXER_SETUP_TOKEN`</dt>
+<dd>The token the setup wizard asks for before it creates the first admin account. Use 32 to 256 printable characters, such as the output of `openssl rand -hex 32`. When it's empty, Fluxer creates one on its first start, and `fluxerd setup-token` prints it. Keep it secret.</dd>
+</div>
+</dl>
+
+## Passwords and keys
+
+Fluxer creates these on its first start and keeps them in its data folder, so backups have them too. Set one only to replace the value Fluxer made, and treat every backup as secret.
+
+<dl class="flx-settings">
+<div class="flx-setting" id="fluxer_activitypub_signing_key_base64">
+<dt>`FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64`</dt>
+<dd>The RSA private key the unfurl service signs ActivityPub requests with when it builds link previews for fediverse posts. Use base64 DER in PKCS#8 or PKCS#1 form. When it's empty, the unfurl service makes those requests unsigned. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_admin_oauth_client_secret">
+<dt>`FLUXER_ADMIN_OAUTH_CLIENT_SECRET`</dt>
+<dd>The OAuth2 client secret the admin panel uses to sign in through the API. The api and admin services must have the same value. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_admin_secret_key_base">
+<dt>`FLUXER_ADMIN_SECRET_KEY_BASE`</dt>
+<dd>The key the admin panel signs its sessions, CSRF tokens and OAuth state with. Changing it signs everyone out of the admin panel. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_connection_initiation_secret">
+<dt>`FLUXER_CONNECTION_INITIATION_SECRET`</dt>
+<dd>The key that signs connection initiation tokens, data export links and admin download links. Changing it breaks tokens not yet verified and download links already sent. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_erlang_cookie">
+<dt>`FLUXER_ERLANG_COOKIE`</dt>
+<dd>The shared secret for Erlang distribution in the gateway. Anyone who can connect to the distribution port with this value can run code in the gateway. Keep the port private. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_gateway_rpc_auth_token">
+<dt>`FLUXER_GATEWAY_RPC_AUTH_TOKEN`</dt>
+<dd>The token the api, worker, gateway and push services use to authenticate internal calls to each other. Every service must have the same value. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_secret_key">
+<dt>`FLUXER_MEDIA_PROXY_SECRET_KEY`</dt>
+<dd>The key that signs the `/external/` URLs for third-party media, such as link preview images and GIF results. The API also uses it to call the media proxy's internal endpoints. It doesn't sign uploaded attachments, which use `FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64`. The api, worker, media-proxy, gifs and unfurl services must have the same value, so change it on all of them and restart them together. Changing it doesn't affect anything stored, but proxy URLs that were already handed out stop working, such as link preview images in clients that are open, until they reload. Keep the value secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_upload_relay_secret_base64">
+<dt>`FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64`</dt>
+<dd>The key that signs upload relay tokens, as standard base64 that decodes to at least 32 bytes. The api, worker and media-proxy services must have the same value. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_profile_pseudonym_secret">
+<dt>`FLUXER_PROFILE_PSEUDONYM_SECRET`</dt>
+<dd>The key Fluxer uses to derive the placeholder name and tag that others see while an account's profile is hidden. The api, worker and users services must have the same value. Changing it gives every hidden profile a new placeholder. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_s3_access_key">
+<dt>`FLUXER_S3_ACCESS_KEY`</dt>
+<dd>The object store access key. rexctl also calls it `storage.access_key`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_s3_secret_key">
+<dt>`FLUXER_S3_SECRET_KEY`</dt>
+<dd>The object store secret key. For your own object store, set its secret key, and update it when you rotate the key at the store. Keep it secret. rexctl also calls it `storage.secret_key`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_sudo_mode_secret">
+<dt>`FLUXER_SUDO_MODE_SECRET`</dt>
+<dd>The key Fluxer signs sudo mode tokens with and derives a few other internal signing keys from. Changing it ends every active sudo mode session, voids codes already emailed and makes every remembered device count as new. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_vapid_private_key">
+<dt>`FLUXER_VAPID_PRIVATE_KEY`</dt>
+<dd>The private half of the VAPID key pair for browser push notifications, as unpadded base64url of the 32-byte P-256 private key. The value is 43 characters long. It must match `FLUXER_VAPID_PUBLIC_KEY`. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_vapid_public_key">
+<dt>`FLUXER_VAPID_PUBLIC_KEY`</dt>
+<dd>The public half of the VAPID key pair for browser push notifications, as unpadded base64url of the 65-byte uncompressed P-256 point. The value is 87 characters long.</dd>
+</div>
+<div class="flx-setting" id="livekit_api_key">
+<dt>`LIVEKIT_API_KEY`</dt>
+<dd>The LiveKit API key. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="livekit_api_secret">
+<dt>`LIVEKIT_API_SECRET`</dt>
+<dd>The LiveKit API secret that goes with `LIVEKIT_API_KEY`, at least 32 characters. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="meili_master_key">
+<dt>`MEILI_MASTER_KEY`</dt>
+<dd>The Meilisearch master key. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="postgres_password">
+<dt>`POSTGRES_PASSWORD`</dt>
+<dd>The PostgreSQL password. Keep it secret.</dd>
+</div>
+</dl>
+
+## Public address
+
+Every address comes from `FLUXER_DOMAIN`. Set these only for a part on another address.
+
+<dl class="flx-settings">
+<div class="flx-setting" id="fluxer_admin_endpoint">
+<dt>`FLUXER_ADMIN_ENDPOINT`</dt>
+<dd>The public address of the admin panel. When it's empty, Fluxer uses the public origin followed by `FLUXER_ADMIN_BASE_PATH`. The admin sign-in redirect is this address followed by `/oauth2_callback`, the single sign-on redirect is this address followed by `/sso/callback`, and the admin panel uses secure cookies when the address starts with `https`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_api_client_endpoint">
+<dt>`FLUXER_API_CLIENT_ENDPOINT`</dt>
+<dd>The API base URL Fluxer hands to clients. When it's empty, Fluxer uses the public origin followed by `/api`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_api_discovery_public_endpoint">
+<dt>`FLUXER_API_DISCOVERY_PUBLIC_ENDPOINT`</dt>
+<dd>The public API base URL Fluxer lists in instance discovery as `api_public`. The ActivityPub actor and its key ID use the same address, so its host must serve `/.well-known/webfinger`, and changing it on an instance with a signing key gives remote servers a new actor. When it's empty, Fluxer uses `FLUXER_API_ENDPOINT`. Webhooks, signed links and Bluesky sign-in always use `FLUXER_API_ENDPOINT`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_api_endpoint">
+<dt>`FLUXER_API_ENDPOINT`</dt>
+<dd>The public base URL of the API. When it's empty, Fluxer uses the public origin followed by `/api`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_app_endpoint">
+<dt>`FLUXER_APP_ENDPOINT`</dt>
+<dd>The address of the web app, which Fluxer allows through CORS and uses in links. When it's empty, Fluxer uses the public origin.</dd>
+</div>
+<div class="flx-setting" id="fluxer_app_origin_aliases">
+<dt>`FLUXER_APP_ORIGIN_ALIASES`</dt>
+<dd>More web app origins, separated by commas, for an instance that serves the web app on more than one hostname. Each must be an http or https origin. The API allows each one through CORS and accepts it for sign-in handoff. List them and the web app origin in `FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS` too, so passkeys work on them.</dd>
+</div>
+<div class="flx-setting" id="fluxer_gateway_endpoint">
+<dt>`FLUXER_GATEWAY_ENDPOINT`</dt>
+<dd>The public WebSocket URL of the gateway, starting with `ws` or `wss`. When it's empty, Fluxer uses `wss` on the public host followed by `/gateway`, or `ws` when the public scheme is `http`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_gift_domain">
+<dt>`FLUXER_GIFT_DOMAIN`</dt>
+<dd>A separate hostname for gift links, with no scheme, port or path. When it's set, the default gift address uses this host.</dd>
+</div>
+<div class="flx-setting" id="fluxer_gift_endpoint">
+<dt>`FLUXER_GIFT_ENDPOINT`</dt>
+<dd>The base URL of gift links. When it's empty, Fluxer uses `FLUXER_GIFT_DOMAIN` or the public host, followed by `/gift`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_invite_domain">
+<dt>`FLUXER_INVITE_DOMAIN`</dt>
+<dd>A separate hostname for invite links, with no scheme, port or path. When it's set, the default invite address uses this host.</dd>
+</div>
+<div class="flx-setting" id="fluxer_invite_endpoint">
+<dt>`FLUXER_INVITE_ENDPOINT`</dt>
+<dd>The base URL of invite links. When it's empty, Fluxer uses `FLUXER_INVITE_DOMAIN`, or the public host when that is empty, followed by `/invite`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_marketing_endpoint">
+<dt>`FLUXER_MARKETING_ENDPOINT`</dt>
+<dd>The address of the marketing site, which Fluxer allows through CORS and uses in some links. When it's empty, Fluxer uses the public origin.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_endpoint">
+<dt>`FLUXER_MEDIA_ENDPOINT`</dt>
+<dd>The public address of the media proxy. When it's empty, Fluxer uses the public origin followed by `/media`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_public_endpoint">
+<dt>`FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT`</dt>
+<dd>The public media proxy address that the gifs, unfurl and media-proxy services use when they build media links. When it's empty, they use `FLUXER_MEDIA_ENDPOINT`, or the public origin followed by `/media`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_public_origin">
+<dt>`FLUXER_PUBLIC_ORIGIN`</dt>
+<dd>The origin browsers use to open the instance, as a scheme, host and optional port with no path or trailing slash, such as `https://chat.example.com:8443`. When it's set, the default public addresses of the api, worker and other services come from it. Keep `FLUXER_DOMAIN` set to the same host. The edge site address, the passkey relying party ID, the default sender and VAPID contact addresses and the gateway still use `FLUXER_DOMAIN`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_public_scheme">
+<dt>`FLUXER_PUBLIC_SCHEME`</dt>
+<dd class="flx-setting-default">Default `https`</dd>
+<dd>The scheme browsers use to open the instance. Use `https` or `http`. Fluxer builds public addresses from it and `FLUXER_DOMAIN` when `FLUXER_PUBLIC_ORIGIN` is empty. With `http`, also set `FLUXER_PUBLIC_PORT`, usually to `80`. Without rexctl, the edge also uses it for its default site address.</dd>
+</div>
+<div class="flx-setting" id="fluxer_static_cdn_domain">
+<dt>`FLUXER_STATIC_CDN_DOMAIN`</dt>
+<dd>A separate hostname for static assets, with no scheme, port or path. When it's set, the default static address of the api and worker services is `https://` followed by this host.</dd>
+</div>
+<div class="flx-setting" id="fluxer_static_cdn_endpoint">
+<dt>`FLUXER_STATIC_CDN_ENDPOINT`</dt>
+<dd>The origin Fluxer serves static assets such as the favicon and app icons from. When it's empty, the api and worker services derive it from `FLUXER_STATIC_CDN_DOMAIN` or the public origin, and the admin and gateway services use the public origin. The app-proxy service uses it only when it's set, and serves its own copies of the web app files otherwise.</dd>
+</div>
+</dl>
+
+## Edge and HTTPS
+
+By default Fluxer listens on ports 80 and 443 and gets its own certificate for your domain. Behind your own proxy or a tunnel, [turn on proxy mode](/operator/reverse-proxy/#turn-on-proxy-mode).
+
+<dl class="flx-settings">
+<div class="flx-setting" id="fluxer_admin_base_path">
+<dt>`FLUXER_ADMIN_BASE_PATH`</dt>
+<dd class="flx-setting-default">Default `/admin`</dd>
+<dd>The path the admin panel is served under, with a leading slash and no trailing slash, such as `/panel`. The edge serves the admin panel under this path, the admin service builds its links with it, and the default `FLUXER_ADMIN_ENDPOINT` follows it.</dd>
+</div>
+<div class="flx-setting" id="fluxer_caddy_site_address">
+<dt>`FLUXER_CADDY_SITE_ADDRESS`</dt>
+<dd>The old name for `FLUXER_EDGE_SITE_ADDRESS`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_edge_acme_ca">
+<dt>`FLUXER_EDGE_ACME_CA`</dt>
+<dd>The ACME directory the edge gets its certificate from. When it's empty, the edge uses Let's Encrypt.</dd>
+</div>
+<div class="flx-setting" id="fluxer_edge_acme_ca_root">
+<dt>`FLUXER_EDGE_ACME_CA_ROOT`</dt>
+<dd>A PEM file with the CA certificate the edge trusts for the ACME directory. When it's empty, the edge uses the system trust store.</dd>
+</div>
+<div class="flx-setting" id="fluxer_edge_bind">
+<dt>`FLUXER_EDGE_BIND`</dt>
+<dd class="flx-setting-default">Default `127.0.0.1:8080`</dd>
+<dd>The address your reverse proxy or tunnel connects to. rexctl also calls it `edge.bind`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_edge_encode">
+<dt>`FLUXER_EDGE_ENCODE`</dt>
+<dd class="flx-setting-default">Default `zstd gzip`</dd>
+<dd>The response compression the edge offers, written as the arguments of the Caddy encode directive, such as `gzip` alone.</dd>
+</div>
+<div class="flx-setting" id="fluxer_edge_global_options">
+<dt>`FLUXER_EDGE_GLOBAL_OPTIONS`</dt>
+<dd>Extra Caddy global options on one line, added to the global block of the edge Caddyfile, such as `email admin@chat.example.com` for the certificate account. An empty value adds nothing.</dd>
+</div>
+<div class="flx-setting" id="fluxer_edge_listen_address">
+<dt>`FLUXER_EDGE_LISTEN_ADDRESS`</dt>
+<dd>The IP address on this machine that Fluxer listens on for HTTP and HTTPS, or empty for every address. Write an IPv6 address without brackets. rexctl also calls it `edge.listen_address`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_edge_mode">
+<dt>`FLUXER_EDGE_MODE`</dt>
+<dd class="flx-setting-default">Default `bundled`</dd>
+<dd>How web traffic gets to Fluxer. `bundled` serves HTTPS on ports 80 and 443 with its own certificate. `proxy` and `tunnel` serve plain HTTP on port 8080 for your own reverse proxy or tunnel.</dd>
+</div>
+<div class="flx-setting" id="fluxer_edge_protocols">
+<dt>`FLUXER_EDGE_PROTOCOLS`</dt>
+<dd class="flx-setting-default">Default `h1 h2 h3`</dd>
+<dd>The HTTP versions the edge serves, as the arguments of the Caddy protocols option, such as `h1 h2` to turn off HTTP/3.</dd>
+</div>
+<div class="flx-setting" id="fluxer_edge_site_address">
+<dt>`FLUXER_EDGE_SITE_ADDRESS`</dt>
+<dd>The site address the edge serves, including the scheme. When it's empty, the edge uses `FLUXER_CADDY_SITE_ADDRESS`, or `FLUXER_PUBLIC_SCHEME` followed by `://` and `FLUXER_DOMAIN`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_edge_tls">
+<dt>`FLUXER_EDGE_TLS`</dt>
+<dd>The arguments of a Caddy tls directive for the edge, such as `internal` for a certificate from Caddy's own local CA, or a certificate and key path under `/etc/fluxer/certs`. When it's empty, the edge adds no tls line and Caddy gets certificates on its own.</dd>
+</div>
+<div class="flx-setting" id="fluxer_edge_trusted_proxies">
+<dt>`FLUXER_EDGE_TRUSTED_PROXIES`</dt>
+<dd class="flx-setting-default">Default `127.0.0.1/32`</dd>
+<dd>Proxies whose client address headers Fluxer trusts, by default only this machine, or private ranges in proxy and tunnel mode. rexctl also calls it `edge.trusted_proxies`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_http_port">
+<dt>`FLUXER_HTTP_PORT`</dt>
+<dd class="flx-setting-default">Default `80`</dd>
+<dd>The port Fluxer listens on for HTTP. rexctl also calls it `edge.http_port`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_https_port">
+<dt>`FLUXER_HTTPS_PORT`</dt>
+<dd class="flx-setting-default">Default `443`</dd>
+<dd>The port Fluxer listens on for HTTPS. If people connect to this port directly, set `FLUXER_PUBLIC_PORT` to the same port. rexctl also calls it `edge.https_port`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_public_port">
+<dt>`FLUXER_PUBLIC_PORT`</dt>
+<dd class="flx-setting-default">Default `443`</dd>
+<dd>The port people use in Fluxer's address, when it differs from the one Fluxer listens on. rexctl also calls it `edge.public_port`.</dd>
+</div>
+</dl>
+
+## Voice and video
+
+Calls connect to the machine on `FLUXER_LIVEKIT_TCP_PORT` and `FLUXER_LIVEKIT_UDP_PORT`, also when Fluxer is behind your own proxy.
+
+<dl class="flx-settings">
+<div class="flx-setting" id="fluxer_livekit_bundled">
+<dt>`FLUXER_LIVEKIT_BUNDLED`</dt>
+<dd class="flx-setting-default">Default `true`</dd>
+<dd>Whether Fluxer runs its own LiveKit voice server on this machine. Use `true` or `false`. The bundled LiveKit is the first server in the default voice region. With `false`, Fluxer creates the default region with no server in it, removes the server it made for the bundled LiveKit and keeps calls on the servers you add with `rexctl voice add`, `rexctl voice join` or the admin panel. rexctl also calls it `voice.bundled`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_livekit_default_region">
+<dt>`FLUXER_LIVEKIT_DEFAULT_REGION`</dt>
+<dd class="flx-setting-default">Default `{"id":"default","name":"Default","emoji":"🌍","latitude":0,"longitude":0}`</dd>
+<dd>The voice region Fluxer creates when no voice regions exist yet, as a JSON object with `id`, `name`, `emoji`, `latitude` and `longitude`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_livekit_enabled">
+<dt>`FLUXER_LIVEKIT_ENABLED`</dt>
+<dd class="flx-setting-default">Default `true`</dd>
+<dd>Whether voice and video calls are turned on. Use `true` or `false`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_livekit_internal_url">
+<dt>`FLUXER_LIVEKIT_INTERNAL_URL`</dt>
+<dd>The URL the API uses for the LiveKit control API of the bundled LiveKit, the first server in the default voice region. Servers added in the admin panel use their own address. Fluxer ignores it when `FLUXER_LIVEKIT_BUNDLED` is `false`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_livekit_node_ip">
+<dt>`FLUXER_LIVEKIT_NODE_IP`</dt>
+<dd>The public IP address voice and video use, when Fluxer can't find it by itself. Set `FLUXER_LIVEKIT_USE_EXTERNAL_IP` to `false` with it. rexctl also calls it `voice.public_ip`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_livekit_stun_primary">
+<dt>`FLUXER_LIVEKIT_STUN_PRIMARY`</dt>
+<dd class="flx-setting-default">Default `stun.l.google.com:19302`</dd>
+<dd>The first STUN host LiveKit asks to find its public IP address, as `host:port`. Point it at another STUN host to avoid contacting Google.</dd>
+</div>
+<div class="flx-setting" id="fluxer_livekit_stun_secondary">
+<dt>`FLUXER_LIVEKIT_STUN_SECONDARY`</dt>
+<dd class="flx-setting-default">Default `stun1.l.google.com:19302`</dd>
+<dd>The second STUN host LiveKit asks to find its public IP address, as `host:port`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_livekit_tcp_port">
+<dt>`FLUXER_LIVEKIT_TCP_PORT`</dt>
+<dd class="flx-setting-default">Default `7881`</dd>
+<dd>The TCP port for voice and video. rexctl also calls it `voice.tcp_port`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_livekit_turn_servers">
+<dt>`FLUXER_LIVEKIT_TURN_SERVERS`</dt>
+<dd class="flx-setting-default">Default `[]`</dd>
+<dd>TURN servers that browsers and apps get when they join a call, as a JSON array of objects with `host`, `port` and `protocol`, and either `username` and `credential` or `secret` with an optional `ttl`, such as `[{"host":"turn.example.com","port":3478,"protocol":"udp","secret":"a-long-random-secret"}]`. Use `udp`, `tcp` or `tls` for `protocol`, and a hostname or an IPv4 address for `host`. With `secret`, LiveKit makes short-lived credentials for each participant in the form coturn checks with `use-auth-secret`, and `ttl`, a whole number from 1, sets how many seconds they last. The bundled voice server and the servers you add with `rexctl voice add` give these to clients, and rexctl restarts the added servers one at a time when the list changes. A server that joined with `rexctl voice join` gets the list when it joins and on each `rexctl upgrade` in its voice folder, unless the instance runs an older release than the rexctl there. Set it when callers can't connect to a voice server directly, such as from networks that allow only port 443. When it's empty, clients get no TURN server. The API doesn't start with a value it can't read, and `rexctl config set` refuses such a value.</dd>
+</div>
+<div class="flx-setting" id="fluxer_livekit_udp_port">
+<dt>`FLUXER_LIVEKIT_UDP_PORT`</dt>
+<dd class="flx-setting-default">Default `7882`</dd>
+<dd>The UDP port for voice and video. rexctl also calls it `voice.udp_port`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_livekit_url">
+<dt>`FLUXER_LIVEKIT_URL`</dt>
+<dd>The URL browsers and apps use for voice signalling. When it's empty, Fluxer uses the public origin, or `FLUXER_PUBLIC_SCHEME`, `FLUXER_DOMAIN` and `FLUXER_PUBLIC_PORT`, followed by `/livekit`. Set it only when LiveKit runs on another host.</dd>
+</div>
+<div class="flx-setting" id="fluxer_livekit_use_external_ip">
+<dt>`FLUXER_LIVEKIT_USE_EXTERNAL_IP`</dt>
+<dd class="flx-setting-default">Default `true`</dd>
+<dd>Whether LiveKit finds its public IP address through STUN. Use `true` or `false`. Set it to `false` when you set `FLUXER_LIVEKIT_NODE_IP`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_voice_health_interval_ms">
+<dt>`FLUXER_VOICE_HEALTH_INTERVAL_MS`</dt>
+<dd>How often each API node checks every active voice server, in milliseconds. A server that fails two checks in a row gets no new calls until a check passes. Set it to `0` to turn the checks off. When it's empty, the API checks every 15 seconds.</dd>
+</div>
+<div class="flx-setting" id="fluxer_voice_join_allow_private_endpoints">
+<dt>`FLUXER_VOICE_JOIN_ALLOW_PRIVATE_ENDPOINTS`</dt>
+<dd>Whether the API accepts a voice server joining with an endpoint that resolves to a private address. Use `true` or `false`. Set it to `true` only for tests and private networks.</dd>
+</div>
+<div class="flx-setting" id="fluxer_voice_p2p_stun_urls">
+<dt>`FLUXER_VOICE_P2P_STUN_URLS`</dt>
+<dd>STUN URLs for peer-to-peer calls, separated by commas, such as `stun:stun.example.com:3478`. When it's empty, peer-to-peer calls work only between devices with a direct route to each other, such as on one local network.</dd>
+</div>
+<div class="flx-setting" id="fluxer_voice_participant_sweep_dry_run">
+<dt>`FLUXER_VOICE_PARTICIPANT_SWEEP_DRY_RUN`</dt>
+<dd>Whether the voice participant check from `FLUXER_VOICE_PARTICIPANT_SWEEP_ENABLED` only logs the connections it would disconnect. Use `true` or `false`. When it's empty, the check only logs them.</dd>
+</div>
+<div class="flx-setting" id="fluxer_voice_participant_sweep_enabled">
+<dt>`FLUXER_VOICE_PARTICIPANT_SWEEP_ENABLED`</dt>
+<dd>Whether a worker compares each voice server's call participants with the gateway's call state every minute and disconnects connections the gateway has not known for two minutes. Use `true` or `false`. When it's empty, the check runs.</dd>
+</div>
+</dl>
+
+## Backups
+
+Fluxer backs up its database before every upgrade. These add regular backups, which Fluxer keeps in the `backups` folder of its data folder. [Copy them off the machine](/operator/backups/#copy-backups-off-the-machine), because they are on the same disk as the instance.
+
+<dl class="flx-settings">
+<div class="flx-setting" id="fluxer_backup_hour">
+<dt>`FLUXER_BACKUP_HOUR`</dt>
+<dd class="flx-setting-default">Default `3`</dd>
+<dd>The hour of the day, from 0 to 23, when Fluxer takes its own scheduled backup. It's in UTC inside a container unless the container has TZ set, and in the machine's time zone otherwise. When it's empty, Fluxer uses 3.</dd>
+</div>
+<div class="flx-setting" id="fluxer_backup_keep">
+<dt>`FLUXER_BACKUP_KEEP`</dt>
+<dd class="flx-setting-default">Default `7`</dd>
+<dd>How many of its own scheduled backups Fluxer keeps. When it's empty, Fluxer keeps 7.</dd>
+</div>
+<div class="flx-setting" id="fluxer_backup_on_upgrade">
+<dt>`FLUXER_BACKUP_ON_UPGRADE`</dt>
+<dd class="flx-setting-default">Default `true`</dd>
+<dd>Set to `false` to stop Fluxer backing up its database by itself before it starts on a newer release. When it's empty, it backs up and keeps the newest 3 of these backups. rexctl backs up before every upgrade and sets this to `false`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_backup_schedule">
+<dt>`FLUXER_BACKUP_SCHEDULE`</dt>
+<dd class="flx-setting-default">Default `off`</dd>
+<dd>How often Fluxer backs itself up into its own data folder, as `daily`, `weekly` or `off`. Fluxer shows a maintenance page while it copies uploads and the search index. On Linux, `rexctl backup schedule` uses a timer on the machine instead, and it sets this one only where the machine has no timer, such as Docker Desktop. `rexctl backup list` copies these backups into rexctl's backup folder, from Fluxer's volume for a container and from Fluxer's data folder for systemd.</dd>
+</div>
+</dl>
+
+## Updates
+
+Fluxer doesn't look for new releases by itself until you turn the check on. Then it checks once a day and shows a newer release in the admin panel, the log and `fluxerd version`. The request [holds no instance ID, domain, version, counts or cookies](/operator/upgrades/#turning-the-check-on).
+
+<dl class="flx-settings">
+<div class="flx-setting" id="fluxer_install_method">
+<dt>`FLUXER_INSTALL_METHOD`</dt>
+<dd>How this instance was installed, which picks the upgrade command Fluxer shows and the command the setup wizard gives for the setup token. Use `compose`, `docker`, `helm`, `systemd` or `rexctl`. The release's `compose.yaml` sets `compose`, the `docker run` line in the Docker guide `docker`, the Helm chart `helm` and rexctl `rexctl`. When it's empty, Fluxer in Docker or Podman shows steps that fit any way of running the image. Set it when the admin panel shows steps that don't fit, such as `compose` for a `compose.yaml` from an older release or `docker` for a `docker run` line without it.</dd>
+</div>
+<div class="flx-setting" id="fluxer_update_check">
+<dt>`FLUXER_UPDATE_CHECK`</dt>
+<dd class="flx-setting-default">Default `false`</dd>
+<dd>Set to `true` to have Fluxer ask `https://fluxer.dev/releases.json` once a day whether a newer release is out, and show newer releases in the admin panel and the log. The request is plain and holds nothing about your instance. It's off unless you set it.</dd>
+</div>
+<div class="flx-setting" id="fluxer_update_check_url">
+<dt>`FLUXER_UPDATE_CHECK_URL`</dt>
+<dd>Where Fluxer asks for the list of releases. When it's empty, it asks `https://fluxer.dev/releases.json`. Any other server you set here must send JSON in the same format as that list.</dd>
+</div>
+<div class="flx-setting" id="fluxer_upgrade_command">
+<dt>`FLUXER_UPGRADE_COMMAND`</dt>
+<dd>The upgrade command Fluxer shows when a newer release is out, with `{version}` where the version goes. The Helm chart and rexctl set it. Set it yourself when you upgrade some other way, such as with Quadlet or Ansible.</dd>
+</div>
+</dl>
+
+## File storage
+
+A new instance keeps uploads as plain files in its data folder. To use an S3-compatible store, set its address, region and buckets, and put its access key and secret key in `FLUXER_S3_ACCESS_KEY` and `FLUXER_S3_SECRET_KEY`.
+
+<dl class="flx-settings">
+<div class="flx-setting" id="fluxer_api_presigned_attachment_uploads_enabled">
+<dt>`FLUXER_API_PRESIGNED_ATTACHMENT_UPLOADS_ENABLED`</dt>
+<dd class="flx-setting-default">Default `true`</dd>
+<dd>Whether the API hands clients upload URLs that let them upload attachments before they send the message. Use `true` or `false`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_api_presigned_harvest_downloads_enabled">
+<dt>`FLUXER_API_PRESIGNED_HARVEST_DOWNLOADS_ENABLED`</dt>
+<dd class="flx-setting-default">Default `false`</dd>
+<dd>Whether data export and admin download links are presigned URLs to the object store. Use `true` or `false`. With `false`, the API serves those downloads itself. Turn it on only once browsers can connect to `FLUXER_S3_PUBLIC_ENDPOINT`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_api_storage_change_feed_enabled">
+<dt>`FLUXER_API_STORAGE_CHANGE_FEED_ENABLED`</dt>
+<dd>Whether the api and worker services publish a record of each object store write and delete they make to a NATS JetStream stream. Uploads written by the media proxy relay or sent directly to the store by clients are not in it. Use `true` or `false`. When it's empty, the feed is off.</dd>
+</div>
+<div class="flx-setting" id="fluxer_api_storage_change_feed_skip_buckets">
+<dt>`FLUXER_API_STORAGE_CHANGE_FEED_SKIP_BUCKETS`</dt>
+<dd>Buckets the storage change feed leaves out, separated by commas, or `none` to leave out no bucket. When it's empty, the feed leaves out the uploads bucket.</dd>
+</div>
+<div class="flx-setting" id="fluxer_api_storage_change_feed_stream">
+<dt>`FLUXER_API_STORAGE_CHANGE_FEED_STREAM`</dt>
+<dd>The JetStream stream the storage change feed publishes to, in letters, digits, underscores or hyphens. When it's empty, Fluxer uses `STORAGE_CHANGES`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_s3_bucket_cdn">
+<dt>`FLUXER_S3_BUCKET_CDN`</dt>
+<dd class="flx-setting-default">Default `fluxer`</dd>
+<dd>The bucket for processed media such as avatars and other served assets.</dd>
+</div>
+<div class="flx-setting" id="fluxer_s3_bucket_harvests">
+<dt>`FLUXER_S3_BUCKET_HARVESTS`</dt>
+<dd class="flx-setting-default">Default `fluxer-harvests`</dd>
+<dd>The bucket for data export archives.</dd>
+</div>
+<div class="flx-setting" id="fluxer_s3_bucket_reports">
+<dt>`FLUXER_S3_BUCKET_REPORTS`</dt>
+<dd class="flx-setting-default">Default `fluxer-reports`</dd>
+<dd>The bucket for abuse report evidence.</dd>
+</div>
+<div class="flx-setting" id="fluxer_s3_bucket_uploads">
+<dt>`FLUXER_S3_BUCKET_UPLOADS`</dt>
+<dd class="flx-setting-default">Default `fluxer-uploads`</dd>
+<dd>The bucket for raw uploads.</dd>
+</div>
+<div class="flx-setting" id="fluxer_s3_endpoint">
+<dt>`FLUXER_S3_ENDPOINT`</dt>
+<dd>The address of the S3-compatible object store. rexctl also calls it `storage.endpoint`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_s3_force_path_style">
+<dt>`FLUXER_S3_FORCE_PATH_STYLE`</dt>
+<dd class="flx-setting-default">Default `true`</dd>
+<dd>Whether the object store needs path-style addresses. Use `true` or `false`. rexctl also calls it `storage.path_style`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_s3_public_endpoint">
+<dt>`FLUXER_S3_PUBLIC_ENDPOINT`</dt>
+<dd>The object store address browsers use, when it differs from the one Fluxer uses. When it's empty, the api and worker use `FLUXER_S3_ENDPOINT`, and the web app doesn't let browsers upload to the object store. rexctl also calls it `storage.public_endpoint`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_s3_read_bucket">
+<dt>`FLUXER_S3_READ_BUCKET`</dt>
+<dd>The bucket the media proxy fetches through `FLUXER_S3_READ_ENDPOINT`. When it's empty, the media proxy uses `FLUXER_S3_BUCKET_CDN`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_s3_read_bucket_style">
+<dt>`FLUXER_S3_READ_BUCKET_STYLE`</dt>
+<dd>How the bucket appears in URLs to `FLUXER_S3_READ_ENDPOINT`. Use `path`, `virtual` or `root`. When it's empty, the media proxy follows `FLUXER_S3_FORCE_PATH_STYLE`, with `path` when it's on and `virtual` when it's off.</dd>
+</div>
+<div class="flx-setting" id="fluxer_s3_read_endpoint">
+<dt>`FLUXER_S3_READ_ENDPOINT`</dt>
+<dd>A separate http or https address, with no credentials, that the media proxy fetches objects in `FLUXER_S3_READ_BUCKET` from. When it's empty, the media proxy fetches everything through `FLUXER_S3_ENDPOINT`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_s3_read_signed">
+<dt>`FLUXER_S3_READ_SIGNED`</dt>
+<dd class="flx-setting-default">Default `true`</dd>
+<dd>Whether the media proxy signs its requests to `FLUXER_S3_READ_ENDPOINT`. Use `true` or `false`. Use `false` only for a bucket that allows anonymous downloads.</dd>
+</div>
+<div class="flx-setting" id="fluxer_s3_region">
+<dt>`FLUXER_S3_REGION`</dt>
+<dd class="flx-setting-default">Default `us-east-1`</dd>
+<dd>The object store region. rexctl also calls it `storage.region`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_s3_session_token">
+<dt>`FLUXER_S3_SESSION_TOKEN`</dt>
+<dd>A temporary S3 session token the media proxy sends with its object store requests. When it's empty, the media proxy sends none. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_storage_backend">
+<dt>`FLUXER_STORAGE_BACKEND`</dt>
+<dd>Where Fluxer keeps uploaded files. `filesystem` keeps them as plain files in the `objects` folder of the data folder and needs `FLUXER_S3_ENDPOINT` to be empty. When it's empty, a new instance picks `filesystem` on its first start, or `s3` when `FLUXER_S3_ENDPOINT` is set, and keeps that choice. An older instance with no choice saved uses `s3`. To switch an instance that already has files, use `rexctl migrate`. rexctl also calls it `storage.backend`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_storage_read_only">
+<dt>`FLUXER_STORAGE_READ_ONLY`</dt>
+<dd>Whether the api and worker refuse to write or delete files. Use `true` or `false`. `rexctl migrate` turns it on while you check the files it moved, and turns it off when you confirm.</dd>
+</div>
+<div class="flx-setting" id="fluxer_storage_uploads_ttl">
+<dt>`FLUXER_STORAGE_UPLOADS_TTL`</dt>
+<dd class="flx-setting-default">Default `1d`</dd>
+<dd>How long Fluxer keeps files in the uploads bucket when `FLUXER_STORAGE_BACKEND` is `filesystem`. Use a number followed by `m`, `h`, `d`, `w`, `M` for months or `y`, such as `1d`, or `off` to keep them. When it's empty, Fluxer uses `FLUXER_SEAWEEDFS_UPLOADS_TTL`, and `1d` when that setting is empty as well.</dd>
+</div>
+</dl>
+
+## Database
+
+Fluxer runs its own PostgreSQL unless you set `FLUXER_POSTGRES_URL` for a database and role that already exist, on PostgreSQL 14 or later.
+
+<dl class="flx-settings">
+<div class="flx-setting" id="fluxer_postgres_database">
+<dt>`FLUXER_POSTGRES_DATABASE`</dt>
+<dd>The PostgreSQL database name. When it's empty, Fluxer uses `fluxer`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_host">
+<dt>`FLUXER_POSTGRES_HOST`</dt>
+<dd class="flx-setting-default">Default `postgres`</dd>
+<dd>The hostname or address of the PostgreSQL database.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_kv_table">
+<dt>`FLUXER_POSTGRES_KV_TABLE`</dt>
+<dd>The PostgreSQL table for Fluxer's key-value data, a plain identifier of letters, digits and underscores that starts with a letter or an underscore. When it's empty, Fluxer uses `fluxer_kv`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_port">
+<dt>`FLUXER_POSTGRES_PORT`</dt>
+<dd>The PostgreSQL port, from 1 to 65535. When it's empty, Fluxer uses `5432`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_prepared_statements">
+<dt>`FLUXER_POSTGRES_PREPARED_STATEMENTS`</dt>
+<dd>Whether Fluxer uses PostgreSQL prepared statements. Use `true` or `false`. When it's empty, Fluxer uses them. Set it to `false` behind a transaction-pooling pooler such as PgBouncer.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_ssl">
+<dt>`FLUXER_POSTGRES_SSL`</dt>
+<dd>Whether Fluxer connects to PostgreSQL over TLS. Use `true` or `false`. When it isn't `true` and `FLUXER_POSTGRES_URL` has no `sslmode`, the api and worker follow `PGSSLMODE` and the other services connect without TLS.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_ssl_ca">
+<dt>`FLUXER_POSTGRES_SSL_CA`</dt>
+<dd>A CA certificate in PEM form that Fluxer trusts for the PostgreSQL TLS connection, with `\n` for line breaks. The Rust services use it whenever the connection uses TLS. The api and worker use it only when `FLUXER_POSTGRES_SSL` is `true` and `FLUXER_POSTGRES_URL` has no `sslmode`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_url">
+<dt>`FLUXER_POSTGRES_URL`</dt>
+<dd>A full PostgreSQL connection URL, such as `postgres://fluxer:secret@db.example.com:5432/fluxer`. When it's set, Fluxer connects with it and ignores the host, port, database, username and password settings. An `sslmode` in the URL can turn TLS on when `FLUXER_POSTGRES_SSL` isn't `true`. For the api and worker, it also wins over `FLUXER_POSTGRES_SSL`. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_username">
+<dt>`FLUXER_POSTGRES_USERNAME`</dt>
+<dd>The PostgreSQL role Fluxer connects as. When it's empty, Fluxer uses `fluxer`.</dd>
+</div>
+</dl>
+
+## Cache, queue and search
+
+<dl class="flx-settings">
+<div class="flx-setting" id="fluxer_gif_service_nats_client_name">
+<dt>`FLUXER_GIF_SERVICE_NATS_CLIENT_NAME`</dt>
+<dd>The client name the API gives its NATS connection to the gifs service, which shows in NATS monitoring. When it's empty, the API uses `fluxer-api-gifs`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_gif_service_register_share_timeout_ms">
+<dt>`FLUXER_GIF_SERVICE_REGISTER_SHARE_TIMEOUT_MS`</dt>
+<dd>How long the API waits for the gifs service to record that someone shared a GIF, in milliseconds. When it's empty, the API uses `3000`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_gif_service_timeout_ms">
+<dt>`FLUXER_GIF_SERVICE_TIMEOUT_MS`</dt>
+<dd>How long the API waits for gifs service requests such as searches, in milliseconds. When it's empty, the API uses `12000`. `FLUXER_GIF_SERVICE_REGISTER_SHARE_TIMEOUT_MS` sets a separate timeout for recording a share.</dd>
+</div>
+<div class="flx-setting" id="fluxer_kv_mode">
+<dt>`FLUXER_KV_MODE`</dt>
+<dd>Where Fluxer keeps its cache, rate limits and other short-lived data. Use `standalone` for a single Valkey or Redis node at `FLUXER_KV_URL`, `cluster` for a Redis-compatible cluster, or `postgres` for tables in Fluxer's own PostgreSQL database. When it's empty, a new instance picks `postgres` on its first start, or `standalone` when `FLUXER_KV_URL` is set, and keeps that choice. An older instance with no choice saved uses `standalone`, which needs a Valkey or Redis node at `FLUXER_KV_URL`. `postgres` needs `FLUXER_DATABASE_BACKEND` to be `postgres` and `FLUXER_KV_URL` to be empty. A pooler such as PgBouncer in transaction mode breaks the LISTEN connection `postgres` needs, so connect directly or through a session-mode pooler. To switch an instance that already has data, use `rexctl migrate`. rexctl also calls it `kv.mode`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_kv_url">
+<dt>`FLUXER_KV_URL`</dt>
+<dd>The Valkey or Redis URL Fluxer uses for its cache, rate limits and other short-lived data.</dd>
+</div>
+<div class="flx-setting" id="fluxer_nats_auth_token">
+<dt>`FLUXER_NATS_AUTH_TOKEN`</dt>
+<dd>The token every service sends when it connects to NATS. When it's empty, services connect without a token. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_search_engine">
+<dt>`FLUXER_SEARCH_ENGINE`</dt>
+<dd class="flx-setting-default">Default `meilisearch`</dd>
+<dd>Which search engine Fluxer uses. Use `meilisearch` or `elasticsearch`, or `none` to turn search off. With `elasticsearch`, set `MEILI_MASTER_KEY` to your Elasticsearch API key.</dd>
+</div>
+<div class="flx-setting" id="fluxer_search_password">
+<dt>`FLUXER_SEARCH_PASSWORD`</dt>
+<dd>The basic auth password for Elasticsearch. Fluxer uses it only when `FLUXER_SEARCH_API_KEY` is empty, the same as `FLUXER_SEARCH_USERNAME`. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_search_tls_reject_unauthorized">
+<dt>`FLUXER_SEARCH_TLS_REJECT_UNAUTHORIZED`</dt>
+<dd>Whether Fluxer checks the Elasticsearch TLS certificate. Use `true` or `false`. When it's empty, Fluxer checks it. Meilisearch connections don't use it.</dd>
+</div>
+<div class="flx-setting" id="fluxer_search_url">
+<dt>`FLUXER_SEARCH_URL`</dt>
+<dd>The address of the search engine.</dd>
+</div>
+<div class="flx-setting" id="fluxer_search_username">
+<dt>`FLUXER_SEARCH_USERNAME`</dt>
+<dd>The basic auth username for Elasticsearch. Fluxer uses it only when `FLUXER_SEARCH_API_KEY` is empty.</dd>
+</div>
+<div class="flx-setting" id="fluxer_snowflake_service_batch_size">
+<dt>`FLUXER_SNOWFLAKE_SERVICE_BATCH_SIZE`</dt>
+<dd>How many IDs the API fetches from the snowflakes service at a time, from 1 to 512. When it's empty, the API uses `128`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_snowflake_service_low_watermark">
+<dt>`FLUXER_SNOWFLAKE_SERVICE_LOW_WATERMARK`</dt>
+<dd>The number of unused IDs at which the API fetches a new batch, from 0 to one less than the batch size. When it's empty, the API uses `32`, or one less than the batch size if that's smaller.</dd>
+</div>
+<div class="flx-setting" id="fluxer_snowflake_service_max_buffer_age_ms">
+<dt>`FLUXER_SNOWFLAKE_SERVICE_MAX_BUFFER_AGE_MS`</dt>
+<dd>How long the API keeps a fetched batch of IDs before it throws the rest away, in milliseconds from 1 to 60000. When it's empty, the API uses `5000`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_snowflake_service_nats_client_name">
+<dt>`FLUXER_SNOWFLAKE_SERVICE_NATS_CLIENT_NAME`</dt>
+<dd>The client name the API gives its NATS connection to the snowflakes service, which shows in NATS monitoring. When it's empty, the API uses `fluxer-api-snowflakes`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_snowflake_service_request_timeout_ms">
+<dt>`FLUXER_SNOWFLAKE_SERVICE_REQUEST_TIMEOUT_MS`</dt>
+<dd>How long the API waits for the snowflakes service, in milliseconds from 1 to 60000. When it's empty, the API uses `6000`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_svc_cache_max_entries">
+<dt>`FLUXER_SVC_CACHE_MAX_ENTRIES`</dt>
+<dd>The most entries each internal service process keeps in its cache. When it's empty, the internal services use `100000`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_svc_cache_ttl_ms">
+<dt>`FLUXER_SVC_CACHE_TTL_MS`</dt>
+<dd>How long the internal services keep cached entries, in milliseconds. When it's empty, they use `30000`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_svc_max_concurrent_requests">
+<dt>`FLUXER_SVC_MAX_CONCURRENT_REQUESTS`</dt>
+<dd>How many requests each internal service handles at once before it turns new ones away. When it's empty, the messages service uses `192`, the snowflakes service `320` and the others `64`. One value you set applies to all of them.</dd>
+</div>
+<div class="flx-setting" id="fluxer_users_service_inflight_max_entries">
+<dt>`FLUXER_USERS_SERVICE_INFLIGHT_MAX_ENTRIES`</dt>
+<dd>How many user lookups the API tracks in flight, which lets requests for the same user share one call to the users service. Lookups past this limit go to the service on their own. When it's empty, the API uses `10000`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_users_service_nats_client_name">
+<dt>`FLUXER_USERS_SERVICE_NATS_CLIENT_NAME`</dt>
+<dd>The client name the API gives its NATS connection to the users service, which shows in NATS monitoring. When it's empty, the API uses `fluxer-api-users`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_users_service_timeout_ms">
+<dt>`FLUXER_USERS_SERVICE_TIMEOUT_MS`</dt>
+<dd>How long the API waits for the users service, in milliseconds. When it's empty, the API uses `6000`.</dd>
+</div>
+</dl>
+
+## Outgoing proxy
+
+<dl class="flx-settings">
+<div class="flx-setting" id="fluxer_node_extra_ca_certs">
+<dt>`FLUXER_NODE_EXTRA_CA_CERTS`</dt>
+<dd class="flx-setting-default">Default `/etc/ssl/certs/ca-certificates.crt`</dd>
+<dd>The path of a PEM file of CA certificates that the api and worker trust for outgoing TLS on top of Node's built-in ones. Use it when your email server has a certificate from your own CA. The path is inside their services. A file you set replaces the system bundle. Node's built-in CAs still apply, and the file can have only your own CA. The Rust services don't use it and take their CA certificates from `SSL_CERT_FILE`.</dd>
+</div>
+<div class="flx-setting" id="http_proxy">
+<dt>`HTTP_PROXY`</dt>
+<dd>The proxy the edge and the Rust services other than the app-proxy use for outgoing HTTP requests. The edge uses it to get its certificate from Let's Encrypt. The api, worker and gateway don't use it. rexctl also calls it `network.http_proxy`.</dd>
+</div>
+<div class="flx-setting" id="https_proxy">
+<dt>`HTTPS_PROXY`</dt>
+<dd>The proxy the edge and the Rust services other than the app-proxy use for outgoing HTTPS requests. The edge uses it to get its certificate from Let's Encrypt. The api, worker and gateway don't use it. rexctl also calls it `network.https_proxy`.</dd>
+</div>
+<div class="flx-setting" id="no_proxy">
+<dt>`NO_PROXY`</dt>
+<dd>Hosts the edge and the Rust services other than the app-proxy connect to without the proxy, separated by commas. rexctl also calls it `network.no_proxy`.</dd>
+</div>
+</dl>
+
+## Sign-in
+
+The admin panel can also save the single sign-on settings, and a value saved there wins over the ones here. [Set up single sign-on](/operator/sign-in/#single-sign-on).
+
+<dl class="flx-settings">
+<div class="flx-setting" id="fluxer_admin_sso_client_id">
+<dt>`FLUXER_ADMIN_SSO_CLIENT_ID`</dt>
+<dd>The client ID of the admin panel at the provider in `FLUXER_ADMIN_SSO_ISSUER`. Register the admin address followed by `/sso/callback` as its redirect URL.</dd>
+</div>
+<div class="flx-setting" id="fluxer_admin_sso_client_secret">
+<dt>`FLUXER_ADMIN_SSO_CLIENT_SECRET`</dt>
+<dd>The client secret that goes with `FLUXER_ADMIN_SSO_CLIENT_ID`. Only the admin service uses it. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_admin_sso_display_name">
+<dt>`FLUXER_ADMIN_SSO_DISPLAY_NAME`</dt>
+<dd>The provider name on the single sign-on button of the admin panel. With `Ferret`, the button says `Sign in with Ferret`. When it's empty, the button says `Sign in with single sign-on`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_admin_sso_issuer">
+<dt>`FLUXER_ADMIN_SSO_ISSUER`</dt>
+<dd>The HTTPS issuer URL of an OpenID Connect provider that staff can also use to sign in to the admin panel. The issuer must not contain credentials, a query or a fragment. Discovery and token endpoints must serve responses directly without redirects. Admin single sign-on is on when `FLUXER_ADMIN_SSO_ISSUER`, `FLUXER_ADMIN_SSO_CLIENT_ID` and `FLUXER_ADMIN_SSO_CLIENT_SECRET` are all set. The admin service won't start when only some of them are set. The api and admin services must have the same issuer and client ID. The provider's ID token must have a `fluxer_id` claim with the ID of the Fluxer account, and access still comes from the admin ACLs of that account. Only trusted provider administrators may set this claim, and users must not be able to change it.</dd>
+</div>
+<div class="flx-setting" id="fluxer_admin_sso_only">
+<dt>`FLUXER_ADMIN_SSO_ONLY`</dt>
+<dd>Whether staff can sign in to the admin panel only with single sign-on. Use `true` or `false`. With `true`, the login page hides the button for signing in with a Fluxer account, and the admin panel refuses new sign-ins that way. Staff who are already signed in stay signed in. It needs `FLUXER_ADMIN_SSO_ISSUER`, `FLUXER_ADMIN_SSO_CLIENT_ID` and `FLUXER_ADMIN_SSO_CLIENT_SECRET`, and the admin service won't start without them. When it's empty, it's `false`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_passkey_additional_allowed_origins">
+<dt>`FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS`</dt>
+<dd>Every origin where passkeys work, separated by commas. A list you set replaces it and must include the web app origin. Set a list when `FLUXER_APP_ENDPOINT` is on another origin. Each entry is an http or https origin or an Android app, written as `android:apk-key-hash:` followed by its signing certificate's SHA-256 hash in unpadded base64url.</dd>
+</div>
+<div class="flx-setting" id="fluxer_passkey_rp_id">
+<dt>`FLUXER_PASSKEY_RP_ID`</dt>
+<dd>The relying party ID that passkeys are tied to, a domain such as `chat.example.com`. When it's empty, Fluxer uses `FLUXER_DOMAIN`. Changing it makes every passkey registered against the old value stop working.</dd>
+</div>
+<div class="flx-setting" id="fluxer_passkey_rp_name">
+<dt>`FLUXER_PASSKEY_RP_NAME`</dt>
+<dd>The title browsers show for Fluxer when someone creates or uses a passkey. When it's empty, browsers show `Fluxer`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_sso_allow_private_addresses">
+<dt>`FLUXER_SSO_ALLOW_PRIVATE_ADDRESSES`</dt>
+<dd>Whether single sign-on can use a provider on a private or local network address. Use `true` or `false`. When it's empty, Fluxer uses `false`. rexctl also calls it `sso.allow_private_addresses`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_sso_allowed_domains">
+<dt>`FLUXER_SSO_ALLOWED_DOMAINS`</dt>
+<dd>Email domains that can sign in through the provider, separated by commas, such as `example.com,example.org`. When it's empty, every domain can.</dd>
+</div>
+<div class="flx-setting" id="fluxer_sso_auto_provision">
+<dt>`FLUXER_SSO_AUTO_PROVISION`</dt>
+<dd>Whether someone new gets an account at their first sign-in through the provider. Use `true` or `false`. When it's empty, Fluxer uses `true`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_sso_client_id">
+<dt>`FLUXER_SSO_CLIENT_ID`</dt>
+<dd>The client ID of Fluxer at your provider. Register the redirect URI the admin panel shows with the provider.</dd>
+</div>
+<div class="flx-setting" id="fluxer_sso_client_secret">
+<dt>`FLUXER_SSO_CLIENT_SECRET`</dt>
+<dd>The client secret that goes with `FLUXER_SSO_CLIENT_ID`. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_sso_display_name">
+<dt>`FLUXER_SSO_DISPLAY_NAME`</dt>
+<dd>The provider name the sign-in page shows.</dd>
+</div>
+<div class="flx-setting" id="fluxer_sso_enabled">
+<dt>`FLUXER_SSO_ENABLED`</dt>
+<dd>Whether people can sign in through your OpenID Connect provider. Use `true` or `false`. When it's empty, single sign-on is off.</dd>
+</div>
+<div class="flx-setting" id="fluxer_sso_enforced">
+<dt>`FLUXER_SSO_ENFORCED`</dt>
+<dd>Whether everyone has to sign in through the provider, with passwords, passkeys and local registration off. Use `true` or `false`. When it's empty, Fluxer uses `false`. Turn it on only after an admin has signed in through your provider.</dd>
+</div>
+<div class="flx-setting" id="fluxer_sso_issuer">
+<dt>`FLUXER_SSO_ISSUER`</dt>
+<dd>The issuer URL of your OpenID Connect provider, such as `https://auth.example.com/application/o/fluxer/`. Fluxer finds the other endpoints through its discovery document.</dd>
+</div>
+<div class="flx-setting" id="fluxer_sso_scope">
+<dt>`FLUXER_SSO_SCOPE`</dt>
+<dd>The scopes Fluxer asks for, separated by spaces. When it's empty, Fluxer uses `openid email profile`.</dd>
+</div>
+</dl>
+
+## Email
+
+The admin panel can also save the delivery mode, the sender and the SMTP server. A value saved there wins. [Set up email with a mail provider](/operator/email/).
+
+<dl class="flx-settings">
+<div class="flx-setting" id="fluxer_email_app_base_url">
+<dt>`FLUXER_EMAIL_APP_BASE_URL`</dt>
+<dd>The base URL Fluxer uses for links in emails, an http or https URL with no credentials, query or fragment. When it's empty, Fluxer uses `FLUXER_APP_ENDPOINT`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_email_delivery">
+<dt>`FLUXER_EMAIL_DELIVERY`</dt>
+<dd>How Fluxer sends email. Use `smtp` or `off`. When it's empty, `FLUXER_EMAIL_ENABLED` and `FLUXER_EMAIL_PROVIDER` decide, and email is off when those are empty too.</dd>
+</div>
+<div class="flx-setting" id="fluxer_email_enabled">
+<dt>`FLUXER_EMAIL_ENABLED`</dt>
+<dd>The older way to turn email on. Use `FLUXER_EMAIL_DELIVERY`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_email_fallback_domains">
+<dt>`FLUXER_EMAIL_FALLBACK_DOMAINS`</dt>
+<dd>Recipient domains, separated by commas, whose mail goes through the fallback SMTP provider, such as `gmail.com,googlemail.com`. Only exact domain matches count, and `*` alone sends all mail through the fallback provider.</dd>
+</div>
+<div class="flx-setting" id="fluxer_email_fallback_smtp_headers">
+<dt>`FLUXER_EMAIL_FALLBACK_SMTP_HEADERS`</dt>
+<dd>Extra headers added to every message sent through the fallback provider, as a JSON object that maps header names to string values. Core headers such as From, To, Subject and Reply-To can't be set here.</dd>
+</div>
+<div class="flx-setting" id="fluxer_email_fallback_smtp_host">
+<dt>`FLUXER_EMAIL_FALLBACK_SMTP_HOST`</dt>
+<dd>The hostname of the fallback SMTP provider.</dd>
+</div>
+<div class="flx-setting" id="fluxer_email_fallback_smtp_password">
+<dt>`FLUXER_EMAIL_FALLBACK_SMTP_PASSWORD`</dt>
+<dd>The password Fluxer signs in to the fallback SMTP provider with. Fluxer doesn't start when a fallback provider is set without it. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_email_fallback_smtp_port">
+<dt>`FLUXER_EMAIL_FALLBACK_SMTP_PORT`</dt>
+<dd>The port of the fallback SMTP provider, from 1 to 65535. When it's empty, Fluxer uses `587`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_email_fallback_smtp_tls_mode">
+<dt>`FLUXER_EMAIL_FALLBACK_SMTP_TLS_MODE`</dt>
+<dd>How Fluxer encrypts the connection to the fallback provider. Use `implicit`, `starttls`, `opportunistic` or `none`. When it's empty, Fluxer uses `implicit` on port 465 and `starttls` on any other port.</dd>
+</div>
+<div class="flx-setting" id="fluxer_email_fallback_smtp_username">
+<dt>`FLUXER_EMAIL_FALLBACK_SMTP_USERNAME`</dt>
+<dd>The username Fluxer signs in to the fallback SMTP provider with. Fluxer doesn't start when a fallback provider is set without it.</dd>
+</div>
+<div class="flx-setting" id="fluxer_email_from_email">
+<dt>`FLUXER_EMAIL_FROM_EMAIL`</dt>
+<dd>The address Fluxer sends email from. When it's empty, Fluxer uses `noreply@` followed by `FLUXER_DOMAIN`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_email_from_name">
+<dt>`FLUXER_EMAIL_FROM_NAME`</dt>
+<dd>The sender name on email from Fluxer. When it's empty, Fluxer uses the product name of the instance.</dd>
+</div>
+<div class="flx-setting" id="fluxer_email_provider">
+<dt>`FLUXER_EMAIL_PROVIDER`</dt>
+<dd>The older way to pick the email transport, which takes `smtp` or `none`. Use `FLUXER_EMAIL_DELIVERY`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_email_reply_to_email">
+<dt>`FLUXER_EMAIL_REPLY_TO_EMAIL`</dt>
+<dd>The address replies go to, sent as the Reply-To header on every email, such as `support@example.com`. When it's empty, Fluxer sends no Reply-To header.</dd>
+</div>
+<div class="flx-setting" id="fluxer_email_smtp_host">
+<dt>`FLUXER_EMAIL_SMTP_HOST`</dt>
+<dd>The hostname of your SMTP server.</dd>
+</div>
+<div class="flx-setting" id="fluxer_email_smtp_password">
+<dt>`FLUXER_EMAIL_SMTP_PASSWORD`</dt>
+<dd>The password Fluxer signs in to your SMTP server with. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_email_smtp_port">
+<dt>`FLUXER_EMAIL_SMTP_PORT`</dt>
+<dd>The port of your SMTP server. When it's empty, Fluxer uses `587`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_email_smtp_secure">
+<dt>`FLUXER_EMAIL_SMTP_SECURE`</dt>
+<dd>The older way to set `FLUXER_EMAIL_SMTP_TLS_MODE`, used only while that is empty. Use `true` for `implicit` on port 465 and `starttls` on any other port, or `false` for `opportunistic`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_email_smtp_tls_mode">
+<dt>`FLUXER_EMAIL_SMTP_TLS_MODE`</dt>
+<dd>How the SMTP connection is encrypted. Use `implicit` for TLS from the start, usually on port 465, `starttls` to upgrade before signing in, usually on port 587, `opportunistic` to upgrade when the server offers it, or `none`. When it's empty, `FLUXER_EMAIL_SMTP_SECURE` decides. When both are empty, Fluxer uses `implicit` on port 465 and `starttls` on any other port.</dd>
+</div>
+<div class="flx-setting" id="fluxer_email_smtp_username">
+<dt>`FLUXER_EMAIL_SMTP_USERNAME`</dt>
+<dd>The username Fluxer signs in to your SMTP server with.</dd>
+</div>
+<div class="flx-setting" id="fluxer_email_webhook_secret">
+<dt>`FLUXER_EMAIL_WEBHOOK_SECRET`</dt>
+<dd>The base64 secret Fluxer uses to check the signature on bounce and complaint webhooks from the Sweego email service. When it's empty, Fluxer turns those webhooks away. Keep it secret.</dd>
+</div>
+</dl>
+
+## Push notifications
+
+<dl class="flx-settings">
+<div class="flx-setting" id="fluxer_push_apns_apps">
+<dt>`FLUXER_PUSH_APNS_APPS`</dt>
+<dd>The apps the push service sends to through APNs, as a JSON array of objects. Each object has an `app_id` and a `topic` with the app's bundle ID, and can have an `environment` of `production` or `development`. APNs sends fail for an app that isn't listed or has no topic. A push relay with APNs on doesn't start until this lists at least one app.</dd>
+</div>
+<div class="flx-setting" id="fluxer_push_apns_default_environment">
+<dt>`FLUXER_PUSH_APNS_DEFAULT_ENVIRONMENT`</dt>
+<dd>The APNs environment the push service uses for a device that registered without one. Use `production` or `development`. When it's empty, it uses `production`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_push_apns_enabled">
+<dt>`FLUXER_PUSH_APNS_ENABLED`</dt>
+<dd>Whether the push service sends mobile notifications through Apple Push Notification service with your own credentials. Use `true` or `false`. When it's empty, APNs is off.</dd>
+</div>
+<div class="flx-setting" id="fluxer_push_apns_key_id">
+<dt>`FLUXER_PUSH_APNS_KEY_ID`</dt>
+<dd>The ID of your APNs signing key, from your Apple developer account.</dd>
+</div>
+<div class="flx-setting" id="fluxer_push_apns_private_key">
+<dt>`FLUXER_PUSH_APNS_PRIVATE_KEY`</dt>
+<dd>Your APNs signing key as PEM text. Set this or `FLUXER_PUSH_APNS_PRIVATE_KEY_PATH`, and this one wins when both are set. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_push_apns_private_key_path">
+<dt>`FLUXER_PUSH_APNS_PRIVATE_KEY_PATH`</dt>
+<dd>The path to your APNs signing key file inside the push service. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_push_apns_team_id">
+<dt>`FLUXER_PUSH_APNS_TEAM_ID`</dt>
+<dd>Your Apple developer team ID.</dd>
+</div>
+<div class="flx-setting" id="fluxer_push_fcm_apps">
+<dt>`FLUXER_PUSH_FCM_APPS`</dt>
+<dd>The apps the push service sends to through FCM, as a JSON array of objects that each have an `app_id` and can have a `project_id`. An app with no entry or no `project_id` uses `FLUXER_PUSH_FCM_PROJECT_ID`. A push relay with FCM on doesn't start until this lists at least one app.</dd>
+</div>
+<div class="flx-setting" id="fluxer_push_fcm_client_email">
+<dt>`FLUXER_PUSH_FCM_CLIENT_EMAIL`</dt>
+<dd>The client email of your Firebase service account. When it's empty, the push service reads `FLUXER_PUSH_FCM_SERVICE_ACCOUNT_JSON_PATH` and takes the client email from the service account file it points to.</dd>
+</div>
+<div class="flx-setting" id="fluxer_push_fcm_enabled">
+<dt>`FLUXER_PUSH_FCM_ENABLED`</dt>
+<dd>Whether the push service sends mobile notifications through Firebase Cloud Messaging with your own credentials. Use `true` or `false`. When it's empty, FCM is off.</dd>
+</div>
+<div class="flx-setting" id="fluxer_push_fcm_private_key">
+<dt>`FLUXER_PUSH_FCM_PRIVATE_KEY`</dt>
+<dd>The private key of your Firebase service account as PEM text. When it's empty, the push service uses `FLUXER_PUSH_FCM_PRIVATE_KEY_PATH` or the key in the service account JSON. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_push_fcm_private_key_path">
+<dt>`FLUXER_PUSH_FCM_PRIVATE_KEY_PATH`</dt>
+<dd>The path to your Firebase service account private key inside the push service. The push service uses it when `FLUXER_PUSH_FCM_PRIVATE_KEY` is empty. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_push_fcm_project_id">
+<dt>`FLUXER_PUSH_FCM_PROJECT_ID`</dt>
+<dd>Your Firebase project ID. When it's empty, the push service reads `FLUXER_PUSH_FCM_SERVICE_ACCOUNT_JSON_PATH` and takes the project ID from the service account file it points to.</dd>
+</div>
+<div class="flx-setting" id="fluxer_push_fcm_service_account_json_path">
+<dt>`FLUXER_PUSH_FCM_SERVICE_ACCOUNT_JSON_PATH`</dt>
+<dd>The path to your Firebase service account JSON file inside the push service. The push service loads the project ID, client email and private key from it when those settings are empty.</dd>
+</div>
+<div class="flx-setting" id="fluxer_push_fcm_token_uri">
+<dt>`FLUXER_PUSH_FCM_TOKEN_URI`</dt>
+<dd>The OAuth token URL the push service uses for FCM. When it's empty, it uses `https://oauth2.googleapis.com/token`. Change it only for a proxy or a test double. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_push_service_apns_base_url">
+<dt>`FLUXER_PUSH_SERVICE_APNS_BASE_URL`</dt>
+<dd>A URL that replaces the APNs host in both environments, for a test double only. When it's empty, the push service uses Apple's own hosts.</dd>
+</div>
+<div class="flx-setting" id="fluxer_push_service_fcm_base_url">
+<dt>`FLUXER_PUSH_SERVICE_FCM_BASE_URL`</dt>
+<dd>The FCM host the push service sends to. When it's empty, it uses `https://fcm.googleapis.com`. Change it only to send through a proxy or to a test double.</dd>
+</div>
+<div class="flx-setting" id="fluxer_push_service_managed_relay_hosts">
+<dt>`FLUXER_PUSH_SERVICE_MANAGED_RELAY_HOSTS`</dt>
+<dd>Hostnames, separated by commas, of the push relay that Fluxer runs. When it's empty, the push service uses `push.fluxer.com`. It sends to these hosts only once relay consent is accepted.</dd>
+</div>
+<div class="flx-setting" id="fluxer_push_service_own_relay_hosts">
+<dt>`FLUXER_PUSH_SERVICE_OWN_RELAY_HOSTS`</dt>
+<dd>Hostnames, separated by commas, of a push relay your instance runs itself. The push service sends mobile app notifications addressed to these hosts directly to APNs or FCM with its own credentials.</dd>
+</div>
+<div class="flx-setting" id="fluxer_push_service_private_hosts">
+<dt>`FLUXER_PUSH_SERVICE_PRIVATE_HOSTS`</dt>
+<dd>Hostnames, separated by commas, that push endpoints may use even when they resolve to private or loopback addresses, such as a ntfy service on your own network. The push service refuses every other such endpoint.</dd>
+</div>
+<div class="flx-setting" id="fluxer_push_service_queue_capacity">
+<dt>`FLUXER_PUSH_SERVICE_QUEUE_CAPACITY`</dt>
+<dd>How many notification jobs the push service queues at once, from 1 to 1000000. When it's empty, it uses `10000`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_push_service_relay_consent_accepted">
+<dt>`FLUXER_PUSH_SERVICE_RELAY_CONSENT_ACCEPTED`</dt>
+<dd>Whether this push service accepts the push relay privacy notice, which lets it send through the relay Fluxer runs. Use `true`, `1` or `yes` to accept. With `false`, `0`, `no` or an empty value, the push relay setting of the instance decides.</dd>
+</div>
+<div class="flx-setting" id="fluxer_push_service_send_concurrency">
+<dt>`FLUXER_PUSH_SERVICE_SEND_CONCURRENCY`</dt>
+<dd>How many provider requests the push service sends at once across all jobs, from 1 to 65536. When it's empty, it uses `256`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_vapid_email">
+<dt>`FLUXER_VAPID_EMAIL`</dt>
+<dd>The contact email Fluxer sends to browser push services with its VAPID key. When it's empty, Fluxer uses `admin@` followed by `FLUXER_DOMAIN`. Set it if that mailbox doesn't exist.</dd>
+</div>
+</dl>
+
+## Media
+
+<dl class="flx-settings">
+<div class="flx-setting" id="fluxer_cache_purge_adapter">
+<dt>`FLUXER_CACHE_PURGE_ADAPTER`</dt>
+<dd>How Fluxer purges cached copies of deleted or replaced media from your CDN or caching proxy. Use `none`, `http` or `controller`. When it's empty, Fluxer uses `none` and sends no purges.</dd>
+</div>
+<div class="flx-setting" id="fluxer_cache_purge_controller_endpoint">
+<dt>`FLUXER_CACHE_PURGE_CONTROLLER_ENDPOINT`</dt>
+<dd>The purge URL of the Controller edge site that serves your media, as an absolute https URL without credentials. Fluxer uses it when `FLUXER_CACHE_PURGE_ADAPTER` is `controller`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_cache_purge_controller_timeout_ms">
+<dt>`FLUXER_CACHE_PURGE_CONTROLLER_TIMEOUT_MS`</dt>
+<dd>How long each Controller purge request may take, in milliseconds from 1000 to 10000. When it's empty, Fluxer uses `10000`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_cache_purge_controller_token">
+<dt>`FLUXER_CACHE_PURGE_CONTROLLER_TOKEN`</dt>
+<dd>The Controller API key Fluxer sends as a bearer token with each purge request, in visible ASCII characters with no spaces. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_cache_purge_http_endpoint">
+<dt>`FLUXER_CACHE_PURGE_HTTP_ENDPOINT`</dt>
+<dd>The URL the worker posts purge requests to when `FLUXER_CACHE_PURGE_ADAPTER` is `http`, as an absolute http or https URL without credentials. Your endpoint then purges the listed media URL prefixes from every cache in front of the media.</dd>
+</div>
+<div class="flx-setting" id="fluxer_cache_purge_http_timeout_ms">
+<dt>`FLUXER_CACHE_PURGE_HTTP_TIMEOUT_MS`</dt>
+<dd>How long each purge request to `FLUXER_CACHE_PURGE_HTTP_ENDPOINT` may take, in milliseconds from 1000 to 10000. When it's empty, Fluxer uses `10000`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_cache_purge_http_token">
+<dt>`FLUXER_CACHE_PURGE_HTTP_TOKEN`</dt>
+<dd>The bearer token Fluxer sends in the Authorization header of each purge request to `FLUXER_CACHE_PURGE_HTTP_ENDPOINT`, in visible ASCII characters with no spaces. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_clamav_enabled">
+<dt>`FLUXER_CLAMAV_ENABLED`</dt>
+<dd>Whether Fluxer scans uploads for viruses with ClamAV. Use `true` or `false`. When it's empty, Fluxer uses `false`. Point `FLUXER_CLAMAV_HOST` at your own.</dd>
+</div>
+<div class="flx-setting" id="fluxer_clamav_fail_open">
+<dt>`FLUXER_CLAMAV_FAIL_OPEN`</dt>
+<dd>Whether uploads go through when a ClamAV scan fails, such as when Fluxer can't connect to the scanner or gets no usable answer. Use `true` or `false`. When it's empty, Fluxer rejects the upload.</dd>
+</div>
+<div class="flx-setting" id="fluxer_clamav_host">
+<dt>`FLUXER_CLAMAV_HOST`</dt>
+<dd>The hostname or address of your ClamAV scanner. When it's empty, Fluxer uses `127.0.0.1`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_clamav_port">
+<dt>`FLUXER_CLAMAV_PORT`</dt>
+<dd>The port of your ClamAV scanner. When it's empty, Fluxer uses `3310`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_attachment_signature_mode">
+<dt>`FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE`</dt>
+<dd>Whether attachment downloads need a signed link. Use `off`, `report` or `enforce`. When it's empty, it's off. With `report`, the media proxy logs downloads it would refuse, and with `enforce` it refuses them. Both need `FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64`, and rexctl makes a key the first time you turn it on if that's empty. rexctl also calls it `media.signed_attachments`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_attachment_url_secrets_base64">
+<dt>`FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64`</dt>
+<dd>Keys that sign attachment URLs, separated by commas. Each is standard base64 that decodes to at least 32 bytes. The first entry signs and every entry verifies. To rotate keys, add the new key last and restart Fluxer. Then move it first and restart again. Every process can then verify the new key before any process signs with it. Remove the old key 24 hours later. Removing a key ends the data package links it signed. When it's empty, Fluxer returns unsigned attachment URLs. Keep the value secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_cors_allowed_origins">
+<dt>`FLUXER_MEDIA_PROXY_CORS_ALLOWED_ORIGINS`</dt>
+<dd>The web origins, separated by commas, that may load media through CORS when `FLUXER_MEDIA_PROXY_CORS_MODE` is `report` or `enforce`. When it's empty, the media proxy uses the public origin. The desktop app is always allowed.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_cors_mode">
+<dt>`FLUXER_MEDIA_PROXY_CORS_MODE`</dt>
+<dd>Whether the media proxy checks the Origin of media requests. Use `off`, `report` or `enforce`. When it's empty, it's off. With `report`, the media proxy logs requests it would refuse, and with `enforce` it refuses them. A request with no Origin header is always served.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_max_encode_duration_ms">
+<dt>`FLUXER_MEDIA_PROXY_MAX_ENCODE_DURATION_MS`</dt>
+<dd>The longest animation the media proxy encodes, in milliseconds from 100 to 600000. When it's empty, it uses `30000`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_max_encode_frames">
+<dt>`FLUXER_MEDIA_PROXY_MAX_ENCODE_FRAMES`</dt>
+<dd>The most frames the media proxy encodes in one animation, from 1 to 100000. When it's empty, it uses `20000`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_max_native_transforms">
+<dt>`FLUXER_MEDIA_PROXY_MAX_NATIVE_TRANSFORMS`</dt>
+<dd>How many image transforms the media proxy runs at once, from 1 to 128. When it's empty, it uses the number of CPU cores, kept between 2 and 8.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_nsfw_threshold">
+<dt>`FLUXER_MEDIA_PROXY_NSFW_THRESHOLD`</dt>
+<dd>The NSFW classifier score, from 0.0 to 1.0, that the media proxy uses as its cutoff. When it's empty, it uses `0.85`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_read_only">
+<dt>`FLUXER_MEDIA_PROXY_READ_ONLY`</dt>
+<dd>Whether the media proxy refuses to write to storage. Use `true` or `false`. When it's empty, it writes as usual.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_shutdown_grace_ms">
+<dt>`FLUXER_MEDIA_PROXY_SHUTDOWN_GRACE_MS`</dt>
+<dd>How long the media proxy waits for open requests and transforms to finish when it stops, in milliseconds from 0 to 300000. When it's empty, it uses `30000`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_socket_io_timeout_ms">
+<dt>`FLUXER_MEDIA_PROXY_SOCKET_IO_TIMEOUT_MS`</dt>
+<dd>How long the media proxy waits on socket input and output, in milliseconds from 1 to 300000. When it's empty, it uses `30000`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_transform_cache_bytes">
+<dt>`FLUXER_MEDIA_PROXY_TRANSFORM_CACHE_BYTES`</dt>
+<dd class="flx-setting-default">Default `67108864`, 64 MiB</dd>
+<dd>How much memory the media proxy's transform cache may use, in bytes from 0 to 4 GiB. When it's empty, it uses `268435456`, which is 256 MiB.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_transform_cache_max_entry_bytes">
+<dt>`FLUXER_MEDIA_PROXY_TRANSFORM_CACHE_MAX_ENTRY_BYTES`</dt>
+<dd>The largest transform result the media proxy caches, in bytes from 0 to 512 MiB. When it's empty, it uses `67108864`, which is 64 MiB.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_transform_cache_ttl_ms">
+<dt>`FLUXER_MEDIA_PROXY_TRANSFORM_CACHE_TTL_MS`</dt>
+<dd>How long the media proxy keeps a transform result in its cache, in milliseconds from 0 to 3600000. When it's empty, it uses `120000`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_transform_timeout_ms">
+<dt>`FLUXER_MEDIA_PROXY_TRANSFORM_TIMEOUT_MS`</dt>
+<dd>How long one media transform may take, in milliseconds from 1000 to 120000. When it's empty, the media proxy uses `15000`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_upload_relay_buffered_retry_bytes">
+<dt>`FLUXER_MEDIA_PROXY_UPLOAD_RELAY_BUFFERED_RETRY_BYTES`</dt>
+<dd>The largest upload the relay keeps in memory so it can retry the object store write, in bytes from 0 to 256 MiB. Larger uploads stream to the store without a retry. When it's empty, the relay uses `33554432`, which is 32 MiB.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_upload_relay_buffered_retry_total_bytes">
+<dt>`FLUXER_MEDIA_PROXY_UPLOAD_RELAY_BUFFERED_RETRY_TOTAL_BYTES`</dt>
+<dd class="flx-setting-default">Default `67108864`, 64 MiB</dd>
+<dd>How much memory all buffered relay uploads may use together, in bytes from 0 to 8 GiB. An upload that would go past it streams without a retry. When it's empty, the relay uses `536870912`, which is 512 MiB.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_upload_relay_endpoint">
+<dt>`FLUXER_MEDIA_PROXY_UPLOAD_RELAY_ENDPOINT`</dt>
+<dd>The upload relay URL the API hands to clients. When it's empty, the API uses the public origin followed by `/media`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_upload_relay_keep_direct_countries">
+<dt>`FLUXER_MEDIA_PROXY_UPLOAD_RELAY_KEEP_DIRECT_COUNTRIES`</dt>
+<dd>Two-letter country codes, separated by commas, whose clients upload to the object store directly and skip the relay. It needs the GeoIP database in `FLUXER_GEOIP_DB_PATH`, and browsers can only upload directly when `FLUXER_S3_PUBLIC_ENDPOINT` is set. When it's empty or there's no GeoIP database, every client uses the relay and browsers never see the internal store address.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_upload_relay_max_body_bytes">
+<dt>`FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES`</dt>
+<dd>The largest single request body the relay accepts, which is one object or one part of a multipart upload, in bytes from 1 to 5 GiB. It can't be more than `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES`. When it's empty, the relay uses `524288000`, which is 500 MiB.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_upload_relay_s3_timeout_ms">
+<dt>`FLUXER_MEDIA_PROXY_UPLOAD_RELAY_S3_TIMEOUT_MS`</dt>
+<dd>How long the relay waits for an upload's write to the object store, in milliseconds from 1000 to 3600000. When it's empty, it uses `900000`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_upload_relay_spool_chunk_bytes">
+<dt>`FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_CHUNK_BYTES`</dt>
+<dd>The chunk size the relay uses when it writes upload bodies to its spool on disk, in bytes from 64 KiB to 64 MiB. When it's empty, it uses `1048576`, which is 1 MiB.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_upload_relay_spool_dir">
+<dt>`FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_DIR`</dt>
+<dd>The directory where the relay spools upload bodies and the media proxy keeps copies of large audio and video files it inspects. It must be writable. When it's empty, the media proxy uses the system temporary directory.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_upload_relay_spool_max_total_bytes">
+<dt>`FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES`</dt>
+<dd class="flx-setting-default">Default `2147483648`, 2 GiB</dd>
+<dd>The most disk space the spool may use at once, in bytes from 0 to 256 GiB. It must be at least `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES`, and relay uploads share it with copies of large audio and video files.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_upload_relay_token_ttl_secs">
+<dt>`FLUXER_MEDIA_PROXY_UPLOAD_RELAY_TOKEN_TTL_SECS`</dt>
+<dd>How long an upload relay token stays valid, in seconds. When it's empty, the API uses `900`. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_worker_queue_capacity">
+<dt>`FLUXER_MEDIA_PROXY_WORKER_QUEUE_CAPACITY`</dt>
+<dd>How many transforms may wait in the media proxy's queue, from 1 to 8192. When it's empty, the queue holds eight times `FLUXER_MEDIA_PROXY_MAX_NATIVE_TRANSFORMS`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_nsfw_service_endpoint">
+<dt>`FLUXER_NSFW_SERVICE_ENDPOINT`</dt>
+<dd>The URL of an outside NSFW classifier the media proxy calls. When it's empty, the media proxy calls none.</dd>
+</div>
+</dl>
+
+## Gateway
+
+<dl class="flx-settings">
+<div class="flx-setting" id="fluxer_gateway_guild_visitor_sessions_floor">
+<dt>`FLUXER_GATEWAY_GUILD_VISITOR_SESSIONS_FLOOR`</dt>
+<dd>The fewest visitor sessions one community allows, however few members it has. When it's empty, the gateway uses `500`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_gateway_guild_visitor_sessions_max">
+<dt>`FLUXER_GATEWAY_GUILD_VISITOR_SESSIONS_MAX`</dt>
+<dd>The most visitor sessions one community allows, however many members it has. A visitor views a community without joining it. When it's empty, the gateway uses `10000`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_gateway_guild_visitor_sessions_per_ip">
+<dt>`FLUXER_GATEWAY_GUILD_VISITOR_SESSIONS_PER_IP`</dt>
+<dd>How many visitor sessions one IPv4 address or one IPv6 `/64` network can have in a single community at once. When it's empty, the gateway uses `20`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_gateway_guild_visitor_sessions_per_member">
+<dt>`FLUXER_GATEWAY_GUILD_VISITOR_SESSIONS_PER_MEMBER`</dt>
+<dd>How many visitor sessions a community allows for each of its members, kept between the floor and the maximum. When it's empty, the gateway uses `2`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_gateway_guild_visitor_sessions_per_user">
+<dt>`FLUXER_GATEWAY_GUILD_VISITOR_SESSIONS_PER_USER`</dt>
+<dd>How many visitor sessions one account can have in a single community at once. When it's empty, the gateway uses `5`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_gateway_http_failure_threshold">
+<dt>`FLUXER_GATEWAY_HTTP_FAILURE_THRESHOLD`</dt>
+<dd>The fewest failed requests from the gateway to the API in 10 seconds that open its circuit breaker. The breaker also needs at least 20 requests in that time, with more than half of them failed. It then stops further requests for a while. When it's empty, the gateway uses `0`, and only the other two conditions count.</dd>
+</div>
+<div class="flx-setting" id="fluxer_gateway_http_recovery_timeout_ms">
+<dt>`FLUXER_GATEWAY_HTTP_RECOVERY_TIMEOUT_MS`</dt>
+<dd>How long the circuit breaker for gateway requests to the API stays open before it tries again, in milliseconds. When it's empty, the gateway uses `15000`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_gateway_http_rpc_max_concurrency">
+<dt>`FLUXER_GATEWAY_HTTP_RPC_MAX_CONCURRENCY`</dt>
+<dd>How many HTTP requests the gateway can have open to the API at once. When it's empty, the gateway uses `512`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_gateway_media_proxy_endpoint">
+<dt>`FLUXER_GATEWAY_MEDIA_PROXY_ENDPOINT`</dt>
+<dd>The public media URL the gateway uses to build avatar links in push notifications. When it's empty, the gateway uses `FLUXER_MEDIA_ENDPOINT`, or the public origin followed by `/media`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_gateway_nats_rpc_max_handlers">
+<dt>`FLUXER_GATEWAY_NATS_RPC_MAX_HANDLERS`</dt>
+<dd>How many NATS RPC requests the gateway works on at once. When it's empty, the gateway uses `512`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_gateway_presence_push_buffer_max_bytes">
+<dt>`FLUXER_GATEWAY_PRESENCE_PUSH_BUFFER_MAX_BYTES`</dt>
+<dd>The most bytes of push notifications the gateway keeps back for one user while one of their sessions is active. A value of `0` turns off this limit. When it's empty, the gateway uses `1048576`, which is 1 MiB.</dd>
+</div>
+<div class="flx-setting" id="fluxer_gateway_presence_push_buffer_max_entries">
+<dt>`FLUXER_GATEWAY_PRESENCE_PUSH_BUFFER_MAX_ENTRIES`</dt>
+<dd>The most push notifications the gateway keeps back for one user while one of their sessions is active, dropping the oldest first. A value of `0` keeps none. When it's empty, the gateway uses `128`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_gateway_push_enabled">
+<dt>`FLUXER_GATEWAY_PUSH_ENABLED`</dt>
+<dd>Whether the gateway sends push notifications through the push service. Use `true` or `false`. When it's empty, the gateway uses `true`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_gateway_push_enrolled_clear_notifications_enabled">
+<dt>`FLUXER_GATEWAY_PUSH_ENROLLED_CLEAR_NOTIFICATIONS_ENABLED`</dt>
+<dd>Whether the gateway asks the push service to clear a channel's push notifications once the user has caught up on that channel. Use `true` or `false`. When it's empty, the gateway uses `true`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_gateway_push_outbox_request_timeout_ms">
+<dt>`FLUXER_GATEWAY_PUSH_OUTBOX_REQUEST_TIMEOUT_MS`</dt>
+<dd>How long the gateway waits for the push service to respond to one push request, in milliseconds. When it's empty, the gateway uses `100000`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_gateway_static_cdn_endpoint">
+<dt>`FLUXER_GATEWAY_STATIC_CDN_ENDPOINT`</dt>
+<dd>The public static file URL the gateway uses to build default avatar links in push notifications. When it's empty, the gateway uses `FLUXER_STATIC_CDN_ENDPOINT`, and the public origin when that is empty too.</dd>
+</div>
+<div class="flx-setting" id="fluxer_gateway_zstd_window_log">
+<dt>`FLUXER_GATEWAY_ZSTD_WINDOW_LOG`</dt>
+<dd>The base 2 logarithm of the zstd window the gateway compresses websocket traffic with, from 10 to 21. Values outside that range count as the nearest end. Larger values compress better and use more memory per connection. When it's empty, the gateway uses `14`.</dd>
+</div>
+</dl>
+
+## Web app
+
+<dl class="flx-settings">
+<div class="flx-setting" id="discovery_refresh_interval_ms">
+<dt>`DISCOVERY_REFRESH_INTERVAL_MS`</dt>
+<dd class="flx-setting-default">Default `5000`</dd>
+<dd>How often the app-proxy service fetches the discovery document, in milliseconds. The document has the branding saved in the admin panel, such as the product name, icons and custom CSS. Values under 1 second count as 1 second. A failed fetch is retried with a growing delay of up to five minutes.</dd>
+</div>
+<div class="flx-setting" id="fluxer_app_proxy_index_upstream_url">
+<dt>`FLUXER_APP_PROXY_INDEX_UPSTREAM_URL`</dt>
+<dd>An http or https URL that the app-proxy service fetches the web app's `index.html` from. When it's empty, the app-proxy service serves the `index.html` built into its image.</dd>
+</div>
+<div class="flx-setting" id="fluxer_app_proxy_manifest_scope_extensions">
+<dt>`FLUXER_APP_PROXY_MANIFEST_SCOPE_EXTENSIONS`</dt>
+<dd>HTTPS origins with no path, separated by commas or spaces, that the app-proxy service adds to the `scope_extensions` list of the web app manifest. An installed web app keeps them inside its window. Each origin must serve `/.well-known/web-app-origin-association` for this web app. The service logs and drops invalid entries.</dd>
+</div>
+<div class="flx-setting" id="fluxer_app_proxy_same_origin_hosts">
+<dt>`FLUXER_APP_PROXY_SAME_ORIGIN_HOSTS`</dt>
+<dd>Extra hostnames that serve the web app, separated by commas or spaces, with no scheme, port or path. On these hostnames, the web app uses the same hostname for the API and for the gateway and media endpoints that share the API's host. Each one must route `/api`, `/gateway` and `/media` like the main one.</dd>
+</div>
+<div class="flx-setting" id="fluxer_csp_extra_connect_src">
+<dt>`FLUXER_CSP_EXTRA_CONNECT_SRC`</dt>
+<dd>Extra sources the app-proxy service adds to the connect-src directive of the web app's Content-Security-Policy, separated by commas or spaces, such as `wss://livekit.example.com`. A ws or wss source also allows the matching http or https source.</dd>
+</div>
+<div class="flx-setting" id="fluxer_csp_extra_default_src">
+<dt>`FLUXER_CSP_EXTRA_DEFAULT_SRC`</dt>
+<dd>Extra sources the app-proxy service adds to the default-src directive of the web app's Content-Security-Policy, separated by commas or spaces. Set one only when a browser must connect to an origin the built-in policy doesn't allow.</dd>
+</div>
+<div class="flx-setting" id="fluxer_csp_extra_font_src">
+<dt>`FLUXER_CSP_EXTRA_FONT_SRC`</dt>
+<dd>Extra sources the app-proxy service adds to the font-src directive of the web app's Content-Security-Policy, separated by commas or spaces.</dd>
+</div>
+<div class="flx-setting" id="fluxer_csp_extra_frame_src">
+<dt>`FLUXER_CSP_EXTRA_FRAME_SRC`</dt>
+<dd>Extra sources the app-proxy service adds to the frame-src directive of the web app's Content-Security-Policy, separated by commas or spaces.</dd>
+</div>
+<div class="flx-setting" id="fluxer_csp_extra_img_src">
+<dt>`FLUXER_CSP_EXTRA_IMG_SRC`</dt>
+<dd>Extra sources the app-proxy service adds to the img-src directive of the web app's Content-Security-Policy, separated by commas or spaces, such as `https://cdn.example.com`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_csp_extra_manifest_src">
+<dt>`FLUXER_CSP_EXTRA_MANIFEST_SRC`</dt>
+<dd>Extra sources the app-proxy service adds to the manifest-src directive of the web app's Content-Security-Policy, separated by commas or spaces.</dd>
+</div>
+<div class="flx-setting" id="fluxer_csp_extra_media_src">
+<dt>`FLUXER_CSP_EXTRA_MEDIA_SRC`</dt>
+<dd>Extra sources the app-proxy service adds to the media-src directive of the web app's Content-Security-Policy, separated by commas or spaces.</dd>
+</div>
+<div class="flx-setting" id="fluxer_csp_extra_script_src">
+<dt>`FLUXER_CSP_EXTRA_SCRIPT_SRC`</dt>
+<dd>Extra sources the app-proxy service adds to the script-src directive of the web app's Content-Security-Policy, separated by commas or spaces, such as `https://analytics.example.com`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_csp_extra_style_src">
+<dt>`FLUXER_CSP_EXTRA_STYLE_SRC`</dt>
+<dd>Extra sources the app-proxy service adds to the style-src directive of the web app's Content-Security-Policy, separated by commas or spaces.</dd>
+</div>
+<div class="flx-setting" id="fluxer_csp_extra_worker_src">
+<dt>`FLUXER_CSP_EXTRA_WORKER_SRC`</dt>
+<dd>Extra sources the app-proxy service adds to the worker-src directive of the web app's Content-Security-Policy, separated by commas or spaces.</dd>
+</div>
+<div class="flx-setting" id="fluxer_csp_report_uri">
+<dt>`FLUXER_CSP_REPORT_URI`</dt>
+<dd>One http or https URL that browsers send Content-Security-Policy violation reports to. When it's empty, the policy has no report-uri.</dd>
+</div>
+</dl>
+
+## API and worker
+
+<dl class="flx-settings">
+<div class="flx-setting" id="fluxer_api_donation_proxy_key">
+<dt>`FLUXER_API_DONATION_PROXY_KEY`</dt>
+<dd>An older way to add one trusted caller that may pass the client address for the donation and purchase rate limits. Fluxer's marketing site uses it. It must be at least 32 characters. Your own instance can leave it empty. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_api_headers_timeout_ms">
+<dt>`FLUXER_API_HEADERS_TIMEOUT_MS`</dt>
+<dd>How long a client may take to send the request line and headers to the API, in milliseconds from 1000 to 3600000. When it's empty, the API uses `30000`. It is capped at `FLUXER_API_REQUEST_TIMEOUT_MS`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_api_ip_ban_exempt_ips">
+<dt>`FLUXER_API_IP_BAN_EXEMPT_IPS`</dt>
+<dd>IP addresses and CIDR ranges, separated by commas, that IP bans never apply to, such as `203.0.113.7,2001:db8::/56`. The API refuses to start when an entry doesn't parse.</dd>
+</div>
+<div class="flx-setting" id="fluxer_api_max_concurrent_form_uploads">
+<dt>`FLUXER_API_MAX_CONCURRENT_FORM_UPLOADS`</dt>
+<dd>How many attachment files sent as multipart form data the API streams to the object store at once, from 1 to 10000. Each one can use up to about 25 MiB of memory. A file that waits more than 10 seconds for a turn gets 503 with a Retry-After header. When it's empty, the API uses `16`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_api_max_inflight_requests">
+<dt>`FLUXER_API_MAX_INFLIGHT_REQUESTS`</dt>
+<dd>How many requests the API handles at once before it responds to new ones with 503 and a Retry-After header, from 1 to 100000. When it's empty, the API uses `512`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_api_request_timeout_ms">
+<dt>`FLUXER_API_REQUEST_TIMEOUT_MS`</dt>
+<dd>How long a client may take over a whole request to the API, in milliseconds from 1000 to 3600000. Raise it for large uploads or slow links. When it's empty, the API uses `120000`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_api_trusted_callers">
+<dt>`FLUXER_API_TRUSTED_CALLERS`</dt>
+<dd>A JSON array of trusted callers, such as a front end that calls the API for its own visitors. Each entry is an object with a `name`, a `key` of at least 32 characters and `buckets`, a non-empty list of the rate limit buckets the caller may pass a client address for. The caller sends its key in the `X-Fluxer-Internal-Key` header and the client address in the `X-Fluxer-Client-IP` header. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_api_worker_lane_concurrency_overrides">
+<dt>`FLUXER_API_WORKER_LANE_CONCURRENCY_OVERRIDES`</dt>
+<dd>How many jobs each worker lane runs at once, as a JSON object that maps each lane to a whole number of at least 1. The lanes are `realtime`, `unfurl`, `lifecycle`, `batch` and `crosspost`. Lanes left out use 10, 20, 8, 12 and 8 in that order, scaled down on any machine with fewer than 4 CPU cores.</dd>
+</div>
+<div class="flx-setting" id="fluxer_client_ip_header_name">
+<dt>`FLUXER_CLIENT_IP_HEADER_NAME`</dt>
+<dd>The request header that has the client's IP address. When it's empty, the api, worker, admin and gateway services and the push relay use `x-forwarded-for`, the header the edge sets.</dd>
+</div>
+<div class="flx-setting" id="fluxer_ip_ban_refresh_interval_ms">
+<dt>`FLUXER_IP_BAN_REFRESH_INTERVAL_MS`</dt>
+<dd>How often the API reloads its IP ban list, in milliseconds. When it's empty, the API uses `300000`. A value of `0` turns the periodic reload off.</dd>
+</div>
+<div class="flx-setting" id="fluxer_trust_client_ip_header">
+<dt>`FLUXER_TRUST_CLIENT_IP_HEADER`</dt>
+<dd class="flx-setting-default">Default `true`</dd>
+<dd>Whether Fluxer trusts the client address in the `FLUXER_CLIENT_IP_HEADER_NAME` header. Use `true` or `false`. The api, worker, admin and gateway services and the push relay use it. With `false`, they use the address of the connection, which behind the edge is the edge itself.</dd>
+</div>
+</dl>
+
+## Instance and branding
+
+Fluxer uses the product name, images, theme colour and status page links set here only until the setup wizard finishes or someone saves branding in the admin panel. After that it uses the values saved in the admin panel.
+
+<dl class="flx-settings">
+<div class="flx-setting" id="fluxer_account_identity">
+<dt>`FLUXER_ACCOUNT_IDENTITY`</dt>
+<dd>How people sign in on a new instance. Use `username` or `email`. Fluxer uses it only on the first start with no saved sign-in method. When it's empty, Fluxer uses `email` if email delivery is set up and `username` otherwise. When `FLUXER_INSTANCE_SETUP_CONFIGURED` is `true` or any account exists, Fluxer uses email sign-in with random tags and ignores this. Otherwise the setup wizard asks again, and its answer replaces this value.</dd>
+</div>
+<div class="flx-setting" id="fluxer_age_policy_enabled">
+<dt>`FLUXER_AGE_POLICY_ENABLED`</dt>
+<dd>Whether a date of birth typed in is not enough for mature content in the regions in `FLUXER_AGE_POLICY_RESTRICTED_REGIONS`. Use `true` or `false`. When it's empty, this is on only while `FLUXER_AGE_POLICY_RESTRICTED_REGIONS` lists at least one region, and off when that list is empty.</dd>
+</div>
+<div class="flx-setting" id="fluxer_age_policy_restricted_regions">
+<dt>`FLUXER_AGE_POLICY_RESTRICTED_REGIONS`</dt>
+<dd>The regions where a date of birth typed in is not enough for mature content, separated by commas. Use a country code such as `GB` or a country and region code such as `US-MS`. When it's empty and `FLUXER_AGE_POLICY_ENABLED` is `true`, Fluxer uses `GB` and `BR`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_app_favicon_dark_url">
+<dt>`FLUXER_APP_FAVICON_DARK_URL`</dt>
+<dd>The URL of the favicon for browsers in dark mode.</dd>
+</div>
+<div class="flx-setting" id="fluxer_app_favicon_url">
+<dt>`FLUXER_APP_FAVICON_URL`</dt>
+<dd>The URL of the favicon.</dd>
+</div>
+<div class="flx-setting" id="fluxer_app_icon_url">
+<dt>`FLUXER_APP_ICON_URL`</dt>
+<dd>The URL of the app icon.</dd>
+</div>
+<div class="flx-setting" id="fluxer_app_logo_url">
+<dt>`FLUXER_APP_LOGO_URL`</dt>
+<dd>The URL of the logo.</dd>
+</div>
+<div class="flx-setting" id="fluxer_app_product_name">
+<dt>`FLUXER_APP_PRODUCT_NAME`</dt>
+<dd>The product name the apps show and Fluxer uses in emails and system messages. When it's empty or set to `Fluxer` on a self-hosted instance, Fluxer uses the hostname of the web app.</dd>
+</div>
+<div class="flx-setting" id="fluxer_app_sign_in_backdrop_url">
+<dt>`FLUXER_APP_SIGN_IN_BACKDROP_URL`</dt>
+<dd>The URL of the image behind the sign-in screen.</dd>
+</div>
+<div class="flx-setting" id="fluxer_app_status_page_incident_history_url">
+<dt>`FLUXER_APP_STATUS_PAGE_INCIDENT_HISTORY_URL`</dt>
+<dd>The URL of the incident history on your status page. The apps don't use it yet.</dd>
+</div>
+<div class="flx-setting" id="fluxer_app_status_page_url">
+<dt>`FLUXER_APP_STATUS_PAGE_URL`</dt>
+<dd>The URL of your public status page. The web app links to it when loading takes a long time. Fluxer checks whether it is an Instatus page. If it is, the web app also shows its current incidents and maintenance.</dd>
+</div>
+<div class="flx-setting" id="fluxer_app_symbol_url">
+<dt>`FLUXER_APP_SYMBOL_URL`</dt>
+<dd>The URL of the symbol mark.</dd>
+</div>
+<div class="flx-setting" id="fluxer_app_theme_color">
+<dt>`FLUXER_APP_THEME_COLOR`</dt>
+<dd>The brand colour of the web app and the browser theme colour, as a hex value such as `#4641d9`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_app_wordmark_url">
+<dt>`FLUXER_APP_WORDMARK_URL`</dt>
+<dd>The URL of the wordmark.</dd>
+</div>
+<div class="flx-setting" id="fluxer_auto_join_invite_code">
+<dt>`FLUXER_AUTO_JOIN_INVITE_CODE`</dt>
+<dd>One or more invite codes, separated by commas or spaces. A new account that signs up without an invite of its own joins the communities these invites lead to.</dd>
+</div>
+<div class="flx-setting" id="fluxer_deletion_grace_period_hours">
+<dt>`FLUXER_DELETION_GRACE_PERIOD_HOURS`</dt>
+<dd>How many hours a deleted account can still be recovered before Fluxer removes it. When it's empty, Fluxer uses `336`, which is 14 days.</dd>
+</div>
+<div class="flx-setting" id="fluxer_discovery_enabled">
+<dt>`FLUXER_DISCOVERY_ENABLED`</dt>
+<dd>Whether community discovery is on. Use `true` or `false`. With `false`, discovery search, joining from discovery and discovery applications are turned off. When it's empty, Fluxer uses `true`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_discovery_min_member_count">
+<dt>`FLUXER_DISCOVERY_MIN_MEMBER_COUNT`</dt>
+<dd>How many members a community needs before it can be listed in discovery. When it's empty, Fluxer uses `1`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_instance_setup_configured">
+<dt>`FLUXER_INSTANCE_SETUP_CONFIGURED`</dt>
+<dd>Whether a new instance starts as already set up. Use `true` or `false`. With `true`, the setup wizard is skipped and registration opens without making the first account an admin. Once a setup state is saved, this has no effect. When it's empty, Fluxer uses `false`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_report_retention_days">
+<dt>`FLUXER_REPORT_RETENTION_DAYS`</dt>
+<dd>How many days the daily retention job keeps a resolved report, from 1 to 36500. It then deletes the report, its evidence copies and its search entry. A child safety report is kept for at least 365 days after it's resolved, and a report with an enforcement decision for at least 365 days after the decision. The job never deletes a pending report or a report under a legal hold. When it's empty, the worker uses `365`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_report_retention_dry_run">
+<dt>`FLUXER_REPORT_RETENTION_DRY_RUN`</dt>
+<dd>Whether the report retention job only counts what it would delete and changes nothing. Use `true` or `false`. When it's empty, the worker uses `false`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_tag_style">
+<dt>`FLUXER_TAG_STYLE`</dt>
+<dd>How usernames are tagged on a new instance that signs in by email. Use `none` for unique usernames with no tag or `random` for a random tag on every account. Username sign-in always uses `none`. Fluxer uses this setting only on the first start. When it's empty, Fluxer uses `none`. When `FLUXER_INSTANCE_SETUP_CONFIGURED` is `true` or any account exists, Fluxer uses random tags and ignores this. Otherwise the setup wizard asks again, and its answer replaces this value.</dd>
+</div>
+</dl>
+
+## Billing
+
+The admin panel can also save whether billing is on, the Stripe keys and the prices. A value saved there is used first, and a saved price list replaces all of `FLUXER_STRIPE_PRICES`.
+
+<dl class="flx-settings">
+<div class="flx-setting" id="fluxer_stripe_enabled">
+<dt>`FLUXER_STRIPE_ENABLED`</dt>
+<dd>Whether Fluxer sells subscriptions through Stripe. Use `true` or `false`. When it's empty, Fluxer uses `false`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_stripe_legacy_prices">
+<dt>`FLUXER_STRIPE_LEGACY_PRICES`</dt>
+<dd>Stripe price IDs you have retired, as a JSON object with the same keys as `FLUXER_STRIPE_PRICES` and a list of IDs for each. Subscriptions on these prices keep renewing.</dd>
+</div>
+<div class="flx-setting" id="fluxer_stripe_prices">
+<dt>`FLUXER_STRIPE_PRICES`</dt>
+<dd>Your Stripe price IDs as one JSON object, keyed by plan and currency such as `monthly_usd`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_stripe_secret_key">
+<dt>`FLUXER_STRIPE_SECRET_KEY`</dt>
+<dd>Your Stripe secret API key. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_stripe_webhook_secret">
+<dt>`FLUXER_STRIPE_WEBHOOK_SECRET`</dt>
+<dd>The signing secret of your Stripe webhook. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_visionaries_guild_id">
+<dt>`FLUXER_VISIONARIES_GUILD_ID`</dt>
+<dd>The ID of the community that people who buy Visionary are added to. When it's empty on a self-hosted instance, nobody is added.</dd>
+</div>
+<div class="flx-setting" id="fluxer_visionaries_guild_visionary_role_id">
+<dt>`FLUXER_VISIONARIES_GUILD_VISIONARY_ROLE_ID`</dt>
+<dd>The ID of the role Fluxer gives Visionary buyers in the community set by `FLUXER_VISIONARIES_GUILD_ID`. Set it whenever `FLUXER_VISIONARIES_GUILD_ID` is set.</dd>
+</div>
+</dl>
+
+## Integrations
+
+The admin panel can also save the Bluesky settings and keys, and its values win.
+
+<dl class="flx-settings">
+<div class="flx-setting" id="fluxer_api_unfurl_ignored_hosts">
+<dt>`FLUXER_API_UNFURL_IGNORED_HOSTS`</dt>
+<dd>Hostnames, separated by commas, that Fluxer never makes link previews for. A link matches only when its host is exactly one of these.</dd>
+</div>
+<div class="flx-setting" id="fluxer_auth_bluesky_client_name">
+<dt>`FLUXER_AUTH_BLUESKY_CLIENT_NAME`</dt>
+<dd>The app name Bluesky shows when someone links their account. When it's empty, Bluesky shows `Fluxer`, even when `FLUXER_APP_PRODUCT_NAME` is set.</dd>
+</div>
+<div class="flx-setting" id="fluxer_auth_bluesky_client_uri">
+<dt>`FLUXER_AUTH_BLUESKY_CLIENT_URI`</dt>
+<dd>Fluxer doesn't use this value. Bluesky shows the API address as the home page of your instance.</dd>
+</div>
+<div class="flx-setting" id="fluxer_auth_bluesky_enabled">
+<dt>`FLUXER_AUTH_BLUESKY_ENABLED`</dt>
+<dd>Whether people can link a Bluesky account to their profile. Use `true` or `false`. It needs `FLUXER_AUTH_BLUESKY_KEYS`. When it's empty, Fluxer uses `false`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_auth_bluesky_keys">
+<dt>`FLUXER_AUTH_BLUESKY_KEYS`</dt>
+<dd>The keys Fluxer signs Bluesky account linking requests with, as a JSON array of objects with a `kid` and a `private_key` or a `private_key_path`, which is an absolute path inside the api and worker services. Keys saved in the admin panel replace these. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_auth_bluesky_logo_uri">
+<dt>`FLUXER_AUTH_BLUESKY_LOGO_URI`</dt>
+<dd>The logo URL Bluesky shows for your instance.</dd>
+</div>
+<div class="flx-setting" id="fluxer_auth_bluesky_policy_uri">
+<dt>`FLUXER_AUTH_BLUESKY_POLICY_URI`</dt>
+<dd>The privacy policy URL Bluesky shows for your instance.</dd>
+</div>
+<div class="flx-setting" id="fluxer_auth_bluesky_tos_uri">
+<dt>`FLUXER_AUTH_BLUESKY_TOS_URI`</dt>
+<dd>The terms of service URL Bluesky shows for your instance.</dd>
+</div>
+<div class="flx-setting" id="fluxer_blocklist_feeds_enabled">
+<dt>`FLUXER_BLOCKLIST_FEEDS_ENABLED`</dt>
+<dd>Whether the worker downloads the URLhaus and PhishTank link lists every six hours and the MalwareBazaar file hashes every twelve hours, and checks posted links and uploads against them. Use `true` or `false`. When it's empty, this is off on a self-hosted instance.</dd>
+</div>
+<div class="flx-setting" id="fluxer_breached_password_check_enabled">
+<dt>`FLUXER_BREACHED_PASSWORD_CHECK_ENABLED`</dt>
+<dd>Whether Fluxer rejects passwords found in known data breaches, by sending the first five characters of the password's SHA-1 hash to `api.pwnedpasswords.com`. Use `true` or `false`. When it's empty, this is off on a self-hosted instance. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_geoip_db_path">
+<dt>`FLUXER_GEOIP_DB_PATH`</dt>
+<dd>Where the api and worker load the MaxMind GeoIP database from, as a file path or an `s3://bucket/key` URL. An s3 URL needs a `download_path` query parameter with an absolute path.</dd>
+</div>
+<div class="flx-setting" id="fluxer_klipy_api_key">
+<dt>`FLUXER_KLIPY_API_KEY`</dt>
+<dd>The Klipy API key for GIF search and Klipy link previews. A key saved in the admin panel is used first. GIF search is off when neither is set. Keep it secret.</dd>
+</div>
+<div class="flx-setting" id="fluxer_youtube_api_key">
+<dt>`FLUXER_YOUTUBE_API_KEY`</dt>
+<dd>The YouTube Data API key Fluxer uses for YouTube link previews. A key saved in the admin panel is used first. The unfurl service calls the API from your server. The key needs YouTube Data API v3 enabled, a daily quota above 0, and an application restriction of None or IP addresses. A key restricted to websites (HTTP referrers) always fails. When Google rejects the key, the unfurl logs show the reason it gives, such as `quotaExceeded` or `API_KEY_HTTP_REFERRER_BLOCKED`. Keep the value secret.</dd>
+</div>
+</dl>
+
+## Memory and performance
+
+rexctl sizes most of these from the memory and CPUs of the machine. Without rexctl, Fluxer sizes its threads from the CPUs it can use each time it starts and uses the defaults below for the rest. A value you set here replaces the size they work out.
+
+<dl class="flx-settings">
+<div class="flx-setting" id="fluxer_api_node_heap_mb">
+<dt>`FLUXER_API_NODE_HEAP_MB`</dt>
+<dd class="flx-setting-default">Default `640`</dd>
+<dd>The Node heap limit of the api service, in MB, set as `--max-old-space-size`. When it's empty, Node uses 60 per cent of the memory available to the service. Keep it below the memory limit of the machine or pod that runs Fluxer.</dd>
+</div>
+<div class="flx-setting" id="fluxer_api_node_options">
+<dt>`FLUXER_API_NODE_OPTIONS`</dt>
+<dd>Extra Node flags for the api service, added to the end of `NODE_OPTIONS`, such as `--dns-result-order=ipv4first`. Set the heap with `FLUXER_API_NODE_HEAP_MB`. While that is empty, a `--max-old-space-size` flag here has no effect.</dd>
+</div>
+<div class="flx-setting" id="fluxer_api_postgres_max_connections">
+<dt>`FLUXER_API_POSTGRES_MAX_CONNECTIONS`</dt>
+<dd class="flx-setting-default">Default `15`</dd>
+<dd>The size of the PostgreSQL connection pool of the api service, from 1 to 1000.</dd>
+</div>
+<div class="flx-setting" id="fluxer_erlang_dirty_cpu_schedulers">
+<dt>`FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS`</dt>
+<dd>How many dirty CPU schedulers the Erlang VM of the gateway runs, a positive whole number. When it's empty, the gateway uses the normal scheduler count.</dd>
+</div>
+<div class="flx-setting" id="fluxer_erlang_dirty_io_schedulers">
+<dt>`FLUXER_ERLANG_DIRTY_IO_SCHEDULERS`</dt>
+<dd>How many dirty I/O schedulers the Erlang VM of the gateway runs, a positive whole number. When it's empty, the gateway uses the normal scheduler count kept between 2 and 4.</dd>
+</div>
+<div class="flx-setting" id="fluxer_erlang_schedulers">
+<dt>`FLUXER_ERLANG_SCHEDULERS`</dt>
+<dd>How many normal schedulers the Erlang VM of the gateway or a bouncer node runs, a positive whole number. When it's empty, the gateway uses the service's CPU count, no lower than `FLUXER_ERLANG_SCHEDULERS_MIN` and no higher than `FLUXER_ERLANG_SCHEDULERS_MAX`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_erlang_schedulers_max">
+<dt>`FLUXER_ERLANG_SCHEDULERS_MAX`</dt>
+<dd>The highest scheduler count the gateway picks from the CPU count when `FLUXER_ERLANG_SCHEDULERS` is empty. When it's empty, the gateway uses `16`, and a bouncer node uses `4`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_erlang_schedulers_min">
+<dt>`FLUXER_ERLANG_SCHEDULERS_MIN`</dt>
+<dd>The lowest scheduler count the gateway picks from the CPU count when `FLUXER_ERLANG_SCHEDULERS` is empty. When it's empty, the gateway uses `2`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_gifs_shard_cache_max_bytes">
+<dt>`FLUXER_GIFS_SHARD_CACHE_MAX_BYTES`</dt>
+<dd class="flx-setting-default">Default `67108864`, 64 MiB</dd>
+<dd>How many bytes the gifs service may use for its cache, at least `16777216`, which is 16 MiB. Keep it below `FLUXER_GIFS_MEMORY_LIMIT`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_kv_postgres_max_bytes">
+<dt>`FLUXER_KV_POSTGRES_MAX_BYTES`</dt>
+<dd class="flx-setting-default">Default `536870912`, 512 MiB</dd>
+<dd>How many bytes the key-value tables may use when `FLUXER_KV_MODE` is `postgres`. Above it, writes of key-value data fail until the cleanup that runs every five minutes brings the tables under it again, like Valkey does at its memory limit.</dd>
+</div>
+<div class="flx-setting" id="fluxer_kv_postgres_max_connections">
+<dt>`FLUXER_KV_POSTGRES_MAX_CONNECTIONS`</dt>
+<dd class="flx-setting-default">Default `15`</dd>
+<dd>The size of the PostgreSQL connection pool for key-value data in each api and worker process when `FLUXER_KV_MODE` is `postgres`, at least 1. Each process also holds one more connection for LISTEN. Keep `FLUXER_POSTGRES_SERVER_MAX_CONNECTIONS` above the total for all processes together.</dd>
+</div>
+<div class="flx-setting" id="fluxer_livekit_gomemlimit">
+<dt>`FLUXER_LIVEKIT_GOMEMLIMIT`</dt>
+<dd class="flx-setting-default">Default `272MiB`</dd>
+<dd>The soft memory limit of the Go runtime in LiveKit, set as its `GOMEMLIMIT`. Keep it below `FLUXER_LIVEKIT_MEMORY_LIMIT`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_malloc_arena_max">
+<dt>`FLUXER_MALLOC_ARENA_MAX`</dt>
+<dd>How many memory arenas the glibc allocator may create in the push, admin, snowflakes, users, gifs, messages and unfurl services, set as their `MALLOC_ARENA_MAX`. Lower values use less memory. Fluxer sizes it from the CPUs it can use.</dd>
+</div>
+<div class="flx-setting" id="fluxer_media_proxy_tokio_worker_threads">
+<dt>`FLUXER_MEDIA_PROXY_TOKIO_WORKER_THREADS`</dt>
+<dd>How many worker threads the async runtime of the media proxy uses, set as its `TOKIO_WORKER_THREADS`. Fluxer sizes it from the CPUs it can use.</dd>
+</div>
+<div class="flx-setting" id="fluxer_meilisearch_max_indexing_memory">
+<dt>`FLUXER_MEILISEARCH_MAX_INDEXING_MEMORY`</dt>
+<dd class="flx-setting-default">Default `128mb`</dd>
+<dd>The memory Meilisearch aims to stay under while indexing, set as its `MEILI_MAX_INDEXING_MEMORY`, such as `512mb`. Meilisearch can go a little over it. Keep it well below `FLUXER_MEILISEARCH_MEMORY_LIMIT`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_meilisearch_max_indexing_threads">
+<dt>`FLUXER_MEILISEARCH_MAX_INDEXING_THREADS`</dt>
+<dd class="flx-setting-default">Default `1`</dd>
+<dd>The most threads Meilisearch may use for indexing, set as its `MEILI_MAX_INDEXING_THREADS`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_messages_postgres_max_connections">
+<dt>`FLUXER_MESSAGES_POSTGRES_MAX_CONNECTIONS`</dt>
+<dd class="flx-setting-default">Default `4`</dd>
+<dd>The size of the PostgreSQL connection pool of the messages service.</dd>
+</div>
+<div class="flx-setting" id="fluxer_nats_max_file_store">
+<dt>`FLUXER_NATS_MAX_FILE_STORE`</dt>
+<dd class="flx-setting-default">Default `10GB`</dd>
+<dd>NATS JetStream `max_file_store`, the most disk space JetStream may use for its streams, such as `20GB`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_nats_max_memory_store">
+<dt>`FLUXER_NATS_MAX_MEMORY_STORE`</dt>
+<dd class="flx-setting-default">Default `64MB`</dd>
+<dd>NATS JetStream `max_memory_store`, the most memory JetStream may use for streams kept in memory, such as `128MB`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_autovacuum_analyze_scale_factor">
+<dt>`FLUXER_POSTGRES_AUTOVACUUM_ANALYZE_SCALE_FACTOR`</dt>
+<dd class="flx-setting-default">Default `0.02`</dd>
+<dd>PostgreSQL `autovacuum_analyze_scale_factor`, the share of a table's rows that must change before autovacuum analyses it again, as a fraction such as `0.05`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_autovacuum_max_workers">
+<dt>`FLUXER_POSTGRES_AUTOVACUUM_MAX_WORKERS`</dt>
+<dd class="flx-setting-default">Default `3`</dd>
+<dd>PostgreSQL `autovacuum_max_workers`, how many autovacuum processes can run at once.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_autovacuum_vacuum_cost_limit">
+<dt>`FLUXER_POSTGRES_AUTOVACUUM_VACUUM_COST_LIMIT`</dt>
+<dd class="flx-setting-default">Default `2000`</dd>
+<dd>PostgreSQL `autovacuum_vacuum_cost_limit`, how much disk work autovacuum may do before it pauses. Higher values let it finish sooner.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_autovacuum_vacuum_scale_factor">
+<dt>`FLUXER_POSTGRES_AUTOVACUUM_VACUUM_SCALE_FACTOR`</dt>
+<dd class="flx-setting-default">Default `0.05`</dd>
+<dd>PostgreSQL `autovacuum_vacuum_scale_factor`, the share of a table's rows that must be updated or deleted before autovacuum vacuums it, as a fraction such as `0.1`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_autovacuum_work_mem">
+<dt>`FLUXER_POSTGRES_AUTOVACUUM_WORK_MEM`</dt>
+<dd class="flx-setting-default">Default `128MB`</dd>
+<dd>PostgreSQL `autovacuum_work_mem`, the memory each autovacuum worker can use.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_bgwriter_delay">
+<dt>`FLUXER_POSTGRES_BGWRITER_DELAY`</dt>
+<dd class="flx-setting-default">Default `50ms`</dd>
+<dd>PostgreSQL `bgwriter_delay`, how long the background writer sleeps between rounds, such as `200ms`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_bgwriter_lru_maxpages">
+<dt>`FLUXER_POSTGRES_BGWRITER_LRU_MAXPAGES`</dt>
+<dd class="flx-setting-default">Default `1000`</dd>
+<dd>PostgreSQL `bgwriter_lru_maxpages`, the most buffers the background writer writes to disk in one round.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_checkpoint_completion_target">
+<dt>`FLUXER_POSTGRES_CHECKPOINT_COMPLETION_TARGET`</dt>
+<dd class="flx-setting-default">Default `0.9`</dd>
+<dd>PostgreSQL `checkpoint_completion_target`, how much of the time between checkpoints a checkpoint spreads its writes over, as a fraction.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_default_statistics_target">
+<dt>`FLUXER_POSTGRES_DEFAULT_STATISTICS_TARGET`</dt>
+<dd class="flx-setting-default">Default `200`</dd>
+<dd>PostgreSQL `default_statistics_target`, how much detail the query planner's table statistics have. Higher values give better plans and a slower ANALYZE.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_effective_cache_size">
+<dt>`FLUXER_POSTGRES_EFFECTIVE_CACHE_SIZE`</dt>
+<dd class="flx-setting-default">Default `768MB`</dd>
+<dd>PostgreSQL `effective_cache_size`, how much disk cache the query planner assumes there is. It allocates no memory.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_effective_io_concurrency">
+<dt>`FLUXER_POSTGRES_EFFECTIVE_IO_CONCURRENCY`</dt>
+<dd class="flx-setting-default">Default `200`</dd>
+<dd>PostgreSQL `effective_io_concurrency`, how many disk requests PostgreSQL may have in flight at once. High values suit SSDs.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_jit">
+<dt>`FLUXER_POSTGRES_JIT`</dt>
+<dd class="flx-setting-default">Default `off`</dd>
+<dd>PostgreSQL `jit`, whether PostgreSQL compiles parts of queries with JIT. Use `on` or `off`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_maintenance_work_mem">
+<dt>`FLUXER_POSTGRES_MAINTENANCE_WORK_MEM`</dt>
+<dd class="flx-setting-default">Default `256MB`</dd>
+<dd>PostgreSQL `maintenance_work_mem`, the memory one VACUUM, CREATE INDEX or ALTER TABLE can use.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_max_parallel_workers">
+<dt>`FLUXER_POSTGRES_MAX_PARALLEL_WORKERS`</dt>
+<dd class="flx-setting-default">Default `8`</dd>
+<dd>PostgreSQL `max_parallel_workers`, how many parallel query workers can run at once across the database.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_max_parallel_workers_per_gather">
+<dt>`FLUXER_POSTGRES_MAX_PARALLEL_WORKERS_PER_GATHER`</dt>
+<dd class="flx-setting-default">Default `2`</dd>
+<dd>PostgreSQL `max_parallel_workers_per_gather`, how many parallel workers one step of a query can use.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_max_wal_size">
+<dt>`FLUXER_POSTGRES_MAX_WAL_SIZE`</dt>
+<dd class="flx-setting-default">Default `2GB`</dd>
+<dd>PostgreSQL `max_wal_size`, how large the write-ahead log may grow before PostgreSQL starts a checkpoint.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_min_wal_size">
+<dt>`FLUXER_POSTGRES_MIN_WAL_SIZE`</dt>
+<dd class="flx-setting-default">Default `80MB`</dd>
+<dd>PostgreSQL `min_wal_size`, the write-ahead log space PostgreSQL keeps for reuse after a checkpoint.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_random_page_cost">
+<dt>`FLUXER_POSTGRES_RANDOM_PAGE_COST`</dt>
+<dd class="flx-setting-default">Default `1.1`</dd>
+<dd>PostgreSQL `random_page_cost`, how costly the query planner thinks fetching a random disk page is next to a sequential one. Values near 1 suit SSDs.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_server_max_connections">
+<dt>`FLUXER_POSTGRES_SERVER_MAX_CONNECTIONS`</dt>
+<dd class="flx-setting-default">Default `150`</dd>
+<dd>PostgreSQL `max_connections`, how many connections the database accepts in total. Keep it above the sum of all pool sizes, counting each worker replica.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_shared_buffers">
+<dt>`FLUXER_POSTGRES_SHARED_BUFFERS`</dt>
+<dd class="flx-setting-default">Default `192MB`</dd>
+<dd>PostgreSQL `shared_buffers`, the memory PostgreSQL uses for its own cache.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_shared_preload_libraries">
+<dt>`FLUXER_POSTGRES_SHARED_PRELOAD_LIBRARIES`</dt>
+<dd class="flx-setting-default">Default `pg_stat_statements`</dd>
+<dd>PostgreSQL `shared_preload_libraries`, the extensions PostgreSQL loads at start, separated by commas. Keep `pg_stat_statements` in the list. The api turns it on at start.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_track_io_timing">
+<dt>`FLUXER_POSTGRES_TRACK_IO_TIMING`</dt>
+<dd class="flx-setting-default">Default `on`</dd>
+<dd>PostgreSQL `track_io_timing`, whether PostgreSQL times its disk I/O for its statistics. Use `on` or `off`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_wal_buffers">
+<dt>`FLUXER_POSTGRES_WAL_BUFFERS`</dt>
+<dd class="flx-setting-default">Default `16MB`</dd>
+<dd>PostgreSQL `wal_buffers`, the memory for write-ahead log data not yet written to disk.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_wal_compression">
+<dt>`FLUXER_POSTGRES_WAL_COMPRESSION`</dt>
+<dd class="flx-setting-default">Default `zstd`</dd>
+<dd>PostgreSQL `wal_compression`, how full-page images in the write-ahead log are compressed, such as `lz4`, `pglz` or `off`. PostgreSQL 14 takes only `on` or `off`, and there Fluxer uses `on` unless you set it.</dd>
+</div>
+<div class="flx-setting" id="fluxer_postgres_work_mem">
+<dt>`FLUXER_POSTGRES_WORK_MEM`</dt>
+<dd class="flx-setting-default">Default `4MB`</dd>
+<dd>PostgreSQL `work_mem`, the memory each sort or hash step in a query can use before it spills to disk.</dd>
+</div>
+<div class="flx-setting" id="fluxer_rust_process">
+<dt>`FLUXER_RUST_PROCESS`</dt>
+<dd>How the Rust services run. `single` runs snowflakes, users, messages, gifs, unfurl, push, app-proxy and admin in one process, and `per-service` runs one process for each. When it's empty, a new instance picks `single` on its first start and keeps it. An older instance with no choice saved uses `per-service`. rexctl also calls it `rust.process`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_rust_server_tokio_worker_threads">
+<dt>`FLUXER_RUST_SERVER_TOKIO_WORKER_THREADS`</dt>
+<dd>How many worker threads the async runtime uses when `FLUXER_RUST_PROCESS` is `single`, set as `TOKIO_WORKER_THREADS` of the one Rust process. Fluxer sizes it from the CPUs it can use.</dd>
+</div>
+<div class="flx-setting" id="fluxer_tokio_worker_threads">
+<dt>`FLUXER_TOKIO_WORKER_THREADS`</dt>
+<dd>How many worker threads the async runtime uses in the app-proxy, push, admin, snowflakes, users, gifs, messages and unfurl services, set as their `TOKIO_WORKER_THREADS`. Fluxer sizes it from the CPUs it can use.</dd>
+</div>
+<div class="flx-setting" id="fluxer_users_postgres_max_connections">
+<dt>`FLUXER_USERS_POSTGRES_MAX_CONNECTIONS`</dt>
+<dd class="flx-setting-default">Default `4`</dd>
+<dd>The size of the PostgreSQL connection pool of the users service.</dd>
+</div>
+</dl>
+
+## Older storage and cache services
+
+Only installs with Valkey or SeaweedFS read these.
+
+<dl class="flx-settings">
+<div class="flx-setting" id="fluxer_meilisearch_env">
+<dt>`FLUXER_MEILISEARCH_ENV`</dt>
+<dd class="flx-setting-default">Default `production`</dd>
+<dd>The Meilisearch environment, set as its `MEILI_ENV`. Use `production` or `development`. With `production`, Meilisearch refuses to start without a master key of at least 16 bytes and turns off its search preview.</dd>
+</div>
+<div class="flx-setting" id="fluxer_meilisearch_no_analytics">
+<dt>`FLUXER_MEILISEARCH_NO_ANALYTICS`</dt>
+<dd class="flx-setting-default">Default `true`</dd>
+<dd>Whether Meilisearch stops sending usage data to the Meilisearch team, set as its `MEILI_NO_ANALYTICS`. Use `true` or `false`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_seaweedfs_garbage_threshold">
+<dt>`FLUXER_SEAWEEDFS_GARBAGE_THRESHOLD`</dt>
+<dd class="flx-setting-default">Default `0.1`</dd>
+<dd>The share of deleted space in a volume that makes SeaweedFS compact it, as a fraction, set as its `-master.garbageThreshold`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_seaweedfs_gomemlimit">
+<dt>`FLUXER_SEAWEEDFS_GOMEMLIMIT`</dt>
+<dd class="flx-setting-default">Default `380MiB`</dd>
+<dd>The soft memory limit of the Go runtime in SeaweedFS, set as its `GOMEMLIMIT`. Go can't see the service limit. Keep this at 75 to 85 percent of `FLUXER_SEAWEEDFS_MEMORY_LIMIT` and raise both together.</dd>
+</div>
+<div class="flx-setting" id="fluxer_seaweedfs_init_attempts">
+<dt>`FLUXER_SEAWEEDFS_INIT_ATTEMPTS`</dt>
+<dd class="flx-setting-default">Default `60`</dd>
+<dd>How many rounds, about two seconds apart, the bundled object store's setup job tries to create the buckets and set up access before it gives up.</dd>
+</div>
+<div class="flx-setting" id="fluxer_seaweedfs_s3_concurrent_uploads">
+<dt>`FLUXER_SEAWEEDFS_S3_CONCURRENT_UPLOADS`</dt>
+<dd class="flx-setting-default">Default `5`</dd>
+<dd>How many uploads the bundled object store writes at once, set as its `-s3.concurrentFileUploadLimit`. More uploads wait for a free slot. Each upload in progress uses up to 32 MB of memory in SeaweedFS. Raise `FLUXER_SEAWEEDFS_MEMORY_LIMIT` before you raise this.</dd>
+</div>
+<div class="flx-setting" id="fluxer_seaweedfs_telemetry">
+<dt>`FLUXER_SEAWEEDFS_TELEMETRY`</dt>
+<dd class="flx-setting-default">Default `false`</dd>
+<dd>Whether SeaweedFS sends usage data to the SeaweedFS project, set as its `-master.telemetry`. Use `true` or `false`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_seaweedfs_uploads_ttl">
+<dt>`FLUXER_SEAWEEDFS_UPLOADS_TTL`</dt>
+<dd class="flx-setting-default">Default `1d`</dd>
+<dd>How long the bundled object store keeps files in the uploads bucket before it deletes them, such as `1d` or `12h`. Use `off` to keep them. A new value applies to uploads written after the next start, and files already stored keep their old expiry.</dd>
+</div>
+<div class="flx-setting" id="fluxer_seaweedfs_volume_growth">
+<dt>`FLUXER_SEAWEEDFS_VOLUME_GROWTH`</dt>
+<dd class="flx-setting-default">Default `1`</dd>
+<dd>How many volumes SeaweedFS creates at once when a bucket has no writable volume left, set as its `WEED_MASTER_VOLUME_GROWTH_COPY_1`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_seaweedfs_volume_max">
+<dt>`FLUXER_SEAWEEDFS_VOLUME_MAX`</dt>
+<dd class="flx-setting-default">Default `10000`</dd>
+<dd>The most volumes the SeaweedFS volume store may have, set as its `-volume.max`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_seaweedfs_volume_size_limit_mb">
+<dt>`FLUXER_SEAWEEDFS_VOLUME_SIZE_LIMIT_MB`</dt>
+<dd class="flx-setting-default">Default `1024`</dd>
+<dd>The size in MB a volume can grow to before SeaweedFS stops writing to it, set as its `-master.volumeSizeLimitMB`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_valkey_appendfsync">
+<dt>`FLUXER_VALKEY_APPENDFSYNC`</dt>
+<dd class="flx-setting-default">Default `everysec`</dd>
+<dd>Valkey `appendfsync`, how often Valkey flushes its append-only file to disk. Use `always`, `everysec` or `no`. With `everysec`, a crash can lose the last second of writes.</dd>
+</div>
+<div class="flx-setting" id="fluxer_valkey_maxmemory">
+<dt>`FLUXER_VALKEY_MAXMEMORY`</dt>
+<dd class="flx-setting-default">Default `128mb`</dd>
+<dd>Valkey `maxmemory`, the most memory Valkey may use for stored data. The append-only file buffer and memory fragmentation come on top. Keep it below `FLUXER_VALKEY_MEMORY_LIMIT`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_valkey_maxmemory_policy">
+<dt>`FLUXER_VALKEY_MAXMEMORY_POLICY`</dt>
+<dd class="flx-setting-default">Default `noeviction`</dd>
+<dd>Valkey `maxmemory-policy`, what Valkey does when its data grows to `FLUXER_VALKEY_MAXMEMORY`. With `noeviction`, writes fail when Valkey is full and no data is dropped.</dd>
+</div>
+<div class="flx-setting" id="fluxer_valkey_save">
+<dt>`FLUXER_VALKEY_SAVE`</dt>
+<dd>Valkey `save`, when Valkey writes RDB snapshots, as pairs of seconds and changes such as `3600 1 300 100`. When it's empty, snapshots are off and Valkey keeps its data in the append-only file alone.</dd>
+</div>
+</dl>
+
+## Internal ports
+
+Every part inside the instance listens on [fixed ports](/operator/how-it-works/#ports-inside-the-instance) on one loopback address.
+
+<dl class="flx-settings">
+<div class="flx-setting" id="fluxer_loopback_address">
+<dt>`FLUXER_LOOPBACK_ADDRESS`</dt>
+<dd class="flx-setting-default">Default `127.0.0.1`</dd>
+<dd>The loopback address the internal parts listen on, from `127.0.0.1` to `127.255.255.254`. rexctl gives each extra instance on a machine its own.</dd>
+</div>
+</dl>
+
+## Logs and health checks
+
+<dl class="flx-settings">
+<div class="flx-setting" id="fluxer_gateway_logger_level">
+<dt>`FLUXER_GATEWAY_LOGGER_LEVEL`</dt>
+<dd>The gateway log level. Use `debug`, `info`, `notice`, `warning`, `error`, `critical`, `alert` or `emergency`. An empty or unknown value gives `info`. `LOGGER_LEVEL` wins over this one.</dd>
+</div>
+<div class="flx-setting" id="fluxer_livekit_log_level">
+<dt>`FLUXER_LIVEKIT_LOG_LEVEL`</dt>
+<dd class="flx-setting-default">Default `info`</dd>
+<dd>How much LiveKit logs. Use `debug`, `info`, `warn` or `error`.</dd>
+</div>
+<div class="flx-setting" id="fluxer_meilisearch_log_level">
+<dt>`FLUXER_MEILISEARCH_LOG_LEVEL`</dt>
+<dd class="flx-setting-default">Default `WARN`</dd>
+<dd>How much Meilisearch logs, set as its `MEILI_LOG_LEVEL`. Use `OFF`, `ERROR`, `WARN`, `INFO`, `DEBUG` or `TRACE`.</dd>
+</div>
+<div class="flx-setting" id="log_level">
+<dt>`LOG_LEVEL`</dt>
+<dd>How much the api and worker log. Use `trace`, `debug`, `info`, `warn`, `error` or `fatal`. An empty or unknown value gives `info`.</dd>
+</div>
+<div class="flx-setting" id="logger_level">
+<dt>`LOGGER_LEVEL`</dt>
+<dd>The gateway log level, which wins over `FLUXER_GATEWAY_LOGGER_LEVEL` and takes the same levels. An empty or unknown value falls back to `FLUXER_GATEWAY_LOGGER_LEVEL`.</dd>
+</div>
+<div class="flx-setting" id="rust_log">
+<dt>`RUST_LOG`</dt>
+<dd>The log filter of media-proxy, app-proxy, admin, push, snowflakes, users, gifs, messages and unfurl, in tracing EnvFilter format such as `debug` or `off`. An empty or invalid filter gives `info`.</dd>
+</div>
+</dl>
+
+## Values from files
+
+Every setting also takes its value from a file, such as a Docker or Kubernetes secret.
+
+1. Set `NAME_FILE` to the path of the file.
+2. Leave `NAME` unset. Fluxer refuses to start when both have a value.
+3. Let the account Fluxer runs as read the file.

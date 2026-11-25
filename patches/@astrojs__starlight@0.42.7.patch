@@ -1,0 +1,26 @@
+diff --git a/dist/components/Search.astro b/dist/components/Search.astro
+index d8c80d8..b15915a 100644
+--- a/dist/components/Search.astro
++++ b/dist/components/Search.astro
+@@ -24,7 +24,7 @@ if (project.trailingSlash === 'never') dataAttributes['data-strip-trailing-slash
+ 	>
+ 		<Icon name="magnifier" />
+ 		<span class="sl-hidden md:sl-block" aria-hidden="true">{Astro.locals.t('search.label')}</span>
+-		<kbd class="sl-hidden md:sl-flex" style="display: none;">
++		<kbd class="sl-hidden md:sl-flex" style="display: none;" aria-hidden="true">
+ 			<kbd>{Astro.locals.t('search.ctrlKey')}</kbd><kbd>K</kbd>
+ 		</kbd>
+ 	</button>
+diff --git a/dist/user-components/Tabs.astro b/dist/user-components/Tabs.astro
+index dae0b05e2c0abca6259ef2ee9cba35e0a6aba6b9..0520a205063ef305b7d7e5bb385aa5c67fdf19ca 100644
+--- a/dist/user-components/Tabs.astro
++++ b/dist/user-components/Tabs.astro
+@@ -86,7 +86,7 @@ const { html, panels } = processPanels(panelHtml, tabInstanceCount);
+ <starlight-tabs data-sync-key={syncKey}>
+ 	{
+ 		panels && (
+-			<div class="tablist-wrapper not-content">
++			<div class="tablist-wrapper not-content" data-pagefind-ignore>
+ 				<ul role="tablist">
+ 					{panels.map(({ icon, label, panelId, tabId }, idx) => (
+ 						<li role="presentation" class="tab">

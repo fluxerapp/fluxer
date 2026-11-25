@@ -1,0 +1,184 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Linux with systemd
+description: rexctl installs Fluxer as one systemd service on Debian or Ubuntu.
+tag: systemd only
+---
+
+import {Steps} from '@astrojs/starlight/components';
+
+rexctl installs Fluxer as one systemd service, with no containers.
+
+## Supported systems
+
+| System | Versions |
+| --- | --- |
+| Debian | 12 or later |
+| Ubuntu | 22.04 or later |
+| Processor | amd64 or arm64 |
+
+On older releases or other Linux systems, [run Fluxer with Docker](/operator/docker/) instead.
+
+You can also [install Fluxer by hand](/operator/linux-manual/) without rexctl.
+
+## What this changes
+
+- A few packages from Debian or Ubuntu, such as `postgresql`, `libjemalloc2` and `fonts-dejavu-core`. The distribution's PostgreSQL service isn't used, and rexctl marks the PostgreSQL package as installed by hand so `apt autoremove` keeps it.
+- A system account called `fluxer`, which runs every part of Fluxer.
+- The release in `/opt/fluxer/releases/<version>`, with the link `/opt/fluxer/current` pointing at the release that runs now.
+- Settings in `/etc/fluxer/fluxer.env` and data in `/var/lib/fluxer`.
+- The service `fluxer.service`, started at boot.
+- rexctl in `/usr/local/bin/rexctl`, a copy the service runs in `/usr/local/libexec/rexctl`, and its install record in `/opt/fluxer/.rexctl`.
+- Rules for ports 80, 443, 7881 and 7882 in ufw or firewalld, if one is on. Pass `--open-firewall=false` to leave it as it is.
+
+## Before you start
+
+Check the [requirements](/operator/requirements/).
+
+| Need | Details |
+| --- | --- |
+| Machine | 2 CPU cores, 2 GB of memory at least, 4 GB for a busy instance |
+| Access | Root, or an account that can use sudo |
+| Domain or IP address | An `A` record for the machine, or its [IP address](/operator/requirements/#with-an-ip-address) |
+| Ports | 80 and 443 open from the internet, also in [your hosting provider's firewall](/operator/platforms/cloud-servers/) |
+
+Without a domain of your own, a free name such as [`203-0-113-10.sslip.io`](/operator/requirements/#with-a-domain) works like a domain and keeps passkeys working.
+
+## Install
+
+The install takes a few minutes.
+
+<Steps>
+
+1. Download rexctl, then start the install.
+
+   ```sh
+   curl -fsSL https://fluxer.dev/install.sh | sudo sh
+   sudo rexctl install --runtime systemd
+   ```
+
+   rexctl checks the machine, then asks for your domain or IP address.
+
+2. rexctl asks these questions first.
+
+   - Your domain or IP address.
+   - Whether a proxy is in front of Fluxer.
+   - Whether Fluxer starts with the machine.
+   - Where to keep uploads.
+   - How often to back up.
+   - Where to create your admin account.
+
+   When you create the admin account in the terminal, rexctl also asks these. The setup wizard in the browser asks them otherwise.
+
+   - How people sign in.
+   - Whether Fluxer can send email, when people sign in with an email address.
+   - The admin account.
+   - The instance name.
+   - Who can create an account.
+
+   People [sign in with a username or with an email address](/operator/sign-in/), and this can't change once the first account exists. Without an email account set up, pick usernames. People then keep a recovery kit in place of password reset emails.
+
+   rexctl then prints a summary of the plan. It changes nothing until you confirm.
+
+3. Confirm, and wait while rexctl installs the packages, downloads Fluxer and starts it.
+
+   When rexctl is done, it prints `Your instance is live.` with your address. If you chose the browser, it also prints the setup token you need there.
+
+   On a private address, rexctl also shows a link to Fluxer's root certificate and its SHA-256 fingerprint. Each device that opens the instance has to [trust that authority](/operator/requirements/#trusting-fluxers-own-authority) first.
+
+4. Create the first admin account. If you chose the terminal, rexctl already asked for it. If you chose the browser, open your address and paste the setup token from the end of the install. This command prints the token again if you need it.
+
+   ```sh
+   sudo rexctl setup token
+   ```
+
+   The wizard starts "Who can create an account?" on "Only people you invite". When you set up in the terminal, rexctl also makes the first invite link.
+
+5. [Invite people](/operator/running/#invite-people) with an invite link.
+
+</Steps>
+
+To install without questions, such as from a script, pass the answers as flags. rexctl then prints the setup token for the browser at the end.
+
+```sh
+sudo rexctl install --runtime systemd --domain chat.example.com --setup browser --yes
+```
+
+## Change settings
+
+rexctl manages `/etc/fluxer/fluxer.env` on this route, so change settings with rexctl.
+
+```sh
+sudo rexctl config set FLUXER_EMAIL_SMTP_HOST smtp.example.com
+```
+
+Before it changes anything, rexctl shows which parts restart. [Every setting](/operator/settings/) works like this.
+
+## Updating, backups and logs
+
+- `sudo rexctl status` shows the status.
+- `sudo rexctl logs`, or `journalctl -u fluxer`, shows the logs.
+- `sudo rexctl backup` makes a backup.
+- `sudo rexctl upgrade` [backs up](/operator/backups/), [upgrades](/operator/upgrades/) and goes back on a failed start.
+- `sudo rexctl auto-upgrade on` upgrades Fluxer every day or once a week, at about 04:00 or at the time you pass with `--at`.
+- `sudo rexctl doctor` checks the machine and the instance and says how to fix each problem it finds. Run it after an upgrade too.
+
+## PostgreSQL versions
+
+Fluxer uses the PostgreSQL from your Debian or Ubuntu version, and needs 14 or later.
+
+| Distribution | PostgreSQL |
+| --- | --- |
+| Ubuntu 22.04 | 14 |
+| Debian 12 | 15 |
+| Ubuntu 24.04 | 16 |
+| Debian 13 | 17 |
+| Ubuntu 26.04 | 18 |
+
+A new install uses the newest PostgreSQL 14 or later already on the machine and installs no other, so one added from [apt.postgresql.org](https://wiki.postgresql.org/wiki/Apt) works too. With none on the machine, rexctl installs the one apt offers, and the plan shows its version. After that, Fluxer keeps running on the version its database was made with, also when a newer one is installed later. `sudo rexctl status` and `sudo rexctl doctor` then say that a newer one is there. To move the database to the newer PostgreSQL, run this.
+
+```sh
+sudo rexctl postgres upgrade
+```
+
+rexctl backs up, stops Fluxer, moves the database with `pg_upgrade --link` and starts Fluxer again. The old files stay in `/var/lib/fluxer/postgres.<version>`, and they can't start again after the move, so the backup is the way back.
+
+Once Fluxer runs well, delete them. When rexctl installed the old PostgreSQL and nothing else on the machine uses it, this also lets apt remove it.
+
+```sh
+sudo rexctl postgres upgrade --clean-up
+```
+
+PostgreSQL 14 no longer gets fixes from the PostgreSQL project, and Ubuntu 22.04 still patches its own copy. `sudo rexctl doctor` warns about it. Move to a newer version from apt.postgresql.org or Ubuntu 24.04 when you can.
+
+## Before a release upgrade
+
+Back up first, then upgrade the operating system as Debian or Ubuntu describes, such as Debian 12 to 13 or Ubuntu 22.04 to 24.04.
+
+```sh
+sudo rexctl backup
+```
+
+Fluxer starts on its old PostgreSQL afterwards, as long as that version is still installed, and `sudo rexctl postgres upgrade` moves it to the new one. Ubuntu's release upgrade can remove the old PostgreSQL as obsolete. Fluxer then doesn't start, and `sudo rexctl doctor` says which package to install again, from apt.postgresql.org if the new version no longer has it. Run `sudo rexctl postgres upgrade` after that, or restore the backup with `sudo rexctl restore`.
+
+## Without rexctl
+
+You can [install the same release by hand](/operator/linux-manual/) or package it. A manual install uses the same paths but its own unit, `fluxerd.service`, so don't run both on one machine.
+
+## Remove Fluxer
+
+```sh
+sudo rexctl uninstall
+```
+
+rexctl lists what goes and what stays before it changes anything. The service, the releases, the data, the settings in `/etc/fluxer`, the `fluxer` account, the firewall rules it added, the timers for backups and upgrades, the service's copy of rexctl if no other instance uses it, and `/opt/fluxer` with the admin's recovery kit file that rexctl saved there go. rexctl asks whether to keep the backups. If you keep them, `/opt/fluxer` stays, and the backups are the only files that are left in it.
+
+These stay on the machine.
+
+- The packages Fluxer needs, such as `libjemalloc2` and the PostgreSQL of your release, which is `postgresql-16` on Ubuntu 24.04 and `postgresql-17` on Debian 13.
+- When rexctl installed PostgreSQL, `create_main_cluster = false` in `/etc/postgresql-common/createcluster.conf` to stop apt making a default cluster.
+- rexctl itself, in `/usr/local/bin/rexctl`.
+
+## More than one instance
+
+A [second instance on the same machine](/operator/multiple-instances/) gets its own name, ports and folders.

@@ -1,0 +1,76 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Proxmox VE
+description: You run Fluxer on Proxmox VE in a Debian virtual machine, or with Docker in an unprivileged LXC container with nesting and keyctl on.
+---
+
+import {Steps} from '@astrojs/starlight/components';
+
+## Short version
+
+A Debian 13 virtual machine with 2 cores, 4 GB of memory and a 32 GB disk is the simplest route. Inside it, [install Fluxer as on Debian](/operator/platforms/debian-ubuntu/). An LXC container uses less memory and works with two extra features on. Both take about 20 minutes.
+
+## What this changes
+
+- One virtual machine or one LXC container on your Proxmox host.
+- Inside it, Docker with one container called `fluxer-fluxer-1` and a volume called `fluxer-data`, or Fluxer under systemd when it's a virtual machine.
+- Port forwards on your router, or on the Proxmox host when its guests are behind NAT, for ports 80 and 443 on TCP, 443 on UDP, 7881 on TCP and 7882 on UDP.
+
+## Before you start
+
+Check the [requirements](/operator/requirements/). Give the guest an address that Fluxer's ports can be forwarded to, and point your domain at your public address. Keep the guest's disk on local storage, and never put the database on NFS or SMB storage.
+
+## In a virtual machine
+
+<Steps>
+
+1. Create a VM from the Debian 13 netinst ISO with 2 cores, 4 GB of memory and a 32 GB disk on local storage, then install Debian with the SSH server.
+
+   After it boots, the Proxmox console shows the VM's address.
+
+2. Inside the VM, [run Fluxer with Docker as on Debian](/operator/platforms/debian-ubuntu/), or [as a systemd service](/operator/linux/).
+
+   When that install finishes, the setup wizard opens at your domain.
+
+</Steps>
+
+Turn on the QEMU guest agent in the VM's options and install `qemu-guest-agent` in Debian, so Proxmox can shut the VM down cleanly. Fluxer needs up to 130 seconds to stop.
+
+## In an LXC container
+
+<Steps>
+
+1. Download the Debian 13 template and create an unprivileged container from it with the nesting and keyctl features turned on.
+
+   ```sh
+   pveam update
+   pveam available --section system | grep debian-13
+   pveam download local debian-13-standard_13.6-1_amd64.tar.zst
+   pct create 120 local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst \
+     --hostname fluxer --unprivileged 1 --features nesting=1,keyctl=1 \
+     --cores 2 --memory 4096 --swap 0 --rootfs local-lvm:32 \
+     --net0 name=eth0,bridge=vmbr0,ip=dhcp --start 1
+   ```
+
+   Use the template version that `pveam available` shows, and your own storage and bridge. `pct status 120` prints `status: running`.
+
+2. Install Docker in the container.
+
+   ```sh
+   pct exec 120 -- bash -c 'apt-get update && apt-get install -y docker.io docker-cli docker-compose curl'
+   ```
+
+   `pct exec 120 -- docker compose version` prints a version.
+
+3. Open a shell in it with `pct enter 120` and go through steps 1 to 4 of [the Docker install](/operator/docker/#install).
+
+   Your domain then opens the setup wizard.
+
+</Steps>
+
+## LXC caveats
+
+- Without `nesting=1`, Docker doesn't start in the container, and its log says `failed to start daemon: error initializing graphdriver: driver not supported`. With `nesting=1` and `keyctl=1`, Docker uses `overlay2`, and after a restart of the container Fluxer comes back healthy.
+- Privileged containers aren't needed. Fluxer runs as user ID 65532 inside its own container, which maps to an unprivileged ID on the host.
+- A Proxmox backup of the container in snapshot or suspend mode copies the database while it's running, and the copy may not restore cleanly. Take [Fluxer's own backups](/operator/backups/), or back up the container in stop mode.
+- Proxmox recommends running Docker in a VM, and a Proxmox update can change how containers behave. If Docker stops working in the container after an update, move to the VM route with a Fluxer backup.

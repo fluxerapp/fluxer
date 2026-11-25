@@ -4,9 +4,15 @@ title: Errors
 description: Error responses, status codes and every error code.
 ---
 
-When a request fails, the response has a non-2xx status and a JSON body with `code` and `message`. Match on `code`, which never changes. `message` is translated text for people, and you shouldn't parse it.
+A failed request returns a non-2xx status and a JSON body with `code` and `message`.
 
 ## Error response
+
+| Field | Type | Description |
+| --- | --- | --- |
+| code | string | The [error code](#api-error-codes), which never changes. Match on it |
+| message | string | Translated text for people, which you shouldn't parse |
+| errors? | array[[validation error](/http-api/#validation-error-object) object] | The fields that failed a check, on a [validation error](#validation-errors) |
 
 ```json
 {
@@ -15,11 +21,10 @@ When a request fails, the response has a non-2xx status and a JSON body with `co
 }
 ```
 
-Some codes add more top-level fields, and a request that fails a field check also has an `errors` array. Ignore any field you don't recognize. Every response has an `X-Request-ID` header, and you should include it when you report a problem.
-
-`message` uses the account's locale or the `Accept-Language` header and falls back to English, as described in [Locales](/topics/locales/).
-
-[OAuth2](/http-api/oauth2/) protocol endpoints return the RFC 6749 `error` and `error_description` fields instead.
+- Some codes add [more top-level fields](#extra-fields). Ignore any field you don't recognise.
+- `message` uses the account's locale or the `Accept-Language` header and [falls back to English](/topics/locales/).
+- Every response has an `X-Request-ID` header. Include it when you report a problem.
+- [OAuth2](/http-api/oauth2/) protocol endpoints return the RFC 6749 `error` and `error_description` fields, with no `code` or `message`.
 
 ## Status codes
 
@@ -31,7 +36,7 @@ Some codes add more top-level fields, and a request that fails a field check als
 | 404 | The resource or route doesn't exist, or you can't see it | Check the ID and the route |
 | 409 | The request conflicts with the current state | Fetch the current state and change the request to match it |
 | 423 | Another request holds a lock on the resource | Wait the number of seconds in the `Retry-After` header and try again |
-| 429 | You're rate limited, or another request is changing the same resource (`RESOURCE_LOCKED`) | Wait the number of seconds in `retry_after`, which can be a fraction, and try again. See [Rate limits](/topics/rate-limits/) |
+| 429 | You're rate limited, or another request is changing the same resource (`RESOURCE_LOCKED`) | Wait the number of seconds in `retry_after`, which can be a fraction, and [try again](/topics/rate-limits/) |
 | 500, 502, 503, 504 | Something failed on the instance | Wait the number of seconds in `Retry-After` if it's sent, or use exponential backoff. Give up after a few tries |
 
 If your IP address is blocked for a while because of abusive traffic, requests return 403 `GLOBAL_IP_TEMPORARILY_BANNED`, and `expires_at` says when the block ends.
@@ -60,23 +65,23 @@ On [Modify current user settings](/http-api/users/settings/#modify-current-user-
 
 ## Extra fields
 
-This table has the most common extra fields. Any other extra fields are listed on the page for the endpoint that returns them.
+These are the most common extra fields. Other extra fields come with the endpoint that returns them.
 
 | Field | Meaning |
 | --- | --- |
 | `retry_after`, `global` | On `RATE_LIMITED`, `SLOWMODE_RATE_LIMITED` and other cooldowns, the seconds to wait. `global` is only on `RATE_LIMITED` |
 | `required_scope` | On `MISSING_OAUTH_SCOPE`, the OAuth2 scope the token is missing |
 | `has_mfa`, `methods` | On `SUDO_MODE_REQUIRED`, the proofs the account can give for [sudo mode](/http-api/users/mfa/#sudo-mode) |
-| `captcha_provider`, `altcha_challenge` | On `CAPTCHA_REQUIRED` and `INVALID_CAPTCHA`, the challenge to solve, as described in [CAPTCHA handling](/topics/captcha/) |
+| `captcha_provider`, `altcha_challenge` | On `CAPTCHA_REQUIRED` and `INVALID_CAPTCHA`, the [challenge to solve](/topics/captcha/) |
 | `step_index` | On `INVALID_REPORT_FLOW_ANSWERS`, the index of the first [report flow step](/http-api/reports/#report-flow-step-object) whose answer isn't valid |
 | `ticket`, `email`, `resend_available_in` | On `IP_AUTHORIZATION_REQUIRED`, the ticket for [authorizing a new IP address](/http-api/authentication/#log-in-with-a-password), and `ip_authorization_required` is `true` |
-| `action`, `tier`, `need` | On `ACCOUNT_VERIFICATION_REQUIRED`, what was refused and which step is missing, as described in [account tiers](/http-api/users/#account-tiers) |
-| `ban_kind`, `expires_at`, `reason` | On `GLOBAL_IP_BANNED` and `GLOBAL_IP_TEMPORARILY_BANNED`, details of the block, listed in full under [network block response](/http-api/authentication/#network-block-response) |
+| `action`, `tier`, `need` | On `ACCOUNT_VERIFICATION_REQUIRED`, what was refused and [which step is missing](/http-api/users/#account-tiers) |
+| `ban_kind`, `expires_at`, `reason` | On `GLOBAL_IP_BANNED` and `GLOBAL_IP_TEMPORARILY_BANNED`, [details of the block](/http-api/authentication/#network-block-response) |
 | `notice` | On `ACCOUNT_SUSPENDED_TEMPORARILY` and `ACCOUNT_SUSPENDED_PERMANENTLY`, the [enforcement notice](/http-api/authentication/#enforcement-notice-object) for the account |
 
 ## API error codes
 
-These are the values of the top-level `code`, and the [OpenAPI document](/http-api/instance/#get-openapi-document) lists them as the `APIErrorCode` schema. The Message column shows the English text, with values to fill in shown in braces. The `message` you get back has those values filled in and can have an extra sentence at the end. Some messages change with the reason, and the table shows the general one.
+These are the values of the top-level `code`, the `APIErrorCode` schema in the [OpenAPI document](/http-api/instance/#get-openapi-document). The Message column shows the English text, with values to fill in shown in braces. The `message` you get back has those values filled in and can have an extra sentence at the end. Some messages change with the reason, and the table shows the general one.
 
 | Code | Message |
 | --- | --- |
@@ -410,6 +415,78 @@ These are the values of the top-level `code`, and the [OpenAPI document](/http-a
 | `WEBHOOK_SERVICE_FORUM_UNSUPPORTED` | This webhook service can't post to a forum or media channel without a `thread_id` |
 | `WEBHOOK_THREAD_NAME_REQUIRES_FORUM` | `thread_name` and `applied_tags` only work in forum and media channels |
 
+### Codes only fluxer.com returns
+
+Self-serve refund, Operator Pass, donation, in-app purchase, age range and passkey domain move routes run only on fluxer.com, so a self-hosted instance never returns these codes.
+
+| Code | Message |
+| --- | --- |
+| `AGE_RANGE_NOT_ADULT` | An age range only counts here when it shows that you're 18 or older |
+| `AGE_RANGE_NOT_NEEDED` | You don't need an age range where you are |
+| `AGE_RANGE_SOURCE_NOT_VERIFIED` | An age you only entered yourself in your Google account doesn't count here |
+| `APP_ATTEST_ASSERTION_INVALID` | We couldn't confirm the age range your device sent |
+| `APP_ATTEST_ATTESTATION_INVALID` | We couldn't confirm this device key |
+| `APP_ATTEST_CHALLENGE_INVALID` | This check has expired or was already used |
+| `APP_ATTEST_KEY_IN_USE` | This device key is already registered to another account |
+| `APP_ATTEST_KEY_NOT_REGISTERED` | This device key isn't registered with your account |
+| `APP_ATTEST_NOT_AVAILABLE` | This instance doesn't accept age ranges from the app |
+| `APP_ATTEST_REQUEST_INVALID` | This age range request isn't valid |
+| `DONATION_AMOUNT_INVALID` | Donation amount is invalid |
+| `DONATION_MAGIC_LINK_EXPIRED` | Magic link has expired |
+| `DONATION_MAGIC_LINK_INVALID` | Magic link is invalid |
+| `DONATION_MAGIC_LINK_USED` | Magic link has already been used |
+| `INVALID_PASSKEY_BRIDGE_NONCE` | This passkey request could not be confirmed |
+| `OPERATOR_PASS_AGE_CONFIRMATION_REQUIRED` | To buy a pass, confirm that you are 18 or older, or that you have permission from a parent or guardian |
+| `OPERATOR_PASS_CERTIFICATE_NAME_REJECTED` | We can't print this name on a certificate |
+| `OPERATOR_PASS_DELIVERY_CONSENT_REQUIRED` | Confirm that you want your certificate delivered right away |
+| `OPERATOR_PASS_EMAIL_UNDELIVERABLE` | Emails to the address on this account cannot be delivered |
+| `OPERATOR_PASS_LAST_PASS_CONFIRMATION_REQUIRED` | Confirm that passing on your only pass removes your badge and your name on the Operators' wall |
+| `OPERATOR_PASS_NOT_HELD` | This account doesn't have the Operator Pass |
+| `OPERATOR_PASS_NOT_TRANSFERABLE` | This pass cannot be passed on |
+| `OPERATOR_PASS_OFFER_BUSY` | Another offer from your account is still being sent |
+| `OPERATOR_PASS_OFFER_UNAVAILABLE` | This pass cannot be passed on to that account right now |
+| `OPERATOR_PASS_PRICE_CHANGED` | The Operator Pass price has changed |
+| `OPERATOR_PASS_RECIPIENT_NOT_FRIEND` | You can only pass this on to one of your friends on Fluxer |
+| `OPERATOR_PASS_RELEASE_ALREADY_PUBLISHED` | This Operators list has already been published |
+| `OPERATOR_PASS_RELEASE_NOT_READY` | This Operators list cannot be published before its cut-off date |
+| `OPERATOR_PASS_REMOVAL_LIMITED_FIRST` | A permanent removal for a breach that is not serious needs an earlier removal for a limited time |
+| `OPERATOR_PASS_REMOVAL_NOTICE_REQUIRED` | A permanent removal needs a notice sent at least 7 days earlier, unless the breach is serious |
+| `OPERATOR_PASS_REMOVED` | The Operator Pass was removed from this account, so it cannot be bought or redeemed again |
+| `OPERATOR_PASS_TERMS_NOT_ACCEPTED` | Accept the Operator Pass terms to get this pass |
+| `OPERATOR_PASS_VISIONARY_UNAVAILABLE` | This account can't turn on the Operator Pass that comes with Visionary right now |
+| `OPERATOR_PASS_WAITLIST_TOKEN_INVALID` | This waitlist link is invalid |
+| `OPERATOR_PASS_WALL_NAME_REJECTED` | We can't show this name on the Operators' wall |
+| `OPERATOR_PASS_WALL_NAME_REQUIRED` | Enter a name for the Operators' wall, or choose not to be listed |
+| `OPERATOR_PASS_WALL_QUOTE_INVALID` | A quote can have up to 80 characters on one line, without hidden or control characters |
+| `OPERATOR_PASS_WALL_QUOTE_REJECTED` | A quote can't contain links, email addresses or @mentions |
+| `OPERATOR_PASS_WITHDRAWAL_UNAVAILABLE` | This purchase can no longer be withdrawn from here |
+| `PAYMENT_DISPUTE_EXEMPT` | Our terms rule out any action on this payment dispute |
+| `PAYMENT_DISPUTE_REVIEW_CLOSED` | This payment dispute has already closed |
+| `PAYMENT_DISPUTE_WARNING_TOO_LATE` | The bank's deadline is too close to warn the account in time |
+| `PLAY_INTEGRITY_APP_NOT_RECOGNIZED` | Install the app from Google Play and sign in to Google Play so the app can send your age range |
+| `PLAY_INTEGRITY_CHALLENGE_INVALID` | This check has expired or was already used |
+| `PLAY_INTEGRITY_DEVICE_NOT_TRUSTED` | This device didn't pass the Google Play device check, so the app can't send your age range from it |
+| `PLAY_INTEGRITY_NOT_AVAILABLE` | This instance doesn't accept age ranges from the Android app |
+| `PLAY_INTEGRITY_REQUEST_INVALID` | This age range request isn't valid |
+| `PLAY_INTEGRITY_TOKEN_INVALID` | We couldn't confirm the age range your device sent |
+| `PLAY_INTEGRITY_UNAVAILABLE` | We couldn't connect to Google Play to get your age range |
+| `STORE_BILLING_UNAVAILABLE` | In-app purchases are unavailable right now |
+| `STORE_NOTIFICATION_UNAUTHORIZED` | The notification signature is invalid |
+| `STORE_PURCHASE_INVALID` | This purchase could not be verified |
+| `STORE_PURCHASE_OWNED_BY_OTHER_ACCOUNT` | This purchase is linked to a different account |
+| `STORE_PURCHASE_SANDBOX_NOT_ENTITLED` | Test purchases cannot be applied to this account |
+| `STRIPE_REFUND_COOLDOWN_ACTIVE` | You can request a self-serve refund once every 30 days |
+| `STRIPE_REFUND_OUTSIDE_WINDOW` | This purchase is outside the 3-day self-serve refund window |
+| `UNKNOWN_OPERATOR_PASS_OFFER` | Unknown Operator Pass offer |
+| `UNKNOWN_OPERATOR_PASS_PURCHASE` | Unknown Operator Pass purchase |
+| `UNKNOWN_OPERATOR_PASS_RELEASE_ENTRY` | This account is not in that published Operators list |
+| `UNKNOWN_OPERATOR_PASS_UNIT` | Unknown Operator Pass |
+| `UNKNOWN_OPERATOR_PASS_WALL_ENTRY` | This account has no name on the Operators' wall |
+| `UNKNOWN_PASSKEY_BRIDGE` | This passkey request has expired |
+| `UNKNOWN_PASSKEY_MIGRATION` | There is no passkey to update right now |
+| `UNKNOWN_PAYMENT_DISPUTE_REVIEW` | Unknown payment dispute review |
+| `UNKNOWN_STORE_PURCHASE` | Unknown store purchase |
+
 ## Validation error codes
 
 These are the values of `code` inside `errors`.
@@ -473,6 +550,7 @@ These are the values of `code` inside `errors`.
 | `DUPLICATE_RECIPIENTS_NOT_ALLOWED` | Duplicate recipients aren't allowed |
 | `EMAIL_ALREADY_IN_USE` | Email is already in use |
 | `EMAIL_DELIVERY_REQUIRES_EMAIL_IDENTITY` | Email delivery only works when people sign in with an email |
+| `EMAIL_DOMAIN_CANNOT_RECEIVE_MAIL` | This email domain can't receive mail |
 | `EMAIL_DOMAIN_NOT_ALLOWED` | This instance only accepts email addresses from certain domains |
 | `EMAIL_DOMAIN_NOT_ALLOWED_FOR_SSO` | This email domain isn't allowed for single sign-on |
 | `EMAIL_IS_REQUIRED` | Email is required |
@@ -503,13 +581,13 @@ These are the values of `code` inside `errors`.
 | `ENFORCEMENT_RIGHTS_HOLDER_NOT_ALLOWED` | A rights holder can only be given for copyright decisions |
 | `ENFORCEMENT_RIGHTS_HOLDER_REQUIRED` | Copyright decisions need the rights holder or the right concerned |
 | `ENFORCEMENT_STATEMENT_NOT_ALLOWED` | Decisions for this reason can't include a note to the user |
-| `ENTRANCE_SOUND_DURATION_EXCEEDS_LIMIT` | Entrance sounds can be at most {max_ms, number}ms long |
+| `ENTRANCE_SOUND_DURATION_EXCEEDS_LIMIT` | Entrance sounds can be at most {max_ms}ms long |
 | `ENTRANCE_SOUND_INVALID_FORMAT` | Entrance sounds must be MP3, OGG, M4A, or WAV audio |
 | `ENTRANCE_SOUND_INVALID_SCOPE` | Invalid entrance sound scope |
-| `ENTRANCE_SOUND_NAME_LENGTH_INVALID` | Entrance sound names must be between 1 and {max, number} characters |
+| `ENTRANCE_SOUND_NAME_LENGTH_INVALID` | Entrance sound names must be between 1 and {max} characters |
 | `ENTRANCE_SOUND_NOT_FOUND` | Entrance sound not found |
-| `ENTRANCE_SOUND_QUOTA_REACHED` | You can't save more than {max, number} entrance sounds |
-| `ENTRANCE_SOUND_SIZE_EXCEEDS_LIMIT` | Entrance sounds can be at most {max_bytes, number} bytes |
+| `ENTRANCE_SOUND_QUOTA_REACHED` | You can't save more than {max} entrance sounds |
+| `ENTRANCE_SOUND_SIZE_EXCEEDS_LIMIT` | Entrance sounds can be at most {max_bytes} bytes |
 | `FAILED_TO_FETCH_SSO_USER_INFO` | We couldn't fetch your SSO user info |
 | `FAILED_TO_PARSE_MULTIPART_FORM_DATA` | We couldn't parse the multipart form data |
 | `FAILED_TO_PARSE_SSO_USER_INFO` | We couldn't read the response from your SSO provider |

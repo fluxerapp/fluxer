@@ -36,7 +36,7 @@ A registration is Web Push when `token` is an endpoint URL sent with both keys, 
 | --- | --- | --- |
 | device_id | string | The registration ID, 32 lowercase hexadecimal characters |
 
-Registering again with the same `platform`, `app_id`, `provider_environment` and `token` replaces the registration and returns the same `device_id`.
+Registering again with the same `platform`, `app_id`, `provider_environment` and `token` replaces the registration but keeps its `device_id` unchanged.
 
 ## Register mobile push device
 
@@ -56,7 +56,7 @@ Stores a push registration and returns its [device registration](#device-registr
 | provider_environment? | string | `production` or `development`, used by APNs only |
 | user_agent? | string | A user agent string describing the device (1-1024 characters) |
 
-When `provider_environment` is omitted, it defaults to `production` on `ios_apns` and `ios_apns_voip` and stays empty on other platforms. To get thread and forum [new post](/http-api/forums/#new-post-notifications) notifications on this device, send the [`channel_threads` client capability](/http-api/threads/#client-capability) with the request.
+When `provider_environment` is omitted, it defaults to `production` on `ios_apns` and `ios_apns_voip` and stays empty on other platforms. To get thread and forum [new post](/http-api/forums/#new-post-notifications) notifications on this device, send the request with the [`channel_threads` client capability](/http-api/threads/#client-capability).
 
 ### Response
 
@@ -97,6 +97,168 @@ Removes the registration that matches `platform`, `token`, `app_id` and `provide
 
 The rate limit is 40 requests per minute, on the `user:push:unsubscribe` bucket.
 
+## Mobile device object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| device_id | string | The registration ID |
+| platform | string | The [platform](#registration-formats) |
+| app_id | ?string | The client build sent at registration |
+| provider_environment | ?string | The APNs environment, null on other platforms |
+| user_agent | ?string | The user agent sent at registration |
+
+## List mobile push devices
+
+<RouteHeader method="GET" path="/v1/users/@me/mobile-devices" />
+
+Returns every mobile registration on the account. Browser subscriptions are left out.
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| devices | array[[mobile device](#mobile-device-object) object] | The registrations |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | Always |
+
+The rate limit is 40 requests per 10 seconds, on the `user:push:list` bucket.
+
+## Delete mobile push device
+
+<RouteHeader method="DELETE" path="/v1/users/@me/mobile-devices/{device_id}" />
+
+Removes the registration with this `device_id`, and returns 200 even when none matches.
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| success | boolean | Always `true` |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The registration was removed, or there was none |
+
+The rate limit is 40 requests per minute, on the `user:push:unsubscribe` bucket.
+
+## Browser push subscriptions
+
+A browser registers the [PushSubscription](https://developer.mozilla.org/en-US/docs/Web/API/PushSubscription) it gets from the Push API. The subscription ID comes from the endpoint, so subscribing again with the same endpoint replaces the subscription. An account keeps at most 100 push registrations across browsers and devices. Past that, a new one removes earlier registrations, starting with the ones from the same session.
+
+## Push subscription object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| subscription_id | string | The subscription ID |
+| user_agent | ?string | The user agent sent when subscribing |
+
+## Push subscription keys object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| p256dh | string | The base64url P-256 public key (1-256 characters) |
+| auth | string | The base64url auth secret (1-256 characters) |
+
+## Subscribe to push notifications
+
+<RouteHeader method="POST" path="/v1/users/@me/push/subscribe" />
+
+Stores a browser subscription and returns its ID. To get thread and forum [new post](/http-api/forums/#new-post-notifications) notifications, send the request with the [`channel_threads` client capability](/http-api/threads/#client-capability).
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| endpoint | string | The subscription endpoint URL, an `https` URL on a public host |
+| keys | [push subscription keys](#push-subscription-keys-object) object | The subscription keys |
+| user_agent? | string | A user agent string describing the browser (1-1024 characters) |
+| installed_app? | boolean | Whether the client runs as an installed web app |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| subscription_id | string | The subscription ID |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The subscription was stored |
+| 400 | [error response](/http-api/#error-response) | `URL_NOT_PUBLICLY_ROUTABLE` on `endpoint` when the endpoint is a private or reserved address |
+
+The rate limit is 20 requests per minute, on the `user:push:subscribe` bucket.
+
+## Rotate a push subscription
+
+<RouteHeader method="POST" path="/v1/users/@me/push/rotate" />
+
+Replaces the subscription for `old_endpoint` with one for `endpoint`. Call it from the service worker's [`pushsubscriptionchange`](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerGlobalScope/pushsubscriptionchange_event) event.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| old_endpoint | string | The endpoint the browser replaced |
+| endpoint | string | The new endpoint URL, an `https` URL on a public host |
+| keys | [push subscription keys](#push-subscription-keys-object) object | The keys of the new subscription |
+| user_agent? | string | A user agent string describing the browser (1-1024 characters) |
+| installed_app? | boolean | Whether the client runs as an installed web app |
+
+The response and rate limit are the same as [Subscribe to push notifications](#subscribe-to-push-notifications).
+
+## List push subscriptions
+
+<RouteHeader method="GET" path="/v1/users/@me/push/subscriptions" />
+
+Returns the account's browser subscriptions. Mobile registrations are left out.
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| subscriptions | array[[push subscription](#push-subscription-object) object] | The subscriptions |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | Always |
+
+The rate limit is 40 requests per 10 seconds, on the `user:push:list` bucket.
+
+## Unsubscribe from push notifications
+
+<RouteHeader method="DELETE" path="/v1/users/@me/push/subscriptions/{subscription_id}" />
+
+Removes the subscription, and returns 200 even when none matches.
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| success | boolean | Always `true` |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The subscription was removed, or there was none |
+
+The rate limit is 40 requests per minute, on the `user:push:unsubscribe` bucket.
+
 ## Handling an incoming push
 
 Fluxer posts one `aes128gcm` record to a Web Push endpoint for each notification. A raw registration gets an unencrypted APNs or FCM message instead. A record has at most 2713 bytes of JSON. When a notification is too large, Fluxer leaves out media and icons and shortens the body text, and your client has to handle those fields being missing.
@@ -110,11 +272,11 @@ Fluxer sets these Web Push headers on each record.
 
 Each payload is one of these kinds.
 
-| Kind | How to recognize it | What to do |
+| Kind | How to recognise it | What to do |
 | --- | --- | --- |
 | Notification | Any other payload | Show it, using `title`, `body`, `icon` and `image_url`, and open `data.url` when tapped |
 | Clear | Top-level `type` is `notification_clear` and `action` is `clear_channel` | Dismiss what you showed for `data.channel_id` |
-| Call ring | Top-level `type` is `call_ring` | See [Call ring](#call-ring) |
+| Call ring | Top-level `type` is `call_ring` | Ring, using the [call ring fields](#call-ring) under `data` |
 
 When an endpoint returns 404 or 410, Fluxer removes the registration. It retries a 429 or 5xx response and keeps the registration.
 
@@ -138,7 +300,7 @@ Only `ios_apns_voip` registrations and Web Push `android_fcm` registrations get 
 
 ### Call rings on iOS
 
-iOS ends an app that gets a PushKit push without reporting a call to CallKit. Report a call for every PushKit push before you decrypt it, and end the call right away in any of these cases.
+iOS ends an app that gets a PushKit push without reporting a call to CallKit. Report a call for every PushKit push before you decrypt it, then end it right away in any of these cases.
 
 | Case | Cause |
 | --- | --- |

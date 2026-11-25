@@ -1,42 +1,26 @@
 ---
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import {Icon} from '@astrojs/starlight/components';
 ---
 
 <script is:inline>
 	window.StarlightThemeProvider = (() => {
-		const storedTheme = typeof localStorage !== 'undefined' && localStorage.getItem('starlight-theme');
+		let storedTheme = null;
+		try {
+			storedTheme = localStorage.getItem('starlight-theme');
+		} catch {}
 		const resolveTheme = () => {
 			if (storedTheme === 'light' || storedTheme === 'dark') {
 				return storedTheme;
 			}
-			if (storedTheme === 'auto') {
-				return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-			}
-			return 'dark';
+			return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
 		};
 		document.documentElement.dataset.theme = resolveTheme();
 		return {
-			updatePickers(theme = storedTheme || 'dark') {
-				document.querySelectorAll('starlight-theme-select').forEach((picker) => {
-					const select = picker.querySelector('select');
-					if (select) select.value = theme;
-					const tmpl = document.querySelector('#theme-icons');
-					const newIcon = tmpl && tmpl.content.querySelector('.' + theme);
-					if (newIcon) {
-						const oldIcon = picker.querySelector('svg.label-icon');
-						if (oldIcon) {
-							oldIcon.replaceChildren(...newIcon.cloneNode(true).childNodes);
-						}
-					}
+			updatePickers(theme = storedTheme || 'auto') {
+				document.querySelectorAll('flx-theme-switch button[data-theme-value]').forEach((button) => {
+					button.setAttribute('aria-pressed', String(button.dataset.themeValue === theme));
 				});
 			},
 		};
 	})();
 </script>
-
-<template id="theme-icons">
-	<Icon name="sun" class="light" />
-	<Icon name="moon" class="dark" />
-	<Icon name="laptop" class="auto" />
-</template>

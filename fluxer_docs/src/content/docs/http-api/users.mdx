@@ -45,13 +45,13 @@ The public account object inside messages, relationships, guild members and appl
 }
 ```
 
-While an account's `profile_restricted` is true, other accounts get null `global_name` and `avatar` for it. A deleted account has the username `DeletedUser`, the discriminator `0000`, the global name `Deleted User`, `flags` of `0` and a null `avatar` and `avatar_color`.
+While an account's `profile_restricted` is true, other accounts get null `global_name` and `avatar` for it. A deleted account has the username `DeletedUser`, the discriminator `0000`, the global name `Deleted User`, `flags` of `0`, and a null `avatar` and `avatar_color` for the account.
 
 On an instance whose `tag_style` [feature](/http-api/instance/#instance-features-object) is `none`, usernames are unique on their own and every account that isn't a bot has the discriminator `0000`.
 
 ## Public user flags
 
-These are the values in the `flags` field, and `STAFF` is left out while the account hides its staff flag.
+These are the values in the `flags` field. `STAFF` is left out while the account hides it.
 
 | Value | Name | Description |
 | --- | --- | --- |
@@ -136,7 +136,7 @@ The current account as its owner sees it, returned by [Get current user](/http-a
 
 <sup>1</sup> With an OAuth2 bearer token on [Get current user](/http-api/users/current-user/#get-current-user), arrays are empty, optional fields are left out, booleans are false, nullable fields are null and `unread_gift_inventory_count` is `0`
 
-<sup>2</sup> With an OAuth2 bearer token that lacks the `email` [scope](/http-api/oauth2/#oauth2-scopes), `email` is null and `verified` is false
+<sup>2</sup> With an OAuth2 bearer token that lacks the `email` [scope](/http-api/oauth2/#oauth2-scopes), `email` is null and `verified` is always false
 
 <sup>3</sup> When the [accounts configuration](/admin-api/instance/#accounts-configuration-object) enforces it, most routes return 403 `DATE_OF_BIRTH_REQUIRED` until the date is set
 
@@ -192,11 +192,27 @@ An account is limited while `account_limited` is true. It can still read, join v
 
 ## Account tiers
 
-An account is unclaimed while it has no email address, unverified while its email address isn't confirmed and verified otherwise. When the `account_identity` [feature](/http-api/instance/#instance-features-object) is `username`, an account with a password or a passkey is verified and one without is unclaimed. On an instance that sends no email, or whose `verification_basis` is `local_credential`, an account with an email address follows the same rule. Bots, system accounts and single sign-on accounts are always verified.
+Every account is in one of three tiers.
 
-`interaction_tier` in the [accounts configuration](/admin-api/instance/#accounts-configuration-object) sets how strict the tiers are. When it is `enforced`, an account that isn't verified can read, edit its own profile and settings, write personal notes and join communities, but can't do most things that involve other people.
+| Tier | When |
+| --- | --- |
+| Unclaimed | The account has no email address |
+| Unverified | The account's email address isn't confirmed |
+| Verified | Otherwise |
 
-A denial that has its own code returns it, such as `UNCLAIMED_ACCOUNT_CANNOT_SEND_MESSAGES` or `EMAIL_VERIFICATION_REQUIRED`. Every other denial returns 403 `ACCOUNT_VERIFICATION_REQUIRED`, and so does every denial for an account whose `verification_need` is `password`. That [error response](/http-api/#error-response) has `action`, `tier` and `need`, and `action` is one of the values below.
+- When the `account_identity` [feature](/http-api/instance/#instance-features-object) is `username`, an account with a password or a passkey is verified and one without is unclaimed.
+- On an instance that sends no email, or whose `verification_basis` is `local_credential`, an account with an email address follows the same rule.
+- Bots, system accounts and single sign-on accounts are always verified.
+
+### What the tiers allow
+
+`interaction_tier` in the [accounts configuration](/admin-api/instance/#accounts-configuration-object) sets how strict the tiers are. When it is `enforced`, an account that isn't verified can read, edit its own profile and settings, write personal notes and join communities. It can't do most things that involve other people.
+
+### Denials
+
+A denial that has its own code returns it, such as `UNCLAIMED_ACCOUNT_CANNOT_SEND_MESSAGES` or `EMAIL_VERIFICATION_REQUIRED`. Every other denial returns 403 `ACCOUNT_VERIFICATION_REQUIRED`, and so does every denial for an account whose `verification_need` is `password`.
+
+That [error response](/http-api/#error-response) has `action`, `tier` and `need`, and `action` is one of the values below.
 
 | Action | Operations |
 | --- | --- |
@@ -224,7 +240,7 @@ A denial that has its own code returns it, such as `UNCLAIMED_ACCOUNT_CANNOT_SEN
 | `mfa` | Turn on two-factor authentication or regenerate backup codes |
 | `guild_verification` | Talk in a guild that requires a verified email |
 
-`guild_join` applies only to accounts assigned [guild visits](/admin-api/instance/#guild-visits-configuration-object), and never while the instance sets `guild_join_gate` to `off`. With `visits_capable`, it applies only to clients that send the `X-Fluxer-Capabilities: guild_visits` header.
+`guild_join` applies only to accounts assigned [guild visits](/admin-api/instance/#guild-visits-configuration-object), and never while the instance sets `guild_join_gate` to `off`. With `visits_capable`, it applies only to clients whose `X-Fluxer-Capabilities` header has `guild_visits`.
 
 ## Profile field privacy flags
 
@@ -287,7 +303,7 @@ The account-wide settings, returned by [Get current user settings](/http-api/use
 | privacy_setup_version | integer | The latest privacy setup version the account reviewed, or 0 |
 | privacy_setup_completed_at | ?ISO8601 timestamp | When the account last finished the privacy setup, or null |
 
-<sup>1</sup> Only staff accounts can set it. A settings update from any other account sets it to false or empty
+<sup>1</sup> Only staff accounts can set it. A settings update from any other account sets it to false or leaves it empty
 
 ## Custom status object
 
@@ -458,7 +474,7 @@ When `FRIENDS_ONLY` is set it applies over `NOBODY`, and `NOBODY` applies over `
 
 ## User profile object
 
-The account-wide profile inside a [full user profile object](#full-user-profile-object). Every field is null when the target's profile is hidden, or when its `profile_restricted` is true and you aren't the target.
+The account-wide profile inside a [full user profile object](#full-user-profile-object). Every field is null when the target's profile is hidden, or when you aren't the target and its `profile_restricted` is true.
 
 ### Structure
 
@@ -523,7 +539,7 @@ Returned by [Get user profile](#get-user-profile). When profile privacy restrict
 
 <sup>3</sup> Only when the matching `with_` query parameter is true, and never for your own profile
 
-<sup>4</sup> Empty or null when the profile is restricted or the target's [profile field privacy flags](#profile-field-privacy-flags) don't include you
+<sup>4</sup> Empty or null when the profile is restricted or the target's [profile field privacy flags](#profile-field-privacy-flags) don't include you as a viewer
 
 <sup>5</sup> Only on your own profile
 
@@ -548,11 +564,11 @@ One badge on a [full user profile](#full-user-profile-object). The API picks the
 | accessible_label? | ?string | The label for screen readers, used in place of `label` |
 | details?<sup>4</sup> | ?[badge details](#badge-details-object) object | A richer tooltip with the badge art, `title` and `lines`. Without it, `label` is the tooltip |
 
-<sup>1</sup> Known values are `staff`, `premium` and `custom`. Render any other kind from its other fields
+<sup>1</sup> Known values are `staff`, `premium` and `custom`. Render any other kind from its remaining fields
 
 <sup>2</sup> The image is at `{static_cdn}/badges/{asset}.webp`, with `static_cdn` from [instance discovery](/http-api/instance/), and square badges also have a `.png`. Hashed files never change
 
-<sup>3</sup> A WebP image from the media proxy. Add a `size` query parameter to get it at the size you draw it
+<sup>3</sup> A WebP image from the media proxy. Add a `size` query parameter to get it at the size you show it at
 
 <sup>4</sup> A custom badge with a description has one, with the name as `title` and the description as its only line
 

@@ -1,0 +1,89 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Managed Kubernetes
+description: You run Fluxer on EKS, GKE, AKS, DigitalOcean, Linode or Vultr with the Helm chart.
+---
+
+import {Steps} from '@astrojs/starlight/components';
+
+## Short version
+
+A managed cluster with one node of 2 CPU cores and 2 GB of memory at least, and 4 GB for a busy instance. You also need a Gateway API implementation or an ingress controller, a certificate for your domain, and a load balancer for voice. Install the chart with `voice.expose=loadBalancer` to put voice on that load balancer, in about 20 minutes.
+
+## What this changes
+
+Fluxer in its own namespace, [the same as on any cluster](/operator/kubernetes/#what-this-changes), with a block storage volume from the provider's default StorageClass. A second LoadBalancer Service called `fluxer-voice` takes TCP 7881 and UDP 7882, and each LoadBalancer costs money on most providers.
+
+A block storage volume belongs to one zone, and the pod can only run in that zone.
+
+## Before you start
+
+Check the [requirements](/operator/requirements/). Managed nodes rarely have public addresses that clients can use, so host ports don't work for voice there. Voice needs one LoadBalancer Service with TCP and UDP, which some providers' load balancers can't take.
+
+| Provider | TCP and UDP together | Default StorageClass |
+| --- | --- | --- |
+| Amazon EKS | With the AWS Load Balancer Controller, an NLB in one subnet and an Elastic IP from the `service.beta.kubernetes.io/aws-load-balancer-eip-allocations` annotation in `voice.service.annotations` | Often none, add one for EBS CSI |
+| Google GKE | Yes | `standard-rwo` |
+| Azure AKS | Yes | `managed-csi` |
+| DigitalOcean | Yes, with TCP 7881 as the health check port | `do-block-storage` |
+| Linode (Akamai) | No, use `voice.expose=nodePort` | `linode-block-storage-retain` |
+| Vultr | No, its load balancer gives every port of a Service the same protocol | `vultr-block-storage` |
+
+If your provider's load balancer can't take both, set `voice.expose=nodePort` and open the two node ports in its firewall, or run a [voice server](/operator/voice-servers/) on a VM.
+
+## Install
+
+<Steps>
+
+1. Install the chart with voice on a LoadBalancer and a route on your Gateway.
+
+   ```sh
+   helm install fluxer oci://ghcr.io/fluxerapp/charts/fluxer \
+     --namespace fluxer --create-namespace \
+     --set domain=chat.example.com \
+     --set voice.expose=loadBalancer \
+     --set ingress.enabled=false --set httpRoute.enabled=true \
+     --set 'httpRoute.parentRefs[0].name=my-gateway'
+   ```
+
+   Use the name of your Gateway. When it's in another namespace, also set `httpRoute.parentRefs[0].namespace`.
+
+   Your Gateway's HTTPS listener needs a certificate for the domain.
+
+   With an ingress controller such as Traefik, replace the last two `--set` lines with `--set ingress.className=traefik --set ingress.annotations."cert-manager\.io/cluster-issuer"=letsencrypt`. ingress-nginx also needs `--set ingress.annotations."nginx\.ingress\.kubernetes\.io/proxy-body-size"=512m --set ingress.annotations."nginx\.ingress\.kubernetes\.io/proxy-read-timeout"=3600`, the same as on [any cluster](/operator/kubernetes/#ingress-or-gateway-api).
+
+   Set annotations for the voice load balancer in `voice.service.annotations`. On DigitalOcean, add `-f values.yaml` with these two lines to the install.
+
+   ```yaml title="values.yaml"
+   voice:
+     service:
+       annotations:
+         service.beta.kubernetes.io/do-loadbalancer-healthcheck-port: "7881"
+         service.beta.kubernetes.io/do-loadbalancer-healthcheck-protocol: tcp
+   ```
+
+   With an address you reserved for voice, pass `--set voice.service.loadBalancerIP=<address>` on GKE or AKS, or `--set voice.publicIP=<Elastic IP>` on EKS, and run only the last line of step 2. EKS always needs the Elastic IP here, because its load balancer shows a hostname in place of an IP address.
+
+2. Set the voice address to the external IP address of the `fluxer-voice` Service, and wait for the pod to restart with that address.
+
+   The first line waits for the load balancer's address, and the second looks up the chart version you installed, so the upgrade stays on the version you have.
+
+   ```sh
+   until ip=$(kubectl -n fluxer get svc fluxer-voice -o jsonpath='{.status.loadBalancer.ingress[0].ip}') && [ -n "$ip" ]; do sleep 5; done
+   version=$(helm get metadata fluxer -n fluxer | awk '/^VERSION:/ {print $2}')
+   helm upgrade fluxer oci://ghcr.io/fluxerapp/charts/fluxer -n fluxer --version "$version" --reset-then-reuse-values \
+     --set voice.publicIP="$ip"
+   kubectl -n fluxer rollout status statefulset/fluxer --timeout 15m
+   ```
+
+   When the pod is ready, the rollout ends with `partitioned roll out complete`.
+
+3. Print the setup token.
+
+   ```sh
+   kubectl -n fluxer exec fluxer-0 -- fluxerd setup-token
+   ```
+
+   Open your domain and paste the token to create the first admin account.
+
+</Steps>

@@ -4,7 +4,18 @@ title: Desktop builds
 description: Download paths for Fluxer desktop builds, their SHA-256 checksums and the update feeds.
 ---
 
-Desktop builds are on `https://pkgs.fluxer.com`, and you can download them without signing in. Each path has a channel (`stable` or `canary`), a platform, an architecture (`x64` or `arm64`) and, for a file, a format from the table below.
+The Fluxer desktop builds, their checksums and the files the app checks for updates are public, and you can download all of them without an account.
+
+## Paths
+
+Builds are on `https://pkgs.fluxer.com`. Each path is made of these parts.
+
+| Part | Values |
+| --- | --- |
+| Channel | `stable` or `canary` |
+| Platform | A path value from the table below |
+| Architecture | `x64` or `arm64` |
+| Format | For a file, a format from the table below |
 
 | Platform | Path value | Formats |
 | --- | --- | --- |
@@ -18,7 +29,11 @@ Desktop builds are on `https://pkgs.fluxer.com`, and you can download them witho
 GET /desktop/{channel}/{platform}/{arch}/latest
 ```
 
-Returns JSON with the current `version`, its `pub_date` and a `files` object that gives each format's `url` and `sha256`.
+Returns JSON with these fields.
+
+- `version` is the current version.
+- `pub_date` is when it was published.
+- `files` gives each format's download `url` and `sha256` checksum.
 
 ## Downloads
 
@@ -28,13 +43,19 @@ GET /desktop/{channel}/{platform}/{arch}/{version}/{format}.sha256
 GET /desktop/{channel}/linux/{arch}/{version}/appimage.zsync
 ```
 
-`version` is a release version such as `2026.904.135113`, or `latest` for the newest one. Add `.sha256` to a download path to get the file's SHA-256 checksum. For example, `https://pkgs.fluxer.com/desktop/stable/win32/x64/latest/setup` downloads the newest Windows installer.
+`version` is a release version such as `2026.904.135113`, or `latest` for the newest one. Add `.sha256` to a download path to get the file's SHA-256 checksum.
+
+This path downloads the latest Windows installer.
+
+```
+https://pkgs.fluxer.com/desktop/stable/win32/x64/latest/setup
+```
 
 AppImage builds also have an `appimage.zsync` file, which AppImage update tools use to download only the blocks that changed.
 
 ## Update feeds
 
-The macOS and Windows desktop apps check these files in `/desktop/{channel}/{platform}/{arch}/` for updates.
+To find updates, the macOS and Windows desktop apps check these files in `/desktop/{channel}/{platform}/{arch}/`.
 
 | Platform | Feed |
 | --- | --- |

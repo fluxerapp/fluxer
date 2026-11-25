@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A report tells the instance's moderators that a message, a user profile or a guild breaks the rules. A signed-in user reports a message, a profile or a guild by answering a [report flow](#report-flows), and anyone with a verified email address can file a Digital Services Act notice without an account. Moderators work with stored reports through the [Admin Reports API](/admin-api/reports/).
 
-A Digital Services Act notice takes three calls, [Send DSA report email](#send-dsa-report-email), [Verify DSA report email](#verify-dsa-report-email) and [Create DSA report](#create-dsa-report), and the reporter gets a receipt email with the report ID when the notice is filed.
+A Digital Services Act notice takes three calls, [Send DSA report email](#send-dsa-report-email), [Verify DSA report email](#verify-dsa-report-email) and [Create DSA report](#create-dsa-report), and once the notice is filed, the reporter gets a receipt email with the report ID.
 
 Fluxer keeps a copy of the reported content and profile when a report is filed, and editing or deleting the content afterwards doesn't change it.
 
@@ -398,7 +398,7 @@ Files a report about a message from the reporter's answers to the `in_app` messa
 | 409 | [error response](/http-api/#error-response) | `REPORT_FLOW_OUTDATED` when the answers came from an outdated flow |
 | 409 | [error response](/http-api/#error-response) | `CONFLICT` when the reporter reported this message in the last 365 days |
 
-The rate limit is 10 requests per hour, on the `report:create` bucket. One reporter can file at most 5 reports an hour across the report routes, and [Rate limits](/topics/rate-limits/#limits-that-return-429) lists the lower limits for one channel, guild or message. A report whose reason is one of the highest-priority reasons doesn't count toward the reporter's hourly, channel or guild limits. When [`interaction_tier`](/http-api/users/#account-tiers) is `enforced`, an account that isn't verified can still report, up to 5 reports a day for the account and 10 a day from one IP address. On any instance, an account that isn't verified can still file a report whose reason is one of the highest-priority reasons, such as child safety, threats, intimate image abuse or self-harm, within the same daily limits.
+The `report:create` bucket allows 100 requests per hour. One reporter can file at most 100 reports an hour across the report routes, with [lower limits](/topics/rate-limits/#limits-that-return-429) for one channel, community or message. A report whose reason is one of the highest-priority reasons doesn't count towards any of these limits. When [`interaction_tier`](/http-api/users/#account-tiers) is `enforced`, an account that isn't verified can still report, up to 5 reports a day for the account and 10 a day from one IP address. On any instance, an account that isn't verified can still file a report whose reason is one of the highest-priority reasons, such as child safety, threats, intimate image abuse or self-harm, within those same daily limits.
 
 ## Submit user report flow
 
@@ -431,13 +431,13 @@ Files a report about a user's profile from the reporter's answers to the `in_app
 | 409 | [error response](/http-api/#error-response) | `REPORT_FLOW_OUTDATED` when the answers came from an outdated flow |
 | 409 | [error response](/http-api/#error-response) | `CONFLICT` when the reporter reported this user in the last 24 hours |
 
-The rate limit is 10 requests per hour, on the `report:create` bucket. One reporter can file at most 5 reports an hour across the report routes, and a report whose reason is one of the highest-priority reasons doesn't count toward that limit. When [`interaction_tier`](/http-api/users/#account-tiers) is `enforced`, an account that isn't verified can still report, up to 5 reports a day for the account and 10 a day from one IP address. On any instance, an account that isn't verified can still file a report whose reason is one of the highest-priority reasons, such as child safety, threats, intimate image abuse or self-harm, within the same daily limits.
+The `report:create` bucket allows 100 requests per hour. One reporter can file at most 100 reports an hour across the report routes, and a report whose reason is one of the highest-priority reasons doesn't count towards that limit. When [`interaction_tier`](/http-api/users/#account-tiers) is `enforced`, an account that isn't verified can still report, up to 5 reports a day for the account and 10 a day from one IP address. On any instance, an account that isn't verified can still file a report whose reason is one of the highest-priority reasons, such as child safety, threats, intimate image abuse or self-harm, within those same daily limits.
 
 ## Submit community report flow
 
 <RouteHeader method="POST" path="/v1/reports/flows/guild/submissions" />
 
-Files a report about a guild from the reporter's answers to the `in_app` guild flow and returns a [report object](#report-object). It needs a user session token, and the reporter must be a member of the guild, the guild must be discoverable, or the request must include an invite code for the guild.
+Files a report about a guild from the reporter's answers to the `in_app` guild flow and returns a [report object](#report-object). It needs a user session token. The reporter must be in the guild, the guild must be discoverable, or the request must include an invite code for it.
 
 ### JSON body
 
@@ -464,7 +464,7 @@ Files a report about a guild from the reporter's answers to the `in_app` guild f
 | 409 | [error response](/http-api/#error-response) | `REPORT_FLOW_OUTDATED` when the answers came from an outdated flow |
 | 409 | [error response](/http-api/#error-response) | `CONFLICT` when the reporter reported this guild in the last 24 hours |
 
-The rate limit is 10 requests per hour, on the `report:create` bucket. One reporter can file at most 5 reports an hour across the report routes, and a report whose reason is one of the highest-priority reasons doesn't count toward that limit. When [`interaction_tier`](/http-api/users/#account-tiers) is `enforced`, an account that isn't verified can still report, up to 5 reports a day for the account and 10 a day from one IP address. On any instance, an account that isn't verified can still file a report whose reason is one of the highest-priority reasons, such as child safety, threats, intimate image abuse or self-harm, within the same daily limits.
+The `report:create` bucket allows 100 requests per hour. One reporter can file at most 100 reports an hour across the report routes, and a report whose reason is one of the highest-priority reasons doesn't count towards that limit. When [`interaction_tier`](/http-api/users/#account-tiers) is `enforced`, an account that isn't verified can still report, up to 5 reports a day for the account and 10 a day from one IP address. On any instance, an account that isn't verified can still file a report whose reason is one of the highest-priority reasons, such as child safety, threats, intimate image abuse or self-harm, within those same daily limits.
 
 ## Send DSA report email
 

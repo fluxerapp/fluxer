@@ -6,7 +6,17 @@ description: The safety blocklists, their value forms, and the operations that m
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-Fluxer has eight blocklists, and each one blocks one kind of value, such as an IP address, a link or a file hash. Each list has three [Admin ACLs](/admin-api/#acl-registry) in the form `ban:<list>:<verb>`, with hyphens in the list name written as underscores. For example, `url-domain` uses `ban:url_domain:check`. You need `check` to read a list, `add` to add or update entries and `remove` to remove them.
+Fluxer has eight blocklists, and each one blocks one kind of value, such as an IP address, a link or a file hash.
+
+## Permissions
+
+Each list has three [Admin ACLs](/admin-api/#acl-registry) in the form `ban:<list>:<verb>`, with hyphens in the list name written as underscores. For example, `url-domain` uses `ban:url_domain:check`.
+
+| Verb | Lets you |
+| --- | --- |
+| check | Read the list |
+| add | Add or update entries |
+| remove | Remove entries |
 
 ## Blocklist types
 
@@ -29,15 +39,28 @@ Fluxer normalizes each value when you add or check it and stores the normalized 
 
 A permanent suspension or an account deletion for a rule violation can block the addresses the account used in the last 30 days, through `block_networks` on [Suspend user](/admin-api/users/#suspend-user) and [Schedule user deletion](/admin-api/users/#schedule-user-deletion). Those `ip` entries belong to the [enforcement decision](/admin-api/enforcement/) and expire after 90 days unless the request sets another length.
 
-A decision takes over a plain entry that has an expiry and keeps the later of the two expiries, so ending the decision also removes that block. Add it again if you still want it. A permanent plain entry or another decision's entry is left as it is, and the request lists the address in `skipped_ips` as `already_blocked`.
+### Existing entries
 
-Ending the decision or executing the account's deletion removes its entries.
+- A decision takes over a plain entry that has an expiry, and keeps the later of the two expiries. Ending the decision also removes that block, so add it again if you still want it.
+- A permanent plain entry or another decision's entry is left as it is, and the request lists the address in `skipped_ips` as `already_blocked`.
+- Ending the decision or executing the account's deletion removes its entries.
 
 ## Domain patterns
 
-A `url-domain` value whose leftmost label has `*` is a pattern. Each `*` matches any run of characters in that one label. For example `*shop*.example.com` matches `shop.example.com` and `my-shop-2.example.com` but not `example.com`. With `match_subdomains` true, a pattern or plain domain also matches every subdomain.
+A `url-domain` value whose leftmost label has `*` is a pattern.
 
-Fluxer refuses a pattern with 400 `INVALID_FORM_BODY` when `*` is outside the leftmost label, when that label has characters other than `a-z`, `0-9`, `-` and `*`, or when it has more than 3 `*` or fewer than 3 other characters. It also refuses a pattern when the part after the leftmost label isn't a valid domain or is a public suffix such as `com` or `co.uk`.
+- Each `*` matches any run of characters in that one label.
+- `*shop*.example.com` matches `shop.example.com` and `my-shop-2.example.com`, but not `example.com`.
+- With `match_subdomains` true, a pattern or plain domain also matches every subdomain.
+
+### Refused patterns
+
+Fluxer refuses a pattern with 400 `INVALID_FORM_BODY` in these cases.
+
+- `*` is outside the leftmost label.
+- The leftmost label has characters other than `a-z`, `0-9`, `-` and `*`.
+- The leftmost label has more than 3 `*`, or fewer than 3 other characters.
+- The part after the leftmost label isn't a valid domain, or is a public suffix such as `com` or `co.uk`.
 
 ## Content blocklist categories
 
@@ -187,7 +210,7 @@ The body of [Add blocklist entry](#add-blocklist-entry) has the value field for 
 
 <RouteHeader method="GET" path="/v1/admin/blocklists" auditReason />
 
-Returns a [blocklist object](#blocklist-object) for each blocklist. You need the `check` permission for at least one list.
+Returns a [blocklist object](#blocklist-object) for each blocklist. You need the `check` permission on at least one of the lists.
 
 ### Response body
 
@@ -217,7 +240,7 @@ Returns a page of [blocklist entry objects](#blocklist-entry-object) ordered by 
 | after? | string | Return entries after this value (1-2048 characters) |
 | scope?<sup>1</sup> | string | The [profile substring scope](#profile-substring-scopes) to list |
 
-<sup>1</sup> Required for `profile-substring` and refused with 400 `INVALID_FORM_BODY` on every other list
+<sup>1</sup> Required for `profile-substring`. Every other list refuses it with 400 `INVALID_FORM_BODY` as the error
 
 ### Response body
 
@@ -327,7 +350,7 @@ A value can be blocked without an entry of its own when an `ip` address is insid
 | --- | --- | --- |
 | scope?<sup>1</sup> | string | The [profile substring scope](#profile-substring-scopes) to check |
 
-<sup>1</sup> Required for `profile-substring` and refused with 400 `INVALID_FORM_BODY` on every other list
+<sup>1</sup> Required for `profile-substring`. Every other list refuses it with 400 `INVALID_FORM_BODY` as the error
 
 ### Response
 
@@ -382,7 +405,7 @@ Removes one entry. You need the list's `remove` permission. Percent-encode `entr
 | --- | --- | --- |
 | scope?<sup>1</sup> | string | The [profile substring scope](#profile-substring-scopes) of the entry |
 
-<sup>1</sup> Required for `profile-substring` and refused with 400 `INVALID_FORM_BODY` on every other list
+<sup>1</sup> Required for `profile-substring`. Every other list refuses it with 400 `INVALID_FORM_BODY` as the error
 
 ### Response
 

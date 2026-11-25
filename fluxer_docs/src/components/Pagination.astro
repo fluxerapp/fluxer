@@ -1,0 +1,30 @@
+---
+// SPDX-License-Identifier: AGPL-3.0-or-later
+import {sectionOf, sectionOfHref} from '@/components/Sections';
+
+const {id, pagination} = Astro.locals.starlightRoute;
+const here = sectionOf(id);
+const keep = (link: typeof pagination.prev) =>
+	link !== undefined && here !== undefined && sectionOfHref(link.href) === here ? link : undefined;
+const prev = keep(pagination.prev);
+const next = keep(pagination.next);
+---
+
+{
+	(prev || next) && (
+		<nav class="pagination-links print:hidden" aria-label="Pages in this section">
+			{prev && (
+				<a href={prev.href} rel="prev">
+					{Astro.locals.t('page.previousLink')}
+					<span class="link-title">{prev.label}</span>
+				</a>
+			)}
+			{next && (
+				<a href={next.href} rel="next">
+					{Astro.locals.t('page.nextLink')}
+					<span class="link-title">{next.label}</span>
+				</a>
+			)}
+		</nav>
+	)
+}

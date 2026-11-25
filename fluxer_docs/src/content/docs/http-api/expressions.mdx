@@ -65,7 +65,7 @@ A short view of the guild that owns an emoji or sticker, with its name, icon and
 
 <RouteHeader method="GET" path="/v1/emojis/{emoji_id}/metadata" bot />
 
-Returns the [emoji metadata object](#emoji-metadata-object) of any guild emoji. You don't need to be in the guild that owns it.
+Returns the [emoji metadata object](#emoji-metadata-object) of any guild emoji. You don't need to be a member of the guild that owns it.
 
 ### Response
 
@@ -79,7 +79,7 @@ The rate limit is 60 requests per 10 seconds, on the `guild:emoji:metadata::user
 
 <RouteHeader method="GET" path="/v1/stickers/{sticker_id}/metadata" bot />
 
-Returns the [sticker metadata object](#sticker-metadata-object) of any guild sticker. You don't need to be in the guild that owns it.
+Returns the [sticker metadata object](#sticker-metadata-object) of any guild sticker. You don't need to be a member of the guild that owns it.
 
 ### Response
 
@@ -93,7 +93,7 @@ The rate limit is 60 requests per 10 seconds, on the `guild:sticker:metadata::us
 
 <RouteHeader method="GET" path="/v1/emojis/{emoji_id}/source" bot />
 
-Returns the [guild that owns the emoji](#expression-source-guild-object) when the guild is discoverable or you are a member of it.
+Returns the [guild that owns the emoji](#expression-source-guild-object) when the guild is discoverable or you are in it.
 
 ### Response
 
@@ -108,7 +108,7 @@ The rate limit is 60 requests per 10 seconds, on the `guild:emoji:source::user_i
 
 <RouteHeader method="GET" path="/v1/stickers/{sticker_id}/source" bot />
 
-Returns the [guild that owns the sticker](#expression-source-guild-object) when the guild is discoverable or you are a member of it.
+Returns the [guild that owns the sticker](#expression-source-guild-object) when the guild is discoverable or you are in it.
 
 ### Response
 

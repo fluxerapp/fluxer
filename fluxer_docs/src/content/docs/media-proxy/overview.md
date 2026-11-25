@@ -4,7 +4,7 @@ title: Media Proxy overview
 description: How the Media Proxy serves files, and the deployment modes, access policies and headers that apply to every route.
 ---
 
-The Media Proxy serves attachments, image assets, themes, entrance sounds and signed external media, and accepts uploads to a signed upload URL. Read routes need no `Authorization` header.
+The Media Proxy serves attachments, image assets, themes, entrance sounds and signed external media. It also accepts uploads to a signed upload URL.
 
 ## Route families
 
@@ -19,19 +19,27 @@ The Media Proxy serves attachments, image assets, themes, entrance sounds and si
 | Upload relay | `/v1/relay/{key}` | [Upload relay](/media-proxy/upload-relay/) |
 | Operator and internal | `/_health`, `/_metrics`, `/_metadata`, `/_sniff`, `/_thumbnail`, `/_frames` | [Operator and internal endpoints](/media-proxy/routes/#operator-and-internal-endpoints) |
 
-<sup>1</sup> Guild member avatars and banners are image assets too, at `/guilds/{guild_id}/users/{user_id}/avatars` and `/guilds/{guild_id}/users/{user_id}/banners`.
+<sup>1</sup> Guild member avatars and banners are image assets too, at these paths.
+
+- `/guilds/{guild_id}/users/{user_id}/avatars`
+- `/guilds/{guild_id}/users/{user_id}/banners`
 
 <sup>2</sup> Only a process in [`static` mode](#deployment-modes) serves this route.
 
-The attachment, signed external and image asset routes take [transformation parameters](/media-proxy/transformations/) in the query string.
+The attachment, signed external and image asset routes take [transformation parameters](/media-proxy/transformations/) from the query string of the URL.
 
 ## Base URLs
 
-Get the read base URLs `endpoints.media` and `endpoints.static_cdn` from [instance discovery](/http-api/instance/#instance-endpoints-object). Read paths have no `/v1` prefix. For an upload, use the full URL the HTTP API returned.
+Get the read base URLs `endpoints.media` and `endpoints.static_cdn` from [instance discovery](/http-api/instance/#instance-endpoints-object). Read paths have no `/v1` prefix. For an upload, use the full URL from the HTTP API response.
 
 ## Authorization
 
-Anyone with a media URL can open the file without an account, and leaving a channel doesn't revoke a URL that was already issued. Only the internal `POST` endpoints use `Authorization`, and they need `Bearer {secret}` with the deployment secret. The Media Proxy has no rate limit.
+Read routes need no `Authorization` header.
+
+- Anyone with a media URL can open the file without an account.
+- Leaving a channel doesn't revoke a URL that was already issued.
+- Only the internal `POST` endpoints use `Authorization`, and they need `Bearer {secret}` with the deployment secret.
+- The Media Proxy has no rate limit.
 
 ## Deployment modes
 
@@ -48,7 +56,7 @@ The [operator and internal endpoints](/media-proxy/routes/#operator-and-internal
 
 ## Cross-origin reads
 
-`FLUXER_MEDIA_PROXY_CORS_MODE` limits which web origins can read media. The default is `off`.
+`FLUXER_MEDIA_PROXY_CORS_MODE` limits which web origins can read media, and is `off` by default. Turning on `report` or `enforce` needs `FLUXER_MEDIA_PROXY_CORS_ALLOWED_ORIGINS` as well.
 
 | Value | Description |
 | --- | --- |
@@ -56,15 +64,21 @@ The [operator and internal endpoints](/media-proxy/routes/#operator-and-internal
 | `report` | Responses are the same as under `off`, and each read `enforce` would refuse is logged |
 | `enforce` | A read from an origin outside the allowlist returns 403 |
 
-Under `enforce`, an `Origin` must match an entry in `FLUXER_MEDIA_PROXY_CORS_ALLOWED_ORIGINS` exactly, and the desktop app origin `fluxer-app://app` is always allowed. An allowed read gets its origin back in `Access-Control-Allow-Origin`. A read with no `Origin` is served without that header, and an `<img>` or `<video>` without `crossorigin` still loads.
+### Allowed origins under enforce
 
-A preflight `OPTIONS` request from an allowed origin gets a 204 that allows `GET` and `HEAD` with the `Range` header, and a refused origin gets the same 403 as a read.
+- An `Origin` must match an entry in `FLUXER_MEDIA_PROXY_CORS_ALLOWED_ORIGINS` exactly.
+- The desktop app origin `fluxer-app://app` is always allowed.
+- An allowed read gets its origin back in `Access-Control-Allow-Origin`.
+- A read with no `Origin` is served without that header, and an `<img>` or `<video>` without `crossorigin` still loads.
+- A preflight `OPTIONS` request from an allowed origin gets a 204 that allows `GET` and `HEAD` with the `Range` header. A refused origin gets the same 403 as a read.
 
-The policy applies to `mp` and `upload` processes and not to the upload relay or the operator endpoints. If a shared cache is in front of the Media Proxy, purge `/attachments/` when you switch from `off` to `enforce`.
+### Where the policy applies
+
+The policy applies to `mp` and `upload` processes, and not to the upload relay or the operator endpoints. If a shared cache is in front of the Media Proxy, purge `/attachments/` when you switch from `off` to `enforce`.
 
 ## Signed attachment URLs
 
-`FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE` can require a signature on every attachment read. The default is `off`, and turning it on needs `FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64`.
+`FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE` can require a signature on every attachment read. It is `off` by default, and turning it on needs `FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64` as well.
 
 | Value | Description |
 | --- | --- |
@@ -72,21 +86,47 @@ The policy applies to `mp` and `upload` processes and not to the upload relay or
 | `report` | Every read is served, and each read `enforce` would refuse is logged |
 | `enforce` | A read without a valid signature returns 404 |
 
-An instance with attachment URL secrets signs every attachment URL it returns, and [Refresh attachment URLs](/http-api/messages/#refresh-attachment-urls) signs one again. An ordinary signed URL has three query parameters.
+The policy applies to `/attachments/` paths on `mp` and `upload` processes.
+
+### Signature parameters
+
+An instance with attachment URL secrets signs every attachment URL it returns, and [Refresh attachment URLs](/http-api/messages/#refresh-attachment-urls) signs one again.
+
+| Parameter | Value |
+| --- | --- |
+| `ex` | When the URL stops working, 24 hours after `is`, as 8 hex digits of Unix time. `0` on a data package URL |
+| `is` | When the URL was issued, as 8 hex digits of Unix time |
+| `hm` | The signature, in lowercase hex |
+| `uc` | `dp` on a [data package URL](/http-api/messages/#data-package-attachment-urls), which never expires, and absent otherwise |
 
 ```text
 ?ex={expires}&is={issued}&hm={signature}
-```
-
-A [data package URL](/http-api/messages/#data-package-attachment-urls) never expires and has `ex=0` and `uc=dp`.
-
-```text
 ?ex=0&is={issued}&hm={signature}&uc=dp
 ```
 
-Keep `ex`, `is`, `hm` and `uc` as issued, and you can add or change any other parameter. One signed URL works for every [transformation](/media-proxy/transformations/) and `download` variant of its file. A request is refused when a signature parameter is missing or malformed, the signature doesn't match a configured secret, or the URL has expired. A shared cache must leave `ex`, `is`, `hm` and `uc` out of its cache key. If a shared cache is in front of the Media Proxy, purge `/attachments/` after every `mp` and `upload` process runs `enforce`, because entries stored under `off` keep their year-long cache lifetime.
+Keep `ex`, `is`, `hm` and `uc` as issued, and you can add or change any other parameter. One signed URL works for every [transformation](/media-proxy/transformations/) and `download` variant of its file.
 
-Under `enforce`, a refused request returns the same 404 as a missing file, with the body `This content is no longer available.`, and the Media Proxy logs a warning with the reason `attachment_signature_refused`. Under `report`, the Media Proxy logs a warning with the reason `attachment_signature_would_deny` for each request that `enforce` would refuse, and the response has `Cache-Control: no-store`. These warnings are limited to 20 a second. The policy applies to `/attachments/` paths on `mp` and `upload` processes.
+### Refused requests
+
+A request is refused in these cases.
+
+- A signature parameter is missing or malformed.
+- The signature doesn't match a configured secret.
+- The URL has expired.
+
+| Mode | Response | Log reason |
+| --- | --- | --- |
+| `enforce` | The same 404 as a missing file, with the body `This content is no longer available.` | `attachment_signature_refused` |
+| `report` | The file, with `Cache-Control: no-store` | `attachment_signature_would_deny` |
+
+The warnings are limited to 20 a second.
+
+### Shared caches
+
+- A shared cache must leave `ex`, `is`, `hm` and `uc` out of its cache key.
+- Purge `/attachments/` after every `mp` and `upload` process runs `enforce`, because entries stored under `off` keep their year-long cache lifetime.
+
+### What a signature limits
 
 Any signed-in user or bot can re-sign an attachment URL with [Refresh attachment URLs](/http-api/messages/#refresh-attachment-urls). A signature limits how long a copied URL works and not who can open the file.
 
@@ -120,7 +160,7 @@ A response whose bytes come from a transformation ignores `Range`, returns the c
 | Access-Control-Allow-Origin? | string | `*`, or the request origin under `enforce` |
 | Cache-Control<sup>3</sup> | string | The browser cache policy |
 | CDN-Cache-Control<sup>3</sup> | string | The shared cache policy |
-| Vary | string | `Accept-Encoding`, or `Accept-Encoding, Origin` under `enforce` |
+| Vary | string | `Accept-Encoding`, with `Origin` added under `enforce` |
 | X-Content-Type-Options | string | The literal `nosniff` |
 | X-Robots-Tag? | string | A no-indexing policy in `mp` and `upload` mode |
 | X-Fluxer-Version | string | The Fluxer build, or `dev` when none is configured |
@@ -129,7 +169,7 @@ A response whose bytes come from a transformation ignores `Range`, returns the c
 
 <sup>2</sup> Sent on the attachment, image asset and signed external routes, and never in `static` mode.
 
-<sup>3</sup> See [Cache policies](/media-proxy/responses-and-limits/#cache-policies) for the values.
+<sup>3</sup> `public, max-age=31536000` on a successful response, with [shorter ages for signed attachments and data packages](/media-proxy/responses-and-limits/#cache-policies)
 
 ## Content type and disposition
 

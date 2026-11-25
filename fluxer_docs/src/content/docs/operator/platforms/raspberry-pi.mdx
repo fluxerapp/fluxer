@@ -1,0 +1,71 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Raspberry Pi and other ARM64 boards
+description: You run Fluxer on a Raspberry Pi 4 or 5 or another 64-bit ARM board with Docker.
+---
+
+import {Steps} from '@astrojs/starlight/components';
+
+## Short version
+
+A Raspberry Pi 4 or 5 with 4 GB of memory or more. A Pi's memory can't be upgraded later, and a busy instance needs 4 GB. You also need a 64-bit OS and an SSD over USB or NVMe. Install Docker, download two files, set your domain and start Fluxer, in about 20 minutes.
+
+## What this changes
+
+- Docker Engine and the Compose plugin.
+- One container called `fluxer-fluxer-1`, which is `fluxer` to `docker compose` commands in that folder, and a Docker volume called `fluxer-data` on the SSD.
+- Ports 80 and 443 on TCP, 443 on UDP, 7881 on TCP and 7882 on UDP, all forwarded from your router to the Pi's address.
+
+## Before you start
+
+- Use a 64-bit OS, such as Raspberry Pi OS (64-bit) or Debian 13 for arm64. There is no 32-bit image. On a 64-bit OS, the command `uname -m` prints `aarch64`.
+- Keep Docker's data on an SSD. An SD card wears out under a database and is slow. The simplest way is to boot the Pi from the SSD.
+- Use the official power supply. Undervoltage on a Pi can corrupt the database.
+- Forward the five ports from your router to the Pi, and point your domain at your home's public address. [Cloudflare Tunnel](/operator/platforms/cloudflare-tunnel/) works without opening ports 80 and 443 at home.
+- Check the [requirements](/operator/requirements/).
+
+Right after its first start, with voice and search on, a machine running Fluxer uses about 1.4 GB of memory in all. Calls with many people use a lot of CPU on a Pi, and [voice servers](/operator/voice-servers/) can run them on another machine instead.
+
+## Install
+
+<Steps>
+
+1. Install Docker. Debian's packages work on Debian 13 and Raspberry Pi OS based on it.
+
+   ```sh
+   sudo apt-get update
+   sudo apt-get install -y docker.io docker-cli docker-compose
+   ```
+
+   On an older Raspberry Pi OS, [install Docker from Docker's repository](/operator/platforms/debian-ubuntu/#install-docker). `docker compose version` prints a version.
+
+2. Download the two files and set your domain.
+
+   ```sh
+   mkdir fluxer && cd fluxer
+   url=https://github.com/fluxerapp/fluxer/releases/latest/download
+   curl -fLO "$url/compose.yaml"
+   curl -fLO "$url/fluxer.env"
+   ```
+
+   Change `FLUXER_DOMAIN=chat.example.com` in `fluxer.env` to your own domain, or to the Pi's [IP address](/operator/requirements/#with-an-ip-address). On a home network, also set `FLUXER_LIVEKIT_NODE_IP` to your public IPv4 address, which helps calls from outside your network connect.
+
+3. Start Fluxer.
+
+   ```sh
+   sudo docker compose up -d
+   ```
+
+   The first start takes a few minutes on a Pi. Once it is done, `sudo docker compose ps` shows the `fluxer` container as `healthy`.
+
+4. Print the setup token.
+
+   ```sh
+   sudo docker compose exec fluxer fluxerd setup-token
+   ```
+
+   Open your domain and paste the token to create the first admin account.
+
+</Steps>
+
+On Debian 12 or later for arm64, you can also run [Fluxer with systemd](/operator/linux/).

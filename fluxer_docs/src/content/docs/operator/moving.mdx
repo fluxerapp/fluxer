@@ -1,0 +1,194 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Moving from the older install
+description: You move an instance that runs each part of Fluxer in its own container to one container or to systemd, with rexctl migrate.
+tag: older Compose installs only
+---
+
+import {Steps} from '@astrojs/starlight/components';
+
+Until late 2026, Fluxer ran each of its parts in its own container with Docker Compose, installed by rexctl or by hand. New releases run as one container or one systemd service, and you can move an older instance to either.
+
+## What happens to older installs
+
+They keep running on the release they have.
+
+`rexctl status` shows that this instance uses the older layout and won't get new releases, and the command still exits with code 0.
+
+`rexctl upgrade --yes` and nightly upgrades never move an instance on their own. In a terminal, `rexctl upgrade` offers the move. It changes nothing unless you say yes.
+
+The older layout gets no more releases, and that includes security fixes.
+
+## What the move does
+
+`rexctl migrate` moves an instance in one go and checks that it works.
+
+1. Backs up your instance.
+2. Stops Fluxer's containers and leaves them in place with their volumes.
+3. Downloads the newest Fluxer.
+4. Creates the new Fluxer, in one container or as the systemd service.
+5. Restores the backup and starts Fluxer.
+6. Checks that it works. If not, removes the new one and starts the old containers again.
+
+Your address, ports, settings, admins, users, messages and uploads stay the same. Fluxer gets new certificates. In one container, its own PostgreSQL moves from version 16 to 17 by a dump and restore. Under systemd, it moves to the newest PostgreSQL on the machine, which must be 16 or later. Your own PostgreSQL stays as it is. The move needs free disk for a second copy of your uploads, and the instance is offline for a few minutes while it runs.
+
+## Move
+
+<Steps>
+
+1. Update rexctl to the newest release.
+
+   ```sh
+   curl -fsSL https://fluxer.dev/install.sh | sudo sh
+   ```
+
+   It prints `Installed rexctl` followed by the new version number.
+
+2. See what the move would do, without changing anything.
+
+   ```sh
+   sudo rexctl migrate --to docker --dry-run
+   ```
+
+   It lists the steps above with your domain and the disk space the move needs.
+
+   Use `--to podman` for Podman, or `--to systemd` to run Fluxer without containers on Debian or Ubuntu. Older installs run PostgreSQL 16, which is newer than what Debian 12 and Ubuntu 22.04 ship. On those two, install `postgresql-16` or newer from [apt.postgresql.org](https://wiki.postgresql.org/wiki/Apt) before you start the real move.
+
+3. Move.
+
+   ```sh
+   sudo rexctl migrate --to docker
+   ```
+
+   Each step prints as it finishes, then the address where Fluxer runs.
+
+   The old containers stay stopped.
+
+4. Sign in to your instance in the browser. When your messages and uploads are there, remove the old containers and volumes.
+
+   ```sh
+   sudo rexctl migrate --clean-up
+   ```
+
+   It lists what it removed. If you skip this step, `rexctl status` reminds you about the old containers from 14 days after the move.
+
+</Steps>
+
+To go back before you clean up, run `sudo rexctl migrate --undo`. It backs up the new instance, removes it and starts the old containers with their data. Anything posted after the move is lost, and changes to Valkey or SeaweedFS stay. With your own PostgreSQL, rexctl can't go back, because the newer release has already updated the database.
+
+## What stops a move
+
+- For a `custom.compose.yml` with your own changes, move what it does into settings with `rexctl config set`, then empty it with `rexctl config edit --compose`.
+- For voice servers in Docker on the same machine, remove them with `rexctl voice remove` first, and add them again after the move.
+- For a setting the new layout doesn't use, rexctl says which one it is. Remove that setting first with `rexctl config unset`.
+
+An external PostgreSQL or S3 store moves along as settings, as does automatic upgrading.
+
+## Installs from before rexctl
+
+An instance set up by hand before rexctl existed needs one more step.
+
+rexctl refuses with "The Fluxer install in \<folder> predates rexctl", and says which rexctl release to install. Install that release, run `rexctl takeover` in the instance folder, then run `rexctl upgrade`, which updates rexctl and offers the move.
+
+## Moving from the 0.x chart
+
+The 0.x chart ran each part of Fluxer as its own workload, with its data in PostgreSQL, NATS, Valkey and SeaweedFS. The new chart refuses to upgrade a release of it, because the upgrade would start an empty instance.
+
+:::caution[Use a new release name]
+Argo CD and `helm template` can't run that check. Never point an existing Argo CD application or a [Flux CD](https://fluxcd.io/) HelmRelease at the new chart, because that would remove the old workloads and start an empty instance.
+:::
+
+To move, install the new chart under a new release name in the same namespace, and copy the data with `fluxerd import`.
+
+It fetches the 0.x database, Valkey, NATS streams and uploads over the cluster network, keeps the 0.x keys that stored data depends on, and writes one archive for `fluxerd restore`. The 0.x chart gets no new releases, not even security fixes.
+
+The steps use `fluxer` for the 0.x release, `chat` for the new one and the namespace `fluxer`. The new volume needs room for the uploads and the database twice over.
+
+### Values
+
+Write a values file for the new release with the same `domain` as before.
+
+| 0.x value | Goes to |
+| --- | --- |
+| `env` | `config` |
+| `secrets.extra` | A Secret that `existingSecret` points to |
+| `secrets.existingSecret` | The import command, in place of `secret/fluxer-env secret/fluxer-unfurl-env` |
+
+Leave `postgres.externalSecret` empty, because `fluxerd restore` loads the import only into the PostgreSQL that runs in the pod.
+
+### Steps
+
+<Steps>
+
+1. Note how many replicas each 0.x Deployment runs, then stop the 0.x parts that write. This also frees the 0.x voice ports, and its databases keep running.
+
+   ```sh
+   kubectl -n fluxer get deployment -l app.kubernetes.io/instance=fluxer \
+     -o custom-columns=NAME:.metadata.name,REPLICAS:.spec.replicas --no-headers > fluxer-0x-replicas.txt
+   kubectl -n fluxer scale deployment -l app.kubernetes.io/instance=fluxer --replicas=0
+   ```
+
+2. The 0.x NetworkPolicy lets in only the 0.x pods. Let the new release in as well.
+
+   ```sh
+   kubectl -n fluxer apply -f - <<'EOF'
+   apiVersion: networking.k8s.io/v1
+   kind: NetworkPolicy
+   metadata:
+     name: fluxer-import
+   spec:
+     podSelector:
+       matchLabels:
+         app.kubernetes.io/instance: fluxer
+     policyTypes: [Ingress]
+     ingress:
+       - from:
+           - podSelector:
+               matchLabels:
+                 app.kubernetes.io/instance: chat
+   EOF
+   ```
+
+3. Install with `maintenance` on, then import and restore. The import prints the path of the archive that `fluxerd restore` loads.
+
+   ```sh
+   helm install chat oci://ghcr.io/fluxerapp/charts/fluxer -n fluxer -f values.yaml --set maintenance=true
+   kubectl -n fluxer rollout status statefulset/chat-fluxer
+   kubectl -n fluxer get secret/fluxer-env secret/fluxer-unfurl-env configmap/fluxer-config -o json \
+     | kubectl -n fluxer exec -i chat-fluxer-0 -- fluxerd import -
+   kubectl -n fluxer exec chat-fluxer-0 -- fluxerd restore /var/lib/fluxer/backups/<archive>
+   ```
+
+4. Once the restore has finished, remove the 0.x release and start Fluxer. Removing the release keeps its volumes and Secrets.
+
+   ```sh
+   helm uninstall fluxer -n fluxer
+   kubectl -n fluxer delete networkpolicy fluxer-import
+   version=$(helm get metadata chat -n fluxer | awk '/^VERSION:/ {print $2}')
+   helm upgrade chat oci://ghcr.io/fluxerapp/charts/fluxer -n fluxer --version "$version" -f values.yaml --set maintenance=false
+   ```
+
+5. Search starts empty, so open "Search Index" in the admin panel and choose "Reindex everything". People sign in with their passwords as before.
+
+</Steps>
+
+### If the import or restore fails
+
+The 0.x release is still installed.
+
+Start its parts again and remove `chat`.
+
+```sh
+while read -r name replicas; do kubectl -n fluxer scale deployment "$name" --replicas="$replicas"; done < fluxer-0x-replicas.txt
+helm uninstall chat -n fluxer
+kubectl -n fluxer delete networkpolicy fluxer-import
+```
+
+### Going back
+
+To go back after step 4, uninstall `chat` and install the 0.x chart again under the name `fluxer` with its old values. It starts on its kept volumes, without newer data. Once the new release has everything, delete the 0.x volumes and Secrets.
+
+```sh
+kubectl -n fluxer delete pvc -l app.kubernetes.io/instance=fluxer
+kubectl -n fluxer delete secret fluxer-env fluxer-unfurl-env
+```

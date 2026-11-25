@@ -6,7 +6,7 @@ description: Application and bot objects and the routes that create, update, rot
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-An application is an OAuth2 client with one bot account, and a user can own up to 25 of them. The routes on this page need a user session unless they say otherwise. A bot or OAuth2 bearer token on one of those routes gets 403 `ACCESS_DENIED`. A route that takes an application ID returns 404 `UNKNOWN_APPLICATION` when the application does not exist and 403 `ACCESS_DENIED` when you do not own it. The authorization flow and its tokens are on [OAuth2](/http-api/oauth2/).
+An application is an OAuth2 client with one bot account, and a user can own up to 25 of them. The routes on this page need a user session unless they say otherwise. A bot or OAuth2 bearer token on one of those routes gets 403 `ACCESS_DENIED`. A route that takes an application ID returns 404 `UNKNOWN_APPLICATION` when the application does not exist and 403 `ACCESS_DENIED` when you do not own it. An application gets tokens for users through [the authorisation flow](/http-api/oauth2/).
 
 ## Application object
 
@@ -72,7 +72,7 @@ Anyone can see this version of an application, with or without a credential.
 | id | snowflake | The ID of the application |
 | name | string | The name of the application |
 | icon | ?string | The avatar hash of the bot account |
-| description | ?string | Always null |
+| description | ?string | The bio of the bot account |
 | redirect_uris | array[string] | The redirect URIs registered for the application |
 | scopes | array[string] | The [OAuth2 scopes](/http-api/oauth2/#oauth2-scopes) the application can be authorized for |
 | bot_public<sup>1</sup> | boolean | Whether the requester can install the bot |
@@ -118,7 +118,7 @@ This is the application that issued the bot token making the request.
 
 ## Bot flags
 
-These bits are in the bot account's `flags`, and you set them with `bot_flags` in [Update bot profile](#update-bot-profile).
+These bits are in the `flags` of the bot account, and you set them with `bot_flags` in [Update bot profile](#update-bot-profile).
 
 | Value | Name | Description |
 | --- | --- | --- |
@@ -269,7 +269,7 @@ Updates an application you own and returns the [application](#application-object
 | 200 | [application](#application-object) object | The application was updated |
 | 403 | [error response](/http-api/#error-response) | `CONTENT_BLOCKED` when the name or a redirect URI is blocked |
 
-The rate limit is 30 requests per minute, on the `oauth_dev:clients:update::client_id` bucket.
+The `oauth_dev:clients:update::client_id` bucket allows 30 requests per minute.
 
 ## Update bot profile
 
@@ -290,7 +290,7 @@ Updates the bot account of an application you own and returns the [bot profile](
 
 <sup>1</sup> Changing the username beyond letter case gives the bot a new random discriminator. You can change the username 5 times per 3 hours, and after that the request fails with `USERNAME_CHANGED_TOO_MANY_TIMES`
 
-<sup>2</sup> Any value other than the current discriminator fails with `BOT_DISCRIMINATOR_CANNOT_BE_CHANGED`
+<sup>2</sup> `BOT_DISCRIMINATOR_CANNOT_BE_CHANGED` is returned for any value other than the current discriminator
 
 <sup>3</sup> The image must fit the `avatar_max_size` [limit](/http-api/instance/#limit-keys)
 
@@ -305,7 +305,7 @@ Updates the bot account of an application you own and returns the [bot profile](
 | 403 | [error response](/http-api/#error-response) | `CONTENT_BLOCKED` when the username or biography is blocked |
 | 404 | [error response](/http-api/#error-response) | `BOT_USER_NOT_FOUND` when the application has no bot account |
 
-The rate limit is 30 requests per minute, on the `oauth_dev:clients:update::client_id` bucket.
+The `oauth_dev:clients:update::client_id` bucket allows 30 requests per minute.
 
 ## Reset bot token
 
@@ -314,7 +314,7 @@ The rate limit is 30 requests per minute, on the `oauth_dev:clients:update::clie
 Issues a new bot token for an application you own and returns the [bot token reset](#bot-token-reset-object) object. You need [sudo mode](/http-api/users/mfa/#sudo-mode).
 
 :::caution[The old token stops working at once]
-Every Gateway session the bot has ends, and the bot can only connect again with the new token.
+Every Gateway session of the bot ends, and it can only connect again with the new token.
 :::
 
 ### JSON body
@@ -328,7 +328,7 @@ The body is a [sudo verification](/http-api/users/mfa/#sudo-verification-object)
 | 200 | [bot token reset](#bot-token-reset-object) object | The token was rotated |
 | 404 | [error response](/http-api/#error-response) | `BOT_USER_NOT_FOUND` when the application has no bot account |
 
-The rate limit is 10 requests per hour, on the `oauth_dev:clients:rotate_secret::client_id` bucket.
+The `oauth_dev:clients:rotate_secret::client_id` bucket allows 10 requests per hour for each application.
 
 ## Reset client secret
 
@@ -346,7 +346,7 @@ The body is a [sudo verification](/http-api/users/mfa/#sudo-verification-object)
 | --- | --- | --- |
 | 200 | [application](#application-object) object | The client secret was rotated |
 
-The rate limit is 10 requests per hour, on the `oauth_dev:clients:rotate_secret::client_id` bucket.
+The `oauth_dev:clients:rotate_secret::client_id` bucket allows 10 requests per hour for each application.
 
 ## Delete application
 
@@ -368,4 +368,4 @@ The body is a [sudo verification](/http-api/users/mfa/#sudo-verification-object)
 | --- | --- | --- |
 | 204 | empty | The application was deleted |
 
-The rate limit is 10 requests per hour, on the `oauth_dev:clients:delete::client_id` bucket.
+The `oauth_dev:clients:delete::client_id` bucket allows 10 requests per hour.

@@ -17,7 +17,7 @@ The public description of one instance.
 | Field | Type | Description |
 | --- | --- | --- |
 | codename? | string | The protocol generation the instance speaks |
-| api_code_version | integer | The API code version, which goes up when clients need to change their behavior |
+| api_code_version | integer | The API code version, which goes up when clients need to change their behaviour |
 | endpoints | [instance endpoints](#instance-endpoints-object) object | Public service URLs |
 | captcha | [captcha configuration](#captcha-configuration-object) object | CAPTCHA configuration |
 | features | [instance features](#instance-features-object) object | Instance-wide feature switches |
@@ -40,7 +40,7 @@ The public description of one instance.
 
 <sup>1</sup> An instance can have any number of guild badges. Discovery lists the first 100 in display order, and [List guild badges](#list-guild-badges) serves every one. A client that knows only `guild_badges` can't show a badge past the first 100
 
-<sup>2</sup> Guilds keep the feature behind a hidden badge, so a discoverable guild is still listed in discovery. When a guild has more than one of these badges, clients show the next one that isn't hidden
+<sup>2</sup> Guilds keep the feature behind a hidden badge, so a discoverable guild is still listed in discovery. When a guild has more than one of these badges, clients show the next badge that isn't hidden
 
 ## Guild badge object
 
@@ -82,7 +82,7 @@ Instance admins can replace the artwork of the built-in guild badges. When a fie
 
 ## Instance notice object
 
-A short message from the instance admins, such as planned maintenance, that people can dismiss.
+A short message from the instance admins, such as a note about planned maintenance, that people can dismiss.
 
 ### Structure
 
@@ -105,7 +105,7 @@ Each value is an absolute URL. Use it exactly as published, including its scheme
 | api | string | Base URL of the client API, the same as `api_client` |
 | api_client | string | Base URL of the client API, used by the Fluxer apps |
 | api_public | string | Base URL of the public API, used by bots and other clients |
-| api_transport? | string | Base URL the official desktop app sends API requests to instead of `api_client`. Only Fluxer.app lists it, and the app ignores any address other than the matching fluxer.com one |
+| api_transport? | string | Base URL the official desktop app sends API requests to instead of `api_client`. Only fluxer.com lists it, and the app ignores any address other than the matching fluxer.com one |
 | gateway | string | The [Gateway](/gateway/overview/) WebSocket URL, with a `ws` or `wss` scheme |
 | media | string | [Media Proxy](/media-proxy/overview/) base URL |
 | upload_relay? | string | Attachment [upload relay](/media-proxy/upload-relay/) base URL |
@@ -132,7 +132,7 @@ Each value is an absolute URL. Use it exactly as published, including its scheme
 | altcha | Gated operations need an ALTCHA proof-of-work challenge |
 | none | The instance needs no CAPTCHA |
 
-Send the solved challenge in the `X-Captcha-Token` header, as [CAPTCHA handling](/topics/captcha/) explains.
+Send the [solved challenge](/topics/captcha/) in the `X-Captcha-Token` header.
 
 ## Instance features object
 
@@ -195,7 +195,7 @@ When `emails_enabled` is false, email verification, password recovery and IP aut
 | email | People register and sign in with an email address |
 | username | People register and sign in with a username, and the instance collects no email address |
 
-On a `username` instance, email routes return 400 `EMAIL_UNAVAILABLE_ON_INSTANCE`. On an `email` instance, username-only routes such as [recover an account](/http-api/authentication/#recover-an-account) return 400 `USERNAME_SIGN_IN_ONLY`.
+On a `username` instance, email routes return 400 `EMAIL_UNAVAILABLE_ON_INSTANCE`. On an `email` instance, username-only routes such as [recover an account](/http-api/authentication/#recover-an-account) return 400 with `USERNAME_SIGN_IN_ONLY` instead.
 
 ### Tag styles
 
@@ -349,7 +349,7 @@ A `feature_` key is `1` when the feature is available and `0` when it isn't. The
 | feature_early_access | Beta features (user) |
 | feature_global_expressions | Using expressions in every guild (user) |
 | feature_guild_create | Creating communities while the instance restricts it (user) |
-| feature_higher_video_quality | Higher video streaming quality: screen shares up to 2160p at 120 FPS and cameras up to 1080p, whatever the `max_screen_share_resolution`, `max_screen_share_frame_rate` and `max_camera_resolution` limits say (user) |
+| feature_higher_video_quality | Screen shares up to 2160p at 120 FPS and cameras up to 1080p, even when the `max_screen_share_resolution`, `max_screen_share_frame_rate` and `max_camera_resolution` limits are lower (user) |
 | feature_per_guild_profiles | A different profile in each guild (user) |
 | feature_voice_entrance_sounds | A sound when joining voice (user) |
 | guild_visit_history_days_unverified | Days of history an unverified account sees while [visiting](/http-api/guilds/#visiting-guilds) a guild (user) |
@@ -392,7 +392,7 @@ A `feature_` key is `1` when the feature is available and `0` when it isn't. The
 | max_webhooks_per_guild | Maximum webhooks per guild (guild) |
 | sticker_max_size | Maximum sticker upload size in bytes, up to 104857600 (guild) |
 
-Threads and forums have fixed limits, listed under [thread lifecycle](/http-api/threads/#thread-lifecycle), [thread members](/http-api/thread-members/) and [forum channel fields](/http-api/forums/#forum-channel-fields).
+Threads and forums have fixed [thread](/http-api/threads/#thread-lifecycle), [thread member](/http-api/thread-members/) and [forum](/http-api/forums/#forum-channel-fields) limits.
 
 ## Public application configuration object
 
@@ -558,7 +558,7 @@ Returns custom guild badges in display order. Send `ids` to look up the badges o
 | ids? | string | Up to 100 badge IDs separated by commas. Can't be sent with `after` |
 | after? | string | The `next` value of the previous page |
 | limit? | integer | How many badges to return when paging (1-200, default 100) |
-| version? | string | The `custom_badges_version` the client holds |
+| version? | string | The client's current `custom_badges_version` |
 
 ### Response body
 

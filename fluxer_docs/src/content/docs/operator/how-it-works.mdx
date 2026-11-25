@@ -1,0 +1,255 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Architecture
+description: Fluxer's processes, where it keeps data, how available it is and what it connects to.
+---
+
+import {Tabs, TabItem} from '@astrojs/starlight/components';
+
+A self-hosted instance is one supervisor, `fluxerd`, and its processes. The container image, the systemd service and the Helm chart run the same release.
+
+<figure class="flx-diagram">
+<svg class="flx-diagram-wide" viewBox="0 0 640 300" role="img" aria-labelledby="flx-arch-title flx-arch-desc" fill="none" stroke="currentColor" font-family="inherit" font-size="13">
+	<title id="flx-arch-title">Fluxer inside one container or service</title>
+	<desc id="flx-arch-desc">People connect on ports 80 and 443 to the edge inside fluxerd, which sends requests to the API, the gateway, the media proxy and the web app. fluxerd also starts PostgreSQL, search and the voice server. Voice and video use ports 7881 and 7882 directly. All data is in /var/lib/fluxer.</desc>
+	<rect x="150" y="20" width="470" height="210" rx="8" stroke-opacity="0.45" />
+	<text x="166" y="44" fill="currentColor" stroke="none" font-weight="600">fluxerd</text>
+	<rect x="166" y="60" width="130" height="40" rx="6" stroke-opacity="0.6" />
+	<text x="231" y="85" fill="currentColor" stroke="none" text-anchor="middle">Edge (Caddy)</text>
+	<rect x="316" y="60" width="130" height="40" rx="6" stroke-opacity="0.6" />
+	<text x="381" y="85" fill="currentColor" stroke="none" text-anchor="middle">API and worker</text>
+	<rect x="466" y="60" width="138" height="40" rx="6" stroke-opacity="0.6" />
+	<text x="535" y="85" fill="currentColor" stroke="none" text-anchor="middle">Gateway</text>
+	<rect x="316" y="116" width="130" height="40" rx="6" stroke-opacity="0.6" />
+	<text x="381" y="141" fill="currentColor" stroke="none" text-anchor="middle">Media proxy</text>
+	<rect x="466" y="116" width="138" height="40" rx="6" stroke-opacity="0.6" />
+	<text x="535" y="141" fill="currentColor" stroke="none" text-anchor="middle">Rust services</text>
+	<rect x="166" y="172" width="130" height="40" rx="6" stroke-opacity="0.6" />
+	<text x="231" y="197" fill="currentColor" stroke="none" text-anchor="middle">Voice (LiveKit)</text>
+	<rect x="316" y="172" width="130" height="40" rx="6" stroke-opacity="0.6" />
+	<text x="381" y="197" fill="currentColor" stroke="none" text-anchor="middle">PostgreSQL</text>
+	<rect x="466" y="172" width="138" height="40" rx="6" stroke-opacity="0.6" />
+	<text x="535" y="197" fill="currentColor" stroke="none" text-anchor="middle">Search</text>
+	<path d="M20 80 H160" stroke-opacity="0.8" />
+	<path d="M152 75 L160 80 L152 85" stroke-opacity="0.8" />
+	<text x="20" y="70" fill="currentColor" stroke="none">80 and 443</text>
+	<path d="M20 192 H160" stroke-opacity="0.8" />
+	<path d="M152 187 L160 192 L152 197" stroke-opacity="0.8" />
+	<text x="20" y="182" fill="currentColor" stroke="none">7881 and 7882</text>
+	<path d="M296 80 H316" stroke-opacity="0.6" />
+	<rect x="150" y="250" width="470" height="36" rx="6" stroke-opacity="0.45" stroke-dasharray="4 4" />
+	<text x="385" y="273" fill="currentColor" stroke="none" text-anchor="middle">/var/lib/fluxer, every file Fluxer keeps</text>
+</svg>
+<svg class="flx-diagram-narrow" viewBox="0 0 340 380" role="img" aria-labelledby="flx-arch-title-narrow flx-arch-desc-narrow" fill="none" stroke="currentColor" font-family="inherit" font-size="13">
+	<title id="flx-arch-title-narrow">Fluxer inside one container or service</title>
+	<desc id="flx-arch-desc-narrow">People connect on ports 80 and 443 to the edge inside fluxerd, which sends requests to the API, the gateway, the media proxy and the web app. fluxerd also starts PostgreSQL, search and the voice server. Voice and video use ports 7881 and 7882 directly. All data is in /var/lib/fluxer.</desc>
+	<text x="94.5" y="16" fill="currentColor" stroke="none" text-anchor="middle">80 and 443</text>
+	<path d="M94.5 24 V86" stroke-opacity="0.8" />
+	<path d="M89.5 78 L94.5 86 L99.5 78" stroke-opacity="0.8" />
+	<text x="245.5" y="16" fill="currentColor" stroke="none" text-anchor="middle">7881 and 7882</text>
+	<path d="M245.5 24 V86" stroke-opacity="0.8" />
+	<path d="M240.5 78 L245.5 86 L250.5 78" stroke-opacity="0.8" />
+	<rect x="10" y="40" width="320" height="272" rx="8" stroke-opacity="0.45" />
+	<text x="26" y="64" fill="currentColor" stroke="none" font-weight="600">fluxerd</text>
+	<rect x="26" y="88" width="137" height="40" rx="6" stroke-opacity="0.6" />
+	<text x="94.5" y="113" fill="currentColor" stroke="none" text-anchor="middle">Edge (Caddy)</text>
+	<rect x="177" y="88" width="137" height="40" rx="6" stroke-opacity="0.6" />
+	<text x="245.5" y="113" fill="currentColor" stroke="none" text-anchor="middle">Voice (LiveKit)</text>
+	<path d="M94.5 128 V144" stroke-opacity="0.6" />
+	<rect x="26" y="144" width="137" height="40" rx="6" stroke-opacity="0.6" />
+	<text x="94.5" y="169" fill="currentColor" stroke="none" text-anchor="middle">API and worker</text>
+	<rect x="177" y="144" width="137" height="40" rx="6" stroke-opacity="0.6" />
+	<text x="245.5" y="169" fill="currentColor" stroke="none" text-anchor="middle">Gateway</text>
+	<rect x="26" y="200" width="137" height="40" rx="6" stroke-opacity="0.6" />
+	<text x="94.5" y="225" fill="currentColor" stroke="none" text-anchor="middle">Media proxy</text>
+	<rect x="177" y="200" width="137" height="40" rx="6" stroke-opacity="0.6" />
+	<text x="245.5" y="225" fill="currentColor" stroke="none" text-anchor="middle">Rust services</text>
+	<rect x="26" y="256" width="137" height="40" rx="6" stroke-opacity="0.6" />
+	<text x="94.5" y="281" fill="currentColor" stroke="none" text-anchor="middle">PostgreSQL</text>
+	<rect x="177" y="256" width="137" height="40" rx="6" stroke-opacity="0.6" />
+	<text x="245.5" y="281" fill="currentColor" stroke="none" text-anchor="middle">Search</text>
+	<rect x="10" y="332" width="320" height="36" rx="6" stroke-opacity="0.45" stroke-dasharray="4 4" />
+	<text x="170" y="355" fill="currentColor" stroke="none" text-anchor="middle">/var/lib/fluxer, every file Fluxer keeps</text>
+</svg>
+</figure>
+
+## What runs
+
+These are the parts in the current release. `fluxerd ps` lists them on your instance, and `fluxerd logs <part>` shows one part's output.
+
+- `fluxerd` starts, watches and restarts every other part, and runs the edge (Caddy) and the message queue (NATS) inside itself.
+- `postgres` is PostgreSQL with all of Fluxer's data, version 17 in the container image, and on the systemd route the newest PostgreSQL 14 or later on the machine at install. Set `FLUXER_POSTGRES_URL` to use your own PostgreSQL 14 or later instead.
+- `api` is the HTTP API and the worker.
+- `gateway` keeps the WebSocket connections that apps hold open for live updates.
+- `media-proxy` resizes and serves images, video and other media.
+- `rust` is eight services in one process, such as users, messages, link previews, push, the admin panel and the web app files. An older instance runs each service as its own part, such as `users` or `unfurl`, until `rexctl migrate --migrate=rust` moves all eight services into the one `rust` process.
+- `meilisearch` is message and member search. To turn search off, set `FLUXER_SEARCH_ENGINE` to `none`.
+- `livekit` is the voice and video server. `FLUXER_LIVEKIT_ENABLED=false` turns it off.
+- `valkey` keeps the cache and rate limits on older installs. A new instance keeps them in PostgreSQL, and `valkey` doesn't run there. It also doesn't run when `FLUXER_KV_URL` points at your own Valkey.
+- `seaweedfs` and `seaweedfs-filer` store uploads on older installs. A new instance keeps uploads in its data folder with `FLUXER_STORAGE_BACKEND=filesystem`, and SeaweedFS doesn't run there. It also doesn't run when `FLUXER_S3_ENDPOINT` points at your own S3-compatible storage.
+
+In the container image, `tini` runs first and starts `fluxerd`. Every part listens only on `127.0.0.1` inside, except the edge and the voice server.
+
+## Ports inside the instance
+
+These ports are fixed and bound to `127.0.0.1`.
+
+A service already on one of them stops that part of Fluxer from starting.
+
+| Port | Part |
+| --- | --- |
+| 14222 | Message queue (NATS) |
+| 15432 | PostgreSQL |
+| 17700 | Search (Meilisearch) |
+| 17880 | Voice server API (LiveKit) |
+| 18080 | API |
+| 18081 | Gateway |
+| 18082 | Media proxy |
+| 18083, 18084 and 18085 | Admin panel, web app files and push |
+| 18090 to 18094 | Snowflakes, users, messages, GIFs and link previews |
+| 16379 | Valkey, only on installs that still use it |
+| 18333 and 19333 to 19335 | SeaweedFS, only on installs that still use it |
+
+`FLUXER_LOOPBACK_ADDRESS=127.0.0.2` moves them all to another loopback address, and rexctl gives each extra instance on a machine its own. Commands such as `fluxerd ctl` and `fluxerd users` talk to the `fluxerd` that runs with their data folder, over sockets in its runtime folder, which is `/run/fluxer`, or `/run/fluxerd/fluxer` with the rexctl unit.
+
+## Where data is kept
+
+The database, uploads, search index, certificates, passwords and keys are all in `/var/lib/fluxer`, and so are the backups.
+
+- With Docker, that is the volume `fluxer-data`.
+- On Kubernetes, it is the PersistentVolumeClaim `data-fluxer-0`, or `data-<release>-fluxer-0` for a release name without `fluxer`.
+- Under systemd, settings are in `/etc/fluxer/fluxer.env` and releases in `/opt/fluxer/releases/<version>`, and `/opt/fluxer/current` is the running one.
+- When rexctl manages Fluxer, it keeps its record of the install in `.rexctl/state.json` in the instance folder, which is `/opt/fluxer` as root and `~/fluxer` for any other account. Never edit that file by hand.
+
+The data folder has `secrets.env` with Fluxer's passwords and keys, `modes.env` with choices made on the first start, and `VERSION` with the release that last ran on the data.
+
+Backups include all of them.
+
+## Bundled or proxy mode
+
+`FLUXER_EDGE_MODE` decides how traffic gets in.
+
+- `bundled`, the default, listens on ports 80 and 443 and gets its own certificate. Pick it when nothing else on the machine uses those ports.
+- `proxy` serves plain HTTP on 8080 and trusts `X-Forwarded-For` from private addresses. Pick it when you already run nginx, Caddy, Traefik or a load balancer, and [point that proxy at Fluxer](/operator/reverse-proxy/) with one of the configs there.
+- `tunnel` is like `proxy`, for [Cloudflare Tunnel](/operator/platforms/cloudflare-tunnel/) on a machine with no public address.
+
+## Keeping data elsewhere
+
+By default every file is on the one volume.
+
+Two parts can move out, and Fluxer's backups then leave them out.
+
+- The database can go to your own PostgreSQL 14 or later, such as a CloudNativePG cluster, with [`FLUXER_POSTGRES_URL`](/operator/settings/#fluxer_postgres_url). Back it up with your database's own tools.
+- Uploads can go to an S3-compatible store with the [file storage settings](/operator/settings/#file-storage). Back them up with your store's versioning or replication.
+
+The search index, message queue, certificates, passwords and keys always stay on Fluxer's volume and in Fluxer's backups.
+
+## Availability
+
+An instance is one process tree in one container, pod or service, and it can't run as two copies. Fluxer locks its data folder so that a second copy can't start on it, and the gateway keeps live connections in memory. The Helm chart runs one replica and has no PodDisruptionBudget, because one on a single pod would only block node drains.
+
+- An upgrade takes Fluxer offline while it backs up the database, stops and starts the new release, usually for a few minutes. The apps reconnect by themselves.
+- A restart or node drain takes Fluxer offline while it stops, for up to 130 seconds, and then it starts again on the same or another node.
+- After a lost disk, or a lost zonal volume on Kubernetes, Fluxer stays down until you restore a backup onto a new volume.
+
+You lose at most what was posted since the last backup, or since the last VolumeSnapshot on Kubernetes. There is no point-in-time recovery for the bundled database.
+
+With your own PostgreSQL that has replicas and point-in-time recovery, such as a CloudNativePG cluster, the database gets those, while the search index, certificates and keys stay on Fluxer's volume and come from Fluxer's backups.
+
+## Connections Fluxer makes
+
+These are the outgoing connections in the current release. Inside the instance, the parts connect to each other only on `127.0.0.1`.
+
+### On by default
+
+- The edge connects to Let's Encrypt (`acme-v02.api.letsencrypt.org`) on TCP 443 in bundled mode to get and renew the certificate. Proxy and tunnel mode don't.
+- The voice server connects to `stun.l.google.com` and `stun1.l.google.com` on UDP 19302 while voice is on, to find the machine's public address. To use your own STUN server, point `FLUXER_LIVEKIT_STUN_PRIMARY` and `FLUXER_LIVEKIT_STUN_SECONDARY` at it.
+- Link previews and the media proxy connect to the pages and media people link to, on TCP 80 and 443. List hosts to skip in `FLUXER_API_UNFURL_IGNORED_HOSTS`.
+Every part looks up host addresses through the machine's DNS resolver on port 53.
+
+### Only when you set them up
+
+These use TCP 443 unless it says otherwise.
+
+- `fluxerd` asks `fluxer.dev` for `/releases.json` once a day to see whether a newer release is out, but only when you [turn the check on](/operator/upgrades/#turning-the-check-on) with `FLUXER_UPDATE_CHECK=true`. The request has nothing about your instance.
+- The push service connects to the push relay, `push.fluxer.com`, after an admin accepts its notice in the setup wizard or the admin panel.
+- The push service connects to `fcm.googleapis.com`, `oauth2.googleapis.com` and Apple's APNs hosts if you set `FLUXER_PUSH_FCM_ENABLED` or `FLUXER_PUSH_APNS_ENABLED` with your own app credentials.
+- The API, worker and Rust services connect to your own PostgreSQL, usually on TCP port 5432, when you set `FLUXER_POSTGRES_URL`.
+- The API and worker connect to your SMTP server for email, usually on TCP port 587.
+- The API connects to your OpenID Connect provider when you set up single sign-on.
+- With uploads in S3, the API, worker and media proxy connect to that store.
+- The GIF service connects to Klipy's API for GIF search when you set a Klipy API key.
+- Link previews connect to the YouTube Data API (`www.googleapis.com`) when you set a YouTube API key for YouTube links.
+- When you turn on `FLUXER_BREACHED_PASSWORD_CHECK_ENABLED`, the API connects to `api.pwnedpasswords.com` to refuse passwords from known breaches.
+- The worker connects to URLhaus, PhishTank and MalwareBazaar to check posted links and uploads against block lists when you turn on `FLUXER_BLOCKLIST_FEEDS_ENABLED`.
+
+Getting Fluxer is a separate step from running it.
+
+Docker pulls the image from `ghcr.io`, the systemd and rexctl installs download from `github.com` and `fluxer.dev`, and Helm pulls the chart from `ghcr.io`.
+
+### The push relay
+
+The official Fluxer apps for iOS and Android get notifications through Apple and Google, and only we can send to them there. When an admin accepts the [push relay notice](https://fluxer.com/push-relay), which says what the relay keeps and where it runs, your instance sends each notification for those apps to the push relay at `push.fluxer.com`, which passes it to Apple or Google. Leave the relay off and the official mobile apps get no notifications from your instance, while browsers and the desktop app still get notifications from it.
+
+Each device with the app makes its own key pair and keeps the private key. Your instance encrypts each notification to that key with standard Web Push encryption and pads it to a fixed size before it sends it to the relay. Only your instance and the device the notification is for can read what it says. Fluxer, Apple and Google pass it on without being able to read it, because none of them has the private key that the device holds.
+
+All three can still see that a notification was sent, when it was sent and the device it's for. The relay also sees your instance's network address, its VAPID key and contact email, and whether the notification is a message, a call or a cleared notification. Apple and Google see the app, the priority and the expiry time, but not which instance sent it. If the iOS app can't decrypt a notification in time, it shows "New message" instead.
+
+### Behind a proxy or on a locked-down network
+
+Set `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY` as [settings](/operator/settings/#outgoing-proxy). Fluxer adds `localhost` and `127.0.0.1` to `NO_PROXY` by itself. Link previews, the media proxy, the push service, the GIF service and the edge use the proxy. The API and worker, the gateway and the voice server don't, and neither does STUN, which is UDP.
+
+The edge gets its certificate through `HTTPS_PROXY`, but Let's Encrypt still has to connect to the machine on ports 80 and 443 from the internet to check your domain.
+
+If those ports can't be opened to the internet, use proxy or tunnel mode.
+
+Where everything has to go through a proxy, set `FLUXER_LIVEKIT_NODE_IP` and point both STUN settings at a STUN server on your network, and allow the API and worker to connect directly to your SMTP server, SSO provider and S3 store, and to `api.pwnedpasswords.com`, URLhaus, PhishTank and MalwareBazaar when you turn those checks on. With no internet access at all, Fluxer runs, but link previews, images from other sites, GIF search and notifications to the official mobile apps don't work.
+
+When your network inspects TLS or your SSO provider or mail server uses a certificate from your own authority, give Fluxer that CA certificate. The API and worker load it from `FLUXER_NODE_EXTRA_CA_CERTS`, and the other parts from `SSL_CERT_FILE`.
+
+Both take a path inside the container, and the file has the usual public authorities and yours, as the system bundle `/etc/ssl/certs/ca-certificates.crt` does.
+
+<Tabs syncKey="runtime">
+<TabItem label="Docker">
+
+```sh
+docker run ... -v /etc/ssl/certs/ca-certificates.crt:/etc/fluxer/ca.pem:ro \
+  -e FLUXER_NODE_EXTRA_CA_CERTS=/etc/fluxer/ca.pem -e SSL_CERT_FILE=/etc/fluxer/ca.pem ...
+```
+
+Mount the host's bundle after you add your authority to it, or a file of your own.
+
+</TabItem>
+<TabItem label="Linux with systemd">
+
+Add your authority to the system bundle with `update-ca-certificates`, then restart Fluxer. Fluxer uses that bundle by default.
+
+</TabItem>
+<TabItem label="Kubernetes">
+
+```yaml title="values.yaml"
+extraVolumes:
+  - name: ca
+    configMap:
+      name: corporate-ca
+extraVolumeMounts:
+  - name: ca
+    mountPath: /etc/fluxer/ca
+    readOnly: true
+extraEnv:
+  - name: FLUXER_NODE_EXTRA_CA_CERTS
+    value: /etc/fluxer/ca/ca.pem
+  - name: SSL_CERT_FILE
+    value: /etc/fluxer/ca/ca.pem
+```
+
+</TabItem>
+</Tabs>
+
+## Health checks
+
+- `fluxerd health` passes when every part is ready, and the image's own health check and the chart's readiness probe use it.
+- `fluxerd health --live` passes when `fluxerd` responds, ready or not, and the chart's startup and liveness probes use it.
+- `GET /_health` over HTTP returns `OK` from Fluxer's edge in every mode once it is up.
+
+Point an [uptime monitor](/operator/monitoring/) at `/_health` from outside the machine.

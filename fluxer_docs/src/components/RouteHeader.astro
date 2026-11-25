@@ -10,10 +10,12 @@ interface Props {
 	mfa?: boolean;
 }
 
-interface Capability {
-	label: string;
-	title: string;
-	href?: string;
+interface Clause {
+	verb: string;
+	text: string;
+	href: string;
+	linkText: string;
+	after?: string;
 }
 
 function resolveAuditReasonHref(routePath: string): string {
@@ -31,73 +33,133 @@ const {method, path, bot, oauth2, unauthenticated, auditReason, mfa} = Astro.pro
 const docsBase = import.meta.env.BASE_URL.replace(/\/$/, '');
 const withBase = (href: string): string => `${docsBase}${href}`;
 
-const segments = path.split(/(\{[^}]+\})/).filter((segment) => segment.length > 0);
+const segments = path.split(/(?<=.\/)(?=.)/u);
+const parts = (segment: string): Array<string> => segment.split(/(\{[^}]+\})/u).filter((part) => part.length > 0);
+const isParam = (part: string): boolean => part.startsWith('{') && part.endsWith('}');
 
-const capabilities: Array<Capability> = [];
+const clauses: Array<Clause> = [];
 if (unauthenticated === true) {
-	capabilities.push({
-		label: 'Unauthenticated',
-		title: 'Accepts requests without an authentication credential',
-		href: withBase('/authentication/'),
-	});
+	clauses.push({verb: 'works', text: 'without ', linkText: 'signing in', href: withBase('/authentication/')});
 }
 if (bot === true) {
-	capabilities.push({
-		label: 'Bot',
-		title: 'Accepts a bot token authorisation scheme',
+	clauses.push({
+		verb: 'accepts',
+		text: 'a ',
+		linkText: 'bot token',
 		href: withBase('/authentication/#authorization-schemes'),
 	});
 }
 if (oauth2 != null) {
-	capabilities.push({
-		label: oauth2,
-		title: `Requires the ${oauth2} OAuth2 scope`,
+	clauses.push({
+		verb: 'needs',
+		text: 'an ',
+		linkText: 'OAuth2 token',
 		href: withBase('/http-api/oauth2/#oauth2-scopes'),
+		after: ` with the ${oauth2} scope`,
 	});
 }
 if (auditReason === true) {
-	capabilities.push({
-		label: 'Audit reason',
-		title: 'Supports the X-Audit-Log-Reason request header',
+	clauses.push({
+		verb: 'accepts',
+		text: 'an ',
+		linkText: 'audit log reason',
 		href: withBase(resolveAuditReasonHref(path)),
 	});
 }
 if (mfa === true) {
-	capabilities.push({
-		label: 'MFA',
-		title: 'Requires multi-factor authentication or an elevated sudo session',
+	clauses.push({
+		verb: 'needs',
+		text: '',
+		linkText: 'two-factor authentication',
 		href: withBase('/http-api/users/mfa/'),
+		after: ' for this action',
 	});
 }
+
+const groups: Array<Array<Clause>> = [];
+for (const clause of clauses) {
+	const group = groups.find((items) => items[0]!.verb === clause.verb);
+	if (group) {
+		group.push(clause);
+	} else {
+		groups.push([clause]);
+	}
+}
+
+const groupJoiner = (index: number): string => {
+	if (index === 0) {
+		return '';
+	}
+	return groups[index - 1]!.length > 1 ? ', and ' : ' and ';
+};
+
+const verbOf = (group: Array<Clause>, index: number): string => {
+	const verb = group[0]!.verb;
+	return `${index === 0 ? `${verb.charAt(0).toUpperCase()}${verb.slice(1)}` : verb} `;
+};
 ---
 
 <flx-route-header class="not-content">
 	<flx-route-line>
-		<code class="route-method" data-method={method}>{method}</code><code class="route-path">{
-			segments.map((segment) =>
-				segment.startsWith('{') && segment.endsWith('}') ? (
-					<span data-param>{segment}</span>
-				) : (
-					segment
-				),
-			)
-		}</code>
+		<code class="flx-route-code"
+			><span class="flx-route-method">{method}</span> <span class="flx-route-path">{
+				segments.map((segment, index) => (
+					<>{index > 0 && <wbr />}<span class="flx-route-segment">{parts(segment).map((part) => (isParam(part) ? <span class="flx-route-param">{part}</span> : part))}</span></>
+				))
+			}</span></code
+		>
+		<button class="flx-route-copy" type="button" data-copy={path} aria-label={`Copy the path ${path}`}>
+			<svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"
+				><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg
+			>
+			<span class="flx-route-copied" aria-live="polite"></span>
+		</button>
 	</flx-route-line>
 	{
-		capabilities.length > 0 && (
-			<flx-route-capabilities>
-				{capabilities.map((capability) =>
-					capability.href == null ? (
-						<span class="route-capability" title={capability.title}>
-							{capability.label}
-						</span>
-					) : (
-						<a class="route-capability" href={capability.href} title={capability.title}>
-							{capability.label}
-						</a>
-					),
-				)}
-			</flx-route-capabilities>
+		groups.length > 0 && (
+			<p class="flx-route-notes">
+				{groups.map((group, index) => (
+					<>
+						{groupJoiner(index)}
+						{verbOf(group, index)}
+						{group.map((clause, item) => (
+							<>
+								{item > 0 && ' and '}
+								{clause.text}
+								<a href={clause.href}>{clause.linkText}</a>
+								{clause.after}
+							</>
+						))}
+						{index === groups.length - 1 && '.'}
+					</>
+				))}</p>
 		)
 	}
 </flx-route-header>
+
+<script>
+	class FlxRouteHeader extends HTMLElement {
+		connectedCallback(): void {
+			const button = this.querySelector<HTMLButtonElement>('.flx-route-copy');
+			const status = this.querySelector<HTMLElement>('.flx-route-copied');
+			button?.addEventListener('click', () => {
+				const text = button.dataset.copy ?? '';
+				void navigator.clipboard?.writeText(text).then(() => {
+					button.dataset.copied = 'true';
+					if (status) {
+						status.textContent = 'Copied';
+					}
+					setTimeout(() => {
+						delete button.dataset.copied;
+						if (status) {
+							status.textContent = '';
+						}
+					}, 1500);
+				});
+			});
+		}
+	}
+	if (!customElements.get('flx-route-header')) {
+		customElements.define('flx-route-header', FlxRouteHeader);
+	}
+</script>

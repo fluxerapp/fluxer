@@ -29,7 +29,7 @@ One page of matching messages.
 
 <sup>1</sup> Messages have no `referenced_message` field
 
-<sup>2</sup> In a channel context without [READ_MESSAGE_HISTORY](/http-api/permissions/), this is the number of messages in `messages`
+<sup>2</sup> In a channel context without [READ_MESSAGE_HISTORY](/http-api/permissions/), this is the number of messages returned in `messages`
 
 <sup>3</sup> Present only when a returned message is in a thread and the request is not a single channel search
 
@@ -56,7 +56,7 @@ Fluxer returns this object with status 200 when a channel in the search isn't in
 
 A bot can only use `current`, and any other value returns 400 `INVALID_FORM_BODY` with the field code [BOT_SEARCH_SCOPE_UNAVAILABLE](/http-api/errors/) on `scope`.
 
-To search members, communities or threads, see [Guild member search](/http-api/guild-member-search/), [Discovery](/http-api/discovery/) and [Search threads](/http-api/threads/#search-threads).
+[Search members](/http-api/guild-member-search/), [communities](/http-api/discovery/) and [threads](/http-api/threads/#search-threads) with their own routes.
 
 ## Search author types
 
@@ -96,7 +96,7 @@ To search members, communities or threads, see [Guild member search](/http-api/g
 | timestamp | Creation time |
 | relevance<sup>1</sup> | The search backend's own order |
 
-<sup>1</sup> `sort_order` doesn't apply, and on Elasticsearch this is the same as `timestamp` with `desc`
+<sup>1</sup> `sort_order` doesn't apply. On Elasticsearch this is the same as sorting by `timestamp` with `desc` order
 
 ## Search sort orders
 

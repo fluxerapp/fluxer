@@ -1,0 +1,40 @@
+---
+// SPDX-License-Identifier: AGPL-3.0-or-later
+---
+
+<script>
+	const selector = '.flx-table-scroll';
+
+	function labelOf(region: HTMLElement): string {
+		return region.dataset.scrollLabel ?? 'Scrollable content';
+	}
+
+	function update(region: HTMLElement): void {
+		if (region.scrollWidth > region.clientWidth + 1) {
+			region.tabIndex = 0;
+			region.setAttribute('role', 'region');
+			region.setAttribute('aria-label', labelOf(region));
+			return;
+		}
+		region.removeAttribute('tabindex');
+		region.removeAttribute('role');
+		region.removeAttribute('aria-label');
+	}
+
+	const observer = new ResizeObserver((entries) => {
+		for (const entry of entries) {
+			const region = entry.target.closest<HTMLElement>(selector);
+			if (region !== null) {
+				update(region);
+			}
+		}
+	});
+
+	for (const region of document.querySelectorAll<HTMLElement>(selector)) {
+		update(region);
+		observer.observe(region);
+		if (region.firstElementChild !== null) {
+			observer.observe(region.firstElementChild);
+		}
+	}
+</script>

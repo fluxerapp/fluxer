@@ -1,0 +1,112 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Several instances on one machine
+description: You run two or more Fluxer instances on one machine, each with its own domain.
+sidebar:
+  label: Several instances
+---
+
+import {Tabs, TabItem} from '@astrojs/starlight/components';
+
+Each Fluxer instance on a machine needs its own domain, data and voice ports.
+
+Only one can have ports 80 and 443. On Docker and Kubernetes, put them all in proxy mode behind one reverse proxy, which sends each domain to its own instance. With rexctl on systemd, the first instance can send the other domains to their instances instead.
+
+In these examples, the first instance is `chat.example.com` on `127.0.0.1:8080` with voice ports 7881 and 7882, and the second instance is `team.example.org` on `127.0.0.1:8081` with voice ports 7883 and 7884.
+
+<Tabs syncKey="runtime">
+<TabItem label="Docker">
+
+Give the second instance its own folder with its own `compose.yaml` and `fluxer.env`. The compose file uses the fixed volume name `fluxer-data`, so change it in the second folder, or both instances would share one volume.
+
+```yaml title="compose.yaml"
+services:
+  fluxer:
+    image: ghcr.io/fluxerapp/fluxer:{{FLUXER_VERSION}}
+    restart: unless-stopped
+    stop_grace_period: 130s
+    env_file: fluxer.env
+    environment:
+      FLUXER_INSTALL_METHOD: compose
+    ports:
+      - "127.0.0.1:8081:8080"
+      - "7883:7883"
+      - "7884:7884/udp"
+    volumes:
+      - fluxer-team-data:/var/lib/fluxer
+
+volumes:
+  fluxer-team-data:
+    name: fluxer-team-data
+```
+
+Keep the image line from your download. In its `fluxer.env`, set its domain, proxy mode and the voice ports. The voice ports inside the container must match the published ones, because the voice server tells apps which port to use.
+
+```sh title="fluxer.env"
+FLUXER_DOMAIN=team.example.org
+FLUXER_EDGE_MODE=proxy
+FLUXER_LIVEKIT_TCP_PORT=7883
+FLUXER_LIVEKIT_UDP_PORT=7884
+```
+
+Switch the first instance to [proxy mode](/operator/docker/#behind-your-own-proxy-or-tunnel) on `127.0.0.1:8080` too. Compose gives each instance the name of its folder, so run `docker compose` in the folder of that instance. With `docker run`, use another `--name` and another volume for the second instance.
+
+</TabItem>
+<TabItem label="Linux with systemd">
+
+With rexctl, install again with the second domain.
+
+```sh
+sudo rexctl install --runtime systemd --domain team.example.org
+```
+
+rexctl calls the second instance `fluxer2`, puts it in `/opt/fluxer2` and picks free voice ports for it. Pass `--project` to choose the name.
+
+When the first instance serves ports 80 and 443 itself, the second domain goes through it and gets its own certificate. Otherwise rexctl asks for a reverse proxy in front.
+
+The first instance keeps `fluxer.service`, `/etc/fluxer` and `/var/lib/fluxer`. A second one runs as `fluxer@<name>.service`, with its settings in `/etc/fluxer/<name>` and its data in `/var/lib/fluxer/<name>`.
+
+Outside an instance folder, rexctl commands use the first instance you installed, unless you pass `--dir` or pick another with `rexctl use <folder>`.
+
+</TabItem>
+<TabItem label="Kubernetes">
+
+Install the chart again with another release name and domain, in its own namespace.
+
+```sh
+helm install team oci://ghcr.io/fluxerapp/charts/fluxer \
+  --namespace fluxer-team --create-namespace --set domain=team.example.org
+```
+
+The release `team` gets the pod `team-fluxer-0` and the claim `data-team-fluxer-0`.
+
+The chart adds `-fluxer` to a release name without `fluxer` in it. With the default host ports for voice, two releases can't run on the same node. Set [`voice.expose=loadBalancer` or `nodePort`](/operator/kubernetes/#voice) on the second release.
+
+</TabItem>
+<TabItem label="With rexctl">
+
+On Docker or Podman, give the second instance its own folder and project name. rexctl gives its container and volume the project's name, and picks free voice ports.
+
+```sh
+rexctl install --runtime docker --dir /opt/fluxer-team --project fluxer-team \
+  --behind-proxy --bind 127.0.0.1:8081
+```
+
+</TabItem>
+</Tabs>
+
+## One proxy in front
+
+Your reverse proxy sends each domain to its own port. With Caddy, it looks like this.
+
+```txt title="Caddyfile"
+chat.example.com {
+	reverse_proxy 127.0.0.1:8080
+}
+
+team.example.org {
+	reverse_proxy 127.0.0.1:8081
+}
+```
+
+[Other proxies](/operator/reverse-proxy/#configs-for-each-proxy) send each domain to its own port the same way. Open both pairs of voice ports in your firewall, one pair for each instance.

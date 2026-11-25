@@ -158,6 +158,7 @@ case $0 in
 	*/install.sh) self_dir=$(cd "$(dirname "$0")" 2>/dev/null && pwd) || self_dir='' ;;
 esac
 
+given=$#
 trial=0
 case ${1:-} in
 	'' | -*) map_legacy_flags "$@" ;;
@@ -247,7 +248,9 @@ if [ "$trial" -eq 1 ]; then
 	exit "$status"
 fi
 
-if [ "$(id -u)" -eq 0 ]; then
+if [ -n "${REXCTL_INSTALL_DIR:-}" ]; then
+	bin_dir=$REXCTL_INSTALL_DIR
+elif [ "$(id -u)" -eq 0 ]; then
 	bin_dir=/usr/local/bin
 else
 	bin_dir=$HOME/.local/bin
@@ -285,6 +288,27 @@ fi
 
 rm -rf "$tmp"
 trap - EXIT INT HUP TERM
+
+answers_needed() {
+	case ${1:-} in
+		'' | version | help) return 1 ;;
+	esac
+	for arg in "$@"; do
+		case $arg in
+			--yes | -y | --help | -h) return 1 ;;
+		esac
+	done
+	return 0
+}
+
+if [ ! -t 0 ] && [ -n "${SUDO_USER:-}" ] && [ "$(id -u)" -eq 0 ] && answers_needed "$@"; then
+	if [ "$given" -eq 0 ]; then
+		printf '  To install Fluxer, run sudo rexctl install.\n' >&2
+	else
+		printf '  Run sudo rexctl %s to go on.\n' "$*" >&2
+	fi
+	exit 0
+fi
 
 if [ ! -t 0 ] && (: </dev/tty) 2>/dev/null; then
 	exec "$bin_dir/rexctl" "$@" </dev/tty

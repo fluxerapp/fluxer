@@ -15,10 +15,10 @@ Bots call this endpoint to get the URL for the [Gateway](/gateway/overview/) Web
 | Field | Type | Description |
 | --- | --- | --- |
 | url | string | The `ws` or `wss` Gateway URL |
-| shards | integer | Recommended shard count, always `1` |
+| shards | integer | The recommended shard count, one for every 2,500 guilds the bot is in, rounded up, and at least `1` |
 | session_start_limit | [session start limit](#session-start-limit-object) object | Session start values, the same on every call |
 
-Add the [connection parameters](/gateway/overview/#connection-parameters) to `url` before you connect. To split a bot across more than one shard, follow [sharding](/gateway/overview/#sharding).
+Add the [connection parameters](/gateway/overview/#connection-parameters) to `url` before you connect. To split a bot across more than one shard, [pass `shard` in Identify](/gateway/overview/#sharding).
 
 ### Example
 
@@ -37,7 +37,7 @@ Add the [connection parameters](/gateway/overview/#connection-parameters) to `ur
 
 ## Session start limit object
 
-The API returns the same values on every call, and the Gateway doesn't use them. The limits it enforces are under [Session lifecycle](/gateway/limits-and-rate-limits/#session-lifecycle).
+The API returns the same values on every call, and the Gateway doesn't use them. The limits the Gateway enforces are on [Limits and rate limits](/gateway/limits-and-rate-limits/#session-lifecycle).
 
 ### Structure
 
@@ -52,13 +52,13 @@ The API returns the same values on every call, and the Gateway doesn't use them.
 
 <RouteHeader method="GET" path="/v1/gateway/bot" bot />
 
-Returns a [Gateway information object](#gateway-information-object). The `Authorization` header takes `Bot <token>`, `Bearer <token>` or the bare token. The API only checks that the token looks like a [bot token](/authentication/#bot-tokens), and it returns 200 for a revoked or wrong one. To test whether a token works, call [Get bot application](/http-api/applications/#get-bot-application).
+Returns a [Gateway information object](#gateway-information-object). The `Authorization` header takes `Bot <token>`, `Bearer <token>` or the bare token. The token must be a working [bot token](/authentication/#bot-tokens).
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | [Gateway information](#gateway-information-object) object | The token looks like a bot token |
-| 401 | [error response](/http-api/#error-response) | `MISSING_AUTHORIZATION` with no token, `INVALID_AUTH_TOKEN` when the token doesn't look like a bot token |
+| 200 | [Gateway information](#gateway-information-object) object | The token is a working bot token |
+| 401 | [error response](/http-api/#error-response) | `MISSING_AUTHORIZATION` with no token, `INVALID_AUTH_TOKEN` when the token is not a working bot token |
 
 The rate limit is 60 requests per minute for each bot, or for each client IP address when the request has no working `Bot ` token, on the `gateway:bot_info` bucket.

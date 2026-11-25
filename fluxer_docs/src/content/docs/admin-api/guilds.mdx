@@ -60,7 +60,7 @@ The short form of a guild, returned by [List guilds](#list-guilds) and [List use
 
 ## Admin guild detail object
 
-The full guild with every channel and role, returned by [Get guild](#get-guild). Use [List guild threads](/admin-api/threads/#list-guild-threads) for threads.
+The full guild with every channel and role, returned by [Get guild](#get-guild). Use [List guild threads](/admin-api/threads/#list-guild-threads) to get its threads.
 
 The owner fields are null when the owner account doesn't exist.
 
@@ -582,7 +582,7 @@ Returns a page of the guild's own audit log, the same as the public [List guild 
 | user_id? | snowflake | Return only entries by this user |
 | action_type?<sup>2</sup> | integer | Return only entries with this [audit action](/http-api/guild-audit-logs/#audit-actions) |
 
-<sup>1</sup> Sending both fails with `INVALID_FORM_BODY` and `CANNOT_SPECIFY_BOTH_BEFORE_AND_AFTER`
+<sup>1</sup> Sending both fails with `CANNOT_SPECIFY_BOTH_BEFORE_AND_AFTER` in an `INVALID_FORM_BODY` error response
 
 <sup>2</sup> The thread actions 110, 111 and 112 fail with `INVALID_FORM_BODY`
 

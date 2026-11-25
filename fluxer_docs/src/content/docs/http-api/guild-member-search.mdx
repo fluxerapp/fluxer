@@ -122,6 +122,6 @@ On an instance that uses Meilisearch, `total_result_count` is an estimate that s
 | 403 | [error response](/http-api/#error-response) | `MISSING_PERMISSIONS` without membership or any of the permissions above, or `MISSING_ACCESS` when the guild is unavailable |
 | 404 | [error response](/http-api/#error-response) | `UNKNOWN_GUILD` when the guild does not exist |
 
-While Fluxer indexes the guild's members, the page is empty and `indexing` is true, and you can retry the request later. If the instance has no member search, the page is empty and `indexing` is false.
+While Fluxer indexes the guild's members, the page is empty and `indexing` is true, and you can retry the request later. If the instance has no member search, the page is empty and `indexing` is `false`.
 
 The rate limit is 40 requests per 10 seconds, on the `guild:members::guild_id` bucket.

@@ -1,33 +1,36 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {OUTBOUND_USER_AGENT} from '@/server/HTTPConstants';
+import {
+	archiveName,
+	CACHE_MS,
+	compareCalVer,
+	type GitHubAsset,
+	type GitHubRelease,
+	getJSON,
+	getText,
+	githubBlocked,
+	isCalVer,
+	isPublished,
+	latestRelease,
+	PAGES,
+	quotaLow,
+	RELEASES_API,
+	RETRY_MS,
+	REXCTL_TARGETS,
+	ResolverUnavailableError,
+	TAG_PREFIX,
+} from '@/installer/GitHubReleases';
 
-const RELEASES_API = 'https://api.github.com/repos/fluxerapp/fluxer/releases';
-const TAG_PREFIX = 'fluxer-release@';
 const METADATA_ASSET = 'rexctl-release.json';
 const CHECKSUMS_ASSET = 'checksums.txt';
 const COMPOSE_ASSET_PREFIX = 'fluxer-compose-';
-const CACHE_MS = 5 * 60 * 1000;
-const RETRY_MS = 30 * 1000;
-const FETCH_TIMEOUT_MS = 15 * 1000;
-const PAGES = 3;
 const MAX_ENTRIES = 256;
 const PINNED_RESERVE = 15;
-const CALVER = /^\d{4}\.\d{3,4}\.\d{1,6}$/;
 const SHA256 = /^[0-9a-f]{64}$/;
 const ENGINE_VERSION = /^\d+\.\d+\.\d+$/;
 const DEFAULT_MIN_PODMAN = '5.4.0';
 const DEFAULT_MIN_DOCKER = '24.0.0';
 const DEFAULT_STATE_SCHEMA = 1;
-
-export const REXCTL_TARGETS = [
-	{os: 'linux', arch: 'amd64'},
-	{os: 'linux', arch: 'arm64'},
-	{os: 'darwin', arch: 'amd64'},
-	{os: 'darwin', arch: 'arm64'},
-	{os: 'windows', arch: 'amd64'},
-	{os: 'windows', arch: 'arm64'},
-] as const;
 
 const NATIVE_ARCHES = ['amd64', 'arm64'] as const;
 
@@ -48,19 +51,7 @@ export interface RexctlRelease {
 	readonly assets: ReadonlyArray<RexctlAsset>;
 	readonly dist: ReadonlyArray<RexctlAsset>;
 	readonly compose_url: string;
-}
-
-interface GitHubAsset {
-	readonly name: string;
-	readonly browser_download_url: string;
-	readonly digest?: string | null;
-}
-
-interface GitHubRelease {
-	readonly tag_name: string;
-	readonly draft: boolean;
-	readonly prerelease: boolean;
-	readonly assets: ReadonlyArray<GitHubAsset>;
+	readonly compose_last: string;
 }
 
 interface CacheEntry {
@@ -71,66 +62,9 @@ interface CacheEntry {
 }
 
 const cache = new Map<string, CacheEntry>();
-let githubRetryAt = 0;
-let rateLimitRemaining = Number.POSITIVE_INFINITY;
-let rateLimitResetAt = 0;
-
-export class ResolverUnavailableError extends Error {}
-
-export function isCalVer(value: string): boolean {
-	return CALVER.test(value);
-}
-
-export function compareCalVer(a: string, b: string): number {
-	return a.localeCompare(b, 'en', {numeric: true});
-}
-
-function archiveName(version: string, os: string, arch: string): string {
-	const extension = os === 'windows' ? 'zip' : 'tar.gz';
-	return `rexctl_${version}_${os}_${arch}.${extension}`;
-}
 
 function nativeName(version: string, arch: string): string {
 	return `fluxer-${version}-linux-${arch}.tar.zst`;
-}
-
-async function getJSON<T>(url: string): Promise<T | null> {
-	const response = await fetch(url, {
-		headers: {
-			accept: 'application/vnd.github+json',
-			'user-agent': OUTBOUND_USER_AGENT,
-			'x-github-api-version': '2022-11-28',
-		},
-		signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-	});
-	const remaining = Number.parseInt(response.headers.get('x-ratelimit-remaining') ?? '', 10);
-	const reset = Number.parseInt(response.headers.get('x-ratelimit-reset') ?? '', 10);
-	if (Number.isFinite(remaining) && Number.isFinite(reset)) {
-		rateLimitRemaining = remaining;
-		rateLimitResetAt = reset * 1000;
-	}
-	if (response.status === 404) {
-		return null;
-	}
-	if (!response.ok) {
-		const now = Date.now();
-		const exhausted = (response.status === 403 || response.status === 429) && remaining === 0;
-		githubRetryAt = exhausted && rateLimitResetAt > now ? rateLimitResetAt : now + RETRY_MS;
-		throw new ResolverUnavailableError(`GitHub answered ${response.status} for ${url}`);
-	}
-	return (await response.json()) as T;
-}
-
-async function getText(url: string): Promise<string | null> {
-	const response = await fetch(url, {
-		headers: {'user-agent': OUTBOUND_USER_AGENT},
-		redirect: 'follow',
-		signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-	});
-	if (!response.ok) {
-		return null;
-	}
-	return response.text();
 }
 
 export function parseChecksums(text: string): Map<string, string> {
@@ -142,19 +76,6 @@ export function parseChecksums(text: string): Map<string, string> {
 		}
 	}
 	return sums;
-}
-
-function versionOf(release: GitHubRelease): string | null {
-	if (!release.tag_name.startsWith(TAG_PREFIX)) {
-		return null;
-	}
-	const version = release.tag_name.slice(TAG_PREFIX.length);
-	return isCalVer(version) ? version : null;
-}
-
-function hasEveryArchive(release: GitHubRelease, version: string): boolean {
-	const names = new Set(release.assets.map((asset) => asset.name));
-	return REXCTL_TARGETS.every((t) => names.has(archiveName(version, t.os, t.arch)));
 }
 
 async function toRexctlRelease(release: GitHubRelease, version: string): Promise<RexctlRelease | null> {
@@ -194,6 +115,7 @@ async function toRexctlRelease(release: GitHubRelease, version: string): Promise
 	let minPodman = DEFAULT_MIN_PODMAN;
 	let minDocker = DEFAULT_MIN_DOCKER;
 	let stateSchema = DEFAULT_STATE_SCHEMA;
+	let composeLast = '';
 	const metadataAsset = byName.get(METADATA_ASSET);
 	if (metadataAsset) {
 		const text = await getText(metadataAsset.browser_download_url);
@@ -206,6 +128,7 @@ async function toRexctlRelease(release: GitHubRelease, version: string): Promise
 			min_podman?: unknown;
 			min_docker?: unknown;
 			state_schema?: unknown;
+			compose_last?: unknown;
 		};
 		if (typeof metadata.min_from === 'string' && isCalVer(metadata.min_from)) {
 			minFrom = metadata.min_from;
@@ -226,6 +149,9 @@ async function toRexctlRelease(release: GitHubRelease, version: string): Promise
 		) {
 			stateSchema = metadata.state_schema;
 		}
+		if (typeof metadata.compose_last === 'string' && isCalVer(metadata.compose_last)) {
+			composeLast = metadata.compose_last;
+		}
 	}
 	return {
 		version,
@@ -237,10 +163,19 @@ async function toRexctlRelease(release: GitHubRelease, version: string): Promise
 		assets,
 		dist,
 		compose_url: byName.get(`${COMPOSE_ASSET_PREFIX}${version}.tar.gz`)?.browser_download_url ?? '',
+		compose_last: composeLast,
 	};
 }
 
 async function resolveLatest(): Promise<RexctlRelease | null> {
+	const marked = await latestRelease();
+	const markedVersion = marked ? isPublished(marked) : null;
+	if (marked && markedVersion) {
+		const resolved = await toRexctlRelease(marked, markedVersion);
+		if (resolved) {
+			return resolved;
+		}
+	}
 	const candidates: Array<{release: GitHubRelease; version: string}> = [];
 	for (let page = 1; page <= PAGES && candidates.length === 0; page++) {
 		const releases = await getJSON<ReadonlyArray<GitHubRelease>>(`${RELEASES_API}?per_page=100&page=${page}`);
@@ -248,8 +183,8 @@ async function resolveLatest(): Promise<RexctlRelease | null> {
 			break;
 		}
 		for (const release of releases) {
-			const version = versionOf(release);
-			if (version && !release.draft && !release.prerelease && hasEveryArchive(release, version)) {
+			const version = isPublished(release);
+			if (version) {
 				candidates.push({release, version});
 			}
 		}
@@ -297,8 +232,8 @@ export async function resolveRexctlRelease(version: string | null): Promise<Rexc
 	if (now - current.fetchedAt < CACHE_MS) {
 		return current.value;
 	}
-	const quotaReserved = version !== null && rateLimitRemaining < PINNED_RESERVE && now < rateLimitResetAt;
-	if (!current.pending && (now - current.failedAt < RETRY_MS || now < githubRetryAt || quotaReserved)) {
+	const quotaReserved = version !== null && quotaLow(PINNED_RESERVE, now);
+	if (!current.pending && (now - current.failedAt < RETRY_MS || githubBlocked(now) || quotaReserved)) {
 		if (current.value) {
 			return current.value;
 		}

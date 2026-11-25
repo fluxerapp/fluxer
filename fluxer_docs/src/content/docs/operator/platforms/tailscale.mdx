@@ -1,0 +1,106 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: At home with Tailscale
+description: You run Fluxer at home for the devices on your tailnet with tailscale serve, or publish it to the internet with Funnel, without voice.
+---
+
+import {Steps} from '@astrojs/starlight/components';
+
+## Short version
+
+Fluxer in proxy mode on `127.0.0.1:8080`, and `tailscale serve` giving it an HTTPS address on your tailnet, such as `fluxer.tail1234.ts.net`. Only people on your tailnet can open it. Setting it up takes about 15 minutes.
+
+## What this changes
+
+- Fluxer serves plain HTTP on `127.0.0.1:8080`, and publishes voice ports 7881 and 7882 on every address of the machine. Keep them closed in your router or your provider's firewall, and calls between tailnet devices still work.
+- Tailscale on the machine, with MagicDNS and HTTPS certificates on for your tailnet.
+- One `tailscale serve` or `tailscale funnel` rule for port 443.
+
+## Before you start
+
+- Check the [requirements](/operator/requirements/).
+- In the Tailscale admin console, turn on MagicDNS and HTTPS certificates under DNS.
+- Pick one of two routes. With Serve, only devices on your tailnet can use Fluxer, and calls work between them. With Funnel, anyone can open Fluxer on the internet, but Funnel only forwards TCP on ports 443, 8443 and 10000, so calls don't work through it.
+
+## Install
+
+<Steps>
+
+1. Install Tailscale on the machine and sign in.
+
+   ```sh
+   curl -fsSL https://tailscale.com/install.sh | sh
+   sudo tailscale up
+   ```
+
+   The Machines page of the admin console shows the machine's full name, such as `fluxer.tail1234.ts.net`, and so does `tailscale status --json | grep -m1 DNSName` without the trailing dot. This name becomes `FLUXER_DOMAIN`, and it changes if you rename the tailnet or the machine later.
+
+2. Set up Fluxer with Docker [in proxy mode](/operator/docker/#behind-your-own-proxy-or-tunnel), with the tailnet name as the domain and the machine's Tailscale address for voice.
+
+   ```sh title="fluxer.env"
+   FLUXER_DOMAIN=fluxer.tail1234.ts.net
+   FLUXER_EDGE_MODE=proxy
+   FLUXER_LIVEKIT_NODE_IP=100.101.102.103
+   ```
+
+   Use the address from `tailscale ip -4`. Then `docker ps` shows `healthy`.
+
+3. Serve Fluxer on your tailnet.
+
+   ```sh
+   sudo tailscale serve --bg 8080
+   ```
+
+   `tailscale serve status` shows `https://fluxer.tail1234.ts.net`.
+
+4. Print the setup token and open the address.
+
+   ```sh
+   docker compose exec fluxer fluxerd setup-token
+   ```
+
+   The setup wizard opens at your tailnet address, where the token creates the first admin account. The mobile and desktop apps need Tailscale running on the phone or computer to connect to an instance that is only on your tailnet.
+
+</Steps>
+
+## With rexctl and no proxy
+
+`rexctl install` on Linux with systemd can serve the tailnet name itself, with a certificate from Tailscale and no `tailscale serve`. When the machine has HTTPS certificates turned on, the address question shows its tailnet name. Before you install, let Fluxer's service account ask Tailscale for its certificate.
+
+```sh
+echo 'TS_PERMIT_CERT_UID=fluxer' | sudo tee -a /etc/default/tailscaled
+sudo systemctl restart tailscaled
+sudo rexctl install --runtime systemd --domain fluxer.tail1234.ts.net
+```
+
+rexctl skips the public DNS check for the tailnet name, and calls use the machine's Tailscale address. With Docker, `rexctl install` picks proxy mode, and you put `tailscale serve` in front of Fluxer as in step 3.
+
+## Docker without tailscale serve
+
+Docker can also get the certificate from Tailscale when the Tailscale socket is mounted into the container. First let user 65532, the account Fluxer runs as inside the container, ask Tailscale for the machine's certificate.
+
+```sh
+echo 'TS_PERMIT_CERT_UID=65532' | sudo tee -a /etc/default/tailscaled
+sudo systemctl restart tailscaled
+```
+
+In `fluxer.env`, set the tailnet name and the machine's Tailscale address and leave proxy mode off. Then add the socket to `compose.yaml`, next to the `fluxer-data` volume.
+
+```sh title="fluxer.env"
+FLUXER_DOMAIN=fluxer.tail1234.ts.net
+FLUXER_LIVEKIT_NODE_IP=100.101.102.103
+```
+
+```yaml title="compose.yaml"
+services:
+  fluxer:
+    volumes:
+      - fluxer-data:/var/lib/fluxer
+      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
+```
+
+## Public with Funnel
+
+To let people outside your tailnet in, use `sudo tailscale funnel --bg 8080` in step 3. Funnel has bandwidth limits that you can't change.
+
+Calls don't work through Funnel, so set `FLUXER_LIVEKIT_ENABLED=false`, forward ports 7881 and 7882 from your router, or add a [voice server](/operator/voice-servers/) on a separate VPS.

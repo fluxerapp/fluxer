@@ -50,13 +50,21 @@ Opcode `12` tells the session that sent a [Voice State Update](/gateway/commands
 }
 ```
 
-The Gateway sends three codes.
+A refused voice join or update gets one of these codes. Show the user why it failed.
 
-- `VOICE_P2P_CONSENT_REQUIRED` means the call is peer-to-peer and the join didn't send `p2p: true`. Ask the user, then join again with `p2p: true`. [Peer-to-peer voice](/gateway/events/#peer-to-peer-voice) has the flow.
-- `VOICE_P2P_UNAVAILABLE` means the Gateway declined peer-to-peer for this join. Abort the join and tell the user.
-- `VOICE_CHANNEL_FULL` means the channel is at its `user_limit` or the peer-to-peer call is full. Abort the join and tell the user.
-
-Other refused voice joins get no opcode 12.
+| Code | Message | Cause |
+| --- | --- | --- |
+| `VOICE_PERMISSION_DENIED` | Missing voice permissions | The member lacks VIEW_CHANNEL or CONNECT |
+| `VOICE_MEMBER_TIMED_OUT` | Voice member is timed out | The member has an active timeout |
+| `VOICE_CHANNEL_FULL` | Voice channel is full | The channel is at its `user_limit`, at 25 users while anyone has a camera on, or the peer-to-peer call is full |
+| `VOICE_CONNECTION_LIMIT_REACHED` | Voice connection limit reached | The user has `voice_connection_limit` connections in the channel |
+| `VOICE_CAMERA_USER_LIMIT` | Too many users in channel to enable camera | 25 members already have a camera on |
+| `VOICE_UNCLAIMED_ACCOUNT` | Claim your account to join voice | An unclaimed account joins a one-on-one call or a voice channel in a guild it doesn't own |
+| `VOICE_ACCOUNT_VERIFICATION_REQUIRED` | Confirm an email address to join voice | The instance's `interaction_tier` is `enforced` and the account isn't [verified](/http-api/users/#account-tiers) |
+| `VOICE_E2EE_REQUIRED` | This voice channel is end-to-end encrypted and requires a client with E2EE support | Voice encryption is on, everyone in the channel is `e2ee_capable`, and the session (not a bot) didn't identify with it |
+| `VOICE_P2P_CONSENT_REQUIRED` | This call is peer-to-peer and requires agreement to join | The call is peer-to-peer and the join didn't send `p2p: true`. Ask the user, then join again with `p2p: true`, as in [peer-to-peer voice](/gateway/events/#peer-to-peer-voice) |
+| `VOICE_P2P_UNAVAILABLE` | Peer-to-peer voice is unavailable for this join | The Gateway declined peer-to-peer for this join |
+| `VOICE_TOKEN_FAILED` | Failed to obtain voice token | Fluxer couldn't issue a voice token. Try the join again later |
 
 ## Close codes
 
@@ -65,12 +73,12 @@ Other refused voice joins get no opcode 12.
 | 4000 | Unknown error | The node is draining, session creation failed, or the session in Resume did not respond |
 | 4001 | Unknown opcode | An undefined or Gateway-only opcode, a payload with no `d`, or opcode 28 without [thread access](/gateway/threads/#session-flag) or an object `d` |
 | 4002 | Decode error | The payload size, compression, encoding or command fields are invalid |
-| 4003 | Not authenticated | A command arrived before Identify or Resume attached a session |
+| 4003 | Not authenticated | A command arrived before Identify or Resume, or no Identify or Resume arrived within one heartbeat interval of Hello |
 | 4004 | Authentication failed | The token is invalid, or it doesn't own the session in Resume |
 | 4005 | Already authenticated | Identify or Resume arrived while a session was attached, or with no `d` |
 | 4007 | Invalid sequence | Heartbeat `d` isn't an integer or `null`, or Resume `seq` is [out of range](#invalid-sequence) |
 | 4008 | Rate limited | A connection, payload, source IP or session budget was exceeded |
-| 4009 | Session timeout | No heartbeat was accepted for 45,000 ms |
+| 4009 | Session timeout | No heartbeat was accepted within the [heartbeat timeout](/gateway/limits-and-rate-limits/#session-lifecycle) |
 | 4010 | Invalid shard | The Identify `shard` isn't a valid `[shard_id, shard_count]` pair<sup>1</sup> |
 | 4011 | Sharding required | More than 2,500 guilds belong to one bot session<sup>2</sup> |
 | 4012 | Invalid API version | The `v` connection parameter is missing or isn't `1` |
@@ -81,39 +89,38 @@ Other refused voice joins get no opcode 12.
 
 If the connection had a session, you can [Resume](/gateway/commands/#resume) it for 60,000 ms after a network failure or any close except `1000` and `1001`. A `1000` or `1001` close from the client ends the session right away, so close with another code, such as `4000`, when you plan to resume. When a Resume closes with `4004` or `4007`, the session stays and you can try again. Resume only replays events still in the [replay buffer](/gateway/limits-and-rate-limits/#replay-and-backpressure).
 
-Change the token, shard pair or version before you reconnect after `4004`, `4010` or `4012`.
+After `4004`, `4010` or `4012`, change the token, shard pair or version before you reconnect.
 
 ### Invalid sequence
 
 Heartbeat closes with `4007` only after a session is attached.
 
-Resume closes with `4007` when `seq` is above the last sequence the session dispatched or below the last acknowledged sequence. A `seq` inside those bounds but older than the oldest event in the replay buffer gets opcode 9 with `d: false`, and the session stays available.
+Resume closes with `4007` when `seq` is negative, above the last sequence the session dispatched or below the last acknowledged sequence. A `seq` inside those bounds but older than the oldest event in the replay buffer gets opcode 9 with `d: false`, and the session stays available.
 
 ## Close reasons
 
-Every close with a 4000-range code has a reason. Branch on the code and log the reason. The reasons below say more than their code. Other codes use the close code name as the reason.
+Every close with a 4000-range code has a reason. Branch on the code and log the reason. The reasons below say more than their code. Other codes use the name of the close code as the reason.
 
 | Reason | Code | Cause |
 | --- | --- | --- |
 | `Failed to start session` | 4000 | Session creation failed for an unclassified reason |
 | `Session unavailable` | 4000 | The session did not respond during Resume |
 | `Session drain requested; reconnect to continue` | 4000 | Opcode 7 came just before the close |
-| `Encode failed` | 4002 | Hello could not be encoded |
 | `Compression failed: zstd-stream` | 4002 | Hello could not be compressed on a zstd connection |
 | `Payload too large` | 4002 | A message is over 16,384 bytes, on the wire or after decompression |
 | `Decompression failed` | 4002 | A compressed message could not be decompressed |
 | `Decode failed` | 4002 | The payload isn't valid JSON or isn't an object |
 | `Invalid payload` | 4002 | The decoded object has no `op` |
-| `Invalid identify payload` | 4002 | Identify is missing `token` or `properties`, or a field has the wrong type |
+| `Invalid identify payload` | 4002 | Identify is missing `token` or `properties`, or has an invalid `properties`, `ignored_events` or `flags`, such as more than 256 `ignored_events` or a negative `flags` |
 | `Invalid resume payload` | 4002 | Resume is missing `token`, `session_id` or an integer `seq`, or a field has the wrong type |
 | `Invalid presence payload` | 4002 | Presence Update is not an object or has no valid `status` |
 | `Invalid voice payload` | 4002 | Voice State Update `d` is not an object |
-| `Invalid token` | 4004 | The Identify token is invalid or the Resume token doesn't own the session |
+| `Invalid token` | 4004 | The Identify token is not a string of 1 to 256 bytes with at least one visible character, the backend rejects it, or the Resume token doesn't own the session |
 | `Too many connections` | 4008 | The source IP has 256 concurrent connections |
 | `Rate limited` | 4008 | The connection, source IP or user payload budget was exceeded |
 | `Too many sessions` | 4008 | The user already has 100 live sessions, which doesn't apply to bots |
-| `Identify rate limited` | 4008 | The instance is starting too many sessions at once. Try Identify again after a backoff |
-| `Resume rate limited` | 4008 | The instance is resuming too many sessions at once. Try Resume again after a backoff |
-| `Heartbeat timeout` | 4009 | No heartbeat was accepted for 45,000 ms |
+| `Identify rate limited` | 4008 | The source IP sent more than 300 Identify and Resume commands in a 60-second window |
+| `Resume rate limited` | 4008 | The same per-IP budget, hit by a Resume |
+| `Heartbeat timeout` | 4009 | No heartbeat was accepted within the [heartbeat timeout](/gateway/limits-and-rate-limits/#session-lifecycle) |
 
 The Gateway drops [some over-budget commands](/gateway/commands/), such as Presence Update and Voice Signal, without closing the connection.

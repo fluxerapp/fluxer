@@ -1,0 +1,109 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Changing settings
+description: You change Fluxer's settings in fluxer.env, in the Helm chart or with rexctl.
+---
+
+import {Tabs, TabItem} from '@astrojs/starlight/components';
+
+Settings control how Fluxer runs, like its domain, email server and storage. Most of the rest, such as its name, sign-up rules and limits, are in the admin panel.
+
+## Where settings go
+
+[Every Fluxer setting](/operator/settings/) is spelled the same on every way of running it, like `FLUXER_DOMAIN`.
+
+| How you run Fluxer | Where settings go |
+| --- | --- |
+| Docker without rexctl | `fluxer.env` |
+| systemd without rexctl | `/etc/fluxer/fluxer.env` |
+| Kubernetes | Under `config` in the Helm chart |
+| rexctl, on Docker, Podman or systemd | `rexctl config set` |
+
+## Change a setting
+
+<Tabs syncKey="runtime">
+<TabItem label="Docker">
+
+Edit `fluxer.env`, then apply it.
+
+```sh
+docker compose up -d
+```
+
+Compose recreates the container with the new settings, which restarts Fluxer. With `docker run`, run `docker stop fluxer && docker rm fluxer`, then the same `docker run` line again. The volume keeps your data.
+
+</TabItem>
+<TabItem label="Linux by hand">
+
+Edit `/etc/fluxer/fluxer.env`, then reload.
+
+```sh
+systemctl reload fluxerd
+```
+
+Fluxer restarts only the changed parts.
+
+</TabItem>
+<TabItem label="Kubernetes">
+
+Set the value under `config` and upgrade the release. The first line looks up the chart version you run, so Helm keeps that version.
+
+```sh
+version=$(helm get metadata fluxer -n fluxer | awk '/^VERSION:/ {print $2}')
+helm upgrade fluxer oci://ghcr.io/fluxerapp/charts/fluxer -n fluxer --version "$version" --reset-then-reuse-values \
+  --set config.FLUXER_SEARCH_ENGINE=none
+```
+
+A change to `config` restarts the pod.
+
+Passwords go in the Secret that `existingSecret` points to, and after a change to it run `kubectl -n fluxer rollout restart statefulset/fluxer`.
+
+</TabItem>
+<TabItem label="With rexctl">
+
+```sh
+rexctl config set FLUXER_SEARCH_ENGINE none
+```
+
+rexctl checks the value, shows what restarts and for about how long, and asks first. `rexctl config get` shows one setting, and `rexctl config list --all` every setting.
+
+</TabItem>
+</Tabs>
+
+To check a settings file without starting anything, run `fluxerd check-config`, for example `docker compose exec fluxer fluxerd check-config` with the compose file or `docker exec fluxer fluxerd check-config` with `docker run`.
+
+## Secrets in files
+
+Every setting also takes its value from a file. Add `_FILE` to the setting's name, set it to the path of a file with the value, and leave the plain name unset. This keeps passwords out of `fluxer.env` and works with Docker and Kubernetes secrets.
+
+```sh title="fluxer.env"
+FLUXER_EMAIL_SMTP_PASSWORD_FILE=/run/secrets/smtp-password
+```
+
+With the compose file, add the file as a Compose secret, which Docker puts at `/run/secrets/smtp-password` in the container.
+
+```yaml title="compose.yaml"
+services:
+  fluxer:
+    secrets: [smtp-password]
+
+secrets:
+  smtp-password:
+    file: ./smtp-password.txt
+```
+
+With `docker run`, add `-v ./smtp-password.txt:/run/secrets/smtp-password:ro` to the line, which mounts the file at the same path.
+
+The file has to be readable by the account Fluxer runs as, which is user ID 65532 in the container. Docker keeps the file's owner and mode, so give that account the file.
+
+```sh
+sudo chown 65532 smtp-password.txt && sudo chmod 400 smtp-password.txt
+```
+
+Compose treats `$` in `fluxer.env` as the start of a variable. Keep any password that has a `$` in it in a file like this one, never in `fluxer.env` itself.
+
+## Passwords and keys Fluxer makes
+
+On its first start, Fluxer creates its own passwords and keys and keeps them in `secrets.env` in its data folder. You never need to set them. Every backup includes them.
+
+Set one only to replace the value Fluxer made, and [check what each one changes](/operator/settings/#passwords-and-keys) first.

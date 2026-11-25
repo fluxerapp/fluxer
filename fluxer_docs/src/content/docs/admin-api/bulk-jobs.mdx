@@ -6,7 +6,7 @@ description: Queue one operation for an explicit list of users or guilds.
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A bulk job applies one operation to a list of user or guild IDs. Queueing one returns a job ID right away. Follow its progress with [Get job](/admin-api/jobs/#get-job) and stop it with [Cancel job](/admin-api/jobs/#cancel-job).
+A bulk job applies one operation to a list of user or guild IDs. Queueing one returns a job ID right away. Follow its progress with [Get job](/admin-api/jobs/#get-job), and stop it with [Cancel job](/admin-api/jobs/#cancel-job) if you need to.
 
 ## Bulk job creation object
 
@@ -20,15 +20,13 @@ A bulk job applies one operation to a list of user or guild IDs. Queueing one re
 
 The `task` field selects the body and the [Admin ACL](/admin-api/#acl-registry) you need.
 
-| Task | ACL | Description |
-| --- | --- | --- |
-| update_user_flags | `bulk:update:user_flags` | Adds and removes account flags on each user |
-| update_guild_features | `bulk:update:guild_features` | Adds and removes features on each guild |
-| add_guild_members | `bulk:add:guild_members` | Adds each user to one guild |
-| schedule_user_deletion | `bulk:delete:users` | Closes each account and schedules its deletion |
-| delete_user_messages | `bulk:delete:user_messages` | Deletes every message each user wrote |
+- `update_user_flags` adds and removes account flags on each user, and needs `bulk:update:user_flags`.
+- `update_guild_features` adds and removes features on each guild, and needs `bulk:update:guild_features`.
+- `add_guild_members` adds each user to one guild, and needs `bulk:add:guild_members`.
+- `schedule_user_deletion` closes each account and schedules its deletion, and needs `bulk:delete:users`.
+- `delete_user_messages` deletes every message each user wrote, and needs `bulk:delete:user_messages`.
 
-[Get job](/admin-api/jobs/#get-job) reports each task under its job task type in `task_type`.
+[Get job](/admin-api/jobs/#get-job) reports each task under its job task type, in the `task_type` field.
 
 | Task | Job task type |
 | --- | --- |
@@ -104,7 +102,7 @@ Queues one bulk operation and returns a [bulk job creation](#bulk-job-creation-o
 
 Fluxer works through the IDs in order. A failed ID doesn't stop the job, and the final `progress_message` gives the successful and failed counts. Cancelling stops the job between IDs and keeps the changes already made.
 
-Queueing writes a `queue_bulk_job` audit entry, and each job writes one summary entry when it ends.
+Queueing writes a `queue_bulk_job` audit entry, and each job writes one summary entry to the audit log when it ends.
 
 Each task works like its single-target route and sends the same Gateway events.
 

@@ -10,7 +10,7 @@ A stream is a screen share on a member's existing voice connection. These routes
 
 ## Stream key
 
-A stream key identifies one stream and has the form `{guild_id}:{channel_id}:{connection_id}`, or `dm:{channel_id}:{connection_id}` in a DM or group DM. A key that isn't three colon-separated segments of 1-256 characters returns 400 `INVALID_STREAM_KEY_FORMAT`.
+A stream key identifies one stream and has the form `{guild_id}:{channel_id}:{connection_id}`, or `dm:{channel_id}:{connection_id}` in a direct message or group direct message. A key that isn't three colon-separated segments of 1-256 characters each returns 400 `INVALID_STREAM_KEY_FORMAT`.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -81,7 +81,7 @@ The rate limit is 20 requests per 10 seconds, on the `channel:stream:update::str
 
 <RouteHeader method="GET" path="/v1/streams/{stream_key}/preview" />
 
-Returns the stored preview image with `Cache-Control: no-store, private`. You need read access.
+Returns the stored preview image with `Cache-Control: no-store, private`. You need read access to the stream.
 
 ### Response
 
@@ -90,7 +90,7 @@ Returns the stored preview image with `Cache-Control: no-store, private`. You ne
 | 200 | preview bytes | A preview is stored |
 | 404 | empty | No preview is stored, or it expired after one day |
 
-The rate limit is 60 requests per 10 seconds, on the `channel:stream:preview:get::stream_key` bucket.
+The `channel:stream:preview:get::stream_key` bucket allows 60 requests per 10 seconds.
 
 ## Upload stream preview
 
@@ -117,7 +117,7 @@ The API treats the image as a JPEG when `content_type` contains `jpeg` or `jpg`,
 | 400 | [error response](/http-api/#error-response) | `PREVIEW_MUST_BE_JPEG` when the payload isn't a JPEG |
 | 400 | [error response](/http-api/#error-response) | `FILE_SIZE_TOO_LARGE` when the JPEG exceeds 1000000 bytes |
 
-The rate limit is 20 requests per 10 seconds, on the `channel:stream:preview:post::stream_key` bucket.
+The `channel:stream:preview:post::stream_key` bucket allows 20 requests per 10 seconds.
 
 ## Create stream preview upload URL
 
@@ -139,7 +139,7 @@ Returns a [stream preview upload object](#stream-preview-upload-object). You nee
 | 200 | [stream preview upload](#stream-preview-upload-object) object | The upload URL was issued |
 | 400 | [error response](/http-api/#error-response) | `PREVIEW_MUST_BE_JPEG` when the media type isn't JPEG |
 
-The rate limit is 20 requests per 10 seconds, on the `channel:stream:preview:upload_url::stream_key` bucket.
+The `channel:stream:preview:upload_url::stream_key` bucket allows 20 requests per 10 seconds.
 
 ## Delete stream preview
 
@@ -153,4 +153,4 @@ Deletes the stored preview. You need mutation access.
 | --- | --- | --- |
 | 204 | empty | The preview was deleted or none was stored |
 
-The rate limit is 20 requests per 10 seconds, on the `channel:stream:preview:delete::stream_key` bucket.
+The `channel:stream:preview:delete::stream_key` bucket allows 20 requests per 10 seconds.

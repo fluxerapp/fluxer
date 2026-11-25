@@ -40,7 +40,19 @@ A thread is a [channel object](/http-api/channels/#channel-object) with the fiel
 
 <sup>1</sup> A thread started from a message has the ID of that message
 
-The schema also declares `topic`, `url`, `icon`, `position`, `bitrate`, `user_limit`, `voice_connection_limit`, `rtc_region`, `rtc_p2p`, `permission_overwrites`, `recipients`, `nsfw`, `nsfw_override`, `content_warning_level`, `content_warning_text`, `nicks`, `default_auto_archive_duration`, `default_thread_rate_limit_per_user`, `available_tags`, `default_reaction_emoji`, `default_sort_order`, `default_forum_layout` and `default_tag_setting`. Fluxer never sends them on a thread.
+The schema also declares these fields, and Fluxer never sends them on a thread.
+
+<details>
+<summary>Fields a thread never has</summary>
+
+- `topic`, `url`, `icon` and `position`
+- `bitrate`, `user_limit`, `voice_connection_limit`, `rtc_region` and `rtc_p2p`
+- `permission_overwrites`, `recipients` and `nicks`
+- `nsfw`, `nsfw_override`, `content_warning_level` and `content_warning_text`
+- `default_auto_archive_duration`, `default_thread_rate_limit_per_user`, `available_tags` and `default_reaction_emoji`
+- `default_sort_order`, `default_forum_layout` and `default_tag_setting`
+
+</details>
 
 ### Example
 
@@ -107,11 +119,16 @@ A new thread ignores the parent's `default_auto_archive_duration`.
 
 Fluxer archives a thread `auto_archive_duration` minutes after its last message or its `archive_timestamp`, whichever is later, and sends [Thread Update](/gateway/threads/#thread-update). A pinned forum post is never archived automatically. A guild can have at most 1,000 active threads, and starting or unarchiving one past that returns 400 `MAX_ACTIVE_THREADS`.
 
-Sending a message to an archived thread unarchives it. In an archived thread, reacting, pinning, editing, joining, leaving and changing members return 400 `THREAD_ARCHIVED`, and deleting a message still works. In a locked thread, sending, reacting, pinning, editing, joining and adding members return 400 `THREAD_LOCKED` to anyone who is not a thread moderator.
+Sending a message to an archived thread unarchives it.
+
+| Thread | Refused actions | Error |
+| --- | --- | --- |
+| Archived | Reacting, pinning, editing, joining, leaving and changing members. Deleting a message still works | 400 `THREAD_ARCHIVED` |
+| Locked | Sending, reacting, pinning, editing, joining and adding members, for anyone who is not a thread moderator | 400 `THREAD_LOCKED` |
 
 ## Thread permissions
 
-A thread has no permission overwrites. Fluxer uses the permissions of the parent with `SEND_MESSAGES_IN_THREADS` in place of `SEND_MESSAGES`. The thread bits are in [Permissions](/http-api/permissions/#permissions).
+A thread has no permission overwrites. Fluxer uses the permissions of the parent with [`SEND_MESSAGES_IN_THREADS`](/http-api/permissions/#permissions) in place of `SEND_MESSAGES`.
 
 ### Thread moderators
 
@@ -127,7 +144,7 @@ A caller who is not a member or thread moderator gets 403 `MISSING_ACCESS` for a
 
 <RouteHeader method="POST" path="/v1/channels/{channel_id}/messages/{message_id}/threads" bot auditReason />
 
-Starts a thread from a regular message or a reply in a guild text or announcement channel and returns a [thread object](#thread-object). You need `CREATE_PUBLIC_THREADS` and `READ_MESSAGE_HISTORY`.
+Starts a thread from a regular message or a reply in a guild text or announcement channel and returns a [thread object](#thread-object). You need the `CREATE_PUBLIC_THREADS` and `READ_MESSAGE_HISTORY` permissions.
 
 ### JSON body
 
@@ -198,7 +215,13 @@ The rate limit is 10 requests per 10 seconds, on the `channel:thread:create::cha
 
 ## Modify thread
 
-[Modify channel](/http-api/channels/#modify-channel) on a thread takes the body below and returns the [thread object](#thread-object). The thread owner or a thread moderator can change `name`, `auto_archive_duration`, `invitable` and `applied_tags`, and can archive or lock the thread. Any thread member can unarchive it. Only a thread moderator can change `rate_limit_per_user` or `flags`, unlock the thread, or change anything in a locked thread.
+[Modify channel](/http-api/channels/#modify-channel) on a thread takes the body below and returns the [thread object](#thread-object).
+
+| Who | Can |
+| --- | --- |
+| Any thread member | Unarchive the thread |
+| The thread owner or a thread moderator | Change `name`, `auto_archive_duration`, `invitable` and `applied_tags`, and archive or lock the thread |
+| Only a thread moderator | Change `rate_limit_per_user` or `flags`, unlock the thread, or change anything in a locked thread |
 
 ### Thread body
 
@@ -269,7 +292,7 @@ Returns the archived public and announcement threads of a channel, most recently
 | members | array[[thread member](/http-api/thread-members/#thread-member-object) object] | A thread member object for each returned thread the caller joined |
 | has_more | boolean | Whether more threads are available |
 
-The rate limit is 20 requests per 10 seconds, on the `channel:threads:archived:list::channel_id` bucket.
+The `channel:threads:archived:list::channel_id` bucket allows 20 requests per 10 seconds.
 
 ## List private archived threads
 
@@ -292,7 +315,7 @@ Returns the archived private threads of a guild text channel, most recently arch
 | members | array[[thread member](/http-api/thread-members/#thread-member-object) object] | A thread member object for each returned thread the caller joined |
 | has_more | boolean | Whether more threads are available |
 
-The rate limit is 20 requests per 10 seconds, on the `channel:threads:archived:list::channel_id` bucket.
+The `channel:threads:archived:list::channel_id` bucket allows 20 requests per 10 seconds.
 
 ## List joined private archived threads
 
@@ -315,13 +338,13 @@ Returns the archived private threads of a guild text channel that you joined, ne
 | members | array[[thread member](/http-api/thread-members/#thread-member-object) object] | A thread member object for each returned thread the caller joined |
 | has_more | boolean | Whether more threads are available |
 
-The rate limit is 20 requests per 10 seconds, on the `channel:threads:archived:list::channel_id` bucket.
+The `channel:threads:archived:list::channel_id` bucket allows 20 requests per 10 seconds.
 
 ## Search threads
 
 <RouteHeader method="GET" path="/v1/channels/{channel_id}/threads/search" bot />
 
-Searches the threads of a channel by name and tag. You need `READ_MESSAGE_HISTORY`, and a caller who is not a thread moderator only finds public threads and private threads they joined.
+Searches the threads of a channel by name and tag. You need `READ_MESSAGE_HISTORY`, and a caller who is not a thread moderator only finds public threads and the private threads they joined.
 
 ### Query parameters
 
@@ -366,7 +389,7 @@ While the thread index for the guild is being built, the API returns 202 with th
 | 202 | The body after the response body | The thread index is being built |
 | 403 | [error response](/http-api/#error-response) | `FEATURE_TEMPORARILY_DISABLED` when thread search is off on the instance |
 
-The rate limit is 20 requests per 10 seconds, on the `channel:threads:search::channel_id` bucket.
+The `channel:threads:search::channel_id` bucket allows 20 requests per 10 seconds.
 
 ## Thread messages
 

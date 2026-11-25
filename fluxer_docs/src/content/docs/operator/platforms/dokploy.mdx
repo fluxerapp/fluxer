@@ -1,0 +1,71 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Dokploy
+description: You run Fluxer on Dokploy as a Compose service behind Dokploy's Traefik.
+---
+
+import {Steps} from '@astrojs/starlight/components';
+
+## Short version
+
+A server running Dokploy, and a domain that points at it. Create a Compose service from the file below, add your domain to the `fluxer` service on port 8080 and deploy.
+
+It takes about 15 minutes.
+
+## What this changes
+
+- One Compose service with one container and one volume for `/var/lib/fluxer`.
+- A Traefik route to port 8080 of the container, with a Let's Encrypt certificate.
+- Ports 7881 on TCP and 7882 on UDP on the server, for voice and video calls.
+
+## Before you start
+
+Check the [requirements](/operator/requirements/).
+
+Dokploy's Traefik uses ports 80 and 443, so Fluxer runs in proxy mode. Open ports 7881 and 7882 in the firewall in front of the server for calls.
+
+## Install
+
+<Steps>
+
+1. In your project, create a Compose service, choose the raw editor and paste this.
+
+   ```yaml title="docker-compose.yml"
+   services:
+     fluxer:
+       image: ghcr.io/fluxerapp/fluxer:{{FLUXER_VERSION}}
+       restart: unless-stopped
+       stop_grace_period: 130s
+       environment:
+         FLUXER_DOMAIN: ${FLUXER_DOMAIN}
+         FLUXER_EDGE_MODE: proxy
+         FLUXER_UPGRADE_COMMAND: "In Dokploy, set the image tag to {version} and deploy again"
+       expose:
+         - "8080"
+       ports:
+         - "7881:7881"
+         - "7882:7882/udp"
+       volumes:
+         - fluxer-data:/var/lib/fluxer
+
+   volumes:
+     fluxer-data:
+   ```
+
+2. Under Environment, add `FLUXER_DOMAIN` with your domain.
+
+3. Under Domains, add your domain for the `fluxer` service with container port 8080, and choose Let's Encrypt for the certificate.
+
+4. Deploy.
+
+   The first start pulls the image and takes a few minutes, and after that Dokploy shows the service as running. To upgrade later, change the tag on the `image` line and deploy again. The `FLUXER_UPGRADE_COMMAND` line makes the admin panel show this step, with the new version filled in, when a new release is out and the [release check](/operator/upgrades/#turning-the-check-on) is on.
+
+5. Open the container's terminal in Dokploy and print the setup token.
+
+   ```sh
+   fluxerd setup-token
+   ```
+
+   Open your domain and paste the token to create the first admin account.
+
+</Steps>

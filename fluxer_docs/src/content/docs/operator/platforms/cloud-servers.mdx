@@ -1,0 +1,99 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Cloud servers
+description: You run Fluxer on a VPS from Hetzner, DigitalOcean, Linode, Vultr, OVHcloud, Amazon Lightsail or Oracle Cloud, and open the ports Fluxer needs in the hosting provider's firewall.
+---
+
+import {Steps} from '@astrojs/starlight/components';
+
+## Short version
+
+A VPS with 2 CPU cores, 2 GB of memory at least, 4 GB for a busy instance, and 20 GB of disk or more, Debian 13, or Ubuntu 24.04 or 26.04, and a domain that points at it or [its IP address](/operator/requirements/#with-an-ip-address). Open five ports in the provider's firewall and [install Fluxer with Docker](/operator/docker/#install) or [as a systemd service](/operator/linux/). The whole setup takes about 15 minutes.
+
+## What this changes
+
+- One VPS, billed by your provider.
+- The provider's firewall, opened for ports 80 and 443 on TCP, 443 on UDP, 7881 on TCP and 7882 on UDP. Keep port 22 open for SSH, ideally from your own address only.
+- On the server, Docker with one container and one volume, or Fluxer under systemd.
+
+## Before you start
+
+- Pick Debian 13, or Ubuntu 24.04 or 26.04, or any Linux with Docker for the Docker route.
+- With a domain, point an `A` record for it at the server's IPv4 address at your DNS provider. Before the first start, check that `dig +short chat.example.com` shows that address. Without a domain, use the server's public IP address and skip DNS. Without a domain of your own, a free name such as [`203-0-113-10.sslip.io`](/operator/requirements/#with-a-domain) works like a domain and keeps passkeys working.
+- Leave out the `AAAA` record on a Docker install unless you [put a reverse proxy in front](/operator/docker/#ipv6). On the systemd route, add the `AAAA` record too.
+- Many providers block outgoing mail ports, so [send email through a sending service](/operator/email/). Where ports 465 and 587 are blocked too, most sending services also take port 2525.
+- Calls use the server's bandwidth, which counts against the provider's traffic allowance.
+- A snapshot of the whole server taken while Fluxer runs may not restore the database cleanly. Use Fluxer's own [backups](/operator/backups/) and copy them off the server.
+
+## Install
+
+<Steps>
+
+1. Create the server with Debian 13, or Ubuntu 24.04 or 26.04, and your SSH key.
+
+   Open the five ports in the provider's firewall.
+
+   Check that `ssh root@<address>` signs you in to the server. Some images use another user, such as `ubuntu` on the Ubuntu images of several providers.
+
+2. [Install Fluxer with Docker](/operator/docker/#install), or install it [as a systemd service with rexctl](/operator/linux/).
+
+   At the end, the setup wizard opens at `https://<your address>`, where the address is your domain or the server's IP address. It asks whether people [sign in with a username or an email address](/operator/sign-in/), and this can't change later.
+
+3. [Invite people](/operator/running/#invite-people) with an invite link.
+
+</Steps>
+
+## Hetzner
+
+- A Cloud Console firewall applies to the servers you attach it to, and a server without a firewall has every port open to the internet.
+- The arm64 CAX servers run the same image.
+- Every server gets an IPv6 /64. On a Docker install, leave out the `AAAA` record unless you [put Caddy or another reverse proxy in front](/operator/docker/#ipv6).
+- Hetzner blocks outgoing ports 25 and 465 on every new account.
+
+## DigitalOcean
+
+- Cloud Firewalls are under Networking, Firewalls, and apply to Droplets by tag or by name. Add inbound rules for the five ports.
+- Turn on IPv6 when you create the Droplet if you want an `AAAA` record.
+- Outgoing ports 25, 465 and 587 are blocked on every Droplet. Send email over port 2525, which most sending services also take.
+
+## Linode (Akamai)
+
+- Cloud Firewalls are in Cloud Manager. Their default inbound policy can drop everything, so add accept rules for the five ports and for SSH.
+- Every Linode gets an IPv6 address.
+- Outgoing ports 25, 465 and 587 are restricted on new accounts until support lifts the block. Until then, send email over port 2525.
+
+## Vultr
+
+- Firewall groups are under Network, Firewall. Add inbound rules for the five ports, for IPv4 and IPv6 separately, and link it to the instance.
+- Outgoing port 25 is blocked on new accounts.
+
+## OVHcloud
+
+- On a VPS, the Edge Network Firewall is under Network, Public IP addresses, in the control panel, and it applies to each IP address. Leaving it off keeps every port open. Open the five ports if you turn it on.
+- Public Cloud instances use security groups.
+
+## Amazon Lightsail
+
+- Each instance has its own firewall under its Networking tab, with separate IPv4 and IPv6 rules. Only ports 22 and 80 are open by default, so add 443 on TCP and UDP, 7881 on TCP and 7882 on UDP, in both sets of rules.
+- Attach a static IP before you point your domain at the instance, because the public address changes when the instance stops.
+- Lightsail blocks outgoing port 25 until you ask AWS to remove the block.
+
+## Oracle Cloud
+
+- The instance's subnet has a security list, under Networking, Virtual cloud networks, your network, Security Lists. Add ingress rules from `0.0.0.0/0` for the five ports.
+- Oracle's Ubuntu and Oracle Linux images also reject every port but 22 inside the instance. `rexctl install` with systemd shows the commands for the ports it needs. Docker publishes its ports past those rules. On Ubuntu, open the ports with iptables.
+
+  ```sh
+  sudo iptables -I INPUT -p tcp -m multiport --dports 80,443,7881 -j ACCEPT
+  sudo iptables -I INPUT -p udp -m multiport --dports 443,7882 -j ACCEPT
+  sudo netfilter-persistent save
+  ```
+
+  On Oracle Linux, open them with firewalld.
+
+  ```sh
+  sudo firewall-cmd --permanent --add-port={80/tcp,443/tcp,443/udp,7881/tcp,7882/udp}
+  sudo firewall-cmd --reload
+  ```
+
+- Ampere A1 instances are arm64 and run the same Fluxer image.

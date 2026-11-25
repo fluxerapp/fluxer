@@ -1,0 +1,92 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Debian and Ubuntu
+description: You run Fluxer on Debian 12 or later, or Ubuntu 22.04 or later, in Docker or with systemd.
+---
+
+import {Tabs, TabItem} from '@astrojs/starlight/components';
+
+## Short version
+
+A machine with 2 CPU cores, 2 GB of memory at least and 4 GB for a busy instance, and 20 GB of free disk, on amd64 or arm64, with a domain that points at it or [its IP address](/operator/requirements/#with-an-ip-address). Install Docker, then [install Fluxer in it](/operator/docker/#install). Installing Docker and Fluxer takes about 5 minutes. For the systemd route, [install Fluxer with rexctl](/operator/linux/), or [install it by hand](/operator/linux-manual/).
+
+## What this changes
+
+- Docker Engine and the Compose plugin, from your distribution or Docker.
+- One container called `fluxer-fluxer-1` with the compose file, or `fluxer` with `docker run`, plus one [Docker volume](/operator/docker/#what-this-changes) called `fluxer-data` with all the data.
+- Ports 80 and 443 on TCP, 443 on UDP, 7881 on TCP and 7882 on UDP.
+
+## Before you start
+
+Check the [requirements](/operator/requirements/). Point your domain at the machine with an `A` record, and check with `dig +short chat.example.com` that it shows the machine's address first. On a Docker install, leave out the `AAAA` record unless a reverse proxy or Docker's IPv6 network [keeps IPv6 visitors' addresses](/operator/docker/#ipv6). Open the five ports in your firewall.
+
+## Install Docker
+
+<Tabs syncKey="docker-source">
+<TabItem label="Debian or Ubuntu">
+
+Debian 13 and Ubuntu 24.04 and later have Docker and the Compose plugin in their own repositories. These packages are older than Docker's own, and they work with Fluxer. On Debian 12 and Ubuntu 22.04, use Docker's repository.
+
+Install these packages on Debian 13.
+
+```sh
+sudo apt-get update
+sudo apt-get install -y docker.io docker-cli docker-compose
+```
+
+Install these on Ubuntu 24.04 and 26.04.
+
+```sh
+sudo apt-get update
+sudo apt-get install -y docker.io docker-compose-v2
+```
+
+`docker compose version` prints a version.
+
+</TabItem>
+<TabItem label="Docker's repository">
+
+Docker's repository has the newest releases of Docker Engine and Compose.
+
+```sh
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL "https://download.docker.com/linux/$(. /etc/os-release && echo "$ID")/gpg" -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/$(. /etc/os-release && echo "$ID")
+Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+
+`docker compose version` prints a version.
+
+</TabItem>
+</Tabs>
+
+## Install Fluxer
+
+Then run [the Docker install](/operator/docker/#install) from step 1, with `sudo` before `docker` unless you're root.
+
+## Firewalls
+
+Docker opens the ports it publishes in its own firewall rules, before ufw and nftables rules see the traffic. A port that ufw blocks is still [open when a container publishes it](https://docs.docker.com/engine/network/packet-filtering-firewalls/).
+
+To keep a port private, publish it on `127.0.0.1`, as proxy mode does with port 8080.
+
+The systemd route has no such exception. With ufw, open the ports yourself.
+
+```sh
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw allow 443/udp
+sudo ufw allow 7881/tcp
+sudo ufw allow 7882/udp
+```

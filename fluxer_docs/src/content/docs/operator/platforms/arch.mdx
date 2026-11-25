@@ -1,0 +1,67 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Arch Linux
+description: You run Fluxer on Arch Linux with Docker or Podman from the official repositories.
+---
+
+import {Steps} from '@astrojs/starlight/components';
+
+## Short version
+
+A machine with 2 CPU cores, 2 GB of memory at least and 4 GB for a busy instance, and 20 GB of free disk, and a domain that points at it or [its IP address](/operator/requirements/#with-an-ip-address). Install `docker` and `docker-compose` with pacman, download two files, set your domain or IP address and start Fluxer. The whole install takes about 5 minutes.
+
+## What this changes
+
+- The `docker` and `docker-compose` packages, and the `docker` service.
+- One container called `fluxer-fluxer-1`, which is `fluxer` to `docker compose` commands in that folder, and one [Docker volume](/operator/docker/#what-this-changes) called `fluxer-data`.
+- Ports 80 and 443 on TCP, 443 on UDP, 7881 on TCP and 7882 on UDP.
+
+## Before you start
+
+Check the [requirements](/operator/requirements/).
+
+Fluxer's image runs on amd64 and arm64, so Arch Linux ARM on a 64-bit board works too.
+
+## Install
+
+<Steps>
+
+1. Install Docker with Compose and start it.
+
+   ```sh
+   sudo pacman -Syu docker docker-compose
+   sudo systemctl enable --now docker
+   ```
+
+   `docker compose version` prints a version. After `pacman -Syu` installs a new kernel, Docker can fail to start until you reboot.
+
+2. Download the two files and set your domain.
+
+   ```sh
+   mkdir fluxer && cd fluxer
+   url=https://github.com/fluxerapp/fluxer/releases/latest/download
+   curl -fLO "$url/compose.yaml"
+   curl -fLO "$url/fluxer.env"
+   ```
+
+   Change `FLUXER_DOMAIN=chat.example.com` in `fluxer.env` to your domain.
+
+3. Start Fluxer.
+
+   ```sh
+   sudo docker compose up -d
+   ```
+
+   `sudo docker compose ps` shows `healthy` within two minutes.
+
+4. Print the setup token.
+
+   ```sh
+   sudo docker compose exec fluxer fluxerd setup-token
+   ```
+
+   Open your domain and paste the token to create the first admin account.
+
+</Steps>
+
+With Podman instead, install `podman` and then [run Fluxer from a Quadlet unit](/operator/platforms/podman/).

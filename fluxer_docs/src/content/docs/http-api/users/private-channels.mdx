@@ -22,7 +22,7 @@ Each property name is the [snowflake](/snowflakes/) of one requested channel.
 
 ## Group DM unaddable recipient object
 
-[Create private channel](#create-private-channel) returns an array of these as `unaddable_recipients` in a `GROUP_DM_RECIPIENTS_NOT_ADDABLE` [error response](/http-api/#error-response).
+In a `GROUP_DM_RECIPIENTS_NOT_ADDABLE` [error response](/http-api/#error-response), [Create private channel](#create-private-channel) returns an array of these as `unaddable_recipients`.
 
 ### Structure
 
@@ -68,7 +68,7 @@ When the instance [community policy](/http-api/instance/#community-policy-object
 
 ### New conversation limit
 
-When your account is limited from starting new conversations, opening a direct message with someone who is not your friend returns 403 `NEW_CONVERSATIONS_LIMITED`, unless they have already sent a message there. Bots, staff and trusted accounts are never limited.
+When your account is limited from starting new conversations, opening a direct message with someone who is not your friend returns 403 `NEW_CONVERSATIONS_LIMITED`, unless they have already sent a message there. This limit never applies to bots, staff or trusted accounts.
 
 ### Direct messages
 
@@ -88,7 +88,7 @@ A repeated ID returns 400 `DUPLICATE_RECIPIENTS_NOT_ALLOWED` and your own ID ret
 
 | Field | Type | Description |
 | --- | --- | --- |
-| X-Captcha-Token?<sup>1</sup> | string | The solved ALTCHA challenge, see [CAPTCHA handling](/topics/captcha/) |
+| X-Captcha-Token?<sup>1</sup> | string | The [solved ALTCHA challenge](/topics/captcha/) |
 
 <sup>1</sup> Needed with `recipients` when the instance has CAPTCHA turned on, otherwise 400 `CAPTCHA_REQUIRED` or `INVALID_CAPTCHA`
 

@@ -42,7 +42,7 @@ The API computes two more states each time it returns a decision, and never stor
 - `expired`: an active suspension or feature limit whose `ends_at` has passed, before Fluxer ends it
 - `replaced`: an active suspension or closure that a later decision replaced
 
-A closure replaces an active suspension and lifts it. A replaced decision gets no ended email.
+A closure replaces an active suspension and lifts it. No ended email goes out for a replaced decision.
 
 When staff [change the reason](#change-the-reason-for-an-enforcement-decision), a new decision takes over and the old one ends as `superseded`. The two link to each other through `supersedes` and `superseded_by`.
 
@@ -110,7 +110,7 @@ The notice says the networks were blocked and until when, and never shows an add
 
 ### Review queue
 
-A decision with `automation` set to `automated` waits in the review queue until a person ends it or records a warning, suspension or closure on the same account. Its `decided_by` is the system user (ID 0).
+A decision with `automation` set to `automated` waits in the review queue until a person ends it or records a warning, suspension or closure on the same account. Its `decided_by` is the system user, whose ID is 0.
 
 ## Enforcement decision input
 
@@ -143,9 +143,9 @@ The `X-Audit-Log-Reason` header is required on every route that takes a decision
 
 Fluxer checks ACLs before it looks anything up. Evidence needs `message:lookup`, `remove_evidence` needs `message:shred`, reports need `report:view` and `report:resolve`, and `block_networks` needs `ban:ip:add` and `user:view:ip`. Every other failure is a 400 `INVALID_FORM_BODY` with one of these codes.
 
-- `ENFORCEMENT_INTERNAL_NOTE_REQUIRED` when the `X-Audit-Log-Reason` header is missing
+- `ENFORCEMENT_INTERNAL_NOTE_REQUIRED` when the request has no `X-Audit-Log-Reason` header
 - `ENFORCEMENT_KIND_NOT_ALLOWED` when the reason code does not allow this kind or action, or a bot is given anything other than a suspension or closure
-- `ENFORCEMENT_LIMIT_NOT_ALLOWED` when the reason code does not allow this feature limit
+- `ENFORCEMENT_LIMIT_NOT_ALLOWED` when the reason code does not allow a feature limit like this one
 - `ENFORCEMENT_LIMIT_END_INVALID` when a reports limit ends in the past or after 365 days, or another limit has an end
 - `ENFORCEMENT_REPORT_REQUIRED` when `source` is `report` and no report is linked
 - `ENFORCEMENT_REPORT_MISMATCH` when a linked report does not exist or is about someone else
@@ -159,14 +159,14 @@ Fluxer checks ACLs before it looks anything up. Evidence needs `message:lookup`,
 - `ENFORCEMENT_PERMANENT_REQUIRED` when a restricted reason has a temporary suspension
 - `ENFORCEMENT_CONFIRMATIONS_REQUIRED` when a restricted reason is missing a confirmation
 - `ENFORCEMENT_RIGHTS_HOLDER_REQUIRED` when code 31 has no `rights_holder`
-- `ENFORCEMENT_RIGHTS_HOLDER_NOT_ALLOWED` when another code has a `rights_holder`
+- `ENFORCEMENT_RIGHTS_HOLDER_NOT_ALLOWED` when a `rights_holder` comes with another reason code
 - `ENFORCEMENT_NETWORK_BLOCK_NOT_ALLOWED` when `block_networks` is given with a temporary suspension or a closure not for a broken rule
 - `ENFORCEMENT_NETWORK_UNKNOWN` when the account did not use an address in `block_networks` in the last 30 days
 - `ENFORCEMENT_NETWORK_SHARED` when another unrestricted account was last active on an address in `block_networks`
 
 ### Notice delivery
 
-A person's suspension or closure notice is sent by email only. Every other notice, including any notice about a bot, is also sent as a system DM to the holder. `notice_status` is `undelivered` when no channel can deliver the notice. A suspension or closure notice that was not sent is delivered at the holder's next sign-in. The notice uses the instance's own name.
+A person's suspension or closure notice is sent by email only. Every other notice, including any notice about a bot, is also sent as a system DM to the holder. `notice_status` is `undelivered` when no channel can deliver the notice. A suspension or closure notice that was not sent is delivered at the holder's next sign-in. The notice uses the instance's own name, not Fluxer's.
 
 ## Enforcement decision object
 
@@ -207,8 +207,8 @@ A person's suspension or closure notice is sent by email only. Every other notic
 | notice_locale | ?string | The locale the notice was written in |
 | notice_text | ?string | The plain text that was sent |
 | notice_sent_at | ?ISO8601 timestamp | When the holder got the notice |
-| expired | boolean | See [Lifecycle](#lifecycle) |
-| replaced | boolean | See [Lifecycle](#lifecycle) |
+| expired | boolean | Whether this active suspension or feature limit has [passed its `ends_at`](#lifecycle) before Fluxer ends it |
+| replaced | boolean | Whether a later decision [replaced](#lifecycle) this active suspension or closure |
 
 <sup>1</sup> Empty without `report:view`
 
@@ -321,7 +321,7 @@ A `content_removal` needs `message:shred`, or `message:delete_all` when every me
 
 | Kind | What ending it does |
 | --- | --- |
-| `suspension` | Clears `temp_banned_until`, `enforcement_decision_id` and `DISABLED` |
+| `suspension` | Clears `DISABLED`, `temp_banned_until` and `enforcement_decision_id` |
 | `closure` | Cancels the deletion and clears `DELETED`, `deletion_reason_code` and `enforcement_decision_id` |
 | `feature_limit` | Removes its flag unless another active decision has the same limit |
 

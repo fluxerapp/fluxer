@@ -1,0 +1,15 @@
+---
+// SPDX-License-Identifier: AGPL-3.0-or-later
+interface Props {
+	label?: string;
+	columns?: 2 | 3;
+}
+
+const {label, columns = 2} = Astro.props;
+---
+
+<div class="flx-path-frame not-content">
+	<ul class:list={['flx-path-grid', {'flx-grid-3': columns === 3}]} aria-label={label}>
+		<slot />
+	</ul>
+</div>

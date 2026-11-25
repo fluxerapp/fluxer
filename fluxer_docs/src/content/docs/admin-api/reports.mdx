@@ -10,7 +10,7 @@ A report is one complaint against a message, an account or a guild, with the evi
 
 ## Admin report object
 
-[List reports](#list-reports) returns this object. [Get report](#get-report) returns the [Admin report detail object](#admin-report-detail-object), which extends it with message context. The guild, channel, webhook and message fields are copied when the report is filed. The account names are looked up when Fluxer builds the response. `reporter_email`, `reporter_full_legal_name` and `reporter_country_of_residence` are null unless you have `report:view:reporter_pii` as well as `report:view`.
+[List reports](#list-reports) returns this object. [Get report](#get-report) returns the [Admin report detail object](#admin-report-detail-object), which extends it with message context. The guild, channel, webhook and message fields are copied when the report is filed. The account names are looked up when Fluxer builds the response. `reporter_email`, `reporter_full_legal_name` and `reporter_country_of_residence` are null unless you have the `report:view:reporter_pii` ACL as well.
 
 ### Structure
 
@@ -165,19 +165,19 @@ A copy of a message as it was when the report was filed. A message report captur
 | id | snowflake | The ID of the message |
 | channel_id | snowflake | The channel the message was sent in |
 | channel_nsfw | ?boolean | The current NSFW state of the channel |
-| channel_content_warning_level? | ?integer | Always null |
-| channel_content_warning_text? | ?string | Always null |
+| channel_content_warning_level? | ?integer | The current [content warning level](/http-api/channels/#content-warning-levels) of the channel |
+| channel_content_warning_text? | ?string | The current content warning text of the channel |
 | guild_id | ?snowflake | The guild the report is about or was filed from |
 | guild_nsfw_level | ?integer | The current guild [NSFW level](/http-api/guilds/#nsfw-levels) |
-| guild_nsfw? | ?boolean | Always null |
-| guild_content_warning_level? | ?integer | Always null |
-| guild_content_warning_text? | ?string | Always null |
+| guild_nsfw? | ?boolean | The current `nsfw` value of the guild |
+| guild_content_warning_level? | ?integer | The current content warning level of the guild |
+| guild_content_warning_text? | ?string | The current content warning text of the guild |
 | content | string | The message content, empty when it had none |
 | timestamp | ISO8601 timestamp | When the message was sent |
 | attachments | array[[report message attachment](#report-message-attachment-object) object] | The attachment copies |
 | author_id | snowflake | The author, or the webhook ID for a webhook message |
 | author_username | string | The author username, or the name a webhook message was sent under |
-| author_global_name | ?string | Always null |
+| author_global_name | ?string | The author's current display name |
 | author_discriminator | string | The four-digit author discriminator, `0000` for a webhook message |
 | author_avatar | ?string | The author avatar hash |
 | webhook_id? | ?snowflake | The [webhook](/http-api/webhooks/) that sent the message |
@@ -379,7 +379,7 @@ A pending report is kept until it is resolved. A resolved report is deleted with
 
 Every report, pending or resolved, loses its message context, profile snapshot, additional info and evidence copies 365 days after it was filed, unless it has a legal hold. The record and its notes stay.
 
-When a report is resolved as `no_violation` and isn't one of the reports above, its message context, profile snapshot, additional info and evidence copies are deleted 184 days after it was resolved, and the rest of the record is deleted when the retention period ends.
+When a report is resolved as `no_violation` and isn't one of the reports above, its message context, profile snapshot, additional info and evidence copies are deleted 184 days after it was resolved, and the rest of the record is deleted at the end of the retention period.
 
 :::caution[Deleted evidence can't be restored]
 To see what retention would delete before it deletes anything, set `FLUXER_REPORT_RETENTION_DRY_RUN` to `true` on `worker`. It then logs each report it would delete and deletes nothing.
@@ -412,9 +412,9 @@ Returns a page of [Admin report](#admin-report-object) objects. You need `report
 | limit? | integer | Maximum reports to return (1-200, default 50) |
 | offset? | integer | Reports to skip (0-10000, default 0) |
 
-<sup>1</sup> Matches `category`, `additional_info`, `reported_guild_name` and `reported_channel_name`
+<sup>1</sup> Matches `category`, `additional_info`, `reported_guild_name` and `reported_channel_name` text
 
-<sup>2</sup> Ignored when `status` is the only filter, and those results are always newest first by `reported_at`
+<sup>2</sup> Ignored when `status` is the only filter, because those results are always sorted by `reported_at` with the newest first
 
 ### Response body
 
@@ -494,7 +494,7 @@ The `resolution` decides which of the other fields you send.
 | --- | --- | --- |
 | actioned | Required, any value except `no_violation` | Not allowed |
 | no_violation | Optional, only `no_violation` | Not allowed |
-| duplicate | Not allowed, copied from the `duplicate_of` report | Required, and not this report |
+| duplicate | Not allowed, copied from the `duplicate_of` one | Required, and not this report |
 
 The `outcome` is one of these values.
 

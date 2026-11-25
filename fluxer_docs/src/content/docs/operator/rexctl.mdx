@@ -1,28 +1,63 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: rexctl commands
-description: Every rexctl command and flag, made from rexctl's own help.
+description: Every rexctl command and flag, from its help.
 ---
 
-This page is made from the help that rexctl prints, and `rexctl <command> --help` shows the same text in the terminal.
+This is the help text rexctl prints for every command and flag.
+
+Add `--help` to any command to see it there.
+
+## Commands
+
+| Command | What it does |
+| --- | --- |
+| [`rexctl admins`](#rexctl-admins) | Choose who can manage your instance. |
+| [`rexctl auto-upgrade`](#rexctl-auto-upgrade) | Show whether rexctl upgrades Fluxer by itself. |
+| [`rexctl backup`](#rexctl-backup) | Back up your instance. |
+| [`rexctl boot`](#rexctl-boot) | Show whether a service starts Fluxer with this machine. |
+| [`rexctl branding`](#rexctl-branding) | Change your instance's name, colour and images. |
+| [`rexctl config`](#rexctl-config) | Read and change Fluxer's settings. |
+| [`rexctl detach`](#rexctl-detach) | Run Fluxer with `docker compose` and stop managing it. |
+| [`rexctl doctor`](#rexctl-doctor) | Find problems on your instance and this machine. |
+| [`rexctl down`](#rexctl-down) | Stop your instance and remove what it runs in. |
+| [`rexctl email`](#rexctl-email) | Set up how your instance sends email. |
+| [`rexctl install`](#rexctl-install) | Install Fluxer on this machine. |
+| [`rexctl invites`](#rexctl-invites) | Manage invite links for new accounts. |
+| [`rexctl logs`](#rexctl-logs) | Show logs from your instance. |
+| [`rexctl migrate`](#rexctl-migrate) | Move an older instance to the current layout. |
+| [`rexctl postgres`](#rexctl-postgres) | Manage the PostgreSQL of a systemd install. |
+| [`rexctl proxy`](#rexctl-proxy) | Use your own proxy or tunnel in front of Fluxer. |
+| [`rexctl registration`](#rexctl-registration) | Choose who can create an account. |
+| [`rexctl restart`](#rexctl-restart) | Restart your instance or some of its parts. |
+| [`rexctl restore`](#rexctl-restore) | Restore your instance from a backup. |
+| [`rexctl rollback`](#rexctl-rollback) | Go back to the release before the last upgrade. |
+| [`rexctl search`](#rexctl-search) | Manage search on your instance. |
+| [`rexctl setup`](#rexctl-setup) | Create the admin and finish setup in the terminal. |
+| [`rexctl start`](#rexctl-start) | Start your instance. |
+| [`rexctl status`](#rexctl-status) | Show whether your instance is running. |
+| [`rexctl stop`](#rexctl-stop) | Stop your instance. |
+| [`rexctl uninstall`](#rexctl-uninstall) | Remove Fluxer from this machine. |
+| [`rexctl upgrade`](#rexctl-upgrade) | Upgrade rexctl and Fluxer to the latest release. |
+| [`rexctl use`](#rexctl-use) | Show or change which instance rexctl uses. |
+| [`rexctl users`](#rexctl-users) | Manage accounts on your instance. |
+| [`rexctl version`](#rexctl-version) | Show the rexctl and Fluxer versions. |
+| [`rexctl voice`](#rexctl-voice) | Run extra voice servers here or on other machines. |
 
 ## Flags for every command
 
-- `--dir string`
-
-  Folder with your instance.
-
-- `-q`, `--quiet`
-
-  Print only errors and results.
-
-- `--verbose`
-
-  Print every step and command.
-
-- `-y`, `--yes`
-
-  Answer yes to every question and never prompt.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--accessible` |  | Print for screen readers and ask questions as numbered lists. |
+| `--dir string` |  | Folder with your instance. |
+| `--no-animation` |  | Keep the layout but stop anything moving. |
+| `--no-color` |  | Print without colour. |
+| `--no-rex` |  | Hide Rex. |
+| `--plain` |  | Print plain lines with no animation or prompts. |
+| `--progress string` | `auto` | How to show progress on stderr, auto, plain or json. |
+| `-q`, `--quiet` |  | Print only errors and results. |
+| `--verbose` |  | Print every step and command, and the full error when one fails. |
+| `-y`, `--yes` |  | Answer yes to every question and never prompt. |
 
 ## rexctl admins
 
@@ -32,511 +67,542 @@ Choose who can manage your instance.
 
 Make an account an admin.
 
-```sh
-rexctl admins add <user>
+Run `rexctl admins add <user>`
+
+```sh title="Examples"
+rexctl admins add alice
 ```
+
+### rexctl admins list
+
+List the admins.
+
+Run `rexctl admins list`
+
+```sh title="Examples"
+rexctl admins list
+
+rexctl admins list --json
+```
+
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--json` |  | Print JSON. |
 
 ### rexctl admins remove
 
-Remove admin access from an account.
+Remove admin access from an account. rexctl refuses to remove the last admin.
 
-```sh
-rexctl admins remove <user>
+Run `rexctl admins remove <user>`
+
+```sh title="Examples"
+rexctl admins remove alice
 ```
 
 ### rexctl admins sign-in-link
 
-Print a link that signs an admin in once. Use it to get in when Require SSO is on and your sign-in provider is down or set up wrong. See https://docs.fluxer.com/operator/sign-in/#single-sign-on.
+Print a link that signs an admin in once. Use it to get in while Require SSO is on and your sign-in provider is down or has been set up wrong.
 
-```sh
-rexctl admins sign-in-link <user>
+Run `rexctl admins sign-in-link <user>`
+
+```sh title="Examples"
+rexctl admins sign-in-link alice
 ```
 
 ## rexctl auto-upgrade
 
-Show whether rexctl upgrades Fluxer, or the voice servers on a voice machine, by itself, when it runs next and how the last run went. Each run is rexctl upgrade --yes and works like an upgrade you run yourself.
+Show whether rexctl upgrades Fluxer, or the voice servers on a voice machine, by itself, when it runs next and how the last run went. Each run is `rexctl upgrade --yes` and works like an upgrade you run yourself.
 
-```sh
-rexctl auto-upgrade [flags]
-```
+Run `rexctl auto-upgrade`
 
-- `--json`
-
-  Print JSON.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--json` |  | Print JSON. |
 
 ### rexctl auto-upgrade off
 
-Stop upgrading Fluxer by itself. This also stops the monthly full backup that --full-backup turned on.
+Stop upgrading Fluxer by itself, along with the monthly full backup from `--full-backup`.
 
-```sh
-rexctl auto-upgrade off
-```
+Run `rexctl auto-upgrade off`
 
 ### rexctl auto-upgrade on
 
-Run rexctl upgrade --yes by itself with a systemd timer, or with cron on machines without systemd. It runs every day, or once a week on the day you pass to --day. Pass several times to --at, like 06:00,18:00, to run more than once on those days. Each run backs up your instance first and goes back to the release you had if the new one doesn't start. It skips that run if another rexctl command is changing the instance, and tries again at the next one. A weekly run that is skipped or fails waits a week, and you can run rexctl upgrade yourself at any time. With --full-backup monthly it also makes a full backup with uploads on the 1st of every month, 3 hours before the first upgrade time of the day. Run it again to change the day, the time, the backups or the address. Leaving out a flag sets it back to its default, and leaving out --notify stops the notifications.
+Run `rexctl upgrade --yes` by itself with a systemd timer, or with cron on machines without systemd. On a terminal rexctl asks how often, at what time, what the backup before each upgrade holds and where to send notices. Scripts can pass those choices as flags, and a flag you leave out keeps what you chose before.
 
-With --notify, rexctl posts JSON to the address when an upgrade installs a new release or fails: instance, status (upgraded or failed), release, the message as text, content, message and body, a title, and a type (success, failure or info). Slack and Discord webhooks, Gotify and the Apprise API show it as it is, so pass a Gotify address like https://gotify.example.com/message?token=... or an Apprise address like https://apprise.example.com/notify/your-key. For ntfy, add ?tpl=1&m=\{\{.text\}\} to the topic address. Run rexctl auto-upgrade test-notify to send a test notice.
+Each run backs up your instance first, and goes back to the release you had when the new one doesn't start. A scheduled run is skipped while another rexctl command is changing the instance, and the next one tries again.
 
-```sh
-rexctl auto-upgrade on [flags]
+With `--notify`, rexctl posts JSON to the address when an upgrade installs a new release, fails, or waits for something from you first.
+
+The JSON holds the instance, the status (upgraded, failed or needs-move), the release, the title, the type of notice (success, failure, warning or info), and the message in each of the fields text, content, message and body.
+
+Slack and Discord webhooks, Gotify and the Apprise API show it as it is. Pass a Gotify address like `https://gotify.example.com/message?token=...` or an Apprise address like `https://apprise.example.com/notify/your-key` for those two services.
+
+For ntfy, add `?tpl=1&m={{.text}}` to the topic address. Put an address with ? or & in it in single quotes, so the shell passes it whole. Pass `--notify off` to stop the notices.
+
+Run `rexctl auto-upgrade on`
+
+```sh title="Examples"
+rexctl auto-upgrade on
+
+rexctl auto-upgrade on --at 04:00 --day sun
+
+rexctl auto-upgrade on --notify 'https://ntfy.sh/your-topic?tpl=1&m={{.text}}'
 ```
 
-- `--at string`
-
-  Time of day to upgrade, as HH:MM in this machine's time zone. Separate several times with commas, like 06:00,18:00. The default is `04:00`.
-
-- `--backup string`
-
-  What the backup before each upgrade holds, full or without-uploads. When an upgrade changes how uploads are stored, the backup includes them anyway. The default is `full`.
-
-- `--day string`
-
-  Run once a week on this day, like sun. Leave it out to run every day.
-
-- `--full-backup string`
-
-  Pass monthly to also make a full backup with uploads on the 1st of every month.
-
-- `--notify string`
-
-  Web address rexctl posts to when an upgrade installs a new release or fails.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--at string` |  | Time of day to upgrade, as `HH:MM` in this machine's time zone. Separate several times with commas, like `06:00,18:00`. |
+| `--backup string` |  | What the backup before each upgrade holds, full, without-uploads or off. |
+| `--day string` |  | Run once a week on this day, like sun. Pass `daily` to run every day. |
+| `--full-backup string` |  | Pass `monthly` to also make a full backup with uploads on the 1st of every month, or off. |
+| `--notify string` |  | Web address rexctl posts to when an upgrade installs a new release, fails or waits for you, or off. |
 
 ### rexctl auto-upgrade test-notify
 
-Post a test notice to the address you passed to rexctl auto-upgrade on --notify, with status test. It looks like the notice after an upgrade, so you can check that it gets to you without waiting for a new release.
+Post a test notice to the address you passed to `rexctl auto-upgrade on --notify`, with status `test`. It looks like the notice after an upgrade, so you can check that notices get to you without waiting for a new release.
 
-```sh
-rexctl auto-upgrade test-notify
-```
+Run `rexctl auto-upgrade test-notify`
 
 ## rexctl backup
 
-Back up your instance in one file that restores on this machine or a new one. It has the database, search data and uploads that Fluxer stores itself. Fluxer pauses while uploads are copied.
+Back up your instance in one file that restores on this machine or a new one, with the database, search data and uploads that Fluxer stores itself. Fluxer pauses during the copy.
 
-```sh
-rexctl backup
+Run `rexctl backup`
+
+### rexctl backup copy-to
+
+Copy a backup to another machine over SSH. Without a file, rexctl copies your newest backup, including the ones Fluxer makes inside its container. It uses scp, so you need an account on the other machine. With `--age-recipient`, rexctl encrypts the copy with age first. To decrypt it, run `rexctl restore --age-identity` with the matching age key file.
+
+Run `rexctl backup copy-to <user@host:/folder> [file]`
+
+```sh title="Examples"
+rexctl backup copy-to --age-recipient age1... backup@storage.example.org:/srv/fluxer
+
+rexctl backup copy-to backup@storage.example.org:/srv/fluxer chat.example.org-20261114-1612.tar.zst
 ```
+
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--age-recipient stringArray` |  | Encrypt the copy for this age public key, which you can pass more than once. |
 
 ### rexctl backup keep
 
-Show or change how many backups rexctl keeps. After each backup, rexctl deletes the oldest ones beyond this number, except the backup that rexctl rollback needs and the newest backup with uploads. Pass all to keep every backup.
+Show or change how many backups rexctl keeps. After each backup, rexctl deletes the oldest ones beyond this number, except the backup that `rexctl rollback` needs and the newest backup with uploads. Pass `all` to keep every backup.
 
-```sh
-rexctl backup keep [count|all] [flags]
-```
+Run `rexctl backup keep [count|all]`
 
-- `--json`
-
-  Print JSON.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--json` |  | Print JSON. |
 
 ### rexctl backup list
 
 List your backups.
 
-```sh
-rexctl backup list [flags]
-```
+Run `rexctl backup list`
 
-- `--json`
-
-  Print JSON.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--json` |  | Print JSON. |
 
 ### rexctl backup location
 
 Show the folder rexctl saves backups in, or pass a full path to save new backups there. Backups that are already saved stay where they are.
 
-```sh
-rexctl backup location [folder] [flags]
+Run `rexctl backup location [folder]`
+
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--json` |  | Print JSON. |
+
+### rexctl backup schedule
+
+Show or change when rexctl backs up your instance by itself. With daily it backs up every night at about `03:00`, with weekly every Sunday at about `03:00`, and off stops it. Each run works like `rexctl backup`. rexctl keeps as many as `rexctl backup keep` says.
+
+Run `rexctl backup schedule [daily|weekly|off]`
+
+```sh title="Examples"
+rexctl backup schedule
+
+rexctl backup schedule daily
+
+rexctl backup schedule off
 ```
 
-- `--json`
-
-  Print JSON.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--json` |  | Print JSON. |
 
 ### rexctl backup verify
 
 Check that a backup is complete and readable.
 
-```sh
-rexctl backup verify <file>
-```
+Run `rexctl backup verify <file>`
 
 ## rexctl boot
 
-Show whether a systemd service starts Fluxer when this machine starts. With Docker, Docker already starts Fluxer again after a restart, and the service also starts its services in order and stops them cleanly. Podman has no daemon to do that, so it needs the service.
+Show whether a systemd service starts Fluxer when this machine starts. Docker already starts Fluxer again after a restart, and the service also starts its services in order and stops them cleanly. Podman has no daemon, so it needs the service. A systemd install always runs as a service, and this shows whether it starts with the machine.
 
-```sh
+Run `rexctl boot`
+
+```sh title="Examples"
 rexctl boot
+
+rexctl boot on
+
+rexctl boot off
 ```
 
 ### rexctl boot off
 
-Remove the systemd service that starts Fluxer with this machine, and the copy of rexctl in /usr/local/libexec/rexctl/rexctl when nothing else uses it. With Docker, Docker still starts Fluxer again after a restart. rexctl lists every change and asks first, unless you pass --yes.
+Remove the systemd service that starts Fluxer with this machine, and the copy of rexctl in `/usr/local/libexec/rexctl/rexctl` if nothing else uses it. With Docker, Docker still starts Fluxer again after a restart. On a systemd install Fluxer keeps running, but no longer starts with the machine. rexctl lists every change and asks first, unless you pass `--yes`.
 
-```sh
+Run `rexctl boot off`
+
+```sh title="Examples"
 rexctl boot off
+
+rexctl boot off --yes
 ```
 
 ### rexctl boot on
 
-Write a systemd service that starts Fluxer when this machine starts and stops it cleanly when it shuts down. On a root install it also copies rexctl to /usr/local/libexec/rexctl/rexctl for the service to run. rexctl lists every change and asks first, unless you pass --yes.
+Write a systemd service that starts Fluxer when this machine starts and stops it cleanly when it shuts down. On a root install it also copies rexctl to `/usr/local/libexec/rexctl/rexctl` for the service to run. On a systemd install it turns on the service that Fluxer already runs as. rexctl lists every change and asks before it makes them, unless you pass `--yes`.
 
-```sh
+Run `rexctl boot on`
+
+```sh title="Examples"
 rexctl boot on
+
+rexctl boot on --yes
 ```
 
 ## rexctl branding
 
-Change your instance's name, colour and images.
+Shows your instance's name, accent colour and images, and offers to change them.
+
+Run `rexctl branding`
+
+```sh title="Examples"
+rexctl branding
+
+rexctl branding set --name "Example Chat" --colour 4641d9
+
+rexctl branding set --logo logo.png --favicon favicon.png
+```
+
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--json` |  | Print JSON. |
 
 ### rexctl branding set
 
-Change the name, colour, logo or icon.
+Change the name, colour or images.
 
-```sh
-rexctl branding set [flags]
+Run `rexctl branding set`
+
+```sh title="Examples"
+rexctl branding set --name "Example Chat"
+
+rexctl branding set --colour 4641d9
+
+rexctl branding set --icon icon.png --sign-in-backdrop backdrop.jpg
 ```
 
-- `--colour string`
-
-  Accent colour as a hex code, like #4641d9.
-
-- `--icon string`
-
-  Image file for the icon.
-
-- `--logo string`
-
-  Image file for the logo.
-
-- `--name string`
-
-  Your instance's name.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--colour string` |  | Accent colour as a hex code, like 4641d9. |
+| `--favicon string` |  | Image file for the favicon. |
+| `--favicon-dark string` |  | Image file for the dark mode favicon. |
+| `--icon string` |  | Image file for the icon. |
+| `--logo string` |  | Image file for the logo. |
+| `--name string` |  | Your instance's name. |
+| `--sign-in-backdrop string` |  | Image file for the sign-in backdrop. |
+| `--symbol string` |  | Image file for the symbol. |
+| `--wordmark string` |  | Image file for the wordmark. |
 
 ## rexctl config
 
-Read and change Fluxer's settings.
+Read and change Fluxer's settings. On a terminal, `rexctl config` opens a browser of every setting, grouped by what it changes. Pick one to see what it takes and change it.
+
+Run `rexctl config`
+
+```sh title="Examples"
+rexctl config
+
+rexctl config list email
+
+rexctl config set registration.mode invite
+```
+
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--json` |  | Print JSON. |
 
 ### rexctl config edit
 
-Opens custom.compose.yml in $VISUAL or $EDITOR. rexctl checks the file, says which services restart and applies it once you agree. Your file stays as it was until it passes the check. On a native instance, it opens the settings rexctl keeps for Fluxer as setting=value lines instead, checks them as rexctl config set does and restarts Fluxer with them.
+Opens the settings you changed from their defaults as setting=value lines in `$VISUAL` or `$EDITOR`. Add a line for any other setting `rexctl config set` takes, or remove one to go back to its default. rexctl checks them as `rexctl config set` does, says what restarts and applies them once you agree.
 
-```sh
+Nothing changes until your draft passes the check. With `--compose`, it opens `custom.compose.yml` instead, for changes to Fluxer's containers that no setting covers.
+
+Run `rexctl config edit`
+
+```sh title="Examples"
 rexctl config edit
+
+EDITOR=vim rexctl config edit
+
+rexctl config edit --compose
 ```
+
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--compose` |  | Edit `custom.compose.yml`, the Compose overrides of a Docker or Podman instance. |
 
 ### rexctl config get
 
-Show one setting.
+Show a setting, what it takes and when it applies.
 
-```sh
-rexctl config get <key> [flags]
+Run `rexctl config get <setting>`
+
+```sh title="Examples"
+rexctl config get edge.bind
+
+rexctl config get storage.secret_key --reveal
 ```
 
-- `--json`
-
-  Print JSON.
-
-- `--reveal`
-
-  Print a secret rexctl keeps.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--json` |  | Print JSON. |
+| `--reveal` |  | Print a secret rexctl keeps. |
 
 ### rexctl config list
 
-List every setting with its value and help.
+List the settings people change most and the ones you changed, with their values, grouped into Network, Email, Voice, Storage, Accounts, Branding and Advanced.
 
-```sh
-rexctl config list [flags]
+Pass `--all` to list every setting. Pass a word to search every setting for ones whose name or help has it, or a group name to show one group.
+
+Run `rexctl config list [filter]`
+
+```sh title="Examples"
+rexctl config list
+
+rexctl config list --all
+
+rexctl config list voice
+
+rexctl config list --changed
 ```
 
-- `--json`
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--all` |  | List every setting. |
+| `--changed` |  | Only show settings that differ from their defaults. |
+| `--json` |  | Print JSON. |
 
-  Print JSON.
+### rexctl config rotate
+
+Replace the key that signs attachment links, without breaking links people already have. rexctl adds a new key, restarts the media services so every part can check it, then signs with it. The old key keeps checking older links. A day later, run it again with `--finish` to drop the old key. Data package links signed with it stop working then.
+
+Run `rexctl config rotate media-signing-key`
+
+```sh title="Examples"
+rexctl config rotate media-signing-key
+
+rexctl config rotate media-signing-key --finish
+```
+
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--finish` |  | Drop the old keys and keep only the one that signs. |
 
 ### rexctl config set
 
-Change one or more settings.
+Change one or more settings. Leave the value out on a terminal and rexctl asks for it, with what the setting takes and its current value. Pass - as the value to read a secret from stdin, which keeps it out of your shell history.
 
-```sh
-rexctl config set <key> <value> | <key>=<value>... [flags]
+Run `rexctl config set <setting> [value] | <setting>=<value>...`
+
+```sh title="Examples"
+rexctl config set registration.mode invite
+
+rexctl config set edge.bind=127.0.0.1:8081 edge.trusted_proxies=10.0.0.5
+
+rexctl config set storage.secret_key -
 ```
 
-- `--migrate-identities`
-
-  When sso.issuer changes, move SSO links to the new issuer.
-
-- `--no-migrate-identities`
-
-  When sso.issuer changes, leave SSO links on the old issuer.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--migrate-identities` |  | When `sso.issuer` changes, move SSO links to the new issuer. |
+| `--no-migrate-identities` |  | When `sso.issuer` changes, leave SSO links on the old issuer. |
 
 ### rexctl config unset
 
 Go back to the default for one or more settings.
 
-```sh
-rexctl config unset <key>...
+Run `rexctl config unset <setting>...`
+
+```sh title="Examples"
+rexctl config unset edge.trusted_proxies
+
+rexctl config unset memory.profile disk.profile
+```
+
+## rexctl detach
+
+Writes `compose.yaml` and `fluxer.env` into the instance folder in the same form as the files each Fluxer release publishes, starts Fluxer from them and stops rexctl from changing the instance. Your data stays in the same volume. Automatic upgrades stop, and a backup schedule moves into Fluxer, which keeps the backups in its volume.
+
+Run `rexctl detach`
+
+```sh title="Examples"
+rexctl detach --yes
+
+rexctl detach --dir /opt/fluxer2
 ```
 
 ## rexctl doctor
 
-Check your instance and this machine for problems.
+Find problems on your instance and this machine.
 
-```sh
-rexctl doctor [flags]
-```
+Run `rexctl doctor`
 
-- `--dry-run`
-
-  Show what --fix would change without changing anything.
-
-- `--fix`
-
-  Fix the problems rexctl can fix safely.
-
-- `--json`
-
-  Print JSON.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--dry-run` |  | Show what `--fix` would change without changing anything. |
+| `--fix` |  | Fix the problems rexctl can fix safely. |
+| `--json` |  | Print JSON. |
 
 ## rexctl down
 
-Stop Fluxer and remove its containers and networks, like docker compose down. Your data, settings, backups and images stay. Fluxer stays stopped until you run rexctl start, which creates the containers again.
+Stop Fluxer and remove its containers and networks, or on a systemd install its runtime files. Your data, settings, backups and images stay. Fluxer stays stopped until you run `rexctl start`, which sets everything up again.
 
-```sh
+Run `rexctl down`
+
+```sh title="Examples"
 rexctl down
-```
 
-## rexctl eject
-
-Writes every setting into the instance folder for docker compose and stops rexctl from changing the instance. Fluxer keeps running. Run rexctl takeover to hand it back.
-
-```sh
-rexctl eject
+rexctl down --dir /opt/fluxer
 ```
 
 ## rexctl email
 
-Set up how your instance sends email.
+Shows how your instance sends email and offers to change it. Fluxer sends email to confirm addresses, reset passwords and tell people about new sign-ins on their account.
+
+Run `rexctl email`
+
+```sh title="Examples"
+rexctl email
+
+rexctl email set --host smtp.example.com --username chat --password-file pass.txt --from "Example Chat <noreply@chat.example.com>"
+
+rexctl email test you@example.com
+```
+
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--json` |  | Print JSON. |
 
 ### rexctl email off
 
 Stop sending email.
 
-```sh
+Run `rexctl email off`
+
+```sh title="Examples"
 rexctl email off
 ```
 
 ### rexctl email set
 
-Set the SMTP server.
+Set the SMTP server Fluxer sends email through. Anything you leave out keeps its saved value, except that a new server or port without `--tls` uses the usual encryption for that port. rexctl tests them before saving, so a typo doesn't stop the email Fluxer already sends.
 
-```sh
-rexctl email set [flags]
+Run `rexctl email set`
+
+```sh title="Examples"
+rexctl email set --host smtp.example.com --port 587 --username chat --password-file pass.txt --from noreply@chat.example.com
+
+rexctl email set --host new.example.com
+
+rexctl email set --ca-file my-ca.pem
 ```
 
-- `--from string`
-
-  Sender, like Example Chat \<noreply@chat.example.com>.
-
-- `--host string`
-
-  The SMTP server.
-
-- `--password-file string`
-
-  File with the SMTP password, or - for stdin.
-
-- `--port int`
-
-  The SMTP port. The default is `587`.
-
-- `--tls string`
-
-  How the connection is encrypted (starttls, implicit, opportunistic or none). Picked from the port when left out.
-
-- `--username string`
-
-  The username for the SMTP server.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--ca-file string` |  | PEM file of the CA that signed your email server's certificate. |
+| `--from string` |  | Sender, like Example Chat \<noreply@chat.example.com>. |
+| `--host string` |  | The SMTP server. |
+| `--password-file string` |  | File with the SMTP password, or - for stdin. |
+| `--port string` |  | The SMTP port, 587 when nothing is saved. |
+| `--tls string` |  | How the connection is encrypted (starttls, implicit, opportunistic or none). Picked from the port when left out. |
+| `--username string` |  | The username for the SMTP server, or empty for none. |
 
 ### rexctl email test
 
 Send a test email.
 
-```sh
-rexctl email test [address]
+Run `rexctl email test [address]`
+
+```sh title="Examples"
+rexctl email test
+
+rexctl email test you@example.com
 ```
 
 ## rexctl install
 
-Install Fluxer on this machine, or take over an existing install.
+Install Fluxer on this machine.
 
-```sh
-rexctl install [flags]
+Run `rexctl install`
+
+```sh title="Examples"
+rexctl install
+
+sudo rexctl install --runtime systemd --domain chat.example.com --yes
+
+rexctl install --runtime docker --domain chat.example.com --behind-proxy --yes
 ```
 
-- `--admin-email string`
-
-  Email address for your admin account.
-
-- `--admin-password-file string`
-
-  File with your admin password, or - for stdin.
-
-- `--admin-username string`
-
-  Username for your admin account.
-
-- `--behind-proxy`
-
-  Serve plain HTTP for your own reverse proxy or tunnel.
-
-- `--bind string`
-
-  Address your proxy or tunnel connects to, with --behind-proxy. The default is `127.0.0.1:8080`.
-
-- `--boot-service string`
-
-  On or off: add a systemd service that starts Fluxer with this machine. Podman needs it. With Docker, rexctl asks, and leaves it off without a terminal.
-
-- `--confirm string`
-
-  Your instance's domain, to confirm without a prompt.
-
-- `--delete-old-data`
-
-  Delete Fluxer data found on this machine and start fresh.
-
-- `--domain string`
-
-  Address people will use to open your instance, like chat.example.com.
-
-- `--dry-run`
-
-  Show what would happen without changing anything.
-
-- `--engine string`
-
-  Container engine to use (docker or podman).
-
-- `--experimental-native`
-
-  Install Fluxer as one systemd service without containers, set up for this machine. This is experimental.
-
-- `--install-docker`
-
-  Install Docker if it's missing. The default is `true`.
-
-- `--memory-profile string`
-
-  Pin small, medium or large instead of sizing Fluxer to this machine on every start.
-
-- `--name string`
-
-  Your instance's name.
-
-- `--no-bundled-voice`
-
-  Run without the bundled LiveKit and use only voice servers you add later.
-
-- `--no-start`
-
-  Write the files without starting Fluxer.
-
-- `--open-firewall`
-
-  Open the ports Fluxer needs in ufw or firewalld. The default is `true`.
-
-- `--project string`
-
-  Name for this instance's containers and volumes, for running more than one instance on a host. The default is `fluxer`.
-
-- `--registration string`
-
-  Who can create an account (invite, approval, open or closed).
-
-- `--setup string`
-
-  Where to create your admin account (terminal or browser).
-
-- `--setup-podman`
-
-  Start Podman's API socket and start Fluxer with the machine. The default is `true`.
-
-- `--sign-in string`
-
-  How people sign in (email or username).
-
-- `--skip-email`
-
-  Set up email later.
-
-- `--smtp-from string`
-
-  Sender, like Example Chat \<noreply@chat.example.com>.
-
-- `--smtp-host string`
-
-  The SMTP server.
-
-- `--smtp-password-file string`
-
-  File with the SMTP password, or - for stdin.
-
-- `--smtp-port int`
-
-  The SMTP port. The default is `587`.
-
-- `--smtp-tls string`
-
-  How the connection is encrypted (starttls, implicit, opportunistic or none). Picked from the port when left out.
-
-- `--smtp-username string`
-
-  The username for the SMTP server.
-
-- `--storage-access-key string`
-
-  The object store access key.
-
-- `--storage-bucket-prefix string`
-
-  Text to put before each bucket name, like chat- for chat-fluxer.
-
-- `--storage-endpoint string`
-
-  Your own S3-compatible object store, like https://s3.example.com, instead of the bundled one.
-
-- `--storage-path-style`
-
-  Put the bucket in the path of object store addresses instead of the host name. The default is `true`.
-
-- `--storage-public-endpoint string`
-
-  The object store address browsers use, when it differs from --storage-endpoint.
-
-- `--storage-region string`
-
-  The object store region (found from --storage-endpoint when it can be).
-
-- `--storage-secret-key-file string`
-
-  File with the object store secret key, or - for stdin.
-
-- `--take-over`
-
-  Take over Fluxer data found on this machine.
-
-- `--voice-ip string`
-
-  Public IP address for voice and video (found automatically).
-
-- `--voice-tcp-port int`
-
-  TCP port for voice and video, for running more than one instance on a host.
-
-- `--voice-udp-port int`
-
-  UDP port for voice and video, for running more than one instance on a host.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--admin-email string` |  | Email address for your admin account. |
+| `--admin-password-file string` |  | File with your admin password, or - for stdin. |
+| `--admin-username string` |  | Username for your admin account. |
+| `--behind-proxy` |  | Serve plain HTTP for your own reverse proxy or tunnel. |
+| `--bind string` | `127.0.0.1:8080` | Address your proxy or tunnel connects to. Implies `--behind-proxy`. |
+| `--boot-service string` |  | Start Fluxer when this machine starts (on or off). |
+| `--confirm string` |  | Your instance's domain, to confirm without a prompt. |
+| `--domain string` |  | Domain or IP address people will use to open your instance, like `chat.example.com` or `203.0.113.7`, and without it `--yes` uses this machine's public IP address. |
+| `--dry-run` |  | Show what would happen without changing anything. |
+| `--install-docker` | On | Install Docker if it's missing. Turn it off with `--install-docker=false`. |
+| `--memory-profile string` |  | Use small, medium or large on every start, without sizing Fluxer to this machine. |
+| `--name string` |  | Your instance's name. |
+| `--no-bundled-voice` |  | Run without the bundled LiveKit and use only voice servers you add later. |
+| `--no-start` |  | Write the files without starting Fluxer. |
+| `--open-firewall` | On | Open the ports Fluxer needs in ufw or firewalld. Turn it off with `--open-firewall=false`. |
+| `--project string` | `fluxer` | Name for this instance's service, containers and folders. A second Fluxer on one machine gets a free name by itself. |
+| `--proxy string` |  | What is in front of Fluxer (local, remote or tunnel). Implies `--behind-proxy`. |
+| `--proxy-from string` |  | Address your proxy on another machine connects from, with `--proxy remote`. |
+| `--registration string` |  | Who can create an account (invite, approval, open or closed). |
+| `--runtime string` |  | Where Fluxer runs, systemd for a service on this machine or docker or podman for one container. Without it, rexctl picks systemd on Debian or Ubuntu as root and one container everywhere else. |
+| `--setup string` |  | Where to create your admin account (terminal or browser). |
+| `--setup-podman` | On | Start Podman's API socket and start Fluxer with the machine. Turn it off with `--setup-podman=false`. |
+| `--sign-in string` |  | How people sign in (email or username), username by default on an IP address or private name. |
+| `--skip-email` |  | Set up email later. |
+| `--smtp-from string` |  | Sender, like Example Chat \<noreply@chat.example.com>. |
+| `--smtp-host string` |  | The SMTP server. |
+| `--smtp-password-file string` |  | File with the SMTP password, or - for stdin. |
+| `--smtp-port int` | `587` | The SMTP port. |
+| `--smtp-tls string` |  | How the connection is encrypted (starttls, implicit, opportunistic or none). Picked from the port when left out. |
+| `--smtp-username string` |  | The username for the SMTP server. |
+| `--storage-access-key string` |  | The object store access key. |
+| `--storage-bucket-prefix string` |  | Text to put before each bucket name, like chat- for chat-fluxer. |
+| `--storage-endpoint string` |  | Your own S3-compatible object store, like `https://s3.example.com`. Without it, Fluxer keeps uploads as files in its data folder. |
+| `--storage-path-style` | On | Put the bucket in the path of object store addresses, like `https://s3.example.com/bucket`. Turn it off with `--storage-path-style=false`. |
+| `--storage-public-endpoint string` |  | The object store address browsers use, when it differs from `--storage-endpoint`. |
+| `--storage-region string` |  | The object store region (found from `--storage-endpoint` when it can be). |
+| `--storage-secret-key-file string` |  | File with the object store secret key, or - for stdin. |
+| `--voice-ip string` |  | Public IP address for voice and video (found automatically). |
+| `--voice-tcp-port int` |  | TCP port for voice and video. A second Fluxer on one machine gets a free port by itself. |
+| `--voice-udp-port int` |  | UDP port for voice and video. A second Fluxer on one machine gets a free port by itself. |
 
 ## rexctl invites
 
@@ -544,116 +610,141 @@ Manage invite links for new accounts.
 
 ### rexctl invites create
 
-Create an invite link.
+Create an invite link that lets people create an account while registration is set to invite. Send the link to the people you want to invite.
 
-```sh
-rexctl invites create [flags]
+Run `rexctl invites create`
+
+```sh title="Examples"
+rexctl invites create
+
+rexctl invites create --uses 0 --expires never
+
+rexctl invites create --uses 10 --expires 12h --label "launch party"
 ```
 
-- `--expires string`
-
-  How long the link works, like 12h, 7d or never. The default is `7d`.
-
-- `--label string`
-
-  A note to help you recognise the link.
-
-- `--uses int`
-
-  How many people can use the link, or 0 for no limit. The default is `1`.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--expires string` | `7d` | How long the link works, like 12h, 7d or never. |
+| `--label string` |  | A note to help you recognise the link. |
+| `--uses int` | `1` | How many people can use the link, or 0 for no limit. |
 
 ### rexctl invites list
 
 List invite links.
 
-```sh
-rexctl invites list [flags]
+Run `rexctl invites list`
+
+```sh title="Examples"
+rexctl invites list
+
+rexctl invites list --json
 ```
 
-- `--json`
-
-  Print JSON.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--json` |  | Print JSON. |
 
 ### rexctl invites revoke
 
 Stop an invite link from working.
 
-```sh
-rexctl invites revoke <id>
+Run `rexctl invites revoke <id>`
+
+```sh title="Examples"
+rexctl invites revoke 1234567890
 ```
 
 ## rexctl logs
 
-Show logs from your instance.
+Show logs from your instance. Every line starts with the part it comes from.
 
-The services are web, api, worker, gateway, voice, media, edge, admin, push, database, search, storage, cache, queue and internal.
-Without a service, rexctl shows every service.
+The parts are web, api, gateway, media, search, database, cache, storage, queue, voice, edge, admin, push, unfurl and internal.
+Without a part, rexctl shows every part.
 
-```sh
-rexctl logs [service] [flags]
+Run `rexctl logs [part]`
+
+```sh title="Examples"
+rexctl logs
+
+rexctl logs api --since 10m
+
+rexctl logs gateway -f
 ```
 
-- `-f`, `--follow`
-
-  Keep printing new lines.
-
-- `--since string`
-
-  Show lines newer than this, like 10m or 2h.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `-f`, `--follow` |  | Keep printing new lines. |
+| `--since string` |  | Show lines newer than this, like 10m or 2h. |
+| `-n`, `--tail int` | `200` | How many lines to show from the end of each log. |
 
 ## rexctl migrate
 
-Move your instance out of Docker, off Valkey or SeaweedFS, or onto one Rust process. This is experimental, so rexctl migrate runs only with --experimental-native. rexctl shows what each change saves and removes, backs up your instance first, moves the data, checks it and goes back if anything fails. The move out of Docker runs as root, and so does every command for the new instance. After the move off SeaweedFS, uploads stay read-only until you open them with --open-writes. The old data stays until you remove it with --clean-up after a newer backup.
+Move your instance to the new layout, off Valkey or SeaweedFS, or onto one Rust process. With `--to`, an instance in the older layout moves to one container on Docker or Podman, or to the systemd service. rexctl shows what each change saves and removes, backs up your instance first, moves the data, checks it and goes back if anything goes wrong.
 
-```sh
-rexctl migrate [flags]
+A move to one container runs as the account that runs the instance now. The move to the systemd service runs as root, and so does every command for the new instance. After the move off SeaweedFS, uploads stay read-only until you open them with `--open-writes`.
+
+The old data stays until you remove it with `--clean-up` after a newer backup.
+
+Run `rexctl migrate`
+
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--clean-up` |  | Remove the old containers and volumes after a move, or the Valkey or SeaweedFS data a change left behind once a newer backup holds what replaced it. |
+| `--confirm string` |  | Your domain, to confirm `--clean-up` without a prompt. |
+| `--details` |  | Show the machine, versions, date and method behind the typical figures. |
+| `--dry-run` |  | Show what each change saves and removes without changing anything. |
+| `--migrate string` |  | The changes to make as a comma-separated list of `docker`, `kv`, `rust` or `storage`. |
+| `--new-dir string` |  | The folder for the moved instance, with `--to`. |
+| `--open-writes` |  | Let people upload again after the move off SeaweedFS. rexctl can't move the files back after this. |
+| `--to string` |  | Move an instance in the older layout, or the voice servers of a voice machine, to docker, podman or systemd. |
+| `--undo string` |  | Go back from a change `rexctl migrate` made. On its own it undoes the move to the new layout. Pass `kv`, or `storage` until you open writes. |
+
+## rexctl postgres
+
+Manage the PostgreSQL of a systemd install.
+
+### rexctl postgres upgrade
+
+Move Fluxer's database to the newest PostgreSQL installed on this machine, or the one `--to` picks. rexctl backs up first, stops Fluxer, moves the database with pg_upgrade `--link` and starts Fluxer again. The old files stay next to the database until you run `rexctl postgres upgrade --clean-up`. That also lets apt remove the old PostgreSQL when rexctl installed it and nothing else on this machine uses it. Only a systemd install uses the PostgreSQL installed on this machine. A Docker or Podman install uses the PostgreSQL that comes in its container image.
+
+Run `rexctl postgres upgrade`
+
+```sh title="Examples"
+rexctl postgres upgrade
+
+rexctl postgres upgrade --to 17
+
+rexctl postgres upgrade --clean-up
 ```
 
-- `--clean-up`
-
-  Remove the Valkey or SeaweedFS data a change left behind, once a newer backup holds what replaced it.
-
-- `--confirm string`
-
-  Your domain, to confirm --clean-up without a prompt.
-
-- `--details`
-
-  Show the machine, versions, date and method behind the typical figures.
-
-- `--dry-run`
-
-  Show what each change saves and removes without changing anything.
-
-- `--experimental-native`
-
-  Turn on rexctl migrate, which is experimental.
-
-- `--migrate string`
-
-  The changes to make, separated by commas: docker, kv, rust and storage.
-
-- `--native-dir string`
-
-  The folder for the instance that runs without Docker, with --migrate docker.
-
-- `--open-writes`
-
-  Let people upload again after the move off SeaweedFS. rexctl can't move the files back after this.
-
-- `--undo string`
-
-  Go back from a change rexctl migrate made: kv, or storage until you open writes.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--clean-up` |  | Delete the old database files an earlier upgrade kept. |
+| `--to int` |  | The PostgreSQL major to move to (default the newest installed). |
 
 ## rexctl proxy
 
-Use your own reverse proxy or tunnel in front of Fluxer.
+Use your own proxy or tunnel in front of Fluxer.
+
+### rexctl proxy config
+
+Print a ready config for your proxy or tunnel.
+
+Run `rexctl proxy config [nginx|caddy|apache|traefik|cloudflared]`
+
+```sh title="Examples"
+rexctl proxy config nginx
+
+rexctl proxy config caddy > /etc/caddy/fluxer.caddy
+```
 
 ### rexctl proxy off
 
-Serve HTTPS directly with a certificate from Let's Encrypt.
+Serve HTTPS itself with a Let's Encrypt certificate.
 
-```sh
+Run `rexctl proxy off`
+
+```sh title="Examples"
 rexctl proxy off
 ```
 
@@ -661,97 +752,135 @@ rexctl proxy off
 
 Serve plain HTTP for your own proxy or tunnel.
 
-```sh
-rexctl proxy on [flags]
+Run `rexctl proxy on`
+
+```sh title="Examples"
+rexctl proxy on
+
+rexctl proxy on --bind 127.0.0.1:8081 --proxy tunnel
+
+rexctl proxy on --bind 10.0.0.5:8080 --proxy-from 10.0.0.2
 ```
 
-- `--bind string`
-
-  Address your proxy or tunnel connects to, kept when left out (127.0.0.1:8080 the first time).
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--bind string` |  | Address your proxy or tunnel connects to, kept when left out (`127.0.0.1:8080` the first time). |
+| `--proxy string` |  | What is in front of Fluxer (local, remote or tunnel). |
+| `--proxy-from string` |  | Address your proxy connects from, when other machines can connect to `--bind`. |
 
 ## rexctl registration
 
-Choose who can create an account.
+Shows who can create an account on your instance and offers to change it.
+
+Run `rexctl registration`
+
+```sh title="Examples"
+rexctl registration
+
+rexctl registration set invite
+
+rexctl registration pending
+```
+
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--json` |  | Print JSON. |
 
 ### rexctl registration approve
 
 Approve a person waiting for approval.
 
-```sh
-rexctl registration approve <id>
+Run `rexctl registration approve <id>`
+
+```sh title="Examples"
+rexctl registration approve alice
 ```
 
 ### rexctl registration deny
 
 Turn down a person waiting for approval.
 
-```sh
-rexctl registration deny <id>
+Run `rexctl registration deny <id>`
+
+```sh title="Examples"
+rexctl registration deny 1234567890
 ```
 
 ### rexctl registration pending
 
 List people waiting for approval.
 
-```sh
-rexctl registration pending [flags]
+Run `rexctl registration pending`
+
+```sh title="Examples"
+rexctl registration pending
 ```
 
-- `--json`
-
-  Print JSON.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--json` |  | Print JSON. |
 
 ### rexctl registration set
 
-Set who can create an account.
+Set who can create an account. open lets anyone sign up, approval lets an admin approve each request, invite needs an invite link and closed stops sign-ups and invite links. Leave the mode out on a terminal to pick it from a list.
 
-```sh
-rexctl registration set <open|approval|invite|closed>
+Run `rexctl registration set [open|approval|invite|closed]`
+
+```sh title="Examples"
+rexctl registration set invite
+
+rexctl registration set approval
 ```
 
 ## rexctl restart
 
-Restart your instance.
+Restart Fluxer, or only the parts you pass, and wait until each one is ready.
 
-```sh
+The parts are web, api, gateway, media, search, database, cache, storage, queue, voice, edge, admin, push, unfurl and internal.
+
+Run `rexctl restart [part...]`
+
+```sh title="Examples"
 rexctl restart
+
+rexctl restart api
+
+rexctl restart web gateway
 ```
 
 ## rexctl restore
 
-Restore your instance from a backup. This works on a new machine too. Copy the backup file there and run this command. A backup without uploads restores only on the instance it was made for, and the uploads there stay as they are. A backup of a Fluxer that runs without containers restores into an empty folder or an instance that runs the same way.
+Restore your instance from a backup. This works on a new machine too. Copy the backup file there and run this command. Without a file, rexctl lists your backups to pick from. Before it replaces an instance, rexctl backs it up first. A backup without uploads restores only on the instance it was made for, and the uploads there stay as they are. A backup from containers restores into a systemd service and the other way round. Pass `--runtime systemd` to set up the new instance as a systemd service.
 
-```sh
-rexctl restore <file> [flags]
+Run `rexctl restore [file]`
+
+```sh title="Examples"
+rexctl restore
+
+rexctl restore chat.example.org-20261114-1612.tar.zst
+
+rexctl restore /mnt/backups/fluxer.tar.zst --confirm chat.example.org
 ```
 
-- `--confirm string`
-
-  Your instance's domain, to confirm without a prompt.
-
-- `--engine string`
-
-  Move the instance to another engine while restoring (docker).
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--age-identity string` |  | Age key file that decrypts a backup ending in .age. |
+| `--confirm string` |  | Your instance's domain, to confirm without a prompt. |
+| `--no-safety-backup` |  | Don't back up the current instance before replacing it. |
+| `--runtime string` |  | Run a new instance from the backup as a systemd service (systemd). |
 
 ## rexctl rollback
 
-Go back to the release you ran before the last upgrade.
+Go back to the release before the last upgrade.
 
-```sh
-rexctl rollback [flags]
-```
+Run `rexctl rollback`
 
-- `--confirm string`
-
-  Your instance's domain, to confirm without a prompt.
-
-- `--dry-run`
-
-  Show what would happen without changing anything.
-
-- `--restore-database`
-
-  Also restore the database from the backup taken before the upgrade.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--confirm string` |  | Your instance's domain, to confirm without a prompt. |
+| `--dry-run` |  | Show what would happen without changing anything. |
+| `--no-safety-backup` |  | Don't back up the current instance before a restore replaces it. |
+| `--restore-database` |  | Also restore the backup taken before the upgrade, which rexctl does by itself once the newer release has changed your data. |
 
 ## rexctl search
 
@@ -761,189 +890,154 @@ Manage search on your instance.
 
 Rebuild every search index from your data, with the messages in every channel and DM. Search shows partial results until it finishes. If a rebuild is already running, rexctl follows that one, and stopping rexctl doesn't stop the rebuild.
 
-```sh
-rexctl search reindex [flags]
+Run `rexctl search reindex`
+
+```sh title="Examples"
+rexctl search reindex
+
+rexctl search reindex --no-wait
 ```
 
-- `--no-wait`
-
-  Start the rebuild and return without waiting for it.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--no-wait` |  | Start the rebuild and return without waiting for it. |
 
 ## rexctl setup
 
-Create the admin account and finish setup in the terminal.
+Create the admin and finish setup in the terminal.
 
-```sh
-rexctl setup [flags]
+Run `rexctl setup`
+
+```sh title="Examples"
+rexctl setup
+
+rexctl setup --sign-in username --admin-username admin --admin-password-file pw.txt --name "Example Chat"
+
+rexctl setup token
 ```
 
-- `--admin-email string`
-
-  Email address for your admin account.
-
-- `--admin-password-file string`
-
-  File with your admin password, or - for stdin.
-
-- `--admin-username string`
-
-  Username for your admin account.
-
-- `--name string`
-
-  Your instance's name.
-
-- `--registration string`
-
-  Who can create an account (invite, approval, open or closed).
-
-- `--sign-in string`
-
-  How people sign in (email or username).
-
-- `--skip-email`
-
-  Set up email later.
-
-- `--smtp-from string`
-
-  Sender, like Example Chat \<noreply@chat.example.com>.
-
-- `--smtp-host string`
-
-  The SMTP server.
-
-- `--smtp-password-file string`
-
-  File with the SMTP password, or - for stdin.
-
-- `--smtp-port int`
-
-  The SMTP port. The default is `587`.
-
-- `--smtp-tls string`
-
-  How the connection is encrypted (starttls, implicit, opportunistic or none). Picked from the port when left out.
-
-- `--smtp-username string`
-
-  The username for the SMTP server.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--admin-email string` |  | Email address for your admin account. |
+| `--admin-password-file string` |  | File with your admin password, or - for stdin. |
+| `--admin-username string` |  | Username for your admin account. |
+| `--name string` |  | Your instance's name. |
+| `--registration string` |  | Who can create an account (invite, approval, open or closed). |
+| `--sign-in string` |  | How people sign in (email or username), username by default on an IP address or private name. |
+| `--skip-email` |  | Set up email later. |
+| `--smtp-from string` |  | Sender, like Example Chat \<noreply@chat.example.com>. |
+| `--smtp-host string` |  | The SMTP server. |
+| `--smtp-password-file string` |  | File with the SMTP password, or - for stdin. |
+| `--smtp-port int` | `587` | The SMTP port. |
+| `--smtp-tls string` |  | How the connection is encrypted (starttls, implicit, opportunistic or none). Picked from the port when left out. |
+| `--smtp-username string` |  | The username for the SMTP server. |
 
 ### rexctl setup token
 
 Show the setup token for the browser.
 
-```sh
+Run `rexctl setup token`
+
+```sh title="Examples"
 rexctl setup token
 ```
 
 ## rexctl start
 
-Start your instance.
+Start Fluxer and wait until every part is ready. A stopped instance stays stopped, also after this machine restarts, until you run `rexctl start`.
 
-```sh
+Run `rexctl start`
+
+```sh title="Examples"
 rexctl start
+
+rexctl start --dir /opt/fluxer
 ```
 
 ## rexctl status
 
-Show whether your instance is running.
+Show whether your instance is running, with each part of Fluxer, the address, version, folder, whether it starts with this machine and when it was last backed up. With `--watch`, the card stays open and updates every few seconds.
 
-```sh
-rexctl status [flags]
+Run `rexctl status`
+
+```sh title="Examples"
+rexctl status
+
+rexctl status --watch
+
+rexctl status --json
 ```
 
-- `--json`
-
-  Print JSON.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--json` |  | Print JSON. |
+| `--watch` |  | Keep the card open and update it every few seconds. |
 
 ## rexctl stop
 
-Stop Fluxer and keep its containers. Fluxer stays stopped until you run rexctl start. To remove the containers too, run rexctl down.
+Stop Fluxer but keep everything it runs with. It stays stopped, also after a restart, until you run `rexctl start`. To also remove its containers or runtime files, run `rexctl down`.
 
-```sh
+Run `rexctl stop`
+
+```sh title="Examples"
 rexctl stop
+
+rexctl stop --dir /opt/fluxer
 ```
-
-## rexctl takeover
-
-Hands an instance made by the old installer, by hand with docker compose, or released with rexctl eject over to rexctl. Fluxer keeps running as it is.
-
-```sh
-rexctl takeover [flags]
-```
-
-- `--dry-run`
-
-  Show what would change without changing anything.
 
 ## rexctl uninstall
 
-Remove Fluxer from this machine, with its data and backups unless you pass --keep-data. To stop Fluxer and keep everything, run rexctl stop or rexctl down.
+Remove Fluxer from this machine, with its data unless you pass `--keep-data`. rexctl asks whether to keep your backups, and they stay unless you choose to delete them or pass `--delete-backups`. It lists what goes and what stays before it changes anything. If you only want to stop Fluxer and keep everything, run `rexctl stop` or `rexctl down`.
 
-```sh
-rexctl uninstall [flags]
+Run `rexctl uninstall`
+
+```sh title="Examples"
+rexctl uninstall
+
+rexctl uninstall --keep-data
+
+rexctl uninstall --confirm chat.example.com --delete-backups
 ```
 
-- `--confirm string`
-
-  Your instance's domain, to confirm without a prompt.
-
-- `--keep-data`
-
-  Keep your data and backups.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--confirm string` |  | Your instance's domain, to confirm without a prompt. |
+| `--delete-backups` |  | Delete the backups in the instance folder too. |
+| `--keep-data` |  | Keep your data, settings and backups. |
 
 ## rexctl upgrade
 
 Upgrade rexctl and Fluxer to the latest release.
 
-```sh
-rexctl upgrade [flags]
+Run `rexctl upgrade`
+
+```sh title="Examples"
+rexctl upgrade
+
+rexctl upgrade --check
+
+rexctl upgrade --prefetch
 ```
 
-- `--backup string`
-
-  What the backup before this upgrade holds, full or without-uploads. When the upgrade changes how uploads are stored, the backup includes them anyway. The default is `full`.
-
-- `--check`
-
-  Show whether an upgrade is available without changing anything.
-
-- `--dry-run`
-
-  Show what would happen without changing anything.
-
-- `--experimental-native`
-
-  After the upgrade, show the experimental changes that run Fluxer with fewer services, and make the ones you pick.
-
-- `--json`
-
-  Print JSON.
-
-- `--migrate string`
-
-  With --experimental-native, make these changes after the upgrade, separated by commas: docker, kv, rust and storage.
-
-- `--no-backup`
-
-  Skip the backup before upgrading.
-
-- `--prefetch`
-
-  Download the new version and upgrade later.
-
-- `--to string`
-
-  Upgrade to this version, not the latest.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--backup string` | `full` | What the backup before this upgrade holds, full or without-uploads. When the upgrade changes how uploads are stored, the backup includes them anyway. |
+| `--check` |  | Show whether an upgrade is available without changing anything. |
+| `--dry-run` |  | Show what would happen without changing anything. |
+| `--json` |  | Print JSON. |
+| `--no-backup` |  | Skip the backup before upgrading. |
+| `--prefetch` |  | Download the new version and upgrade later. |
+| `--to string` |  | Upgrade to this version, not the latest. |
 
 ## rexctl use
 
-Show which instance rexctl uses when you don't pass --dir and aren't in an instance folder, or pass a folder to use that instance from now on. rexctl remembers each instance it installs. You only need this with more than one instance or one installed by an older rexctl. Each account has its own choice. Root's choice also applies to accounts that have no instance of their own. As root, rexctl refuses an instance folder that other accounts can write to. It still uses a folder you pick when other accounts can change a folder above it, and it warns you about that. The services rexctl sets up for starting and upgrading Fluxer always pass their own folder, and this choice doesn't change them.
+Show which instance rexctl uses when you don't pass `--dir` and aren't in an instance folder, or pass a folder to use that instance from now on. rexctl remembers each instance it installs. You only need this with more than one instance or one installed by an older rexctl.
 
-```sh
-rexctl use [folder]
-```
+Each account makes its own choice, and the choice root makes also applies to any account that has no instance of its own.
+
+As root, rexctl refuses an instance folder that other accounts can write to. It still uses a folder you pick when other accounts can change a folder above it, and it warns you about that. The services rexctl sets up for starting and upgrading Fluxer always pass their own folder, and this choice doesn't change them.
+
+Run `rexctl use [folder]`
 
 ## rexctl users
 
@@ -951,426 +1045,469 @@ Manage accounts on your instance.
 
 ### rexctl users ban
 
-Ban an account.
+Ban an account so it can't sign in. With `--delete-messages`, Fluxer also deletes everything the account posted, in the background.
 
-```sh
-rexctl users ban <user> [flags]
+Run `rexctl users ban <user>`
+
+```sh title="Examples"
+rexctl users ban spammer --reason spam
+
+rexctl users ban spammer --reason spam --delete-messages --yes
 ```
 
-- `--delete-messages`
-
-  Also delete their messages.
-
-- `--reason string`
-
-  Why you're banning them, one of spam, scam, harassment, hate, threats, raids, automation, ban-evasion, impersonation, malware, doxxing, intimate-images, explicit-content, adult-content, violence, self-harm, illegal, deception, exploits or report-abuse.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--delete-messages` |  | Also delete their messages. |
+| `--reason string` |  | Why you're banning them, one of `spam`, `scam`, `harassment`, `hate`, `threats`, `raids`, `automation`, `ban-evasion`, `impersonation`, `malware`, `doxxing`, `intimate-images`, `explicit-content`, `adult-content`, `violence`, `self-harm`, `illegal`, `deception`, `exploits` or `report-abuse`. |
 
 ### rexctl users create
 
-Create an account and print a link to set its password.
+Create an account and print a password link.
 
-```sh
-rexctl users create <username> [flags]
+Run `rexctl users create <username>`
+
+```sh title="Examples"
+rexctl users create alice --email alice@example.com
+
+rexctl users create bob --admin
 ```
 
-- `--admin`
-
-  Make the account an admin.
-
-- `--email string`
-
-  Email address for the account.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--admin` |  | Make the account an admin. |
+| `--email string` |  | Email address for the account. |
 
 ### rexctl users delete
 
 Delete an account and its data.
 
-```sh
-rexctl users delete <user> [flags]
+Run `rexctl users delete <user>`
+
+```sh title="Examples"
+rexctl users delete alice
+
+rexctl users delete alice --confirm chat.example.com
 ```
 
-- `--confirm string`
-
-  Your instance's domain, to confirm without a prompt.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--confirm string` |  | Your instance's domain, to confirm without a prompt. |
 
 ### rexctl users disable-mfa
 
 Turn off two-factor authentication for an account.
 
-```sh
-rexctl users disable-mfa <user>
+Run `rexctl users disable-mfa <user>`
+
+```sh title="Examples"
+rexctl users disable-mfa alice
 ```
 
 ### rexctl users list
 
 List accounts.
 
-```sh
-rexctl users list [flags]
+Run `rexctl users list`
+
+```sh title="Examples"
+rexctl users list
+
+rexctl users list --search alice
+
+rexctl users list --admins --json
 ```
 
-- `--admins`
-
-  Only show admins.
-
-- `--json`
-
-  Print JSON.
-
-- `--search string`
-
-  Only show accounts that match this text.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--admins` |  | Only show admins. |
+| `--json` |  | Print JSON. |
+| `--limit int` | `50` | Show at most this many accounts, or 0 for all. With `--json` it lists them all unless you pass `--limit`. |
+| `--search string` |  | Only show accounts that match this text. |
 
 ### rexctl users reset-link
 
 Print a link to set a new password.
 
-```sh
-rexctl users reset-link <user>
+Run `rexctl users reset-link <user>`
+
+```sh title="Examples"
+rexctl users reset-link alice
 ```
 
 ### rexctl users show
 
 Show one account.
 
-```sh
-rexctl users show <user> [flags]
+Run `rexctl users show <user>`
+
+```sh title="Examples"
+rexctl users show alice
+
+rexctl users show alice@example.com --json
 ```
 
-- `--json`
-
-  Print JSON.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--json` |  | Print JSON. |
 
 ### rexctl users sign-out
 
 Sign an account out everywhere.
 
-```sh
-rexctl users sign-out <user>
+Run `rexctl users sign-out <user>`
+
+```sh title="Examples"
+rexctl users sign-out alice
 ```
 
 ### rexctl users unban
 
 Lift a ban.
 
-```sh
-rexctl users unban <user>
+Run `rexctl users unban <user>`
+
+```sh title="Examples"
+rexctl users unban alice
 ```
 
 ## rexctl version
 
-Show the rexctl and Fluxer versions.
+Show the version of rexctl, the Fluxer release it installs, and the Fluxer release and runtime of the instance in this folder, if there is one.
 
-```sh
-rexctl version [flags]
+Run `rexctl version`
+
+```sh title="Examples"
+rexctl version
+
+rexctl version --json
 ```
 
-- `--json`
-
-  Print JSON.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--json` |  | Print JSON. |
 
 ## rexctl voice
 
-Run standalone LiveKit voice servers next to Fluxer with rexctl voice add, or on other machines with rexctl voice token and rexctl voice join.
+Run standalone LiveKit voice servers next to Fluxer with `rexctl voice add`, or on other machines with `rexctl voice token` and `rexctl voice join`.
 
-To run without the bundled voice server, run rexctl config set voice.bundled false, or install with rexctl install --no-bundled-voice. Calls then go only to the servers you add. rexctl config set voice.bundled true brings the bundled server back.
+To run without the bundled voice server, run `rexctl config set voice.bundled false`, or install with `rexctl install --no-bundled-voice`. Calls then go only to the servers you add. `rexctl config set voice.bundled true` brings the bundled server back.
 
 ### rexctl voice add
 
-Add standalone LiveKit voice servers next to your Fluxer instance on this machine. Each one gets its own ID, ports, keys and path on your domain, and rexctl registers it with your instance.
+Add standalone LiveKit voice servers next to your instance on this machine. Each one gets its own ID, ports, keys and path on your domain, and rexctl registers it with your instance.
 
-```sh
-rexctl voice add [flags]
+Run `rexctl voice add`
+
+```sh title="Examples"
+rexctl voice add
+
+rexctl voice add --count 2
+
+rexctl voice add --print --endpoint wss://voice.example.com > livekit.yaml
+
+rexctl voice add --new-region fra --region-name Frankfurt --lat 50.1 --long 8.7
 ```
 
-- `--count int`
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--count int` | `1` | How many servers to add. |
+| `--dry-run` |  | Show what would happen and change nothing. |
+| `--endpoint string` |  | Public `wss://` URL of the LiveKit server you run yourself, with `--print`. |
+| `--force` |  | Add servers even when Fluxer runs through a tunnel. |
+| `--id string` |  | Server ID, such as fra-server-2. With `--print`, a registered server's ID prints a new config with a new secret. |
+| `--image string` |  | LiveKit image to run. |
+| `--ip string` |  | Public IPv4 address LiveKit gives to clients, also the address the ports bind to when it's on this machine. |
+| `--ipv6 string` |  | Public IPv6 address LiveKit gives to clients. |
+| `--lat float` |  | Latitude of the server. |
+| `--long float` |  | Longitude of the server. |
+| `--memory string` |  | Memory limit for the server, such as 2g. |
+| `--new-region string` |  | Create a voice region with this ID for the servers. |
+| `--no-firewall` |  | Leave the firewall on this machine alone. |
+| `--no-ipv6` |  | Give clients only the IPv4 address, even when this machine has IPv6. |
+| `--print` |  | Register a server you run yourself with plain LiveKit and print its LiveKit config, with `--endpoint`. |
+| `--region string` |  | Existing voice region for the server. |
+| `--region-name string` |  | Name of the new region. |
+| `--soft-limit int` |  | Connections above which placement prefers another server. |
+| `--tcp-port int` |  | TCP port for media. |
+| `--udp-port int` |  | UDP port for media. |
 
-  How many servers to add. The default is `1`.
+### rexctl voice drain
 
-- `--dry-run`
+Stop sending new calls to a voice server.
 
-  Show what would happen and change nothing.
+Run `rexctl voice drain <id>`
 
-- `--force`
-
-  Add servers even when Fluxer runs through a tunnel.
-
-- `--id string`
-
-  Server ID, such as fra-server-2.
-
-- `--image string`
-
-  LiveKit image to run.
-
-- `--ip string`
-
-  Public IPv4 address LiveKit gives to clients, also the address the ports bind to when it's on this machine.
-
-- `--ipv6 string`
-
-  Public IPv6 address LiveKit gives to clients.
-
-- `--lat float`
-
-  Latitude of the server.
-
-- `--long float`
-
-  Longitude of the server.
-
-- `--memory string`
-
-  Memory limit for the server, such as 2g.
-
-- `--new-region string`
-
-  Create a voice region with this ID for the servers.
-
-- `--no-firewall`
-
-  Leave the firewall on this machine alone.
-
-- `--no-ipv6`
-
-  Give clients only the IPv4 address, even when this machine has IPv6.
-
-- `--region string`
-
-  Existing voice region for the server.
-
-- `--region-name string`
-
-  Name of the new region.
-
-- `--soft-limit int`
-
-  Connections above which placement prefers another server.
-
-- `--tcp-port int`
-
-  TCP port for media.
-
-- `--udp-port int`
-
-  UDP port for media.
+```sh title="Examples"
+rexctl voice drain fra-server-2
+```
 
 ### rexctl voice hostname
 
 Move a voice server on this machine to a hostname once its DNS record points here. rexctl gets a certificate and updates the server's endpoint on the instance.
 
-```sh
-rexctl voice hostname <id> <host>
+Run `rexctl voice hostname <id> <host>`
+
+```sh title="Examples"
+rexctl voice hostname ams-server-1 voice.example.com
 ```
 
 ### rexctl voice join
 
-Install a standalone LiveKit voice server on this machine and register it with the Fluxer instance at \<domain>. Get the token with rexctl voice token on the Fluxer machine, or with Add a voice server in the admin panel. The token works once. rexctl also reads it from FLUXER_VOICE_JOIN_TOKEN or, with --token-stdin, from standard input. The server offers IPv4 and IPv6 when the machine has both. On a machine with only IPv6, pass --hostname with an AAAA record that points here.
+Install a standalone LiveKit voice server on this machine and register it with the Fluxer instance at `<domain>`. Get the token with `rexctl voice token` on the Fluxer machine, or with Add a voice server in the admin panel. The token works once. rexctl also reads it from `FLUXER_VOICE_JOIN_TOKEN` or, with `--token-stdin`, from standard input. The server offers IPv4 and IPv6 when the machine has both. On a machine with only IPv6, pass `--hostname` with an AAAA record that points here.
 
-```sh
-rexctl voice join <domain> [token] [flags]
-```
+Run `rexctl voice join <domain> [token]`
 
-- `--dry-run`
-
-  Show what would happen and change nothing.
-
-- `--email string`
-
-  Email address for Let's Encrypt notices.
-
-- `--endpoint string`
-
-  Public wss:// URL of the server behind your own proxy.
-
-- `--hostname string`
-
-  Hostname for the server's endpoint and certificate.
-
-- `--http-bind string`
-
-  Address the port for your own proxy listens on, with --no-edge (default 127.0.0.1).
-
-- `--http-port int`
-
-  Port for your own proxy, with --no-edge.
-
-- `--id string`
-
-  Server ID, such as fra-server-2.
-
-- `--image string`
-
-  LiveKit image to run.
-
-- `--ip string`
-
-  Public IPv4 address LiveKit gives to clients, also the address the ports bind to when it's on this machine.
-
-- `--ipv6 string`
-
-  Public IPv6 address LiveKit gives to clients.
-
-- `--lat float`
-
-  Latitude of the server.
-
-- `--long float`
-
-  Longitude of the server.
-
-- `--memory string`
-
-  Memory limit for the server, such as 2g.
-
-- `--no-edge`
-
-  Start no edge and publish the server's HTTP port for your own proxy.
-
-- `--no-firewall`
-
-  Leave the firewall on this machine alone.
-
-- `--no-ipv6`
-
-  Give clients only the IPv4 address, even when this machine has IPv6.
-
-- `--region string`
-
-  Existing voice region for the server.
-
-- `--soft-limit int`
-
-  Connections above which placement prefers another server.
-
-- `--tcp-port int`
-
-  TCP port for media.
-
-- `--token-stdin`
-
-  Read the join token from standard input.
-
-- `--udp-port int`
-
-  UDP port for media.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--dry-run` |  | Show what would happen and change nothing. |
+| `--email string` |  | Email address for Let's Encrypt notices. |
+| `--endpoint string` |  | Public `wss://` URL of the server behind your own proxy. |
+| `--hostname string` |  | Hostname for the server's endpoint and certificate. |
+| `--http-bind string` |  | Address the port for your own proxy listens on, with `--no-edge` (default `127.0.0.1`). |
+| `--http-port int` |  | Port for your own proxy, with `--no-edge`. |
+| `--id string` |  | Server ID, such as fra-server-2. With `--print`, a registered server's ID prints a new config with a new secret. |
+| `--image string` |  | LiveKit image to run. |
+| `--ip string` |  | Public IPv4 address LiveKit gives to clients, also the address the ports bind to when it's on this machine. |
+| `--ipv6 string` |  | Public IPv6 address LiveKit gives to clients. |
+| `--lat float` |  | Latitude of the server. |
+| `--long float` |  | Longitude of the server. |
+| `--memory string` |  | Memory limit for the server, such as 2g. |
+| `--no-edge` |  | Start no edge and publish the server's HTTP port for your own proxy. |
+| `--no-firewall` |  | Leave the firewall on this machine alone. |
+| `--no-ipv6` |  | Give clients only the IPv4 address, even when this machine has IPv6. |
+| `--region string` |  | Existing voice region for the server. |
+| `--runtime string` |  | Where the voice server runs, systemd, docker or podman (default systemd on Debian or Ubuntu as root, otherwise a container). |
+| `--soft-limit int` |  | Connections above which placement prefers another server. |
+| `--tcp-port int` |  | TCP port for media. |
+| `--token-stdin` |  | Read the join token from standard input. |
+| `--udp-port int` |  | UDP port for media. |
 
 ### rexctl voice list
 
 List voice servers.
 
-```sh
-rexctl voice list [flags]
+Run `rexctl voice list`
+
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--json` |  | Print JSON. |
+
+### rexctl voice logs
+
+Show the logs of this machine's voice servers.
+
+Run `rexctl voice logs [id]`
+
+```sh title="Examples"
+rexctl voice logs fra-server-2
+
+rexctl voice logs fra-server-2 --follow
+
+rexctl voice logs --since 1h
 ```
 
-- `--json`
-
-  Print JSON.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `-f`, `--follow` |  | Keep printing new lines. |
+| `--since string` |  | Show lines from this long ago, such as 30m. |
+| `-n`, `--tail int` | `200` | How many lines to show from the end of each log. |
 
 ### rexctl voice remove
 
 Drain, unregister and delete a voice server.
 
-```sh
-rexctl voice remove [id] [flags]
+Run `rexctl voice remove [id]`
+
+```sh title="Examples"
+rexctl voice remove fra-server-2
+
+rexctl voice remove ams-server-1 --forget
+
+rexctl voice remove --all
 ```
 
-- `--all`
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--all` |  | Remove every voice server and the edge on this machine. |
+| `--drain-timeout duration` | `15m0s` | How long to wait for calls to end. |
+| `--forget` |  | Only remove a server on another machine from the instance, when that machine is gone. |
+| `--now` |  | Don't wait for calls to end. |
 
-  Remove every voice server and the edge on this machine.
+### rexctl voice restart
 
-- `--drain-timeout duration`
+Restart local voice servers. Their calls reconnect.
 
-  How long to wait for calls to end. The default is `15m0s`.
+Run `rexctl voice restart [id]`
 
-- `--now`
+```sh title="Examples"
+rexctl voice restart fra-server-2
 
-  Don't wait for calls to end.
+rexctl voice restart
+```
+
+### rexctl voice resync
+
+Calls fail when the instance signs tokens with another secret than the voice server has. On the machine that runs the server, `rexctl voice resync` sends the server's key, secret, endpoint and addresses to the instance again. For a server on another machine, run it on the Fluxer machine and pass the server's secret with `--secret-file`.
+
+Run `rexctl voice resync <id>`
+
+```sh title="Examples"
+rexctl voice resync fra-server-2
+
+rexctl voice resync ams-server-1 --print-secret
+
+rexctl voice resync ams-server-1 --secret-file -
+```
+
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--print-secret` |  | Print the secret of a server on this machine, for `--secret-file` on the Fluxer machine. |
+| `--secret-file string` |  | File that holds the server's secret, or - for standard input, for a server on another machine. |
+
+### rexctl voice set
+
+Change the public IPv4 address a voice server gives to clients, or the address its port for your own proxy listens on. rexctl restarts the server, and calls on it reconnect.
+
+Run `rexctl voice set <id>`
+
+```sh title="Examples"
+rexctl voice set fra-server-2 --ip 203.0.113.7
+
+rexctl voice set fra-server-2 --ip auto
+
+rexctl voice set ams-server-1 --http-bind 10.0.0.5
+```
+
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--http-bind string` |  | Address the port for your own proxy listens on. |
+| `--ip string` |  | Public IPv4 address for clients, or auto to follow this machine. |
 
 ### rexctl voice status
 
 Show the voice servers on this machine.
 
-```sh
-rexctl voice status [id]
+Run `rexctl voice status [id]`
+
+```sh title="Examples"
+rexctl voice status
+
+rexctl voice status fra-server-2
 ```
+
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--json` |  | Print JSON. |
 
 ### rexctl voice test
 
 Join a throwaway room on a voice server and report which transports connect. On the Fluxer machine it can test any server of the instance, including servers on other machines.
 
-```sh
-rexctl voice test [id]
+Run `rexctl voice test [id]`
+
+```sh title="Examples"
+rexctl voice test
+
+rexctl voice test ams-server-1
 ```
 
 ### rexctl voice token
 
-Create a join token and print the command that installs a voice server with it. The token works once.
+Create a one-time join token and print the command that installs a voice server with it.
 
-```sh
-rexctl voice token [flags]
-```
+Run `rexctl voice token`
 
-- `--expires string`
-
-  How long the token works, at most 24h. The default is `1h`.
-
-- `--hostname string`
-
-  Hostname the server must use.
-
-- `--id string`
-
-  Server ID.
-
-- `--internal-endpoint string`
-
-  URL the API uses to connect to the server, such as http://10.0.0.5:7880.
-
-- `--lat float`
-
-  Latitude of the new region.
-
-- `--long float`
-
-  Longitude of the new region.
-
-- `--name string`
-
-  A note for the server.
-
-- `--new-region string`
-
-  Create a region with this ID when the server joins.
-
-- `--region string`
-
-  Existing region for the server.
-
-- `--region-name string`
-
-  Name of the new region.
-
-- `--soft-limit int`
-
-  Connections above which placement prefers another server.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--expires string` | `1h` | How long the token works, at most 24h. |
+| `--hostname string` |  | Hostname the server must use. |
+| `--id string` |  | Server ID. |
+| `--internal-endpoint string` |  | URL the API uses to connect to the server, such as `http://10.0.0.5:7880`. |
+| `--lat float` |  | Latitude of the new region. |
+| `--long float` |  | Longitude of the new region. |
+| `--name string` |  | A note for the server. |
+| `--new-region string` |  | Create a region with this ID when the server joins. |
+| `--region string` |  | Existing region for the server. |
+| `--region-name string` |  | Name of the new region. |
+| `--soft-limit int` |  | Connections above which placement prefers another server. |
 
 ### rexctl voice token list
 
 List join tokens.
 
-```sh
-rexctl voice token list [flags]
-```
+Run `rexctl voice token list`
 
-- `--json`
-
-  Print JSON.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--json` |  | Print JSON. |
 
 ### rexctl voice token revoke
 
 Stop a join token from working.
 
-```sh
-rexctl voice token revoke <token id>
+Run `rexctl voice token revoke <token id>`
+
+### rexctl voice turn
+
+Callers behind strict firewalls connect to voice servers through a TURN server. rexctl keeps the list, gives it to every voice server of the instance and restarts the bundled one.
+
+### rexctl voice turn add
+
+Add a TURN server.
+
+Run `rexctl voice turn add`
+
+```sh title="Examples"
+rexctl voice turn add --host turn.example.com --username fluxer --password-file turn.txt
+
+rexctl voice turn add --host turn.example.com --port 5349 --protocol tls --secret-file secret.txt
+```
+
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--host string` |  | Hostname or IPv4 address of the TURN server. |
+| `--password-file string` |  | File that holds the password for `--username`, or - for standard input. |
+| `--port int` | `3478` | Port of the TURN server. |
+| `--protocol string` | `udp` | How to connect to the TURN server, udp, tcp or tls. |
+| `--secret-file string` |  | File that holds the shared secret, for TURN servers that make short-lived passwords. |
+| `--ttl int` |  | Seconds a password made from the shared secret works. |
+| `--username string` |  | Username for the TURN server. |
+
+### rexctl voice turn list
+
+List the TURN servers.
+
+Run `rexctl voice turn list`
+
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--json` |  | Print JSON. |
+
+### rexctl voice turn remove
+
+Remove a TURN server.
+
+Run `rexctl voice turn remove [host]`
+
+```sh title="Examples"
+rexctl voice turn remove turn.example.com
+
+rexctl voice turn remove turn.example.com --port 5349
+
+rexctl voice turn remove --all
+```
+
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--all` |  | Remove every TURN server. |
+| `--port int` |  | Remove only the entry on this port. |
+
+### rexctl voice undrain
+
+Send new calls to a voice server again.
+
+Run `rexctl voice undrain <id>`
+
+```sh title="Examples"
+rexctl voice undrain fra-server-2
 ```

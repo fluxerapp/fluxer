@@ -1,0 +1,25 @@
+---
+// SPDX-License-Identifier: AGPL-3.0-or-later
+import {withBase} from '@/components/Sections';
+
+const target = withBase('/operator/settings/');
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="color-scheme" content="light dark" />
+		<meta name="robots" content="noindex" />
+		<title>Settings reference</title>
+		<link rel="canonical" href={target} />
+		<meta http-equiv="refresh" content={`0; url=${target}`} />
+		<script is:inline define:vars={{target}}>
+			location.replace(target + location.hash);
+		</script>
+	</head>
+	<body>
+		<p>The environment variables are on the <a href={target}>settings reference</a> page.</p>
+	</body>
+</html>

@@ -1,0 +1,79 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: CapRover
+description: You run Fluxer on CapRover as an app from the image, with a persistent directory.
+---
+
+import {Steps} from '@astrojs/starlight/components';
+
+## Short version
+
+A CapRover server with a root domain and HTTPS turned on. Create an app with persistent data, deploy the Fluxer image, set three environment variables and publish the voice ports.
+
+It takes about 15 minutes.
+
+## What this changes
+
+- One CapRover app called `fluxer`, a Docker Swarm service with one container.
+- One persistent directory for `/var/lib/fluxer`.
+- CapRover's nginx in front, sending your domain to port 8080 of the app.
+- Ports 7881 on TCP and 7882 on UDP for voice, published on the server itself.
+
+## Before you start
+
+Check the [requirements](/operator/requirements/). CapRover's nginx uses ports 80 and 443 and gets the certificate, so Fluxer runs in proxy mode behind it.
+
+## Install
+
+<Steps>
+
+1. Create an app called `fluxer`, with "Has Persistent Data" ticked.
+
+2. Under App Configs, add the variables and the persistent directory.
+
+   - The environment variables `FLUXER_DOMAIN` set to `chat.example.com`, `FLUXER_EDGE_MODE` set to `proxy` and `FLUXER_UPGRADE_COMMAND` set to `In CapRover, deploy the image ghcr.io/fluxerapp/fluxer:{version}`. The last one is the upgrade step the admin panel shows for a newer release. The panel only learns about new releases after you have turned on the daily [release check](/operator/upgrades/#turning-the-check-on).
+   - A persistent directory with the path in app `/var/lib/fluxer` and the label `fluxer-data`. Fluxer keeps all of its data in that directory.
+
+   Leave the port mapping form empty, and paste this into "Service Update Override".
+
+   ```yaml title="Service Update Override"
+   TaskTemplate:
+     ContainerSpec:
+       StopGracePeriod: 130000000000
+   EndpointSpec:
+     Ports:
+       - Protocol: tcp
+         TargetPort: 7881
+         PublishedPort: 7881
+         PublishMode: host
+       - Protocol: udp
+         TargetPort: 7882
+         PublishedPort: 7882
+         PublishMode: host
+   ```
+
+   It gives Fluxer 130 seconds to stop, where Swarm's default of 10 seconds is too short for PostgreSQL. It also publishes the voice ports on the server itself, past Swarm's routing mesh, and calls see each person's real address. `docker service inspect srv-captain--fluxer` shows both of these settings after you save.
+
+3. Under HTTP Settings, set the container HTTP port to 8080, turn on WebSocket support, connect your own domain and enable HTTPS for it.
+
+   CapRover's nginx limits the size of [uploads](/operator/upload-limits/). Set `client_max_body_size` to `512m` in the app's nginx config. Your domain then opens with a valid certificate.
+
+4. Under Deployment, deploy this image.
+
+   ```text
+   ghcr.io/fluxerapp/fluxer:{{FLUXER_VERSION}}
+   ```
+
+   The first start takes a few minutes, then CapRover shows the app as running.
+
+   To upgrade later, deploy the image again with the new version as its tag.
+
+5. Print the setup token on the server.
+
+   ```sh
+   docker exec $(docker ps -q -f name=srv-captain--fluxer) fluxerd setup-token
+   ```
+
+   Open your domain and paste the token to create the first admin account.
+
+</Steps>

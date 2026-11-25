@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A call is the live voice session of a direct message or group direct message. You join and leave one by sending [Voice State Update](/gateway/commands/#voice-state-update), and [Call Create](/gateway/events/#call-create), [Call Update](/gateway/events/#call-update) and [Call Delete](/gateway/events/#call-delete) publish its state.
 
-Every route here is user-only and needs a direct message or group direct message that includes you as a recipient. A channel you can't see returns 404 `UNKNOWN_CHANNEL`, and a channel of another type returns 400 `INVALID_CHANNEL_TYPE_FOR_CALL`.
+Every route here is user-only and needs a direct message or group direct message that includes you as a recipient. A channel you can't see returns 404 `UNKNOWN_CHANNEL`, and a channel of any other type returns 400 `INVALID_CHANNEL_TYPE_FOR_CALL` instead.
 
 ## Call eligibility object
 
@@ -112,7 +112,7 @@ The rate limit is 5 requests per 10 seconds, on the `channel:call:ring::channel_
 
 <RouteHeader method="POST" path="/v1/channels/{channel_id}/call/stop-ringing" />
 
-Removes recipients from the ringing set of an active call. Sends [Call Update](/gateway/events/#call-update) when the set changes.
+Removes recipients from the ringing set of an active call. Fluxer sends [Call Update](/gateway/events/#call-update) when the set changes.
 
 ### JSON body
 
@@ -131,7 +131,7 @@ Removes recipients from the ringing set of an active call. Sends [Call Update](/
 | 204 | empty | The ringing set was updated |
 | 404 | [error response](/http-api/#error-response) | `NO_ACTIVE_CALL` when the channel has no call |
 
-The rate limit is 20 requests per 10 seconds, on the `channel:call:stop_ringing::channel_id` bucket.
+The `channel:call:stop_ringing::channel_id` bucket allows 20 requests per 10 seconds.
 
 ## End call session
 

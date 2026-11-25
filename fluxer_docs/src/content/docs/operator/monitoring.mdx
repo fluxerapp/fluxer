@@ -1,0 +1,71 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Health checks and logs
+description: You use Fluxer's health checks and logs to see when it is down or a backup failed.
+---
+
+Fluxer reports whether it is up through health checks and its logs.
+
+Point your uptime monitor and alerts at them.
+
+## Health checks
+
+- `fluxerd health` passes when every part of Fluxer is ready, and is the readiness check. The image's health check runs it every 30 seconds.
+- `fluxerd health --live` passes when `fluxerd` responds, ready or not, and is the liveness check. It still passes during a long backup before an upgrade.
+- `GET https://chat.example.com/_health` returns `OK` when the edge is up, for an uptime monitor outside the machine.
+- `GET https://chat.example.com/api/v1/_health` passes when the API responds, for an uptime monitor that checks the API too.
+
+`fluxerd health` prints `ready`, or `not ready` with the parts it is waiting for, and exits with 1 when Fluxer isn't ready. [Run it inside the instance](/operator/running/#status), for example `docker compose exec fluxer fluxerd health` with the compose file or `docker exec fluxer fluxerd health` with `docker run`. With Docker, `docker inspect --format '{{.State.Health.Status}}' $(docker compose ps -q fluxer)` shows the result of the built-in check. With `docker run`, use `fluxer` in place of the `$(...)` part.
+
+On Kubernetes, the chart's startup and liveness probes use `fluxerd health --live` and its readiness probe uses `fluxerd health`.
+
+## Logs
+
+These show the output of every part of Fluxer at once. `fluxerd logs <part>` shows one.
+
+| How you run Fluxer | Logs command |
+| --- | --- |
+| Docker with the compose file | `docker compose logs fluxer` |
+| Docker with `docker run` | `docker logs fluxer` |
+| Podman with Quadlet | `journalctl --user -u fluxer`, or `journalctl -u fluxer` as root |
+| Podman with `podman run` | `podman logs fluxer` |
+| Kubernetes | `kubectl -n fluxer logs fluxer-0` |
+| rexctl on systemd | `journalctl -u fluxer` |
+| [Linux by hand](/operator/linux-manual/) | `journalctl -u fluxerd` |
+| rexctl | `rexctl logs` |
+
+Each line starts with the part's name in brackets, such as `[api]`. After the name, the API and worker write one JSON object per line, and other parts write plain text.
+
+| Setting | What it sets the log level for |
+| --- | --- |
+| `LOG_LEVEL` | The API and worker |
+| `FLUXER_GATEWAY_LOGGER_LEVEL` | The gateway |
+| `RUST_LOG` | The media proxy and the `rust` services |
+
+[LiveKit and Meilisearch log settings](/operator/settings/#logs-and-health-checks) are separate.
+
+## Metrics
+
+Fluxer has no Prometheus or OpenTelemetry endpoint you can scrape yet. Watch it from the outside with the health checks above, and alert when one of these happens.
+
+- `GET /_health` and `GET /api/v1/_health` called from outside fail for a few minutes.
+- `fluxerd health` exits with 1, or the container shows `unhealthy`.
+- The disk or volume with `/var/lib/fluxer` has less than 20% free.
+- The newest file in the `backups` folder is older than your schedule.
+- The container's restart count, or the restarts column of `fluxerd ps`, keeps going up.
+
+## Backups
+
+A scheduled backup writes these log lines.
+
+- `scheduled backup: starting` at the start.
+- `scheduled backup written to` with the path when it finishes.
+- `scheduled backup failed:` with what went wrong, such as a full disk, when it fails.
+
+Alert on lines with `scheduled backup failed:`, and check that the newest backup in the `backups` folder is less than a day old, or less than a week old for weekly backups.
+
+## With rexctl
+
+- `rexctl status --json` prints each part of Fluxer, the version and when the instance was last backed up, for monitoring tools.
+- `rexctl doctor` checks the instance and machine and says how to fix what it finds.
+- [`rexctl auto-upgrade on`](/operator/rexctl/#rexctl-auto-upgrade-on) can post a notice each time it upgrades.

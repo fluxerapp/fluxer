@@ -6,7 +6,7 @@ description: Admin API key objects and the operations that manage them.
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-An Admin API key is a long-lived credential for the [Admin API](/admin-api/). It acts as the account that created it and only works on paths below `/v1/admin`. A request made with a key passes only when both the key and that account have the [ACL](/admin-api/#acl-registry) the route needs, or `*`.
+An Admin API key is a long-lived credential for the [Admin API](/admin-api/). It acts as the account that created it and only works on paths below `/v1/admin`. A request made with a key passes only when both the key and that account have the [ACL](/admin-api/#acl-registry) the route needs, or the `*` ACL.
 
 Every route on this page needs `admin_api_key:manage` and records an [Admin audit entry](/admin-api/#admin-audit-entry-object) with target type `admin_api_key`. You can only see and change keys your account created.
 
@@ -54,7 +54,7 @@ Only [Create Admin API key](#create-admin-api-key) returns this object. Its `key
 | acls | array[string] | The [ACLs](/admin-api/#acl-registry) stored on the key |
 
 :::caution[The key is returned once]
-You can't get the `key` value again or rotate it. If you lose it, revoke the key and create a new one.
+You can't get the `key` value again or rotate it. If you lose it, revoke the key and create another.
 :::
 
 ## List Admin API keys

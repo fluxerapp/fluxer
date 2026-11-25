@@ -1,64 +1,82 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
-title: Use your own proxy
-description: Put nginx, Caddy, Apache or another reverse proxy in front of your Fluxer instance.
+title: Reverse proxies and tunnels
+description: You put nginx, Caddy, Traefik, Apache, Cloudflare or a tunnel in front of Fluxer.
 ---
 
-By default, Fluxer uses ports 80 and 443 and gets its own certificate from Let's Encrypt. If another web server on the machine already uses those ports, Fluxer can serve plain HTTP on a local port for your proxy to forward to.
+import {Tabs, TabItem} from '@astrojs/starlight/components';
 
-## Serve plain HTTP for your proxy
+By default Fluxer listens on ports 80 and 443 and gets its own certificate from Let's Encrypt. In proxy mode it serves plain HTTP on port 8080, and your reverse proxy or tunnel handles HTTPS in front of it. Voice and video skip the proxy, and always connect to the machine on TCP port 7881 and UDP port 7882.
+
+## Turn on proxy mode
+
+<Tabs syncKey="runtime">
+<TabItem label="Docker">
+
+Set `FLUXER_EDGE_MODE=proxy` in `fluxer.env`, and publish `127.0.0.1:8080:8080` in place of ports 80 and 443, the same as [behind your own proxy with Docker](/operator/docker/#behind-your-own-proxy-or-tunnel). Your proxy then connects to Fluxer on `127.0.0.1:8080`.
+
+</TabItem>
+<TabItem label="Linux by hand">
+
+Set this in `/etc/fluxer/fluxer.env`. Your proxy on the same machine then connects to Fluxer on `127.0.0.1:8080`, the default address in proxy mode. Set [`FLUXER_EDGE_BIND`](/operator/settings/#fluxer_edge_bind) only when Fluxer should listen on another address.
+
+```sh title="fluxer.env"
+FLUXER_EDGE_MODE=proxy
+```
+
+Then reload Fluxer.
+
+```sh
+systemctl reload fluxerd
+```
+
+</TabItem>
+<TabItem label="Kubernetes">
+
+Proxy mode is the chart's default.
+
+Your [Ingress or HTTPRoute](/operator/kubernetes/#ingress-or-gateway-api) connects to the Service on port 8080.
+
+</TabItem>
+<TabItem label="With rexctl">
 
 ```sh
 rexctl proxy on
 ```
 
-Fluxer then listens on `127.0.0.1:8080`. Pass `--bind` to [`rexctl proxy on`](/operator/rexctl/#rexctl-proxy) to use another address or port.
+Fluxer then listens on `127.0.0.1:8080`, or the address you pass with `--bind`. rexctl writes ready configs for nginx, Caddy, Apache, Traefik and Cloudflare Tunnel into the `proxy` folder of the instance, and `rexctl proxy config nginx` prints one again. `rexctl proxy off` goes back to serving HTTPS directly. For a tunnel, such as Cloudflare Tunnel, use `rexctl proxy on --proxy tunnel` in place of the command above.
+
+When the proxy runs on another machine, bind Fluxer to an address that machine can connect to, and say which address it connects from.
 
 ```sh
-rexctl proxy on --bind 127.0.0.1:8081
+rexctl proxy on --bind 10.0.0.5:8080 --proxy-from 10.0.0.2
 ```
 
-On a new machine, pass `--behind-proxy` to [`rexctl install`](/operator/rexctl/#rexctl-install) to start in this mode.
+</TabItem>
+</Tabs>
 
-## Go back to HTTPS
+In proxy mode, Fluxer trusts the visitor address in `X-Forwarded-For` from private addresses. To trust only your proxy, set [`FLUXER_EDGE_TRUSTED_PROXIES`](/operator/settings/#fluxer_edge_trusted_proxies) to its address. When people open Fluxer on a port other than 443, set `FLUXER_PUBLIC_PORT` to that port.
 
-```sh
-rexctl proxy off
+## Configs for each proxy
+
+Each config below sends `chat.example.com` to Fluxer on `127.0.0.1:8080`. Replace both with your own. They are the same configs `rexctl proxy config` writes.
+
+<Tabs>
+<TabItem label="Caddy">
+
+```txt title="Caddyfile"
+chat.example.com {
+	reverse_proxy 127.0.0.1:8080
+}
 ```
 
-Fluxer goes back to serving HTTPS with its own certificate, and ports 80 and 443 need to be open to the machine again.
+Caddy gets the certificate, forwards WebSockets and sets `X-Forwarded-For` by itself.
 
-## Run the proxy on another machine
+</TabItem>
+<TabItem label="nginx">
 
-Bind an address the proxy machine can connect to, and only let the proxy connect to that port.
-
-```sh
-rexctl proxy on --bind 10.0.0.5:8080
-```
-
-By default, Fluxer trusts `X-Forwarded-For` only from private addresses. If the proxy connects from a public address, set `edge.trusted_proxies` to that address, which replaces the default.
-
-```sh
-rexctl config set edge.trusted_proxies 203.0.113.10
-```
-
-Until you do, everyone who uses your instance shows up with your proxy's address, and they share its rate limits and bans.
-
-## What your proxy needs to do
-
-- Serve your domain over HTTPS with TLS 1.2 and TLS 1.3 turned on, because video playback in the mobile apps needs TLS 1.2.
-- Forward WebSocket connections.
-- Set `X-Forwarded-For` to the address the request came from, and drop any value the visitor sent.
-- Accept request bodies of at least 512 MB for uploads.
-- Keep idle connections open for an hour.
-- Don't add a `Content-Security-Policy` header, because Fluxer sends its own.
-- Forward every path and query string unchanged.
-- Use `/_health` as the health check if your proxy has one.
-
-## nginx
-
-```nginx
-map $http_upgrade $connection_upgrade {
+```nginx title="fluxer.conf"
+map $http_upgrade $fluxer_connection_upgrade {
     default upgrade;
     ''      close;
 }
@@ -71,8 +89,8 @@ server {
 }
 
 server {
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
+    listen 443 ssl;
+    listen [::]:443 ssl;
     server_name chat.example.com;
 
     ssl_certificate     /etc/letsencrypt/live/chat.example.com/fullchain.pem;
@@ -87,7 +105,7 @@ server {
 
         proxy_set_header Host            $host;
         proxy_set_header Upgrade         $http_upgrade;
-        proxy_set_header Connection      $connection_upgrade;
+        proxy_set_header Connection      $fluxer_connection_upgrade;
         proxy_set_header X-Forwarded-For $remote_addr;
 
         proxy_read_timeout 3600s;
@@ -98,15 +116,34 @@ server {
 }
 ```
 
-Don't change `$remote_addr` to `$proxy_add_x_forwarded_for`, which keeps the value the visitor sent and lets anyone pretend to come from another address.
+</TabItem>
+<TabItem label="Traefik">
 
-Keep `proxy_pass` without a path after the port. With a path such as `http://127.0.0.1:8080/`, nginx decodes and rewrites the request path before it forwards it, and some media URLs stop working.
+```yaml title="fluxer.yml"
+http:
+  routers:
+    fluxer:
+      rule: "Host(`chat.example.com`)"
+      entryPoints:
+        - websecure
+      service: fluxer
+      tls:
+        certResolver: letsencrypt
+  services:
+    fluxer:
+      loadBalancer:
+        servers:
+          - url: "http://127.0.0.1:8080"
+```
 
-## Apache
+This is a file provider config.
 
-Turn on `mod_proxy`, `mod_proxy_http`, `mod_headers` and `mod_ssl`. `upgrade=websocket` needs Apache 2.4.47 or later.
+Use the entry point and certificate resolver from your own Traefik setup.
 
-```apache
+</TabItem>
+<TabItem label="Apache">
+
+```apache title="fluxer.conf"
 <VirtualHost *:80>
     ServerName chat.example.com
     Redirect permanent / https://chat.example.com/
@@ -123,75 +160,117 @@ Turn on `mod_proxy`, `mod_proxy_http`, `mod_headers` and `mod_ssl`. `upgrade=web
     AllowEncodedSlashes NoDecode
     ProxyPreserveHost On
     RequestHeader unset X-Forwarded-For early
+    LimitRequestBody 536870912
 
     ProxyPass        / http://127.0.0.1:8080/ nocanon upgrade=websocket timeout=3600
     ProxyPassReverse / http://127.0.0.1:8080/
 </VirtualHost>
 ```
 
-Keep `nocanon` and `AllowEncodedSlashes NoDecode`. Without them, Apache rewrites or refuses media URLs that have escaped characters, such as `%3D` and `%2F`. `AllowEncodedSlashes` has to be inside the `VirtualHost`, and Apache doesn't copy it from the main server config. Don't proxy with `RewriteRule` and the `[P]` flag, which refuses the same URLs.
+It needs `mod_ssl`, `mod_headers`, `mod_proxy` and `mod_proxy_http`.
 
-## Caddy
+</TabItem>
+<TabItem label="Cloudflare Tunnel">
 
-```caddy
-chat.example.com {
-	reverse_proxy 127.0.0.1:8080
-}
+```yaml title="config.yml"
+tunnel: fluxer
+
+ingress:
+  - hostname: chat.example.com
+    service: http://127.0.0.1:8080
+    originRequest:
+      connectTimeout: 30s
+      keepAliveTimeout: 1h
+  - service: http_status:404
 ```
 
-Caddy's defaults do everything in the list above, and Caddy gets a certificate for your domain itself.
+Set `FLUXER_EDGE_MODE=tunnel`, or run `rexctl proxy on --proxy tunnel`. Cloudflare's Free and Pro plans limit one request to 100 MB. The apps send a large file in parts of 10 to 64 MiB, or larger for a file over 625 GiB. A file sent in a single request has to fit in 100 MB.
+
+</TabItem>
+</Tabs>
+
+## What any other proxy needs to do
+
+- Serve HTTPS with TLS 1.2 and 1.3, because video in the mobile apps needs TLS 1.2.
+- Pass WebSockets, paths and query strings through unchanged.
+- Set `X-Forwarded-For` to the request's address, and drop any value the visitor sent.
+- Accept request bodies of at least 512 MiB, to match the [upload limits](/operator/upload-limits/). Keep idle connections open for an hour, or at least 120 seconds.
+- Add no `Content-Security-Policy` header, because Fluxer sends its own.
+- Use `/_health` for health checks.
+
+## Your own certificate
+
+Without a proxy, Fluxer can also serve HTTPS with a certificate you already have in place of one from Let's Encrypt. Set `FLUXER_EDGE_TLS` to the certificate file, with the full chain, and the key file. Fluxer looks for a file name without a folder in `/etc/fluxer/certs`.
+
+<Tabs syncKey="runtime">
+<TabItem label="Docker">
+
+Put both files in a `certs` folder next to `fluxer.env`, then add this line to `fluxer.env`.
+
+```sh title="fluxer.env"
+FLUXER_EDGE_TLS=fullchain.pem privkey.pem
+```
+
+Then mount the folder with `-v ./certs:/etc/fluxer/certs:ro` on the `docker run` line, or with `- ./certs:/etc/fluxer/certs:ro` under `volumes` in `compose.yaml`. Fluxer runs as user ID 65532 in the container, so the files need to belong to that user ID.
+
+```sh
+sudo chown 65532:65532 certs/*.pem && sudo chmod 0400 certs/privkey.pem
+```
+
+</TabItem>
+<TabItem label="Linux by hand">
+
+Copy both files into `/etc/fluxer/certs`, readable by the `fluxer` group, and add the setting to `/etc/fluxer/fluxer.env`.
+
+```sh
+install -o root -g fluxer -m 0640 fullchain.pem privkey.pem /etc/fluxer/certs/
+```
+
+```sh title="fluxer.env"
+FLUXER_EDGE_TLS=fullchain.pem privkey.pem
+```
+
+Then reload Fluxer with `systemctl reload fluxerd`.
+
+</TabItem>
+</Tabs>
+
+To renew, replace both files and reload Fluxer with the command for how it runs. Fluxer then serves the new certificate without a restart.
+
+| How Fluxer runs | Reload |
+| --- | --- |
+| Compose file | `docker compose kill -s HUP fluxer` |
+| `docker run` | `docker kill -s HUP fluxer` |
+| Linux by hand | `systemctl reload fluxerd` |
+
+With certbot on a systemd install, a deploy hook does this after each renewal.
+
+```sh
+sudo tee /etc/letsencrypt/renewal-hooks/deploy/fluxer > /dev/null <<'EOF'
+#!/bin/sh
+install -o root -g fluxer -m 0640 "$RENEWED_LINEAGE/fullchain.pem" "$RENEWED_LINEAGE/privkey.pem" /etc/fluxer/certs/
+systemctl reload fluxerd
+EOF
+sudo chmod 0755 /etc/letsencrypt/renewal-hooks/deploy/fluxer
+```
 
 ## Cloudflare
 
-If Cloudflare proxies your domain, change these settings in the Cloudflare dashboard.
+When your domain points at Cloudflare's proxy and Fluxer serves HTTPS itself, change these settings in the Cloudflare dashboard.
 
 - Turn Rocket Loader off, because the web app shows a blank page with it on.
-- Don't let a Cache Rule store HTML pages, or people get an old version of the web app after you upgrade.
-- Turn Bot Fight Mode off and don't add challenges for `/api/`, `/gateway` or `/livekit/`. The desktop and mobile apps can't solve a challenge.
-- Set the SSL/TLS encryption mode to "Full (strict)".
+- Don't let a Cache Rule store HTML pages, or people get an old web app after upgrades.
+- Turn Bot Fight Mode off and add no challenges for `/api/`, `/gateway` or `/livekit/`. The desktop and mobile apps can't solve them.
+- Set the SSL/TLS encryption mode to "Full (strict)" in the dashboard.
 
-### Purging deleted media
+Cloudflare keeps serving cached media after someone deletes it. To purge it right away, make an API token with the Zone Cache Purge permission and set `FLUXER_CACHE_PURGE_ADAPTER=http`, `FLUXER_CACHE_PURGE_HTTP_ENDPOINT` to `https://api.cloudflare.com/client/v4/zones/<zone id>/purge_cache` and `FLUXER_CACHE_PURGE_HTTP_TOKEN` to the token.
 
-Cloudflare keeps serving cached copies of media after someone deletes it, until the cached copy expires. Fluxer can ask Cloudflare to purge those copies right away. Create an API token with the Zone Cache Purge permission for your zone, find the zone ID on the zone's overview page, and set these variables.
+## Calls behind a tunnel
 
-```bash
-rexctl config set FLUXER_CACHE_PURGE_ADAPTER http
-rexctl config set FLUXER_CACHE_PURGE_HTTP_ENDPOINT https://api.cloudflare.com/client/v4/zones/<zone id>/purge_cache
-rexctl config set FLUXER_CACHE_PURGE_HTTP_TOKEN <api token>
-```
-
-Fluxer sends at most 100 prefixes per request, which is the most Cloudflare accepts. See [Environment variables](/operator/environment/#media) for the other cache purge settings.
-
-## Voice and video
-
-Call audio and video don't go through your proxy. They connect directly to the machine on TCP port 7881 and UDP port 7882, and both ports need to be open. A tunnel such as Cloudflare Tunnel can't forward them.
-
-Extra voice servers on this machine from [`rexctl voice add`](/operator/voice-servers/#on-the-fluxer-machine) use paths on your domain, such as `/livekit-default-server-2/`. A proxy that forwards every path already passes them. Their media ports skip the proxy too. Open each server's TCP and UDP port as well.
-
-### Voice behind a tunnel
-
-If you only serve Fluxer through a tunnel, calls need a TURN server. It relays call media between people's devices and LiveKit. Run one on a machine with a public address, such as coturn on a small VPS, and open its port there, usually UDP port 3478.
-
-Then give LiveKit the relay as a JSON array in `FLUXER_LIVEKIT_TURN_SERVERS`.
+A tunnel can't forward call audio and video. Without ports 7881 and 7882 open on the machine, calls need a TURN server on a machine with a public address, such as coturn on a small VPS, or a [voice server](/operator/voice-servers/) on such a machine. Add a TURN server with the `FLUXER_LIVEKIT_TURN_SERVERS` [setting](/operator/settings/#fluxer_livekit_turn_servers) or with rexctl.
 
 ```sh
-rexctl config set FLUXER_LIVEKIT_TURN_SERVERS '[{"host":"turn.example.com","port":3478,"protocol":"udp","username":"fluxer","credential":"a-long-password"}]'
+rexctl voice turn add --host turn.example.com --secret-file secret.txt
 ```
 
-Without rexctl, put the same value in `.env` between single quotes and run `docker compose up -d`.
-
-LiveKit hands the relay to browsers and apps when they join a call, and they use it when they can't connect to LiveKit directly. Voice servers that rexctl adds or joins hand out the same relays. See [TURN servers](/operator/voice-servers/#turn-servers). Keep `FLUXER_LIVEKIT_USE_EXTERNAL_IP` at `true` so LiveKit tells them its public address. LiveKit opens the path to the relay from its own side, which most routers let through without open ports. If calls still don't connect, your router probably blocks this and you need to open TCP port 7881 and UDP port 7882 after all.
-
-On Kubernetes, add the relay to `livekit.extraConfig` in your values file.
-
-```yaml
-livekit:
-  extraConfig:
-    rtc:
-      turn_servers:
-        - host: turn.example.com
-          port: 3478
-          protocol: udp
-          username: fluxer
-          credential: a-long-password
-```
+When calls still don't connect with a TURN server, check that the router lets the voice server connect out to the relay, or open ports 7881 and 7882.

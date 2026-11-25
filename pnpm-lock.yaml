@@ -330,6 +330,9 @@ catalogs:
     pino-pretty:
       specifier: 13.2.0
       version: 13.2.0
+    playwright:
+      specifier: 1.64.0
+      version: 1.64.0
     postcss:
       specifier: 8.5.32
       version: 8.5.32
@@ -468,6 +471,7 @@ overrides:
   zod@^4: 4.6.7
 
 patchedDependencies:
+  '@astrojs/starlight@0.42.7': e3ba4d526d5d3069172ec280f047592d9b652006d0c285279d277cf6555ef2a9
   '@electron/universal@3.0.4': 89eb2c71ca988f424f2c75cf28b566b156c55b06a0b6cd01d06f9a6763e754bb
   '@phosphor-icons/react@2.1.10': 9b0b481de857aa7a7525f023baea9da72be4574ff72825e39d959e6979d78eea
   emscripten-wasm-loader@3.0.3: 65d0567cd2da382764aee3839187feb5284662c4a9f0b755f1e52163c5e36399
@@ -1894,7 +1898,7 @@ importers:
         version: 11.1.9(astro@7.4.4(@astrojs/markdown-remark@7.3.5(supports-color@7.2.0))(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))(supports-color@7.2.0)
       '@astrojs/starlight':
         specifier: 'catalog:'
-        version: 0.42.7(@astrojs/markdown-remark@7.3.5(supports-color@7.2.0))(astro@7.4.4(@astrojs/markdown-remark@7.3.5(supports-color@7.2.0))(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))(supports-color@7.2.0)(typescript@6.0.3)
+        version: 0.42.7(patch_hash=e3ba4d526d5d3069172ec280f047592d9b652006d0c285279d277cf6555ef2a9)(@astrojs/markdown-remark@7.3.5(supports-color@7.2.0))(astro@7.4.4(@astrojs/markdown-remark@7.3.5(supports-color@7.2.0))(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))(supports-color@7.2.0)(typescript@6.0.3)
       '@fluxer/config':
         specifier: workspace:*
         version: link:../packages/config
@@ -1929,6 +1933,9 @@ importers:
       mdast-util-to-hast:
         specifier: 'catalog:'
         version: 13.2.1
+      playwright:
+        specifier: 'catalog:'
+        version: 1.64.0
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -9897,6 +9904,16 @@ packages:
   platform@1.3.6:
     resolution: {integrity: sha512-fnWVljUchTro6RiCFvCXBbNhJc2NijN7oIQxbwsyL0buWJPG85v81ehlHI9fXrJsMNgTofEoWIQeClKpgxFLrg==}
 
+  playwright-core@1.64.0:
+    resolution: {integrity: sha512-T9r+MZkTECl2+oUcZ26YgZzTrYidTsIhYYkJix+6iDOymOb1FB2RLLSOxRGnZGv5DStt+aduIVbt+E8WygXYpg==}
+    engines: {node: '>=20'}
+    hasBin: true
+
+  playwright@1.64.0:
+    resolution: {integrity: sha512-kVzTnYFYEyQ9RGzBjNCd2+yEqWmVbxl3AHPynv3qQ6JTjv4a+kwRcnqQwIpuP3NnrnIrE/Q6wWAIAvMfIE2/Yg==}
+    engines: {node: '>=20'}
+    hasBin: true
+
   plist@3.1.0:
     resolution: {integrity: sha512-uysumyrvkUX0rX/dEVqt8gC3sTBzd4zoWfLeS29nb53imdaXVvLINYXTI2GNqzaMuvacNx4uJQ8+b3zXR0pkgQ==}
     engines: {node: '>=10.4.0'}
@@ -12188,7 +12205,7 @@ snapshots:
       sitemap: 9.0.1
       zod: 4.6.7
 
-  '@astrojs/starlight@0.42.7(@astrojs/markdown-remark@7.3.5(supports-color@7.2.0))(astro@7.4.4(@astrojs/markdown-remark@7.3.5(supports-color@7.2.0))(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))(supports-color@7.2.0)(typescript@6.0.3)':
+  '@astrojs/starlight@0.42.7(patch_hash=e3ba4d526d5d3069172ec280f047592d9b652006d0c285279d277cf6555ef2a9)(@astrojs/markdown-remark@7.3.5(supports-color@7.2.0))(astro@7.4.4(@astrojs/markdown-remark@7.3.5(supports-color@7.2.0))(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))(supports-color@7.2.0)(typescript@6.0.3)':
     dependencies:
       '@astrojs/markdown-satteri': 0.4.6
       '@astrojs/mdx': 8.1.2(@astrojs/markdown-remark@7.3.5(supports-color@7.2.0))(@astrojs/markdown-satteri@0.4.6)(astro@7.4.4(@astrojs/markdown-remark@7.3.5(supports-color@7.2.0))(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
@@ -20362,6 +20379,12 @@ snapshots:
       tslib: 2.8.1
 
   platform@1.3.6: {}
+
+  playwright-core@1.64.0: {}
+
+  playwright@1.64.0:
+    dependencies:
+      playwright-core: 1.64.0
 
   plist@3.1.0:
     dependencies:

@@ -15,14 +15,21 @@ export const PX = {
 	cellPad: 24,
 	codeGlyph: 7.872,
 	codeChrome: 8.203,
+	fieldAnchor: 16,
 	headerBold: 1.035,
 	lineHeight: 20,
 	proseFallback: 8.6,
 } as const;
 
+export const CODE_NOWRAP_LIMIT = 24;
+
 export const TABLE_BUDGET_PX = 528;
 
+export const TABLE_PHONE_PX = 350;
+
 export const TABLE_FLOOR_CAP_SHARE = 1 / 3;
+
+export const TABLE_DESK_TIER_PX = 672;
 
 export const TABLE_MIDDLE_TIER_PX = 768;
 
@@ -33,10 +40,12 @@ const TABLE_FIXED_REFERENCE_PX = TABLE_BUDGET_PX;
 export interface Piece {
 	readonly text: string;
 	readonly code: boolean;
+	readonly nowrap?: boolean;
+	readonly mono?: boolean;
 }
 
 function pieceWidth(piece: Piece, bold: boolean): number {
-	if (piece.code) {
+	if (piece.code || piece.mono === true) {
 		return piece.text.length * PX.codeGlyph;
 	}
 	let width = 0;
@@ -49,8 +58,12 @@ function pieceWidth(piece: Piece, bold: boolean): number {
 function atoms(parts: ReadonlyArray<Piece>): Array<Piece> {
 	const out: Array<Piece> = [];
 	for (const part of parts) {
+		if (part.nowrap === true || (part.code && part.text.length <= CODE_NOWRAP_LIMIT)) {
+			out.push(part);
+			continue;
+		}
 		for (const fragment of part.text.split(/(?<=\s)|(?<=-)(?!\d)/u)) {
-			out.push({text: fragment, code: part.code});
+			out.push({...part, text: fragment});
 		}
 	}
 	return out;

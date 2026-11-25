@@ -1,20 +1,24 @@
 ---
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import Select from '@astrojs/starlight/components/Select.astro';
+import {Icon} from '@astrojs/starlight/components';
+
+const options = [
+	{icon: 'sun', label: 'Light', value: 'light'},
+	{icon: 'moon', label: 'Dark', value: 'dark'},
+	{icon: 'laptop', label: 'System', value: 'auto'},
+] as const;
 ---
 
-<starlight-theme-select>
-	<Select
-		icon="moon"
-		label={Astro.locals.t('themeSelect.accessibleLabel')}
-		options={[
-			{label: Astro.locals.t('themeSelect.dark'), selected: true, value: 'dark'},
-			{label: Astro.locals.t('themeSelect.light'), selected: false, value: 'light'},
-			{label: Astro.locals.t('themeSelect.auto'), selected: false, value: 'auto'},
-		]}
-		width="6.25em"
-	/>
-</starlight-theme-select>
+<flx-theme-switch role="group" aria-label="Theme">
+	{
+		options.map((option) => (
+			<button type="button" data-theme-value={option.value} aria-pressed="false" title={option.label}>
+				<Icon name={option.icon} size="1rem" />
+				<span class="sr-only">{option.label}</span>
+			</button>
+		))
+	}
+</flx-theme-switch>
 
 <script is:inline>
 	StarlightThemeProvider.updatePickers();
@@ -28,15 +32,20 @@ import Select from '@astrojs/starlight/components/Select.astro';
 	const storageKey = 'starlight-theme';
 
 	const parseTheme = (theme: unknown): Theme =>
-		theme === 'auto' || theme === 'dark' || theme === 'light' ? theme : 'dark';
+		theme === 'auto' || theme === 'dark' || theme === 'light' ? theme : 'auto';
 
-	const loadTheme = (): Theme =>
-		parseTheme(typeof localStorage !== 'undefined' && localStorage.getItem(storageKey));
+	function loadTheme(): Theme {
+		try {
+			return parseTheme(localStorage.getItem(storageKey));
+		} catch {
+			return 'auto';
+		}
+	}
 
 	function storeTheme(theme: Theme): void {
-		if (typeof localStorage !== 'undefined') {
+		try {
 			localStorage.setItem(storageKey, theme);
-		}
+		} catch {}
 	}
 
 	const getPreferredColorScheme = (): Theme => (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
@@ -51,16 +60,15 @@ import Select from '@astrojs/starlight/components/Select.astro';
 		if (loadTheme() === 'auto') onThemeChange('auto');
 	});
 
-	class StarlightThemeSelect extends HTMLElement {
-		constructor() {
-			super();
+	class FlxThemeSwitch extends HTMLElement {
+		connectedCallback(): void {
 			onThemeChange(loadTheme());
-			this.querySelector('select')?.addEventListener('change', (e) => {
-				if (e.currentTarget instanceof HTMLSelectElement) {
-					onThemeChange(parseTheme(e.currentTarget.value));
-				}
-			});
+			for (const button of this.querySelectorAll<HTMLButtonElement>('button[data-theme-value]')) {
+				button.addEventListener('click', () => onThemeChange(parseTheme(button.dataset.themeValue)));
+			}
 		}
 	}
-	customElements.define('starlight-theme-select', StarlightThemeSelect);
+	if (!customElements.get('flx-theme-switch')) {
+		customElements.define('flx-theme-switch', FlxThemeSwitch);
+	}
 </script>

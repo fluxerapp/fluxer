@@ -4,13 +4,22 @@ title: HTTP API
 description: Request format, shared headers, cross-origin policy, error objects and the list of resource pages.
 ---
 
-Use the HTTP API to read and change resources. Every path starts with `/v1` under the base URL in [`/.well-known/fluxer`](/http-api/instance/#get-instance-discovery), and third-party clients use `endpoints.api_public`.
+Use the HTTP API to read and change resources.
 
-Limits such as attachment counts differ between instances, and [instance discovery](/http-api/instance/#limit-keys) lists them. Field tables use the [field notation](/#field-notation) for optional and nullable fields.
+## Base URL
+
+- Every path starts with `/v1` under the base URL in [`/.well-known/fluxer`](/http-api/instance/#get-instance-discovery).
+- Third-party clients use `endpoints.api_public`.
+- Every instance serves its OpenAPI 3.1 document at [`/v1/openapi.json`](/http-api/instance/#get-openapi-document).
+
+## Conventions
+
+- Limits such as attachment counts differ between instances, and each instance returns its own in [instance discovery](/http-api/instance/#limit-keys).
+- Field tables use the [field notation](/#field-notation) for optional and nullable fields.
 
 ## Resource pages
 
-| Page | Covers |
+| Page | What it documents |
 | --- | --- |
 | [Errors](/http-api/errors/) | Error responses, status codes and every error code |
 | [Deployment availability](/http-api/deployment-availability/) | Routes served only while premium or billing is on |
@@ -33,7 +42,7 @@ Limits such as attachment counts differ between instances, and [instance discove
 | [Push notifications](/http-api/users/push-notifications/) | Registering a device for push delivery |
 | [User content collections](/http-api/users/content/) | Recent mentions, saved messages, message deletion |
 | [Gift inventory](/http-api/users/gifts/) | Premium gift codes you created |
-| [Data harvests](/http-api/users/data-harvest/) | Requesting and downloading your data |
+| [Data exports](/http-api/users/data-harvest/) | Requesting and downloading a copy of your data |
 | [Read states](/http-api/read-states/) | Read acknowledgements and mention counts |
 | [Memes](/http-api/memes/) | Saved media and GIF URL resolution |
 | [GIFs](/http-api/gifs/) | GIF search, featured and trending listings, share registration |
@@ -69,9 +78,11 @@ Limits such as attachment counts differ between instances, and [instance discove
 
 ## Request format
 
-Send JSON bodies with `Content-Type: application/json`. Responses are UTF-8 JSON unless an operation says otherwise, and every `GET` route also responds to `HEAD`.
-
-Unknown paths, including a known path with a trailing slash, return 404 `NOT_FOUND`. An overloaded instance returns 503 `SERVICE_UNAVAILABLE` with `Retry-After: 1`.
+- Send JSON bodies with `Content-Type: application/json`.
+- Responses are UTF-8 JSON unless an operation says otherwise.
+- Every `GET` route also responds to `HEAD`.
+- Unknown paths, including a known path with a trailing slash, return 404 `NOT_FOUND`.
+- An overloaded instance returns 503 `SERVICE_UNAVAILABLE` with `Retry-After: 1`.
 
 ## Request body formats
 
@@ -82,17 +93,25 @@ Unknown paths, including a known path with a trailing slash, return 404 `NOT_FOU
 | payload_json? | string | The JSON request payload of the operation |
 | files[n]? | file | The attachment file at index `n` |
 
-The index `n` must be below the instance's [`max_attachments_per_message`](/http-api/instance/#limit-keys) limit and matches the `id` of an entry in the `attachments` array of `payload_json`. Indexes don't need to start at zero or be consecutive.
+- The index `n` must be below the instance's [`max_attachments_per_message`](/http-api/instance/#limit-keys) limit.
+- It matches the `id` of an entry in the `attachments` array of `payload_json`.
+- Indexes don't need to start at zero or be consecutive.
+- A malformed multipart body returns 400 `INVALID_FORM_BODY` with the validation code `FAILED_TO_PARSE_MULTIPART_FORM_DATA`.
 
-A malformed multipart body returns 400 `INVALID_FORM_BODY` with the validation code `FAILED_TO_PARSE_MULTIPART_FORM_DATA`. To upload files before sending, see [Attachment uploads](/topics/uploads/). The OAuth2 token operations take `application/x-www-form-urlencoded` or `multipart/form-data` bodies.
+To upload files before sending, use [attachment uploads](/topics/uploads/). The OAuth2 token operations take `application/x-www-form-urlencoded` or `multipart/form-data` bodies.
 
 ## Input normalization
 
-Before validation, empty strings and empty nested objects become `null`, and an empty body counts as `{}`. Create message, Modify message, Execute webhook and Start thread skip this step. Malformed JSON returns 400 `INVALID_FORM_BODY` with the `path` `body` and the `code` `INVALID_FORMAT`.
+Before validation, Fluxer changes these values.
+
+- Empty strings and empty nested objects become `null`.
+- An empty body counts as `{}`.
+
+Create message, Modify message, Execute webhook and Start thread skip this step. Malformed JSON returns 400 `INVALID_FORM_BODY` with the `path` `body` and the `code` `INVALID_FORMAT`.
 
 ## Authentication
 
-Each operation says which credentials it accepts, and [Authentication](/authentication/) has the `Authorization` schemes. An OAuth2 bearer token works only on routes marked OAuth2, and other routes return 403 `ACCESS_DENIED`.
+Each operation says which [credentials](/authentication/) it accepts. An OAuth2 bearer token works only on routes marked OAuth2, and other routes return 403 `ACCESS_DENIED`.
 
 ## Standard request headers
 
@@ -103,7 +122,7 @@ Each operation says which credentials it accepts, and [Authentication](/authenti
 | Accept-Language? | string | The locale for an error `message`, used when the account has none set |
 | X-Audit-Log-Reason? | string | A reason for the audit log entry (up to 512 characters) |
 | X-Fluxer-Sudo-Mode-JWT? | string | The sudo token from [Multi-factor authentication](/http-api/users/mfa/#sudo-mode) |
-| X-Captcha-Token? | string | The solved ALTCHA challenge, see [CAPTCHA handling](/topics/captcha/) |
+| X-Captcha-Token? | string | The [solved ALTCHA challenge](/topics/captcha/) |
 | X-Request-ID? | string | An identifier you choose, echoed in the response |
 
 ## Standard response headers
@@ -116,29 +135,38 @@ Each operation says which credentials it accepts, and [Authentication](/authenti
 | Cache-Control? | string | `no-cache` unless the operation sets its own value or the body is media |
 | Retry-After? | string | Whole seconds to wait after a 429 or 503 |
 
-The `X-RateLimit-*` headers are listed under [Rate limits](/topics/rate-limits/).
+A 429, and any response to a bot or webhook token, can have the [`X-RateLimit-*` headers](/topics/rate-limits/).
 
 ## Rate limits
 
-Every route has its own bucket, and most routes also count against a global bucket. A denial returns 429 `RATE_LIMITED`, as described in [Rate limits](/topics/rate-limits/).
+Every route has its own bucket, and most routes also count against a global bucket. A denial returns 429 [`RATE_LIMITED`](/topics/rate-limits/).
 
 ## Conditional routes
 
-A self-hosted instance serves some routes only while its premium mode or billing is on, and returns 404 `NOT_FOUND` for the others. [Deployment availability](/http-api/deployment-availability/) lists them.
+A self-hosted instance serves [some routes](/http-api/deployment-availability/) only while its premium mode or billing is on, and returns 404 `NOT_FOUND` for the others.
 
 ## Cross-origin requests
 
 Only the instance's web app and marketing origins are allowed. A request from one of them gets `Access-Control-Allow-Origin` set to that origin and `Vary: Origin`. Browsers don't send cookies cross-origin, and you send your token in `Authorization`.
 
-[Get instance discovery](/http-api/instance/#get-instance-discovery), [Get OpenAPI document](/http-api/instance/#get-openapi-document) and [Get client geolocation](/http-api/instance/#get-client-geolocation) allow any origin with `*`. The webhook execution routes also allow any origin, with the exceptions under [Origin refusal](/http-api/webhooks/#origin-refusal).
+### Routes open to any origin
 
-Browser scripts can read only the `X-Fluxer-Version` and `ETag` response headers. Cross-origin requests can send the headers in [Standard request headers](#standard-request-headers) plus `X-Requested-With`, `If-None-Match`, `X-Captcha-ID` and the `X-Fluxer-*` client headers.
+- [Get instance discovery](/http-api/instance/#get-instance-discovery), [List guild badges](/http-api/instance/#list-guild-badges), [Get OpenAPI document](/http-api/instance/#get-openapi-document), [Get client geolocation](/http-api/instance/#get-client-geolocation) and [Look up the actor with WebFinger](/http-api/unfurl/#look-up-the-actor-with-webfinger) allow any origin with `*`.
+- The webhook execution routes also allow any origin, with the exceptions under [Origin refusal](/http-api/webhooks/#origin-refusal).
+
+### Headers
+
+Browser scripts can see only the `X-Fluxer-Version` and `ETag` response headers. Cross-origin requests can send these headers.
+
+- The headers in [Standard request headers](#standard-request-headers)
+- `X-Requested-With`
+- `If-None-Match`
+- `X-Captcha-ID`
+- The `X-Fluxer-*` client headers
 
 <a id="error-response"></a>
 
 ## Error response object
-
-[Errors](/http-api/errors/) lists every status code and `code` value.
 
 ### Structure
 
@@ -148,11 +176,11 @@ Browser scripts can read only the `X-Fluxer-Version` and `ETag` response headers
 | message | string | A description in the request locale |
 | errors? | array[[validation error](#validation-error-object) object] | The request fields that failed validation |
 
-Some codes add more top-level fields, listed under [Extra fields](/http-api/errors/#extra-fields). Ignore fields you don't recognize.
+Some codes add [more top-level fields](/http-api/errors/#extra-fields). Ignore fields you don't recognise.
 
 ## Validation error object
 
-A 400 `INVALID_FORM_BODY` response has one validation error object in `errors` for each field that failed, and [Validation errors](/http-api/errors/#validation-errors) lists the codes.
+A 400 `INVALID_FORM_BODY` response has one validation error object in `errors` for each field that failed, with its [validation code](/http-api/errors/#validation-errors).
 
 ### Structure
 

@@ -117,9 +117,9 @@ Changes the account and returns the updated [user](/http-api/users/#user-object)
 
 <sup>6</sup> Any non-null value needs the animated banner entitlement or returns [`BANNERS_REQUIRE_PREMIUM`](/http-api/errors/)
 
-<sup>7</sup> The `max_bio_length` instance limit also applies and returns `CONTENT_EXCEEDS_MAX_LENGTH`
+<sup>7</sup> The `max_bio_length` instance limit also applies, and a longer bio returns `CONTENT_EXCEEDS_MAX_LENGTH` as the error
 
-<sup>8</sup> An unknown identifier returns `INVALID_TIMEZONE_IDENTIFIER`. A first timezone without `timezone_privacy_flags` is visible to `EVERYONE`
+<sup>8</sup> An unknown identifier returns `INVALID_TIMEZONE_IDENTIFIER`. A first timezone sent without `timezone_privacy_flags` is visible to everyone, as with `EVERYONE`
 
 <sup>9</sup> Needs the [`STAFF`](/http-api/users/#public-user-flags) flag or returns 403 [`MISSING_ACCESS`](/http-api/errors/)
 
@@ -129,21 +129,40 @@ Changes the account and returns the updated [user](/http-api/users/#user-object)
 
 <sup>12</sup> Replaces the saved list. A key that is neither a built-in badge kind nor `custom:{id}` returns `INVALID_FORM_BODY`, and keys of custom badges that no longer exist are dropped
 
-<sup>13</sup> `true` adds keys to `hidden_profile_badges` and `false` removes them: `plutonium`, `visionary` and `premium` for `premium_badge_hidden`, and `visionary_number` for `premium_badge_sequence_hidden`. `operator_pass_badge_hidden` does the same for `operator_pass`. All three are ignored when the request also sends `hidden_profile_badges`
+<sup>13</sup> `true` adds the field's [badge keys](#deprecated-badge-fields) to `hidden_profile_badges` and `false` removes them. Ignored when the request also sends `hidden_profile_badges`
 
-While `interaction_tier` is `legacy` ([account tiers](/http-api/users/#account-tiers)), an unverified account gets 403 [`PROFILE_EMAIL_VERIFICATION_REQUIRED`](/http-api/errors/) when it changes the username, discriminator, display name, avatar, banner, biography, pronouns, accent color, timezone, timezone privacy or a premium badge field. In that mode an [unclaimed](/http-api/users/#account-tiers) account can only send `new_password`, `has_dismissed_premium_onboarding`, `has_unread_gift_inventory`, `email_token` and the sudo fields, and any other field returns [`UNCLAIMED_ACCOUNTS_CAN_ONLY_SET_EMAIL_VIA_TOKEN`](/http-api/errors/). On an instance where people sign in with a username, `new_password` can come with `username` to claim the account in one request.
+### Deprecated badge fields
 
-In `enforced` mode an unclaimed account on an `email` instance that sends `new_password` without `email_token` gets 400 `USE_CLAIM_ROUTE`.
+| Field | Badge keys it hides |
+| --- | --- |
+| `premium_badge_hidden` | `plutonium`, `visionary` and `premium` |
+| `premium_badge_sequence_hidden` | `visionary_number` |
+| `operator_pass_badge_hidden` | `operator_pass` |
 
-A [limited account](/http-api/users/#account-limitation) can't change profile fields and gets 403 [`ACCOUNT_LIMITED`](/http-api/errors/).
+### Account state
 
-While the instance [enforces single sign-on](/authentication/#single-sign-on-enforcement), an account linked to the provider that sends `new_password` or `email_token` gets 403 [`SSO_REQUIRED`](/http-api/errors/).
+These checks depend on the [account tier](/http-api/users/#account-tiers) and the instance.
+
+| Condition | Result |
+| --- | --- |
+| An unverified account changes the username, discriminator, display name, avatar, banner, biography, pronouns, accent colour, timezone, timezone privacy or a premium badge field while `interaction_tier` is `legacy` | 403 [`PROFILE_EMAIL_VERIFICATION_REQUIRED`](/http-api/errors/) |
+| An [unclaimed](/http-api/users/#account-tiers) account sends a field other than `new_password`, `has_dismissed_premium_onboarding`, `has_unread_gift_inventory`, `email_token` and the sudo fields while `interaction_tier` is `legacy` | [`UNCLAIMED_ACCOUNTS_CAN_ONLY_SET_EMAIL_VIA_TOKEN`](/http-api/errors/) |
+| An unclaimed account on an `email` instance sends `new_password` without `email_token` while `interaction_tier` is `enforced` | 400 `USE_CLAIM_ROUTE` |
+| A [limited account](/http-api/users/#account-limitation) changes a profile field | 403 [`ACCOUNT_LIMITED`](/http-api/errors/) |
+| An account linked to the provider sends `new_password` or `email_token` while the instance [enforces single sign-on](/authentication/#single-sign-on-enforcement) | 403 [`SSO_REQUIRED`](/http-api/errors/) |
+
+On an instance where people sign in with a username, `new_password` can come with `username` to claim the account in one request.
 
 ### Images and blocklists
 
-Avatars and banners can be PNG, JPEG, WebP, GIF, APNG, AVIF, HEIC, HEIF, JPEG XL or SVG, up to the `avatar_max_size` limit (10485760 bytes by default). Other formats return `INVALID_IMAGE_FORMAT` and larger images return `IMAGE_SIZE_EXCEEDS_LIMIT`. An animated avatar needs the animated avatar entitlement or returns `ANIMATED_AVATARS_REQUIRE_PREMIUM`.
+| Condition | Error |
+| --- | --- |
+| An avatar or banner in a format other than PNG, JPEG, WebP, GIF, APNG, AVIF, HEIC, HEIF, JPEG XL or SVG | `INVALID_IMAGE_FORMAT` |
+| An avatar or banner larger than the `avatar_max_size` limit, 10485760 bytes by default | `IMAGE_SIZE_EXCEEDS_LIMIT` |
+| An animated avatar without the animated avatar entitlement | `ANIMATED_AVATARS_REQUIRE_PREMIUM` |
+| A username, display name, biography or pronouns that matches the instance blocklist | 403 [`CONTENT_BLOCKED`](/http-api/errors/) |
 
-A username, display name, biography or pronouns that matches the instance blocklist returns 403 [`CONTENT_BLOCKED`](/http-api/errors/). `STAFF` accounts skip the profile blocklist but not the phrase and URL blocklists.
+`STAFF` accounts skip the profile blocklist but not the phrase and URL blocklists.
 
 ### Change limits
 
@@ -187,7 +206,7 @@ Sets the date of birth of an account that has none and returns a [date of birth 
 | --- | --- | --- |
 | date_of_birth<sup>1</sup> | string | The date of birth as `YYYY-MM-DD` |
 
-<sup>1</sup> A date that doesn't exist, is today or later, or is more than 120 years ago returns `INVALID_DATE_OF_BIRTH_FORMAT`
+<sup>1</sup> A date that doesn't exist, is today or later, or is more than 120 years ago returns the field code `INVALID_DATE_OF_BIRTH_FORMAT`
 
 The minimum age follows the region of the client IP address, as in [register an account](/http-api/authentication/#register-an-account). A person below it gets 403 `ACCOUNT_BELOW_MINIMUM_AGE`, and the account is closed and deleted after 72 hours.
 
@@ -218,7 +237,7 @@ Adds an email address, and optionally a password, to an unclaimed account so it 
 | email?<sup>1</sup> | string | The email address to add |
 | password?<sup>2</sup> | string | The password to set (8-256 characters) |
 
-<sup>1</sup> Needed on an `email` instance or the field code `EMAIL_IS_REQUIRED` is returned. Ignored on a `username` instance. An address on another account returns `EMAIL_ALREADY_IN_USE`
+<sup>1</sup> Needed on an `email` instance or the field code `EMAIL_IS_REQUIRED` is returned. Ignored on a `username` instance. An address already on another account returns `EMAIL_ALREADY_IN_USE` as the field code
 
 <sup>2</sup> Needed when the instance uses usernames to sign in, sends no email or has `verification_basis` set to `local_credential`, unless the account has a passkey. Without it the route returns 400 `PASSWORD_REQUIRED_TO_CLAIM`. A breached password returns `PASSWORD_IS_TOO_COMMON`
 
@@ -325,7 +344,7 @@ Schedules deletion of the account and deletes every session. Needs [sudo verific
 
 ### JSON body
 
-The [sudo verification object](/http-api/users/mfa/#sudo-verification-object), which can be empty when you send a sudo token, and these fields.
+The [sudo verification object](/http-api/users/mfa/#sudo-verification-object), which can be empty when you send a sudo token, together with these fields.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -333,7 +352,7 @@ The [sudo verification object](/http-api/users/mfa/#sudo-verification-object), w
 | delete_messages? | boolean | Delete every message the account sent along with the account. Otherwise the messages stay, with the author removed |
 
 :::caution[Signing in cancels the deletion]
-The deletion happens 14 days later by default, or within about a minute with `immediate`. Signing in before then cancels it, together with the message deletion, and once erasure starts it can't be cancelled.
+The deletion happens 14 days later by default, or within about a minute with `immediate`. Signing in before then cancels it, together with the message deletion. Once erasure has started, it can't be cancelled any more.
 :::
 
 ### Response

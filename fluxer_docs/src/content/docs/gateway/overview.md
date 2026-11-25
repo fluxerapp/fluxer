@@ -40,7 +40,11 @@ Add these to the query of the discovered URL and keep any query it already has.
 | compress? | string | `zstd-stream` for compression, and any other value turns it off |
 | stream? | string | `1` or `true`, which `compress=zstd-stream` needs to take effect |
 
-A missing or different `v` closes the connection with `4012` and reason `Invalid API version` before Hello. The reference client connects with `?v=1&encoding=json&compress=zstd-stream&stream=1`.
+A missing or different `v` closes the connection with `4012` and reason `Invalid API version` before Hello. The reference client connects with this query string.
+
+```text
+?v=1&encoding=json&compress=zstd-stream&stream=1
+```
 
 ## Gateway payload
 
@@ -55,13 +59,13 @@ Every WebSocket message is one UTF-8 JSON payload.
 
 A payload that is not a JSON object with an `op` closes the connection with a [close code](/gateway/opcodes-and-close-codes/#close-codes).
 
-Each live Dispatch raises `s` by one, starting from 0, and Ready has `s` 1. A replayed Dispatch keeps its original sequence, and [Resumed](/gateway/events/#resumed) has the current sequence without raising it. Some events are never replayed (see [Dispatch delivery](/gateway/events/#dispatch-delivery)).
+Ready has `s` 1, and each later live Dispatch raises `s` by one. A replayed Dispatch keeps its original sequence, and [Resumed](/gateway/events/#resumed) has the current sequence without raising it. Some events are [never replayed](/gateway/events/#dispatch-delivery).
 
 ## Framing
 
 A client message can be at most 16,384 bytes on the wire and 16,384 bytes after decompression. A larger one closes with `4002`.
 
-Snowflakes are decimal strings (see [Snowflakes](/snowflakes/)), and every other number is a JSON number.
+[Snowflakes](/snowflakes/) are decimal strings, and every other number is a JSON number.
 
 With `zstd-stream`, every server frame is binary, starting with Hello. Feed every frame to one decompressor in order for the whole connection, and send every client message through one compressor that also lasts the whole connection.
 
@@ -88,16 +92,16 @@ Identify creates a session and the Gateway responds with Ready. These failures c
 | --- | --- | --- |
 | 4004 | `Invalid token` | The token is not valid |
 | 4008 | `Too many sessions` | The user already has 100 live sessions (bots have no limit) |
-| 4008 | `Identify rate limited` | The instance is starting too many sessions at once. Try again after a backoff |
+| 4008 | `Identify rate limited` | More than 300 Identify and Resume commands came from your IP address in 60 seconds |
 | 4010 | `Invalid shard` | The `shard` pair is malformed |
 | 4011 | `Sharding required` | A bot shard owns more than 2,500 guilds |
 | 4000 | `Failed to start session` | The session could not be created for another reason |
 
-An Identify can stay pending with no reply while the Gateway is busy. Keep heartbeating until Ready arrives. An Identify or Resume over the [per-IP budget](/gateway/limits-and-rate-limits/#connection-and-command-rate-limits) is dropped without a reply, and you need to send it again later. Any command other than Heartbeat, Identify or Resume before Ready closes with `4003`, and an Identify or Resume on a socket that already has a session closes with `4005`.
+An Identify can stay pending with no reply while the Gateway is busy. Keep heartbeating until Ready arrives. An Identify or Resume over the [per-IP budget](/gateway/limits-and-rate-limits/#connection-and-command-rate-limits) closes the connection with `4008`. Any command other than Heartbeat, Identify or Resume sent before Identify or Resume closes with `4003`. Commands sent after Identify and before Ready wait until the session starts, up to 64 of them, and more close with `4008`. A socket that sends no Identify or Resume within one heartbeat interval of Hello closes with `4003`, and an Identify or Resume on a socket that already has a session closes with `4005`.
 
 ## Heartbeats
 
-Send opcode 1 with the sequence of the last Dispatch you processed, or `null` before the first one.
+Send opcode 1 with the sequence of the last Dispatch you processed, or `null` before the first Dispatch.
 
 ```json
 {
@@ -106,13 +110,13 @@ Send opcode 1 with the sequence of the last Dispatch you processed, or `null` be
 }
 ```
 
-The server responds with opcode 11 Heartbeat ACK. Once a session exists, a `d` that is neither `null` nor an integer closes with `4007`. If 90 percent of the interval passes without an acknowledgment, the server sends its own opcode 1 with `d: null`, and you respond with a heartbeat right away. After 45,000 ms with no acknowledgment the connection closes with `4009`.
+The server responds with opcode 11 Heartbeat ACK. Once a session exists, a `d` that is neither `null` nor an integer closes with `4007`. If 90 per cent of the interval passes without an acknowledgement, the server sends its own opcode 1 with `d: null`, and you respond with a heartbeat right away. The connection closes with `4009` when the [heartbeat timeout](/gateway/limits-and-rate-limits/#session-lifecycle) passes with no acknowledgement.
 
 The Gateway drops replayable Dispatches up to the sequence in your heartbeat. Only send a sequence you have finished processing.
 
 ## Resuming a session
 
-Opcode 6 resumes a session on a new socket within 60,000 ms after the old one closes, unless the client closed it with `1000` or `1001`. Send the original token, the Ready `session_id` and the last sequence you processed. A payload missing any of them closes with `4002`.
+Opcode 6 resumes a session on a new socket within 60,000 ms after the old one closes, unless the client closed it with `1000` or `1001`. Send the original token, the Ready `session_id` and the last sequence you processed. A payload that is missing any of them closes with `4002`.
 
 ```json
 {
@@ -125,18 +129,18 @@ Opcode 6 resumes a session on a new socket within 60,000 ms after the old one cl
 }
 ```
 
-The Gateway replays every Dispatch above `seq` in order and then sends [Resumed](/gateway/events/#resumed). Your presence shows as `offline` 5,000 ms after the socket drops, and a Resume brings back the status you had. See [Limits and rate limits](/gateway/limits-and-rate-limits/#replay-and-backpressure) for replay bounds.
+The Gateway replays every Dispatch above `seq` in order and then sends [Resumed](/gateway/events/#resumed). Your presence shows as `offline` 5,000 ms after the socket drops, and a Resume brings back the status you had. The [replay buffer](/gateway/limits-and-rate-limits/#replay-and-backpressure) keeps at most 4,096 Dispatch events and about 16 MiB of event data.
 
-| Result | Response |
+| Condition | Result |
 | --- | --- |
 | The session is unknown or expired, or `seq` is below the replay floor | [Invalid Session](#invalid-session), and the socket can Identify |
-| `seq` is above the session sequence or below the acknowledged one | Close with `4007` and reason `Invalid sequence` |
-| The token does not own the session | Close with `4004` and reason `Invalid token` |
-| The session does not respond | Close with `4000` and reason `Session unavailable` |
+| `seq` is negative, above the session sequence or below the acknowledged one | Close code `4007`, reason `Invalid sequence` |
+| The token does not own the session | Close code `4004`, reason `Invalid token` |
+| The session does not respond | Close code `4000`, reason `Session unavailable` |
 
 ## Reconnect
 
-Opcode 7 asks you to open a new WebSocket and [resume](#resuming-a-session). The Gateway sends it when it moves your session, or when another socket resumes the same session, and then closes the old socket with `4000`.
+Opcode 7 asks you to open a new WebSocket and [resume](#resuming-a-session). The Gateway sends it when it moves your session or another socket resumes the same session, and then closes the old socket with close code `4000`. An Identify sent to a draining node also gets opcode 7 and a `4000` close, and you Identify again on a new socket.
 
 ## Invalid session
 
@@ -144,7 +148,7 @@ Opcode 9 with `d: false` means the session cannot be resumed, after a failed [Re
 
 ## Sharding
 
-Identify takes an optional `shard` of `[shard_id, shard_count]`. `shard_id` is below `shard_count`, and `shard_count` runs from 1 through 16,384. A guild belongs to shard `(guild_id >> 22) % shard_count`.
+Identify takes an optional `shard` of `[shard_id, shard_count]`. `shard_id` is below `shard_count`, and `shard_count` runs from 1 to 16,384. A guild belongs to shard `(guild_id >> 22) % shard_count`.
 
 A session only receives the guilds its shard owns. Ready lists them in `guilds` and echoes the pair as `shard`. A bot gets each guild as unavailable, followed by one [Guild Create](/gateway/events/#guild-create) or [Guild Delete](/gateway/events/#guild-delete). One bot shard can have at most 2,500 guilds, and a bot that sends no `shard` counts all its guilds.
 

@@ -1,0 +1,105 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Fedora, RHEL, Rocky and Alma
+description: You run Fluxer on Fedora or a RHEL family release with Podman or Docker CE.
+---
+
+import {Steps} from '@astrojs/starlight/components';
+
+## Short version
+
+A machine with 2 CPU cores, 2 GB of memory at least and 4 GB for a busy instance, and 20 GB of free disk, on amd64 or arm64, with a domain that points at it or [its IP address](/operator/requirements/#with-an-ip-address). Use Podman with a Quadlet unit, or install Docker CE and use the compose file. Either way, the install takes about 15 minutes from start to finish.
+
+## What this changes
+
+- Podman from your release's own packages, or Docker CE from Docker's repository.
+- One container called `fluxer` with Podman, or `fluxer-fluxer-1` with Docker CE and the compose file, and one volume called `fluxer-data` either way.
+- Ports 80 and 443 on TCP, 443 on UDP, 7881 on TCP and 7882 on UDP, in firewalld.
+
+## Before you start
+
+Check the [requirements](/operator/requirements/).
+
+Point your domain at the machine and open the five ports in your provider's firewall.
+
+## With Podman
+
+Current releases of Fedora, RHEL 9 and 10, Rocky and Alma ship Podman 4.6 or later, which the Quadlet file needs. Install it if it's missing.
+
+```sh
+sudo dnf install -y podman
+```
+
+Then [set up Podman and Quadlet](/operator/platforms/podman/), with the sysctl for ports 80 and 443, the Quadlet file, SELinux and the firewalld commands.
+
+## With Docker CE
+
+<Steps>
+
+1. Add Docker's repository and install Docker.
+
+   On Fedora, add Docker's repository.
+
+   ```sh
+   sudo dnf config-manager addrepo --from-repofile https://download.docker.com/linux/fedora/docker-ce.repo
+   ```
+
+   On RHEL, Rocky and Alma, add it with these.
+
+   ```sh
+   sudo dnf -y install dnf-plugins-core
+   sudo dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo
+   ```
+
+   Then install Docker and start it.
+
+   ```sh
+   sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+   sudo systemctl enable --now docker
+   ```
+
+   `docker compose version` prints a version.
+
+2. Download the two files and set your domain.
+
+   ```sh
+   mkdir fluxer && cd fluxer
+   url=https://github.com/fluxerapp/fluxer/releases/latest/download
+   curl -fLO "$url/compose.yaml"
+   curl -fLO "$url/fluxer.env"
+   ```
+
+   Change `FLUXER_DOMAIN=chat.example.com` in `fluxer.env` to your domain.
+
+3. Start Fluxer.
+
+   ```sh
+   sudo docker compose up -d
+   ```
+
+   `sudo docker compose ps` shows `healthy` within two minutes.
+
+4. Print the setup token.
+
+   ```sh
+   sudo docker compose exec fluxer fluxerd setup-token
+   ```
+
+   Open your domain and paste the token to create the first admin account.
+
+</Steps>
+
+## Firewall
+
+firewalld blocks the ports Podman publishes until you open them. Some cloud images come without firewalld. Install and start it with `sudo dnf install -y firewalld && sudo systemctl enable --now firewalld`.
+
+```sh
+sudo firewall-cmd --permanent --add-port={80/tcp,443/tcp,443/udp,7881/tcp,7882/udp}
+sudo firewall-cmd --reload
+```
+
+Docker CE puts its containers in its own firewalld zone, and ports it publishes are open even when the `public` zone doesn't list them. So a published port such as 7881 is open from the internet even with firewalld on and no ports added. To keep a port private with Docker, publish it on `127.0.0.1` instead.
+
+## SELinux
+
+Leave SELinux enforcing. A Docker or Podman volume such as `fluxer-data` needs nothing extra. A folder on the machine needs `:Z` after the volume, such as `/srv/fluxer:/var/lib/fluxer:Z`, and user ID 65532 inside the container as its owner.

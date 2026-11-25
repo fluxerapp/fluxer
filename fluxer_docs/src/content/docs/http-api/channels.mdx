@@ -57,7 +57,7 @@ Every channel has `id` and `type`, and the other fields are present only on the 
 | default_forum_layout? | integer | The default [layout](/http-api/forums/#forum-layouts) of posts (forum channels) |
 | default_tag_setting? | string | The default [tag matching](/http-api/forums/#forum-tag-settings) of a post search (forum and media channels) |
 
-Threads and forum channels have more fields, described under [thread object](/http-api/threads/#thread-object) and [forum channel fields](/http-api/forums/#forum-channel-fields).
+A [thread](/http-api/threads/#thread-object) or [forum channel](/http-api/forums/#forum-channel-fields) has extra fields on top of these.
 
 `nsfw`, `nsfw_override` and the content warning fields describe only this channel. To find the setting that applies, use the first one that is set on the channel, then its parent category, then the guild.
 
@@ -105,7 +105,7 @@ A bot always sees threads, forum channels and media channels. A user session see
 
 ## Permission overwrite object
 
-A permission overwrite changes the permissions of one role or member in one channel. `allow` and `deny` are decimal strings, and [Permissions](/http-api/permissions/) lists the flags.
+A permission overwrite changes the permissions of one role or member in one channel. `allow` and `deny` are decimal strings of [permission flags](/http-api/permissions/).
 
 ### Structure
 
@@ -132,7 +132,7 @@ A permission overwrite changes the permissions of one role or member in one chan
 
 ## Channel slowmode state object
 
-This object tells you whether you can send in a channel with slowmode.
+Your slowmode state in one channel, with when you can send next.
 
 ### Structure
 
@@ -143,11 +143,11 @@ This object tells you whether you can send in a channel with slowmode.
 | next_send_allowed_at | ?ISO8601 timestamp | When you can send next, null when you can send now |
 | can_bypass | boolean | Whether you skip slowmode with [BYPASS_SLOWMODE](/http-api/permissions/) |
 
-Bots never wait, and direct messages and group direct messages have no slowmode. In a forum or media channel, the state applies to creating a post.
+Bots never wait, and direct messages and group direct messages have no slowmode. In a forum or media channel, the state applies to creating posts.
 
 ## RTC region object
 
-An RTC region is a voice region on the instance, and a voice channel stores its `id` in `rtc_region`.
+An RTC region is a voice region on the instance. A voice channel stores the region's `id` in its `rtc_region` field.
 
 ### Structure
 
@@ -198,7 +198,7 @@ The rate limit is 100 requests per 10 seconds, on the `channel:read::channel_id`
 
 <RouteHeader method="GET" path="/v1/channels/{channel_id}/slowmode" bot />
 
-Returns your [channel slowmode state object](#channel-slowmode-state-object). You need the same access as for [Get channel](#get-channel).
+Returns your [channel slowmode state object](#channel-slowmode-state-object). It needs the same access as [Get channel](#get-channel).
 
 ### Response
 
@@ -212,7 +212,7 @@ The rate limit is 100 requests per 10 seconds, on the `channel:read::channel_id`
 
 <RouteHeader method="GET" path="/v1/channels/{channel_id}/rtc-regions" />
 
-Returns the [RTC regions](#rtc-region-object) you can pick for a guild voice channel, sorted by name. [Hidden regions](/admin-api/voice/#hidden-regions) are left out. You need the same access as for [Get channel](#get-channel), and bots can't use this route.
+Returns the [RTC regions](#rtc-region-object) you can pick for a guild voice channel, sorted by name. [Hidden regions](/admin-api/voice/#hidden-regions) are left out. You need the same access as for [Get channel](#get-channel), and bots can't call it.
 
 ### Response
 
@@ -241,7 +241,7 @@ Changes a guild channel or a group direct message and returns the [channel objec
 
 ### JSON body
 
-The body depends on the channel type, and a thread accepts every field of the [Modify thread body](/http-api/threads/#thread-body). Sending one for a direct message or personal notes returns 400 `INVALID_FORM_BODY`.
+The body depends on the channel type, and a thread accepts every field of the [Modify thread body](/http-api/threads/#thread-body). A body for a direct message or personal notes returns 400 `INVALID_FORM_BODY` instead.
 
 #### Guild channel body
 
@@ -320,7 +320,7 @@ The rate limit is 20 requests per 10 seconds, on the `channel:update::channel_id
 
 <RouteHeader method="DELETE" path="/v1/channels/{channel_id}" bot auditReason />
 
-Deletes a guild channel, closes a direct message or leaves a group direct message, and returns 204. Deleting a guild channel needs `VIEW_CHANNEL` and `MANAGE_CHANNELS`. [Delete thread](/http-api/threads/#delete-thread) has this route for threads.
+Deletes a guild channel, closes a direct message or leaves a group direct message, and returns 204. Deleting a guild channel needs `VIEW_CHANNEL` and `MANAGE_CHANNELS`. [Deleting a thread](/http-api/threads/#delete-thread) uses the same route.
 
 :::danger
 Deleting a guild channel deletes it right away with its messages, attachments, invites, webhooks and threads, and you can't restore it.
@@ -375,13 +375,13 @@ The rate limit is 20 requests per 10 seconds, on the `channel:delete::channel_id
 
 <RouteHeader method="PUT" path="/v1/channels/{channel_id}/recipients/{user_id}" bot />
 
-Adds a user to a group direct message and returns 204. You need to be in the group and friends with the user, and the user's privacy settings have to allow group direct messages from you.
+Adds a user to a group direct message and returns 204. You need to be in the group and friends with the user, and the user's privacy settings have to let you add them to group direct messages.
 
 ### Request headers
 
 | Field | Type | Description |
 | --- | --- | --- |
-| X-Captcha-Token? | string | The solved CAPTCHA, see [CAPTCHA handling](/topics/captcha/) |
+| X-Captcha-Token? | string | The [solved CAPTCHA](/topics/captcha/) |
 
 ### Response
 
@@ -493,7 +493,7 @@ The rate limit is 20 requests per 10 seconds, on the `channel:update::channel_id
 
 <RouteHeader method="POST" path="/v1/channels/{channel_id}/followers" bot auditReason />
 
-Follows an announcement channel into a guild text channel and returns a [followed channel object](#followed-channel-object). Fluxer creates a [channel follower webhook](/http-api/webhooks/#webhook-types) in the target channel, and [published](/http-api/messages/#crosspost-message) messages are copied into it from then on, as described in [Announcement channels](/topics/announcement-channels/). You need `VIEW_CHANNEL` on the announcement channel and `VIEW_CHANNEL` and `MANAGE_WEBHOOKS` on the target channel.
+Follows an announcement channel into a guild text channel and returns a [followed channel object](#followed-channel-object). Fluxer creates a [channel follower webhook](/http-api/webhooks/#webhook-types) in the target channel, and [published](/http-api/messages/#crosspost-message) messages are [copied into it](/topics/announcement-channels/) from then on. You need `VIEW_CHANNEL` on the announcement channel and `VIEW_CHANNEL` and `MANAGE_WEBHOOKS` on the target channel.
 
 ### JSON body
 
@@ -531,4 +531,4 @@ Returns the [channel follower stats object](#channel-follower-stats-object) of a
 | 200 | [channel follower stats](#channel-follower-stats-object) object | The counts were returned |
 | 400 | [error response](/http-api/#error-response) | `ANNOUNCEMENT_CHANNEL_REQUIRED` when the channel is not an announcement channel |
 
-The rate limit is 10 requests per 10 seconds, on the `channel:follower_stats::channel_id` bucket.
+The `channel:follower_stats::channel_id` bucket allows 10 requests per 10 seconds.

@@ -46,7 +46,7 @@ A permission lets a member do one thing in a guild, such as send a message or ba
 | 1 &lt;&lt; 35 | CREATE_PUBLIC_THREADS<sup>1</sup> | Start public and announcement threads |
 | 1 &lt;&lt; 36 | CREATE_PRIVATE_THREADS<sup>1</sup> | Start private threads |
 | 1 &lt;&lt; 37 | USE_EXTERNAL_STICKERS | Use stickers from other guilds |
-| 1 &lt;&lt; 38 | SEND_MESSAGES_IN_THREADS<sup>1</sup> | Send messages in threads and add members to them |
+| 1 &lt;&lt; 38 | SEND_MESSAGES_IN_THREADS<sup>1</sup> | Send messages in [threads](/http-api/threads/#thread-permissions), in place of `SEND_MESSAGES`, and add members to them |
 | 1 &lt;&lt; 40 | MODERATE_MEMBERS | Time out members |
 | 1 &lt;&lt; 43 | CREATE_EXPRESSIONS | Create emojis and stickers and edit or delete your own |
 | 1 &lt;&lt; 51 | PIN_MESSAGES | Pin and unpin messages |
@@ -54,7 +54,7 @@ A permission lets a member do one thing in a guild, such as send a message or ba
 | 1 &lt;&lt; 53 | UPDATE_RTC_REGION | Change the voice region of a voice channel |
 | 1 &lt;&lt; 54 | VIEW_CHANNEL_MEMBERS<sup>1</sup> | View the member list of a channel |
 
-<sup>1</sup> The bit is [feature-gated](#feature-gated-permission-bits). [Thread permissions](/http-api/threads/#thread-permissions) explains how the thread bits apply.
+<sup>1</sup> The bit is [feature-gated](#feature-gated-permission-bits)
 
 Responses send a permission mask as a decimal string. Requests accept a decimal string up to 9223372036854775807, or a JSON number that is a safe integer. Parse masks as unsigned 64-bit integers. Fluxer drops any bit it doesn't define.
 
@@ -65,13 +65,13 @@ You can only write a gated bit when your request declares the feature it needs, 
 | Bits | Who can write them |
 | --- | --- |
 | `VIEW_CHANNEL_MEMBERS` | A request that declares `view_channel_members_permission` |
-| The four thread bits | A bot, or a user session that declares the [`channel_threads`](/http-api/threads/#client-capability) feature |
+| The four thread bits | A bot, or a user session that declares the [`channel_threads`](/http-api/threads/#client-capability) capability |
 
 When you can't write a gated bit, Fluxer keeps that bit at its stored value and writes the rest of the mask. A new role created with `permissions` starts with the bit cleared. One created without `permissions` copies the everyone role's mask, gated bits included. Callers that can't write the thread bits also don't see them in role masks, overwrite masks or `permissions` values.
 
 ## Elevated permissions
 
-`KICK_MEMBERS`, `BAN_MEMBERS`, `ADMINISTRATOR`, `MANAGE_CHANNELS`, `MANAGE_GUILD`, `MANAGE_MESSAGES`, `MANAGE_ROLES`, `MANAGE_WEBHOOKS`, `MODERATE_MEMBERS` and `MANAGE_THREADS` are elevated. In a guild with the elevated [MFA level](/http-api/guilds/#mfa-levels), a member other than the owner needs two-factor authentication to use them, and gets 400 `TWO_FACTOR_REQUIRED` without it. Computed `permissions` values still include these bits.
+`KICK_MEMBERS`, `BAN_MEMBERS`, `ADMINISTRATOR`, `MANAGE_CHANNELS`, `MANAGE_GUILD`, `MANAGE_MESSAGES`, `MANAGE_ROLES`, `MANAGE_WEBHOOKS`, `MODERATE_MEMBERS` and `MANAGE_THREADS` are elevated. In a guild with the elevated [MFA level](/http-api/guilds/#mfa-levels), a member other than the owner needs two-factor authentication to use them, and gets 400 `TWO_FACTOR_REQUIRED` without it. Computed `permissions` values still include these bits for that member.
 
 ## Permission computation
 
@@ -83,11 +83,11 @@ In a channel, Fluxer then applies the channel's overwrites in this order, removi
 2. The overwrites for the member's roles, combined, where an allow on one role beats a deny on another.
 3. The member's own overwrite.
 
-A category is visible when you can view at least one channel in it. A thread has no overwrites of its own, and [Thread permissions](/http-api/threads/#thread-permissions) explains how its permissions work.
+A category is visible when you can view at least one channel in it. A thread has no overwrites of its own and [uses the permissions of its parent](/http-api/threads/#thread-permissions).
 
 ## Communication timeout
 
-In a guild channel, a member whose [`communication_disabled_until`](/http-api/guild-members/#guild-member-object) is in the future keeps their permissions, but gets 403 `COMMUNICATION_DISABLED` when they try any of these.
+In a guild channel, a member whose [`communication_disabled_until`](/http-api/guild-members/#guild-member-object) is in the future keeps their permissions, but gets 403 `COMMUNICATION_DISABLED` when they try any of the actions below.
 
 - Send, edit or publish their own message
 - Add a reaction or request an attachment upload
@@ -125,7 +125,7 @@ A role is a permission mask that a guild assigns to its members.
 
 The everyone role has the guild's ID, is called `@everyone` and is always at position 0. You can change its color and permissions, but you can't delete it, move it, give it a hoist position or give it an icon.
 
-A role has at most one of `icon` and `unicode_emoji`. Clients show the icon of a member's highest role that has one. An image icon is served by the Media Proxy at [Get role icon](/media-proxy/routes/#get-role-icon).
+A role has at most one of `icon` and `unicode_emoji`. Clients show the icon of a member's highest role that has one. The Media Proxy serves an image icon through [Get role icon](/media-proxy/routes/#get-role-icon), at a size you choose.
 
 ### Example
 
@@ -233,7 +233,7 @@ Modifies a role and returns its [guild role object](#guild-role-object). You nee
 
 ### JSON body
 
-Fields you leave out keep their value. On the everyone role, Fluxer ignores every field except `color`, `permissions`, `icon` and `unicode_emoji`, and the last two can only be null.
+Fields you leave out keep their value. On the everyone role, Fluxer ignores every field except `color`, `permissions`, `icon` and `unicode_emoji`, and `icon` and `unicode_emoji` can only be null.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -298,7 +298,7 @@ The rate limit is 20 requests per 10 seconds, on the `guild:role:positions::guil
 
 <RouteHeader method="PATCH" path="/v1/guilds/{guild_id}/roles/hoist-positions" bot auditReason />
 
-Sets the member list position of one or more roles and returns 204. You need [MANAGE_ROLES](#elevated-permissions) and must [outrank](#role-hierarchy) every role you name. Fluxer sends a [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) event.
+Sets the member list position of one or more roles and returns 204. You need [MANAGE_ROLES](#elevated-permissions) and must [outrank](#role-hierarchy) every role in the body. Fluxer then sends one [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) event for the change.
 
 ### JSON body
 
@@ -312,7 +312,7 @@ An array of [role hoist position objects](#role-hoist-position-object). The ever
 | 400 | [error response](/http-api/#error-response) | An entry is the everyone role or a role that doesn't exist |
 | 423 | [error response](/http-api/#error-response) | Another hoist position change is still running |
 
-The rate limit is 20 requests per 10 seconds, on the `guild:role:hoist_positions::guild_id` bucket.
+The `guild:role:hoist_positions::guild_id` bucket allows 20 requests per 10 seconds.
 
 ## Reset role hoist positions
 
@@ -327,7 +327,7 @@ Clears the member list position of every role in the guild, including roles you 
 | 204 | empty | The hoist positions were cleared |
 | 423 | [error response](/http-api/#error-response) | Another hoist position change is still running |
 
-The rate limit is 10 requests per minute, on the `guild:role:hoist_positions_reset::guild_id` bucket.
+The `guild:role:hoist_positions_reset::guild_id` bucket allows 10 requests per minute.
 
 ## Delete guild role
 

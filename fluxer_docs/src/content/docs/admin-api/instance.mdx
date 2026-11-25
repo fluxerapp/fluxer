@@ -6,9 +6,11 @@ description: Instance configuration, branding, registration control, limits and 
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-Instance configuration is everything an instance admin can change at runtime, from sign-in and registration to branding, integrations, billing and limits. The [Instance](/http-api/instance/) resource publishes part of it to clients.
+Instance configuration is what an instance admin can change at runtime, from sign-in to branding, billing and limits. The [Instance](/http-api/instance/) resource publishes part of it to clients.
 
-No read returns a stored secret, and a boolean such as `client_secret_set` says whether one is set.
+## Secrets
+
+No read returns a stored secret. A boolean such as `client_secret_set` says whether a value is saved.
 
 ## Instance configuration object
 
@@ -41,7 +43,7 @@ The full runtime configuration. A setting that was never saved uses the default 
 
 ## Account identity configuration object
 
-How people sign in. It is read-only here, and the setup wizard sets it through [set the setup sign-in method](/http-api/instance/#set-the-setup-sign-in-method). [Sign-in methods](/operator/sign-in/) explains the rules.
+How people sign in. It is read-only here, and the setup wizard sets it through [set the setup sign-in method](/http-api/instance/#set-the-setup-sign-in-method). It can't change once the first account exists.
 
 ### Structure
 
@@ -79,7 +81,7 @@ Settings for the instance's OpenID Connect provider.
 | groups_claim | ?string | The claim that lists a person's groups, or null for `groups` (up to 128 characters) |
 | group_role_mappings<sup>2</sup> | array[[SSO group role mapping](#sso-group-role-mapping-object) object] | Groups whose members get a role in the single community (up to 100 entries) |
 
-<sup>1</sup> The web app URL followed by `/auth/sso/callback`, which mobile sign-in also uses. It is read-only
+<sup>1</sup> The web app URL followed by `/auth/sso/callback`, which mobile sign-in also uses. You can't change it
 
 <sup>2</sup> Used only in single-community mode. At each sign-in, Fluxer adds or removes each mapped role to match the person's groups and leaves other roles alone. If the groups claim is missing, the person loses every mapped role. Keycloak leaves the claim out when someone is in no groups
 
@@ -126,7 +128,7 @@ Your consent to the privacy notice of the Fluxer-run push relay, which sends not
 
 ## Peer-to-peer voice configuration object
 
-The rollout that lets small calls connect people directly, without the voice servers. [Experiments](/http-api/experiments/#peer-to-peer-voice-assignment-object) describes what a client gets from it.
+The rollout that lets small calls connect people directly, without the voice servers. Each account gets an [assignment](/http-api/experiments/#peer-to-peer-voice-assignment-object) that says whether it can start a peer-to-peer call and how many people the call allows.
 
 ### Structure
 
@@ -147,7 +149,7 @@ Selection decides who can start a peer-to-peer call, and anyone can join one whi
 
 ## Captcha configuration object
 
-The ALTCHA proof-of-work check on gated operations. [CAPTCHA handling](/topics/captcha/) lists those operations.
+The ALTCHA proof-of-work check on [gated operations](/topics/captcha/).
 
 ### Structure
 
@@ -207,7 +209,7 @@ What accounts have to do before they can interact with other people, and which a
 
 <sup>5</sup> Bot, system and single sign-on accounts are never deleted this way. `on_last_session_end` set to `after_grace` also schedules the deletion when the account signs out of its last session. Each deletion is scheduled 24 hours ahead, and signing in cancels it
 
-<sup>6</sup> Fluxer emails a warning first and deletes the account `warning_lead_days` later unless it is used. An account that never got the warning, such as one with no email, is never deleted this way
+<sup>6</sup> Fluxer emails a warning first and deletes the account `warning_lead_days` later unless it is used. This never deletes an account that didn't get the warning, such as one with no email address
 
 #### Unclaimed account cleanup object
 
@@ -232,7 +234,11 @@ What accounts have to do before they can interact with other people, and which a
 | inactive_days | integer | Days without use before the warning email is sent (1-3650, default 730) |
 | warning_lead_days | integer | Days between the warning email and the deletion (1-365, default 30) |
 
-A new self-hosted instance starts with `date_of_birth` set to `off` and `interaction_tier` set to `enforced`. It deletes unclaimed accounts after 90 days with `after_grace`, and accounts without a date of birth after 7 days. An upgraded instance starts in `legacy` with both cleanup policies off. Every instance starts with inactivity deletion on.
+### Starting values
+
+- A new self-hosted instance starts with `date_of_birth` set to `off` and `interaction_tier` set to `enforced`. It deletes unclaimed accounts after 90 days with `after_grace`, and accounts without a date of birth after 7 days.
+- An upgraded instance starts in `legacy` with both cleanup policies off.
+- Every instance starts with inactivity deletion turned on.
 
 ## Guild visits configuration object
 
@@ -381,7 +387,7 @@ Billing and gift codes work only in `mirror`.
 
 ## Instance integrations object
 
-Each provider's saved settings, a `_set` boolean for each secret and whether it is available.
+Each provider's saved settings, `_set` booleans for its secrets and whether it is available.
 
 ### Structure
 
@@ -496,20 +502,35 @@ Stripe billing for premium. Each `effective_` field gives the value in use.
 
 <sup>2</sup> True when billing is on, a Stripe secret key is set, the premium mode is `mirror` and at least one currency has a monthly and a yearly price
 
-<sup>3</sup> With billing emails on, the instance emails receipts, refund notices, credit notes, failed or unconfirmed payment notices, renewal reminders, expiring card notices and cancellation confirmations for premium and donations. It also emails gift notices for premium and refund notices for Operator Pass purchases. See [billing emails](#billing-emails)
+<sup>3</sup> With billing emails on, the instance emails receipts, refund notices, credit notes, failed or unconfirmed payment notices, renewal reminders, expiring card notices and cancellation confirmations for premium and donations. It also emails gift notices for premium and refund notices for Operator Pass purchases. [Turn off the matching Stripe emails](#billing-emails) so buyers don't get two of each
 
 ### Billing emails
 
-When `billing_emails` is on, turn off the matching Stripe customer emails, or buyers get two of each:
+When `billing_emails` is on, turn off the matching Stripe customer emails below, or buyers get two of each.
 
-- Settings > Business > Customer emails > Payments: **Successful payments** and **Refunds**
+- **Successful payments** and **Refunds**, under Settings > Business > Customer emails > Payments in Stripe
 - Revenue recovery > Emails: **Send emails when card payments fail** and **Send a Stripe-hosted link for customers to confirm their payments when required**, and with it **Send reminders if payment confirmation isn't completed**
 - Settings > Billing > Subscriptions and emails: **Send emails about upcoming renewals** and **Send emails about expiring cards**
 - Settings > Billing > Subscriptions and emails > Manage invoices sent to customers: **Send credit notes to customers**
 
-Gifts redeemed on a paying subscription are Stripe trials, and the instance sends its own notice before the gift time ends. Also turn off **Send a reminder email 7 days before a free trial ends**.
+Gifts redeemed on a paying subscription are Stripe trials, and the instance sends its own notice before the gift time ends. Also turn off **Send a reminder email 7 days before a free trial ends** in Stripe.
 
-The webhook endpoint at `webhook_url` must receive these events for the emails: `invoice.paid`, `invoice.payment_succeeded`, `invoice.payment_failed`, `invoice.payment_action_required`, `refund.created`, `refund.updated`, `charge.refunded`, `credit_note.created`, `customer.subscription.updated` and `customer.subscription.deleted`. Billing itself also needs the `checkout.session.*`, `customer.subscription.*`, `invoice.*`, `charge.dispute.*` and `refund.failed` events.
+### Webhook events
+
+The webhook endpoint at `webhook_url` must receive these events for the emails.
+
+- `invoice.paid`, `invoice.payment_succeeded`, `invoice.payment_failed` and `invoice.payment_action_required`
+- `refund.created`, `refund.updated` and `charge.refunded`
+- `credit_note.created`
+- `customer.subscription.updated` and `customer.subscription.deleted`
+
+Billing itself also needs these events.
+
+- `checkout.session.*`
+- `customer.subscription.*`
+- `invoice.*`
+- `charge.dispute.*`
+- `refund.failed`
 
 ## Billing price set object
 
@@ -560,20 +581,39 @@ The rules behind [distributions](/http-api/premium/#distributions). On fluxer.co
 
 ## Instance media object
 
-Attachment retention overrides and the values in use.
+Attachment retention overrides, and the values that are in use.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
 | attachment_decay<sup>1</sup> | object | Nullable overrides, plus an `effective` object with the values in use |
-| proxy_attachments_through_api<sup>2</sup> | boolean | Whether [attachment URLs point at the API](/http-api/messages/#attachment-urls-on-the-api) |
+| proxy_attachments_through_api | boolean | Whether [attachment URLs point at the API](/http-api/messages/#attachment-urls-on-the-api) |
 
 <sup>1</sup> The keys are `enabled`, `min_size_mb`, `max_size_mb`, `max_eligible_size_mb`, `min_lifetime_days`, `max_lifetime_days`, `curve` (0-1), `renew_threshold_days` and `renew_window_days`. Null uses the default
 
-<sup>2</sup> Data harvest links and admin views keep Media Proxy URLs. URLs handed out before a change keep working until they expire, so run the Media Proxy with the [signature mode](/media-proxy/overview/#signed-attachment-urls) set to `enforce`. A cache in front of the API must not store these files, and access logs should leave out the `mt` query parameter. Clients pick up a change when they next load the instance discovery document, and a web app tab opened before the change needs a reload when the API has its own domain. No URL holds a token for the whole account. The web app loads images with the session header and shows them from memory, and the desktop app adds the header itself. Videos, audio, downloads and files opened in the browser use a token that opens one file for 5 minutes. Copy actions in Fluxer leave the token out. Turning the setting off again breaks the API URLs handed out while it was on. Messages show their files again once clients load them again, but favorite GIFs saved from attachments while it was on stay broken
-
 Fluxer drops an override that would make a maximum smaller than its minimum.
+
+### Attachment URLs on the API
+
+With `proxy_attachments_through_api` on, data export links and admin views keep Media Proxy URLs.
+
+#### Turning it on
+
+- URLs handed out before the change keep working until they expire, so run the Media Proxy with the [signature mode](/media-proxy/overview/#signed-attachment-urls) set to `enforce`.
+- A cache in front of the API must not store these files, and access logs should leave out the `mt` query parameter.
+- Clients pick up the change when they next load the instance discovery document. A web app tab opened before the change needs a reload when the API has its own domain.
+
+#### Tokens
+
+- No URL has a token for the whole account.
+- The web app loads images with the session header and shows them from memory, and the desktop app adds the header itself.
+- Videos, audio, downloads and files opened in the browser use a token that opens one file for 5 minutes.
+- Copy actions in Fluxer leave the token out.
+
+#### Turning it off
+
+Turning the setting off again breaks the API URLs handed out while it was on. Messages show their files again once clients load them again, but favourite GIFs saved from attachments while it was on stay broken.
 
 ## Branding asset kinds
 
@@ -658,7 +698,7 @@ Trait definitions and the ordered rules that set each [limit key](/http-api/inst
 
 ## Limit rule object
 
-One rule, the filters that scope it and the limits it sets.
+One rule, with the filters that scope it and the limits it sets.
 
 ### Structure
 
@@ -711,48 +751,98 @@ Merges the body into the saved configuration and returns the [instance configura
 
 | Field | Type | Description |
 | --- | --- | --- |
-| sso?<sup>1</sup> | object | [SSO configuration](#sso-configuration-object) fields except `client_secret_set` and `redirect_uri`, plus `client_secret` and `migrate_identities` |
+| sso? | object | [SSO configuration](#sso-configuration-object) fields except `client_secret_set` and `redirect_uri`, plus `client_secret` and `migrate_identities` |
 | gateway_rollout? | object | Any [Gateway rollout configuration](#gateway-rollout-configuration-object) fields |
 | push_relay? | object | `relay_consent_accepted` from the [push relay configuration](#push-relay-configuration-object) |
 | voice_p2p? | object | Any [peer-to-peer voice](#peer-to-peer-voice-configuration-object) fields |
 | captcha? | object | Any [captcha configuration](#captcha-configuration-object) fields |
 | experiment_delivery? | object | Any [experiment delivery](#experiment-delivery-configuration-object) fields |
 | registration? | object | `mode`, `admin_registration_urls_enabled` and `allowed_email_domains` |
-| app_public?<sup>2</sup> | object | `branding`, `setup`, `legal` and `registration` objects, each merged field by field |
-| integrations?<sup>3</sup> | object | `gif`, `youtube`, `email` and `bluesky` objects, `bluesky.keys` and `connection_providers` |
+| app_public? | object | `branding`, `setup`, `legal` and `registration` objects, each merged field by field |
+| integrations? | object | `gif`, `youtube`, `email` and `bluesky` objects, `bluesky.keys` and `connection_providers` |
 | media? | object | `attachment_decay` overrides, null to restore a default, and `proxy_attachments_through_api` |
 | policy? | [instance policy update](#instance-policy-update-structure) object | Community, direct message, premium and gating policy |
-| billing?<sup>4</sup> | object | [Instance billing](#instance-billing-object) fields, plus `stripe_secret_key` and `stripe_webhook_secret` |
-| distribution_pricing?<sup>6</sup> | object | `rules`, each with `id`, `active`, `rate_bps` and `products` from the [distribution rule](#distribution-rule-object) |
+| billing? | object | [Instance billing](#instance-billing-object) fields, plus `stripe_secret_key` and `stripe_webhook_secret` |
+| distribution_pricing? | object | `rules`, each with `id`, `active`, `rate_bps` and `products` from the [distribution rule](#distribution-rule-object) |
 | auth? | object | `identifier_first` and any `instant_accounts` fields from the [auth configuration](#auth-configuration-object) |
 | accounts? | object | Any [accounts configuration](#accounts-configuration-object) fields |
 | guild_visits? | object | Any [guild visits configuration](#guild-visits-configuration-object) fields |
-| notice?<sup>5</sup> | object | `message`, `url`, `starts_at` and `ends_at` of the [instance notice](/http-api/instance/#instance-notice-object) |
+| notice? | object | `message`, `url`, `starts_at` and `ends_at` of the [instance notice](/http-api/instance/#instance-notice-object) |
 
-<sup>1</sup> While `enabled` is true, a save without an `issuer` fails with `SSO_ISSUER_REQUIRED`, and endpoint URLs must use `https` and point at a public address unless `FLUXER_SSO_ALLOW_PRIVATE_ADDRESSES` is true. Turning on both `enabled` and `enforced` fails with `SSO_MISCONFIGURED` without a `client_id`. When endpoints come from the `issuer`, Fluxer fetches the provider's discovery document. If that fails, turning on `enforced` fails with `SSO_DISCOVERY_FAILED`, and a save without `enforced` goes through with a line in `warnings`. A save that changes the provider ID while accounts are linked to the old one moves those links itself when only a trailing `/` changed, or when it adds an `issuer` whose authorization endpoint is the one already in use. Otherwise it fails with `SSO_ISSUER_CHANGE_HAS_IDENTITIES` unless it sends `migrate_identities`. True moves the links to the new issuer, and false leaves them on the old one. Each move writes a `migrate_sso_identities` audit log entry. `migrate_identities` applies to that save only and is never stored
+### Single sign-on rules
 
-<sup>2</sup> `branding.product_name` is 1-80 characters, `branding.premium_product_name` 1-40, `branding.custom_css` up to 32,768 and `branding.upload_limit_message` up to 500. `branding.trusted_domains` holds up to 50 hostnames, each optionally starting with `*.`, and null clears it. URLs are up to 2048 characters, and `branding.theme_color` and `branding.premium_page_color` are hex colors. `branding.premium_page_color` only works on self-hosted instances. Setting `setup.configured` to true finishes setup, and accounts that register after that don't get the wildcard Admin ACL
+- While `enabled` is true, a save without an `issuer` fails with `SSO_ISSUER_REQUIRED`.
+- Endpoint URLs must use `https` and point at a public address, unless `FLUXER_SSO_ALLOW_PRIVATE_ADDRESSES` is true.
+- Turning on both `enabled` and `enforced` fails with `SSO_MISCONFIGURED` without a `client_id`.
+- When endpoints come from the `issuer`, Fluxer fetches the provider's discovery document. If that fails, turning on `enforced` fails with `SSO_DISCOVERY_FAILED`, and a save without `enforced` goes through with a line in `warnings`.
+- `sso.username_from_provider` can be true only on a `username` instance.
 
-<sup>3</sup> A secret such as `klipy_api_key`, `api_key` or the SMTP `password` is saved when sent and kept when left out. `email.smtp` takes `host`, `port`, `username`, `password` and `tls_mode`. `bluesky.keys` replaces the signing keys with up to 8 entries of `kid` and `private_key`. `connection_providers` replaces the provider list with up to 20 [connection provider](#connection-provider-object) objects without `client_secret_set` and `callback_url`, plus `client_secret`. A provider that leaves out `client_secret` keeps the one saved under its `id`, unless it is new or its issuer, token URL or user URL host changed. Only self-hosted instances can save providers
+#### Changing the issuer
 
-<sup>4</sup> `prices`, `country_currencies` and `legacy_prices` replace the saved value, and an empty `prices` object goes back to the environment prices. Billing can't be on while the premium mode is `everyone`
+A save that changes the provider ID while accounts are linked to the old one moves those links itself in two cases.
 
-<sup>5</sup> `message` is up to 1000 characters, and null or an empty string removes the notice. A request replaces the whole notice
+- Only a trailing `/` changed.
+- It adds an `issuer` whose authorisation endpoint is the one already in use.
 
-<sup>6</sup> `rules` replaces the saved list. Fluxer keeps `rule_version` and `prices` for ids it already has, and raises `rule_version` when `rate_bps` changes. A rule left out that already has channel prices stays saved with `active` false, so its subscriptions keep renewing
+Otherwise it fails with `SSO_ISSUER_CHANGE_HAS_IDENTITIES` unless it sends `migrate_identities`. True moves the links to the new issuer, and false leaves them on the old one. Each move writes a `migrate_sso_identities` audit log entry. `migrate_identities` applies to that save only and is never stored.
+
+### Branding and setup limits
+
+| Field | Limit |
+| --- | --- |
+| `branding.product_name` | 1-80 characters |
+| `branding.premium_product_name` | 1-40 characters |
+| `branding.custom_css` | Up to 32,768 characters |
+| `branding.upload_limit_message` | Up to 500 characters |
+| `branding.trusted_domains` | Up to 50 hostnames, each optionally starting with `*.`, and null clears it |
+| Every URL | Up to 2048 characters |
+| `branding.theme_color` | A hex colour |
+| `branding.premium_page_color` | A hex colour, only on self-hosted instances |
+
+Setting `setup.configured` to true finishes setup. Accounts that register after that don't get the wildcard Admin ACL.
+
+### Integration secrets
+
+- A secret such as `klipy_api_key`, `api_key` or the SMTP `password` is saved when sent and kept when left out.
+- `email.smtp` takes `host`, `port`, `username`, `password` and `tls_mode`.
+- `bluesky.keys` replaces the signing keys with up to 8 entries of `kid` and `private_key`.
+
+#### Connection providers
+
+`connection_providers` replaces the provider list with up to 20 [connection provider](#connection-provider-object) objects, without `client_secret_set` and `callback_url`, plus `client_secret`. Only self-hosted instances can save providers.
+
+A provider that leaves out `client_secret` keeps the one saved under its `id`. It doesn't when the provider is new, or when its issuer, token URL or user URL host changed.
+
+### Billing rules
+
+- `prices`, `country_currencies` and `legacy_prices` replace the saved value.
+- An empty `prices` object goes back to the environment prices.
+- Billing can't be on while the premium mode is `everyone`.
+
+### Distribution pricing rules
+
+- `rules` replaces the saved list.
+- Fluxer keeps `rule_version` and `prices` for ids it already has, and raises `rule_version` when `rate_bps` changes.
+- A rule left out that already has channel prices stays saved with `active` false, so its subscriptions keep renewing.
+
+### Notice
+
+`message` is up to 1000 characters, and null or an empty string removes the notice. A request replaces the whole notice.
+
+### Refused combinations
 
 Fluxer checks the merged settings before it writes anything, and refuses these combinations with 400 `INVALID_FORM_BODY`.
 
-- `INSTANT_ACCOUNTS_REQUIRE_CAPTCHA` when instant accounts are turned on while the captcha provider is `none`
-- `CAPTCHA_REQUIRED_BY_INSTANT_ACCOUNTS` when the captcha provider is set to `none` while instant accounts are on
-- `IDENTIFIER_FIRST_REQUIRES_EMAIL_IDENTITY` when `identifier_first` is set to `on` on a `username` instance
-- `EMAIL_DELIVERY_REQUIRES_EMAIL_IDENTITY` when email delivery is set to `smtp` on a `username` instance
-- `SMTP_HOST_REQUIRED` when email delivery is set to `smtp` with no SMTP host saved or in the environment
-- `VERIFICATION_BASIS_REQUIRES_EMAIL_DELIVERY` when `verification_basis` is `confirmed_email` while the instance doesn't send email
+| Code | When |
+| --- | --- |
+| `INSTANT_ACCOUNTS_REQUIRE_CAPTCHA` | Instant accounts are turned on while the captcha provider is `none` |
+| `CAPTCHA_REQUIRED_BY_INSTANT_ACCOUNTS` | The captcha provider is set to `none` while instant accounts are on |
+| `IDENTIFIER_FIRST_REQUIRES_EMAIL_IDENTITY` | `identifier_first` is set to `on` on a `username` instance |
+| `EMAIL_DELIVERY_REQUIRES_EMAIL_IDENTITY` | Email delivery is set to `smtp` on a `username` instance |
+| `SMTP_HOST_REQUIRED` | Email delivery is set to `smtp` with no SMTP host saved or in the environment |
+| `VERIFICATION_BASIS_REQUIRES_EMAIL_DELIVERY` | `verification_basis` is `confirmed_email` while the instance doesn't send email |
 
-It also refuses `sso.username_from_provider` set to true on an instance that isn't a `username` instance.
-
-#### Instance policy update structure
+### Instance policy update structure
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -783,7 +873,7 @@ It also refuses `sso.username_from_provider` set to true on an instance that isn
 | 200 | [instance configuration](#instance-configuration-object) object with `warnings`, a list of problems that didn't stop the save | The update was applied |
 | 400 | [error response](/admin-api/#error-response) | `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED` when a policy change isn't allowed |
 
-Fluxer saves the sections one at a time, and a failure partway keeps the sections saved before it.
+Fluxer saves the sections one at a time, and a failure partway keeps the sections saved before the failure.
 
 The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 

@@ -1,0 +1,213 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Podman and Quadlet
+description: You run Fluxer with rootless or rootful Podman, and start it at boot with a Quadlet unit.
+---
+
+import {Steps} from '@astrojs/starlight/components';
+
+## Short version
+
+Podman 4.6 or later, a user with lingering turned on, one sysctl on the machine, `fluxer.env` and a `fluxer.container` file. It takes about 15 minutes.
+
+## What this changes
+
+- One container called `fluxer` and one Podman volume called `fluxer-data`, both owned by the user that runs Podman.
+- `net.ipv4.ip_unprivileged_port_start` set to 80 on the machine, so a rootless container can publish ports 80 and 443.
+- A Quadlet file, `~/.config/containers/systemd/fluxer.container`, which systemd turns into the user service `fluxer.service`.
+- Lingering for that user, so the service starts at boot without a login.
+
+## Before you start
+
+Check the [requirements](/operator/requirements/). On Debian and Ubuntu, install Podman with the tools that rootless containers need, which minimal images leave out.
+
+```sh
+sudo apt-get install -y podman uidmap passt
+```
+
+On Fedora and RHEL, `sudo dnf install -y podman` is enough. [rexctl](/operator/with-rexctl/) on Podman needs Podman 5.4 or later, which Debian 13 has and Ubuntu 24.04 doesn't.
+
+Without rexctl, Fluxer runs on the Podman that Debian 13 and Ubuntu 24.04 ship.
+
+Pick the account that will run Fluxer. The steps below use a normal account called `chat`. Run steps 1 and 2 as an admin with sudo. From step 3 on, sign in as `chat` over SSH, such as `ssh chat@203.0.113.10`. `su` and `sudo -u` don't work here, because they don't start the user session that `systemctl --user` needs.
+
+## Install
+
+<Steps>
+
+1. Allow rootless containers to publish ports 80 and 443, as root.
+
+   ```sh
+   echo 'net.ipv4.ip_unprivileged_port_start=80' | sudo tee /etc/sysctl.d/90-fluxer.conf
+   sudo sysctl --system
+   ```
+
+   `sudo sysctl --system` prints `net.ipv4.ip_unprivileged_port_start = 80`. In proxy mode, Fluxer publishes no port below 1024, and you can skip this step.
+
+2. Turn on lingering for the account.
+
+   ```sh
+   sudo loginctl enable-linger chat
+   ```
+
+   The output of `loginctl show-user chat` includes `Linger=yes`.
+
+3. Get the settings file and set your domain.
+
+   ```sh
+   mkdir -p ~/fluxer && cd ~/fluxer
+   url=https://github.com/fluxerapp/fluxer/releases/latest/download
+   curl -fLO "$url/fluxer.env"
+   ```
+
+   Change `FLUXER_DOMAIN=chat.example.com` in `fluxer.env` to your domain.
+
+4. Make the Quadlet folder and write the Quadlet file there.
+
+   ```sh
+   mkdir -p ~/.config/containers/systemd
+   ```
+
+   ```ini title="~/.config/containers/systemd/fluxer.container"
+   [Unit]
+   Description=Fluxer
+
+   [Container]
+   ContainerName=fluxer
+   Network=pasta
+   Image=ghcr.io/fluxerapp/fluxer:{{FLUXER_VERSION}}
+   EnvironmentFile=%h/fluxer/fluxer.env
+   Volume=fluxer-data:/var/lib/fluxer
+   PublishPort=80:80
+   PublishPort=443:443
+   PublishPort=443:443/udp
+   PublishPort=7881:7881
+   PublishPort=7882:7882/udp
+   Sysctl=net.ipv4.ip_unprivileged_port_start=0
+   PodmanArgs=--stop-timeout=130
+
+   [Service]
+   Restart=always
+   TimeoutStopSec=150
+
+   [Install]
+   WantedBy=default.target
+   ```
+
+   `Network=pasta` keeps each visitor's address for rate limits and bans, as Podman 5 does by default. `Sysctl` lets Fluxer listen on ports 80 and 443 inside the container, and `--stop-timeout` gives PostgreSQL time to shut down cleanly.
+
+5. Start Fluxer.
+
+   ```sh
+   systemctl --user daemon-reload
+   systemctl --user start fluxer
+   ```
+
+   The first start pulls the image and takes a few minutes. `systemctl --user is-active fluxer` prints `active`, and `podman ps` shows `healthy` after another minute. `journalctl --user -u fluxer` shows its logs from the journal.
+
+   If systemd says `Unit fluxer.service not found`, Quadlet refused the file.
+
+   `/usr/libexec/podman/quadlet -dryrun -user` prints the reason.
+
+6. Print the setup token.
+
+   ```sh
+   podman exec fluxer fluxerd setup-token
+   ```
+
+   Open your domain and paste the token to create the first admin account.
+
+</Steps>
+
+Quadlet units have no `enable` step.
+
+The `[Install]` section starts the service at boot, and `systemctl --user daemon-reload` picks up any change to the file.
+
+## Rootful Podman
+
+As root, skip steps 1 and 2, make the folder with `mkdir -p /etc/containers/systemd`, put the file in `/etc/containers/systemd/fluxer.container`, give `EnvironmentFile` a full path such as `/etc/fluxer/fluxer.env`, and use `systemctl` without `--user`. Leave out the `Network=pasta` line but keep the `Sysctl=net.ipv4.ip_unprivileged_port_start=0` line. Pasta runs only rootless, and rootful Podman keeps each visitor's address on its own.
+
+## podman run
+
+[`podman run` without Quadlet](/operator/docker/#podman) works too. It doesn't start at boot by itself. So that the admin panel shows the `podman` commands for an upgrade, add this line to `fluxer.env`.
+
+```sh title="fluxer.env"
+FLUXER_UPGRADE_COMMAND=podman pull ghcr.io/fluxerapp/fluxer:{version} && podman stop -t 130 fluxer && podman rm fluxer
+```
+
+After those commands, run your `podman run` line again with the new tag.
+
+With `podman compose` and the published file, add `network_mode: pasta` and `sysctls` with `net.ipv4.ip_unprivileged_port_start=0` to the settings of the `fluxer` service.
+
+## SELinux
+
+A Podman volume such as `fluxer-data` needs nothing extra with SELinux enforcing. For a folder on the machine, add `:Z` to the volume, as in `Volume=/srv/fluxer:/var/lib/fluxer:Z`, and make user ID 65532 the folder's owner.
+
+## Firewall
+
+ufw and firewalld block the ports that rootless Podman publishes until you open them.
+
+With ufw, on Debian and Ubuntu, run these.
+
+```sh
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw allow 443/udp
+sudo ufw allow 7881/tcp
+sudo ufw allow 7882/udp
+```
+
+With firewalld, on Fedora and RHEL, run these.
+
+```sh
+sudo firewall-cmd --permanent --add-port={80/tcp,443/tcp,443/udp,7881/tcp,7882/udp}
+sudo firewall-cmd --reload
+```
+
+The output of `sudo firewall-cmd --list-ports` lists all five ports.
+
+## Upgrade
+
+Change the tag on the `Image` line to the new version and run `systemctl --user daemon-reload` and `systemctl --user restart fluxer`. Fluxer backs up first.
+
+So that the admin panel shows the command for Quadlet, add this line to `fluxer.env`. Fluxer puts the newest version in place of `{version}`.
+
+```sh title="fluxer.env"
+FLUXER_UPGRADE_COMMAND=sed -i 's#ghcr.io/fluxerapp/fluxer:[^[:space:]]*#ghcr.io/fluxerapp/fluxer:{version}#' ~/.config/containers/systemd/fluxer.container && systemctl --user daemon-reload && systemctl --user restart fluxer
+```
+
+As root, use `/etc/containers/systemd/fluxer.container` and leave out `--user`.
+
+We don't recommend `AutoUpdate=registry` and `podman auto-update`. Going back to the older release after one of those upgrades needs the restore command by hand.
+
+## Admin accounts
+
+When nobody can sign in as an admin, make a reset link for an account or create a new admin. Each command prints a link that sets a password, and the link works once for an hour. On an email instance that sends email, `users reset-link` refuses, and the admin resets their password by email from the sign-in page.
+
+As root, run them with `sudo`.
+
+```sh
+podman exec fluxer fluxerd users reset-link alex
+podman exec fluxer fluxerd users create alex --admin
+```
+
+On an email sign-in instance, add `--email alex@example.com` to `users create`.
+
+## Remove Fluxer
+
+The volume `fluxer-data` is the instance, with every message, upload, password and key. Before you delete it, [take a backup](/operator/backups/) if you may want it back, and keep that file safe outside `~/fluxer`, because it has every key too.
+
+```sh
+systemctl --user stop fluxer
+rm ~/.config/containers/systemd/fluxer.container
+systemctl --user daemon-reload
+podman volume rm fluxer-data
+podman image rm $(podman image ls -q ghcr.io/fluxerapp/fluxer)
+rm -r ~/fluxer
+sudo rm /etc/sysctl.d/90-fluxer.conf
+sudo loginctl disable-linger chat
+```
+
+`podman image rm` removes every Fluxer image of the account, older releases included. If other containers of that account need the sysctl file or lingering, keep them.
+
+As root, the file is in `/etc/containers/systemd`, `systemctl` runs without `--user`, the settings folder to delete is the one on the `EnvironmentFile` line, and you leave out the two `sudo` lines at the end of the block.

@@ -56,7 +56,7 @@ A pending application and details about its guild.
 
 ## Admin discovery listing object
 
-An approved listing has every field of the [Admin pending application object](#admin-pending-application-object) plus `approved_at`.
+An approved listing has every field of the [Admin pending application object](#admin-pending-application-object), plus the time it was approved in `approved_at`.
 
 ### Structure
 
@@ -82,7 +82,7 @@ The rate limit is 30 requests per 10 seconds, on the `discovery:admin:list` buck
 
 <RouteHeader method="PATCH" path="/v1/admin/discovery/applications/{guild_id}" auditReason />
 
-Approves or rejects a pending application and returns the [discovery application](/http-api/discovery/#discovery-application-object). An approval adds the `DISCOVERABLE` and `VISITS_ENABLED` [guild features](/http-api/guilds/#guild-features) and sends [Guild Update](/gateway/events/#guild-update).
+Approves or rejects a pending application and returns the [discovery application](/http-api/discovery/#discovery-application-object). An approval adds the `DISCOVERABLE` and `VISITS_ENABLED` [guild features](/http-api/guilds/#guild-features) and sends a [Guild Update](/gateway/events/#guild-update) event.
 
 ### JSON body
 
@@ -208,7 +208,7 @@ The rate limit is 20 requests per 10 seconds, on the `discovery:admin:action` bu
 
 <RouteHeader method="DELETE" path="/v1/admin/discovery/listings/{guild_id}" auditReason />
 
-Removes an approved listing and returns the [discovery application](/http-api/discovery/#discovery-application-object). Fluxer removes the `DISCOVERABLE` feature from the guild, keeps `VISITS_ENABLED` and sends [Guild Update](/gateway/events/#guild-update). The guild has to apply again to be listed.
+Removes an approved listing and returns the [discovery application](/http-api/discovery/#discovery-application-object). Fluxer removes the `DISCOVERABLE` feature from the guild, keeps `VISITS_ENABLED` and sends a [Guild Update](/gateway/events/#guild-update) event. The guild has to apply again to be listed.
 
 ### JSON body
 

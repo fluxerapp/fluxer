@@ -1,0 +1,131 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Security and support
+description: How Fluxer runs, where its secrets are, how releases are signed and how to check them, and how to report a security problem.
+---
+
+Fluxer is free software under the AGPL 3.0 or later licence. It never runs as root, keeps its passwords and keys on your machine and signs its releases.
+
+## Licence
+
+Fluxer is free software under the [GNU AGPL 3.0 or later licence](https://github.com/fluxerapp/fluxer/blob/main/LICENSE). If you change it and people use your changed version over the network, you must offer them its source. The container image has an SBOM that lists the licences of all the parts it includes. There is no paid edition, no licence key and no limit on accounts.
+
+## How Fluxer runs
+
+- The container image runs as user ID and group ID 65532, never as root, and `tini` starts `fluxerd` as the first process.
+- The Helm chart runs as user ID 65532 with every capability dropped, no privilege escalation and a read-only root file system. It uses the `RuntimeDefault` seccomp profile and no service account token.
+- Under systemd, Fluxer runs as the `fluxer` system account with `NoNewPrivileges`, `ProtectSystem=strict` and write access only to `/var/lib/fluxer`. It gets only the capability to listen on ports below 1024. In a container without mount namespaces, such as an unprivileged LXC container, rexctl turns off `ProtectSystem` and `PrivateTmp` with a drop-in, and `rexctl doctor` warns about it.
+
+## Who can connect to what
+
+| Port | Open to | What it is |
+| --- | --- | --- |
+| 80 and 443, or 8080 in proxy mode | Everyone, or your proxy | The edge, with the web app, API, gateway and admin panel |
+| 7881 TCP and 7882 UDP | Everyone | Voice and video, encrypted with DTLS and SRTP |
+| Everything else | `127.0.0.1` inside the container, pod or service | PostgreSQL, the message queue, search, the API and other internal parts |
+
+PostgreSQL, the message queue, search, the voice server and, on older installs, Valkey each need a password Fluxer made on its first start.
+
+The API, the gateway, the media proxy and the admin panel take plain HTTP from any connection to `127.0.0.1`. The API trusts the visitor address such a connection sends.
+
+- Only Fluxer can connect to them in a container.
+- In a Kubernetes pod, every container in the pod can connect, sidecars included. Keep sidecars you don't trust out of the pod, for example with `podAnnotations` set to `sidecar.istio.io/inject: "false"`.
+- Under systemd, every account on the machine can connect, so run Fluxer on a machine where every local account is trusted, or use Docker.
+
+In proxy mode, Fluxer serves plain HTTP on port 8080 and has no option for TLS between your proxy and Fluxer, so keep port 8080 on `127.0.0.1` or on a private network you trust.
+
+## Data at rest
+
+Fluxer doesn't encrypt its volume. Use disk encryption from your system or provider, such as LUKS. Backups have the database and every password and key without encryption, so encrypt each copy before you [copy it off the machine](/operator/backups/#copy-backups-off-the-machine).
+
+## Secrets
+
+Fluxer creates its passwords and keys on its first start and keeps them in `secrets.env` in its data folder, readable only by Fluxer's account. They never leave the machine except in backups. Every backup has them, and backups need to be as private as the machine itself.
+
+Passwords you set, such as your SMTP password, can come from [files](/operator/configuration/#secrets-in-files). The Helm chart takes passwords only from a Secret you manage.
+
+To keep Fluxer's own [passwords and keys](/operator/settings/#passwords-and-keys) in your secret store, such as Vault or External Secrets, put them in the environment before the first start, such as in the Secret that `existingSecret` points to. A value from the environment wins over `secrets.env`, and Fluxer only writes the values that it generates itself.
+
+## Admin actions and accounts
+
+Every action in the admin panel and the admin API goes to the admin audit log, with who did it and why. Read it under "Audit Logs" in the admin panel or with the [admin API](/admin-api/#admin-audit-entry-object).
+
+An instance can't require two-factor authentication for every account. A community can require it for its moderators, and with [single sign-on](/operator/sign-in/#single-sign-on) your provider's own rules apply.
+
+Deleted accounts can be recovered for 14 days before Fluxer removes them, set by `FLUXER_DELETION_GRACE_PERIOD_HOURS`. [`FLUXER_REPORT_RETENTION_DAYS`](/operator/settings/#fluxer_report_retention_days) keeps resolved reports for 365 days by default. As the one running the instance, you decide what happens to the data of the people on it, and you are responsible for it under laws such as the GDPR. None of it is sent to Fluxer Platform AB, the company that runs fluxer.com. If you turn on the [push relay](/operator/how-it-works/#the-push-relay), your instance's notifications for the official mobile apps go through it, encrypted so that only your instance and the device they're for can read them. Fluxer, Apple and Google can still see that a notification was sent, when, and the device it's for, and Fluxer also sees which instance sent it.
+
+## Releases
+
+Fluxer releases have a date and time as their version, such as `2026.1114.195738`. Each release on [GitHub](https://github.com/fluxerapp/fluxer/releases) has the container image, the compose file and settings file, the Helm chart, and the release tarballs for systemd and rexctl.
+
+- The image `ghcr.io/fluxerapp/fluxer` has amd64 and arm64 under one tag, with a software bill of materials (SBOM) and SLSA build provenance attached.
+- The image and the Helm chart are signed with Sigstore cosign, without a long-lived key. `checksums.txt` lists the release tarballs for systemd and the rexctl downloads and is signed the same way. The tarballs and the rexctl downloads also have GitHub build provenance that `gh attestation verify` can check on your machine.
+- `:latest` moves to each new release. A version tag never moves, and a digest pins one exact image. The release's `compose.yaml`, the Helm chart and these docs use a version tag, so nothing upgrades until you change it.
+
+Check an image's signature with cosign.
+
+```sh
+cosign verify ghcr.io/fluxerapp/fluxer:{{FLUXER_VERSION}} \
+  --certificate-identity https://github.com/fluxerapp/fluxer/.github/workflows/release-image-set.yaml@refs/heads/main \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
+Check the chart the same way.
+
+```sh
+cosign verify ghcr.io/fluxerapp/charts/fluxer:{{FLUXER_VERSION}} \
+  --certificate-identity https://github.com/fluxerapp/fluxer/.github/workflows/release-image-set.yaml@refs/heads/main \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
+Check `checksums.txt` from the release first, and then each file it lists.
+
+```sh
+cosign verify-blob checksums.txt --bundle checksums.txt.sigstore.json \
+  --certificate-identity https://github.com/fluxerapp/fluxer/.github/workflows/release-image-set.yaml@refs/heads/main \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+sha256sum --ignore-missing -c checksums.txt
+gh attestation verify rexctl_{{FLUXER_VERSION}}_linux_amd64.tar.gz --repo fluxerapp/fluxer
+gh attestation verify fluxer-{{FLUXER_VERSION}}-linux-amd64.tar.zst --repo fluxerapp/fluxer
+```
+
+`gh attestation` needs GitHub CLI 2.49 or newer, signed in with `gh auth login` or `GH_TOKEN`. It prints nothing when it passes in a script, and fails when a file has changed.
+
+Show the image's build provenance and save its SBOM for one platform with Docker. These need Docker Buildx, which is the `docker-buildx` package in Debian's own repository and `docker-buildx-plugin` in Docker's.
+
+```sh
+docker buildx imagetools inspect ghcr.io/fluxerapp/fluxer:{{FLUXER_VERSION}} --format '{{json .Provenance}}'
+docker buildx imagetools inspect ghcr.io/fluxerapp/fluxer:{{FLUXER_VERSION}} \
+  --format '{{json (index .SBOM "linux/amd64").SPDX}}' > sbom.json
+```
+
+## Security fixes and advisories
+
+Fixes, security fixes included, come out in new releases. Older releases get no patch releases, so stay on the newest one. Instances on the older Compose layout and on the 0.x Helm chart get no fixes at all until you [move them](/operator/moving/).
+
+To hear about every new release, follow the [releases on GitHub](https://github.com/fluxerapp/fluxer/releases), subscribe to the [releases RSS](/releases.atom), or choose Watch, Custom, Releases on the GitHub repository. To have the admin panel tell you as well, [turn on the release check](/operator/upgrades/#turning-the-check-on), which is off unless you set it. Fixed security problems are disclosed under the [security policy](https://fluxer.com/security).
+
+## What differs from fluxer.com
+
+A self-hosted instance runs the same code as fluxer.com, with a few differences.
+
+- Every feature is on. Every account has what premium gives on fluxer.com, unless you set the [premium mode](/admin-api/instance/#premium-modes) to `mirror` and sell premium with Stripe.
+- You decide who can create an account. A new instance lets in only people you invite.
+- Moderation is yours. Reports that people make on your instance show up in your admin panel, for you and your admins to handle.
+
+## What Fluxer doesn't do yet
+
+- Run as several copies. There is no failover.
+- Sign in with SAML, or manage accounts with SCIM. [Single sign-on](/operator/sign-in/#single-sign-on) is OpenID Connect.
+- Require two-factor authentication for every account on an instance.
+- Encrypt calls end to end. Calls are encrypted in transit, and the server has the key.
+
+## Report a security problem
+
+Report a security problem privately by following the [security policy](https://fluxer.com/security), never in an issue, on Fluxer Feedback or in a Fluxer community.
+
+## Get help
+
+For anything else, ask in [Fluxer Developers](https://fluxer.gg/fluxer-developers) or report a bug on [Fluxer Feedback](https://feedback.fluxer.com).
+
+Self-hosted instances come with no support contract or promised response time. For a support contract with Fluxer Platform AB, email [hampus@fluxer.com](mailto:hampus@fluxer.com).

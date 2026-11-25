@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A forum channel has posts, and every post is a public [thread](/http-api/threads/) with its own first message. A media channel is a forum channel that can hide media download options.
 
-Neither channel type has messages of its own. Creating a message, adding a reaction or pinning a message in the channel itself returns 400 `CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL`. Listing messages or pins and the typing indicator return 400 `INVALID_CHANNEL_TYPE`.
+Neither channel type has messages of its own. Creating a message, adding a reaction or pinning a message in the channel itself returns 400 `CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL`. Listing messages or pins and sending the typing indicator return 400 `INVALID_CHANNEL_TYPE` instead.
 
 A user request to a route below without the [`channel_threads` client capability](/http-api/threads/#client-capability) gets 404 `NOT_FOUND`. A `channel_id` that does not exist or is outside a guild gets the same 404.
 
@@ -39,7 +39,7 @@ A forum or media channel is a [channel object](/http-api/channels/#channel-objec
 
 <sup>4</sup> A post created with no `auto_archive_duration` archives after 4320 minutes
 
-<sup>5</sup> A new post gets it when [Start thread](/http-api/threads/#start-thread) sets no `rate_limit_per_user`, and it is `0` when none is set
+<sup>5</sup> A new post gets it when [Start thread](/http-api/threads/#start-thread) sets no `rate_limit_per_user`, and it is `0` when no value is set
 
 In a forum, `rate_limit_per_user` limits how often one member creates a post. Bots and members with `BYPASS_SLOWMODE` are exempt.
 
@@ -173,21 +173,19 @@ The reaction clients show on each post.
 
 Null clears a field unless its description says otherwise. A request that sets these fields can fail with these errors.
 
-| Status | Code | Condition |
-| --- | --- | --- |
-| 400 | `MAX_FORUM_TAGS` | `available_tags` has more than 20 tags |
-| 400 | `FORUM_TAG_NAMES_MUST_BE_UNIQUE` | Two tags have the same name |
-| 400 | `INVALID_FORM_BODY` | A tag or the default reaction sets both emoji fields, or an `emoji_name` that isn't one Unicode emoji |
-| 400 | `NO_TAGS_AVAILABLE_TO_NON_MODERATORS` | `REQUIRE_TAG` is set and no unmoderated tag is left |
-| 404 | `UNKNOWN_FORUM_TAG` | A tag has an `id` the channel doesn't have |
-| 404 | `UNKNOWN_EMOJI` | An `emoji_id` is not an emoji of this guild |
-| 429 | `RESOURCE_LOCKED` | Another tag change is running |
+- 400 `MAX_FORUM_TAGS` when `available_tags` has more than 20 tags.
+- 400 `FORUM_TAG_NAMES_MUST_BE_UNIQUE` when two tags have the same name.
+- 400 `INVALID_FORM_BODY` when a tag or the default reaction sets both emoji fields, or an `emoji_name` that isn't one Unicode emoji.
+- 400 `NO_TAGS_AVAILABLE_TO_NON_MODERATORS` when `REQUIRE_TAG` is set and no unmoderated tag is left.
+- 404 `UNKNOWN_FORUM_TAG` when a tag has an `id` the channel doesn't have.
+- 404 `UNKNOWN_EMOJI` when an `emoji_id` is not an emoji of this guild.
+- 429 `RESOURCE_LOCKED` when another tag change is running.
 
 ## Create forum tag
 
 <RouteHeader method="POST" path="/v1/channels/{channel_id}/tags" bot auditReason />
 
-Adds a tag to a forum or media channel and sends a [Channel Update](/gateway/events/#channel-update) event. You need `MANAGE_CHANNELS`.
+Adds a tag to a forum or media channel and sends a [Channel Update](/gateway/events/#channel-update) event. You need the `MANAGE_CHANNELS` permission.
 
 ### JSON body
 
@@ -259,7 +257,7 @@ The rate limit is 10 requests per 10 seconds, on the `channel:forum_tags::channe
 
 <RouteHeader method="POST" path="/v1/channels/{channel_id}/post-data" bot />
 
-Returns the owner and first message of each requested post. You need `READ_MESSAGE_HISTORY`.
+Returns the owner and first message of each requested post. You need the `READ_MESSAGE_HISTORY` permission.
 
 ### JSON body
 
@@ -273,7 +271,7 @@ Returns the owner and first message of each requested post. You need `READ_MESSA
 | --- | --- | --- |
 | threads<sup>1</sup> | map[snowflake, [post data](#post-data-object) object] | The post data keyed by post ID |
 
-<sup>1</sup> An ID that isn't a post in this channel maps to an object with null `owner` and `first_message`
+<sup>1</sup> An ID that isn't a post in this channel maps to an object whose `owner` and `first_message` are null
 
 #### Post data object
 

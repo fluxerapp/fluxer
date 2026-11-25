@@ -4,7 +4,7 @@ title: Linux repositories
 description: How to add the apt, dnf, pacman and Flatpak repositories Fluxer publishes.
 ---
 
-Fluxer publishes apt, dnf, pacman and Flatpak repositories, all signed with the key whose fingerprint is `09D01339EE128925F75E675C855C5BDE34D205D2`. You pick the channel with the entry file on apt and dnf, by package name on pacman and by app ID on Flatpak.
+Fluxer publishes apt, dnf, pacman and Flatpak repositories, signed by the key with fingerprint `09D01339EE128925F75E675C855C5BDE34D205D2`. Each channel has its own entry file on apt and dnf, package name on pacman and app ID on Flatpak.
 
 | Package manager | Pick stable with | Pick canary with |
 | --- | --- | --- |
@@ -24,7 +24,7 @@ sudo curl -fsSL -o /etc/apt/sources.list.d/fluxer.sources \
 sudo apt update && sudo apt install fluxer
 ```
 
-A `.deb` you downloaded only gets updates after you add the entry for its channel. For canary, add the canary entry and install `fluxer-canary`.
+A `.deb` you downloaded gets updates only once you add the entry for its channel. For canary, add that entry and install `fluxer-canary`.
 
 ```sh
 sudo curl -fsSL -o /etc/apt/sources.list.d/fluxer-canary.sources \
@@ -44,7 +44,7 @@ sudo dnf install fluxer
 
 dnf asks you to import the signing key on the first install, once for the repository and once for the package. Check that the fingerprint matches the one above both times.
 
-For canary, add the canary entry and install `fluxer-canary`.
+Canary needs its own entry and `fluxer-canary`.
 
 ```sh
 sudo curl -fsSL -o /etc/yum.repos.d/fluxer-canary.repo \
@@ -52,11 +52,11 @@ sudo curl -fsSL -o /etc/yum.repos.d/fluxer-canary.repo \
 sudo dnf install fluxer-canary
 ```
 
-dnf keeps the repository metadata for six hours, so a new build can take up to six hours to show up. Run `sudo dnf --refresh upgrade` to check sooner.
+dnf keeps the repository metadata for six hours, so a new build can take that long to show up. Run `sudo dnf --refresh upgrade` to check sooner.
 
 ## Arch Linux
 
-Add the signing key to the pacman keyring once, or pacman refuses the repository with `unknown trust`.
+Add the signing key to the pacman keyring once or pacman fails with `unknown trust`.
 
 ```sh
 sudo pacman-key --init
@@ -66,7 +66,7 @@ sudo pacman-key --add /tmp/fluxer-archive-keyring.asc
 sudo pacman-key --lsign-key 09D01339EE128925F75E675C855C5BDE34D205D2
 ```
 
-Then add the repository and install `fluxer` or `fluxer-canary`.
+Then add the repository and install `fluxer`, or `fluxer-canary` for canary.
 
 ```sh
 sudo tee -a /etc/pacman.conf >/dev/null <<'REPO'
@@ -80,7 +80,9 @@ sudo pacman -Syu fluxer
 
 ## Flatpak
 
-Stable is also on Flathub as `app.fluxer.Fluxer`, but canary is only in the Fluxer repository. The reference file adds a remote called `fluxer` and installs the app.
+Fluxer's own Flatpak repository gets each update on release day. Open [the stable reference file](https://pkgs.fluxer.com/flatpak/fluxer.flatpakref) or [the canary one](https://pkgs.fluxer.com/flatpak/fluxer-canary.flatpakref) and your software manager takes over. In the address bar, some desktops also accept `flatpak+https://pkgs.fluxer.com/flatpak/fluxer.flatpakref`.
+
+From a terminal, the reference file adds a remote called `fluxer` and installs the app.
 
 ```sh
 flatpak install https://pkgs.fluxer.com/flatpak/fluxer.flatpakref

@@ -6,13 +6,13 @@ description: Start premium and gift checkouts and receive Stripe webhook events.
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-These routes start a premium purchase on Stripe and receive Stripe's events. Checkout finishes on Stripe's pages, and the checkout routes return a URL for the browser to open. Entitlement state and subscription self-service are on [Premium](/http-api/premium/).
+These routes start a premium purchase on Stripe and receive Stripe's events. Checkout finishes on Stripe's pages, and the checkout routes return a URL for the browser to open. The [premium routes](/http-api/premium/) return entitlement state and manage a subscription.
 
 The checkout routes only work while [billing is on](/http-api/deployment-availability/), and the webhook only works while Stripe and its webhook secret are set up. Both checkout routes are user-only. A bot token gets 403 `ACCESS_DENIED`.
 
 ## Redirect URL object
 
-The checkout routes and the billing portal route return this object. Open `url` in the browser.
+The checkout routes and the billing portal route return this object. Open `url` in the user's browser to continue.
 
 ### Structure
 

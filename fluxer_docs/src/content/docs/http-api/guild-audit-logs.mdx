@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 An audit log entry records one change to a guild and who made it. You get entries with [List guild audit logs](#list-guild-audit-logs) or its [Admin API counterpart](/admin-api/guilds/#list-guild-audit-logs). Entries are kept for 45 days.
 
-Each new entry is also sent as [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) to sessions with `VIEW_AUDIT_LOG`.
+Each new entry is also sent as [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) to sessions that have `VIEW_AUDIT_LOG` in the guild.
 
 ## Audit log reason
 
@@ -31,7 +31,7 @@ One page of entries with the users, webhooks and threads they reference.
 
 <sup>1</sup> Present only for a bot and for a user session that declares the [`channel_threads` client capability](/http-api/threads/#client-capability)
 
-`users` has every user an entry was made by or refers to. A deleted user is returned as `DeletedUser`.
+`users` has every user an entry was made by or refers to. A deleted user comes back with the username `DeletedUser`.
 
 ## Guild audit log entry object
 
@@ -119,7 +119,7 @@ Each value is an `action_type`, and the `action_type` query filter takes the sam
 
 <sup>4</sup> The options are `max_age`, `max_uses`, `temporary`, `channel_id` and `inviter_id`, and the last two are recorded only when the invite has them
 
-<sup>5</sup> [Follow announcement channel](/http-api/channels/#follow-announcement-channel) records these in the guild that follows the channel, with `type` `2`
+<sup>5</sup> [Follow announcement channel](/http-api/channels/#follow-announcement-channel) records these in the following guild, with `type` `2`
 
 Deleting a channel deletes its threads and records only CHANNEL_DELETE.
 
@@ -338,7 +338,7 @@ Recorded by [ROLE_CREATE](#audit-actions), [ROLE_UPDATE](#audit-actions) and [RO
 | mentionable | boolean | Whether the role is mentionable |
 | permissions_diff<sup>1</sup> | object | The permission names this change added and removed |
 
-<sup>1</sup> Recorded only by [Modify guild role](/http-api/permissions/#modify-guild-role) when the mask changed, as `new_value` with no `old_value`
+<sup>1</sup> Recorded only by [Modify guild role](/http-api/permissions/#modify-guild-role) when the mask changed, with `new_value` set and no `old_value` at all
 
 #### Invite change fields
 

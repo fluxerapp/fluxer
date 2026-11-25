@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 const PAGE_TITLE_ID = '_top';
+const READING_BAND = 140;
 
-class FluxerStarlightTOC extends HTMLElement {
+export class FluxerStarlightTOC extends HTMLElement {
 	private _current = this.querySelector<HTMLAnchorElement>('a[aria-current="true"]');
 	private minH = Number.parseInt(this.dataset.minH || '2', 10);
 	private maxH = Number.parseInt(this.dataset.maxH || '3', 10);
@@ -20,6 +21,28 @@ class FluxerStarlightTOC extends HTMLElement {
 		}
 		link.setAttribute('aria-current', 'true');
 		this._current = link;
+		this.keepInView(link);
+	}
+
+	private keepInView(link: HTMLAnchorElement): void {
+		const scroller = this.closest<HTMLElement>('.right-sidebar');
+		if (!scroller || scroller.clientHeight === 0) {
+			return;
+		}
+		const box = scroller.getBoundingClientRect();
+		const item = link.getBoundingClientRect();
+		const margin = 48;
+		if (item.top < box.top + margin) {
+			scroller.scrollTop -= box.top + margin - item.top;
+		} else if (item.bottom > box.bottom - margin) {
+			scroller.scrollTop += item.bottom - (box.bottom - margin);
+		}
+	}
+
+	private readingLine(): number {
+		const navBarHeight = document.querySelector('header')?.getBoundingClientRect().height || 0;
+		const mobileTocHeight = this.querySelector('summary')?.getBoundingClientRect().height || 0;
+		return navBarHeight + mobileTocHeight + 32;
 	}
 
 	private onIdle = (cb: IdleRequestCallback) => (window.requestIdleCallback || ((cb) => setTimeout(cb, 1)))(cb);
@@ -35,9 +58,7 @@ class FluxerStarlightTOC extends HTMLElement {
 		if (links.length === 0) {
 			return;
 		}
-		const navBarHeight = document.querySelector('header')?.getBoundingClientRect().height || 0;
-		const mobileTocHeight = this.querySelector('summary')?.getBoundingClientRect().height || 0;
-		const readingLine = navBarHeight + mobileTocHeight + 32;
+		const readingLine = this.readingLine() + READING_BAND;
 		let match: HTMLAnchorElement | undefined;
 		for (const heading of document.querySelectorAll<HTMLElement>(this.tocHeadingSelector)) {
 			if (heading.getBoundingClientRect().top > readingLine) {
@@ -134,10 +155,8 @@ class FluxerStarlightTOC extends HTMLElement {
 	};
 
 	private getRootMargin(): `-${number}px 0% ${number}px` {
-		const navBarHeight = document.querySelector('header')?.getBoundingClientRect().height || 0;
-		const mobileTocHeight = this.querySelector('summary')?.getBoundingClientRect().height || 0;
-		const top = navBarHeight + mobileTocHeight + 32;
-		const bottom = top + 53;
+		const top = this.readingLine();
+		const bottom = top + READING_BAND;
 		const height = document.documentElement.clientHeight;
 		return `-${top}px 0% ${bottom - height}px`;
 	}

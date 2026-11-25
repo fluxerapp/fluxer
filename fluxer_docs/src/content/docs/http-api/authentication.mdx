@@ -6,13 +6,13 @@ description: Routes for signing up, signing in, recovering an account, managing 
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-These routes create accounts, sign people in and manage their sessions. Every route is under `/v1/auth`, and [Authentication](/authentication/) explains the token formats.
+These routes create accounts, sign people in and manage their [sessions](/authentication/). Every route is under `/v1/auth`.
 
-## Shared behavior
+## Shared behaviour
 
 Most routes here need no `Authorization` header, because the request has its own ticket, code or credential. The routes that need a user session token, except [log out](#log-out), reject a bot token and an OAuth2 bearer token with 403 `ACCESS_DENIED`.
 
-An instance reports how people sign in as `account_identity` in its [instance features](/http-api/instance/#instance-features-object). On a `username` instance, these routes return 400 `EMAIL_UNAVAILABLE_ON_INSTANCE` and send no email.
+An instance reports how people sign in as `account_identity` in its [instance features](/http-api/instance/#instance-features-object). On a `username` instance, these routes send no email and return 400 `EMAIL_UNAVAILABLE_ON_INSTANCE`.
 
 - [Verify an email address](#verify-an-email-address)
 - [Resend email verification](#resend-email-verification)
@@ -47,7 +47,7 @@ When a route can return this object or a different one, check for `token`.
 
 ## SSO status object
 
-The public single sign-on state. The [instance discovery document](/http-api/instance/#instance-discovery-object) has the same object.
+The public single sign-on state, which the [instance discovery document](/http-api/instance/#instance-discovery-object) also returns.
 
 ### Structure
 
@@ -157,7 +157,7 @@ Sign-in routes return this object when the account has a second factor. Finish w
 | webauthn | boolean | Whether passkeys are turned on as a second factor |
 | backup_codes | boolean | Whether the account has an unused backup code |
 
-Backup codes go to [complete login with TOTP](#complete-login-with-totp) as `code`.
+To sign in with a backup code, send it in the `code` field of [complete login with TOTP](#complete-login-with-totp).
 
 <a id="webauthn-authentication-options"></a>
 
@@ -169,7 +169,7 @@ The WebAuthn options routes return a [WebAuthn authentication options object](/h
 
 ## WebAuthn assertion object
 
-WebAuthn sign-in routes take the browser credential result as `response` and the challenge as `challenge`. The [WebAuthn assertion object](/http-api/users/mfa/#webauthn-assertion-object) on the Multi-factor authentication resource has its fields.
+WebAuthn sign-in routes take the browser credential result as `response`, in the form of a [WebAuthn assertion object](/http-api/users/mfa/#webauthn-assertion-object), and the challenge as `challenge`.
 
 ## Authentication session object
 
@@ -261,7 +261,7 @@ The state of a sign-in that waits for IP authorization.
 
 ## Identify response object
 
-The next step after [identify an account](#identify-an-account).
+The result of [identify an account](#identify-an-account), with a ticket for the next step.
 
 ### Structure
 
@@ -388,7 +388,7 @@ The rate limit is 10 requests per 10 seconds, on the shared `auth:sso:start` buc
 
 <RouteHeader method="POST" path="/v1/auth/sso/start" unauthenticated />
 
-Starts single sign-on and returns an [SSO start](#sso-start-object) object. Send the user to `authorization_url`.
+Starts single sign-on and returns an [SSO start](#sso-start-object) object. Send the user to its `authorization_url` to sign in.
 
 ### JSON body
 
@@ -415,9 +415,9 @@ The rate limit is 10 requests per 10 seconds, on the `auth:sso:start` bucket.
 
 <RouteHeader method="POST" path="/v1/auth/sso/complete" unauthenticated />
 
-Signs in or creates the account linked to the provider identity and returns an [SSO completion response](#sso-completion-response-object). The state works once, and after any failure you start again with [start SSO](#start-sso).
+Signs in or creates the account linked to the provider identity and returns an [SSO completion response](#sso-completion-response-object). The state works once, and after any failure you have to start again with a new state from [start SSO](#start-sso).
 
-An unlinked identity is linked to the account with the same verified email only when the instance sends email and that account's email is confirmed. Otherwise it returns `SSO_ACCOUNT_LINK_REQUIRES_SIGN_IN`, and the person connects the account with [start connecting SSO](#start-connecting-sso). An account with a second factor or a passkey is asked for it on every SSO sign-in, except a sign-in to an already linked account from a state started with the mobile `redirect_uri`. A new account has no password and accepts no invite, and it joins the instance's single community when the instance has one. On an `email` instance it gets the provider's verified email, and when SSO is enforced each sign-in sets the account email to it.
+An unlinked identity is linked to the account with the same verified email only when the instance sends email and that account's email is confirmed. Otherwise it returns `SSO_ACCOUNT_LINK_REQUIRES_SIGN_IN`, and the person connects the account with [start connecting SSO](#start-connecting-sso). An account with a second factor or a passkey is asked for it on every SSO sign-in, except a sign-in to an already linked account from a state started with the mobile `redirect_uri`. A new account has no password and accepts no invite, and it joins the instance's single community when the instance has one. On an `email` instance it gets the provider's verified email, and when SSO is enforced, each sign-in updates the account email to match.
 
 :::caution[A verified provider email signs in to a matching confirmed account]
 Turn on SSO only for a provider that controls the email addresses it asserts.
@@ -448,7 +448,7 @@ The rate limit is 15 requests per 10 seconds, on the `auth:sso:complete` bucket.
 
 <RouteHeader method="POST" path="/v1/users/@me/sso/link/start" mfa />
 
-Starts connecting the instance's SSO provider to the current account after [sudo mode](/http-api/users/mfa/#sudo-mode) and returns an [SSO start](#sso-start-object) object. Send the user to `authorization_url`, then finish with [complete SSO](#complete-sso), which returns `linked` and creates no new session. It works while the instance enforces SSO. The session that started it has to stay signed in until it finishes, and an identity another account holds returns `SSO_IDENTITY_LINKED_TO_ANOTHER_ACCOUNT`.
+Starts connecting the instance's SSO provider to the current account after [sudo mode](/http-api/users/mfa/#sudo-mode) and returns an [SSO start](#sso-start-object) object. Send the user to `authorization_url`, then finish with [complete SSO](#complete-sso), which returns `linked` and creates no new session. It works while the instance enforces SSO. The session that started it has to stay signed in until it finishes, and it returns `SSO_IDENTITY_LINKED_TO_ANOTHER_ACCOUNT` for an identity that another account has.
 
 ### JSON body
 
@@ -499,7 +499,7 @@ If you lose the response, try to sign in before you retry, because registration 
 
 | Field | Type | Description |
 | --- | --- | --- |
-| X-Captcha-Token? | string | The solved ALTCHA challenge, see [CAPTCHA handling](/topics/captcha/) |
+| X-Captcha-Token? | string | The [solved ALTCHA challenge](/topics/captcha/) |
 | Accept-Language? | string | The language for the account and the verification email |
 
 ### JSON body
@@ -582,7 +582,7 @@ Emails a 6-digit code for an identify ticket and returns an [email code send res
 
 | Field | Type | Description |
 | --- | --- | --- |
-| X-Captcha-Token? | string | The solved ALTCHA challenge, see [CAPTCHA handling](/topics/captcha/) |
+| X-Captcha-Token? | string | The [solved ALTCHA challenge](/topics/captcha/) |
 
 ### JSON body
 
@@ -627,7 +627,7 @@ Checks the emailed code and signs in to the existing account, or creates the acc
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [authentication token response](#authentication-token-response) \| [MFA challenge response](#mfa-challenge-response) \| [registration pending approval response](#registration-pending-approval-response-object) | The code was accepted |
-| 400 | [error response](/http-api/#error-response) | `INVALID_SIGN_IN_CODE` or `SIGN_IN_CODE_EXPIRED` |
+| 400 | [error response](/http-api/#error-response) | `INVALID_SIGN_IN_CODE`, or `SIGN_IN_CODE_EXPIRED` for an expired code |
 
 The rate limit is 10 requests per minute, on the `auth:email_code:verify` bucket.
 
@@ -635,7 +635,7 @@ The rate limit is 10 requests per minute, on the `auth:email_code:verify` bucket
 
 <RouteHeader method="GET" path="/v1/auth/register/handoff/challenge" unauthenticated />
 
-Returns the [CAPTCHA challenge](#captcha-challenge-object) for [start an account for the website](#start-an-account-for-the-website). Only a trusted caller can use it, with its key in `X-Fluxer-Internal-Key` and the visitor IP address in `X-Fluxer-Client-IP`.
+Returns the [CAPTCHA challenge](#captcha-challenge-object) for [start an account for the website](#start-an-account-for-the-website). Only a trusted caller can use it. It sends its key in `X-Fluxer-Internal-Key` and the visitor IP address in `X-Fluxer-Client-IP` with each request.
 
 ### Response
 
@@ -656,7 +656,7 @@ Checks a display name typed on the website and returns an [account handoff](#acc
 
 | Field | Type | Description |
 | --- | --- | --- |
-| X-Captcha-Token | string | The visitor's solved ALTCHA challenge, see [CAPTCHA handling](/topics/captcha/) |
+| X-Captcha-Token | string | The visitor's [solved ALTCHA challenge](/topics/captcha/) |
 
 ### JSON body
 
@@ -716,7 +716,7 @@ Signing in turns a disabled account back on and cancels a deletion the person sc
 
 | Field | Type | Description |
 | --- | --- | --- |
-| X-Captcha-Token? | string | The solved ALTCHA challenge, see [CAPTCHA handling](/topics/captcha/) |
+| X-Captcha-Token? | string | The [solved ALTCHA challenge](/topics/captcha/) |
 | X-Fluxer-Client-Properties? | string | Base64 JSON with the app's `os`, for the [client info](#client-info-object) |
 | User-Agent? | string | The client string shown in [list authentication sessions](#list-authentication-sessions) |
 
@@ -903,7 +903,7 @@ Emails a password reset link, valid for 1 hour, and returns 204. The request nee
 
 | Field | Type | Description |
 | --- | --- | --- |
-| X-Captcha-Token? | string | The solved ALTCHA challenge, see [CAPTCHA handling](/topics/captcha/) |
+| X-Captcha-Token? | string | The [solved ALTCHA challenge](/topics/captcha/) |
 
 ### JSON body
 
@@ -973,7 +973,7 @@ The old key stops working and every session is signed out. For an account with a
 
 | Field | Type | Description |
 | --- | --- | --- |
-| X-Captcha-Token? | string | The solved ALTCHA challenge, see [CAPTCHA handling](/topics/captcha/) |
+| X-Captcha-Token? | string | The [solved ALTCHA challenge](/topics/captcha/) |
 
 ### JSON body
 
@@ -1151,7 +1151,7 @@ The rate limit is 60 requests per minute, on the `auth:ip_authorization_poll` bu
 
 <RouteHeader method="POST" path="/v1/auth/username-suggestions" unauthenticated />
 
-Returns [username suggestions](#username-suggestions-object) made from a display name. It doesn't check or reserve the name.
+Returns [username suggestions](#username-suggestions-object) made from a display name. It doesn't check whether the name is free or reserve it.
 
 ### JSON body
 
@@ -1272,7 +1272,7 @@ The rate limit is 10 requests per minute, on the `auth:handoff:deny` bucket.
 
 <RouteHeader method="GET" path="/v1/auth/handoff/{code}/status" unauthenticated />
 
-Returns the [handoff status](#handoff-status-object) without the token, and reports a completed handoff as `pending`. To get the token, use [get desktop handoff status with the poll secret](#get-desktop-handoff-status-with-the-poll-secret).
+Returns the [handoff status](#handoff-status-object) without the token, and reports a completed handoff as `pending`. Only [get desktop handoff status with the poll secret](#get-desktop-handoff-status-with-the-poll-secret) returns the token itself.
 
 ### Response
 

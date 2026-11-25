@@ -28,7 +28,7 @@ A gift grants premium for a set duration.
 
 <sup>2</sup> A value of `0` grants lifetime premium
 
-<sup>3</sup> For a gift created through the Admin API, `created_by` is the administrator who created it
+<sup>3</sup> For a gift from the Admin API, `created_by` is the instance admin who created it
 
 ### Example
 
@@ -52,7 +52,7 @@ A gift grants premium for a set duration.
 
 ## Gift duration units
 
-Bought gifts use months or years, and only gifts created through the Admin API use days or weeks.
+Bought gifts use months or years, and only Admin API gifts use days or weeks.
 
 | Value | Description |
 | --- | --- |
@@ -88,7 +88,7 @@ A gift adds its duration after any premium the account already has and pushes ba
 
 | Field | Type | Description |
 | --- | --- | --- |
-| X-Captcha-Token? | string | The solved ALTCHA challenge, see [CAPTCHA handling](/topics/captcha/) |
+| X-Captcha-Token? | string | The [solved ALTCHA challenge](/topics/captcha/) |
 
 ### Response
 

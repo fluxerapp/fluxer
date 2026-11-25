@@ -8,11 +8,11 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 These routes search the instance's GIF provider. They need a session token. A bot token or OAuth2 bearer token gets 403 `ACCESS_DENIED`.
 
-[Get instance discovery](/http-api/instance/#gif-provider-object) has a `gif` object that says whether the instance has a GIF provider.
+[Get instance discovery](/http-api/instance/#gif-provider-object) says in its `gif` object whether the instance has a GIF provider.
 
 ## Provider headers
 
-Every response from these routes has these headers when the instance has a GIF provider.
+When the instance has a GIF provider, every response from these routes has these headers.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -78,7 +78,7 @@ A GIF object is one result from the provider. [Save meme from URL](/http-api/mem
 
 ## GIF category object
 
-A category is a search term with a preview GIF. Send `name` as the `q` of [Search GIFs](#search-gifs) to get its GIFs.
+A category is a search term with a preview GIF. Send `name` as the `q` of [Search GIFs](#search-gifs) to get the GIFs for it.
 
 ### Structure
 

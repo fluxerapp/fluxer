@@ -1,18 +1,20 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Client commands
-description: The Gateway commands a client sends, with their payloads, results and close behavior.
+description: The Gateway commands a client sends, with their payloads, results and close behaviour.
 ---
 
-Clients send commands over the [Gateway](/gateway/overview/) WebSocket as JSON with an [opcode](/gateway/opcodes-and-close-codes/#opcodes) in `op` and the data in `d`. Every command except Heartbeat, Identify and Resume needs an authenticated session, and sending one earlier closes with `4003` and reason `Not authenticated`.
+Clients send commands over the [Gateway](/gateway/overview/) WebSocket as JSON, with an [opcode](/gateway/opcodes-and-close-codes/#opcodes) in `op` and the data in `d`.
+
+## Command list
 
 | Opcode | Command | Result |
 | --- | --- | --- |
 | 1 | [Heartbeat](#heartbeat) | Opcode `11` Heartbeat ACK |
-| 2 | [Identify](#identify) | [Ready](/gateway/events/#ready), a close frame, or no response while Fluxer holds a rate-limited Identify |
+| 2 | [Identify](#identify) | [Ready](/gateway/events/#ready), opcode `7` from a draining node, a close frame, or no response while the Gateway keeps the Identify waiting |
 | 3 | [Presence Update](#presence-update) | None |
 | 4 | [Voice State Update](#voice-state-update) | [Voice State Update](/gateway/events/#voice-state-update) and [Voice Server Update](/gateway/events/#voice-server-update) |
-| 6 | [Resume](#resume) | Replayed Dispatches and [Resumed](/gateway/events/#resumed), Invalid Session, a close frame, or no response while rate limited |
+| 6 | [Resume](#resume) | Replayed Dispatches and [Resumed](/gateway/events/#resumed), Invalid Session, or a close frame |
 | 8 | [Request Guild Members](#request-guild-members) | [Guild Members Chunk](/gateway/events/#guild-members-chunk) |
 | 13 | [Voice Signal](#voice-signal) | [Voice Signal](/gateway/events/#voice-signal) for the target connection |
 | 14 | [Lazy Request](#lazy-request) | [Guild Sync](/gateway/events/#guild-sync) and member list and thread list updates |
@@ -20,13 +22,26 @@ Clients send commands over the [Gateway](/gateway/overview/) WebSocket as JSON w
 | 16 | [Request Channel Member Counts](#request-channel-member-counts) | [Channel Member Counts Update](/gateway/events/#channel-member-counts-update) |
 | 28 | [Request Forum Unreads](/gateway/threads/#request-forum-unreads) | [Forum Unreads](/gateway/threads/#forum-unreads) |
 
-A frame that does not decode to an object closes with `4002` and reason `Decode failed`, and an object with no `op` closes with `4002` and reason `Invalid payload`. Once the session is authenticated, an unknown opcode closes with `4001` and reason `Unknown opcode`. A payload with `op` but no `d` does the same, except Identify and Resume, which close with `4005` and reason `Already authenticated`. Every command counts against the [payload budgets](/gateway/limits-and-rate-limits/#connection-and-command-rate-limits).
+Every command counts against the [payload budgets](/gateway/limits-and-rate-limits/#connection-and-command-rate-limits).
+
+## Malformed commands
+
+| Payload | Close code | Reason |
+| --- | --- | --- |
+| A command other than Heartbeat, Identify and Resume before Identify or Resume | `4003` | `Not authenticated` |
+| No Identify or Resume within one heartbeat interval of Hello | `4003` | `Not authenticated` |
+| More than 64 commands between Identify and Ready, or between Resume and Resumed | `4008` | `Rate limited` |
+| A frame that does not decode to an object | `4002` | `Decode failed` |
+| An object with no `op` | `4002` | `Invalid payload` |
+| An unknown opcode, once the session is authenticated | `4001` | `Unknown opcode` |
+| A payload with `op` but no `d`, other than Identify and Resume | `4001` | `Unknown opcode` |
+| Identify or Resume with no `d`, or on a session that is already authenticated | `4005` | `Already authenticated` |
 
 The [bounded commands](#bounded-requests) never close the connection, and they skip input they cannot parse.
 
 ## Heartbeat
 
-Opcode `1` sends the last Dispatch sequence the client processed, or `null` before the first Dispatch. See [Gateway overview](/gateway/overview/#heartbeats) for the timing.
+Opcode `1` sends the last Dispatch sequence the client processed, or `null` before the first Dispatch. The connection closes with `4009` when the [heartbeat timeout](/gateway/limits-and-rate-limits/#session-lifecycle) passes with no acknowledgement.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -57,11 +72,11 @@ Opcode `2` authenticates and creates a new session.
 
 <sup>1</sup> Null and an omitted key both use the account's saved status and custom status
 
-<sup>2</sup> See [Event filtering](/gateway/event-filtering/) for the suppression rule
+<sup>2</sup> An ignored Message Create still arrives for a direct, `@here` or `@everyone` mention, and a dropped event uses no sequence number
 
 <sup>3</sup> The session is [active](/gateway/event-filtering/#active-and-passive-guilds) in that guild without a [Lazy Request](#lazy-request) and gets no initial [Guild Sync](/gateway/events/#guild-sync). An invalid value is ignored
 
-<sup>4</sup> `shard_count` is from 1 through 16,384, and `shard_id` is at least 0 and below `shard_count`
+<sup>4</sup> `shard_id` is at least 0 and lower than `shard_count`, which is from 1 to 16,384
 
 ```json
 {
@@ -87,14 +102,15 @@ Opcode `2` authenticates and creates a new session.
 
 Identify closes the connection on these faults.
 
-| Fault | Close |
-| --- | --- |
-| A missing `token` or `properties`, or an invalid `properties`, `ignored_events` or `flags` | `4002` `Invalid identify payload` |
-| Malformed `shard` | `4010` `Invalid shard` |
-| A bot session with more than 2,500 guilds after the `shard` filter | `4011` `Sharding required` |
-| The backend rejects the token | `4004` `Invalid token` |
-| A non-bot account with 100 live sessions | `4008` `Too many sessions` |
-| The socket already has a session | `4005` `Already authenticated` |
+| Fault | Close code | Reason |
+| --- | --- | --- |
+| A missing `token` or `properties`, or an invalid `properties`, `ignored_events` or `flags` | `4002` | `Invalid identify payload` |
+| A `token` that isn't a string of 1 to 256 bytes with at least one visible character | `4004` | `Invalid token` |
+| Malformed `shard` | `4010` | `Invalid shard` |
+| A bot session with more than 2,500 guilds after the `shard` filter | `4011` | `Sharding required` |
+| The backend rejects the token | `4004` | `Invalid token` |
+| A non-bot account with 100 live sessions | `4008` | `Too many sessions` |
+| The socket already has a session | `4005` | `Already authenticated` |
 
 ### Session flags
 
@@ -120,7 +136,7 @@ Undefined bits are ignored.
 | latitude?<sup>3</sup> | string | The client latitude as a decimal string (1-32 characters) |
 | longitude?<sup>3</sup> | string | The client longitude as a decimal string (1-32 characters) |
 
-<sup>1</sup> A session without it is refused from a voice channel with encrypted call media with `VOICE_E2EE_REQUIRED`
+<sup>1</sup> A session without it gets `VOICE_E2EE_REQUIRED` when it joins a voice channel with encrypted call media
 
 <sup>2</sup> Used only when `presence` is absent or null. Otherwise the [initial presence object](#initial-presence-object) decides
 
@@ -158,7 +174,7 @@ A session whose status is `offline` or `invisible` shows as offline with no cust
 
 <sup>2</sup> Must be an existing emoji. Fluxer drops the field when the account has no global expressions entitlement
 
-<sup>3</sup> A single Unicode emoji, ignored when `emoji_id` is sent
+<sup>3</sup> A single Unicode emoji, which is ignored when `emoji_id` is sent
 
 [Presence Update](/gateway/events/#presence-update) events also include `emoji_animated`.
 
@@ -178,10 +194,10 @@ Send Resume on a new socket. Fluxer replays every retained Dispatch above `seq` 
 | --- | --- |
 | Unknown or expired session | Opcode `9` with `d: false` |
 | `seq` below the [replay floor](/gateway/limits-and-rate-limits/#replay-and-backpressure) | Opcode `9` with `d: false` |
-| Token does not own the session | Close `4004` `Invalid token` |
-| `seq` above the session sequence or below the acknowledged one | Close `4007` `Invalid sequence` |
-| Negative `seq`, or the session cannot be restored right now | Close `4000` `Session unavailable` |
-| The socket already has a session | Close `4005` `Already authenticated` |
+| Token does not own the session | Close code `4004`, reason `Invalid token` |
+| `seq` is negative, above the session sequence or below the acknowledged one | Close code `4007`, reason `Invalid sequence` |
+| The session can't be restored right now | Close code `4000`, reason `Session unavailable` |
+| The socket already has a session | Close code `4005`, reason `Already authenticated` |
 
 ## Presence Update
 
@@ -210,7 +226,7 @@ Opcode `3` replaces the current session presence. Updates over the [Presence Upd
 }
 ```
 
-A payload that is not an object, has no `status`, or has a string `status` outside the set closes with `4002` and reason `Invalid presence payload`. `offline` is stored as `invisible`.
+A payload that is not an object, has no `status`, or has a non-empty string `status` outside the set closes with `4002` and reason `Invalid presence payload`. An empty string or a `status` that isn't a string counts as `online`, and an `offline` status is stored as `invisible`.
 
 ## Voice State Update
 
@@ -239,7 +255,7 @@ Opcode `4` joins, moves, updates or leaves the voice membership of the current s
 
 <sup>4</sup> Each entry is a stream key matching this update's scope, guild and channel, or the update is refused with `VOICE_INVALID_STATE`. An entry with no connection is refused with `VOICE_CONNECTION_NOT_FOUND`
 
-<sup>5</sup> Only the JSON Boolean `true` agrees. On an existing connection, `false` moves the whole channel or call to LiveKit. A bot session never agrees. See [Peer-to-peer voice](/gateway/events/#peer-to-peer-voice)
+<sup>5</sup> Only the JSON Boolean `true` agrees. On an existing connection, `false` [moves the whole channel or call to LiveKit](/gateway/events/#peer-to-peer-voice), except in a guild voice channel with `rtc_p2p` set. A bot session never agrees
 
 ```json
 {
@@ -257,9 +273,9 @@ Opcode `4` joins, moves, updates or leaves the voice membership of the current s
 
 `guild_id: null` with `channel_id: null` and a `connection_id` leaves that DM or group DM call connection. Without a `connection_id` it disconnects the session from every voice membership.
 
-Joining or moving sends [Voice Server Update](/gateway/events/#voice-server-update) to you and [Voice State Update](/gateway/events/#voice-state-update) to every session that can see the channel. A refusal with `VOICE_P2P_CONSENT_REQUIRED`, `VOICE_P2P_UNAVAILABLE` or `VOICE_CHANNEL_FULL` comes back as a [Gateway Error](/gateway/opcodes-and-close-codes/#gateway-error). Other refusals send nothing.
+Joining or moving sends [Voice Server Update](/gateway/events/#voice-server-update) to you and [Voice State Update](/gateway/events/#voice-state-update) to every session that can see the channel. A refused join comes back as a [Gateway Error](/gateway/opcodes-and-close-codes/#gateway-error) with the refusal code.
 
-Updates over the [Voice State Update limit](/gateway/limits-and-rate-limits/#connection-and-command-rate-limits) are queued, and a newer one replaces a queued one.
+Updates over the [Voice State Update limit](/gateway/limits-and-rate-limits/#connection-and-command-rate-limits) are queued, and a newer update for the same `guild_id` and `connection_id` replaces one that is still waiting.
 
 ## Voice Signal
 
@@ -328,7 +344,7 @@ Opcode `8` requests member chunks for one or more guilds.
 
 Guilds the session is not connected to are skipped, and a request with no connected guild gets no chunk. A full member list needs `MANAGE_ROLES`, `KICK_MEMBERS` and `BAN_MEMBERS` together, and the owner and `ADMINISTRATOR` satisfy that. Without them the request is dropped silently.
 
-A bot can request one guild at a time. A bot asking for the full list gets one accepted request per guild every 30 seconds, and another inside that window gets [Rate Limited](/gateway/events/#rate-limited) and no chunk.
+Fluxer drops a bot request that lists more than one guild in `guild_ids`, with no chunk. A bot asking for the full list gets one accepted request per guild every 30 seconds, and another request inside that window gets [Rate Limited](/gateway/events/#rate-limited) and no chunk.
 
 Results arrive as [Guild Members Chunk](/gateway/events/#guild-members-chunk) pages of at most 1,000 members with `chunk_index` and `chunk_count`. Chunks are not replayed on Resume. If you send a new request while one is running, it replaces any request still waiting.
 
@@ -372,13 +388,13 @@ Opcode `14` sets the per-guild subscriptions that decide member list, typing, sy
 | members? | array[snowflake] | The explicit member IDs to subscribe to (at most 1,000) |
 | focused_channel_id?<sup>3</sup> | ?snowflake | The channel or public thread a visiting session has open |
 
-<sup>1</sup> A non-Boolean value stops Fluxer applying the remaining options for that guild and the guilds after it
+<sup>1</sup> A non-Boolean value is ignored
 
 <sup>2</sup> Each range is `[start, end]` with `start` at least 0, `end` at least `start` and at most 100,000, and `end - start` at most 99. Invalid ranges are dropped and each channel keeps its first 10
 
-<sup>3</sup> Used only for a guild the session is visiting, where it is the only option applied. Null or an unreadable channel clears it. A visiting session gets messages and reactions only for this channel
+<sup>3</sup> Used only for a guild the session is visiting, where it is the only option applied. Null or an unreadable channel clears it. A visiting session gets messages and reactions only for this channel, and none for the guild's other channels
 
-[Event filtering](/gateway/event-filtering/) describes what `active` changes.
+A user session is passive in a guild of more than 250 members until `active` is `true` for it, unless it is the Identify `initial_guild_id`, and a [passive session gets only some events](/gateway/event-filtering/#active-and-passive-guilds).
 
 Switching a guild between passive and active sends a [Guild Sync](/gateway/events/#guild-sync) unless the session already has one for that guild. Going passive also clears the [`threads`](/gateway/threads/#lazy-request-thread-options) subscription, and the next switch to active syncs again.
 
@@ -433,4 +449,4 @@ An invalid or unconnected guild gives an empty result. Results arrive in one [Ch
 
 ## Bounded requests
 
-A command sent while four [bounded commands](/gateway/limits-and-rate-limits/#bounded-commands) are running is dropped with no close and no result.
+A command sent while four [bounded commands](/gateway/limits-and-rate-limits/#bounded-commands) are running is dropped silently, with no close and no result.

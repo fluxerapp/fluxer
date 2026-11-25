@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 Premium is the paid tier of a Fluxer account. Use these routes to read an account's entitlement and to manage its Stripe subscription. To buy premium, use the [Billing](/http-api/billing/) routes.
 
-Every route except [get price IDs](#get-price-ids) needs a user token. On a [self-hosted instance](/http-api/deployment-availability/), [get premium state](#get-premium-state) and [set premium perks disabled](#set-premium-perks-disabled) always work, and the other routes need Stripe billing to be set up.
+Every route except [get price IDs](#get-price-ids) needs a user token. On a [self-hosted instance](/http-api/deployment-availability/), [get premium state](#get-premium-state) and [set premium perks disabled](#set-premium-perks-disabled) always work, and the other routes need Stripe billing set up on the instance.
 
 ## Premium types
 
@@ -53,7 +53,7 @@ The recurring and gift checkout prices for one country.
 
 ## Distributions
 
-An app build sold through a store that keeps a share of each sale sends its distribution id, such as `ios_marketplace`, with [get price IDs](#get-price-ids), [get premium state](#get-premium-state) and the [checkout routes](/http-api/billing/#create-subscription-checkout). When the instance has an active rule for that id, the amounts and checkout use its channel price. The channel price is the standard price divided by one minus the rule's rate, rounded up to an amount Stripe accepts in that currency, so the amount left after the store's share is at least the standard price. An unknown, malformed or inactive id gets the standard price and never an error. Self-hosted instances have no rules until an admin adds one.
+An app build sold through a store that keeps a share of each sale sends its distribution id, such as `ios_marketplace`, with [get price IDs](#get-price-ids), [get premium state](#get-premium-state) and the [checkout routes](/http-api/billing/#create-subscription-checkout). When the instance has an active rule for that id, the amounts and checkout use its channel price. The channel price is the standard price divided by one minus the rule's rate, rounded up to an amount Stripe accepts in that currency, so the amount left after the store's share is at least the standard price. An unknown, malformed or inactive id gets the standard price and never an error. On a self-hosted instance there are no rules until an admin adds one.
 
 ## Price distribution object
 
@@ -133,7 +133,7 @@ The account's entitlement and the billing and pricing data behind it. Gate premi
 | effective | [effective premium state](#effective-premium-state-object) object | The entitlement premium feature checks read |
 | billing | [premium billing state](#premium-billing-state-object) object | The account's Stripe billing data |
 | pricing | [premium pricing state](#premium-pricing-state-object) object | The checkout prices for the request's country |
-| store | null | Always null |
+| store | ?object | The active App Store or Google Play subscription on fluxer.com, always null on a self-hosted instance |
 | subscription_provider | ?string | `stripe` when the account has an active Stripe subscription, or null |
 
 ## Actual premium state object
@@ -149,7 +149,7 @@ The entitlement the account has from billing, before disabled perks, operator ov
 | premium_until | ?ISO8601 timestamp | When premium access ends, including gift extensions, or null for lifetime |
 | premium_will_cancel | boolean | Whether the subscription cancels at the end of the current period |
 | premium_billing_cycle | ?string | [Billing cycle](#billing-cycles) |
-| premium_lifetime_sequence | ?integer | Always null |
+| premium_lifetime_sequence | ?integer | The Visionary number of a lifetime entitlement, or null |
 | premium_grace_ends_at | ?ISO8601 timestamp | The end of grace access after a failed renewal or a subscription end |
 | has_active_paid_premium | boolean | Whether paid premium access is active, including the grace period |
 | is_visionary | boolean | Whether the entitlement is lifetime |
@@ -169,7 +169,7 @@ The state that decides whether premium features are available. `is_premium` is a
 | premium_until | ?ISO8601 timestamp | Same as in the [actual premium state](#actual-premium-state-object) |
 | premium_will_cancel | boolean | Same as in the [actual premium state](#actual-premium-state-object) |
 | premium_billing_cycle | ?string | Same as in the [actual premium state](#actual-premium-state-object) |
-| premium_lifetime_sequence | ?integer | Always null |
+| premium_lifetime_sequence | ?integer | Same as in the [actual premium state](#actual-premium-state-object) |
 | premium_grace_ends_at | ?ISO8601 timestamp | Same as in the [actual premium state](#actual-premium-state-object) |
 | premium_enabled_override | boolean | Whether an operator [premium flag](/admin-api/users/#premium-flags) grants premium |
 | premium_purchase_disabled | boolean | Whether purchases are disabled for the account, or billing isn't set up |
@@ -196,7 +196,7 @@ The account's Stripe customer, subscription and payment methods.
 
 ## Billing subscription object
 
-A Stripe subscription, with `status`, `plan_interval` and `plan_currency` in Stripe's own values.
+A Stripe subscription. Its `status`, `plan_interval` and `plan_currency` use Stripe's values.
 
 ### Structure
 
@@ -267,7 +267,7 @@ The rate limit is 40 requests per 10 seconds, on the `stripe:price:ids` bucket.
 
 <RouteHeader method="GET" path="/v1/premium/state" />
 
-Returns the [premium state](#premium-state-object) object for the current account. This request can also update the Stripe default payment method so that the customer and the subscription use the same one.
+Returns the [premium state](#premium-state-object) object for the current account. When the Stripe customer and the subscription have different default payment methods, this request sets the subscription's default to the customer's. When the customer has none, it sets the customer's default to the subscription's.
 
 ### Query parameters
 
@@ -387,7 +387,7 @@ The rate limit is 5 requests per minute, on the `stripe:subscription:reactivate`
 
 <RouteHeader method="POST" path="/v1/premium/change-subscription" />
 
-Moves the subscription between monthly and yearly and clears a pending cancellation. With `effective_at` set to `now`, Fluxer charges or credits the prorated difference at once, and a change at `period_end` shows up as `billing.pending_subscription_change` in [get premium state](#get-premium-state). Requesting the current cycle does nothing. Fluxer sends [User Update](/gateway/events/#user-update).
+Moves the subscription between monthly and yearly and clears a pending cancellation. With `effective_at` set to `now`, Fluxer charges or credits the prorated difference at once, and a change at `period_end` shows up as `billing.pending_subscription_change` in [get premium state](#get-premium-state). Requesting the current cycle does nothing. Fluxer sends a [User Update](/gateway/events/#user-update) event.
 
 ### JSON body
 

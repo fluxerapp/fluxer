@@ -1,0 +1,39 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Email
+description: You set up SMTP so Fluxer can send password resets and address checks, and test it.
+---
+
+An instance where people sign in with an email address sends email to confirm addresses and reset passwords. Fluxer sends it through an SMTP server you already have, such as your mail provider's or a sending service.
+
+With usernames, an instance needs no email.
+
+## Settings
+
+[Set these](/operator/configuration/) with your server's details.
+
+```sh title="fluxer.env"
+FLUXER_EMAIL_DELIVERY=smtp
+FLUXER_EMAIL_SMTP_HOST=smtp.example.com
+FLUXER_EMAIL_SMTP_PORT=587
+FLUXER_EMAIL_SMTP_USERNAME=fluxer@example.com
+FLUXER_EMAIL_SMTP_PASSWORD_FILE=/run/secrets/smtp-password
+FLUXER_EMAIL_FROM_EMAIL=noreply@chat.example.com
+```
+
+- Port 587 uses STARTTLS and port 465 uses TLS from the start. You can also set `FLUXER_EMAIL_SMTP_TLS_MODE` to `implicit`, `starttls`, `opportunistic` or `none` when you want to choose the encryption yourself.
+- Put the password in a Kubernetes Secret, or in a file with `FLUXER_EMAIL_SMTP_PASSWORD_FILE` as in [secrets in files](/operator/configuration/#secrets-in-files). Leave both out for a relay that lets Fluxer send without signing in.
+- Without `FLUXER_EMAIL_FROM_EMAIL`, Fluxer sends from `noreply@` and your domain.
+- When your SMTP server's certificate comes from your own CA, mount the CA's PEM file and set [`FLUXER_NODE_EXTRA_CA_CERTS`](/operator/settings/#fluxer_node_extra_ca_certs) to its path. With rexctl, `rexctl email set --ca-file ca.pem` does both of these steps.
+
+[Other email settings](/operator/settings/#email) include a fallback server for some recipient domains.
+
+The admin panel can also save the SMTP server, the sender and whether email is on, in "Email delivery" under "Instance Config". A value saved there wins over `fluxer.env`.
+
+## Test it
+
+In the admin panel, open "Email delivery" under "Instance Config", enter your own address under "Send a test message to (optional)" and press "Save and test SMTP". It connects with the saved settings and shows what your server said.
+
+With rexctl, `rexctl email test` sends a test email, or one to the address you pass. `rexctl email` shows the current settings and offers to change them.
+
+Until email works, you can [create a reset link](/operator/running/#help-someone-back-into-their-account) for anyone who is locked out.

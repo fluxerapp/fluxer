@@ -8,7 +8,7 @@ An announcement channel is a guild channel of [type](/http-api/channels/#channel
 
 ## Converting a channel
 
-You can create one with [Create guild channel](/http-api/guild-channels/#create-guild-channel) and `type` set to `5`, or switch a text channel to an announcement channel and back with [Modify channel](/http-api/channels/#modify-channel). Both need `MANAGE_CHANNELS`.
+Create one with [Create guild channel](/http-api/guild-channels/#create-guild-channel) and `type` set to `5`, or turn a text channel into one and back with [Modify channel](/http-api/channels/#modify-channel). Both need the `MANAGE_CHANNELS` permission.
 
 Converting a text channel into an announcement channel returns 400 `CHANNEL_HAS_FOLLOWED_CHANNELS` while the text channel follows another announcement channel, and 400 `CHANNEL_HAS_THREADS` while it has a private thread. Delete its channel follower webhooks or private threads first.
 
@@ -20,13 +20,15 @@ Fluxer creates the copies in the background. A channel that starts following aft
 
 ## Following
 
-[Follow announcement channel](/http-api/channels/#follow-announcement-channel) creates a channel follower webhook in a text channel of any guild. You need `VIEW_CHANNEL` on the announcement channel, and `VIEW_CHANNEL` and `MANAGE_WEBHOOKS` on the target channel. Fluxer posts a `CHANNEL_FOLLOW_ADD` [system message](/http-api/messages/#message-types) in the target channel.
+[Follow announcement channel](/http-api/channels/#follow-announcement-channel) creates a channel follower webhook in a text channel of any guild. You need `VIEW_CHANNEL` on the announcement channel, and `VIEW_CHANNEL` and `MANAGE_WEBHOOKS` on the target channel.
 
-[Get channel follower stats](/http-api/channels/#get-channel-follower-stats) counts the followers, and deleting the follower webhook with [Delete webhook](/http-api/webhooks/#delete-webhook) unfollows.
+Fluxer posts a `CHANNEL_FOLLOW_ADD` [system message](/http-api/messages/#message-types) in the target channel.
+
+[Get channel follower stats](/http-api/channels/#get-channel-follower-stats) counts the followers, and deleting the follower webhook with [Delete webhook](/http-api/webhooks/#delete-webhook) unfollows the channel.
 
 ## What a copy has
 
-A copy is a message with the `IS_CROSSPOST` flag and a `message_reference` to the published message.
+A copy has the `IS_CROSSPOST` flag and a `message_reference` to the published message.
 
 | Part | In the copy |
 | --- | --- |
@@ -38,27 +40,27 @@ A copy is a message with the `IS_CROSSPOST` flag and a `message_reference` to th
 | Flags | `IS_CROSSPOST` plus `SUPPRESS_EMBEDS`, `SUPPRESS_NOTIFICATIONS` and `VOICE_MESSAGE` from the source |
 | Mentions | None, and `@everyone` notifies nobody in the following guild |
 
-When the published message is deleted or can't be shown, a copy becomes a placeholder with the content `[Original message deleted]` and the `SOURCE_MESSAGE_DELETED` flag.
+When the published message is deleted or can't be shown, copies become placeholders with content `[Original message deleted]` and the `SOURCE_MESSAGE_DELETED` flag.
 
 [Get message crosspost source](/http-api/messages/#get-message-crosspost-source) returns the public profile of the source guild of a copy.
 
 ## Content rules
 
-- An age-restricted announcement channel can only be followed into an age-restricted channel.
+- Only an age-restricted channel can follow an age-restricted announcement channel.
 - An announcement channel with a content warning can only be followed into a channel with a content warning or an age restriction.
 - Explicit media is left out of a copy when the following channel doesn't allow it.
 
 Fluxer checks the age-restriction and content-warning rules when a follow is created, at every delivery and at every edit. Age restrictions and content warnings come from the channel, then its category, then its guild.
 
-When a following channel stops meeting the age-restriction or content-warning rule, it gets no new copies, and its existing copies become placeholders the next time the published message is edited.
+If a following channel fails the age-restriction or content-warning rule, it gets no new copies, and its copies become placeholders at the next edit.
 
 ## Delivery
 
 Fluxer retries a failed delivery 8 times over about 80 minutes and then drops it.
 
-A follow is paused while the person who created it can't view the announcement channel, and messages published during the pause are never delivered. Editing a published message during the pause turns its copy in that channel into a placeholder.
+A follow is paused while the person who created it can't view the announcement channel. Messages published during the pause are never delivered, and editing a published message during the pause turns its copy in that channel into a placeholder.
 
-Nothing is delivered from a guild with [ANNOUNCEMENT_CHANNELS_DISABLED](/http-api/guilds/#guild-features), or to or from a guild with message sending disabled. With `ANNOUNCEMENT_CHANNELS_DISABLED`, edits of published messages stop updating existing copies, except that attachments removed from a published message are also removed from its copies.
+Nothing is delivered from a guild with [ANNOUNCEMENT_CHANNELS_DISABLED](/http-api/guilds/#guild-features), or to or from a guild with message sending disabled. With the flag, edits of published messages stop updating existing copies, except that attachments removed from a published message are also removed from its copies.
 
 ## Edits and deletions
 
@@ -89,4 +91,4 @@ Each removed follow sends [Webhooks Update](/gateway/events/#webhooks-update). F
 | Webhooks in the following channel | 15 by default (`max_webhooks_per_channel`) |
 | Webhooks in the following guild | 1000 by default (`max_webhooks_per_guild`) |
 
-Follower webhooks count toward both webhook limits. Any number of channels can follow one announcement channel. The publish and edit limits return 429 with their own error codes, which are listed in [Rate limits](/topics/rate-limits/#announcement-channel-limits).
+Follower webhooks count against both webhook limits. Any number of channels can follow one announcement channel. The publish and edit limits return 429 with [their own codes](/topics/rate-limits/#announcement-channel-limits).

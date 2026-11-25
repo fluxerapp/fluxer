@@ -1,0 +1,70 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Portainer
+description: You run Fluxer as a Portainer stack from the published compose file and settings.
+---
+
+import {Steps} from '@astrojs/starlight/components';
+
+## Short version
+
+A Docker machine managed by Portainer, and a domain that points at it or [its IP address](/operator/requirements/#with-an-ip-address).
+
+Add a stack from `compose.yaml` with one line changed, and load `fluxer.env` as its environment variables. It takes about 10 minutes.
+
+## What this changes
+
+- One Portainer stack called `fluxer`, with one container called `fluxer-fluxer-1` and one Docker volume called `fluxer-data`. Removing the volume under Volumes deletes every message, upload and key.
+- Ports 80 and 443 on TCP, 443 on UDP, 7881 on TCP and 7882 on UDP.
+
+## Before you start
+
+Check the [requirements](/operator/requirements/).
+
+Download `compose.yaml` and `fluxer.env` from the [latest release](https://github.com/fluxerapp/fluxer/releases/latest), and set `FLUXER_DOMAIN` in `fluxer.env` to your domain.
+
+## Install
+
+<Steps>
+
+1. In Portainer, open your environment, then Stacks, and choose "Add stack".
+
+   Call it `fluxer` and choose the web editor as the build method.
+
+2. Paste `compose.yaml` and change the `env_file` line to `stack.env`.
+
+   ```yaml title="compose.yaml"
+       env_file: stack.env
+   ```
+
+   Portainer writes the stack's environment variables to `stack.env`. In proxy mode, also change the ports [for a proxy or tunnel](/operator/docker/#behind-your-own-proxy-or-tunnel).
+
+3. Add this line to `fluxer.env`, which makes the admin panel show the upgrade step for Portainer when a newer release is out and the [release check](/operator/upgrades/#turning-the-check-on) is on.
+
+   ```sh title="fluxer.env"
+   FLUXER_UPGRADE_COMMAND=In Portainer, set the image tag to {version} and update the stack
+   ```
+
+   Then, under "Environment variables", choose "Load variables from .env file" and pick your `fluxer.env` file from the computer you saved it on.
+
+   The list now shows `FLUXER_DOMAIN` with your domain as its value.
+
+4. Choose "Deploy the stack".
+
+   The first start pulls the image and takes a few minutes. Under Containers, `fluxer-fluxer-1` shows as healthy.
+
+5. Print the setup token in the container's console, or on the Docker machine.
+
+   ```sh
+   docker exec fluxer-fluxer-1 fluxerd setup-token
+   ```
+
+   Open your domain and paste the token to create the first admin account.
+
+</Steps>
+
+## Upgrade
+
+Edit the stack, change the tag on the `image` line to the new version and update the stack. Fluxer backs itself up before every [upgrade](/operator/upgrades/).
+
+Keep a version number on the `image` line, so you choose when Fluxer upgrades.

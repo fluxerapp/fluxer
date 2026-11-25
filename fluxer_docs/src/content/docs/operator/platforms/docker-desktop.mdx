@@ -1,0 +1,101 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Docker Desktop on macOS and Windows
+description: You run Fluxer with Docker Desktop on a Mac or a Windows PC, to try it out.
+---
+
+import {Steps} from '@astrojs/starlight/components';
+
+## Short version
+
+Docker Desktop with 4 GB of memory for its VM, which Fluxer shares with Docker and your other containers. You also need `compose.yaml` and `fluxer.env`, and a domain or tunnel. It takes about 15 minutes. A desktop computer sleeps and restarts, so use a Linux machine for an instance people use every day.
+
+## What this changes
+
+- One container called `fluxer-fluxer-1`, which is `fluxer` to `docker compose` commands in that folder, and one volume called `fluxer-data`, inside Docker Desktop's Linux VM. Resetting Docker Desktop to factory defaults deletes the volume.
+- Port 8080 on `127.0.0.1`, and 7881 on TCP and 7882 on UDP for voice.
+
+## Before you start
+
+- Check the [requirements](/operator/requirements/).
+- On a Mac, give the VM at least 4 GB of memory and 2 CPUs in Docker Desktop's settings, under "Resources". On Windows, WSL 2 gives Docker half the PC's memory by default. To set it yourself, add `memory=4GB` under `[wsl2]` in `%UserProfile%\.wslconfig` and run `wsl --shutdown`.
+- Turn on "Start Docker Desktop when you sign in to your computer" in Docker Desktop's settings, because Fluxer stops whenever Docker Desktop does.
+- A computer at home usually has no public address, and ports 80 and 443 belong to the router. Put a tunnel such as [Cloudflare Tunnel](/operator/platforms/cloudflare-tunnel/) or your own reverse proxy in front of Fluxer, and forward only the two voice ports on your home router to this computer.
+
+## macOS
+
+<Steps>
+
+1. Open Terminal, make a folder and download the two files into it.
+
+   ```sh
+   mkdir fluxer && cd fluxer
+   url=https://github.com/fluxerapp/fluxer/releases/latest/download
+   curl -fLO "$url/compose.yaml"
+   curl -fLO "$url/fluxer.env"
+   ```
+
+   `ls` lists both files.
+
+2. Set your domain, tunnel mode and voice address in `fluxer.env`, then change the ports in `compose.yaml` [for a tunnel or proxy](/operator/docker/#behind-your-own-proxy-or-tunnel) so they publish port 8080.
+
+   ```sh title="fluxer.env"
+   FLUXER_DOMAIN=chat.example.com
+   FLUXER_EDGE_MODE=tunnel
+   FLUXER_LIVEKIT_NODE_IP=203.0.113.10
+   ```
+
+   Set `FLUXER_LIVEKIT_NODE_IP` to your home's public IPv4 address, and forward TCP 7881 and UDP 7882 on your router to this computer on your network.
+
+   Behind your own proxy, set the edge mode to `proxy` in place of `tunnel`.
+
+   The `ports` list in `compose.yaml` has `127.0.0.1:8080:8080`.
+
+3. Start Fluxer and print the setup token.
+
+   ```sh
+   docker compose up -d
+   docker compose exec fluxer fluxerd setup-token
+   ```
+
+   Once your tunnel or proxy points at `http://127.0.0.1:8080`, your domain shows the setup wizard when you open it in your web browser.
+
+</Steps>
+
+## Windows
+
+Use Docker Desktop with the WSL 2 backend, and run every command in a WSL terminal such as Ubuntu from the Microsoft Store.
+
+<Steps>
+
+1. In the WSL terminal, make a folder in your Linux home and download the two files.
+
+   ```sh
+   mkdir ~/fluxer && cd ~/fluxer
+   url=https://github.com/fluxerapp/fluxer/releases/latest/download
+   curl -fLO "$url/compose.yaml"
+   curl -fLO "$url/fluxer.env"
+   ```
+
+   Keep the folder under `~`, never under `/mnt/c`. `ls` lists both files.
+
+2. Set up `fluxer.env` and `compose.yaml` as in step 2 for macOS.
+
+3. Start Fluxer and print the setup token.
+
+   ```sh
+   docker compose up -d
+   docker compose exec fluxer fluxerd setup-token
+   ```
+
+   Once your tunnel or proxy points at `http://127.0.0.1:8080`, your domain shows the setup wizard when you open it in your web browser.
+
+</Steps>
+
+## Upgrade
+
+The upgrade works as on Linux, in Terminal or WSL. In the folder with `compose.yaml`, this changes the version on the image line, then pulls and starts the new release. Once you turn on the [release check](/operator/upgrades/#turning-the-check-on), the admin panel's Updates page shows this command with the newest version number already filled in.
+
+```sh
+sed -i.bak -E 's#ghcr\.io/fluxerapp/fluxer:(\$\{[^}]*\}|[^[:space:]"'\'']*)#ghcr.io/fluxerapp/fluxer:{{FLUXER_VERSION}}#' compose.yaml && grep -q 'ghcr.io/fluxerapp/fluxer:{{FLUXER_VERSION}}' compose.yaml && docker compose pull && docker compose up -d
+```

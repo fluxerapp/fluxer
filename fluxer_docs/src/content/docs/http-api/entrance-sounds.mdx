@@ -228,4 +228,4 @@ Sends an [ENTRANCE_SOUND_PLAY](/gateway/events/#entrance-sound-play) event to ev
 | 204 | empty | The event was sent |
 | 400 | [error response](/http-api/#error-response) | `ENTRANCE_SOUND_INVALID_SCOPE` when you aren't connected to the channel, or `ENTRANCE_SOUND_NOT_FOUND` when you don't own the clip |
 
-The rate limit is 3 requests per 30 seconds, on the `voice:entrance_sound:play::user_id::channel_id` bucket.
+The `voice:entrance_sound:play::user_id::channel_id` bucket allows 3 requests per 30 seconds.

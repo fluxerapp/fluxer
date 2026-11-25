@@ -10,7 +10,7 @@ Admin message routes browse, search and permanently delete the messages of one c
 
 ## Admin message object
 
-One message with its author, content, attachments and the NSFW settings of its channel and guild. Every response that returns Admin message objects also returns the matching public [message](/http-api/messages/#message-object) objects in `message_responses`, in the same order.
+One message with its author, content, attachments and the NSFW settings of its channel and guild. Every response that returns Admin message objects also returns the matching public [message](/http-api/messages/#message-object) objects, in the same order, in `message_responses`.
 
 ### Structure
 
@@ -83,7 +83,7 @@ One message with its author, content, attachments and the NSFW settings of its c
 
 ## Message shred status object
 
-The state of one message shred job. A job expires one hour after its last update. A job that is unknown, expired or not yet started by a worker returns only `status`, set to `not_found`.
+The state of one message shred job. A job expires one hour after its last update. A job that is unknown, expired or not yet started by a worker returns only a `status` of `not_found`.
 
 ### Structure
 
@@ -125,7 +125,7 @@ Returns one page of [Admin message](#admin-message-object) objects for a channel
 | message_responses? | array[[message](/http-api/messages/#message-object) object] | The same messages as public message objects (at most 100) |
 | has_more<sup>2</sup> | boolean | Whether the page was filled to `limit` |
 
-<sup>1</sup> Oldest first, or newest first when you sent `after`
+<sup>1</sup> Oldest first, or newest first when you sent `after` in the request
 
 <sup>2</sup> The next page can still be empty
 
@@ -219,7 +219,7 @@ Searches the messages of one channel, or looks up one message by message ID or a
 
 <sup>1</sup> `message_id` takes precedence over `attachment_id`, and `attachment_id` over `q`
 
-<sup>2</sup> `attachment_id` needs `filename`, or the request fails with `INVALID_FORM_BODY` on `filename`
+<sup>2</sup> `attachment_id` needs `filename`, or the request fails with `INVALID_FORM_BODY` on the `filename` field
 
 ### Search response body
 

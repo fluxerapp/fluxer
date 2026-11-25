@@ -10,7 +10,7 @@ Each gift code gives [premium](/http-api/premium/) to the first account that red
 
 ## Gift duration units
 
-[Gifts](/http-api/gifts/#gift-object) explains how a redeemed code extends premium.
+A [gift's](/http-api/gifts/#gift-object) `duration_type` is one of these units.
 
 | Value | Description |
 | --- | --- |
@@ -74,7 +74,7 @@ A code a customer bought can't be revoked here either. Refund the purchase inste
 | 400 | [error response](/admin-api/#error-response) | `STRIPE_GIFT_REDEMPTION_IN_PROGRESS` when someone is redeeming the code right now |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_GIFT_CODE` when the code doesn't exist or was already revoked |
 
-The request records a `revoke_gift_code` [audit entry](/admin-api/#admin-audit-entry-object) with the code and its duration. A revoked code can't be redeemed, so the entry doesn't give premium to anyone who reads it.
+The request records a `revoke_gift_code` [audit entry](/admin-api/#admin-audit-entry-object) with the code and its duration. A revoked code can't be redeemed, so reading the entry doesn't give premium to anyone.
 
 The rate limit is 30 requests per minute, on the `admin:code:generation` bucket.
 

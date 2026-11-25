@@ -1,6 +1,7 @@
 ---
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import Default from '@astrojs/starlight/components/Head.astro';
+import ScrollRegions from '@/components/ScrollRegions.astro';
 import LatinFontFaces from '@/fonts/LatinFontFaces.astro';
 import {docsSearchIndexing} from '@/server/DocsConfig';
 
@@ -17,4 +18,5 @@ const robots = resolveRobotsDirective(docsSearchIndexing());
 <Default />
 <meta name="robots" content={robots} />
 <meta name="darkreader-lock" />
-<LatinFontFaces preloadFallback={false} />
+<LatinFontFaces />
+<ScrollRegions />

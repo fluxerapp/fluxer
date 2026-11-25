@@ -4,7 +4,7 @@ title: Downloads overview
 description: Where Fluxer publishes desktop builds and Linux package repositories.
 ---
 
-Fluxer publishes desktop builds and Linux package repositories at `https://pkgs.fluxer.com`. You don't need to sign in to download anything.
+Fluxer publishes desktop builds and Linux package repositories for apt, dnf, pacman and Flatpak, and you don't need to sign in to download anything.
 
 | Page | What it has |
 | --- | --- |
@@ -13,9 +13,13 @@ Fluxer publishes desktop builds and Linux package repositories at `https://pkgs.
 
 ## Channels
 
-Every build is published to either the `stable` or the `canary` channel. The apt, dnf and pacman packages are called `fluxer` on stable and `fluxer-canary` on canary, and you can install both on one machine.
+Every build is published to either the `stable` or the `canary` channel.
+
+The apt, dnf and pacman packages are called `fluxer` on stable and `fluxer-canary` on canary, and you can install both on one machine.
 
 ## Paths
+
+Everything is on `https://pkgs.fluxer.com`, under these prefixes.
 
 | Prefix | Contents |
 | --- | --- |

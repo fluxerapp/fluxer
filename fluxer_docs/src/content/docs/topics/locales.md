@@ -4,11 +4,11 @@ title: Locales
 description: The supported locales and how the API picks one for a request.
 ---
 
-A locale is a BCP 47 tag that sets the language of human-readable text, such as the `message` in an [error response](/http-api/#error-response). Everything else in a response is the same in every locale.
+A locale is a BCP 47 tag that sets the language of text meant for people, such as the message in an [error response](/http-api/#error-response), and changes nothing else.
 
 ## Supported locales
 
-A `locale` field in a request, such as the one in [user settings](/http-api/users/settings/), has to be one of these values exactly, with the same case.
+A `locale` field in a request, such as the one in [user settings](/http-api/users/settings/), has to be one of these values exactly, with the same upper and lower case.
 
 | Value | Description |
 | --- | --- |
@@ -59,12 +59,33 @@ A `locale` field in a request, such as the one in [user settings](/http-api/user
 
 ## Negotiation
 
-When you're signed in and your account has a saved locale, the API uses it. Otherwise the API picks a locale from the `Accept-Language` header and uses `en-US` when the header is missing or nothing in it matches.
+When you're signed in and your account has a saved locale, the API uses it.
 
-The API sorts the `Accept-Language` tags by `q` weight and makes two passes over them. Matching ignores case and accepts `_` in place of `-`.
+Otherwise the API picks a locale from the `Accept-Language` header and uses `en-US` when the header is missing or nothing in it matches.
 
-1. The first tag that is a supported locale wins. `sv` counts as `sv-SE`, `tl` counts as `fil`, and `nb` and `nn` count as `no`.
-2. If no tag matched, the first tag whose language subtag has a locale wins, and `fr-CA` picks `fr`. A Chinese tag with `Hant`, `TW`, `HK` or `MO` picks `zh-TW`. A Portuguese tag with a region other than `BR`, such as `pt-AO`, picks `pt-PT`. The language subtags below pick a set locale.
+The API sorts the `Accept-Language` tags by `q` weight and makes two passes over them. Matching ignores case and takes `_` for `-`.
+
+1. The first tag that is a supported locale wins. A few other tags count as one in this pass.
+2. If no tag matched, the first tag whose language subtag has a locale wins, so `fr-CA` picks `fr`. Some language subtags pick a set locale.
+
+### Tags that count as a locale
+
+| Tag | Counts as |
+| --- | --- |
+| `en` | `en-US` |
+| `sv` | `sv-SE` |
+| `tl` | `fil` |
+| `nb` | `no` |
+| `nn` | `no` |
+
+### Language subtags with a set locale
+
+Two rules come first.
+
+- A `zh` tag with `Hant`, `TW`, `HK` or `MO` picks `zh-TW`, the traditional script.
+- A Portuguese tag with a region other than `BR`, such as `pt-AO`, picks `pt-PT`.
+
+Other tags with these language subtags pick the locale the table gives.
 
 | Language subtag | Locale |
 | --- | --- |

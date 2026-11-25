@@ -1,0 +1,72 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: QNAP
+description: You run Fluxer on a QNAP NAS as a Container Station application, behind a reverse proxy.
+---
+
+import {Steps} from '@astrojs/starlight/components';
+
+## Short version
+
+A QNAP NAS with an x86-64 or ARM64 processor, Container Station 3 or later, 2 GB of memory at least and 4 GB for a busy instance, and a domain. Create an application from the compose file behind a reverse proxy.
+
+It takes about 20 minutes.
+
+## What this changes
+
+- One Container Station application called `fluxer`, with one container, and one Docker volume called `fluxer-data` with all the data.
+- Port 8081 for your proxy, and ports 7881 on TCP and 7882 on UDP for voice, which your router forwards to the NAS from the internet.
+
+## Before you start
+
+- Check the [requirements](/operator/requirements/).
+- QTS and QuTS hero use ports 80, 443 and 8080 for their own web pages. Fluxer runs in proxy mode on port 8081 behind a reverse proxy, such as QTS's own reverse proxy under Network & File Services or a proxy container.
+
+## Install
+
+<Steps>
+
+1. In Container Station, open Applications and choose Create. Call the application `fluxer` and paste this, with your own domain in place of `chat.example.com`.
+
+   ```yaml title="compose.yaml"
+   services:
+     fluxer:
+       image: ghcr.io/fluxerapp/fluxer:{{FLUXER_VERSION}}
+       container_name: fluxer
+       restart: unless-stopped
+       stop_grace_period: 130s
+       environment:
+         FLUXER_DOMAIN: chat.example.com
+         FLUXER_EDGE_MODE: proxy
+         FLUXER_UPGRADE_COMMAND: "In Container Station, edit the application, set the image tag to {version} and apply it"
+       ports:
+         - "127.0.0.1:8081:8080"
+         - "7881:7881"
+         - "7882:7882/udp"
+       volumes:
+         - fluxer-data:/var/lib/fluxer
+
+   volumes:
+     fluxer-data:
+       name: fluxer-data
+   ```
+
+   With a proxy container, leave out the `127.0.0.1:` part.
+
+2. Create the application.
+
+   The first start pulls the image and takes a few minutes, and then Container Station shows the container as running. To upgrade later, edit the application, change the tag on the `image` line and apply it. The `FLUXER_UPGRADE_COMMAND` line makes the admin panel show this step with the new version when one is out.
+
+3. Point your proxy at port 8081 on the NAS for your domain, with WebSockets turned on, and with an upload limit of at least 512 MiB.
+
+   The Fluxer setup wizard opens at `https://chat.example.com`.
+
+4. Print the setup token over SSH.
+
+   ```sh
+   docker exec fluxer fluxerd setup-token
+   ```
+
+   Open your domain and paste the token to create the first admin account.
+
+</Steps>

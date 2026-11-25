@@ -140,7 +140,7 @@ Notification settings for one guild, or for all DMs when `guild_id` is null.
 
 ## Guild settings update fields
 
-Both notification settings routes accept these fields. An omitted field keeps its stored value.
+Both notification settings routes accept these fields, and keep the stored value of any field you leave out.
 
 ### Structure
 
@@ -205,27 +205,27 @@ The input form of the [user settings object](/http-api/users/#user-settings-obje
 | suppress_unprivileged_self_mentions_bypass_user_ids?<sup>9</sup> | ?array[snowflake] | The users exempt from mention suppression |
 | staff_dm_access_user_ids?<sup>9</sup> | ?array[snowflake] | The users granted staff direct message access |
 | profile_privacy? | integer | [Profile privacy level](/http-api/users/#profile-privacy-levels) |
-| privacy_setup_version? | integer | The privacy setup version the user reviewed (1-1000), which also sets `privacy_setup_completed_at` to now |
-| synced_preferences?<sup>10</sup> | ?string | The base64 `fluxer.user.preferences.v1.SyncedPreferences` snapshot, or null to clear it |
+| privacy_setup_version? | integer | The privacy setup version the user reviewed (1-1000). Setting it also sets `privacy_setup_completed_at` to the current time |
+| synced_preferences?<sup>10</sup> | ?string | The base64 `fluxer.user.preferences.v1.SyncedPreferences` snapshot. Send null to clear the snapshot. |
 | synced_preferences_base_hash?<sup>11</sup> | string | The lowercase hex SHA-256 of the decoded bytes of the stored snapshot the new one was built on |
 | guild_positions? | array[snowflake] | Accepted and ignored (max 200) |
 | default_share_voice_activity? | boolean | Accepted and ignored |
 
-<sup>1</sup> An ISO 8601 string or Unix milliseconds. Anything else fails with the field code `INVALID_ISO_TIMESTAMP`
+<sup>1</sup> An ISO 8601 string or Unix milliseconds. Anything else fails with the field code `INVALID_ISO_TIMESTAMP` on this field
 
-<sup>2</sup> Must match a supported locale exactly. It also sets the language of emails Fluxer sends you
+<sup>2</sup> Must match a supported locale exactly. It also sets the language of emails from Fluxer
 
 <sup>3</sup> Duplicates are removed
 
 <sup>4</sup> `flags` is a legacy alias for `friend_source_flags`, which wins when both are sent
 
-<sup>5</sup> When the value has `FRIENDS_ONLY`, Fluxer keeps only that flag. Otherwise, when it has `NOBODY`, Fluxer keeps only `NOBODY`. `incoming_call_flags` also keeps `SILENT_EVERYONE`
+<sup>5</sup> When the value has `FRIENDS_ONLY`, Fluxer keeps only that flag. Otherwise, when it has `NOBODY`, Fluxer keeps only `NOBODY`. `incoming_call_flags` also keeps `SILENT_EVERYONE` in both cases
 
 <sup>6</sup> The single entry `*` trusts every domain. Combining it with another entry fails with the field code `INVALID_TRUSTED_DOMAINS`
 
 <sup>7</sup> An account under 18 can set only blur or block, and any other value fails with the field code `AGE_RESTRICTED`
 
-<sup>8</sup> An account under 18 can't change this field, and it fails with the field code `AGE_RESTRICTED`
+<sup>8</sup> An account under 18 can't change this field, and the change fails with the field code `AGE_RESTRICTED` for it
 
 <sup>9</sup> Only staff accounts can set these fields
 

@@ -6,7 +6,7 @@ description: How to send a file to an upload relay URL and what the relay return
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-The upload relay stores the bytes of one file at a signed upload URL. [Request attachment upload URLs](/http-api/messages/#request-attachment-upload-urls) and [Create stream preview upload URL](/http-api/streams/#create-stream-preview-upload-url) issue these URLs. See [Attachment uploads](/topics/uploads/) for the whole flow.
+The upload relay stores the bytes of one file at a signed upload URL. [Request attachment upload URLs](/http-api/messages/#request-attachment-upload-urls) and [Create stream preview upload URL](/http-api/streams/#create-stream-preview-upload-url) issue these URLs as one step of an [attachment upload](/topics/uploads/).
 
 ## Authorization
 
@@ -54,4 +54,4 @@ You can retry a 502 or 503 until the URL expires. Responses allow requests from 
 
 `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES` sets the body limit, which defaults to 500 MiB. `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_S3_TIMEOUT_MS` sets the write deadline, which defaults to 900,000 ms.
 
-The largest body the relay accepts is the smaller of the body limit and the authorized upload size. When the request has `Content-Length`, the relay adds one second to the write deadline for every 16 KiB of declared length, and it returns 400 if the body takes longer.
+The largest body the relay accepts is the smaller of the body limit and the authorised upload size. When the request has `Content-Length`, the relay adds one second to the write deadline for every 16 KiB of declared length, and it returns 400 if the body takes longer than that.

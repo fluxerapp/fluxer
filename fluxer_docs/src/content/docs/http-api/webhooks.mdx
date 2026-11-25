@@ -16,7 +16,7 @@ A user session that doesn't declare the [`channel_threads` client capability](/h
 
 ## Origin refusal
 
-[Execute webhook](#execute-webhook), the [GitHub](#execute-github-webhook), [Slack](#execute-slack-webhook), [Instatus](#execute-instatus-webhook) and [Libredesk](#execute-libredesk-webhook) callbacks, [Get webhook message](#get-webhook-message), [Edit webhook message](#edit-webhook-message) and [Delete webhook message](#delete-webhook-message) return 403 `INVALID_API_ORIGIN` when the `Origin` header is one of the instance's own web app origins. See [cross-origin requests](/http-api/#cross-origin-requests).
+[Execute webhook](#execute-webhook), the [GitHub](#execute-github-webhook), [Slack](#execute-slack-webhook), [Instatus](#execute-instatus-webhook) and [Libredesk](#execute-libredesk-webhook) callbacks, [Get webhook message](#get-webhook-message), [Edit webhook message](#edit-webhook-message) and [Delete webhook message](#delete-webhook-message) return 403 `INVALID_API_ORIGIN` when the [`Origin` header](/http-api/#cross-origin-requests) is one of the instance's own web app origins.
 
 ## Webhook object
 
@@ -137,13 +137,13 @@ Token routes return this shorter form of the [webhook object](#webhook-object).
 
 <sup>1</sup> Up to the guild's [max_message_length](/http-api/instance/#limit-keys) or 4,000 characters, whichever is larger
 
-<sup>2</sup> The referenced message must be in the webhook's channel, or in the thread from `thread_id`
+<sup>2</sup> The referenced message must be in the webhook's channel, or in the thread that `thread_id` points to
 
 <sup>3</sup> When omitted, no mention notifies anyone
 
 <sup>4</sup> Repeating a nonce within five minutes returns the first message and creates no new one
 
-<sup>5</sup> Only for a webhook in a forum or media channel. See [Webhooks in forums](/http-api/forums/#webhooks-in-forums)
+<sup>5</sup> Only for a [webhook in a forum or media channel](/http-api/forums/#webhooks-in-forums)
 
 ## Webhook message edit body
 
@@ -162,7 +162,7 @@ Token routes return this shorter form of the [webhook object](#webhook-object).
 
 <RouteHeader method="GET" path="/v1/guilds/{guild_id}/webhooks" bot />
 
-Returns the [webhooks](#webhook-object) in a guild, limited to channels where you have `VIEW_CHANNEL` and `MANAGE_WEBHOOKS`.
+Returns the [webhooks](#webhook-object) in a guild, limited to channels where you have both `VIEW_CHANNEL` and `MANAGE_WEBHOOKS`.
 
 ### Response
 
@@ -228,7 +228,7 @@ The rate limit is 100 requests per 10 seconds, on the `webhook:read::webhook_id`
 
 <RouteHeader method="PATCH" path="/v1/webhooks/{webhook_id}" bot auditReason />
 
-Updates a webhook and returns the [webhook object](#webhook-object). To move it, you need `MANAGE_WEBHOOKS` in the new channel too, and the new channel must be in the same guild.
+Updates a webhook and returns the [webhook object](#webhook-object). To move it, you need `MANAGE_WEBHOOKS` in the new channel too, and the new channel must be in the same guild as the old one.
 
 ### JSON body
 
@@ -451,7 +451,7 @@ Deletes a message the webhook posted.
 
 Fluxer sends [Message Delete](/gateway/events/#message-delete).
 
-The rate limit is 30 requests per minute, on the `webhook:message_delete::webhook_id` bucket.
+The `webhook:message_delete::webhook_id` bucket allows 30 requests per minute.
 
 ## Slack callback objects
 
@@ -505,7 +505,7 @@ A field without both a title and a value is dropped.
 
 ## GitHub callback objects
 
-[Execute GitHub webhook](#execute-github-webhook) takes the body GitHub sends. Fields outside these tables are ignored.
+[Execute GitHub webhook](#execute-github-webhook) takes the body GitHub sends. Fluxer ignores any field that isn't in these tables.
 
 ### GitHub callback object
 

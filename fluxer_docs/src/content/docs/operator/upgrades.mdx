@@ -1,0 +1,219 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Upgrades and rollbacks
+description: You upgrade Fluxer to a new release, and go back when something goes wrong.
+---
+
+import {Tabs, TabItem} from '@astrojs/starlight/components';
+
+Fluxer backs up and upgrades its own database when you start a newer release. You can go from any older release to any newer one in one step.
+
+## How releases work
+
+Each release has a date and time as its version, such as `2026.1114.195738`.
+
+A newer date is a newer release.
+
+When Fluxer starts a newer release on older data, it first backs up the database, passwords and keys into the `backups` folder of its data folder. It then upgrades the database. You don't need to stop anything first, or install the releases in between.
+
+## Knowing when a release is out
+
+Fluxer doesn't look for new releases by itself. When you [turn the check on](#turning-the-check-on), it looks once a day and tells you in these places when one is out.
+
+- The admin panel shows a line at the top of the Users page. Its Updates page, under Configuration, has the version, the day it came out and the upgrade command for this instance with the new version already filled in.
+- The log shows the upgrade command once.
+- `fluxerd version` prints what the Updates page shows, and `fluxerd ps` adds a line.
+- `rexctl status` shows a New release row.
+
+| How you run Fluxer | Version command |
+| --- | --- |
+| Compose file | `docker compose exec fluxer fluxerd version` |
+| `docker run` | `docker exec fluxer fluxerd version` |
+| Podman | `podman exec fluxer fluxerd version` |
+| Linux by hand | `runuser -u fluxer -- /opt/fluxer/current/bin/fluxerd version` |
+| Kubernetes | `kubectl -n fluxer exec fluxer-0 -- fluxerd version` |
+
+To hear about releases without running anything, follow the [releases RSS](/releases.atom) in an RSS reader, or watch the releases of [fluxerapp/fluxer](https://github.com/fluxerapp/fluxer) on GitHub.
+
+## Upgrade
+
+<Tabs syncKey="runtime">
+<TabItem label="Docker">
+
+With the compose file, open `compose.yaml`, change the tag on the `image:` line, such as `ghcr.io/fluxerapp/fluxer:2026.1114.195738`, then pull and start it in the same folder.
+
+```sh
+docker compose pull && docker compose up -d
+```
+
+With the [check](#turning-the-check-on) on, the Updates page in the admin panel shows one command that does both steps, with the newest version number already filled in.
+
+With `docker run`, pull the new image, then stop and remove the container and run the same line with the new tag. The volume keeps your data. With the check on and `-e FLUXER_INSTALL_METHOD=docker` in your line, the Updates page shows the first two commands with the newest version filled in.
+
+```sh
+docker pull ghcr.io/fluxerapp/fluxer:{{FLUXER_VERSION}}
+docker stop -t 130 fluxer && docker rm fluxer
+docker run -d --name fluxer --restart unless-stopped --stop-timeout 130 \
+  --env-file fluxer.env -e FLUXER_INSTALL_METHOD=docker -v fluxer-data:/var/lib/fluxer \
+  -p 80:80 -p 443:443 -p 443:443/udp -p 7881:7881 -p 7882:7882/udp \
+  ghcr.io/fluxerapp/fluxer:{{FLUXER_VERSION}}
+```
+
+Use your own ports if you changed them, such as the proxy mode ones.
+
+Never use `docker rm -f` here, which stops PostgreSQL without letting it shut down.
+
+On a NAS or a panel such as Portainer or Coolify that keeps the compose file for you, change the tag on the `image` line where the panel shows it.
+
+The compose file for each panel sets `FLUXER_UPGRADE_COMMAND` so that the admin panel shows that step, with `{version}` where the version goes, such as `FLUXER_UPGRADE_COMMAND=In Portainer, set the image tag to {version} and update the stack`. Without it, the admin panel shows steps for any container.
+
+</TabItem>
+<TabItem label="Podman">
+
+Change the tag on the `Image` line of the Quadlet file, then reload and restart.
+
+```sh
+systemctl --user daemon-reload && systemctl --user restart fluxer
+```
+
+As root, leave out `--user`. To have the Updates page show this step with the version filled in, [set `FLUXER_UPGRADE_COMMAND`](/operator/platforms/podman/#upgrade).
+
+</TabItem>
+<TabItem label="Linux by hand">
+
+[Download and unpack the new release, move the `current` link and restart](/operator/linux-manual/#upgrade). With the check on, the Updates page in the admin panel shows the download command with the newest version already filled in for you.
+
+</TabItem>
+<TabItem label="Kubernetes">
+
+```sh
+helm upgrade fluxer oci://ghcr.io/fluxerapp/charts/fluxer -n fluxer --version {{FLUXER_VERSION}} --reset-then-reuse-values
+```
+
+The image tag follows the chart version, so a newer chart upgrades Fluxer. It takes the new chart's defaults and keeps the values you set, while `--reuse-values` leaves out any value a newer chart adds. If you set `image.tag`, add `--set image.tag=` with the new version. If you set `image.digest`, add `--set image.digest=` with the new digest, or with nothing to follow the chart. With the check on, the Updates page in the admin panel shows the full command for your release, with the new version in `image.tag` and an empty `image.digest`, ready to copy and run.
+
+</TabItem>
+<TabItem label="With rexctl">
+
+```sh
+rexctl upgrade
+```
+
+rexctl upgrades itself and Fluxer, takes a full backup first, and goes back to the release you had if the new one doesn't start. On Linux, `rexctl auto-upgrade on` upgrades every day or once a week, at about 04:00 unless you pass `--at`, and sends a notice after each upgrade when you set an address with `--notify`.
+
+</TabItem>
+</Tabs>
+
+## Go back a version
+
+An older release can't run on a database that a newer one has upgraded.
+
+When you start one, Fluxer stays up but not ready, and its log says which command restores the backup from before the upgrade.
+
+```text
+this data was upgraded to Fluxer 2026.1201.120000, and this Fluxer 2026.1114.195738 can't run on it. Start Fluxer 2026.1201.120000 or newer, or go back to the backup from before the upgrade with fluxerd restore /var/lib/fluxer/backups/...
+```
+
+Run that command in the running container, pod or service, and Fluxer then starts the older release. Anything posted after the upgrade is gone.
+
+<Tabs syncKey="runtime">
+<TabItem label="Docker">
+
+Put the older tag back on the `image` line of `compose.yaml`, start it, then restore.
+
+```sh
+docker compose up -d
+docker compose logs fluxer
+docker compose exec fluxer fluxerd restore /var/lib/fluxer/backups/<archive>
+```
+
+Without the compose file, run `docker stop fluxer` and `docker rm fluxer`, then run your `docker run` line with the older tag.
+
+After that, `docker compose logs fluxer` and `docker compose exec fluxer` become `docker logs fluxer` and `docker exec fluxer`.
+
+</TabItem>
+<TabItem label="Podman">
+
+Put the older tag back on the `Image` line of the Quadlet file, run `systemctl --user daemon-reload` and `systemctl --user restart fluxer`, then restore.
+
+```sh
+journalctl --user -u fluxer
+podman exec fluxer fluxerd restore /var/lib/fluxer/backups/<archive>
+```
+
+As root, leave out `--user`.
+
+</TabItem>
+<TabItem label="Linux by hand">
+
+```sh
+journalctl -u fluxerd
+runuser -u fluxer -- /opt/fluxer/current/bin/fluxerd restore /var/lib/fluxer/backups/<archive>
+```
+
+</TabItem>
+<TabItem label="Kubernetes">
+
+```sh
+kubectl -n fluxer logs fluxer-0
+kubectl -n fluxer exec fluxer-0 -- fluxerd restore /var/lib/fluxer/backups/<archive>
+```
+
+</TabItem>
+<TabItem label="With rexctl">
+
+```sh
+rexctl rollback
+```
+
+`rexctl rollback` goes back to the release before the last upgrade. When the newer release has changed your data, it also restores the backup rexctl took before the upgrade, and anything posted after the upgrade is gone. With `--restore-database`, rexctl restores that backup even when the data hasn't changed.
+
+Before a restore, rexctl backs up the instance as it is now and prints the command that puts it back, unless you pass `--no-safety-backup`.
+
+</TabItem>
+</Tabs>
+
+## Automatic upgrades
+
+The compose file and `docker run` use the tag you give them, and nothing upgrades Fluxer behind your back. With rexctl on Linux, `rexctl auto-upgrade on` upgrades every day or once a week, at about 04:00 unless you pass `--at`, with the same backup and go-back as `rexctl upgrade`. rexctl doesn't offer automatic upgrades on Docker Desktop.
+
+Each run asks `fluxer.dev` for the newest release itself. It doesn't need `FLUXER_UPDATE_CHECK`, and turning on automatic upgrades doesn't turn the check on.
+
+We don't recommend tools that pull a new image by themselves, such as Watchtower or Podman's auto-update. Fluxer still backs up first, but going back needs a manual restore.
+
+## Turning the check on
+
+The release check is off unless you turn it on. Once it's on, Fluxer asks https://fluxer.dev/releases.json for the list of releases once a day and compares it with its own version on your machine. Every instance that asks gets exactly the same list back.
+
+The request is a plain GET with the user agent `Fluxer`. It has no instance ID, domain, version, user or community counts, and no cookies. Like any web request, it shows the server your machine's public IP address.
+
+| How you run Fluxer | Turn the check on |
+| --- | --- |
+| Docker or systemd | Set `FLUXER_UPDATE_CHECK=true` in `fluxer.env` |
+| Kubernetes | Set `config.FLUXER_UPDATE_CHECK` to `"true"` in the chart |
+| rexctl | Run `rexctl config set FLUXER_UPDATE_CHECK true` |
+
+- To turn the check off again, remove the setting or set it to `false`.
+- `FLUXER_UPDATE_CHECK_URL` points the check at a copy of the list you host yourself.
+- `fluxerd version --check` asks each time you run it, even with the check off.
+- A list Fluxer saved before you turned the check off stays in the admin panel and `rexctl status` until you upgrade past it.
+
+## PostgreSQL upgrades
+
+The container image has PostgreSQL 17, and an image upgrade never changes it.
+
+On the [systemd route](/operator/linux/), Fluxer uses the PostgreSQL from Debian or Ubuntu and stays on the version its database was made with.
+
+A Fluxer upgrade never moves the database to another PostgreSQL.
+
+When a newer PostgreSQL is installed, such as after a Debian or Ubuntu release upgrade, move the Fluxer database over to it with rexctl.
+
+```sh
+sudo rexctl postgres upgrade
+```
+
+rexctl backs up first, and going back after the move needs that backup. Without rexctl, stop `fluxerd.service` and, as the `fluxer` account, [run `fluxerd postgres-upgrade`](/operator/linux-manual/#postgresql-upgrades).
+
+### Restoring onto another PostgreSQL
+
+A backup restores onto the same PostgreSQL or a newer one. A backup from PostgreSQL 17, such as one from the container image, doesn't restore onto Ubuntu 22.04 with PostgreSQL 14. Install `postgresql-17` from [apt.postgresql.org](https://wiki.postgresql.org/wiki/Apt) first, or restore on a machine with 17 or later. The restore then puts the backup into a new PostgreSQL 17 database and keeps the old one next to it. `rexctl postgres upgrade --clean-up` deletes the old one when you no longer need it.

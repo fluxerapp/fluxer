@@ -37,7 +37,7 @@ Messages, reactions, typing and pins in a thread go to a session that can view t
 
 ### <span id="thread-create"></span>THREAD_CREATE
 
-A thread is created or the session is added to one. The payload is the [thread object](/http-api/threads/#thread-object) with these fields.
+A thread is created or the session is added to one. The payload is the [thread object](/http-api/threads/#thread-object) with these fields added.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -48,7 +48,7 @@ A passive session gets it only when its user is a member.
 
 ### <span id="thread-update"></span>THREAD_UPDATE
 
-A thread changes, and the payload is the [thread object](/http-api/threads/#thread-object). A message sent to an archived thread unarchives it and sends this event. A passive session gets it only for a thread it joined.
+A thread changes, and the payload is the [thread object](/http-api/threads/#thread-object). A message sent to an archived thread unarchives it and sends this event. A passive session gets it only when its user is a member.
 
 ### <span id="thread-delete"></span>THREAD_DELETE
 
@@ -74,7 +74,7 @@ The session's active threads are replaced for a guild or for some of its channel
 | threads | array[[thread](/http-api/threads/#thread-object) object] | The active threads the session can view |
 | members | array[[thread member](/http-api/thread-members/#thread-member-object) object] | The session's memberships in those threads |
 
-A user session that did not set `threads` gets only the threads it joined unless `channel_ids` is present. Fluxer sends it after [Lazy Request](#lazy-request-thread-options) sets `threads` to true and when the session gets view access to channels with active threads. Resume does not replay it.
+A user session that did not set `threads` gets only the threads it joined unless `channel_ids` is present. Fluxer sends it after [Lazy Request](#lazy-request-thread-options) sets `threads` to true and when the session gets view access to channels with active threads. A Resume does not replay this event.
 
 ### <span id="thread-member-update"></span>THREAD_MEMBER_UPDATE
 
@@ -92,7 +92,7 @@ Users join or leave a thread.
 | added_members? | array[[thread member](/http-api/thread-members/#thread-member-object) object] | The users who joined, each with `member` and `presence` |
 | removed_member_ids? | array[snowflake] | The IDs of the users who left |
 
-`member` is the guild member or null. `presence` is the [presence object](/gateway/events/#presence-object) or null when the user is not visibly online. A passive session gets it only when its user was added or removed.
+`member` is the guild member or null. `presence` is the [presence object](/gateway/events/#presence-object) or null when the user is not visibly online. A passive session gets it only when its user is added or removed.
 
 ### <span id="thread-member-list-update"></span>THREAD_MEMBER_LIST_UPDATE
 

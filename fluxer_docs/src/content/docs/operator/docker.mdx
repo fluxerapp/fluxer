@@ -1,0 +1,292 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Docker
+description: Fluxer runs as one container from a small compose file or one docker run line, with an env file for its settings.
+tag: Docker and Podman
+---
+
+import {Steps, Tabs, TabItem} from '@astrojs/starlight/components';
+
+On Docker or Podman, Fluxer runs as one container, started from a small compose file or one docker run line, and loads its settings from an env file.
+
+## Short version
+
+You need a 64-bit Linux machine with 2 CPU cores, 2 GB of memory at least, 4 GB for a busy instance, and Docker 24 or later with Compose. People open Fluxer at a domain that points at the machine, or at [its IP address](/operator/requirements/#with-an-ip-address). Installing takes about 5 minutes.
+
+```sh
+mkdir fluxer && cd fluxer
+url=https://github.com/fluxerapp/fluxer/releases/latest/download
+curl -fLO "$url/compose.yaml"
+curl -fLO "$url/fluxer.env"
+```
+
+Set `FLUXER_DOMAIN` in `fluxer.env`, then run `docker compose up -d` and `docker compose exec fluxer fluxerd setup-token`. On a machine with IPv6, leave out the `AAAA` record for now, or [put a reverse proxy in front](#ipv6).
+
+## What this changes
+
+- One container from the image `ghcr.io/fluxerapp/fluxer`. Docker calls it after the folder, such as `fluxer-fluxer-1` in a folder called `fluxer`, and `docker compose` commands in that folder find it as `fluxer`.
+- One Docker volume called `fluxer-data`, which has the database, uploads, search index, certificates, passwords and keys.
+- Ports 80 and 443 on TCP, 443 on UDP, 7881 on TCP and 7882 on UDP, published on every one of the machine's addresses.
+- Two files in a folder you choose, `compose.yaml` and `fluxer.env`, both yours to edit. `compose.yaml` runs the release it came with and sets `FLUXER_INSTALL_METHOD` to `compose`, so the admin panel shows the compose upgrade command.
+
+Fluxer runs as user ID 65532 inside the container.
+
+## Before you start
+
+Check the [requirements](/operator/requirements/).
+
+You need Docker Engine 24 or later and the Compose plugin. If the machine doesn't have them yet, [install them](/operator/platforms/debian-ubuntu/#install-docker), and on a VPS [open the ports in your provider's firewall](/operator/platforms/cloud-servers/). Fluxer needs ports 80 and 443 open from the internet to get its certificate. If another web server already uses ports 80 and 443, [put Fluxer behind it](#behind-your-own-proxy-or-tunnel) as you go.
+
+To use the machine's IP address in place of a domain, skip the DNS steps and set `FLUXER_DOMAIN` in step 2 to the address, such as `203.0.113.10`. Without a domain of your own, a free name such as [`203-0-113-10.sslip.io`](/operator/requirements/#with-a-domain) works like a domain and keeps passkeys working. A public address gets a Let's Encrypt certificate. On a private address, browsers show a certificate warning until each device [trusts Fluxer's own authority](/operator/requirements/#trusting-fluxers-own-authority). Passkeys don't work on an IP address, whatever certificate it has. For an IPv6 address, also turn on [IPv6 on the Docker network](#ipv6) first.
+
+With a domain, point it at the machine before the first start. At your DNS provider, add an `A` record for the name you want, such as `chat`, with the machine's public IPv4 address.
+
+Then check that it resolves.
+
+```sh
+dig +short chat.example.com
+```
+
+The answer is the machine's address. If it isn't, wait a few minutes. Leave out the `AAAA` record unless a reverse proxy or Docker's IPv6 network [keeps IPv6 visitors' addresses](#ipv6).
+
+## Install
+
+<Steps>
+
+1. Make a folder for Fluxer and download the two files from the latest release.
+
+   ```sh
+   mkdir fluxer && cd fluxer
+   url=https://github.com/fluxerapp/fluxer/releases/latest/download
+   curl -fLO "$url/compose.yaml"
+   curl -fLO "$url/fluxer.env"
+   ```
+
+   `ls` in that folder now lists `compose.yaml` and `fluxer.env`.
+
+2. Open `fluxer.env` in an editor and set `FLUXER_DOMAIN` to your domain, such as `chat.example.com`, without `https://`.
+
+   ```sh title="fluxer.env"
+   FLUXER_DOMAIN=chat.example.com
+   ```
+
+   Write values without quotes. A password with a `$` in it goes [in a file](/operator/configuration/#secrets-in-files). Fluxer refuses to start with the example domain `chat.example.com`.
+
+3. Start Fluxer.
+
+   ```sh
+   docker compose up -d
+   ```
+
+   The first start takes a minute or two while Fluxer creates its database, passwords and keys. `docker compose ps` should then show `healthy` in its status column. The certificate can take another minute or two.
+
+4. Print the setup token.
+
+   ```sh
+   docker compose exec fluxer fluxerd setup-token
+   ```
+
+   Open `https://chat.example.com` with your domain. The setup wizard opens and asks for the token. Paste it and create the first admin account. With a domain, a certificate warning means Fluxer hasn't got its certificate yet, so wait a minute and reload. On a private IP address the warning stays until the device [trusts Fluxer's own authority](/operator/requirements/#trusting-fluxers-own-authority). `docker compose logs fluxer | grep -iE 'acme|certificate'` shows what Let's Encrypt reported. Let's Encrypt gives out at most 5 certificates a week for the same domain, and every reinstall with a new volume uses one of them.
+
+   The wizard asks whether people [sign in with a username or an email address](/operator/sign-in/), and this can't change later. Without an email account set up, pick usernames. People then keep a recovery kit in place of password reset emails. Under "Who can create an account?" the wizard starts on "Only people you invite".
+
+5. [Invite people](/operator/running/#invite-people) with an invite link.
+
+</Steps>
+
+## Without Compose
+
+The same container runs from one `docker run` line, with only `fluxer.env` in the folder.
+
+```sh
+docker run -d --name fluxer --restart unless-stopped --stop-timeout 130 \
+  --env-file fluxer.env -e FLUXER_INSTALL_METHOD=docker -v fluxer-data:/var/lib/fluxer \
+  -p 80:80 -p 443:443 -p 443:443/udp -p 7881:7881 -p 7882:7882/udp \
+  ghcr.io/fluxerapp/fluxer:{{FLUXER_VERSION}}
+```
+
+The first start takes a minute or two.
+
+Once `docker ps` shows `healthy` in the status of `fluxer`, print the setup token.
+
+```sh
+docker exec fluxer fluxerd setup-token
+```
+
+The container is called `fluxer`, and `docker logs fluxer` shows its log.
+
+Keep `--stop-timeout 130`, because Docker's default of 10 seconds stops PostgreSQL before it has shut down. The compose file and this line use the same volume, and you can switch between them without losing data.
+
+## Behind your own proxy or tunnel
+
+When something else handles HTTPS, such as nginx, Caddy, Traefik or Cloudflare Tunnel, Fluxer serves plain HTTP on port 8080.
+
+Set this in `fluxer.env`, or `FLUXER_EDGE_MODE=tunnel` behind a tunnel.
+
+```sh title="fluxer.env"
+FLUXER_EDGE_MODE=proxy
+```
+
+Publish port 8080 on `127.0.0.1` in place of ports 80 and 443. The ports list becomes this.
+
+```yaml title="compose.yaml"
+services:
+  fluxer:
+    ports:
+      - "127.0.0.1:8080:8080"
+      - "7881:7881"
+      - "7882:7882/udp"
+```
+
+With `docker run`, the port flags become these.
+
+```sh
+-p 127.0.0.1:8080:8080 -p 7881:7881 -p 7882:7882/udp
+```
+
+Keep the port on `127.0.0.1` unless your proxy runs on another machine. Fluxer trusts the visitor address that anything on a private network sends it, so anything that can connect to port 8080 could pretend to be any visitor.
+
+Set up your proxy with one of the [proxy configs](/operator/reverse-proxy/).
+
+## Voice and video
+
+Calls use TCP port 7881 and UDP port 7882 on the machine, also behind a proxy or tunnel. Open both in any firewall in front of the machine.
+
+When `FLUXER_DOMAIN` is an IP address, calls use that address. With a domain, Fluxer finds its public address over STUN. On a home network, or when STUN finds the wrong address, set it yourself. Use your public IPv4 address, the one a site such as `ifconfig.me` shows, not the `192.168` address of the machine on your own network.
+
+```sh title="fluxer.env"
+FLUXER_LIVEKIT_NODE_IP=203.0.113.10
+```
+
+To run without voice, set `FLUXER_LIVEKIT_ENABLED=false` and leave out the two voice ports. To run calls on other machines instead, [add voice servers](/operator/voice-servers/).
+
+## IPv6
+
+On Docker's default network, a visitor who connects over IPv6 shows up inside the container with the network's own address. Rate limits and bans then treat every IPv6 visitor as one person. IPv4 visitors keep their own address.
+
+The simplest choice is to leave out the `AAAA` record, so everyone connects over IPv4. To serve IPv6 visitors as well, put a reverse proxy on the machine in front of Fluxer in proxy mode, as above. The proxy sees the real address and passes it on.
+
+[IPv6 on the Docker network](https://docs.docker.com/engine/daemon/ipv6/) also keeps addresses.
+
+## Podman
+
+Podman runs the same image with the same files. In `podman run`, `--sysctl net.ipv4.ip_unprivileged_port_start=0` allows Fluxer to listen on ports 80 and 443.
+
+`--network pasta` keeps each visitor's address for rate limits and bans, which Podman 5 also does by default without the flag. When you run Podman as root, leave this flag out, because pasta runs only in rootless mode.
+
+```sh
+podman run -d --name fluxer --restart always --stop-timeout 130 \
+  --network pasta \
+  --sysctl net.ipv4.ip_unprivileged_port_start=0 \
+  --env-file fluxer.env -v fluxer-data:/var/lib/fluxer \
+  -p 80:80 -p 443:443 -p 443:443/udp -p 7881:7881 -p 7882:7882/udp \
+  ghcr.io/fluxerapp/fluxer:{{FLUXER_VERSION}}
+```
+
+Rootless Podman can publish ports 80 and 443 only when the machine's own `net.ipv4.ip_unprivileged_port_start` is 80 or lower. Set it with `sudo sysctl -w net.ipv4.ip_unprivileged_port_start=80`. To keep it after a reboot, put the same line in a new file in `/etc/sysctl.d/` as well.
+
+In proxy mode, Fluxer uses no port below 1024 and needs neither sysctl setting.
+
+Podman has no daemon, so after a reboot `podman-restart.service` starts the containers that run with `--restart always`. As root, turn it on for the whole machine.
+
+```sh
+sudo systemctl enable podman-restart
+```
+
+With rootless Podman, turn it on for your account, with lingering for boot.
+
+```sh
+systemctl --user enable podman-restart
+sudo loginctl enable-linger $USER
+```
+
+The [Podman guide](/operator/platforms/podman/) runs Fluxer from a Quadlet file as a systemd service instead.
+
+## Day to day
+
+These show the status, the logs, one part's logs, a [backup](/operator/backups/) and how to stop Fluxer.
+
+<Tabs syncKey="docker-file">
+<TabItem label="Compose file">
+
+```sh
+docker compose exec fluxer fluxerd ps
+docker compose logs fluxer
+docker compose exec fluxer fluxerd logs api
+docker compose exec -T fluxer fluxerd backup --out - > fluxer-backup.tar.zst
+docker compose stop
+```
+
+</TabItem>
+<TabItem label="docker run">
+
+```sh
+docker exec fluxer fluxerd ps
+docker logs fluxer
+docker exec fluxer fluxerd logs api
+docker exec fluxer fluxerd backup --out - > fluxer-backup.tar.zst
+docker stop fluxer
+```
+
+</TabItem>
+</Tabs>
+
+[Upgrade](/operator/upgrades/#upgrade) with one command that changes only the image line of the compose file. You can also [restore a backup](/operator/backups/#restore), [restart one part, invite people or move to a new machine](/operator/running/).
+
+:::caution[Keep the volume]
+`docker compose down -v` and `docker volume rm fluxer-data` delete the volume, and with it each message, upload, password and key of your instance. `docker compose down` without `-v` keeps it.
+:::
+
+## Admin accounts
+
+When nobody can sign in as an admin, make a reset link for an account or create a new admin. Each command prints a link that sets a password, and the link works once for an hour. On an email instance that sends email, `users reset-link` refuses, and the admin resets their password by email from the sign-in page.
+
+<Tabs syncKey="docker-file">
+<TabItem label="Compose file">
+
+```sh
+docker compose exec fluxer fluxerd users reset-link alex
+docker compose exec fluxer fluxerd users create alex --admin
+```
+
+</TabItem>
+<TabItem label="docker run">
+
+```sh
+docker exec fluxer fluxerd users reset-link alex
+docker exec fluxer fluxerd users create alex --admin
+```
+
+</TabItem>
+</Tabs>
+
+On an instance with email sign-in, add `--email alex@example.com` to `users create`.
+
+## Remove Fluxer
+
+To keep the instance for later, take a backup first with the `fluxerd backup` line under [Day to day](#day-to-day), and copy `fluxer-backup.tar.zst` out of the Fluxer folder. Keep it somewhere safe, because it has every password and key.
+
+<Tabs syncKey="docker-file">
+<TabItem label="Compose file">
+
+```sh
+docker compose down -v
+docker image rm $(docker image ls -q ghcr.io/fluxerapp/fluxer)
+```
+
+</TabItem>
+<TabItem label="docker run">
+
+```sh
+docker stop fluxer
+docker rm fluxer
+docker volume rm fluxer-data
+docker image rm $(docker image ls -q ghcr.io/fluxerapp/fluxer)
+```
+
+</TabItem>
+</Tabs>
+
+The last line removes every Fluxer image on the machine, older releases included.
+
+Then delete the folder with `fluxer.env`.

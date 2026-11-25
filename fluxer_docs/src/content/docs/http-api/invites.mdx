@@ -99,7 +99,7 @@ A custom invite URL is a guild invite with a code you choose. It has no inviter,
 
 <RouteHeader method="GET" path="/v1/invites/{invite_code}" unauthenticated />
 
-Returns an [invite object](#invite-object) without using up the invite. Codes from [Create channel invite](#create-channel-invite) are case-sensitive.
+Returns an [invite object](#invite-object) without using up the invite. Codes from [Create channel invite](#create-channel-invite) are case-sensitive, so send them exactly.
 
 ### Path parameters
 
@@ -218,7 +218,7 @@ The rate limit is 20 requests per minute, on the `invite:create::channel_id` buc
 
 <RouteHeader method="GET" path="/v1/channels/{channel_id}/invites" bot mfa />
 
-Returns the channel's [invite metadata objects](#invite-metadata-object), newest first, with no pagination. A guild channel needs `VIEW_CHANNEL` and `MANAGE_CHANNELS`, and a group direct message needs you to own it.
+Returns the channel's [invite metadata objects](#invite-metadata-object), newest first, with no pagination. A guild channel needs `VIEW_CHANNEL` and `MANAGE_CHANNELS`, and a group direct message needs you to be its owner.
 
 ### Response
 

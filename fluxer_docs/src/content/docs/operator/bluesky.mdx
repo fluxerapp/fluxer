@@ -1,16 +1,16 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Bluesky account linking
-description: Let people link a Bluesky account to their profile on your instance.
+description: You set up a signing key so people can link a Bluesky account to their profile.
 sidebar:
   label: Bluesky linking
 ---
 
-People can link a Bluesky account to their profile. Bluesky has no developer registration and hands out no API keys. Your instance makes its own signing key, and Fluxer publishes the public half for Bluesky to check.
+People can link a Bluesky account to their profile. Bluesky has no developer registration and hands out no API keys. Your instance makes its own signing key, and Fluxer publishes the public half so Bluesky can check it.
 
 ## Make a signing key
 
-The key has to be an ES256 key on the P-256 curve, which Bluesky requires. You can make one with OpenSSL.
+Bluesky needs an ES256 key on the P-256 curve. Make one with OpenSSL.
 
 ```sh
 openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:P-256 -out bluesky-key.pem
@@ -20,16 +20,19 @@ Keep the file secret. Anyone with it can sign requests as your instance.
 
 ## Give the key to Fluxer
 
-Each key has a key ID, which is any name you pick, such as `key-1`. Use one of these.
+Each key has a key ID, which can be any name you pick, such as `key-1` or `bluesky`.
 
-- **Admin panel.** Open Instance Config, go to Runtime Integrations and find Bluesky OAuth. Enter the key ID under New signing key ID and paste the whole PEM file, including the BEGIN and END lines, under New private key. Saving there replaces every key Fluxer had before.
-- **Environment.** Set [`FLUXER_AUTH_BLUESKY_KEYS`](/operator/environment/#fluxer_auth_bluesky_keys) to a JSON array. Each entry has a `kid` and either a `private_key` with the PEM text or a `private_key_path` with an absolute path inside the api and worker containers. For example, `[{"kid":"key-1","private_key_path":"/etc/fluxer/bluesky-key.pem"}]`. With rexctl, use `rexctl config set integrations.bluesky.keys`.
+In the admin panel, open "Bluesky OAuth" under "Runtime Integrations" in "Instance Config". Enter the key ID under "New signing key ID" and paste the whole PEM file with its BEGIN and END lines under "New private key". When you save, the new key replaces every key that was saved in the admin panel before it.
+
+You can also set [`FLUXER_AUTH_BLUESKY_KEYS`](/operator/settings/#fluxer_auth_bluesky_keys) to a JSON array. Each entry has a `kid` and either a `private_key` with the PEM text or a `private_key_path` with the path of the file Fluxer loads, for example `[{"kid":"key-1","private_key_path":"/etc/fluxer/bluesky-key.pem"}]`. In Docker, mount it with `-v ./bluesky-key.pem:/etc/fluxer/bluesky-key.pem:ro`, readable by user ID 65532. Under systemd, put it in `/etc/fluxer` readable by the `fluxer` group. With rexctl, use `rexctl config set integrations.bluesky.keys`.
 
 Keys saved in the admin panel replace the ones from the environment.
 
 ## Turn it on
 
-Set Bluesky OAuth to enabled in the admin panel, or set [`FLUXER_AUTH_BLUESKY_ENABLED`](/operator/environment/#fluxer_auth_bluesky_enabled) to `true`. With rexctl, use `rexctl config set integrations.bluesky.enabled true`. The name, logo, terms and privacy links Bluesky shows are optional and listed under [Integrations](/operator/environment/#integrations).
+Turn on "Bluesky OAuth" in the admin panel, or set [`FLUXER_AUTH_BLUESKY_ENABLED`](/operator/settings/#fluxer_auth_bluesky_enabled) to `true`. With rexctl, use `rexctl config set integrations.bluesky.enabled true`.
+
+[Integrations](/operator/settings/#integrations) lists the optional name, logo and policy links Bluesky shows.
 
 ## Check that Bluesky can see it
 

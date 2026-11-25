@@ -1,0 +1,99 @@
+---
+// SPDX-License-Identifier: AGPL-3.0-or-later
+import {getCollection} from 'astro:content';
+import {withBase} from '@/components/Sections';
+
+interface Props {
+	section: string;
+}
+
+type Entry = (typeof Astro.locals.starlightRoute.sidebar)[number];
+
+interface Row {
+	title: string;
+	href: string;
+	summary: string;
+	external: boolean;
+}
+
+interface Block {
+	label: string;
+	depth: number;
+	rows: Array<Row>;
+}
+
+const externalSummaries: Record<string, string> = {
+	'https://github.com/fluxerapp/fluxer/blob/main/LICENSE':
+		'The GNU Affero General Public License 3.0 or later that Fluxer is released under.',
+	'https://fluxer.com/terms': 'The terms for using fluxer.com, the service that Fluxer Platform AB runs.',
+	'https://fluxer.com/privacy':
+		'How fluxer.com handles personal data, and who the data controller of other instances is.',
+	'https://fluxer.com/guidelines': "What isn't allowed on fluxer.com and how we respond to violations.",
+	'https://fluxer.com/security': 'How to report a security problem, including one in a supported self-hosted release.',
+	'https://fluxer.com/company-information':
+		"Who runs fluxer.com, with Fluxer Platform AB's registration details and address.",
+};
+
+const {section} = Astro.props;
+const docs = await getCollection('docs');
+const byHref = new Map(
+	docs.map((doc) => {
+		const id = doc.id.replace(/\/index$/u, '');
+		return [withBase(`/${id}/`), doc.data] as const;
+	}),
+);
+
+const blocks: Array<Block> = [];
+
+function collect(entries: ReadonlyArray<Entry>, label: string, depth: number): void {
+	const block: Block = {label, depth, rows: []};
+	blocks.push(block);
+	for (const entry of entries) {
+		if (entry.type === 'group') {
+			collect(entry.entries, entry.label, depth + 1);
+			continue;
+		}
+		const external = /^https?:\/\//u.test(entry.href);
+		const data = byHref.get(entry.href);
+		block.rows.push({
+			title: data?.title ?? entry.label,
+			href: entry.href,
+			summary: data
+				? [data.description, data.tag && `(${data.tag})`].filter(Boolean).join(' ')
+				: (externalSummaries[entry.href] ?? ''),
+			external,
+		});
+	}
+}
+
+const root = Astro.locals.starlightRoute.sidebar.find((entry) => entry.type === 'group' && entry.label === section);
+if (root?.type === 'group') {
+	for (const entry of root.entries) {
+		if (entry.type === 'group') {
+			collect(entry.entries, entry.label, 2);
+		}
+	}
+}
+---
+
+<div class="flx-page-index not-content">
+	{
+		blocks.map((block) => (
+			<section class="flx-page-index-group" data-depth={block.depth}>
+				{block.depth === 2 ? <h2 id={block.label.toLowerCase().replace(/\s+/gu, '-')}>{block.label}</h2> : <h3>{block.label}</h3>}
+				{block.rows.length > 0 && (
+					<ul>
+						{block.rows.map((row) => (
+							<li>
+								<a href={row.href} rel={row.external ? 'noopener' : undefined}>
+									{row.title}
+								</a>
+								{row.summary && <p>{row.summary}</p>}
+							</li>
+						))}
+					</ul>
+				)}
+			</section>
+		))
+	}
+</div>

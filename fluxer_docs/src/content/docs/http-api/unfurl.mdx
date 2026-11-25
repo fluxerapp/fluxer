@@ -20,7 +20,7 @@ The sites below get a dedicated preview. Any other URL gets a preview from its p
 | Klipy<sup>1</sup> | `klipy.com` and `www.klipy.com` |
 | Tenor | `tenor.com` |
 | xkcd | `xkcd.com` |
-| YouTube<sup>1</sup> | `youtube.com` and its `www`, `m` and `music` hosts, `youtube-nocookie.com` and `www.youtube-nocookie.com`, and `youtu.be` |
+| YouTube<sup>1</sup> | `youtube.com` and its `www`, `m` and `music` hosts, `youtu.be`, and `youtube-nocookie.com` with its `www` host |
 | Wikipedia | `wikipedia.org` and its `www`, `en`, `de`, `fr`, `es`, `it`, `ja`, `ru` and `zh` hosts, under `/wiki/` |
 | Bluesky | Post and profile URLs on `bsky.app` |
 | FxTwitter | `fxtwitter.com`, `fixupx.com`, `twittpr.com`, `xfixup.com` and their subdomains |
@@ -105,7 +105,7 @@ Accepts any activity and discards it.
 
 <RouteHeader method="GET" path="/.well-known/webfinger" unauthenticated />
 
-Returns an `application/jrd+json` document whose `self` link points to the actor. The edge serves this path at the root of the public origin. Responses may be cached for 5 minutes.
+Returns an `application/jrd+json` document whose `self` link points to the actor. The edge serves this path at the root of the public origin, and clients and caches may keep a response for 5 minutes.
 
 ### Query parameters
 

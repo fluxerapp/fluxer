@@ -1,0 +1,15 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: YunoHost
+description: There is no YunoHost package for Fluxer yet, but you can run Fluxer on its own machine with YunoHost's web server in front of it.
+---
+
+## Short version
+
+There is no Fluxer package in the YunoHost catalogue. Run Fluxer with Docker on another machine or VM, and add its domain to YunoHost only if its nginx should handle HTTPS.
+
+## What you can do today
+
+Run Fluxer on a separate machine or VM [with Debian or Ubuntu](/operator/platforms/debian-ubuntu/), in its default mode with its own certificate. Point the domain at that machine. This is the setup we recommend.
+
+If your YunoHost server has the only public address, set `FLUXER_EDGE_MODE=proxy` on the Fluxer machine. Add the domain in YunoHost, then install the Redirect app on it as a public reverse proxy with `http://<fluxer address>:8080` as the target. To raise the upload limit and the WebSocket timeout, add the `client_max_body_size` and `proxy_read_timeout` lines from [our nginx config](/operator/reverse-proxy/#configs-for-each-proxy) to a `.conf` file in `/etc/nginx/conf.d/chat.example.com.d/`, and reload nginx. Set `FLUXER_EDGE_TRUSTED_PROXIES` to the YunoHost machine's address. For voice and video calls, forward ports 7881 and 7882 on your router to the machine that runs Fluxer.

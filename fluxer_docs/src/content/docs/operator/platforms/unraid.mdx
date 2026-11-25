@@ -1,0 +1,99 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Unraid
+description: You run Fluxer on Unraid with Compose Manager, behind a proxy, with the data on a pool.
+---
+
+import {Steps} from '@astrojs/starlight/components';
+
+## Short version
+
+Unraid 6.12 or later with the Docker Compose Manager plugin, a pool such as `cache` on an SSD, and a reverse proxy such as Nginx Proxy Manager or a tunnel. Add one stack with the compose file below. It takes about 20 minutes.
+
+## What this changes
+
+- One stack called `fluxer` in Compose Manager, with one container and one Docker volume called `fluxer-data` for the data.
+- Port 8080 for your proxy, and ports 7881 on TCP and 7882 on UDP for voice, forwarded from your router to the Unraid server.
+
+## Before you start
+
+- Check the [requirements](/operator/requirements/).
+- Unraid's web UI uses ports 80 and 443, so Fluxer runs in proxy mode behind your own proxy or a tunnel. [Point your proxy at Fluxer](/operator/reverse-proxy/).
+- Keep Docker's data on a pool, such as `/mnt/cache`. Never put the database on `/mnt/user` or the array, whose FUSE file system and parity disks don't suit PostgreSQL. Backups can go on the array, such as in `/mnt/user/backups`.
+- Install "Docker Compose Manager" from the Apps tab in Unraid.
+
+## Install
+
+<Steps>
+
+1. In the Docker tab, under Compose, add a new stack called `fluxer`, choose "Edit stack" and then choose "Compose file" in it.
+
+2. Paste in this compose file with your domain.
+
+   ```yaml title="compose.yaml"
+   services:
+     fluxer:
+       image: ghcr.io/fluxerapp/fluxer:{{FLUXER_VERSION}}
+       container_name: fluxer
+       restart: unless-stopped
+       stop_grace_period: 130s
+       environment:
+         FLUXER_DOMAIN: chat.example.com
+         FLUXER_EDGE_MODE: proxy
+         FLUXER_UPGRADE_COMMAND: "In Unraid, set the image tag to {version} and choose Compose Up"
+       ports:
+         - "8080:8080"
+         - "7881:7881"
+         - "7882:7882/udp"
+       volumes:
+         - fluxer-data:/var/lib/fluxer
+
+   volumes:
+     fluxer-data:
+       name: fluxer-data
+   ```
+
+   This is the published compose file with your settings written into it, proxy mode turned on and a fixed container name of `fluxer`.
+
+   To keep the data in a folder in place of the `fluxer-data` volume, make user ID 65532 its owner, because Fluxer runs as that user.
+
+3. Choose "Compose Up".
+
+   The first start pulls the image and takes a few minutes. The Docker tab then shows the `fluxer` container as healthy. To upgrade later, change the tag on the `image` line and choose "Compose Up" again. The `FLUXER_UPGRADE_COMMAND` line makes the admin panel show this step with the new version when one is out.
+
+4. For your domain, point your proxy at `http://<unraid address>:8080`. In the proxy, turn on WebSockets and set the upload limit to at least 512 MiB.
+
+   The Fluxer setup wizard opens at `https://chat.example.com`.
+
+5. Print the setup token in Unraid's terminal.
+
+   ```sh
+   docker exec fluxer fluxerd setup-token
+   ```
+
+   Open your domain and paste the token to create the first admin account.
+
+</Steps>
+
+Fluxer trusts the visitor address that any private address passes on. Keep port 8080 closed to other devices on your network when you can, for example by putting the proxy and Fluxer on one Docker network and leaving out the `8080` line.
+
+## On your home network without a domain
+
+Fluxer can also run on the Unraid server's own address, such as `192.168.1.20`, and sign its own certificate. Devices on your home network can then open it, and nobody outside can. The Unraid web UI keeps ports 80 and 443, so Fluxer uses ports 8080 and 8443.
+
+In the compose file, set these lines, leave out `FLUXER_EDGE_MODE` and replace the ports.
+
+```yaml title="compose.yaml"
+services:
+  fluxer:
+    environment:
+      FLUXER_DOMAIN: 192.168.1.20
+      FLUXER_PUBLIC_PORT: "8443"
+    ports:
+      - "8080:80"
+      - "8443:443"
+      - "7881:7881"
+      - "7882:7882/udp"
+```
+
+Open `https://192.168.1.20:8443` with your own address. Browsers show a certificate warning until you [install Fluxer's root certificate](/operator/requirements/#trusting-fluxers-own-authority) on each device. Each device can download the certificate file from `http://192.168.1.20:8080/fluxer-root.crt` with any browser.

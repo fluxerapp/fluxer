@@ -43,10 +43,10 @@ For `/_metadata`, the body is the reason phrase of the origin status.
 | Proxied or stored media | 500 MiB | 413 |
 | Decoded signed external target URL | 8,192 bytes | 400 |
 | External redirects | 5 | 502 |
-| Decoded image width or height | 16,384 pixels | See [transformation limits](/media-proxy/transformations/#transformation-limits) |
-| Decoded image area | 268,435,456 pixels | See [transformation limits](/media-proxy/transformations/#transformation-limits) |
-| Animated input frames | 20,000 | See [transformation limits](/media-proxy/transformations/#transformation-limits) |
-| Animated input decoded pixels | 1,073,741,824 across all frames | See [transformation limits](/media-proxy/transformations/#transformation-limits) |
+| Decoded image width or height | 16,384 pixels | 400, the [transformation fails](/media-proxy/transformations/#transformation-limits) |
+| Decoded image area | 268,435,456 pixels | 400, the [transformation fails](/media-proxy/transformations/#transformation-limits) |
+| Animated input frames | 20,000 | 400, the [transformation fails](/media-proxy/transformations/#transformation-limits) |
+| Animated input decoded pixels | 1,073,741,824 across all frames | 400, the [transformation fails](/media-proxy/transformations/#transformation-limits) |
 | Upload relay body | The smaller of the authorized size and the endpoint limit, which defaults to 500 MiB | 413 |
 | Internal `/_metadata`, `/_sniff`, `/_thumbnail` and `/_frames` body | About 668 MiB | 413 |
 
@@ -81,4 +81,4 @@ Error responses use `Cache-Control: no-store`, except a 416, which has no cache 
 | 416 | `Content-Range: bytes */{size}`, `Accept-Ranges: bytes` and an empty body |
 | [Transformed media](/media-proxy/overview/#transformed-representations) | No `Accept-Ranges`, and always the whole body |
 
-Signed external media leaves out `Content-Length` when the origin sent none, and a forwarded range keeps the origin's `Content-Range` and `Content-Length`. `HEAD` follows the same rules with an empty body. See [byte ranges](/media-proxy/overview/#byte-ranges) for the `Range` values the Media Proxy accepts.
+Signed external media leaves out `Content-Length` when the origin sent none, and a forwarded range keeps the origin's `Content-Range` and `Content-Length`. `HEAD` follows the same rules with an empty body. The Media Proxy accepts one [`Range`](/media-proxy/overview/#byte-ranges) with the unit `bytes`.

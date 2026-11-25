@@ -1,0 +1,76 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: NixOS
+description: You run Fluxer's container image from NixOS with virtualisation.oci-containers.
+---
+
+import {Steps} from '@astrojs/starlight/components';
+
+## Short version
+
+Nixpkgs has no Fluxer package or module, so you run Fluxer's container image. You need a NixOS machine with 2 CPU cores, 2 GB of memory at least and 4 GB for a busy instance, and 20 GB of free disk, and a domain that points at it, or the [machine's IP address](/operator/requirements/#with-an-ip-address). Add the container below to your configuration, write `fluxer.env` and run `nixos-rebuild switch`. The install takes about 15 minutes from start to finish.
+
+## What this changes
+
+- A systemd service called `podman-fluxer.service`, or `docker-fluxer.service` with the Docker backend, that runs the container. With the Docker backend, use `docker` in place of `podman` in the commands below.
+- One volume called `fluxer-data`.
+- TCP ports 80, 443 and 7881, and UDP ports 443 and 7882, opened in the NixOS firewall.
+
+## Before you start
+
+Check the [requirements](/operator/requirements/). Pick a place for `fluxer.env` outside the Nix store, such as `/etc/fluxer/fluxer.env`, because the store can be read by every user on the machine.
+
+## Install
+
+<Steps>
+
+1. Write the settings file as root.
+
+   ```sh
+   sudo install -d -m 0750 /etc/fluxer
+   echo 'FLUXER_DOMAIN=chat.example.com' | sudo tee /etc/fluxer/fluxer.env
+   echo 'FLUXER_UPGRADE_COMMAND=Set image to ghcr.io/fluxerapp/fluxer:{version} in your NixOS configuration and run nixos-rebuild switch' | sudo tee -a /etc/fluxer/fluxer.env
+   ```
+
+   Use your own domain. The second line is the upgrade step that the admin panel shows you when a newer release of Fluxer is out and the [release check](/operator/upgrades/#turning-the-check-on) is on.
+
+2. Add the container to your configuration, for example in `configuration.nix`.
+
+   ```nix title="configuration.nix"
+   virtualisation.podman.enable = true;
+   virtualisation.oci-containers.backend = "podman";
+   virtualisation.oci-containers.containers.fluxer = {
+     image = "ghcr.io/fluxerapp/fluxer:{{FLUXER_VERSION}}";
+     environmentFiles = [ "/etc/fluxer/fluxer.env" ];
+     volumes = [ "fluxer-data:/var/lib/fluxer" ];
+     ports = [ "80:80" "443:443" "443:443/udp" "7881:7881" "7882:7882/udp" ];
+     extraOptions = [ "--sysctl=net.ipv4.ip_unprivileged_port_start=0" "--stop-timeout=130" ];
+   };
+   systemd.services.podman-fluxer.serviceConfig.TimeoutStopSec = lib.mkForce 150;
+   networking.firewall.allowedTCPPorts = [ 80 443 7881 ];
+   networking.firewall.allowedUDPPorts = [ 443 7882 ];
+   ```
+
+   `lib.mkForce` needs `lib` in the argument list at the top of the file, such as `{ config, lib, pkgs, ... }:`. Then run `sudo nixos-rebuild dry-build`, which checks the configuration and ends without errors.
+
+3. Apply it.
+
+   ```sh
+   sudo nixos-rebuild switch
+   ```
+
+   The first start pulls the image and takes a few minutes, then `systemctl status podman-fluxer` shows `active (running)`.
+
+4. Print the setup token.
+
+   ```sh
+   sudo podman exec fluxer fluxerd setup-token
+   ```
+
+   Open your domain and paste the token to create the first admin account.
+
+</Steps>
+
+## Upgrade
+
+Change the tag in `image` and run `nixos-rebuild switch`. `nixos-rebuild switch --rollback` goes back to the older image but doesn't roll back the database. [Restore the database](/operator/upgrades/#go-back-a-version) with the `fluxerd restore` command the older release logs.

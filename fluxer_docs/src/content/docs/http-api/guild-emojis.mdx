@@ -200,7 +200,7 @@ Deletes an emoji. The uploader needs [CREATE_EXPRESSIONS](/http-api/permissions/
 | purge? | boolean | Whether to delete the image file too (default false) |
 
 :::caution[Purging cannot be undone]
-With `purge`, Fluxer deletes the image file and you can't get it back. Without it, the image stays available through the [Media Proxy](/media-proxy/routes/#image-asset-contract).
+With `purge`, Fluxer deletes the image file and you can't get it back. Without it, the image stays available through the [Media Proxy](/media-proxy/routes/#image-asset-contract) for anyone with its URL.
 :::
 
 ### Response
@@ -208,9 +208,9 @@ With `purge`, Fluxer deletes the image file and you can't get it back. Without i
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | The emoji was deleted |
-| 403 | [error response](/http-api/#error-response) | `MISSING_ACCESS` when `purge` is true and the guild lacks [EXPRESSION_PURGE_ALLOWED](/http-api/guilds/#guild-features) |
+| 403 | [error response](/http-api/#error-response) | `MISSING_ACCESS` when `purge` is true without [EXPRESSION_PURGE_ALLOWED](/http-api/guilds/#guild-features) on the guild |
 | 404 | [error response](/http-api/#error-response) | `UNKNOWN_EMOJI` when the emoji is not in this guild |
 
 Fluxer sends a [Guild Emojis Update](/gateway/events/#guild-emojis-update) event and records an [`EMOJI_DELETE`](/http-api/guild-audit-logs/#audit-actions) audit entry.
 
-The rate limit is 10 requests per 30 seconds, on the `guild:emoji:delete::guild_id` bucket. The route also allows 300 requests per day, on the `guild:emoji:delete:daily::guild_id` bucket.
+The `guild:emoji:delete::guild_id` bucket allows 10 requests per 30 seconds. The `guild:emoji:delete:daily::guild_id` bucket also allows 300 requests per day.

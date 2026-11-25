@@ -10,7 +10,7 @@ A message is one post in a [channel](/http-api/channels/), with its text, attach
 
 ## Access and history
 
-A private channel returns 404 `UNKNOWN_CHANNEL` when you're not a recipient. A guild channel needs [VIEW_CHANNEL](/http-api/permissions/), and in a thread you also need access to the parent and to a private thread, as [Thread permissions](/http-api/threads/#thread-permissions) describes.
+A private channel returns 404 `UNKNOWN_CHANNEL` when you're not a recipient. A guild channel needs [VIEW_CHANNEL](/http-api/permissions/), and in a thread you also need [access](/http-api/threads/#thread-permissions) to the parent and to a private thread.
 
 In a guild channel without [READ_MESSAGE_HISTORY](/http-api/permissions/), you only see messages created after the guild's message history cutoff, and nothing when the guild has no cutoff. In an age-restricted channel, the routes that read, send, edit or delete messages return 403 `NSFW_CONTENT_AGE_RESTRICTED` until the account can see mature content.
 
@@ -49,7 +49,7 @@ Routes that need `MANAGE_MESSAGES` also follow the guild's [MFA level](/http-api
 | referenced_message?<sup>4</sup> | ?[message](#message-object) object | The message a reply points to |
 | thread? | [thread](/http-api/threads/#thread-object) object | The thread started from this message |
 
-<sup>1</sup> For a webhook message, Fluxer builds the author from the webhook, with `bot` set to true
+<sup>1</sup> Fluxer builds the author of a webhook message from the webhook, with `bot` set to true
 
 <sup>2</sup> A user is in `mentions` or in `users`, never both. Resolve the IDs in a snapshot's `mentions` against this array
 
@@ -102,7 +102,7 @@ Routes that need `MANAGE_MESSAGES` also follow the guild's [MFA level](/http-api
 | 19 | REPLY | A reply to another message |
 | 21 | THREAD_STARTER_MESSAGE | The first message of a thread started from a message |
 
-You can only edit, pin or reply to `DEFAULT` and `REPLY` messages. [Thread messages](/http-api/threads/#thread-messages) describes the thread types.
+You can only edit, pin or reply to `DEFAULT` and `REPLY` messages. Threads add the `THREAD_CREATED` and `THREAD_STARTER_MESSAGE` [system messages](/http-api/threads/#thread-messages).
 
 ## Message flags
 
@@ -146,7 +146,7 @@ You can set `SUPPRESS_EMBEDS`, `SUPPRESS_NOTIFICATIONS` and `VOICE_MESSAGE`. Flu
 
 ### Signed attachment URLs
 
-When the instance has attachment URL secrets, Fluxer adds these query parameters to `url` and `proxy_url`.
+When the instance has attachment URL secrets, Fluxer adds these query parameters to both `url` and `proxy_url`.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -159,7 +159,7 @@ A URL is valid for 24 hours from `is`. Keep the four parameters as they are, and
 
 ### Data package attachment URLs
 
-A [data harvest](/http-api/users/data-harvest/) archive links each attachment with `uc=dp` and `ex=0`. These URLs don't expire and work until the instance removes the secret that signed them.
+A [data export](/http-api/users/data-harvest/) archive links each attachment with `uc=dp` and `ex=0`. These URLs don't expire and work until the instance removes the secret that signed them.
 
 ### Attachment URLs on the API
 
@@ -254,11 +254,11 @@ A message can have up to `max_reactions_per_message` different emoji (default 30
 | attachment_ids? | array[snowflake] | The attachments to forward (at most 10) |
 | embed_indices? | array[integer] | The embeds to forward (at most 10) |
 
-A forward copies all the source's media unless you pick some with `attachment_ids` or `embed_indices`.
+A forward copies all the source's media, unless you pick some of it with `attachment_ids` or `embed_indices` in the body.
 
 ## Message snapshot object
 
-A snapshot is a copy of a forwarded message. It doesn't change when the source is edited or deleted.
+A snapshot is a copy of a forwarded message, and it doesn't change when the source is edited or deleted.
 
 ### Structure
 
@@ -389,7 +389,7 @@ An embed is a link preview Fluxer builds, or a rich embed you send.
 | placeholder? | string | An encoded placeholder image |
 | flags? | integer | `CONTAINS_EXPLICIT_MEDIA` and `IS_ANIMATED` from [attachment flags](#attachment-flags) |
 
-Fluxer signs every embed URL that points to an attachment on this instance, the same way as [attachment URLs](#signed-attachment-urls). When [attachment URLs point at the API](#attachment-urls-on-the-api), these URLs point at the API instead.
+Fluxer signs every embed URL that points to an attachment on this instance, the same way as [attachment URLs](#signed-attachment-urls). When [attachment URLs point at the API](#attachment-urls-on-the-api), so do these.
 
 ## Embed footer object
 
@@ -436,7 +436,7 @@ An allowed mentions object picks which mentions in the text notify anyone.
 <sup>1</sup> Leaving out the whole object allows every value. Sending `users` or `roles` without `parse` allows none of them. You can't send `parse` together with `users` or `roles`
 
 :::caution
-Sending `allowed_mentions` as `{}` turns off every mention, including `@everyone` and `@here`.
+Sending `allowed_mentions` as `{}` turns off every mention, `@everyone` and `@here` included.
 :::
 
 ## Allowed mention parse values
@@ -648,7 +648,7 @@ Each part except the last must be exactly `part_size` bytes, and all parts toget
 | original | string | The URL you sent |
 | refreshed | string | The URL with a new [signature](#signed-attachment-urls) |
 
-`refreshed` is the same as `original` when the URL isn't an attachment URL of this instance.
+When the URL isn't an attachment URL of this instance, `refreshed` and `original` are the same URL.
 
 ## Channel pin object
 
@@ -748,7 +748,7 @@ Returns messages from a channel, newest first. A page can have fewer than `limit
 | 200 | array[[message](#message-object) object] | The messages were returned |
 | 400 | [error response](/http-api/#error-response) | `INVALID_CHANNEL_TYPE` for a forum or media channel |
 
-The rate limit is 100 requests per 10 seconds, on the `channel:messages:read::channel_id` bucket.
+The `channel:messages:read::channel_id` bucket allows 100 requests per 10 seconds.
 
 ## List messages from multiple channels
 
@@ -788,13 +788,13 @@ Returns one message, or 404 `UNKNOWN_MESSAGE` when it's older than your [history
 | --- | --- | --- |
 | 200 | [message](#message-object) object | The message was returned |
 
-The rate limit is 100 requests per 10 seconds, on the `channel:message:read::channel_id` bucket.
+The `channel:message:read::channel_id` bucket allows 100 requests per 10 seconds.
 
 ## Request attachment upload URLs
 
 <RouteHeader method="POST" path="/v1/channels/{channel_id}/attachments" bot />
 
-Returns upload URLs for 1 to 10 files, as described in [Attachment upload objects](#attachment-upload-objects). In a guild channel you need `SEND_MESSAGES` and `ATTACH_FILES`.
+Returns [upload URLs](#attachment-upload-objects) for 1 to 10 files. In a guild channel you need `SEND_MESSAGES` and `ATTACH_FILES`.
 
 Each file can be up to the [`max_attachment_file_size`](/http-api/instance/#limit-keys) limit, which defaults to 524288000 bytes (500 MiB), or 26214400 bytes (25 MiB) without premium on an instance with premium tiers. A bot gets the lower of that limit and [`max_bot_attachment_file_size`](/http-api/instance/#limit-keys), which defaults to 52428800 bytes (50 MiB).
 
@@ -820,7 +820,7 @@ Each file can be up to the [`max_attachment_file_size`](/http-api/instance/#limi
 | 403 | [error response](/http-api/#error-response) | `COMMUNICATION_DISABLED` when you're timed out |
 | 403 | [error response](/http-api/#error-response) | `FEATURE_TEMPORARILY_DISABLED` when the instance has turned off uploads |
 
-The rate limit is 10 requests per 10 seconds, on the `channel:attachment:upload::channel_id` bucket.
+The `channel:attachment:upload::channel_id` bucket allows 10 requests per 10 seconds.
 
 ## Complete attachment upload
 
@@ -849,7 +849,7 @@ Finishes 1 to 10 multipart uploads after you've uploaded every part. If completi
 | 400 | [error response](/http-api/#error-response) | `INVALID_FORM_BODY` with `NO_UPLOADED_PARTS_TO_FINALIZE` when no part was uploaded |
 | 400 | [error response](/http-api/#error-response) | `FILE_SIZE_TOO_LARGE` when the uploaded file is over the size limit |
 
-The rate limit is 10 requests per 10 seconds, on the `channel:attachment:upload::channel_id` bucket.
+The `channel:attachment:upload::channel_id` bucket allows 10 requests per 10 seconds.
 
 ## Refresh attachment URLs
 
@@ -1022,7 +1022,7 @@ A message with the `VOICE_MESSAGE` flag has one audio attachment with `duration`
 | 403 | [error response](/http-api/#error-response) | `ACCOUNT_LIMITED` when your account is [limited](/http-api/users/#account-limitation) |
 | 403 | [error response](/http-api/#error-response) | `UNCLAIMED_ACCOUNT_CANNOT_SEND_MESSAGES` outside personal notes |
 
-The rate limit is 20 requests per 10 seconds, on the `channel:message:create::channel_id` bucket.
+The `channel:message:create::channel_id` bucket allows 20 requests per 10 seconds.
 
 ## Modify message
 
@@ -1030,7 +1030,7 @@ The rate limit is 20 requests per 10 seconds, on the `channel:message:create::ch
 
 Edits a message and returns it, and Fluxer sends [Message Update](/gateway/events/#message-update). The author can change any field. Someone else with `MANAGE_MESSAGES` can only change `SUPPRESS_EMBEDS` and the title and alt text of existing attachments. The author of a [published](#crosspost-message) message can edit it 3 times in a row, then once every 20 minutes.
 
-The body works like [Create message](#create-message), including multipart. Fields you leave out stay the same.
+The body works like [Create message](#create-message), multipart included, and every field you leave out keeps its current value.
 
 ### JSON body
 
@@ -1056,13 +1056,13 @@ The body works like [Create message](#create-message), including multipart. Fiel
 | 403 | [error response](/http-api/#error-response) | `CANNOT_EDIT_OTHER_USER_MESSAGE` when you can't edit someone else's message |
 | 429 | [error response](/http-api/#error-response) | `PUBLISHED_MESSAGE_EDIT_RATE_LIMITED` for a published message |
 
-The rate limit is 20 requests per 10 seconds, on the `channel:message:update::channel_id` bucket.
+The `channel:message:update::channel_id` bucket allows 20 requests per 10 seconds.
 
 ## Crosspost message
 
 <RouteHeader method="POST" path="/v1/channels/{channel_id}/messages/{message_id}/crosspost" bot />
 
-Publishes a message in an announcement channel to every channel that follows it, and returns the message with the `CROSSPOSTED` flag. You need `SEND_MESSAGES`, and `MANAGE_MESSAGES` for someone else's message. Only a `DEFAULT` message that isn't a forward can be published, and only once. [Announcement channels](/topics/announcement-channels/) describes the copies.
+Publishes a message in an announcement channel to every channel that follows it, and returns the message with the `CROSSPOSTED` flag. You need `SEND_MESSAGES`, and `MANAGE_MESSAGES` for someone else's message. Only a `DEFAULT` message that isn't a forward can be published, and only once. Fluxer creates the [copies](/topics/announcement-channels/#publishing) in the background, and a channel that follows later never gets the message.
 
 Each announcement channel can publish 10 messages in a row, then one every 6 minutes.
 
@@ -1077,7 +1077,7 @@ Each announcement channel can publish 10 messages in a row, then one every 6 min
 | 403 | [error response](/http-api/#error-response) | `CONTENT_BLOCKED` when the message matches an instance blocklist |
 | 429 | [error response](/http-api/#error-response) | `MESSAGE_CROSSPOST_RATE_LIMITED` when the channel has published too many |
 
-The rate limit is 5 requests per 5 seconds, on the `channel:message:crosspost::channel_id` bucket.
+The `channel:message:crosspost::channel_id` bucket allows 5 requests per 5 seconds.
 
 ## Get message crosspost source
 
@@ -1093,7 +1093,7 @@ Returns the guild a published copy came from, for a message with `IS_CROSSPOST` 
 | 404 | [error response](/http-api/#error-response) | `UNKNOWN_MESSAGE` for any other message |
 | 404 | [error response](/http-api/#error-response) | `UNKNOWN_GUILD` when the guild was deleted |
 
-The rate limit is 20 requests per 10 seconds, on the `channel:message:crosspost_source::channel_id` bucket.
+The `channel:message:crosspost_source::channel_id` bucket allows 20 requests per 10 seconds.
 
 ## Clear channel read state
 
@@ -1107,7 +1107,7 @@ This route is deprecated, and it returns 204 without changing anything.
 | --- | --- | --- |
 | 204 | empty | Always |
 
-The rate limit is 40 requests per 10 seconds, on the `channel:read_state:delete::channel_id` bucket.
+The `channel:read_state:delete::channel_id` bucket allows 40 requests per 10 seconds.
 
 ## Delete message
 
@@ -1123,7 +1123,7 @@ Deleting a [published](#crosspost-message) message replaces each copy with `[Ori
 | --- | --- | --- |
 | 204 | empty | The message was deleted |
 
-The rate limit is 20 requests per 10 seconds, on the `channel:message:delete::channel_id` bucket.
+The `channel:message:delete::channel_id` bucket allows 20 requests per 10 seconds.
 
 ## Delete message attachment
 
@@ -1137,7 +1137,7 @@ Deletes one attachment from your own message, and Fluxer sends [Message Update](
 | --- | --- | --- |
 | 204 | empty | The attachment was deleted |
 
-The rate limit is 20 requests per 10 seconds, on the `channel:message:delete::channel_id` bucket.
+The `channel:message:delete::channel_id` bucket allows 20 requests per 10 seconds.
 
 ## Bulk delete messages
 
@@ -1160,7 +1160,7 @@ Deletes up to 100 messages of any age in a guild channel and skips IDs that matc
 | 400 | [error response](/http-api/#error-response) | `INVALID_FORM_BODY` with `MESSAGE_IDS_CANNOT_BE_EMPTY` when the list is empty |
 | 400 | [error response](/http-api/#error-response) | `CANNOT_EXECUTE_ON_DM` in a private channel |
 
-The rate limit is 10 requests per 10 seconds, on the `channel:message:bulk_delete::channel_id` bucket.
+The `channel:message:bulk_delete::channel_id` bucket allows 10 requests per 10 seconds.
 
 ## Purge personal notes
 
@@ -1208,7 +1208,7 @@ Deletes every message you sent in a channel and its threads, and can't be undone
 | 202 | empty | The messages were deleted |
 | 403 | [error response](/http-api/#error-response) | `SUDO_MODE_REQUIRED` when you're not in sudo mode |
 
-The rate limit is 10 requests per 10 seconds, on the `channel:message:bulk_delete::channel_id` bucket.
+The `channel:message:bulk_delete::channel_id` bucket allows 10 requests per 10 seconds.
 
 ## List pinned messages
 
@@ -1287,7 +1287,7 @@ The `{emoji}` path value is URL-encoded and 1-64 characters long. Use `name:id` 
 
 <RouteHeader method="GET" path="/v1/channels/{channel_id}/messages/{message_id}/reactions/{emoji}" bot />
 
-Returns the users who reacted with an emoji, as a plain array. The `X-Has-More` and `X-Next-After` headers have the paging values that [List reaction users](#list-reaction-users) returns in the body.
+Returns the users who reacted with an emoji, as a plain array. The `X-Has-More` and `X-Next-After` headers have the paging values that [List reaction users](#list-reaction-users) puts in its body.
 
 ### Query parameters
 
@@ -1375,7 +1375,7 @@ The rate limit is 30 requests per 10 seconds, on the `channel:reactions::channel
 
 <RouteHeader method="DELETE" path="/v1/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/{target_id}" bot />
 
-Removes the reaction of the user `target_id`, and Fluxer sends [Message Reaction Remove](/gateway/events/#message-reaction-remove). Unless `target_id` is you, this only works in a guild channel and needs `MANAGE_MESSAGES`.
+Removes the reaction of the user `target_id`, and Fluxer sends [Message Reaction Remove](/gateway/events/#message-reaction-remove). Unless `target_id` is you, this only works in a guild channel and needs the `MANAGE_MESSAGES` permission.
 
 ### Query parameters
 
@@ -1429,10 +1429,8 @@ Shows that you're typing, and Fluxer sends [Typing Start](/gateway/events/#typin
 
 | Field | Type | Description |
 | --- | --- | --- |
-| message_send_cooldown_ms?<sup>1</sup> | integer | Milliseconds until slowmode lets you send a message |
-| thread_create_cooldown_ms?<sup>1</sup> | integer | Milliseconds until slowmode lets you create a thread |
-
-<sup>1</sup> The schema does not declare this body
+| message_send_cooldown_ms? | integer | Milliseconds until slowmode lets you send a message |
+| thread_create_cooldown_ms? | integer | Milliseconds until slowmode lets you create a thread |
 
 Fluxer only returns this body during a slowmode cooldown, and only to a session with the [`channel_threads` client capability](/http-api/threads/#client-capability).
 

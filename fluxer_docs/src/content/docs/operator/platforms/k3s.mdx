@@ -1,0 +1,110 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: k3s
+description: You run Fluxer on k3s with the Helm chart, Traefik and local-path storage.
+---
+
+import {Steps} from '@astrojs/starlight/components';
+
+## Short version
+
+One machine with 2 CPU cores, 2 GB of memory at least and 4 GB for a busy instance, and 20 GB of free disk, and a domain that points at it. Installing k3s, cert-manager and the chart takes about 15 minutes from start to finish.
+
+## What this changes
+
+- k3s, with its Traefik ingress controller on ports 80 and 443 and its local-path storage. local-path keeps the data in `/var/lib/rancher/k3s/storage` on the node, and deleting the claim deletes the data. `helm uninstall` leaves the claim in place.
+- cert-manager in the `cert-manager` namespace, with a ClusterIssuer called `letsencrypt` that uses Let's Encrypt.
+- Fluxer in the `fluxer` namespace, [the same as on any cluster](/operator/kubernetes/#what-this-changes), with voice on host ports 7881 on TCP and 7882 on UDP of the node.
+
+## Before you start
+
+Check the [requirements](/operator/requirements/). Open ports 80 and 443 on TCP, 7881 on TCP and 7882 on UDP in any firewall in front of the machine. Install [Helm](https://helm.sh/docs/intro/install/).
+
+## Install
+
+<Steps>
+
+1. Install k3s.
+
+   ```sh
+   curl -sfL https://get.k3s.io | sh -
+   mkdir -p ~/.kube && sudo cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config && chmod 600 ~/.kube/config
+   ```
+
+   After a few seconds, `kubectl get nodes` shows the node as `Ready`.
+
+2. Install cert-manager and a Let's Encrypt issuer that uses Traefik for its challenges.
+
+   ```sh
+   helm install cert-manager oci://quay.io/jetstack/charts/cert-manager \
+     -n cert-manager --create-namespace --set crds.enabled=true --wait
+   ```
+
+   ```yaml title="issuer.yaml"
+   apiVersion: cert-manager.io/v1
+   kind: ClusterIssuer
+   metadata:
+     name: letsencrypt
+   spec:
+     acme:
+       server: https://acme-v02.api.letsencrypt.org/directory
+       privateKeySecretRef:
+         name: letsencrypt
+       solvers:
+         - http01:
+             ingress:
+               ingressClassName: traefik
+   ```
+
+   Apply it with `kubectl apply -f issuer.yaml`. `kubectl get clusterissuer` then shows `True` under READY for the issuer.
+
+3. Give Traefik ten minutes to receive each request, so large uploads on a slow connection finish. Traefik 3 gives each request 60 seconds by default.
+
+   ```yaml title="traefik-config.yaml"
+   apiVersion: helm.cattle.io/v1
+   kind: HelmChartConfig
+   metadata:
+     name: traefik
+     namespace: kube-system
+   spec:
+     valuesContent: |-
+       ports:
+         web:
+           transport:
+             respondingTimeouts:
+               readTimeout: 600s
+         websecure:
+           transport:
+             respondingTimeouts:
+               readTimeout: 600s
+   ```
+
+   Apply it with `kubectl apply -f traefik-config.yaml`, and k3s then restarts Traefik with the longer read timeout on both of its ports.
+
+4. Install Fluxer.
+
+   ```sh
+   helm install fluxer oci://ghcr.io/fluxerapp/charts/fluxer \
+     --namespace fluxer --create-namespace \
+     --set domain=chat.example.com \
+     --set ingress.annotations."cert-manager\.io/cluster-issuer"=letsencrypt
+   kubectl -n fluxer rollout status statefulset/fluxer --timeout 15m
+   ```
+
+   Traefik in k3s needs no extra annotations on the Ingress, and the Traefik config from step 3 gives slow uploads ten minutes to finish.
+
+   The rollout ends with `partitioned roll out complete`, and `kubectl -n fluxer get certificate` shows the certificate as ready about a minute later.
+
+5. Print the setup token.
+
+   ```sh
+   kubectl -n fluxer exec fluxer-0 -- fluxerd setup-token
+   ```
+
+   Open your domain and paste the token to create the first admin account.
+
+</Steps>
+
+## More than one node
+
+With more than one node, the voice ports open on whichever node runs the pod. Pin the pod to a node with `nodeSelector`, or use `voice.expose=loadBalancer` with ServiceLB.

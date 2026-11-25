@@ -36,7 +36,7 @@ Admin requests such as [Queue bulk job](/admin-api/bulk-jobs/#queue-bulk-job), [
 | payload | ?string | The JSON-encoded job input |
 | result | ?string | The JSON-encoded result |
 
-`payload` can include user IDs and message text. Status and progress can lag a few moments behind the running task. Use the [archive routes](/admin-api/archives/) to track archive progress and failures.
+`payload` can include user IDs and message text. Status and progress can lag a few moments behind the running task. Use the [archive routes](/admin-api/archives/) to track the progress and failures of archives.
 
 ### Example
 
@@ -92,7 +92,7 @@ A job still `queued` or `running` after 8 days becomes `deadletter` with the err
 
 ## Processing lanes
 
-List jobs never returns `realtime` or `unfurl` work, because those tasks have no job record.
+List jobs never returns `realtime` or `unfurl` work, since those tasks have no job record.
 
 | Value | Description |
 | --- | --- |
@@ -104,7 +104,7 @@ List jobs never returns `realtime` or `unfurl` work, because those tasks have no
 
 ## Background job task types
 
-The table lists the task types that admin requests queue and the guild and thread work you are most likely to see. Other task types can also appear.
+These are the task types that admin requests queue, and the guild and thread work you are most likely to see. Other task types can also appear.
 
 | Value | Description |
 | --- | --- |

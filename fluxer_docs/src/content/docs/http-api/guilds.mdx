@@ -6,7 +6,7 @@ description: Guild objects, creation templates, visits and the endpoints that cr
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A guild is a community with its own channels, roles, members and settings. Members and ownership are on [Guild members](/http-api/guild-members/), and channels are on [Guild channels](/http-api/guild-channels/). An OAuth2 bearer token with the [`guilds` scope](/http-api/oauth2/#oauth2-scopes) can call only [List current user guilds](#list-current-user-guilds) and [Get guild](#get-guild). A guild that doesn't exist returns 404 `UNKNOWN_GUILD`, and a route that needs membership returns 403 `MISSING_PERMISSIONS` to a non-member.
+A guild is a community with its own channels, roles, members and settings. [Manage members and ownership](/http-api/guild-members/) and [channels](/http-api/guild-channels/) with their own routes. An OAuth2 bearer token with the [`guilds` scope](/http-api/oauth2/#oauth2-scopes) can call only [List current user guilds](#list-current-user-guilds) and [Get guild](#get-guild). A guild that doesn't exist returns 404 `UNKNOWN_GUILD`, and a route that needs membership returns 403 `MISSING_PERMISSIONS` to a non-member.
 
 ## Guild object
 
@@ -241,7 +241,7 @@ The verification level decides who can send messages in the guild. The owner, bo
 
 <sup>1</sup> A guild with `DISCOVERABLE` is always at least LOW, and [Modify guild](#modify-guild) rejects a lower value with the field code `DISCOVERABLE_GUILD_VERIFICATION_LEVEL_TOO_LOW`
 
-A member who fails the check gets 403 `GUILD_VERIFICATION_REQUIRED`, `GUILD_EMAIL_VERIFICATION_REQUIRED` or `ACCOUNT_TOO_NEW_FOR_GUILD`.
+A member who fails the check gets 403 with `ACCOUNT_TOO_NEW_FOR_GUILD`, `GUILD_VERIFICATION_REQUIRED` or `GUILD_EMAIL_VERIFICATION_REQUIRED`.
 
 ## MFA levels
 
@@ -288,7 +288,7 @@ Fluxer sets the level from the guild's `nsfw` field.
 
 ## Guild content warning levels
 
-A channel set to inherit uses the guild level, as described in [channel content warning levels](/http-api/channels/#content-warning-levels).
+A channel set to [inherit](/http-api/channels/#content-warning-levels) uses the guild level.
 
 | Value | Name | Description |
 | --- | --- | --- |
@@ -337,7 +337,7 @@ Only the [Admin API](/admin-api/guilds/) sets these bits.
 | INVITE_SPLASH | Guild can use invite splash assets |
 | INVITES_DISABLED<sup>3</sup> | Guild invites can't be used |
 | LARGE_GUILD_OVERRIDE<sup>4</sup> | Guild is marked as a large guild |
-| MEMBER_DMS_DISABLED<sup>3</sup> | Members who aren't friends can't message each other through this guild. See [Direct messages](/http-api/users/private-channels/#direct-messages) |
+| MEMBER_DMS_DISABLED<sup>3</sup> | Members who aren't friends can't [message each other](/http-api/users/private-channels/#direct-messages) through this guild |
 | MORE_EMOJI<sup>4</sup> | Raises the emoji limit |
 | MORE_STICKERS<sup>4</sup> | Raises the sticker limit |
 | PARTNERED | Guild has partnered status |
@@ -346,7 +346,7 @@ Only the [Admin API](/admin-api/guilds/) sets these bits.
 | TEXT_CHANNEL_FLEXIBLE_NAMES<sup>3</sup> | Text, announcement, forum and media channel names keep uppercase letters, spaces and punctuation |
 | UNAVAILABLE_FOR_EVERYONE<sup>5</sup> | Guild is unavailable to every account, including the owner |
 | UNAVAILABLE_FOR_EVERYONE_BUT_STAFF<sup>5</sup> | Guild is unavailable to every account without the instance staff flag |
-| UNAVAILABLE_HIDDEN | The Gateway sends the unavailable guild with `unavailable_hidden: true` |
+| UNAVAILABLE_HIDDEN | The Gateway sends the unavailable guild, with `unavailable_hidden` set to `true` |
 | UNLIMITED_EMOJI | Guild has 999999 emoji slots |
 | UNLIMITED_STICKERS | Guild has 999999 sticker slots |
 | VANITY_URL | Guild can have a custom invite code |
@@ -356,7 +356,7 @@ Only the [Admin API](/admin-api/guilds/) sets these bits.
 | VISITS_ENABLED<sup>3</sup> | People can [visit](#visiting-guilds) the guild before joining |
 | VOICE_E2EE | Guild voice channels encrypt call media with a room key that the server issues. This isn't end-to-end encryption |
 
-<sup>1</sup> [Crosspost message](/http-api/messages/#crosspost-message) and [Follow announcement channel](/http-api/channels/#follow-announcement-channel) return 403 `FEATURE_TEMPORARILY_DISABLED`
+<sup>1</sup> [Crosspost message](/http-api/messages/#crosspost-message) and [Follow announcement channel](/http-api/channels/#follow-announcement-channel) return 403 with `FEATURE_TEMPORARILY_DISABLED` in this guild
 
 <sup>2</sup> Without one of these, the limit is 96000. A higher `bitrate` is stored at the limit
 
@@ -368,7 +368,7 @@ Only the [Admin API](/admin-api/guilds/) sets these bits.
 
 ## Visiting guilds
 
-A visit lets someone read a guild before joining. A visitor sees the channels the @everyone role can read, with only the @everyone overwrite applied, and can't post, react, type, join voice or see the member list. Visits need the `guild_visits` [experiment assignment](/http-api/experiments/#guild-visits-assignment-object), and a session gets its visited guilds only when it identifies with the `GUILD_VISITS` [session flag](/gateway/commands/#session-flags).
+A visit lets someone read a guild before joining. A visitor sees the channels the @everyone role can read, with only the @everyone overwrite applied, and can't post, react, type, join voice or see the member list. Visits need the `guild_visits` [experiment assignment](/http-api/experiments/#guild-visits-assignment-object), and a session gets its visited guilds only when it identifies with the [session flag](/gateway/commands/#session-flags) `GUILD_VISITS` set.
 
 A guild takes visitors while it has `VISITS_ENABLED`. A visit starts from [Visit invite guild](/http-api/invites/#visit-invite-guild), [Visit discovery guild](/http-api/discovery/#visit-discovery-guild) or the instance's single community after sign up. Visitors can't see private threads, and adult channels stay hidden from people who may not see adult content. Without a verified email, a visitor sees only the last `guild_visit_history_days_unverified` days of messages (30 by default). Search by author or mention returns 400 `SEARCH_FILTER_NEEDS_MEMBERSHIP`.
 
@@ -529,7 +529,7 @@ The rate limit is 100 requests per 10 seconds, on the `guild:read::guild_id` buc
 
 <RouteHeader method="PATCH" path="/v1/guilds/{guild_id}" bot auditReason mfa />
 
-Changes guild settings and returns the updated [guild object](#guild-object). You need `MANAGE_GUILD`, which is an [elevated permission](/http-api/permissions/#elevated-permissions). Only the owner can change `mfa_level`, and it needs [sudo mode](#sudo-verification-fields).
+Changes guild settings and returns the updated [guild object](#guild-object). You need `MANAGE_GUILD`, which is an [elevated permission](/http-api/permissions/#elevated-permissions). Only the owner can change `mfa_level`, and that change needs [sudo mode](#sudo-verification-fields).
 
 ### JSON body
 
@@ -739,7 +739,7 @@ The rate limit is 30 requests per 10 seconds, on the `user:guild_visits` bucket.
 
 <RouteHeader method="POST" path="/v1/users/@me/guild-visits/{guild_id}/join" />
 
-Turns your visit into membership and returns the [guild object](#guild-object). The join runs the same checks as the invite or discovery listing that started the visit. Your sessions get [Guild Create](/gateway/events/#guild-create).
+Turns your visit into membership and returns the [guild object](#guild-object). The join runs the same checks as the invite or discovery listing that started the visit. Fluxer sends [Guild Create](/gateway/events/#guild-create) to your sessions.
 
 ### Response
 

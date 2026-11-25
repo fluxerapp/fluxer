@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 An archive is a snapshot of one user account or one guild, built in the background. [Create user archive](/admin-api/users/#create-user-archive) and [Create guild archive](/admin-api/guilds/#create-guild-archive) start one, and the routes below look it up and give you a download link.
 
-The Admin API routes on this page need `archive:view_all`, or `archive:trigger:user` for user archives and `archive:trigger:guild` for guild archives. See [ACL evaluation](/admin-api/#acl-evaluation).
+The Admin API routes on this page need `archive:view_all`, or `archive:trigger:user` for user archives and `archive:trigger:guild` for guild archives. The [wildcard ACL](/admin-api/#acl-evaluation) `*` covers all three.
 
 ## Archive object
 
@@ -113,7 +113,7 @@ The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 
 <RouteHeader method="GET" path="/v1/admin/archives/{subject_type}/{subject_id}/{archive_id}" auditReason />
 
-Returns one [archive](#archive-object) object, or null `archive` when nothing matches or the archive has expired.
+Returns one [archive](#archive-object) object, or null `archive` when nothing matches or the archive expired.
 
 ### Response body
 

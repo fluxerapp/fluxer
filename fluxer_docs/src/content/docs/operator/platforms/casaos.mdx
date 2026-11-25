@@ -1,0 +1,71 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: CasaOS and ZimaOS
+description: You run Fluxer on CasaOS or ZimaOS as a custom app imported from a compose file.
+---
+
+import {Steps} from '@astrojs/starlight/components';
+
+## Short version
+
+CasaOS or ZimaOS on a 64-bit machine with 2 GB of memory at least and 4 GB for a busy instance, and a domain or [its IP address](/operator/requirements/#with-an-ip-address). Import the compose file below as a custom app. The install takes about 15 minutes from start to finish.
+
+## What this changes
+
+- One app called `fluxer`, with one container and one Docker volume called `fluxer-data`. Uninstalling the app can delete the volume.
+- TCP ports 80, 443 and 7881, and UDP ports 443 and 7882, or port 8080 in proxy mode.
+
+## Before you start
+
+- Check the [requirements](/operator/requirements/).
+- The CasaOS dashboard uses port 80 by default. Either move the dashboard to another port in its settings, or run Fluxer in proxy mode behind a proxy or a tunnel.
+
+## Install
+
+<Steps>
+
+1. In the app store, choose Custom Install and then Import. Paste this with your domain.
+
+   ```yaml title="compose.yaml"
+   services:
+     fluxer:
+       image: ghcr.io/fluxerapp/fluxer:{{FLUXER_VERSION}}
+       container_name: fluxer
+       restart: unless-stopped
+       stop_grace_period: 130s
+       environment:
+         FLUXER_DOMAIN: chat.example.com
+         FLUXER_UPGRADE_COMMAND: "In CasaOS, set the image tag to {version} and apply it"
+       ports:
+         - "80:80"
+         - "443:443"
+         - "443:443/udp"
+         - "7881:7881"
+         - "7882:7882/udp"
+       volumes:
+         - fluxer-data:/var/lib/fluxer
+
+   volumes:
+     fluxer-data:
+       name: fluxer-data
+   ```
+
+   For proxy mode, add `FLUXER_EDGE_MODE: proxy` and replace the first three ports with the single port `"8080:8080"` for your proxy.
+
+2. Install the app.
+
+   The first start takes a few minutes, then the app shows on the dashboard.
+
+3. Print the setup token on the machine.
+
+   ```sh
+   sudo docker exec fluxer fluxerd setup-token
+   ```
+
+   Open your domain and paste the token to create the first admin account.
+
+</Steps>
+
+## Upgrade
+
+Change the tag on the `image` line to the new version and apply it. Fluxer backs up before it upgrades. The `FLUXER_UPGRADE_COMMAND` line makes the admin panel show this step with the new version when one is out.

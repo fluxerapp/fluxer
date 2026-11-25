@@ -1,0 +1,97 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: TrueNAS
+description: You run Fluxer on TrueNAS Community Edition 25.04 or later, or TrueNAS SCALE 24.10, as a custom app installed from a compose file you paste in.
+---
+
+import {Steps} from '@astrojs/starlight/components';
+
+## Short version
+
+TrueNAS Community Edition 25.04 or later, or TrueNAS SCALE 24.10, with Docker apps, an SSD pool for app data, and a reverse proxy or a tunnel. Install a custom app from the YAML below, which takes about 20 minutes.
+
+## What this changes
+
+- One custom app called `fluxer`, with one container and one Docker volume called `fluxer-data` in the apps pool. A ZFS snapshot of the apps dataset taken while Fluxer runs may not restore cleanly, and Fluxer's own [backups](/operator/backups/) don't have that problem.
+- Port 8080 for your proxy, and ports 7881 on TCP and 7882 on UDP for voice, forwarded from your router to the TrueNAS machine.
+
+## Before you start
+
+- Check the [requirements](/operator/requirements/).
+- TrueNAS 24.04 and older run apps on Kubernetes, and these steps don't work there.
+- The TrueNAS web UI uses ports 80 and 443. Either run Fluxer in proxy mode behind a proxy, as below, or move the UI to other ports under System, General, GUI.
+- Choose a pool for apps under Apps, Configuration, if you haven't already.
+
+## Install
+
+<Steps>
+
+1. Under Apps, choose "Discover Apps", open the menu next to "Custom App" and choose "Install via YAML" to paste a compose file.
+
+2. Call the app `fluxer`, then paste this with your own domain in it.
+
+   ```yaml title="compose.yaml"
+   services:
+     fluxer:
+       image: ghcr.io/fluxerapp/fluxer:{{FLUXER_VERSION}}
+       container_name: fluxer
+       restart: unless-stopped
+       stop_grace_period: 130s
+       environment:
+         FLUXER_DOMAIN: chat.example.com
+         FLUXER_EDGE_MODE: proxy
+         FLUXER_UPGRADE_COMMAND: "In TrueNAS, edit the app, set the image tag to {version} and save"
+       ports:
+         - "8080:8080"
+         - "7881:7881"
+         - "7882:7882/udp"
+       volumes:
+         - fluxer-data:/var/lib/fluxer
+
+   volumes:
+     fluxer-data:
+       name: fluxer-data
+   ```
+
+   To keep the data in a dataset in place of the `fluxer-data` volume, make user ID 65532 its owner, because Fluxer runs as that user.
+
+3. Save the app.
+
+   The first start pulls the image and takes a few minutes. The app should then show as running under Apps, Installed. To upgrade later, edit the app, change the tag on the `image` line and save. The `FLUXER_UPGRADE_COMMAND` line makes the admin panel show this step with the new version when one is out.
+
+4. Point your proxy at `http://<truenas address>:8080` for your domain, with WebSockets turned on and an upload limit of at least 512 MiB.
+
+   Fluxer trusts the visitor address that any private address passes on, so keep port 8080 closed to the other devices on your home or office network.
+
+   The Fluxer setup wizard opens at `https://chat.example.com`.
+
+5. Print the setup token in the TrueNAS shell.
+
+   ```sh
+   sudo docker exec fluxer fluxerd setup-token
+   ```
+
+   Open your domain and paste the token to create the first admin account.
+
+</Steps>
+
+## On your home network without a domain
+
+Fluxer can also run on the TrueNAS machine's own address, such as `192.168.1.20`, and sign its own certificate. Devices on your home network can then open it, and nobody outside can. The TrueNAS web UI keeps ports 80 and 443, so Fluxer uses 8080 and 8443.
+
+In the compose file, set these lines, leave out `FLUXER_EDGE_MODE` and replace the ports.
+
+```yaml title="compose.yaml"
+services:
+  fluxer:
+    environment:
+      FLUXER_DOMAIN: 192.168.1.20
+      FLUXER_PUBLIC_PORT: "8443"
+    ports:
+      - "8080:80"
+      - "8443:443"
+      - "7881:7881"
+      - "7882:7882/udp"
+```
+
+Open `https://192.168.1.20:8443` with your own address. Browsers show a certificate warning until you [install Fluxer's root certificate](/operator/requirements/#trusting-fluxers-own-authority) on each device. Each device can download the certificate file from `http://192.168.1.20:8080/fluxer-root.crt` with any browser.

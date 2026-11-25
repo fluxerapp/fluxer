@@ -1,0 +1,74 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Talos Linux
+description: You run Fluxer on a Talos Linux cluster with the Helm chart, a CSI driver for storage and voice through a LoadBalancer or node ports.
+---
+
+import {Steps} from '@astrojs/starlight/components';
+
+## Short version
+
+A Talos cluster with a default StorageClass, an ingress controller or Gateway API, cert-manager or another way to get certificates, and a load balancer that takes TCP and UDP on one Service. Install the chart with `voice.expose=loadBalancer`. It takes about 20 minutes on a cluster that has those parts.
+
+## What this changes
+
+Fluxer in its own namespace, [the same as on any cluster](/operator/kubernetes/#what-this-changes), with a second LoadBalancer Service called `fluxer-voice` for TCP 7881 and UDP 7882.
+
+## Before you start
+
+- Check the [requirements](/operator/requirements/).
+- Talos has no storage of its own for workloads. Install a CSI driver with a default StorageClass first, such as Longhorn, Rook Ceph, OpenEBS or local-path-provisioner. Local disks work best for the database. Upgrading Talos reboots each node, and with local storage the pod waits for its own node to come back.
+- Talos enforces the Pod Security `baseline` level in every namespace by default, and `baseline` refuses host ports. With the chart's default `voice.expose=hostPort` no pod starts, so use `loadBalancer` or `nodePort`.
+
+## Install
+
+<Steps>
+
+1. Install the chart with voice on a LoadBalancer Service.
+
+   ```sh
+   helm install fluxer oci://ghcr.io/fluxerapp/charts/fluxer \
+     --namespace fluxer --create-namespace \
+     --set domain=chat.example.com \
+     --set voice.expose=loadBalancer \
+     --set ingress.annotations."cert-manager\.io/cluster-issuer"=letsencrypt
+   ```
+
+   On bare metal, a LoadBalancer Service needs MetalLB, Cilium or another implementation. With an address you set aside for voice, add `--set voice.service.loadBalancerIP=<address>` to the install, and in step 2 run only the `kubectl rollout status` line, which waits until the Fluxer pod is ready to use.
+
+2. Set the voice address to the external IP address of the `fluxer-voice` Service, and wait for the pod to restart with that address.
+
+   The first line waits for the load balancer's address, and the second looks up the chart version you installed, so the upgrade stays on the version you have.
+
+   ```sh
+   until ip=$(kubectl -n fluxer get svc fluxer-voice -o jsonpath='{.status.loadBalancer.ingress[0].ip}') && [ -n "$ip" ]; do sleep 5; done
+   version=$(helm get metadata fluxer -n fluxer | awk '/^VERSION:/ {print $2}')
+   helm upgrade fluxer oci://ghcr.io/fluxerapp/charts/fluxer -n fluxer --version "$version" --reset-then-reuse-values \
+     --set voice.publicIP="$ip"
+   kubectl -n fluxer rollout status statefulset/fluxer --timeout 15m
+   ```
+
+   When the pod is ready, the rollout ends with `partitioned roll out complete`.
+
+3. Print the setup token.
+
+   ```sh
+   kubectl -n fluxer exec fluxer-0 -- fluxerd setup-token
+   ```
+
+   Open your domain and paste the token to create the first admin account.
+
+</Steps>
+
+To keep host ports, create the namespace at the Pod Security `privileged` level before you install, and leave out `voice.expose`. That turns off Pod Security for each pod in the namespace, so keep Fluxer in a namespace of its own.
+
+```sh
+kubectl create namespace fluxer
+kubectl label namespace fluxer pod-security.kubernetes.io/enforce=privileged
+helm install fluxer oci://ghcr.io/fluxerapp/charts/fluxer \
+  --namespace fluxer \
+  --set domain=chat.example.com \
+  --set ingress.annotations."cert-manager\.io/cluster-issuer"=letsencrypt
+```
+
+Then run the last line of step 2, and step 3.

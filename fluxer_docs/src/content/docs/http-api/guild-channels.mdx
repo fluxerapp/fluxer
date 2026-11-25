@@ -6,7 +6,7 @@ description: Lists, creates and reorders the channels in a guild.
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A guild channel is a channel or category in a guild. These endpoints list, create and reorder them. [Channels](/http-api/channels/) has the channel object and the endpoints for a single channel.
+A guild channel is a channel or category in a guild. These endpoints list, create and reorder them. To get, change or delete one channel, use the [channel routes](/http-api/channels/).
 
 ## Guild channel types
 
@@ -39,7 +39,7 @@ You send these in `permission_overwrites` when you create a channel. Later reads
 
 ## Channel position object
 
-One entry in the body of [Modify guild channel positions](#modify-guild-channel-positions). The API applies entries in array order.
+One entry in the body of [Modify guild channel positions](#modify-guild-channel-positions). The API applies entries in order.
 
 ### Structure
 
@@ -55,7 +55,7 @@ One entry in the body of [Modify guild channel positions](#modify-guild-channel-
 
 <sup>2</sup> An omitted field keeps the current parent. A category can't have a parent
 
-<sup>3</sup> Must share the destination parent. A category as sibling places the channel after it and its children
+<sup>3</sup> Must share the destination parent. A category as sibling places the channel after the category and its children
 
 <sup>4</sup> Applies only when the same entry moves the channel into a category, and replaces the channel's overwrites
 
@@ -115,7 +115,7 @@ A forum channel also accepts every field of the [forum field table](/http-api/fo
 | default_auto_archive_duration?<sup>8</sup> | ?integer | The default [auto archive duration](/http-api/threads/#auto-archive-durations), or null for none |
 | default_thread_rate_limit_per_user?<sup>8</sup> | ?integer | The slowmode interval in seconds new threads inherit (0-21600), or null for none |
 
-<sup>1</sup> Control characters are stripped and whitespace is collapsed. A text, announcement, forum or media channel name is also lowercased, with hyphens for spaces and ASCII punctuation other than `-`, `.` and `_` removed, unless the guild has [TEXT_CHANNEL_FLEXIBLE_NAMES](/http-api/guilds/#guild-features). An empty result returns `NAME_EMPTY_AFTER_NORMALIZATION`
+<sup>1</sup> Control characters are stripped and whitespace is collapsed. A text, announcement, forum or media channel name is also lowercased, with hyphens for spaces and ASCII punctuation other than `-`, `.` and `_` removed, unless the guild has [TEXT_CHANNEL_FLEXIBLE_NAMES](/http-api/guilds/#guild-features). A name that is empty after these changes returns the field code `NAME_EMPTY_AFTER_NORMALIZATION`
 
 <sup>2</sup> An `http` or `https` URL of at most 2048 characters with no credentials
 
@@ -129,7 +129,7 @@ A forum channel also accepts every field of the [forum field table](/http-api/fo
 
 <sup>7</sup> `1` turns the warning on. Any other value stores `0`, which inherits the warning from the parent category and the guild
 
-<sup>8</sup> Text, announcement, forum and media channels only, from a caller with `channel_threads`
+<sup>8</sup> Text, announcement, forum and media channels only, from a bot or a session with the `channel_threads` client capability
 
 The [limit keys](/http-api/instance/#limit-keys) `max_guild_channels` and `max_channels_per_category` cap the channels in a guild and in one category.
 
@@ -140,7 +140,7 @@ In a category, a new voice channel goes last and any other channel goes after th
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [channel](/http-api/channels/#channel-object) object | The channel was created |
-| 400 | [error response](/http-api/#error-response) | `MAX_GUILD_CHANNELS` or `MAX_CATEGORY_CHANNELS` when a limit is hit, or `TWO_FACTOR_REQUIRED` (see [MFA level](/http-api/guilds/#mfa-levels)) |
+| 400 | [error response](/http-api/#error-response) | `MAX_GUILD_CHANNELS` or `MAX_CATEGORY_CHANNELS` when a limit is hit, or `TWO_FACTOR_REQUIRED` under the guild's [MFA level](/http-api/guilds/#mfa-levels) |
 | 403 | [error response](/http-api/#error-response) | You lack a required permission, returning `MISSING_PERMISSIONS` |
 
 The rate limit is 10 requests per minute, on the `guild:channel:create::guild_id` bucket.
@@ -149,7 +149,7 @@ The rate limit is 10 requests per minute, on the `guild:channel:create::guild_id
 
 <RouteHeader method="PATCH" path="/v1/guilds/{guild_id}/channels" bot mfa />
 
-Moves channels and categories and returns 204. You need [MANAGE_CHANNELS](/http-api/permissions/) in the guild. When an entry sets `lock_permissions` and changes the parent, you also need [MANAGE_ROLES](/http-api/permissions/) in the moved channel and every bit the copy adds or removes. Fluxer sends [Channel Update Bulk](/gateway/events/#channel-update-bulk) for each entry that changes the order and writes no audit log entry.
+Moves channels and categories and returns 204. You need [MANAGE_CHANNELS](/http-api/permissions/) in the guild. When an entry sets `lock_permissions` and changes the parent, you also need [MANAGE_ROLES](/http-api/permissions/) in the moved channel and every bit the copy adds or removes. Fluxer sends [Channel Update Bulk](/gateway/events/#channel-update-bulk) for each entry that changes the order, and the move writes no entry to the audit log.
 
 ### JSON body
 
@@ -166,7 +166,7 @@ The API checks that every channel, parent and sibling in the request exists befo
 | 403 | [error response](/http-api/#error-response) | You lack a required permission, returning `MISSING_PERMISSIONS` |
 | 423 | [error response](/http-api/#error-response) | `GENERAL_ERROR` when another reorder in this guild is in progress. Retry after the `Retry-After` header |
 
-<sup>1</sup> Field errors are `INVALID_FORM_BODY` with `CHANNEL_NOT_FOUND`, `INVALID_CHANNEL_ID`, `INVALID_PARENT_CHANNEL`, `PARENT_MUST_BE_CATEGORY`, `CATEGORIES_CANNOT_HAVE_PARENTS`, `PRECEDING_CHANNEL_MUST_SHARE_PARENT`, `CANNOT_POSITION_CHANNEL_RELATIVE_TO_ITSELF` or `VOICE_CHANNELS_CANNOT_BE_ABOVE_TEXT_CHANNELS`. A full category returns `MAX_CATEGORY_CHANNELS`, and two-factor authentication returns `TWO_FACTOR_REQUIRED`
+<sup>1</sup> Field errors are `INVALID_FORM_BODY` with `CHANNEL_NOT_FOUND`, `INVALID_CHANNEL_ID`, `INVALID_PARENT_CHANNEL`, `PARENT_MUST_BE_CATEGORY`, `CATEGORIES_CANNOT_HAVE_PARENTS`, `PRECEDING_CHANNEL_MUST_SHARE_PARENT`, `CANNOT_POSITION_CHANNEL_RELATIVE_TO_ITSELF` or `VOICE_CHANNELS_CANNOT_BE_ABOVE_TEXT_CHANNELS`. A full category returns `MAX_CATEGORY_CHANNELS`, and missing two-factor authentication returns `TWO_FACTOR_REQUIRED`
 
 A failed `lock_permissions` copy returns 403 `MISSING_PERMISSIONS` and keeps the move. The copy sends no Gateway event. Re-read the channel to see it.
 

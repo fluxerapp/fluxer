@@ -1,31 +1,31 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
-title: Data harvests
+title: Data exports
 description: Requesting a ZIP archive of the account's data and downloading it.
 ---
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A data harvest is a ZIP archive of the current account's data. Fluxer builds it in the background while you poll its status, then you download it.
+A data export is a ZIP archive with a copy of the current account's data. Fluxer builds it in the background while you poll its status, then you download it.
 
-Every route except [Download data harvest archive](#download-data-harvest-archive) needs a user token. Bot and OAuth2 tokens get 403.
+Every route except [Download data export archive](#download-data-export-archive) needs a user token. Bot and OAuth2 tokens get 403.
 
-You can download a completed archive until `download_url_expires_at`, seven days after it is written. After that, [Get data harvest download URL](#get-data-harvest-download-url) returns 400 `HARVEST_EXPIRED` and the status stays `completed`.
+You can download a completed archive until `download_url_expires_at`, seven days after it is written. After that, [Get data export download URL](#get-data-export-download-url) returns 400 `HARVEST_EXPIRED` and the status stays `completed`.
 
 ## Archive contents
 
 The archive has these files.
 
 - `user.json` with the account, its connections without credentials and its thread memberships
-- `channels/{channel_id}/messages.json` for each channel with a collected message, oldest first
+- `channels/{channel_id}/messages.json` for each channel with a collected message, with the oldest first
 - `payments/payment_history.json`
 - `integrations/oauth.json` with the applications the account owns
 - `account/security.json`
 - the avatar and banner under `assets/user/`
 
-Each message lists its attachments with a [data package URL](/http-api/messages/#data-package-attachment-urls), and the archive doesn't include the files. When the harvest completes, Fluxer emails a download link if the account has an email address and the instance sends email.
+Each message lists its attachments with a [data package URL](/http-api/messages/#data-package-attachment-urls), and the archive doesn't include the files. When the export is ready, Fluxer emails a download link if the account has an email address and the instance sends email.
 
-## Harvest status values
+## Export status values
 
 | Value | Description |
 | --- | --- |
@@ -36,40 +36,40 @@ Each message lists its attachments with a [data package URL](/http-api/messages/
 
 When an attempt fails, Fluxer retries it a limited number of times. The retry clears `failed_at` and `error_message`, resets progress to 0 and reports `processing`. After the last attempt fails, `progress_step` becomes `Failed` and the status stays `failed`.
 
-## Harvest creation object
+## Export creation object
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| harvest_id | snowflake | The ID of the created harvest |
-| status | string | The [harvest status](#harvest-status-values), always `pending` |
-| created_at | ISO8601 timestamp | When the harvest was requested |
+| harvest_id | snowflake | The ID of the created export |
+| status | string | The [export status](#export-status-values), always `pending` |
+| created_at | ISO8601 timestamp | When the export was requested |
 
-## Harvest status object
+## Export status object
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| harvest_id | snowflake | The ID of the harvest |
-| status | string | The [harvest status](#harvest-status-values) |
-| created_at | ISO8601 timestamp | When the harvest was requested |
+| harvest_id | snowflake | The ID of the export |
+| status | string | The [export status](#export-status-values) |
+| created_at | ISO8601 timestamp | When the export was requested |
 | started_at | ?ISO8601 timestamp | When the current attempt began |
 | completed_at | ?ISO8601 timestamp | When the archive was written |
 | failed_at | ?ISO8601 timestamp | When the latest attempt failed |
 | file_size | ?string | The archive size in bytes as a decimal string |
 | progress_percent | number | Progress from 0 through 100 |
-| progress_step | ?string | The [harvest progress step](#harvest-progress-steps) |
+| progress_step | ?string | The [export progress step](#export-progress-steps) |
 | error_message | ?string | The latest failure description, for logs only |
 | download_url_expires_at | ?ISO8601 timestamp | When the archive stops being downloadable |
 | expires_at | ?ISO8601 timestamp | Same as `download_url_expires_at` |
 
-## Harvest progress steps
+## Export progress steps
 
 | Value | Description |
 | --- | --- |
-| Queued | The harvest was created |
+| Queued | The export was created |
 | Starting harvest | An attempt began, with progress 0 |
 | Harvesting messages | Message collection started, with progress 5 |
 | Harvested N messages | N messages were collected. This step is skipped when there are none |
@@ -78,7 +78,7 @@ When an attempt fails, Fluxer retries it a limited number of times. The retry cl
 | Completed | The archive is ready, with progress 100 |
 | Failed | The last attempt failed and Fluxer stopped retrying |
 
-## Harvest download object
+## Export download object
 
 ### Structure
 
@@ -87,15 +87,15 @@ When an attempt fails, Fluxer retries it a limited number of times. The retry cl
 | download_url | string | The temporary archive download URL (1-2048 characters) |
 | expires_at | ISO8601 timestamp | Seven days after the URL was issued |
 
-## Harvest message filter object
+## Export message filter object
 
-The filter chooses which messages a harvest collects, and the rest of the archive is always included.
+The filter chooses which messages an export includes, and the rest of the archive is always included.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| scope? | string | Either `selected` or `inaccessible_only` (default `selected`) |
+| scope? | string | `selected` (the default) or `inaccessible_only` |
 | include_dms? | boolean | Whether to include open one-to-one DMs (default true) |
 | include_dms_closed?<sup>1</sup> | boolean | Whether to include closed one-to-one DMs (default true) |
 | include_group_dms? | boolean | Whether to include group DMs you are still in (default true) |
@@ -112,75 +112,75 @@ The filter chooses which messages a harvest collects, and the rest of the archiv
 
 The `selected` scope needs at least one `include_*` field set to true. The `inaccessible_only` scope selects messages in guilds you left or were removed from and in group DMs you left. It ignores the `include_*` fields, `guild_filter_mode` and both guild lists, and `start_date` and `end_date` still apply. Both scopes skip your personal notes channel.
 
-## Request data harvest
+## Request data export
 
 <RouteHeader method="POST" path="/v1/users/@me/harvest" />
 
-Creates an unfiltered harvest and returns a [harvest creation](#harvest-creation-object) object. The request has no body.
+Creates an unfiltered export from a request with no body, and returns an [export creation](#export-creation-object) object.
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | [harvest creation](#harvest-creation-object) object | The harvest was requested |
+| 200 | [export creation](#export-creation-object) object | The export was requested |
 
-The rate limit is 5 requests per 30 minutes, on the `user:data:harvest` bucket, shared with [Request filtered data harvest](#request-filtered-data-harvest).
+The rate limit is 5 requests per 30 minutes, on the `user:data:harvest` bucket, shared with [Request filtered data export](#request-filtered-data-export).
 
-## Request filtered data harvest
+## Request filtered data export
 
 <RouteHeader method="POST" path="/v1/users/@me/harvest/filtered" />
 
-Creates a harvest that collects only the messages the filter selects and returns a [harvest creation](#harvest-creation-object) object. With every field at its default, it collects the same messages as [Request data harvest](#request-data-harvest) except those in guilds and group DMs you have left.
+Creates an export that includes only the messages the filter selects and returns an [export creation](#export-creation-object) object. With every field at its default, it includes the same messages as [Request data export](#request-data-export) except those in guilds and group direct messages you have left.
 
 ### JSON body
 
-A [harvest message filter](#harvest-message-filter-object) object.
+A [export message filter](#export-message-filter-object) object.
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | [harvest creation](#harvest-creation-object) object | The harvest was requested |
+| 200 | [export creation](#export-creation-object) object | The export was requested |
 | 400 | [error response](/http-api/#error-response) | A field is invalid, `selected` has no `include_*` field set to true or `start_date` is not before `end_date` |
 
-The rate limit is 5 requests per 30 minutes, on the `user:data:harvest` bucket, shared with [Request data harvest](#request-data-harvest).
+The `user:data:harvest` bucket allows 5 requests per 30 minutes, and [Request data export](#request-data-export) shares it.
 
-## Get latest data harvest
+## Get latest data export
 
 <RouteHeader method="GET" path="/v1/users/@me/harvest/latest" />
 
-Returns the newest [harvest status](#harvest-status-object) object, or `null` when the account has no harvest.
+Returns the newest [export status](#export-status-object) object, or `null` when the account has no export.
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | [harvest status](#harvest-status-object) object \| null | The latest harvest was returned |
+| 200 | [export status](#export-status-object) object \| null | The latest export was returned |
 
 The rate limit is 40 requests per 10 seconds, on the `user:harvest:latest` bucket.
 
-## Get data harvest status
+## Get data export status
 
-<RouteHeader method="GET" path="/v1/users/@me/harvest/{harvestId}" />
+<RouteHeader method="GET" path="/v1/users/@me/harvest/{harvest_id}" />
 
-Returns one [harvest status](#harvest-status-object) object owned by the current account.
+Returns one [export status](#export-status-object) object owned by the current account.
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | [harvest status](#harvest-status-object) object | The harvest was returned |
-| 404 | [error response](/http-api/#error-response) | `UNKNOWN_HARVEST` when the harvest doesn't exist or isn't yours |
+| 200 | [export status](#export-status-object) object | The export was returned |
+| 404 | [error response](/http-api/#error-response) | `UNKNOWN_HARVEST` when the export doesn't exist or isn't yours |
 
 The rate limit is 40 requests per 10 seconds, on the `user:harvest:status` bucket.
 
-## Get data harvest download URL
+## Get data export download URL
 
-<RouteHeader method="GET" path="/v1/users/@me/harvest/{harvestId}/download" />
+<RouteHeader method="GET" path="/v1/users/@me/harvest/{harvest_id}/download" />
 
-Issues a temporary download URL for a completed harvest and returns a [harvest download](#harvest-download-object) object. By default the URL is a presigned object storage URL. When `FLUXER_API_PRESIGNED_HARVEST_DOWNLOADS_ENABLED` is false, it links to [Download data harvest archive](#download-data-harvest-archive).
+Issues a temporary download URL for a completed export and returns an [export download](#export-download-object) object. By default the URL is a presigned object storage URL. When `FLUXER_API_PRESIGNED_HARVEST_DOWNLOADS_ENABLED` is false, it links to [Download data export archive](#download-data-export-archive).
 
-:::caution[Anyone with a download URL can get the archive]
+:::caution[Anyone with a download URL can download the archive]
 Issuing a new URL doesn't revoke earlier ones, and each one works until it expires.
 :::
 
@@ -188,17 +188,17 @@ Issuing a new URL doesn't revoke earlier ones, and each one works until it expir
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | [harvest download](#harvest-download-object) object | A URL was issued |
+| 200 | [export download](#export-download-object) object | A URL was issued |
 | 400 | [error response](/http-api/#error-response) | `HARVEST_NOT_READY`, `HARVEST_FAILED` or `HARVEST_EXPIRED` |
-| 404 | [error response](/http-api/#error-response) | `UNKNOWN_HARVEST` when the harvest doesn't exist or isn't yours |
+| 404 | [error response](/http-api/#error-response) | `UNKNOWN_HARVEST` when the export doesn't exist or isn't yours |
 
 The rate limit is 10 requests per minute, on the `user:harvest:download` bucket.
 
-## Download data harvest archive
+## Download data export archive
 
-<RouteHeader method="GET" path="/v1/harvest-downloads/{harvestId}" unauthenticated />
+<RouteHeader method="GET" path="/v1/harvest-downloads/{harvest_id}" unauthenticated />
 
-Streams the archive of a completed harvest. Use the full URL from [Get data harvest download URL](#get-data-harvest-download-url), whose `token` authorizes the request. When presigned downloads are on, this route returns 404.
+Streams the archive of a completed export. Use the full URL from [Get data export download URL](#get-data-export-download-url), whose `token` authorises the request. When presigned downloads are on, this route returns 404.
 
 ### Query parameters
 
@@ -216,9 +216,9 @@ Streams the archive of a completed harvest. Use the full URL from [Get data harv
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | archive bytes | The archive was streamed as `application/zip` called `fluxer-data-{harvestId}.zip` |
+| 200 | archive bytes | The archive was streamed as `application/zip` called `fluxer-data-{harvest_id}.zip` |
 | 206 | archive bytes | The requested byte range was streamed |
-| 404 | `Not Found` | The token is invalid or expired, or the harvest is not downloadable |
+| 404 | `Not Found` | The token is invalid or expired, or the export is not downloadable |
 | 416 | `Range Not Satisfiable` | The requested byte range is outside the archive |
 
 The rate limit is 60 requests per minute, on the `user:harvest:download_file` bucket.

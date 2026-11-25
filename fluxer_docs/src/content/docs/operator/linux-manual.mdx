@@ -1,0 +1,210 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Linux by hand
+description: You install a release on Debian or Ubuntu under systemd by hand.
+tag: systemd only
+---
+
+import {Steps} from '@astrojs/starlight/components';
+
+Install a Fluxer release by hand with the same steps rexctl runs, one at a time. Every step runs as root on Debian 12 or later, or Ubuntu 22.04 or later.
+
+## What this changes
+
+- PostgreSQL and the packages in the release's `share/runtime-packages`, from Debian or Ubuntu. The names are the same on every supported version. The distribution's own PostgreSQL cluster is not created.
+- A system account and group called `fluxer`.
+- The release in `/opt/fluxer/releases/<version>`, and the link `/opt/fluxer/current` that points to it.
+- `/etc/fluxer/fluxer.env`, yours to edit, and the data folder `/var/lib/fluxer`.
+- The unit `fluxerd.service` in `/etc/systemd/system`.
+
+## Install
+
+<Steps>
+
+1. Download the release for your machine, with `checksums.txt` and its signature.
+
+   ```sh
+   version={{FLUXER_VERSION}}
+   arch=$(dpkg --print-architecture)
+   base=https://github.com/fluxerapp/fluxer/releases/download/fluxer-release%40$version
+   curl -fLO $base/fluxer-$version-linux-$arch.tar.zst
+   curl -fLO $base/checksums.txt
+   curl -fLO $base/checksums.txt.sigstore.json
+   ```
+
+   With [cosign](https://docs.sigstore.dev/cosign/system_config/installation/) installed, check that `checksums.txt` comes from Fluxer's release workflow. Then check the download against `checksums.txt`.
+
+   ```sh
+   cosign verify-blob checksums.txt --bundle checksums.txt.sigstore.json \
+     --certificate-identity https://github.com/fluxerapp/fluxer/.github/workflows/release-image-set.yaml@refs/heads/main \
+     --certificate-oidc-issuer https://token.actions.githubusercontent.com
+   sha256sum --ignore-missing -c checksums.txt
+   ```
+
+   cosign prints `Verified OK`, and `sha256sum` prints `OK` after the release file.
+
+2. Install PostgreSQL without its default cluster, then the other packages.
+
+   ```sh
+   apt-get update
+   apt-get install -y --no-install-recommends \
+     zstd postgresql-common
+   sed -ri \
+     's/^#?[[:space:]]*create_main_cluster[[:space:]]*=.*/create_main_cluster = false/' \
+     /etc/postgresql-common/createcluster.conf
+   mkdir release && tar --zstd -xf fluxer-$version-linux-$arch.tar.zst -C release
+   apt-get install -y --no-install-recommends \
+     $(cat release/share/runtime-packages)
+   systemctl disable --now postgresql
+   major=$(ls /usr/lib/postgresql | sort -n | tail -n 1)
+   apt-mark manual postgresql-$major
+   ```
+
+   The output shows `postgresql-$major` marked as manually installed, such as `postgresql-16` on Ubuntu 24.04, and nothing in `/etc/postgresql/$major`. The `apt-mark` line keeps `apt autoremove` from removing PostgreSQL.
+
+3. Create the account, folders and release.
+
+   ```sh
+   groupadd --system fluxer
+   useradd --system --gid fluxer --home-dir /var/lib/fluxer --no-create-home --shell /usr/sbin/nologin fluxer
+   install -d -m 0755 /opt/fluxer/releases
+   install -d -o root -g fluxer -m 0750 /etc/fluxer /etc/fluxer/caddy.d /etc/fluxer/caddy.d/sites /etc/fluxer/certs
+   install -d -o fluxer -g fluxer -m 0750 /var/lib/fluxer
+   chown -R root:root release && mv release /opt/fluxer/releases/$version
+   ln -sfn releases/$version /opt/fluxer/current
+   ```
+
+   To check it, run `ls /opt/fluxer/current/bin/fluxerd`. It prints that path.
+
+4. Write the settings file with your domain, or with the machine's [IP address](/operator/requirements/#with-an-ip-address).
+
+   ```sh
+   install -o root -g fluxer -m 0640 /dev/null /etc/fluxer/fluxer.env
+   echo 'FLUXER_DOMAIN=chat.example.com' > /etc/fluxer/fluxer.env
+   ```
+
+   Any other [setting](/operator/settings/) goes in the same file.
+
+5. Install the unit and start Fluxer.
+
+   ```sh
+   install -m 0644 /opt/fluxer/current/share/systemd/fluxerd.service /etc/systemd/system/fluxerd.service
+   systemctl daemon-reload
+   systemctl enable --now fluxerd
+   ```
+
+   The first start takes a few minutes.
+
+   `systemctl status fluxerd` shows `active (running)`. Its `Status` line says `starting` at first and `ready` once every part of Fluxer is up.
+
+6. Print the token and open your domain.
+
+   ```sh
+   runuser -u fluxer -- /opt/fluxer/current/bin/fluxerd setup-token
+   ```
+
+   The setup wizard opens at `https://chat.example.com`. It asks for the token and then creates the first admin account. The wizard asks whether people [sign in with a username or an email address](/operator/sign-in/), and this can't change later.
+
+7. [Invite people](/operator/running/#invite-people) with an invite link.
+
+</Steps>
+
+## Change settings
+
+Edit `/etc/fluxer/fluxer.env`, then reload, and Fluxer restarts the changed parts.
+
+```sh
+systemctl reload fluxerd
+```
+
+## Upgrade
+
+Download the new release and check it as in step 1, unpack it next to the old one, install any new packages, move the link and restart. Without cosign, leave out the `cosign` lines. With the [release check](/operator/upgrades/#turning-the-check-on) on, the admin panel's Updates page shows the download command with the newest version. When Fluxer starts a newer release on older data, it backs up the database, passwords and keys first, into `/var/lib/fluxer/backups`.
+
+```sh
+version={{FLUXER_VERSION}}
+arch=$(dpkg --print-architecture)
+base=https://github.com/fluxerapp/fluxer/releases/download/fluxer-release%40$version
+curl -fLO $base/fluxer-$version-linux-$arch.tar.zst
+curl -fLO $base/checksums.txt
+curl -fLO $base/checksums.txt.sigstore.json
+cosign verify-blob checksums.txt --bundle checksums.txt.sigstore.json \
+  --certificate-identity https://github.com/fluxerapp/fluxer/.github/workflows/release-image-set.yaml@refs/heads/main \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+sha256sum --ignore-missing -c checksums.txt
+mkdir release && tar --zstd -xf fluxer-$version-linux-$arch.tar.zst -C release
+apt-get install -y --no-install-recommends $(cat release/share/runtime-packages)
+chown -R root:root release && mv release /opt/fluxer/releases/$version
+install -m 0644 /opt/fluxer/releases/$version/share/systemd/fluxerd.service \
+  /etc/systemd/system/fluxerd.service
+systemctl daemon-reload
+ln -sfn releases/$version /opt/fluxer/current
+systemctl restart fluxerd
+```
+
+The upgrade replaces `fluxerd.service`, so put your own changes to the unit in a drop-in with `systemctl edit fluxerd`. Keep the previous release for going back, and delete older ones with `rm -r /opt/fluxer/releases/<version>`.
+
+Older releases came with `share/install.sh`, which used the same folders and unit, so upgrade those installs the same way.
+
+The first upgrade backs up the database as well. A release from install.sh doesn't check which release last ran on the data, so to go back from that first upgrade, stop Fluxer and run `fluxerd restore` with that backup before you move the link back.
+
+To go back, point `/opt/fluxer/current` at the older release and restart Fluxer.
+
+The older release refuses to run on newer data, and it logs the `fluxerd restore` command for the backup from before the upgrade. Stop Fluxer, run that command as the `fluxer` account and then start Fluxer again.
+
+```sh
+systemctl stop fluxerd
+runuser -u fluxer -- /opt/fluxer/current/bin/fluxerd restore /var/lib/fluxer/backups/<file>.tar.zst
+systemctl start fluxerd
+```
+
+Anything posted after the upgrade is gone.
+
+## PostgreSQL upgrades
+
+Fluxer keeps running on the PostgreSQL its database was made with, and logs a line at start when a newer one is installed. To move to the newest one, stop Fluxer, back up and run `fluxerd postgres-upgrade`, which uses `pg_upgrade --link`.
+
+```sh
+systemctl stop fluxerd
+runuser -u fluxer -- /opt/fluxer/current/bin/fluxerd backup
+runuser -u fluxer -- /opt/fluxer/current/bin/fluxerd postgres-upgrade
+apt-mark manual postgresql-$(ls /usr/lib/postgresql | sort -n | tail -n 1)
+systemctl start fluxerd
+```
+
+When `fluxerd postgres-upgrade` is done, it prints `the database is PostgreSQL` followed by the version the database now runs on.
+
+The old files stay in `/var/lib/fluxer/postgres.<version>` and can't start again, so the backup is the way back. Once Fluxer runs well, delete them with `fluxerd postgres-upgrade --cleanup`. If nothing else on the machine uses the old PostgreSQL, run `apt-mark auto` on its package so `apt autoremove` can remove it.
+
+If the PostgreSQL the database was made with is gone, Fluxer refuses to start and says which package to install. Install that package and run the upgrade above. If your Debian or Ubuntu version no longer has it, get it from [apt.postgresql.org](https://wiki.postgresql.org/wiki/Apt).
+
+## Which unit to use
+
+The unit from the release is `fluxerd.service`. rexctl writes its own unit, `fluxer.service`, with the same paths. Its sockets are in `/run/fluxerd/fluxer`, and the `fluxerd` commands on this page find them. Run Fluxer with one of them only, and don't install with rexctl on a machine that already runs `fluxerd.service`.
+
+## Running as the fluxer account
+
+Every `fluxerd` command runs as the `fluxer` account, for example `runuser -u fluxer -- /opt/fluxer/current/bin/fluxerd ps`.
+
+When nobody can sign in as an admin, `users reset-link` prints a link that sets a new password for an existing account, and `users create --admin` creates a new admin and prints the same kind of link. The link works once and expires after an hour. On an email instance that sends email, `users reset-link` refuses, and the admin resets their password by email from the sign-in page.
+
+```sh
+runuser -u fluxer -- /opt/fluxer/current/bin/fluxerd users reset-link alex
+runuser -u fluxer -- /opt/fluxer/current/bin/fluxerd users create alex --admin
+```
+
+Logs are in the journal. Read them with `journalctl -u fluxerd`, or with `journalctl -u fluxer` for the rexctl unit.
+
+## Remove Fluxer
+
+To keep the instance for later, [take a backup](/operator/backups/) first and copy it off the machine. The backup has every password and key, so encrypt the copy.
+
+```sh
+systemctl disable --now fluxerd
+rm /etc/systemd/system/fluxerd.service
+systemctl daemon-reload
+rm -rf /opt/fluxer /var/lib/fluxer /etc/fluxer
+userdel fluxer
+```
+
+The packages from step 2 stay. Before you remove them with `apt-get remove`, check that nothing else uses them, PostgreSQL above all.

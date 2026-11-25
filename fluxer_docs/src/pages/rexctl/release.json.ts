@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {APIRoute} from 'astro';
-import {isCalVer, REXCTL_TARGETS, resolveRexctlRelease} from '@/installer/RexctlRelease';
+import {isCalVer, REXCTL_TARGETS} from '@/installer/GitHubReleases';
+import {resolveRexctlRelease} from '@/installer/RexctlRelease';
 
 export const prerender = false;
 

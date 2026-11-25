@@ -100,7 +100,7 @@ The rate limit is 20 requests per 10 seconds, on the `read_state:ack_bulk` bucke
 
 <RouteHeader method="POST" path="/v1/read-states/ack-bulk" />
 
-Marks each channel as read through `message_id` and sets its mention count to `0`. It works like [Acknowledge read states](#acknowledge-read-states) without `mention_count` or `manual` and returns no body. An entry whose `message_id` is below the current `last_message_id` changes nothing. Sends a [Message ACK](/gateway/events/#message-ack) event to your sessions for each entry. Each entry also clears delivered push notifications for its channel up to the submitted `message_id`.
+Marks each channel as read through `message_id` and sets its mention count to `0`. It works like [Acknowledge read states](#acknowledge-read-states) without `mention_count` or `manual` and returns no body. An entry whose `message_id` is below the current `last_message_id` changes nothing. Sends a [Message ACK](/gateway/events/#message-ack) event to your sessions for each entry. Each entry also clears delivered push notifications for its channel, up to the `message_id` you sent.
 
 ### JSON body
 

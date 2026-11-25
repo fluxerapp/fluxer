@@ -4,7 +4,11 @@ title: User settings Protobuf
 description: The Protobuf messages and enumerations in the synced_preferences field of user settings.
 ---
 
-The `synced_preferences` field of the [user settings object](/http-api/users/#user-settings-object) is a base64-encoded `fluxer.user.preferences.v1.SyncedPreferences` message with the client preferences an account shares between its devices. The API stores the snapshot and doesn't act on any field in it. The schema is in `packages/schema/proto/fluxer/user/preferences/v1`.
+The `synced_preferences` field of the [user settings object](/http-api/users/#user-settings-object) is a base64-encoded `fluxer.user.preferences.v1.SyncedPreferences` message with the client preferences an account shares between its devices. The API stores the snapshot and doesn't act on any field in it. The schema is in this folder of the Fluxer repository.
+
+```text
+packages/schema/proto/fluxer/user/preferences/v1
+```
 
 ## Reading and writing the snapshot
 
@@ -131,7 +135,7 @@ Display, motion, message, media, voice and interaction preferences.
 | show_context_menu_shortcuts? | bool | Whether context menus show keyboard shortcuts |
 | confirm_before_starting_calls? | bool | Whether starting a call asks for confirmation |
 | hdr_display_mode | int32 | [HDR display mode](#hdr-display-modes) |
-| preserve_edit_draft? | bool | Whether canceling an edit keeps its draft |
+| preserve_edit_draft? | bool | Whether cancelling an edit keeps its draft |
 | stay_interactive_when_unfocused? | bool | Whether animation and interaction continue while the app is unfocused |
 | confirm_before_joining_voice_channels? | bool | Whether joining a voice channel asks for confirmation |
 | screen_reader_announce_new_messages? | bool | Whether a screen reader announces new messages |

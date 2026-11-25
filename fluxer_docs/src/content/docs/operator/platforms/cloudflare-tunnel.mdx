@@ -1,0 +1,77 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: At home with Cloudflare Tunnel
+description: You give a Fluxer instance at home a public HTTPS address through Cloudflare Tunnel, without opening ports 80 and 443 on your router.
+---
+
+import {Steps} from '@astrojs/starlight/components';
+
+## Short version
+
+A machine at home with Fluxer in tunnel mode on `127.0.0.1:8080`, a domain on Cloudflare, and `cloudflared` running a tunnel to Fluxer. Web traffic goes through the tunnel. Calls need ports 7881 and 7882 forwarded on your router, or a voice server elsewhere. It takes about 20 minutes.
+
+## What this changes
+
+- Fluxer serves plain HTTP on `127.0.0.1:8080`, and publishes no ports 80 or 443.
+- `cloudflared` runs as a service on the machine and connects out to Cloudflare.
+- A tunnel and a DNS record for your domain in your Cloudflare account.
+- For calls, ports 7881 on TCP and 7882 on UDP forwarded from your router.
+
+## Before you start
+
+- Check the [requirements](/operator/requirements/).
+- Your domain's DNS must be on Cloudflare, on any plan. The Free and Pro plans limit one request to 100 MB. The apps send a large file in parts of 10 to 64 MiB, or larger for a file over 625 GiB. A file sent in a single request has to fit in that 100 MB limit.
+- Decide how calls will work, since a tunnel can't forward them. Forward ports 7881 and 7882 from your router to the machine, add a [voice server](/operator/voice-servers/) on a VPS, or turn voice off.
+
+## Install
+
+<Steps>
+
+1. Set up Fluxer with [Docker](/operator/docker/) in tunnel mode.
+
+   ```sh title="fluxer.env"
+   FLUXER_DOMAIN=chat.example.com
+   FLUXER_EDGE_MODE=tunnel
+   FLUXER_LIVEKIT_NODE_IP=203.0.113.10
+   ```
+
+   Set `FLUXER_LIVEKIT_NODE_IP` to your home's public IPv4 address if you forward the voice ports. Publish only port 8080 on `127.0.0.1` and the two voice ports.
+
+   ```sh
+   docker run -d --name fluxer --restart unless-stopped --stop-timeout 130 \
+     --env-file fluxer.env -e FLUXER_INSTALL_METHOD=docker -v fluxer-data:/var/lib/fluxer \
+     -p 127.0.0.1:8080:8080 -p 7881:7881 -p 7882:7882/udp \
+     ghcr.io/fluxerapp/fluxer:{{FLUXER_VERSION}}
+   ```
+
+   Wait for `healthy` in `docker ps`.
+
+2. In the Cloudflare dashboard, under Networking, Tunnels, create a tunnel with cloudflared, and run the install command it shows on the machine.
+
+   The tunnel shows as healthy.
+
+3. On the tunnel's Routes tab, add a published application route for `chat.example.com` that points at `http://127.0.0.1:8080`.
+
+   Cloudflare's DNS then has a `CNAME` record for your domain that points at the tunnel.
+
+4. Print the setup token.
+
+   ```sh
+   docker exec fluxer fluxerd setup-token
+   ```
+
+   Open your domain and paste the token to create the first admin account.
+
+</Steps>
+
+If you manage tunnels from files, [copy the `config.yml` for cloudflared](/operator/reverse-proxy/#configs-for-each-proxy). Turn Rocket Loader and Bot Fight Mode off, and [change the other Cloudflare settings that break Fluxer](/operator/reverse-proxy/#cloudflare).
+
+## Try it without an account
+
+A quick tunnel gives you a random `trycloudflare.com` address with no account. Start it before Fluxer, and use the address it prints as `FLUXER_DOMAIN`.
+
+```sh
+cloudflared tunnel --url http://127.0.0.1:8080
+```
+
+The address changes every time cloudflared starts, and a new address needs a new instance, so use it only for a trial. Cloudflare limits a quick tunnel to 200 requests at a time.

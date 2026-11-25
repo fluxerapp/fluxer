@@ -6,7 +6,7 @@ description: TOTP, backup codes, WebAuthn credentials and sudo mode.
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-An account can use a TOTP authenticator app and WebAuthn credentials such as passkeys as a second factor, with one-use backup codes as a fallback. A registered passkey works for [sudo mode](#sudo-mode) and passwordless login right away, but password login only asks for it after [Set WebAuthn two-factor authentication](#set-webauthn-two-factor-authentication) turns it on.
+An account can use a TOTP authenticator app and WebAuthn credentials such as passkeys as a second factor, with one-use backup codes as a fallback. A registered passkey works for [sudo mode](#sudo-mode) and passwordless login right away, but password login asks for it only after [Set WebAuthn two-factor authentication](#set-webauthn-two-factor-authentication) turns it on for the account.
 
 ## TOTP parameters
 
@@ -16,9 +16,9 @@ Fluxer accepts six-digit HMAC-SHA-1 codes with a 30-second time step and one ste
 
 An account gets 10 backup codes when it enables TOTP, and when it turns on passkeys as a second factor while it has no unused codes. Each code works once, and Fluxer ignores case, spaces and hyphens when it compares them. You can send a backup code wherever a TOTP code is accepted, except in [Enable TOTP MFA](#enable-totp-mfa). Fluxer deletes every code when the account is left with no second factor.
 
-A user who lost their codes and their authenticator can get them back by email without sudo mode.
+A user who lost both their codes and their authenticator can get the codes back by email without sudo mode.
 
-1. [Start MFA backup codes challenge](#start-mfa-backup-codes-challenge) emails a code and returns a ticket that lasts 30 minutes.
+1. [Start MFA backup codes challenge](#start-mfa-backup-codes-challenge) emails a code to the account and returns a ticket that stays valid for 30 minutes.
 2. [Verify MFA backup codes challenge code](#verify-mfa-backup-codes-challenge-code) trades the code, which lasts 10 minutes, for the current codes and a proof.
 3. [Regenerate MFA backup codes](#regenerate-mfa-backup-codes) uses the proof to replace the set.
 
@@ -99,7 +99,7 @@ Operations that need [sudo mode](#sudo-mode) accept these fields in their JSON b
 | password? | string | Account password (8-256 characters) |
 | mfa_method? | string | One of `totp`, `webauthn` or `email_code` |
 | mfa_code? | string | TOTP code or unused backup code, for `totp` (1-32 characters) |
-| webauthn_response? | [WebAuthn assertion](#webauthn-assertion-object) object | Assertion for `webauthn_challenge`, for `webauthn` |
+| webauthn_response? | [WebAuthn assertion](#webauthn-assertion-object) object | The assertion for `webauthn_challenge`, when `mfa_method` is `webauthn` |
 | webauthn_challenge? | string | Challenge from [Create sudo WebAuthn authentication options](#create-sudo-webauthn-authentication-options) (1-256 characters) |
 | email_code_ticket? | string | Ticket from [Send a sudo email code](#send-a-sudo-email-code), for `email_code` (1-128 characters) |
 | email_code? | string | The 6-digit code from the email, for `email_code` |
@@ -369,7 +369,7 @@ Enables TOTP and returns 10 new backup codes. You need [sudo mode](#sudo-mode) a
 
 ### JSON body
 
-The body extends the [sudo verification object](#sudo-verification-object) with these fields.
+The body is a [sudo verification object](#sudo-verification-object) with these added fields.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -450,7 +450,7 @@ Emails a verification code to the account and returns a ticket. The body is empt
 | 400 | [error response](/http-api/#error-response) | `EMAIL_CODES_UNAVAILABLE` when the instance doesn't send email |
 | 403 | [error response](/http-api/#error-response) | `MFA_EMAIL_VERIFICATION_REQUIRED` when the email address is unverified |
 
-The rate limit is 6 requests per minute, on the `user:mfa:backup_codes_challenge:start` bucket.
+The `user:mfa:backup_codes_challenge:start` bucket allows 6 requests per minute.
 
 ## Resend MFA backup codes challenge code
 
@@ -471,13 +471,13 @@ Emails a new code for the ticket and returns 204. The old code and any proof alr
 | 204 | empty | A new code was sent |
 | 400 | [error response](/http-api/#error-response) | `INVALID_OR_EXPIRED_TICKET` when the ticket is unknown or expired |
 
-The rate limit is 6 requests per minute, on the `user:mfa:backup_codes_challenge:resend` bucket.
+The `user:mfa:backup_codes_challenge:resend` bucket allows 6 requests per minute.
 
 ## Verify MFA backup codes challenge code
 
 <RouteHeader method="POST" path="/v1/users/@me/mfa/backup-codes/challenge/verify" />
 
-Checks the emailed code and returns the account's backup codes and a proof. A code works once.
+Checks the emailed code, which works only once, and returns the account's backup codes and a proof of the check.
 
 ### JSON body
 
@@ -493,7 +493,7 @@ Checks the emailed code and returns the account's backup codes and a proof. A co
 | 200 | [MFA backup codes verification](#mfa-backup-codes-verification-object) object | The code was accepted |
 | 400 | [error response](/http-api/#error-response) | `INVALID_VERIFICATION_CODE`, `VERIFICATION_CODE_EXPIRED` or `VERIFICATION_CODE_NOT_ISSUED` |
 
-The rate limit is 20 requests per minute, on the `user:mfa:backup_codes_challenge:verify` bucket.
+The `user:mfa:backup_codes_challenge:verify` bucket allows 20 requests per minute.
 
 ## Regenerate MFA backup codes
 
@@ -515,7 +515,7 @@ Replaces the account's backup codes with 10 new ones. The ticket and proof can b
 | 200 | [MFA backup codes](#mfa-backup-codes-object) object | The codes were replaced |
 | 400 | [error response](/http-api/#error-response) | `INVALID_PROOF_TOKEN`, `INVALID_OR_EXPIRED_TICKET` or `TWO_FACTOR_REQUIRED` |
 
-The rate limit is 6 requests per minute, on the `user:mfa:backup_codes_challenge:regenerate` bucket.
+The `user:mfa:backup_codes_challenge:regenerate` bucket allows 6 requests per minute.
 
 ## List WebAuthn credentials
 
@@ -535,7 +535,7 @@ The rate limit is 40 requests per 10 seconds, on the `mfa:webauthn:list` bucket.
 
 <RouteHeader method="POST" path="/v1/users/@me/mfa/webauthn/credentials/registration-options" mfa />
 
-Returns a registration challenge for [Register WebAuthn credential](#register-webauthn-credential). You need [sudo mode](#sudo-mode) and a [verified account](/http-api/users/#account-tiers) or one that only needs a password, and the response never has a sudo token.
+Returns a registration challenge for [Register WebAuthn credential](#register-webauthn-credential). You need [sudo mode](#sudo-mode) and a [verified account](/http-api/users/#account-tiers) or one that only needs a password, and the response never has a sudo token in it, even when the request had one.
 
 ### JSON body
 

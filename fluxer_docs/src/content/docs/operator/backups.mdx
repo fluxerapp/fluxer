@@ -1,0 +1,203 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Backup and restore
+description: You take backups, schedule them, copy them off the machine and restore them.
+---
+
+import {Tabs, TabItem} from '@astrojs/starlight/components';
+
+A Fluxer backup is one file with everything your instance needs to start again somewhere else. It restores into any way of running Fluxer, which is also how you move an instance to another machine or from Docker to systemd.
+
+The `.tar.zst` file has the database, uploads, search index and settings, and the passwords and keys Fluxer made on its first start.
+
+Fluxer also backs up by itself before it starts a newer release on older data. That backup has the database, passwords and keys but not uploads, and Fluxer keeps the newest 3.
+
+## Take a backup
+
+<Tabs syncKey="runtime">
+<TabItem label="Docker">
+
+```sh
+docker exec fluxer fluxerd backup --out - > fluxer-$(date +%F).tar.zst
+```
+
+With the compose file, the command is `docker compose exec -T fluxer fluxerd backup --out - > fluxer-$(date +%F).tar.zst`.
+
+</TabItem>
+<TabItem label="Podman">
+
+```sh
+podman exec fluxer fluxerd backup --out - > fluxer-$(date +%F).tar.zst
+```
+
+</TabItem>
+<TabItem label="Linux by hand">
+
+```sh
+runuser -u fluxer -- /opt/fluxer/current/bin/fluxerd backup
+```
+
+This writes the backup into `/var/lib/fluxer/backups` and prints its path.
+
+</TabItem>
+<TabItem label="Kubernetes">
+
+```sh
+kubectl -n fluxer exec fluxer-0 -- fluxerd backup --out - > fluxer-$(date +%F).tar.zst
+```
+
+A VolumeSnapshot of `data-fluxer-0` also works, if your storage supports it.
+
+</TabItem>
+<TabItem label="With rexctl">
+
+```sh
+rexctl backup
+```
+
+rexctl keeps the latest 3 in the `backups` folder of the instance. `rexctl backup keep` changes how many, and `rexctl backup location` where.
+
+</TabItem>
+</Tabs>
+
+Fluxer shows a maintenance page while it copies uploads and the search index, and stays up the rest of the time. When a backup is already running, a second one stops with "another backup or restore of this instance is running".
+
+## Back up on a schedule
+
+[Set these](/operator/configuration/) and Fluxer backs itself up into the `backups` folder of its data folder.
+
+```sh title="fluxer.env"
+FLUXER_BACKUP_SCHEDULE=daily
+FLUXER_BACKUP_KEEP=7
+FLUXER_BACKUP_HOUR=3
+```
+
+| Setting | Helm value | What it does | Default |
+| --- | --- | --- | --- |
+| `FLUXER_BACKUP_SCHEDULE` | `backup.schedule` | How often to back up, as `daily`, `weekly` or `off` | `off` |
+| `FLUXER_BACKUP_HOUR` | `backup.hour` | The hour it starts, from 0 to 23 | `3` |
+| `FLUXER_BACKUP_KEEP` | `backup.keep` | How many scheduled backups to keep before deleting the oldest | `7` |
+
+The hour is in the machine's time zone, which is UTC in the container image.
+
+With rexctl, `rexctl backup schedule daily` sets up the schedule.
+
+With rexctl on Linux, a systemd timer or cron job runs the backup at about 03:00. On Docker Desktop, rexctl sets `FLUXER_BACKUP_SCHEDULE` and Fluxer backs itself up.
+
+## Copy backups off the machine
+
+A backup on the same disk doesn't help when the disk fails. Copy each backup somewhere else, such as another machine, a NAS or object storage.
+
+```sh
+rsync -a /var/lib/docker/volumes/fluxer-data/_data/backups/ backup@storage.example.org:/srv/fluxer/
+rclone copy fluxer-2026-12-01.tar.zst remote:fluxer-backups
+```
+
+The first line copies the scheduled backups out of the Docker volume. Under systemd they are in `/var/lib/fluxer/backups`, which only the `fluxer` account can read, so run the copy as root or as the `fluxer` account.
+
+A backup has every password and key of your instance, unencrypted. Encrypt each copy before it leaves the machine, for example with `age`, or with a tool that encrypts on its own, such as `restic` or an `rclone` crypt remote.
+
+```sh
+age -r age1examplepublickey... -o fluxer-2026-12-01.tar.zst.age fluxer-2026-12-01.tar.zst
+```
+
+With rexctl, this command takes your newest backup, from its own backups and the ones Fluxer makes by itself inside its container, encrypts it for your age public key and copies it over SSH. `rexctl restore --age-identity key.txt` restores the `.age` file.
+
+```sh
+rexctl backup copy-to --age-recipient age1examplepublickey... backup@storage.example.org:/srv/fluxer
+```
+
+## Restore
+
+:::danger[Restore replaces everything]
+A restore replaces the database, uploads, search index, passwords and keys with the ones in the backup. Anything posted since the backup is gone. Take a backup of the current instance first if you want it back later.
+:::
+
+A restore runs in one of two situations. Usually Fluxer is stopped and you run `fluxerd restore` on its data, as below. After you go back to an older release, Fluxer is running but not ready, because the data is newer than the code, and you run `fluxerd restore` inside the running container, pod or service to [go back a version](/operator/upgrades/#go-back-a-version). In both cases the backup must come from the same release of Fluxer or an earlier release.
+
+<Tabs syncKey="runtime">
+<TabItem label="Docker">
+
+```sh
+docker stop fluxer
+docker run --rm -i --env-file fluxer.env -v fluxer-data:/var/lib/fluxer \
+  "$(docker inspect -f '{{.Config.Image}}' fluxer)" restore - < fluxer-2026-12-01.tar.zst
+docker start fluxer
+```
+
+The restore runs on the same image as the container. With the compose file, stop it with `docker compose stop`, run `docker compose run --rm -T fluxer restore - < fluxer-2026-12-01.tar.zst`, then start it again with `docker compose up -d`.
+
+</TabItem>
+<TabItem label="Podman">
+
+```sh
+systemctl --user stop fluxer
+podman run --rm -i --env-file ~/fluxer/fluxer.env -v fluxer-data:/var/lib/fluxer \
+  ghcr.io/fluxerapp/fluxer:{{FLUXER_VERSION}} restore - < fluxer-2026-12-01.tar.zst
+systemctl --user start fluxer
+```
+
+Stop the service with `systemctl`, because systemd starts the container again after `podman stop`. Use the tag from the `Image` line of the Quadlet file. As root, leave out `--user` and pass the `EnvironmentFile` path.
+
+</TabItem>
+<TabItem label="Linux by hand">
+
+```sh
+systemctl stop fluxerd
+runuser -u fluxer -- /opt/fluxer/current/bin/fluxerd restore - < fluxer-2026-12-01.tar.zst
+systemctl start fluxerd
+```
+
+</TabItem>
+<TabItem label="Kubernetes">
+
+Follow [the restore steps](/operator/kubernetes/#backups), which keep the chart version you run. After `helm rollback`, Fluxer stays up but not ready until you [restore the backup in the running pod](/operator/kubernetes/#upgrades-and-going-back).
+
+</TabItem>
+<TabItem label="With rexctl">
+
+```sh
+rexctl restore
+```
+
+rexctl lists your backups, backs up the current instance first and puts the one you pick back. On a new machine, `curl -fsSL https://fluxer.dev/install.sh | sh -s -- restore fluxer-2026-12-01.tar.zst` installs rexctl and restores in one step. For an instance on an IP address, then run `rexctl config set domain` with the new address.
+
+</TabItem>
+</Tabs>
+
+`fluxerd restore --check` checks a backup and whether it fits the instance, without changing anything or keeping a copy. In a container the file is on the machine, so pass it on standard input, with `docker exec -i fluxer fluxerd restore --check - < fluxer-2026-12-01.tar.zst`, `docker compose exec -T fluxer fluxerd restore --check - < fluxer-2026-12-01.tar.zst` with the compose file, or `podman exec -i fluxer fluxerd restore --check - < fluxer-2026-12-01.tar.zst` on Podman.
+
+If the backup's settings file differs from yours and Fluxer can't write it, such as the `fluxer.env` you pass to Docker, the restore leaves yours alone and tells you the path where it saved the backup's copy of the settings file.
+
+## What a backup leaves out
+
+With your own PostgreSQL in `FLUXER_POSTGRES_URL`, a backup has no database, and with uploads in your own S3 store, it has no uploads. Back those up with your database's and your store's own tools, at the same time as Fluxer's backup. The search index, message queue, passwords and keys always stay on Fluxer's volume and in its backups. Fluxer gets its public certificate again after a restore.
+
+## Test a restore
+
+Every few months, and after big changes, test the latest off-site copy on a spare machine.
+
+1. On a spare machine or VM with Docker, download `fluxer.env` [as for a Docker install](/operator/docker/). Set `FLUXER_DOMAIN` to your real domain, `FLUXER_EDGE_MODE=proxy` and `FLUXER_LIVEKIT_ENABLED=false`. Don't point any DNS record at it.
+2. Copy the newest backup from where you keep copies, not from the instance itself.
+
+   If you encrypted it, decrypt it first. With age, that is this command.
+
+   ```sh
+   age -d -i key.txt -o fluxer-2026-12-01.tar.zst fluxer-2026-12-01.tar.zst.age
+   ```
+3. Restore it into a new volume with the `docker run --rm -i ... restore -` line from the Docker tab above, with the same image tag as your instance runs.
+4. Start Fluxer on a Docker network without internet access. The copy has your SMTP server and push setup, so this keeps it from sending email or notifications to your users, and from asking Let's Encrypt for a certificate.
+
+   ```sh
+   docker network create --internal fluxer-test
+   docker run -d --name fluxer --env-file fluxer.env -v fluxer-data:/var/lib/fluxer \
+     --network fluxer-test ghcr.io/fluxerapp/fluxer:<your tag>
+   ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' fluxer)
+   ```
+
+   Wait until `docker exec fluxer fluxerd health` prints `ready`, then check the API with your domain in place of `chat.example.com`. The command fails if the API isn't working. To check your messages as well, sign in through an SSH tunnel to port 8080 at the container's IP address, which is in `$ip`.
+
+   ```sh
+   curl -fsS -H "Host: chat.example.com" "http://$ip:8080/api/v1/_health"
+   ```
+5. Delete the test machine and its volume, since they have every password and key. On a machine you keep, remove the container, the volume and the network with `docker stop fluxer`, `docker rm fluxer`, `docker volume rm fluxer-data` and `docker network rm fluxer-test`.

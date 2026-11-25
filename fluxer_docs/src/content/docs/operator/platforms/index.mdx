@@ -1,0 +1,67 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: All platforms
+description: A guide for each Linux distribution, NAS, panel, cluster, cloud provider and home network.
+---
+
+Fluxer runs the same on these platforms as in a [Docker](/operator/docker/), [systemd](/operator/linux/) or [Kubernetes](/operator/kubernetes/) install, and each guide covers only the steps that differ. Umbrel and YunoHost have no Fluxer app or package yet. Their guides show how to run Fluxer on another machine or a virtual machine.
+
+## Linux
+
+| Platform | How Fluxer runs there |
+| --- | --- |
+| [Debian and Ubuntu](/operator/platforms/debian-ubuntu/) | Docker or systemd |
+| [Fedora, RHEL, Rocky and Alma](/operator/platforms/fedora-rhel/) | Podman or Docker |
+| [Arch Linux](/operator/platforms/arch/) | Docker or Podman |
+| [Raspberry Pi and other ARM64 boards](/operator/platforms/raspberry-pi/) | Docker |
+| [NixOS](/operator/platforms/nixos/) | A container in your NixOS configuration |
+| [Podman and Quadlet](/operator/platforms/podman/) | Rootless Podman under systemd |
+
+## Desktop and virtual machines
+
+| Platform | How Fluxer runs there |
+| --- | --- |
+| [Docker Desktop on macOS and Windows](/operator/platforms/docker-desktop/) | Docker Desktop |
+| [Proxmox VE](/operator/platforms/proxmox/) | A Debian VM, or Docker in an LXC container |
+
+## NAS and home servers
+
+| Platform | How Fluxer runs there |
+| --- | --- |
+| [Unraid](/operator/platforms/unraid/) | Docker Compose Manager |
+| [TrueNAS](/operator/platforms/truenas/) | A custom app from YAML |
+| [Synology](/operator/platforms/synology/) | A Container Manager project |
+| [QNAP](/operator/platforms/qnap/) | A Container Station application |
+| [CasaOS and ZimaOS](/operator/platforms/casaos/) | A custom app from the compose file |
+| [Umbrel](/operator/platforms/umbrel/) | No app yet |
+| [YunoHost](/operator/platforms/yunohost/) | No package yet |
+
+## Self-hosting panels
+
+| Platform | How Fluxer runs there |
+| --- | --- |
+| [Coolify](/operator/platforms/coolify/) | A Docker Compose resource |
+| [Dokploy](/operator/platforms/dokploy/) | A Compose service |
+| [CapRover](/operator/platforms/caprover/) | An app from the image |
+| [Portainer](/operator/platforms/portainer/) | A stack from the compose file |
+
+## Kubernetes
+
+| Platform | How Fluxer runs there |
+| --- | --- |
+| [k3s](/operator/platforms/k3s/) | The Helm chart with Traefik |
+| [MicroK8s](/operator/platforms/microk8s/) | The Helm chart with the ingress addon |
+| [Talos Linux](/operator/platforms/talos/) | The Helm chart |
+| [Managed Kubernetes](/operator/platforms/managed-kubernetes/) | The Helm chart |
+
+## Cloud and home networks
+
+| Platform | How Fluxer runs there |
+| --- | --- |
+| [Cloud servers](/operator/platforms/cloud-servers/) | Docker or systemd on a VPS |
+| [At home with Cloudflare Tunnel](/operator/platforms/cloudflare-tunnel/) | Proxy mode behind cloudflared |
+| [At home with Tailscale](/operator/platforms/tailscale/) | Proxy mode behind Tailscale |
+
+A platform that isn't listed can run Fluxer if it runs Linux containers on amd64 or arm64 and gives Fluxer a volume on a local disk.
+
+[Install Fluxer there as you would with Docker](/operator/docker/), and tell us how it went in [Fluxer Developers](https://fluxer.gg/fluxer-developers).

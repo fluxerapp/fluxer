@@ -24,7 +24,7 @@ Each account has its own record. A friendship is a `FRIEND` record on both accou
 | share_voice_activity | boolean | Whether you share voice activity with the related account |
 | friend_shares_voice_activity<sup>1</sup> | boolean | Whether the related account shares voice activity with you |
 
-<sup>1</sup> Only [List relationships](#list-relationships) and the [Relationship Update](/gateway/events/#relationship-update) sent by [Modify voice activity sharing](/http-api/users/settings/#modify-voice-activity-sharing) return the real value. Everything else returns `true`.
+<sup>1</sup> Only [List relationships](#list-relationships) and the [Relationship Update](/gateway/events/#relationship-update) sent by [Modify voice activity sharing](/http-api/users/settings/#modify-voice-activity-sharing) return the real value, and every other route or event returns `true`.
 
 ### Example
 
@@ -176,9 +176,12 @@ A 400 has one of these codes.
 | `CANNOT_BLOCK_SYSTEM_USER` | The block target is the Fluxer system account |
 | `MAX_FRIENDS` | You are at the [relationship limit](#relationship-limit) |
 
-A 403 has `UNCLAIMED_ACCOUNT_CANNOT_ACCEPT_FRIEND_REQUESTS` or `FRIEND_REQUEST_EMAIL_VERIFICATION_REQUIRED`.
+A 403 has one of these codes.
 
-Accepting sends [Relationship Update](/gateway/events/#relationship-update) to both accounts, opens your direct message with the account for both of you, and sends [Channel Create](/gateway/events/#channel-create) to whoever did not already have it open.
+- `UNCLAIMED_ACCOUNT_CANNOT_ACCEPT_FRIEND_REQUESTS`
+- `FRIEND_REQUEST_EMAIL_VERIFICATION_REQUIRED`
+
+Accepting sends [Relationship Update](/gateway/events/#relationship-update) to both accounts, opens your direct message with the account for both of you, and sends [Channel Create](/gateway/events/#channel-create) to each of you who didn't have that direct message open.
 
 Blocking replaces any friendship or pending request with a `BLOCKED` record and sends [Relationship Add](/gateway/events/#relationship-add) to you. If the block ends a friendship or your outgoing request, the other account's record is deleted too and it gets [Relationship Remove](/gateway/events/#relationship-remove). Blocking works even when friends are disabled or your account is unclaimed, and it does not close the direct message.
 
@@ -197,7 +200,7 @@ Removes your friendship, pending request in either direction, or block with an a
 | 204 | empty | The relationship was removed |
 | 404 | [error response](/http-api/#error-response) | `UNKNOWN_USER` when you have no relationship with the account |
 
-Removing a friendship or outgoing request deletes both records and sends [Relationship Remove](/gateway/events/#relationship-remove) to both accounts. Removing a block or declining an incoming request deletes only your record and sends the event only to you, and the sender keeps its `OUTGOING_REQUEST`.
+Removing a friendship or outgoing request deletes both records and sends [Relationship Remove](/gateway/events/#relationship-remove) to both accounts. Removing a block or declining an incoming request deletes only your record and sends the event only to you, and the sender keeps its `OUTGOING_REQUEST` record.
 
 The rate limit is 30 requests per 10 seconds, on the `user:relationship:delete` bucket.
 
@@ -205,7 +208,7 @@ The rate limit is 30 requests per 10 seconds, on the `user:relationship:delete` 
 
 <RouteHeader method="PATCH" path="/v1/users/@me/relationships/{user_id}" />
 
-Sets or clears your private nickname for a friend, which the friend never sees. Returns the updated [relationship](#relationship-object) object and sends [Relationship Update](/gateway/events/#relationship-update) to you.
+Sets or clears your private nickname for a friend, which the friend never sees. Returns the updated [relationship](#relationship-object) object and sends you a [Relationship Update](/gateway/events/#relationship-update).
 
 ### JSON body
 

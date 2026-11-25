@@ -78,7 +78,7 @@ A snapshot of the whole cluster. Each count and each `memory` value is a sum ove
 
 ## Gateway node object
 
-One node's statistics. A node that does not respond within 10 seconds is listed with status `unavailable`.
+One node's statistics. A node that does not respond within 10 seconds is listed with the status `unavailable`.
 
 ### Structure
 
@@ -222,7 +222,7 @@ The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 
 <RouteHeader method="GET" path="/v1/admin/gateway/memory-stats" auditReason />
 
-Returns the live guild processes that use the most memory, largest first. Needs `gateway:memory_stats`. A node that does not respond within 5 seconds adds no entries.
+Returns the live guild processes that use the most memory, largest first. Needs `gateway:memory_stats`. A node that doesn't respond within 5 seconds adds nothing.
 
 ### Query parameters
 

@@ -138,6 +138,7 @@ catalog:
   pg: 8.23.1
   pino: 10.4.0
   pino-pretty: 13.2.0
+  playwright: 1.64.0
   postcss: 8.5.32
   postcss-discard-comments: 9.0.2
   postcss-loader: 8.2.1
@@ -177,7 +178,6 @@ catalog:
   validator: 13.15.35
   vite: 8.3.5
   vitest: 5.0.5
-  yaml: 2.9.1
   zod: 4.6.7
 
 catalogs:
@@ -199,6 +199,7 @@ overrides:
   zod@^4: 'catalog:'
 
 patchedDependencies:
+  '@astrojs/starlight@0.42.7': patches/@astrojs__starlight@0.42.7.patch
   '@electron/universal@3.0.4': patches/@electron__universal@3.0.4.patch
   '@phosphor-icons/react@2.1.10': patches/@phosphor-icons__react@2.1.10.patch
   emscripten-wasm-loader@3.0.3: patches/emscripten-wasm-loader@3.0.3.patch
