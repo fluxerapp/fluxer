@@ -329,7 +329,7 @@ The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 <RouteHeader method="PUT" path="/v1/admin/badges/built-in/{kind}/hidden" auditReason />
 
-Stops clients on this instance from showing a built-in guild badge, then returns the first page of [List badges](#list-badges) with up to 200 badges. `kind` is `guild_verified`, `guild_partnered` or `guild_discoverable`. Guilds keep the feature behind the badge, so a discoverable guild stays listed in discovery. When a guild has more than one of these badges, clients show the next one that isn't hidden. You need `badge:update`.
+Stops clients on this instance from showing a built-in guild badge, then returns the first page of [List badges](#list-badges) with up to 200 badges. `kind` is `guild_verified`, `guild_partnered` or `guild_discoverable`. Guilds keep the feature behind the badge. A discoverable guild stays listed in discovery. When a guild has more than one of these badges, clients show the next one that isn't hidden. You need `badge:update`.
 
 ### Response body
 

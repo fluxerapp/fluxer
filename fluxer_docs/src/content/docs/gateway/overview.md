@@ -67,7 +67,7 @@ A client message can be at most 16,384 bytes on the wire and 16,384 bytes after 
 
 [Snowflakes](/snowflakes/) are decimal strings, and every other number is a JSON number.
 
-With `zstd-stream`, every server frame is binary, starting with Hello. Feed every frame to one decompressor in order for the whole connection, and send every client message through one compressor that also lasts the whole connection.
+With `zstd-stream`, every server frame is binary, starting with Hello. Pass every frame to one decompressor in order for the whole connection, and send every client message through one compressor that also lasts the whole connection.
 
 ## Hello
 
@@ -152,7 +152,7 @@ Identify takes an optional `shard` of `[shard_id, shard_count]`. `shard_id` is b
 
 A session only receives the guilds its shard owns. Ready lists them in `guilds` and echoes the pair as `shard`. A bot gets each guild as unavailable, followed by one [Guild Create](/gateway/events/#guild-create) or [Guild Delete](/gateway/events/#guild-delete). One bot shard can have at most 2,500 guilds, and a bot that sends no `shard` counts all its guilds.
 
-Dispatches for no guild, such as account-level events, only go to shard 0, apart from Rate Limited, Guild Counts Update and Channel Member Counts Update.
+Dispatches for no guild, such as account-level events, only go to shard 0 and to sessions that sent no `shard`, apart from Rate Limited, Guild Counts Update and Channel Member Counts Update.
 
 ## Ordering
 

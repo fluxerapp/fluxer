@@ -1038,7 +1038,7 @@ The rate limit is 40 requests per 10 seconds, on the `auth:sessions` bucket.
 
 <RouteHeader method="POST" path="/v1/auth/sessions/logout" mfa />
 
-Signs out the sessions you name and returns 204. It needs [sudo mode](/http-api/users/mfa/#sudo-mode), from the `X-Fluxer-Sudo-Mode-JWT` header or a password or MFA proof in the body. Leave out the `id_hash` of the current session to stay signed in.
+Signs out the sessions whose `id_hash` values you send and returns 204. It needs [sudo mode](/http-api/users/mfa/#sudo-mode), from the `X-Fluxer-Sudo-Mode-JWT` header or a password or MFA proof in the body. Leave out the `id_hash` of the current session to stay signed in.
 
 ### JSON body
 

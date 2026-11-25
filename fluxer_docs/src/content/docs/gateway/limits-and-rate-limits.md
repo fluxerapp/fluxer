@@ -44,29 +44,19 @@ Every client payload counts toward the first three budgets.
 | Voice Signal | 240 per WebSocket per rolling 10 seconds | The command is dropped |
 | Request Guild Members | 12 per account and 40 per guild per rolling 10 seconds | The command is dropped |
 
-Fluxer applies the first two Voice State Updates per session in a rolling second. Later ones are applied one every 500 ms, and a newer update for the same `guild_id` and `connection_id` replaces one that is still waiting.
+Fluxer applies the first two Voice State Updates per WebSocket in a rolling second. Later ones wait in a queue of up to 64 and are applied one every 500 ms. A newer update for the same `guild_id` and `connection_id` replaces one that is still waiting, and a full queue drops its oldest update.
 
 A bot can request a guild's complete member list (Request Guild Members with an empty `query`, `limit` 0 and no `user_ids`) once every 30 seconds per guild. An earlier request gets [Rate Limited](/gateway/events/#rate-limited), and reconnecting does not reset the timer.
 
-## Bounded commands
-
-One WebSocket runs at most four of the following commands at once, and each one stops after 10,000 ms.
-
-- [Request Guild Members](/gateway/commands/#request-guild-members)
-- [Lazy Request](/gateway/commands/#lazy-request)
-- [Request Guild Counts](/gateway/commands/#request-guild-counts)
-- [Request Channel Member Counts](/gateway/commands/#request-channel-member-counts)
-- [Request Forum Unreads](/gateway/threads/#request-forum-unreads)
-
-A command sent while all four slots are busy is dropped with no result and no close. If you send more Request Guild Members commands while one is running, only the most recent waits and the rest are dropped. A command that times out after sending some of its events does not send the rest.
+## Count timeouts
 
 Request Guild Counts and Request Channel Member Counts leave out a guild that does not respond within 2,000 ms.
 
 ## Replay and backpressure
 
-The replay buffer keeps at most 4,096 Dispatch events and about 16 MiB of event data, and drops the oldest events past either limit. A single Dispatch over about 2 MiB is sent but never kept, and a Resume with a `seq` below that event gets opcode `9` with `d: false`. A replay can skip sequence numbers, because some events are [never replayed](/gateway/events/#dispatch-delivery).
+The replay buffer keeps at most 4,096 Dispatch events and about 16 MiB of event data, and drops the oldest events past either limit. A single Dispatch over about 2 MiB is sent but never kept, and a Resume with a `seq` below that event gets opcode `9` with `d: false`. Some events are [never replayed](/gateway/events/#dispatch-delivery), and a replay skips their sequence numbers.
 
-Send a sequence in a heartbeat only after you finish processing that event, because the Gateway then drops kept events up to it. When `seq` is below an event that was dropped from the buffer or never kept, you get opcode `9` with `d: false` and need to Identify again.
+The Gateway drops kept events up to the sequence in a heartbeat. Send a sequence only after you finish processing that event. When `seq` is below an event that was dropped from the buffer or never kept, you get opcode `9` with `d: false` and need to Identify again.
 
 ## Command payload limits
 

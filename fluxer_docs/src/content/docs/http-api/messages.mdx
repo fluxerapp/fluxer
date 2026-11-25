@@ -90,11 +90,11 @@ Routes that need `MANAGE_MESSAGES` also follow the guild's [MFA level](/http-api
 | Value | Name | Description |
 | --- | --- | --- |
 | 0 | DEFAULT | Ordinary message |
-| 1 | RECIPIENT_ADD | Someone was added to a group DM or thread |
-| 2 | RECIPIENT_REMOVE | Someone was removed from a group DM or thread |
+| 1 | RECIPIENT_ADD | Someone was added to a group direct message or thread |
+| 2 | RECIPIENT_REMOVE | Someone was removed from a group direct message or thread |
 | 3 | CALL | A call in a private channel |
-| 4 | CHANNEL_NAME_CHANGE | A group DM or thread was renamed |
-| 5 | CHANNEL_ICON_CHANGE | A group DM icon was changed |
+| 4 | CHANNEL_NAME_CHANGE | A group direct message or thread was renamed |
+| 5 | CHANNEL_ICON_CHANGE | A group direct message icon was changed |
 | 6 | CHANNEL_PINNED_MESSAGE | A message was pinned |
 | 7 | USER_JOIN | A member joined |
 | 12 | CHANNEL_FOLLOW_ADD | The channel started following an announcement channel |
@@ -163,7 +163,7 @@ A [data export](/http-api/users/data-harvest/) archive links each attachment wit
 
 ### Attachment URLs on the API
 
-When [`proxy_attachments_through_api`](/http-api/instance/#instance-features-object) is true, `url` and `proxy_url` point at [Get attachment file](#get-attachment-file) instead of the Media Proxy, and have no signature.
+When [`proxy_attachments_through_api`](/http-api/instance/#instance-features-object) is true, `url` and `proxy_url` point at [Get attachment file](#get-attachment-file) on the API and have no signature.
 
 ```text
 /v1/channels/{channel_id}/attachments/{attachment_id}/{filename}?mid={message_id}
@@ -171,7 +171,7 @@ When [`proxy_attachments_through_api`](/http-api/instance/#instance-features-obj
 
 Fetching one needs the same access as reading the message. Send your token in the `Authorization` header. When a request can't send a header, such as a video player, a download or a link opened in the browser, add `mt` from [Create attachment token](#create-attachment-token), which opens only that one file for a few minutes. Keep `mid` as issued. A link copied for someone else should leave out `mt`.
 
-An embed image uploaded with `attachment://` names its own message in `mid`. Any other embed URL that points to a stored file names the channel of that file and has no `mid`, so it opens only for people who can read the message the file came from. Fluxer doesn't build link previews for attachment URLs in message text while the setting is on.
+An embed image uploaded with `attachment://` has the ID of its own message in `mid`. Any other embed URL that points to a stored file has the ID of the file's channel and no `mid`, and it opens only for people who can read the message the file came from. Fluxer doesn't build link previews for attachment URLs in message text while the setting is on.
 
 ### Example
 

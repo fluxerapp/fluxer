@@ -89,14 +89,15 @@ These return 429 with the [rate limit response object](#rate-limit-response-obje
 | [Register an account](/http-api/authentication/#register-an-account) | 3 per 15 minutes for one email address, 3 per hour for one IP address and 15 per hour for one subnet |
 | [Resend email verification](/http-api/authentication/#resend-email-verification) | 3 per 15 minutes for one account |
 | [Request password recovery](/http-api/authentication/#request-password-recovery) | 5 per 30 minutes for one email address and 20 per 30 minutes for one IP address |
+| [Recover an account](/http-api/authentication/#recover-an-account) | 10 per 30 minutes from one IP address, and 5 per 30 minutes for one username from one IP address |
 | [Start email change](/http-api/users/email-and-password/#start-email-change) | 3 code sends to the current address and 5 to the new one per 15 minutes, and one every 30 seconds per ticket |
 | [Start password change](/http-api/users/email-and-password/#start-password-change) | 3 code sends per 15 minutes, and one every 30 seconds per ticket |
-| [Submit message report flow](/http-api/reports/#submit-message-report-flow) | 5 reports per hour for one reporter, 3 in one channel, 4 in one community and 20 for one message from all reporters. A report with a highest-priority reason only counts toward the limit for one message |
-| [Create DSA report](/http-api/reports/#create-dsa-report) | 5 reports per hour for one reporter, shared with the other report routes |
+| [Submit message report flow](/http-api/reports/#submit-message-report-flow) | 100 reports per hour for one reporter, 30 in one channel, 50 in one community and 20 for one message from all reporters. A report with a highest-priority reason doesn't count towards any of these limits |
+| [Create DSA report](/http-api/reports/#create-dsa-report) | 100 reports per hour for one email address |
 
 On an instance where people sign in with a username, a password login allows 5 attempts per 15 minutes for one username from one IP address and 100 failed logins per hour for one username, and the IP address limit still applies.
 
-Registering an [instant account](/admin-api/instance/#auth-configuration-object) allows 5 per hour and 20 per day from one IP address and 40 per hour from one subnet instead.
+Registering an [instant account](/admin-api/instance/#auth-configuration-object) doesn't use the limits of [Register an account](/http-api/authentication/#register-an-account). It allows 5 per hour and 20 per day from one IP address and 40 per hour from one subnet.
 
 [Resend IP authorisation](/http-api/authentication/#resend-ip-authorization) allows one resend per ticket, 30 seconds or more after the ticket was issued. An earlier resend returns 429 `IP_AUTHORIZATION_RESEND_COOLDOWN` with `retry_after` and `resend_available_in` in the body, a `Retry-After` header and no `X-RateLimit-*` headers. A second resend returns 400 `IP_AUTHORIZATION_RESEND_LIMIT_EXCEEDED` for that ticket.
 

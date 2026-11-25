@@ -38,7 +38,7 @@ The `scope` field of [Delete current user's messages](#delete-current-users-mess
 | Value | Description |
 | --- | --- |
 | selected | The `include_*` fields and the guild filter decide which messages are deleted |
-| inaccessible_only | Only guilds you have left and group DMs you are no longer in |
+| inaccessible_only | Only guilds you have left and group direct messages you are no longer in |
 
 ## Guild filter modes
 
@@ -182,7 +182,7 @@ The sudo fields are the [sudo verification object](/http-api/users/mfa/#sudo-ver
 | scope? | string | The [deletion scope](#bulk-message-deletion-scopes), default `selected` |
 | include_dms? | boolean | Whether open one-to-one DMs are included (default true) |
 | include_dms_closed? | boolean | Whether closed one-to-one DMs are included (default true) |
-| include_group_dms? | boolean | Whether group DMs you are still in are included (default true) |
+| include_group_dms? | boolean | Whether group direct messages you are still in are included (default true) |
 | include_guilds? | boolean | Whether guilds you are still in are included (default true) |
 | guild_filter_mode? | string | The [guild filter mode](#guild-filter-modes), default `exclude` |
 | excluded_guild_ids? | array[snowflake] | The guilds to skip in `exclude` mode (max 500 IDs) |

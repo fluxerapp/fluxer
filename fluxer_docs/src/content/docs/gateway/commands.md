@@ -37,7 +37,7 @@ Every command counts against the [payload budgets](/gateway/limits-and-rate-limi
 | A payload with `op` but no `d`, other than Identify and Resume | `4001` | `Unknown opcode` |
 | Identify or Resume with no `d`, or on a session that is already authenticated | `4005` | `Already authenticated` |
 
-The [bounded commands](#bounded-requests) never close the connection, and they skip input they cannot parse.
+Request Guild Members, Lazy Request, Request Guild Counts and Request Channel Member Counts never close the connection when they have a `d`, and they skip input they cannot parse. [Request Forum Unreads](/gateway/threads/#request-forum-unreads) closes with `4001` when its `d` is not an object.
 
 ## Heartbeat
 
@@ -116,7 +116,7 @@ Identify closes the connection on these faults.
 
 | Value | Name | Description |
 | --- | --- | --- |
-| 1 &lt;&lt; 1 | DEBOUNCE_MESSAGE_REACTIONS | Merges runs of DM and group DM reactions into [Message Reaction Add Many](/gateway/events/#message-reaction-add-many) |
+| 1 &lt;&lt; 1 | DEBOUNCE_MESSAGE_REACTIONS | Merges runs of reactions into [Message Reaction Add Many](/gateway/events/#message-reaction-add-many) |
 | 1 &lt;&lt; 2 | [CHANNEL_THREADS](/gateway/threads/#session-flag) | The client can parse thread, forum and media channels |
 | 1 &lt;&lt; 3 | GUILD_VISITS | The session receives the guilds the account is [visiting](/http-api/guilds/#visiting-guilds) |
 
@@ -133,14 +133,14 @@ Undefined bits are ignored.
 | device | string | The device or application identifier |
 | e2ee_capable?<sup>1</sup> | boolean | Whether the client can take part in voice with encrypted call media |
 | mobile?<sup>2</sup> | boolean | Whether the session is mobile (default false) |
-| latitude?<sup>3</sup> | string | The client latitude as a decimal string (1-32 characters) |
-| longitude?<sup>3</sup> | string | The client longitude as a decimal string (1-32 characters) |
+| latitude?<sup>3</sup> | number or string | The client latitude, at most 32 characters as a string |
+| longitude?<sup>3</sup> | number or string | The client longitude, at most 32 characters as a string |
 
 <sup>1</sup> A session without it gets `VOICE_E2EE_REQUIRED` when it joins a voice channel with encrypted call media
 
 <sup>2</sup> Used only when `presence` is absent or null. Otherwise the [initial presence object](#initial-presence-object) decides
 
-<sup>3</sup> Send both as strings to order the Ready `rtc_regions` array by distance
+<sup>3</sup> Send both to order the Ready `rtc_regions` array by distance
 
 ### Initial presence object
 
@@ -153,7 +153,7 @@ Undefined bits are ignored.
 | mobile? | boolean | Whether the presence is mobile (default false) |
 | custom_status?<sup>2</sup> | ?[custom status](#custom-status-object) object | The custom status this session publishes |
 
-<sup>1</sup> Fluxer uses the account's saved status when `status` is missing, not a string or `unknown`, and when it is `online` but the saved status is something else
+<sup>1</sup> Fluxer uses the account's saved status when `status` is missing, empty or not one of these values, and when it is `online` but the saved status is something else
 
 <sup>2</sup> Used only when the account has no saved custom status, and stored as sent
 
@@ -188,7 +188,7 @@ Opcode `6` restores a retained session. All fields are required, and a missing o
 | session_id | string | The session ID from [Ready](/gateway/events/#ready) |
 | seq | integer | The last Dispatch sequence the client processed |
 
-Send Resume on a new socket. Fluxer replays every retained Dispatch above `seq` in order and then sends [Resumed](/gateway/events/#resumed). If another socket still has the session, that socket gets Opcode `7` and is closed.
+Send Resume on a new socket. Fluxer replays every retained Dispatch above `seq` in order and then sends [Resumed](/gateway/events/#resumed). If another socket still has the session, that socket gets opcode `7` and is closed.
 
 | Condition | Result |
 | --- | --- |
@@ -234,7 +234,7 @@ Opcode `4` joins, moves, updates or leaves the voice membership of the current s
 
 | Field | Type | Description |
 | --- | --- | --- |
-| guild_id? | ?snowflake | The guild with the voice channel, where null selects the DM and group DM call context |
+| guild_id? | ?snowflake | The guild with the voice channel, where null selects the direct message and group direct message call context |
 | channel_id? | ?snowflake | The channel to join or move to, where null leaves the membership |
 | connection_id?<sup>1</sup> | ?string | The existing voice connection this update applies to |
 | self_mute?<sup>2</sup> | boolean | Whether the client has muted its microphone (default false) |
@@ -247,13 +247,13 @@ Opcode `4` joins, moves, updates or leaves the voice membership of the current s
 | longitude? | number or string | The client longitude, used to pick a voice region |
 | p2p?<sup>5</sup> | boolean | Whether the client agrees to peer-to-peer media for a new connection, or leaves the mesh on an existing one |
 
-<sup>1</sup> A `channel_id` with no `connection_id` opens a new connection and one with it updates or moves that connection. Leaving a guild with `channel_id: null` needs a `connection_id`, or the update is refused with `VOICE_MISSING_CONNECTION_ID`
+<sup>1</sup> A `channel_id` with no `connection_id` opens a new connection and one with it updates or moves that connection. Leaving a guild with `channel_id: null` and no `connection_id` disconnects every connection the session has in that guild
 
 <sup>2</sup> Only `true` and the string `"true"` set the flag
 
 <sup>3</sup> Set like the other flags, and `false` is published when the member lacks `STREAM` in the channel. It sends no [Voice Server Update](/gateway/events/#voice-server-update)
 
-<sup>4</sup> Each entry is a stream key matching this update's scope, guild and channel, or the update is refused with `VOICE_INVALID_STATE`. An entry with no connection is refused with `VOICE_CONNECTION_NOT_FOUND`
+<sup>4</sup> Each entry is the stream key of a live connection that matches this update's scope, guild and channel. Fluxer drops an update with any other entry
 
 <sup>5</sup> Only the JSON Boolean `true` agrees. On an existing connection, `false` [moves the whole channel or call to LiveKit](/gateway/events/#peer-to-peer-voice), except in a guild voice channel with `rtc_p2p` set. A bot session never agrees
 
@@ -271,7 +271,7 @@ Opcode `4` joins, moves, updates or leaves the voice membership of the current s
 }
 ```
 
-`guild_id: null` with `channel_id: null` and a `connection_id` leaves that DM or group DM call connection. Without a `connection_id` it disconnects the session from every voice membership.
+`guild_id: null` with `channel_id: null` and a `connection_id` leaves that direct message or group direct message call connection. Without a `connection_id` it disconnects the session from every voice membership.
 
 Joining or moving sends [Voice Server Update](/gateway/events/#voice-server-update) to you and [Voice State Update](/gateway/events/#voice-state-update) to every session that can see the channel. A refused join comes back as a [Gateway Error](/gateway/opcodes-and-close-codes/#gateway-error) with the refusal code.
 
@@ -283,7 +283,7 @@ Opcode `13` sends one signaling message to another connection in a [peer-to-peer
 
 | Field | Type | Description |
 | --- | --- | --- |
-| guild_id? | ?snowflake | The guild with the voice channel, where null or omitted selects the DM and group DM call context |
+| guild_id? | ?snowflake | The guild with the voice channel, where null or omitted selects the direct message and group direct message call context |
 | channel_id | snowflake | The voice channel or call channel both connections are in |
 | to | string | The `connection_id` of the voice state the signal is for |
 | data | object | The signaling message, which Fluxer relays unread |
@@ -342,11 +342,11 @@ Opcode `8` requests member chunks for one or more guilds.
 }
 ```
 
-Guilds the session is not connected to are skipped, and a request with no connected guild gets no chunk. A full member list needs `MANAGE_ROLES`, `KICK_MEMBERS` and `BAN_MEMBERS` together, and the owner and `ADMINISTRATOR` satisfy that. Without them the request is dropped silently.
+Guilds the session is not connected to are skipped, and a request with no connected guild gets no chunk. A user session needs `MANAGE_ROLES`, `KICK_MEMBERS` and `BAN_MEMBERS` together for a full member list, and the owner and `ADMINISTRATOR` satisfy that. Without them the request is dropped silently. A bot needs no permission for it.
 
 Fluxer drops a bot request that lists more than one guild in `guild_ids`, with no chunk. A bot asking for the full list gets one accepted request per guild every 30 seconds, and another request inside that window gets [Rate Limited](/gateway/events/#rate-limited) and no chunk.
 
-Results arrive as [Guild Members Chunk](/gateway/events/#guild-members-chunk) pages of at most 1,000 members with `chunk_index` and `chunk_count`. Chunks are not replayed on Resume. If you send a new request while one is running, it replaces any request still waiting.
+Results arrive as [Guild Members Chunk](/gateway/events/#guild-members-chunk) pages of at most 1,000 members with `chunk_index` and `chunk_count`. Chunks are not replayed on Resume.
 
 ## Lazy Request
 
@@ -356,7 +356,7 @@ Opcode `14` sets the per-guild subscriptions that decide member list, typing, sy
 | --- | --- | --- |
 | subscriptions<sup>1</sup> | map[snowflake, [guild subscription](#guild-subscription-object) object] | The subscription options for each guild, keyed by guild ID |
 
-<sup>1</sup> Fluxer applies each guild's options again when the session connects to that guild later
+<sup>1</sup> Fluxer applies each guild's options again when the session connects to that guild later, and keeps options for at most 10 guilds the session isn't connected to yet
 
 ```json
 {
@@ -398,7 +398,7 @@ A user session is passive in a guild of more than 250 members until `active` is 
 
 Switching a guild between passive and active sends a [Guild Sync](/gateway/events/#guild-sync) unless the session already has one for that guild. Going passive also clears the [`threads`](/gateway/threads/#lazy-request-thread-options) subscription, and the next switch to active syncs again.
 
-A channel gets [Guild Member List Update](/gateway/events/#guild-member-list-update) only when you have `VIEW_CHANNEL` and `VIEW_CHANNEL_MEMBERS` in it. Thread IDs here subscribe to nothing. Use [`thread_member_lists`](/gateway/threads/#lazy-request-thread-options). Subscribing a channel to a range drops the session's other member list in that guild.
+A channel gets [Guild Member List Update](/gateway/events/#guild-member-list-update) only when you have `VIEW_CHANNEL` and `VIEW_CHANNEL_MEMBERS` in it. Thread IDs here subscribe to nothing. Use [`thread_member_lists`](/gateway/threads/#lazy-request-thread-options). Subscribing a channel to a range drops the session's member list in any other channel or guild.
 
 ## Request Guild Counts
 
@@ -428,7 +428,7 @@ Opcode `16` requests the member and online counts for channels in one guild.
 | Field | Type | Description |
 | --- | --- | --- |
 | guild_id | snowflake | The ID of the guild whose channels are queried |
-| channel_ids | array[snowflake] | The channel IDs to query, deduplicated and truncated to 25 |
+| channel_ids? | array[snowflake] | The channel IDs to query, deduplicated and truncated to 25 |
 | channel_id?<sup>1</sup> | snowflake | The ID of the single channel to query |
 | nonce? | string | A value of 1-64 bytes echoed in the result |
 
@@ -445,8 +445,4 @@ Opcode `16` requests the member and online counts for channels in one guild.
 }
 ```
 
-An invalid or unconnected guild gives an empty result. Results arrive in one [Channel Member Counts Update](/gateway/events/#channel-member-counts-update), and a channel is counted only when you have `VIEW_CHANNEL` and `VIEW_CHANNEL_MEMBERS` in it.
-
-## Bounded requests
-
-A command sent while four [bounded commands](/gateway/limits-and-rate-limits/#bounded-commands) are running is dropped silently, with no close and no result.
+An invalid or unconnected guild gives an empty result. Results arrive in one [Channel Member Counts Update](/gateway/events/#channel-member-counts-update), and a channel is counted only when it isn't a thread and you have `VIEW_CHANNEL` and `VIEW_CHANNEL_MEMBERS` in it.

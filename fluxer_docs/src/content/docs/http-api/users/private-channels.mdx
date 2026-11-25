@@ -1,12 +1,12 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Private channels
-description: List, create, preload and pin direct messages and group DMs.
+description: List, create, preload and pin direct messages and group direct messages.
 ---
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A private channel is a direct message between two accounts or a group DM. Its fields are in the [channel object](/http-api/channels/#channel-object). These routes take a user session or a bot token, not an OAuth2 token.
+A private channel is a direct message between two accounts or a group direct message. Its fields are in the [channel object](/http-api/channels/#channel-object). These routes take a user session or a bot token, not an OAuth2 token.
 
 ## Preloaded messages object
 
@@ -18,7 +18,7 @@ Each property name is the [snowflake](/snowflakes/) of one requested channel.
 | --- | --- | --- |
 | &#123;channel_id&#125;<sup>1</sup> | ?[message](/http-api/messages/#message-object) object | The latest message you can read, or null when there is none |
 
-<sup>1</sup> Channels that aren't direct messages or group DMs are left out
+<sup>1</sup> Channels that aren't direct messages or group direct messages are left out
 
 ## Group DM unaddable recipient object
 
@@ -44,7 +44,7 @@ In a `GROUP_DM_RECIPIENTS_NOT_ADDABLE` [error response](/http-api/#error-respons
 
 <RouteHeader method="GET" path="/v1/users/@me/channels" bot />
 
-Returns your open direct message and group DM [channel](/http-api/channels/#channel-object) objects, unordered and unpaginated. Each channel's `recipients` leaves out the caller.
+Returns your open direct message and group direct message [channel](/http-api/channels/#channel-object) objects, unordered and unpaginated. Each channel's `recipients` leaves out the caller.
 
 ### Response
 
@@ -58,9 +58,9 @@ The rate limit is 40 requests per 10 seconds, on the `user:channels` bucket.
 
 <RouteHeader method="POST" path="/v1/users/@me/channels" bot />
 
-Opens a direct message with one account, or creates a group DM.
+Opens a direct message with one account, or creates a group direct message.
 
-Send `recipient_id` to open a direct message or `recipients` to create a group DM. Opening a direct message you already have returns the same channel.
+Send `recipient_id` to open a direct message or `recipients` to create a group direct message. Opening a direct message you already have returns the same channel.
 
 An account that is not [verified](/http-api/users/#account-tiers) gets 403 `UNCLAIMED_ACCOUNT_CANNOT_JOIN_GROUP_DMS`, `UNCLAIMED_ACCOUNT_CANNOT_SEND_DIRECT_MESSAGES`, `DIRECT_MESSAGE_EMAIL_VERIFICATION_REQUIRED` or `ACCOUNT_VERIFICATION_REQUIRED`.
 
@@ -76,11 +76,11 @@ Your own ID returns 400 `CANNOT_DM_YOURSELF` on `recipient_id`, and an unknown u
 
 A guild with the `MEMBER_DMS_DISABLED` [guild feature](/http-api/guilds/#guild-features) doesn't count as a shared guild between two people who aren't friends, unless one of them is a bot. When the only guilds you share have it, [Create message](/http-api/messages/#create-message) returns 400 `COMMUNITY_MEMBER_DMS_DISABLED`. This also applies to direct messages opened before the guild turned it on.
 
-### Group DMs
+### Group direct messages
 
 A [limited](/http-api/users/#account-limitation) account gets 403 `ACCOUNT_LIMITED`.
 
-A group DM has at most `max_group_dm_recipients` participants including you (default 50), or the request returns 400 `MAX_GROUP_DM_RECIPIENTS` with `max_recipients`. Each participant must be in fewer than `max_group_dms_per_user` group DMs (default 150), or it returns 400 `MAX_GROUP_DMS` with `max_group_dms`.
+A group direct message has at most `max_group_dm_recipients` participants including you (default 50), or the request returns 400 `MAX_GROUP_DM_RECIPIENTS` with `max_recipients`. Each participant must be in fewer than `max_group_dms_per_user` group direct messages (default 150), or it returns 400 `MAX_GROUP_DMS` with `max_group_dms`.
 
 A repeated ID returns 400 `DUPLICATE_RECIPIENTS_NOT_ALLOWED` and your own ID returns 400 `CANNOT_ADD_YOURSELF_TO_GROUP_DM`, both as field errors on `recipients`. If any recipient can't be added, the request returns 400 `GROUP_DM_RECIPIENTS_NOT_ADDABLE` with [`unaddable_recipients`](#group-dm-unaddable-recipient-object) and the IDs that could be added in `addable_recipients`.
 
@@ -97,7 +97,7 @@ A repeated ID returns 400 `DUPLICATE_RECIPIENTS_NOT_ALLOWED` and your own ID ret
 | Field | Type | Description |
 | --- | --- | --- |
 | recipient_id?<sup>1</sup> | snowflake | The only recipient of a direct message |
-| recipients?<sup>1</sup> | array[snowflake] | The other participants of a group DM, excluding the caller (max 49) |
+| recipients?<sup>1</sup> | array[snowflake] | The other participants of a group direct message, excluding the caller (max 49) |
 
 <sup>1</sup> Send exactly one of the two
 
@@ -105,14 +105,14 @@ A repeated ID returns 400 `DUPLICATE_RECIPIENTS_NOT_ALLOWED` and your own ID ret
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | [channel](/http-api/channels/#channel-object) object | The direct message was opened or the group DM was created |
+| 200 | [channel](/http-api/channels/#channel-object) object | The direct message was opened or the group direct message was created |
 | 400 | [error response](/http-api/#error-response) | The request failed a check described above |
 | 403 | [error response](/http-api/#error-response) | The account is not verified, is limited, or may not start a new conversation |
 | 404 | [error response](/http-api/#error-response) | `UNKNOWN_USER` when `recipient_id` does not exist |
 
 ### Side effects
 
-A new direct message opens only for you. The other side opens when a message is sent or a call rings in it, when they open it, or when you become friends. A new group DM makes you the owner, sends [Channel Create](/gateway/events/#channel-create) to every participant and posts a [RECIPIENT_ADD](/http-api/messages/#message-types) message, with its [Message Create](/gateway/events/#message-create) event, for each other recipient.
+A new direct message opens only for you. The other side opens when a message is sent or a call rings in it, when they open it, or when you become friends. A new group direct message makes you the owner, sends [Channel Create](/gateway/events/#channel-create) to every participant and posts a [RECIPIENT_ADD](/http-api/messages/#message-types) message, with its [Message Create](/gateway/events/#message-create) event, for each other recipient.
 
 The rate limit is 40 requests per 10 seconds, on the `user:channels` bucket. A request with `recipients` also uses the `user:group_dm:create` bucket, at 10 requests per hour.
 
@@ -160,7 +160,7 @@ The rate limit is 40 requests per 10 seconds, on the `user:preload_messages` buc
 
 <RouteHeader method="PUT" path="/v1/users/@me/channels/{channel_id}/pin" bot />
 
-Adds a direct message or group DM to the end of your pinned list and sends you a [User Pinned DMs Update](/gateway/events/#user-pinned-dms-update) Gateway event.
+Adds a direct message or group direct message to the end of your pinned list and sends you a [User Pinned DMs Update](/gateway/events/#user-pinned-dms-update) Gateway event.
 
 ### Response
 
@@ -175,7 +175,7 @@ The rate limit is 40 requests per 10 seconds, on the `user:channels` bucket.
 
 <RouteHeader method="DELETE" path="/v1/users/@me/channels/{channel_id}/pin" bot />
 
-Removes a direct message or group DM from your pinned list and sends you a [User Pinned DMs Update](/gateway/events/#user-pinned-dms-update) Gateway event.
+Removes a direct message or group direct message from your pinned list and sends you a [User Pinned DMs Update](/gateway/events/#user-pinned-dms-update) Gateway event.
 
 ### Response
 

@@ -75,7 +75,7 @@ When an instance admin removes a published message or one of its copies, the pub
 | Announcement channel deleted | Removed | Become placeholders |
 | Announcement channel converted to text | Removed | Stay, and keep receiving edits and deletions |
 | Source guild deleted by its owner | Removed | Become placeholders |
-| Source guild deleted by an administrator | Removed | Deleted |
+| Source guild deleted by an instance admin | Removed | Deleted |
 | Following channel deleted | Removed with the channel | Deleted with the channel |
 | Follower webhook deleted | Removed | Stay, and keep receiving edits and deletions |
 | Follower webhook moved | Kept | Stay in the previous channel |

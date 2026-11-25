@@ -37,6 +37,6 @@ Returns the gift codes the current account bought, newest first, with no paginat
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | array[[gift inventory](#gift-inventory-object) object] | The gift codes were returned |
-| 404 | [error response](/http-api/#error-response) | `NOT_FOUND` when the instance [premium mode](/admin-api/instance/#premium-modes) isn't `mirror` |
+| 404 | [error response](/http-api/#error-response) | `NOT_FOUND` when a self-hosted instance's [premium mode](/admin-api/instance/#premium-modes) isn't `mirror` |
 
 The rate limit is 40 requests per 10 seconds, on the `gifts:list` bucket.

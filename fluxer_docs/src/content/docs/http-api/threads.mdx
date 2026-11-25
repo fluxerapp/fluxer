@@ -136,7 +136,7 @@ A thread moderator is the guild owner, a member with `ADMINISTRATOR`, or a membe
 
 ### Access rules
 
-A timed-out member who is not the guild owner or an administrator can read, join and leave threads and delete messages, but gets 403 `COMMUNICATION_DISABLED` for anything else.
+A timed-out member who is not the guild owner and doesn't have [ADMINISTRATOR](/http-api/permissions/) can read, join and leave threads and delete messages, but gets 403 `COMMUNICATION_DISABLED` for anything else.
 
 A caller who is not a member or thread moderator gets 403 `MISSING_ACCESS` for a private thread.
 

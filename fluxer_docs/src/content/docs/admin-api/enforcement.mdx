@@ -39,8 +39,8 @@ A decision is `active` until staff end it as `lifted` or `reversed`. Fluxer ends
 
 The API computes two more states each time it returns a decision, and never stores them.
 
-- `expired`: an active suspension or feature limit whose `ends_at` has passed, before Fluxer ends it
-- `replaced`: an active suspension or closure that a later decision replaced
+- `expired` is an active suspension or feature limit whose `ends_at` has passed, before Fluxer ends it.
+- `replaced` is an active suspension or closure that a later decision replaced.
 
 A closure replaces an active suspension and lifts it. No ended email goes out for a replaced decision.
 

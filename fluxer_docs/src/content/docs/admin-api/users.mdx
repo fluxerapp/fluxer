@@ -958,7 +958,7 @@ The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 Ends the premium of an account right away and returns the account. You need `user:update:flags`, and the `X-Audit-Log-Reason` header is required. Use it to take back premium from a [gift code](/admin-api/gift-codes/) or from `ENABLED_OVERRIDE`.
 
-Fluxer ends premium the same way it does when premium expires. It clears the premium type, start, end, gift extension, grace period and billing cycle, and removes `ENABLED_OVERRIDE`. It then sanitizes the account's profile perks in each community, such as a community avatar and banner, and sets `PERKS_SANITIZED`. An animated avatar and banner stop showing at once. When the [tag style](/http-api/instance/#tag-styles) is `random`, a premium discriminator is replaced the next time the account starts a session, as it is when premium expires. Gift codes the account redeemed stay redeemed.
+Fluxer ends premium the same way it does when premium expires. It clears the premium type, start, end, gift extension, grace period and billing cycle, and removes `ENABLED_OVERRIDE`. It then sanitises the account's profile perks in each guild, such as a guild profile avatar and banner, and sets `PERKS_SANITIZED`. An animated avatar and banner stop showing at once. When the [tag style](/http-api/instance/#tag-styles) is `random`, a premium discriminator is replaced the next time the account starts a session, as it is when premium expires. Gift codes the account redeemed stay redeemed.
 
 Fluxer refuses the request, and changes nothing, in these cases.
 
@@ -986,7 +986,7 @@ Fluxer refuses the request, and changes nothing, in these cases.
 
 The request records a `remove_premium` [audit entry](/admin-api/#admin-audit-entry-object) with the earlier premium type and end date, and whether `ENABLED_OVERRIDE` was removed.
 
-Fluxer sends [User Update](/gateway/events/#user-update), and [Guild Member Update](/gateway/events/#guild-member-update) for each community where perks were sanitized.
+Fluxer sends [User Update](/gateway/events/#user-update), and [Guild Member Update](/gateway/events/#guild-member-update) for each guild where perks were sanitised.
 
 The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
@@ -1676,7 +1676,7 @@ The rate limit is 100 requests per minute, on the `admin:message:operation` buck
 
 <RouteHeader method="POST" path="/v1/admin/users/{user_id}/message-shreds/preview" auditReason />
 
-Lists exactly the messages a shred of these entries deletes, without deleting anything or recording a decision. You need `message:shred`. A message is listed only when the account sent it in the named channel. Missing messages, messages someone else sent and repeated entries are returned in `skipped`. Pass `preview_token` to [Shred user messages](#shred-user-messages) to delete exactly these messages.
+Lists exactly the messages a shred of these entries deletes, without deleting anything or recording a decision. You need `message:shred`. A message is listed only when the account sent it in the entry's `channel_id`. Missing messages, messages someone else sent and repeated entries are returned in `skipped`. Pass `preview_token` to [Shred user messages](#shred-user-messages) to delete exactly these messages.
 
 ### JSON body
 

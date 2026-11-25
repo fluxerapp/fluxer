@@ -367,7 +367,7 @@ Deleting a guild channel sends [Channel Delete](/gateway/events/#channel-delete)
 
 Closing a direct message only hides it for you.
 
-Leaving a group direct message sends [Channel Recipient Remove](/gateway/events/#channel-recipient-remove) to the others. If you owned the group, another recipient becomes the owner. To see the new `owner_id`, fetch the channel again, because Fluxer sends no Channel Update for the change. When the last recipient leaves, the group and its messages are deleted.
+Leaving a group direct message sends [Channel Recipient Remove](/gateway/events/#channel-recipient-remove) to the others. If you owned the group, another recipient becomes the owner. Fluxer sends no Channel Update for the change. To see the new `owner_id`, fetch the channel again. When the last recipient leaves, the group and its messages are deleted.
 
 The rate limit is 20 requests per 10 seconds, on the `channel:delete::channel_id` bucket.
 

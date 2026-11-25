@@ -37,7 +37,7 @@ A repeated parameter uses its last value, and an unknown parameter is ignored. `
 
 `width` and `height` are free integers from 1 through 16,384. Any other value returns 400.
 
-`size` selects from a fixed ladder: 16, 20, 22, 24, 28, 32, 40, 44, 48, 56, 60, 64, 80, 96, 100, 128, 160, 240, 256, 300, 320, 480, 512, 600, 640, 1024, 1280, 1536, 2048, 3072, 4096, 8192, and 16,384. A requested value snaps up to the next rung (641 selects 1024), and a value above 16,384 selects 16,384.
+`size` selects from a fixed ladder of 16, 20, 22, 24, 28, 32, 40, 44, 48, 56, 60, 64, 80, 96, 100, 128, 160, 240, 256, 300, 320, 480, 512, 600, 640, 1024, 1280, 1536, 2048, 3072, 4096, 8192 and 16,384. A requested value snaps up to the next rung (641 selects 1024), and a value above 16,384 selects 16,384.
 
 ## Geometry
 

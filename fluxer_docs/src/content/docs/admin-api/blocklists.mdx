@@ -24,8 +24,8 @@ Fluxer normalizes each value when you add or check it and stores the normalized 
 
 | Value | Description |
 | --- | --- |
-| ip | IPv4 addresses, IPv6 addresses and CIDR ranges denied service |
-| email | Email addresses, or `@example.com` for a domain and its subdomains, that can't be used to sign up or be set on an account |
+| ip | IPv4 addresses, IPv6 addresses and CIDR ranges denied service. An email address whose mail server is on one can't be used to sign up or be set on an account |
+| email | Email addresses, or `@example.com` for a domain and its subdomains, that can't be used to sign up or be set on an account. A domain entry also refuses every address whose mail server is at that domain |
 | phrase<sup>1</sup> | Phrases blocked from content |
 | url | Absolute `http` and `https` URLs blocked from being posted |
 | url-domain | Domains or [domain patterns](#domain-patterns) blocked from being linked |
@@ -128,7 +128,7 @@ An entry stored in a blocklist. Every field is present, and a field the list doe
 | scope | ?string | The [profile substring scope](#profile-substring-scopes) |
 | category | ?string | The [content blocklist category](#content-blocklist-categories) |
 | severity | ?integer | The [content blocklist severity](#content-blocklist-severities) |
-| source_url | ?string | The feed or evidence URL |
+| source_url | ?string | The list or evidence URL |
 | notes | ?string | The internal note |
 | content_type | ?string | The media type hint of a `file-sha` entry |
 | match_subdomains | ?boolean | Whether a `url-domain` entry also covers subdomains |
@@ -197,7 +197,7 @@ The body of [Add blocklist entry](#add-blocklist-entry) has the value field for 
 | severity?<sup>2</sup> | integer | The [content blocklist severity](#content-blocklist-severities) (0-3, default 2) |
 | match_subdomains? | boolean | Whether a `url-domain` entry also covers subdomains (default true) |
 | content_type? | string | The media type hint of a `file-sha` entry (1-128 characters) |
-| source_url?<sup>2</sup> | string | The feed or evidence URL (1-2048 characters) |
+| source_url?<sup>2</sup> | string | The list or evidence URL (1-2048 characters) |
 | reason? | string | The reason for `avatar-hash` and `profile-substring`, kept in the audit entry (1-1024 characters) |
 | notes? | string | The internal note, for every list but `ip`, `email` and `phrase` (1-1024 characters) |
 | duration_hours? | integer | Hours until an `ip` entry expires, with `0` for permanent (0-8760, default 0) |
@@ -375,7 +375,7 @@ Rewrites the fields of one entry, or creates it when it doesn't exist. You need 
 | severity? | integer | The [content blocklist severity](#content-blocklist-severities) (0-3, default 2) |
 | match_subdomains? | boolean | Whether a `url-domain` entry also covers subdomains (default true) |
 | content_type? | string | The media type hint of a `file-sha` entry (1-128 characters) |
-| source_url? | string | The feed or evidence URL (1-2048 characters) |
+| source_url? | string | The list or evidence URL (1-2048 characters) |
 | reason? | string | The reason, kept in the audit entry (1-1024 characters) |
 | notes? | string | The internal note (1-1024 characters) |
 

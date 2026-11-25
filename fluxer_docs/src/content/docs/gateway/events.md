@@ -34,7 +34,7 @@ Most guild events have a `guild_id`. [Guild Create](#guild-create), [Guild Sync]
 
 The session that made a change receives the Dispatch like any other session. The one exception is a guild-channel reaction, where the request's `session_id` excludes that session from [Message Reaction Add](#message-reaction-add) and [Message Reaction Remove](#message-reaction-remove).
 
-[Resume](/gateway/commands/#resume) replays every Dispatch except [Ready](#ready) and the [Guild Create](#guild-create) and [Guild Delete](#guild-delete) burst a bot gets after Ready. These events are live only and are never replayed.
+[Resume](/gateway/commands/#resume) replays every Dispatch except [Ready](#ready) and the following live-only events.
 
 - [Guild Sync](#guild-sync)
 - [Guild Member List Update](#guild-member-list-update)
@@ -90,7 +90,7 @@ A single Dispatch over about 2 MiB is sent but [never kept for replay](/gateway/
 | [Webhooks Update](#webhooks-update) | The webhook set of a viewable guild channel changes |
 | [Invite Create](#invite-create) | An invite is created |
 | [Invite Delete](#invite-delete) | An invite is deleted |
-| [Thread Create](/gateway/threads/#thread-create) | A thread is created or the session joins one |
+| [Thread Create](/gateway/threads/#thread-create) | A thread is created or the session is added to one |
 | [Thread Update](/gateway/threads/#thread-update) | A visible thread changes |
 | [Thread Delete](/gateway/threads/#thread-delete) | A thread is deleted |
 | [Thread List Sync](/gateway/threads/#thread-list-sync) | The session's active thread set is replaced |
@@ -155,8 +155,9 @@ The session's initial state, sent once after a successful [Identify](/gateway/co
 | pinned_dms | array[snowflake] | Pinned private channel IDs |
 | favorite_memes | array[[meme](/http-api/memes/#meme-object) object] | Saved memes |
 | webauthn_credentials | array[[WebAuthn credential object](#webauthn-credential-object)] | Registered WebAuthn credentials |
-| rtc_regions | array[[RTC region object](#rtc-region-object)] | Voice regions you can pick, nearest first, without [hidden regions](/admin-api/voice/#hidden-regions) |
+| rtc_regions | array[[RTC region object](#rtc-region-object)] | Voice regions you can pick, starting with `automatic`, without [hidden regions](/admin-api/voice/#hidden-regions) |
 | country_code | string | Country of the connecting address, `US` when unknown |
+| geoip_country_code | ?string | Country of the connecting address, null when unknown |
 | latitude? | string | Latitude of the connecting address as a decimal string |
 | longitude? | string | Longitude of the connecting address as a decimal string |
 | auth_session_id_hash? | string | Base64url hash identifying the authentication session |
@@ -388,7 +389,7 @@ The guild's full state again, sent after a [Lazy Request](/gateway/commands/#laz
 
 ### <span id="guild-update"></span>GUILD_UPDATE
 
-A guild's settings changed. The payload is the [guild object](/http-api/guilds/#guild-object) with `guild_id` added. An unavailable guild sends no other event.
+A guild's settings changed. The payload is the [guild object](/http-api/guilds/#guild-object) with `guild_id` added. A guild with the `UNAVAILABLE_FOR_EVERYONE` or `UNAVAILABLE_FOR_EVERYONE_BUT_STAFF` feature sends no other event.
 
 ### <span id="guild-delete"></span>GUILD_DELETE
 
@@ -487,7 +488,7 @@ Several channels changed at once, usually in a reorder. Each session gets only t
 
 ### <span id="channel-delete"></span>CHANNEL_DELETE
 
-A channel was deleted or the session can no longer see it. The payload is the [channel object](/http-api/channels/#channel-object) as it was before. Remove every thread whose `parent_id` is the channel yourself, because Fluxer sends no [Thread Delete](/gateway/threads/#thread-delete) for them.
+A channel was deleted or the session can no longer see it. The payload is the [channel object](/http-api/channels/#channel-object) as it was before. Fluxer sends no [Thread Delete](/gateway/threads/#thread-delete) for the channel's threads. Remove every thread whose `parent_id` is the channel yourself.
 
 ### <span id="channel-recipient-add"></span>CHANNEL_RECIPIENT_ADD
 
@@ -570,7 +571,7 @@ A member list the session subscribed to with [Lazy Request](/gateway/commands/#l
 | --- | --- | --- |
 | guild_id | snowflake | Guild the list belongs to |
 | id | string | List identifier, which is the channel ID |
-| channel_id? | snowflake | Channel the list is scoped to |
+| channel_id | snowflake | Channel the list belongs to, the same value as `id` |
 | member_count | integer | Total members in the list |
 | online_count | integer | Online members in the list |
 | groups | array[[member list group object](#member-list-group-object)] | Group headers in list order |
@@ -636,7 +637,7 @@ A visible presence changed. The payload is a [presence object](#presence-object)
 | --- | --- | --- |
 | user | [partial user](/http-api/users/#partial-user-object) object | The user the presence belongs to |
 | status | string | `online`, `idle`, `dnd` or `offline` |
-| mobile | boolean | Whether the user's active status comes from a mobile session |
+| mobile | boolean | Whether `status` is `online` and one of the user's online sessions is mobile |
 | afk | boolean | Whether every one of the user's sessions is away, always false when `mobile` is true |
 | custom_status | ?[custom status object](#custom-status-object) | The user's custom status, null when `offline` |
 | guild_id? | snowflake | Guild the presence came through |
@@ -692,11 +693,13 @@ A message was deleted.
 | id | snowflake | The deleted message |
 | channel_id | snowflake | Channel the message was in |
 | content?<sup>1</sup> | ?string | The message's content before it was deleted |
-| author_id?<sup>1</sup> | snowflake | Account that wrote the message |
+| author_id?<sup>2</sup> | snowflake | Account that wrote the message |
 | guild_id? | snowflake | Guild the channel belongs to |
 | member? | [guild member](/http-api/guild-members/#guild-member-object) object | The author's member object without `user`, when the author is still a member |
 
 <sup>1</sup> Absent when an instance admin or Fluxer itself deleted the message
+
+<sup>2</sup> Absent when an instance admin or Fluxer itself deleted the message, except when Fluxer removes an account's messages
 
 ### <span id="message-delete-bulk"></span>MESSAGE_DELETE_BULK
 
@@ -747,7 +750,7 @@ A user reacted to a message.
 
 ### <span id="message-reaction-add-many"></span>MESSAGE_REACTION_ADD_MANY
 
-Reactions in private channels, grouped over 650 ms, for a session with the `DEBOUNCE_MESSAGE_REACTIONS` [session flag](/gateway/commands/#session-flags). Each window keeps only the latest 512 reactions and drops older ones. Each event covers one message. A window with a single reaction sends [Message Reaction Add](#message-reaction-add).
+Reactions the session receives, grouped over 650 ms, for a session with the `DEBOUNCE_MESSAGE_REACTIONS` [session flag](/gateway/commands/#session-flags). Each window keeps only the latest 512 reactions and drops older ones. Each event covers one message. A message with only one reaction in the window gets a [Message Reaction Add](#message-reaction-add).
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -846,8 +849,8 @@ A participant's voice state changed. The payload is a [voice state object](#voic
 | connection_id | ?string | Voice connection ID |
 | session_id | ?string | Gateway session that owns the connection |
 | member | ?[guild member](/http-api/guild-members/#guild-member-object) object | The participant's member object, null in a call |
-| mute | boolean | Server mute |
-| deaf | boolean | Server deafen |
+| mute | boolean | Whether a moderator muted the participant |
+| deaf | boolean | Whether a moderator deafened the participant |
 | self_mute | boolean | Local microphone mute |
 | self_deaf | boolean | Local output deafen |
 | self_video | boolean | Whether the participant sends camera video |
@@ -880,7 +883,7 @@ The session got a voice grant, sent only to the session that asked. A LiveKit gr
 
 <sup>2</sup> On a peer-to-peer grant
 
-<sup>3</sup> On a LiveKit grant for a channel with encrypted call media. The server creates the key, so this isn't end-to-end encryption
+<sup>3</sup> On a LiveKit grant for a channel with encrypted call media. The server creates this key
 
 A new grant comes when the connection opens, moves to another channel or changes region. A LiveKit grant for a connection that had a peer-to-peer grant means the call switched to LiveKit. Close your peer connections and connect with the new grant.
 
@@ -909,7 +912,7 @@ Fluxer decides each join from the channel's state and the `p2p` value in the [Vo
 
 A refusal arrives as a [Gateway Error](/gateway/opcodes-and-close-codes/#gateway-error) and changes nothing. On `VOICE_P2P_CONSENT_REQUIRED`, ask the user and send the join again with `p2p: true` if they agree. The participant cap is `max_participants` from the [peer-to-peer voice configuration](/admin-api/instance/#peer-to-peer-voice-configuration-object), a number from 2 to 4.
 
-Fluxer never switches a call to LiveKit on its own. Only a participant sending `p2p: false` for its own connection, or a region change through [Modify call region](/http-api/calls/#modify-call-region) or [Modify channel](/http-api/channels/#modify-channel), switches it. The call stays on LiveKit until it empties. A guild voice channel with `rtc_p2p` set never switches.
+A peer-to-peer voice channel or call switches to LiveKit only when a participant sends `p2p: false` for its own connection or the region changes through [Modify call region](/http-api/calls/#modify-call-region) or [Modify channel](/http-api/channels/#modify-channel). It stays on LiveKit until it empties. A guild voice channel with `rtc_p2p` set never switches.
 
 ### <span id="voice-signal"></span>VOICE_SIGNAL
 
@@ -1001,7 +1004,7 @@ The answer to [Request Guild Counts](/gateway/commands/#request-guild-counts). A
 
 ### <span id="channel-member-counts-update"></span>CHANNEL_MEMBER_COUNTS_UPDATE
 
-The answer to [Request Channel Member Counts](/gateway/commands/#request-channel-member-counts). You only get an entry for a channel where you have `VIEW_CHANNEL_MEMBERS`.
+The answer to [Request Channel Member Counts](/gateway/commands/#request-channel-member-counts). You only get an entry for a channel that isn't a thread and where you have `VIEW_CHANNEL` and `VIEW_CHANNEL_MEMBERS`.
 
 | Field | Type | Description |
 | --- | --- | --- |

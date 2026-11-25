@@ -75,7 +75,7 @@ The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 
 <RouteHeader method="POST" path="/v1/admin/api-keys" auditReason />
 
-Creates a key and returns an [Admin API key creation](#admin-api-key-creation-object) object. You can only give the key ACLs your credential has, unless it has `*`. When you call with an Admin API key, that means the key's own ACLs, so a key can't create a broader key.
+Creates a key and returns an [Admin API key creation](#admin-api-key-creation-object) object. You can only give the key ACLs your credential has, unless it has `*`. When you call with an Admin API key, the key's own ACLs are the limit, and a key can't create a broader key.
 
 ### JSON body
 

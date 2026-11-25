@@ -184,7 +184,7 @@ An account is limited while `account_limited` is true. It can still read, join v
 - [Create webhook](/http-api/webhooks/#create-webhook)
 - [Accept invite](/http-api/invites/#accept-invite) and [Join discovery guild](/http-api/discovery/#join-discovery-guild), unless the account is already a member
 - [Create guild](/http-api/guilds/#create-guild)
-- Creating a group DM with [Create private channel](/http-api/users/private-channels/#create-private-channel), and [Add group direct message recipient](/http-api/channels/#add-group-direct-message-recipient)
+- Creating a group direct message with [Create private channel](/http-api/users/private-channels/#create-private-channel), and [Add group direct message recipient](/http-api/channels/#add-group-direct-message-recipient)
 - Changing a profile field with [Modify current user](/http-api/users/current-user/#modify-current-user) or [Modify current guild member](/http-api/guild-members/#modify-current-guild-member)
 - Setting a custom status with [Modify current user settings](/http-api/users/settings/#modify-current-user-settings) or a [presence update](/gateway/commands/#presence-update)
 - [Initiate connection](/http-api/connections/#initiate-connection), [Verify and create connection](/http-api/connections/#verify-and-create-connection) and [Start Bluesky authorization](/http-api/connections/#start-bluesky-authorization)
@@ -221,7 +221,7 @@ That [error response](/http-api/#error-response) has `action`, `tier` and `need`
 | `reaction` | Add a reaction |
 | `direct_message` | Send a DM |
 | `direct_message_open` | Open a DM |
-| `group_dm` | Create or join a group DM |
+| `group_dm` | Create or join a group direct message |
 | `friend_request` | Send a friend request |
 | `friend_accept` | Accept a friend request |
 | `invite_create` | Create an invite |
@@ -229,7 +229,7 @@ That [error response](/http-api/#error-response) has `action`, `tier` and `need`
 | `guild_create` | Create a guild |
 | `voice` | Join a voice channel |
 | `call` | Start or ring a call in a DM |
-| `group_call` | Start or join a call in a group DM |
+| `group_call` | Start or join a call in a group direct message |
 | `thread_join` | Join a thread |
 | `channel_follow` | Follow an announcement channel |
 | `ownership_transfer` | Receive guild ownership |
@@ -629,7 +629,7 @@ The rate limit is 100 requests per 10 seconds, on the `user:read::user_id` bucke
 
 <RouteHeader method="GET" path="/v1/users/{target_id}/profile" bot />
 
-Returns a [full user profile](#full-user-profile-object) object. To get the profile of another account that isn't a bot, you need a friendship, a pending friend request, a shared guild or a shared group DM with it. Profile privacy can still [restrict the fields](#full-user-profile-object) you get.
+Returns a [full user profile](#full-user-profile-object) object. To get the profile of another account that isn't a bot, you need a friendship, a pending friend request, a shared guild or a shared group direct message with it. Profile privacy can still [restrict the fields](#full-user-profile-object) you get.
 
 ### Query parameters
 

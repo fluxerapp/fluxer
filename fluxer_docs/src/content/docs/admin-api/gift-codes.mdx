@@ -59,9 +59,9 @@ Save the response. No Admin API route lists the codes later. If a request fails 
 
 <RouteHeader method="DELETE" path="/v1/admin/gift-codes/{code}" auditReason />
 
-Revokes a gift code that nobody has redeemed, so it can't be redeemed anymore. You need `gift_codes:generate`. Pass the code itself, which is the last part of the redemption link.
+Revokes a gift code that nobody has redeemed. You need `gift_codes:generate`. Pass the code itself, which is the last part of the redemption link.
 
-A redeemed code can't be revoked, because the premium it gave already belongs to the account that redeemed it. To take that premium back, use [Remove user premium](/admin-api/users/#remove-user-premium) on that account. The error message names the account.
+A redeemed code can't be revoked, because the premium it gave already belongs to the account that redeemed it. To take that premium back, use [Remove user premium](/admin-api/users/#remove-user-premium) on that account. The error message has the ID of that account.
 
 A code a customer bought can't be revoked here either. Refund the purchase instead, which revokes the code.
 

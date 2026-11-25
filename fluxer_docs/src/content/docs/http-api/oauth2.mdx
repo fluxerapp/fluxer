@@ -6,7 +6,7 @@ description: The OAuth2 authorization code grant, tokens, scopes and the routes 
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-OAuth2 lets a user give an application access to their account, and the same consent step can install the application's bot into a guild or group DM. You create applications and client secrets with the [Applications](/http-api/applications/) routes.
+OAuth2 lets a user give an application access to their account, and the same consent step can install the application's bot into a guild or group direct message. You create applications and client secrets with the [Applications](/http-api/applications/) routes.
 
 ## Authorization code grant
 
@@ -42,7 +42,7 @@ String fields such as `state`, `redirect_uri` and `code` can be at most 256 char
 | email<sup>1</sup> | Adds `email` and `verified` to the user information |
 | guilds | Use [List current user guilds](/http-api/guilds/#list-current-user-guilds), [Get guild](/http-api/guilds/#get-guild) and [List guild roles](/http-api/permissions/#list-guild-roles) |
 | connections | Use [List connections](/http-api/connections/#list-connections) |
-| bot<sup>2</sup> | Install the application's bot into a guild or group DM |
+| bot<sup>2</sup> | Install the application's bot into a guild or group direct message |
 
 <sup>1</sup> Only works together with `identify`
 
@@ -248,7 +248,7 @@ Starts the grant and redirects the browser to the Fluxer consent screen with the
 | state? | string | A value Fluxer returns unchanged on the redirect |
 | prompt? | string | The prompt mode, `consent` or `none` |
 | guild_id? | snowflake | The guild to preselect for the `bot` scope |
-| channel_id? | snowflake | The group DM to preselect for the `bot` scope |
+| channel_id? | snowflake | The group direct message to preselect for the `bot` scope |
 | permissions? | string | The permissions to give the bot, as an integer string |
 | disable_guild_select? | string | `true` to stop the user from picking another guild |
 | code_challenge? | string | The PKCE challenge |
@@ -274,7 +274,7 @@ The rate limit is 60 requests per minute, on the `oauth:authorize` bucket.
 
 <RouteHeader method="POST" path="/v1/oauth2/authorize/consent" />
 
-Records the user's consent and returns an [OAuth2 consent response](#oauth2-consent-response-object) with the callback URL. With the `bot` scope it also installs the bot. In a guild you need [MANAGE_GUILD or ADMINISTRATOR](/http-api/permissions/), and in a group DM you need to be a recipient.
+Records the user's consent and returns an [OAuth2 consent response](#oauth2-consent-response-object) with the callback URL. With the `bot` scope it also installs the bot. In a guild you need [MANAGE_GUILD or ADMINISTRATOR](/http-api/permissions/), and in a group direct message you need to be a recipient.
 
 ### JSON body
 
@@ -287,7 +287,7 @@ Records the user's consent and returns an [OAuth2 consent response](#oauth2-cons
 | state? | string | A value Fluxer adds to the callback URL |
 | permissions?<sup>2</sup> | string | The permissions to give the bot, as an integer string |
 | guild_id?<sup>3</sup> | snowflake | The guild to install the bot into |
-| channel_id?<sup>3</sup> | snowflake | The group DM to install the bot into |
+| channel_id?<sup>3</sup> | snowflake | The group direct message to install the bot into |
 | code_challenge? | string | The PKCE challenge |
 | code_challenge_method? | string | The PKCE method, `S256` |
 
@@ -306,10 +306,10 @@ Records the user's consent and returns an [OAuth2 consent response](#oauth2-cons
 | 400 | [error response](/http-api/#error-response) | `NOT_A_BOT_APPLICATION`, `BOT_ALREADY_IN_GUILD` or `INVALID_CHANNEL_TYPE` |
 | 400 | [error response](/http-api/#error-response) | `MAX_GUILD_MEMBERS`, `MAX_GUILD_ROLES` or `MAX_GROUP_DM_RECIPIENTS` |
 | 403 | [error response](/http-api/#error-response) | `BOT_IS_PRIVATE` when you don't own a private bot's application |
-| 403 | [error response](/http-api/#error-response) | `MISSING_PERMISSIONS` when you lack the guild permissions, or `MISSING_ACCESS` when you aren't in the group DM |
-| 404 | [error response](/http-api/#error-response) | `UNKNOWN_CHANNEL` when the group DM doesn't exist |
+| 403 | [error response](/http-api/#error-response) | `MISSING_PERMISSIONS` when you lack the guild permissions, or `MISSING_ACCESS` when you aren't in the group direct message |
+| 404 | [error response](/http-api/#error-response) | `UNKNOWN_CHANNEL` when the group direct message doesn't exist |
 
-When a guild install has a non-zero `permissions` value, Fluxer creates a role with the application's name with those permissions and gives it to the bot. A guild install sends [Guild Create](/gateway/events/#guild-create) and [Guild Member Add](/gateway/events/#guild-member-add), and a group DM install sends [Channel Recipient Add](/gateway/events/#channel-recipient-add). If the install fails, Fluxer deletes the code and returns the error.
+When a guild install has a non-zero `permissions` value, Fluxer creates a role with the application's name with those permissions and gives it to the bot. A guild install sends [Guild Create](/gateway/events/#guild-create) and [Guild Member Add](/gateway/events/#guild-member-add), and a group direct message install sends [Channel Recipient Add](/gateway/events/#channel-recipient-add). If the install fails, Fluxer deletes the code and returns the error.
 
 The rate limit is 60 requests per minute, on the `oauth:authorize` bucket.
 

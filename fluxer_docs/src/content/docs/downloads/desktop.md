@@ -1,7 +1,7 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Desktop builds
-description: Download paths for Fluxer desktop builds, their SHA-256 checksums and the update feeds.
+description: Download paths for Fluxer desktop builds, their SHA-256 checksums and the files the app checks for updates.
 ---
 
 The Fluxer desktop builds, their checksums and the files the app checks for updates are public, and you can download all of them without an account.
@@ -53,11 +53,11 @@ https://pkgs.fluxer.com/desktop/stable/win32/x64/latest/setup
 
 AppImage builds also have an `appimage.zsync` file, which AppImage update tools use to download only the blocks that changed.
 
-## Update feeds
+## Update files
 
 To find updates, the macOS and Windows desktop apps check these files in `/desktop/{channel}/{platform}/{arch}/`.
 
-| Platform | Feed |
+| Platform | Files |
 | --- | --- |
 | macOS | `RELEASES.json`, `releases.json` |
 | Windows | `RELEASES`, `releases.win.json`, `assets.win.json` |

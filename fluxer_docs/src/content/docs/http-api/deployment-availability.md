@@ -4,7 +4,7 @@ title: Deployment availability
 description: The routes a self-hosted instance serves only while premium or billing is on, and the flags that decide them.
 ---
 
-A self-hosted instance serves the routes below only while its premium mode is `mirror` or Stripe is set up. When the instance doesn't serve one, the API returns 404 `NOT_FOUND`, the same as for an unknown path.
+A self-hosted instance serves the routes below only while its premium mode is `mirror`, and the billing routes also need Stripe. When the instance doesn't serve one, the API returns 404 `NOT_FOUND`, the same as for an unknown path.
 
 ## Flags
 

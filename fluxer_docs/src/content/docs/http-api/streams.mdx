@@ -18,7 +18,7 @@ A stream key identifies one stream and has the form `{guild_id}:{channel_id}:{co
 | channel_id | string | The ID of the voice channel or private channel the stream runs in |
 | connection_id | string | The `connection_id` of the publisher's voice connection |
 
-A scope that isn't the channel's guild ID, or `dm` for a DM or group DM, returns 400 `STREAM_KEY_SCOPE_MISMATCH`. Any other channel type returns 400 `INVALID_CHANNEL_TYPE`. Upload stream preview and Create stream preview upload URL also take a `channel_id` in the body, and one that doesn't equal the key's channel segment returns 400 `STREAM_KEY_CHANNEL_MISMATCH`.
+A scope that isn't the channel's guild ID, or `dm` for a direct message or group direct message, returns 400 `STREAM_KEY_SCOPE_MISMATCH`. Any other channel type returns 400 `INVALID_CHANNEL_TYPE`. Upload stream preview and Create stream preview upload URL also take a `channel_id` in the body, and one that doesn't equal the key's channel segment returns 400 `STREAM_KEY_CHANNEL_MISMATCH`.
 
 ## Access rules
 

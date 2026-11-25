@@ -98,7 +98,7 @@ The filter chooses which messages an export includes, and the rest of the archiv
 | scope? | string | `selected` (the default) or `inaccessible_only` |
 | include_dms? | boolean | Whether to include open one-to-one DMs (default true) |
 | include_dms_closed?<sup>1</sup> | boolean | Whether to include closed one-to-one DMs (default true) |
-| include_group_dms? | boolean | Whether to include group DMs you are still in (default true) |
+| include_group_dms? | boolean | Whether to include group direct messages you are still in (default true) |
 | include_guilds? | boolean | Whether to include guilds you are still in (default true) |
 | guild_filter_mode? | string | Either `exclude` or `include_only` (default `exclude`) |
 | excluded_guild_ids? | array[snowflake] | The guilds to leave out in `exclude` mode (max 500) |
@@ -110,7 +110,7 @@ The filter chooses which messages an export includes, and the rest of the archiv
 
 <sup>2</sup> Compared with the message ID's [snowflake](/snowflakes/) timestamp. When both are set, `start_date` must be earlier than `end_date`.
 
-The `selected` scope needs at least one `include_*` field set to true. The `inaccessible_only` scope selects messages in guilds you left or were removed from and in group DMs you left. It ignores the `include_*` fields, `guild_filter_mode` and both guild lists, and `start_date` and `end_date` still apply. Both scopes skip your personal notes channel.
+The `selected` scope needs at least one `include_*` field set to true. The `inaccessible_only` scope selects messages in guilds you left or were removed from and in group direct messages you left. It ignores the `include_*` fields, `guild_filter_mode` and both guild lists, and `start_date` and `end_date` still apply. Both scopes skip your personal notes channel.
 
 ## Request data export
 

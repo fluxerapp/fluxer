@@ -9,7 +9,7 @@ Fluxer runs voice over LiveKit. The Gateway places a session in a voice channel 
 | Surface | Description | Reference |
 | --- | --- | --- |
 | Guild voice channel | A channel of [type](/http-api/channels/#channel-types) `2` | [Channels](/http-api/channels/) |
-| Private call | The voice channel of a DM or group DM | [Calls](/http-api/calls/) |
+| Private call | The voice channel of a direct message or group DM | [Calls](/http-api/calls/) |
 | Stream | A screen share published on an existing connection | [Streams](/http-api/streams/) |
 | Entrance sound | A clip played for everyone in a voice channel when you join | [Entrance sounds](/http-api/entrance-sounds/) |
 | Voice activity sharing | Whether friends see which voice channel you are in | [User settings](/http-api/users/settings/#modify-voice-activity-sharing) |
@@ -101,7 +101,7 @@ A viewer's Voice State Update lists the streams it watches in `viewer_stream_key
 
 ## Entrance sounds
 
-An account uploads [entrance sounds](/http-api/entrance-sounds/#clip-limits) and assigns one to each [scope](/http-api/entrance-sounds/#entrance-sound-scopes), and the client picks which one to play. [Play entrance sound](/http-api/entrance-sounds/#play-entrance-sound) needs a voice state in the channel and sends [ENTRANCE_SOUND_PLAY](/gateway/events/#entrance-sound-play) to every other account in it. Each of those accounts gets it on every session, so a client checks `channel_id` before playing it.
+An account uploads [entrance sounds](/http-api/entrance-sounds/#clip-limits) and assigns one to each [scope](/http-api/entrance-sounds/#entrance-sound-scopes), and the client picks which one to play. [Play entrance sound](/http-api/entrance-sounds/#play-entrance-sound) needs a voice state in the channel and sends [ENTRANCE_SOUND_PLAY](/gateway/events/#entrance-sound-play) to every other account in it. Each of those accounts gets it on every session, and a client checks `channel_id` before playing it.
 
 ## Voice activity sharing
 

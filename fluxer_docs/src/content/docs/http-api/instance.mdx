@@ -35,7 +35,7 @@ The public description of one instance.
 | guild_badges_partial? | boolean | True when the instance has more guild badges than `guild_badges` lists |
 | custom_badges_version? | string | The badge catalog version. It changes whenever a badge is created, edited, deleted or moved |
 | built_in_guild_badge_images? | [built-in guild badge images](#built-in-guild-badge-images-object) object | The images the instance shows in place of the built-in guild badges |
-| hidden_built_in_guild_badges?<sup>2</sup> | array[string] | The built-in guild badges the instance doesn't show: any of `verified`, `partnered` and `discoverable` |
+| hidden_built_in_guild_badges?<sup>2</sup> | array[string] | The built-in guild badges the instance doesn't show, from `verified`, `partnered` and `discoverable` |
 | voice_origins? | array[string] | The origin of every voice server endpoint, such as `wss://voice.example.com`, for content security policies. Voice servers that share a domain are listed once as a wildcard, such as `wss://*.example.com` (at most 1000) |
 
 <sup>1</sup> An instance can have any number of guild badges. Discovery lists the first 100 in display order, and [List guild badges](#list-guild-badges) serves every one. A client that knows only `guild_badges` can't show a badge past the first 100
@@ -364,8 +364,8 @@ A `feature_` key is `1` when the feature is available and `0` when it isn't. The
 | max_embeds_per_message | Maximum embeds per message (user and guild) |
 | max_favorite_meme_tags | Maximum meme tags to track (user) |
 | max_favorite_memes | Maximum favorite memes (user) |
-| max_group_dm_recipients | Maximum members per group DM (user) |
-| max_group_dms_per_user | Maximum group DMs a user can own (user) |
+| max_group_dm_recipients | Maximum members per group direct message (user) |
+| max_group_dms_per_user | Maximum group direct messages a user can own (user) |
 | max_guild_channels | Maximum channels per guild, counting forum and media channels but not threads (guild) |
 | max_guild_emojis | Maximum emojis per guild (guild) |
 | max_guild_emojis_animated | Alias of `max_guild_emojis` for older clients (guild) |
@@ -380,7 +380,7 @@ A `feature_` key is `1` when the feature is available and `0` when it isn't. The
 | max_guild_visits | Maximum guilds a user can [visit](/http-api/guilds/#visiting-guilds) at once, halved for unverified accounts (user) |
 | max_guilds | Maximum guilds a user can join (user) |
 | max_message_length | Maximum characters per message (user and guild) |
-| max_private_channels_per_user | Maximum DM channels per user (user) |
+| max_private_channels_per_user | Maximum direct message channels per user (user) |
 | max_reactions_per_message | Maximum distinct reactions per message (guild) |
 | max_relationships | Maximum friends and blocked users (user) |
 | max_screen_share_bitrate | Highest screen share bitrate in bits per second, 1000000 to 50000000 (user) |

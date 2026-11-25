@@ -290,7 +290,7 @@ A new account starts with these settings.
 | Theme | The theme chosen at registration, or `dark` |
 | Status | `online` |
 | Rendering | Everything shown and animated, spoilers hidden until clicked |
-| Incoming calls and group DM additions | Friends only |
+| Incoming calls and group direct message additions | Friends only |
 | Guild DM restrictions | None for members and bots |
 | Guild folders | One empty uncategorized folder |
 | AFK timeout | 600 seconds |
@@ -368,7 +368,7 @@ The rate limit is 20 requests per 10 seconds, on the `user:settings:update` buck
 
 <RouteHeader method="PATCH" path="/v1/users/@me/guilds/@me/settings" />
 
-Modifies and returns the [user guild settings](#user-guild-settings-object) for direct messages and group DMs, with `guild_id` null. Sends [User Guild Settings Update](/gateway/events/#user-guild-settings-update) to your own sessions.
+Modifies and returns the [user guild settings](#user-guild-settings-object) for direct messages and group direct messages, with `guild_id` null. Sends [User Guild Settings Update](/gateway/events/#user-guild-settings-update) to your own sessions.
 
 ### JSON body
 

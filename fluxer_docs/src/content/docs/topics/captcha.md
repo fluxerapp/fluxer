@@ -8,7 +8,7 @@ Some operations return 400 `CAPTCHA_REQUIRED` with an [ALTCHA](https://altcha.or
 
 ## Turn the check on or off
 
-The check is on by default. An administrator can turn it off or change its cost in the [captcha configuration](/admin-api/instance/#captcha-configuration-object). The `captcha.provider` field in [instance discovery](/http-api/instance/#captcha-configuration-object) is `altcha` while the check is on and `none` while it is off.
+The check is on by default. An instance admin can turn it off or change its cost in the [captcha configuration](/admin-api/instance/#captcha-configuration-object). The `captcha.provider` field in [instance discovery](/http-api/instance/#captcha-configuration-object) is `altcha` while the check is on and `none` while it is off.
 
 ## Solve a challenge
 

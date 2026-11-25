@@ -23,7 +23,7 @@ Use the HTTP API to read and change resources.
 | --- | --- |
 | [Errors](/http-api/errors/) | Error responses, status codes and every error code |
 | [Deployment availability](/http-api/deployment-availability/) | Routes served only while premium or billing is on |
-| [Authentication operations](/http-api/authentication/) | Registration, login, MFA, WebAuthn, SSO, recovery, sessions |
+| [Authentication resource](/http-api/authentication/) | Registration, login, MFA, WebAuthn, SSO, recovery, sessions |
 | [Gateway](/http-api/gateway/) | Gateway endpoint discovery and the session start budget |
 | [Instance](/http-api/instance/) | Instance discovery, geolocation, limit keys, the OpenAPI document |
 | [Experiments](/http-api/experiments/) | Experiment assignments and how to poll for them |
@@ -38,7 +38,7 @@ Use the HTTP API to read and change resources.
 | [Multi-factor authentication](/http-api/users/mfa/) | TOTP, backup codes, WebAuthn credentials, sudo verification |
 | [Relationships](/http-api/users/relationships/) | Friends, friend requests, blocks |
 | [User notes](/http-api/users/notes/) | Private notes on users |
-| [Private channels](/http-api/users/private-channels/) | Direct message and group DM channels |
+| [Private channels](/http-api/users/private-channels/) | Direct message and group direct message channels |
 | [Push notifications](/http-api/users/push-notifications/) | Registering a device for push delivery |
 | [User content collections](/http-api/users/content/) | Recent mentions, saved messages, message deletion |
 | [Gift inventory](/http-api/users/gifts/) | Premium gift codes you created |
@@ -147,7 +147,7 @@ A self-hosted instance serves [some routes](/http-api/deployment-availability/) 
 
 ## Cross-origin requests
 
-Only the instance's web app and marketing origins are allowed. A request from one of them gets `Access-Control-Allow-Origin` set to that origin and `Vary: Origin`. Browsers don't send cookies cross-origin, and you send your token in `Authorization`.
+Only the instance's web app and marketing origins are allowed. A request from one of them gets `Access-Control-Allow-Origin` set to that origin and `Vary: Origin`. The API doesn't use cookies. Send your token in `Authorization`.
 
 ### Routes open to any origin
 
