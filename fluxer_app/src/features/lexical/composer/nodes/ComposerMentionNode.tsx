@@ -20,7 +20,7 @@ export const ComposerMentionPresentation = {
 
 export type ComposerMentionPresentationFormat = number;
 
-export type SerializedComposerMentionNode = Spread<
+type SerializedComposerMentionNode = Spread<
 	{
 		mentionType: ComposerMentionType;
 		mentionId: string;

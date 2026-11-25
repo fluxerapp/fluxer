@@ -11,7 +11,7 @@ import {
 	TextNode,
 } from 'lexical';
 
-export type SerializedComposerCommandNode = Spread<
+type SerializedComposerCommandNode = Spread<
 	{
 		optionalOptions: ReadonlyArray<CommandOption>;
 	},

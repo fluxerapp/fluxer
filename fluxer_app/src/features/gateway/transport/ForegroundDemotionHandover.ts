@@ -11,7 +11,7 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 
 const logger = new Logger('ForegroundDemotionHandover');
 
-export const GATEWAY_HANDOFF_CLOSE_CODE = 4901;
+const GATEWAY_HANDOFF_CLOSE_CODE = 4901;
 
 interface ActiveForegroundDemotion {
 	readonly accountKey: string;
@@ -25,7 +25,7 @@ interface ActiveForegroundDemotion {
 	latestAuthTokenRetainedByteSize: number;
 }
 
-export interface ForegroundDemotionStart {
+interface ForegroundDemotionStart {
 	readonly accountKey: string;
 	readonly expectedUserId: string;
 	readonly socket: GatewaySocket;
@@ -43,9 +43,9 @@ interface ForegroundDemotionRetire {
 	readonly outcome: 'retire';
 }
 
-export type ForegroundDemotionRollback = ForegroundDemotionRestore | ForegroundDemotionRetire;
+type ForegroundDemotionRollback = ForegroundDemotionRestore | ForegroundDemotionRetire;
 
-export interface ForegroundDemotionHandoverHost {
+interface ForegroundDemotionHandoverHost {
 	applySnapshotDispatch(accountKey: string, expectedUserId: string, delivery: GatewayDispatchDelivery): void;
 	persistRetiringToken(accountKey: string, token: string): Promise<boolean>;
 	persistAccountToken(accountKey: string, token: string): Promise<boolean>;

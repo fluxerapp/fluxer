@@ -20,7 +20,7 @@ export type SlashSlotValidationError =
 	| 'not-a-boolean'
 	| 'invalid-choice';
 
-export interface SlashSlotValidationResult {
+interface SlashSlotValidationResult {
 	valid: boolean;
 	resolvedWire?: string;
 	error?: SlashSlotValidationError;

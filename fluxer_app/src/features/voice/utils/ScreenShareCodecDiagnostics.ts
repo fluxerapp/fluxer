@@ -50,7 +50,7 @@ export interface StalledVideoDecoderInfo {
 	framesDropped: number | null;
 }
 
-export interface InboundVideoDecodeSample {
+interface InboundVideoDecodeSample {
 	codec: VideoCodec | null;
 	mimeType?: string;
 	atMs: number;
@@ -142,7 +142,7 @@ function collectInboundVideoStats(stats: RTCStatsReport): {
 	return {codecs, reports};
 }
 
-export function findInboundVideoDecodeSample(stats: RTCStatsReport): InboundVideoDecodeSample | null {
+function findInboundVideoDecodeSample(stats: RTCStatsReport): InboundVideoDecodeSample | null {
 	const {codecs, reports} = collectInboundVideoStats(stats);
 	for (const report of reports) {
 		if (getStatsKind(report, codecs) !== 'video') continue;
@@ -179,7 +179,7 @@ function findSoftwareVideoDecoder(sample: InboundVideoDecodeSample): SoftwareVid
 	};
 }
 
-export function findStalledVideoDecoder(sample: InboundVideoDecodeSample): StalledVideoDecoderInfo | null {
+function findStalledVideoDecoder(sample: InboundVideoDecodeSample): StalledVideoDecoderInfo | null {
 	if (sample.codec === null) return null;
 	if (sample.framesDecoded !== 0) return null;
 	if (sample.keyFramesDecoded !== 0) return null;

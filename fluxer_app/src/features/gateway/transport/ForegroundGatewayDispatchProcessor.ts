@@ -15,7 +15,7 @@ import type {GatewayDispatchDelivery, GatewaySocket} from '@app/features/gateway
 import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import {runInAction} from 'mobx';
 
-export interface ForegroundGatewayDispatchHost {
+interface ForegroundGatewayDispatchHost {
 	getSocket(): GatewaySocket | null;
 	getForegroundSocket(accountKey: string | null): GatewaySocket | null;
 	getAccountUserId(accountKey: string): string | null;

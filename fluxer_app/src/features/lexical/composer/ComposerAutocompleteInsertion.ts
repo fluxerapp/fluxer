@@ -3,7 +3,7 @@
 import type {Command} from '@app/features/devtools/hooks/useCommands';
 import {getCommandInsertionText} from '@app/features/messaging/utils/SlashCommandUtils';
 
-export type ComposerAutocompleteTriggerType =
+type ComposerAutocompleteTriggerType =
 	| 'mention'
 	| 'channel'
 	| 'emoji'
@@ -39,7 +39,7 @@ function getComposerCommandInsertionText(command: Command): string {
 	return command.type === 'simple' ? `${command.content} ` : getCommandInsertionText(command);
 }
 
-export interface ComposerCommandReplacement {
+interface ComposerCommandReplacement {
 	start: number;
 	end: number;
 	text: string;

@@ -4,7 +4,7 @@ import type {SnapshotEmit} from '@app/features/gateway/snapshot/SnapshotEntities
 import type {SnapshotRowStore} from '@app/features/gateway/snapshot/SnapshotRowStore';
 import type {StateSyncCursor} from '@app/features/gateway/snapshot/SnapshotTypes';
 
-export interface SnapshotWriterOptions {
+interface SnapshotWriterOptions {
 	readonly storageKey: string;
 	readonly store: SnapshotRowStore;
 	readonly onInvalid: (error: Error) => void;

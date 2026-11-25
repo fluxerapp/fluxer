@@ -2,7 +2,7 @@
 
 type InspectedImageFormat = 'unknown' | 'png' | 'gif' | 'webp' | 'avif' | 'jpeg';
 
-export interface InspectedImage {
+interface InspectedImage {
 	format: InspectedImageFormat;
 	animated: boolean;
 }

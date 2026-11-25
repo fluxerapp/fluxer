@@ -25,7 +25,7 @@ function resolveDisplayMediaCursorCapture(
 	return displaySurface === 'window' ? 'never' : 'always';
 }
 
-export function getDisplayMediaOptions(options?: ScreenShareCaptureOptions): DisplayMediaStreamOptions {
+function getDisplayMediaOptions(options?: ScreenShareCaptureOptions): DisplayMediaStreamOptions {
 	let videoConstraints: MediaTrackConstraints | boolean = options?.video ?? true;
 	const resolution = options?.resolution;
 	if (resolution && resolution.width > 0 && resolution.height > 0) {

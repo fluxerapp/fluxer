@@ -13,7 +13,7 @@ import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import {ChannelFlags} from '@fluxer/constants/src/ThreadConstants';
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 
-export interface ForumTagInput {
+interface ForumTagInput {
 	id?: string;
 	name: string;
 	moderated: boolean;
@@ -34,7 +34,7 @@ export interface ForumChannelPatch {
 	flags?: number;
 }
 
-export interface ForumPostInput {
+interface ForumPostInput {
 	name: string;
 	appliedTags: ReadonlyArray<string>;
 	content: string;

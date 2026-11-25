@@ -15,7 +15,7 @@ const normalizeFeatures = (features?: Iterable<string> | null): Array<string> =>
 	return Array.from(features);
 };
 
-export interface GuildInviteActionState {
+interface GuildInviteActionState {
 	guildId: string | null;
 	isMember: boolean;
 	presenceCount: number;

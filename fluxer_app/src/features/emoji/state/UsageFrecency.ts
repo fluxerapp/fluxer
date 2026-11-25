@@ -8,7 +8,7 @@ export type UsageEntry = Readonly<{
 	lastUsed: number;
 }>;
 
-export type WireUsageStat = Readonly<{
+type WireUsageStat = Readonly<{
 	count: number;
 	lastUsedMs: bigint;
 }>;

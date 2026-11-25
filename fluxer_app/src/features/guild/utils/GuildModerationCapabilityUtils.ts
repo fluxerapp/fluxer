@@ -17,13 +17,13 @@ interface GuildModerationCapabilityOptions {
 	targetHasAdministratorPermission: boolean;
 }
 
-export interface GuildModerationCapabilities {
+interface GuildModerationCapabilities {
 	canKick: boolean;
 	canBan: boolean;
 	canTimeout: boolean;
 }
 
-export type MemberModerationActionKey = 'timeout' | 'remove_timeout' | 'kick' | 'ban';
+type MemberModerationActionKey = 'timeout' | 'remove_timeout' | 'kick' | 'ban';
 
 function resolveGuildModerationCapabilities(options: GuildModerationCapabilityOptions): GuildModerationCapabilities {
 	const canModerateTarget = !options.isCurrentUser && options.canManageTarget;

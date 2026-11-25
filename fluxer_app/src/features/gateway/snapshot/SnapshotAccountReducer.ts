@@ -41,7 +41,7 @@ const isSupportedTimeFormat = (value: number): value is UserSettingsTimeFormat =
 const isSupportedTimestampFormat = (value: number | undefined): value is UserSettingsTimestampFormat =>
 	value !== undefined && SUPPORTED_TIMESTAMP_FORMATS.has(value);
 
-export interface SnapshotAccountState {
+interface SnapshotAccountState {
 	readonly userSettings: SnapshotEntityRowMap['user_settings'] | null;
 	readonly accountMetadata: SnapshotAccountMetadataRow | null;
 }

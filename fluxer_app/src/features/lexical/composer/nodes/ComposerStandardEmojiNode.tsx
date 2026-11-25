@@ -7,7 +7,7 @@ import {ComposerStandardEmoji} from '@app/features/lexical/composer/nodes/Compos
 import type {DOMExportOutput, EditorConfig, LexicalNode, NodeKey, SerializedLexicalNode, Spread} from 'lexical';
 import type {JSX} from 'react';
 
-export type SerializedComposerStandardEmojiNode = Spread<
+type SerializedComposerStandardEmojiNode = Spread<
 	{
 		name: string;
 		surrogate: string;

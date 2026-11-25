@@ -67,7 +67,7 @@ interface AspectRatioConfig {
 	set: (ratio: number | undefined) => void;
 }
 
-export interface UseGuildImageAssetFieldArgs {
+interface UseGuildImageAssetFieldArgs {
 	form: UseFormReturn<FormInputs>;
 	fieldName: ImageAssetFieldName;
 	assetType: AssetType;
@@ -83,7 +83,7 @@ export interface UseGuildImageAssetFieldArgs {
 	uploadHint?: React.ReactNode;
 }
 
-export interface ImageAssetFieldController {
+interface ImageAssetFieldController {
 	pickFile: () => Promise<void>;
 	openSourcePicker: () => void;
 	handleFile: (file: File | null) => Promise<void>;

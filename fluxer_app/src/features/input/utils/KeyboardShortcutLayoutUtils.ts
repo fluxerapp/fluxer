@@ -11,7 +11,7 @@ interface KeyboardLayoutProvider {
 	getLayoutMap?: () => Promise<KeyboardLayoutMapReader>;
 }
 
-export interface KeyboardShortcutsOverlayFallbackEvent {
+interface KeyboardShortcutsOverlayFallbackEvent {
 	key: string;
 	code?: string;
 	shiftKey: boolean;

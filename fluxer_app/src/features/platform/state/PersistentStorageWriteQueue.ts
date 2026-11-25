@@ -2,7 +2,7 @@
 
 import type {AppStorageWrite, PersistentStorageBackend} from '@app/features/platform/state/PersistentStorageBackend';
 
-export const APP_STORAGE_WRITE_BATCH_SIZE = 256;
+const APP_STORAGE_WRITE_BATCH_SIZE = 256;
 
 export interface PersistentStorageWriteRequest {
 	readonly scope: string;
@@ -27,7 +27,7 @@ interface StorageWriteGeneration {
 	readonly generation: number;
 }
 
-export function persistentStorageWriteIdentity(scope: string, key: string): string {
+function persistentStorageWriteIdentity(scope: string, key: string): string {
 	return `${scope.length}:${scope}${key}`;
 }
 

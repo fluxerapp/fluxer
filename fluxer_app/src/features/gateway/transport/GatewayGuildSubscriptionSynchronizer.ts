@@ -6,14 +6,14 @@ import {FAVORITES_GUILD_ID} from '@fluxer/constants/src/AppConstants';
 
 const logger = new Logger('GatewayGuildSubscriptionSynchronizer');
 
-export interface GatewayGuildSubscriptionHost {
+interface GatewayGuildSubscriptionHost {
 	getSocket(): GatewaySocket | null;
 	isReady(): boolean;
 	getSessionId(): string | null;
 	getSelectedGuildId(): string | null;
 }
 
-export interface GuildSubscriptionSyncRequest {
+interface GuildSubscriptionSyncRequest {
 	readonly force: boolean;
 	readonly reason: string | null;
 }

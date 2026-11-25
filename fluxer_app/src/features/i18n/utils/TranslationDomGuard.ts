@@ -14,7 +14,7 @@ const MICROSOFT_TRANSLATOR_ATTRIBUTES = ['_msttexthash', '_msthash'];
 
 type GuardedMethod = 'insertBefore' | 'removeChild';
 
-export interface TranslationDomGuardStats {
+interface TranslationDomGuardStats {
 	installed: boolean;
 	insertBefore: number;
 	removeChild: number;

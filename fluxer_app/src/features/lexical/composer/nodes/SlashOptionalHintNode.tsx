@@ -4,7 +4,7 @@ import {SlashOptionalHintPill} from '@app/features/lexical/composer/nodes/SlashO
 import {DecoratorNode, type LexicalNode, type NodeKey, type SerializedLexicalNode, type Spread} from 'lexical';
 import type {JSX} from 'react';
 
-export type SerializedSlashOptionalHintNode = Spread<
+type SerializedSlashOptionalHintNode = Spread<
 	{
 		remaining: number;
 	},

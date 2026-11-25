@@ -77,7 +77,7 @@ interface ComposerClipboardSelection extends ComposerClipboardSlice {
 	textPlain: string;
 }
 
-export interface ComposerClipboardCommandState {
+interface ComposerClipboardCommandState {
 	getPlainText(): boolean;
 	isEditable(): boolean;
 	getMarkdownParserFlags(): number;

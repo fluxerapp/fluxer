@@ -37,9 +37,9 @@ const IDLE_LOAD_TIMEOUT_MS = 10_000;
 const CHANNEL_RENDER_WAIT_MS = 15_000;
 
 type LoadedVoiceRuntime = typeof VoiceRuntimeModule;
-export type MediaEngine = LoadedVoiceRuntime['MediaEngine'];
+type MediaEngine = LoadedVoiceRuntime['MediaEngine'];
 
-export type VoiceRuntimeLoadReason =
+type VoiceRuntimeLoadReason =
 	| 'current-user-voice-state'
 	| 'call-ring'
 	| 'join'
@@ -48,7 +48,7 @@ export type VoiceRuntimeLoadReason =
 	| 'idle'
 	| 'engine-created';
 
-export interface VoiceRuntimeConnection {
+interface VoiceRuntimeConnection {
 	readonly guildId: string | null;
 	readonly channelId: string | null;
 	readonly connectionId: string | null;

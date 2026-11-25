@@ -18,7 +18,7 @@ interface CodeIndentEdit {
 	text: string;
 }
 
-export interface CodeIndentPlan {
+interface CodeIndentPlan {
 	edits: Array<CodeIndentEdit>;
 	selectionStart: number;
 	selectionEnd: number;

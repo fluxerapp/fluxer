@@ -2,7 +2,7 @@
 
 import type {GatewaySocket} from '@app/features/gateway/transport/GatewaySocket';
 
-export interface GatewayResumeListenerRequest {
+interface GatewayResumeListenerRequest {
 	readonly socket: GatewaySocket;
 	readonly isCurrent: () => boolean;
 }

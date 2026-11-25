@@ -6,7 +6,7 @@ import type {EditorView} from '@codemirror/view';
 
 const PARSE_TIMEOUT_MS = 500;
 
-export function hasCssParseErrors(state: EditorState): boolean {
+function hasCssParseErrors(state: EditorState): boolean {
 	const tree = ensureSyntaxTree(state, state.doc.length, PARSE_TIMEOUT_MS) ?? syntaxTree(state);
 	let found = false;
 	tree.iterate({

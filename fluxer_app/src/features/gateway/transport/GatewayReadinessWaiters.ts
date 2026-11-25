@@ -38,7 +38,7 @@ function createGatewayReadyWaiter(generation: number, accountKey: string | null)
 	};
 }
 
-export type GatewayReadyTimeoutHandler = (
+type GatewayReadyTimeoutHandler = (
 	generation: number,
 	accountKey: string | null,
 	error: GatewayReadyTimeoutError,

@@ -18,7 +18,7 @@ export const ADD_GUILD_VIEW_ORDER: ReadonlyArray<AddGuildModalView> = [
 	'import_template',
 ];
 
-export interface ModalFooterContextValue {
+interface ModalFooterContextValue {
 	setFooterContent: (content: React.ReactNode) => void;
 	onBack: () => void;
 }

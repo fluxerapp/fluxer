@@ -29,7 +29,7 @@ const CHOOSE_A_GIF_DESCRIPTOR = msg({
 	comment: 'Title of the GIF picker modal opened from the asset source modal. Keep it concise.',
 });
 
-export interface AssetSourceModalProps {
+interface AssetSourceModalProps {
 	title: string;
 	uploadHint: React.ReactNode;
 	onPickUpload: () => void | Promise<void>;

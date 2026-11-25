@@ -42,12 +42,12 @@ export const GatewayWireReadyState = Object.freeze({
 
 export type GatewayWireReadyState = (typeof GatewayWireReadyState)[keyof typeof GatewayWireReadyState];
 
-export const GatewayWireTransportKind = Object.freeze({
+const GatewayWireTransportKind = Object.freeze({
 	BROWSER: 'browser',
 	DESKTOP_NATIVE: 'desktop-native',
 } as const);
 
-export type GatewayWireTransportKind = (typeof GatewayWireTransportKind)[keyof typeof GatewayWireTransportKind];
+type GatewayWireTransportKind = (typeof GatewayWireTransportKind)[keyof typeof GatewayWireTransportKind];
 
 export interface GatewayWireOpenEvent {
 	target: GatewayWireTransport;
@@ -81,7 +81,7 @@ type GatewayWireTransportEvents = {
 	[K in keyof GatewayWireTransportEventMap]: (event: GatewayWireTransportEventMap[K]) => void;
 };
 
-export interface GatewayWireTransportOptions {
+interface GatewayWireTransportOptions {
 	readonly binaryType: BinaryType;
 	readonly adoptPrebootSocket?: boolean;
 }

@@ -3,7 +3,7 @@
 import {ensureSyntaxTree, foldService, syntaxTree} from '@codemirror/language';
 import type {EditorState, Extension} from '@codemirror/state';
 
-export type OutlineEntryKind = 'rule' | 'at-rule' | 'region';
+type OutlineEntryKind = 'rule' | 'at-rule' | 'region';
 
 export interface OutlineEntry {
 	kind: OutlineEntryKind;

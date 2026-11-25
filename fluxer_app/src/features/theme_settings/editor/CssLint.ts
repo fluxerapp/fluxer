@@ -204,7 +204,7 @@ function enclosingBlockEnd(node: SyntaxNode): number {
 	return Number.POSITIVE_INFINITY;
 }
 
-export function lintCss(state: EditorState): Array<Diagnostic> {
+function lintCss(state: EditorState): Array<Diagnostic> {
 	const tree = ensureSyntaxTree(state, state.doc.length, PARSE_TIMEOUT_MS) ?? syntaxTree(state);
 	const doc = state.doc.toString();
 	const diagnostics: Array<Diagnostic> = [];

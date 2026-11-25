@@ -21,7 +21,7 @@ import {ME} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 
-export interface SnapshotUserShellState {
+interface SnapshotUserShellState {
 	readonly selfUserId: string | null;
 	readonly shellUserIds: ReadonlySet<string>;
 }

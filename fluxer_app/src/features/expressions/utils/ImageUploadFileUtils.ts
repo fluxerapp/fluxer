@@ -3,7 +3,7 @@
 import {readBlobAsDataUrl} from '@app/features/platform/utils/BlobDataUrl';
 import {type AssetKind, getPolicy, isExtensionAllowed} from '@fluxer/constants/src/AssetFormatPolicy';
 
-export interface ImageUploadFileLike {
+interface ImageUploadFileLike {
 	readonly type?: string | null;
 	readonly name?: string | null;
 }

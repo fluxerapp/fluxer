@@ -3,7 +3,7 @@
 import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
 import {type LexicalNode, type NodeKey, type SerializedTextNode, type Spread, TextNode} from 'lexical';
 
-export type SerializedComposerPlainSegmentNode = Spread<
+type SerializedComposerPlainSegmentNode = Spread<
 	{
 		segmentType: MentionSegment['type'];
 		segmentId: string;

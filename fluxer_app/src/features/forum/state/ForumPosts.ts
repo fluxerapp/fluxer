@@ -33,7 +33,7 @@ const POST_DATA_DEBOUNCE_MS = 50;
 const SEARCH_RETRY_MAX_ATTEMPTS = 6;
 const SEARCH_RETRY_MAX_DELAY_MS = MS_PER_MINUTE;
 
-export type ForumListKind = 'archived' | 'search';
+type ForumListKind = 'archived' | 'search';
 
 export interface ForumListState {
 	readonly ids: ReadonlyArray<string>;

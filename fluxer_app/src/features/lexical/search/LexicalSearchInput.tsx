@@ -67,7 +67,7 @@ export interface LexicalSearchInputHandle {
 	setSelectionRange: (start: number | null, end?: number | null, direction?: SearchSelectionDirection) => void;
 }
 
-export interface LexicalSearchInputProps {
+interface LexicalSearchInputProps {
 	value: string;
 	placeholder: string;
 	className?: string;

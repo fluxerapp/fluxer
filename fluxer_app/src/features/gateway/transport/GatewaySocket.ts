@@ -57,8 +57,8 @@ const GATEWAY_TIMEOUTS = {
 	Hello: 20000,
 } as const;
 
-export const MAX_DEFERRED_GATEWAY_EMITS = 1024;
-export const MAX_DEFERRED_GATEWAY_EMIT_BYTES = 16 * 1024 * 1024;
+const MAX_DEFERRED_GATEWAY_EMITS = 1024;
+const MAX_DEFERRED_GATEWAY_EMIT_BYTES = 16 * 1024 * 1024;
 const MAX_UTF8_BYTES_PER_UTF16_CODE_UNIT = 3;
 
 export const GatewayState = {
@@ -70,7 +70,7 @@ export const GatewayState = {
 
 export type GatewayState = ValueOf<typeof GatewayState>;
 
-export interface GatewayPayload {
+interface GatewayPayload {
 	op: number;
 	d?: unknown;
 	s?: number;
@@ -114,7 +114,7 @@ export interface GatewayVoiceStateUpdateParams {
 	p2p?: boolean;
 }
 
-export interface GatewayVoiceSignalParams {
+interface GatewayVoiceSignalParams {
 	guild_id: string | null;
 	channel_id: string;
 	to: string;
@@ -131,7 +131,7 @@ export const VoiceSignalSendResult = {
 
 export type VoiceSignalSendResult = ValueOf<typeof VoiceSignalSendResult>;
 
-export interface GatewaySocketOptions {
+interface GatewaySocketOptions {
 	token: string;
 	apiVersion: number;
 	properties: GatewaySocketProperties;
@@ -186,7 +186,7 @@ function isGatewayErrorData(value: unknown): value is GatewayErrorData {
 	return isRecord(value) && typeof value.code === 'string' && typeof value.message === 'string';
 }
 
-export interface GatewayDispatchReceipt {
+interface GatewayDispatchReceipt {
 	readonly sequence: number;
 	readonly generation: number;
 }
@@ -201,7 +201,7 @@ export interface GatewayDispatchDelivery {
 
 export const MAX_GATEWAY_AUTH_TOKEN_LENGTH = 16 * 1024;
 
-export interface GatewaySocketEvents {
+interface GatewaySocketEvents {
 	connecting: () => void;
 	connected: () => void;
 	ready: (data: unknown) => void;

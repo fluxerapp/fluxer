@@ -104,7 +104,7 @@ export interface BackgroundChannelActivity {
 	readonly ackMessageId: string | null;
 }
 
-export interface BackgroundReadStateTotals {
+interface BackgroundReadStateTotals {
 	readonly mentionCount: number;
 	readonly unreadChannelCount: number;
 	readonly lastMessageId: string | null;

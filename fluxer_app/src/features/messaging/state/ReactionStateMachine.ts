@@ -25,7 +25,7 @@ export type ReactionMachineEvent =
 	| {type: 'reaction.removeEmoji'; emoji: ReactionEmoji}
 	| {type: 'reaction.trackReactors'; emoji: ReactionEmoji; userIds: ReadonlyArray<string>};
 
-export function getEmojiKey(emoji: ReactionEmoji): string {
+function getEmojiKey(emoji: ReactionEmoji): string {
 	return `${emoji.id ?? ''}:${emoji.name}`;
 }
 

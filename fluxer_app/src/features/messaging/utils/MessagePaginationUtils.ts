@@ -2,7 +2,7 @@
 
 import {compare as compareSnowflakes} from '@fluxer/snowflake/src/SnowflakeUtils';
 
-export interface AroundWindowCounts {
+interface AroundWindowCounts {
 	newer: number;
 	older: number;
 }
@@ -25,7 +25,7 @@ export interface AroundPaginationState {
 	isAtKnownLatest: boolean;
 }
 
-export function getAroundWindowCounts(limit: number): AroundWindowCounts {
+function getAroundWindowCounts(limit: number): AroundWindowCounts {
 	const newer = Math.floor(Math.max(0, limit) / 2);
 	return {
 		newer,

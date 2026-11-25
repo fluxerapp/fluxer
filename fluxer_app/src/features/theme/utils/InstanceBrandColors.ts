@@ -307,7 +307,7 @@ export function getInstanceBrandVariables(
 	};
 }
 
-export const PREMIUM_PAGE_STOPS = {
+const PREMIUM_PAGE_STOPS = {
 	'--pl-indigo-0': '#ffffff',
 	'--pl-indigo-1': '#e3e2ff',
 	'--pl-indigo-2': '#c9c7ff',

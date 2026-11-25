@@ -18,8 +18,8 @@ import {
 import {resolveThemeCssReferences} from '@app/features/theme/utils/ThemeCssUtils';
 import {useEffect, useLayoutEffect, useRef} from 'react';
 
-export const CUSTOM_THEME_STYLE_ELEMENT_ID = 'fluxer-custom-theme-style';
-export const INSTANCE_CUSTOM_CSS_ELEMENT_ID = 'fluxer-instance-custom-css';
+const CUSTOM_THEME_STYLE_ELEMENT_ID = 'fluxer-custom-theme-style';
+const INSTANCE_CUSTOM_CSS_ELEMENT_ID = 'fluxer-instance-custom-css';
 const logger = new Logger('useCustomThemeStyle');
 const SHEET_PREPARE_WAIT_MS = 1_500;
 const UNSIGNED_URL_RETRY_MS = 300_000;

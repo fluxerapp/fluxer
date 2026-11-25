@@ -24,7 +24,7 @@ interface BadgeLookupResponse {
 	readonly badges?: unknown;
 }
 
-export interface ResolvedGuildBadges {
+interface ResolvedGuildBadges {
 	readonly badges: ReadonlyArray<InstanceGuildBadge>;
 	readonly settled: boolean;
 }

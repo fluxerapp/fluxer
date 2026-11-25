@@ -4,7 +4,7 @@ import styles from '@app/features/expressions/components/ExpressionHoverTooltipC
 import {Trans} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 
-export interface ExpressionHoverTooltipContentProps {
+interface ExpressionHoverTooltipContentProps {
 	displayName: string;
 	previewUrl?: string | null;
 }

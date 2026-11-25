@@ -41,7 +41,7 @@ interface DiscoverySearchPayload {
 	category_counts?: Array<DiscoveryCategoryCountPayload>;
 }
 
-export interface DiscoverySearchResponse {
+interface DiscoverySearchResponse {
 	guilds: Array<DiscoveryGuild>;
 	total: number;
 	categoryCounts: ReadonlyMap<number, number> | null;

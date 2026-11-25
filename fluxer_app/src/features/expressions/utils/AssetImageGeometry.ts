@@ -5,7 +5,7 @@ export interface ImageDimensions {
 	height: number;
 }
 
-export interface AspectRatioRange {
+interface AspectRatioRange {
 	min: number;
 	max: number;
 }

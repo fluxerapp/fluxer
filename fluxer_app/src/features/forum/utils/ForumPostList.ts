@@ -29,7 +29,7 @@ function matchesTagFilter(
 	return tagIds.some((tagId) => appliedTags.includes(tagId));
 }
 
-export interface ForumPostListInput {
+interface ForumPostListInput {
 	known: ReadonlyArray<Channel>;
 	extra: ReadonlyArray<Channel>;
 	sortOrder: ForumSortOrderType;
@@ -37,7 +37,7 @@ export interface ForumPostListInput {
 	tagSetting: ForumTagSetting;
 }
 
-export interface ForumPostListResult {
+interface ForumPostListResult {
 	pinned: Channel | null;
 	active: Array<Channel>;
 	archived: Array<Channel>;

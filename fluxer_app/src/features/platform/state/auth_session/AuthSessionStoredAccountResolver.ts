@@ -20,7 +20,7 @@ import {
 	type StoredSessionRestorationPointer,
 } from '@app/features/platform/state/auth_session/SessionCredentialMirror';
 
-export interface AuthSessionStoredAccountResolverStorage {
+interface AuthSessionStoredAccountResolverStorage {
 	getAccountInventory(): Promise<StoredAccountInventory>;
 	replaceInventoryEntry(request: StoredAccountInventoryReplacement): Promise<QualifiedStoredAccount>;
 }
@@ -64,7 +64,7 @@ export type ActiveStoredAccountRestoration =
 	| SignedOutActiveStoredAccountRestoration
 	| UnresolvedActiveStoredAccountRestoration;
 
-export class StoredAccountNotFoundError extends Error {
+class StoredAccountNotFoundError extends Error {
 	readonly accountKey: string;
 
 	constructor(accountKey: string) {

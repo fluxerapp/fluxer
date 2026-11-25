@@ -11,7 +11,7 @@ const SOURCE_MAX_PIXELS = 32_000_000;
 const WEBP_QUALITY_STEPS = [0.92, 0.82, 0.72, 0.62, 0.52, 0.42];
 const JPEG_QUALITY_STEPS = [0.9, 0.8, 0.7, 0.6, 0.5, 0.4];
 
-export type ImageOptimizationSizeErrorReason = 'animated' | 'processed' | 'svg';
+type ImageOptimizationSizeErrorReason = 'animated' | 'processed' | 'svg';
 type StaticOutputMime = 'image/png' | 'image/webp' | 'image/jpeg';
 
 export class ImageOptimizationSizeError extends Error {

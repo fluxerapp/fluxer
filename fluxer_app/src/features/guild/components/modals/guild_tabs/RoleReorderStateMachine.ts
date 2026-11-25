@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export interface RoleReorderPoint {
+interface RoleReorderPoint {
 	x: number;
 	y: number;
 }
 
-export interface RoleReorderRect {
+interface RoleReorderRect {
 	top: number;
 	bottom: number;
 	left: number;
@@ -17,7 +17,7 @@ export interface RoleReorderAccess {
 	isGuildOwner: boolean;
 }
 
-export interface RoleReorderDragItem {
+interface RoleReorderDragItem {
 	id: string;
 	isEveryone: boolean;
 	isLocked: boolean;
@@ -60,7 +60,7 @@ type RoleReorderBlockedReason =
 	| 'top-target-requires-owner'
 	| 'empty-target-rect';
 
-export interface RoleReorderResolution {
+interface RoleReorderResolution {
 	intent: RoleReorderIntent | null;
 	indicator: RoleReorderIndicator | null;
 	blockedReason: RoleReorderBlockedReason | null;

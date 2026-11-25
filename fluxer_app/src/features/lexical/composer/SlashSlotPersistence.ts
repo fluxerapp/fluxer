@@ -26,7 +26,7 @@ export type PersistedSlashSlotState =
 	| (PersistedSlashSlotStateBase & {version: 1; allowEmpty?: never})
 	| (PersistedSlashSlotStateBase & {version: 2; allowEmpty: boolean});
 
-export interface PersistedSlashCommandState {
+interface PersistedSlashCommandState {
 	version: 1;
 	commandName: string;
 	optionalOptions: ReadonlyArray<CommandOption>;

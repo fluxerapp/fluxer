@@ -109,7 +109,7 @@ const INVALID_DESCRIPTOR = msg({
 
 export type SlashSlotValidity = 'neutral' | 'valid' | 'invalid';
 
-export type SerializedSlashSlotNode = Spread<
+type SerializedSlashSlotNode = Spread<
 	{
 		optionName: string;
 		optionType: SlashSlotType;

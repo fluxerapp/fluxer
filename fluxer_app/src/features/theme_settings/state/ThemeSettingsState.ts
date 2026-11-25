@@ -20,7 +20,7 @@ export type QuickCssEditorPlacement = 'panel' | 'window';
 export type QuickCssEditorTab = 'css' | 'colors' | 'themes' | 'assets' | 'reference';
 export type QuickCssEditorFocusTarget = 'editor' | 'tab' | 'float' | 'dock-left' | 'dock-right';
 
-export interface ThemePreview {
+interface ThemePreview {
 	id: string;
 	css: string;
 }

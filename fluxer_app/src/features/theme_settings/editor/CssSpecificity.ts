@@ -14,7 +14,7 @@ function compare(left: Specificity, right: Specificity): number {
 	return left[0] - right[0] || left[1] - right[1] || left[2] - right[2];
 }
 
-export function splitSelectorList(selector: string): Array<string> {
+function splitSelectorList(selector: string): Array<string> {
 	const parts: Array<string> = [];
 	let depth = 0;
 	let quote: string | null = null;

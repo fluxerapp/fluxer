@@ -6,7 +6,7 @@ import {
 	type KeybindCommand,
 } from '@app/features/input/state/input_keybind/KeybindCommands';
 
-export interface AccountKeybindDefault {
+interface AccountKeybindDefault {
 	readonly action: KeybindCommand;
 	readonly combo: KeyCombo;
 }

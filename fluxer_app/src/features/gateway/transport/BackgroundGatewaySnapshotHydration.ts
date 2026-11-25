@@ -10,7 +10,7 @@ class BackgroundGatewayReadyIdentityMismatchError extends Error {
 	}
 }
 
-export interface BackgroundSnapshotReadySeed {
+interface BackgroundSnapshotReadySeed {
 	readonly user: {readonly id: string};
 	readonly guilds: ReadonlyArray<unknown>;
 	readonly private_channels: ReadonlyArray<unknown>;

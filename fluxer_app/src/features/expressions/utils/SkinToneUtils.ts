@@ -4,7 +4,7 @@ import Emoji from '@app/features/emoji/state/Emoji';
 import type {FlatEmoji, UnicodeEmoji} from '@app/features/emoji/types/EmojiTypes';
 import UnicodeEmojis from '@app/features/expressions/utils/UnicodeEmojis';
 
-export interface EmojiDisplayData {
+interface EmojiDisplayData {
 	surrogates: string;
 	url: string | undefined;
 }

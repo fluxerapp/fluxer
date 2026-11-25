@@ -4,7 +4,7 @@ const DEVTOOLS_DOCK_THRESHOLD_PX = 160;
 
 type DevtoolsDockOrientation = 'horizontal' | 'vertical';
 
-export interface DevtoolsViewportSnapshot {
+interface DevtoolsViewportSnapshot {
 	outerWidth: number;
 	innerWidth: number;
 	outerHeight: number;
@@ -12,7 +12,7 @@ export interface DevtoolsViewportSnapshot {
 	legacyDebuggerPresent: boolean;
 }
 
-export interface DevtoolsDockState {
+interface DevtoolsDockState {
 	open: boolean;
 	orientation: DevtoolsDockOrientation | null;
 }

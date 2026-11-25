@@ -118,7 +118,7 @@ export const GatewaySessionStartStatus = Object.freeze({
 
 export type GatewaySessionStartStatus = (typeof GatewaySessionStartStatus)[keyof typeof GatewaySessionStartStatus];
 
-export type GatewaySessionStartResult =
+type GatewaySessionStartResult =
 	| {
 			readonly status:
 				| typeof GatewaySessionStartStatus.STARTED
@@ -149,7 +149,7 @@ interface GatewayAuthenticationFailure {
 	readonly completion: Promise<void>;
 }
 
-export interface GatewaySessionStartOptions {
+interface GatewaySessionStartOptions {
 	readonly resume?: GatewayResumeSeed;
 }
 

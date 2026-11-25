@@ -83,7 +83,7 @@ interface PremiumScenarioSelectOption {
 	label: MessageDescriptor;
 }
 
-export type PremiumScenarioOption = 'none' | PremiumScenarioOverride | 'reset';
+type PremiumScenarioOption = 'none' | PremiumScenarioOverride | 'reset';
 
 export const PREMIUM_SCENARIO_OPTIONS: ReadonlyArray<PremiumScenarioSelectOption> = [
 	{

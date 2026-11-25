@@ -55,7 +55,7 @@ function blockingNotice(reason: OperatorPassPurchaseBlockedReason | null): Block
 	}
 }
 
-export function stageForState(state: OperatorPassStateResponse): CheckoutStage {
+function stageForState(state: OperatorPassStateResponse): CheckoutStage {
 	const notice = blockingNotice(state.purchase_blocked_reason ?? null);
 	return notice ? {kind: 'notice', notice} : {kind: 'choose'};
 }
@@ -131,7 +131,7 @@ const REFUNDED_STATUSES: ReadonlySet<OperatorPassPurchaseResponse['status']> = n
 	'withdrawn',
 ]);
 
-export const CHECKOUT_EXPIRY_GRACE_MS = 60_000;
+const CHECKOUT_EXPIRY_GRACE_MS = 60_000;
 
 export function checkoutEventForPurchases(
 	purchases: ReadonlyArray<OperatorPassPurchaseResponse>,

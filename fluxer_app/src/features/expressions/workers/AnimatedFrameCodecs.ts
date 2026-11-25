@@ -37,7 +37,7 @@ export interface FrameSource {
 	close(): void;
 }
 
-export interface GifFrameSink {
+interface GifFrameSink {
 	add(rgba: Uint8Array, delayMs: number): boolean;
 	finish(): Uint8Array;
 	close(): void;

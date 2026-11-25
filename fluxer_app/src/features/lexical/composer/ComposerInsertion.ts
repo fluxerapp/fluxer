@@ -23,12 +23,12 @@ interface ComposerReplacementPlan {
 	selectionAfter: number;
 }
 
-export interface ComposerReplacementLimit {
+interface ComposerReplacementLimit {
 	maxWireLength?: number;
 	onExceedMaxLength?: () => void;
 }
 
-export interface ComposerEmojiInsertOptions extends ComposerReplacementLimit {
+interface ComposerEmojiInsertOptions extends ComposerReplacementLimit {
 	reactionShorthand?: boolean;
 }
 

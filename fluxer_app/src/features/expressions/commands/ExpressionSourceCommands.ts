@@ -20,7 +20,7 @@ interface ExpressionSourceGuildResponse {
 	features: Array<string>;
 }
 
-export type ExpressionSourceResult = {available: true; guild: ExpressionSourceGuild} | {available: false};
+type ExpressionSourceResult = {available: true; guild: ExpressionSourceGuild} | {available: false};
 
 function sourceEndpoint(kind: ExpressionKind, id: string): string {
 	return kind === 'emoji' ? Endpoints.EMOJI_SOURCE(id) : Endpoints.STICKER_SOURCE(id);

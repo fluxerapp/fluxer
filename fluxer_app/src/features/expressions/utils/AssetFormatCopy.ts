@@ -28,7 +28,7 @@ const ANIMATED_UPLOADS_REQUIRE_A_PREMIUM_SUBSCRIPTION_DESCRIPTOR = msg({
 	comment:
 		'Validation error shown when uploading an animated asset without the required subscription. Preserve {premiumProductName}; it is inserted by code.',
 });
-export type AssetCopyErrorReason = 'unsupported_mime' | 'too_large' | 'bad_dimensions' | 'animated_requires_premium';
+type AssetCopyErrorReason = 'unsupported_mime' | 'too_large' | 'bad_dimensions' | 'animated_requires_premium';
 
 export function getAssetFormatErrorMessage(i18n: I18n, kind: AssetKind, reason: AssetCopyErrorReason): string {
 	const policy = ASSET_FORMAT_POLICY[kind];

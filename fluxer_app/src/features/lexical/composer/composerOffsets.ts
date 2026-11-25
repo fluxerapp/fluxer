@@ -84,12 +84,12 @@ export interface ComposerSelectionOffsets {
 	focus: number;
 }
 
-export interface ComposerSelectionWrapperQuery {
+interface ComposerSelectionWrapperQuery {
 	prefix: string;
 	suffix: string;
 }
 
-export interface ComposerSelectionWrapperResult {
+interface ComposerSelectionWrapperResult {
 	offsets: ComposerSelectionOffsets | null;
 	wrapped: Array<boolean>;
 }

@@ -3,7 +3,7 @@
 import Authentication from '@app/features/auth/state/Authentication';
 import Channels from '@app/features/channel/state/Channels';
 
-export interface GroupDmInviteCounts {
+interface GroupDmInviteCounts {
 	memberCount: number;
 	hasLocalChannel: boolean;
 }

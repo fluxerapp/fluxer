@@ -2,7 +2,7 @@
 
 import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
 
-export interface GuildReadStateContributionInput {
+interface GuildReadStateContributionInput {
 	isEligibleTextChannel: boolean;
 	isPrivate: boolean;
 	unreadBadgesLevel: number | null;

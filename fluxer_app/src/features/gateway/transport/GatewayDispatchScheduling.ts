@@ -23,7 +23,7 @@ const CRITICAL_DISPATCH_TYPES = new Set([
 	'STREAM_SERVER_UPDATE',
 ]);
 
-export type GatewayDispatchFlushMode = 'immediate' | 'deferred';
+type GatewayDispatchFlushMode = 'immediate' | 'deferred';
 
 export function selectGatewayDispatchFlushMode(dispatchType: string | null): GatewayDispatchFlushMode {
 	if (dispatchType == null) return 'immediate';

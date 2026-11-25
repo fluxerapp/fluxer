@@ -21,7 +21,7 @@ export interface LexicalRichInputHandle {
 	insertEmoji: (emoji: FlatEmoji) => boolean;
 }
 
-export interface LexicalRichInputProps {
+interface LexicalRichInputProps {
 	initialValue?: string;
 	initialSegments?: ReadonlyArray<MentionSegment>;
 	placeholder: string;

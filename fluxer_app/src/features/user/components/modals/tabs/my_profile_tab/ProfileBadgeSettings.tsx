@@ -117,7 +117,7 @@ export type ProfileBadgeVariantField =
 	| 'operator_pass_badge_timestamp_hidden'
 	| 'operator_pass_badge_count_hidden';
 
-export type ProfileBadgeVariants = Record<ProfileBadgeVariantField, boolean>;
+type ProfileBadgeVariants = Record<ProfileBadgeVariantField, boolean>;
 
 interface BadgeVariant {
 	field: ProfileBadgeVariantField;

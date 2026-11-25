@@ -6,9 +6,9 @@ import type {ComposerInsertPayload} from '@app/features/lexical/composer/compose
 import {isAutocompleteTriggerAllowed, type TriggerType} from '@app/features/messaging/utils/AutocompleteTriggerPolicy';
 import {findUrlSpans, isInsideSpan, type TextSpan} from '@app/features/messaging/utils/markdown/UrlSpanUtils';
 
-export type SpecialMentionKind = '@everyone' | '@here';
+type SpecialMentionKind = '@everyone' | '@here';
 
-export interface TypedSpecialMention {
+interface TypedSpecialMention {
 	start: number;
 	end: number;
 	kind: SpecialMentionKind;

@@ -272,7 +272,7 @@ const beginCapture = <E, T>(
 	};
 };
 
-export interface GlobalKeyCaptureApi {
+interface GlobalKeyCaptureApi {
 	globalKeyHookStart?: () => Promise<boolean>;
 	globalKeyHookStop?: () => Promise<void>;
 	onGlobalKeyEvent?: (callback: (event: GlobalKeyEvent) => void) => () => void;

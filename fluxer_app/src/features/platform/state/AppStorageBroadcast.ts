@@ -2,17 +2,17 @@
 
 import {randomUuid} from '@app/features/platform/utils/RandomUuid';
 
-export const APP_STORAGE_BROADCAST_CHANNEL_NAME = 'fluxer:app-storage';
+const APP_STORAGE_BROADCAST_CHANNEL_NAME = 'fluxer:app-storage';
 export const APP_STORAGE_SCOPE_LOCK_NAME = 'fluxer:app-storage:scope';
 export const APP_STORAGE_MIGRATION_LOCK_NAME = 'fluxer:app-storage:migration';
 
-export const AppStorageBroadcastKind = Object.freeze({
+const AppStorageBroadcastKind = Object.freeze({
 	COMMIT: 'commit',
 	SCOPE_CLEARED: 'scope-cleared',
 	RESET: 'reset',
 } as const);
 
-export type AppStorageBroadcastKind = (typeof AppStorageBroadcastKind)[keyof typeof AppStorageBroadcastKind];
+type AppStorageBroadcastKind = (typeof AppStorageBroadcastKind)[keyof typeof AppStorageBroadcastKind];
 
 export interface AppStorageBroadcastMessage {
 	readonly clientId: string;

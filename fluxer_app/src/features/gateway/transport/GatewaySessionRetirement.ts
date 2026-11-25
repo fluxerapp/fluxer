@@ -3,7 +3,7 @@
 import type {GatewayCustomStatusPayload} from '@app/features/user/state/CustomStatus';
 import {StatusTypes} from '@fluxer/constants/src/StatusConstants';
 
-export interface GatewayPresenceRetirementSocket {
+interface GatewayPresenceRetirementSocket {
 	updatePresence(
 		status: string,
 		afk?: boolean,
@@ -12,7 +12,7 @@ export interface GatewayPresenceRetirementSocket {
 	): void;
 }
 
-export interface GatewayPresenceRetirementLogger {
+interface GatewayPresenceRetirementLogger {
 	warn(message: string, error?: unknown): void;
 }
 

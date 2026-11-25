@@ -39,7 +39,7 @@ interface GiftDurationTextConfig {
 	years: (durationQuantity: number) => string;
 }
 
-export interface GiftDurationPayload {
+interface GiftDurationPayload {
 	duration_type: GiftDurationType;
 	duration_quantity: number;
 }

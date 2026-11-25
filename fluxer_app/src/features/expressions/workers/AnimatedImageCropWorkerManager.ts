@@ -18,7 +18,7 @@ const STALL_TIMEOUT_MS = 45_000;
 
 let lastJobId = 0;
 
-export interface AnimatedCropRequest {
+interface AnimatedCropRequest {
 	bytes: ArrayBuffer;
 	format: AnimatedCropSourceFormat;
 	crop: CropParams;
@@ -30,12 +30,12 @@ interface AnimatedCropProgress {
 	fraction: number;
 }
 
-export interface AnimatedCropOptions {
+interface AnimatedCropOptions {
 	signal: AbortSignal;
 	onProgress?: (progress: AnimatedCropProgress) => void;
 }
 
-export interface AnimatedCropResult {
+interface AnimatedCropResult {
 	bytes: Uint8Array;
 	mime: AnimatedCropOutputMime;
 	stats: CropStats;

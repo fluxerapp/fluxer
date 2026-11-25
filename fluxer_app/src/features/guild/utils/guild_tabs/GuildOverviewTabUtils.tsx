@@ -74,7 +74,7 @@ function getEmptyGuildOverviewFormValues(): FormInputs {
 	};
 }
 
-export interface AfkTimeoutOptionRaw {
+interface AfkTimeoutOptionRaw {
 	value: number;
 	label: MessageDescriptor;
 }

@@ -13,7 +13,7 @@ import ChannelThreads from '@app/features/threads/state/ChannelThreads';
 import Window from '@app/features/window/state/Window';
 import {useEffect} from 'react';
 
-export interface ForumPostListView {
+interface ForumPostListView {
 	searching: boolean;
 	pinned: Channel | null;
 	posts: ReadonlyArray<Channel>;

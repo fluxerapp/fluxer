@@ -196,7 +196,7 @@ export function withoutTrailingSlashes(value: string): string {
 	return value.replace(/\/+$/u, '');
 }
 
-export class RestClient {
+class RestClient {
 	private readonly state: RuntimeState = {
 		routing: null,
 		defaultTimeoutMs: 0,

@@ -129,7 +129,7 @@ const THEME: InitialConfigType['theme'] = {
 	},
 };
 
-export interface LexicalComposerInputProps {
+interface LexicalComposerInputProps {
 	placeholder: string;
 	disabled: boolean;
 	handleRef: React.RefObject<ComposerHandle | null>;

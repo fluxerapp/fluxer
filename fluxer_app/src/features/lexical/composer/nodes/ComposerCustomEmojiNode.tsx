@@ -7,7 +7,7 @@ import styles from '@app/features/lexical/composer/nodes/ComposerInline.module.c
 import type {DOMExportOutput, EditorConfig, LexicalNode, NodeKey, SerializedLexicalNode, Spread} from 'lexical';
 import type {JSX} from 'react';
 
-export type SerializedComposerCustomEmojiNode = Spread<
+type SerializedComposerCustomEmojiNode = Spread<
 	{
 		emojiId: string;
 		animated: boolean;

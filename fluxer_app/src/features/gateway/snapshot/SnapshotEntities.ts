@@ -38,20 +38,20 @@ declare const SNAPSHOT_PRESENCE_KEY_BRAND: unique symbol;
 
 type SnapshotRowKey = string & {readonly [SNAPSHOT_ROW_KEY_BRAND]: true};
 export type SnapshotRowKeyPrefix = string & {readonly [SNAPSHOT_ROW_KEY_PREFIX_BRAND]: true};
-export type SnapshotSingletonKey = SnapshotRowKey & {readonly [SNAPSHOT_SINGLETON_KEY_BRAND]: true};
-export type SnapshotGuildKey = SnapshotRowKey & {readonly [SNAPSHOT_GUILD_KEY_BRAND]: true};
+type SnapshotSingletonKey = SnapshotRowKey & {readonly [SNAPSHOT_SINGLETON_KEY_BRAND]: true};
+type SnapshotGuildKey = SnapshotRowKey & {readonly [SNAPSHOT_GUILD_KEY_BRAND]: true};
 export type SnapshotGuildRoleKey = SnapshotRowKey & {readonly [SNAPSHOT_GUILD_ROLE_KEY_BRAND]: true};
-export type SnapshotChannelKey = SnapshotRowKey & {readonly [SNAPSHOT_CHANNEL_KEY_BRAND]: true};
-export type SnapshotReadStateKey = SnapshotRowKey & {readonly [SNAPSHOT_READ_STATE_KEY_BRAND]: true};
-export type SnapshotUserGuildSettingsKey = SnapshotRowKey & {
+type SnapshotChannelKey = SnapshotRowKey & {readonly [SNAPSHOT_CHANNEL_KEY_BRAND]: true};
+type SnapshotReadStateKey = SnapshotRowKey & {readonly [SNAPSHOT_READ_STATE_KEY_BRAND]: true};
+type SnapshotUserGuildSettingsKey = SnapshotRowKey & {
 	readonly [SNAPSHOT_USER_GUILD_SETTINGS_KEY_BRAND]: true;
 };
-export type SnapshotGuildEmojiKey = SnapshotRowKey & {readonly [SNAPSHOT_GUILD_EMOJI_KEY_BRAND]: true};
-export type SnapshotGuildStickerKey = SnapshotRowKey & {readonly [SNAPSHOT_GUILD_STICKER_KEY_BRAND]: true};
+type SnapshotGuildEmojiKey = SnapshotRowKey & {readonly [SNAPSHOT_GUILD_EMOJI_KEY_BRAND]: true};
+type SnapshotGuildStickerKey = SnapshotRowKey & {readonly [SNAPSHOT_GUILD_STICKER_KEY_BRAND]: true};
 export type SnapshotGuildMemberKey = SnapshotRowKey & {readonly [SNAPSHOT_GUILD_MEMBER_KEY_BRAND]: true};
-export type SnapshotRelationshipKey = SnapshotRowKey & {readonly [SNAPSHOT_RELATIONSHIP_KEY_BRAND]: true};
-export type SnapshotUserKey = SnapshotRowKey & {readonly [SNAPSHOT_USER_KEY_BRAND]: true};
-export type SnapshotPresenceKey = SnapshotRowKey & {readonly [SNAPSHOT_PRESENCE_KEY_BRAND]: true};
+type SnapshotRelationshipKey = SnapshotRowKey & {readonly [SNAPSHOT_RELATIONSHIP_KEY_BRAND]: true};
+type SnapshotUserKey = SnapshotRowKey & {readonly [SNAPSHOT_USER_KEY_BRAND]: true};
+type SnapshotPresenceKey = SnapshotRowKey & {readonly [SNAPSHOT_PRESENCE_KEY_BRAND]: true};
 
 export const SNAPSHOT_SINGLETON_KEY = snapshotSingletonKey('@me');
 
@@ -252,7 +252,7 @@ export interface SnapshotEntityKeyMap {
 	voice_state: SnapshotGuildKey;
 }
 
-export type SnapshotSingletonEntity = 'user_settings' | 'account_metadata' | 'user_connections';
+type SnapshotSingletonEntity = 'user_settings' | 'account_metadata' | 'user_connections';
 
 interface SnapshotRowUpsertOpFor<E extends SnapshotEntity> {
 	readonly kind: 'upsert';

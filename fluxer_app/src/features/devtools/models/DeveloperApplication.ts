@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export interface DeveloperApplicationBot {
+interface DeveloperApplicationBot {
 	id: string;
 	username: string;
 	discriminator: string;

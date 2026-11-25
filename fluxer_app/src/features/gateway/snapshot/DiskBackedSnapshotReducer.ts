@@ -450,7 +450,7 @@ class SnapshotOperationCollector {
 	};
 }
 
-export interface DiskBackedSnapshotReducerOptions {
+interface DiskBackedSnapshotReducerOptions {
 	readonly storageKey: string;
 	readonly store: SnapshotRowStore;
 	readonly writer: SnapshotWriter;

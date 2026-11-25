@@ -2,7 +2,7 @@
 
 import type {CommandOption} from '@app/features/devtools/hooks/useCommands';
 
-export interface PartitionedCommandOptions {
+interface PartitionedCommandOptions {
 	required: Array<CommandOption>;
 	optional: Array<CommandOption>;
 }

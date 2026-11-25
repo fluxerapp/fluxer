@@ -2,7 +2,7 @@
 
 import {createContext} from 'react';
 
-export interface ComposerMentionContextValue {
+interface ComposerMentionContextValue {
 	guildId?: string;
 	channelId?: string;
 	plainText: boolean;

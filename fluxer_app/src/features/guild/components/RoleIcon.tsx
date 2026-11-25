@@ -13,7 +13,7 @@ import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import {useState} from 'react';
 
-export type RoleIconSize = 16 | 20 | 40;
+type RoleIconSize = 16 | 20 | 40;
 
 const ROLE_ICON_LABEL_DESCRIPTOR = msg({
 	message: 'Role icon, {roleName}',

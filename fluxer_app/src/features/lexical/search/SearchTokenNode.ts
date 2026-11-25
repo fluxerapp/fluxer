@@ -10,7 +10,7 @@ import {
 	TextNode,
 } from 'lexical';
 
-export type SerializedSearchTokenNode = Spread<{role: SearchChipRole; exclude: boolean}, SerializedTextNode>;
+type SerializedSearchTokenNode = Spread<{role: SearchChipRole; exclude: boolean}, SerializedTextNode>;
 
 function resolveRoleThemeClass(role: SearchChipRole, config: EditorConfig): unknown {
 	switch (role) {

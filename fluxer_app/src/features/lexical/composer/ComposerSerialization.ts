@@ -49,7 +49,7 @@ import {
 } from 'lexical';
 import invariant from 'tiny-invariant';
 
-export interface ComposerProjection {
+interface ComposerProjection {
 	display: string;
 	segments: Array<MentionSegment>;
 	wire: string;

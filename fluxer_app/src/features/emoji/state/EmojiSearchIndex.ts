@@ -39,13 +39,13 @@ type SearchResult<TEmoji extends FlatEmoji> = Readonly<{
 	order: number;
 }>;
 
-export type EmojiSearchOptions<TEmoji extends FlatEmoji> = Readonly<{
+type EmojiSearchOptions<TEmoji extends FlatEmoji> = Readonly<{
 	count?: number;
 	canUse?: (emoji: TEmoji) => boolean;
 	getFrecencyScore?: (emoji: TEmoji) => number;
 }>;
 
-export type EmojiSearchIndexStats = Readonly<{
+type EmojiSearchIndexStats = Readonly<{
 	emojiCount: number;
 	gramCount: number;
 	postingCount: number;

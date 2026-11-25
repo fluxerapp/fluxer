@@ -56,7 +56,7 @@ export class AppStorageQuotaExceededError extends Error {
 	}
 }
 
-export class AppStorageBlockedError extends Error {
+class AppStorageBlockedError extends Error {
 	public constructor(operation: string, options?: ErrorOptions) {
 		super(`AppStorage ${operation} is blocked by another open connection`, options);
 		this.name = 'AppStorageBlockedError';
@@ -70,7 +70,7 @@ export class AppStorageOperationError extends Error {
 	}
 }
 
-export class AppStorageOpenTimeoutError extends AppStorageOperationError {
+class AppStorageOpenTimeoutError extends AppStorageOperationError {
 	public constructor() {
 		super('open');
 		this.name = 'AppStorageOpenTimeoutError';
@@ -593,7 +593,7 @@ function createIndexedDBBackendWithMemoryFallback(factory: IDBFactory): Persiste
 	};
 }
 
-export function createPersistentStorageBackend(factory: IDBFactory | null): PersistentStorageBackend {
+function createPersistentStorageBackend(factory: IDBFactory | null): PersistentStorageBackend {
 	if (factory == null) {
 		return createMemoryBackend();
 	}

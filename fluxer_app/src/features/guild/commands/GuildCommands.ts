@@ -28,7 +28,7 @@ import type {UserPartial} from '@fluxer/schema/src/domains/user/UserResponseSche
 
 const logger = new Logger('GuildCommands');
 
-export interface GuildAuditLogFetchParams {
+interface GuildAuditLogFetchParams {
 	userId?: string;
 	actionType?: AuditLogActionType;
 	limit?: number;

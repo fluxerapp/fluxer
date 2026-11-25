@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export interface RolePositionPayloadItem {
+interface RolePositionPayloadItem {
 	id: string;
 	position: number;
 }
 
-export interface RoleHoistPositionPayloadItem {
+interface RoleHoistPositionPayloadItem {
 	id: string;
 	hoist_position: number;
 }
 
-export interface SubmittableRoleOrderParams {
+interface SubmittableRoleOrderParams {
 	guildId: string;
 	orderedRoleIds: ReadonlyArray<string>;
 	isRoleLocked: (roleId: string) => boolean;
