@@ -22,7 +22,12 @@ export const PushRelayConfigResponse = PushRelayConfigSchema;
 export type PushRelayConfigResponse = z.infer<typeof PushRelayConfigResponse>;
 
 export const PushRelayConfigUpdateRequest = z.object({
-	relay_consent_accepted: z.boolean().optional(),
+	relay_consent_accepted: z
+		.boolean()
+		.optional()
+		.describe(
+			'Whether you accept the push relay privacy notice, which the Fluxer mobile apps need to get notifications from your instance',
+		),
 });
 
 export type PushRelayConfigUpdateRequest = z.infer<typeof PushRelayConfigUpdateRequest>;

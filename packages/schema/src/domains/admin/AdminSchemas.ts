@@ -531,14 +531,14 @@ const SsoGroupRoleMappingsSchema = z
 	.array(SsoGroupRoleMappingSchema)
 	.max(SSO_GROUP_ROLE_MAPPINGS_MAX)
 	.describe(
-		'Groups whose members get a role in the single community. Every listed role is managed by single sign-on, and is added or removed to match the groups at each sign-in',
+		'Groups whose members get a role in the single community, where single sign-on adds or removes each listed role to match the groups at every sign-in',
 	);
 
 const SsoGroupsClaimSchema = z
 	.string()
 	.trim()
 	.max(128)
-	.describe('The claim that lists the groups of a member. Empty or null uses `groups`');
+	.describe("The claim that lists a member's groups, with groups used when it is empty");
 
 const SsoConfigResponse = z.object({
 	enabled: z.boolean(),
@@ -558,7 +558,7 @@ const SsoConfigResponse = z.object({
 	username_from_provider: z
 		.boolean()
 		.describe(
-			"Each SSO sign-in sets the username from the provider, and people can't change it in Fluxer. Only on username instances",
+			"On username instances, each SSO sign-in sets the username from the provider and people can't change it in Fluxer",
 		),
 	redirect_uri: z.string().nullable(),
 	groups_claim: SsoGroupsClaimSchema.nullable(),
@@ -569,7 +569,7 @@ const InstanceRegistrationConfigResponse = z.object({
 	mode: InstanceRegistrationModeSchema,
 	admin_registration_urls_enabled: z.boolean(),
 	allowed_email_domains: SsoAllowedDomainsSchema.describe(
-		'Email domains that public sign-ups and email changes must use. Empty allows any domain',
+		'Email domains that public sign-ups and email changes must use, where an empty list allows any domain',
 	),
 });
 
@@ -666,23 +666,117 @@ const HEX_THEME_COLOR_PATTERN = /^(?:#?(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}))?$/;
 const AppPublicConfigUpdateRequest = z.object({
 	branding: z
 		.object({
-			product_name: z.string().trim().min(1).max(80).optional(),
-			icon_url: z.string().trim().max(2048).nullish(),
-			symbol_url: z.string().trim().max(2048).nullish(),
-			logo_url: z.string().trim().max(2048).nullish(),
-			wordmark_url: z.string().trim().max(2048).nullish(),
-			favicon_url: z.string().trim().max(2048).nullish(),
-			favicon_dark_url: z.string().trim().max(2048).nullish(),
-			theme_color: z.string().trim().regex(HEX_THEME_COLOR_PATTERN).nullish(),
-			status_page_url: z.string().trim().max(2048).nullish(),
-			status_page_incident_history_url: z.string().trim().max(2048).nullish(),
-			premium_product_name: z.string().trim().min(1).max(40).nullable().optional(),
-			premium_info_url: z.string().trim().max(2048).refine(isAbsoluteHttpUrl).nullish(),
-			sign_in_backdrop_url: z.string().trim().max(2048).nullish(),
-			premium_page_color: z.string().trim().regex(HEX_THEME_COLOR_PATTERN).nullish(),
-			custom_css: z.string().trim().max(32_768).nullish(),
-			upload_limit_message: z.string().trim().max(UPLOAD_LIMIT_MESSAGE_MAX_LENGTH).nullish(),
-			trusted_domains: z.array(z.string().max(255)).max(TRUSTED_DOMAINS_MAX).nullish(),
+			product_name: z
+				.string()
+				.trim()
+				.min(1)
+				.max(80)
+				.optional()
+				.describe('Name of your instance in the apps, on the sign-in page and in the browser tab'),
+			icon_url: z
+				.string()
+				.trim()
+				.max(2048)
+				.nullish()
+				.describe(
+					'Square app icon for the home screen when someone adds the web app, which also fills in for an empty logo, symbol or favicon',
+				),
+			symbol_url: z
+				.string()
+				.trim()
+				.max(2048)
+				.nullish()
+				.describe('Small square mark next to the instance name in the account switcher and the instance list'),
+			logo_url: z
+				.string()
+				.trim()
+				.max(2048)
+				.nullish()
+				.describe('Large image in light colours next to the sign-in form, or empty to use the app icon or symbol'),
+			wordmark_url: z
+				.string()
+				.trim()
+				.max(2048)
+				.nullish()
+				.describe(
+					'Your name in your own lettering, which shows under the logo on the sign-in page and in the desktop app title bar',
+				),
+			favicon_url: z
+				.string()
+				.trim()
+				.max(2048)
+				.nullish()
+				.describe('Small image in the browser tab, or empty to use the app icon'),
+			favicon_dark_url: z
+				.string()
+				.trim()
+				.max(2048)
+				.nullish()
+				.describe('Favicon for browsers with a dark theme, or empty to show the same favicon in both themes'),
+			theme_color: z
+				.string()
+				.trim()
+				.regex(HEX_THEME_COLOR_PATTERN)
+				.nullish()
+				.describe(
+					"Hex colour for buttons and highlights in the apps and for the toolbar of phone browsers, or empty for Fluxer's indigo",
+				),
+			status_page_url: z
+				.string()
+				.trim()
+				.max(2048)
+				.nullish()
+				.describe('Link to your status page, which the apps show when they cannot connect'),
+			status_page_incident_history_url: z
+				.string()
+				.trim()
+				.max(2048)
+				.nullish()
+				.describe('Link to the list of past incidents on your status page'),
+			premium_product_name: z
+				.string()
+				.trim()
+				.min(1)
+				.max(40)
+				.nullable()
+				.optional()
+				.describe('Name of the paid tier in the apps, which is Plutonium while unset'),
+			premium_info_url: z
+				.string()
+				.trim()
+				.max(2048)
+				.refine(isAbsoluteHttpUrl)
+				.nullish()
+				.describe('Link to a page about the paid tier, which shows on the premium page'),
+			sign_in_backdrop_url: z
+				.string()
+				.trim()
+				.max(2048)
+				.nullish()
+				.describe('Landscape image that fills the sign-in page behind the form, or empty for the starry background'),
+			premium_page_color: z
+				.string()
+				.trim()
+				.regex(HEX_THEME_COLOR_PATTERN)
+				.nullish()
+				.describe('Hex colour for the premium page, or empty for its usual colours'),
+			custom_css: z
+				.string()
+				.trim()
+				.max(32_768)
+				.nullish()
+				.describe('CSS that the web and desktop apps add to every page, including the sign-in pages'),
+			upload_limit_message: z
+				.string()
+				.trim()
+				.max(UPLOAD_LIMIT_MESSAGE_MAX_LENGTH)
+				.nullish()
+				.describe('Your own text in the message people see when a file is over the upload limit'),
+			trusted_domains: z
+				.array(z.string().max(255))
+				.max(TRUSTED_DOMAINS_MAX)
+				.nullish()
+				.describe('Domains whose links open without the warning about leaving the app'),
 		})
 		.register(schemaMetadata, {preserveNullFields: true})
 		.nullish(),
@@ -693,9 +787,25 @@ const AppPublicConfigUpdateRequest = z.object({
 		.nullish(),
 	legal: z
 		.object({
-			terms_url: z.string().trim().max(2048).nullish(),
-			privacy_url: z.string().trim().max(2048).nullish(),
-			guidelines_url: z.string().trim().max(2048).refine(isAbsoluteHttpUrl).nullish(),
+			terms_url: z
+				.string()
+				.trim()
+				.max(2048)
+				.nullish()
+				.describe('Link to your terms of service, which people agree to when they sign up'),
+			privacy_url: z
+				.string()
+				.trim()
+				.max(2048)
+				.nullish()
+				.describe('Link to your privacy policy, which people agree to when they sign up'),
+			guidelines_url: z
+				.string()
+				.trim()
+				.max(2048)
+				.refine(isAbsoluteHttpUrl)
+				.nullish()
+				.describe('Link to your community guidelines from the app, the report form and enforcement emails'),
 		})
 		.register(schemaMetadata, {preserveNullFields: true})
 		.nullish(),
@@ -928,34 +1038,74 @@ export const InstanceConfigResponse = z.object({
 export type InstanceConfigResponse = z.infer<typeof InstanceConfigResponse>;
 
 const InstancePolicyUpdateSchema = z.object({
-	single_community_enabled: z.boolean().optional(),
-	single_community_name: z.string().trim().min(1).max(100).optional(),
+	single_community_enabled: z
+		.boolean()
+		.optional()
+		.describe('Whether everyone who signs up joins one community that you own, with nobody able to create others'),
+	single_community_name: z
+		.string()
+		.trim()
+		.min(1)
+		.max(100)
+		.optional()
+		.describe(
+			'Name of the community created when this change turns on single_community_enabled, or the product name when left out',
+		),
 	single_community_guild_id: SnowflakeStringType.optional().describe(
-		'ID of an existing community to use as the single community. Turns the mode on with that community, or moves it there while the mode is on',
+		'ID of an existing community to use as the single community, which turns the mode on or moves it there',
 	),
 	single_community_add_members: z
 		.boolean()
 		.optional()
 		.describe('Also add every existing account to the single community in the background'),
-	direct_messages_disabled: z.boolean().optional(),
-	direct_messages_locked: z.literal(false).optional(),
+	direct_messages_disabled: z
+		.boolean()
+		.optional()
+		.describe('Whether direct messages are off and people can only talk in communities'),
+	direct_messages_locked: z
+		.literal(false)
+		.optional()
+		.describe('Set to false to let direct messages be turned off again after they were locked on'),
 	friends_disabled: z
 		.boolean()
 		.optional()
 		.describe(
-			'Whether friend requests are disabled instance-wide. Left out while direct_messages_disabled changes, it takes the same value',
+			'Whether friend requests are off instance-wide, which follows direct_messages_disabled when that changes and this is left out',
 		),
 	personal_notes_enabled: z
 		.boolean()
 		.optional()
-		.describe('Whether people can use personal notes. Off by default on self-hosted instances'),
-	premium_mode: z.enum(['mirror', 'everyone']).optional(),
-	guild_create_access: z.boolean().optional(),
+		.describe('Whether people can use personal notes, which are off by default on self-hosted instances'),
+	premium_mode: z
+		.enum(['mirror', 'everyone'])
+		.optional()
+		.describe(
+			'Whether every account has the paid tier (everyone) or only accounts with a subscription have it (mirror)',
+		),
+	guild_create_access: z
+		.boolean()
+		.optional()
+		.describe(
+			'Whether everyone can create communities, or only admins and accounts with the feature_guild_create limit',
+		),
 	services: z
 		.object({
-			gif_enabled: z.boolean().nullish(),
-			youtube_enabled: z.boolean().nullish(),
-			bluesky_enabled: z.boolean().nullish(),
+			gif_enabled: z
+				.boolean()
+				.nullish()
+				.describe('Whether the GIF picker is on, where leaving it unset turns it on while a KLIPY API key is set'),
+			youtube_enabled: z
+				.boolean()
+				.nullish()
+				.describe(
+					'Whether YouTube features are on, where leaving it unset turns them on while a YouTube API key is set',
+				),
+			bluesky_enabled: z
+				.boolean()
+				.nullish()
+				.describe(
+					'Whether people can connect a Bluesky account, where leaving it unset follows integrations.bluesky.enabled',
+				),
 		})
 		.nullish(),
 });
@@ -972,39 +1122,73 @@ export const InstanceConfigUpdateRequest = z.object({
 	experiment_delivery: ExperimentDeliveryConfigUpdateRequest.nullish(),
 	registration: z
 		.object({
-			mode: InstanceRegistrationModeSchema.optional(),
-			admin_registration_urls_enabled: z.boolean().optional(),
+			mode: InstanceRegistrationModeSchema.optional().describe(
+				'How people sign up, open for anyone, approval where an admin approves each new account, or closed where only registration links create accounts',
+			),
+			admin_registration_urls_enabled: z
+				.boolean()
+				.optional()
+				.describe('Whether registration links that admins made still create accounts'),
 			allowed_email_domains: SsoAllowedDomainsSchema.optional(),
 		})
 		.nullish(),
 	sso: z
 		.object({
-			enabled: z.boolean().optional(),
-			enforced: z.boolean().optional(),
-			display_name: z.string().nullish(),
+			enabled: z.boolean().optional().describe('Whether people can sign in with your single sign-on provider'),
+			enforced: z
+				.boolean()
+				.optional()
+				.describe('Whether single sign-on is the only way to sign in, with password sign-in turned off'),
+			display_name: z
+				.string()
+				.nullish()
+				.describe('Provider name for the sign-in button, which then says "Continue with" and this name'),
 			button_label: z
 				.string()
 				.trim()
 				.max(SSO_BUTTON_LABEL_MAX_LENGTH)
 				.nullish()
 				.describe(
-					`Text for the sign-in button. Trimmed, then up to ${SSO_BUTTON_LABEL_MAX_LENGTH} UTF-16 code units with at least one visible character and no control characters, line breaks or bidirectional formatting characters. Empty or null uses the default label`,
+					`Text on the sign-in button, up to ${SSO_BUTTON_LABEL_MAX_LENGTH} characters on one line, or empty for the default label`,
 				),
-			issuer: z.string().nullish(),
-			authorization_url: z.string().nullish(),
-			token_url: z.string().nullish(),
-			userinfo_url: z.string().nullish(),
-			jwks_url: z.string().nullish(),
-			client_id: z.string().nullish(),
-			client_secret: z.string().nullish(),
-			scope: z.string().nullish(),
-			allowed_domains: SsoAllowedDomainsSchema.optional(),
-			auto_provision: z.boolean().optional(),
+			issuer: z
+				.string()
+				.nullish()
+				.describe('OpenID Connect issuer URL of your provider, used to look up any endpoint left empty'),
+			authorization_url: z
+				.string()
+				.nullish()
+				.describe('Provider page where people sign in, or empty to look it up from the issuer'),
+			token_url: z
+				.string()
+				.nullish()
+				.describe('Provider endpoint that Fluxer gets tokens from, or empty to look it up from the issuer'),
+			userinfo_url: z
+				.string()
+				.nullish()
+				.describe('Provider endpoint that Fluxer gets account details from, or empty to look it up from the issuer'),
+			jwks_url: z
+				.string()
+				.nullish()
+				.describe('Provider endpoint with the keys that sign its tokens, or empty to look it up from the issuer'),
+			client_id: z.string().nullish().describe('Client ID that your provider gave Fluxer'),
+			client_secret: z.string().nullish().describe('Client secret that your provider gave Fluxer'),
+			scope: z
+				.string()
+				.nullish()
+				.describe('Space-separated scopes that Fluxer asks the provider for, or empty for openid email profile'),
+			allowed_domains: SsoAllowedDomainsSchema.optional().describe(
+				'Email domains whose accounts can sign in with single sign-on, or empty for any domain',
+			),
+			auto_provision: z
+				.boolean()
+				.optional()
+				.describe('Whether the first single sign-on sign-in makes an account for someone who has none'),
 			username_from_provider: z
 				.boolean()
 				.optional()
 				.describe(
-					"Each SSO sign-in sets the username from the provider, and people can't change it in Fluxer. Only on username instances",
+					"On username instances, each SSO sign-in sets the username from the provider and people can't change it in Fluxer",
 				),
 			groups_claim: SsoGroupsClaimSchema.nullish(),
 			group_role_mappings: SsoGroupRoleMappingsSchema.optional(),
@@ -1021,12 +1205,22 @@ export const InstanceConfigUpdateRequest = z.object({
 		.object({
 			gif: z
 				.object({
-					klipy_api_key: z.string().trim().max(4096).nullish(),
+					klipy_api_key: z
+						.string()
+						.trim()
+						.max(4096)
+						.nullish()
+						.describe('KLIPY API key for the GIF picker and GIF link previews'),
 				})
 				.nullish(),
 			youtube: z
 				.object({
-					api_key: z.string().trim().max(4096).nullish(),
+					api_key: z
+						.string()
+						.trim()
+						.max(4096)
+						.nullish()
+						.describe('YouTube Data API key that link previews use for details of YouTube videos'),
 				})
 				.nullish(),
 			email: z
@@ -1036,30 +1230,82 @@ export const InstanceConfigUpdateRequest = z.object({
 					),
 					enabled: z.boolean().nullish().describe('Deprecated, use delivery'),
 					provider: EmailProviderSchema.nullish(),
-					from_email: z.string().trim().max(320).nullish(),
-					from_name: z.string().trim().max(120).nullish(),
+					from_email: z
+						.string()
+						.trim()
+						.max(320)
+						.nullish()
+						.describe('Address that email from your instance is sent from'),
+					from_name: z
+						.string()
+						.trim()
+						.max(120)
+						.nullish()
+						.describe('Sender name on email from your instance, or empty for the product name'),
 					smtp: z
 						.object({
-							host: z.string().trim().max(255).nullish(),
-							port: z.number().int().min(1).max(65535).nullish(),
-							username: z.string().trim().max(320).nullish(),
-							password: z.string().trim().max(4096).nullish(),
+							host: z
+								.string()
+								.trim()
+								.max(255)
+								.nullish()
+								.describe("Host of the SMTP server that sends your instance's email"),
+							port: z
+								.number()
+								.int()
+								.min(1)
+								.max(65535)
+								.nullish()
+								.describe('Port of the SMTP server, usually 587 or 465'),
+							username: z.string().trim().max(320).nullish().describe('User name for signing in to the SMTP server'),
+							password: z.string().trim().max(4096).nullish().describe('Password for signing in to the SMTP server'),
 							tls_mode: SmtpTlsModeSchema.nullish(),
 							secure: z.boolean().nullish().describe('Deprecated, use tls_mode'),
 						})
 						.register(schemaMetadata, {preserveNullFields: true})
 						.nullish(),
-					disable_new_ip_authorization: z.boolean().nullish(),
+					disable_new_ip_authorization: z
+						.boolean()
+						.nullish()
+						.describe('Whether people can sign in from a new IP address without confirming it from an email first'),
 				})
 				.nullish(),
 			bluesky: z
 				.object({
-					enabled: z.boolean().nullish(),
-					client_name: z.string().trim().max(120).nullish(),
-					client_uri: z.string().trim().max(2048).nullish(),
-					logo_uri: z.string().trim().max(2048).nullish(),
-					tos_uri: z.string().trim().max(2048).nullish(),
-					policy_uri: z.string().trim().max(2048).nullish(),
+					enabled: z
+						.boolean()
+						.nullish()
+						.describe('Whether people can connect a Bluesky account to their profile, which also needs a signing key'),
+					client_name: z
+						.string()
+						.trim()
+						.max(120)
+						.nullish()
+						.describe('Name that Bluesky shows people when they connect their account'),
+					client_uri: z
+						.string()
+						.trim()
+						.max(2048)
+						.nullish()
+						.describe('Home page link that Bluesky shows people when they connect their account'),
+					logo_uri: z
+						.string()
+						.trim()
+						.max(2048)
+						.nullish()
+						.describe('Logo that Bluesky shows people when they connect their account'),
+					tos_uri: z
+						.string()
+						.trim()
+						.max(2048)
+						.nullish()
+						.describe('Link to your terms that Bluesky shows people when they connect their account'),
+					policy_uri: z
+						.string()
+						.trim()
+						.max(2048)
+						.nullish()
+						.describe('Link to your privacy policy that Bluesky shows people when they connect their account'),
 					keys: z
 						.array(
 							z.object({
@@ -1068,7 +1314,8 @@ export const InstanceConfigUpdateRequest = z.object({
 							}),
 						)
 						.max(8)
-						.optional(),
+						.optional()
+						.describe('Private keys, each with a key ID, that Fluxer signs its Bluesky sign-in requests with'),
 				})
 				.register(schemaMetadata, {preserveNullFields: true})
 				.nullish(),
@@ -1076,22 +1323,60 @@ export const InstanceConfigUpdateRequest = z.object({
 				.array(ConnectionProviderUpdate)
 				.max(MAX_CONNECTION_PROVIDERS)
 				.optional()
-				.describe('Replaces the whole provider list. Only self-hosted instances can have providers'),
+				.describe(
+					'Services people can connect to their profile on a self-hosted instance, where a save replaces the whole list',
+				),
 		})
 		.nullish(),
 	media: z
 		.object({
 			attachment_decay: z
 				.object({
-					enabled: z.boolean().nullish(),
-					min_size_mb: z.number().positive().nullish(),
-					max_size_mb: z.number().positive().nullish(),
-					max_eligible_size_mb: z.number().positive().nullish(),
-					min_lifetime_days: z.number().int().positive().nullish(),
-					max_lifetime_days: z.number().int().positive().nullish(),
-					curve: z.number().min(0).max(1).nullish(),
-					renew_threshold_days: z.number().int().positive().nullish(),
-					renew_window_days: z.number().int().positive().nullish(),
+					enabled: z
+						.boolean()
+						.nullish()
+						.describe('Whether files in messages are deleted after a while, with smaller files kept longer'),
+					min_size_mb: z
+						.number()
+						.positive()
+						.nullish()
+						.describe('Size in MB up to which a file is kept for max_lifetime_days'),
+					max_size_mb: z
+						.number()
+						.positive()
+						.nullish()
+						.describe('Size in MB from which a file is kept for only min_lifetime_days'),
+					max_eligible_size_mb: z
+						.number()
+						.positive()
+						.nullish()
+						.describe('Size in MB above which a file is never deleted'),
+					min_lifetime_days: z.number().int().positive().nullish().describe('Days that the largest files are kept'),
+					max_lifetime_days: z.number().int().positive().nullish().describe('Days that the smallest files are kept'),
+					curve: z
+						.number()
+						.min(0)
+						.max(1)
+						.nullish()
+						.describe(
+							'How the time a file is kept falls between the two sizes, from 0 for an even fall to 1 for a steep fall just above min_size_mb',
+						),
+					renew_threshold_days: z
+						.number()
+						.int()
+						.positive()
+						.nullish()
+						.describe(
+							"Days before a file's deletion within which loading its message keeps the file for renew_window_days from then",
+						),
+					renew_window_days: z
+						.number()
+						.int()
+						.positive()
+						.nullish()
+						.describe(
+							'Days a file is kept from the moment its message is loaded, when that is within renew_threshold_days of its deletion',
+						),
 				})
 				.register(schemaMetadata, {preserveNullFields: true})
 				.nullish(),
@@ -1105,7 +1390,9 @@ export const InstanceConfigUpdateRequest = z.object({
 		.nullish(),
 	policy: InstancePolicyUpdateSchema.nullish(),
 	billing: InstanceBillingUpdateRequest.nullish(),
-	distribution_pricing: DistributionPricingUpdateRequest.nullish(),
+	distribution_pricing: DistributionPricingUpdateRequest.nullish().describe(
+		"Higher Stripe prices for app builds from a store such as an iOS app marketplace, to pay the store's share",
+	),
 	notice: z
 		.object({
 			message: z

@@ -27,7 +27,7 @@
   {
     "key": "accounts.guild_join_gate",
     "type": "string",
-    "help": "When joining a community needs a finished account. Applies only while the interaction tier is enforced and the person can preview communities",
+    "help": "When joining a community needs a finished account, which only applies while the interaction tier is enforced and the person can preview communities",
     "options": [
       "off",
       "visits_capable",
@@ -42,7 +42,7 @@
   {
     "key": "accounts.inactivity_deletion.mode",
     "type": "string",
-    "help": "Whether accounts unused for a long time are deleted. An account is only deleted after a warning email reached it",
+    "help": "Whether accounts unused for a long time are deleted, always after a warning email reached them",
     "options": [
       "off",
       "after_inactivity"
@@ -98,120 +98,120 @@
   {
     "key": "app_public.branding.custom_css",
     "type": "string",
-    "help": "Branding custom CSS",
+    "help": "CSS that the web and desktop apps add to every page, including the sign-in pages",
     "nullable": true
   },
   {
     "key": "app_public.branding.favicon_dark_url",
     "type": "string",
-    "help": "Branding favicon dark URL",
+    "help": "Favicon for browsers with a dark theme, or empty to show the same favicon in both themes",
     "nullable": true
   },
   {
     "key": "app_public.branding.favicon_url",
     "type": "string",
-    "help": "Branding favicon URL",
+    "help": "Small image in the browser tab, or empty to use the app icon",
     "nullable": true
   },
   {
     "key": "app_public.branding.icon_url",
     "type": "string",
-    "help": "Branding icon URL",
+    "help": "Square app icon for the home screen when someone adds the web app, which also fills in for an empty logo, symbol or favicon",
     "nullable": true
   },
   {
     "key": "app_public.branding.logo_url",
     "type": "string",
-    "help": "Branding logo URL",
+    "help": "Large image in light colours next to the sign-in form, or empty to use the app icon or symbol",
     "nullable": true
   },
   {
     "key": "app_public.branding.premium_info_url",
     "type": "string",
-    "help": "Branding premium info URL",
+    "help": "Link to a page about the paid tier, which shows on the premium page",
     "nullable": true
   },
   {
     "key": "app_public.branding.premium_page_color",
     "type": "string",
-    "help": "Branding premium page color",
+    "help": "Hex colour for the premium page, or empty for its usual colours",
     "nullable": true
   },
   {
     "key": "app_public.branding.premium_product_name",
     "type": "string",
-    "help": "Branding premium product name",
+    "help": "Name of the paid tier in the apps, which is Plutonium while unset",
     "nullable": true
   },
   {
     "key": "app_public.branding.product_name",
     "type": "string",
-    "help": "Branding product name"
+    "help": "Name of your instance in the apps, on the sign-in page and in the browser tab"
   },
   {
     "key": "app_public.branding.sign_in_backdrop_url",
     "type": "string",
-    "help": "Branding sign in backdrop URL",
+    "help": "Landscape image that fills the sign-in page behind the form, or empty for the starry background",
     "nullable": true
   },
   {
     "key": "app_public.branding.status_page_incident_history_url",
     "type": "string",
-    "help": "Branding status page incident history URL",
+    "help": "Link to the list of past incidents on your status page",
     "nullable": true
   },
   {
     "key": "app_public.branding.status_page_url",
     "type": "string",
-    "help": "Branding status page URL",
+    "help": "Link to your status page, which the apps show when they cannot connect",
     "nullable": true
   },
   {
     "key": "app_public.branding.symbol_url",
     "type": "string",
-    "help": "Branding symbol URL",
+    "help": "Small square mark next to the instance name in the account switcher and the instance list",
     "nullable": true
   },
   {
     "key": "app_public.branding.theme_color",
     "type": "string",
-    "help": "Branding theme color",
+    "help": "Hex colour for buttons and highlights in the apps and for the toolbar of phone browsers, or empty for Fluxer's indigo",
     "nullable": true
   },
   {
     "key": "app_public.branding.trusted_domains",
     "type": "list",
-    "help": "Branding trusted domains",
+    "help": "Domains whose links open without the warning about leaving the app",
     "nullable": true
   },
   {
     "key": "app_public.branding.upload_limit_message",
     "type": "string",
-    "help": "Branding upload limit message",
+    "help": "Your own text in the message people see when a file is over the upload limit",
     "nullable": true
   },
   {
     "key": "app_public.branding.wordmark_url",
     "type": "string",
-    "help": "Branding wordmark URL",
+    "help": "Your name in your own lettering, which shows under the logo on the sign-in page and in the desktop app title bar",
     "nullable": true
   },
   {
     "key": "app_public.legal.guidelines_url",
     "type": "string",
-    "help": "Legal guidelines URL",
+    "help": "Link to your community guidelines from the app, the report form and enforcement emails",
     "nullable": true
   },
   {
     "key": "app_public.legal.privacy_url",
     "type": "string",
-    "help": "Legal privacy URL",
+    "help": "Link to your privacy policy, which people agree to when they sign up",
     "nullable": true
   },
   {
     "key": "app_public.legal.terms_url",
     "type": "string",
-    "help": "Legal terms URL",
+    "help": "Link to your terms of service, which people agree to when they sign up",
     "nullable": true
   },
   {
@@ -227,95 +227,95 @@
   {
     "key": "auth.instant_accounts.enabled",
     "type": "boolean",
-    "help": "Whether accounts can be created from just a display name. Needs the captcha to be on"
+    "help": "Whether accounts can be created from just a display name, which needs the captcha to be on"
   },
   {
     "key": "auth.instant_accounts.pow_escalation_per_hour",
     "type": "integer",
-    "help": "Every this many accounts created from a display name in the current hour doubles the captcha cost"
+    "help": "The captcha gets twice as hard for each batch of this many accounts created from a display name in the past hour"
   },
   {
     "key": "billing.automatic_tax",
     "type": "boolean",
-    "help": "Billing automatic tax",
+    "help": "Whether Stripe works out and adds tax at checkout",
     "nullable": true
   },
   {
     "key": "billing.billing_emails",
     "type": "boolean",
-    "help": "Billing billing emails",
+    "help": "Whether your instance sends its own billing emails, such as receipts, renewal reminders and refund notices",
     "nullable": true
   },
   {
     "key": "billing.country_currencies",
     "type": "json",
-    "help": "Billing country currencies",
+    "help": "Currency that buyers in each country pay in, by two-letter country code",
     "nullable": true
   },
   {
     "key": "billing.default_currency",
     "type": "string",
-    "help": "Billing default currency",
+    "help": "Currency for buyers whose country has no currency in country_currencies",
     "nullable": true
   },
   {
     "key": "billing.enabled",
     "type": "boolean",
-    "help": "Billing enabled",
+    "help": "Whether people can buy the paid tier through Stripe, which also needs a secret key, prices and the mirror premium mode",
     "nullable": true
   },
   {
     "key": "billing.legacy_prices",
     "type": "json",
-    "help": "Billing legacy prices",
+    "help": "Older Stripe price IDs whose subscriptions keep renewing, by slot such as monthly_GBP",
     "nullable": true
   },
   {
     "key": "billing.prices",
     "type": "json",
-    "help": "Billing prices",
+    "help": "Stripe price IDs by currency for the monthly and yearly plans and the one-month and one-year gifts",
     "nullable": true
   },
   {
     "key": "billing.stripe_secret_key",
     "type": "secret",
-    "help": "Billing stripe secret key",
+    "help": "Secret key of your Stripe account",
     "secret_set": "billing.stripe_secret_key_set",
     "nullable": true
   },
   {
     "key": "billing.stripe_webhook_secret",
     "type": "secret",
-    "help": "Billing stripe webhook secret",
+    "help": "Signing secret of the Stripe webhook that sends payment events to your instance",
     "secret_set": "billing.stripe_webhook_secret_set",
     "nullable": true
   },
   {
     "key": "billing.tax_id_collection",
     "type": "boolean",
-    "help": "Billing tax ID collection",
+    "help": "Whether checkout asks buyers for a tax ID, such as a VAT number",
     "nullable": true
   },
   {
     "key": "billing.terms_consent_required",
     "type": "boolean",
-    "help": "Billing terms consent required",
+    "help": "Whether buyers have to agree to your terms at checkout",
     "nullable": true
   },
   {
     "key": "captcha.cost",
     "type": "integer",
-    "help": "Captcha cost"
+    "help": "How much work each attempt at the proof-of-work check takes, where a higher value is slower for everyone"
   },
   {
     "key": "captcha.max_counter",
     "type": "integer",
-    "help": "Captcha max counter"
+    "help": "Most attempts the proof-of-work check can need, where a higher value makes it take longer on average"
   },
   {
     "key": "captcha.provider",
     "type": "string",
-    "help": "Captcha the instance asks for",
+    "help": "Which check people solve before they sign up, sign in or do other things spammers abuse, altcha for a proof-of-work check or none for no check",
     "options": [
       "none",
       "altcha"
@@ -324,103 +324,103 @@
   {
     "key": "distribution_pricing",
     "type": "json",
-    "help": "Distribution pricing",
+    "help": "Higher Stripe prices for app builds from a store such as an iOS app marketplace, to pay the store's share",
     "nullable": true
   },
   {
     "key": "domain_migration.anonymous_rollout_basis_points",
     "type": "integer",
-    "help": "Domain migration anonymous rollout basis points"
+    "help": "Share of signed-out devices that move to the new domain, in basis points where 10000 is everyone"
   },
   {
     "key": "domain_migration.enabled",
     "type": "boolean",
-    "help": "Domain migration enabled"
+    "help": "Whether fluxer.com moves people from its old web app domain to the new one, which does nothing on a self-hosted instance"
   },
   {
     "key": "domain_migration.excluded_user_ids",
     "type": "list",
-    "help": "Domain migration excluded user IDs"
+    "help": "Accounts that never move to the new domain, checked before every other rule"
   },
   {
     "key": "domain_migration.include_premium_users",
     "type": "boolean",
-    "help": "Domain migration include premium users"
+    "help": "Whether accounts with the paid tier always move to the new domain"
   },
   {
     "key": "domain_migration.included_guild_ids",
     "type": "list",
-    "help": "Domain migration included guild IDs"
+    "help": "Communities whose members always move to the new domain"
   },
   {
     "key": "domain_migration.included_user_ids",
     "type": "list",
-    "help": "Domain migration included user IDs"
+    "help": "Accounts that always move to the new domain"
   },
   {
     "key": "domain_migration.rollout_basis_points",
     "type": "integer",
-    "help": "Domain migration rollout basis points"
+    "help": "Share of signed-in accounts that move to the new domain, in basis points where 10000 is everyone"
   },
   {
     "key": "domain_migration.rollout_country_codes",
     "type": "list",
-    "help": "Domain migration rollout country codes"
+    "help": "Two-letter country codes that limit the rollout share to people in those countries, or empty for every country"
   },
   {
     "key": "domain_migration.rollout_salt",
     "type": "string",
-    "help": "Domain migration rollout salt"
+    "help": "Text mixed into the rollout pick, where a new value picks a different set of accounts"
   },
   {
     "key": "domain_migration.standalone_forwarding",
     "type": "boolean",
-    "help": "Domain migration standalone forwarding"
+    "help": "Whether installed web apps forward to the new domain after moving their session"
   },
   {
     "key": "experiment_delivery.poll_interval_seconds",
     "type": "integer",
-    "help": "Experiment delivery poll interval seconds"
+    "help": "Seconds between the checks where the apps ask which feature rollouts they are part of"
   },
   {
     "key": "experiment_delivery.poll_jitter_percent",
     "type": "integer",
-    "help": "Experiment delivery poll jitter percent"
+    "help": "Most that each app shifts a check earlier or later, as a percentage of the poll interval"
   },
   {
     "key": "gateway_rollout.gateway_dispatch_relay_max_queue",
     "type": "integer",
-    "help": "Gateway rollout gateway dispatch relay max queue"
+    "help": "Most events one dispatch relay worker queues before senders wait, where 0 uses the gateway's own limit"
   },
   {
     "key": "gateway_rollout.gateway_dispatch_relay_shards",
     "type": "integer",
-    "help": "Gateway rollout gateway dispatch relay shards"
+    "help": "Number of dispatch relay workers on each gateway node that send events to connected sessions, which changes only when the gateway restarts"
   },
   {
     "key": "gateway_rollout.guild_rollout_percentage",
     "type": "number",
-    "help": "Gateway rollout guild rollout percentage"
+    "help": "Percentage of communities the gateway starts, from 0 for none to 100 for all of them"
   },
   {
     "key": "gateway_rollout.max_concurrent_guild_starts",
     "type": "integer",
-    "help": "Gateway rollout max concurrent guild starts"
+    "help": "Most communities each gateway node starts at once, with the rest waiting their turn"
   },
   {
     "key": "gateway_rollout.max_concurrent_session_starts",
     "type": "integer",
-    "help": "Gateway rollout max concurrent session starts"
+    "help": "Most connections each gateway node sets up at once, with the rest waiting in a queue"
   },
   {
     "key": "gateway_rollout.rpc_request_timeout_ms",
     "type": "integer",
-    "help": "Gateway rollout RPC request timeout ms"
+    "help": "Milliseconds the gateway waits for the API to respond to one request"
   },
   {
     "key": "gateway_rollout.session_rollout_mode",
     "type": "string",
-    "help": "Gateway rollout session rollout mode",
+    "help": "How the gateway picks accounts below 100 percent, modulo for the same accounts each time or random for a new pick at each connection",
     "options": [
       "modulo",
       "random"
@@ -429,12 +429,12 @@
   {
     "key": "gateway_rollout.session_rollout_percentage",
     "type": "number",
-    "help": "Gateway rollout session rollout percentage"
+    "help": "Percentage of accounts that can connect to the gateway, where 0 pauses every new connection"
   },
   {
     "key": "gateway_rollout.voice_e2ee_scope",
     "type": "string",
-    "help": "Gateway rollout voice E2EE scope",
+    "help": "Which calls encrypt their media with a key that your instance hands out, guild_feature_only for communities with the VOICE_E2EE feature or platform_wide for every call",
     "options": [
       "guild_feature_only",
       "platform_wide"
@@ -443,73 +443,73 @@
   {
     "key": "guild_visits.enabled",
     "type": "boolean",
-    "help": "Kill switch for visiting communities without joining"
+    "help": "Whether people picked by the rollout can preview a community before they join it"
   },
   {
     "key": "guild_visits.excluded_user_ids",
     "type": "list",
-    "help": "People never assigned, checked before the included list"
+    "help": "People who can never preview communities, checked before the included list"
   },
   {
     "key": "guild_visits.included_user_ids",
     "type": "list",
-    "help": "People always assigned"
+    "help": "People who can always preview communities"
   },
   {
     "key": "guild_visits.user_basis_points",
     "type": "integer",
-    "help": "Share of people assigned, in basis points"
+    "help": "Share of people who can preview communities, in basis points where 10000 is everyone"
   },
   {
     "key": "guild_visits.user_salt",
     "type": "string",
-    "help": "Salt for the assignment bucket"
+    "help": "Text mixed into the rollout pick, where a new value picks a different set of people"
   },
   {
     "key": "integrations.bluesky.client_name",
     "type": "string",
-    "help": "Bluesky client name",
+    "help": "Name that Bluesky shows people when they connect their account",
     "nullable": true
   },
   {
     "key": "integrations.bluesky.client_uri",
     "type": "string",
-    "help": "Bluesky client URI",
+    "help": "Home page link that Bluesky shows people when they connect their account",
     "nullable": true
   },
   {
     "key": "integrations.bluesky.enabled",
     "type": "boolean",
-    "help": "Bluesky enabled",
+    "help": "Whether people can connect a Bluesky account to their profile, which also needs a signing key",
     "nullable": true
   },
   {
     "key": "integrations.bluesky.keys",
     "type": "json",
-    "help": "Bluesky keys"
+    "help": "Private keys, each with a key ID, that Fluxer signs its Bluesky sign-in requests with"
   },
   {
     "key": "integrations.bluesky.logo_uri",
     "type": "string",
-    "help": "Bluesky logo URI",
+    "help": "Logo that Bluesky shows people when they connect their account",
     "nullable": true
   },
   {
     "key": "integrations.bluesky.policy_uri",
     "type": "string",
-    "help": "Bluesky policy URI",
+    "help": "Link to your privacy policy that Bluesky shows people when they connect their account",
     "nullable": true
   },
   {
     "key": "integrations.bluesky.tos_uri",
     "type": "string",
-    "help": "Bluesky terms URI",
+    "help": "Link to your terms that Bluesky shows people when they connect their account",
     "nullable": true
   },
   {
     "key": "integrations.connection_providers",
     "type": "json",
-    "help": "Replaces the whole provider list. Only self-hosted instances can have providers"
+    "help": "Services people can connect to their profile on a self-hosted instance, where a save replaces the whole list"
   },
   {
     "key": "integrations.email.delivery",
@@ -524,38 +524,38 @@
   {
     "key": "integrations.email.disable_new_ip_authorization",
     "type": "boolean",
-    "help": "Email disable new IP authorization",
+    "help": "Whether people can sign in from a new IP address without confirming it from an email first",
     "nullable": true
   },
   {
     "key": "integrations.email.from_email",
     "type": "string",
-    "help": "Email from email",
+    "help": "Address that email from your instance is sent from",
     "nullable": true
   },
   {
     "key": "integrations.email.from_name",
     "type": "string",
-    "help": "Email from name",
+    "help": "Sender name on email from your instance, or empty for the product name",
     "nullable": true
   },
   {
     "key": "integrations.email.smtp.host",
     "type": "string",
-    "help": "SMTP host",
+    "help": "Host of the SMTP server that sends your instance's email",
     "nullable": true
   },
   {
     "key": "integrations.email.smtp.password",
     "type": "secret",
-    "help": "SMTP password",
+    "help": "Password for signing in to the SMTP server",
     "secret_set": "integrations.email.smtp.password_set",
     "nullable": true
   },
   {
     "key": "integrations.email.smtp.port",
     "type": "integer",
-    "help": "SMTP port",
+    "help": "Port of the SMTP server, usually 587 or 465",
     "nullable": true
   },
   {
@@ -573,75 +573,75 @@
   {
     "key": "integrations.email.smtp.username",
     "type": "string",
-    "help": "SMTP username",
+    "help": "User name for signing in to the SMTP server",
     "nullable": true
   },
   {
     "key": "integrations.gif.klipy_api_key",
     "type": "secret",
-    "help": "GIF klipy API key",
+    "help": "KLIPY API key for the GIF picker and GIF link previews",
     "secret_set": "integrations.gif.klipy_api_key_set",
     "nullable": true
   },
   {
     "key": "integrations.youtube.api_key",
     "type": "secret",
-    "help": "Youtube API key",
+    "help": "YouTube Data API key that link previews use for details of YouTube videos",
     "secret_set": "integrations.youtube.api_key_set",
     "nullable": true
   },
   {
     "key": "media.attachment_decay.curve",
     "type": "number",
-    "help": "Attachment decay curve",
+    "help": "How the time a file is kept falls between the two sizes, from 0 for an even fall to 1 for a steep fall just above min_size_mb",
     "nullable": true
   },
   {
     "key": "media.attachment_decay.enabled",
     "type": "boolean",
-    "help": "Attachment decay enabled",
+    "help": "Whether files in messages are deleted after a while, with smaller files kept longer",
     "nullable": true
   },
   {
     "key": "media.attachment_decay.max_eligible_size_mb",
     "type": "number",
-    "help": "Attachment decay max eligible size MB",
+    "help": "Size in MB above which a file is never deleted",
     "nullable": true
   },
   {
     "key": "media.attachment_decay.max_lifetime_days",
     "type": "integer",
-    "help": "Attachment decay max lifetime days",
+    "help": "Days that the smallest files are kept",
     "nullable": true
   },
   {
     "key": "media.attachment_decay.max_size_mb",
     "type": "number",
-    "help": "Attachment decay max size MB",
+    "help": "Size in MB from which a file is kept for only min_lifetime_days",
     "nullable": true
   },
   {
     "key": "media.attachment_decay.min_lifetime_days",
     "type": "integer",
-    "help": "Attachment decay min lifetime days",
+    "help": "Days that the largest files are kept",
     "nullable": true
   },
   {
     "key": "media.attachment_decay.min_size_mb",
     "type": "number",
-    "help": "Attachment decay min size MB",
+    "help": "Size in MB up to which a file is kept for max_lifetime_days",
     "nullable": true
   },
   {
     "key": "media.attachment_decay.renew_threshold_days",
     "type": "integer",
-    "help": "Attachment decay renew threshold days",
+    "help": "Days before a file's deletion within which loading its message keeps the file for renew_window_days from then",
     "nullable": true
   },
   {
     "key": "media.attachment_decay.renew_window_days",
     "type": "integer",
-    "help": "Attachment decay renew window days",
+    "help": "Days a file is kept from the moment its message is loaded, when that is within renew_threshold_days of its deletion",
     "nullable": true
   },
   {
@@ -658,32 +658,32 @@
   {
     "key": "policy.direct_messages_disabled",
     "type": "boolean",
-    "help": "Policy direct messages disabled"
+    "help": "Whether direct messages are off and people can only talk in communities"
   },
   {
     "key": "policy.direct_messages_locked",
     "type": "boolean",
-    "help": "Policy direct messages locked"
+    "help": "Set to false to let direct messages be turned off again after they were locked on"
   },
   {
     "key": "policy.friends_disabled",
     "type": "boolean",
-    "help": "Whether friend requests are disabled instance-wide. Left out while direct_messages_disabled changes, it takes the same value"
+    "help": "Whether friend requests are off instance-wide, which follows direct_messages_disabled when that changes and this is left out"
   },
   {
     "key": "policy.guild_create_access",
     "type": "boolean",
-    "help": "Policy guild create access"
+    "help": "Whether everyone can create communities, or only admins and accounts with the feature_guild_create limit"
   },
   {
     "key": "policy.personal_notes_enabled",
     "type": "boolean",
-    "help": "Whether people can use personal notes. Off by default on self-hosted instances"
+    "help": "Whether people can use personal notes, which are off by default on self-hosted instances"
   },
   {
     "key": "policy.premium_mode",
     "type": "string",
-    "help": "Policy premium mode",
+    "help": "Whether every account has the paid tier (everyone) or only accounts with a subscription have it (mirror)",
     "options": [
       "mirror",
       "everyone"
@@ -692,19 +692,19 @@
   {
     "key": "policy.services.bluesky_enabled",
     "type": "boolean",
-    "help": "Services bluesky enabled",
+    "help": "Whether people can connect a Bluesky account, where leaving it unset follows integrations.bluesky.enabled",
     "nullable": true
   },
   {
     "key": "policy.services.gif_enabled",
     "type": "boolean",
-    "help": "Services GIF enabled",
+    "help": "Whether the GIF picker is on, where leaving it unset turns it on while a KLIPY API key is set",
     "nullable": true
   },
   {
     "key": "policy.services.youtube_enabled",
     "type": "boolean",
-    "help": "Services youtube enabled",
+    "help": "Whether YouTube features are on, where leaving it unset turns them on while a YouTube API key is set",
     "nullable": true
   },
   {
@@ -715,37 +715,37 @@
   {
     "key": "policy.single_community_enabled",
     "type": "boolean",
-    "help": "Policy single community enabled"
+    "help": "Whether everyone who signs up joins one community that you own, with nobody able to create others"
   },
   {
     "key": "policy.single_community_guild_id",
     "type": "string",
-    "help": "ID of an existing community to use as the single community. Turns the mode on with that community, or moves it there while the mode is on"
+    "help": "ID of an existing community to use as the single community, which turns the mode on or moves it there"
   },
   {
     "key": "policy.single_community_name",
     "type": "string",
-    "help": "Policy single community name"
+    "help": "Name of the community created when this change turns on single_community_enabled, or the product name when left out"
   },
   {
     "key": "push_relay.relay_consent_accepted",
     "type": "boolean",
-    "help": "Push relay relay consent accepted"
+    "help": "Whether you accept the push relay privacy notice, which the Fluxer mobile apps need to get notifications from your instance"
   },
   {
     "key": "registration.admin_registration_urls_enabled",
     "type": "boolean",
-    "help": "Registration admin registration URLs enabled"
+    "help": "Whether registration links that admins made still create accounts"
   },
   {
     "key": "registration.allowed_email_domains",
     "type": "list",
-    "help": "Email domains that public sign-ups and email changes must use. Empty allows any domain"
+    "help": "Email domains that public sign-ups and email changes must use, where an empty list allows any domain"
   },
   {
     "key": "registration.mode",
     "type": "string",
-    "help": "Registration mode",
+    "help": "How people sign up, open for anyone, approval where an admin approves each new account, or closed where only registration links create accounts",
     "options": [
       "open",
       "approval",
@@ -755,143 +755,143 @@
   {
     "key": "sso.allowed_domains",
     "type": "list",
-    "help": "SSO allowed domains"
+    "help": "Email domains whose accounts can sign in with single sign-on, or empty for any domain"
   },
   {
     "key": "sso.authorization_url",
     "type": "string",
-    "help": "SSO authorization URL",
+    "help": "Provider page where people sign in, or empty to look it up from the issuer",
     "nullable": true
   },
   {
     "key": "sso.auto_provision",
     "type": "boolean",
-    "help": "SSO auto provision"
+    "help": "Whether the first single sign-on sign-in makes an account for someone who has none"
   },
   {
     "key": "sso.button_label",
     "type": "string",
-    "help": "Text for the sign-in button. Trimmed, then up to 64 UTF-16 code units with at least one visible character and no control characters, line breaks or bidirectional formatting characters. Empty or null uses the default label",
+    "help": "Text on the sign-in button, up to 64 characters on one line, or empty for the default label",
     "nullable": true
   },
   {
     "key": "sso.client_id",
     "type": "string",
-    "help": "SSO client ID",
+    "help": "Client ID that your provider gave Fluxer",
     "nullable": true
   },
   {
     "key": "sso.client_secret",
     "type": "secret",
-    "help": "SSO client secret",
+    "help": "Client secret that your provider gave Fluxer",
     "secret_set": "sso.client_secret_set",
     "nullable": true
   },
   {
     "key": "sso.display_name",
     "type": "string",
-    "help": "SSO display name",
+    "help": "Provider name for the sign-in button, which then says \"Continue with\" and this name",
     "nullable": true
   },
   {
     "key": "sso.enabled",
     "type": "boolean",
-    "help": "SSO enabled"
+    "help": "Whether people can sign in with your single sign-on provider"
   },
   {
     "key": "sso.enforced",
     "type": "boolean",
-    "help": "SSO enforced"
+    "help": "Whether single sign-on is the only way to sign in, with password sign-in turned off"
   },
   {
     "key": "sso.group_role_mappings",
     "type": "json",
-    "help": "Groups whose members get a role in the single community. Every listed role is managed by single sign-on, and is added or removed to match the groups at each sign-in"
+    "help": "Groups whose members get a role in the single community, where single sign-on adds or removes each listed role to match the groups at every sign-in"
   },
   {
     "key": "sso.groups_claim",
     "type": "string",
-    "help": "The claim that lists the groups of a member. Empty or null uses `groups`",
+    "help": "The claim that lists a member's groups, with groups used when it is empty",
     "nullable": true
   },
   {
     "key": "sso.issuer",
     "type": "string",
-    "help": "SSO issuer",
+    "help": "OpenID Connect issuer URL of your provider, used to look up any endpoint left empty",
     "nullable": true
   },
   {
     "key": "sso.jwks_url",
     "type": "string",
-    "help": "SSO JWKS URL",
+    "help": "Provider endpoint with the keys that sign its tokens, or empty to look it up from the issuer",
     "nullable": true
   },
   {
     "key": "sso.scope",
     "type": "string",
-    "help": "SSO scope",
+    "help": "Space-separated scopes that Fluxer asks the provider for, or empty for openid email profile",
     "nullable": true
   },
   {
     "key": "sso.token_url",
     "type": "string",
-    "help": "SSO token URL",
+    "help": "Provider endpoint that Fluxer gets tokens from, or empty to look it up from the issuer",
     "nullable": true
   },
   {
     "key": "sso.userinfo_url",
     "type": "string",
-    "help": "SSO userinfo URL",
+    "help": "Provider endpoint that Fluxer gets account details from, or empty to look it up from the issuer",
     "nullable": true
   },
   {
     "key": "sso.username_from_provider",
     "type": "boolean",
-    "help": "Each SSO sign-in sets the username from the provider, and people can't change it in Fluxer. Only on username instances"
+    "help": "On username instances, each SSO sign-in sets the username from the provider and people can't change it in Fluxer"
   },
   {
     "key": "voice_p2p.enabled",
     "type": "boolean",
-    "help": "Voice P2P enabled"
+    "help": "Whether people picked by the rollout can start calls that connect them directly to each other"
   },
   {
     "key": "voice_p2p.excluded_user_ids",
     "type": "list",
-    "help": "Voice P2P excluded user IDs"
+    "help": "Accounts that can never start peer-to-peer calls, checked before every other rule"
   },
   {
     "key": "voice_p2p.include_premium_users",
     "type": "boolean",
-    "help": "Voice P2P include premium users"
+    "help": "Whether accounts with the paid tier can always start peer-to-peer calls"
   },
   {
     "key": "voice_p2p.included_guild_ids",
     "type": "list",
-    "help": "Voice P2P included guild IDs"
+    "help": "Communities whose members can always start peer-to-peer calls"
   },
   {
     "key": "voice_p2p.included_user_ids",
     "type": "list",
-    "help": "Voice P2P included user IDs"
+    "help": "Accounts that can always start peer-to-peer calls"
   },
   {
     "key": "voice_p2p.max_participants",
     "type": "integer",
-    "help": "Voice P2P max participants"
+    "help": "Most people in one peer-to-peer call"
   },
   {
     "key": "voice_p2p.rollout_basis_points",
     "type": "integer",
-    "help": "Voice P2P rollout basis points"
+    "help": "Share of accounts that can start peer-to-peer calls, in basis points where 10000 is everyone"
   },
   {
     "key": "voice_p2p.rollout_country_codes",
     "type": "list",
-    "help": "Voice P2P rollout country codes"
+    "help": "Two-letter country codes that limit the rollout share to people in those countries, or empty for every country"
   },
   {
     "key": "voice_p2p.rollout_salt",
     "type": "string",
-    "help": "Voice P2P rollout salt"
+    "help": "Text mixed into the rollout pick, where a new value picks a different set of accounts"
   }
 ]

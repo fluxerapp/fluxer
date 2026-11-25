@@ -21,8 +21,14 @@ const experimentDeliveryFields = {
 		.number()
 		.int()
 		.min(EXPERIMENT_MIN_POLL_INTERVAL_SECONDS)
-		.max(EXPERIMENT_MAX_POLL_INTERVAL_SECONDS),
-	poll_jitter_percent: z.number().int().min(0).max(EXPERIMENT_MAX_POLL_JITTER_PERCENT),
+		.max(EXPERIMENT_MAX_POLL_INTERVAL_SECONDS)
+		.describe('Seconds between the checks where the apps ask which feature rollouts they are part of'),
+	poll_jitter_percent: z
+		.number()
+		.int()
+		.min(0)
+		.max(EXPERIMENT_MAX_POLL_JITTER_PERCENT)
+		.describe('Most that each app shifts a check earlier or later, as a percentage of the poll interval'),
 };
 
 export const ExperimentDeliveryConfigSchema = z.object({

@@ -22,16 +22,42 @@ const VoiceP2pTargetIdSchema = z.string().regex(/^\d{1,20}$/u);
 const VoiceP2pTargetedUserIdsSchema = z.array(VoiceP2pTargetIdSchema).max(VOICE_P2P_MAX_TARGETED_USERS);
 
 const voiceP2pConfigFields = {
-	enabled: z.boolean(),
+	enabled: z
+		.boolean()
+		.describe('Whether people picked by the rollout can start calls that connect them directly to each other'),
 	config_version: z.number().int().min(0),
-	rollout_basis_points: z.number().int().min(0).max(VOICE_P2P_ROLLOUT_BASIS_POINTS_MAX),
-	rollout_country_codes: ExperimentRolloutCountryCodesSchema,
-	rollout_salt: z.string().trim().min(1).max(64).regex(VOICE_P2P_SALT_PATTERN),
-	included_user_ids: VoiceP2pTargetedUserIdsSchema,
-	included_guild_ids: VoiceP2pTargetedUserIdsSchema,
-	include_premium_users: z.boolean(),
-	excluded_user_ids: VoiceP2pTargetedUserIdsSchema,
-	max_participants: z.number().int().min(VOICE_P2P_MIN_PARTICIPANTS).max(VOICE_P2P_MAX_PARTICIPANTS),
+	rollout_basis_points: z
+		.number()
+		.int()
+		.min(0)
+		.max(VOICE_P2P_ROLLOUT_BASIS_POINTS_MAX)
+		.describe('Share of accounts that can start peer-to-peer calls, in basis points where 10000 is everyone'),
+	rollout_country_codes: ExperimentRolloutCountryCodesSchema.describe(
+		'Two-letter country codes that limit the rollout share to people in those countries, or empty for every country',
+	),
+	rollout_salt: z
+		.string()
+		.trim()
+		.min(1)
+		.max(64)
+		.regex(VOICE_P2P_SALT_PATTERN)
+		.describe('Text mixed into the rollout pick, where a new value picks a different set of accounts'),
+	included_user_ids: VoiceP2pTargetedUserIdsSchema.describe('Accounts that can always start peer-to-peer calls'),
+	included_guild_ids: VoiceP2pTargetedUserIdsSchema.describe(
+		'Communities whose members can always start peer-to-peer calls',
+	),
+	include_premium_users: z
+		.boolean()
+		.describe('Whether accounts with the paid tier can always start peer-to-peer calls'),
+	excluded_user_ids: VoiceP2pTargetedUserIdsSchema.describe(
+		'Accounts that can never start peer-to-peer calls, checked before every other rule',
+	),
+	max_participants: z
+		.number()
+		.int()
+		.min(VOICE_P2P_MIN_PARTICIPANTS)
+		.max(VOICE_P2P_MAX_PARTICIPANTS)
+		.describe('Most people in one peer-to-peer call'),
 };
 
 export const VoiceP2pConfigSchema = z.object({
@@ -60,7 +86,7 @@ export const VoiceP2pConfigResponse = VoiceP2pConfigSchema;
 export type VoiceP2pConfigResponse = z.infer<typeof VoiceP2pConfigResponse>;
 
 export const VoiceP2pAssignmentResponse = z.object({
-	enabled: voiceP2pConfigFields.enabled,
+	enabled: voiceP2pConfigFields.enabled.describe('Whether this account can start peer-to-peer calls'),
 	max_participants: voiceP2pConfigFields.max_participants,
 });
 

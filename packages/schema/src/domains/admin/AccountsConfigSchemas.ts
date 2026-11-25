@@ -25,13 +25,17 @@ const LegacyDateOfBirthEnforcementSchema = z
 	.describe('Deprecated, use date_of_birth');
 
 const InstantAccountsConfigSchema = z.object({
-	enabled: z.boolean().describe('Whether accounts can be created from just a display name. Needs the captcha to be on'),
+	enabled: z
+		.boolean()
+		.describe('Whether accounts can be created from just a display name, which needs the captcha to be on'),
 	pow_escalation_per_hour: z
 		.number()
 		.int()
 		.min(InstantAccountLimits.MIN_POW_ESCALATION_PER_HOUR)
 		.max(InstantAccountLimits.MAX_POW_ESCALATION_PER_HOUR)
-		.describe('Every this many accounts created from a display name in the current hour doubles the captcha cost'),
+		.describe(
+			'The captcha gets twice as hard for each batch of this many accounts created from a display name in the past hour',
+		),
 });
 
 export const AuthConfigSchema = z.object({
@@ -62,7 +66,7 @@ const DateOfBirthMissingCleanupSchema = z.object({
 
 const InactivityDeletionSchema = z.object({
 	mode: CleanupModeSchema.describe(
-		'Whether accounts unused for a long time are deleted. An account is only deleted after a warning email reached it',
+		'Whether accounts unused for a long time are deleted, always after a warning email reached them',
 	),
 	inactive_days: InactiveDaysSchema.describe('Days without use before the warning email is sent'),
 	warning_lead_days: z.number().int().min(1).max(365).describe('Days between the warning email and the deletion'),

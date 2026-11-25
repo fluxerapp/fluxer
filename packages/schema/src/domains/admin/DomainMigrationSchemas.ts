@@ -22,17 +22,45 @@ const DomainMigrationTargetedUserIdsSchema = z
 	.max(DOMAIN_MIGRATION_MAX_TARGETED_USERS);
 
 const domainMigrationConfigFields = {
-	enabled: z.boolean(),
+	enabled: z
+		.boolean()
+		.describe(
+			'Whether fluxer.com moves people from its old web app domain to the new one, which does nothing on a self-hosted instance',
+		),
 	config_version: z.number().int().min(0),
-	rollout_basis_points: z.number().int().min(0).max(DOMAIN_MIGRATION_ROLLOUT_BASIS_POINTS_MAX),
-	rollout_country_codes: ExperimentRolloutCountryCodesSchema,
-	rollout_salt: z.string().trim().min(1).max(64).regex(DOMAIN_MIGRATION_SALT_PATTERN),
-	included_user_ids: DomainMigrationTargetedUserIdsSchema,
-	included_guild_ids: DomainMigrationTargetedUserIdsSchema,
-	include_premium_users: z.boolean(),
-	excluded_user_ids: DomainMigrationTargetedUserIdsSchema,
-	anonymous_rollout_basis_points: z.number().int().min(0).max(DOMAIN_MIGRATION_ROLLOUT_BASIS_POINTS_MAX),
-	standalone_forwarding: z.boolean(),
+	rollout_basis_points: z
+		.number()
+		.int()
+		.min(0)
+		.max(DOMAIN_MIGRATION_ROLLOUT_BASIS_POINTS_MAX)
+		.describe('Share of signed-in accounts that move to the new domain, in basis points where 10000 is everyone'),
+	rollout_country_codes: ExperimentRolloutCountryCodesSchema.describe(
+		'Two-letter country codes that limit the rollout share to people in those countries, or empty for every country',
+	),
+	rollout_salt: z
+		.string()
+		.trim()
+		.min(1)
+		.max(64)
+		.regex(DOMAIN_MIGRATION_SALT_PATTERN)
+		.describe('Text mixed into the rollout pick, where a new value picks a different set of accounts'),
+	included_user_ids: DomainMigrationTargetedUserIdsSchema.describe('Accounts that always move to the new domain'),
+	included_guild_ids: DomainMigrationTargetedUserIdsSchema.describe(
+		'Communities whose members always move to the new domain',
+	),
+	include_premium_users: z.boolean().describe('Whether accounts with the paid tier always move to the new domain'),
+	excluded_user_ids: DomainMigrationTargetedUserIdsSchema.describe(
+		'Accounts that never move to the new domain, checked before every other rule',
+	),
+	anonymous_rollout_basis_points: z
+		.number()
+		.int()
+		.min(0)
+		.max(DOMAIN_MIGRATION_ROLLOUT_BASIS_POINTS_MAX)
+		.describe('Share of signed-out devices that move to the new domain, in basis points where 10000 is everyone'),
+	standalone_forwarding: z
+		.boolean()
+		.describe('Whether installed web apps forward to the new domain after moving their session'),
 };
 
 export const DomainMigrationConfigSchema = z.object({
@@ -65,7 +93,7 @@ export const DomainMigrationConfigResponse = DomainMigrationConfigSchema;
 export type DomainMigrationConfigResponse = z.infer<typeof DomainMigrationConfigResponse>;
 
 export const DomainMigrationAssignmentResponse = z.object({
-	enabled: domainMigrationConfigFields.enabled,
+	enabled: domainMigrationConfigFields.enabled.describe('Whether this account moves to the new domain'),
 });
 
 export type DomainMigrationAssignmentResponse = z.infer<typeof DomainMigrationAssignmentResponse>;

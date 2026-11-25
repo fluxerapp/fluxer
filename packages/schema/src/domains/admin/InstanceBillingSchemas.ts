@@ -81,17 +81,44 @@ export type InstanceBillingResponse = z.infer<typeof InstanceBillingResponse>;
 
 export const InstanceBillingUpdateRequest = z
 	.object({
-		enabled: z.boolean().nullish(),
-		stripe_secret_key: z.string().trim().min(1).max(4096).nullish(),
-		stripe_webhook_secret: z.string().trim().min(1).max(4096).nullish(),
-		automatic_tax: z.boolean().nullish(),
-		tax_id_collection: z.boolean().nullish(),
-		terms_consent_required: z.boolean().nullish(),
-		billing_emails: z.boolean().nullish(),
-		default_currency: PremiumCurrency.nullish(),
-		prices: BillingPricesSchema(BillingPriceSetUpdateRequest).nullish(),
-		country_currencies: BillingCountryCurrenciesSchema.nullish(),
-		legacy_prices: BillingLegacyPricesSchema.nullish(),
+		enabled: z
+			.boolean()
+			.nullish()
+			.describe(
+				'Whether people can buy the paid tier through Stripe, which also needs a secret key, prices and the mirror premium mode',
+			),
+		stripe_secret_key: z.string().trim().min(1).max(4096).nullish().describe('Secret key of your Stripe account'),
+		stripe_webhook_secret: z
+			.string()
+			.trim()
+			.min(1)
+			.max(4096)
+			.nullish()
+			.describe('Signing secret of the Stripe webhook that sends payment events to your instance'),
+		automatic_tax: z.boolean().nullish().describe('Whether Stripe works out and adds tax at checkout'),
+		tax_id_collection: z
+			.boolean()
+			.nullish()
+			.describe('Whether checkout asks buyers for a tax ID, such as a VAT number'),
+		terms_consent_required: z.boolean().nullish().describe('Whether buyers have to agree to your terms at checkout'),
+		billing_emails: z
+			.boolean()
+			.nullish()
+			.describe(
+				'Whether your instance sends its own billing emails, such as receipts, renewal reminders and refund notices',
+			),
+		default_currency: PremiumCurrency.nullish().describe(
+			'Currency for buyers whose country has no currency in country_currencies',
+		),
+		prices: BillingPricesSchema(BillingPriceSetUpdateRequest)
+			.nullish()
+			.describe('Stripe price IDs by currency for the monthly and yearly plans and the one-month and one-year gifts'),
+		country_currencies: BillingCountryCurrenciesSchema.nullish().describe(
+			'Currency that buyers in each country pay in, by two-letter country code',
+		),
+		legacy_prices: BillingLegacyPricesSchema.nullish().describe(
+			'Older Stripe price IDs whose subscriptions keep renewing, by slot such as monthly_GBP',
+		),
 	})
 	.register(schemaMetadata, {preserveNullFields: true});
 export type InstanceBillingUpdateRequest = z.infer<typeof InstanceBillingUpdateRequest>;

@@ -117,7 +117,7 @@ export const GuildJoinGateSchema = withOpenApiType(
 			],
 			[GuildJoinGates.ALWAYS, 'ALWAYS', 'Joining needs a finished account in every client'],
 		],
-		'When joining a community needs a finished account. Applies only while the interaction tier is enforced and the person can preview communities',
+		'When joining a community needs a finished account, which only applies while the interaction tier is enforced and the person can preview communities',
 	),
 	'GuildJoinGate',
 );

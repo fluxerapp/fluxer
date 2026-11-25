@@ -1560,7 +1560,7 @@ type AccountsConfigSchema struct {
 		// InactiveDays Days without use before the warning email is sent
 		InactiveDays int `json:"inactive_days"`
 
-		// Mode Whether accounts unused for a long time are deleted. An account is only deleted after a warning email reached it
+		// Mode Whether accounts unused for a long time are deleted, always after a warning email reached them
 		Mode CleanupModeSchema `json:"mode"`
 
 		// WarningLeadDays Days between the warning email and the deletion
@@ -1598,7 +1598,7 @@ type AccountsConfigUpdateRequest struct {
 		// InactiveDays Days without use before the warning email is sent
 		InactiveDays *int `json:"inactive_days,omitempty"`
 
-		// Mode Whether accounts unused for a long time are deleted. An account is only deleted after a warning email reached it
+		// Mode Whether accounts unused for a long time are deleted, always after a warning email reached them
 		Mode *CleanupModeSchema `json:"mode,omitempty"`
 
 		// WarningLeadDays Days between the warning email and the deletion
@@ -1756,10 +1756,10 @@ type AdminUserMessageDeleteRequest struct {
 type AuthConfigUpdateRequest struct {
 	IdentifierFirst *AuthConfigUpdateRequest_IdentifierFirst `json:"identifier_first,omitempty"`
 	InstantAccounts *struct {
-		// Enabled Whether accounts can be created from just a display name. Needs the captcha to be on
+		// Enabled Whether accounts can be created from just a display name, which needs the captcha to be on
 		Enabled *bool `json:"enabled,omitempty"`
 
-		// PowEscalationPerHour Every this many accounts created from a display name in the current hour doubles the captcha cost
+		// PowEscalationPerHour The captcha gets twice as hard for each batch of this many accounts created from a display name in the past hour
 		PowEscalationPerHour *int `json:"pow_escalation_per_hour,omitempty"`
 	} `json:"instant_accounts,omitempty"`
 }
@@ -1811,22 +1811,32 @@ type BrandingAssetUploadRequestKind string
 
 // CaptchaConfigResponse defines model for CaptchaConfigResponse.
 type CaptchaConfigResponse struct {
+	// Cost How much work each attempt at the proof-of-work check takes, where a higher value is slower for everyone
 	Cost int `json:"cost"`
 
 	// Enabled Deprecated, use provider. Whether any captcha is asked for
-	Enabled    bool                  `json:"enabled"`
-	MaxCounter int                   `json:"max_counter"`
-	Provider   CaptchaProviderSchema `json:"provider"`
+	Enabled bool `json:"enabled"`
+
+	// MaxCounter Most attempts the proof-of-work check can need, where a higher value makes it take longer on average
+	MaxCounter int `json:"max_counter"`
+
+	// Provider Which check people solve before they sign up, sign in or do other things spammers abuse, altcha for a proof-of-work check or none for no check
+	Provider CaptchaProviderSchema `json:"provider"`
 }
 
 // CaptchaConfigUpdateRequest defines model for CaptchaConfigUpdateRequest.
 type CaptchaConfigUpdateRequest struct {
+	// Cost How much work each attempt at the proof-of-work check takes, where a higher value is slower for everyone
 	Cost *int `json:"cost,omitempty"`
 
 	// Enabled Deprecated, use provider. false means none and true means altcha
-	Enabled    *bool                  `json:"enabled,omitempty"`
-	MaxCounter *int                   `json:"max_counter,omitempty"`
-	Provider   *CaptchaProviderSchema `json:"provider,omitempty"`
+	Enabled *bool `json:"enabled,omitempty"`
+
+	// MaxCounter Most attempts the proof-of-work check can need, where a higher value makes it take longer on average
+	MaxCounter *int `json:"max_counter,omitempty"`
+
+	// Provider Which check people solve before they sign up, sign in or do other things spammers abuse, altcha for a proof-of-work check or none for no check
+	Provider *CaptchaProviderSchema `json:"provider,omitempty"`
 }
 
 // CaptchaProviderSchema Captcha the instance asks for
@@ -2202,31 +2212,69 @@ type DistributionRuleSchema struct {
 
 // DomainMigrationConfigResponse defines model for DomainMigrationConfigResponse.
 type DomainMigrationConfigResponse struct {
-	AnonymousRolloutBasisPoints int                                 `json:"anonymous_rollout_basis_points"`
-	ConfigVersion               int                                 `json:"config_version"`
-	Enabled                     bool                                `json:"enabled"`
-	ExcludedUserIds             []string                            `json:"excluded_user_ids"`
-	IncludePremiumUsers         bool                                `json:"include_premium_users"`
-	IncludedGuildIds            []string                            `json:"included_guild_ids"`
-	IncludedUserIds             []string                            `json:"included_user_ids"`
-	RolloutBasisPoints          int                                 `json:"rollout_basis_points"`
-	RolloutCountryCodes         ExperimentRolloutCountryCodesSchema `json:"rollout_country_codes"`
-	RolloutSalt                 string                              `json:"rollout_salt"`
-	StandaloneForwarding        bool                                `json:"standalone_forwarding"`
+	// AnonymousRolloutBasisPoints Share of signed-out devices that move to the new domain, in basis points where 10000 is everyone
+	AnonymousRolloutBasisPoints int `json:"anonymous_rollout_basis_points"`
+	ConfigVersion               int `json:"config_version"`
+
+	// Enabled Whether fluxer.com moves people from its old web app domain to the new one, which does nothing on a self-hosted instance
+	Enabled bool `json:"enabled"`
+
+	// ExcludedUserIds Accounts that never move to the new domain, checked before every other rule
+	ExcludedUserIds []string `json:"excluded_user_ids"`
+
+	// IncludePremiumUsers Whether accounts with the paid tier always move to the new domain
+	IncludePremiumUsers bool `json:"include_premium_users"`
+
+	// IncludedGuildIds Communities whose members always move to the new domain
+	IncludedGuildIds []string `json:"included_guild_ids"`
+
+	// IncludedUserIds Accounts that always move to the new domain
+	IncludedUserIds []string `json:"included_user_ids"`
+
+	// RolloutBasisPoints Share of signed-in accounts that move to the new domain, in basis points where 10000 is everyone
+	RolloutBasisPoints int `json:"rollout_basis_points"`
+
+	// RolloutCountryCodes Two-letter country codes that limit the rollout share to people in those countries, or empty for every country
+	RolloutCountryCodes ExperimentRolloutCountryCodesSchema `json:"rollout_country_codes"`
+
+	// RolloutSalt Text mixed into the rollout pick, where a new value picks a different set of accounts
+	RolloutSalt string `json:"rollout_salt"`
+
+	// StandaloneForwarding Whether installed web apps forward to the new domain after moving their session
+	StandaloneForwarding bool `json:"standalone_forwarding"`
 }
 
 // DomainMigrationConfigUpdateRequest defines model for DomainMigrationConfigUpdateRequest.
 type DomainMigrationConfigUpdateRequest struct {
-	AnonymousRolloutBasisPoints *int                                 `json:"anonymous_rollout_basis_points,omitempty"`
-	Enabled                     *bool                                `json:"enabled,omitempty"`
-	ExcludedUserIds             *[]string                            `json:"excluded_user_ids,omitempty"`
-	IncludePremiumUsers         *bool                                `json:"include_premium_users,omitempty"`
-	IncludedGuildIds            *[]string                            `json:"included_guild_ids,omitempty"`
-	IncludedUserIds             *[]string                            `json:"included_user_ids,omitempty"`
-	RolloutBasisPoints          *int                                 `json:"rollout_basis_points,omitempty"`
-	RolloutCountryCodes         *ExperimentRolloutCountryCodesSchema `json:"rollout_country_codes,omitempty"`
-	RolloutSalt                 *string                              `json:"rollout_salt,omitempty"`
-	StandaloneForwarding        *bool                                `json:"standalone_forwarding,omitempty"`
+	// AnonymousRolloutBasisPoints Share of signed-out devices that move to the new domain, in basis points where 10000 is everyone
+	AnonymousRolloutBasisPoints *int `json:"anonymous_rollout_basis_points,omitempty"`
+
+	// Enabled Whether fluxer.com moves people from its old web app domain to the new one, which does nothing on a self-hosted instance
+	Enabled *bool `json:"enabled,omitempty"`
+
+	// ExcludedUserIds Accounts that never move to the new domain, checked before every other rule
+	ExcludedUserIds *[]string `json:"excluded_user_ids,omitempty"`
+
+	// IncludePremiumUsers Whether accounts with the paid tier always move to the new domain
+	IncludePremiumUsers *bool `json:"include_premium_users,omitempty"`
+
+	// IncludedGuildIds Communities whose members always move to the new domain
+	IncludedGuildIds *[]string `json:"included_guild_ids,omitempty"`
+
+	// IncludedUserIds Accounts that always move to the new domain
+	IncludedUserIds *[]string `json:"included_user_ids,omitempty"`
+
+	// RolloutBasisPoints Share of signed-in accounts that move to the new domain, in basis points where 10000 is everyone
+	RolloutBasisPoints *int `json:"rollout_basis_points,omitempty"`
+
+	// RolloutCountryCodes Two-letter country codes that limit the rollout share to people in those countries, or empty for every country
+	RolloutCountryCodes *ExperimentRolloutCountryCodesSchema `json:"rollout_country_codes,omitempty"`
+
+	// RolloutSalt Text mixed into the rollout pick, where a new value picks a different set of accounts
+	RolloutSalt *string `json:"rollout_salt,omitempty"`
+
+	// StandaloneForwarding Whether installed web apps forward to the new domain after moving their session
+	StandaloneForwarding *bool `json:"standalone_forwarding,omitempty"`
 }
 
 // EmailDeliveryModeSchema How the instance sends email
@@ -2302,14 +2350,20 @@ type Error struct {
 
 // ExperimentDeliveryConfigResponse defines model for ExperimentDeliveryConfigResponse.
 type ExperimentDeliveryConfigResponse struct {
+	// PollIntervalSeconds Seconds between the checks where the apps ask which feature rollouts they are part of
 	PollIntervalSeconds int `json:"poll_interval_seconds"`
-	PollJitterPercent   int `json:"poll_jitter_percent"`
+
+	// PollJitterPercent Most that each app shifts a check earlier or later, as a percentage of the poll interval
+	PollJitterPercent int `json:"poll_jitter_percent"`
 }
 
 // ExperimentDeliveryConfigUpdateRequest defines model for ExperimentDeliveryConfigUpdateRequest.
 type ExperimentDeliveryConfigUpdateRequest struct {
+	// PollIntervalSeconds Seconds between the checks where the apps ask which feature rollouts they are part of
 	PollIntervalSeconds *int `json:"poll_interval_seconds,omitempty"`
-	PollJitterPercent   *int `json:"poll_jitter_percent,omitempty"`
+
+	// PollJitterPercent Most that each app shifts a check earlier or later, as a percentage of the poll interval
+	PollJitterPercent *int `json:"poll_jitter_percent,omitempty"`
 }
 
 // ExperimentRolloutCountryCodesSchema defines model for ExperimentRolloutCountryCodesSchema.
@@ -2317,78 +2371,112 @@ type ExperimentRolloutCountryCodesSchema = []string
 
 // GatewayRolloutConfigResponse defines model for GatewayRolloutConfigResponse.
 type GatewayRolloutConfigResponse struct {
-	GatewayDispatchRelayMaxQueue int                                            `json:"gateway_dispatch_relay_max_queue"`
-	GatewayDispatchRelayShards   int                                            `json:"gateway_dispatch_relay_shards"`
-	GuildRolloutPercentage       float32                                        `json:"guild_rollout_percentage"`
-	MaxConcurrentGuildStarts     int                                            `json:"max_concurrent_guild_starts"`
-	MaxConcurrentSessionStarts   int                                            `json:"max_concurrent_session_starts"`
-	RpcRequestTimeoutMs          int                                            `json:"rpc_request_timeout_ms"`
-	SessionRolloutMode           GatewayRolloutConfigResponseSessionRolloutMode `json:"session_rollout_mode"`
-	SessionRolloutPercentage     float32                                        `json:"session_rollout_percentage"`
-	VoiceE2eeScope               GatewayRolloutConfigResponseVoiceE2eeScope     `json:"voice_e2ee_scope"`
+	// GatewayDispatchRelayMaxQueue Most events one dispatch relay worker queues before senders wait, where 0 uses the gateway's own limit
+	GatewayDispatchRelayMaxQueue int `json:"gateway_dispatch_relay_max_queue"`
+
+	// GatewayDispatchRelayShards Number of dispatch relay workers on each gateway node that send events to connected sessions, which changes only when the gateway restarts
+	GatewayDispatchRelayShards int `json:"gateway_dispatch_relay_shards"`
+
+	// GuildRolloutPercentage Percentage of communities the gateway starts, from 0 for none to 100 for all of them
+	GuildRolloutPercentage float32 `json:"guild_rollout_percentage"`
+
+	// MaxConcurrentGuildStarts Most communities each gateway node starts at once, with the rest waiting their turn
+	MaxConcurrentGuildStarts int `json:"max_concurrent_guild_starts"`
+
+	// MaxConcurrentSessionStarts Most connections each gateway node sets up at once, with the rest waiting in a queue
+	MaxConcurrentSessionStarts int `json:"max_concurrent_session_starts"`
+
+	// RpcRequestTimeoutMs Milliseconds the gateway waits for the API to respond to one request
+	RpcRequestTimeoutMs int `json:"rpc_request_timeout_ms"`
+
+	// SessionRolloutMode How the gateway picks accounts below 100 percent, modulo for the same accounts each time or random for a new pick at each connection
+	SessionRolloutMode GatewayRolloutConfigResponseSessionRolloutMode `json:"session_rollout_mode"`
+
+	// SessionRolloutPercentage Percentage of accounts that can connect to the gateway, where 0 pauses every new connection
+	SessionRolloutPercentage float32 `json:"session_rollout_percentage"`
+
+	// VoiceE2eeScope Which calls encrypt their media with a key that your instance hands out, guild_feature_only for communities with the VOICE_E2EE feature or platform_wide for every call
+	VoiceE2eeScope GatewayRolloutConfigResponseVoiceE2eeScope `json:"voice_e2ee_scope"`
 }
 
-// GatewayRolloutConfigResponseSessionRolloutMode defines model for GatewayRolloutConfigResponse.SessionRolloutMode.
+// GatewayRolloutConfigResponseSessionRolloutMode How the gateway picks accounts below 100 percent, modulo for the same accounts each time or random for a new pick at each connection
 type GatewayRolloutConfigResponseSessionRolloutMode string
 
-// GatewayRolloutConfigResponseVoiceE2eeScope defines model for GatewayRolloutConfigResponse.VoiceE2eeScope.
+// GatewayRolloutConfigResponseVoiceE2eeScope Which calls encrypt their media with a key that your instance hands out, guild_feature_only for communities with the VOICE_E2EE feature or platform_wide for every call
 type GatewayRolloutConfigResponseVoiceE2eeScope string
 
 // GatewayRolloutConfigUpdateRequest defines model for GatewayRolloutConfigUpdateRequest.
 type GatewayRolloutConfigUpdateRequest struct {
-	GatewayDispatchRelayMaxQueue *int                                                 `json:"gateway_dispatch_relay_max_queue,omitempty"`
-	GatewayDispatchRelayShards   *int                                                 `json:"gateway_dispatch_relay_shards,omitempty"`
-	GuildRolloutPercentage       *float32                                             `json:"guild_rollout_percentage,omitempty"`
-	MaxConcurrentGuildStarts     *int                                                 `json:"max_concurrent_guild_starts,omitempty"`
-	MaxConcurrentSessionStarts   *int                                                 `json:"max_concurrent_session_starts,omitempty"`
-	RpcRequestTimeoutMs          *int                                                 `json:"rpc_request_timeout_ms,omitempty"`
-	SessionRolloutMode           *GatewayRolloutConfigUpdateRequestSessionRolloutMode `json:"session_rollout_mode,omitempty"`
-	SessionRolloutPercentage     *float32                                             `json:"session_rollout_percentage,omitempty"`
-	VoiceE2eeScope               *GatewayRolloutConfigUpdateRequestVoiceE2eeScope     `json:"voice_e2ee_scope,omitempty"`
+	// GatewayDispatchRelayMaxQueue Most events one dispatch relay worker queues before senders wait, where 0 uses the gateway's own limit
+	GatewayDispatchRelayMaxQueue *int `json:"gateway_dispatch_relay_max_queue,omitempty"`
+
+	// GatewayDispatchRelayShards Number of dispatch relay workers on each gateway node that send events to connected sessions, which changes only when the gateway restarts
+	GatewayDispatchRelayShards *int `json:"gateway_dispatch_relay_shards,omitempty"`
+
+	// GuildRolloutPercentage Percentage of communities the gateway starts, from 0 for none to 100 for all of them
+	GuildRolloutPercentage *float32 `json:"guild_rollout_percentage,omitempty"`
+
+	// MaxConcurrentGuildStarts Most communities each gateway node starts at once, with the rest waiting their turn
+	MaxConcurrentGuildStarts *int `json:"max_concurrent_guild_starts,omitempty"`
+
+	// MaxConcurrentSessionStarts Most connections each gateway node sets up at once, with the rest waiting in a queue
+	MaxConcurrentSessionStarts *int `json:"max_concurrent_session_starts,omitempty"`
+
+	// RpcRequestTimeoutMs Milliseconds the gateway waits for the API to respond to one request
+	RpcRequestTimeoutMs *int `json:"rpc_request_timeout_ms,omitempty"`
+
+	// SessionRolloutMode How the gateway picks accounts below 100 percent, modulo for the same accounts each time or random for a new pick at each connection
+	SessionRolloutMode *GatewayRolloutConfigUpdateRequestSessionRolloutMode `json:"session_rollout_mode,omitempty"`
+
+	// SessionRolloutPercentage Percentage of accounts that can connect to the gateway, where 0 pauses every new connection
+	SessionRolloutPercentage *float32 `json:"session_rollout_percentage,omitempty"`
+
+	// VoiceE2eeScope Which calls encrypt their media with a key that your instance hands out, guild_feature_only for communities with the VOICE_E2EE feature or platform_wide for every call
+	VoiceE2eeScope *GatewayRolloutConfigUpdateRequestVoiceE2eeScope `json:"voice_e2ee_scope,omitempty"`
 }
 
-// GatewayRolloutConfigUpdateRequestSessionRolloutMode defines model for GatewayRolloutConfigUpdateRequest.SessionRolloutMode.
+// GatewayRolloutConfigUpdateRequestSessionRolloutMode How the gateway picks accounts below 100 percent, modulo for the same accounts each time or random for a new pick at each connection
 type GatewayRolloutConfigUpdateRequestSessionRolloutMode string
 
-// GatewayRolloutConfigUpdateRequestVoiceE2eeScope defines model for GatewayRolloutConfigUpdateRequest.VoiceE2eeScope.
+// GatewayRolloutConfigUpdateRequestVoiceE2eeScope Which calls encrypt their media with a key that your instance hands out, guild_feature_only for communities with the VOICE_E2EE feature or platform_wide for every call
 type GatewayRolloutConfigUpdateRequestVoiceE2eeScope string
 
-// GuildJoinGateSchema When joining a community needs a finished account. Applies only while the interaction tier is enforced and the person can preview communities
+// GuildJoinGateSchema When joining a community needs a finished account, which only applies while the interaction tier is enforced and the person can preview communities
 type GuildJoinGateSchema string
 
 // GuildVisitsConfigResponse defines model for GuildVisitsConfigResponse.
 type GuildVisitsConfigResponse struct {
-	// Enabled Kill switch for visiting communities without joining
+	// Enabled Whether people picked by the rollout can preview a community before they join it
 	Enabled bool `json:"enabled"`
 
-	// ExcludedUserIds People never assigned, checked before the included list
+	// ExcludedUserIds People who can never preview communities, checked before the included list
 	ExcludedUserIds []string `json:"excluded_user_ids"`
 
-	// IncludedUserIds People always assigned
+	// IncludedUserIds People who can always preview communities
 	IncludedUserIds []string `json:"included_user_ids"`
 
-	// UserBasisPoints Share of people assigned, in basis points
+	// UserBasisPoints Share of people who can preview communities, in basis points where 10000 is everyone
 	UserBasisPoints int `json:"user_basis_points"`
 
-	// UserSalt Salt for the assignment bucket
+	// UserSalt Text mixed into the rollout pick, where a new value picks a different set of people
 	UserSalt string `json:"user_salt"`
 }
 
 // GuildVisitsConfigUpdateRequest defines model for GuildVisitsConfigUpdateRequest.
 type GuildVisitsConfigUpdateRequest struct {
-	// Enabled Kill switch for visiting communities without joining
+	// Enabled Whether people picked by the rollout can preview a community before they join it
 	Enabled *bool `json:"enabled,omitempty"`
 
-	// ExcludedUserIds People never assigned, checked before the included list
+	// ExcludedUserIds People who can never preview communities, checked before the included list
 	ExcludedUserIds *[]string `json:"excluded_user_ids,omitempty"`
 
-	// IncludedUserIds People always assigned
+	// IncludedUserIds People who can always preview communities
 	IncludedUserIds *[]string `json:"included_user_ids,omitempty"`
 
-	// UserBasisPoints Share of people assigned, in basis points
+	// UserBasisPoints Share of people who can preview communities, in basis points where 10000 is everyone
 	UserBasisPoints *int `json:"user_basis_points,omitempty"`
 
-	// UserSalt Salt for the assignment bucket
+	// UserSalt Text mixed into the rollout pick, where a new value picks a different set of people
 	UserSalt *string `json:"user_salt,omitempty"`
 }
 
@@ -2426,17 +2514,38 @@ type InstanceBillingResponse struct {
 
 // InstanceBillingUpdateRequest defines model for InstanceBillingUpdateRequest.
 type InstanceBillingUpdateRequest struct {
-	AutomaticTax         *bool                                    `json:"automatic_tax,omitempty"`
-	BillingEmails        *bool                                    `json:"billing_emails,omitempty"`
-	CountryCurrencies    *BillingCountryCurrenciesSchema          `json:"country_currencies,omitempty"`
-	DefaultCurrency      *PremiumCurrency                         `json:"default_currency,omitempty"`
-	Enabled              *bool                                    `json:"enabled,omitempty"`
-	LegacyPrices         *BillingLegacyPricesSchema               `json:"legacy_prices,omitempty"`
-	Prices               *map[string]BillingPriceSetUpdateRequest `json:"prices,omitempty"`
-	StripeSecretKey      *string                                  `json:"stripe_secret_key,omitempty"`
-	StripeWebhookSecret  *string                                  `json:"stripe_webhook_secret,omitempty"`
-	TaxIdCollection      *bool                                    `json:"tax_id_collection,omitempty"`
-	TermsConsentRequired *bool                                    `json:"terms_consent_required,omitempty"`
+	// AutomaticTax Whether Stripe works out and adds tax at checkout
+	AutomaticTax *bool `json:"automatic_tax,omitempty"`
+
+	// BillingEmails Whether your instance sends its own billing emails, such as receipts, renewal reminders and refund notices
+	BillingEmails *bool `json:"billing_emails,omitempty"`
+
+	// CountryCurrencies Currency that buyers in each country pay in, by two-letter country code
+	CountryCurrencies *BillingCountryCurrenciesSchema `json:"country_currencies,omitempty"`
+
+	// DefaultCurrency Currency for buyers whose country has no currency in country_currencies
+	DefaultCurrency *PremiumCurrency `json:"default_currency,omitempty"`
+
+	// Enabled Whether people can buy the paid tier through Stripe, which also needs a secret key, prices and the mirror premium mode
+	Enabled *bool `json:"enabled,omitempty"`
+
+	// LegacyPrices Older Stripe price IDs whose subscriptions keep renewing, by slot such as monthly_GBP
+	LegacyPrices *BillingLegacyPricesSchema `json:"legacy_prices,omitempty"`
+
+	// Prices Stripe price IDs by currency for the monthly and yearly plans and the one-month and one-year gifts
+	Prices *map[string]BillingPriceSetUpdateRequest `json:"prices,omitempty"`
+
+	// StripeSecretKey Secret key of your Stripe account
+	StripeSecretKey *string `json:"stripe_secret_key,omitempty"`
+
+	// StripeWebhookSecret Signing secret of the Stripe webhook that sends payment events to your instance
+	StripeWebhookSecret *string `json:"stripe_webhook_secret,omitempty"`
+
+	// TaxIdCollection Whether checkout asks buyers for a tax ID, such as a VAT number
+	TaxIdCollection *bool `json:"tax_id_collection,omitempty"`
+
+	// TermsConsentRequired Whether buyers have to agree to your terms at checkout
+	TermsConsentRequired *bool `json:"terms_consent_required,omitempty"`
 }
 
 // InstanceConfigResponse defines model for InstanceConfigResponse.
@@ -2496,10 +2605,10 @@ type InstanceConfigResponse struct {
 		// InstantAccountAvailability Whether accounts can be created from just a display name through public sign-up right now, and why not
 		InstantAccountAvailability InstantAccountAvailabilitySchema `json:"instant_account_availability"`
 		InstantAccounts            struct {
-			// Enabled Whether accounts can be created from just a display name. Needs the captcha to be on
+			// Enabled Whether accounts can be created from just a display name, which needs the captcha to be on
 			Enabled bool `json:"enabled"`
 
-			// PowEscalationPerHour Every this many accounts created from a display name in the current hour doubles the captcha cost
+			// PowEscalationPerHour The captcha gets twice as hard for each batch of this many accounts created from a display name in the past hour
 			PowEscalationPerHour int `json:"pow_escalation_per_hour"`
 		} `json:"instant_accounts"`
 	} `json:"auth"`
@@ -2627,7 +2736,7 @@ type InstanceConfigResponse struct {
 	Registration struct {
 		AdminRegistrationUrlsEnabled bool `json:"admin_registration_urls_enabled"`
 
-		// AllowedEmailDomains Email domains that public sign-ups and email changes must use. Empty allows any domain
+		// AllowedEmailDomains Email domains that public sign-ups and email changes must use, where an empty list allows any domain
 		AllowedEmailDomains []string                       `json:"allowed_email_domains"`
 		Mode                InstanceRegistrationModeSchema `json:"mode"`
 		Urls                []struct {
@@ -2659,7 +2768,7 @@ type InstanceConfigResponse struct {
 		Enabled          bool     `json:"enabled"`
 		Enforced         bool     `json:"enforced"`
 
-		// GroupRoleMappings Groups whose members get a role in the single community. Every listed role is managed by single sign-on, and is added or removed to match the groups at each sign-in
+		// GroupRoleMappings Groups whose members get a role in the single community, where single sign-on adds or removes each listed role to match the groups at every sign-in
 		GroupRoleMappings []struct {
 			// Group A group name exactly as the provider sends it in the groups claim, such as `staff` or `/engineering/devs`
 			Group string `json:"group"`
@@ -2668,7 +2777,7 @@ type InstanceConfigResponse struct {
 			RoleId SnowflakeStringType `json:"role_id"`
 		} `json:"group_role_mappings"`
 
-		// GroupsClaim The claim that lists the groups of a member. Empty or null uses `groups`
+		// GroupsClaim The claim that lists a member's groups, with groups used when it is empty
 		GroupsClaim *string `json:"groups_claim"`
 		Issuer      *string `json:"issuer"`
 		JwksUrl     *string `json:"jwks_url"`
@@ -2677,7 +2786,7 @@ type InstanceConfigResponse struct {
 		TokenUrl    *string `json:"token_url"`
 		UserinfoUrl *string `json:"userinfo_url"`
 
-		// UsernameFromProvider Each SSO sign-in sets the username from the provider, and people can't change it in Fluxer. Only on username instances
+		// UsernameFromProvider On username instances, each SSO sign-in sets the username from the provider and people can't change it in Fluxer
 		UsernameFromProvider bool `json:"username_from_provider"`
 	} `json:"sso"`
 	VoiceP2p VoiceP2pConfigResponse `json:"voice_p2p"`
@@ -2706,28 +2815,66 @@ type InstanceConfigUpdateRequest struct {
 	Accounts  *AccountsConfigUpdateRequest `json:"accounts,omitempty"`
 	AppPublic *struct {
 		Branding *struct {
-			CustomCss                    *string   `json:"custom_css,omitempty"`
-			FaviconDarkUrl               *string   `json:"favicon_dark_url,omitempty"`
-			FaviconUrl                   *string   `json:"favicon_url,omitempty"`
-			IconUrl                      *string   `json:"icon_url,omitempty"`
-			LogoUrl                      *string   `json:"logo_url,omitempty"`
-			PremiumInfoUrl               *string   `json:"premium_info_url,omitempty"`
-			PremiumPageColor             *string   `json:"premium_page_color,omitempty"`
-			PremiumProductName           *string   `json:"premium_product_name,omitempty"`
-			ProductName                  *string   `json:"product_name,omitempty"`
-			SignInBackdropUrl            *string   `json:"sign_in_backdrop_url,omitempty"`
-			StatusPageIncidentHistoryUrl *string   `json:"status_page_incident_history_url,omitempty"`
-			StatusPageUrl                *string   `json:"status_page_url,omitempty"`
-			SymbolUrl                    *string   `json:"symbol_url,omitempty"`
-			ThemeColor                   *string   `json:"theme_color,omitempty"`
-			TrustedDomains               *[]string `json:"trusted_domains,omitempty"`
-			UploadLimitMessage           *string   `json:"upload_limit_message,omitempty"`
-			WordmarkUrl                  *string   `json:"wordmark_url,omitempty"`
+			// CustomCss CSS that the web and desktop apps add to every page, including the sign-in pages
+			CustomCss *string `json:"custom_css,omitempty"`
+
+			// FaviconDarkUrl Favicon for browsers with a dark theme, or empty to show the same favicon in both themes
+			FaviconDarkUrl *string `json:"favicon_dark_url,omitempty"`
+
+			// FaviconUrl Small image in the browser tab, or empty to use the app icon
+			FaviconUrl *string `json:"favicon_url,omitempty"`
+
+			// IconUrl Square app icon for the home screen when someone adds the web app, which also fills in for an empty logo, symbol or favicon
+			IconUrl *string `json:"icon_url,omitempty"`
+
+			// LogoUrl Large image in light colours next to the sign-in form, or empty to use the app icon or symbol
+			LogoUrl *string `json:"logo_url,omitempty"`
+
+			// PremiumInfoUrl Link to a page about the paid tier, which shows on the premium page
+			PremiumInfoUrl *string `json:"premium_info_url,omitempty"`
+
+			// PremiumPageColor Hex colour for the premium page, or empty for its usual colours
+			PremiumPageColor *string `json:"premium_page_color,omitempty"`
+
+			// PremiumProductName Name of the paid tier in the apps, which is Plutonium while unset
+			PremiumProductName *string `json:"premium_product_name,omitempty"`
+
+			// ProductName Name of your instance in the apps, on the sign-in page and in the browser tab
+			ProductName *string `json:"product_name,omitempty"`
+
+			// SignInBackdropUrl Landscape image that fills the sign-in page behind the form, or empty for the starry background
+			SignInBackdropUrl *string `json:"sign_in_backdrop_url,omitempty"`
+
+			// StatusPageIncidentHistoryUrl Link to the list of past incidents on your status page
+			StatusPageIncidentHistoryUrl *string `json:"status_page_incident_history_url,omitempty"`
+
+			// StatusPageUrl Link to your status page, which the apps show when they cannot connect
+			StatusPageUrl *string `json:"status_page_url,omitempty"`
+
+			// SymbolUrl Small square mark next to the instance name in the account switcher and the instance list
+			SymbolUrl *string `json:"symbol_url,omitempty"`
+
+			// ThemeColor Hex colour for buttons and highlights in the apps and for the toolbar of phone browsers, or empty for Fluxer's indigo
+			ThemeColor *string `json:"theme_color,omitempty"`
+
+			// TrustedDomains Domains whose links open without the warning about leaving the app
+			TrustedDomains *[]string `json:"trusted_domains,omitempty"`
+
+			// UploadLimitMessage Your own text in the message people see when a file is over the upload limit
+			UploadLimitMessage *string `json:"upload_limit_message,omitempty"`
+
+			// WordmarkUrl Your name in your own lettering, which shows under the logo on the sign-in page and in the desktop app title bar
+			WordmarkUrl *string `json:"wordmark_url,omitempty"`
 		} `json:"branding,omitempty"`
 		Legal *struct {
+			// GuidelinesUrl Link to your community guidelines from the app, the report form and enforcement emails
 			GuidelinesUrl *string `json:"guidelines_url,omitempty"`
-			PrivacyUrl    *string `json:"privacy_url,omitempty"`
-			TermsUrl      *string `json:"terms_url,omitempty"`
+
+			// PrivacyUrl Link to your privacy policy, which people agree to when they sign up
+			PrivacyUrl *string `json:"privacy_url,omitempty"`
+
+			// TermsUrl Link to your terms of service, which people agree to when they sign up
+			TermsUrl *string `json:"terms_url,omitempty"`
 		} `json:"legal,omitempty"`
 		Registration *struct {
 			// CollectDateOfBirth Deprecated, use accounts.date_of_birth. false sets it to off
@@ -2737,9 +2884,11 @@ type InstanceConfigUpdateRequest struct {
 			Configured *bool `json:"configured,omitempty"`
 		} `json:"setup,omitempty"`
 	} `json:"app_public,omitempty"`
-	Auth                *AuthConfigUpdateRequest               `json:"auth,omitempty"`
-	Billing             *InstanceBillingUpdateRequest          `json:"billing,omitempty"`
-	Captcha             *CaptchaConfigUpdateRequest            `json:"captcha,omitempty"`
+	Auth    *AuthConfigUpdateRequest      `json:"auth,omitempty"`
+	Billing *InstanceBillingUpdateRequest `json:"billing,omitempty"`
+	Captcha *CaptchaConfigUpdateRequest   `json:"captcha,omitempty"`
+
+	// DistributionPricing Higher Stripe prices for app builds from a store such as an iOS app marketplace, to pay the store's share
 	DistributionPricing *DistributionPricingUpdateRequest      `json:"distribution_pricing,omitempty"`
 	DomainMigration     *DomainMigrationConfigUpdateRequest    `json:"domain_migration,omitempty"`
 	ExperimentDelivery  *ExperimentDeliveryConfigUpdateRequest `json:"experiment_delivery,omitempty"`
@@ -2747,63 +2896,108 @@ type InstanceConfigUpdateRequest struct {
 	GuildVisits         *GuildVisitsConfigUpdateRequest        `json:"guild_visits,omitempty"`
 	Integrations        *struct {
 		Bluesky *struct {
+			// ClientName Name that Bluesky shows people when they connect their account
 			ClientName *string `json:"client_name,omitempty"`
-			ClientUri  *string `json:"client_uri,omitempty"`
-			Enabled    *bool   `json:"enabled,omitempty"`
-			Keys       *[]struct {
+
+			// ClientUri Home page link that Bluesky shows people when they connect their account
+			ClientUri *string `json:"client_uri,omitempty"`
+
+			// Enabled Whether people can connect a Bluesky account to their profile, which also needs a signing key
+			Enabled *bool `json:"enabled,omitempty"`
+
+			// Keys Private keys, each with a key ID, that Fluxer signs its Bluesky sign-in requests with
+			Keys *[]struct {
 				Kid        string  `json:"kid"`
 				PrivateKey *string `json:"private_key,omitempty"`
 			} `json:"keys,omitempty"`
-			LogoUri   *string `json:"logo_uri,omitempty"`
+
+			// LogoUri Logo that Bluesky shows people when they connect their account
+			LogoUri *string `json:"logo_uri,omitempty"`
+
+			// PolicyUri Link to your privacy policy that Bluesky shows people when they connect their account
 			PolicyUri *string `json:"policy_uri,omitempty"`
-			TosUri    *string `json:"tos_uri,omitempty"`
+
+			// TosUri Link to your terms that Bluesky shows people when they connect their account
+			TosUri *string `json:"tos_uri,omitempty"`
 		} `json:"bluesky,omitempty"`
 
-		// ConnectionProviders Replaces the whole provider list. Only self-hosted instances can have providers
+		// ConnectionProviders Services people can connect to their profile on a self-hosted instance, where a save replaces the whole list
 		ConnectionProviders *[]ConnectionProviderUpdate `json:"connection_providers,omitempty"`
 		Email               *struct {
 			// Delivery How the instance sends email, or null to use the environment
-			Delivery                  *EmailDeliveryModeSchema `json:"delivery,omitempty"`
-			DisableNewIpAuthorization *bool                    `json:"disable_new_ip_authorization,omitempty"`
+			Delivery *EmailDeliveryModeSchema `json:"delivery,omitempty"`
+
+			// DisableNewIpAuthorization Whether people can sign in from a new IP address without confirming it from an email first
+			DisableNewIpAuthorization *bool `json:"disable_new_ip_authorization,omitempty"`
 
 			// Enabled Deprecated, use delivery
-			Enabled   *bool   `json:"enabled,omitempty"`
+			Enabled *bool `json:"enabled,omitempty"`
+
+			// FromEmail Address that email from your instance is sent from
 			FromEmail *string `json:"from_email,omitempty"`
-			FromName  *string `json:"from_name,omitempty"`
+
+			// FromName Sender name on email from your instance, or empty for the product name
+			FromName *string `json:"from_name,omitempty"`
 
 			// Provider Deprecated, use delivery
 			Provider *InstanceConfigUpdateRequestIntegrationsEmailProvider `json:"provider,omitempty"`
 			Smtp     *struct {
-				Host     *string `json:"host,omitempty"`
+				// Host Host of the SMTP server that sends your instance's email
+				Host *string `json:"host,omitempty"`
+
+				// Password Password for signing in to the SMTP server
 				Password *string `json:"password,omitempty"`
-				Port     *int    `json:"port,omitempty"`
+
+				// Port Port of the SMTP server, usually 587 or 465
+				Port *int `json:"port,omitempty"`
 
 				// Secure Deprecated, use tls_mode
 				Secure *bool `json:"secure,omitempty"`
 
 				// TlsMode How the SMTP connection is encrypted
-				TlsMode  *InstanceConfigUpdateRequestIntegrationsEmailSmtpTlsMode `json:"tls_mode,omitempty"`
-				Username *string                                                  `json:"username,omitempty"`
+				TlsMode *InstanceConfigUpdateRequestIntegrationsEmailSmtpTlsMode `json:"tls_mode,omitempty"`
+
+				// Username User name for signing in to the SMTP server
+				Username *string `json:"username,omitempty"`
 			} `json:"smtp,omitempty"`
 		} `json:"email,omitempty"`
 		Gif *struct {
+			// KlipyApiKey KLIPY API key for the GIF picker and GIF link previews
 			KlipyApiKey *string `json:"klipy_api_key,omitempty"`
 		} `json:"gif,omitempty"`
 		Youtube *struct {
+			// ApiKey YouTube Data API key that link previews use for details of YouTube videos
 			ApiKey *string `json:"api_key,omitempty"`
 		} `json:"youtube,omitempty"`
 	} `json:"integrations,omitempty"`
 	Media *struct {
 		AttachmentDecay *struct {
-			Curve              *float32 `json:"curve,omitempty"`
-			Enabled            *bool    `json:"enabled,omitempty"`
-			MaxEligibleSizeMb  *float32 `json:"max_eligible_size_mb,omitempty"`
-			MaxLifetimeDays    *int     `json:"max_lifetime_days,omitempty"`
-			MaxSizeMb          *float32 `json:"max_size_mb,omitempty"`
-			MinLifetimeDays    *int     `json:"min_lifetime_days,omitempty"`
-			MinSizeMb          *float32 `json:"min_size_mb,omitempty"`
-			RenewThresholdDays *int     `json:"renew_threshold_days,omitempty"`
-			RenewWindowDays    *int     `json:"renew_window_days,omitempty"`
+			// Curve How the time a file is kept falls between the two sizes, from 0 for an even fall to 1 for a steep fall just above min_size_mb
+			Curve *float32 `json:"curve,omitempty"`
+
+			// Enabled Whether files in messages are deleted after a while, with smaller files kept longer
+			Enabled *bool `json:"enabled,omitempty"`
+
+			// MaxEligibleSizeMb Size in MB above which a file is never deleted
+			MaxEligibleSizeMb *float32 `json:"max_eligible_size_mb,omitempty"`
+
+			// MaxLifetimeDays Days that the smallest files are kept
+			MaxLifetimeDays *int `json:"max_lifetime_days,omitempty"`
+
+			// MaxSizeMb Size in MB from which a file is kept for only min_lifetime_days
+			MaxSizeMb *float32 `json:"max_size_mb,omitempty"`
+
+			// MinLifetimeDays Days that the largest files are kept
+			MinLifetimeDays *int `json:"min_lifetime_days,omitempty"`
+
+			// MinSizeMb Size in MB up to which a file is kept for max_lifetime_days
+			MinSizeMb *float32 `json:"min_size_mb,omitempty"`
+
+			// RenewThresholdDays Days before a file's deletion within which loading its message keeps the file for renew_window_days from then
+			RenewThresholdDays *int `json:"renew_threshold_days,omitempty"`
+
+			// RenewWindowDays Days a file is kept from the moment its message is loaded, when that is within renew_threshold_days of its deletion
+			RenewWindowDays *int `json:"renew_window_days,omitempty"`
 		} `json:"attachment_decay,omitempty"`
 
 		// ProxyAttachmentsThroughApi Whether attachment links point at the API, which checks that the viewer can read the message before it hands over the file
@@ -2825,50 +3019,84 @@ type InstanceConfigUpdateRequest struct {
 		Url *string `json:"url,omitempty"`
 	} `json:"notice,omitempty"`
 	Policy *struct {
-		DirectMessagesDisabled *bool                                                  `json:"direct_messages_disabled,omitempty"`
-		DirectMessagesLocked   *InstanceConfigUpdateRequestPolicyDirectMessagesLocked `json:"direct_messages_locked,omitempty"`
+		// DirectMessagesDisabled Whether direct messages are off and people can only talk in communities
+		DirectMessagesDisabled *bool `json:"direct_messages_disabled,omitempty"`
 
-		// FriendsDisabled Whether friend requests are disabled instance-wide. Left out while direct_messages_disabled changes, it takes the same value
-		FriendsDisabled   *bool `json:"friends_disabled,omitempty"`
+		// DirectMessagesLocked Set to false to let direct messages be turned off again after they were locked on
+		DirectMessagesLocked *InstanceConfigUpdateRequestPolicyDirectMessagesLocked `json:"direct_messages_locked,omitempty"`
+
+		// FriendsDisabled Whether friend requests are off instance-wide, which follows direct_messages_disabled when that changes and this is left out
+		FriendsDisabled *bool `json:"friends_disabled,omitempty"`
+
+		// GuildCreateAccess Whether everyone can create communities, or only admins and accounts with the feature_guild_create limit
 		GuildCreateAccess *bool `json:"guild_create_access,omitempty"`
 
-		// PersonalNotesEnabled Whether people can use personal notes. Off by default on self-hosted instances
-		PersonalNotesEnabled *bool                                         `json:"personal_notes_enabled,omitempty"`
-		PremiumMode          *InstanceConfigUpdateRequestPolicyPremiumMode `json:"premium_mode,omitempty"`
-		Services             *struct {
+		// PersonalNotesEnabled Whether people can use personal notes, which are off by default on self-hosted instances
+		PersonalNotesEnabled *bool `json:"personal_notes_enabled,omitempty"`
+
+		// PremiumMode Whether every account has the paid tier (everyone) or only accounts with a subscription have it (mirror)
+		PremiumMode *InstanceConfigUpdateRequestPolicyPremiumMode `json:"premium_mode,omitempty"`
+		Services    *struct {
+			// BlueskyEnabled Whether people can connect a Bluesky account, where leaving it unset follows integrations.bluesky.enabled
 			BlueskyEnabled *bool `json:"bluesky_enabled,omitempty"`
-			GifEnabled     *bool `json:"gif_enabled,omitempty"`
+
+			// GifEnabled Whether the GIF picker is on, where leaving it unset turns it on while a KLIPY API key is set
+			GifEnabled *bool `json:"gif_enabled,omitempty"`
+
+			// YoutubeEnabled Whether YouTube features are on, where leaving it unset turns them on while a YouTube API key is set
 			YoutubeEnabled *bool `json:"youtube_enabled,omitempty"`
 		} `json:"services,omitempty"`
 
 		// SingleCommunityAddMembers Also add every existing account to the single community in the background
 		SingleCommunityAddMembers *bool `json:"single_community_add_members,omitempty"`
-		SingleCommunityEnabled    *bool `json:"single_community_enabled,omitempty"`
 
-		// SingleCommunityGuildId ID of an existing community to use as the single community. Turns the mode on with that community, or moves it there while the mode is on
+		// SingleCommunityEnabled Whether everyone who signs up joins one community that you own, with nobody able to create others
+		SingleCommunityEnabled *bool `json:"single_community_enabled,omitempty"`
+
+		// SingleCommunityGuildId ID of an existing community to use as the single community, which turns the mode on or moves it there
 		SingleCommunityGuildId *SnowflakeStringType `json:"single_community_guild_id,omitempty"`
-		SingleCommunityName    *string              `json:"single_community_name,omitempty"`
+
+		// SingleCommunityName Name of the community created when this change turns on single_community_enabled, or the product name when left out
+		SingleCommunityName *string `json:"single_community_name,omitempty"`
 	} `json:"policy,omitempty"`
 	PushRelay    *PushRelayConfigUpdateRequest `json:"push_relay,omitempty"`
 	Registration *struct {
-		AdminRegistrationUrlsEnabled *bool                           `json:"admin_registration_urls_enabled,omitempty"`
-		AllowedEmailDomains          *[]string                       `json:"allowed_email_domains,omitempty"`
-		Mode                         *InstanceRegistrationModeSchema `json:"mode,omitempty"`
+		// AdminRegistrationUrlsEnabled Whether registration links that admins made still create accounts
+		AdminRegistrationUrlsEnabled *bool     `json:"admin_registration_urls_enabled,omitempty"`
+		AllowedEmailDomains          *[]string `json:"allowed_email_domains,omitempty"`
+
+		// Mode How people sign up, open for anyone, approval where an admin approves each new account, or closed where only registration links create accounts
+		Mode *InstanceRegistrationModeSchema `json:"mode,omitempty"`
 	} `json:"registration,omitempty"`
 	Sso *struct {
-		AllowedDomains   *[]string `json:"allowed_domains,omitempty"`
-		AuthorizationUrl *string   `json:"authorization_url,omitempty"`
-		AutoProvision    *bool     `json:"auto_provision,omitempty"`
+		// AllowedDomains Email domains whose accounts can sign in with single sign-on, or empty for any domain
+		AllowedDomains *[]string `json:"allowed_domains,omitempty"`
 
-		// ButtonLabel Text for the sign-in button. Trimmed, then up to 64 UTF-16 code units with at least one visible character and no control characters, line breaks or bidirectional formatting characters. Empty or null uses the default label
-		ButtonLabel  *string `json:"button_label,omitempty"`
-		ClientId     *string `json:"client_id,omitempty"`
+		// AuthorizationUrl Provider page where people sign in, or empty to look it up from the issuer
+		AuthorizationUrl *string `json:"authorization_url,omitempty"`
+
+		// AutoProvision Whether the first single sign-on sign-in makes an account for someone who has none
+		AutoProvision *bool `json:"auto_provision,omitempty"`
+
+		// ButtonLabel Text on the sign-in button, up to 64 characters on one line, or empty for the default label
+		ButtonLabel *string `json:"button_label,omitempty"`
+
+		// ClientId Client ID that your provider gave Fluxer
+		ClientId *string `json:"client_id,omitempty"`
+
+		// ClientSecret Client secret that your provider gave Fluxer
 		ClientSecret *string `json:"client_secret,omitempty"`
-		DisplayName  *string `json:"display_name,omitempty"`
-		Enabled      *bool   `json:"enabled,omitempty"`
-		Enforced     *bool   `json:"enforced,omitempty"`
 
-		// GroupRoleMappings Groups whose members get a role in the single community. Every listed role is managed by single sign-on, and is added or removed to match the groups at each sign-in
+		// DisplayName Provider name for the sign-in button, which then says "Continue with" and this name
+		DisplayName *string `json:"display_name,omitempty"`
+
+		// Enabled Whether people can sign in with your single sign-on provider
+		Enabled *bool `json:"enabled,omitempty"`
+
+		// Enforced Whether single sign-on is the only way to sign in, with password sign-in turned off
+		Enforced *bool `json:"enforced,omitempty"`
+
+		// GroupRoleMappings Groups whose members get a role in the single community, where single sign-on adds or removes each listed role to match the groups at every sign-in
 		GroupRoleMappings *[]struct {
 			// Group A group name exactly as the provider sends it in the groups claim, such as `staff` or `/engineering/devs`
 			Group string `json:"group"`
@@ -2877,18 +3105,28 @@ type InstanceConfigUpdateRequest struct {
 			RoleId SnowflakeStringType `json:"role_id"`
 		} `json:"group_role_mappings,omitempty"`
 
-		// GroupsClaim The claim that lists the groups of a member. Empty or null uses `groups`
+		// GroupsClaim The claim that lists a member's groups, with groups used when it is empty
 		GroupsClaim *string `json:"groups_claim,omitempty"`
-		Issuer      *string `json:"issuer,omitempty"`
-		JwksUrl     *string `json:"jwks_url,omitempty"`
+
+		// Issuer OpenID Connect issuer URL of your provider, used to look up any endpoint left empty
+		Issuer *string `json:"issuer,omitempty"`
+
+		// JwksUrl Provider endpoint with the keys that sign its tokens, or empty to look it up from the issuer
+		JwksUrl *string `json:"jwks_url,omitempty"`
 
 		// MigrateIdentities Only for a save that changes the issuer while accounts are linked to the old one. True moves those links to the new issuer, false leaves them on the old one. Applies to this save only and is never stored
-		MigrateIdentities *bool   `json:"migrate_identities,omitempty"`
-		Scope             *string `json:"scope,omitempty"`
-		TokenUrl          *string `json:"token_url,omitempty"`
-		UserinfoUrl       *string `json:"userinfo_url,omitempty"`
+		MigrateIdentities *bool `json:"migrate_identities,omitempty"`
 
-		// UsernameFromProvider Each SSO sign-in sets the username from the provider, and people can't change it in Fluxer. Only on username instances
+		// Scope Space-separated scopes that Fluxer asks the provider for, or empty for openid email profile
+		Scope *string `json:"scope,omitempty"`
+
+		// TokenUrl Provider endpoint that Fluxer gets tokens from, or empty to look it up from the issuer
+		TokenUrl *string `json:"token_url,omitempty"`
+
+		// UserinfoUrl Provider endpoint that Fluxer gets account details from, or empty to look it up from the issuer
+		UserinfoUrl *string `json:"userinfo_url,omitempty"`
+
+		// UsernameFromProvider On username instances, each SSO sign-in sets the username from the provider and people can't change it in Fluxer
 		UsernameFromProvider *bool `json:"username_from_provider,omitempty"`
 	} `json:"sso,omitempty"`
 	VoiceP2p *VoiceP2pConfigUpdateRequest `json:"voice_p2p,omitempty"`
@@ -2900,10 +3138,10 @@ type InstanceConfigUpdateRequestIntegrationsEmailProvider string
 // InstanceConfigUpdateRequestIntegrationsEmailSmtpTlsMode How the SMTP connection is encrypted
 type InstanceConfigUpdateRequestIntegrationsEmailSmtpTlsMode string
 
-// InstanceConfigUpdateRequestPolicyDirectMessagesLocked defines model for InstanceConfigUpdateRequest.Policy.DirectMessagesLocked.
+// InstanceConfigUpdateRequestPolicyDirectMessagesLocked Set to false to let direct messages be turned off again after they were locked on
 type InstanceConfigUpdateRequestPolicyDirectMessagesLocked bool
 
-// InstanceConfigUpdateRequestPolicyPremiumMode defines model for InstanceConfigUpdateRequest.Policy.PremiumMode.
+// InstanceConfigUpdateRequestPolicyPremiumMode Whether every account has the paid tier (everyone) or only accounts with a subscription have it (mirror)
 type InstanceConfigUpdateRequestPolicyPremiumMode string
 
 // InstanceEmailSmtpTestRequest defines model for InstanceEmailSmtpTestRequest.
@@ -3157,6 +3395,7 @@ type PushRelayConfigResponse struct {
 
 // PushRelayConfigUpdateRequest defines model for PushRelayConfigUpdateRequest.
 type PushRelayConfigUpdateRequest struct {
+	// RelayConsentAccepted Whether you accept the push relay privacy notice, which the Fluxer mobile apps need to get notifications from your instance
 	RelayConsentAccepted *bool `json:"relay_consent_accepted,omitempty"`
 }
 
@@ -3417,29 +3656,64 @@ type VoiceJoinTokenStatus string
 
 // VoiceP2pConfigResponse defines model for VoiceP2pConfigResponse.
 type VoiceP2pConfigResponse struct {
-	ConfigVersion       int                                 `json:"config_version"`
-	Enabled             bool                                `json:"enabled"`
-	ExcludedUserIds     []string                            `json:"excluded_user_ids"`
-	IncludePremiumUsers bool                                `json:"include_premium_users"`
-	IncludedGuildIds    []string                            `json:"included_guild_ids"`
-	IncludedUserIds     []string                            `json:"included_user_ids"`
-	MaxParticipants     int                                 `json:"max_participants"`
-	RolloutBasisPoints  int                                 `json:"rollout_basis_points"`
+	ConfigVersion int `json:"config_version"`
+
+	// Enabled Whether people picked by the rollout can start calls that connect them directly to each other
+	Enabled bool `json:"enabled"`
+
+	// ExcludedUserIds Accounts that can never start peer-to-peer calls, checked before every other rule
+	ExcludedUserIds []string `json:"excluded_user_ids"`
+
+	// IncludePremiumUsers Whether accounts with the paid tier can always start peer-to-peer calls
+	IncludePremiumUsers bool `json:"include_premium_users"`
+
+	// IncludedGuildIds Communities whose members can always start peer-to-peer calls
+	IncludedGuildIds []string `json:"included_guild_ids"`
+
+	// IncludedUserIds Accounts that can always start peer-to-peer calls
+	IncludedUserIds []string `json:"included_user_ids"`
+
+	// MaxParticipants Most people in one peer-to-peer call
+	MaxParticipants int `json:"max_participants"`
+
+	// RolloutBasisPoints Share of accounts that can start peer-to-peer calls, in basis points where 10000 is everyone
+	RolloutBasisPoints int `json:"rollout_basis_points"`
+
+	// RolloutCountryCodes Two-letter country codes that limit the rollout share to people in those countries, or empty for every country
 	RolloutCountryCodes ExperimentRolloutCountryCodesSchema `json:"rollout_country_codes"`
-	RolloutSalt         string                              `json:"rollout_salt"`
+
+	// RolloutSalt Text mixed into the rollout pick, where a new value picks a different set of accounts
+	RolloutSalt string `json:"rollout_salt"`
 }
 
 // VoiceP2pConfigUpdateRequest defines model for VoiceP2pConfigUpdateRequest.
 type VoiceP2pConfigUpdateRequest struct {
-	Enabled             *bool                                `json:"enabled,omitempty"`
-	ExcludedUserIds     *[]string                            `json:"excluded_user_ids,omitempty"`
-	IncludePremiumUsers *bool                                `json:"include_premium_users,omitempty"`
-	IncludedGuildIds    *[]string                            `json:"included_guild_ids,omitempty"`
-	IncludedUserIds     *[]string                            `json:"included_user_ids,omitempty"`
-	MaxParticipants     *int                                 `json:"max_participants,omitempty"`
-	RolloutBasisPoints  *int                                 `json:"rollout_basis_points,omitempty"`
+	// Enabled Whether people picked by the rollout can start calls that connect them directly to each other
+	Enabled *bool `json:"enabled,omitempty"`
+
+	// ExcludedUserIds Accounts that can never start peer-to-peer calls, checked before every other rule
+	ExcludedUserIds *[]string `json:"excluded_user_ids,omitempty"`
+
+	// IncludePremiumUsers Whether accounts with the paid tier can always start peer-to-peer calls
+	IncludePremiumUsers *bool `json:"include_premium_users,omitempty"`
+
+	// IncludedGuildIds Communities whose members can always start peer-to-peer calls
+	IncludedGuildIds *[]string `json:"included_guild_ids,omitempty"`
+
+	// IncludedUserIds Accounts that can always start peer-to-peer calls
+	IncludedUserIds *[]string `json:"included_user_ids,omitempty"`
+
+	// MaxParticipants Most people in one peer-to-peer call
+	MaxParticipants *int `json:"max_participants,omitempty"`
+
+	// RolloutBasisPoints Share of accounts that can start peer-to-peer calls, in basis points where 10000 is everyone
+	RolloutBasisPoints *int `json:"rollout_basis_points,omitempty"`
+
+	// RolloutCountryCodes Two-letter country codes that limit the rollout share to people in those countries, or empty for every country
 	RolloutCountryCodes *ExperimentRolloutCountryCodesSchema `json:"rollout_country_codes,omitempty"`
-	RolloutSalt         *string                              `json:"rollout_salt,omitempty"`
+
+	// RolloutSalt Text mixed into the rollout pick, where a new value picks a different set of accounts
+	RolloutSalt *string `json:"rollout_salt,omitempty"`
 }
 
 // VoicePublicIpv4Type Public IPv4 address LiveKit gives to clients

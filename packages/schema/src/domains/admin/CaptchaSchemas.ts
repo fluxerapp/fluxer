@@ -10,9 +10,23 @@ const CAPTCHA_MIN_MAX_COUNTER = 100;
 const CAPTCHA_MAX_MAX_COUNTER = 20000;
 
 const captchaConfigFields = {
-	provider: CaptchaProviderSchema,
-	cost: z.number().int().min(CAPTCHA_MIN_COST).max(CAPTCHA_MAX_COST),
-	max_counter: z.number().int().min(CAPTCHA_MIN_MAX_COUNTER).max(CAPTCHA_MAX_MAX_COUNTER),
+	provider: CaptchaProviderSchema.describe(
+		'Which check people solve before they sign up, sign in or do other things spammers abuse, altcha for a proof-of-work check or none for no check',
+	),
+	cost: z
+		.number()
+		.int()
+		.min(CAPTCHA_MIN_COST)
+		.max(CAPTCHA_MAX_COST)
+		.describe(
+			'How much work each attempt at the proof-of-work check takes, where a higher value is slower for everyone',
+		),
+	max_counter: z
+		.number()
+		.int()
+		.min(CAPTCHA_MIN_MAX_COUNTER)
+		.max(CAPTCHA_MAX_MAX_COUNTER)
+		.describe('Most attempts the proof-of-work check can need, where a higher value makes it take longer on average'),
 };
 
 export const CaptchaConfigSchema = z.object({

@@ -36744,7 +36744,12 @@
 				"type": "object",
 				"properties": {
 					"poll_interval_seconds": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991},
-					"poll_jitter_percent": {"type": "integer", "minimum": 0, "maximum": 50},
+					"poll_jitter_percent": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 50,
+						"description": "Most that each app shifts a check earlier or later, as a percentage of the poll interval"
+					},
 					"assignments": {
 						"type": "object",
 						"properties": {
@@ -40416,7 +40421,7 @@
 				"type": "string"
 			},
 			"GuildJoinGateSchema": {
-				"description": "When joining a community needs a finished account. Applies only while the interaction tier is enforced and the person can preview communities",
+				"description": "When joining a community needs a finished account, which only applies while the interaction tier is enforced and the person can preview communities",
 				"x-enumNames": ["OFF", "VISITS_CAPABLE", "ALWAYS"],
 				"x-enumDescriptions": [
 					"Joining a community never needs a finished account",
@@ -43051,8 +43056,13 @@
 			"VoiceP2pAssignmentResponse": {
 				"type": "object",
 				"properties": {
-					"enabled": {"type": "boolean"},
-					"max_participants": {"type": "integer", "minimum": 2, "maximum": 4}
+					"enabled": {"type": "boolean", "description": "Whether this account can start peer-to-peer calls"},
+					"max_participants": {
+						"type": "integer",
+						"minimum": 2,
+						"maximum": 4,
+						"description": "Most people in one peer-to-peer call"
+					}
 				},
 				"required": ["enabled", "max_participants"],
 				"additionalProperties": false
@@ -43074,7 +43084,7 @@
 			},
 			"DomainMigrationAssignmentResponse": {
 				"type": "object",
-				"properties": {"enabled": {"type": "boolean"}},
+				"properties": {"enabled": {"type": "boolean", "description": "Whether this account moves to the new domain"}},
 				"required": ["enabled"],
 				"additionalProperties": false
 			},

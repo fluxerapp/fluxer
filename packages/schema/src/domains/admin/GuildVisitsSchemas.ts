@@ -9,22 +9,24 @@ const DEFAULT_GUILD_VISITS_USER_SALT = 'guild-visits-user-v1';
 const GuildVisitsUserIdsSchema = z.array(z.string().regex(/^\d{1,20}$/u)).max(GUILD_VISITS_MAX_TARGETED_IDS);
 
 const guildVisitsConfigFields = {
-	enabled: z.boolean().describe('Kill switch for visiting communities without joining'),
+	enabled: z.boolean().describe('Whether people picked by the rollout can preview a community before they join it'),
 	user_basis_points: z
 		.number()
 		.int()
 		.min(0)
 		.max(EXPERIMENT_BUCKET_RESOLUTION)
-		.describe('Share of people assigned, in basis points'),
+		.describe('Share of people who can preview communities, in basis points where 10000 is everyone'),
 	user_salt: z
 		.string()
 		.trim()
 		.min(1)
 		.max(64)
 		.regex(/^[\x20-\x7e]+$/u)
-		.describe('Salt for the assignment bucket'),
-	included_user_ids: GuildVisitsUserIdsSchema.describe('People always assigned'),
-	excluded_user_ids: GuildVisitsUserIdsSchema.describe('People never assigned, checked before the included list'),
+		.describe('Text mixed into the rollout pick, where a new value picks a different set of people'),
+	included_user_ids: GuildVisitsUserIdsSchema.describe('People who can always preview communities'),
+	excluded_user_ids: GuildVisitsUserIdsSchema.describe(
+		'People who can never preview communities, checked before the included list',
+	),
 };
 
 export const GuildVisitsConfigSchema = z.object({

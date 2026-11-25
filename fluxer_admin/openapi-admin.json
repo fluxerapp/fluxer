@@ -17893,14 +17893,14 @@
 							"auto_provision": {"type": "boolean"},
 							"username_from_provider": {
 								"type": "boolean",
-								"description": "Each SSO sign-in sets the username from the provider, and people can't change it in Fluxer. Only on username instances"
+								"description": "On username instances, each SSO sign-in sets the username from the provider and people can't change it in Fluxer"
 							},
 							"redirect_uri": {"nullable": true, "type": "string"},
 							"groups_claim": {
 								"nullable": true,
 								"type": "string",
 								"maxLength": 128,
-								"description": "The claim that lists the groups of a member. Empty or null uses `groups`"
+								"description": "The claim that lists a member's groups, with groups used when it is empty"
 							},
 							"group_role_mappings": {
 								"maxItems": 100,
@@ -17922,7 +17922,7 @@
 									"required": ["group", "role_id"],
 									"additionalProperties": false
 								},
-								"description": "Groups whose members get a role in the single community. Every listed role is managed by single sign-on, and is added or removed to match the groups at each sign-in"
+								"description": "Groups whose members get a role in the single community, where single sign-on adds or removes each listed role to match the groups at every sign-in"
 							}
 						},
 						"required": [
@@ -17961,13 +17961,13 @@
 								"properties": {
 									"enabled": {
 										"type": "boolean",
-										"description": "Whether accounts can be created from just a display name. Needs the captcha to be on"
+										"description": "Whether accounts can be created from just a display name, which needs the captcha to be on"
 									},
 									"pow_escalation_per_hour": {
 										"type": "integer",
 										"minimum": 10,
 										"maximum": 1000000,
-										"description": "Every this many accounts created from a display name in the current hour doubles the captcha cost"
+										"description": "The captcha gets twice as hard for each batch of this many accounts created from a display name in the past hour"
 									}
 								},
 								"required": ["enabled", "pow_escalation_per_hour"],
@@ -17993,7 +17993,7 @@
 								"maxItems": 100,
 								"type": "array",
 								"items": {"type": "string"},
-								"description": "Email domains that public sign-ups and email changes must use. Empty allows any domain"
+								"description": "Email domains that public sign-ups and email changes must use, where an empty list allows any domain"
 							},
 							"urls": {
 								"type": "array",
@@ -18717,8 +18717,14 @@
 						"nullable": true,
 						"type": "object",
 						"properties": {
-							"mode": {"allOf": [{"$ref": "#/components/schemas/InstanceRegistrationModeSchema"}]},
-							"admin_registration_urls_enabled": {"type": "boolean"},
+							"mode": {
+								"description": "How people sign up, open for anyone, approval where an admin approves each new account, or closed where only registration links create accounts",
+								"allOf": [{"$ref": "#/components/schemas/InstanceRegistrationModeSchema"}]
+							},
+							"admin_registration_urls_enabled": {
+								"description": "Whether registration links that admins made still create accounts",
+								"type": "boolean"
+							},
 							"allowed_email_domains": {"maxItems": 100, "type": "array", "items": {"type": "string"}}
 						}
 					},
@@ -18726,34 +18732,84 @@
 						"nullable": true,
 						"type": "object",
 						"properties": {
-							"enabled": {"type": "boolean"},
-							"enforced": {"type": "boolean"},
-							"display_name": {"nullable": true, "type": "string"},
+							"enabled": {
+								"description": "Whether people can sign in with your single sign-on provider",
+								"type": "boolean"
+							},
+							"enforced": {
+								"description": "Whether single sign-on is the only way to sign in, with password sign-in turned off",
+								"type": "boolean"
+							},
+							"display_name": {
+								"description": "Provider name for the sign-in button, which then says \"Continue with\" and this name",
+								"nullable": true,
+								"type": "string"
+							},
 							"button_label": {
-								"description": "Text for the sign-in button. Trimmed, then up to 64 UTF-16 code units with at least one visible character and no control characters, line breaks or bidirectional formatting characters. Empty or null uses the default label",
+								"description": "Text on the sign-in button, up to 64 characters on one line, or empty for the default label",
 								"nullable": true,
 								"type": "string",
 								"maxLength": 64
 							},
-							"issuer": {"nullable": true, "type": "string"},
-							"authorization_url": {"nullable": true, "type": "string"},
-							"token_url": {"nullable": true, "type": "string"},
-							"userinfo_url": {"nullable": true, "type": "string"},
-							"jwks_url": {"nullable": true, "type": "string"},
-							"client_id": {"nullable": true, "type": "string"},
-							"client_secret": {"nullable": true, "type": "string"},
-							"scope": {"nullable": true, "type": "string"},
-							"allowed_domains": {"maxItems": 100, "type": "array", "items": {"type": "string"}},
-							"auto_provision": {"type": "boolean"},
+							"issuer": {
+								"description": "OpenID Connect issuer URL of your provider, used to look up any endpoint left empty",
+								"nullable": true,
+								"type": "string"
+							},
+							"authorization_url": {
+								"description": "Provider page where people sign in, or empty to look it up from the issuer",
+								"nullable": true,
+								"type": "string"
+							},
+							"token_url": {
+								"description": "Provider endpoint that Fluxer gets tokens from, or empty to look it up from the issuer",
+								"nullable": true,
+								"type": "string"
+							},
+							"userinfo_url": {
+								"description": "Provider endpoint that Fluxer gets account details from, or empty to look it up from the issuer",
+								"nullable": true,
+								"type": "string"
+							},
+							"jwks_url": {
+								"description": "Provider endpoint with the keys that sign its tokens, or empty to look it up from the issuer",
+								"nullable": true,
+								"type": "string"
+							},
+							"client_id": {
+								"description": "Client ID that your provider gave Fluxer",
+								"nullable": true,
+								"type": "string"
+							},
+							"client_secret": {
+								"description": "Client secret that your provider gave Fluxer",
+								"nullable": true,
+								"type": "string"
+							},
+							"scope": {
+								"description": "Space-separated scopes that Fluxer asks the provider for, or empty for openid email profile",
+								"nullable": true,
+								"type": "string"
+							},
+							"allowed_domains": {
+								"description": "Email domains whose accounts can sign in with single sign-on, or empty for any domain",
+								"maxItems": 100,
+								"type": "array",
+								"items": {"type": "string"}
+							},
+							"auto_provision": {
+								"description": "Whether the first single sign-on sign-in makes an account for someone who has none",
+								"type": "boolean"
+							},
 							"username_from_provider": {
-								"description": "Each SSO sign-in sets the username from the provider, and people can't change it in Fluxer. Only on username instances",
+								"description": "On username instances, each SSO sign-in sets the username from the provider and people can't change it in Fluxer",
 								"type": "boolean"
 							},
 							"groups_claim": {
 								"nullable": true,
 								"type": "string",
 								"maxLength": 128,
-								"description": "The claim that lists the groups of a member. Empty or null uses `groups`"
+								"description": "The claim that lists a member's groups, with groups used when it is empty"
 							},
 							"group_role_mappings": {
 								"maxItems": 100,
@@ -18774,7 +18830,7 @@
 									},
 									"required": ["group", "role_id"]
 								},
-								"description": "Groups whose members get a role in the single community. Every listed role is managed by single sign-on, and is added or removed to match the groups at each sign-in"
+								"description": "Groups whose members get a role in the single community, where single sign-on adds or removes each listed role to match the groups at every sign-in"
 							},
 							"migrate_identities": {
 								"description": "Only for a save that changes the issuer while accounts are linked to the old one. True moves those links to the new issuer, false leaves them on the old one. Applies to this save only and is never stored",
@@ -18790,31 +18846,105 @@
 								"nullable": true,
 								"type": "object",
 								"properties": {
-									"product_name": {"type": "string", "minLength": 1, "maxLength": 80},
-									"icon_url": {"nullable": true, "type": "string", "maxLength": 2048},
-									"symbol_url": {"nullable": true, "type": "string", "maxLength": 2048},
-									"logo_url": {"nullable": true, "type": "string", "maxLength": 2048},
-									"wordmark_url": {"nullable": true, "type": "string", "maxLength": 2048},
-									"favicon_url": {"nullable": true, "type": "string", "maxLength": 2048},
-									"favicon_dark_url": {"nullable": true, "type": "string", "maxLength": 2048},
+									"product_name": {
+										"description": "Name of your instance in the apps, on the sign-in page and in the browser tab",
+										"type": "string",
+										"minLength": 1,
+										"maxLength": 80
+									},
+									"icon_url": {
+										"description": "Square app icon for the home screen when someone adds the web app, which also fills in for an empty logo, symbol or favicon",
+										"nullable": true,
+										"type": "string",
+										"maxLength": 2048
+									},
+									"symbol_url": {
+										"description": "Small square mark next to the instance name in the account switcher and the instance list",
+										"nullable": true,
+										"type": "string",
+										"maxLength": 2048
+									},
+									"logo_url": {
+										"description": "Large image in light colours next to the sign-in form, or empty to use the app icon or symbol",
+										"nullable": true,
+										"type": "string",
+										"maxLength": 2048
+									},
+									"wordmark_url": {
+										"description": "Your name in your own lettering, which shows under the logo on the sign-in page and in the desktop app title bar",
+										"nullable": true,
+										"type": "string",
+										"maxLength": 2048
+									},
+									"favicon_url": {
+										"description": "Small image in the browser tab, or empty to use the app icon",
+										"nullable": true,
+										"type": "string",
+										"maxLength": 2048
+									},
+									"favicon_dark_url": {
+										"description": "Favicon for browsers with a dark theme, or empty to show the same favicon in both themes",
+										"nullable": true,
+										"type": "string",
+										"maxLength": 2048
+									},
 									"theme_color": {
+										"description": "Hex colour for buttons and highlights in the apps and for the toolbar of phone browsers, or empty for Fluxer's indigo",
 										"nullable": true,
 										"type": "string",
 										"pattern": "^(?:#?(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}))?$"
 									},
-									"status_page_url": {"nullable": true, "type": "string", "maxLength": 2048},
-									"status_page_incident_history_url": {"nullable": true, "type": "string", "maxLength": 2048},
-									"premium_product_name": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 40},
-									"premium_info_url": {"nullable": true, "type": "string", "maxLength": 2048},
-									"sign_in_backdrop_url": {"nullable": true, "type": "string", "maxLength": 2048},
+									"status_page_url": {
+										"description": "Link to your status page, which the apps show when they cannot connect",
+										"nullable": true,
+										"type": "string",
+										"maxLength": 2048
+									},
+									"status_page_incident_history_url": {
+										"description": "Link to the list of past incidents on your status page",
+										"nullable": true,
+										"type": "string",
+										"maxLength": 2048
+									},
+									"premium_product_name": {
+										"description": "Name of the paid tier in the apps, which is Plutonium while unset",
+										"nullable": true,
+										"type": "string",
+										"minLength": 1,
+										"maxLength": 40
+									},
+									"premium_info_url": {
+										"description": "Link to a page about the paid tier, which shows on the premium page",
+										"nullable": true,
+										"type": "string",
+										"maxLength": 2048
+									},
+									"sign_in_backdrop_url": {
+										"description": "Landscape image that fills the sign-in page behind the form, or empty for the starry background",
+										"nullable": true,
+										"type": "string",
+										"maxLength": 2048
+									},
 									"premium_page_color": {
+										"description": "Hex colour for the premium page, or empty for its usual colours",
 										"nullable": true,
 										"type": "string",
 										"pattern": "^(?:#?(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}))?$"
 									},
-									"custom_css": {"nullable": true, "type": "string", "maxLength": 32768},
-									"upload_limit_message": {"nullable": true, "type": "string", "maxLength": 500},
+									"custom_css": {
+										"description": "CSS that the web and desktop apps add to every page, including the sign-in pages",
+										"nullable": true,
+										"type": "string",
+										"maxLength": 32768
+									},
+									"upload_limit_message": {
+										"description": "Your own text in the message people see when a file is over the upload limit",
+										"nullable": true,
+										"type": "string",
+										"maxLength": 500
+									},
 									"trusted_domains": {
+										"description": "Domains whose links open without the warning about leaving the app",
 										"nullable": true,
 										"maxItems": 50,
 										"type": "array",
@@ -18827,9 +18957,24 @@
 								"nullable": true,
 								"type": "object",
 								"properties": {
-									"terms_url": {"nullable": true, "type": "string", "maxLength": 2048},
-									"privacy_url": {"nullable": true, "type": "string", "maxLength": 2048},
-									"guidelines_url": {"nullable": true, "type": "string", "maxLength": 2048}
+									"terms_url": {
+										"description": "Link to your terms of service, which people agree to when they sign up",
+										"nullable": true,
+										"type": "string",
+										"maxLength": 2048
+									},
+									"privacy_url": {
+										"description": "Link to your privacy policy, which people agree to when they sign up",
+										"nullable": true,
+										"type": "string",
+										"maxLength": 2048
+									},
+									"guidelines_url": {
+										"description": "Link to your community guidelines from the app, the report form and enforcement emails",
+										"nullable": true,
+										"type": "string",
+										"maxLength": 2048
+									}
 								}
 							},
 							"registration": {
@@ -18851,12 +18996,26 @@
 							"gif": {
 								"nullable": true,
 								"type": "object",
-								"properties": {"klipy_api_key": {"nullable": true, "type": "string", "maxLength": 4096}}
+								"properties": {
+									"klipy_api_key": {
+										"description": "KLIPY API key for the GIF picker and GIF link previews",
+										"nullable": true,
+										"type": "string",
+										"maxLength": 4096
+									}
+								}
 							},
 							"youtube": {
 								"nullable": true,
 								"type": "object",
-								"properties": {"api_key": {"nullable": true, "type": "string", "maxLength": 4096}}
+								"properties": {
+									"api_key": {
+										"description": "YouTube Data API key that link previews use for details of YouTube videos",
+										"nullable": true,
+										"type": "string",
+										"maxLength": 4096
+									}
+								}
 							},
 							"email": {
 								"nullable": true,
@@ -18874,16 +19033,47 @@
 										"enum": ["smtp", "none"],
 										"description": "Deprecated, use delivery"
 									},
-									"from_email": {"nullable": true, "type": "string", "maxLength": 320},
-									"from_name": {"nullable": true, "type": "string", "maxLength": 120},
+									"from_email": {
+										"description": "Address that email from your instance is sent from",
+										"nullable": true,
+										"type": "string",
+										"maxLength": 320
+									},
+									"from_name": {
+										"description": "Sender name on email from your instance, or empty for the product name",
+										"nullable": true,
+										"type": "string",
+										"maxLength": 120
+									},
 									"smtp": {
 										"nullable": true,
 										"type": "object",
 										"properties": {
-											"host": {"nullable": true, "type": "string", "maxLength": 255},
-											"port": {"nullable": true, "type": "integer", "minimum": 1, "maximum": 65535},
-											"username": {"nullable": true, "type": "string", "maxLength": 320},
-											"password": {"nullable": true, "type": "string", "maxLength": 4096},
+											"host": {
+												"description": "Host of the SMTP server that sends your instance's email",
+												"nullable": true,
+												"type": "string",
+												"maxLength": 255
+											},
+											"port": {
+												"description": "Port of the SMTP server, usually 587 or 465",
+												"nullable": true,
+												"type": "integer",
+												"minimum": 1,
+												"maximum": 65535
+											},
+											"username": {
+												"description": "User name for signing in to the SMTP server",
+												"nullable": true,
+												"type": "string",
+												"maxLength": 320
+											},
+											"password": {
+												"description": "Password for signing in to the SMTP server",
+												"nullable": true,
+												"type": "string",
+												"maxLength": 4096
+											},
 											"tls_mode": {
 												"nullable": true,
 												"description": "How the SMTP connection is encrypted",
@@ -18900,20 +19090,54 @@
 											"secure": {"description": "Deprecated, use tls_mode", "nullable": true, "type": "boolean"}
 										}
 									},
-									"disable_new_ip_authorization": {"nullable": true, "type": "boolean"}
+									"disable_new_ip_authorization": {
+										"description": "Whether people can sign in from a new IP address without confirming it from an email first",
+										"nullable": true,
+										"type": "boolean"
+									}
 								}
 							},
 							"bluesky": {
 								"nullable": true,
 								"type": "object",
 								"properties": {
-									"enabled": {"nullable": true, "type": "boolean"},
-									"client_name": {"nullable": true, "type": "string", "maxLength": 120},
-									"client_uri": {"nullable": true, "type": "string", "maxLength": 2048},
-									"logo_uri": {"nullable": true, "type": "string", "maxLength": 2048},
-									"tos_uri": {"nullable": true, "type": "string", "maxLength": 2048},
-									"policy_uri": {"nullable": true, "type": "string", "maxLength": 2048},
+									"enabled": {
+										"description": "Whether people can connect a Bluesky account to their profile, which also needs a signing key",
+										"nullable": true,
+										"type": "boolean"
+									},
+									"client_name": {
+										"description": "Name that Bluesky shows people when they connect their account",
+										"nullable": true,
+										"type": "string",
+										"maxLength": 120
+									},
+									"client_uri": {
+										"description": "Home page link that Bluesky shows people when they connect their account",
+										"nullable": true,
+										"type": "string",
+										"maxLength": 2048
+									},
+									"logo_uri": {
+										"description": "Logo that Bluesky shows people when they connect their account",
+										"nullable": true,
+										"type": "string",
+										"maxLength": 2048
+									},
+									"tos_uri": {
+										"description": "Link to your terms that Bluesky shows people when they connect their account",
+										"nullable": true,
+										"type": "string",
+										"maxLength": 2048
+									},
+									"policy_uri": {
+										"description": "Link to your privacy policy that Bluesky shows people when they connect their account",
+										"nullable": true,
+										"type": "string",
+										"maxLength": 2048
+									},
 									"keys": {
+										"description": "Private keys, each with a key ID, that Fluxer signs its Bluesky sign-in requests with",
 										"maxItems": 8,
 										"type": "array",
 										"items": {
@@ -18928,7 +19152,7 @@
 								}
 							},
 							"connection_providers": {
-								"description": "Replaces the whole provider list. Only self-hosted instances can have providers",
+								"description": "Services people can connect to their profile on a self-hosted instance, where a save replaces the whole list",
 								"maxItems": 20,
 								"type": "array",
 								"items": {"$ref": "#/components/schemas/ConnectionProviderUpdate"}
@@ -18943,11 +19167,34 @@
 								"nullable": true,
 								"type": "object",
 								"properties": {
-									"enabled": {"nullable": true, "type": "boolean"},
-									"min_size_mb": {"nullable": true, "type": "number", "minimum": 0, "exclusiveMinimum": true},
-									"max_size_mb": {"nullable": true, "type": "number", "minimum": 0, "exclusiveMinimum": true},
-									"max_eligible_size_mb": {"nullable": true, "type": "number", "minimum": 0, "exclusiveMinimum": true},
+									"enabled": {
+										"description": "Whether files in messages are deleted after a while, with smaller files kept longer",
+										"nullable": true,
+										"type": "boolean"
+									},
+									"min_size_mb": {
+										"description": "Size in MB up to which a file is kept for max_lifetime_days",
+										"nullable": true,
+										"type": "number",
+										"minimum": 0,
+										"exclusiveMinimum": true
+									},
+									"max_size_mb": {
+										"description": "Size in MB from which a file is kept for only min_lifetime_days",
+										"nullable": true,
+										"type": "number",
+										"minimum": 0,
+										"exclusiveMinimum": true
+									},
+									"max_eligible_size_mb": {
+										"description": "Size in MB above which a file is never deleted",
+										"nullable": true,
+										"type": "number",
+										"minimum": 0,
+										"exclusiveMinimum": true
+									},
 									"min_lifetime_days": {
+										"description": "Days that the largest files are kept",
 										"nullable": true,
 										"type": "integer",
 										"minimum": 0,
@@ -18955,14 +19202,22 @@
 										"maximum": 9007199254740991
 									},
 									"max_lifetime_days": {
+										"description": "Days that the smallest files are kept",
 										"nullable": true,
 										"type": "integer",
 										"minimum": 0,
 										"exclusiveMinimum": true,
 										"maximum": 9007199254740991
 									},
-									"curve": {"nullable": true, "type": "number", "minimum": 0, "maximum": 1},
+									"curve": {
+										"description": "How the time a file is kept falls between the two sizes, from 0 for an even fall to 1 for a steep fall just above min_size_mb",
+										"nullable": true,
+										"type": "number",
+										"minimum": 0,
+										"maximum": 1
+									},
 									"renew_threshold_days": {
+										"description": "Days before a file's deletion within which loading its message keeps the file for renew_window_days from then",
 										"nullable": true,
 										"type": "integer",
 										"minimum": 0,
@@ -18970,6 +19225,7 @@
 										"maximum": 9007199254740991
 									},
 									"renew_window_days": {
+										"description": "Days a file is kept from the moment its message is loaded, when that is within renew_threshold_days of its deletion",
 										"nullable": true,
 										"type": "integer",
 										"minimum": 0,
@@ -18988,41 +19244,76 @@
 						"nullable": true,
 						"type": "object",
 						"properties": {
-							"single_community_enabled": {"type": "boolean"},
-							"single_community_name": {"type": "string", "minLength": 1, "maxLength": 100},
+							"single_community_enabled": {
+								"description": "Whether everyone who signs up joins one community that you own, with nobody able to create others",
+								"type": "boolean"
+							},
+							"single_community_name": {
+								"description": "Name of the community created when this change turns on single_community_enabled, or the product name when left out",
+								"type": "string",
+								"minLength": 1,
+								"maxLength": 100
+							},
 							"single_community_guild_id": {
-								"description": "ID of an existing community to use as the single community. Turns the mode on with that community, or moves it there while the mode is on",
+								"description": "ID of an existing community to use as the single community, which turns the mode on or moves it there",
 								"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
 							},
 							"single_community_add_members": {
 								"description": "Also add every existing account to the single community in the background",
 								"type": "boolean"
 							},
-							"direct_messages_disabled": {"type": "boolean"},
-							"direct_messages_locked": {"type": "boolean", "enum": [false]},
+							"direct_messages_disabled": {
+								"description": "Whether direct messages are off and people can only talk in communities",
+								"type": "boolean"
+							},
+							"direct_messages_locked": {
+								"description": "Set to false to let direct messages be turned off again after they were locked on",
+								"type": "boolean",
+								"enum": [false]
+							},
 							"friends_disabled": {
-								"description": "Whether friend requests are disabled instance-wide. Left out while direct_messages_disabled changes, it takes the same value",
+								"description": "Whether friend requests are off instance-wide, which follows direct_messages_disabled when that changes and this is left out",
 								"type": "boolean"
 							},
 							"personal_notes_enabled": {
-								"description": "Whether people can use personal notes. Off by default on self-hosted instances",
+								"description": "Whether people can use personal notes, which are off by default on self-hosted instances",
 								"type": "boolean"
 							},
-							"premium_mode": {"type": "string", "enum": ["mirror", "everyone"]},
-							"guild_create_access": {"type": "boolean"},
+							"premium_mode": {
+								"description": "Whether every account has the paid tier (everyone) or only accounts with a subscription have it (mirror)",
+								"type": "string",
+								"enum": ["mirror", "everyone"]
+							},
+							"guild_create_access": {
+								"description": "Whether everyone can create communities, or only admins and accounts with the feature_guild_create limit",
+								"type": "boolean"
+							},
 							"services": {
 								"nullable": true,
 								"type": "object",
 								"properties": {
-									"gif_enabled": {"nullable": true, "type": "boolean"},
-									"youtube_enabled": {"nullable": true, "type": "boolean"},
-									"bluesky_enabled": {"nullable": true, "type": "boolean"}
+									"gif_enabled": {
+										"description": "Whether the GIF picker is on, where leaving it unset turns it on while a KLIPY API key is set",
+										"nullable": true,
+										"type": "boolean"
+									},
+									"youtube_enabled": {
+										"description": "Whether YouTube features are on, where leaving it unset turns them on while a YouTube API key is set",
+										"nullable": true,
+										"type": "boolean"
+									},
+									"bluesky_enabled": {
+										"description": "Whether people can connect a Bluesky account, where leaving it unset follows integrations.bluesky.enabled",
+										"nullable": true,
+										"type": "boolean"
+									}
 								}
 							}
 						}
 					},
 					"billing": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/InstanceBillingUpdateRequest"}]},
 					"distribution_pricing": {
+						"description": "Higher Stripe prices for app builds from a store such as an iOS app marketplace, to pay the store's share",
 						"nullable": true,
 						"allOf": [{"$ref": "#/components/schemas/DistributionPricingUpdateRequest"}]
 					},
@@ -24408,24 +24699,66 @@
 			"InstanceBillingUpdateRequest": {
 				"type": "object",
 				"properties": {
-					"enabled": {"nullable": true, "type": "boolean"},
-					"stripe_secret_key": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 4096},
-					"stripe_webhook_secret": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 4096},
-					"automatic_tax": {"nullable": true, "type": "boolean"},
-					"tax_id_collection": {"nullable": true, "type": "boolean"},
-					"terms_consent_required": {"nullable": true, "type": "boolean"},
-					"billing_emails": {"nullable": true, "type": "boolean"},
-					"default_currency": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/PremiumCurrency"}]},
+					"enabled": {
+						"description": "Whether people can buy the paid tier through Stripe, which also needs a secret key, prices and the mirror premium mode",
+						"nullable": true,
+						"type": "boolean"
+					},
+					"stripe_secret_key": {
+						"description": "Secret key of your Stripe account",
+						"nullable": true,
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 4096
+					},
+					"stripe_webhook_secret": {
+						"description": "Signing secret of the Stripe webhook that sends payment events to your instance",
+						"nullable": true,
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 4096
+					},
+					"automatic_tax": {
+						"description": "Whether Stripe works out and adds tax at checkout",
+						"nullable": true,
+						"type": "boolean"
+					},
+					"tax_id_collection": {
+						"description": "Whether checkout asks buyers for a tax ID, such as a VAT number",
+						"nullable": true,
+						"type": "boolean"
+					},
+					"terms_consent_required": {
+						"description": "Whether buyers have to agree to your terms at checkout",
+						"nullable": true,
+						"type": "boolean"
+					},
+					"billing_emails": {
+						"description": "Whether your instance sends its own billing emails, such as receipts, renewal reminders and refund notices",
+						"nullable": true,
+						"type": "boolean"
+					},
+					"default_currency": {
+						"description": "Currency for buyers whose country has no currency in country_currencies",
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/PremiumCurrency"}]
+					},
 					"prices": {
+						"description": "Stripe price IDs by currency for the monthly and yearly plans and the one-month and one-year gifts",
 						"nullable": true,
 						"type": "object",
 						"additionalProperties": {"$ref": "#/components/schemas/BillingPriceSetUpdateRequest"}
 					},
 					"country_currencies": {
+						"description": "Currency that buyers in each country pay in, by two-letter country code",
 						"nullable": true,
 						"allOf": [{"$ref": "#/components/schemas/BillingCountryCurrenciesSchema"}]
 					},
-					"legacy_prices": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/BillingLegacyPricesSchema"}]}
+					"legacy_prices": {
+						"description": "Older Stripe price IDs whose subscriptions keep renewing, by slot such as monthly_GBP",
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/BillingLegacyPricesSchema"}]
+					}
 				}
 			},
 			"ConnectionProviderUpdate": {
@@ -24505,38 +24838,51 @@
 			"ExperimentDeliveryConfigUpdateRequest": {
 				"type": "object",
 				"properties": {
-					"poll_interval_seconds": {"type": "integer", "minimum": 60, "maximum": 86400},
-					"poll_jitter_percent": {"type": "integer", "minimum": 0, "maximum": 50}
+					"poll_interval_seconds": {
+						"type": "integer",
+						"minimum": 60,
+						"maximum": 86400,
+						"description": "Seconds between the checks where the apps ask which feature rollouts they are part of"
+					},
+					"poll_jitter_percent": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 50,
+						"description": "Most that each app shifts a check earlier or later, as a percentage of the poll interval"
+					}
 				}
 			},
 			"GuildVisitsConfigUpdateRequest": {
 				"type": "object",
 				"properties": {
-					"enabled": {"type": "boolean", "description": "Kill switch for visiting communities without joining"},
+					"enabled": {
+						"type": "boolean",
+						"description": "Whether people picked by the rollout can preview a community before they join it"
+					},
 					"user_basis_points": {
 						"type": "integer",
 						"minimum": 0,
 						"maximum": 10000,
-						"description": "Share of people assigned, in basis points"
+						"description": "Share of people who can preview communities, in basis points where 10000 is everyone"
 					},
 					"user_salt": {
 						"type": "string",
 						"minLength": 1,
 						"maxLength": 64,
 						"pattern": "^[\\x20-\\x7e]+$",
-						"description": "Salt for the assignment bucket"
+						"description": "Text mixed into the rollout pick, where a new value picks a different set of people"
 					},
 					"included_user_ids": {
 						"maxItems": 1000,
 						"type": "array",
 						"items": {"type": "string", "pattern": "^\\d{1,20}$"},
-						"description": "People always assigned"
+						"description": "People who can always preview communities"
 					},
 					"excluded_user_ids": {
 						"maxItems": 1000,
 						"type": "array",
 						"items": {"type": "string", "pattern": "^\\d{1,20}$"},
-						"description": "People never assigned, checked before the included list"
+						"description": "People who can never preview communities, checked before the included list"
 					}
 				}
 			},
@@ -24582,7 +24928,7 @@
 						"type": "object",
 						"properties": {
 							"mode": {
-								"description": "Whether accounts unused for a long time are deleted. An account is only deleted after a warning email reached it",
+								"description": "Whether accounts unused for a long time are deleted, always after a warning email reached them",
 								"allOf": [{"$ref": "#/components/schemas/CleanupModeSchema"}]
 							},
 							"inactive_days": {
@@ -24624,13 +24970,13 @@
 						"properties": {
 							"enabled": {
 								"type": "boolean",
-								"description": "Whether accounts can be created from just a display name. Needs the captcha to be on"
+								"description": "Whether accounts can be created from just a display name, which needs the captcha to be on"
 							},
 							"pow_escalation_per_hour": {
 								"type": "integer",
 								"minimum": 10,
 								"maximum": 1000000,
-								"description": "Every this many accounts created from a display name in the current hour doubles the captcha cost"
+								"description": "The captcha gets twice as hard for each batch of this many accounts created from a display name in the past hour"
 							}
 						}
 					}
@@ -24639,9 +24985,22 @@
 			"CaptchaConfigUpdateRequest": {
 				"type": "object",
 				"properties": {
-					"provider": {"allOf": [{"$ref": "#/components/schemas/CaptchaProviderSchema"}]},
-					"cost": {"type": "integer", "minimum": 1000, "maximum": 20000},
-					"max_counter": {"type": "integer", "minimum": 100, "maximum": 20000},
+					"provider": {
+						"description": "Which check people solve before they sign up, sign in or do other things spammers abuse, altcha for a proof-of-work check or none for no check",
+						"allOf": [{"$ref": "#/components/schemas/CaptchaProviderSchema"}]
+					},
+					"cost": {
+						"type": "integer",
+						"minimum": 1000,
+						"maximum": 20000,
+						"description": "How much work each attempt at the proof-of-work check takes, where a higher value is slower for everyone"
+					},
+					"max_counter": {
+						"type": "integer",
+						"minimum": 100,
+						"maximum": 20000,
+						"description": "Most attempts the proof-of-work check can need, where a higher value makes it take longer on average"
+					},
 					"enabled": {
 						"type": "boolean",
 						"description": "Deprecated, use provider. false means none and true means altcha"
@@ -24651,69 +25010,179 @@
 			"VoiceP2pConfigUpdateRequest": {
 				"type": "object",
 				"properties": {
-					"enabled": {"type": "boolean"},
-					"rollout_basis_points": {"type": "integer", "minimum": 0, "maximum": 10000},
-					"rollout_country_codes": {"allOf": [{"$ref": "#/components/schemas/ExperimentRolloutCountryCodesSchema"}]},
-					"rollout_salt": {"type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[\\x20-\\x7e]+$"},
+					"enabled": {
+						"type": "boolean",
+						"description": "Whether people picked by the rollout can start calls that connect them directly to each other"
+					},
+					"rollout_basis_points": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 10000,
+						"description": "Share of accounts that can start peer-to-peer calls, in basis points where 10000 is everyone"
+					},
+					"rollout_country_codes": {
+						"description": "Two-letter country codes that limit the rollout share to people in those countries, or empty for every country",
+						"allOf": [{"$ref": "#/components/schemas/ExperimentRolloutCountryCodesSchema"}]
+					},
+					"rollout_salt": {
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 64,
+						"pattern": "^[\\x20-\\x7e]+$",
+						"description": "Text mixed into the rollout pick, where a new value picks a different set of accounts"
+					},
 					"included_user_ids": {
 						"maxItems": 1000,
 						"type": "array",
-						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"},
+						"description": "Accounts that can always start peer-to-peer calls"
 					},
 					"included_guild_ids": {
 						"maxItems": 1000,
 						"type": "array",
-						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"},
+						"description": "Communities whose members can always start peer-to-peer calls"
 					},
-					"include_premium_users": {"type": "boolean"},
+					"include_premium_users": {
+						"type": "boolean",
+						"description": "Whether accounts with the paid tier can always start peer-to-peer calls"
+					},
 					"excluded_user_ids": {
 						"maxItems": 1000,
 						"type": "array",
-						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"},
+						"description": "Accounts that can never start peer-to-peer calls, checked before every other rule"
 					},
-					"max_participants": {"type": "integer", "minimum": 2, "maximum": 4}
+					"max_participants": {
+						"type": "integer",
+						"minimum": 2,
+						"maximum": 4,
+						"description": "Most people in one peer-to-peer call"
+					}
 				}
 			},
 			"DomainMigrationConfigUpdateRequest": {
 				"type": "object",
 				"properties": {
-					"enabled": {"type": "boolean"},
-					"rollout_basis_points": {"type": "integer", "minimum": 0, "maximum": 10000},
-					"rollout_country_codes": {"allOf": [{"$ref": "#/components/schemas/ExperimentRolloutCountryCodesSchema"}]},
-					"rollout_salt": {"type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[\\x20-\\x7e]+$"},
+					"enabled": {
+						"type": "boolean",
+						"description": "Whether fluxer.com moves people from its old web app domain to the new one, which does nothing on a self-hosted instance"
+					},
+					"rollout_basis_points": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 10000,
+						"description": "Share of signed-in accounts that move to the new domain, in basis points where 10000 is everyone"
+					},
+					"rollout_country_codes": {
+						"description": "Two-letter country codes that limit the rollout share to people in those countries, or empty for every country",
+						"allOf": [{"$ref": "#/components/schemas/ExperimentRolloutCountryCodesSchema"}]
+					},
+					"rollout_salt": {
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 64,
+						"pattern": "^[\\x20-\\x7e]+$",
+						"description": "Text mixed into the rollout pick, where a new value picks a different set of accounts"
+					},
 					"included_user_ids": {
 						"maxItems": 1000,
 						"type": "array",
-						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"},
+						"description": "Accounts that always move to the new domain"
 					},
 					"included_guild_ids": {
 						"maxItems": 1000,
 						"type": "array",
-						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"},
+						"description": "Communities whose members always move to the new domain"
 					},
-					"include_premium_users": {"type": "boolean"},
+					"include_premium_users": {
+						"type": "boolean",
+						"description": "Whether accounts with the paid tier always move to the new domain"
+					},
 					"excluded_user_ids": {
 						"maxItems": 1000,
 						"type": "array",
-						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"},
+						"description": "Accounts that never move to the new domain, checked before every other rule"
 					},
-					"anonymous_rollout_basis_points": {"type": "integer", "minimum": 0, "maximum": 10000},
-					"standalone_forwarding": {"type": "boolean"}
+					"anonymous_rollout_basis_points": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 10000,
+						"description": "Share of signed-out devices that move to the new domain, in basis points where 10000 is everyone"
+					},
+					"standalone_forwarding": {
+						"type": "boolean",
+						"description": "Whether installed web apps forward to the new domain after moving their session"
+					}
 				}
 			},
-			"PushRelayConfigUpdateRequest": {"type": "object", "properties": {"relay_consent_accepted": {"type": "boolean"}}},
+			"PushRelayConfigUpdateRequest": {
+				"type": "object",
+				"properties": {
+					"relay_consent_accepted": {
+						"description": "Whether you accept the push relay privacy notice, which the Fluxer mobile apps need to get notifications from your instance",
+						"type": "boolean"
+					}
+				}
+			},
 			"GatewayRolloutConfigUpdateRequest": {
 				"type": "object",
 				"properties": {
-					"session_rollout_percentage": {"type": "number", "minimum": 0, "maximum": 100},
-					"session_rollout_mode": {"type": "string", "enum": ["modulo", "random"]},
-					"guild_rollout_percentage": {"type": "number", "minimum": 0, "maximum": 100},
-					"rpc_request_timeout_ms": {"type": "integer", "minimum": 1000, "maximum": 60000},
-					"max_concurrent_session_starts": {"type": "integer", "minimum": 1, "maximum": 10000},
-					"max_concurrent_guild_starts": {"type": "integer", "minimum": 1, "maximum": 10000},
-					"gateway_dispatch_relay_shards": {"type": "integer", "minimum": 1, "maximum": 10000},
-					"gateway_dispatch_relay_max_queue": {"type": "integer", "minimum": 0, "maximum": 1000000},
-					"voice_e2ee_scope": {"type": "string", "enum": ["guild_feature_only", "platform_wide"]}
+					"session_rollout_percentage": {
+						"type": "number",
+						"minimum": 0,
+						"maximum": 100,
+						"description": "Percentage of accounts that can connect to the gateway, where 0 pauses every new connection"
+					},
+					"session_rollout_mode": {
+						"type": "string",
+						"enum": ["modulo", "random"],
+						"description": "How the gateway picks accounts below 100 percent, modulo for the same accounts each time or random for a new pick at each connection"
+					},
+					"guild_rollout_percentage": {
+						"type": "number",
+						"minimum": 0,
+						"maximum": 100,
+						"description": "Percentage of communities the gateway starts, from 0 for none to 100 for all of them"
+					},
+					"rpc_request_timeout_ms": {
+						"type": "integer",
+						"minimum": 1000,
+						"maximum": 60000,
+						"description": "Milliseconds the gateway waits for the API to respond to one request"
+					},
+					"max_concurrent_session_starts": {
+						"type": "integer",
+						"minimum": 1,
+						"maximum": 10000,
+						"description": "Most connections each gateway node sets up at once, with the rest waiting in a queue"
+					},
+					"max_concurrent_guild_starts": {
+						"type": "integer",
+						"minimum": 1,
+						"maximum": 10000,
+						"description": "Most communities each gateway node starts at once, with the rest waiting their turn"
+					},
+					"gateway_dispatch_relay_shards": {
+						"type": "integer",
+						"minimum": 1,
+						"maximum": 10000,
+						"description": "Number of dispatch relay workers on each gateway node that send events to connected sessions, which changes only when the gateway restarts"
+					},
+					"gateway_dispatch_relay_max_queue": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 1000000,
+						"description": "Most events one dispatch relay worker queues before senders wait, where 0 uses the gateway's own limit"
+					},
+					"voice_e2ee_scope": {
+						"type": "string",
+						"enum": ["guild_feature_only", "platform_wide"],
+						"description": "Which calls encrypt their media with a key that your instance hands out, guild_feature_only for communities with the VOICE_E2EE feature or platform_wide for every call"
+					}
 				}
 			},
 			"ExperimentRolloutCountryCodesSchema": {
@@ -24760,7 +25229,7 @@
 				"type": "string"
 			},
 			"GuildJoinGateSchema": {
-				"description": "When joining a community needs a finished account. Applies only while the interaction tier is enforced and the person can preview communities",
+				"description": "When joining a community needs a finished account, which only applies while the interaction tier is enforced and the person can preview communities",
 				"x-enumNames": ["OFF", "VISITS_CAPABLE", "ALWAYS"],
 				"x-enumDescriptions": [
 					"Joining a community never needs a finished account",
@@ -25080,8 +25549,20 @@
 			"ExperimentDeliveryConfigResponse": {
 				"type": "object",
 				"properties": {
-					"poll_interval_seconds": {"default": 300, "type": "integer", "minimum": 60, "maximum": 86400},
-					"poll_jitter_percent": {"default": 15, "type": "integer", "minimum": 0, "maximum": 50}
+					"poll_interval_seconds": {
+						"default": 300,
+						"type": "integer",
+						"minimum": 60,
+						"maximum": 86400,
+						"description": "Seconds between the checks where the apps ask which feature rollouts they are part of"
+					},
+					"poll_jitter_percent": {
+						"default": 15,
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 50,
+						"description": "Most that each app shifts a check earlier or later, as a percentage of the poll interval"
+					}
 				},
 				"required": ["poll_interval_seconds", "poll_jitter_percent"],
 				"additionalProperties": false
@@ -25092,14 +25573,14 @@
 					"enabled": {
 						"default": false,
 						"type": "boolean",
-						"description": "Kill switch for visiting communities without joining"
+						"description": "Whether people picked by the rollout can preview a community before they join it"
 					},
 					"user_basis_points": {
 						"default": 0,
 						"type": "integer",
 						"minimum": 0,
 						"maximum": 10000,
-						"description": "Share of people assigned, in basis points"
+						"description": "Share of people who can preview communities, in basis points where 10000 is everyone"
 					},
 					"user_salt": {
 						"default": "guild-visits-user-v1",
@@ -25107,21 +25588,21 @@
 						"minLength": 1,
 						"maxLength": 64,
 						"pattern": "^[\\x20-\\x7e]+$",
-						"description": "Salt for the assignment bucket"
+						"description": "Text mixed into the rollout pick, where a new value picks a different set of people"
 					},
 					"included_user_ids": {
 						"default": [],
 						"maxItems": 1000,
 						"type": "array",
 						"items": {"type": "string", "pattern": "^\\d{1,20}$"},
-						"description": "People always assigned"
+						"description": "People who can always preview communities"
 					},
 					"excluded_user_ids": {
 						"default": [],
 						"maxItems": 1000,
 						"type": "array",
 						"items": {"type": "string", "pattern": "^\\d{1,20}$"},
-						"description": "People never assigned, checked before the included list"
+						"description": "People who can never preview communities, checked before the included list"
 					}
 				},
 				"required": ["enabled", "user_basis_points", "user_salt", "included_user_ids", "excluded_user_ids"],
@@ -25173,7 +25654,7 @@
 						"type": "object",
 						"properties": {
 							"mode": {
-								"description": "Whether accounts unused for a long time are deleted. An account is only deleted after a warning email reached it",
+								"description": "Whether accounts unused for a long time are deleted, always after a warning email reached them",
 								"allOf": [{"$ref": "#/components/schemas/CleanupModeSchema"}]
 							},
 							"inactive_days": {
@@ -25235,9 +25716,25 @@
 			"CaptchaConfigResponse": {
 				"type": "object",
 				"properties": {
-					"provider": {"default": "altcha", "allOf": [{"$ref": "#/components/schemas/CaptchaProviderSchema"}]},
-					"cost": {"default": 5000, "type": "integer", "minimum": 1000, "maximum": 20000},
-					"max_counter": {"default": 1000, "type": "integer", "minimum": 100, "maximum": 20000},
+					"provider": {
+						"default": "altcha",
+						"description": "Which check people solve before they sign up, sign in or do other things spammers abuse, altcha for a proof-of-work check or none for no check",
+						"allOf": [{"$ref": "#/components/schemas/CaptchaProviderSchema"}]
+					},
+					"cost": {
+						"default": 5000,
+						"type": "integer",
+						"minimum": 1000,
+						"maximum": 20000,
+						"description": "How much work each attempt at the proof-of-work check takes, where a higher value is slower for everyone"
+					},
+					"max_counter": {
+						"default": 1000,
+						"type": "integer",
+						"minimum": 100,
+						"maximum": 20000,
+						"description": "Most attempts the proof-of-work check can need, where a higher value makes it take longer on average"
+					},
 					"enabled": {"type": "boolean", "description": "Deprecated, use provider. Whether any captcha is asked for"}
 				},
 				"required": ["provider", "cost", "max_counter", "enabled"],
@@ -25246,11 +25743,22 @@
 			"VoiceP2pConfigResponse": {
 				"type": "object",
 				"properties": {
-					"enabled": {"default": false, "type": "boolean"},
+					"enabled": {
+						"default": false,
+						"type": "boolean",
+						"description": "Whether people picked by the rollout can start calls that connect them directly to each other"
+					},
 					"config_version": {"default": 0, "type": "integer", "minimum": 0, "maximum": 9007199254740991},
-					"rollout_basis_points": {"default": 0, "type": "integer", "minimum": 0, "maximum": 10000},
+					"rollout_basis_points": {
+						"default": 0,
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 10000,
+						"description": "Share of accounts that can start peer-to-peer calls, in basis points where 10000 is everyone"
+					},
 					"rollout_country_codes": {
 						"default": [],
+						"description": "Two-letter country codes that limit the rollout share to people in those countries, or empty for every country",
 						"allOf": [{"$ref": "#/components/schemas/ExperimentRolloutCountryCodesSchema"}]
 					},
 					"rollout_salt": {
@@ -25258,28 +25766,42 @@
 						"type": "string",
 						"minLength": 1,
 						"maxLength": 64,
-						"pattern": "^[\\x20-\\x7e]+$"
+						"pattern": "^[\\x20-\\x7e]+$",
+						"description": "Text mixed into the rollout pick, where a new value picks a different set of accounts"
 					},
 					"included_user_ids": {
 						"default": [],
 						"maxItems": 1000,
 						"type": "array",
-						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"},
+						"description": "Accounts that can always start peer-to-peer calls"
 					},
 					"included_guild_ids": {
 						"default": [],
 						"maxItems": 1000,
 						"type": "array",
-						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"},
+						"description": "Communities whose members can always start peer-to-peer calls"
 					},
-					"include_premium_users": {"default": false, "type": "boolean"},
+					"include_premium_users": {
+						"default": false,
+						"type": "boolean",
+						"description": "Whether accounts with the paid tier can always start peer-to-peer calls"
+					},
 					"excluded_user_ids": {
 						"default": [],
 						"maxItems": 1000,
 						"type": "array",
-						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"},
+						"description": "Accounts that can never start peer-to-peer calls, checked before every other rule"
 					},
-					"max_participants": {"default": 2, "type": "integer", "minimum": 2, "maximum": 4}
+					"max_participants": {
+						"default": 2,
+						"type": "integer",
+						"minimum": 2,
+						"maximum": 4,
+						"description": "Most people in one peer-to-peer call"
+					}
 				},
 				"required": [
 					"enabled",
@@ -25298,11 +25820,22 @@
 			"DomainMigrationConfigResponse": {
 				"type": "object",
 				"properties": {
-					"enabled": {"default": false, "type": "boolean"},
+					"enabled": {
+						"default": false,
+						"type": "boolean",
+						"description": "Whether fluxer.com moves people from its old web app domain to the new one, which does nothing on a self-hosted instance"
+					},
 					"config_version": {"default": 0, "type": "integer", "minimum": 0, "maximum": 9007199254740991},
-					"rollout_basis_points": {"default": 0, "type": "integer", "minimum": 0, "maximum": 10000},
+					"rollout_basis_points": {
+						"default": 0,
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 10000,
+						"description": "Share of signed-in accounts that move to the new domain, in basis points where 10000 is everyone"
+					},
 					"rollout_country_codes": {
 						"default": [],
+						"description": "Two-letter country codes that limit the rollout share to people in those countries, or empty for every country",
 						"allOf": [{"$ref": "#/components/schemas/ExperimentRolloutCountryCodesSchema"}]
 					},
 					"rollout_salt": {
@@ -25310,29 +25843,47 @@
 						"type": "string",
 						"minLength": 1,
 						"maxLength": 64,
-						"pattern": "^[\\x20-\\x7e]+$"
+						"pattern": "^[\\x20-\\x7e]+$",
+						"description": "Text mixed into the rollout pick, where a new value picks a different set of accounts"
 					},
 					"included_user_ids": {
 						"default": [],
 						"maxItems": 1000,
 						"type": "array",
-						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"},
+						"description": "Accounts that always move to the new domain"
 					},
 					"included_guild_ids": {
 						"default": [],
 						"maxItems": 1000,
 						"type": "array",
-						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"},
+						"description": "Communities whose members always move to the new domain"
 					},
-					"include_premium_users": {"default": false, "type": "boolean"},
+					"include_premium_users": {
+						"default": false,
+						"type": "boolean",
+						"description": "Whether accounts with the paid tier always move to the new domain"
+					},
 					"excluded_user_ids": {
 						"default": [],
 						"maxItems": 1000,
 						"type": "array",
-						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"},
+						"description": "Accounts that never move to the new domain, checked before every other rule"
 					},
-					"anonymous_rollout_basis_points": {"default": 0, "type": "integer", "minimum": 0, "maximum": 10000},
-					"standalone_forwarding": {"default": false, "type": "boolean"}
+					"anonymous_rollout_basis_points": {
+						"default": 0,
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 10000,
+						"description": "Share of signed-out devices that move to the new domain, in basis points where 10000 is everyone"
+					},
+					"standalone_forwarding": {
+						"default": false,
+						"type": "boolean",
+						"description": "Whether installed web apps forward to the new domain after moving their session"
+					}
 				},
 				"required": [
 					"enabled",
@@ -25368,18 +25919,66 @@
 			"GatewayRolloutConfigResponse": {
 				"type": "object",
 				"properties": {
-					"session_rollout_percentage": {"default": 100, "type": "number", "minimum": 0, "maximum": 100},
-					"session_rollout_mode": {"default": "modulo", "type": "string", "enum": ["modulo", "random"]},
-					"guild_rollout_percentage": {"default": 100, "type": "number", "minimum": 0, "maximum": 100},
-					"rpc_request_timeout_ms": {"default": 10000, "type": "integer", "minimum": 1000, "maximum": 60000},
-					"max_concurrent_session_starts": {"default": 512, "type": "integer", "minimum": 1, "maximum": 10000},
-					"max_concurrent_guild_starts": {"default": 256, "type": "integer", "minimum": 1, "maximum": 10000},
-					"gateway_dispatch_relay_shards": {"default": 32, "type": "integer", "minimum": 1, "maximum": 10000},
-					"gateway_dispatch_relay_max_queue": {"default": 50000, "type": "integer", "minimum": 0, "maximum": 1000000},
+					"session_rollout_percentage": {
+						"default": 100,
+						"type": "number",
+						"minimum": 0,
+						"maximum": 100,
+						"description": "Percentage of accounts that can connect to the gateway, where 0 pauses every new connection"
+					},
+					"session_rollout_mode": {
+						"default": "modulo",
+						"type": "string",
+						"enum": ["modulo", "random"],
+						"description": "How the gateway picks accounts below 100 percent, modulo for the same accounts each time or random for a new pick at each connection"
+					},
+					"guild_rollout_percentage": {
+						"default": 100,
+						"type": "number",
+						"minimum": 0,
+						"maximum": 100,
+						"description": "Percentage of communities the gateway starts, from 0 for none to 100 for all of them"
+					},
+					"rpc_request_timeout_ms": {
+						"default": 10000,
+						"type": "integer",
+						"minimum": 1000,
+						"maximum": 60000,
+						"description": "Milliseconds the gateway waits for the API to respond to one request"
+					},
+					"max_concurrent_session_starts": {
+						"default": 512,
+						"type": "integer",
+						"minimum": 1,
+						"maximum": 10000,
+						"description": "Most connections each gateway node sets up at once, with the rest waiting in a queue"
+					},
+					"max_concurrent_guild_starts": {
+						"default": 256,
+						"type": "integer",
+						"minimum": 1,
+						"maximum": 10000,
+						"description": "Most communities each gateway node starts at once, with the rest waiting their turn"
+					},
+					"gateway_dispatch_relay_shards": {
+						"default": 32,
+						"type": "integer",
+						"minimum": 1,
+						"maximum": 10000,
+						"description": "Number of dispatch relay workers on each gateway node that send events to connected sessions, which changes only when the gateway restarts"
+					},
+					"gateway_dispatch_relay_max_queue": {
+						"default": 50000,
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 1000000,
+						"description": "Most events one dispatch relay worker queues before senders wait, where 0 uses the gateway's own limit"
+					},
 					"voice_e2ee_scope": {
 						"default": "guild_feature_only",
 						"type": "string",
-						"enum": ["guild_feature_only", "platform_wide"]
+						"enum": ["guild_feature_only", "platform_wide"],
+						"description": "Which calls encrypt their media with a key that your instance hands out, guild_feature_only for communities with the VOICE_E2EE feature or platform_wide for every call"
 					}
 				},
 				"required": [
