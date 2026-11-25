@@ -64,10 +64,12 @@ export function nextRepair(
 
 export function vanishedTombstoneSql(table: CdcTable, scanStartUs: number): string {
 	const keys = table.keyColumns.map((column) => quoteIdentifier(column.name)).join(', ');
+	const live = ['_deleted = 0', '(_expires_at = 0 OR _expires_at > now64(3))'];
+	if (table.derived !== undefined) live.push(`${table.derived.ttl} > now64(3)`);
 	return [
 		`INSERT INTO ${cdcTableName(table.layout.name)} (${keys}, _version, _deleted)`,
 		`SELECT ${keys}, toUInt64(${scanStartUs}), 1 FROM ${cdcTableName(table.layout.name)} FINAL`,
-		`WHERE _deleted = 0 AND _version < ${scanStartUs}`,
+		`WHERE ${live.join(' AND ')} AND _version < ${scanStartUs}`,
 	].join(' ');
 }
 
