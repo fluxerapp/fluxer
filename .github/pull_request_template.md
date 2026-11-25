@@ -1,6 +1,6 @@
 Resolves https://feedback.fluxer.com/p/
 
-<!-- Repeat this line for each feedback.fluxer.com post this resolves, up to 20. Remove the placeholder only if no post is resolved and the approval gate does not apply. -->
+<!-- Repeat this line for each feedback.fluxer.com post this resolves, up to 20. Read https://docs.fluxer.com/contributing/ first: only approved contributors can open pull requests. -->
 
 ## Summary
 

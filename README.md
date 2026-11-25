@@ -143,6 +143,7 @@ Full setup notes, including canary, are in the [Linux repositories documentation
 - [Documentation home][docs]
 - [Downloads][docs-downloads]
 - [Self-hosting][docs-selfhost]
+- [Contributing][docs-contributing]
 
 ## License
 
@@ -181,3 +182,4 @@ Use of the Fluxer name and logo is covered by the
 [docs-downloads]: https://docs.fluxer.com/downloads/overview/
 [docs-linux]: https://docs.fluxer.com/downloads/linux-repositories/
 [docs-selfhost]: https://docs.fluxer.com/operator/
+[docs-contributing]: https://docs.fluxer.com/contributing/

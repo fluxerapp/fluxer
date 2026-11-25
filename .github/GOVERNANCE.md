@@ -12,7 +12,7 @@ Source code owned by Fluxer Platform AB in this repository is distributed under 
 
 Fluxer Platform AB does not require contributors to sign a contributor licence agreement or assign their copyright. Contributors retain the copyright in their work.
 
-Every commit made by a contributor must include the [Developer Certificate of Origin](https://developercertificate.org) sign-off required by the [contributing guidelines](https://github.com/fluxerapp/fluxer/blob/main/.github/CONTRIBUTING.md). Pull requests opened by Fluxer repository automation are exempt from this requirement.
+Every commit made by a contributor must include a [Developer Certificate of Origin](https://developercertificate.org) sign-off. Pull requests opened by Fluxer repository automation are exempt from this requirement.
 
 ## Name and marks
 

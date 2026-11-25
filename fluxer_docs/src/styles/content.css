@@ -1454,6 +1454,18 @@ starlight-tabs [role='tabpanel'] {
 	max-width: 40rem;
 }
 
+.sl-markdown-content figure.flx-diagram--start > svg {
+	margin-inline: 0;
+}
+
+.sl-markdown-content figure.flx-diagram--start > .flx-diagram-wide {
+	max-width: 35rem;
+}
+
+.sl-markdown-content figure.flx-diagram--start > .flx-diagram-narrow {
+	max-width: 18rem;
+}
+
 .sl-markdown-content figure.flx-diagram > .flx-diagram-narrow {
 	display: none;
 	max-width: 22rem;

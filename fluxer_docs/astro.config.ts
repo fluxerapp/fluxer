@@ -190,7 +190,7 @@ export default defineConfig({
 					items: [
 						{
 							label: 'Getting started',
-							items: [{label: 'Introduction', link: '/'}, 'authentication', 'snowflakes'],
+							items: [{label: 'Introduction', link: '/'}, 'authentication', 'snowflakes', 'contributing'],
 						},
 						{
 							label: 'Topics',
