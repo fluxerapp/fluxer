@@ -463,7 +463,11 @@ export default defineConfig({
 				},
 				{
 					label: 'Downloads',
-					items: ['downloads/overview', 'downloads/desktop', 'downloads/linux-repositories'],
+					items: [
+						{label: 'Overview', link: '/downloads/overview/'},
+						'downloads/desktop',
+						'downloads/linux-repositories',
+					],
 				},
 			],
 			social: [
