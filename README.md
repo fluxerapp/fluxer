@@ -12,6 +12,8 @@
     <img src="https://img.shields.io/badge/Docs-docs.fluxer.com-blue" alt="Documentation" /></a>
   <a href="https://fluxer.com/donate">
     <img src="https://img.shields.io/badge/Donate-fluxer.com%2Fdonate-brightgreen" alt="Donate" /></a>
+  <a href="https://fluxer.com/funding.json">
+    <img src="https://img.shields.io/badge/funding.json-fluxer.com%2Ffunding.json-orange" alt="funding.json" /></a>
   <a href="./LICENSE">
     <img src="https://img.shields.io/badge/License-AGPLv3-purple" alt="AGPLv3 License" /></a>
 </p>
@@ -144,6 +146,15 @@ Full setup notes, including canary, are in the [Linux repositories documentation
 - [Downloads][docs-downloads]
 - [Self-hosting][docs-selfhost]
 - [Contributing][docs-contributing]
+
+## Funding
+
+Fluxer is funded by the people who use fluxer.com, through optional purchases
+and donations, and it has no outside investors. Organizations can
+[donate](https://fluxer.com/donate?type=business) or
+[fund a piece of Fluxer's open source work](https://fluxer.com/help/fund-fluxer)
+with a grant, and every way to fund Fluxer is in our
+[funding.json](https://fluxer.com/funding.json).
 
 ## License
 
