@@ -251,6 +251,7 @@ These are the values of the top-level `code`, and the [OpenAPI document](/http-a
 | `MAX_GUILD_MEMBERS` | You can't have more than {count} community members |
 | `MAX_GUILD_ROLES` | You can't have more than {count} community roles |
 | `MAX_INVITES` | You can't have more than {count} invites |
+| `MAX_PERSONAS` | You can't have more than {count} personas |
 | `MAX_PINNED_THREADS_IN_FORUM` | This channel is at its pinned post limit of {count} |
 | `MAX_REACTIONS` | You can't have more than {count} reactions |
 | `MAX_STICKERS` | You can't have more than {count} stickers |
@@ -613,6 +614,10 @@ These are the values of `code` inside `errors`.
 | `PASSWORD_IS_TOO_COMMON` | Your password is too common |
 | `PASSWORD_LENGTH_INVALID` | String length must be between {min} and {max} characters |
 | `PASSWORD_NOT_SET` | Password isn't set |
+| `PERSONA_TAG_CANNOT_CONTAIN_RESERVED_TERMS` | Persona tag can't contain "fluxer". |
+| `PERSONA_TAG_CHANGED_TOO_MANY_TIMES` | You've changed your persona tag too often recently. Please try again in {minutes} minutes. |
+| `PERSONA_TAG_LENGTH_INVALID` | Persona tag length must be between {min} and {max} characters |
+| `PERSONA_TAG_RESERVED_VALUE` | Persona tag can't look like a staff or system message. |
 | `PRECEDING_CHANNEL_MUST_SHARE_PARENT` | Preceding channel must share the same parent as the moved channel |
 | `PRECEDING_CHANNEL_NOT_IN_GUILD` | Preceding channel isn't present in the community |
 | `PRONOUNS_CHANGED_TOO_MANY_TIMES` | You've changed your pronouns too often recently |

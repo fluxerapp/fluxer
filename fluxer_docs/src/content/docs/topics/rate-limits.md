@@ -121,6 +121,7 @@ These return 400 `INVALID_FORM_BODY` with a [validation error](/http-api/#valida
 | Accent color | 25 changes per 30 minutes | `ACCENT_COLOR_CHANGED_TOO_MANY_TIMES` |
 | Avatar | 25 changes per 30 minutes | `AVATAR_CHANGED_TOO_MANY_TIMES` |
 | Banner | 25 changes per 30 minutes | `BANNER_CHANGED_TOO_MANY_TIMES` |
+| Persona Tag | 25 changes per 30 minutes | `PERSONA_TAG_CHANGED_TOO_MANY_TIMES` |
 | [Voice activity sharing](/http-api/users/settings/#modify-voice-activity-sharing) | 1 change per 24 hours | `VOICE_ACTIVITY_SHARING_ON_COOLDOWN` |
 | [TOTP login](/http-api/authentication/#complete-login-with-totp) | 10 attempts per 15 minutes, and 5 per 5 minutes on one MFA ticket | `INVALID_CODE` |
 | [Sudo mode](/http-api/users/mfa/#sudo-mode) with TOTP | 10 attempts per 15 minutes | `INVALID_MFA_CODE` |
