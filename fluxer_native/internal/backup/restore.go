@@ -20,7 +20,9 @@ import (
 	"strings"
 
 	"github.com/fluxerapp/fluxer/fluxer_native/internal/config"
+	"github.com/fluxerapp/fluxer/fluxer_native/internal/lock"
 	"github.com/fluxerapp/fluxer/fluxer_native/internal/spec"
+	"github.com/fluxerapp/fluxer/fluxer_native/internal/stamp"
 )
 
 const (
@@ -30,7 +32,37 @@ const (
 
 type RestoreOptions struct {
 	EnvFile  string
+	Release  string
 	Progress func(stage string)
+}
+
+func CheckRelease(m *Manifest, release string) error {
+	if c, ok := stamp.Compare(m.Release, release); ok && c > 0 {
+		return fmt.Errorf("backup: this backup is from Fluxer %s, which is newer than this Fluxer %s. Restore it with Fluxer %s or newer", m.Release, release, m.Release)
+	}
+	return nil
+}
+
+func Check(t Target, path string) (*Manifest, error) {
+	m, err := Verify(path)
+	if err != nil {
+		return m, err
+	}
+	if m.Scope == ScopeWithoutUploads {
+		return m, errors.New("backup: this backup has no uploads and only restores onto the instance that made it")
+	}
+	for _, v := range m.Volumes {
+		if _, ok := volumeDir(t.Layout, v); !ok {
+			return m, fmt.Errorf("backup: volume %s has no place in native mode", v)
+		}
+	}
+	if m.Database != "" && t.externalDatabase() {
+		return m, fmt.Errorf("backup: the database is external, restore %s from the backup into it with pg_restore", DumpName)
+	}
+	if m.Database != "" {
+		return m, checkDumpMajor(m.Dump, t.PGMajor)
+	}
+	return m, nil
 }
 
 func Restore(ctx context.Context, t Target, path string, opts RestoreOptions) (*Manifest, string, error) {
@@ -39,20 +71,12 @@ func Restore(ctx context.Context, t Target, path string, opts RestoreOptions) (*
 		progress = func(string) {}
 	}
 	progress(StageVerifying)
-	m, err := Verify(path)
+	m, err := Check(t, path)
 	if err != nil {
 		return m, "", err
 	}
-	if m.Scope == ScopeWithoutUploads {
-		return m, "", errors.New("backup: this backup has no uploads and only restores onto the instance that made it")
-	}
-	for _, v := range m.Volumes {
-		if _, ok := volumeDir(t.Layout, v); !ok {
-			return m, "", fmt.Errorf("backup: volume %s has no place in native mode", v)
-		}
-	}
-	if m.Database != "" && t.externalDatabase() {
-		return m, "", fmt.Errorf("backup: the database is external, restore %s from the backup into it with pg_restore", DumpName)
+	if err := CheckRelease(m, opts.Release); err != nil {
+		return m, "", err
 	}
 	held, err := lockData(t.Layout)
 	if err != nil {
@@ -60,35 +84,40 @@ func Restore(ctx context.Context, t Target, path string, opts RestoreOptions) (*
 	}
 	defer held.Release()
 
-	var pg *postgresServer
+	var pg *PostgresServer
 	var restoreDump func(io.Reader) error
 	if m.Database != "" {
 		progress(StageDatabase)
-		if pg, err = t.startPostgres(ctx, t.Layout.Tmp("restore")); err != nil {
+		if pg, err = t.StartPostgres(ctx, t.Layout.Tmp("restore")); err != nil {
 			return m, "", err
 		}
 		defer func() {
 			if pg != nil {
-				pg.stop()
+				pg.Stop()
 			}
 		}()
-		restoreDump = func(r io.Reader) error { return t.restoreDump(ctx, pg.sock, r) }
+		restoreDump = func(r io.Reader) error { return t.RestoreDump(ctx, pg.Sock, r) }
 	}
 	files, err := unpack(path, t.Layout, m, restoreDump, progress)
 	if err != nil {
 		return m, "", err
 	}
 	if pg != nil {
-		err, pg = pg.stop(), nil
+		err, pg = pg.Stop(), nil
 		if err != nil {
 			return m, "", err
 		}
 	}
 	for _, v := range volumeDirs {
-		if slices.Contains(m.Volumes, v.name) || uploadsVolume(v.name) && m.HasSkipped(SkippedUploads) || leftBehind(m, v.name) {
+		if m.Scope == ScopeDatabase || v.name == edgeCAVolume || slices.Contains(m.Volumes, v.name) || uploadsVolume(v.name) && m.HasSkipped(SkippedUploads) || leftBehind(m, v.name) {
 			continue
 		}
 		if err := clearDir(v.dir(t.Layout)); err != nil {
+			return m, "", err
+		}
+	}
+	if slices.Contains(m.Volumes, edgeCAVolume) {
+		if err := os.RemoveAll(internalLeavesDir(t.Layout)); err != nil {
 			return m, "", err
 		}
 	}
@@ -106,6 +135,43 @@ func Restore(ctx context.Context, t Target, path string, opts RestoreOptions) (*
 		}
 	}
 	return m, envCopy, nil
+}
+
+type Spooled struct {
+	Path string
+	busy *lock.Lock
+}
+
+func (s *Spooled) Close() {
+	os.Remove(s.Path)
+	s.busy.Release()
+}
+
+func Spool(r io.Reader, l spec.Layout) (*Spooled, error) {
+	dir := l.BackupsDir()
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return nil, err
+	}
+	busy, err := lockBackups(l)
+	if err != nil {
+		return nil, err
+	}
+	f, err := os.CreateTemp(dir, ".incoming-*"+Extension+PartialSuffix)
+	if err != nil {
+		busy.Release()
+		return nil, err
+	}
+	s := &Spooled{Path: f.Name(), busy: busy}
+	if _, err := io.Copy(f, r); err != nil {
+		f.Close()
+		s.Close()
+		return nil, fmt.Errorf("backup: reading the archive from standard input: %w", err)
+	}
+	if err := f.Close(); err != nil {
+		s.Close()
+		return nil, err
+	}
+	return s, nil
 }
 
 func leftBehind(m *Manifest, volume string) bool {
@@ -145,17 +211,7 @@ func unpack(path string, l spec.Layout, m *Manifest, restoreDump func(io.Reader)
 			return restoreDump(r)
 		}
 		if strings.HasPrefix(hdr.Name, FilesPrefix) {
-			if hdr.Typeflag == tar.TypeReg && slices.Contains([]string{EnvFileName, SecretsFileName, ModesFileName, RexctlStateName}, hdr.Name) {
-				data, err := io.ReadAll(io.LimitReader(r, maxSmallFile+1))
-				if err != nil {
-					return err
-				}
-				if len(data) > maxSmallFile {
-					return fmt.Errorf("%w: %s is too large", ErrDamaged, hdr.Name)
-				}
-				files[hdr.Name] = data
-			}
-			return nil
+			return readSmallFile(hdr, r, files)
 		}
 		vol, inner, ok := volumeOf(hdr.Name)
 		if !ok {
@@ -189,6 +245,68 @@ func unpack(path string, l spec.Layout, m *Manifest, restoreDump func(io.Reader)
 		return extract(root, vol, inner, hdr, r)
 	})
 	return files, err
+}
+
+func readSmallFile(hdr *tar.Header, r io.Reader, files map[string][]byte) error {
+	if hdr.Typeflag != tar.TypeReg || !slices.Contains([]string{EnvFileName, SecretsFileName, ModesFileName, RexctlStateName}, hdr.Name) {
+		return nil
+	}
+	data, err := io.ReadAll(io.LimitReader(r, maxSmallFile+1))
+	if err != nil {
+		return err
+	}
+	if len(data) > maxSmallFile {
+		return fmt.Errorf("%w: %s is too large", ErrDamaged, hdr.Name)
+	}
+	files[hdr.Name] = data
+	return nil
+}
+
+var errFilesRead = errors.New("backup: files read")
+
+func readFiles(path string) (map[string][]byte, error) {
+	files := map[string][]byte{}
+	err := walkArchive(path, func(hdr *tar.Header, r io.Reader) error {
+		if hdr.Name == DumpName || strings.HasPrefix(hdr.Name, VolumesPrefix) {
+			return errFilesRead
+		}
+		if strings.HasPrefix(hdr.Name, FilesPrefix) {
+			return readSmallFile(hdr, r, files)
+		}
+		return nil
+	})
+	if errors.Is(err, errFilesRead) {
+		err = nil
+	}
+	return files, err
+}
+
+func CheckModes(t Target, m *Manifest, path string) error {
+	files, err := readFiles(path)
+	if err != nil {
+		return err
+	}
+	modes, err := restoredModes(t.Layout, m, files)
+	if err != nil {
+		return err
+	}
+	archive := parseEnv(files[EnvFileName])
+	maps.Copy(archive, modes)
+	target := maps.Clone(archive)
+	maps.Copy(target, t.SetModes)
+	for _, k := range []string{spec.KVURLEnv, spec.S3EndpointEnv} {
+		if v := strings.TrimSpace(t.Env[k]); v != "" {
+			target[k] = v
+		}
+	}
+	archiveValkey, archiveWeed := spec.Bundled(archive)
+	targetValkey, targetWeed := spec.Bundled(target)
+	valkey := slices.Contains(m.Volumes, spec.ValkeyVolume) || archiveValkey && targetValkey
+	weed := slices.Contains(m.Volumes, spec.SeaweedFSVolume) && !leftBehind(m, spec.SeaweedFSVolume) || archiveWeed && targetWeed
+	if valkey && !spec.HasBinary(t.BinDir, spec.ValkeyBinary) || weed && !spec.HasBinary(t.BinDir, spec.WeedBinary) {
+		return errors.New("backup: this backup uses Valkey or SeaweedFS. Run rexctl migrate on the old install first")
+	}
+	return nil
 }
 
 func extract(root *os.Root, vol, inner string, hdr *tar.Header, r io.Reader) error {
@@ -250,9 +368,17 @@ func clearDir(dir string) error {
 }
 
 func restoreModes(l spec.Layout, m *Manifest, files map[string][]byte) error {
-	modes, err := config.ReadModes(l)
+	out, err := restoredModes(l, m, files)
 	if err != nil {
 		return err
+	}
+	return config.WriteModes(l, out)
+}
+
+func restoredModes(l spec.Layout, m *Manifest, files map[string][]byte) (map[string]string, error) {
+	modes, err := config.ReadModes(l)
+	if err != nil {
+		return nil, err
 	}
 	archive := parseEnv(files[ModesFileName])
 	for k, v := range parseEnv(files[EnvFileName]) {
@@ -267,7 +393,7 @@ func restoreModes(l spec.Layout, m *Manifest, files map[string][]byte) error {
 		}
 	}
 	maps.Copy(out, spec.RestoreDefaults(m.Volumes, archive))
-	return config.WriteModes(l, out)
+	return out, nil
 }
 
 func restoreSecrets(target string, files map[string][]byte) error {

@@ -1,0 +1,63 @@
+{
+	admin off
+	persist_config off
+	skip_install_trust
+	storage file_system {{quote .Storage}}
+	{{- if .Bind}}
+	default_bind {{.Bind}}
+	{{- end}}
+	http_port {{.HTTPPort}}
+	https_port {{.HTTPSPort}}
+	pki {
+		ca local {
+			name "Fluxer"
+		}
+	}
+	servers {
+		trusted_proxies static {{.TrustedProxies}}
+		trusted_proxies_strict
+		protocols {{.Protocols}}
+	}
+	{{.GlobalOptions}}
+}
+
+{{.Site}} {
+	{{.TLS}}
+
+	handle /_health {
+		header Cache-Control no-store
+		respond "OK" 200
+	}
+{{- range .Voices}}
+
+	handle_path /livekit-{{.ID}}/* {
+		reverse_proxy {{.Addr}} {
+			header_up X-Forwarded-For {client_ip}
+			header_up X-Real-IP {client_ip}
+			header_up -Forwarded
+			stream_timeout 24h
+			stream_close_delay 5m
+		}
+	}
+{{- end}}
+
+	handle {
+		respond 404
+	}
+}
+{{- if .RootSite}}
+
+{{.RootSite}} {
+	handle /fluxer-root.crt {
+		header Content-Type application/x-x509-ca-cert
+		header Cache-Control no-store
+		rewrite * /root.crt
+		root * {{quote .RootDir}}
+		file_server
+	}
+
+	handle {
+		redir {{.RedirectTo}}{uri} 308
+	}
+}
+{{- end}}

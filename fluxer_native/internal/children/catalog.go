@@ -2,7 +2,16 @@
 
 package children
 
-import "github.com/fluxerapp/fluxer/fluxer_native/internal/spec"
+import (
+	"cmp"
+	"maps"
+	"slices"
+	"strings"
+
+	"github.com/fluxerapp/fluxer/fluxer_native/internal/sizing"
+	"github.com/fluxerapp/fluxer/fluxer_native/internal/spec"
+	"github.com/fluxerapp/fluxer/fluxer_native/internal/updates"
+)
 
 const (
 	edgeService = "edge"
@@ -205,6 +214,15 @@ var fluxerEnv = with(postgresEnv, map[string]string{
 	"FLUXER_CONNECTION_INITIATION_SECRET":                   "${FLUXER_CONNECTION_INITIATION_SECRET:-}",
 	"FLUXER_PROFILE_PSEUDONYM_SECRET":                       "${FLUXER_PROFILE_PSEUDONYM_SECRET:-}",
 	"FLUXER_SSO_ALLOW_PRIVATE_ADDRESSES":                    "${FLUXER_SSO_ALLOW_PRIVATE_ADDRESSES:-}",
+	"FLUXER_SSO_ENABLED":                                    "${FLUXER_SSO_ENABLED:-}",
+	"FLUXER_SSO_ENFORCED":                                   "${FLUXER_SSO_ENFORCED:-}",
+	"FLUXER_SSO_AUTO_PROVISION":                             "${FLUXER_SSO_AUTO_PROVISION:-}",
+	"FLUXER_SSO_ISSUER":                                     "${FLUXER_SSO_ISSUER:-}",
+	"FLUXER_SSO_CLIENT_ID":                                  "${FLUXER_SSO_CLIENT_ID:-}",
+	"FLUXER_SSO_CLIENT_SECRET":                              "${FLUXER_SSO_CLIENT_SECRET:-}",
+	"FLUXER_SSO_SCOPE":                                      "${FLUXER_SSO_SCOPE:-}",
+	"FLUXER_SSO_DISPLAY_NAME":                               "${FLUXER_SSO_DISPLAY_NAME:-}",
+	"FLUXER_SSO_ALLOWED_DOMAINS":                            "${FLUXER_SSO_ALLOWED_DOMAINS:-}",
 	"FLUXER_VAPID_PUBLIC_KEY":                               "${FLUXER_VAPID_PUBLIC_KEY:-}",
 	"FLUXER_VAPID_PRIVATE_KEY":                              "${FLUXER_VAPID_PRIVATE_KEY:-}",
 	"FLUXER_VAPID_EMAIL":                                    "${FLUXER_VAPID_EMAIL:-admin@${FLUXER_DOMAIN:-}}",
@@ -231,15 +249,17 @@ var rustEnv = with(fluxerEnv, map[string]string{
 	"MALLOC_ARENA_MAX":     "${FLUXER_MALLOC_ARENA_MAX:-2}",
 })
 
-var composeEnv = map[string]map[string]string{
+var childEnv = map[string]map[string]string{
 	edgeService: {
-		"FLUXER_EDGE_SITE_ADDRESS":    "${FLUXER_EDGE_SITE_ADDRESS:-${FLUXER_CADDY_SITE_ADDRESS:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}}}",
-		"FLUXER_EDGE_TRUSTED_PROXIES": "${FLUXER_EDGE_TRUSTED_PROXIES:-127.0.0.1/32}",
-		"FLUXER_EDGE_ENCODE":          "${FLUXER_EDGE_ENCODE:-zstd gzip}",
-		"FLUXER_EDGE_PROTOCOLS":       "${FLUXER_EDGE_PROTOCOLS:-h1 h2 h3}",
-		"FLUXER_EDGE_GLOBAL_OPTIONS":  "${FLUXER_EDGE_GLOBAL_OPTIONS:-}",
-		"FLUXER_EDGE_TLS_DIRECTIVE":   "${FLUXER_EDGE_TLS:+tls ${FLUXER_EDGE_TLS:-}}",
-		"FLUXER_ADMIN_BASE_PATH":      "${FLUXER_ADMIN_BASE_PATH:-/admin}",
+		"FLUXER_EDGE_SITE_ADDRESS":           "${FLUXER_EDGE_SITE_ADDRESS:-${FLUXER_CADDY_SITE_ADDRESS:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:-}}}",
+		"FLUXER_EDGE_TRUSTED_PROXIES":        "${FLUXER_EDGE_TRUSTED_PROXIES:-127.0.0.1/32}",
+		"FLUXER_EDGE_ENCODE":                 "${FLUXER_EDGE_ENCODE:-zstd gzip}",
+		"FLUXER_EDGE_PROTOCOLS":              "${FLUXER_EDGE_PROTOCOLS:-h1 h2 h3}",
+		"FLUXER_EDGE_GLOBAL_OPTIONS":         "${FLUXER_EDGE_GLOBAL_OPTIONS:-}",
+		"FLUXER_EDGE_ACME_CA_DIRECTIVE":      "${FLUXER_EDGE_ACME_CA:+acme_ca ${FLUXER_EDGE_ACME_CA:-}}",
+		"FLUXER_EDGE_ACME_CA_ROOT_DIRECTIVE": "${FLUXER_EDGE_ACME_CA_ROOT:+acme_ca_root ${FLUXER_EDGE_ACME_CA_ROOT:-}}",
+		"FLUXER_EDGE_TLS_DIRECTIVE":          "${FLUXER_EDGE_TLS:+tls ${FLUXER_EDGE_TLS:-}}",
+		"FLUXER_ADMIN_BASE_PATH":             "${FLUXER_ADMIN_BASE_PATH:-/admin}",
 	},
 
 	spec.Postgres: {
@@ -515,4 +535,225 @@ var seaweedArgs = []string{
 	"-master.garbageThreshold=${FLUXER_SEAWEEDFS_GARBAGE_THRESHOLD:-0.1}",
 	"-volume.max=${FLUXER_SEAWEEDFS_VOLUME_MAX:-10000}",
 	"-s3.concurrentFileUploadLimit=${FLUXER_SEAWEEDFS_S3_CONCURRENT_UPLOADS:-5}",
+}
+
+const (
+	Fluxerd      = "fluxerd"
+	BackupReader = "backups"
+	UpdateReader = "updates"
+)
+
+type Setting struct {
+	Name    string   `json:"name"`
+	Default string   `json:"default,omitempty"`
+	Sized   string   `json:"sized,omitempty"`
+	PerCPU  bool     `json:"per_cpu,omitempty"`
+	Readers []string `json:"readers"`
+	Secret  bool     `json:"secret,omitempty"`
+}
+
+type direct struct {
+	def     string
+	readers []string
+}
+
+var directSettings = map[string]direct{
+	"FLUXER_EDGE_BIND":           {"127.0.0.1:8080", []string{edgeService}},
+	"FLUXER_EDGE_LISTEN_ADDRESS": {"", []string{edgeService}},
+	"FLUXER_HTTP_PORT":           {"80", []string{edgeService}},
+	"FLUXER_HTTPS_PORT":          {"443", []string{edgeService}},
+	"FLUXER_RESTART_POLICY":      {"unless-stopped", []string{Fluxerd}},
+	spec.RustProcessEnv:          {"", []string{Fluxerd}},
+	spec.RustWorkerThreadsEnv:    {"2", []string{spec.RustServer}},
+	spec.StorageBackendEnv:       {"", []string{Fluxerd, spec.API, spec.Admin, spec.MediaProxy}},
+	spec.StorageReadOnlyEnv:      {"", []string{spec.API}},
+	spec.StorageUploadsTTLEnv:    {spec.DefaultUploadsTTL, []string{spec.API}},
+	spec.SeaweedFSUploadsTTLEnv:  {"", []string{spec.API}},
+	"FLUXER_BACKUP_SCHEDULE":     {"off", []string{BackupReader}},
+	"FLUXER_BACKUP_KEEP":         {"7", []string{BackupReader}},
+	"FLUXER_BACKUP_HOUR":         {"3", []string{BackupReader}},
+	"FLUXER_BACKUP_ON_UPGRADE":   {"true", []string{BackupReader}},
+	spec.UpdateCheckEnv:          {"false", []string{UpdateReader}},
+	spec.UpdateCheckURLEnv:       {updates.DefaultURL, []string{UpdateReader}},
+	spec.InstallMethodEnv:        {"", []string{UpdateReader, spec.API}},
+	spec.UpgradeCommandEnv:       {"", []string{UpdateReader}},
+}
+
+var secretParts = []string{"PASSWORD", "SECRET", "_TOKEN", "PRIVATE_KEY", "COOKIE", "API_KEY", "PROXY_KEY", "BLUESKY_KEYS", "SECRETS_BASE64", "TRUSTED_CALLERS", "SIGNING_KEY", "MASTER_KEY"}
+
+func secretName(name string) bool {
+	return slices.ContainsFunc(secretParts, func(p string) bool { return strings.Contains(name, p) })
+}
+
+func Catalog() []Setting {
+	readers := map[string]map[string]bool{}
+	defaults := map[string]map[string]int{}
+	own := map[string]map[string]int{}
+	alt := map[string]bool{}
+	read := func(child, expr string) {
+		scanRefs(expr, func(name, op, arg string) {
+			if readers[name] == nil {
+				readers[name] = map[string]bool{}
+			}
+			readers[name][child] = true
+			switch {
+			case strings.HasSuffix(op, "+"):
+				alt[name] = true
+			case strings.HasSuffix(op, "-"):
+				if defaults[name] == nil {
+					defaults[name] = map[string]int{}
+				}
+				defaults[name][arg]++
+			}
+		})
+	}
+	for child, block := range childEnv {
+		for key, expr := range block {
+			read(child, expr)
+			if def, ok := ownDefault(key, expr); ok {
+				if own[key] == nil {
+					own[key] = map[string]int{}
+				}
+				own[key][def]++
+			}
+		}
+	}
+	for _, child := range supervised() {
+		h, ok := childHealth[child]
+		if !ok {
+			h = defaultHealth
+		}
+		for _, expr := range []string{h.interval, h.timeout, h.startPeriod, h.retries} {
+			read(child, expr)
+		}
+	}
+	for _, list := range []struct {
+		child string
+		exprs []string
+	}{{spec.Postgres, postgresSettings}, {spec.Valkey, valkeyArgs}, {spec.SeaweedFS, seaweedArgs}} {
+		for _, expr := range list.exprs {
+			read(list.child, expr)
+		}
+	}
+	out := make([]Setting, 0, len(readers)+len(directSettings))
+	for name, by := range readers {
+		s := Setting{Name: name, Readers: slices.Sorted(maps.Keys(by)), Secret: secretName(name)}
+		if !alt[name] {
+			counts := own[name]
+			if counts == nil {
+				counts = defaults[name]
+			}
+			s.Default = commonest(counts)
+		}
+		if d, ok := directSettings[name]; ok {
+			s.Readers = slices.Compact(slices.Sorted(slices.Values(append(s.Readers, d.readers...))))
+			s.Default = cmp.Or(s.Default, d.def)
+		}
+		out = append(out, s)
+	}
+	for name, d := range directSettings {
+		if readers[name] == nil {
+			out = append(out, Setting{Name: name, Default: d.def, Readers: slices.Sorted(slices.Values(d.readers)), Secret: secretName(name)})
+		}
+	}
+	fixed, perCPU := sizing.Fixed()
+	for i := range out {
+		if v, ok := fixed[out[i].Name]; ok && v != out[i].Default {
+			out[i].Sized = v
+		}
+		out[i].PerCPU = slices.Contains(perCPU, out[i].Name)
+	}
+	slices.SortFunc(out, func(a, b Setting) int { return strings.Compare(a.Name, b.Name) })
+	return out
+}
+
+func supervised() []string {
+	out := []string{spec.Valkey}
+	for child := range childEnv {
+		if child != edgeService && child != natsService {
+			out = append(out, child)
+		}
+	}
+	return out
+}
+
+func ownDefault(key, expr string) (string, bool) {
+	rest, ok := strings.CutPrefix(expr, "${"+key)
+	if !ok {
+		return "", false
+	}
+	for _, op := range []string{":-", "-"} {
+		if arg, ok := strings.CutPrefix(rest, op); ok {
+			if end := matchingBrace(arg, 0); end == len(arg)-1 {
+				return arg[:end], true
+			}
+		}
+	}
+	return "", false
+}
+
+func matchingBrace(s string, from int) int {
+	depth := 0
+	for i := from; i < len(s); i++ {
+		switch s[i] {
+		case '{':
+			depth++
+		case '}':
+			if depth == 0 {
+				return i
+			}
+			depth--
+		}
+	}
+	return -1
+}
+
+func commonest(counts map[string]int) string {
+	best, n := "", 0
+	for _, v := range slices.Sorted(maps.Keys(counts)) {
+		if c := counts[v]; c > n || c == n && best == "" {
+			best, n = v, c
+		}
+	}
+	return best
+}
+
+func scanRefs(s string, visit func(name, op, arg string)) {
+	for i := 0; i < len(s); i++ {
+		if s[i] != '$' || i+1 == len(s) {
+			continue
+		}
+		switch next := s[i+1]; {
+		case next == '$':
+			i++
+		case next == '{':
+			end := matchingBrace(s, i+2)
+			if end < 0 {
+				return
+			}
+			inner := s[i+2 : end]
+			n := 0
+			for n < len(inner) && isNameByte(inner[n], n == 0) {
+				n++
+			}
+			op, arg := inner[n:], ""
+			if strings.HasPrefix(op, ":") && len(op) > 1 {
+				op, arg = op[:2], op[2:]
+			} else if op != "" {
+				op, arg = op[:1], op[1:]
+			}
+			if n > 0 {
+				visit(inner[:n], op, arg)
+			}
+			scanRefs(arg, visit)
+			i = end
+		case isNameByte(next, true):
+			j := i + 1
+			for j < len(s) && isNameByte(s[j], false) {
+				j++
+			}
+			visit(s[i+1:j], "", "")
+			i = j - 1
+		}
+	}
 }

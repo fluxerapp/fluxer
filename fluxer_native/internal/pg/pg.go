@@ -15,22 +15,19 @@ import (
 	"strconv"
 	"strings"
 
-	"golang.org/x/sys/unix"
-
 	"github.com/fluxerapp/fluxer/fluxer_native/internal/spec"
 )
-
-const Major = 17
 
 const (
 	shmPath     = "/dev/shm"
 	minPosixShm = 256 << 20
 )
 
-var DefaultBinDir = fmt.Sprintf("/usr/lib/postgresql/%d/bin", Major)
-
 type Options struct {
 	BinDir    string
+	Major     int
+	Newer     int
+	Resolve   error
 	DataDir   string
 	SocketDir string
 	Port      int
@@ -43,9 +40,15 @@ type Options struct {
 func (o Options) bin(name string) string { return filepath.Join(o.BinDir, name) }
 
 func Prepare(ctx context.Context, o Options) error {
-	version, err := os.ReadFile(filepath.Join(o.DataDir, "PG_VERSION"))
+	if err := FinishUpgrade(o.DataDir); err != nil {
+		return err
+	}
+	_, err := os.Stat(filepath.Join(o.DataDir, "PG_VERSION"))
 	if err == nil {
-		return checkVersion(strings.TrimSpace(string(version)), o.DataDir)
+		if err := clearStaleLocks(o); err != nil {
+			return err
+		}
+		return os.Chmod(o.DataDir, 0o700)
 	}
 	if !errors.Is(err, fs.ErrNotExist) {
 		return err
@@ -60,7 +63,7 @@ func Prepare(ctx context.Context, o Options) error {
 	if err := os.RemoveAll(staging); err != nil {
 		return err
 	}
-	if err := initCluster(ctx, o, staging); err != nil {
+	if err := initCluster(ctx, o, staging, "--data-checksums"); err != nil {
 		return err
 	}
 	if err := os.Remove(o.DataDir); err != nil && !errors.Is(err, fs.ErrNotExist) {
@@ -69,7 +72,50 @@ func Prepare(ctx context.Context, o Options) error {
 	return os.Rename(staging, o.DataDir)
 }
 
-func initCluster(ctx context.Context, o Options, dir string) error {
+func clearStaleLocks(o Options) error {
+	paths := []string{filepath.Join(o.DataDir, "postmaster.pid")}
+	if o.SocketDir != "" {
+		locks, err := filepath.Glob(filepath.Join(o.SocketDir, ".s.PGSQL.*.lock"))
+		if err != nil {
+			return err
+		}
+		paths = append(paths, locks...)
+	}
+	for _, path := range paths {
+		if err := clearStaleLock(path); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func clearStaleLock(path string) error {
+	data, err := os.ReadFile(path)
+	if errors.Is(err, fs.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	line, _, _ := strings.Cut(string(data), "\n")
+	pid, err := strconv.Atoi(strings.TrimSpace(line))
+	if err != nil || pid <= 0 {
+		return nil
+	}
+	if _, err := os.Stat("/proc/self/comm"); err != nil {
+		return nil
+	}
+	comm, err := os.ReadFile(filepath.Join("/proc", strconv.Itoa(pid), "comm"))
+	if err == nil && strings.TrimSpace(string(comm)) == "postgres" {
+		return nil
+	}
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return nil
+	}
+	return os.Remove(path)
+}
+
+func initCluster(ctx context.Context, o Options, dir string, extra ...string) error {
 	pwfile, err := os.CreateTemp("", "fluxer-pg-pw-")
 	if err != nil {
 		return err
@@ -82,9 +128,10 @@ func initCluster(ctx context.Context, o Options, dir string) error {
 	if err := pwfile.Close(); err != nil {
 		return err
 	}
-	if err := run(ctx, nil, o.bin("initdb"), "-D", dir, "-U", o.User,
+	argv := append([]string{o.bin("initdb"), "-D", dir, "-U", o.User,
 		"--auth-host=scram-sha-256", "--auth-local=scram-sha-256",
-		"--locale=C.UTF-8", "-E", "UTF8", "--pwfile="+pwfile.Name()); err != nil {
+		"--locale=C.UTF-8", "-E", "UTF8", "--pwfile=" + pwfile.Name()}, extra...)
+	if err := run(ctx, nil, argv...); err != nil {
 		return err
 	}
 	if o.Database == "postgres" {
@@ -94,21 +141,13 @@ func initCluster(ctx context.Context, o Options, dir string) error {
 	return run(ctx, strings.NewReader(create), o.bin("postgres"), "--single", "-D", dir, "-c", "listen_addresses=", "postgres")
 }
 
-func checkVersion(version, dataDir string) error {
-	if version == strconv.Itoa(Major) {
-		return nil
-	}
-	return fmt.Errorf("postgres: %s holds a Postgres %s cluster, but this release runs Postgres %d. "+
-		"Start the old release, run fluxerd backup, move %s away, start this release and run fluxerd restore with that backup",
-		dataDir, version, Major, dataDir)
-}
-
 func Argv(o Options) []string {
 	argv := []string{o.bin("postgres"), "-D", o.DataDir,
 		"-c", "listen_addresses=" + spec.Loopback,
 		"-c", "port=" + strconv.Itoa(o.Port),
 		"-c", "unix_socket_directories=" + o.SocketDir,
 		"-c", "dynamic_shared_memory_type=" + DSMType(shmPath),
+		"-c", "max_logical_replication_workers=0",
 	}
 	for _, s := range o.Settings {
 		argv = append(argv, "-c", s)
@@ -121,11 +160,7 @@ func ReadyProbe(o Options) spec.Probe {
 }
 
 func DSMType(path string) string {
-	var st unix.Statfs_t
-	if err := unix.Statfs(path, &st); err != nil {
-		return "mmap"
-	}
-	if uint64(st.Bsize)*uint64(st.Blocks) >= minPosixShm {
+	if size, ok := fsSize(path); ok && size >= minPosixShm {
 		return "posix"
 	}
 	return "mmap"

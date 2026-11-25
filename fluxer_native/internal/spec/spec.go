@@ -4,7 +4,9 @@ package spec
 
 import (
 	"context"
+	"fmt"
 	"net"
+	"net/netip"
 	"path/filepath"
 	"slices"
 	"strconv"
@@ -36,7 +38,28 @@ const (
 
 var RustServices = []string{Snowflakes, Users, Messages, Gifs, Unfurl, Push, AppProxy, Admin}
 
-const Loopback = "127.0.0.1"
+const (
+	DefaultLoopback = "127.0.0.1"
+	AnyAddress      = "0.0.0.0"
+	ContainerEnv    = "FLUXER_CONTAINER"
+	LoopbackEnv     = "FLUXER_LOOPBACK_ADDRESS"
+	VoiceOnlyEnv    = "FLUXER_VOICE_ONLY"
+)
+
+var Loopback = DefaultLoopback
+
+func SetLoopback(v string) error {
+	if v == "" {
+		Loopback = DefaultLoopback
+		return nil
+	}
+	a, err := netip.ParseAddr(v)
+	if err != nil || !a.Is4() || !a.IsLoopback() {
+		return fmt.Errorf("%s must be an IPv4 address from 127.0.0.1 to 127.255.255.254, not %q", LoopbackEnv, v)
+	}
+	Loopback = a.String()
+	return nil
+}
 
 const (
 	PortNATS          = 14222
@@ -64,6 +87,27 @@ const (
 	PortEdgeProxy     = 8080
 )
 
+var ChildPorts = map[string][]int{
+	Postgres:       {PortPostgres},
+	Valkey:         {PortValkey},
+	Meilisearch:    {PortMeilisearch},
+	LiveKit:        {PortLiveKit, PortLiveKitRTCTCP},
+	API:            {PortAPI},
+	Gateway:        {PortGateway},
+	MediaProxy:     {PortMediaProxy},
+	Admin:          {PortAdmin},
+	AppProxy:       {PortAppProxy},
+	Push:           {PortPush},
+	Snowflakes:     {PortSnowflakes},
+	Users:          {PortUsers},
+	Messages:       {PortMessages},
+	Gifs:           {PortGifs},
+	Unfurl:         {PortUnfurl},
+	SeaweedFS:      {PortWeedMaster, PortWeedVolume},
+	SeaweedFSFiler: {PortWeedFiler, PortSeaweedS3},
+	RustServer:     {PortSnowflakes, PortUsers, PortMessages, PortGifs, PortUnfurl, PortPush, PortAdmin, PortAppProxy},
+}
+
 func Addr(port int) string {
 	return net.JoinHostPort(Loopback, strconv.Itoa(port))
 }
@@ -84,7 +128,7 @@ const (
 )
 
 const (
-	WorkerHeartbeatPath   = "/tmp/fluxer-worker-heartbeat"
+	WorkerHeartbeatEnv    = "FLUXER_API_HEARTBEAT_FILE"
 	WorkerHeartbeatMaxAge = 30 * time.Second
 )
 
@@ -114,10 +158,14 @@ func (l Layout) EdgeDir() string        { return filepath.Join(l.Data, "edge") }
 func (l Layout) GatewayHome() string    { return filepath.Join(l.Data, "gateway") }
 func (l Layout) TmpRoot() string        { return filepath.Join(l.Data, "tmp") }
 func (l Layout) Tmp(svc string) string  { return filepath.Join(l.Data, "tmp", svc) }
+func (l Layout) WorkerHeartbeat() string {
+	return filepath.Join(l.Data, "tmp", API, "worker-heartbeat")
+}
 func (l Layout) BackupsDir() string     { return filepath.Join(l.Data, "backups") }
 func (l Layout) SecretsFile() string    { return filepath.Join(l.Data, "secrets.env") }
 func (l Layout) ModesFile() string      { return filepath.Join(l.Data, "modes.env") }
 func (l Layout) LockFile() string       { return filepath.Join(l.Data, ".fluxerd.lock") }
+func (l Layout) RuntimeRecord() string  { return filepath.Join(l.Data, ".fluxerd.runtime") }
 func (l Layout) ControlSocket() string  { return filepath.Join(l.Runtime, "fluxerd.sock") }
 func (l Layout) OperatorSocket() string { return filepath.Join(l.Runtime, "operator.sock") }
 func (l Layout) PGSocketDir() string    { return filepath.Join(l.Runtime, "pg") }
@@ -152,6 +200,7 @@ type Probe struct {
 	File   string
 	MaxAge time.Duration
 	Func   func(context.Context) error
+	Core   bool
 }
 
 func HTTPProbe(port int, path string, status int) Probe {
@@ -170,19 +219,38 @@ func FuncProbe(fn func(context.Context) error) Probe {
 	return Probe{Kind: ProbeFunc, Func: fn}
 }
 
+type HealthCheck struct {
+	Interval    time.Duration
+	Timeout     time.Duration
+	StartPeriod time.Duration
+	Retries     int
+}
+
+type Restart string
+
+const (
+	RestartAlways    Restart = ""
+	RestartOnFailure Restart = "on-failure"
+	RestartNever     Restart = "no"
+)
+
 type Child struct {
-	Name        string
-	Argv        []string
-	Env         Env
-	Cwd         string
-	Deps        []string
-	Probes      []Probe
-	Watch       []Probe
-	SvcLogs     bool
-	StopSignal  syscall.Signal
-	StopTimeout time.Duration
-	Core        bool
-	Oneshot     bool
+	Name             string
+	Argv             []string
+	Env              Env
+	Cwd              string
+	Deps             []string
+	Probes           []Probe
+	Watch            []Probe
+	Health           HealthCheck
+	RestartUnhealthy bool
+	Restart          Restart
+	Rearm            bool
+	SvcLogs          bool
+	StopSignal       syscall.Signal
+	StopTimeout      time.Duration
+	Core             bool
+	Oneshot          bool
 }
 
 type State string
@@ -224,6 +292,7 @@ type WatchEntry struct {
 	Name   string      `json:"name"`
 	Health HealthState `json:"health"`
 	Error  string      `json:"error,omitempty"`
+	Core   bool        `json:"core,omitempty"`
 }
 
 type Health struct {
@@ -231,16 +300,35 @@ type Health struct {
 	Stopping bool     `json:"stopping"`
 	Pending  []string `json:"pending"`
 	Failed   []string `json:"failed"`
+	Starting []string `json:"starting,omitempty"`
 	Degraded []string `json:"degraded,omitempty"`
+	Status   string   `json:"status,omitempty"`
 }
 
 const (
-	PathPs        = "/v1/ps"
-	PathHealth    = "/v1/health"
-	PathSvc       = "/v1/svc/"
-	PathLogs      = "/v1/logs/"
-	PathJetStream = "/v1/jetstream/"
+	PathPs          = "/v1/ps"
+	PathHealth      = "/v1/health"
+	PathSvc         = "/v1/svc/"
+	PathLogs        = "/v1/logs/"
+	PathJetStream   = "/v1/jetstream/"
+	PathEvents      = "/v1/events"
+	PathStats       = "/v1/stats"
+	PathReload      = "/v1/reload"
+	PathMaintenance = "/v1/maintenance/"
 )
+
+const (
+	MaintenanceOn  = "on"
+	MaintenanceOff = "off"
+
+	EventPs     = "ps"
+	EventHealth = "health"
+)
+
+type Reloaded struct {
+	Restarted []string `json:"restarted"`
+	Edge      bool     `json:"edge"`
+}
 
 const (
 	ActionStart   = "start"

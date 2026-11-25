@@ -20,6 +20,7 @@ type Options struct {
 	Port           int
 	MaxMemoryStore string
 	MaxFileStore   string
+	Quiet          bool
 }
 
 type Server struct {
@@ -42,6 +43,7 @@ func Start(o Options) (*Server, error) {
 	opts.JetStream = true
 	opts.StoreDir = o.StoreDir
 	opts.NoSigs = true
+	opts.NoLog = o.Quiet
 	s, err := server.NewServer(opts)
 	if err != nil {
 		return nil, fmt.Errorf("nats: %w", err)
@@ -61,6 +63,10 @@ func Start(o Options) (*Server, error) {
 	cfg := *s.JetStreamConfig()
 	cfg.StoreDir = o.StoreDir
 	return &Server{Server: s, jetstream: cfg}, nil
+}
+
+func (s *Server) MaxMemory() int64 {
+	return s.jetstream.MaxMemory
 }
 
 func (s *Server) SetJetStream(on bool) error {

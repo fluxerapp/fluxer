@@ -3,6 +3,7 @@
 package spec
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"os"
@@ -28,6 +29,9 @@ const (
 	MediaProxyStorageRootEnv = "FLUXER_MEDIA_PROXY_STORAGE_ROOT"
 	UVThreadpoolSizeEnv      = "UV_THREADPOOL_SIZE"
 	S3EndpointEnv            = "FLUXER_S3_ENDPOINT"
+
+	SizingSourceEnv = "FLUXER_SIZING_SOURCE"
+	SizingByRexctl  = "rexctl"
 
 	KVModeEnv             = "FLUXER_KV_MODE"
 	KVPostgresMaxConnsEnv = "FLUXER_KV_POSTGRES_MAX_CONNECTIONS"
@@ -212,8 +216,6 @@ func ResolveModes(env map[string]string, dataDir string) (Modes, error) {
 		if nonEmpty(layout.SeaweedFSDir()) && !exists(layout.ObjectsLayout()) {
 			return Modes{}, fmt.Errorf("%w: %s holds SeaweedFS data and %s does not exist. Move the files over with %s, or set %s=%s", ErrNeedsMigration, layout.SeaweedFSDir(), layout.ObjectsLayout(), MigrateStorageCommand, StorageBackendEnv, StorageS3)
 		}
-	} else {
-		m.BundledWeed = get(S3EndpointEnv) == ""
 	}
 	switch m.KV {
 	case KVPostgres:
@@ -226,10 +228,36 @@ func ResolveModes(env map[string]string, dataDir string) (Modes, error) {
 		if nonEmpty(layout.ValkeyDir()) {
 			return Modes{}, fmt.Errorf("%w: %s holds Valkey data. Move it over with %s, or set %s=%s", ErrNeedsMigration, layout.ValkeyDir(), MigrateKVCommand, KVModeEnv, KVStandalone)
 		}
-	case KVStandalone:
-		m.BundledValkey = get(KVURLEnv) == ""
 	}
+	m.BundledValkey, m.BundledWeed = Bundled(env)
 	return m, nil
+}
+
+func Bundled(env map[string]string) (valkey, weed bool) {
+	get := func(k string) string { return strings.TrimSpace(env[k]) }
+	valkey = cmp.Or(get(KVModeEnv), string(KVStandalone)) == string(KVStandalone) && get(KVURLEnv) == ""
+	weed = cmp.Or(get(StorageBackendEnv), string(StorageS3)) == string(StorageS3) && get(S3EndpointEnv) == ""
+	return valkey, weed
+}
+
+const (
+	ValkeyBinary = "valkey-server"
+	WeedBinary   = "weed"
+)
+
+func HasBinary(binDir, name string) bool {
+	return exists(filepath.Join(binDir, name))
+}
+
+func CheckBundled(binDir string, env map[string]string) error {
+	valkey, weed := Bundled(env)
+	if valkey && !HasBinary(binDir, ValkeyBinary) {
+		return fmt.Errorf("%w: this Fluxer has no Valkey server, so %s=%s needs %s. Set %s=%s, or set %s to your Valkey server", ErrModeCombination, KVModeEnv, KVStandalone, KVURLEnv, KVModeEnv, KVPostgres, KVURLEnv)
+	}
+	if weed && !HasBinary(binDir, WeedBinary) {
+		return fmt.Errorf("%w: this Fluxer has no SeaweedFS, so %s=%s needs %s. Set %s=%s, or set %s to your S3 storage", ErrModeCombination, StorageBackendEnv, StorageS3, S3EndpointEnv, StorageBackendEnv, StorageFilesystem, S3EndpointEnv)
+	}
+	return nil
 }
 
 func exists(path string) bool {

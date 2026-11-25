@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -49,6 +50,13 @@ func (f *fakeSupervisor) Service(_ context.Context, name, action string) error {
 			}
 		}
 	}
+	return nil
+}
+
+func (f *fakeSupervisor) Maintenance(_ context.Context, on bool) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.calls = append(f.calls, fmt.Sprintf("maintenance %t", on))
 	return nil
 }
 
@@ -97,7 +105,7 @@ func startValkey(t *testing.T, dir, password string) *exec.Cmd {
 	cmd := exec.Command("valkey-server", "--port", strconv.Itoa(spec.PortValkey), "--bind", spec.Loopback, "--requirepass", password, "--dir", dir, "--appendonly", "yes", "--save", "")
 	var out bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &out
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	ownGroup(cmd)
 	if err := cmd.Start(); err != nil {
 		t.Fatal(err)
 	}
@@ -140,13 +148,13 @@ func TestBackupRestoreRoundTrip(t *testing.T) {
 	pwfile := filepath.Join(base, "pw")
 	writeFile(t, pwfile, pgPassword)
 	run(t, nil, "initdb", "-D", l.PostgresDir(), "-U", "fluxer", "--auth-local=scram-sha-256", "--auth-host=scram-sha-256", "--pwfile="+pwfile, "-E", "UTF8", "--locale=C.UTF-8")
-	pg, err := tg.startPostgres(ctx, l.PGSocketDir())
+	pg, err := tg.StartPostgres(ctx, l.PGSocketDir())
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer func() {
 		if pg != nil {
-			pg.stop()
+			pg.Stop()
 		}
 	}()
 	psqlEnv := []string{"PGPASSWORD=" + pgPassword}
@@ -186,7 +194,7 @@ func TestBackupRestoreRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantCalls := []string{"stop gateway", "stop api", "stop users", "stop seaweedfs-filer", "stop seaweedfs", "stop valkey", "stop jetstream", "start jetstream", "start valkey", "start seaweedfs", "start seaweedfs-filer", "start users", "start api", "start gateway"}
+	wantCalls := []string{"maintenance true", "stop gateway", "stop api", "stop users", "stop seaweedfs-filer", "stop seaweedfs", "stop valkey", "stop jetstream", "start jetstream", "start valkey", "start seaweedfs", "start seaweedfs-filer", "start users", "start api", "start gateway", "maintenance false"}
 	if !slices.Equal(sup.calls, wantCalls) {
 		t.Fatalf("supervisor calls %v, want %v", sup.calls, wantCalls)
 	}
@@ -208,7 +216,7 @@ func TestBackupRestoreRoundTrip(t *testing.T) {
 	psql("postgres", "ALTER ROLE fluxer PASSWORD '"+targetPassword+"'")
 	psqlEnv[0] = "PGPASSWORD=" + targetPassword
 	tg.Env["POSTGRES_PASSWORD"] = targetPassword
-	if err := pg.stop(); err != nil {
+	if err := pg.Stop(); err != nil {
 		t.Fatal(err)
 	}
 	pg = nil
@@ -248,7 +256,7 @@ func TestBackupRestoreRoundTrip(t *testing.T) {
 		t.Fatalf("an archive with SeaweedFS and Valkey data restored modes %q", got)
 	}
 
-	if pg, err = tg.startPostgres(ctx, l.PGSocketDir()); err != nil {
+	if pg, err = tg.StartPostgres(ctx, l.PGSocketDir()); err != nil {
 		t.Fatal(err)
 	}
 	if got := psql("fluxer", "SELECT body FROM messages"); got != "hello" {

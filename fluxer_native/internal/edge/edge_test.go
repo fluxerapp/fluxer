@@ -62,7 +62,7 @@ func TestRouting(t *testing.T) {
 	srv := &http.Server{Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { io.WriteString(w, "spa") })}
 	go srv.Serve(ln)
 	t.Cleanup(func() { srv.Close() })
-	if err := Load(c, true); err != nil {
+	if err := Load(c, Ready); err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { Stop() })

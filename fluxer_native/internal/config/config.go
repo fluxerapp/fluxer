@@ -26,6 +26,7 @@ type Config struct {
 	CaddyDir string
 	CertsDir string
 	Env      spec.Env
+	SetModes map[string]string
 }
 
 var fileRefPrefixes = []string{"FLUXER_", "POSTGRES_", "MEILI_", "LIVEKIT_"}
@@ -70,6 +71,9 @@ func Load(opt Options) (*Config, error) {
 			}
 			cfg.Env[k] = v
 		}
+	}
+	if err := spec.SetLoopback(strings.TrimSpace(cfg.Env[spec.LoopbackEnv])); err != nil {
+		return nil, err
 	}
 	cfg.Layout = spec.LayoutFromEnv(func(k string) string { return cfg.Env[k] })
 	if err := fillModes(cfg); err != nil {
@@ -148,7 +152,16 @@ func unquote(v string) string {
 	if v[0] == '\'' {
 		return inner
 	}
-	return strings.NewReplacer(`\\`, `\`, `\"`, `"`, `\n`, "\n").Replace(inner)
+	return strings.NewReplacer(`\\`, `\`, `\"`, `"`, `\n`, "\n", `\r`, "\r").Replace(inner)
+}
+
+func Quote(v string) string {
+	if v != "" && !strings.ContainsFunc(v, func(r rune) bool {
+		return !(r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9' || strings.ContainsRune("-_.,:/@+=%~^", r))
+	}) {
+		return v
+	}
+	return `"` + strings.NewReplacer(`\`, `\\`, `"`, `\"`, "\n", `\n`, "\r", `\r`).Replace(v) + `"`
 }
 
 func validKey(k string) bool {

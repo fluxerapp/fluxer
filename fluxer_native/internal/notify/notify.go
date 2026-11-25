@@ -3,14 +3,18 @@
 package notify
 
 import (
+	"context"
 	"net"
 	"os"
+	"strconv"
 	"syscall"
+	"time"
 )
 
 const (
-	systemdVar = "NOTIFY_SOCKET"
-	ownVar     = "FLUXERD_NOTIFY_SOCKET"
+	systemdVar  = "NOTIFY_SOCKET"
+	ownVar      = "FLUXERD_NOTIFY_SOCKET"
+	watchdogVar = "WATCHDOG_USEC"
 )
 
 func Detach() error {
@@ -33,7 +37,38 @@ func Detach() error {
 
 func Ready() error { return send("READY=1") }
 
-func Stopping() error { return send("STOPPING=1") }
+const watchdogEvery = 2 * time.Minute
+
+func Watchdog(ctx context.Context, check func()) {
+	if os.Getenv(ownVar) == "" {
+		return
+	}
+	every := watchdogEvery
+	if usec, err := strconv.ParseInt(os.Getenv(watchdogVar), 10, 64); err == nil && usec > 0 {
+		every = time.Duration(usec) * time.Microsecond
+	} else if err := send("WATCHDOG=1\nWATCHDOG_USEC=" + strconv.FormatInt(every.Microseconds(), 10)); err != nil {
+		return
+	}
+	t := time.NewTicker(every / 2)
+	defer t.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-t.C:
+			check()
+			_ = send("WATCHDOG=1")
+		}
+	}
+}
+
+func Stopping() error { return send("STOPPING=1\nSTATUS=stopping") }
+
+func Status(line string) error { return send("STATUS=" + line) }
+
+func Extend(d time.Duration) error {
+	return send("EXTEND_TIMEOUT_USEC=" + strconv.FormatInt(d.Microseconds(), 10))
+}
 
 func send(state string) error {
 	path := os.Getenv(ownVar)

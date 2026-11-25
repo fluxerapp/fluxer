@@ -41,6 +41,9 @@ const (
 	SkippedDatabase     = "database"
 	SkippedUploads      = "uploads"
 	ScopeWithoutUploads = "without-uploads"
+	ScopeDatabase       = "database"
+	ReasonPreUpgrade    = "pre-upgrade"
+	ReasonScheduled     = "scheduled"
 )
 
 const (
@@ -72,17 +75,18 @@ type Entry struct {
 }
 
 type Manifest struct {
-	Format    int       `json:"format"`
-	Release   string    `json:"release"`
-	Project   string    `json:"project"`
-	Domain    string    `json:"domain"`
-	CreatedAt time.Time `json:"created_at"`
-	Reason    string    `json:"reason,omitempty"`
-	Database  string    `json:"database"`
-	Volumes   []string  `json:"volumes"`
-	Skipped   []string  `json:"skipped,omitempty"`
-	Scope     string    `json:"scope,omitempty"`
-	Entries   []Entry   `json:"entries"`
+	Format    int         `json:"format"`
+	Release   string      `json:"release"`
+	Project   string      `json:"project"`
+	Domain    string      `json:"domain"`
+	CreatedAt time.Time   `json:"created_at"`
+	Reason    string      `json:"reason,omitempty"`
+	Database  string      `json:"database"`
+	Volumes   []string    `json:"volumes"`
+	Skipped   []string    `json:"skipped,omitempty"`
+	Scope     string      `json:"scope,omitempty"`
+	Entries   []Entry     `json:"entries"`
+	Dump      DumpVersion `json:"-"`
 }
 
 func (m *Manifest) HasSkipped(what string) bool {
@@ -91,6 +95,7 @@ func (m *Manifest) HasSkipped(what string) bool {
 
 type archiveWriter struct {
 	f       *os.File
+	out     io.Writer
 	zw      *zstd.Encoder
 	tw      *tar.Writer
 	entries []Entry
@@ -101,18 +106,29 @@ func createArchive(path string) (*archiveWriter, error) {
 	if err != nil {
 		return nil, err
 	}
-	zw, err := zstd.NewWriter(f, zstd.WithEncoderLevel(zstd.SpeedDefault))
+	w, err := streamArchive(f)
 	if err != nil {
 		f.Close()
 		return nil, err
 	}
-	return &archiveWriter{f: f, zw: zw, tw: tar.NewWriter(zw)}, nil
+	w.f = f
+	return w, nil
+}
+
+func streamArchive(out io.Writer) (*archiveWriter, error) {
+	zw, err := zstd.NewWriter(out, zstd.WithEncoderLevel(zstd.SpeedDefault))
+	if err != nil {
+		return nil, err
+	}
+	return &archiveWriter{out: out, zw: zw, tw: tar.NewWriter(zw)}, nil
 }
 
 func (w *archiveWriter) abort() {
 	w.zw.Close()
-	w.f.Close()
-	os.Remove(w.f.Name())
+	if w.f != nil {
+		w.f.Close()
+		os.Remove(w.f.Name())
+	}
 }
 
 func (w *archiveWriter) add(hdr *tar.Header, r io.Reader) error {
@@ -223,8 +239,11 @@ func (w *archiveWriter) finish(m *Manifest) error {
 	if err := w.zw.Close(); err != nil {
 		return err
 	}
-	if _, err := w.f.Write(trailer(data)); err != nil {
+	if _, err := w.out.Write(trailer(data)); err != nil {
 		return err
+	}
+	if w.f == nil {
+		return nil
 	}
 	if err := w.f.Sync(); err != nil {
 		return err
@@ -381,9 +400,16 @@ func Verify(path string) (*Manifest, error) {
 			return fmt.Errorf("%w: %s comes after the manifest", ErrDamaged, hdr.Name)
 		}
 		h := sha256.New()
+		var head headBuffer
+		if hdr.Name == DumpName {
+			r = io.TeeReader(r, &head)
+		}
 		n, err := io.Copy(h, r)
 		if err != nil {
 			return fmt.Errorf("%w: %v", ErrDamaged, err)
+		}
+		if hdr.Name == DumpName {
+			m.Dump, _ = ReadDumpVersion(bytes.NewReader(head.buf))
 		}
 		if _, dup := seen[hdr.Name]; dup {
 			return fmt.Errorf("%w: %s appears twice", ErrDamaged, hdr.Name)

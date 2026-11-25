@@ -24,7 +24,17 @@ import (
 //go:embed Caddyfile.native
 var caddyfile string
 
-var tmpl = template.Must(template.New("Caddyfile.native").Option("missingkey=error").Parse(caddyfile))
+//go:embed Caddyfile.voice
+var voiceCaddyfile string
+
+var (
+	tmpl      = template.Must(template.New("Caddyfile.native").Option("missingkey=error").Funcs(template.FuncMap{"quote": Quote}).Parse(caddyfile))
+	voiceTmpl = template.Must(template.New("Caddyfile.voice").Option("missingkey=error").Funcs(template.FuncMap{"quote": Quote}).Parse(voiceCaddyfile))
+)
+
+func Quote(s string) string {
+	return `"` + strings.NewReplacer(`\`, `\\`, `"`, `\"`).Replace(s) + `"`
+}
 
 const SystemBundle = "/etc/ssl/certs/ca-certificates.crt"
 
@@ -38,43 +48,97 @@ type Config struct {
 	Encode         string
 	Protocols      string
 	GlobalOptions  string
+	ACMEFirst      string
+	RootSite       string
+	RedirectTo     string
 	AdminBasePath  string
 	Dir            string
 	CaddyDir       string
 	Static         string
 	LiveKit        bool
+	Container      bool
+	VoiceOnly      bool
+	Voices         []VoiceRoute
+	Off            bool
+}
+
+type VoiceRoute struct {
+	ID   string
+	Addr string
 }
 
 func (c Config) Storage() string { return filepath.Join(c.Dir, "caddy") }
 
-func (c Config) RootCert() string {
-	return filepath.Join(c.Storage(), "pki", "authorities", "local", "root.crt")
+func (c Config) RootDir() string {
+	return filepath.Join(c.Storage(), "pki", "authorities", "local")
 }
+
+func (c Config) RootCert() string {
+	return filepath.Join(c.RootDir(), "root.crt")
+}
+
+func (c Config) InternalCertDir(name string) string {
+	return filepath.Join(c.Storage(), "certificates", "local", strings.ReplaceAll(strings.ToLower(name), ":", "-"))
+}
+
+func (c Config) DropInternalCert() error {
+	if c.ACMEFirst == "" {
+		return nil
+	}
+	return os.RemoveAll(c.InternalCertDir(c.ACMEFirst))
+}
+
+type Mode int
+
+const (
+	Starting Mode = iota
+	Ready
+	Maintenance
+)
+
+var Modes = []Mode{Starting, Ready, Maintenance}
 
 type page struct {
 	Config
-	Ready       bool
-	API         string
-	Gateway     string
-	Media       string
-	Admin       string
-	AppProxy    string
-	LiveKitAddr string
+	Ready        bool
+	Maintenance  bool
+	API          string
+	Gateway      string
+	Media        string
+	Admin        string
+	AppProxy     string
+	StaticAssets string
+	LiveKitAddr  string
+	DropIns      bool
+	SiteDropIns  bool
 }
 
-func Render(c Config, ready bool) ([]byte, error) {
+func Render(c Config, m Mode) ([]byte, error) {
 	var b bytes.Buffer
+	if c.VoiceOnly {
+		err := voiceTmpl.Execute(&b, c)
+		return b.Bytes(), err
+	}
 	err := tmpl.Execute(&b, page{
-		Config:      c,
-		Ready:       ready,
-		API:         spec.Addr(spec.PortAPI),
-		Gateway:     spec.Addr(spec.PortGateway),
-		Media:       spec.Addr(spec.PortMediaProxy),
-		Admin:       spec.Addr(spec.PortAdmin),
-		AppProxy:    spec.Addr(spec.PortAppProxy),
-		LiveKitAddr: spec.Addr(spec.PortLiveKit),
+		Config:       c,
+		Ready:        m == Ready,
+		Maintenance:  m == Maintenance,
+		API:          spec.Addr(spec.PortAPI),
+		Gateway:      spec.Addr(spec.PortGateway),
+		Media:        spec.Addr(spec.PortMediaProxy),
+		Admin:        spec.Addr(spec.PortAdmin),
+		AppProxy:     spec.Addr(spec.PortAppProxy),
+		StaticAssets: spec.Addr(spec.PortAppProxy),
+		LiveKitAddr:  spec.Addr(spec.PortLiveKit),
+		DropIns:      matches(filepath.Join(c.CaddyDir, "*.caddy")),
+		SiteDropIns:  matches(filepath.Join(c.CaddyDir, "sites", "*.caddy")),
 	})
 	return b.Bytes(), err
+}
+
+func matches(pattern string) bool {
+	found, _ := filepath.Glob(pattern)
+	return len(found) > 0
 }
 
 func Adapt(body []byte) ([]byte, error) {
@@ -85,7 +149,20 @@ func Adapt(body []byte) ([]byte, error) {
 	return cfg, nil
 }
 
-func Load(c Config, ready bool) error {
+func Load(c Config, m Mode) error { return load(c, m, false) }
+
+func Reload(c Config, m Mode) error { return load(c, m, c.CertFiles()) }
+
+func (c Config) CertFiles() bool {
+	rest, ok := strings.CutPrefix(c.TLS, "tls ")
+	f := strings.Fields(rest)
+	return ok && len(f) == 2 && !strings.ContainsAny(rest, "@{")
+}
+
+func load(c Config, m Mode, force bool) error {
+	if c.Off {
+		return Stop()
+	}
 	if err := os.MkdirAll(c.Storage(), 0o700); err != nil {
 		return err
 	}
@@ -94,7 +171,7 @@ func Load(c Config, ready bool) error {
 			return err
 		}
 	}
-	body, err := Render(c, ready)
+	body, err := Render(c, m)
 	if err != nil {
 		return err
 	}
@@ -102,8 +179,11 @@ func Load(c Config, ready bool) error {
 	if err != nil {
 		return err
 	}
-	if err := caddy.Load(cfg, false); err != nil {
+	if err := caddy.Load(cfg, force); err != nil {
 		if errors.Is(err, fs.ErrPermission) || strings.Contains(err.Error(), "permission denied") {
+			if c.Container {
+				return fmt.Errorf("edge: %w. Start the container with --sysctl net.ipv4.ip_unprivileged_port_start=0, or set FLUXER_HTTP_PORT=8080 and FLUXER_HTTPS_PORT=8443", err)
+			}
 			return fmt.Errorf("edge: %w. To listen without that privilege, set FLUXER_HTTP_PORT=8080 and FLUXER_HTTPS_PORT=8443", err)
 		}
 		return fmt.Errorf("edge: %w", err)

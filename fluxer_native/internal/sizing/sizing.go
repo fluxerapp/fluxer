@@ -58,6 +58,18 @@ func Defaults(h Host) map[string]string {
 	return out
 }
 
+func Fixed() (fixed map[string]string, perCPU []string) {
+	fixed = Defaults(Host{CPUs: 1})
+	wide := Defaults(Host{CPUs: 64})
+	for k, v := range fixed {
+		if wide[k] != v {
+			perCPU = append(perCPU, k)
+			delete(fixed, k)
+		}
+	}
+	return fixed, perCPU
+}
+
 func Schedulers(h Host, env map[string]string) (schedulers, dirtyCPU, dirtyIO int) {
 	lo := positive(env["FLUXER_ERLANG_SCHEDULERS_MIN"], 2)
 	hi := positive(env["FLUXER_ERLANG_SCHEDULERS_MAX"], 16)

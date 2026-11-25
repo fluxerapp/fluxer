@@ -5,6 +5,7 @@ package backup
 import (
 	"archive/tar"
 	"bytes"
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -104,7 +105,30 @@ func (t Target) addDump(ctx context.Context, w *archiveWriter, sock, spool strin
 	return w.add(&tar.Header{Name: DumpName, Mode: 0o600, Size: fi.Size(), ModTime: time.Now(), Typeflag: tar.TypeReg}, f)
 }
 
-func (t Target) restoreDump(ctx context.Context, sock string, r io.Reader) error {
+func (t Target) DumpRemote(ctx context.Context, dsn, path string) error {
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0o600)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	var stderr bytes.Buffer
+	cmd := exec.CommandContext(ctx, t.pgTool("pg_dump"), "--dbname="+dsn, "--format=custom", "--no-owner", "--no-acl")
+	cmd.Env = append(os.Environ(), "PGCONNECT_TIMEOUT=10")
+	cmd.Stdout, cmd.Stderr = f, &stderr
+	if err := cmd.Run(); err != nil {
+		if strings.Contains(stderr.String(), "server version mismatch") {
+			err = fmt.Errorf("the other database runs a newer PostgreSQL than this machine has. Install that major's postgresql package here, from apt.postgresql.org if this release lacks it: %w", err)
+		}
+		return &DumpError{Output: strings.TrimSpace(stderr.String()), Err: err}
+	}
+	head := make([]byte, 5)
+	if _, err := f.ReadAt(head, 0); err != nil || string(head) != "PGDMP" {
+		return &DumpError{Output: strings.TrimSpace(stderr.String())}
+	}
+	return f.Close()
+}
+
+func (t Target) RestoreDump(ctx context.Context, sock string, r io.Reader) error {
 	var stderr bytes.Buffer
 	cmd := t.pgCommand(ctx, sock, "pg_restore", "-d", t.pgDatabase(), "--clean", "--if-exists", "--single-transaction", "--exit-on-error", "--no-owner", "--no-acl")
 	cmd.Stdin, cmd.Stderr = r, &stderr
@@ -114,17 +138,20 @@ func (t Target) restoreDump(ctx context.Context, sock string, r io.Reader) error
 	return nil
 }
 
-type postgresServer struct {
+type PostgresServer struct {
 	cmd    *exec.Cmd
-	sock   string
+	Sock   string
 	out    *bytes.Buffer
 	exited chan error
 }
 
-func (t Target) startPostgres(ctx context.Context, sock string) (*postgresServer, error) {
-	dir := t.Layout.PostgresDir()
+func (t Target) StartPostgres(ctx context.Context, sock string) (*PostgresServer, error) {
+	dir := cmp.Or(t.PGDataDir, t.Layout.PostgresDir())
 	if _, err := os.Stat(filepath.Join(dir, "PG_VERSION")); err != nil {
 		return nil, fmt.Errorf("backup: %s holds no database yet, start Fluxer once and stop it again first: %w", dir, err)
+	}
+	if err := os.Chmod(dir, 0o700); err != nil {
+		return nil, err
 	}
 	if err := os.MkdirAll(sock, 0o700); err != nil {
 		return nil, err
@@ -136,11 +163,11 @@ func (t Target) startPostgres(ctx context.Context, sock string) (*postgresServer
 		"-c", "unix_socket_directories="+sock,
 		"-c", "dynamic_shared_memory_type=mmap")
 	cmd.Stdout, cmd.Stderr = out, out
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	ownGroup(cmd)
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
-	s := &postgresServer{cmd: cmd, sock: sock, out: out, exited: make(chan error, 1)}
+	s := &PostgresServer{cmd: cmd, Sock: sock, out: out, exited: make(chan error, 1)}
 	go func() { s.exited <- cmd.Wait() }()
 	ctx, cancel := context.WithTimeout(ctx, postgresReadyTimeout)
 	defer cancel()
@@ -154,20 +181,20 @@ func (t Target) startPostgres(ctx context.Context, sock string) (*postgresServer
 			s.exited <- err
 			return nil, &RestoreError{Part: "database", Output: strings.TrimSpace(out.String()), Err: fmt.Errorf("postgres exited: %v", err)}
 		case <-ctx.Done():
-			s.stop()
+			s.Stop()
 			return nil, &RestoreError{Part: "database", Output: strings.TrimSpace(out.String()), Err: errors.New("postgres did not get ready")}
 		case <-time.After(250 * time.Millisecond):
 		}
 	}
 }
 
-func (s *postgresServer) stop() error {
+func (s *PostgresServer) Stop() error {
 	s.cmd.Process.Signal(syscall.SIGINT)
 	select {
 	case err := <-s.exited:
 		return err
 	case <-time.After(postgresStopTimeout):
-		syscall.Kill(-s.cmd.Process.Pid, syscall.SIGKILL)
+		killGroup(s.cmd.Process.Pid)
 		return fmt.Errorf("backup: postgres did not stop within %s: %v", postgresStopTimeout, <-s.exited)
 	}
 }

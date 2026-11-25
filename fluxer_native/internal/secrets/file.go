@@ -81,7 +81,7 @@ func write(path string, values map[string]string) error {
 	slices.Sort(keys)
 	var b strings.Builder
 	for _, k := range keys {
-		b.WriteString(k + "=" + values[k] + "\n")
+		b.WriteString(k + "=" + config.Quote(values[k]) + "\n")
 	}
 	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 		return err

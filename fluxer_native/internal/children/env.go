@@ -3,6 +3,7 @@
 package children
 
 import (
+	"cmp"
 	"fmt"
 	"maps"
 	"net/url"
@@ -12,13 +13,20 @@ import (
 
 	"github.com/fluxerapp/fluxer/fluxer_native/internal/sizing"
 	"github.com/fluxerapp/fluxer/fluxer_native/internal/spec"
+	"github.com/fluxerapp/fluxer/fluxer_native/internal/updates"
 )
 
 const overridePrefix = "FLUXER_NATIVE_"
 
 const systemPath = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
-const nativeNoProxy = "localhost,127.0.0.1,::1${NO_PROXY:+,${NO_PROXY:-}}"
+func nativeNoProxy() string {
+	hosts := "localhost," + spec.DefaultLoopback
+	if spec.Loopback != spec.DefaultLoopback {
+		hosts += "," + spec.Loopback
+	}
+	return hosts + ",::1${NO_PROXY:+,${NO_PROXY:-}}"
+}
 
 type Config struct {
 	Layout   spec.Layout
@@ -94,7 +102,7 @@ func (c Config) env(svc string) (spec.Env, error) {
 	if svc == spec.SeaweedFSFiler {
 		name = spec.SeaweedFS
 	}
-	block, ok := composeEnv[name]
+	block, ok := childEnv[name]
 	if !ok && svc != spec.Valkey {
 		return nil, fmt.Errorf("unknown service %q", svc)
 	}
@@ -134,25 +142,53 @@ func (c Config) buildArgs() map[string]string {
 }
 
 func (c Config) vars() map[string]string {
-	v := sizing.Defaults(c.Host)
-	v["FLUXER_LIVEKIT_ENABLED"] = "false"
+	v := map[string]string{}
+	if c.Vars[spec.SizingSourceEnv] != spec.SizingByRexctl {
+		v = sizing.Defaults(c.Host)
+	}
 	maps.Copy(v, c.Vars)
+	ip, isIP := domainIP(strings.TrimSpace(v["FLUXER_DOMAIN"]))
+	if isIP && strings.TrimSpace(v["FLUXER_LIVEKIT_NODE_IP"]) == "" && !strings.EqualFold(strings.TrimSpace(v["FLUXER_LIVEKIT_USE_EXTERNAL_IP"]), "true") {
+		v["FLUXER_LIVEKIT_NODE_IP"] = ip.String()
+	}
 	if strings.TrimSpace(v["FLUXER_LIVEKIT_NODE_IP"]) != "" && strings.TrimSpace(v["FLUXER_LIVEKIT_USE_EXTERNAL_IP"]) == "" {
 		v["FLUXER_LIVEKIT_USE_EXTERNAL_IP"] = "false"
+	}
+	if isIP {
+		literal := "[" + ip.String() + "]"
+		if ip.Is6() {
+			literal = "[IPv6:" + ip.String() + "]"
+		}
+		for key, local := range map[string]string{"FLUXER_EMAIL_FROM_EMAIL": "noreply", "FLUXER_VAPID_EMAIL": "admin"} {
+			if strings.TrimSpace(v[key]) == "" {
+				v[key] = local + "@" + literal
+			}
+		}
+	}
+	if strings.TrimSpace(v["FLUXER_PUBLIC_ORIGIN"]) == "" {
+		v["FLUXER_PUBLIC_ORIGIN"] = portOrigin(v)
 	}
 	maps.Copy(v, c.inputs())
 	return v
 }
 
+func portOrigin(v map[string]string) string {
+	domain := NormalDomain(v["FLUXER_DOMAIN"])
+	port := strings.TrimSpace(v["FLUXER_PUBLIC_PORT"])
+	scheme := strings.ToLower(cmp.Or(strings.TrimSpace(v["FLUXER_PUBLIC_SCHEME"]), "https"))
+	if domain == "" || port == "" || scheme == "https" && port == "443" || scheme == "http" && port == "80" {
+		return ""
+	}
+	return scheme + "://" + domain + ":" + port
+}
+
 func (c Config) inputs() map[string]string {
 	nats := "nats://" + spec.Addr(spec.PortNATS)
 	in := map[string]string{
-		"FLUXER_NATS_URL":                                 nats,
-		"FLUXER_NATS_JETSTREAM_URL":                       nats,
-		"FLUXER_SVC_NATS_URL":                             nats,
-		"FLUXER_TRUST_CLIENT_IP_HEADER":                   "true",
-		"FLUXER_API_EMBEDDED_WORKER":                      "true",
-		"FLUXER_API_PRESIGNED_ATTACHMENT_UPLOADS_ENABLED": "true",
+		"FLUXER_NATS_URL":            nats,
+		"FLUXER_NATS_JETSTREAM_URL":  nats,
+		"FLUXER_SVC_NATS_URL":        nats,
+		"FLUXER_API_EMBEDDED_WORKER": "true",
 	}
 	if c.local(spec.Postgres) {
 		in["FLUXER_POSTGRES_HOST"] = c.Layout.PGSocketDir()
@@ -175,6 +211,9 @@ func (c Config) inputs() map[string]string {
 }
 
 func (c Config) local(svc string) bool {
+	if c.VoiceOnly() {
+		return false
+	}
 	switch svc {
 	case spec.Postgres:
 		return c.Vars["FLUXER_POSTGRES_URL"] == ""
@@ -186,7 +225,7 @@ func (c Config) local(svc string) bool {
 		engine := c.Vars["FLUXER_SEARCH_ENGINE"]
 		return engine == "" || engine == "meilisearch"
 	case spec.LiveKit:
-		return c.Vars["FLUXER_LIVEKIT_ENABLED"] == "true" && c.Vars["FLUXER_LIVEKIT_BUNDLED"] != "false"
+		return cmp.Or(strings.TrimSpace(c.Vars["FLUXER_LIVEKIT_ENABLED"]), "true") == "true" && c.Vars["FLUXER_LIVEKIT_BUNDLED"] != "false"
 	}
 	return true
 }
@@ -199,7 +238,7 @@ func (c Config) native(svc string, env spec.Env, m spec.Modes) error {
 		env["NODE_EXTRA_CA_CERTS"] = c.CABundle
 		env["SSL_CERT_FILE"] = c.CABundle
 	}
-	noProxy, err := interpolate(nativeNoProxy, c.Vars)
+	noProxy, err := interpolate(nativeNoProxy(), c.Vars)
 	if err != nil {
 		return err
 	}
@@ -242,6 +281,11 @@ func (c Config) native(svc string, env spec.Env, m spec.Modes) error {
 	case spec.API:
 		listen("FLUXER_API_HOST", "FLUXER_API_PORT", spec.PortAPI)
 		env["FLUXER_OPERATOR_SOCKET"] = c.Layout.OperatorSocket()
+		if method := setupMethod(c.Vars); method != "" {
+			env[spec.InstallMethodEnv] = method
+			env[spec.SetupCommandEnv] = setupCommand(method, c.Vars)
+		}
+		env[spec.WorkerHeartbeatEnv] = c.Layout.WorkerHeartbeat()
 	case spec.Gateway:
 		listen("FLUXER_GATEWAY_BIND_HOST", "FLUXER_GATEWAY_PORT", spec.PortGateway)
 		env["FLUXER_GATEWAY_STATUS_PORT"] = "0"
@@ -249,15 +293,20 @@ func (c Config) native(svc string, env spec.Env, m spec.Modes) error {
 		env["FLUXER_ERLANG_SCHEDULERS"] = strconv.Itoa(schedulers)
 		env["FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS"] = strconv.Itoa(dirtyCPU)
 		env["FLUXER_ERLANG_DIRTY_IO_SCHEDULERS"] = strconv.Itoa(dirtyIO)
+		env["ERL_INETRC"] = filepath.Join(c.Root, "gateway", "config", "inetrc")
 		env["ERL_CRASH_DUMP"] = filepath.Join(c.Layout.GatewayHome(), "erl_crash.dump")
 		env["LANG"] = "C.UTF-8"
 	case spec.MediaProxy:
 		listen("FLUXER_MEDIA_PROXY_HOST", "FLUXER_MEDIA_PROXY_PORT", spec.PortMediaProxy)
 		env["FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_DIR"] = c.Layout.Tmp(svc)
-		env["LD_LIBRARY_PATH"] = filepath.Join(c.Root, "lib")
+		env["FONTCONFIG_FILE"] = filepath.Join(c.Root, "share", "fonts.conf")
+		env["GDK_PIXBUF_MODULE_FILE"] = filepath.Join(c.Root, "share", "gdk-pixbuf-loaders.cache")
+		env["GIO_MODULE_DIR"] = filepath.Join(c.Root, "share", "gio-modules")
+		env["XDG_CACHE_HOME"] = c.Layout.Tmp(svc)
 	case spec.Admin:
 		listen("FLUXER_ADMIN_HOST", "FLUXER_ADMIN_PORT", spec.PortAdmin)
 		env["FLUXER_API_ENDPOINT"] = spec.URL(spec.PortAPI)
+		env[spec.UpdateStatePathEnv] = updates.FilePath(c.Layout.Data)
 	case spec.AppProxy:
 		listen("FLUXER_APP_PROXY_HOST", "FLUXER_APP_PROXY_PORT", spec.PortAppProxy)
 		env["DISCOVERY_UPSTREAM_URL"] = spec.URL(spec.PortAPI) + "/.well-known/fluxer"

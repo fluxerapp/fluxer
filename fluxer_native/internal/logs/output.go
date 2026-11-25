@@ -15,8 +15,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-
-	"golang.org/x/sys/unix"
 )
 
 const (
@@ -64,38 +62,91 @@ func stdoutIsJournal(stream string) bool {
 	if err1 != nil || err2 != nil {
 		return false
 	}
-	var st unix.Stat_t
-	if err := unix.Fstat(int(os.Stdout.Fd()), &st); err != nil {
-		return false
-	}
-	return uint64(st.Dev) == dev && uint64(st.Ino) == ino
+	gotDev, gotIno, ok := stdoutID()
+	return ok && gotDev == dev && gotIno == ino
 }
 
-func (o *Output) Child(svc string, prio int, text string) {
-	o.write("fluxer-"+svc, svc, prio, text)
+const (
+	Stdout = "stdout"
+	Stderr = "stderr"
+)
+
+func (o *Output) Child(svc, stream, text string) {
+	o.write("fluxer-"+svc, svc, Priority(text), stream, text)
 }
 
 func (o *Output) Logf(prio int, format string, args ...any) {
-	o.write("fluxerd", "fluxerd", prio, fmt.Sprintf(format, args...))
+	o.write("fluxerd", "fluxerd", prio, "", fmt.Sprintf(format, args...))
 }
 
-func (o *Output) write(ident, label string, prio int, text string) {
+func (o *Output) write(ident, label string, prio int, stream, text string) {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 	if o.journal != nil {
-		if _, err := o.journal.Write(journalEntry(ident, prio, text)); err == nil {
+		if _, err := o.journal.Write(journalEntry(ident, prio, stream, text)); err == nil {
 			return
 		}
 	}
 	fmt.Fprintf(o.w, "[%s] %s\n", label, text)
 }
 
-func journalEntry(ident string, prio int, text string) []byte {
+func journalEntry(ident string, prio int, stream, text string) []byte {
 	var b bytes.Buffer
 	journalField(&b, "MESSAGE", text)
 	journalField(&b, "PRIORITY", strconv.Itoa(prio))
 	journalField(&b, "SYSLOG_IDENTIFIER", ident)
+	if stream != "" {
+		journalField(&b, "FLUXER_STREAM", stream)
+	}
 	return b.Bytes()
+}
+
+var (
+	errMarks  = []string{" ERROR ", "ERROR:", "[ERROR]", "[error]", "level=error", " FATAL ", "FATAL:", "[FATAL]", "PANIC:", "[critical]", "CRITICAL"}
+	warnMarks = []string{" WARN ", "WARN:", "[WARN]", "[warn]", "[warning]", "level=warn", "WARNING"}
+)
+
+func Priority(text string) int {
+	if strings.HasPrefix(text, "{") {
+		var line struct {
+			Level any `json:"level"`
+		}
+		if json.Unmarshal([]byte(text), &line) == nil {
+			return levelPriority(line.Level)
+		}
+	}
+	head := text[:min(len(text), 160)]
+	for _, m := range errMarks {
+		if strings.Contains(head, m) {
+			return PrioErr
+		}
+	}
+	for _, m := range warnMarks {
+		if strings.Contains(head, m) {
+			return PrioWarning
+		}
+	}
+	return PrioInfo
+}
+
+func levelPriority(level any) int {
+	switch v := level.(type) {
+	case float64:
+		switch {
+		case v >= 50:
+			return PrioErr
+		case v >= 40:
+			return PrioWarning
+		}
+	case string:
+		switch strings.ToLower(v) {
+		case "error", "err", "fatal", "critical", "panic", "dpanic":
+			return PrioErr
+		case "warn", "warning":
+			return PrioWarning
+		}
+	}
+	return PrioInfo
 }
 
 func journalField(b *bytes.Buffer, key, value string) {

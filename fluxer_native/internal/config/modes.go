@@ -18,6 +18,12 @@ import (
 var modeKeys = []string{spec.RustProcessEnv, spec.StorageBackendEnv, spec.KVModeEnv}
 
 func fillModes(cfg *Config) error {
+	cfg.SetModes = map[string]string{}
+	for _, k := range modeKeys {
+		if v := strings.TrimSpace(cfg.Env[k]); v != "" {
+			cfg.SetModes[k] = v
+		}
+	}
 	file, err := ReadEnvFile(cfg.Layout.ModesFile())
 	if errors.Is(err, fs.ErrNotExist) {
 		return nil
@@ -33,14 +39,21 @@ func fillModes(cfg *Config) error {
 	return nil
 }
 
-func EnsureModes(cfg *Config, fresh bool) (map[string]string, error) {
+func PendingModes(cfg *Config, fresh bool) (map[string]string, error) {
 	if !fresh {
 		return nil, nil
 	}
 	if _, err := os.Stat(cfg.Layout.ModesFile()); !errors.Is(err, fs.ErrNotExist) {
 		return nil, err
 	}
-	modes := spec.FreshModes(cfg.Env)
+	return spec.FreshModes(cfg.Env), nil
+}
+
+func EnsureModes(cfg *Config, fresh bool) (map[string]string, error) {
+	modes, err := PendingModes(cfg, fresh)
+	if err != nil || modes == nil {
+		return nil, err
+	}
 	if err := WriteModes(cfg.Layout, modes); err != nil {
 		return nil, err
 	}

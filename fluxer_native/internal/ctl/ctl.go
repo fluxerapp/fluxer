@@ -3,6 +3,7 @@
 package ctl
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -11,10 +12,15 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"slices"
 	"strings"
+	"sync/atomic"
+	"time"
 
+	"github.com/fluxerapp/fluxer/fluxer_native/internal/procstat"
 	"github.com/fluxerapp/fluxer/fluxer_native/internal/spec"
 	"github.com/fluxerapp/fluxer/fluxer_native/internal/supervise"
+	"github.com/fluxerapp/fluxer/fluxer_native/internal/updates"
 )
 
 func Listen(path string) (net.Listener, error) {
@@ -32,7 +38,36 @@ func Listen(path string) (net.Listener, error) {
 	return ln, nil
 }
 
-func Handler(sup *supervise.Supervisor, setJetStream func(on bool) error) http.Handler {
+type Swap struct {
+	h atomic.Pointer[http.Handler]
+}
+
+func (s *Swap) Set(h http.Handler) { s.h.Store(&h) }
+
+func (s *Swap) ServeHTTP(w http.ResponseWriter, r *http.Request) { (*s.h.Load()).ServeHTTP(w, r) }
+
+func Waiting(status string) http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET "+spec.PathHealth, func(w http.ResponseWriter, r *http.Request) {
+		writeJSON(w, http.StatusServiceUnavailable, spec.Health{Status: status})
+	})
+	mux.HandleFunc("POST "+spec.PathReload, func(w http.ResponseWriter, r *http.Request) {
+		writeError(w, http.StatusConflict, errors.New(status))
+	})
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		writeError(w, http.StatusServiceUnavailable, errors.New(status))
+	})
+	return mux
+}
+
+type Hooks struct {
+	JetStream   func(on bool) error
+	Maintenance func(on bool) error
+	Reload      func(ctx context.Context) (spec.Reloaded, error)
+	Update      func(ctx context.Context, check bool) (updates.Report, error)
+}
+
+func Handler(sup *supervise.Supervisor, hooks Hooks) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET "+spec.PathPs, func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, sup.Ps())
@@ -66,11 +101,68 @@ func Handler(sup *supervise.Supervisor, setJetStream func(on bool) error) http.H
 			writeError(w, http.StatusBadRequest, fmt.Errorf("unknown JetStream action %q", action))
 			return
 		}
-		if err := setJetStream(action == spec.ActionStart); err != nil {
+		if err := hooks.JetStream(action == spec.ActionStart); err != nil {
 			writeError(w, http.StatusInternalServerError, err)
 			return
 		}
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+	})
+	mux.HandleFunc("POST "+spec.PathMaintenance+"{action}", func(w http.ResponseWriter, r *http.Request) {
+		action := r.PathValue("action")
+		if action != spec.MaintenanceOn && action != spec.MaintenanceOff {
+			writeError(w, http.StatusBadRequest, fmt.Errorf("unknown maintenance action %q", action))
+			return
+		}
+		if err := hooks.Maintenance(action == spec.MaintenanceOn); err != nil {
+			writeError(w, http.StatusInternalServerError, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+	})
+	mux.HandleFunc("POST "+spec.PathReload, func(w http.ResponseWriter, r *http.Request) {
+		res, err := hooks.Reload(r.Context())
+		switch {
+		case err == nil:
+			writeJSON(w, http.StatusOK, res)
+		case errors.Is(err, supervise.ErrRestart):
+			writeError(w, http.StatusConflict, err)
+		case errors.Is(err, supervise.ErrStopping):
+			writeError(w, http.StatusServiceUnavailable, err)
+		default:
+			writeError(w, http.StatusUnprocessableEntity, err)
+		}
+	})
+	update := func(check bool) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			if hooks.Update == nil {
+				writeError(w, http.StatusNotFound, errors.New("voice-only mode doesn't check for new releases"))
+				return
+			}
+			rep, err := hooks.Update(r.Context(), check)
+			if err != nil && rep.Running == "" {
+				writeError(w, http.StatusInternalServerError, err)
+				return
+			}
+			writeJSON(w, http.StatusOK, rep)
+		}
+	}
+	mux.HandleFunc("GET "+spec.PathUpdate, update(false))
+	mux.HandleFunc("POST "+spec.PathUpdateCheck, update(true))
+	mux.HandleFunc("GET "+spec.PathStats, func(w http.ResponseWriter, r *http.Request) {
+		pids := map[string]int{}
+		for _, e := range sup.Ps() {
+			pids[e.Name] = e.PID
+		}
+		stats, err := procstat.Sample(r.Context(), pids, statsWindow)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, err)
+			return
+		}
+		slices.SortFunc(stats, func(a, b procstat.Stat) int { return strings.Compare(a.Name, b.Name) })
+		writeJSON(w, http.StatusOK, stats)
+	})
+	mux.HandleFunc("GET "+spec.PathEvents, func(w http.ResponseWriter, r *http.Request) {
+		events(w, r, sup)
 	})
 	mux.HandleFunc("GET "+spec.PathLogs+"{name}", func(w http.ResponseWriter, r *http.Request) {
 		ring, err := sup.Logs(r.PathValue("name"))
@@ -106,6 +198,58 @@ func Handler(sup *supervise.Supervisor, setJetStream func(on bool) error) http.H
 		}
 	})
 	return mux
+}
+
+const (
+	statsWindow    = 250 * time.Millisecond
+	eventsCoalesce = 250 * time.Millisecond
+	eventsKeepOpen = 15 * time.Second
+)
+
+func events(w http.ResponseWriter, r *http.Request, sup *supervise.Supervisor) {
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		writeError(w, http.StatusInternalServerError, errors.New("streaming is not supported"))
+		return
+	}
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-store")
+	w.WriteHeader(http.StatusOK)
+	var lastPs, lastHealth []byte
+	keep := time.NewTicker(eventsKeepOpen)
+	defer keep.Stop()
+	for {
+		changed := sup.Changes()
+		ps, _ := json.Marshal(sup.Ps())
+		health, _ := json.Marshal(sup.Health())
+		if !bytes.Equal(ps, lastPs) {
+			fmt.Fprintf(w, "event: %s\ndata: %s\n\n", spec.EventPs, ps)
+			lastPs = ps
+		}
+		if !bytes.Equal(health, lastHealth) {
+			fmt.Fprintf(w, "event: %s\ndata: %s\n\n", spec.EventHealth, health)
+			lastHealth = health
+		}
+		flusher.Flush()
+		select {
+		case <-r.Context().Done():
+			return
+		case <-keep.C:
+			if _, err := io.WriteString(w, ": keep open\n\n"); err != nil {
+				return
+			}
+			flusher.Flush()
+			continue
+		case <-changed:
+		}
+		timer := time.NewTimer(eventsCoalesce)
+		select {
+		case <-r.Context().Done():
+			timer.Stop()
+			return
+		case <-timer.C:
+		}
+	}
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {
@@ -149,6 +293,24 @@ func (c *Client) Health(ctx context.Context) (spec.Health, error) {
 	return h, c.getJSON(ctx, spec.PathHealth, &h, http.StatusOK, http.StatusServiceUnavailable)
 }
 
+func (c *Client) Update(ctx context.Context) (updates.Report, error) {
+	var r updates.Report
+	return r, c.getJSON(ctx, spec.PathUpdate, &r, http.StatusOK)
+}
+
+func (c *Client) UpdateCheck(ctx context.Context) (updates.Report, error) {
+	var r updates.Report
+	resp, err := c.do(ctx, http.MethodPost, spec.PathUpdateCheck)
+	if err != nil {
+		return r, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return r, responseError(resp)
+	}
+	return r, json.NewDecoder(resp.Body).Decode(&r)
+}
+
 func (c *Client) getJSON(ctx context.Context, path string, v any, ok ...int) error {
 	resp, err := c.do(ctx, http.MethodGet, path)
 	if err != nil {
@@ -169,6 +331,13 @@ func (c *Client) Service(ctx context.Context, name, action string) error {
 
 func (c *Client) JetStream(ctx context.Context, action string) error {
 	return c.post(ctx, spec.PathJetStream+action)
+}
+
+func (c *Client) Maintenance(ctx context.Context, on bool) error {
+	if on {
+		return c.post(ctx, spec.PathMaintenance+spec.MaintenanceOn)
+	}
+	return c.post(ctx, spec.PathMaintenance+spec.MaintenanceOff)
 }
 
 func (c *Client) post(ctx context.Context, path string) error {
@@ -211,5 +380,5 @@ func responseError(resp *http.Response) error {
 	if json.Unmarshal(data, &body) == nil && body.Error != "" {
 		return errors.New(body.Error)
 	}
-	return fmt.Errorf("fluxerd answered %s: %s", resp.Status, strings.TrimSpace(string(data)))
+	return fmt.Errorf("fluxerd returned %s: %s", resp.Status, strings.TrimSpace(string(data)))
 }

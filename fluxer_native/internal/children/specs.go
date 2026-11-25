@@ -3,6 +3,8 @@
 package children
 
 import (
+	"bytes"
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -60,98 +62,105 @@ func (c Config) child(svc string, argv []string, deps []string, probes ...spec.P
 }
 
 func Specs(c Config) ([]spec.Child, error) {
+	if c.VoiceOnly() {
+		return voiceOnlySpecs(c)
+	}
 	m, err := spec.ResolveModes(c.Vars, c.Layout.Data)
 	if err != nil {
 		return nil, err
 	}
 	var out []spec.Child
-	var deps []string
-	step := func(chs ...spec.Child) {
-		deps = nil
-		for _, ch := range chs {
-			out = append(out, ch)
-			deps = append(deps, ch.Name)
-		}
-	}
 	var errs []error
-	must := func(ch spec.Child, err error) spec.Child {
+	has := map[string]bool{}
+	add := func(ch spec.Child, err error) *spec.Child {
 		errs = append(errs, err)
-		return ch
+		out = append(out, ch)
+		has[ch.Name] = true
+		return &out[len(out)-1]
+	}
+	on := func(names ...string) []string {
+		var deps []string
+		for _, n := range names {
+			if has[n] {
+				deps = append(deps, n)
+			}
+		}
+		return deps
 	}
 
 	if c.local(spec.Postgres) {
 		o, err := c.postgres()
 		errs = append(errs, err)
-		ch := must(c.child(spec.Postgres, pg.Argv(o), deps, pg.ReadyProbe(o)))
+		ch := add(c.child(spec.Postgres, pg.Argv(o), nil, pg.ReadyProbe(o)))
 		ch.Cwd = o.DataDir
 		ch.StopSignal = syscall.SIGINT
 		ch.StopTimeout = 30 * time.Second
 		ch.Core = true
-		step(ch)
 	}
 	if c.local(spec.Valkey) {
 		argv, err := c.valkeyArgv()
 		errs = append(errs, err)
-		ch := must(c.child(spec.Valkey, argv, deps, spec.FuncProbe(probe.Valkey(spec.Addr(spec.PortValkey), c.Vars["FLUXER_VALKEY_PASSWORD"]))))
+		ch := add(c.child(spec.Valkey, argv, nil, spec.FuncProbe(probe.Valkey(spec.Addr(spec.PortValkey), c.Vars["FLUXER_VALKEY_PASSWORD"]))))
 		ch.Core = true
-		step(ch)
 	}
 	if c.local(spec.SeaweedFS) {
 		args, err := resolveList(seaweedArgs, c.vars())
 		errs = append(errs, err)
-		weed := c.bin("weed")
+		weed := c.bin(spec.WeedBinary)
 		tls := seaweed.ConfigDir(c.Layout)
 		serverArgv, filerArgv := seaweed.Argv(weed, c.Layout.SeaweedFSDir(), tls, args)
-		server := must(c.child(spec.SeaweedFS, serverArgv, deps, seaweed.VolumeProbe(tls), seaweed.LeaderProbe(tls)))
+		server := add(c.child(spec.SeaweedFS, serverArgv, nil, seaweed.VolumeProbe(tls), seaweed.LeaderProbe(tls)))
 		server.StopTimeout = 30 * time.Second
 		server.Core = true
-		step(server)
-		filer := must(c.child(spec.SeaweedFSFiler, filerArgv, deps, spec.HTTPProbe(spec.PortSeaweedS3, "/healthz", 200)))
+		filer := add(c.child(spec.SeaweedFSFiler, filerArgv, on(spec.SeaweedFS), spec.HTTPProbe(spec.PortSeaweedS3, "/healthz", 200)))
 		filer.StopTimeout = 30 * time.Second
 		filer.Core = true
-		step(filer)
-		buckets := must(c.child(spec.SeaweedFSInit, seaweed.InitArgv(c.Self, weed, tls), deps))
+		buckets := add(c.child(spec.SeaweedFSInit, seaweed.InitArgv(c.Self, weed, tls), on(spec.SeaweedFS, spec.SeaweedFSFiler)))
 		buckets.Cwd = c.Layout.Tmp(spec.SeaweedFSInit)
 		buckets.Oneshot = true
-		step(buckets)
+		buckets.Rearm = true
 	}
 	if c.local(spec.Meilisearch) {
-		step(must(c.child(spec.Meilisearch, []string{c.bin("meilisearch")}, deps, spec.HTTPProbe(spec.PortMeilisearch, "/health", 200))))
+		meili := add(c.child(spec.Meilisearch, []string{c.bin("meilisearch")}, nil, spec.HTTPProbe(spec.PortMeilisearch, "/health", 200)))
+		meili.Core = true
 	}
+	if c.local(spec.LiveKit) {
+		add(c.child(spec.LiveKit, []string{c.bin("livekit-server")}, nil, spec.HTTPProbe(spec.PortLiveKit, "/", 200)))
+	}
+	rust := []string{spec.RustServer}
 	if m.Rust == spec.RustSingle {
-		step(must(c.rust(deps)))
+		add(c.rust(on(spec.Postgres)))
 	} else {
-		step(must(c.server(spec.Snowflakes, deps)))
-		var services []spec.Child
-		for _, svc := range []string{spec.Users, spec.Messages, spec.Gifs, spec.Unfurl} {
-			services = append(services, must(c.server(svc, deps)))
+		rust = rustGating
+		for _, svc := range []string{spec.Snowflakes, spec.Gifs, spec.Unfurl} {
+			add(c.server(svc, nil))
 		}
-		step(services...)
+		for _, svc := range []string{spec.Users, spec.Messages} {
+			add(c.server(svc, on(spec.Postgres)))
+		}
 	}
 
-	api := must(c.child(spec.API, []string{c.bin("node"), filepath.Join(c.Root, "api", "dist", "AppEntrypoint.js")}, deps,
+	api := add(c.child(spec.API, []string{c.bin("node"), filepath.Join(c.Root, "api", "dist", "AppEntrypoint.js")},
+		on(append([]string{spec.Postgres, spec.Valkey, spec.Meilisearch, spec.SeaweedFSInit}, rust...)...),
 		spec.HTTPProbe(spec.PortAPI, "/_health", 200),
-		spec.FileFreshProbe(spec.WorkerHeartbeatPath, spec.WorkerHeartbeatMaxAge)))
+		spec.FileFreshProbe(c.Layout.WorkerHeartbeat(), spec.WorkerHeartbeatMaxAge)))
 	api.StopTimeout = 20 * time.Second
 	api.Core = true
-	step(api)
 
-	gateway := must(c.child(spec.Gateway, []string{filepath.Join(c.Root, "gateway", "bin", "fluxer_gateway"), "foreground"}, deps,
+	gateway := add(c.child(spec.Gateway, []string{filepath.Join(c.Root, "gateway", "bin", "fluxer_gateway"), "foreground"}, on(spec.Valkey),
 		spec.HTTPProbe(spec.PortGateway, "/_health/ready", 200)))
 	gateway.StopTimeout = 15 * time.Second
 	gateway.Core = true
-	step(gateway)
 
-	last := []spec.Child{must(c.child(spec.MediaProxy, []string{c.bin("fluxer-media-proxy")}, deps, spec.HTTPProbe(spec.PortMediaProxy, "/_health", 200)))}
+	add(c.child(spec.MediaProxy, []string{c.bin("fluxer-media-proxy")}, on(spec.SeaweedFSInit), spec.HTTPProbe(spec.PortMediaProxy, "/_health", 200)))
 	if m.Rust != spec.RustSingle {
 		for _, svc := range []string{spec.Push, spec.Admin, spec.AppProxy} {
-			last = append(last, must(c.server(svc, deps)))
+			add(c.server(svc, on(spec.API)))
 		}
 	}
-	if c.local(spec.LiveKit) {
-		last = append(last, must(c.child(spec.LiveKit, []string{c.bin("livekit-server")}, deps, spec.HTTPProbe(spec.PortLiveKit, "/", 200))))
-	}
-	step(last...)
+	voices, _ := VoiceServers(c)
+	out = append(out, voices...)
+	errs = append(errs, c.supervision(out))
 	_, err = Edge(c)
 	errs = append(errs, err)
 	_, err = NATS(c)
@@ -160,6 +169,8 @@ func Specs(c Config) ([]spec.Child, error) {
 }
 
 var rustGating = []string{spec.Snowflakes, spec.Users, spec.Messages, spec.Gifs}
+
+var rustCore = append(slices.Clone(rustGating), spec.AppProxy)
 
 var rustSharedKeys = []string{
 	"HTTP_PROXY", "HTTPS_PROXY", "NO_PROXY", "http_proxy", "https_proxy", "no_proxy",
@@ -185,6 +196,7 @@ func (c Config) server(svc string, deps []string) (spec.Child, error) {
 		return ch, err
 	}
 	ch.Env[spec.ServerServicesEnv] = svc
+	ch.Core = slices.Contains(rustCore, svc)
 	return ch, nil
 }
 
@@ -237,13 +249,20 @@ func (c Config) rust(deps []string) (spec.Child, error) {
 		SvcLogs:     true,
 		StopSignal:  syscall.SIGTERM,
 		StopTimeout: 30 * time.Second,
+		Core:        true,
 	}
 	for _, svc := range spec.RustServices {
-		if slices.Contains(rustGating, svc) {
-			ch.Probes = append(ch.Probes, rustProbes(svc)...)
-		} else {
-			ch.Watch = append(ch.Watch, rustProbes(svc)...)
+		probes := rustProbes(svc)
+		switch {
+		case slices.Contains(rustGating, svc):
+			ch.Probes = append(ch.Probes, probes...)
+			continue
+		case slices.Contains(rustCore, svc):
+			for i := range probes {
+				probes[i].Core = true
+			}
 		}
+		ch.Watch = append(ch.Watch, probes...)
 	}
 	return ch, nil
 }
@@ -257,10 +276,10 @@ func Prepare(ctx context.Context, c Config, specs []spec.Child) error {
 	if err := os.RemoveAll(c.Layout.TmpRoot()); err != nil {
 		return err
 	}
-	if err := os.Remove(spec.WorkerHeartbeatPath); err != nil && !errors.Is(err, os.ErrNotExist) {
-		return err
-	}
 	dirs := []string{c.Layout.NATSDir(), c.Layout.EdgeDir(), c.Layout.PGSocketDir()}
+	if c.VoiceOnly() {
+		dirs = []string{c.Layout.EdgeDir()}
+	}
 	for _, ch := range specs {
 		dirs = append(dirs, ch.Cwd, c.Layout.Tmp(ch.Name))
 	}
@@ -268,6 +287,9 @@ func Prepare(ctx context.Context, c Config, specs []spec.Child) error {
 		if err := os.MkdirAll(d, 0o700); err != nil {
 			return err
 		}
+	}
+	if c.VoiceOnly() {
+		return nil
 	}
 	if err := c.writeValkeyConf(); err != nil {
 		return err
@@ -285,6 +307,31 @@ func Prepare(ctx context.Context, c Config, specs []spec.Child) error {
 	return PreparePostgres(ctx, c)
 }
 
+func Refresh(c Config, specs []spec.Child) ([]string, error) {
+	for _, ch := range specs {
+		for _, d := range []string{ch.Cwd, c.Layout.Tmp(ch.Name)} {
+			if err := os.MkdirAll(d, 0o700); err != nil {
+				return nil, err
+			}
+		}
+	}
+	if !c.local(spec.Valkey) {
+		return nil, nil
+	}
+	before, _ := os.ReadFile(c.valkeyConf())
+	if err := c.writeValkeyConf(); err != nil {
+		return nil, err
+	}
+	after, err := os.ReadFile(c.valkeyConf())
+	if err != nil {
+		return nil, err
+	}
+	if bytes.Equal(before, after) {
+		return nil, nil
+	}
+	return []string{spec.Valkey}, nil
+}
+
 func PreparePostgres(ctx context.Context, c Config) error {
 	if !c.local(spec.Postgres) {
 		return nil
@@ -293,7 +340,51 @@ func PreparePostgres(ctx context.Context, c Config) error {
 	if err != nil {
 		return err
 	}
+	if o.Resolve != nil {
+		return o.Resolve
+	}
 	return pg.Prepare(ctx, o)
+}
+
+func PreparePostgresIn(ctx context.Context, c Config, dir string) error {
+	o, err := c.postgres()
+	if err != nil {
+		return err
+	}
+	choice, err := pg.Resolve(dir, c.Vars["FLUXER_POSTGRES_BIN_DIR"])
+	if err != nil {
+		return err
+	}
+	o.BinDir, o.Major, o.DataDir = choice.BinDir, choice.Major, dir
+	return pg.Prepare(ctx, o)
+}
+
+func PostgresHint(c Config) string {
+	if !c.local(spec.Postgres) {
+		return ""
+	}
+	choice, err := pg.Resolve(c.Layout.PostgresDir(), c.Vars["FLUXER_POSTGRES_BIN_DIR"])
+	if err != nil {
+		return ""
+	}
+	return choice.Hint()
+}
+
+const walCompressionEnv = "FLUXER_POSTGRES_WAL_COMPRESSION"
+
+func walCompression(setting string, major int, vars map[string]string) (string, error) {
+	_, v, _ := strings.Cut(setting, "=")
+	if major == 0 || major >= 15 {
+		return setting, nil
+	}
+	switch strings.ToLower(strings.TrimSpace(v)) {
+	case "on", "off", "true", "false", "yes", "no", "1", "0":
+		return setting, nil
+	}
+	if _, set := vars[walCompressionEnv]; set {
+		return "", fmt.Errorf("%s is %s, and PostgreSQL %d only takes on or off. Set it to on, or unset it", walCompressionEnv, v, major)
+	}
+	return "wal_compression=on", nil
 }
 
 func (c Config) postgres() (pg.Options, error) {
@@ -301,17 +392,21 @@ func (c Config) postgres() (pg.Options, error) {
 	if err != nil {
 		return pg.Options{}, err
 	}
+	choice, resolveErr := pg.Resolve(c.Layout.PostgresDir(), c.Vars["FLUXER_POSTGRES_BIN_DIR"])
+	if resolveErr != nil {
+		choice.BinDir = cmp.Or(c.Vars["FLUXER_POSTGRES_BIN_DIR"], pg.BinDir(pg.MinMajor))
+	}
 	o := pg.Options{
-		BinDir:    c.Vars["FLUXER_POSTGRES_BIN_DIR"],
+		BinDir:    choice.BinDir,
+		Major:     choice.Major,
+		Newer:     choice.Newer,
+		Resolve:   resolveErr,
 		DataDir:   c.Layout.PostgresDir(),
 		SocketDir: c.Layout.PGSocketDir(),
 		Port:      spec.PortPostgres,
 		User:      env["POSTGRES_USER"],
 		Password:  env["POSTGRES_PASSWORD"],
 		Database:  env["POSTGRES_DB"],
-	}
-	if o.BinDir == "" {
-		o.BinDir = pg.DefaultBinDir
 	}
 	settings, err := resolveList(postgresSettings, c.vars())
 	if err != nil {
@@ -339,7 +434,16 @@ func (c Config) postgres() (pg.Options, error) {
 	for i, s := range settings {
 		switch name, _, _ := strings.Cut(s, "="); name {
 		case "max_connections":
-			settings[i] = "max_connections=" + strconv.Itoa(pools+10)
+			_, v, _ := strings.Cut(s, "=")
+			n, err := strconv.Atoi(strings.TrimSpace(v))
+			if err != nil {
+				return o, fmt.Errorf("FLUXER_POSTGRES_SERVER_MAX_CONNECTIONS is %q, not a number", v)
+			}
+			settings[i] = "max_connections=" + strconv.Itoa(max(n, pools+10))
+		case "wal_compression":
+			if settings[i], err = walCompression(s, o.Major, c.Vars); err != nil {
+				return o, err
+			}
 		case "shared_preload_libraries":
 			if _, set := c.Vars["FLUXER_POSTGRES_SHARED_PRELOAD_LIBRARIES"]; !set && !pg.HasLibrary(o.BinDir, "pg_stat_statements") {
 				settings[i] = "shared_preload_libraries="
@@ -370,7 +474,7 @@ func (c Config) valkeyArgv() ([]string, error) {
 		return nil, errors.New("valkey: compose command has no --dir")
 	}
 	args[i+1] = c.Layout.ValkeyDir()
-	argv := append([]string{c.bin("valkey-server"), c.valkeyConf()}, args...)
+	argv := append([]string{c.bin(spec.ValkeyBinary), c.valkeyConf()}, args...)
 	return append(argv, "--bind", spec.Loopback, "--port", strconv.Itoa(spec.PortValkey)), nil
 }
 
@@ -411,12 +515,13 @@ func Edge(c Config) (edge.Config, error) {
 		TrustedProxies: env["FLUXER_EDGE_TRUSTED_PROXIES"],
 		Encode:         env["FLUXER_EDGE_ENCODE"],
 		Protocols:      env["FLUXER_EDGE_PROTOCOLS"],
-		GlobalOptions:  env["FLUXER_EDGE_GLOBAL_OPTIONS"],
+		GlobalOptions:  globalOptions(env),
 		AdminBasePath:  env["FLUXER_ADMIN_BASE_PATH"],
 		Dir:            c.Layout.EdgeDir(),
 		CaddyDir:       c.CaddyDir,
 		Static:         filepath.Join(c.Root, "app", "static"),
 		LiveKit:        c.local(spec.LiveKit),
+		Container:      c.Vars[spec.ContainerEnv] == "1",
 	}
 	if e.HTTPPort, err = port(c.Vars["FLUXER_HTTP_PORT"], 80); err != nil {
 		return e, fmt.Errorf("FLUXER_HTTP_PORT: %w", err)
@@ -424,23 +529,83 @@ func Edge(c Config) (edge.Config, error) {
 	if e.HTTPSPort, err = port(c.Vars["FLUXER_HTTPS_PORT"], 443); err != nil {
 		return e, fmt.Errorf("FLUXER_HTTPS_PORT: %w", err)
 	}
+	if c.VoiceOnly() {
+		return c.voiceEdge(e)
+	}
 	switch mode := c.Vars["FLUXER_EDGE_MODE"]; mode {
 	case "", "bundled":
-		e.TLS = c.tlsDirective()
+		c.bundledTLS(&e)
 	case "proxy", "tunnel":
-		trusted, err := interpolate("${FLUXER_EDGE_TRUSTED_PROXIES:-private_ranges}", c.Vars)
-		if err != nil {
+		if err := c.proxyEdge(&e); err != nil {
 			return e, err
-		}
-		e.Site = ":" + strconv.Itoa(spec.PortEdgeProxy)
-		e.TrustedProxies = trusted
-		if e.Bind == "" {
-			e.Bind = spec.Loopback
 		}
 	default:
 		return e, fmt.Errorf("FLUXER_EDGE_MODE must be bundled, proxy or tunnel, not %q", mode)
 	}
 	return e, nil
+}
+
+func (c Config) proxyEdge(e *edge.Config) error {
+	trusted, err := interpolate("${FLUXER_EDGE_TRUSTED_PROXIES:-private_ranges}", c.Vars)
+	if err != nil {
+		return err
+	}
+	host, p, err := proxyBind(c.Vars["FLUXER_EDGE_BIND"], c.Vars["FLUXER_EDGE_LISTEN_ADDRESS"], e.Container)
+	if err != nil {
+		return fmt.Errorf("FLUXER_EDGE_BIND: %w", err)
+	}
+	e.Site = ":" + strconv.Itoa(p)
+	e.Bind = host
+	e.TrustedProxies = trusted
+	e.Protocols = plainProtocols(e.Protocols)
+	return nil
+}
+
+func plainProtocols(protocols string) string {
+	kept := slices.DeleteFunc(strings.Fields(protocols), func(p string) bool { return p == "h2" || p == "h3" })
+	if len(kept) == 0 {
+		return "h1"
+	}
+	return strings.Join(kept, " ")
+}
+
+func globalOptions(env map[string]string) string {
+	var lines []string
+	for _, k := range []string{"FLUXER_EDGE_GLOBAL_OPTIONS", "FLUXER_EDGE_ACME_CA_DIRECTIVE", "FLUXER_EDGE_ACME_CA_ROOT_DIRECTIVE"} {
+		if v := strings.TrimSpace(env[k]); v != "" {
+			lines = append(lines, v)
+		}
+	}
+	return strings.Join(lines, "\n\t")
+}
+
+func proxyBind(bind, listen string, container bool) (string, int, error) {
+	fallback := spec.Loopback
+	if container {
+		fallback = spec.AnyAddress
+	}
+	bind = strings.TrimSpace(bind)
+	if bind == "" {
+		return cmp.Or(strings.Trim(strings.TrimSpace(listen), "[]"), fallback), spec.PortEdgeProxy, nil
+	}
+	if _, err := strconv.Atoi(bind); err == nil {
+		bind = ":" + bind
+	}
+	host, ps, err := net.SplitHostPort(bind)
+	if err != nil {
+		return "", 0, fmt.Errorf("%q is not a host:port address", bind)
+	}
+	p, err := port(ps, 0)
+	if err != nil || p == 0 {
+		return "", 0, fmt.Errorf("%q has no valid port", bind)
+	}
+	if host == "" {
+		host = fallback
+	}
+	if net.ParseIP(host) == nil {
+		return "", 0, fmt.Errorf("%q is not an IP address", host)
+	}
+	return host, p, nil
 }
 
 func (c Config) tlsDirective() string {
@@ -457,9 +622,32 @@ func (c Config) tlsDirective() string {
 				f[i] = filepath.Join(c.CertsDir, p)
 			}
 		}
-		value = f[0] + " " + f[1]
+		value = edge.Quote(f[0]) + " " + edge.Quote(f[1])
 	}
 	return "tls " + value
+}
+
+func (c Config) bundledTLS(e *edge.Config) {
+	if strings.EqualFold(strings.TrimSpace(c.Vars["FLUXER_PUBLIC_SCHEME"]), "http") {
+		e.TLS = ""
+		return
+	}
+	e.TLS = c.tlsDirective()
+	if ip, ok := domainIP(strings.TrimSpace(c.Vars["FLUXER_DOMAIN"])); ok {
+		if publicAddress(ip) && strings.TrimSpace(c.Vars["FLUXER_EDGE_TLS"]) == "" {
+			e.TLS = "tls {\n\t\tissuer acme {\n\t\t\tprofile shortlived\n\t\t}\n\t\tissuer fluxer_local {\n\t\t\tlifetime 2h\n\t\t}\n\t}"
+			e.ACMEFirst = ip.String()
+		}
+		e.GlobalOptions = strings.TrimSpace(e.GlobalOptions + "\n\tdefault_sni " + ip.String())
+	}
+	domain := NormalDomain(c.Vars["FLUXER_DOMAIN"])
+	if e.TLS == "tls internal" {
+		e.RootSite = "http://" + domain
+	}
+	e.RedirectTo = "https://" + domain
+	if p, err := port(c.Vars["FLUXER_PUBLIC_PORT"], e.HTTPSPort); err == nil && p != 443 {
+		e.RedirectTo += ":" + strconv.Itoa(p)
+	}
 }
 
 func publicName(domain string) bool {
@@ -470,7 +658,7 @@ func publicName(domain string) bool {
 	if host == "" || net.ParseIP(strings.Trim(host, "[]")) != nil || !strings.Contains(host, ".") {
 		return false
 	}
-	for _, suffix := range []string{".local", ".internal", ".localhost"} {
+	for _, suffix := range []string{".localhost", ".local", ".test", ".internal", ".lan", ".home.arpa", ".example", ".invalid"} {
 		if strings.HasSuffix(host, suffix) {
 			return false
 		}

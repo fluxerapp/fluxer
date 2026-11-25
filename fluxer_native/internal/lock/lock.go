@@ -5,9 +5,9 @@ package lock
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
-
-	"golang.org/x/sys/unix"
+	"time"
 )
 
 var ErrHeld = errors.New("lock: another fluxerd already uses this data directory")
@@ -21,9 +21,14 @@ func Acquire(path string) (*Lock, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := unix.Flock(int(f.Fd()), unix.LOCK_EX|unix.LOCK_NB); err != nil {
+	held, err := flock(f)
+	for try := 0; held && try < 10; try++ {
+		time.Sleep(10 * time.Millisecond)
+		held, err = flock(f)
+	}
+	if err != nil {
 		f.Close()
-		if errors.Is(err, unix.EWOULDBLOCK) {
+		if held {
 			return nil, fmt.Errorf("%w (%s)", ErrHeld, path)
 		}
 		return nil, fmt.Errorf("lock %s: %w", path, err)
@@ -36,4 +41,16 @@ func Acquire(path string) (*Lock, error) {
 
 func (l *Lock) Release() error {
 	return l.f.Close()
+}
+
+func Held(path string) (bool, error) {
+	f, err := os.Open(path)
+	if errors.Is(err, fs.ErrNotExist) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+	return probe(f)
 }

@@ -6,8 +6,10 @@ toolchain go1.27.3
 
 require (
 	github.com/caddyserver/caddy/v2 v2.11.9
+	github.com/caddyserver/certmagic v0.25.6
 	github.com/klauspost/compress v1.20.3
 	github.com/nats-io/nats-server/v2 v2.14.9
+	github.com/nats-io/nats.go v1.55.0
 	golang.org/x/sys v0.49.0
 )
 
@@ -33,7 +35,6 @@ require (
 	github.com/aryann/difflib v0.0.0-20210328193216-ff5ff6dc229b // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.25.0 // indirect
-	github.com/caddyserver/certmagic v0.25.6 // indirect
 	github.com/caddyserver/zerossl v0.1.6 // indirect
 	github.com/ccoveille/go-safecast/v2 v2.0.1 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
@@ -89,7 +90,6 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/nats-io/jwt/v2 v2.8.2 // indirect
-	github.com/nats-io/nats.go v1.55.0 // indirect
 	github.com/nats-io/nkeys v0.4.16 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/nlnwa/whatwg-url v0.6.2 // indirect

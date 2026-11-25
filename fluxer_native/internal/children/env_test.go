@@ -33,6 +33,7 @@ func TestGatewayEnv(t *testing.T) {
 		"FLUXER_ERLANG_DIRTY_IO_SCHEDULERS":  "4",
 		"ERL_CRASH_DUMP":                     filepath.Join(data, "gateway", "erl_crash.dump"),
 		"LANG":                               "C.UTF-8",
+		"ERL_INETRC":                         filepath.Join("/opt/fluxer/current", "gateway", "config", "inetrc"),
 		"HOME":                               filepath.Join(data, "gateway"),
 	}
 	for k, v := range want {

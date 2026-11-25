@@ -3,6 +3,7 @@
 package supervise
 
 import (
+	"cmp"
 	"context"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 
 type watched struct {
 	name   string
+	core   bool
 	probes []spec.Probe
 	health spec.HealthState
 	err    string
@@ -29,6 +31,7 @@ func groupWatch(probes []spec.Probe) []*watched {
 			out = append(out, w)
 		}
 		w.probes = append(w.probes, pr)
+		w.core = w.core || pr.Core
 	}
 	return out
 }
@@ -50,22 +53,37 @@ func (t *tracker) next(err error, unhealthyAfter int, graceOver bool) (spec.Heal
 	return "", false
 }
 
-func (s *Supervisor) watchHealth(ctx context.Context, p *proc, gen int) {
-	if len(p.c.Probes) == 0 && len(p.watch) == 0 {
+func (t *tracker) exhausted(retries int) bool {
+	return retries > 0 && t.fails >= retries
+}
+
+func (s *Supervisor) healthCheck(c spec.Child) spec.HealthCheck {
+	return spec.HealthCheck{
+		Interval:    cmp.Or(c.Health.Interval, s.t.HealthEvery),
+		Timeout:     cmp.Or(c.Health.Timeout, s.t.ProbeTimeout),
+		StartPeriod: cmp.Or(c.Health.StartPeriod, s.t.StartPeriod),
+		Retries:     cmp.Or(c.Health.Retries, s.t.Retries),
+	}
+}
+
+func (s *Supervisor) watchHealth(ctx context.Context, p *proc, gen int, c spec.Child, ws []*watched) {
+	if len(c.Probes) == 0 && len(ws) == 0 {
 		return
 	}
+	hc := s.healthCheck(c)
+	unhealthyAfter := min(s.t.UnhealthyAfter, hc.Retries)
 	started := time.Now()
 	var gate tracker
-	watch := make([]tracker, len(p.watch))
+	watch := make([]tracker, len(ws))
 	for {
-		interval := s.t.HealthEvery
-		if len(p.c.Probes) > 0 && !gate.seen {
-			interval = s.t.ProbeEvery
-		}
+		graceOver := time.Since(started) >= hc.StartPeriod
+		interval := hc.Interval
+		pending := len(c.Probes) > 0 && !gate.seen
 		for _, w := range watch {
-			if !w.seen {
-				interval = s.t.ProbeEvery
-			}
+			pending = pending || !w.seen
+		}
+		if pending && !graceOver {
+			interval = min(s.t.ProbeEvery, interval)
 		}
 		timer := time.NewTimer(interval)
 		select {
@@ -74,34 +92,44 @@ func (s *Supervisor) watchHealth(ctx context.Context, p *proc, gen int) {
 			return
 		case <-timer.C:
 		}
-		if len(p.c.Probes) > 0 {
-			err := s.check(ctx, p.c.Probes)
+		graceOver = time.Since(started) >= hc.StartPeriod
+		restart := false
+		if len(c.Probes) > 0 {
+			err := s.check(ctx, c.Probes, hc.Timeout)
 			if ctx.Err() != nil {
 				return
 			}
-			if next, ok := gate.next(err, s.t.UnhealthyAfter, false); ok {
+			if next, ok := gate.next(err, unhealthyAfter, graceOver); ok {
 				changed := false
 				s.update(func() {
-					if p.gen == gen && p.state == spec.StateRunning && p.health != next {
-						p.health = next
-						changed = true
+					if p.gen != gen || !p.alive() {
+						return
 					}
+					if next == spec.HealthHealthy && p.state == spec.StateStarting {
+						p.state = spec.StateRunning
+					}
+					changed = p.health != next
+					p.health = next
 				})
-				s.logHealth(changed, p.c.Name, next, err)
+				s.logHealth(changed, c.Name, next, err)
 			}
+			restart = gate.exhausted(hc.Retries)
 		}
-		for i, w := range p.watch {
-			err := s.check(ctx, w.probes)
+		for i, w := range ws {
+			err := s.check(ctx, w.probes, hc.Timeout)
 			if ctx.Err() != nil {
 				return
 			}
-			next, ok := watch[i].next(err, s.t.UnhealthyAfter, time.Since(started) >= s.t.WatchGrace)
+			next, ok := watch[i].next(err, unhealthyAfter, graceOver)
+			if w.core {
+				restart = restart || watch[i].exhausted(hc.Retries)
+			}
 			if !ok {
 				continue
 			}
 			changed := false
 			s.update(func() {
-				if p.gen == gen && p.state == spec.StateRunning {
+				if p.gen == gen && p.alive() {
 					changed = w.health != next
 					w.health = next
 					w.err = ""
@@ -110,7 +138,14 @@ func (s *Supervisor) watchHealth(ctx context.Context, p *proc, gen int) {
 					}
 				}
 			})
-			s.logHealth(changed, p.c.Name+"/"+w.name, next, err)
+			s.logHealth(changed, c.Name+"/"+w.name, next, err)
+		}
+		if restart && c.RestartUnhealthy {
+			select {
+			case p.kick <- gen:
+			default:
+			}
+			return
 		}
 	}
 }
@@ -124,8 +159,8 @@ func (s *Supervisor) logHealth(changed bool, name string, next spec.HealthState,
 	}
 }
 
-func (s *Supervisor) check(ctx context.Context, probes []spec.Probe) error {
-	ctx, cancel := context.WithTimeout(ctx, s.t.ProbeTimeout)
+func (s *Supervisor) check(ctx context.Context, probes []spec.Probe, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	return probe.All(ctx, probes)
 }

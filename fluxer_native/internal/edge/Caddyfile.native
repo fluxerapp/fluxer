@@ -1,13 +1,21 @@
 {
 	admin off
+	log default {
+		exclude admin
+	}
 	persist_config off
 	skip_install_trust
-	storage file_system {{.Storage}}
+	storage file_system {{quote .Storage}}
 	{{- if .Bind}}
 	default_bind {{.Bind}}
 	{{- end}}
 	http_port {{.HTTPPort}}
 	https_port {{.HTTPSPort}}
+	pki {
+		ca local {
+			name "Fluxer"
+		}
+	}
 	servers {
 		trusted_proxies static {{.TrustedProxies}}
 		trusted_proxies_strict
@@ -36,7 +44,9 @@
 {{.Site}} {
 	{{.TLS}}
 {{- if .Ready}}
-	import {{.CaddyDir}}/*.caddy
+	{{- if .DropIns}}
+	import {{quote (print .CaddyDir "/*.caddy")}}
+	{{- end}}
 	encode {{.Encode}}
 
 	@internal path /api/_* /media/_* /gateway/_*
@@ -52,21 +62,33 @@
 		respond 404
 	}
 
+	handle /fluxer-root.crt {
+		respond 404
+	}
+
 	handle /_health {
 		header Cache-Control no-store
 		respond "OK" 200
 	}
 
+	{{- if .Static}}
+
 	@licenses path /LICENSE /THIRD_PARTY_LICENSES.md
 	handle @licenses {
-		root * {{.Static}}
+		root * {{quote .Static}}
 		header Content-Type "text/plain; charset=utf-8"
 		file_server
 	}
+	{{- end}}
 
 	handle /_edge {
 		header Cache-Control no-store
 		respond "{system.hostname}" 200
+	}
+
+	handle /.well-known/fluxer-client-ip {
+		header Cache-Control no-store
+		respond "{client_ip}" 200
 	}
 
 	handle_path /api/* {
@@ -107,7 +129,7 @@
 			defer
 			Access-Control-Allow-Origin *
 		}
-		import upstream {{.AppProxy}}
+		import upstream {{.StaticAssets}}
 	}
 
 	handle /.well-known/fluxer {
@@ -121,6 +143,11 @@
 	handle {
 		import upstream {{.AppProxy}}
 	}
+{{- else if .Maintenance}}
+
+	header Cache-Control no-store
+	header Retry-After 30
+	respond "Fluxer is down for maintenance and will be back shortly" 503
 {{- else}}
 
 	header Cache-Control no-store
@@ -128,7 +155,23 @@
 	respond "Fluxer is starting" 503
 {{- end}}
 }
-{{- if .Ready}}
+{{- if .RootSite}}
 
-import {{.CaddyDir}}/sites/*.caddy
+{{.RootSite}} {
+	handle /fluxer-root.crt {
+		header Content-Type application/x-x509-ca-cert
+		header Cache-Control no-store
+		rewrite * /root.crt
+		root * {{quote .RootDir}}
+		file_server
+	}
+
+	handle {
+		redir {{.RedirectTo}}{uri} 308
+	}
+}
+{{- end}}
+{{- if and .Ready .SiteDropIns}}
+
+import {{quote (print .CaddyDir "/sites/*.caddy")}}
 {{- end}}
