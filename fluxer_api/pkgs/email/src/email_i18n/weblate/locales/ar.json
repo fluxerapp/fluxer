@@ -30,7 +30,7 @@
 	"bulk_message_deletion_completed": {
 		"footer_reason": "لقد تلقيت هذا البريد الإلكتروني لأنه تم طلب حذف رسائل لحسابك في {product_name}.",
 		"intro": "انتهينا من حذف رسائلك. أزلنا {message_count, plural, =0 {0 رسالة} one {رسالة واحدة} two {رسالتين} few {# رسائل} many {# رسالة} other {# رسالة}} من {channel_count, plural, =0 {0 مكان} one {مكان واحد} two {مكانين} few {# أماكن} many {# مكانًا} other {# مكان}}.",
-		"note": "{reply, select, yes {إذا لم تطلب هذا، فغيّر كلمة مرورك الآن ورد على هذا البريد الإلكتروني.} other {إذا لم تطلب هذا، فغيّر كلمة مرورك الآن وتواصل مع مسؤولي هذا المثيل.}}",
+		"note": "{reply, select, yes {إذا لم تطلب هذا، فغيّر كلمة مرورك الآن وردّ على هذه الرسالة.} other {إذا لم تطلب هذا، فغيّر كلمة مرورك الآن وتواصل مع مسؤولي هذا المثيل.}}",
 		"signoff": "فريق {product_name}",
 		"subject": "تم الانتهاء من حذف رسائلك على {product_name}"
 	},
@@ -66,12 +66,12 @@
 		"date_label": "تاريخ الدفع",
 		"date_value": "{paidAt, date, long}",
 		"document_attached": "إيصال تبرعك {documentNumber} مرفق بهذه الرسالة كملف PDF.",
-		"footer_reason": "لقد تلقيت هذا البريد الإلكتروني لأنك تبرعت لـ{product_name} باستخدام عنوان البريد الإلكتروني هذا.",
-		"intro": "{interval, select, month {تم إعداد تبرعك الشهري لـ{product_name}.} year {تم إعداد تبرعك السنوي لـ{product_name}.} other {تلقينا تبرعك لـ{product_name}.}}",
+		"footer_reason": "لقد تلقيت هذا البريد الإلكتروني لأنك تبرعت لـ {product_name} باستخدام عنوان البريد الإلكتروني هذا.",
+		"intro": "{interval, select, month {تم إعداد تبرعك الشهري لـ {product_name}.} year {تم إعداد تبرعك السنوي لـ {product_name}.} other {تلقينا تبرعك لـ {product_name}.}}",
 		"lead": "{interval, select, month {نرسل إليك إيصالًا بالبريد الإلكتروني عن كل دفعة.} year {نرسل إليك إيصالًا بالبريد الإلكتروني عن كل دفعة.} other {هذه الرسالة هي إيصالك.}}",
 		"reference_label": "الرقم المرجعي",
 		"signoff": "فريق {product_name}",
-		"subject": "شكرًا لك على تبرعك لـ{product_name}"
+		"subject": "شكرًا لك على تبرعك لـ {product_name}"
 	},
 	"donation_magic_link": {
 		"cta": "إدارة التبرعات",
@@ -80,7 +80,7 @@
 		"intro": "استخدم هذا الرابط لإدارة تبرعك المتكرر أو إلغائه وتحديث طريقة الدفع.",
 		"note": "إذا لم تطلب هذا الرابط، يمكنك تجاهل هذا البريد الإلكتروني.",
 		"signoff": "فريق {product_name}",
-		"subject": "إدارة تبرعاتك لـ{product_name}"
+		"subject": "إدارة تبرعاتك لـ {product_name}"
 	},
 	"donation_payment_failed": {
 		"amount_label": "المبلغ",
@@ -142,7 +142,7 @@
 		"subject": "يتجدد تبرعك السنوي لـ {product_name} في {chargeAt, date, long}"
 	},
 	"dsa_report_resolved": {
-		"about": "{target, select, message_community {أبلغت عن رسالة في #{channelName} في «{communityName}» بتاريخ {reportedAt, date, long}.} message_dm {أبلغت عن رسالة في محادثة خاصة بتاريخ {reportedAt, date, long}.} message {أبلغت عن رسالة بتاريخ {reportedAt, date, long}.} user {أبلغت عن الحساب «{username}» بتاريخ {reportedAt, date, long}.} community {أبلغت عن المجتمع «{communityName}» بتاريخ {reportedAt, date, long}.} other {أرسلت إلينا بلاغًا بتاريخ {reportedAt, date, long}.}}",
+		"about": "{target, select, message_community {أبلغت عن رسالة في #{channelName} في \"{communityName}\" بتاريخ {reportedAt, date, long}.} message_dm {أبلغت عن رسالة مباشرة بتاريخ {reportedAt, date, long}.} message {أبلغت عن رسالة بتاريخ {reportedAt, date, long}.} user {أبلغت عن الحساب \"{username}\" بتاريخ {reportedAt, date, long}.} community {أبلغت عن المجتمع \"{communityName}\" بتاريخ {reportedAt, date, long}.} other {أرسلت إلينا بلاغًا بتاريخ {reportedAt, date, long}.}}",
 		"comment_label": "ملاحظة من فريقنا",
 		"footer_reason": "تلقيت هذه الرسالة لأنك قدمت بلاغًا بموجب قانون الخدمات الرقمية على {product_name}.",
 		"intro": "{outcome, select, removed {أزلنا المحتوى لأنه خالف قواعدنا.} restricted {خالف الحساب قواعدنا، واتخذنا إجراءً بشأنه. حفاظًا على خصوصية الجميع، لا نشارك نوع الإجراء.} action_taken {خالف ما أبلغت عنه قواعدنا، واتخذنا إجراءً بشأنه. حفاظًا على خصوصية الجميع، لا نشارك نوع الإجراء.} no_violation {{concern, select, self_harm {شكرًا على اهتمامك بهذا الشخص. راجع فريقنا البلاغ. الحديث عن الشعور بالضيق أو بعدم الأمان لا يخالف قواعدنا، لذلك لم نُزِل أي شيء، لكن قد نرسل إلى الشخص موارد للدعم. لا نكشف أبدًا هوية من أرسل البلاغ. إذا كنت تعتقد أن أحدًا في خطر مباشر، فاتصل برقم الطوارئ في منطقتك.} other {راجع فريقنا البلاغ ووجد أنه لا يخالف قواعدنا، لذلك لم نتخذ إجراءً بشأنه. ومع ذلك قد يؤدي البلاغ إلى خطوات أخرى، مثل إرسال موارد للدعم إلى الشخص. لا نكشف أبدًا هوية من أرسل البلاغ.}}} other {أغلقنا بلاغك.}}",
@@ -157,7 +157,7 @@
 		"footer_reason": "لقد تلقيت هذا البريد الإلكتروني لأن هذا العنوان تم إدخاله في نموذج بلاغ بموجب قانون الخدمات الرقمية على {product_name}.",
 		"intro": "استخدم هذا الرمز لإرسال بلاغك بموجب قانون الخدمات الرقمية إلى {product_name}.",
 		"note": "إذا لم تطلب ذلك، يمكنك تجاهل هذا البريد الإلكتروني.",
-		"signoff": "فريق أمان {product_name}",
+		"signoff": "فريق السلامة في {product_name}",
 		"subject": "رمزك لبلاغ DSA على {product_name}"
 	},
 	"email_change_new": {
@@ -183,7 +183,7 @@
 		"lead": "إذا لم تفعل ذلك بنفسك، فتراجع عن التغيير وأمّن حسابك.",
 		"new_email_label": "عنوان البريد الإلكتروني الجديد",
 		"note": "يعيد هذا عنوان بريدك الإلكتروني السابق، ويسجّل خروجك من كل مكان، ويوقف المصادقة الثنائية، ويطلب منك تعيين كلمة مرور جديدة.",
-		"signoff": "فريق أمان {product_name}",
+		"signoff": "فريق السلامة في {product_name}",
 		"subject": "تم تغيير عنوان بريدك الإلكتروني في {product_name}"
 	},
 	"email_verification": {
@@ -199,7 +199,7 @@
 		"expiry": "تنتهي صلاحية هذا الرمز بعد {minutes, plural, zero {# دقيقة} one {دقيقة واحدة} two {دقيقتين} few {# دقائق} many {# دقيقة} other {# دقيقة}}.",
 		"footer_reason": "لقد تلقيت هذا البريد الإلكتروني لأن هذا العنوان تمت إضافته إلى حساب {product_name}.",
 		"intro": "أدخل هذا الرمز في التطبيق لتأكيد عنوان بريدك الإلكتروني.",
-		"note": "لا تشارك هذا الرمز مع أي شخص. لن يطلب منك فريق عمل {product_name} هذا الرمز أبدًا. إذا لم تقم بإضافة عنوان البريد الإلكتروني هذا إلى حساب، يمكنك تجاهل هذا البريد الإلكتروني.",
+		"note": "لا تشارك هذا الرمز مع أي شخص. لن يطلب منك فريق {product_name} هذا الرمز أبدًا. إذا لم تُضف عنوان البريد الإلكتروني هذا إلى حساب، يمكنك تجاهل هذه الرسالة.",
 		"signoff": "فريق {product_name}",
 		"subject": "رمز تأكيد بريدك الإلكتروني لـ {product_name}"
 	},
@@ -229,7 +229,7 @@
 		"why_title": "السبب"
 	},
 	"gift_chargeback_notification": {
-		"billing_resumed": "نظرًا لإزالة الهدية، تُستأنف محاسبتك على اشتراكك {plan, select, yearly {السنوي} other {الشهري}} في {premiumName} اعتبارًا من اليوم. سيصلك إيصال منفصل بهذه الدفعة. يمكنك الإلغاء في أي وقت من «إدارة الاشتراك».",
+		"billing_resumed": "نظرًا لإزالة الهدية، تُستأنف محاسبتك على اشتراكك {plan, select, yearly {السنوي} other {الشهري}} في {premiumName} اعتبارًا من اليوم. سيصلك إيصال منفصل بهذه الدفعة. يمكنك الإلغاء في أي وقت من \"إدارة الاشتراك\".",
 		"footer_reason": "لقد تلقيت هذا البريد الإلكتروني لأنه تمت إزالة مزايا من حسابك على {product_name}.",
 		"intro": "أُلغيت الدفعة الخاصة برمز هدية فعّلته، لذا أزلنا المزايا التي أضافها إلى حسابك.",
 		"manage_cta": "إدارة الاشتراك",
@@ -336,9 +336,9 @@
 		"product_label": "المنتج",
 		"product_value": "{quantity, plural, zero {# من {product_name} Operator Pass} one {{product_name} Operator Pass} two {اثنان من {product_name} Operator Pass} few {# من {product_name} Operator Pass} many {# من {product_name} Operator Pass} other {# من {product_name} Operator Pass}}",
 		"reverse_charge": "لم تُحتسب ضريبة القيمة المضافة لأن آلية الاحتساب العكسي تنطبق. التفاصيل مذكورة في الفاتورة.",
-		"seller": "البائع: Fluxer Platform AB، 559537-3993، المقر المسجل Haninge، السويد، {sellerAddress}، {sellerPhone}، <mail>{sellerEmail}</mail>",
+		"seller": "البائع هو Fluxer Platform AB (رقم التسجيل 559537-3993)، وهي شركة سويدية مقرها المسجل في Haninge. يمكنك مراسلتنا على العنوان {sellerAddress} أو الاتصال بنا على {sellerPhone} أو مراسلتنا عبر البريد الإلكتروني على <mail>{sellerEmail}</mail>.",
 		"signoff": "فريق {product_name}",
-		"subject": "إيصال {product_name} Operator Pass الخاص بك",
+		"subject": "إيصال شراء Operator Pass على {product_name}",
 		"tax_added": "أُضيفت إلى السعر ضريبة بقيمة {taxFormatted}",
 		"tax_included": "يشمل ضريبة بقيمة {taxFormatted}",
 		"terms_link": "شروط Operator Pass",
@@ -365,7 +365,7 @@
 		"footer_reason": "لقد تلقيت هذا البريد الإلكتروني لأننا أعدنا مبلغ دفعة Operator Pass على {product_name}.",
 		"heading": "استرداد {amountFormatted}",
 		"intro": "أعدنا {amountFormatted} مقابل شرائك Operator Pass إلى البطاقة أو الحساب الذي دفعت منه. يستغرق ظهور المبلغ عادةً من 5 إلى 10 أيام عمل، حسب مصرفك.",
-		"lead": "{delivered, select, no {{passCount, plural, =1 {لم نكن قد سلّمنا شهادتك بعد، لذلك لا يتغير أي شيء آخر في حسابك.} other {لم نكن قد سلّمنا شهاداتك بعد، لذلك لا يتغير أي شيء آخر في حسابك.}}} other {{passCount, plural, =0 {لم يُنهِ هذا الاسترداد أيًّا من تصاريحك، لذلك لا يتغير أي شيء آخر في حسابك.} other {{passCount, plural, =1 {انتهى Operator Pass.} two {انتهى اثنان من Operator Pass.} other {انتهى # من Operator Pass.}} {lastPass, select, yes {{visionary, select, yes {وانتهت أيضًا شارتك وظهورك على الجدار. تحتفظ بـ'#'operators من خلال Visionary لديك.} other {وانتهت أيضًا شارتك وظهورك على الجدار و'#'operators.}}} other {وتبقى بقية Operator Pass لديك كما هي.}}}}}}",
+		"lead": "{delivered, select, no {{passCount, plural, =1 {لم نكن قد سلّمنا شهادتك بعد، لذلك لا يتغير أي شيء آخر في حسابك.} other {لم نكن قد سلّمنا شهاداتك بعد، لذلك لا يتغير أي شيء آخر في حسابك.}}} other {{passCount, plural, =0 {لم يُنهِ هذا الاسترداد أيًّا من Operator Pass لديك، لذلك لا يتغير أي شيء آخر في حسابك.} other {{passCount, plural, =1 {انتهى Operator Pass.} two {انتهى اثنان من Operator Pass.} other {انتهى # من Operator Pass.}} {lastPass, select, yes {{visionary, select, yes {وانتهت أيضًا شارتك وظهورك على الجدار. تحتفظ بـ'#'operators من خلال Visionary لديك.} other {وانتهت أيضًا شارتك وظهورك على الجدار و'#'operators.}}} other {وتبقى بقية Operator Pass لديك كما هي.}}}}}}",
 		"note": "{reply, select, yes {هل لديك أسئلة عن هذا الاسترداد؟ ردّ على هذه الرسالة.} other {إذا كانت لديك أسئلة عن هذا الاسترداد، فتواصل مع مسؤولي هذا المثيل.}}",
 		"order_date_label": "تاريخ الطلب",
 		"order_date_value": "{orderDate, date, long}",
@@ -373,7 +373,7 @@
 		"preheader": "أعدنا إليك {amountFormatted} مقابل Operator Pass",
 		"refund_label": "المبلغ المسترد",
 		"signoff": "فريق {product_name}",
-		"subject": "استرداد مبلغ {product_name} Operator Pass الخاص بك"
+		"subject": "استرداد مبلغ Operator Pass على {product_name}"
 	},
 	"operator_pass_removal_notice": {
 		"facts_label": "الوقائع التي استندنا إليها",
@@ -485,7 +485,7 @@
 		"refund": "{refund, select, dispute {فتح البنك الذي تتعامل معه نزاع دفع على هذا الشراء أولًا، لذا قبلنا النزاع وسيعيد إليك البنك المبلغ كاملًا وقدره {amountFormatted}.} already {كنا قد رددنا مبلغ {amountFormatted} لهذا الشراء إلى وسيلة الدفع الخاصة بك من قبل، لذلك لم تكن هناك حاجة إلى ردّ جديد.} other {بدأنا ردّ المبلغ كاملًا وقدره {amountFormatted} إلى وسيلة الدفع الخاصة بك. عادةً ما يظهر لدى البنك الذي تتعامل معه خلال 5 إلى 10 أيام عمل.}} {delivered, select, no {{passCount, plural, =1 {لم نكن قد سلّمنا شهادتك بعد، لذلك لا يتغير أي شيء آخر في حسابك.} other {لم نكن قد سلّمنا شهاداتك بعد، لذلك لا يتغير أي شيء آخر في حسابك.}}} other {{passCount, plural, =1 {انتهى Operator Pass.} two {انتهى اثنان من Operator Pass.} other {انتهى # من Operator Pass.}} {lastPass, select, yes {{visionary, select, yes {وانتهت أيضًا شارتك وظهورك على الجدار. تحتفظ بـ#operators من خلال Visionary لديك.} other {وانتهت أيضًا شارتك وظهورك على الجدار و#operators.}}} other {وتبقى بقية Operator Pass لديك كما هي.}}}}",
 		"refund_label": "المبلغ المسترد",
 		"signoff": "فريق {product_name}",
-		"subject": "تلقينا انسحابك من {product_name} Operator Pass"
+		"subject": "تلقينا انسحابك من شراء Operator Pass على {product_name}"
 	},
 	"password_change_verification": {
 		"expiry": "تنتهي صلاحية هذا الرمز بعد {minutes, plural, zero {# دقيقة} one {دقيقة واحدة} two {دقيقتين} few {# دقائق} many {# دقيقة} other {# دقيقة}}.",
@@ -512,7 +512,7 @@
 		"appeal_title": "إذا كنت تعتقد أننا أخطأنا",
 		"currency_label": "العملة",
 		"deadline_body": "إذا لم يُسحب النزاع قبل {warningDate, date, long} وانتهى بإعادة المال إليك، فسنحذف حسابك في {product_name} نهائيًا. لا يمكن استعادة الحساب المحذوف. وإذا أغلقنا حسابك، فلن تتمكن أيضًا من إنشاء حسابات أخرى في {product_name} أو استخدامها.",
-		"deadline_body_operator_pass": "إذا لم يُسحب النزاع قبل {warningDate, date, long} وانتهى بإعادة المال إليك، تنتهي الـ Passes التي دفع ثمنها هذا الدفع، ونزيل ما يأتي مع Operator Pass من حسابك نهائيًا. بعد ذلك، لا يمكن لحسابك شراء أو استقبال Pass مرة أخرى. ولا يتغير أي شيء آخر في حسابك.",
+		"deadline_body_operator_pass": "إذا لم يُسحب النزاع قبل {warningDate, date, long} وانتهى بإعادة المال إليك، فسينتهي Operator Pass الذي دُفع ثمنه بهذه الدفعة، وسنزيل ما يأتي مع Operator Pass من حسابك نهائيًا. وبعد ذلك لن يتمكن حسابك من شراء Operator Pass أو الحصول عليه مرة أخرى. ولا يتغير أي شيء آخر في حسابك.",
 		"deadline_label": "اسحب النزاع قبل",
 		"deadline_value": "{warningDate, date, long}",
 		"footer_reason": "لقد تلقيت هذا البريد الإلكتروني بسبب نزاع دفع يتعلق بحساب {product_name} الخاص بك.",
@@ -536,7 +536,7 @@
 		"footer_reason": "لقد تلقيت هذا البريد الإلكتروني لأنك ألغيت اشتراكك في {premiumName}.",
 		"heading": "تلقينا طلب الإلغاء",
 		"intro": "تلقينا في {receivedFormatted} طلبك لإلغاء اشتراكك {plan, select, yearly {السنوي} other {الشهري}} في {premiumName}.",
-		"lead": "غيّرت رأيك؟ يمكنك استئناف اشتراكك من «إدارة الاشتراك» قبل {endsAt, date, long}.",
+		"lead": "غيّرت رأيك؟ يمكنك استئناف اشتراكك من \"إدارة الاشتراك\" قبل {endsAt, date, long}.",
 		"preheader": "يبقى {premiumName} متاحًا لك حتى {endsAt, date, long}",
 		"reference_line": "الرقم المرجعي: {reference}",
 		"seller": "البائع: Fluxer Platform AB، 559537-3993، {sellerAddress}، <mail>{sellerEmail}</mail>",
@@ -572,7 +572,7 @@
 		"footer_reason": "لقد تلقيت هذا البريد الإلكتروني لأنك فعّلت هدية {premiumName}.",
 		"heading": "أُضيفت الهدية",
 		"intro": "أُضيفت مدة الهدية إلى اشتراكك. لن نخصم منك أي مبلغ مقابل اشتراكك {plan, select, yearly {السنوي} other {الشهري}} في {premiumName} حتى {trialEnd, date, long}.",
-		"lead": "يمكنك الإلغاء في أي وقت قبل ذلك من «إدارة الاشتراك».",
+		"lead": "يمكنك الإلغاء في أي وقت قبل ذلك من \"إدارة الاشتراك\".",
 		"preheader": "لن نخصم منك أي مبلغ حتى {trialEnd, date, long}",
 		"seller": "البائع: Fluxer Platform AB، 559537-3993، {sellerAddress}، <mail>{sellerEmail}</mail>",
 		"signoff": "فريق {product_name}",
@@ -586,7 +586,7 @@
 		"heading": "{reason, select, action_required {يطلب منك مصرفك تأكيد دفعة} other {لم تتم دفعة {premiumName}}}",
 		"intro": "{reason, select, action_required {يطلب منك مصرفك تأكيد دفعة تجديد اشتراكك في {premiumName}.} other {لم نتمكن من تحصيل دفعة تجديد اشتراكك في {premiumName}.}} {access, select, yes {يبقى {premiumName} متاحًا لك حتى {accessEndsAt, date, long}.} other {}}",
 		"intro_change": "{reason, select, action_required {يطلب منك مصرفك تأكيد دفعة التغيير الذي أجريته على اشتراكك في {premiumName}.} other {لم نتمكن من تحصيل دفعة التغيير الذي أجريته على اشتراكك في {premiumName}.}} {access, select, yes {يبقى {premiumName} متاحًا لك حتى {accessEndsAt, date, long}.} other {}}",
-		"manage_link": "حدّث طريقة الدفع من «إدارة الاشتراك»",
+		"manage_link": "حدّث طريقة الدفع من \"إدارة الاشتراك\"",
 		"note": "{reply, select, yes {إذا احتجت إلى مساعدة، فردّ على هذه الرسالة.} other {إذا احتجت إلى مساعدة، فتواصل مع مسؤولي هذا المثيل.}}",
 		"preheader": "{reason, select, action_required {أكّد دفع {amountFormatted} مقابل {premiumName}} other {لم نتمكن من تحصيل {amountFormatted} مقابل {premiumName}}}",
 		"reminder_subject": "تذكير بتأكيد دفعتك مقابل {premiumName}",
@@ -595,7 +595,7 @@
 	},
 	"plutonium_payment_receipt": {
 		"consent_body": "في {consentAt, date, long} طلبت أن يبدأ {premiumName} فورًا. وأكدت أيضًا أنه لا يزال بإمكانك الانسحاب واسترداد المبلغ كاملًا حتى انتهاء مدة الانسحاب.",
-		"consent_body_pro_rata": "{gift, select, yes {في {consentAt, date, long} طلبت أن تبدأ هدية {premiumName} هذه فور استرداد رمزها. وأكدت أيضًا أنك إذا انسحبت خلال 14 يومًا، فستسترد المبلغ كاملًا إذا لم يُسترد الرمز، وإلا فستدفع مقابل الأيام التي كان لدى المستلم فيها {premiumName} وتسترد الباقي.} other {في {consentAt, date, long} طلبت بدء {premiumName} فورًا. وأكدت أيضًا أنك إذا انسحبت خلال 14 يومًا، فستدفع مقابل الأيام التي كان لديك فيها {premiumName} وتسترد الباقي، وأنك لن تستطيع الانسحاب بعد تقديم الخدمة بالكامل.}}",
+		"consent_body_pro_rata": "{gift, select, yes {في {consentAt, date, long} طلبت أن تبدأ هدية {premiumName} هذه فور تفعيل رمزها. وأكدت أيضًا أنك إذا انسحبت خلال 14 يومًا، فستسترد المبلغ كاملًا إذا لم يُفعَّل الرمز، وإلا فستدفع مقابل الأيام التي كان لدى المستلم فيها {premiumName} وتسترد الباقي.} other {في {consentAt, date, long} طلبت بدء {premiumName} فورًا. وأكدت أيضًا أنك إذا انسحبت خلال 14 يومًا، فستدفع مقابل الأيام التي كان لديك فيها {premiumName} وتسترد الباقي، وأنك لن تستطيع الانسحاب بعد تقديم الخدمة بالكامل.}}",
 		"consent_title": "البدء فورًا",
 		"credit_label": "الرصيد المستخدم",
 		"date_label": "تاريخ الدفع",
@@ -604,7 +604,7 @@
 		"footer_reason": "لقد تلقيت هذا البريد الإلكتروني لأنك دفعت مقابل {premiumName} على {product_name}.",
 		"form_body": "إلى: Fluxer Platform AB، {sellerAddress}، <mail>{sellerEmail}</mail>\nأُبلغكم بانسحابي من عقدي الخاص بـ {premiumName}، الذي اشتريته في {paidAt, date, long}.\nرقم الفاتورة: {invoiceNumber}\nالاسم:\nالعنوان:\nالتاريخ:\nالتوقيع (على النسخة الورقية فقط):",
 		"form_title": "نموذج الانسحاب",
-		"gift_note": "تجد رابط هديتك في الإعدادات ضمن «الهدايا». انسخه من هناك وأرسله إلى الشخص الذي تريد أن تهديه {premiumName}. يمكن لأي شخص لديه الرابط استخدام الهدية.",
+		"gift_note": "تجد رابط هديتك في الإعدادات ضمن \"الهدايا\". انسخه من هناك وأرسله إلى الشخص الذي تريد أن تهديه {premiumName}. يمكن لأي شخص لديه الرابط استخدام الهدية.",
 		"heading": "{gift, select, yes {إيصال هدية {premiumName}} other {إيصال {premiumName}}}",
 		"intro": "{document, select, yes {{gift, select, yes {شكرًا لك على شراء {premiumName} هديةً.} other {شكرًا لك على دفعتك.}}} other {{gift, select, yes {شكرًا لك على شراء {premiumName} هديةً. هذه الرسالة هي إيصالك.} other {شكرًا لك على دفعتك. هذه الرسالة هي إيصالك.}}}}",
 		"invoice_label": "رقم الفاتورة",
@@ -612,21 +612,21 @@
 		"paid_label": "المبلغ المدفوع",
 		"period_label": "الفترة",
 		"period_value": "من {periodStart, date, long} إلى\n{periodEnd, date, long}",
-		"plan_body": "{renewal, select, month {يتجدد {premiumName} كل شهر بسعر {renewalFormatted}{renewalTax, select, included { شاملًا الضريبة} added { مضافًا إليه الضريبة} other {}} إلى أن تلغيه. يمكنك الإلغاء في أي وقت من «إدارة الاشتراك» في صفحة {premiumName}، ويبقى {premiumName} متاحًا لك حتى نهاية الفترة التي دفعت مقابلها.} year {يتجدد {premiumName} كل عام بسعر {renewalFormatted}{renewalTax, select, included { شاملًا الضريبة} added { مضافًا إليه الضريبة} other {}} إلى أن تلغيه. يمكنك الإلغاء في أي وقت من «إدارة الاشتراك» في صفحة {premiumName}، ويبقى {premiumName} متاحًا لك حتى نهاية الفترة التي دفعت مقابلها.} other {هذه الهدية عملية شراء لمرة واحدة. لا تتجدد، ولن تُفرض أي رسوم أخرى.}}",
+		"plan_body": "{renewal, select, month {يتجدد {premiumName} كل شهر بسعر {renewalFormatted}{renewalTax, select, included { شاملًا الضريبة} added { مضافًا إليه الضريبة} other {}} إلى أن تلغيه. يمكنك الإلغاء في أي وقت من \"إدارة الاشتراك\" في صفحة {premiumName}، ويبقى {premiumName} متاحًا لك حتى نهاية الفترة التي دفعت مقابلها.} year {يتجدد {premiumName} كل عام بسعر {renewalFormatted}{renewalTax, select, included { شاملًا الضريبة} added { مضافًا إليه الضريبة} other {}} إلى أن تلغيه. يمكنك الإلغاء في أي وقت من \"إدارة الاشتراك\" في صفحة {premiumName}، ويبقى {premiumName} متاحًا لك حتى نهاية الفترة التي دفعت مقابلها.} other {هذه الهدية عملية شراء لمرة واحدة. لا تتجدد، ولن تُفرض أي رسوم أخرى.}}",
 		"plan_title": "{gift, select, yes {هديتك} other {اشتراكك}}",
 		"preheader": "دفعت {amountFormatted} مقابل {premiumName}",
 		"product_label": "المنتج",
-		"product_value": "{plan, select, monthly {{premiumName}، شهريًا} yearly {{premiumName}، سنويًا} gift_1_month {{premiumName} هدية، شهر واحد} gift_1_year {{premiumName} هدية، سنة واحدة} other {{premiumName}}}",
+		"product_value": "{plan, select, monthly {{premiumName}، شهريًا} yearly {{premiumName}، سنويًا} gift_1_month {هدية {premiumName}، شهر واحد} gift_1_year {هدية {premiumName}، سنة واحدة} other {{premiumName}}}",
 		"reverse_charge": "لم تُحتسب ضريبة القيمة المضافة لأن آلية الاحتساب العكسي تنطبق. التفاصيل مذكورة في الفاتورة.",
-		"seller": "البائع: Fluxer Platform AB، 559537-3993، المقر المسجل Haninge، السويد، {sellerAddress}، <mail>{sellerEmail}</mail>",
+		"seller": "البائع هو Fluxer Platform AB (رقم التسجيل 559537-3993)، وهي شركة سويدية مقرها المسجل في Haninge. يمكنك مراسلتنا على العنوان {sellerAddress} أو عبر البريد الإلكتروني على <mail>{sellerEmail}</mail>.",
 		"signoff": "فريق {product_name}",
 		"subject": "{gift, select, yes {إيصال هدية {premiumName} على {product_name}} other {إيصال {premiumName} على {product_name}}}",
 		"tax_added": "أُضيفت إلى السعر ضريبة بقيمة {taxFormatted}",
 		"tax_included": "يشمل ضريبة بقيمة {taxFormatted}",
 		"total_label": "الإجمالي",
 		"withdrawal_body": "يمكنك الانسحاب من عملية الشراء هذه حتى {withdrawalEndsAt, date, long} واسترداد المبلغ كاملًا. للانسحاب، ردّ على هذه الرسالة أو راسلنا على <mail>{sellerEmail}</mail> وأخبرنا بأنك تنسحب. يمكنك استخدام النموذج أدناه، لكن ذلك ليس إلزاميًا.",
-		"withdrawal_body_brazil": "يمكنك الانسحاب من هذا الشراء حتى الساعة 23:59 بتوقيت ولاية أكري (UTC-5) في {withdrawalEndsAt, date, long} واسترداد كل ما دفعته. للانسحاب، رد على هذه الرسالة أو اكتب إلى <mail>{sellerEmail}</mail> وأخبرنا أنك تنسحب. يمكنك استخدام النموذج أدناه، لكن ذلك ليس إلزاميًا.{gift, select, yes {} other { لا يبدأ التجديد التلقائي للخطة نفسها فترة انسحاب جديدة.}}",
-		"withdrawal_body_pro_rata": "يمكنك الانسحاب من هذا الشراء حتى {withdrawalEndsAt, date, long}. {gift, select, yes {إذا لم يُسترد الرمز، فسنرد إليك كل ما دفعته. وإذا استُرد، فسنرد إليك ما دفعته مخصومًا منه حصة الأيام التي كان لدى المستلم فيها {premiumName}.} other {إذا فعلت ذلك، فسنرد إليك ما دفعته مخصومًا منه حصة الأيام التي كان لديك فيها {premiumName}. ولا يبدأ التجديد التلقائي للخطة نفسها فترة انسحاب جديدة.}} للانسحاب، استخدم «انسحب من العقد هنا» في صفحة {premiumName} ضمن «إعدادات المستخدم»، أو رد على هذه الرسالة أو اكتب إلى <mail>{sellerEmail}</mail> وأخبرنا أنك تنسحب. يمكنك استخدام النموذج أدناه، لكن ذلك ليس إلزاميًا.",
+		"withdrawal_body_brazil": "يمكنك الانسحاب من هذا الشراء حتى الساعة 23:59 بتوقيت ولاية أكري (UTC-5) في {withdrawalEndsAt, date, long} واسترداد كل ما دفعته. للانسحاب، ردّ على هذه الرسالة أو اكتب إلى <mail>{sellerEmail}</mail> وأخبرنا أنك تنسحب. يمكنك استخدام النموذج أدناه، لكن ذلك ليس إلزاميًا.{gift, select, yes {} other { لا يبدأ التجديد التلقائي للخطة نفسها فترة انسحاب جديدة.}}",
+		"withdrawal_body_pro_rata": "يمكنك الانسحاب من هذا الشراء حتى {withdrawalEndsAt, date, long}. {gift, select, yes {إذا لم يُفعَّل الرمز، فسنردّ إليك كل ما دفعته. وإذا فُعِّل، فسنردّ إليك ما دفعته مخصومًا منه حصة الأيام التي كان لدى المستلم فيها {premiumName}.} other {إذا فعلت ذلك، فسنردّ إليك ما دفعته مخصومًا منه حصة الأيام التي كان لديك فيها {premiumName}. ولا يبدأ التجديد التلقائي للخطة نفسها فترة انسحاب جديدة.}} للانسحاب، استخدم \"انسحب من العقد هنا\" في صفحة {premiumName} ضمن \"إعدادات المستخدم\"، أو ردّ على هذه الرسالة أو اكتب إلى <mail>{sellerEmail}</mail> وأخبرنا أنك تنسحب. يمكنك استخدام النموذج أدناه، لكن ذلك ليس إلزاميًا.",
 		"withdrawal_note": "يعمل زر الاسترداد في التطبيق لمدة 3 أيام بعد كل دفعة. وهو ميزة إضافية إلى جانب حقك في الانسحاب ولا يحلّ محله.",
 		"withdrawal_title": "حق الانسحاب"
 	},
@@ -645,10 +645,10 @@
 		"original_value": "{paidFormatted} في {paidAt, date, long}",
 		"preheader": "أعدنا إليك {amountFormatted} مقابل {premiumName}",
 		"product_label": "المنتج",
-		"product_value": "{plan, select, monthly {{premiumName}، شهريًا} yearly {{premiumName}، سنويًا} gift_1_month {{premiumName} هدية، شهر واحد} gift_1_year {{premiumName} هدية، سنة واحدة} other {{premiumName}}}",
+		"product_value": "{plan, select, monthly {{premiumName}، شهريًا} yearly {{premiumName}، سنويًا} gift_1_month {هدية {premiumName}، شهر واحد} gift_1_year {هدية {premiumName}، سنة واحدة} other {{premiumName}}}",
 		"refund_label": "المبلغ المسترد",
 		"signoff": "فريق {product_name}",
-		"subject": "استرداد {product_name} {premiumName} الخاص بك"
+		"subject": "استرداد مبلغ {premiumName} على {product_name}"
 	},
 	"plutonium_renewal_notice": {
 		"after_line": "{differs, select, yes {بعد ذلك يصبح السعر {tax, select, yes {{regularFormatted}} other {{regularFormatted} (مضافًا إليه الضريبة المستحقة إن وُجدت)}} {plan, select, yearly {سنويًا} other {شهريًا}}.} other {بعد ذلك تدفع {tax, select, yes {{regularFormatted}} other {{regularFormatted} (مضافًا إليه الضريبة المستحقة إن وُجدت)}} كل {plan, select, yearly {عام} other {شهر}} إلى أن تلغي الاشتراك.}}",
@@ -674,9 +674,9 @@
 		"name_label": "الاسم",
 		"note": "احتفظ بهذا البريد الإلكتروني تأكيدًا على أننا استلمنا طلبك بالانسحاب.",
 		"reference_label": "الرقم المرجعي",
-		"refund": "{gift, select, yes {يتوقف رمز الهدية عن العمل، وإذا استرده شخص ما فإنه يفقد المدة التي منحها له.} other {انتهى اشتراكك في {premiumName} ولن يتجدد.}} {refund, select, manual {لم نتمكن من بدء استرداد {amountFormatted} تلقائيًا، لذا سيعيد شخص من فريقنا المبلغ إلى البطاقة أو الحساب الذي دفعت به {brazil, select, yes {فورًا} other {خلال 14 يومًا}}.} other {بدأنا استردادًا كاملًا لمبلغ {amountFormatted} إلى البطاقة أو الحساب الذي دفعت به. يستغرق ظهور المبلغ عادةً من 5 إلى 10 أيام عمل، حسب مصرفك.}} عند اكتمال الاسترداد، نرسل إليك الإشعار الدائن بالبريد الإلكتروني.",
+		"refund": "{gift, select, yes {يتوقف رمز الهدية عن العمل، وإذا فعّله شخص ما فإنه يفقد المدة التي منحها له.} other {انتهى اشتراكك في {premiumName} ولن يتجدد.}} {refund, select, manual {لم نتمكن من بدء استرداد {amountFormatted} تلقائيًا، لذا سيعيد شخص من فريقنا المبلغ إلى البطاقة أو الحساب الذي دفعت به {brazil, select, yes {فورًا} other {خلال 14 يومًا}}.} other {بدأنا استردادًا كاملًا لمبلغ {amountFormatted} إلى البطاقة أو الحساب الذي دفعت به. يستغرق ظهور المبلغ عادةً من 5 إلى 10 أيام عمل، حسب مصرفك.}} عند اكتمال الاسترداد، نرسل إليك الإشعار الدائن بالبريد الإلكتروني.",
 		"refund_label": "المبلغ المسترد",
-		"refund_pro_rata": "{gift, select, yes {يتوقف رمز الهدية عن العمل، وإذا استرده شخص ما فإنه يفقد المدة التي منحها له.} other {انتهى اشتراكك في {premiumName} ولن يتجدد.}} {refund, select, manual {لم نتمكن من بدء استرداد {amountFormatted} تلقائيًا، لذا سيعيد شخص من فريقنا المبلغ إلى البطاقة أو الحساب الذي دفعت به {brazil, select, yes {فورًا} other {خلال 14 يومًا}}.} other {بدأنا استرداد {amountFormatted} إلى البطاقة أو الحساب الذي دفعت منه. هذا هو ما دفعته مخصومًا منه حصة الأيام التي كان فيها {premiumName} قيد الاستخدام. عادةً ما يستغرق ظهوره من 5 إلى 10 أيام عمل، حسب البنك الذي تتعامل معه.}} عند اكتمال الاسترداد، نرسل إليك الإشعار الدائن بالبريد الإلكتروني.",
+		"refund_pro_rata": "{gift, select, yes {يتوقف رمز الهدية عن العمل، وإذا فعّله شخص ما فإنه يفقد المدة التي منحها له.} other {انتهى اشتراكك في {premiumName} ولن يتجدد.}} {refund, select, manual {لم نتمكن من بدء استرداد {amountFormatted} تلقائيًا، لذا سيعيد شخص من فريقنا المبلغ إلى البطاقة أو الحساب الذي دفعت به {brazil, select, yes {فورًا} other {خلال 14 يومًا}}.} other {بدأنا استرداد {amountFormatted} إلى البطاقة أو الحساب الذي دفعت منه. هذا هو ما دفعته مخصومًا منه حصة الأيام التي كان فيها {premiumName} قيد الاستخدام. عادةً ما يستغرق ظهوره من 5 إلى 10 أيام عمل، حسب البنك الذي تتعامل معه.}} عند اكتمال الاسترداد، نرسل إليك الإشعار الدائن بالبريد الإلكتروني.",
 		"signoff": "فريق {product_name}",
 		"statement_label": "انسحابك",
 		"statement_value": "{gift, select, yes {أنسحب من عقدي الخاص بهدية {premiumName} التي اشتريتها في {purchasedAt, date, long}.} other {أنسحب من عقدي الخاص باشتراك {premiumName} الذي دفعت ثمنه في {purchasedAt, date, long}.}}",
@@ -709,11 +709,11 @@
 		"intro": "لقد استلمنا بلاغك بموجب قانون الخدمات الرقمية بشأن {targetKind, select, message {رسالة} user {حساب} guild {مجتمع} other {محتوى}} على {product_name}.",
 		"next": "سنراسلك على هذا العنوان عندما نتخذ قرارنا.",
 		"report_label": "معرف البلاغ",
-		"signoff": "فريق أمان {product_name}",
+		"signoff": "فريق السلامة في {product_name}",
 		"subject": "لقد استلمنا بلاغك في {product_name}"
 	},
 	"report_resolved": {
-		"about": "{target, select, message_community {أبلغت عن رسالة في #{channelName} في «{communityName}» بتاريخ {reportedAt, date, long}.} message_dm {أبلغت عن رسالة في محادثة خاصة بتاريخ {reportedAt, date, long}.} message {أبلغت عن رسالة بتاريخ {reportedAt, date, long}.} user {أبلغت عن الحساب «{username}» بتاريخ {reportedAt, date, long}.} community {أبلغت عن المجتمع «{communityName}» بتاريخ {reportedAt, date, long}.} other {أرسلت إلينا بلاغًا بتاريخ {reportedAt, date, long}.}}",
+		"about": "{target, select, message_community {أبلغت عن رسالة في #{channelName} في \"{communityName}\" بتاريخ {reportedAt, date, long}.} message_dm {أبلغت عن رسالة مباشرة بتاريخ {reportedAt, date, long}.} message {أبلغت عن رسالة بتاريخ {reportedAt, date, long}.} user {أبلغت عن الحساب \"{username}\" بتاريخ {reportedAt, date, long}.} community {أبلغت عن المجتمع \"{communityName}\" بتاريخ {reportedAt, date, long}.} other {أرسلت إلينا بلاغًا بتاريخ {reportedAt, date, long}.}}",
 		"comment_label": "ملاحظة من فريقنا",
 		"footer_reason": "لقد تلقيت هذا البريد الإلكتروني لأنك أرسلت بلاغًا على {product_name}.",
 		"intro": "{outcome, select, removed {أزلنا المحتوى لأنه خالف قواعدنا.} restricted {خالف الحساب قواعدنا، واتخذنا إجراءً بشأنه. حفاظًا على خصوصية الجميع، لا نشارك نوع الإجراء.} action_taken {خالف ما أبلغت عنه قواعدنا، واتخذنا إجراءً بشأنه. حفاظًا على خصوصية الجميع، لا نشارك نوع الإجراء.} no_violation {{concern, select, self_harm {شكرًا على اهتمامك بهذا الشخص. راجع فريقنا البلاغ. الحديث عن الشعور بالضيق أو بعدم الأمان لا يخالف قواعدنا، لذلك لم نُزِل أي شيء، لكن قد نرسل إلى الشخص موارد للدعم. لا نكشف أبدًا هوية من أرسل البلاغ. إذا كنت تعتقد أن أحدًا في خطر مباشر، فاتصل برقم الطوارئ في منطقتك.} other {راجع فريقنا البلاغ ووجد أنه لا يخالف قواعدنا، لذلك لم نتخذ إجراءً بشأنه. ومع ذلك قد يؤدي البلاغ إلى خطوات أخرى، مثل إرسال موارد للدعم إلى الشخص. لا نكشف أبدًا هوية من أرسل البلاغ.}}} other {أغلقنا بلاغك.}}",
