@@ -298,9 +298,13 @@ function buildOperatorPassConfig(master: MasterConfig): OperatorPassConfig {
 			'FLUXER_OPERATOR_PASS_STANDARD_PRICE_* must be set in production when FLUXER_OPERATOR_PASS_PRICE_RISES_AT is set',
 		);
 	}
-	if (hostedSale && (labsGuildId === null || labsVisionaryRoleId === null || labsOperatorsChannelId === null)) {
+	if (
+		master.env === 'production' &&
+		!master.instance.self_hosted &&
+		(labsGuildId === null || labsVisionaryRoleId === null || labsOperatorsChannelId === null)
+	) {
 		throw new Error(
-			'FLUXER_LABS_GUILD_ID, FLUXER_LABS_OPERATOR_ROLE_ID, FLUXER_LABS_VISIONARY_ROLE_ID and FLUXER_LABS_OPERATORS_CHANNEL_ID must be set in production when FLUXER_OPERATOR_PASS_PRICE_RISES_AT is set',
+			'FLUXER_LABS_GUILD_ID, FLUXER_LABS_OPERATOR_ROLE_ID, FLUXER_LABS_VISIONARY_ROLE_ID and FLUXER_LABS_OPERATORS_CHANNEL_ID must be set in production',
 		);
 	}
 	return {
