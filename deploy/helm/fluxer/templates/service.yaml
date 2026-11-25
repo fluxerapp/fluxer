@@ -1,0 +1,100 @@
+{{- include "fluxer.validate" . }}
+{{- $v := .Values }}
+{{- $fullname := include "fluxer.fullname" . }}
+{{- $voice := include "fluxer.voicePorts" . | fromJson }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $fullname }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" . | nindent 4 }}
+  {{- with $v.service.annotations }}
+  annotations:
+    {{- include "fluxer.annotations" . | nindent 4 }}
+  {{- end }}
+spec:
+  publishNotReadyAddresses: true
+  selector:
+    {{- include "fluxer.selectorLabels" . | nindent 4 }}
+  {{- if contains ":" $v.domain }}
+  ipFamilyPolicy: PreferDualStack
+  {{- end }}
+  {{- if eq (include "fluxer.edgeMode" .) "bundled" }}
+  {{- if eq $v.edge.expose "hostPort" }}
+  type: ClusterIP
+  {{- else }}
+  type: LoadBalancer
+  externalTrafficPolicy: Local
+  {{- with $v.edge.loadBalancer.loadBalancerIP | default (include "fluxer.bareIP" .) }}
+  loadBalancerIP: {{ . | quote }}
+  {{- end }}
+  {{- end }}
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+    - name: https
+      port: 443
+      targetPort: https
+      protocol: TCP
+    {{- if $v.edge.loadBalancer.http3 }}
+    - name: https-udp
+      port: 443
+      targetPort: https-udp
+      protocol: UDP
+    {{- end }}
+  {{- else }}
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+  {{- end }}
+{{- if and (eq $v.voice.mode "bundled") (ne $v.voice.expose "hostPort") }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $fullname }}-voice
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" . | nindent 4 }}
+  {{- with $v.voice.service.annotations }}
+  annotations:
+    {{- include "fluxer.annotations" . | nindent 4 }}
+  {{- end }}
+spec:
+  publishNotReadyAddresses: true
+  selector:
+    {{- include "fluxer.selectorLabels" . | nindent 4 }}
+  externalTrafficPolicy: Local
+  {{- if contains ":" $v.domain }}
+  ipFamilyPolicy: PreferDualStack
+  {{- end }}
+  {{- if eq $v.voice.expose "loadBalancer" }}
+  type: LoadBalancer
+  {{- with $v.voice.service.loadBalancerIP }}
+  loadBalancerIP: {{ . | quote }}
+  {{- end }}
+  {{- else }}
+  type: NodePort
+  {{- end }}
+  ports:
+    - name: voice-tcp
+      port: {{ $voice.tcp }}
+      targetPort: voice-tcp
+      protocol: TCP
+      {{- if eq $v.voice.expose "nodePort" }}
+      nodePort: {{ $voice.tcp }}
+      {{- end }}
+    - name: voice-udp
+      port: {{ $voice.udp }}
+      targetPort: voice-udp
+      protocol: UDP
+      {{- if eq $v.voice.expose "nodePort" }}
+      nodePort: {{ $voice.udp }}
+      {{- end }}
+{{- end }}

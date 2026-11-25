@@ -1,0 +1,255 @@
+{{- include "fluxer.validate" . }}
+{{- $v := .Values }}
+{{- $fullname := include "fluxer.fullname" . }}
+{{- $bundled := eq (include "fluxer.edgeMode" .) "bundled" }}
+{{- $voice := include "fluxer.voicePorts" . | fromJson }}
+{{- $fluxerd := "/opt/fluxer/current/bin/fluxerd" }}
+{{- $backups := and $v.backup.persistence.enabled (not $v.backup.persistence.existingClaim) }}
+{{- if $backups }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $fullname }}-backups
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  accessModes: ["ReadWriteOnce"]
+  {{- with $v.backup.persistence.storageClass }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ $v.backup.persistence.size }}
+---
+{{- end }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ $fullname }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  serviceName: {{ $fullname }}
+  selector:
+    matchLabels:
+      {{- include "fluxer.selectorLabels" . | nindent 6 }}
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+  template:
+    metadata:
+      labels:
+        {{- include "fluxer.selectorLabels" . | nindent 8 }}
+        {{- with $v.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        checksum/config: {{ include "fluxer.config" . | sha256sum }}
+        {{- with $v.podAnnotations }}
+        {{- include "fluxer.annotations" . | nindent 8 }}
+        {{- end }}
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: {{ $v.terminationGracePeriodSeconds }}
+      {{- with $v.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $v.priorityClassName }}
+      priorityClassName: {{ . | quote }}
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+        {{- if $bundled }}
+        sysctls:
+          - name: net.ipv4.ip_unprivileged_port_start
+            value: "0"
+        {{- end }}
+      {{- with $v.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $v.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $v.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $v.initContainers }}
+      initContainers:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: fluxer
+          image: {{ include "fluxer.image" . }}
+          imagePullPolicy: {{ $v.image.pullPolicy }}
+          {{- if $v.maintenance }}
+          command: ["/usr/bin/tini", "--", "sleep", "infinity"]
+          {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ $fullname }}
+            {{- with $v.existingSecret }}
+            - secretRef:
+                name: {{ . }}
+            {{- end }}
+          {{- if or $v.postgres.externalSecret $v.extraEnv }}
+          env:
+            {{- with $v.postgres.externalSecret }}
+            - name: FLUXER_POSTGRES_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ . }}
+                  key: {{ $v.postgres.externalSecretKey }}
+            {{- end }}
+            {{- with $v.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- end }}
+          ports:
+            {{- if $bundled }}
+            - name: http
+              containerPort: 80
+              protocol: TCP
+              {{- if eq $v.edge.expose "hostPort" }}
+              hostPort: 80
+              {{- end }}
+            - name: https
+              containerPort: 443
+              protocol: TCP
+              {{- if eq $v.edge.expose "hostPort" }}
+              hostPort: 443
+              {{- end }}
+            {{- if $v.edge.loadBalancer.http3 }}
+            - name: https-udp
+              containerPort: 443
+              protocol: UDP
+              {{- if eq $v.edge.expose "hostPort" }}
+              hostPort: 443
+              {{- end }}
+            {{- end }}
+            {{- else }}
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            {{- end }}
+            {{- if eq $v.voice.mode "bundled" }}
+            - name: voice-tcp
+              containerPort: {{ $voice.tcp }}
+              protocol: TCP
+              {{- if eq $v.voice.expose "hostPort" }}
+              hostPort: {{ $voice.tcp }}
+              {{- end }}
+            - name: voice-udp
+              containerPort: {{ $voice.udp }}
+              protocol: UDP
+              {{- if eq $v.voice.expose "hostPort" }}
+              hostPort: {{ $voice.udp }}
+              {{- end }}
+            {{- end }}
+          {{- if not $v.maintenance }}
+          startupProbe:
+            exec:
+              command: [{{ $fluxerd | quote }}, "health", "--live"]
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            exec:
+              command: [{{ $fluxerd | quote }}, "health", "--live"]
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command: [{{ $fluxerd | quote }}, "health"]
+            periodSeconds: 10
+            timeoutSeconds: 10
+            failureThreshold: 3
+          {{- end }}
+          {{- with $v.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/fluxer
+            - name: run
+              mountPath: /run/fluxer
+            - name: tmp
+              mountPath: /tmp
+            - name: shm
+              mountPath: /dev/shm
+            {{- if $v.backup.persistence.enabled }}
+            - name: backups
+              mountPath: /var/lib/fluxer/backups
+            {{- end }}
+            {{- with $v.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+        {{- with $v.extraContainers }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      volumes:
+        - name: run
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+        - name: shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: {{ $v.shmSize }}
+        {{- with $v.persistence.existingClaim }}
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ . }}
+        {{- end }}
+        {{- if $v.backup.persistence.enabled }}
+        - name: backups
+          persistentVolumeClaim:
+            claimName: {{ $v.backup.persistence.existingClaim | default (printf "%s-backups" $fullname) }}
+        {{- end }}
+        {{- with $v.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+  {{- if not $v.persistence.existingClaim }}
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: data
+        labels:
+          {{- include "fluxer.selectorLabels" . | nindent 10 }}
+        {{- with $v.persistence.annotations }}
+        annotations:
+          {{- include "fluxer.annotations" . | nindent 10 }}
+        {{- end }}
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        {{- with $v.persistence.storageClass }}
+        storageClassName: {{ . | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ $v.persistence.size }}
+  {{- end }}

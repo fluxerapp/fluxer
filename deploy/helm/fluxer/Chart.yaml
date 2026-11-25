@@ -1,13 +1,20 @@
 apiVersion: v2
 name: fluxer
-description: A complete Fluxer instance on Kubernetes, at parity with the self-hosted Docker Compose stack.
+description: Fluxer in one pod. fluxerd runs the database, the app, search and voice inside it.
 type: application
-version: 0.1.0
-appVersion: "v1"
+version: 0.0.0
+appVersion: latest
 kubeVersion: ">=1.29.0-0"
 home: https://docs.fluxer.com/operator/kubernetes/
+icon: https://fluxerstatic.com/marketing/branding/symbol-color.svg
 sources:
   - https://github.com/fluxerapp/fluxer/tree/main/deploy/helm/fluxer
+maintainers:
+  - name: Fluxer Platform AB
+    url: https://fluxer.com
 keywords:
   - fluxer
   - chat
+  - voice
+annotations:
+  artifacthub.io/license: AGPL-3.0-or-later

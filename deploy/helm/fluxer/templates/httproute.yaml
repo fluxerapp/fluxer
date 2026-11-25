@@ -1,0 +1,34 @@
+{{- if and (eq (include "fluxer.edgeMode" .) "proxy") .Values.httpRoute.enabled }}
+{{- include "fluxer.validate" . }}
+{{- if not .Values.httpRoute.parentRefs }}
+{{- fail "httpRoute.parentRefs is empty. Add the Gateway the route attaches to." }}
+{{- end }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ include "fluxer.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" . | nindent 4 }}
+  {{- with .Values.httpRoute.annotations }}
+  annotations:
+    {{- include "fluxer.annotations" . | nindent 4 }}
+  {{- end }}
+spec:
+  parentRefs:
+    {{- toYaml .Values.httpRoute.parentRefs | nindent 4 }}
+  hostnames:
+    - {{ .Values.domain | quote }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: {{ include "fluxer.fullname" . }}
+          port: 8080
+      {{- with .Values.httpRoute.timeouts.request }}
+      timeouts:
+        request: {{ . }}
+      {{- end }}
+{{- end }}

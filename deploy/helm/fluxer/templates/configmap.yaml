@@ -2,19 +2,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: fluxer-config
+  name: {{ include "fluxer.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "fluxer.labels" (dict "root" . "name" "fluxer-config" "component" "config") | nindent 4 }}
+    {{- include "fluxer.labels" . | nindent 4 }}
 data:
-  {{- include "fluxer.configData" . | nindent 2 }}
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: fluxer-app-proxy
-  namespace: {{ .Release.Namespace }}
-  labels:
-    {{- include "fluxer.labels" (dict "root" . "name" "fluxer-app-proxy" "component" "config") | nindent 4 }}
-data:
-  {{- include "fluxer.appProxyConfigData" . | nindent 2 }}
+  {{- include "fluxer.config" . | trim | nindent 2 }}

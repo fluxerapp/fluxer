@@ -1,381 +1,217 @@
-{{- define "fluxer.chart" -}}
-{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
+{{- define "fluxer.name" -}}
+{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{- define "fluxer.fullname" -}}
+{{- if .Values.fullnameOverride }}
+{{- .Values.fullnameOverride | trunc 52 | trimSuffix "-" }}
+{{- else }}
+{{- $name := default .Chart.Name .Values.nameOverride }}
+{{- if contains $name .Release.Name }}
+{{- .Release.Name | trunc 52 | trimSuffix "-" }}
+{{- else }}
+{{- printf "%s-%s" .Release.Name $name | trunc 52 | trimSuffix "-" }}
+{{- end }}
+{{- end }}
 {{- end }}
 
 {{- define "fluxer.selectorLabels" -}}
-app.kubernetes.io/name: {{ .name }}
-app.kubernetes.io/instance: {{ .root.Release.Name }}
-{{- end }}
-
-{{- define "fluxer.podLabels" -}}
-{{ include "fluxer.selectorLabels" . }}
-{{- with .component }}
-app.kubernetes.io/component: {{ . }}
-{{- end }}
-app.kubernetes.io/part-of: fluxer
+app.kubernetes.io/name: {{ include "fluxer.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{- define "fluxer.labels" -}}
-{{ include "fluxer.podLabels" . }}
-app.kubernetes.io/managed-by: {{ .root.Release.Service }}
-app.kubernetes.io/version: {{ .root.Chart.AppVersion | quote }}
-helm.sh/chart: {{ include "fluxer.chart" .root }}
+helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+{{ include "fluxer.selectorLabels" . }}
+app.kubernetes.io/version: {{ include "fluxer.tag" . | trunc 63 | trimSuffix "-" | quote }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
-{{- define "fluxer.string" -}}
-{{- if and (kindIs "float64" .) (eq . (float64 (int64 .))) }}
-{{- int64 . | toString }}
-{{- else }}
-{{- toString . }}
-{{- end }}
-{{- end }}
-
-{{- define "fluxer.origin" -}}
-{{- $v := .Values }}
-{{- if $v.publicOrigin }}
-{{- trimSuffix "/" $v.publicOrigin }}
-{{- else }}
-{{- $default := ternary 443 80 (eq $v.scheme "https") }}
-{{- if eq (int $v.port) $default }}
-{{- printf "%s://%s" $v.scheme $v.domain }}
-{{- else }}
-{{- printf "%s://%s:%d" $v.scheme $v.domain (int $v.port) }}
-{{- end }}
-{{- end }}
-{{- end }}
-
-{{- define "fluxer.hostOrigin" -}}
-{{- $v := .Values }}
-{{- if $v.publicOrigin }}
-{{- trimSuffix "/" $v.publicOrigin }}
-{{- else }}
-{{- printf "%s://%s:%d" $v.scheme $v.domain (int $v.port) }}
-{{- end }}
-{{- end }}
-
-{{- define "fluxer.secretName" -}}
-{{- .Values.secrets.existingSecret | default "fluxer-env" }}
-{{- end }}
-
-{{- define "fluxer.thirdPartyImage" -}}
-{{- $ref := printf "%s:%s" .repository (include "fluxer.string" .tag) }}
-{{- with .digest }}
-{{- $ref = printf "%s@%s" $ref . }}
-{{- end }}
-{{- $ref | quote }}
+{{- define "fluxer.tag" -}}
+{{- .Values.image.tag | default .Chart.AppVersion }}
 {{- end }}
 
 {{- define "fluxer.image" -}}
-{{- $v := .root.Values.image }}
-{{- $img := (.w | default dict).image | default dict }}
-{{- $registry := $img.registry | default $v.registry }}
-{{- $tag := $img.tag | default (get ($v.tags | default dict) .image) | default $v.tag }}
-{{- $ref := printf "%s/%s:%s" $registry .image (include "fluxer.string" $tag) }}
-{{- with $img.digest | default (get ($v.digests | default dict) .image) }}
-{{- $ref = printf "%s@%s" $ref . }}
-{{- end }}
-{{- $ref | quote }}
-{{- end }}
-
-{{- define "fluxer.pullPolicy" -}}
-{{- (((.w | default dict).image | default dict).pullPolicy) | default .root.Values.image.pullPolicy }}
-{{- end }}
-
-{{- define "fluxer.pullSecrets" -}}
-{{- with .Values.image.pullSecrets }}
-imagePullSecrets:
-  {{- toYaml . | nindent 2 }}
-{{- end }}
-{{- end }}
-
-{{- define "fluxer.podSecurityContext" -}}
-runAsNonRoot: true
-{{- with .uid }}
-runAsUser: {{ . }}
-runAsGroup: {{ $.gid | default . }}
-fsGroup: {{ $.gid | default . }}
-fsGroupChangePolicy: OnRootMismatch
-{{- end }}
-seccompProfile:
-  type: RuntimeDefault
-{{- end }}
-
-{{- define "fluxer.containerSecurityContext" -}}
-allowPrivilegeEscalation: false
-capabilities:
-  drop:
-    - ALL
-{{- end }}
-
-{{- define "fluxer.scheduling" -}}
-{{- $w := .w | default dict }}
-{{- with $w.nodeSelector }}
-nodeSelector:
-  {{- toYaml . | nindent 2 }}
-{{- end }}
-{{- with $w.tolerations }}
-tolerations:
-  {{- toYaml . | nindent 2 }}
-{{- end }}
-{{- with $w.affinity }}
-affinity:
-  {{- toYaml . | nindent 2 }}
-{{- end }}
-{{- $spread := list }}
-{{- range $w.topologySpreadConstraints }}
-{{- $c := deepCopy . }}
-{{- if not (hasKey $c "labelSelector") }}
-{{- $_ := set $c "labelSelector" (dict "matchLabels" (include "fluxer.selectorLabels" $ | fromYaml)) }}
-{{- end }}
-{{- $spread = append $spread $c }}
-{{- end }}
-{{- with $spread }}
-topologySpreadConstraints:
-  {{- toYaml . | nindent 2 }}
-{{- end }}
-{{- end }}
-
-{{- define "fluxer.pvc" -}}
-- metadata:
-    name: data
-  spec:
-    accessModes:
-      - ReadWriteOnce
-    {{- with .storageClassName }}
-    storageClassName: {{ . }}
-    {{- end }}
-    resources:
-      requests:
-        storage: {{ .size }}
-{{- end }}
-
-{{- define "fluxer.vapidPair" -}}
-{{- $der := genPrivateKey "ecdsa" | replace "-----BEGIN EC PRIVATE KEY-----" "" | replace "-----END EC PRIVATE KEY-----" "" | nospace | b64dec -}}
-private: {{ substr 7 39 $der | b64enc | replace "+" "-" | replace "/" "_" | trimAll "=" }}
-public: {{ substr 56 121 $der | b64enc | replace "+" "-" | replace "/" "_" | trimAll "=" }}
-{{- end }}
-
-{{- define "fluxer.livekitMode" -}}
-{{- if .Values.livekit.enabled }}bundled{{ else if .Values.livekit.external.url }}external{{ else if .Values.livekit.joined }}joined{{ else }}off{{ end }}
-{{- end }}
-
-{{- define "fluxer.noGenerateKeys" -}}
-{{- $keys := list }}
-{{- $extra := .Values.secrets.extra | default dict }}
-{{- if and (not .Values.postgres.enabled) (not (get $extra "FLUXER_POSTGRES_URL")) }}
-{{- $keys = append $keys "FLUXER_POSTGRES_PASSWORD" }}
-{{- end }}
-{{- if not .Values.meilisearch.enabled }}
-{{- $keys = append $keys "FLUXER_SEARCH_API_KEY" }}
-{{- end }}
-{{- if not .Values.seaweedfs.enabled }}
-{{- $keys = append $keys "FLUXER_S3_SECRET_ACCESS_KEY" }}
-{{- end }}
-{{- if eq (include "fluxer.livekitMode" .) "external" }}
-{{- $keys = append $keys "FLUXER_LIVEKIT_API_SECRET" }}
-{{- end }}
-{{- toJson $keys }}
-{{- end }}
-
-{{- define "fluxer.requiredSecretKeys" -}}
-{{- $keys := list }}
-{{- $extra := .Values.secrets.extra | default dict }}
-{{- range $k, $_ := .Values.secrets.values }}
-{{- if and (eq $k "FLUXER_POSTGRES_PASSWORD") (get $extra "FLUXER_POSTGRES_URL") }}
-{{- else if and (hasPrefix "FLUXER_LIVEKIT_" $k) (has (include "fluxer.livekitMode" $) (list "off" "joined")) }}
-{{- else if and (eq $k "FLUXER_VALKEY_PASSWORD") (not $.Values.valkey.enabled) }}
-{{- else if and (eq $k "FLUXER_NATS_AUTH_TOKEN") (not $.Values.nats.enabled) }}
-{{- else if and (has $k (list "FLUXER_SETUP_TOKEN" "FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64")) (or $.Values.secrets.existingSecret (and (not $.Values.secrets.generate) (not (include "fluxer.string" (get $.Values.secrets.values $k | default ""))))) }}
+{{- if .Values.image.digest }}
+{{- printf "%s@%s" .Values.image.repository .Values.image.digest }}
 {{- else }}
-{{- $keys = append $keys $k }}
+{{- printf "%s:%s" .Values.image.repository (include "fluxer.tag" .) }}
 {{- end }}
-{{- end }}
-{{- toJson $keys }}
 {{- end }}
 
-{{- define "fluxer.resolveSecrets" -}}
+{{- define "fluxer.upgradeCommand" -}}
+{{- printf "helm upgrade %s oci://ghcr.io/fluxerapp/charts/fluxer -n %s --version {version} --reset-then-reuse-values" .Release.Name .Release.Namespace }}
+{{- if .Values.image.tag }} --set image.tag={version}{{ end }}
+{{- if .Values.image.digest }} --set image.digest={{ end }}
+{{- end }}
+
+{{- define "fluxer.voicePorts" -}}
+{{- if eq .Values.voice.expose "nodePort" }}
+{{- dict "tcp" (int .Values.voice.nodePorts.tcp) "udp" (int .Values.voice.nodePorts.udp) | toJson }}
+{{- else }}
+{{- dict "tcp" 7881 "udp" 7882 | toJson }}
+{{- end }}
+{{- end }}
+
+{{- define "fluxer.config" -}}
 {{- $v := .Values }}
-{{- $existing := dict }}
-{{- $found := lookup "v1" "Secret" .Release.Namespace (include "fluxer.secretName" .) }}
-{{- range $k, $val := ($found.data | default dict) }}
-{{- $_ := set $existing $k (b64dec $val) }}
+{{- $owned := dict
+  "FLUXER_DOMAIN" "domain"
+  "FLUXER_EDGE_MODE" "edge.mode"
+  "FLUXER_EDGE_BIND" "edge.mode"
+  "FLUXER_EDGE_PROTOCOLS" "edge.loadBalancer.http3"
+  "FLUXER_EDGE_TRUSTED_PROXIES" "edge.trustedProxies"
+  "FLUXER_HTTP_PORT" "edge.mode"
+  "FLUXER_HTTPS_PORT" "edge.mode"
+  "FLUXER_LIVEKIT_ENABLED" "voice.mode"
+  "FLUXER_LIVEKIT_BUNDLED" "voice.mode"
+  "FLUXER_LIVEKIT_NODE_IP" "voice.publicIP"
+  "FLUXER_LIVEKIT_TCP_PORT" "voice.nodePorts"
+  "FLUXER_LIVEKIT_UDP_PORT" "voice.nodePorts"
+  "FLUXER_BACKUP_SCHEDULE" "backup.schedule"
+  "FLUXER_BACKUP_KEEP" "backup.keep"
+  "FLUXER_BACKUP_HOUR" "backup.hour"
+  "FLUXER_POSTGRES_URL" "postgres.externalSecret"
+  "FLUXER_DATA_DIR" "persistence"
+  "FLUXER_CONTAINER" "image"
+  "FLUXER_INSTALL_METHOD" "config.FLUXER_UPGRADE_COMMAND" }}
+{{- range $k, $_ := $v.config }}
+{{- with get $owned $k }}
+{{- fail (printf "config.%s is set by the chart. Use %s instead." $k .) }}
 {{- end }}
+{{- if and (regexMatch "(PASSWORD|SECRET|TOKEN|COOKIE|_KEYS?|_BASE64|_KEY_BASE|TRUSTED_CALLERS)$" $k) (not (hasSuffix "PUBLIC_KEY" $k)) }}
+{{- fail (printf "config.%s looks like a password or key, and config is stored in plain text. Put it in the Secret set in existingSecret." $k) }}
+{{- end }}
+{{- end }}
+{{- $c := dict "FLUXER_DOMAIN" $v.domain "FLUXER_LIVEKIT_ENABLED" (toString (ne $v.voice.mode "off")) }}
+{{- $_ := set $c "FLUXER_INSTALL_METHOD" "helm" }}
+{{- $_ := set $c "FLUXER_UPGRADE_COMMAND" (include "fluxer.upgradeCommand" .) }}
+{{- if eq $v.voice.mode "external" }}
+{{- $_ := set $c "FLUXER_LIVEKIT_BUNDLED" "false" }}
+{{- end }}
+{{- if eq (include "fluxer.edgeMode" .) "proxy" }}
+{{- $_ := set $c "FLUXER_EDGE_MODE" "proxy" }}
+{{- $_ := set $c "FLUXER_EDGE_TRUSTED_PROXIES" $v.edge.trustedProxies }}
+{{- else if not $v.edge.loadBalancer.http3 }}
+{{- $_ := set $c "FLUXER_EDGE_PROTOCOLS" "h1 h2" }}
+{{- end }}
+{{- if eq $v.voice.mode "bundled" }}
+{{- $nodeIP := $v.voice.publicIP | default (and (eq $v.voice.expose "loadBalancer") $v.voice.service.loadBalancerIP) }}
+{{- with $nodeIP }}
+{{- $_ := set $c "FLUXER_LIVEKIT_NODE_IP" . }}
+{{- end }}
+{{- $onNode := and (eq (include "fluxer.edgeMode" .) "bundled") (eq $v.edge.expose "hostPort") (eq $v.voice.expose "hostPort") }}
+{{- if and (not $nodeIP) (include "fluxer.ipDomain" .) (not $onNode) }}
+{{- $_ := set $c "FLUXER_LIVEKIT_USE_EXTERNAL_IP" "true" }}
+{{- end }}
+{{- if eq $v.voice.expose "nodePort" }}
+{{- $_ := set $c "FLUXER_LIVEKIT_TCP_PORT" (toString $v.voice.nodePorts.tcp) }}
+{{- $_ := set $c "FLUXER_LIVEKIT_UDP_PORT" (toString $v.voice.nodePorts.udp) }}
+{{- end }}
+{{- end }}
+{{- with $v.backup.schedule }}
+{{- $_ := set $c "FLUXER_BACKUP_SCHEDULE" . }}
+{{- $_ := set $c "FLUXER_BACKUP_KEEP" (toString $v.backup.keep) }}
+{{- $_ := set $c "FLUXER_BACKUP_HOUR" (toString $v.backup.hour) }}
+{{- end }}
+{{- range $k, $val := $v.config }}
+{{- if and (kindIs "float64" $val) (eq (floor $val) $val) }}
+{{- $_ := set $c $k ($val | int64 | toString) }}
+{{- else }}
+{{- $_ := set $c $k (toString $val) }}
+{{- end }}
+{{- end }}
+{{- toYaml $c }}
+{{- end }}
+
+{{- define "fluxer.edgeMode" -}}
+{{- if .Values.edge.mode }}{{ .Values.edge.mode }}{{ else if and (include "fluxer.ipDomain" .) (or .Values.ingress.enabled .Values.httpRoute.enabled) }}bundled{{ else }}proxy{{ end }}
+{{- end }}
+
+{{- define "fluxer.bareIP" -}}
+{{- if include "fluxer.ipDomain" . }}{{ trimSuffix "]" (trimPrefix "[" .Values.domain) }}{{ end }}
+{{- end }}
+
+{{- define "fluxer.ipDomain" -}}
+{{- if or (regexMatch "^[0-9]+(\\.[0-9]+){3}$" .Values.domain) (contains ":" .Values.domain) }}true{{ end }}
+{{- end }}
+
+{{- define "fluxer.validIP" -}}
+{{- $octet := "(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])" }}
+{{- $v4 := printf "^%s(\\.%s){3}$" $octet $octet }}
+{{- $d := trimSuffix "]" (trimPrefix "[" .Values.domain) | lower }}
+{{- if not (contains ":" $d) }}
+{{- if regexMatch $v4 $d }}true{{ end }}
+{{- else }}
+{{- $halves := splitList "::" $d }}
+{{- $count := 0 }}
+{{- $ok := le (len $halves) 2 }}
+{{- range $i, $half := $halves }}
+{{- if $half }}
+{{- $groups := splitList ":" $half }}
+{{- range $j, $g := $groups }}
+{{- if and (eq $i (sub (len $halves) 1)) (eq $j (sub (len $groups) 1)) (regexMatch $v4 $g) }}
+{{- $count = add $count 2 }}
+{{- else if regexMatch "^[0-9a-f]{1,4}$" $g }}
+{{- $count = add $count 1 }}
+{{- else }}
+{{- $ok = false }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- if and $ok (or (and (eq (len $halves) 2) (le $count 7)) (eq $count 8)) }}true{{ end }}
+{{- end }}
+{{- end }}
+
+{{- define "fluxer.host" -}}
+{{- $d := .Values.domain | lower }}
+{{- if and (contains ":" $d) (not (hasPrefix "[" $d)) }}[{{ $d }}]{{ else }}{{ $d }}{{ end }}
+{{- end }}
+
+{{- define "fluxer.validate" -}}
+{{- if not .Values.domain }}
+{{- fail "Set domain to the address people open, without https://." }}
+{{- end }}
+{{- if regexMatch "(^|\\.)example\\.(com|net|org)$" .Values.domain }}
+{{- fail (printf "domain is %s, an example name. Set it to your own domain." .Values.domain) }}
+{{- end }}
+{{- if and (include "fluxer.ipDomain" .) (not (include "fluxer.validIP" .)) }}
+{{- fail (printf "domain is %s, which is not a valid IPv4 or IPv6 address. Write an IPv4 address as four numbers from 0 to 255, such as 192.0.2.10, and an IPv6 address in hex groups with at most one ::, such as 2001:db8::10." .Values.domain) }}
+{{- end }}
+{{- $bare := include "fluxer.bareIP" . | lower }}
+{{- if or (has $bare (list "0.0.0.0" "::" "255.255.255.255")) (regexMatch "^(22[4-9]|23[0-9])\\." $bare) (hasPrefix "ff" $bare) }}
+{{- fail (printf "domain is %s, which no device can open. Use the address of this machine or its load balancer." .Values.domain) }}
+{{- end }}
+{{- if and (include "fluxer.ipDomain" .) (eq (include "fluxer.edgeMode" .) "proxy") (or .Values.ingress.enabled .Values.httpRoute.enabled) }}
+{{- fail (printf "domain is the IP address %s, and an Ingress or HTTPRoute only routes domain names. Set edge.mode to bundled, or turn off ingress.enabled and httpRoute.enabled and send traffic to port 8080 of the Service yourself." .Values.domain) }}
+{{- end }}
+{{- if and (eq .Values.edge.expose "hostPort") (eq (include "fluxer.edgeMode" .) "proxy") }}
+{{- fail "edge.expose is hostPort, which only opens ports 80 and 443 in bundled mode. Set edge.mode to bundled, or leave edge.expose at loadBalancer." }}
+{{- end }}
+{{- $old := lookup "apps/v1" "Deployment" .Release.Namespace "edge" }}
+{{- if and $old (eq (dig "metadata" "labels" "app.kubernetes.io/instance" "" $old) .Release.Name) (eq (dig "metadata" "labels" "app.kubernetes.io/part-of" "" $old) "fluxer") }}
+{{- fail "This release runs the 0.x chart, and upgrading it would start an empty instance. Install this chart under a new release name and move the data with fluxerd import. See https://docs.fluxer.com/operator/moving/#moving-from-the-0x-chart" }}
+{{- end }}
+{{- $legacy := list }}
+{{- range $k := list "admin" "adminBasePath" "api" "appProxy" "clusterChecks" "clusterDomain" "email" "env" "gateway" "initImage" "livekit" "mediaProxy" "meilisearch" "nats" "port" "publicOrigin" "push" "s3" "scheme" "seaweedfs" "secrets" "staticProxy" "svc" "valkey" "worker" }}
+{{- if hasKey $.Values $k }}
+{{- $legacy = append $legacy $k }}
+{{- end }}
+{{- end }}
+{{- if $legacy }}
+{{- fail (printf "%s are values of the 0.x chart, so this release or values file is from the 0.x chart. Install this chart under a new release name and move the data with fluxerd import. See https://docs.fluxer.com/operator/moving/#moving-from-the-0x-chart" (join ", " $legacy)) }}
+{{- end }}
+{{- end }}
+
+{{- define "fluxer.annotations" -}}
 {{- $out := dict }}
-{{- if $v.secrets.existingSecret }}
-{{- $out = $existing }}
+{{- range $k, $v := . }}
+{{- if and (kindIs "float64" $v) (eq (floor $v) $v) }}
+{{- $_ := set $out $k ($v | int64 | toString) }}
 {{- else }}
-{{- $unfurlFound := lookup "v1" "Secret" .Release.Namespace "fluxer-unfurl-env" }}
-{{- range $k, $val := ($unfurlFound.data | default dict) }}
-{{- $_ := set $existing $k (b64dec $val) }}
-{{- end }}
-{{- $noGenerate := include "fluxer.noGenerateKeys" . | fromJsonArray }}
-{{- $explicit := $v.secrets.values | default dict }}
-{{- $vapidPublic := include "fluxer.string" (get $explicit "FLUXER_VAPID_PUBLIC_KEY" | default "") }}
-{{- $vapidPrivate := include "fluxer.string" (get $explicit "FLUXER_VAPID_PRIVATE_KEY" | default "") }}
-{{- if and $vapidPublic $vapidPrivate }}
-{{- else if or $vapidPublic $vapidPrivate }}
-{{- fail "secrets.values.FLUXER_VAPID_PUBLIC_KEY and secrets.values.FLUXER_VAPID_PRIVATE_KEY must be set together, or both left empty to generate a pair" }}
-{{- else if and (get $existing "FLUXER_VAPID_PUBLIC_KEY") (get $existing "FLUXER_VAPID_PRIVATE_KEY") }}
-{{- $vapidPublic = get $existing "FLUXER_VAPID_PUBLIC_KEY" }}
-{{- $vapidPrivate = get $existing "FLUXER_VAPID_PRIVATE_KEY" }}
-{{- else if $v.secrets.generate }}
-{{- $pair := include "fluxer.vapidPair" . | fromYaml }}
-{{- $vapidPublic = $pair.public }}
-{{- $vapidPrivate = $pair.private }}
-{{- else }}
-{{- fail "secrets.values.FLUXER_VAPID_PUBLIC_KEY and secrets.values.FLUXER_VAPID_PRIVATE_KEY are empty and secrets.generate is false" }}
-{{- end }}
-{{- $_ := set $out "FLUXER_VAPID_PUBLIC_KEY" $vapidPublic }}
-{{- $_ := set $out "FLUXER_VAPID_PRIVATE_KEY" $vapidPrivate }}
-{{- $required := include "fluxer.requiredSecretKeys" . | fromJsonArray }}
-{{- $outsideToken := include "fluxer.string" (get $explicit "FLUXER_NATS_AUTH_TOKEN" | default "") }}
-{{- if and $outsideToken (not $v.nats.enabled) }}
-{{- $_ := set $out "FLUXER_NATS_AUTH_TOKEN" $outsideToken }}
-{{- end }}
-{{- range $k := $required }}
-{{- if not (hasPrefix "FLUXER_VAPID_" $k) }}
-{{- $given := include "fluxer.string" (get $explicit $k | default "") }}
-{{- if $given }}
-{{- $_ := set $out $k $given }}
-{{- else if has $k $noGenerate }}
-{{- fail (printf "secrets.values.%s is required when the matching service is not bundled" $k) }}
-{{- else if get $existing $k }}
-{{- $_ := set $out $k (get $existing $k) }}
-{{- else if $v.secrets.generate }}
-{{- if eq $k "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64" }}
-{{- $_ := set $out $k (randBytes 32) }}
-{{- else if eq $k "FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64" }}
-{{- $_ := set $out $k (genPrivateKey "rsa" | replace "-----BEGIN RSA PRIVATE KEY-----" "" | replace "-----END RSA PRIVATE KEY-----" "" | nospace) }}
-{{- else }}
-{{- $_ := set $out $k (randAlphaNum 64) }}
-{{- end }}
-{{- else }}
-{{- fail (printf "secrets.values.%s is empty and secrets.generate is false" $k) }}
+{{- $_ := set $out $k (toString $v) }}
 {{- end }}
 {{- end }}
-{{- end }}
-{{- range $k, $val := $v.secrets.extra | default dict }}
-{{- $s := include "fluxer.string" ($val | default "") }}
-{{- if $s }}
-{{- $_ := set $out $k $s }}
-{{- end }}
-{{- end }}
-{{- end }}
-{{- toJson $out }}
-{{- end }}
-
-{{- define "fluxer.secretData" -}}
-{{- if not (hasKey .Values "fluxerResolvedSecrets") }}
-{{- $_ := set .Values "fluxerResolvedSecrets" (include "fluxer.resolveSecrets" . | fromJson) }}
-{{- end }}
-{{- toJson (get .Values "fluxerResolvedSecrets") }}
-{{- end }}
-
-{{- define "fluxer.secretEnv" -}}
-- name: {{ .name }}
-  valueFrom:
-    secretKeyRef:
-      name: {{ include "fluxer.secretName" .root }}
-      key: {{ .key }}
-{{- end }}
-
-{{- define "fluxer.instanceChecksum" -}}
-{{- $parts := list (include "fluxer.configData" .) (include "fluxer.appProxyConfigData" .) (toJson .Values.secrets.values) (toJson (.Values.secrets.extra | default dict)) (include "fluxer.string" .Values.image.revision) (include "fluxer.secretData" .) }}
-{{- join "\n" $parts | sha256sum }}
-{{- end }}
-
-{{- define "fluxer.envList" -}}
-{{- $w := .w | default dict }}
-{{- $own := $w.env | default dict }}
-{{- $base := .env | default list }}
-{{- $names := list }}
-{{- range $base }}
-{{- $names = append $names .name }}
-{{- end }}
-{{- $out := list }}
-{{- range $base }}
-{{- if hasKey $own .name }}
-{{- $val := get $own .name }}
-{{- if not (kindIs "invalid" $val) }}
-{{- $out = append $out (dict "name" .name "value" (include "fluxer.string" $val)) }}
-{{- end }}
-{{- else }}
-{{- $out = append $out . }}
-{{- end }}
-{{- end }}
-{{- range $k := keys $own | sortAlpha }}
-{{- $val := get $own $k }}
-{{- if and (not (has $k $names)) (not (kindIs "invalid" $val)) }}
-{{- $out = append $out (dict "name" $k "value" (include "fluxer.string" $val)) }}
-{{- end }}
-{{- end }}
-{{- $out = concat $out ($w.extraEnv | default list) }}
-{{- with $out }}
-{{- toYaml . }}
-{{- end }}
-{{- end }}
-
-{{- define "fluxer.probes" -}}
-{{- $own := (.w | default dict).probes | default dict }}
-{{- range $probe := list "startup" "liveness" "readiness" }}
-{{- $p := get ($.probes | default dict) $probe }}
-{{- if hasKey $own $probe }}
-{{- $p = get $own $probe }}
-{{- end }}
-{{- with $p }}
-{{ $probe }}Probe:
-  {{- toYaml . | nindent 2 }}
-{{- end }}
-{{- end }}
-{{- end }}
-
-{{- define "fluxer.waitFor" -}}
-{{- with .waitFor }}
-initContainers:
-  - name: wait-for-dependencies
-    image: {{ include "fluxer.thirdPartyImage" $.root.Values.initImage }}
-    imagePullPolicy: {{ $.root.Values.initImage.pullPolicy }}
-    command:
-      - sh
-      - -c
-      - {{ printf "for t in %s; do until nc -z -w 2 ${t%%:*} ${t##*:}; do echo waiting for $t; sleep 2; done; done" (join " " .) | quote }}
-    resources:
-      requests:
-        cpu: 10m
-        memory: 16Mi
-      limits:
-        memory: 32Mi
-    securityContext:
-      runAsUser: 65532
-      runAsGroup: 65532
-      {{- include "fluxer.containerSecurityContext" . | nindent 6 }}
-{{- end }}
-{{- end }}
-
-{{- define "fluxer.appWaitFor" -}}
-{{- $out := list }}
-{{- if and .usesNats .root.Values.nats.enabled }}
-{{- $out = append $out "nats:4222" }}
-{{- end }}
-{{- if and .usesPostgres .root.Values.postgres.enabled }}
-{{- $out = append $out "postgres:5432" }}
-{{- end }}
-{{- if and .usesS3 .root.Values.seaweedfs.enabled }}
-{{- $out = append $out "seaweedfs:8333" }}
-{{- end }}
-{{- if and .usesKv .root.Values.valkey.enabled }}
-{{- $out = append $out "valkey:6379" }}
-{{- end }}
-{{- if .usesSvc }}
-{{- range $name := list "gifs" "messages" "snowflakes" "unfurl" "users" }}
-{{- $svc := get $.root.Values.svc $name | default dict }}
-{{- if gt (int (include "fluxer.replicas" (dict "w" ($svc.router | default dict)))) 0 }}
-{{- $out = append $out (printf "%s:8090" $name) }}
-{{- end }}
-{{- if gt (int (include "fluxer.replicas" (dict "w" ($svc.shard | default dict)))) 0 }}
-{{- $out = append $out (printf "%s-shard:8090" $name) }}
-{{- end }}
-{{- end }}
-{{- end }}
-{{- toJson $out }}
+{{- toYaml $out }}
 {{- end }}

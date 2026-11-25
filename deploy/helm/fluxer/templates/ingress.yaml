@@ -1,0 +1,36 @@
+{{- if and (eq (include "fluxer.edgeMode" .) "proxy") .Values.ingress.enabled }}
+{{- include "fluxer.validate" . }}
+{{- $fullname := include "fluxer.fullname" . }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $fullname }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- include "fluxer.annotations" . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.ingress.className }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  {{- if .Values.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ .Values.domain | quote }}
+      secretName: {{ .Values.ingress.tls.secretName | default (printf "%s-tls" $fullname) }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.domain | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $fullname }}
+                port:
+                  name: http
+{{- end }}

@@ -31,7 +31,7 @@
 		"i18n:refresh": "pnpm --filter fluxer_app i18n:refresh",
 		"i18n:source-sync": "pnpm i18n:refresh && pnpm i18n:compile",
 		"knip": "tools/ci/run.sh ci --step knip",
-		"lint": "biome ci && eslint . --max-warnings 0 && pnpm --filter fluxer_app theming:data-flx:check && pnpm --filter @fluxer/config self-host-env:check",
+		"lint": "biome ci && eslint . --max-warnings 0 && pnpm --filter fluxer_app theming:data-flx:check",
 		"openapi:generate": "pnpm --filter @fluxer/openapi generate",
 		"openapi:validate": "pnpm --filter @fluxer/openapi validate",
 		"test": "tools/ci/run.sh ci --step test",

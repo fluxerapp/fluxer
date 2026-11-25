@@ -1,73 +1,72 @@
-{{- include "fluxer.validate" . }}
 {{- $v := .Values }}
-{{- $o := include "fluxer.origin" . }}
-Fluxer is installing in namespace {{ .Release.Namespace }}. Run one release per namespace.
+{{- $fullname := include "fluxer.fullname" . }}
+{{- if $v.maintenance }}
+Fluxer is in maintenance and does not start. Restore a backup into it
+  kubectl -n {{ .Release.Namespace }} exec -i {{ $fullname }}-0 -- fluxerd restore - < fluxer-backup.tar.zst
 
-Open {{ $o }} once every pod is ready:
+Then set maintenance to false with helm upgrade, and Fluxer starts with the restored data.
+{{- else if .Release.IsUpgrade }}
+Fluxer is starting {{ include "fluxer.image" . }} at https://{{ include "fluxer.host" . }}. When it's newer than the release before, it backs up the database first, then upgrades it.
 
-  kubectl -n {{ .Release.Namespace }} get pods
+Watch it become ready
+  kubectl -n {{ .Release.Namespace }} rollout status statefulset/{{ $fullname }} --timeout 15m
 
-The admin panel is at {{ $o }}{{ $v.adminBasePath }}.
+If it doesn't become ready, its log says why
+  kubectl -n {{ .Release.Namespace }} logs {{ $fullname }}-0
+{{- else }}
+Fluxer is starting at https://{{ include "fluxer.host" . }}. On a new claim the first start creates the database and takes a few minutes.
 
-The setup wizard asks for the setup token before it creates the admin account:
+Watch it become ready
+  kubectl -n {{ .Release.Namespace }} rollout status statefulset/{{ $fullname }} --timeout 15m
 
-  kubectl -n {{ .Release.Namespace }} get secret {{ include "fluxer.secretName" . }} -o jsonpath='{.data.FLUXER_SETUP_TOKEN}' | base64 -d
+If this is a new instance, create the first admin account with the setup token, then open https://{{ include "fluxer.host" . }}
+  kubectl -n {{ .Release.Namespace }} exec {{ $fullname }}-0 -- fluxerd setup-token
+{{- if eq (include "fluxer.edgeMode" .) "bundled" }}
+{{- if include "fluxer.ipDomain" . }}
 
-A Secret with no FLUXER_SETUP_TOKEN has a token the API wrote to its log once:
-
-  kubectl -n {{ .Release.Namespace }} logs deployment/api | grep -i 'setup token'
-{{- if eq $v.edge.expose "loadBalancer" }}
-
-Point DNS for {{ $v.domain }} at the external address of the edge-public Service:
-
-  kubectl -n {{ .Release.Namespace }} get service edge-public
-{{- else if eq $v.edge.expose "none" }}
-
-Nothing exposes the instance yet. Send your proxy or tunnel to the Service edge
-on port 8080, with the Host header {{ $v.domain }}. The proxy must replace
-X-Forwarded-For with the client address it sees, or add that address at the end.
+The Service {{ $fullname }} asks for the address {{ $v.edge.loadBalancer.loadBalancerIP | default (include "fluxer.bareIP" .) }}. On a public address Fluxer gets a Let's Encrypt certificate once ports 80 and 443 on it are open to the internet. On a private address Fluxer signs its own certificate, and each device that opens it has to trust that certificate, from http://{{ include "fluxer.host" . }}/fluxer-root.crt. That link uses plain HTTP, so before you trust the file, check that its SHA-256 fingerprint matches the one this command prints.
+  kubectl -n {{ .Release.Namespace }} exec {{ $fullname }}-0 -- cat /var/lib/fluxer/edge/caddy/pki/authorities/local/root.crt | openssl x509 -noout -fingerprint -sha256
 {{- else }}
 
-Point DNS for {{ $v.domain }} at your {{ ternary "ingress controller" "gateway" (eq $v.edge.expose "ingress") }}. Its Service needs
-externalTrafficPolicy Local or the PROXY protocol, or every client shares one IP
-and registration hits its per-IP limit.
+Point {{ $v.domain }} at the address of the Service {{ $fullname }}. Fluxer gets its certificate once ports 80 and 443 answer on that name.
 {{- end }}
-{{- if $v.livekit.external.url }}
+  kubectl -n {{ .Release.Namespace }} get service {{ $fullname }}
+{{- with lookup "v1" "Service" "kube-system" "traefik" }}
+{{- if eq (dig "spec" "type" "" .) "LoadBalancer" }}
 
-Voice uses your LiveKit server at {{ $v.livekit.external.publicUrl }}. Point its webhook at
-{{ $o }}/api/webhooks/livekit, signed with the key in FLUXER_LIVEKIT_API_KEY.
+Traefik in kube-system also has a LoadBalancer on ports 80 and 443, as k3s sets up by default. Only one of them gets those ports on a node, so turn Traefik off, for example with --disable traefik on k3s, or use edge.mode proxy behind it.
 {{- end }}
-{{- if $v.livekit.enabled }}
+{{- end }}
+{{- else if $v.ingress.enabled }}
 
-Voice media does not pass through the edge. Open these ports to the internet:
-{{- if eq $v.livekit.expose "hostNetwork" }}
-  {{ $v.livekit.tcpPort }}/tcp and {{ $v.livekit.udpPort }}/udp on the node that runs the livekit pod.
-  hostNetwork needs a namespace that allows privileged pods. Keep 7880 closed.
-{{- else if eq $v.livekit.expose "nodePort" }}
-  {{ $v.livekit.nodePorts.tcp }}/tcp and {{ $v.livekit.nodePorts.udp }}/udp on the node that runs the livekit pod.
+Traffic goes to Fluxer through the Ingress {{ $fullname }}.{{ if $v.ingress.tls.enabled }} It expects a certificate for {{ $v.domain }} in the Secret {{ $v.ingress.tls.secretName | default (printf "%s-tls" $fullname) }}, from cert-manager or made by you.{{ end }}
+{{- else if $v.httpRoute.enabled }}
+
+Traffic goes to Fluxer through the HTTPRoute {{ $fullname }}.
 {{- else }}
-  {{ $v.livekit.tcpPort }}/tcp and {{ $v.livekit.udpPort }}/udp on the load balancer of the Service livekit-rtc,
-  whose public IP must be {{ $v.livekit.nodeIP }}.
-{{- end }}
-{{- end }}
 
-Back up the {{ if $v.secrets.existingSecret }}Secret {{ $v.secrets.existingSecret }}{{ else }}Secrets fluxer-env and fluxer-unfurl-env{{ end }}{{ if $v.postgres.enabled }}, the database in postgres-0{{ end }}{{ if $v.seaweedfs.enabled }} and the uploads on the volume data-seaweedfs-0{{ end }}.
-{{- if $v.secrets.existingSecret }}
-After editing the Secret {{ $v.secrets.existingSecret }}, restart the release:
-
-  kubectl -n {{ .Release.Namespace }} rollout restart deployment,statefulset -l app.kubernetes.io/instance={{ .Release.Name }}
+Nothing routes traffic to Fluxer yet. Send it to port 8080 of the Service {{ $fullname }}.
 {{- end }}
-{{- if and $v.secrets.generate (not $v.secrets.existingSecret) }}
+{{- if eq $v.voice.mode "bundled" }}
+{{- if eq $v.voice.expose "hostPort" }}
 
-Argo CD and helm template cannot read the existing Secret and would generate
-new secrets on every render. Under them, set secrets.generate=false and use
-secrets.existingSecret or give every key in secrets.values.
+Voice uses TCP 7881 and UDP 7882 on the node that runs the pod. The pod stays Pending on a node where something else holds those ports, such as another Fluxer release or the LiveKit of a 0.x release. A namespace that enforces Pod Security baseline or restricted refuses host ports, and the pod never starts there. Set voice.expose to loadBalancer or nodePort in either case.
+{{- else if eq $v.voice.expose "loadBalancer" }}
+
+Voice uses the Service {{ $fullname }}-voice.{{ if not (or $v.voice.publicIP $v.voice.service.loadBalancerIP) }} Calls connect once voice.service.loadBalancerIP or voice.publicIP holds its external address.{{ end }}
+{{- end }}
+{{- else if eq $v.voice.mode "external" }}
+
+Calls need a LiveKit server. Add yours under Voice servers in the admin panel.
 {{- end }}
 
-To move to the latest v1 images, pull the repository and upgrade with your values file:
+Back up
+  kubectl -n {{ .Release.Namespace }} exec {{ $fullname }}-0 -- fluxerd backup --out - > fluxer-backup.tar.zst
 
-  helm upgrade {{ .Release.Name }} <chart> -n {{ .Release.Namespace }} -f <your values file> --set-string image.revision=$(date +%s)
+Upgrade, with Helm 3.14 or later, Helm 4 included, and the new release in place of <version>. With config.FLUXER_UPDATE_CHECK set to "true", the Updates page of the admin panel shows this command with the version filled in when a newer release is out
+  {{ include "fluxer.upgradeCommand" . | replace "{version}" "<version>" }}
 
-Leave out --reuse-values, which keeps the defaults of the old chart version.
+Fluxer backs up its database before every upgrade. After a helm rollback to an older release it stays up but not ready and logs the restore command to run with kubectl exec.
 
-Documentation: https://docs.fluxer.com/operator/kubernetes/
+A 0.x release can't be upgraded to this chart. Install this chart under a new release name and move the data with fluxerd import, as in https://docs.fluxer.com/operator/moving/#moving-from-the-0x-chart
+{{- end }}

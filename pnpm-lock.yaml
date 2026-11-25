@@ -447,9 +447,6 @@ catalogs:
     vitest:
       specifier: 5.0.5
       version: 5.0.5
-    yaml:
-      specifier: 2.9.1
-      version: 2.9.1
     zod:
       specifier: 4.6.7
       version: 4.6.7
@@ -1941,18 +1938,12 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
-      tsx:
-        specifier: 'catalog:'
-        version: 4.23.15
       typescript:
         specifier: catalog:ts7
         version: 7.0.2
       vitest:
         specifier: 'catalog:'
         version: 5.0.5(@opentelemetry/api@1.9.1)(@types/node@26.6.6)(happy-dom@20.14.6)(msw@3.0.3(@types/node@26.6.6)(graphql@16.14.2)(supports-color@7.2.0)(typescript@7.0.2)(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
-      yaml:
-        specifier: 'catalog:'
-        version: 2.9.1
 
   packages/constants:
     devDependencies:

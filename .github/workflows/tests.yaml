@@ -365,9 +365,6 @@ jobs:
       - name: Check data-flx attributes
         run: pnpm --filter fluxer_app theming:data-flx:check
 
-      - name: Check self-host env forwarding
-        run: pnpm --filter @fluxer/config self-host-env:check
-
   i18n:
     runs-on: ubuntu-24.04
     timeout-minutes: 25

@@ -1,55 +1,22 @@
-{{- include "fluxer.validate" . }}
 {{- if .Values.networkPolicy.enabled }}
+{{- include "fluxer.validate" . }}
 {{- $v := .Values }}
-{{- $release := dict "app.kubernetes.io/instance" .Release.Name }}
+{{- $voice := include "fluxer.voicePorts" . | fromJson }}
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: fluxer
+  name: {{ include "fluxer.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "fluxer.labels" (dict "root" . "name" "fluxer" "component" "network") | nindent 4 }}
+    {{- include "fluxer.labels" . | nindent 4 }}
 spec:
   podSelector:
     matchLabels:
-      {{- toYaml $release | nindent 6 }}
+      {{- include "fluxer.selectorLabels" . | nindent 6 }}
   policyTypes:
     - Ingress
   ingress:
-    - from:
-        - podSelector:
-            matchLabels:
-              {{- toYaml $release | nindent 14 }}
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: fluxer-edge
-  namespace: {{ .Release.Namespace }}
-  labels:
-    {{- include "fluxer.labels" (dict "root" . "name" "fluxer-edge" "component" "network") | nindent 4 }}
-spec:
-  podSelector:
-    matchLabels:
-      {{- include "fluxer.selectorLabels" (dict "root" . "name" "edge") | nindent 6 }}
-  policyTypes:
-    - Ingress
-  ingress:
-    - ports:
-        - port: 8080
-          protocol: TCP
-      {{- with $v.networkPolicy.ingressNamespaceSelector }}
-      from:
-        - namespaceSelector:
-            {{- toYaml . | nindent 12 }}
-        {{- if and $v.livekit.enabled (eq $v.livekit.expose "hostNetwork") }}
-        {{- range $v.livekit.nodeCIDRs }}
-        - ipBlock:
-            cidr: {{ . }}
-        {{- end }}
-        {{- end }}
-      {{- end }}
-    {{- if eq $v.edge.expose "loadBalancer" }}
+    {{- if eq (include "fluxer.edgeMode" .) "bundled" }}
     - ports:
         - port: 80
           protocol: TCP
@@ -57,27 +24,24 @@ spec:
           protocol: TCP
         - port: 443
           protocol: UDP
-    {{- end }}
-{{- if and $v.livekit.enabled (ne $v.livekit.expose "hostNetwork") }}
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: fluxer-livekit
-  namespace: {{ .Release.Namespace }}
-  labels:
-    {{- include "fluxer.labels" (dict "root" . "name" "fluxer-livekit" "component" "network") | nindent 4 }}
-spec:
-  podSelector:
-    matchLabels:
-      {{- include "fluxer.selectorLabels" (dict "root" . "name" "livekit") | nindent 6 }}
-  policyTypes:
-    - Ingress
-  ingress:
+    {{- else }}
     - ports:
-        - port: {{ ternary $v.livekit.nodePorts.tcp $v.livekit.tcpPort (eq $v.livekit.expose "nodePort") }}
+        - port: 8080
           protocol: TCP
-        - port: {{ ternary $v.livekit.nodePorts.udp $v.livekit.udpPort (eq $v.livekit.expose "nodePort") }}
+      {{- with $v.networkPolicy.from }}
+      from:
+        {{- toYaml . | nindent 8 }}
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: {{ include "fluxer.name" $ }}-test
+              app.kubernetes.io/instance: {{ $.Release.Name }}
+      {{- end }}
+    {{- end }}
+    {{- if eq $v.voice.mode "bundled" }}
+    - ports:
+        - port: {{ $voice.tcp }}
+          protocol: TCP
+        - port: {{ $voice.udp }}
           protocol: UDP
-{{- end }}
+    {{- end }}
 {{- end }}
