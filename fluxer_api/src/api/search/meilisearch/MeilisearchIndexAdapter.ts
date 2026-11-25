@@ -12,6 +12,7 @@ import type {SearchOptions, SearchResult} from '@fluxer/schema/src/contracts/sea
 
 const MAX_SEARCH_LIMIT = 1000;
 const MAX_TOTAL_HITS = 10000;
+const INDEX_LIST_LIMIT = 1000;
 
 const MEILISEARCH_MAX_TRACKED_BULK_TASKS = 4096;
 
@@ -221,18 +222,11 @@ export class MeilisearchIndexAdapter<
 	}
 
 	private async indexExists(uid: string): Promise<boolean> {
-		try {
-			await this.client.request<unknown>('GET', `/indexes/${encodeURIComponent(uid)}`);
-			return true;
-		} catch (error) {
-			if (error instanceof Error && error.message.includes('index_not_found')) {
-				return false;
-			}
-			if (error instanceof Error && error.message.includes('404')) {
-				return false;
-			}
-			throw error;
-		}
+		const {results} = await this.client.request<{results: Array<{uid: string}>}>(
+			'GET',
+			`/indexes?limit=${INDEX_LIST_LIMIT}`,
+		);
+		return results.some((index) => index.uid === uid);
 	}
 
 	private async applySetting(

@@ -13,7 +13,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 use thiserror::Error;
-use tracing::warn;
+use tracing::debug;
 
 const USER_BATCH_MAX: usize = 2_000;
 const DELETION_BATCH_MAX: usize = 100;
@@ -142,7 +142,7 @@ impl RpcClient {
                 return Err(error);
             }
             let delay_ms = backoff_delay_ms(attempt);
-            warn!(
+            debug!(
                 method = method.label(),
                 attempt,
                 max_attempts = MAX_ATTEMPTS,

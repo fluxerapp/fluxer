@@ -20,11 +20,11 @@ class FakeMeilisearchClient implements MeilisearchClient {
 
 	async request<TResponse>(method: string, path: string, body?: unknown): Promise<TResponse> {
 		this.requests.push({method, path, body});
+		if (method === 'GET' && path.startsWith('/indexes?')) {
+			return {results: this.indexExists ? [{uid: 'messages'}] : []} as TResponse;
+		}
 		if (method === 'GET' && path.startsWith('/indexes/')) {
-			if (!this.indexExists) {
-				throw new Error('404 index_not_found');
-			}
-			return {uid: path.slice('/indexes/'.length)} as TResponse;
+			return {} as TResponse;
 		}
 		if (method === 'POST' && path === '/indexes') {
 			this.indexExists = true;

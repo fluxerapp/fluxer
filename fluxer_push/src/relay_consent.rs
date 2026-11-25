@@ -7,7 +7,7 @@ use serde_json::Value;
 use std::sync::RwLock;
 use std::time::Duration;
 use tokio::time::Instant;
-use tracing::{info, warn};
+use tracing::{debug, info, warn};
 
 pub const RECONCILE_INTERVAL: Duration = Duration::from_secs(30);
 const FIRST_READ_RETRY_DELAYS: [Duration; 3] = [
@@ -16,6 +16,7 @@ const FIRST_READ_RETRY_DELAYS: [Duration; 3] = [
     Duration::from_secs(4),
 ];
 const FIRST_READ_RETRY_CAP: Duration = Duration::from_secs(5);
+const FIRST_READ_GRACE: Duration = Duration::from_secs(120);
 
 const SUBJECT: &str = "config.push.delivery";
 const MESSAGE_TYPE: &str = "push_service_delivery_config";
@@ -144,6 +145,7 @@ pub async fn run_subscriber<T: Transport>(
             }
         };
         info!(subject = SUBJECT, "listening for relay consent updates");
+        let subscribed_at = Instant::now();
         let mut failed_first_reads = Some(0);
         let next_read = tokio::time::sleep(Duration::ZERO);
         tokio::pin!(next_read);
@@ -157,7 +159,8 @@ pub async fn run_subscriber<T: Transport>(
                     record(metrics, store, outcome);
                 }
                 () = &mut next_read => {
-                    let read = fetch(rpc, store, metrics).await;
+                    let quiet = failed_first_reads.is_some() && subscribed_at.elapsed() < FIRST_READ_GRACE;
+                    let read = fetch(rpc, store, metrics, quiet).await;
                     let wait = match (failed_first_reads, read) {
                         (Some(_), Ok(outcome)) => {
                             info!(
@@ -195,9 +198,14 @@ async fn fetch(
     rpc: &RpcClient,
     store: &RelayConsentStore,
     metrics: &Metrics,
+    quiet: bool,
 ) -> Result<ConsentUpdate, ()> {
     let read = match rpc.push_service_delivery_config().await {
         Ok(config) => Ok(store.update(&config)),
+        Err(error) if quiet => {
+            debug!(error = %error, "relay consent read failed while the api starts");
+            Err(())
+        }
         Err(error) => {
             warn!(error = %error, "relay consent read failed");
             Err(())

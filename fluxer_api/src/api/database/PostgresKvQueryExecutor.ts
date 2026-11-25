@@ -715,6 +715,12 @@ function planFragmentGroups(plan: CandidatePlan): Array<PlanFragments> {
 	return [planFragments(plan)];
 }
 
+function logDebug(details: Record<string, unknown>, message: string): void {
+	try {
+		Logger.debug(details, message);
+	} catch {}
+}
+
 function logWarn(details: Record<string, unknown>, message: string): void {
 	try {
 		Logger.warn(details, message);
@@ -737,10 +743,12 @@ function logFullScan(meta: KvQueryMeta, walk?: 'numeric' | 'row_key'): void {
 	if (last !== undefined && now - last < FULL_SCAN_LOG_INTERVAL_MS) return;
 	if (fullScanLoggedAt.size >= FULL_SCAN_LOG_KEY_LIMIT) fullScanLoggedAt.clear();
 	fullScanLoggedAt.set(key, now);
-	logWarn(
-		{table: meta.table.name, action: meta.action, where: shape.summary || 'none', walk: walk ?? 'load'},
-		'Postgres KV full table scan',
-	);
+	const details = {table: meta.table.name, action: meta.action, where: shape.summary || 'none', walk: walk ?? 'load'};
+	if (!shape.summary) {
+		logDebug(details, 'Postgres KV read a whole table');
+		return;
+	}
+	logWarn(details, 'Postgres KV full table scan');
 }
 
 function ttlExpiresAt(meta: KvQueryMeta, params: CassandraParams): Date | typeof NO_EXPIRY | null | undefined {
