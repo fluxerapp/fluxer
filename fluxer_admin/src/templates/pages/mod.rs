@@ -37,6 +37,7 @@ pub mod report_detail;
 pub mod reports_list;
 pub mod search_index;
 pub mod system_dm;
+pub mod updates;
 pub mod url_domain_bans;
 pub mod user_detail;
 pub mod user_detail_tabs;

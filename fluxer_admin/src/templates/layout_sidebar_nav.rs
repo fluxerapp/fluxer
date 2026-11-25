@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::acl;
+use crate::{acl, templates::pages::updates::UPDATES_KEY};
 
 pub struct NavItem {
     pub title: &'static str,
@@ -8,6 +8,7 @@ pub struct NavItem {
     pub active_key: &'static str,
     pub required_acls: &'static [&'static str],
     pub hosted_only: bool,
+    pub self_hosted_only: bool,
 }
 
 pub const PENDING_REGISTRATIONS_KEY: &str = "pending-registrations";
@@ -19,10 +20,13 @@ pub struct NavSection {
 
 macro_rules! item {
     ($t:expr, $p:expr, $k:expr, [ $($a:expr),+ $(,)? ]) => {
-        NavItem { title: $t, path: $p, active_key: $k, required_acls: &[$($a),+], hosted_only: false }
+        NavItem { title: $t, path: $p, active_key: $k, required_acls: &[$($a),+], hosted_only: false, self_hosted_only: false }
     };
     ($t:expr, $p:expr, $k:expr, [ $($a:expr),+ $(,)? ], hosted) => {
-        NavItem { title: $t, path: $p, active_key: $k, required_acls: &[$($a),+], hosted_only: true }
+        NavItem { title: $t, path: $p, active_key: $k, required_acls: &[$($a),+], hosted_only: true, self_hosted_only: false }
+    };
+    ($t:expr, $p:expr, $k:expr, [ $($a:expr),+ $(,)? ], self_hosted) => {
+        NavItem { title: $t, path: $p, active_key: $k, required_acls: &[$($a),+], hosted_only: false, self_hosted_only: true }
     };
 }
 
@@ -234,6 +238,13 @@ pub const NAV_SECTIONS: &[NavSection] = &[
     NavSection {
         title: "Configuration",
         items: &[
+            item!(
+                "Updates",
+                "/updates",
+                UPDATES_KEY,
+                [acl::INSTANCE_CONFIG_VIEW],
+                self_hosted
+            ),
             item!(
                 "Instance Config",
                 "/instance-config",

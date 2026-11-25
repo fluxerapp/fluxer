@@ -23,6 +23,7 @@ use crate::{
             user_profile_badges::{BadgeSize, user_profile_badges},
         },
         layout::admin_layout,
+        pages::updates::update_strip,
     },
     utils::{
         bigint::format_discriminator,
@@ -140,6 +141,7 @@ pub fn users_list_page(config: &AdminConfig, auth: &AuthContext, view: UserListV
 
     let content = html! {
         div class="space-y-6" {
+            (update_strip(config, auth))
             (page_header("Users", None))
             div class="rounded-lg bg-white transition-all border border-neutral-200 p-3" {
                 p class="mb-1 text-xs text-neutral-500" {

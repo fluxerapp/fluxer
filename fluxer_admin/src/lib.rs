@@ -13,6 +13,7 @@ pub mod session;
 pub mod sso;
 pub mod state;
 pub mod templates;
+pub mod updates;
 pub mod utils;
 
 pub use config::AdminConfig as Config;

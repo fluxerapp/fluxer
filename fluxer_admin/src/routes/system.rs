@@ -64,6 +64,19 @@ pub fn router() -> Router<AppState> {
             "/limit-config",
             get(limit_config_page).post(limit_config_actions::limit_config_post),
         )
+        .route("/updates", get(updates_page))
+}
+
+async fn updates_page(
+    State(state): State<AppState>,
+    auth: axum::Extension<AuthContext>,
+) -> Response {
+    let markup = templates::pages::updates::updates_page(
+        state.config(),
+        &auth.0,
+        time::OffsetDateTime::now_utc(),
+    );
+    Html(markup.into_string()).into_response()
 }
 
 async fn gateway_page(

@@ -5,6 +5,7 @@ use maud::{Markup, PreEscaped, html};
 
 use super::layout_scripts::SIDEBAR_ACTIVE_SCROLL_SCRIPT;
 use super::layout_sidebar_nav::{NAV_SECTIONS, PENDING_REGISTRATIONS_KEY};
+use super::pages::updates::{UPDATES_KEY, has_new_release};
 
 pub fn render_sidebar(
     config: &AdminConfig,
@@ -16,6 +17,7 @@ pub fn render_sidebar(
     discovery_enabled: bool,
 ) -> Markup {
     let base = &config.base_path;
+    let new_release = has_new_release(config, admin_acls);
     html! {
         aside id="admin-sidebar" data-sidebar="" class="fixed inset-y-0 left-0 z-40 flex h-[100dvh] w-72 max-w-[85vw] -translate-x-full transform flex-col bg-neutral-900 text-white shadow-2xl transition-transform duration-200 ease-in-out lg:static lg:inset-auto lg:w-64 lg:max-w-none lg:translate-x-0 lg:shadow-none" role="navigation" aria-label="Admin navigation" tabindex="-1" {
             div class="flex items-center justify-between gap-3 border-neutral-800 border-b px-5 py-4 lg:px-6 lg:py-6" {
@@ -33,6 +35,7 @@ pub fn render_sidebar(
                 @for section in NAV_SECTIONS {
                     @let visible_items: Vec<_> = section.items.iter()
                         .filter(|item| !(item.hosted_only && config.self_hosted))
+                        .filter(|item| !(item.self_hosted_only && !config.self_hosted))
                         .filter(|item| acl::has_any_permission(admin_acls, item.required_acls))
                         .filter(|item| {
                             item.active_key != "voice-servers" || inspected_voice_region_id.is_some()
@@ -65,6 +68,9 @@ pub fn render_sidebar(
                                         (item.title)
                                         @if item.active_key == PENDING_REGISTRATIONS_KEY {
                                             (pending_registration_count_markup(pending_registration_count, false))
+                                        }
+                                        @if item.active_key == UPDATES_KEY && new_release {
+                                            span class="rounded-full bg-blue-500 px-2 py-0.5 font-medium text-white text-xs" { "New" }
                                         }
                                     }
                                 }

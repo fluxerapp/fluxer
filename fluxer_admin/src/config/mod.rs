@@ -25,6 +25,7 @@ pub struct AdminConfig {
     pub oauth_redirect_uri: String,
     pub build_version: String,
     pub self_hosted: bool,
+    pub update_state_path: Option<String>,
     pub proxy: ProxyConfig,
     pub sso: Option<SsoConfig>,
 }
@@ -99,6 +100,8 @@ impl AdminConfig {
                 env!("CARGO_PKG_VERSION"),
             ),
             self_hosted: env.read_bool("FLUXER_SELF_HOSTED", false),
+            update_state_path: Some(env.read("FLUXER_UPDATE_STATE_PATH", ""))
+                .filter(|path| !path.trim().is_empty()),
             proxy: ProxyConfig {
                 trust_client_ip_header: env.read_bool("FLUXER_TRUST_CLIENT_IP_HEADER", false),
                 client_ip_header_name: env
