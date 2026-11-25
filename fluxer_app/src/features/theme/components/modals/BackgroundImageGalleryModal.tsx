@@ -36,7 +36,11 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
-import VoiceSettings, {BLUR_BACKGROUND_ID, NONE_BACKGROUND_ID} from '@app/features/voice/state/VoiceSettings';
+import VoiceSettings, {
+	type BackgroundImage,
+	BLUR_BACKGROUND_ID,
+	NONE_BACKGROUND_ID,
+} from '@app/features/voice/state/VoiceSettings';
 import {areVoiceBackgroundsAvailable} from '@app/features/voice/utils/VoiceBackgroundAvailability';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -147,12 +151,6 @@ const CUSTOM_BACKGROUND_DESCRIPTOR = msg({
 	comment:
 		'Label in the background image gallery modal. Preserve {backgroundCount}, {maxBackgroundImages}; they are inserted by code.',
 });
-const CUSTOM_BACKGROUNDS_DESCRIPTOR = msg({
-	message:
-		'{backgroundCount} / {maxBackgroundImages} {backgroundCount, plural, one {custom background} other {custom backgrounds}}',
-	comment:
-		'Label in the background image gallery modal. Preserve {backgroundCount}, {maxBackgroundImages}; they are inserted by code.',
-});
 const CHOOSE_A_GIF_DESCRIPTOR = msg({
 	message: 'Choose a GIF',
 	comment: 'Title of the GIF picker modal opened from the background image gallery. Keep it concise.',
@@ -168,12 +166,6 @@ const REPLACE_WITH_A_GIF_DESCRIPTOR = msg({
 });
 const logger = new Logger('BackgroundImageGalleryModal');
 const TILE_PRELOAD_ROOT_MARGIN = '200px';
-
-interface BackgroundImage {
-	id: string;
-	createdAt: number;
-	mediaKind?: 'static' | 'animated' | 'video';
-}
 
 interface BuiltInBackground {
 	id: string;
@@ -982,9 +974,7 @@ const BackgroundImageGalleryModal: React.FC = observer(() => {
 							</div>
 						)}
 						<div className={styles.statsText} data-flx="theme.background-image-gallery-modal.stats-text">
-							{backgroundCount === 1
-								? i18n._(CUSTOM_BACKGROUND_DESCRIPTOR, {backgroundCount, maxBackgroundImages})
-								: i18n._(CUSTOM_BACKGROUNDS_DESCRIPTOR, {backgroundCount, maxBackgroundImages})}
+							{i18n._(CUSTOM_BACKGROUND_DESCRIPTOR, {backgroundCount, maxBackgroundImages})}
 						</div>
 						<div className={styles.infoText} data-flx="theme.background-image-gallery-modal.info-text">
 							{i18n._(MAX_BACKGROUND_SIZE_DESCRIPTOR, {

@@ -941,6 +941,11 @@ msgstr "{amount} ({currency})"
 msgid "{appCount, plural, one {# app selected for access revocation} other {# apps selected for access revocation}}"
 msgstr "{appCount, plural, one {# app valgt for tilbaketrekking av tilgang} other {# apper valgt for tilbaketrekking av tilgang}}"
 
+#. Security warning in the confirmation dialog for revoking OAuth application authorizations. appCount is the number of selected applications.
+#: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx
+msgid "{appCount, plural, one {This will revoke access for # selected application. It will no longer be able to access your account.} other {This will revoke access for # selected applications. They will no longer be able to access your account.}}"
+msgstr ""
+
 #. Tooltip on the desktop tray or menu bar icon while there are unread messages. {appName} is the desktop app name (typically Fluxer). {description} is the unread summary, such as "Unread messages: 3". Change the separator only if your language needs it.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "{appName} - {description}"
@@ -1036,6 +1041,13 @@ msgstr "{authorName} sendte et klistremerke"
 msgid "{authorName} sent an embed"
 msgstr "{authorName} sendte et innebygd element"
 
+#. Name of the message author shown before a short message preview, followed by the message text. {authorName} is a display name or the translated word for You. Keep the punctuation your language uses between a name and a quoted message.
+#. Name of the message author shown before a short message preview, followed by the message text. {authorName} is a display name or the translated word for You. Keep the punctuation your language uses between a name and a quoted message.
+#: src/features/channel/components/direct_message/DMListItem.tsx
+#: src/features/forum/utils/ForumMessageDescriptors.ts
+msgid "{authorName}:"
+msgstr ""
+
 #. Confirmation body when the recipient prefers no @mention on replies but the user enabled it. authorNickname is the recipient display name. The @ character is literal.
 #: src/features/channel/components/ChannelReplyBar.tsx
 msgid "{authorNickname} prefers replies without an @mention. Send with the mention anyway?"
@@ -1046,7 +1058,6 @@ msgstr "{authorNickname} foretrekker svar uten en @omtale. Vil du sende med omta
 msgid "{authorNickname} prefers to be @mentioned on replies. Send without the mention anyway?"
 msgstr "{authorNickname} foretrekker å bli @omtalt i svar. Vil du sende uten omtalen likevel?"
 
-#. Label in the background image gallery modal. Preserve {backgroundCount}, {maxBackgroundImages}; they are inserted by code.
 #. Label in the background image gallery modal. Preserve {backgroundCount}, {maxBackgroundImages}; they are inserted by code.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx
 msgid "{backgroundCount} / {maxBackgroundImages} {backgroundCount, plural, one {custom background} other {custom backgrounds}}"
@@ -2621,6 +2632,11 @@ msgstr "<0/> startet en samtale som varte i {durationText}."
 #: src/features/channel/components/CallMessage.tsx
 msgid "<0/> started a call."
 msgstr "<0/> startet en samtale."
+
+#. One row in the list of people who can't be added to a group DM. {name} is their display name and {reasonText} is the already translated reason. Keep the punctuation your language uses between a label and its explanation.
+#: src/features/channel/components/modals/UnaddableRecipientsConfirmModal.tsx
+msgid "<0>{name}</0><1>: {reasonText}</1>"
+msgstr ""
 
 #: src/features/moderation/components/modals/TimeoutMemberSheet.tsx
 msgid "<0>{targetUserTag}</0> is currently timed out. You can update their timeout duration or remove the timeout."
@@ -4720,6 +4736,12 @@ msgstr "Rapporter også denne meldingen til sikkerhetsteamet hos {productName}"
 #: src/features/ui/keybind_hint/KeybindHint.tsx
 msgid "Alt"
 msgstr "Alt"
+
+#. Short badge on an image or video that has alt text. Opens the description on hover. Use the short abbreviation readers in your language know for alt text, at most four letters.
+#: src/features/channel/components/embeds/AltTextBadge.tsx
+msgctxt "alt text badge"
+msgid "ALT"
+msgstr ""
 
 #. Form field label for the accessibility description of an image or video.
 #: src/features/expressions/components/modals/meme_form/MemeFormFields.tsx
@@ -7487,6 +7509,12 @@ msgstr "Kortplassering"
 #: src/features/ui/card_alignment_controls/CardAlignmentControls.tsx
 msgid "Card alignment controls"
 msgstr "Kontroller for kortplassering"
+
+#. Screen reader role description for the slideshow in the Operator Pass checkout dialog. Screen readers announce it after the slideshow name. Use the usual accessibility term for a rotating set of slides, in lowercase where the language allows.
+#: src/features/premium/components/operator_pass/checkout/OperatorPassShowcase.tsx
+msgctxt "screen-reader-role"
+msgid "carousel"
+msgstr ""
 
 #. Short label in the language and locale names. Keep it concise.
 #: src/features/user/utils/LocaleUtils.ts
@@ -34644,6 +34672,12 @@ msgctxt "keyboard-key-name"
 msgid "Sleep"
 msgstr "Hvilemodus"
 
+#. Screen reader role description for one slide in the Operator Pass checkout slideshow. Screen readers announce it with the slide content. Use the usual accessibility term for one slide of a carousel, in lowercase where the language allows.
+#: src/features/premium/components/operator_pass/checkout/OperatorPassShowcase.tsx
+msgctxt "screen-reader-role"
+msgid "slide"
+msgstr ""
+
 #. Accessible label announcing the current slider value.
 #: src/features/ui/components/Slider.tsx
 msgid "Slider value"
@@ -38864,11 +38898,6 @@ msgstr "Dette vil slette alle meldingene du har sendt i denne samtalen permanent
 #: src/features/channel/hooks/useDeleteMyMessagesInChannel.tsx
 msgid "This will permanently delete every message you have ever sent in this thread. This cannot be undone."
 msgstr "Dette vil permanent slette alle meldinger du noensinne har sendt i denne tråden. Dette kan ikke angres."
-
-#. Security warning explaining that selected OAuth application authorizations will be revoked.
-#: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx
-msgid "This will revoke access for the selected {appCount, plural, one {application} other {applications}}. They will no longer be able to access your account."
-msgstr "{appCount, plural, one {Dette fjerner tilgangen for den valgte appen. Den vil ikke lenger kunne få tilgang til kontoen din.} other {Dette fjerner tilgangen for de valgte appene. De vil ikke lenger kunne få tilgang til kontoen din.}}"
 
 #. Security warning explaining that selected saved login sessions will be signed out.
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx

@@ -29,7 +29,7 @@ import {CLEAR_SELECTION_DESCRIPTOR} from '@app/features/user/utils/UserMessageDe
 import * as FormUtils from '@app/lib/forms';
 import type {OAuth2Scope} from '@fluxer/constants/src/OAuth2Constants';
 import {msg, plural} from '@lingui/core/macro';
-import {Plural, Trans, useLingui} from '@lingui/react/macro';
+import {Trans, useLingui} from '@lingui/react/macro';
 import {AppWindowIcon, InfoIcon, NetworkSlashIcon, XIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
@@ -63,6 +63,12 @@ const SELECTED_APPS_FOR_REVOKE_DESCRIPTOR = msg({
 	message:
 		'{appCount, plural, one {# app selected for access revocation} other {# apps selected for access revocation}}',
 	comment: 'Unsaved-changes banner text in the authorized apps tab. Counts selected apps that will be revoked.',
+});
+const REVOKE_SELECTED_APPS_WARNING_DESCRIPTOR = msg({
+	message:
+		'{appCount, plural, one {This will revoke access for # selected application. It will no longer be able to access your account.} other {This will revoke access for # selected applications. They will no longer be able to access your account.}}',
+	comment:
+		'Security warning in the confirmation dialog for revoking OAuth application authorizations. appCount is the number of selected applications.',
 });
 const APPLICATION_ACCESS_REVOKED_DESCRIPTOR = msg({
 	message: 'Application access revoked',
@@ -148,16 +154,7 @@ const AuthorizedAppsRevokeModal = observer(
 				<Modal.Content data-flx="user.authorized-apps-tab.revoke-modal.content">
 					<Modal.ContentLayout data-flx="user.authorized-apps-tab.revoke-modal.content-layout">
 						<Modal.Description data-flx="user.authorized-apps-tab.revoke-modal.description">
-							<Trans comment="Security warning explaining that selected OAuth application authorizations will be revoked.">
-								This will revoke access for the selected{' '}
-								<Plural
-									value={appCount}
-									one="application"
-									other="applications"
-									data-flx="user.authorized-apps-tab.revoke-modal.plural"
-								/>
-								. They will no longer be able to access your account.
-							</Trans>
+							{i18n._(REVOKE_SELECTED_APPS_WARNING_DESCRIPTOR, {appCount})}
 						</Modal.Description>
 					</Modal.ContentLayout>
 				</Modal.Content>

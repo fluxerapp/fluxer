@@ -133,6 +133,11 @@ export const PINNED_DESCRIPTOR = msg({
 	message: 'Pinned',
 	comment: 'Label on a pinned forum post card.',
 });
+export const CARD_PREVIEW_AUTHOR_DESCRIPTOR = msg({
+	message: '{authorName}:',
+	comment:
+		'Name of the message author shown before a short message preview, followed by the message text. {authorName} is a display name or the translated word for You. Keep the punctuation your language uses between a name and a quoted message.',
+});
 export const NEW_BADGE_DESCRIPTOR = msg({
 	message: 'New',
 	comment: 'Badge on a forum post card for a post created since the user last opened the forum.',

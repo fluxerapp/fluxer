@@ -342,7 +342,7 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 												<span
 													className={styles.cardAuthor}
 													data-flx="forum.forum-post-card.card-author"
-												>{`${authorName}: `}</span>
+												>{`${i18n._(D.CARD_PREVIEW_AUTHOR_DESCRIPTOR, {authorName})} `}</span>
 											)}
 											<span data-flx="forum.forum-post-card.preview-text">{preview}</span>
 										</div>

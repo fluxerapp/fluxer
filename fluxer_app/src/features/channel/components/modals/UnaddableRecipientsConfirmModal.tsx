@@ -82,10 +82,12 @@ export const UnaddableRecipientsConfirmModal = observer(
 					<Trans>The following people can't be added to this group DM:</Trans>
 				</p>
 				<ul data-flx="channel.unaddable-recipients-confirm-modal.ul">
-					{rows.map((row) => (
-						<li key={row.userId} data-flx="channel.unaddable-recipients-confirm-modal.li">
-							<strong data-flx="channel.unaddable-recipients-confirm-modal.strong">{row.name}</strong>
-							<span data-flx="channel.unaddable-recipients-confirm-modal.span">{`: ${row.reasonText}`}</span>
+					{rows.map(({userId, name, reasonText}) => (
+						<li key={userId} data-flx="channel.unaddable-recipients-confirm-modal.li">
+							<Trans comment="One row in the list of people who can't be added to a group DM. {name} is their display name and {reasonText} is the already translated reason. Keep the punctuation your language uses between a label and its explanation.">
+								<strong data-flx="channel.unaddable-recipients-confirm-modal.strong">{name}</strong>
+								<span data-flx="channel.unaddable-recipients-confirm-modal.span">: {reasonText}</span>
+							</Trans>
 						</li>
 					))}
 				</ul>

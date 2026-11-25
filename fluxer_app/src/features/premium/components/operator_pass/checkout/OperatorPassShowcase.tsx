@@ -28,6 +28,19 @@ const SHOW_SLIDE_DESCRIPTOR = msg({
 		'Accessible label of a small dot under the slideshow in the Operator Pass checkout dialog. Selecting it shows that slide. {title} is the heading of the slide, such as The Operator badge.',
 });
 
+const CAROUSEL_ROLE_DESCRIPTOR = msg({
+	context: 'screen-reader-role',
+	message: 'carousel',
+	comment:
+		'Screen reader role description for the slideshow in the Operator Pass checkout dialog. Screen readers announce it after the slideshow name. Use the usual accessibility term for a rotating set of slides, in lowercase where the language allows.',
+});
+const SLIDE_ROLE_DESCRIPTOR = msg({
+	context: 'screen-reader-role',
+	message: 'slide',
+	comment:
+		'Screen reader role description for one slide in the Operator Pass checkout slideshow. Screen readers announce it with the slide content. Use the usual accessibility term for one slide of a carousel, in lowercase where the language allows.',
+});
+
 interface OperatorPassShowcaseProps {
 	resting: boolean;
 	compact: boolean;
@@ -63,7 +76,7 @@ export const OperatorPassShowcase = observer(function OperatorPassShowcase({
 	return (
 		<section
 			className={clsx(styles.showcase, compact && styles.compact)}
-			aria-roledescription="carousel"
+			aria-roledescription={i18n._(CAROUSEL_ROLE_DESCRIPTOR)}
 			aria-label={i18n._(SHOWCASE_LABEL_DESCRIPTOR, {operatorPassName: OPERATOR_PASS_NAME})}
 			onMouseEnter={() => setHovered(true)}
 			onMouseLeave={() => setHovered(false)}
@@ -90,7 +103,7 @@ export const OperatorPassShowcase = observer(function OperatorPassShowcase({
 						animate={{opacity: 1, y: 0}}
 						exit={reducedMotion ? {opacity: 0} : {opacity: 0, y: -12}}
 						transition={transition}
-						aria-roledescription="slide"
+						aria-roledescription={i18n._(SLIDE_ROLE_DESCRIPTOR)}
 						data-flx="premium.operator-pass-showcase.slide"
 					>
 						<picture className={styles.picture} data-flx="premium.operator-pass-showcase.picture">

@@ -19,13 +19,13 @@ import {StatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import Users from '@app/features/user/state/Users';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
+import {getFormattedDateTime} from '@app/features/user/utils/DateFormatting';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {JoinSourceTypes} from '@fluxer/constants/src/GuildConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {CrownIcon, DotsThreeVerticalIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
-import {DateTime} from 'luxon';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useMemo} from 'react';
@@ -105,15 +105,12 @@ export const MemberTableRow: React.FC<MemberTableRowProps> = observer(
 		const extraRolesCount = memberRoles.length - 1;
 		const joinedAt = member?.joinedAt ?? data.joinedAt;
 		const joinedAtRelative = useMemo(() => formatRecentOrFallback(joinedAt, i18n), [joinedAt, i18n.locale]);
-		const joinedAtAbsolute = useMemo(() => DateTime.fromJSDate(joinedAt).toFormat('d LLLL yyyy, HH:mm'), [joinedAt]);
+		const joinedAtAbsolute = getFormattedDateTime(joinedAt);
 		const userCreatedAtRelative = useMemo(
 			() => formatRecentOrFallback(data.userCreatedAt, i18n),
 			[data.userCreatedAt, i18n.locale],
 		);
-		const userCreatedAtAbsolute = useMemo(
-			() => DateTime.fromJSDate(data.userCreatedAt).toFormat('d LLLL yyyy, HH:mm'),
-			[data.userCreatedAt],
-		);
+		const userCreatedAtAbsolute = getFormattedDateTime(data.userCreatedAt);
 		const sourceInviteCode = data.sourceInviteCode;
 		const joinSourceType = data.joinSourceType;
 		const inviterId = data.inviterId;

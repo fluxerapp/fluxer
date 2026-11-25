@@ -58,6 +58,11 @@ const YOU_DESCRIPTOR = msg({
 	message: 'You',
 	comment: 'First-person prefix used in DM list row preview when the current user is the message author.',
 });
+const AUTHOR_PREFIX_DESCRIPTOR = msg({
+	message: '{authorName}:',
+	comment:
+		'Name of the message author shown before a short message preview, followed by the message text. {authorName} is a display name or the translated word for You. Keep the punctuation your language uses between a name and a quoted message.',
+});
 const SENT_AN_ATTACHMENT_DESCRIPTOR = msg({
 	message: 'Sent an attachment',
 	comment: 'DM list row preview text when the most recent message has only attachments.',
@@ -242,9 +247,10 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 	const getMessagePreview = (): React.ReactNode | null => {
 		if (!lastMessage) return null;
 		const isCurrentUser = lastMessage.author.id === currentUser?.id;
-		const authorPrefix = isCurrentUser
-			? `${i18n._(YOU_DESCRIPTOR)}: `
-			: `${NicknameUtils.getNickname(lastMessage.author, null, channel.id)}: `;
+		const authorName = isCurrentUser
+			? i18n._(YOU_DESCRIPTOR)
+			: NicknameUtils.getNickname(lastMessage.author, null, channel.id);
+		const authorPrefix = `${i18n._(AUTHOR_PREFIX_DESCRIPTOR, {authorName})} `;
 		if (lastMessage.type !== MessageTypes.DEFAULT && lastMessage.type !== MessageTypes.REPLY) {
 			const systemText = SystemMessageUtils.stringify(lastMessage, i18n);
 			if (systemText) {

@@ -595,9 +595,6 @@
 	font-variant-numeric: tabular-nums;
 }
 
-/* Lays out from the end edge and wraps whatever does not fit onto a clipped second line, so a part is dropped whole
-   instead of cut mid-word. The zero-width anchor comes first so the time drops when it cannot fit, and the new count
-   comes last so it drops before the time. */
 .cardFooter > .cardFooterRest {
 	display: flex;
 	flex: 1 1 0;
