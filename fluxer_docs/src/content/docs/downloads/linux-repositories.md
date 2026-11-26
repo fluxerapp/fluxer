@@ -34,7 +34,7 @@ sudo apt update && sudo apt install fluxer-canary
 
 ## Fedora and RHEL
 
-RHEL, Rocky, Alma and CentOS Stream need `sudo dnf install epel-release` first, because the package depends on `libXScrnSaver`.
+RHEL, Rocky, Alma and CentOS Stream need `sudo dnf install epel-release` first, because the package depends on `libXScrnSaver` and their base repositories lack it. Fedora has it already and doesn't need this step.
 
 ```sh
 sudo curl -fsSL -o /etc/yum.repos.d/fluxer.repo \
@@ -78,6 +78,8 @@ REPO
 sudo pacman -Syu fluxer
 ```
 
+Type `$repo` and `$arch` exactly as shown. pacman fills them in itself, and the quoted `'REPO'` keeps your shell from expanding them.
+
 ## Flatpak
 
 Fluxer's own Flatpak repository gets each update on release day. Open [the stable reference file](https://pkgs.fluxer.com/flatpak/fluxer.flatpakref) or [the canary one](https://pkgs.fluxer.com/flatpak/fluxer-canary.flatpakref) and your software manager takes over. In the address bar, some desktops also accept `flatpak+https://pkgs.fluxer.com/flatpak/fluxer.flatpakref`.
@@ -92,4 +94,10 @@ For canary, use the canary reference file.
 
 ```sh
 flatpak install https://pkgs.fluxer.com/flatpak/fluxer-canary.flatpakref
+```
+
+Stable is also on [Flathub](https://flathub.org/apps/app.fluxer.Fluxer) as `app.fluxer.Fluxer`. Flathub can be a few weeks behind Fluxer's own repository and has no canary.
+
+```sh
+flatpak install flathub app.fluxer.Fluxer
 ```

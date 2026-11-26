@@ -51,102 +51,27 @@ Fluxer is a free and open source instant messaging and VoIP chat app built for f
 
 The macOS disk image runs on both Apple silicon and Intel. Windows and Linux need the build matching your processor.
 
-On Linux, prefer a repository over a single file so Fluxer updates with the rest of your system.
+On Linux, add one of our [package repositories][docs-linux] for apt, dnf, pacman or Flatpak so Fluxer updates with the rest of your system. You can also [open Fluxer in a browser](https://fluxer.com/app) with nothing to install.
 
-## Linux package repositories
+## Self-hosting
 
-The package is `fluxer` for stable and `fluxer-canary` for canary. apt and dnf subscribe to one channel per entry file. pacman and Flatpak serve both from one repository.
+You can run Fluxer on your own server from this repository, as one container, one systemd service or one Kubernetes pod. The [self-hosting guide][docs-selfhost] covers each setup. [rexctl][docs-rexctl] is an optional helper that installs and looks after Fluxer on Docker, Podman or systemd.
 
-### Flatpak
+## Building from source
 
-Fluxer's own Flatpak repository gets every update the day we release it. Open [the stable][flatpak-ref] or [the canary][flatpak-canary-ref] reference file and your software manager takes over. Some desktops also accept `flatpak+https://pkgs.fluxer.com/flatpak/fluxer.flatpakref` in the address bar.
+[Building from source][docs-build] shows how to build the server's release tarball and container image yourself. To package the desktop app for a Linux distribution, follow [fluxer_desktop/PACKAGING.md](fluxer_desktop/PACKAGING.md). The mobile app has its own repository, [fluxerapp/flutter_client](https://github.com/fluxerapp/flutter_client).
 
-From a terminal:
+## Contributing
 
-```sh
-flatpak install https://pkgs.fluxer.com/flatpak/fluxer.flatpakref
-```
+Read the [contributing guide][docs-contributing] before you open a pull request. It explains how to get a change approved, how to use AI tools and what each commit needs. You can also [translate Fluxer on Weblate](https://weblate.fluxer.tools). The [code of conduct][docs-conduct] applies to everything in this repository.
 
-Stable is also on [Flathub][flathub], but Flathub can be a few weeks behind and has no canary:
+## Roadmap
 
-```sh
-flatpak install flathub app.fluxer.Fluxer
-```
+The [roadmap](https://fluxer.com/roadmap) shows what we're working on and what comes next.
 
-### Debian and Ubuntu
+## Governance
 
-```sh
-sudo install -d -m 0755 /etc/apt/keyrings
-sudo curl -fsSL -o /etc/apt/keyrings/fluxer-archive-keyring.gpg https://pkgs.fluxer.com/keys/fluxer-archive-keyring.gpg
-sudo curl -fsSL -o /etc/apt/sources.list.d/fluxer.sources https://pkgs.fluxer.com/deb/fluxer.sources
-sudo apt update && sudo apt install fluxer
-```
-
-For canary, use the canary entry file and package.
-
-```sh
-sudo curl -fsSL -o /etc/apt/sources.list.d/fluxer-canary.sources https://pkgs.fluxer.com/deb/fluxer-canary.sources
-sudo apt update && sudo apt install fluxer-canary
-```
-
-A `.deb` installed from a download only updates once its channel's entry is added.
-
-### Fedora and RHEL
-
-```sh
-sudo curl -fsSL -o /etc/yum.repos.d/fluxer.repo https://pkgs.fluxer.com/rpm/fluxer.repo
-sudo dnf install fluxer
-```
-
-For canary, use the canary entry file and package.
-
-```sh
-sudo curl -fsSL -o /etc/yum.repos.d/fluxer-canary.repo https://pkgs.fluxer.com/rpm/fluxer-canary.repo
-sudo dnf install fluxer-canary
-```
-
-RHEL, Rocky, Alma and CentOS Stream need `sudo dnf install epel-release` first, because their base repositories lack `libXScrnSaver`. Fedora does not.
-
-### Arch Linux
-
-The repository is signed, so pacman needs the key once:
-
-```sh
-sudo pacman-key --init
-curl -fsSL -o /tmp/fluxer-archive-keyring.asc https://pkgs.fluxer.com/keys/fluxer-archive-keyring.asc
-sudo pacman-key --add /tmp/fluxer-archive-keyring.asc
-sudo pacman-key --lsign-key 09D01339EE128925F75E675C855C5BDE34D205D2
-```
-
-`--lsign-key` is what makes pacman trust it. Then add the repository:
-
-```sh
-sudo tee -a /etc/pacman.conf >/dev/null <<'REPO'
-
-[fluxer]
-SigLevel = Required TrustedOnly
-Server = https://pkgs.fluxer.com/arch/$repo/os/$arch
-REPO
-sudo pacman -Syu fluxer
-```
-
-Write `$repo` and `$arch` literally. Both are pacman variables, not shell ones, hence the quoted heredoc.
-
-Full setup notes, including canary, are in the [Linux repositories documentation][docs-linux].
-
-## Other ways to run it
-
-- [Open Fluxer in a browser](https://fluxer.com/app), no install needed.
-- [Host your own instance][docs-selfhost] from this repository.
-- [Build the desktop app from source](fluxer_desktop/PACKAGING.md) for a Linux distribution.
-
-## Documentation
-
-- [Documentation home][docs]
-- [Downloads][docs-downloads]
-- [Self-hosting][docs-selfhost]
-- [Contributing][docs-contributing]
-- [Code of conduct][docs-conduct]
+[fluxer.com/governance](https://fluxer.com/governance) explains who makes decisions about Fluxer and how maintainers work.
 
 ## Funding
 
@@ -183,16 +108,15 @@ Use of the Fluxer name and logo is covered by the
 [linux-targz-x64]: https://pkgs.fluxer.com/desktop/stable/linux/x64/latest/tar_gz
 [linux-targz-arm64]: https://pkgs.fluxer.com/desktop/stable/linux/arm64/latest/tar_gz
 [flatpak-ref]: https://pkgs.fluxer.com/flatpak/fluxer.flatpakref
-[flatpak-canary-ref]: https://pkgs.fluxer.com/flatpak/fluxer-canary.flatpakref
 [flathub]: https://flathub.org/apps/app.fluxer.Fluxer
 [android-play]: https://play.google.com/store/apps/details?id=com.fluxer
 [android-apk]: https://fluxer.com/download/android
 [obtainium-fcm]: https://apps.obtainium.imranr.dev/redirect?r=obtainium%3A%2F%2Fapp%2F%7B%22id%22%3A%22com.fluxer%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Ffluxerapp%2Fflutter_client%22%2C%22author%22%3A%22fluxerapp%22%2C%22name%22%3A%22Fluxer%20%28FCM%29%22%2C%22additionalSettings%22%3A%22%7B%5C%22includePrereleases%5C%22%3Afalse%2C%5C%22fallbackToOlderReleases%5C%22%3Atrue%2C%5C%22apkFilterRegEx%5C%22%3A%5C%22stablefcm%5C%22%2C%5C%22autoApkFilterByArch%5C%22%3Atrue%7D%22%7D
 [obtainium-oss]: https://apps.obtainium.imranr.dev/redirect?r=obtainium%3A%2F%2Fapp%2F%7B%22id%22%3A%22com.fluxer%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Ffluxerapp%2Fflutter_client%22%2C%22author%22%3A%22fluxerapp%22%2C%22name%22%3A%22Fluxer%20%28OSS%29%22%2C%22additionalSettings%22%3A%22%7B%5C%22includePrereleases%5C%22%3Afalse%2C%5C%22fallbackToOlderReleases%5C%22%3Atrue%2C%5C%22apkFilterRegEx%5C%22%3A%5C%22stableoss%5C%22%2C%5C%22autoApkFilterByArch%5C%22%3Atrue%7D%22%7D
 [ios-beta-paused]: https://fluxer.com/help/ios-testflight
-[docs]: https://docs.fluxer.com
-[docs-downloads]: https://docs.fluxer.com/downloads/overview/
 [docs-linux]: https://docs.fluxer.com/downloads/linux-repositories/
 [docs-selfhost]: https://docs.fluxer.com/operator/
+[docs-rexctl]: https://docs.fluxer.com/operator/with-rexctl/
+[docs-build]: https://docs.fluxer.com/operator/build-from-source/
 [docs-contributing]: https://docs.fluxer.com/contributing/
 [docs-conduct]: https://docs.fluxer.com/code-of-conduct/
