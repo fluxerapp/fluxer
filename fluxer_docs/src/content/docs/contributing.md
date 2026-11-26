@@ -23,6 +23,8 @@ Resolves https://feedback.fluxer.com/p/456
 
 Keep each pull request to one change, and put any unrelated fixes, refactoring or formatting in a separate pull request.
 
+[Set up a development environment](/development-environment/) to run Fluxer from source and run its checks.
+
 ## AI tools
 
 You write everything you submit yourself. That includes code, tests, comments, commit messages, pull request text, security reports and your replies to code reviews.

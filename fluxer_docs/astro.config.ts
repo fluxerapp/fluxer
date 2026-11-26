@@ -196,6 +196,7 @@ export default defineConfig({
 								'authentication',
 								'snowflakes',
 								'contributing',
+								'development-environment',
 								'code-of-conduct',
 							],
 						},
