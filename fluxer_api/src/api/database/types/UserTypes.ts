@@ -89,6 +89,7 @@ export interface UserRow {
 	last_voice_activity_sharing_change_at: Date | null;
 	attested_age_floor?: string | null;
 	age_attested_at?: Date | null;
+	persona_tag?: string | null;
 	version: number;
 }
 
@@ -159,6 +160,7 @@ export const USER_COLUMNS = [
 	'last_voice_activity_sharing_change_at',
 	'attested_age_floor',
 	'age_attested_at',
+	'persona_tag',
 	'version',
 ] as const satisfies ReadonlyArray<keyof UserRow>;
 export const EMPTY_USER_ROW: UserRow = {
@@ -228,6 +230,7 @@ export const EMPTY_USER_ROW: UserRow = {
 	last_voice_activity_sharing_change_at: null,
 	attested_age_floor: null,
 	age_attested_at: null,
+	persona_tag: null,
 	version: 1,
 };
 

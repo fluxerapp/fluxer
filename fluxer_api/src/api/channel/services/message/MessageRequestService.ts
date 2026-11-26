@@ -40,6 +40,7 @@ export class MessageRequestService {
 			around?: MessageID;
 		};
 		requestCache: RequestCache;
+		personaFallbackBehavior?: boolean;
 	}): Promise<Array<MessageResponse>> {
 		const retrieval = this.channelService.messages.retrieval;
 		const {access, authChannel} = await retrieval.getResponseAccess({
@@ -57,6 +58,7 @@ export class MessageRequestService {
 			after: params.query.after,
 			around: params.query.around,
 			access,
+			personaFallbackBehavior: params.personaFallbackBehavior,
 		};
 		let responses = await this.responseDataService.listMessages(request);
 		if (await this.needsThreadsMask(params.viewer, authChannel.channel.guildId, responses)) {
@@ -96,6 +98,7 @@ export class MessageRequestService {
 			};
 		}>;
 		requestCache: RequestCache;
+		personaFallbackBehavior?: boolean;
 	}): Promise<BulkMessageFetchResponse> {
 		const channels = await mapWithConcurrency(params.requests, 4, async (request) => ({
 			channel_id: request.channelId.toString(),
@@ -105,6 +108,7 @@ export class MessageRequestService {
 				channelId: request.channelId,
 				query: request.query,
 				requestCache: params.requestCache,
+				personaFallbackBehavior: params.personaFallbackBehavior,
 			}),
 		}));
 		return {channels};
@@ -116,6 +120,7 @@ export class MessageRequestService {
 		channelId: ChannelID;
 		messageId: MessageID;
 		requestCache: RequestCache;
+		personaFallbackBehavior?: boolean;
 	}): Promise<MessageResponse> {
 		const retrieval = this.channelService.messages.retrieval;
 		const {access, authChannel} = await retrieval.getResponseAccess({
@@ -139,6 +144,7 @@ export class MessageRequestService {
 			channelId: params.channelId,
 			messageId: params.messageId,
 			access,
+			personaFallbackBehavior: params.personaFallbackBehavior,
 		};
 		let response = await this.responseDataService.getMessage(request);
 		if (response !== null && (await this.needsThreadsMask(params.viewer, authChannel.channel.guildId, [response]))) {
@@ -201,6 +207,7 @@ export class MessageRequestService {
 			access: {...access, messageHistoryCutoff: null, canReadMessageHistory: true},
 			nonce: params.data.nonce,
 			tts: params.data.tts ?? false,
+			personaFallbackBehavior: false,
 		});
 		const [shaped] = maskThreadArtifactsFor(params.viewer, authChannel.channel.guildId, [response]);
 		return shaped ?? response;
@@ -226,6 +233,7 @@ export class MessageRequestService {
 			userId: params.userId,
 			message,
 			access,
+			personaFallbackBehavior: false,
 		});
 		const [shaped] = await retrieval.threadResponses.shape({
 			viewer: params.viewer,
@@ -304,6 +312,7 @@ export class MessageRequestService {
 			userId: params.userId,
 			message,
 			access,
+			personaFallbackBehavior: false,
 		});
 		const [shaped] = maskThreadArtifactsFor(params.viewer, authChannel.channel.guildId, [response]);
 		return shaped ?? response;

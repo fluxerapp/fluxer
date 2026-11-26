@@ -10,6 +10,8 @@ pub use fluxer_common::user_partial::ApiUserPartial;
 use fluxer_common::user_partial::{
     FLUXER_SYSTEM_USER_ID, UserPartialFields, default_instance_name,
 };
+#[cfg(feature = "scylla")]
+use scylla::DeserializeRow;
 use serde::{Deserialize, Deserializer, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -24,6 +26,13 @@ pub enum UserRequest {
         user_ids: Vec<String>,
         #[serde(default = "default_instance_name")]
         instance_name: String,
+    },
+    GetPersonaPartialById {
+        persona_id: i64,
+        user_id: i64,
+    },
+    GetPersonaPartialsByIds {
+        persona_ids: Vec<(i64, i64)>,
     },
     Invalidate {
         #[serde(deserialize_with = "deserialize_i64_from_number_or_string")]
@@ -66,6 +75,9 @@ pub enum UserRequest {
 pub enum UserResponse {
     FoundPartials(Vec<UserPartial>),
     FoundApiPartials(Vec<ApiUserPartial>),
+    FoundPersonaPartial(PersonaPartial),
+    FoundPersonaPartials(Vec<PersonaPartial>),
+    NotFound,
     Invalidated,
     AppAttestChallenge {
         challenge: String,
@@ -103,6 +115,30 @@ pub struct UserPartial {
     pub content_hidden_since: Option<i64>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub hidden_profile_badges: Vec<String>,
+    pub persona_tag: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PersonaPartial {
+    pub persona_id: i64,
+    pub owner_id: i64,
+    pub internal_name: String,
+    pub display_name: Option<String>,
+    pub avatar_hash: Option<String>,
+    pub pronouns: Option<String>,
+    pub accent_color: Option<i32>,
+}
+
+#[cfg(feature = "scylla")]
+#[derive(Debug, Clone, Serialize, Deserialize, DeserializeRow)]
+pub struct PersonaPartialScyllaRow {
+    pub persona_id: i64,
+    pub owner_id: i64,
+    pub internal_name: String,
+    pub display_name: Option<String>,
+    pub avatar_hash: Option<String>,
+    pub pronouns: Option<String>,
+    pub accent_color: Option<i32>,
 }
 
 impl UserPartial {
@@ -120,6 +156,7 @@ impl UserPartial {
             banner_color: None,
             accent_color: None,
             avatar_color: None,
+            persona_tag: None,
             ..self
         }
     }
@@ -137,6 +174,7 @@ impl UserPartial {
             flags: self.flags,
             hidden_profile_badges: self.hidden_profile_badges.clone(),
             mention_flags: self.mention_flags,
+            persona_tag: self.persona_tag.clone(),
         })
     }
 }
@@ -158,10 +196,25 @@ where
     }
 }
 
+#[cfg(feature = "scylla")]
+impl From<PersonaPartialScyllaRow> for PersonaPartial {
+    fn from(value: PersonaPartialScyllaRow) -> Self {
+        PersonaPartial {
+            persona_id: value.persona_id,
+            owner_id: value.owner_id,
+            internal_name: value.internal_name,
+            display_name: value.display_name,
+            avatar_hash: value.avatar_hash,
+            pronouns: value.pronouns,
+            accent_color: value.accent_color,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::json;
+    use serde_json::{Value::Null, json};
 
     fn partial_with_flags(user_id: i64, flags: i64) -> UserPartial {
         UserPartial {
@@ -180,6 +233,7 @@ mod tests {
             mention_flags: Some(0),
             content_hidden_since: None,
             hidden_profile_badges: Vec::new(),
+            persona_tag: None,
         }
     }
 
@@ -242,6 +296,7 @@ mod tests {
                     "global_name": "Ada Lovelace",
                     "avatar": "avatar_hash",
                     "avatar_color": 0x336699,
+                    "persona_tag": Null,
                     "flags": 1
                 }]
             })

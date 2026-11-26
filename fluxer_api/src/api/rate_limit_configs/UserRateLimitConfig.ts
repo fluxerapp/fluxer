@@ -264,6 +264,27 @@ export const UserRateLimitConfigs = {
 		bucket: 'user:entrance_sound:mutate',
 		config: {limit: 20, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
+	USER_PERSONA_GET: {
+		// Bucket set intentionally low to prevent scanning
+		bucket: 'user:persona::user_id',
+		config: {limit: 10, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	USER_PERSONA_NEW: {
+		bucket: 'user:persona:create',
+		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	USER_PERSONA_BULK_IMPORT: {
+		bucket: 'user:persona:bulk_import',
+		config: {limit: 5, windowMs: ms('5 minutes')},
+	} as RouteRateLimitConfig,
+	USER_PERSONA_UPDATE: {
+		bucket: 'user:persona:update',
+		config: {limit: 30, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	USER_PERSONA_FETCH_AVATAR: {
+		bucket: 'user:persona:fetch_avatar',
+		config: {limit: 100, windowMs: ms('15 minutes')},
+	} as RouteRateLimitConfig,
 	USER_APP_ATTEST_CHALLENGE: {
 		bucket: 'user:app_attest:challenge',
 		config: {limit: 10, windowMs: ms('1 minute')},

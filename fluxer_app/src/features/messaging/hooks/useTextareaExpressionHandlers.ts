@@ -9,11 +9,14 @@ import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlR
 import {isApiAttachmentUrl} from '@app/features/messaging/utils/ApiAttachmentUrl';
 import {attachmentUrlMayNeedRefresh} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {TextareaSegmentManager} from '@app/features/messaging/utils/TextareaSegmentManager';
+import type {Persona} from '@app/features/personas/models/Persona';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import ActiveComposer from '@app/features/threads/state/ActiveComposer';
+import Personas from '@app/features/user/state/Personas';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import type {MessageAttachment, MessageStickerItem} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {PersonaSnapshot} from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
 import {useCallback, useEffect} from 'react';
 
 interface UseTextareaExpressionHandlersOptions {
@@ -25,6 +28,7 @@ interface UseTextareaExpressionHandlersOptions {
 			content: string;
 			stickers?: Array<MessageStickerItem>;
 			attachments?: Array<MessageAttachment>;
+			persona?: PersonaSnapshot;
 		},
 		sendOptions: {
 			hasAttachments: boolean;
@@ -32,6 +36,7 @@ interface UseTextareaExpressionHandlersOptions {
 		},
 	) => void;
 	enabled?: boolean;
+	selectedPersona?: Persona;
 	channelId?: string;
 }
 
@@ -41,8 +46,10 @@ export const useTextareaExpressionHandlers = ({
 	segmentManagerRef,
 	sendOptimisticMessage,
 	enabled = true,
+	selectedPersona,
 	channelId,
 }: UseTextareaExpressionHandlersOptions) => {
+	const persona = selectedPersona?.toSnapshot() || Personas.getGlobalActivePersona()?.toSnapshot();
 	const appendText = useCallback(
 		(text: string) => {
 			if (!enabled || (channelId != null && !ActiveComposer.accepts(channelId))) return;
@@ -53,7 +60,7 @@ export const useTextareaExpressionHandlers = ({
 			previousValueRef.current = nextValue;
 			setValue(nextValue);
 		},
-		[enabled, channelId, previousValueRef, segmentManagerRef, setValue],
+		[persona, enabled, channelId, previousValueRef, segmentManagerRef, setValue],
 	);
 	useEffect(() => {
 		const handleGifSelect = async (payload?: unknown) => {
@@ -69,7 +76,7 @@ export const useTextareaExpressionHandlers = ({
 				: shareUrl;
 			if (channelId != null && !ActiveComposer.accepts(channelId)) return;
 			if (autoSend) {
-				sendOptimisticMessage({content: gifUrl}, {hasAttachments: false});
+				sendOptimisticMessage({content: gifUrl, persona}, {hasAttachments: false});
 			} else {
 				appendText(gifUrl);
 			}
@@ -77,7 +84,7 @@ export const useTextareaExpressionHandlers = ({
 		return ComponentBus.subscribe('GIF_SELECT', (payload) => {
 			void handleGifSelect(payload);
 		});
-	}, [appendText, sendOptimisticMessage, enabled, channelId]);
+	}, [persona, appendText, sendOptimisticMessage, enabled, channelId]);
 	useEffect(() => {
 		const handleStickerSelect = (payload?: unknown) => {
 			if (!enabled || (channelId != null && !ActiveComposer.accepts(channelId))) return;
@@ -85,10 +92,10 @@ export const useTextareaExpressionHandlers = ({
 				sticker?: GuildSticker;
 			};
 			if (!sticker) return;
-			sendOptimisticMessage({content: '', stickers: [sticker.toJSON()]}, {hasAttachments: false});
+			sendOptimisticMessage({content: '', persona, stickers: [sticker.toJSON()]}, {hasAttachments: false});
 		};
 		return ComponentBus.subscribe('STICKER_SELECT', handleStickerSelect);
-	}, [sendOptimisticMessage, enabled, channelId]);
+	}, [persona, sendOptimisticMessage, enabled, channelId]);
 	useEffect(() => {
 		const handleFavoriteMemeSelect = (payload?: unknown) => {
 			if (!enabled || (channelId != null && !ActiveComposer.accepts(channelId))) return;
@@ -104,7 +111,7 @@ export const useTextareaExpressionHandlers = ({
 				meme.gifProvider && meme.gifSlug ? GifSlugUtils.buildShareUrl(meme.gifProvider, meme.gifSlug) : null;
 			if (providerShareUrl) {
 				if (autoSend) {
-					sendOptimisticMessage({content: providerShareUrl}, {hasAttachments: false});
+					sendOptimisticMessage({content: providerShareUrl, persona}, {hasAttachments: false});
 				} else {
 					appendText(providerShareUrl);
 				}
@@ -124,7 +131,7 @@ export const useTextareaExpressionHandlers = ({
 			}
 		};
 		return ComponentBus.subscribe('FAVORITE_MEME_SELECT', handleFavoriteMemeSelect);
-	}, [appendText, sendOptimisticMessage, enabled, channelId]);
+	}, [persona, appendText, sendOptimisticMessage, enabled, channelId]);
 	useEffect(() => {
 		const handleInsertMention = (payload?: unknown) => {
 			if (!enabled || (channelId != null && !ActiveComposer.accepts(channelId))) return;
@@ -157,5 +164,5 @@ export const useTextareaExpressionHandlers = ({
 			setValue(newText);
 		};
 		return ComponentBus.subscribe('INSERT_MENTION', handleInsertMention);
-	}, [previousValueRef, setValue, segmentManagerRef, enabled, channelId]);
+	}, [previousValueRef, setValue, segmentManagerRef, enabled, channelId, persona]);
 };

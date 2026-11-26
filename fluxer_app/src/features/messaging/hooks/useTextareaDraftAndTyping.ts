@@ -12,6 +12,7 @@ interface UseTextareaDraftAndTypingOptions {
 	bootFrameDraftRef?: React.RefObject<boolean>;
 	draftOwner: DraftCommands.DraftOwner;
 	channelId: string;
+	personaId?: string;
 	value: string;
 	setValue: React.Dispatch<React.SetStateAction<string>>;
 	draft: string | null;
@@ -31,6 +32,7 @@ export const useTextareaDraftAndTyping = ({
 	bootFrameDraftRef,
 	draftOwner,
 	channelId,
+	personaId,
 	value,
 	setValue,
 	draft,
@@ -175,5 +177,5 @@ export const useTextareaDraftAndTyping = ({
 			typingEnabled,
 			isEditingMessageInComposer: isEditingMessageInComposerRef.current,
 		});
-	}, [channelId, value, enabled, typingEnabled]);
+	}, [channelId, personaId, value, enabled, typingEnabled]);
 };

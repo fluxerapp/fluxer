@@ -10,6 +10,8 @@ import {OPEN_DM_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescript
 import type {GuildMember} from '@app/features/member/models/GuildMember';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import Permission from '@app/features/permissions/state/Permission';
+import * as PersonaCommands from '@app/features/personas/commands/Personas';
+import type {Persona} from '@app/features/personas/models/Persona';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {usePresenceCustomStatus} from '@app/features/presence/hooks/usePresenceCustomStatus';
 import MemberPresenceSubscription from '@app/features/presence/state/MemberPresenceSubscription';
@@ -63,13 +65,16 @@ import {Trans, useLingui} from '@lingui/react/macro';
 import {ChatTeardropIcon, PencilIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useEffect, useMemo, useRef} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import Personas from '../../state/Personas';
+import {PersonaProfileCard} from '../profile/PersonaProfile';
 
 const logger = new Logger('UserProfilePopout');
 
 interface UserProfilePopoutProps {
 	popoutKey: string | number;
 	user: User;
+	persona?: Persona;
 	isWebhook: boolean;
 	guildId?: string;
 	guildMember?: GuildMember | null;
@@ -77,12 +82,21 @@ interface UserProfilePopoutProps {
 }
 
 export const UserProfilePopout: React.FC<UserProfilePopoutProps> = observer(
-	({popoutKey, user, isWebhook, guildId, guildMember: providedGuildMember, onClose}) => {
+	({popoutKey, user, persona, isWebhook, guildId, guildMember: providedGuildMember, onClose}) => {
 		const {i18n} = useLingui();
 		const [hoverRef, isHovering] = useHover();
 		const storedGuildMember = guildId ? GuildMembers.getMember(guildId, user.id) : null;
 		const profileGuildId = isWebhook ? undefined : guildId;
 		const fallbackProfile = useMemo(() => createMockProfile(user), [user]);
+		const [storedPersona, setStoredPersona] = useState(persona?.id ? Personas.getPersona(persona.id) : null);
+		useEffect(() => {
+			if (persona && !storedPersona) {
+				PersonaCommands.getPersona(user.id, persona!.id).then((wirePersona) => {
+					Personas.cachePersonas([wirePersona]);
+					setStoredPersona(Personas.getPersona(persona.id));
+				});
+			}
+		}, []);
 		const handleProfileLoadError = useCallback((error: unknown) => {
 			logger.error('Failed to fetch profile for user popout', error);
 		}, []);
@@ -403,22 +417,31 @@ export const UserProfilePopout: React.FC<UserProfilePopoutProps> = observer(
 		return (
 			<FocusRingScope containerRef={popoutContainerRef} data-flx="user.user-profile-popout.focus-ring-scope">
 				<div ref={popoutContainerRef} data-flx="user.user-profile-popout.div">
-					<ProfileCardLayout
-						borderColor={borderColor}
-						hoverRef={hoverRef}
-						className={cardClassName}
-						style={PROFILE_POPOUT_GEOMETRY_STYLE}
-						data-flx="user.user-profile-popout.profile-card-layout"
-					>
-						{profileBanner}
-						{profileBadges}
-						{profileContent}
-						{showProfileFooter && (
-							<ProfileCardFooter data-flx="user.user-profile-popout.profile-card-footer">
-								{footerAction}
-							</ProfileCardFooter>
-						)}
-					</ProfileCardLayout>
+					{persona?.id ? (
+						<PersonaProfileCard
+							user={user}
+							persona={storedPersona || persona}
+							openFullMainProfile={openFullProfile}
+							data-flx="user.user-profile-popout.persona-profile-card"
+						/>
+					) : (
+						<ProfileCardLayout
+							borderColor={borderColor}
+							hoverRef={hoverRef}
+							className={cardClassName}
+							style={PROFILE_POPOUT_GEOMETRY_STYLE}
+							data-flx="user.user-profile-popout.profile-card-layout"
+						>
+							{profileBanner}
+							{profileBadges}
+							{profileContent}
+							{showProfileFooter && (
+								<ProfileCardFooter data-flx="user.user-profile-popout.profile-card-footer">
+									{footerAction}
+								</ProfileCardFooter>
+							)}
+						</ProfileCardLayout>
+					)}
 				</div>
 			</FocusRingScope>
 		);

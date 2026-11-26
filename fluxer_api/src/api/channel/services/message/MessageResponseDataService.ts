@@ -115,6 +115,7 @@ export class MessageResponseDataService {
 		after?: MessageID;
 		around?: MessageID;
 		access: MessageResponseAccessContext;
+		personaFallbackBehavior?: boolean;
 		threadsMask?: boolean;
 	}): Promise<Array<MessageResponse>> {
 		const response = await this.request({
@@ -128,6 +129,7 @@ export class MessageResponseDataService {
 			around_id: params.around?.toString(),
 			...(await this.accessEnvelope(params.access)),
 			include_reactions: true,
+			persona_fallback_behavior: params.personaFallbackBehavior ?? true,
 		});
 		if (typeof response === 'object' && 'FoundApiMany' in response) {
 			return response.FoundApiMany;
@@ -152,6 +154,7 @@ export class MessageResponseDataService {
 		channelId: ChannelID;
 		messageId: MessageID;
 		access: MessageResponseAccessContext;
+		personaFallbackBehavior?: boolean;
 		threadsMask?: boolean;
 	}): Promise<MessageResponse | null> {
 		const response = await this.request({
@@ -162,6 +165,7 @@ export class MessageResponseDataService {
 			viewer_user_id: params.userId.toString(),
 			...(await this.accessEnvelope(params.access)),
 			include_reactions: true,
+			persona_fallback_behavior: params.personaFallbackBehavior ?? true,
 		});
 		if (response === 'NotFound') return null;
 		if (typeof response === 'object' && 'FoundApi' in response) {
@@ -177,6 +181,7 @@ export class MessageResponseDataService {
 		nonce?: string;
 		tts?: boolean;
 		includeReactions?: boolean;
+		personaFallbackBehavior?: boolean;
 	}): Promise<MessageResponse> {
 		const response = await this.request({
 			op: 'BuildResponse',
@@ -186,6 +191,7 @@ export class MessageResponseDataService {
 			include_reactions: params.includeReactions ?? true,
 			nonce: params.nonce,
 			tts: params.tts,
+			persona_fallback_behavior: params.personaFallbackBehavior ?? true,
 		});
 		if (typeof response === 'object' && 'FoundApi' in response) {
 			return response.FoundApi;
@@ -200,6 +206,7 @@ export class MessageResponseDataService {
 		nonce?: string;
 		tts?: boolean;
 		sourceGuildId?: GuildID | null;
+		personaFallbackBehavior?: boolean;
 	}): Promise<MessageResponse> {
 		return this.buildMessage({
 			userId: messageResponseViewerId(params.message, params.userId),
@@ -211,6 +218,7 @@ export class MessageResponseDataService {
 			nonce: params.nonce,
 			tts: params.tts,
 			includeReactions: false,
+			personaFallbackBehavior: true, // Gateway responses always use fallback behavior for now
 		});
 	}
 
@@ -218,6 +226,7 @@ export class MessageResponseDataService {
 		userId: UserID;
 		messages: Array<Message>;
 		access: MessageResponseAccessContext;
+		personaFallbackBehavior?: boolean;
 	}): Promise<Array<MessageResponse>> {
 		if (params.messages.length === 0) return [];
 		const responses: Array<MessageResponse> = [];
@@ -226,6 +235,7 @@ export class MessageResponseDataService {
 				op: 'BuildResponses',
 				messages: batch,
 				viewer_user_id: params.userId.toString(),
+				persona_fallback_behavior: params.personaFallbackBehavior ?? true,
 				...(await this.accessEnvelope(params.access)),
 				include_reactions: true,
 			});
@@ -241,6 +251,7 @@ export class MessageResponseDataService {
 		userId: UserID;
 		messages: Array<Message>;
 		channelById: ReadonlyMap<string, Pick<Channel, 'guildId'>>;
+		personaFallbackBehavior?: boolean;
 	}): Promise<Array<MessageResponse>> {
 		const responses = new Array<MessageResponse | undefined>(params.messages.length);
 		const groups = new Map<
@@ -270,6 +281,7 @@ export class MessageResponseDataService {
 					userId: params.userId,
 					messages: group.entries.map((entry) => entry.message),
 					access: group.access,
+					personaFallbackBehavior: params.personaFallbackBehavior ?? true,
 				});
 				const mappedByMessageId = new Map(mapped.map((response) => [response.id, response] as const));
 				for (const entry of group.entries) {

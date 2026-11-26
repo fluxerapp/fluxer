@@ -17,6 +17,7 @@ import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {
 	ADD_REACTION_DESCRIPTOR,
 	BOOKMARK_MESSAGE_DESCRIPTOR,
+	CHANGE_PERSONA_DESCRIPTOR,
 	COPY_MESSAGE_ID_DESCRIPTOR,
 	COPY_MESSAGE_LINK_DESCRIPTOR,
 	DELETE_MESSAGE_DESCRIPTOR,
@@ -65,11 +66,13 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {KeybindHint} from '@app/features/ui/keybind_hint/KeybindHint';
 import type {MenuGroupType, MenuItemType} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
+import Personas from '@app/features/user/state/Personas';
 import UserSettings from '@app/features/user/state/UserSettings';
 import TtsUtils from '@app/features/voice/utils/VoiceTtsUtils';
 import {MessageStates, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
+import {UserSwitchIcon} from '@phosphor-icons/react';
 import {useCallback, useEffect, useMemo, useState} from 'react';
 
 const MESSAGE_DEBUG_DESCRIPTOR = msg({
@@ -134,6 +137,7 @@ export const messageActionMenuItemIds = {
 	crosspost: 'message_crosspost',
 	createThread: 'create_thread',
 	edit: 'edit',
+	changePersona: 'change_persona',
 	pinMessage: 'message_pin',
 	bookmarkMessage: 'message_bookmark',
 	suppressEmbeds: 'suppress_embeds',
@@ -335,6 +339,14 @@ export const useMessageActionMenuData = (
 					onClick: handlers.handleEditMessage,
 					shortcut: <KeybindHint action="message_edit" data-flx="channel.message-action-menu.groups.keybind-hint--5" />,
 				});
+				if (Personas.getOwnPersonas())
+					interactionActions.push({
+						id: messageActionMenuItemIds.changePersona,
+						icon: <UserSwitchIcon size={20} data-flx="channel.message-action-menu.groups.change-persona-icon" />,
+						label: i18n._(CHANGE_PERSONA_DESCRIPTOR),
+						onClick: handlers.handleChangePersona,
+						//shortcut: <KeybindHint action="message_edit" data-flx="channel.message-action-menu.groups.keybind-hint--change-persona" />,
+					});
 			}
 			if (message.isUserMessage() && permissions?.canPinMessage) {
 				managementActions.push({

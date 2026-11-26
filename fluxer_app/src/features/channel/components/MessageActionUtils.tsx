@@ -21,6 +21,7 @@ import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import MessageEdit from '@app/features/messaging/state/MessageEdit';
 import MessageReply from '@app/features/messaging/state/MessageReply';
 import Messages from '@app/features/messaging/state/MessagingMessages';
+import PersonaChange from '@app/features/messaging/state/PersonaChange';
 import SavedMessages from '@app/features/messaging/state/SavedMessages';
 import {refreshAttachmentUrlsInText} from '@app/features/messaging/utils/MessageCopyTextUtils';
 import {buildMessageJumpLink} from '@app/features/messaging/utils/MessageLinkUtils';
@@ -324,6 +325,7 @@ export interface MessageActionHandlers {
 	handleReply: (event?: React.MouseEvent | React.KeyboardEvent) => void;
 	handlePinMessage: (event?: React.MouseEvent | React.KeyboardEvent) => void;
 	handleEditMessage: () => void;
+	handleChangePersona: () => void;
 	handleRetryMessage: () => void;
 	handleFailedMessageDelete: () => void;
 	handleForward: () => void;
@@ -398,6 +400,10 @@ export function createMessageActionHandlers(
 		startMessageEdit(message);
 		onClose?.();
 	};
+	const handleChangePersona = () => {
+		PersonaChange.startEditing(message.channelId, message.id);
+		onClose?.();
+	};
 	const handleRetryMessage = () => {
 		retryFailedMessage(message);
 		onClose?.();
@@ -442,6 +448,7 @@ export function createMessageActionHandlers(
 		handleReply,
 		handlePinMessage,
 		handleEditMessage,
+		handleChangePersona,
 		handleRetryMessage,
 		handleFailedMessageDelete,
 		handleForward,

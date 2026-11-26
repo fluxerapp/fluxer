@@ -232,6 +232,7 @@ export default defineConfig({
 						'http-api/memes',
 						'http-api/gifs',
 						'http-api/webhooks',
+						'http-api/personas',
 					],
 				},
 				{

@@ -114,6 +114,7 @@ export async function runMessageSearch({
 	userId,
 	viewer,
 	requestCache,
+	personaFallbackBehavior,
 }: {
 	searchService: IMessageSearchService;
 	messageRepository: MessageLookupRepository;
@@ -124,6 +125,7 @@ export async function runMessageSearch({
 	userId: UserID;
 	viewer: ThreadViewer;
 	requestCache: RequestCache;
+	personaFallbackBehavior: boolean;
 }): Promise<MessageSearchResultsResponse> {
 	const hitsPerPage = searchParams.hits_per_page ?? 25;
 	const page = searchParams.page ?? 1;
@@ -141,6 +143,7 @@ export async function runMessageSearch({
 		userId,
 		viewer,
 		requestCache,
+		personaFallbackBehavior,
 	);
 	return {
 		messages: mappedResponses.messages,

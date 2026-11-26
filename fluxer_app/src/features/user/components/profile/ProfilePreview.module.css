@@ -31,3 +31,42 @@
 .profileCustomStatus:hover .profileCustomStatusText {
 	--emoji-show-animated: 1;
 }
+
+.mainProfileButton {
+	display: flex;
+	flex-direction: row;
+	gap: 0.5rem;
+	background: var(--button-secondary-fill);
+	border-radius: var(--radius-lg);
+	padding: 0.5rem;
+	cursor: pointer;
+
+	&:hover {
+		background: var(--button-secondary-active-fill);
+	}
+
+	&.mainProfileMobileButton {
+		background: var(--background-secondary-alt);
+		justify-content: stretch;
+	}
+}
+
+.mainProfileButtonAvatar {
+	margin: 0.3rem 0;
+	margin-inline-start: 0.4rem;
+}
+
+.mainProfileLabelContainer {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+}
+
+.mainProfileHint {
+	font-size: smaller;
+	opacity: 70%;
+}
+
+.mainProfileName {
+	font-weight: bold;
+}

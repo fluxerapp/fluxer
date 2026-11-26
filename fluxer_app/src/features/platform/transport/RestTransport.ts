@@ -603,7 +603,7 @@ interface AssembleHeadersInput {
 function assembleHeaders(input: AssembleHeadersInput): Record<string, string> {
 	const accumulator: Record<string, string> = {};
 	if (input.sameOrigin) {
-		accumulator[Headers.X_FLUXER_FEATURES] = 'view_channel_members_permission,channel_threads';
+		accumulator[Headers.X_FLUXER_FEATURES] = 'view_channel_members_permission,channel_threads,personas';
 		accumulator[Headers.X_FLUXER_CAPABILITIES] = 'guild_visits';
 		accumulator[Headers.X_FLUXER_CLIENT_INSTALLATION_ID] = ClientInstallationId.get();
 	}

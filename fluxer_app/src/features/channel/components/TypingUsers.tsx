@@ -11,7 +11,9 @@ import {
 	TYPING_ROLLING_OVERFLOW_SLACK_PX,
 } from '@app/features/typing/rolling/TypingSendThrottle';
 import {AvatarStack} from '@app/features/ui/avatars/AvatarStack';
+import {Avatar} from '@app/features/ui/components/Avatar';
 import type {User} from '@app/features/user/models/User';
+import Personas from '@app/features/user/state/Personas';
 import Users from '@app/features/user/state/Users';
 import type {I18n} from '@lingui/core';
 import {useLingui} from '@lingui/react/macro';
@@ -112,6 +114,21 @@ export const TypingUsers = observer(
 									users={typingUsers}
 									guildId={channel.guildId}
 									channelId={channel.id}
+									personasFromTypingIndicators
+									renderAvatar={(user, size, _index) => {
+										const personaId = RollingTypingStore.getPersona(channel.id, user.id);
+										const persona = personaId ? Personas.getPersona(personaId) : undefined;
+										return (
+											<Avatar
+												user={user}
+												size={size}
+												guildId={channel.guildId}
+												personaId={personaId}
+												personaAvatar={persona?.avatar}
+												data-flx="ui.avatars.avatar-stack.avatar"
+											/>
+										);
+									}}
 									data-flx="channel.typing-users.avatar-stack"
 								/>
 							)}

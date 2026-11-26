@@ -9,10 +9,12 @@ import Guilds from '@app/features/guild/state/Guilds';
 import Inbox from '@app/features/inbox/state/Inbox';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
+import {Checkbox} from '@app/features/ui/checkbox/Checkbox';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import {SwitchGroup, SwitchGroupItem} from '@app/features/ui/components/SwitchGroup';
+import {RadioGroup} from '@app/features/ui/radio_group/RadioGroup';
 import * as UserGuildSettingsCommands from '@app/features/user/commands/UserGuildSettingsCommands';
 import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsCommands';
 import type {SearchEngineMode} from '@app/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal';
@@ -30,6 +32,7 @@ import {
 	TranslatorsContent,
 } from '@app/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab';
 import {SHOW_DOWNLOAD_BUTTON_DESCRIPTOR} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import Personas from '@app/features/user/state/Personas';
 import PrivacyPreferences from '@app/features/user/state/PrivacyPreferences';
 import UserSettings from '@app/features/user/state/UserSettings';
 import {
@@ -42,6 +45,7 @@ import {
 	SKIP_MARK_ALL_AS_READ_CONFIRMATION_DESCRIPTOR,
 	UPLOAD_ATTACHMENTS_BEFORE_SENDING_DESCRIPTOR,
 } from '@app/features/user/utils/UserMessageDescriptors';
+import {PersonaSettings_LatchMode} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb.js';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {GearIcon} from '@phosphor-icons/react';
@@ -104,6 +108,10 @@ const SHOW_GIFS_BUTTON_DESCRIPTOR = msg({
 	message: 'Show GIFs button',
 	comment: 'Short label for an advanced message input preference.',
 });
+const SHOW_PERSONA_PICKER_BUTTON_DESCRIPTOR = msg({
+	message: 'Show persona button',
+	comment: 'Short label for an advanced message input preference.',
+});
 const SHOW_MEDIA_BUTTON_DESCRIPTOR = msg({
 	message: 'Show media button',
 	comment: 'Short label for an advanced message input preference.',
@@ -147,6 +155,35 @@ const STOP_HIDING_MUTED_CHANNELS_BY_DEFAULT_DESCRIPTOR = msg({
 const SHOW_IN_ALL_COMMUNITIES_DESCRIPTOR = msg({
 	message: 'Show in all communities',
 	comment: 'Short confirmation button label in advanced settings.',
+});
+export const LATCH_OFF_DESCRIPTOR = msg({
+	message: 'Ignore',
+	comment: 'A label for the latching modes (trigger behavior) setting.',
+});
+const LATCH_OFF_DESCRIPTION_DESCRIPTOR = msg({
+	message: "Triggers don't do anything.",
+	comment: 'A label for the latching modes (trigger behavior) setting.',
+});
+export const LATCH_MANUAL_DESCRIPTOR = msg({
+	message: 'One-off',
+	comment: 'A label for the latching modes (trigger behavior) setting.',
+});
+const LATCH_MANUAL_DESCRIPTION_DESCRIPTOR = msg({
+	message: "A trigger sends a message with its persona, but the active persona doesn't change.",
+	comment: 'A label for the latching modes (trigger behavior) setting.',
+});
+export const LATCH_TRIGGER_SWITCHING_DESCRIPTOR = msg({
+	message: 'Sticky',
+	comment: 'A label for the latching modes (trigger behavior) setting.',
+});
+const LATCH_TRIGGER_SWITCHING_DESCRIPTION_DESCRIPTOR = msg({
+	message:
+		'A trigger sets its persona as active until the active persona is changed. This may also be called "latching".',
+	comment: 'A label for the latching modes (trigger behavior) setting.',
+});
+export const SHOW_LATCH_IN_PERSONA_PICKER_DESCRIPTOR = msg({
+	message: 'Show trigger behavior slider in persona picker',
+	comment: 'A label for the latching modes (trigger behavior) setting.',
 });
 
 export const AutoSendGifsControl = observer(() => {
@@ -251,6 +288,43 @@ const MediaButtonsContent = observer(() => {
 				data-flx="user.advanced-settings-tab.switch-group-item.suppress-embeds"
 			/>
 		</SwitchGroup>
+	);
+});
+
+const PersonaTriggerBehaviorComponent = observer(() => {
+	const {i18n} = useLingui();
+	return (
+		<>
+			<Checkbox
+				checked={Accessibility.showLatchInPersonaPicker}
+				onChange={(checked) => Accessibility.updateSettings({showLatchInPersonaPicker: checked})}
+				data-flx="user.advanced-settings-tab.advanced-chat-controls.persona-trigger-behavior-component.checkbox.update-settings"
+			>
+				{i18n._(SHOW_LATCH_IN_PERSONA_PICKER_DESCRIPTOR)}
+			</Checkbox>
+			<RadioGroup
+				value={Personas.latchMode}
+				onChange={(v) => (Personas.latchMode = v)}
+				options={[
+					{
+						value: PersonaSettings_LatchMode.OFF,
+						name: i18n._(LATCH_OFF_DESCRIPTOR),
+						desc: i18n._(LATCH_OFF_DESCRIPTION_DESCRIPTOR),
+					},
+					{
+						value: PersonaSettings_LatchMode.MANUAL,
+						name: i18n._(LATCH_MANUAL_DESCRIPTOR),
+						desc: i18n._(LATCH_MANUAL_DESCRIPTION_DESCRIPTOR),
+					},
+					{
+						value: PersonaSettings_LatchMode.TRIGGER_SWITCHING,
+						name: i18n._(LATCH_TRIGGER_SWITCHING_DESCRIPTOR),
+						desc: i18n._(LATCH_TRIGGER_SWITCHING_DESCRIPTION_DESCRIPTOR),
+					},
+				]}
+				data-flx="user.advanced-settings-tab.advanced-chat-controls.persona-trigger-behavior-component.radio-group"
+			/>
+		</>
 	);
 });
 
@@ -441,6 +515,12 @@ const InputButtonsContent = observer(() => {
 				data-flx="user.advanced-settings-tab.switch-group-item.emoji-button"
 			/>
 			<SwitchGroupItem
+				label={i18n._(SHOW_PERSONA_PICKER_BUTTON_DESCRIPTOR)}
+				value={Accessibility.showPersonaPickerButton}
+				onChange={(value) => AccessibilityCommands.update({showPersonaPickerButton: value})}
+				data-flx="user.advanced-settings-tab.switch-group-item.persona-picker-button"
+			/>
+			<SwitchGroupItem
 				label={i18n._(SHOW_SEND_BUTTON_DESCRIPTOR)}
 				value={Accessibility.showMessageSendButton}
 				onChange={(value) => AccessibilityCommands.update({showMessageSendButton: value})}
@@ -450,7 +530,12 @@ const InputButtonsContent = observer(() => {
 	);
 });
 
-type SwitchGroupSettingsMode = 'message-action-bar' | 'media-buttons' | 'expression-autocomplete' | 'input-buttons';
+type SwitchGroupSettingsMode =
+	| 'message-action-bar'
+	| 'media-buttons'
+	| 'expression-autocomplete'
+	| 'persona-trigger-behavior'
+	| 'input-buttons';
 
 interface SwitchGroupSettingsModalProps {
 	mode: SwitchGroupSettingsMode;
@@ -473,6 +558,10 @@ const SwitchGroupSettingsModal = observer(({mode, title}: SwitchGroupSettingsMod
 	} else if (mode === 'expression-autocomplete') {
 		content = (
 			<ExpressionAutocompleteContent data-flx="user.advanced-settings-tab.advanced-chat-controls.switch-group-settings-modal.expression-autocomplete-content" />
+		);
+	} else if (mode === 'persona-trigger-behavior') {
+		content = (
+			<PersonaTriggerBehaviorComponent data-flx="user.advanced-settings-tab.advanced-chat-controls.switch-group-settings-modal.persona-trigger-behavior-content" />
 		);
 	} else {
 		content = (
@@ -540,6 +629,15 @@ const SwitchGroupSettingsButton = observer(({mode, title, dataFlx}: SwitchGroupS
 interface SwitchGroupSettingsControlProps {
 	title: string;
 }
+
+export const PersonaTriggerBehaviorControl = observer(({title}: SwitchGroupSettingsControlProps) => (
+	<SwitchGroupSettingsButton
+		mode="persona-trigger-behavior"
+		title={title}
+		dataFlx="user.advanced-settings-tab.persona-trigger-behavior-control.configure-button"
+		data-flx="user.advanced-settings-tab.advanced-chat-controls.persona-trigger-behavior-control.switch-group-settings-button"
+	/>
+));
 
 export const MessageActionBarControl = observer(({title}: SwitchGroupSettingsControlProps) => (
 	<SwitchGroupSettingsButton

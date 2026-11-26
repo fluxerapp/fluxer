@@ -35,6 +35,7 @@ import type {User} from '@app/api/models/User';
 import type {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
 import type {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
 import {endOperatorPassesForDeletion} from '@app/api/operator_pass/OperatorPassHoldingService';
+import type {PersonaRepository} from '@app/api/personas/repositories/PersonaRepository';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import {isMissingOrCancelledSubscriptionError} from '@app/api/stripe/StripeUtils';
 import {deleteAllAppAttestKeys} from '@app/api/user/AgeRange';
@@ -77,6 +78,7 @@ interface UserDeletionDependencies {
 
 	stripe: Stripe | null;
 	applicationRepository: ApplicationRepository;
+	personaRepository: PersonaRepository;
 	workerService: IWorkerService<WorkerTaskName>;
 	connectionRepository: ConnectionRepository;
 	storeEntitlementService: StoreEntitlementService;
@@ -154,6 +156,7 @@ export async function processUserDeletion(
 		snowflakeService,
 		stripe,
 		applicationRepository,
+		personaRepository,
 		workerService,
 		connectionRepository,
 		storeEntitlementService,
@@ -372,6 +375,7 @@ export async function processUserDeletion(
 				message_snapshots: null,
 				call: null,
 				has_reaction: false,
+				persona: null,
 				version: 1,
 			});
 			const recipientUserResponse = await userCacheService.getUserPartialResponse(userId, createRequestCache());
@@ -465,6 +469,27 @@ export async function processUserDeletion(
 			Logger.error({error, userId}, 'Failed to delete banner');
 		}
 	}
+	const personas = await personaRepository.listUserPersonas(userId);
+	for (const persona of personas) {
+		if (persona.avatarHash) {
+			try {
+				await storageService.deleteAvatar({prefix: 'avatars', key: `${persona.id}/${persona.avatarHash}`});
+				await purgeQueue.addUrls([`${Config.endpoints.media}/avatars/${persona.id}/${persona.avatarHash}`]);
+				Logger.debug({userId: persona.id, avatarHash: persona.avatarHash}, 'Deleted avatar');
+			} catch (error) {
+				Logger.error({error, userId: persona.id}, 'Failed to delete avatar');
+			}
+		}
+		if (persona.bannerHash) {
+			try {
+				await storageService.deleteAvatar({prefix: 'banners', key: `${persona.id}/${persona.bannerHash}`});
+				await purgeQueue.addUrls([`${Config.endpoints.media}/banners/${persona.id}/${persona.bannerHash}`]);
+				Logger.debug({userId: persona.id, bannerHash: persona.bannerHash}, 'Deleted banner');
+			} catch (error) {
+				Logger.error({error, userId: persona.id}, 'Failed to delete banner');
+			}
+		}
+	}
 	const favoriteMemes = await favoriteMemeRepository.findByUserId(userId);
 	for (const meme of favoriteMemes) {
 		try {
@@ -525,6 +550,7 @@ export async function processUserDeletion(
 		userRepository.deleteAllRecentMentions(userId),
 		userRepository.deleteAllAuthorizedIps(userId),
 		userRepository.deletePinnedDmsByUserId(userId),
+		personaRepository.deleteAllPersonasByUserId(userId),
 		endOperatorPassesForDeletion(operatorPassRepository, deps.cacheService, userId).then(async (buyers) => {
 			await operatorPassRepository.deleteOperatorPass(userId);
 			for (const buyer of buyers) {

@@ -35,15 +35,18 @@ function userHasAnimatedEntitlement(user: User, key: 'feature_animated_avatar' |
 	return resolveLimitSafe(snapshot, ctx, key, 0) > 0;
 }
 
-export function stripAvatarForUser(user: User): string | null {
-	return stripAnimationPrefixIfNoEntitlement(user.avatarHash, userHasAnimatedAvatarEntitlement(user));
+export function stripAvatarForUser(user: User, avatarHash?: string | null | undefined): string | null {
+	return stripAnimationPrefixIfNoEntitlement(
+		avatarHash !== undefined ? avatarHash : user.avatarHash,
+		userHasAnimatedAvatarEntitlement(user),
+	);
 }
 
-export function stripBannerForUser(user: User): string | null {
+export function stripBannerForUser(user: User, bannerHash?: string | null | undefined): string | null {
 	if (!userHasAnimatedEntitlement(user, 'feature_animated_banner')) {
 		return null;
 	}
-	return user.bannerHash;
+	return bannerHash !== undefined ? bannerHash : user.bannerHash;
 }
 
 export function stripGuildIconForFeatures(

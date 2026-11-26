@@ -23,6 +23,7 @@ import type {SendMessageFunction} from '@app/features/messaging/hooks/useMessage
 import Drafts from '@app/features/messaging/state/MessagingDrafts';
 import {CloudUpload} from '@app/features/messaging/upload/CloudUpload';
 import * as MessageSubmitUtils from '@app/features/messaging/utils/MessageSubmitUtils';
+import {PersonaPickerComposerButton} from '@app/features/personas/components/PersonaPickerComposerButton';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import {openThread} from '@app/features/threads/commands/ThreadNavigation';
@@ -239,6 +240,10 @@ export const ForumPostComposer = observer(({forum, onClose}: ForumPostComposerPr
 			)}
 			<div className={styles.composerBar} data-flx="forum.forum-post-composer.composer-bar">
 				<div className={styles.composerBarStart} data-flx="forum.forum-post-composer.composer-bar-start">
+					<PersonaPickerComposerButton
+						channel={forum}
+						data-flx="forum.forum-post-composer.persona-picker-composer-button"
+					/>
 					<Tooltip text={i18n._(D.ATTACH_MEDIA_DESCRIPTOR)} data-flx="forum.forum-post-composer.attach-tooltip">
 						<FocusRing offset={-2} data-flx="forum.forum-post-composer.attach.focus-ring">
 							<button

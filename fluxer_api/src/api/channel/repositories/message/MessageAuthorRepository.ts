@@ -81,6 +81,7 @@ export class MessageAuthorRepository {
 				},
 				{
 					author_id: Db.set(newAuthorId),
+					persona: Db.clear(),
 				},
 			),
 		);

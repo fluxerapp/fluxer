@@ -600,6 +600,7 @@ export const ERROR_I18N_MESSAGES = {
 		"You can't have more than {count, plural, one {# category channel} other {# category channels}}.",
 	'misc_limits.max_friends_reached': "You can't have more than {count, plural, one {# friend} other {# friends}}.",
 	'misc_limits.max_invites_reached': "You can't have more than {count, plural, one {# invite} other {# invites}}.",
+	'misc_limits.max_personas_reached': "You can't have more than {count, plural, one {# persona} other {# personas}}.",
 	'moderation_and_reports.cannot_report_own_message': "You can't report your own message.",
 	'moderation_and_reports.cannot_report_yourself': "You can't report yourself.",
 	'moderation_and_reports.invalid_dsa_report_target': 'Invalid DSA report target.',
@@ -665,6 +666,8 @@ export const ERROR_I18N_MESSAGES = {
 	'rate_limits.slowmode_rate_limited': 'Slowmode rate limited.',
 	'rate_limits.username_changed_too_often':
 		"You've changed your username too often recently. Please try again in {minutes, plural, one {# minute} other {# minutes}}.",
+	'rate_limits.persona_tag_changed_too_often':
+		"You've changed your persona tag too often recently. Please try again in {minutes, plural, one {# minute} other {# minutes}}.",
 	'rate_limits.voice_activity_sharing_on_cooldown':
 		'You can only update your voice activity sharing default once every 24 hours. Please try again in {retry_after, plural, one {# second} other {# seconds}}.',
 	'roles.cannot_reorder_everyone_role': "You can't reorder the @everyone role.",
@@ -760,6 +763,9 @@ export const ERROR_I18N_MESSAGES = {
 	'usernames_and_tags.display_name_reserved_terms': 'Display name can\'t contain "system message".',
 	'usernames_and_tags.global_name_length_invalid': 'Global name must be between {min} and {max} characters.',
 	'usernames_and_tags.global_name_reserved_value': 'Global name can\'t be "everyone" or "here".',
+	'usernames_and_tags.persona_tag_reserved_terms': 'Persona tag can\'t contain "fluxer".',
+	'usernames_and_tags.persona_tag_length_invalid': 'Persona tag must be between {min} and {max} characters.',
+	'usernames_and_tags.persona_tag_reserved_value': "Persona tag can't look like a staff or system message.",
 	'usernames_and_tags.tag_already_taken': 'This tag is already taken.',
 	'usernames_and_tags.too_many_users_with_this_username': 'There are too many users with this username.',
 	'usernames_and_tags.too_many_users_with_username_try_different':

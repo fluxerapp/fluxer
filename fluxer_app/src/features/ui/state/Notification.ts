@@ -281,7 +281,7 @@ class NotificationState {
 			return;
 		}
 		const useMacOSNotificationPresentation = NotificationUtils.isMacOSDesktopNotification();
-		let title = NicknameUtils.getNickname(user, channel.guildId, channel.id);
+		let title = message.persona?.name || NicknameUtils.getNickname(user, channel.guildId, channel.id);
 		let subtitle: string | undefined;
 		switch (channel.type) {
 			case ChannelTypes.GUILD_TEXT:
@@ -349,7 +349,10 @@ class NotificationState {
 				title,
 				subtitle,
 				body,
-				icon: getNotificationIconURL(user, channel.guildId),
+				icon: getNotificationIconURL(
+					message.persona ? {id: message.persona.id || '0', avatar: message.persona.avatar || null} : user,
+					channel.guildId,
+				),
 				url: notificationUrl,
 				playSound: false,
 				accountKey,

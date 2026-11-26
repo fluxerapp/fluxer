@@ -29,7 +29,7 @@ export interface ProfilePreviewOverrides {
 	ignoreGuildBanner?: boolean;
 }
 
-function getProfileAvatarUrl(
+export function getProfileAvatarUrl(
 	context: ProfileDisplayContext,
 	overrides?: ProfilePreviewOverrides,
 	animated = false,

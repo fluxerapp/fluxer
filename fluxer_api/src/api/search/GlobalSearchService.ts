@@ -60,6 +60,7 @@ export class GlobalSearchService {
 		requestCache: RequestCache;
 		includeChannelId?: ChannelID | null;
 		requestedChannelIds?: Array<ChannelID>;
+		personaFallbackBehavior?: boolean;
 	}): Promise<MessageSearchResponse> {
 		const includeChannel = await this.findDmScopeContextChannel(params.userId, params.includeChannelId);
 		const dmChannelIds = await this.memberDmChannelIds(
@@ -79,7 +80,14 @@ export class GlobalSearchService {
 		if (needsIndexing) {
 			return {indexing: true};
 		}
-		return this.runSearch(finalChannelIds, params.userId, params.viewer, params.searchParams, params.requestCache);
+		return this.runSearch(
+			finalChannelIds,
+			params.userId,
+			params.viewer,
+			params.searchParams,
+			params.requestCache,
+			params.personaFallbackBehavior,
+		);
 	}
 
 	async searchAcrossGuildsAndDms(params: {
@@ -91,6 +99,7 @@ export class GlobalSearchService {
 		requestCache: RequestCache;
 		includeChannelId?: ChannelID | null;
 		requestedChannelIds?: Array<ChannelID>;
+		personaFallbackBehavior?: boolean;
 	}): Promise<MessageSearchResponse> {
 		const [guildAccess, includeChannel] = await Promise.all([
 			this.guildService.search.collectAccessibleGuildChannels(params.userId, params.viewer, params.requestedChannelIds),
@@ -143,7 +152,14 @@ export class GlobalSearchService {
 		if (needsIndexing) {
 			return {indexing: true};
 		}
-		return this.runSearch(finalChannelIds, params.userId, params.viewer, params.searchParams, params.requestCache);
+		return this.runSearch(
+			finalChannelIds,
+			params.userId,
+			params.viewer,
+			params.searchParams,
+			params.requestCache,
+			params.personaFallbackBehavior,
+		);
 	}
 
 	private filterRequestedChannelIds(available: Array<string>, requested?: Array<ChannelID>): Array<string> {
@@ -237,6 +253,7 @@ export class GlobalSearchService {
 		viewer: ThreadViewer,
 		searchParams: MessageSearchRequest,
 		requestCache: RequestCache,
+		personaFallbackBehavior?: boolean,
 	): Promise<MessageSearchResponse> {
 		return runMessageSearch({
 			searchService: this.getMessageSearchService(),
@@ -248,6 +265,7 @@ export class GlobalSearchService {
 			userId,
 			viewer,
 			requestCache,
+			personaFallbackBehavior: personaFallbackBehavior ?? true,
 		});
 	}
 }

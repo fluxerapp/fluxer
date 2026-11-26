@@ -1,0 +1,88 @@
+.footerHintText {
+	color: var(--text-primary-muted);
+	font-size: 0.75rem;
+	line-height: 1rem;
+}
+.unsavedChangesWarning {
+	text-align: start;
+	flex: 1;
+	font-weight: 500;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.unsavedChangesTransition:not(.prefersReducedMotion) {
+	transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+	transition-duration: 200ms;
+	transition-timing-function: ease-out;
+}
+
+.unsavedChangesArea.flashingUnsavedChanges {
+	background-color: var(--accent-danger, #d00);
+	color: var(--button-danger-text, #fff);
+	.unsavedChangesWarning {
+		color: var(--button-danger-text, #fff);
+	}
+}
+
+.deleteButton {
+	margin-inline-end: auto;
+}
+
+.triggerRow {
+	display: flex;
+	flex-direction: row;
+	gap: 0;
+
+	.triggerPrefix {
+		border-start-end-radius: 0;
+		border-end-end-radius: 0;
+		text-align: end;
+		flex-grow: 1;
+	}
+	.triggerSuffix {
+		border-start-start-radius: 0;
+		border-end-start-radius: 0;
+		text-align: start;
+		flex-grow: 1;
+	}
+	.triggerMessagePlaceholder {
+		border-inline-start: none;
+		border-inline-end: none;
+		border-radius: 0;
+		background-color: var(--bg-code);
+		opacity: 60%;
+		text-align: center;
+		font-style: italic;
+		flex-shrink: 1;
+		min-width: none;
+	}
+	/* div[data-flx="ui.form.input.input-container"]:has(.triggerMessagePlaceholder) {
+		flex-shrink: 1;
+		min-width: 0;
+	} */
+	.triggerDelete {
+		height: 100%;
+		width: unset;
+		max-width: none;
+		max-height: none;
+		min-width: 2.7rem;
+		min-height: 0;
+		aspect-ratio: 1 / 1;
+		margin-inline-start: var(--spacing-2);
+	}
+}
+
+.triggerRowWrapper {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-1);
+}
+
+.error {
+	display: flex;
+	flex-direction: row;
+	gap: var(--spacing-2);
+	padding: var(--spacing-2) var(--spacing-1);
+	color: var(--accent-danger);
+}

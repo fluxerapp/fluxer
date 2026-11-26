@@ -59,6 +59,7 @@ export class GuildSearchService {
 		iosApp: boolean;
 		searchParams: MessageSearchRequest;
 		requestCache: RequestCache;
+		personaFallbackBehavior?: boolean;
 	}): Promise<MessageSearchResponse> {
 		const {userId, viewer, guildId, iosApp, searchParams, requestCache} = params;
 		let {channelIds} = params;
@@ -183,6 +184,7 @@ export class GuildSearchService {
 			userId,
 			viewer,
 			requestCache,
+			personaFallbackBehavior: params.personaFallbackBehavior ?? true,
 		});
 	}
 
@@ -193,6 +195,7 @@ export class GuildSearchService {
 		iosApp: boolean;
 		searchParams: MessageSearchRequest;
 		requestCache: RequestCache;
+		personaFallbackBehavior?: boolean;
 	}): Promise<MessageSearchResponse> {
 		const {userId, viewer, channelIds, iosApp, searchParams, requestCache} = params;
 		const searchService = getMessageSearchService();
@@ -247,6 +250,7 @@ export class GuildSearchService {
 			userId,
 			viewer,
 			requestCache,
+			personaFallbackBehavior: params.personaFallbackBehavior ?? true,
 		});
 	}
 

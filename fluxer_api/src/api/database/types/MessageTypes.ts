@@ -11,6 +11,7 @@ import type {
 	UserID,
 	WebhookID,
 } from '@app/api/BrandedTypes';
+import type {PersonaSnapshot} from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
 
 export interface MessageAttachment {
 	attachment_id: AttachmentID;
@@ -146,6 +147,7 @@ export interface MessageRow {
 	message_snapshots: Array<MessageSnapshot> | null;
 	call: MessageCall | null;
 	has_reaction: boolean | null;
+	persona: PersonaSnapshot | null;
 	version: number;
 }
 
@@ -173,6 +175,7 @@ export const MESSAGE_COLUMNS = [
 	'message_snapshots',
 	'call',
 	'has_reaction',
+	'persona',
 	'version',
 ] as const satisfies ReadonlyArray<keyof MessageRow>;
 

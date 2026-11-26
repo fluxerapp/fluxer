@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Endpoints} from '@app/features/app/constants/Endpoints';
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
 import GuildReadState from '@app/features/guild/state/GuildReadState';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import MessageReferences from '@app/features/messaging/state/MessageReferences';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import MentionFeed from '@app/features/notification/state/MentionFeed';
+import {http} from '@app/features/platform/transport/RestTransport';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import ChannelThreads from '@app/features/threads/state/ChannelThreads';
 import RollingTypingStore from '@app/features/typing/rolling/RollingTypingStore';
@@ -16,6 +18,15 @@ import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMember
 import type {Message} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 
 export function handleMessageCreate(data: Message, _context: GatewayHandlerContext): void {
+	if (data.webhook_id && !data.author.bot && data.author.username?.includes('~ @')) {
+		// probably persona fallback behavior
+		// Get the message over the API, then handle that instead (that way, persona data is received)
+		// when the fallback behavior is deprecated, this if block can be deleted with it
+		http.get<Message>(Endpoints.CHANNEL_MESSAGE(data.channel_id, data.id)).then((response) => {
+			if (response.ok) handleMessageCreate(response.body, _context);
+		});
+		return;
+	}
 	if (data.guild_id && data.member) {
 		GuildMembers.hydrateIfMissing(data.guild_id, {
 			...data.member,

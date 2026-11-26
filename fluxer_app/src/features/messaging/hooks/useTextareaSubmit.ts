@@ -46,6 +46,7 @@ import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
 import {StatusTypes} from '@fluxer/constants/src/StatusConstants';
 import type {MessageStickerItem} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {PersonaSnapshot} from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import type React from 'react';
@@ -88,10 +89,12 @@ interface UseTextareaSubmitOptions {
 		stickersOrTts?: Array<MessageStickerItem> | boolean,
 		favoriteMemeIdOrStickers?: string | Array<MessageStickerItem>,
 		maybeFavoriteMemeId?: string,
+		persona?: PersonaSnapshot,
 	) => boolean;
 	onMentionConfirmationNeeded?: (info: MentionConfirmationInfo) => void;
 	commandsEnabled?: boolean;
 	i18n: I18n;
+	persona?: PersonaSnapshot;
 }
 
 interface MentionCountResolutionParams {
@@ -262,6 +265,7 @@ export const useTextareaSubmit = ({
 	onMentionConfirmationNeeded,
 	commandsEnabled = true,
 	i18n,
+	persona,
 }: UseTextareaSubmitOptions) => {
 	const checkMentionConfirmation = useCallback(
 		async (content: string, sourceContent: string, tts?: boolean): Promise<boolean> => {
@@ -575,16 +579,21 @@ export const useTextareaSubmit = ({
 			RollingTypingSender.stopTyping(channelId);
 			return;
 		}
-		const sendWithPendingSticker = (content: string, hasAttachments: boolean, tts?: boolean): boolean => {
+		const sendWithPendingSticker = (
+			content: string,
+			hasAttachments: boolean,
+			tts?: boolean,
+			persona?: PersonaSnapshot,
+		): boolean => {
 			const pendingSticker = ChannelSticker.getPendingSticker(channelId);
 			const stickerItems = pendingSticker ? [pendingSticker.toJSON()] : undefined;
 			let didSend = false;
 			if (tts) {
-				didSend = handleSendMessage(content, hasAttachments, true, stickerItems);
+				didSend = handleSendMessage(content, hasAttachments, true, stickerItems, undefined, persona);
 			} else if (stickerItems) {
-				didSend = handleSendMessage(content, hasAttachments, stickerItems);
+				didSend = handleSendMessage(content, hasAttachments, stickerItems, undefined, undefined, persona);
 			} else {
-				didSend = handleSendMessage(content, hasAttachments);
+				didSend = handleSendMessage(content, hasAttachments, undefined, undefined, undefined, persona);
 			}
 			if (didSend && pendingSticker) {
 				ChannelStickerCommands.removePendingSticker(channelId);
@@ -606,7 +615,7 @@ export const useTextareaSubmit = ({
 						return;
 					}
 					if (!(await checkMentionConfirmation(transformedContent, actualContent))) {
-						sendWithPendingSticker(transformedContent, false);
+						sendWithPendingSticker(transformedContent, false, undefined, persona);
 						return;
 					}
 				} else if (parsedCommand.type === 'tts') {
@@ -615,7 +624,7 @@ export const useTextareaSubmit = ({
 						return;
 					}
 					if (!(await checkMentionConfirmation(ttsContent, actualContent, true))) {
-						sendWithPendingSticker(ttsContent, false, true);
+						sendWithPendingSticker(ttsContent, false, true, persona);
 						return;
 					}
 				} else {
@@ -672,6 +681,7 @@ export const useTextareaSubmit = ({
 		checkMentionConfirmation,
 		resolveTypedEmojiContent,
 		ttsCommandEnabled,
+		persona?.id,
 		commandsEnabled,
 	]);
 	return {onSubmit};

@@ -10,6 +10,7 @@ import {GuildAvailabilityMiddleware} from '@app/api/middleware/GuildAvailability
 import {GuildVisitorRequestContextMiddleware} from '@app/api/middleware/GuildVisitorRequestContextMiddleware';
 import {IpBanMiddleware} from '@app/api/middleware/IpBanMiddleware';
 import {LocaleMiddleware} from '@app/api/middleware/LocaleMiddleware';
+import {PersonaMiddleware} from '@app/api/middleware/PersonaMiddleware';
 import {RequestBodyLimitMiddleware} from '@app/api/middleware/RequestBodyLimitMiddleware';
 import {RequestCacheMiddleware} from '@app/api/middleware/RequestCacheMiddleware';
 import {RequestErrorTelemetry} from '@app/api/middleware/RequestErrorTelemetry';
@@ -133,4 +134,5 @@ export function configureMiddleware(routes: HonoApp, options: MiddlewarePipeline
 	routes.use(ContentFilterMiddleware);
 	routes.use(GuildAvailabilityMiddleware);
 	routes.use(LocaleMiddleware);
+	routes.use(PersonaMiddleware);
 }

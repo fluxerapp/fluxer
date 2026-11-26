@@ -22,25 +22,33 @@ import {MessageViewContextProvider} from '@app/features/channel/components/Messa
 import type {Channel} from '@app/features/channel/models/Channel';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import type {GuildRole} from '@app/features/guild/models/GuildRole';
+import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import {parse} from '@app/features/messaging/components/markdown/renderers';
 import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
 import type {Message as MessageModel} from '@app/features/messaging/models/MessagingMessage';
 import MessageEdit from '@app/features/messaging/state/MessageEdit';
 import MessageFocus from '@app/features/messaging/state/MessageFocus';
 import MessageReply from '@app/features/messaging/state/MessageReply';
+import PersonaChange from '@app/features/messaging/state/PersonaChange';
 import {getMessageComponent} from '@app/features/messaging/utils/MessageComponentUtils';
+import {buildExistingAttachmentEditReferences} from '@app/features/messaging/utils/MessageEditContentUtils';
 import {renderAstToPlaintext} from '@app/features/messaging/utils/markdown/Plaintext';
 import {NodeType} from '@app/features/messaging/utils/markdown/parser/Enums';
 import {isMarkdownParserReady} from '@app/features/messaging/utils/markdown/parser/MarkdownParserWasm';
 import {SystemMessageUtils} from '@app/features/messaging/utils/SystemMessageUtils';
+import {PersonaPickerPopout} from '@app/features/personas/components/popouts/PersonaPickerPopout';
+import PersonaPickerMobile from '@app/features/personas/state/PersonaPickerMobile';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
 import styles from '@app/features/theme/styles/Message.module.css';
 import {ThreadStarterDivider, ThreadStarterMessage} from '@app/features/threads/components/ThreadSystemMessages';
 import {MessageContextMenu} from '@app/features/ui/action_menu/MessageContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
+import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {openPopout} from '@app/features/ui/popover/PopoverPopout';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
+import Personas from '@app/features/user/state/Personas';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
@@ -186,6 +194,7 @@ export type MessageBehaviorOverrides = Partial<{
 	messageGroupSpacing: number;
 	messageDisplayCompact: boolean;
 	isEditing: boolean;
+	isChangingPersona: boolean;
 	isReplying: boolean;
 	isHighlight: boolean;
 	forceUnknownMessageType: boolean;
@@ -252,6 +261,7 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 	const messageDisplayCompact =
 		compact ?? behaviorOverrides?.messageDisplayCompact ?? UserSettings.getMessageDisplayCompact();
 	const isEditing = behaviorOverrides?.isEditing ?? MessageEdit.isEditing(message.channelId, message.id);
+	const isChangingPersona = PersonaChange.isEditing(message.channelId, message.id);
 	const isReplying = behaviorOverrides?.isReplying ?? MessageReply.isReplying(message.channelId, message.id);
 	const isHighlight = behaviorOverrides?.isHighlight ?? MessageReply.isHighlight(message.id);
 	const forceUnknownMessageType =
@@ -269,6 +279,63 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 			}),
 		[message.content, markdownParserReady],
 	);
+	const isMobile = MobileLayout.isEnabled();
+	useEffect(() => {
+		if (!isChangingPersona) return;
+		if (!messageRef.current) return;
+		const applyEdit = (p: string | null) =>
+			void MessageCommands.edit(
+				channel.id,
+				message.id,
+				undefined,
+				undefined,
+				undefined,
+				buildExistingAttachmentEditReferences(message),
+				p === null || p === ''
+					? null
+					: (() => {
+							const persona = Personas.getPersona(p);
+							if (!persona) return null;
+							return persona.toSnapshot();
+						})(),
+			);
+		const popoutKey = `message-change-persona::${message.id}`;
+		if (isMobile) {
+			PersonaPickerMobile.open({
+				channel: props.channel,
+				selectedId: message.persona?.id || '',
+				onSelect: (p) => {
+					applyEdit(p);
+					PersonaPickerMobile.close();
+				},
+				messageId: message.id,
+				onClose: () => PersonaChange.stopEditing(channel.id),
+			});
+		} else {
+			openPopout(
+				messageRef.current,
+				{
+					position: 'bottom-start',
+					offsetCrossAxis: 8,
+					offsetMainAxis: 4,
+					render: () => (
+						<PersonaPickerPopout
+							channel={channel}
+							selectedId={message.persona?.id || ''}
+							onSelect={(p: string | null) => {
+								applyEdit(p);
+								PopoutCommands.close(popoutKey);
+							}}
+							data-flx="channel.channel-message.message.persona-picker-popout.apply-edit"
+						/>
+					),
+					shouldAutoUpdate: false,
+					onClose: () => PersonaChange.stopEditing(channel.id),
+				},
+				popoutKey,
+			);
+		}
+	}, [isChangingPersona]);
 	const messageAriaLabel = useMemo(() => {
 		const timeLabel = DateUtils.getFormattedDateTime(message.timestamp);
 		const systemText = message.isSystemMessage() ? SystemMessageUtils.stringify(message, i18n) : null;

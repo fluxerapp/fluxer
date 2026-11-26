@@ -144,6 +144,8 @@ Display, motion, message, media, voice and interaction preferences.
 | message_double_click_actions? | bool | Whether double-clicking a message edits your own message or replies to others |
 | announce_call_joins_and_leaves? | bool | Whether a screen reader announces people joining and leaving calls. Clients treat it as on when it's unset |
 | animate_gif_picker? | bool | Whether GIFs in the GIF picker play without hovering them. Clients treat it as on when it's unset |
+| show_persona_picker_button | bool | Whether the composer shows the personas button |
+| show_latch_in_persona_picker | bool | Whether the composer's persona picker shows the trigger behavior selector |
 
 ### Channel typing indicator modes
 
@@ -770,3 +772,28 @@ What a right to left swipe in a channel does on mobile.
 | 0 | SWIPE_ACTION_UNSPECIFIED | No action is set |
 | 1 | SWIPE_ACTION_CHANNEL_DETAILS | Open the channel details |
 | 2 | SWIPE_ACTION_REPLY | Reply to the message |
+
+## Persona settings object
+
+| Field | Type | Description |
+| --- | --- | --- |
+| active_persona_global | snowflake | The active persona, used by default for new messages |
+| active_personas | array[[active persona item](#active-persona-item) object] | A map of contexts (guilds and channels) to the active persona to use for them |
+| locked_contexts | array[snowflake] | Unknown, will probably remove this |
+| recent_personas | array[[persona frecency entry](#persona-frecency-entry-object) object] | Personas used recently, for menu sorting. Not currently used in the client |
+| latch_mode_global | int32 | The currently set [latch mode](#latch-modes) or trigger behavior |
+
+### Active persona item
+
+| Field | Type | Description |
+| --- | --- | --- |
+| context_id | snowflake | The ID of the context (channel or guild) that this activation applies in |
+| persona_id? | snowflake | The ID of the persona to consider active in the specified context. If this is not set, then use the main account in this context instead. |
+
+### Latch modes
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | MANUAL | Triggers apply the triggered persona to only the message they're used in |
+| 1 | OFF | Triggers are not checked or stripped, and the triggered persona is not applied |
+| 2 | TRIGGER_SWITCHING | Also known as "last used" or "latch." When a message with a persona trigger is sent, the triggered persona is used for the message and then becomes the active persona |

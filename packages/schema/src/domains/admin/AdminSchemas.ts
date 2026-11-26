@@ -467,7 +467,7 @@ export const CheckAvatarHashRequest = z.object({
 
 export type CheckAvatarHashRequest = z.infer<typeof CheckAvatarHashRequest>;
 
-const ProfileSubstringScopeSchema = z.enum(['username', 'global_name', 'nickname', 'bio', 'pronouns']);
+const ProfileSubstringScopeSchema = z.enum(['username', 'global_name', 'nickname', 'bio', 'pronouns', 'persona_tag']);
 
 export const BanUserAvatarRequest = z.object({
 	reason: createStringType(1, 1024).optional(),

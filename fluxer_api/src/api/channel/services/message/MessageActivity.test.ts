@@ -70,6 +70,7 @@ function message(attachments: Array<MessageAttachment>, content = ''): Message {
 		message_snapshots: null,
 		call: null,
 		has_reaction: null,
+		persona: null,
 		version: 1,
 	});
 }

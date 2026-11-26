@@ -351,6 +351,14 @@ import {
 import {ATTACHMENT_DECAY_COLUMNS, type AttachmentDecayRow} from '@app/api/types/AttachmentDecayTypes';
 import {GUILD_VISIT_TTL_SECONDS} from '@fluxer/constants/src/GuildVisitConstants';
 import {seconds} from 'itty-time';
+import {
+	PERSONA_COLUMNS,
+	PERSONA_GROUP_COLUMNS,
+	PERSONA_TRIGGER_COLUMNS,
+	type PersonaGroupRow,
+	type PersonaRow,
+	type PersonaTriggerRow,
+} from './database/types/PersonaTypes';
 
 export const Users = defineTable<UserRow, 'user_id'>({
 	name: 'users',
@@ -1556,4 +1564,20 @@ export const VoiceP2pConnectionReports = defineTable<VoiceP2pConnectionReportRow
 	columns: VOICE_P2P_CONNECTION_REPORT_COLUMNS,
 	primaryKey: ['user_id', 'report_id'],
 	defaultTtlSeconds: seconds('180 days'),
+});
+export const Personas = defineTable<PersonaRow, 'owner_id' | 'persona_id'>({
+	name: 'personas',
+	columns: PERSONA_COLUMNS,
+	primaryKey: ['owner_id', 'persona_id'],
+	partitionKey: ['owner_id'],
+});
+export const PersonaTriggers = defineTable<PersonaTriggerRow, 'owner_id' | 'prefix' | 'suffix'>({
+	name: 'persona_triggers',
+	columns: PERSONA_TRIGGER_COLUMNS,
+	primaryKey: ['owner_id', 'prefix', 'suffix'],
+});
+export const PersonaGroups = defineTable<PersonaGroupRow, 'owner_id' | 'persona_group_id'>({
+	name: 'persona_groups',
+	columns: PERSONA_GROUP_COLUMNS,
+	primaryKey: ['owner_id', 'persona_group_id'],
 });

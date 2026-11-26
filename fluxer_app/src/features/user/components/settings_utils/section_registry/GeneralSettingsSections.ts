@@ -32,6 +32,7 @@ import {
 import Users from '@app/features/user/state/Users';
 import {
 	INTERFACE_LANGUAGE_DESCRIPTOR,
+	PERSONAS_DESCRIPTOR,
 	PROFILE_BADGES_DESCRIPTOR,
 	PROFILE_CUSTOMIZATION_DESCRIPTOR,
 } from '@app/features/user/utils/UserMessageDescriptors';
@@ -62,6 +63,13 @@ export const generalSettingsSections = [
 		id: 'profile-customization',
 		tabType: 'my_profile',
 		label: PROFILE_CUSTOMIZATION_DESCRIPTOR,
+		keywords: [],
+		isAdvanced: false,
+	},
+	{
+		id: 'personas',
+		tabType: 'personas',
+		label: PERSONAS_DESCRIPTOR,
 		keywords: [],
 		isAdvanced: false,
 	},

@@ -33,6 +33,7 @@ export class MessageSearchResponseMapper {
 		userId: UserID,
 		viewer: ThreadViewer,
 		requestCache: RequestCache,
+		personaFallbackBehavior?: boolean,
 	): Promise<{
 		messages: Array<MessageSearchResultsResponse['messages'][number]>;
 		channels: Array<MessageSearchResultsResponse['channels'][number]>;
@@ -58,6 +59,7 @@ export class MessageSearchResponseMapper {
 			userId,
 			messages: renderableMessages,
 			channelById,
+			personaFallbackBehavior,
 		});
 		const searchMessages = maskThreadArtifactsByChannel(viewer, channelById, messageResponses).map(
 			({referenced_message: _referencedMessage, ...searchMessage}) => searchMessage,

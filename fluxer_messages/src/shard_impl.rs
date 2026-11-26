@@ -7,12 +7,13 @@ use crate::types::{
     ApiChannelMentionResponse, ApiEmbedAuthorResponse, ApiEmbedFieldResponse,
     ApiEmbedFooterResponse, ApiEmbedMediaResponse, ApiEmbedProviderResponse,
     ApiMessageAttachmentResponse, ApiMessageCallResponse, ApiMessageEmbedChildResponse,
-    ApiMessageEmbedResponse, ApiMessageReactionResponse, ApiMessageReferenceResponse,
-    ApiMessageResponse, ApiMessageSnapshotResponse, ApiMessageStickerResponse,
-    ApiReactionEmojiResponse, ApiUserPartial, Message, MessageAttachment, MessageCall,
-    MessageEmbed, MessageEmbedAuthor, MessageEmbedChild, MessageEmbedField, MessageEmbedFooter,
-    MessageEmbedMedia, MessageEmbedProvider, MessageReference, MessageRequest, MessageResponse,
-    MessageSnapshot, MessageStickerItem,
+    ApiMessageEmbedResponse, ApiMessagePersonaSnapshotResponse, ApiMessageReactionResponse,
+    ApiMessageReferenceResponse, ApiMessageResponse, ApiMessageSnapshotResponse,
+    ApiMessageStickerResponse, ApiPersonaResponse, ApiReactionEmojiResponse, ApiUserPartial,
+    Message, MessageAttachment, MessageCall, MessageEmbed, MessageEmbedAuthor, MessageEmbedChild,
+    MessageEmbedField, MessageEmbedFooter, MessageEmbedMedia, MessageEmbedProvider,
+    MessagePersonaSnapshot, MessageReference, MessageRequest, MessageResponse, MessageSnapshot,
+    MessageStickerItem,
 };
 use crate::udt;
 use base64::prelude::{BASE64_STANDARD, Engine};
@@ -95,6 +96,7 @@ const THREAD_FEATURE_CHANNEL_TYPES: [i32; 5] = [10, 11, 12, 15, 16];
 const EMBED_MEDIA_OWNED_ATTACHMENT_FLAG: i32 = 1 << 30;
 const DELETED_USER_USERNAME: &str = "DeletedUser";
 const DELETED_USER_GLOBAL_NAME: &str = "Deleted User";
+const DELETED_PERSONA_GLOBAL_NAME: &str = "Deleted Persona";
 const BUCKET_SCAN_CONCURRENCY: usize = 16;
 const BUCKET_SCAN_WAVE: usize = 4;
 const ENRICHMENT_QUERY_CONCURRENCY: usize = 16;
@@ -119,7 +121,7 @@ const MESSAGE_COLUMNS: &str = "\
     webhook_id, webhook_name, webhook_avatar_hash, \
     content, edited_timestamp, pinned_timestamp, flags, mention_everyone, \
     mention_users, mention_roles, mention_channels, \
-    has_reaction, version, \
+    has_reaction, version, persona, \
     attachments, embeds, sticker_items, message_reference, call, message_snapshots";
 
 pub struct MessagesShard<T> {
@@ -188,6 +190,7 @@ struct MessageDbRow {
     message_reference: Option<udt::MessageReferenceUdt>,
     call: Option<udt::MessageCallUdt>,
     message_snapshots: Option<Vec<udt::MessageSnapshotUdt>>,
+    persona: Option<udt::MessagePersonaSnapshotUdt>,
 }
 
 #[cfg_attr(feature = "scylla", derive(DeserializeRow))]
@@ -261,6 +264,7 @@ struct UserPartialServiceResponse {
     content_hidden_since: Option<i64>,
     #[serde(default)]
     hidden_profile_badges: Vec<String>,
+    persona_tag: Option<String>,
 }
 
 #[derive(Debug, Default)]
@@ -303,6 +307,25 @@ impl PageCursor {
 #[derive(Debug, Deserialize)]
 enum UserServiceResponse {
     FoundPartials(Vec<UserPartialServiceResponse>),
+    FoundPersonaPartials(Vec<PartialPersonaUserServiceResponse>),
+    FoundPersonaPartial(PartialPersonaUserServiceResponse),
+    NotFound,
+    #[allow(dead_code)]
+    Found(serde_json::Value),
+    #[allow(dead_code)]
+    Invalidated,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+struct PartialPersonaUserServiceResponse {
+    persona_id: i64,
+    owner_id: i64,
+    internal_name: String,
+    display_name: Option<String>,
+    avatar_hash: Option<String>,
+    pronouns: Option<String>,
+    #[allow(dead_code)]
+    accent_color: Option<i32>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -337,6 +360,7 @@ struct ResponseBuildOptions {
     nonce: Option<String>,
     tts: bool,
     include_hidden: bool,
+    persona_fallback_behavior: bool,
     threads_mask: bool,
     excluded_types: Vec<i32>,
     attachment_decay: bool,
@@ -399,6 +423,7 @@ struct ResponseContext {
     attachment_decay: HashMap<i64, DateTime<Utc>>,
     channel_mentions: HashMap<String, ApiChannelMentionResponse>,
     mention_context: HashMap<i64, MessageMentionContext>,
+    personas: HashMap<i64, ApiPersonaResponse>,
 }
 
 #[derive(Debug, Default)]
@@ -1061,15 +1086,18 @@ impl<T: Transport> MessagesShard<T> {
         let attachment_ids = options.expiring_attachment_ids(&all_messages);
         let channel_ids = collect_channel_mention_ids(&all_messages, &mention_context);
         let user_ids = collect_user_ids(&all_messages, &mention_context);
+        let persona_ids = collect_persona_ids(&all_messages);
         let reactions_future = self.fetch_reactions_for_messages(messages, options);
         let attachment_decay_future = self.fetch_attachment_decay(attachment_ids);
         let channel_mentions_future = self.resolve_channel_mentions(channel_ids, options);
         let users_future = self.load_user_partials(user_ids, &options.instance_name, &mut users);
-        let (reactions, attachment_decay, channel_mentions, ()) = tokio::join!(
+        let personas_future = self.fetch_personas(persona_ids);
+        let (reactions, attachment_decay, channel_mentions, (), personas) = tokio::join!(
             reactions_future,
             attachment_decay_future,
             channel_mentions_future,
-            users_future
+            users_future,
+            personas_future
         );
         let attachment_decay = attachment_decay?;
         if !options.include_hidden {
@@ -1083,6 +1111,7 @@ impl<T: Transport> MessagesShard<T> {
             .collect();
         Ok(ResponseContext {
             users,
+            personas,
             reactions,
             referenced_messages,
             attachment_decay,
@@ -1262,6 +1291,55 @@ impl<T: Transport> MessagesShard<T> {
         );
     }
 
+    async fn fetch_personas(
+        &self,
+        persona_ids: HashSet<(i64, i64)>,
+    ) -> HashMap<i64, ApiPersonaResponse> {
+        if persona_ids.is_empty() {
+            return HashMap::new();
+        }
+        let mut persona_ids: Vec<(i64, i64)> = persona_ids.into_iter().collect();
+        persona_ids.sort_unstable();
+        persona_ids.dedup();
+        let payload = serde_json::json!({
+            "op": "GetPersonaPartialsByIds",
+            "persona_ids": persona_ids,
+        });
+        let payload_bytes = serde_json::to_vec(&payload).unwrap_or_default();
+        let response = self
+            .transport
+            .request(
+                "svc.users",
+                payload_bytes.as_slice(),
+                SERVICE_REQUEST_TIMEOUT,
+            )
+            .await
+            .ok()
+            .and_then(|bytes| serde_json::from_slice::<UserServiceResponse>(&bytes).ok());
+        let partials = match response {
+            Some(UserServiceResponse::FoundPersonaPartials(partials)) => partials,
+            Some(UserServiceResponse::FoundPersonaPartial(partial)) => vec![partial],
+            _ => Vec::new(),
+        };
+        partials
+            .into_iter()
+            .map(|partial| {
+                //let id = parse_i64(&, "persona_id").expect("Cannot find persona ID from response");
+                (
+                    partial.persona_id,
+                    ApiPersonaResponse {
+                        id: partial.persona_id.to_string(),
+                        owner_id: Some(partial.owner_id.to_string()),
+                        display_name: partial.display_name.or(Some(partial.internal_name)),
+                        avatar: partial.avatar_hash,
+                        pronouns: partial.pronouns,
+                        ..Default::default()
+                    },
+                )
+            })
+            .collect()
+    }
+
     async fn resolve_channel_mentions(
         &self,
         channel_ids: HashSet<i64>,
@@ -1332,6 +1410,7 @@ impl<T: Transport> MessagesShard<T> {
         include_referenced_message: bool,
     ) -> ApiMessageResponse {
         let author = self.resolve_author(message, options, context);
+        let persona = self.resolve_persona(message, context);
         let scope = AttachmentUrlScope::for_message(message);
         let attachments = message
             .attachments
@@ -1416,6 +1495,92 @@ impl<T: Transport> MessagesShard<T> {
         } else {
             None
         };
+        if options.persona_fallback_behavior
+            && message.webhook_id.is_none()
+            && message.persona.is_some()
+        {
+            let persona_id = {
+                let pid = persona
+                    .clone()
+                    .and_then(|p| p.id)
+                    .clone()
+                    .unwrap_or("0".to_string());
+                if !pid.is_empty() {
+                    pid
+                } else {
+                    "0".to_string()
+                }
+            };
+            return ApiMessageResponse {
+                id: message.message_id.to_string(),
+                channel_id: message.channel_id.to_string(),
+                author: ApiUserPartial {
+                    bot: author.bot,
+                    avatar: persona
+                        .clone()
+                        .and_then(|p| p.avatar)
+                        .or(message.persona.as_ref().and_then(|p| p.avatar.clone())),
+                    username: format!(
+                        "{} ~ @{}#{}",
+                        persona
+                            .and_then(|p| p.name)
+                            .unwrap_or(DELETED_PERSONA_GLOBAL_NAME.to_string()),
+                        author.username,
+                        author.discriminator
+                    ),
+                    discriminator: "0000".to_string(),
+                    id: persona_id.clone(),
+                    flags: 0,
+                    avatar_color: None,
+                    global_name: None,
+                    mention_flags: None,
+                    system: Some(false),
+                    persona_tag: None,
+                },
+                webhook_id: Some(persona_id),
+                message_type: message.message_type,
+                flags: message.flags.unwrap_or_default(),
+                content: message.content.clone().unwrap_or_default(),
+                timestamp: epoch_millis_to_iso(snowflake_to_epoch_millis(message.message_id)),
+                edited_timestamp: message.edited_timestamp.map(epoch_millis_to_iso),
+                pinned: message.pinned.unwrap_or(false),
+                mention_everyone: message.mention_everyone.unwrap_or(false),
+                tts: options.tts,
+                mentions,
+                mention_roles,
+                mention_channels: (!mention_channels.is_empty()).then_some(mention_channels),
+                users: (!users.is_empty()).then_some(users),
+                embeds,
+                attachments,
+                stickers,
+                reactions: context.reactions.get(&message.message_id).cloned(),
+                message_reference: message
+                    .message_reference
+                    .as_ref()
+                    .and_then(map_message_reference),
+                message_snapshots: message.message_snapshots.as_ref().and_then(|snapshots| {
+                    let mapped: Vec<_> = snapshots
+                        .iter()
+                        .enumerate()
+                        .map(|(index, snapshot)| {
+                            self.map_snapshot(
+                                message.message_id,
+                                message.channel_id,
+                                index,
+                                snapshot,
+                                options,
+                                context,
+                            )
+                        })
+                        .collect();
+                    (!mapped.is_empty()).then_some(mapped)
+                }),
+                nonce: options.nonce.clone(),
+                call: message.call.as_ref().map(map_call),
+                referenced_message,
+                persona: None,
+            };
+        }
         ApiMessageResponse {
             id: message.message_id.to_string(),
             channel_id: message.channel_id.to_string(),
@@ -1461,6 +1626,24 @@ impl<T: Transport> MessagesShard<T> {
             nonce: options.nonce.clone(),
             call: message.call.as_ref().map(map_call),
             referenced_message,
+            persona: persona.or(message.persona.as_ref().map(|v| {
+                match v.name.as_ref().is_some() {
+                    true => ApiMessagePersonaSnapshotResponse {
+                        id: v.id.clone(),
+                        owner_id: None, // won't be returned from the API
+                        name: v.name.clone(),
+                        avatar: v.avatar.clone(),
+                        pronouns: v.pronouns.clone(),
+                    },
+                    false => ApiMessagePersonaSnapshotResponse {
+                        id: Some("0".to_string()),
+                        owner_id: None, // won't be returned from the API
+                        name: Some(DELETED_PERSONA_GLOBAL_NAME.to_string()),
+                        avatar: None,
+                        pronouns: None,
+                    },
+                }
+            })),
         }
     }
 
@@ -1491,6 +1674,7 @@ impl<T: Transport> MessagesShard<T> {
                 system: None,
                 flags: 0,
                 mention_flags: None,
+                persona_tag: None,
             };
         }
         deleted_user(0, &options.instance_name)
@@ -1779,6 +1963,44 @@ impl<T: Transport> MessagesShard<T> {
             flags: options.mask_flags(i64::from(snapshot.flags.unwrap_or_default())) as i32,
         }
     }
+
+    fn resolve_persona(
+        &self,
+        message: &Message,
+        context: &ResponseContext,
+    ) -> Option<ApiMessagePersonaSnapshotResponse> {
+        if let Some(Some(persona_id)) = message.persona.as_ref().map(|v| &v.id) {
+            let id = parse_i64(persona_id, "persona_id").expect("Could not parse persona ID");
+            let persona = context
+                .personas
+                .get(&id)
+                .cloned()
+                .map(Into::<ApiMessagePersonaSnapshotResponse>::into);
+            if let Some(persona) = persona
+                && persona
+                    .owner_id
+                    .as_ref()
+                    .is_some_and(|v| v.clone() == message.author_id.unwrap_or_default().to_string())
+            {
+                return Some(persona);
+            }
+        }
+        None
+    }
+}
+
+fn collect_persona_ids(all_messages: &[&Message]) -> HashSet<(i64, i64)> {
+    let mut ids = HashSet::new();
+    all_messages.iter().for_each(|f| {
+        if let Some(persona) = &f.persona
+            && let Some(id) = &persona.id
+            && let Ok(num) = parse_i64(id, "persona_id")
+            && let Some(author_id) = f.author_id
+        {
+            ids.insert((num, author_id));
+        }
+    });
+    ids
 }
 
 impl MessagesStorage {
@@ -2339,6 +2561,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                 nonce,
                 tts,
                 include_hidden,
+                persona_fallback_behavior,
                 threads_mask,
                 instance_name,
                 attachment_api_base,
@@ -2369,6 +2592,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                             nonce,
                             tts: tts.unwrap_or(false),
                             include_hidden,
+                            persona_fallback_behavior,
                             threads_mask,
                             excluded_types: Vec::new(),
                             instance_name,
@@ -2395,6 +2619,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                 nonce,
                 tts,
                 include_hidden,
+                persona_fallback_behavior,
                 threads_mask,
                 instance_name,
                 attachment_api_base,
@@ -2422,6 +2647,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                             nonce,
                             tts: tts.unwrap_or(false),
                             include_hidden,
+                            persona_fallback_behavior,
                             threads_mask,
                             excluded_types: Vec::new(),
                             instance_name,
@@ -2446,6 +2672,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                 include_reactions,
                 attachment_decay,
                 include_hidden,
+                persona_fallback_behavior,
                 threads_mask,
                 instance_name,
                 attachment_api_base,
@@ -2473,6 +2700,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                             nonce: None,
                             tts: false,
                             include_hidden,
+                            persona_fallback_behavior,
                             threads_mask,
                             excluded_types: Vec::new(),
                             instance_name,
@@ -2498,6 +2726,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                 include_reactions,
                 attachment_decay,
                 include_hidden,
+                persona_fallback_behavior,
                 threads_mask,
                 mut exclude_types,
                 instance_name,
@@ -2546,6 +2775,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                             nonce: None,
                             tts: false,
                             include_hidden,
+                            persona_fallback_behavior,
                             threads_mask,
                             excluded_types: exclude_types,
                             instance_name,
@@ -2566,6 +2796,18 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                     .collect();
                 Ok(MessageResponse::FoundMentions(mentions))
             }
+        }
+    }
+}
+
+impl From<ApiPersonaResponse> for ApiMessagePersonaSnapshotResponse {
+    fn from(value: ApiPersonaResponse) -> Self {
+        Self {
+            id: Some(value.id),
+            owner_id: value.owner_id,
+            name: value.display_name.or(value.internal_name),
+            avatar: value.avatar,
+            pronouns: value.pronouns,
         }
     }
 }
@@ -2942,6 +3184,7 @@ fn map_user_partial(partial: UserPartialServiceResponse) -> ApiUserPartial {
         flags: partial.flags,
         hidden_profile_badges: partial.hidden_profile_badges,
         mention_flags: partial.mention_flags,
+        persona_tag: partial.persona_tag,
     })
 }
 
@@ -2960,6 +3203,7 @@ fn deleted_user(user_id: i64, instance_name: &str) -> ApiUserPartial {
         system: None,
         flags: 0,
         mention_flags: None,
+        persona_tag: None,
     }
 }
 
@@ -3588,6 +3832,15 @@ fn convert_message_snapshot(s: udt::MessageSnapshotUdt) -> MessageSnapshot {
     }
 }
 
+fn convert_message_persona_snapshot(s: udt::MessagePersonaSnapshotUdt) -> MessagePersonaSnapshot {
+    MessagePersonaSnapshot {
+        id: s.id.clone(),
+        name: s.name.clone(),
+        avatar: s.avatar.clone(),
+        pronouns: s.pronouns.clone(),
+    }
+}
+
 impl From<MessageDbRow> for Message {
     fn from(row: MessageDbRow) -> Self {
         Self {
@@ -3632,6 +3885,7 @@ impl From<MessageDbRow> for Message {
             message_snapshots: row
                 .message_snapshots
                 .map(|v| v.into_iter().map(convert_message_snapshot).collect()),
+            persona: row.persona.map(convert_message_persona_snapshot),
         }
     }
 }
@@ -3795,6 +4049,7 @@ mod tests {
             nonce: None,
             tts: false,
             include_hidden: false,
+            persona_fallback_behavior: false,
             threads_mask: false,
             excluded_types: Vec::new(),
             attachment_decay: true,

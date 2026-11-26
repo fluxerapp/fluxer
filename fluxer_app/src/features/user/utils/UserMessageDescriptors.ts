@@ -237,6 +237,11 @@ export const PROFILE_CUSTOMIZATION_DESCRIPTOR = msg({
 	comment: 'Settings section label for editing profile appearance and identity.',
 });
 
+export const PERSONAS_DESCRIPTOR = msg({
+	message: 'Personas',
+	comment: 'Settings section label for editing personas.',
+});
+
 export const PROFILE_BADGES_DESCRIPTOR = msg({
 	message: 'Badges',
 	comment: 'Title of the profile settings section that lists the badges you hold and lets you hide each one.',
@@ -267,6 +272,16 @@ export const COMMUNITY_NICKNAME_DESCRIPTOR = msg({
 export const DISPLAY_NAME_DESCRIPTOR = msg({
 	message: 'Display name',
 	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
+});
+
+export const PERSONA_TAG_DESCRIPTOR = msg({
+	message: 'Persona tag',
+	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
+});
+
+export const PERSONA_TAG_DESCRIPTION_DESCRIPTOR = msg({
+	message: 'Persona tags display next to your personas to tie them together.',
+	comment: 'Explanation for persona tags.',
 });
 
 export const MENTION_PREFERENCE_SECTION_TITLE_DESCRIPTOR = msg({

@@ -49,12 +49,13 @@ message SyncedPreferences {
   KeybindSettings keybinds = 111;
   ChatInputSettings chat_input = 112;
   optional bool save_camera_uploads_to_device = 113;
-  ReactionEmoji double_tap_reaction = 114;
+  ReactionEmoji double_tap_reaction = 901114;
   ChannelFrecencyState channel_frecency = 115;
   AnnouncementPromptsState announcement_prompts = 116;
   DoubleTapAction double_tap_action = 117;
   SwipeAction swipe_right_to_left_action = 118;
 
+	PersonaSettings persona_settings = 902114;
 }
 
 message SpellcheckSettings {
@@ -281,6 +282,29 @@ message ChannelFrecencyState {
 
 message ChatInputSettings {
   optional bool convert_emoticons = 1;
+}
+
+message PersonaSettings {
+	message ActivePersonaItem {
+		int64 context_id = 1;
+		optional int64 persona_id = 2;
+	}
+	message FrecencyEntry {
+		int64 persona_id = 1;
+		uint32 count = 2;
+		int64 last_used_ms = 3;
+	}
+	enum LatchMode {
+		MANUAL = 0;
+		OFF = 1;
+		TRIGGER_SWITCHING = 2;
+	}
+
+	optional int64 active_persona_global = 1;
+	repeated ActivePersonaItem active_personas = 2;
+  reserved 3;
+	repeated FrecencyEntry recent_personas = 4;
+	LatchMode latch_mode_global = 5;
 }
 
 enum DoubleTapAction {

@@ -1,0 +1,210 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Personas
+description: Persona objects and the routes for personas.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A persona is a reusable profile that can be attached to messages.
+
+Personas are applied by the client before the message is sent. This includes checking and applying persona triggers.
+
+## Limits
+
+You can save up to `max_personas` personas (default 250) with up to `10` triggers and up to `10` tags each. See [instance limits](/http-api/instance/#limit-keys). This limit is only enforced on persona creation or import, so that if you have more than `max_personas` personas, all personas you already have will stay in place and continue to be usable and editable, but you won't be able to create any more until you have deleted enough to be below the limit (or raised the limit again).
+
+## Own Persona object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the persona |
+| internal_name | string | A name to use for the persona in lists of the user's own personas. Also used as the default display name if one is not set. |
+| avatar<sup>1</sup> | ?string | The avatar hash, or null |
+| avatar_color | ?integer | The 24-bit RGB color taken from the avatar, or null |
+| banner | ?string | The banner hash, or null |
+| banner_color | ?integer | The 24-bit RGB color taken from the banner, or null |
+| display_name | ?string | The display name of the persona |
+| bio | ?string | The profile biography, or null |
+| pronouns | ?string | The profile pronouns, or null |
+| accent_color | ?integer | The accent color as 24-bit RGB, or null |
+| tags | array[string] | A list of arbitrary string tags used for search and categorization |
+| triggers | array[[persona trigger](#persona-trigger-object) objects] | Pairs of prefixes and suffixes that can activate a persona |
+
+<sup>1</sup> An animated avatar hash starts with `a_`
+
+## Other Persona object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the persona |
+| user | [partial user](/http-api/users/#partial-user-object) object | The account that owns the persona |
+| avatar<sup>1</sup> | ?string | The avatar hash, or null |
+| avatar_color | ?integer | The 24-bit RGB color taken from the avatar, or null |
+| banner | ?string | The banner hash, or null |
+| banner_color | ?integer | The 24-bit RGB color taken from the banner, or null |
+| display_name | string | The display name of the persona |
+| bio | ?string | The profile biography, or null |
+| pronouns | ?string | The profile pronouns, or null |
+| accent_color | ?integer | The accent color as 24-bit RGB, or null |
+
+<sup>1</sup> An animated avatar hash starts with `a_`
+
+## Persona trigger object
+
+Both the prefix and suffix must be specified, but one MAY be null. These are used in a pairing, and therefore the pair must be unique across an entire user account.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| prefix | ?string | A prefix that, with the paired suffix, should activate a persona for a message |
+| suffix | ?string | A suffix that, with the paired prefix, should activate a persona for a message |
+
+## Persona import progress object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| event | string | The [persona import event](#persona-import-events) this entry represents |
+| length? | integer | The number of entries being imported |
+| index? | integer | The zero-based index of the persona the event relates to in the list of imported personas |
+
+### Persona import events
+
+| Event | Description |
+| --- | --- |
+| Start | This event includes `length`. This confirms that the request has reached the server, the added personas will not exceed the limit, and the import is starting. |
+| PersonaBuilt | This event includes `index`. The indicated persona has been queued for creation. |
+| PersonaSaved | This event includes `index`. The indicated persona has been created successfully. |
+| SaveFailed | This event includes `index`. The indicated persona could not be saved for some reason. |
+| Done | This event does not include any other fields. The import has finished. |
+
+## List own personas
+
+<RouteHeader method="GET" path="/v1/users/@me/personas" bot />
+
+Returns a list of your own personas.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[own persona](#own-persona-object) object] | The personas that were returned |
+
+## Get persona
+
+<RouteHeader method="GET" path="/v1/users/{user_id}/personas/{persona_id}" bot />
+
+Returns the full persona by its ID.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[other persona](#other-persona-object) object] | The personas that were returned |
+
+## Create persona
+
+<RouteHeader method="POST" path="/v1/users/@me/personas" bot />
+
+Creates the specified persona.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| internal_name | string | A name to use for the persona in lists of the user's own personas. Also used as the default display name if one is not set. |
+| avatar?<sup>1</sup> | ?string | The avatar hash, or null |
+| banner? | ?string | The banner hash, or null |
+| display_name? | ?string | The display name of the persona |
+| bio? | ?string | The profile biography, or null |
+| pronouns? | ?string | The profile pronouns, or null |
+| accent_color? | ?integer | The accent color as 24-bit RGB, or null |
+| tags? | array[string] | A list of arbitrary string tags used for search and categorization |
+| triggers? | array[[persona trigger](#persona-trigger-object) objects] | Pairs of prefixes and suffixes that can activate a persona |
+
+<sup>1</sup> An animated avatar hash starts with `a_`
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [own persona](#own-persona-object) object | The persona that was created |
+| 400 | [error response](/http-api/#error-response) | `MAX_PERSONAS` if the `max_personas` limit has been exceeded |
+
+## Import personas
+
+<RouteHeader method="POST" path="/v1/users/@me/personas/import" bot />
+
+Imports the specified personas. The limit is checked before the import begins.
+
+### JSON body
+
+Takes an array of the [Create persona](#create-persona) payload.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | streamed newline-delimited [persona import progress](#persona-import-progress-object) objects | The progress of the import |
+| 400 | [error response](/http-api/#error-response) | `MAX_PERSONAS` if the `max_personas` limit has been exceeded |
+
+## Update persona
+
+<RouteHeader method="PATCH" path="/v1/users/@me/personas/{persona_id}" bot />
+
+Updates the identified persona. Fields you leave out stay the same.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| internal_name? | string | A name to use for the persona in lists of the user's own personas. Also used as the default display name if one is not set. |
+| avatar<sup>1</sup>? | ?string | The avatar hash, or null |
+| banner? | ?string | The banner hash, or null |
+| display_name? | ?string | The display name of the persona |
+| bio? | ?string | The profile biography, or null |
+| pronouns? | ?string | The profile pronouns, or null |
+| accent_color? | ?integer | The accent color as 24-bit RGB, or null |
+| tags?<sup>2</sup> | array[string] | A list of arbitrary string tags used for search and categorization |
+| triggers?<sup>2</sup> | array[[persona trigger](#persona-trigger-object) objects] | Pairs of prefixes and suffixes that can activate a persona |
+
+<sup>1</sup> An animated avatar hash starts with `a_`
+
+<sup>2</sup> Replaces the whole list. Include every existing item you want to keep
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [own persona](#own-persona-object) object | The persona that was created |
+
+## Persona import image proxy
+
+<RouteHeader method="GET" path="/v1/import_image_proxy" />
+
+This endpoint is a CORS proxy for users signed in to the web app to allow images (avatar or banner) to be imported from external URLs, since all known JSON export formats rely on URLs. It is intended only for the web-app where it is required. Therefore, it only works with the web-app, it only returns images, and it has a rather strict rate-limit. It is only documented here for completeness, and you should not use it.
+
+Other web-based clients MUST use another CORS proxy to get these images, and all other clients MUST NOT use this endpoint and MAY download the relevant images directly.
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| url | string | The URL to import an image from. |
+
+### Responses
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | the image | The image was found and is being proxied to you. |
+| 400 | [error response](/http-api/#error-response) | `INVALID_FORM_BODY` if you submitted an invalid URL |
+| 401 | [error response](/http-api/#error-response) | `UNAUTHORIZED` if you are not the web-app |
+| 404 | [error response](/http-api/#error-response) | `NOT_FOUND` if the remote URL returned 404 as well |
+| 501 | [error response](/http-api/#error-response) | `BAD_GATEWAY` if the remote URL did not return an image |

@@ -46,6 +46,7 @@ Routes that need `MANAGE_MESSAGES` also follow the guild's [MFA level](/http-api
 | message_snapshots? | array[[message snapshot](#message-snapshot-object) object] | Copies of a forwarded message |
 | nonce?<sup>3</sup> | string | The nonce from the create request |
 | call? | [message call](#message-call-object) object | The call a `CALL` message records |
+| persona? | [persona snapshot](#persona-snapshot-object) object | The persona to display for this message |
 | referenced_message?<sup>4</sup> | ?[message](#message-object) object | The message a reply points to |
 | thread? | [thread](/http-api/threads/#thread-object) object | The thread started from this message |
 
@@ -726,6 +727,19 @@ To get the next page, set `before` to the `pinned_at` of the last item. Skip mes
 | approximate_presence_count | ?integer | About how many members are online |
 | discoverable | boolean | Whether you can join through [Join discovery guild](/http-api/discovery/#join-discovery-guild) |
 
+## Persona snapshot object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id<sup>1</sup>? | snowflake | The persona ID |
+| name<sup>1</sup>? | string | The persona name. If this is set, the name shows when the ID can't be found or is not set. |
+| avatar? | ?string | The avatar hash, or null |
+| pronouns? | ?string | The persona's pronouns |
+
+<sup>1</sup> Only one of these are required, but both can be set.
+
 ## List channel messages
 
 <RouteHeader method="GET" path="/v1/channels/{channel_id}/messages" bot />
@@ -965,6 +979,7 @@ A message needs text, an embed, an attachment, a meme or a sticker. Text can be 
 | flags? | integer | [Message flags](#message-flags) (default `0`) |
 | favorite_meme_id? | ?snowflake | A saved meme to attach |
 | sticker_ids? | ?array[snowflake] | The stickers (at most 3) |
+| persona? | [persona snapshot](#persona-snapshot-object) object | The persona to display for this message |
 | tts? | boolean | Whether to use text-to-speech, which needs `SEND_TTS_MESSAGES` |
 
 <sup>1</sup> Fluxer remembers a nonce for 5 minutes, and sending it again in the same channel returns the first message. Reuse the nonce when you retry a send. Reusing it in a different channel within that time returns 404 `UNKNOWN_MESSAGE`
@@ -985,6 +1000,7 @@ Send files as `multipart/form-data`, with the JSON body in `payload_json`. In `p
 | flags? | string | Replaces `flags` in `payload_json` |
 | favorite_meme_id? | string | Replaces `favorite_meme_id` in `payload_json` |
 | sticker_ids? | string | Replaces `sticker_ids` in `payload_json`, once for each sticker |
+| persona? | [persona snapshot](#persona-snapshot-object) object | The persona to display for this message |
 
 These field codes come back in a 400 `INVALID_FORM_BODY`.
 
@@ -1042,6 +1058,7 @@ The body works like [Create message](#create-message), including multipart. Fiel
 | flags? | integer | [Message flags](#message-flags) |
 | attachments?<sup>1</sup> | array[[pre-uploaded attachment](#pre-uploaded-attachment-object) object \| [existing attachment reference](#existing-attachment-reference-object) object] | The attachments to keep and add |
 | message_snapshots? | array | Not accepted, and returns 403 `MISSING_PERMISSIONS` |
+| persona? | [persona snapshot](#persona-snapshot-object) object | The persona to display for this message. Set to (explicitly) null to clear the set persona. |
 
 <sup>1</sup> Replaces the whole list. Include every existing item you want to keep
 

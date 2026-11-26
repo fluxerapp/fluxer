@@ -10,8 +10,10 @@ import {normalizeMessageContent} from '@app/features/messaging/utils/MessageRequ
 import {http} from '@app/features/platform/transport/RestTransport';
 import ChannelThreads from '@app/features/threads/state/ChannelThreads';
 import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
+import Personas from '@app/features/user/state/Personas';
 import {ChannelFlags} from '@fluxer/constants/src/ThreadConstants';
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import { channel } from 'diagnostics_channel';
 
 export interface ForumTagInput {
 	id?: string;
@@ -63,7 +65,8 @@ export async function createForumPost(forum: Channel, input: ForumPostInput): Pr
 	if (prepared == null) return undefined;
 	assertActive(forum);
 	const normalized = normalizeMessageContent(input.content);
-	const message: Record<string, unknown> = {content: normalized.content};
+	const persona = Personas.getActivePersonaFromContext(forum.id, forum.guildId)?.toSnapshot();
+	const message: Record<string, unknown> = {content: normalized.content, persona};
 	if (normalized.flags !== 0) message.flags = normalized.flags;
 	if (prepared.attachments?.length) message.attachments = prepared.attachments;
 	if (input.stickerIds.length > 0) message.sticker_ids = [...input.stickerIds];

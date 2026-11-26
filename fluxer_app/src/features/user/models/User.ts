@@ -179,6 +179,7 @@ export class User {
 	readonly lastVoiceActivitySharingChangeAt: Date | null | undefined;
 	private readonly _nsfwAllowed: boolean | undefined;
 	readonly hasDismissedPremiumOnboarding: boolean | undefined;
+	readonly personaTag: string | null | undefined;
 	private readonly _hasEverPurchased: boolean | undefined;
 	private readonly _hasUnreadGiftInventory: boolean | undefined;
 	private readonly _unreadGiftInventoryCount: number | undefined;
@@ -265,6 +266,7 @@ export class User {
 		this.hasDismissedPremiumOnboarding = hasKey(user, 'has_dismissed_premium_onboarding')
 			? user.has_dismissed_premium_onboarding
 			: undefined;
+		this.personaTag = hasKey(user, 'persona_tag') ? user.persona_tag : undefined;
 		this._hasEverPurchased = hasKey(user, 'has_ever_purchased') ? user.has_ever_purchased : undefined;
 		this._hasUnreadGiftInventory = hasKey(user, 'has_unread_gift_inventory')
 			? user.has_unread_gift_inventory
@@ -545,6 +547,8 @@ export class User {
 		if (dateOfBirthRequired !== undefined) result.date_of_birth_required = dateOfBirthRequired;
 		const hasAgeRange = pickField(this._hasAgeRange, u, 'has_age_range', opts);
 		if (hasAgeRange !== undefined) result.has_age_range = hasAgeRange;
+		const personaTag = pickField(this.personaTag, u, 'persona_tag', opts);
+		if (personaTag !== undefined) result.persona_tag = personaTag;
 		return result;
 	}
 
@@ -688,6 +692,10 @@ export class User {
 		return this._hasAgeRange === true;
 	}
 
+	get maxPersonas(): number {
+		return this.resolveRuntimeLimit('max_personas', DEFAULT_STOCK_LIMITS.max_personas);
+	}
+
 	equals(other: User): boolean {
 		if (this === other) return true;
 		return (
@@ -736,6 +744,7 @@ export class User {
 			datesEqual(this.lastVoiceActivitySharingChangeAt, other.lastVoiceActivitySharingChangeAt) &&
 			this._nsfwAllowed === other._nsfwAllowed &&
 			this.hasDismissedPremiumOnboarding === other.hasDismissedPremiumOnboarding &&
+			this.personaTag === other.personaTag &&
 			this._hasEverPurchased === other._hasEverPurchased &&
 			this._hasUnreadGiftInventory === other._hasUnreadGiftInventory &&
 			this._unreadGiftInventoryCount === other._unreadGiftInventoryCount &&
@@ -819,6 +828,7 @@ export class User {
 		);
 		setOptional('nsfw_allowed', this._nsfwAllowed);
 		setOptional('has_dismissed_premium_onboarding', this.hasDismissedPremiumOnboarding);
+		setOptional('persona_tag', this.personaTag);
 		setOptional('has_ever_purchased', this._hasEverPurchased);
 		setOptional('has_unread_gift_inventory', this._hasUnreadGiftInventory);
 		setOptional('unread_gift_inventory_count', this._unreadGiftInventoryCount);

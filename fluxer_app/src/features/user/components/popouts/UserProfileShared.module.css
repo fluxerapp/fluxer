@@ -284,3 +284,8 @@
 	color: var(--text-tertiary);
 	flex-shrink: 0;
 }
+
+.scrollableBio {
+	max-height: 5.3lh;
+	overflow-y: scroll;
+}

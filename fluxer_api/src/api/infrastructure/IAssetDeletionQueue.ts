@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export type QueuedAssetEntityType = 'user' | 'guild' | 'guild_member' | 'instance' | 'role';
+export type QueuedAssetEntityType = 'user' | 'persona' | 'guild' | 'guild_member' | 'instance' | 'role';
 export type QueuedAssetType =
 	| 'avatar'
 	| 'banner'

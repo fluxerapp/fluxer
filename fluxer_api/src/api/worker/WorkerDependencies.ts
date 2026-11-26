@@ -98,6 +98,7 @@ import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import type {IVirusScanService} from '@pkgs/virus_scan/src/IVirusScanService';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import type Stripe from 'stripe';
+import {PersonaRepository} from '../personas/repositories/PersonaRepository';
 
 export interface WorkerDependencies {
 	kvClient: IKVProvider;
@@ -145,6 +146,7 @@ export interface WorkerDependencies {
 	operatorPassServices: OperatorPassServices;
 	guildService: GuildService;
 	billingRepository: BillingRepository;
+	personaRepository: PersonaRepository;
 	storeEntitlementService: StoreEntitlementService;
 	stripe: Stripe | null;
 }
@@ -228,6 +230,7 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 		liveKitService,
 		voiceAvailabilityService,
 	});
+	const personaRepository = new PersonaRepository();
 	const billingRepository = new BillingRepository(kvClient);
 	const storeEntitlementService = createStoreEntitlementService({
 		userRepository,
@@ -298,6 +301,7 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 		billingRepository,
 		storeEntitlementService,
 		guildAuditLogService,
+		personaRepository,
 		get stripe() {
 			return getStripeClient();
 		},

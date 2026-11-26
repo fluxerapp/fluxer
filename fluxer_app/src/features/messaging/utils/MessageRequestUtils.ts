@@ -10,6 +10,7 @@ import type {
 	MessageReference,
 	MessageStickerItem,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {PersonaSnapshot} from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
 import {hasVisibleContent as hasVisibleMessageContent} from '@fluxer/schema/src/primitives/MessageValidators';
 
 const DEFAULT_ALLOWED_MENTIONS: AllowedMentions = {replied_user: true};
@@ -49,6 +50,7 @@ export interface MessageCreateRequest {
 	favorite_meme_id?: string;
 	sticker_ids?: Array<string>;
 	tts?: true;
+	persona?: PersonaSnapshot;
 }
 
 export interface MessageEditRequest {
@@ -56,6 +58,7 @@ export interface MessageEditRequest {
 	attachments?: Array<ApiMessageEditAttachmentMetadata>;
 	allowed_mentions?: AllowedMentions;
 	flags?: number;
+	persona?: PersonaSnapshot | null;
 }
 
 export interface MessageEditPayload {
@@ -63,6 +66,7 @@ export interface MessageEditPayload {
 	attachments?: Array<ApiMessageEditAttachmentMetadata>;
 	allowedMentions?: AllowedMentions;
 	flags?: number;
+	persona?: PersonaSnapshot | null;
 }
 
 export interface MessageCreatePayload {
@@ -75,6 +79,7 @@ export interface MessageCreatePayload {
 	favoriteMemeId?: string;
 	stickers?: Array<MessageStickerItem>;
 	tts?: boolean;
+	persona?: PersonaSnapshot;
 }
 
 export interface NormalizedMessageContent {
@@ -128,8 +133,18 @@ function normalizeMessageEditContent(content: string): string {
 }
 
 export function buildMessageCreateRequest(payload: MessageCreatePayload): MessageCreateRequest {
-	const {content, nonce, attachments, allowedMentions, messageReference, flags, favoriteMemeId, stickers, tts} =
-		payload;
+	const {
+		content,
+		nonce,
+		attachments,
+		allowedMentions,
+		messageReference,
+		flags,
+		favoriteMemeId,
+		stickers,
+		tts,
+		persona,
+	} = payload;
 	const requestBody: MessageCreateRequest = {};
 	if (content != null && hasVisibleMessageContent(content)) {
 		requestBody.content = content;
@@ -158,11 +173,14 @@ export function buildMessageCreateRequest(payload: MessageCreatePayload): Messag
 	if (tts) {
 		requestBody.tts = true;
 	}
+	if (persona) {
+		requestBody.persona = persona;
+	}
 	return requestBody;
 }
 
 export function buildMessageEditRequest(payload: MessageEditPayload): MessageEditRequest {
-	const {content, attachments, allowedMentions, flags} = payload;
+	const {content, attachments, allowedMentions, flags, persona} = payload;
 	const requestBody: MessageEditRequest = {};
 	if (content !== undefined) {
 		requestBody.content = normalizeMessageEditContent(content);
@@ -175,6 +193,9 @@ export function buildMessageEditRequest(payload: MessageEditPayload): MessageEdi
 	}
 	if (flags !== undefined) {
 		requestBody.flags = flags;
+	}
+	if (persona !== undefined) {
+		requestBody.persona = persona;
 	}
 	return requestBody;
 }

@@ -15,6 +15,7 @@ import type {
 	MessageReference,
 	MessageStickerItem,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {PersonaSnapshot} from '@fluxer/schema/src/domains/persona/PersonaSchemas.js';
 
 interface MessageSubmitData {
 	content: string;
@@ -25,6 +26,7 @@ interface MessageSubmitData {
 	replyMentioning?: boolean;
 	stickers?: Array<MessageStickerItem>;
 	favoriteMemeId?: string;
+	persona?: PersonaSnapshot;
 }
 
 export function createUploadingAttachments(
@@ -59,6 +61,7 @@ export function createOptimisticMessage(data: MessageSubmitData, attachments: Ar
 			: undefined,
 		state: MessageStates.SENDING,
 		nonce: data.nonce,
+		persona: data.persona,
 		attachments,
 		_allowedMentions: data.referencedMessage ? {replied_user: data.replyMentioning ?? true} : undefined,
 	});
