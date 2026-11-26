@@ -174,7 +174,7 @@ pub fn is_retryable(reason: ApiError) -> Bool {
   }
 }
 
-fn describe(reason: ApiError) -> String {
+pub fn describe(reason: ApiError) -> String {
   case reason {
     ApiUnavailable -> "unavailable"
     ApiTimeout -> "timeout"

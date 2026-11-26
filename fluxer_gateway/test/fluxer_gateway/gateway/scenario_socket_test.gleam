@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import fluxer_gateway/config/settings
 import fluxer_gateway/gateway/socket
 import fluxer_gateway/telemetry/rollout_metrics
 import gleam/bit_array
@@ -12,6 +13,7 @@ import gleam/string
 import support/gateway_api_stub as stub
 import support/gateway_harness as h
 import support/gateway_ws_client as ws
+import support/isolation
 
 fn session_id(ready: ws.Payload) -> String {
   let assert Ok(id) =
@@ -161,6 +163,72 @@ pub fn rejected_token_closes_4004_test_() {
   let client = h.hello(scenario.gateway.port)
   ws.send_json(client, h.identify_payload("bad-token"))
   expect_closed_with(client, 4004, "Invalid token")
+}
+
+fn sessions_answer(status: Int, body: String) -> stub.Responder {
+  fn(kind, _body) {
+    case kind {
+      "session" -> #(status, body)
+      _ -> #(200, "{\"data\":{}}")
+    }
+  }
+}
+
+fn short_hold_budget() -> Nil {
+  isolation.set_durations(fn(durations) {
+    settings.Durations(
+      ..durations,
+      gateway: settings.GatewayDurations(
+        ..durations.gateway,
+        socket_pending_identify_retry_base_ms: 20,
+        socket_pending_identify_retry_jitter_ms: 1,
+        socket_held_start_retry_cap_ms: 80,
+        socket_held_start_budget_ms: 400,
+      ),
+    )
+  })
+}
+
+pub fn forbidden_session_backs_off_and_closes_4008_without_logging_out_test_() {
+  use <- h.within(30.0)
+  short_hold_budget()
+  use scenario <- h.run(sessions_answer(
+    403,
+    "{\"code\":\"GLOBAL_IP_BANNED\",\"message\":\"banned\"}",
+  ))
+  let client = h.hello(scenario.gateway.port)
+  ws.send_json(client, h.identify_payload("token-banned"))
+  expect_closed_with(client, 4008, "Session RPC rate limited")
+  let calls =
+    list.length(stub.token_calls(scenario.api, "session", "token-banned"))
+  assert calls >= 2
+  assert calls <= 12
+}
+
+pub fn rate_limited_session_closes_4008_once_the_hold_budget_is_spent_test_() {
+  use <- h.within(30.0)
+  short_hold_budget()
+  use scenario <- h.run(sessions_answer(429, "{\"retry_after\":1}"))
+  let client = h.hello(scenario.gateway.port)
+  ws.send_json(client, h.identify_payload("token-throttled"))
+  expect_closed_with(client, 4008, "Session RPC rate limited")
+  let calls =
+    list.length(stub.token_calls(scenario.api, "session", "token-throttled"))
+  assert calls >= 2
+  assert calls <= 12
+}
+
+pub fn unavailable_session_closes_4000_once_the_hold_budget_is_spent_test_() {
+  use <- h.within(30.0)
+  short_hold_budget()
+  use scenario <- h.run(sessions_answer(404, "{}"))
+  let client = h.hello(scenario.gateway.port)
+  ws.send_json(client, h.identify_payload("token-unavailable"))
+  expect_closed_with(client, 4000, "Session unavailable")
+  let calls =
+    list.length(stub.token_calls(scenario.api, "session", "token-unavailable"))
+  assert calls >= 2
+  assert calls <= 12
 }
 
 pub fn identify_after_ready_closes_4005_test_() {
