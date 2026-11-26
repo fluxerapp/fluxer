@@ -2,6 +2,7 @@
 
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import Authentication from '@app/features/auth/state/Authentication';
+import Channels from '@app/features/channel/state/Channels';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {decideComposerTyping} from '@app/features/typing/rolling/RollingComposerTypingGate';
@@ -43,7 +44,7 @@ class RollingTypingSender {
 
 	startTyping(channelId: string): void {
 		const userId = Authentication.currentUserId;
-		const personaId = this.personaId || Personas.getGlobalActivePersona()?.id || null;
+		const personaId = this.personaId || Personas.getActivePersonaFromContext(channelId, Channels.getChannel(channelId)?.guildId)?.id || null;
 		if (userId == null) {
 			return;
 		}

@@ -1081,7 +1081,7 @@ export const LexicalChannelTextareaContent = observer(
 		}, [channel.id, enableEditLast]);
 		useTextareaDraftAndTyping({
 			personaId:
-				(useTriggeredPersona ? triggeredPersona?.id : undefined) || Personas.getGlobalActivePersona()?.id || undefined,
+				(useTriggeredPersona ? triggeredPersona?.id : undefined) || Personas.getActivePersonaFromContext(draftChannelId ?? channel.id, channel.guildId)?.id || undefined,
 			bootFrameDraftRef,
 			draftOwner: accountKey,
 			channelId: draftChannelId ?? channel.id,

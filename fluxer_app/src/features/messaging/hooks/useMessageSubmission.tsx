@@ -108,7 +108,6 @@ export const useMessageSubmission = ({
 			maybeFavoriteMemeId?: string,
 			persona?: PersonaSnapshot,
 		) => {
-			const personaSnapshot = persona || Personas.getGlobalActivePersona()?.toSnapshot();
 			const isTtsCall = typeof stickersOrTts === 'boolean';
 			const tts = isTtsCall ? stickersOrTts : undefined;
 			let stickers: Array<MessageStickerItem>;
@@ -122,6 +121,7 @@ export const useMessageSubmission = ({
 			}
 			const currentUser = Users.getCurrentUser();
 			if (!channel || !currentUser || !accountOwnsActiveView(accountKey)) return false;
+			const personaSnapshot = persona || Personas.getActivePersonaFromContext(channel?.id, channel?.guildId)?.toSnapshot();
 			const hasNonTextContent =
 				hasAttachments ||
 				stickers.length > 0 ||
