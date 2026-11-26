@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "অ্যাকাউন্ট বিক্রি, অথবা চুরি করা লগইন বা কার্ডের তথ্য",
 	"report_flow.label.account_trading_communities": "অ্যাকাউন্ট বা কমিউনিটি কেনাবেচা",
 	"report_flow.label.address": "বাড়ির ঠিকানা বা কর্মস্থল",
-	"report_flow.label.adult_content_no_gate": "১৮+ বয়সের বিধিনিষেধ ছাড়া প্রাপ্তবয়স্কদের কনটেন্ট",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "প্রোফাইলে প্রাপ্তবয়স্কদের অশ্লীল কনটেন্ট",
 	"report_flow.label.adult_content_unmarked": "১৮+ চিহ্নিত নয় এমন কমিউনিটি চ্যানেলে প্রাপ্তবয়স্কদের কনটেন্ট",
 	"report_flow.label.age_no_message": "না, এতে বয়সের উল্লেখ নেই",

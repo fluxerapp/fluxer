@@ -157,7 +157,7 @@ Every field is optional, but the default `current` scope needs `context_guild_id
 | exclude_attachment_extension?<sup>6</sup> | array[string] | Extensions to exclude (at most 50, 1-32 characters each) |
 | sort_by? | string | [Search sort field](#search-sort-fields) (default `timestamp`) |
 | sort_order? | string | [Search sort order](#search-sort-orders) (default `desc`) |
-| include_nsfw?<sup>7</sup> | boolean | Whether age-restricted channels can give results (default false) |
+| include_nsfw?<sup>7</sup> | boolean | Whether channels marked 18+ can give results (default false) |
 
 <sup>1</sup> A channel context ignores them
 
@@ -182,7 +182,7 @@ Every channel in `channel_ids` must be in the scope. A channel from another guil
 | 200 | [message search result](#message-search-result-object) object \| [search indexing](#search-indexing-object) object | The search completed, or an index isn't ready |
 | 400 | [error response](/http-api/#error-response) | `INVALID_FORM_BODY` for a bad scope, a channel from another guild or no context |
 | 403 | [error response](/http-api/#error-response) | `FEATURE_TEMPORARILY_DISABLED` when the instance has no search backend |
-| 403 | [error response](/http-api/#error-response) | `NSFW_CONTENT_AGE_RESTRICTED` when the context is age restricted and you are not old enough |
+| 403 | [error response](/http-api/#error-response) | `NSFW_CONTENT_AGE_RESTRICTED` when the context is marked 18+ and the account can't see mature content |
 | 403 | [error response](/http-api/#error-response) | `CONTENT_BLOCKED` when a search string matches the instance blocklist |
 
 The rate limit is 20 requests per 10 seconds, on the `search:messages` bucket.

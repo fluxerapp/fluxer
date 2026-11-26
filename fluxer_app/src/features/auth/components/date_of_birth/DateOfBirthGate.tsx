@@ -42,7 +42,7 @@ const DATE_OF_BIRTH_TITLE_DESCRIPTOR = msg({
 });
 const DATE_OF_BIRTH_TEXT_DESCRIPTOR = msg({
 	message:
-		"{productName} only asks for your date of birth, never for ID or a face scan. It's used to check the minimum age for your country and for age-restricted content, and it isn't shown to anyone. You can't change it later, so please make sure it's right.",
+		"{productName} only asks for your date of birth, never for ID or a face scan. It's used to apply the minimum age for your country and to decide which mature content you can see, and it isn't shown to anyone. You can't change it later, so please make sure it's right.",
 	comment:
 		'Text under the date of birth heading. productName is the app name. It says the app never asks for ID or a face scan, what the date is used for, and that it cannot be changed once entered.',
 });

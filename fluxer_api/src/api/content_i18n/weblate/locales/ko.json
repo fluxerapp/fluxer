@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "계정, 도난당한 로그인 정보 또는 카드 정보 판매",
 	"report_flow.label.account_trading_communities": "계정 또는 커뮤니티 구매 또는 판매",
 	"report_flow.label.address": "집 주소 또는 직장",
-	"report_flow.label.adult_content_no_gate": "18세 이상 연령 제한이 없는 성인 콘텐츠",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "프로필의 노골적인 성인 콘텐츠",
 	"report_flow.label.adult_content_unmarked": "18세 이상으로 표시되지 않은 커뮤니티 채널의 성인 콘텐츠",
 	"report_flow.label.age_no_message": "아니요, 나이가 언급되어 있지 않습니다",

@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "Selling accounts, or stolen logins or card details",
 	"report_flow.label.account_trading_communities": "Buying or selling accounts or communities",
 	"report_flow.label.address": "Home address or workplace",
-	"report_flow.label.adult_content_no_gate": "Adult content without an 18+ age restriction",
+	"report_flow.label.adult_content_no_gate": "Adult content in a community that isn't marked 18+",
 	"report_flow.label.adult_content_profile": "Explicit adult content in their profile",
 	"report_flow.label.adult_content_unmarked": "Adult content in a community channel that isn't marked 18+",
 	"report_flow.label.age_no_message": "No, it doesn't mention it",

@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "מכירת חשבונות, או פרטי התחברות או כרטיס גנובים",
 	"report_flow.label.account_trading_communities": "קנייה או מכירה של חשבונות או קהילות",
 	"report_flow.label.address": "כתובת מגורים או מקום עבודה",
-	"report_flow.label.adult_content_no_gate": "תוכן למבוגרים ללא הגבלת גיל 18+",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "תוכן מפורש למבוגרים בפרופיל",
 	"report_flow.label.adult_content_unmarked": "תוכן למבוגרים בערוץ קהילה שלא סומן כערוץ עם הגבלת גיל (18+)",
 	"report_flow.label.age_no_message": "לא, זה לא מוזכר",

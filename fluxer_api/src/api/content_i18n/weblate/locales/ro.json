@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "Vânzarea de conturi, de date de autentificare furate sau de date de card furate",
 	"report_flow.label.account_trading_communities": "Cumpărarea sau vânzarea de conturi sau comunități",
 	"report_flow.label.address": "Adresă de domiciliu sau loc de muncă",
-	"report_flow.label.adult_content_no_gate": "Conținut pentru adulți fără restricție de vârstă 18+",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "Conținut explicit pentru adulți în profilul său",
 	"report_flow.label.adult_content_unmarked": "Conținut pentru adulți într-un canal al comunității care nu este marcat 18+",
 	"report_flow.label.age_no_message": "Nu, mesajul nu menționează vârsta",

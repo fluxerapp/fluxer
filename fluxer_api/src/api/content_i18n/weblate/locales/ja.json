@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "アカウント、または盗まれたログイン情報やカード情報の販売",
 	"report_flow.label.account_trading_communities": "アカウントまたはコミュニティの売買",
 	"report_flow.label.address": "自宅の住所または職場",
-	"report_flow.label.adult_content_no_gate": "18歳以上の年齢制限がないアダルトコンテンツ",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "プロフィール内の露骨なアダルトコンテンツ",
 	"report_flow.label.adult_content_unmarked": "年齢制限付き（18+）に設定されていないコミュニティチャンネルにあるアダルトコンテンツ",
 	"report_flow.label.age_no_message": "いいえ、年齢には言及していません",

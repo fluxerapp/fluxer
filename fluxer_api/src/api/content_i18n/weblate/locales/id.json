@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "Menjual akun, atau login atau detail kartu yang dicuri",
 	"report_flow.label.account_trading_communities": "Membeli atau menjual akun atau komunitas",
 	"report_flow.label.address": "Alamat rumah atau tempat kerja",
-	"report_flow.label.adult_content_no_gate": "Konten dewasa tanpa batasan usia 18+",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "Konten dewasa eksplisit di profilnya",
 	"report_flow.label.adult_content_unmarked": "Konten dewasa di saluran komunitas yang tidak ditandai 18+",
 	"report_flow.label.age_no_message": "Tidak, tidak disebutkan",

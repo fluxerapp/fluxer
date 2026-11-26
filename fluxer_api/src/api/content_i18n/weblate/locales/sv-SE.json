@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "Säljer konton, eller stulna inloggningar eller kortuppgifter",
 	"report_flow.label.account_trading_communities": "Köper eller säljer konton eller communities",
 	"report_flow.label.address": "Hemadress eller arbetsplats",
-	"report_flow.label.adult_content_no_gate": "Innehåll för vuxna utan åldersbegränsning 18+",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "Explicit innehåll för vuxna i personens profil",
 	"report_flow.label.adult_content_unmarked": "Innehåll för vuxna i en communitykanal som inte är markerad som 18+",
 	"report_flow.label.age_no_message": "Nej, det nämns inte",

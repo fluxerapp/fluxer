@@ -27,7 +27,7 @@ The short form of a guild, returned by [List guilds](#list-guilds) and [List use
 | banner | ?string | The banner hash |
 | member_count | integer | The number of members |
 | nsfw_level? | integer | The [NSFW level](/http-api/guilds/#nsfw-levels) |
-| nsfw | boolean | Whether the guild is age restricted |
+| nsfw | boolean | Whether the guild is marked 18+ |
 | content_warning_level | integer | The [guild content warning level](/http-api/guilds/#guild-content-warning-levels) |
 | content_warning_text | ?string | The custom content warning text |
 | approximate_member_count?<sup>2</sup> | integer | The member count the Gateway reports |
@@ -84,7 +84,7 @@ The owner fields are null when the owner account doesn't exist.
 | verification_level | integer | The [verification level](/http-api/guilds/#verification-levels) |
 | mfa_level | integer | The [MFA level](/http-api/guilds/#mfa-levels) moderators need |
 | nsfw_level | integer | The [NSFW level](/http-api/guilds/#nsfw-levels) |
-| nsfw | boolean | Whether the guild is age restricted |
+| nsfw | boolean | Whether the guild is marked 18+ |
 | content_warning_level | integer | The [guild content warning level](/http-api/guilds/#guild-content-warning-levels) |
 | content_warning_text | ?string | The custom content warning text |
 | explicit_content_filter | integer | The [explicit content filter level](/http-api/guilds/#guild-explicit-content-filter-levels) |
@@ -111,8 +111,8 @@ The owner fields are null when the owner account doesn't exist.
 | type | integer | The [channel type](/http-api/channels/#channel-types) |
 | position | integer | The sort position in the guild |
 | parent_id | ?snowflake | The parent category ID |
-| nsfw | ?boolean | Whether the channel itself is age restricted, false when it inherits |
-| nsfw_override | ?boolean | The channel's own age restriction, or null when it inherits from its category or guild |
+| nsfw | ?boolean | Whether the channel itself is marked 18+, false when it inherits |
+| nsfw_override | ?boolean | The channel's own 18+ marking, or null when it inherits from its category or guild |
 | content_warning_level | integer | The [content warning level](/http-api/guilds/#guild-content-warning-levels) set on the channel |
 | content_warning_text | ?string | The content warning text set on the channel |
 | url | ?string | The URL of a link channel (1-2048 characters), or null for other types |
@@ -293,7 +293,7 @@ To change `afk_channel_id`, `system_channel_id` or `afk_timeout`, use [Modify gu
 | verification_level? | integer | The new [verification level](/http-api/guilds/#verification-levels) |
 | mfa_level? | integer | The new [MFA level](/http-api/guilds/#mfa-levels) |
 | nsfw_level? | integer | The new [NSFW level](/http-api/guilds/#nsfw-levels) |
-| nsfw? | boolean | Whether the guild is age restricted |
+| nsfw? | boolean | Whether the guild is marked 18+ |
 | content_warning_level? | integer | The new [guild content warning level](/http-api/guilds/#guild-content-warning-levels) |
 | content_warning_text? | ?string | The new content warning text (at most 200 characters), or null to clear it |
 | explicit_content_filter? | integer | The new [explicit content filter level](/http-api/guilds/#guild-explicit-content-filter-levels) |

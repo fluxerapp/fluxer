@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "Paskyrų, pavogtų prisijungimo duomenų ar kortelės duomenų pardavimas",
 	"report_flow.label.account_trading_communities": "Paskyrų ar bendruomenių pirkimas arba pardavimas",
 	"report_flow.label.address": "Namų adresas arba darbovietė",
-	"report_flow.label.adult_content_no_gate": "Suaugusiesiems skirtas turinys be 18+ amžiaus apribojimo",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "Atviras suaugusiesiems skirtas turinys profilyje",
 	"report_flow.label.adult_content_unmarked": "Suaugusiesiems skirtas turinys bendruomenės kanale, kuris nepažymėtas 18+",
 	"report_flow.label.age_no_message": "Ne, amžius neminimas",

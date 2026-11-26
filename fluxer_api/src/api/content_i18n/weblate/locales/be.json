@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "Продаж уліковых запісаў, скрадзеных даных для ўваходу або даных картак",
 	"report_flow.label.account_trading_communities": "Купля або продаж уліковых запісаў ці суполак",
 	"report_flow.label.address": "Хатні адрас або месца працы",
-	"report_flow.label.adult_content_no_gate": "Змесціва для дарослых без узроставага абмежавання 18+",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "Змесціва адкрытага характару для дарослых у профілі гэтага чалавека",
 	"report_flow.label.adult_content_unmarked": "Змесціва для дарослых у канале суполкі, які не пазначаны як 18+",
 	"report_flow.label.age_no_message": "Не, узрост там не згадваецца",

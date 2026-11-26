@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "การขายบัญชี หรือข้อมูลลงชื่อเข้าใช้หรือรายละเอียดบัตรที่ถูกขโมย",
 	"report_flow.label.account_trading_communities": "การซื้อหรือขายบัญชีหรือคอมมูนิตี้",
 	"report_flow.label.address": "ที่อยู่บ้านหรือที่ทำงาน",
-	"report_flow.label.adult_content_no_gate": "เนื้อหาสำหรับผู้ใหญ่ที่ไม่มีการจำกัดอายุ 18+",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "เนื้อหาสำหรับผู้ใหญ่ที่โจ่งแจ้งในโปรไฟล์",
 	"report_flow.label.adult_content_unmarked": "เนื้อหาสำหรับผู้ใหญ่ในช่องคอมมูนิตี้ที่ไม่ได้ระบุว่าเป็น 18+",
 	"report_flow.label.age_no_message": "ไม่ ไม่ได้ระบุอายุ",

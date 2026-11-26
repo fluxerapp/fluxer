@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "esun pi lipu jan, anu nimi len anu sona pi lipu mani tan jan ante",
 	"report_flow.label.account_trading_communities": "esun pi lipu jan anu kulupu",
 	"report_flow.label.address": "ma tomo anu ma pali",
-	"report_flow.label.adult_content_no_gate": "ijo unpa lon ma pi tan jan 18+ taso ala",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "ijo unpa wawa lon lipu jan ona",
 	"report_flow.label.adult_content_unmarked": "ijo unpa lon tomo kulupu. tomo ni li tan jan 18+ taso ala",
 	"report_flow.label.age_no_message": "ala, ona li toki ala e ni",

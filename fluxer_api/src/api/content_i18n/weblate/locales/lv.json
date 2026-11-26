@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "Kontu vai nozagtu pieteikšanās datu vai karšu datu pārdošana",
 	"report_flow.label.account_trading_communities": "Kontu vai kopienu pirkšana vai pārdošana",
 	"report_flow.label.address": "Mājas adrese vai darbavieta",
-	"report_flow.label.adult_content_no_gate": "Saturs pieaugušajiem bez 18+ vecuma ierobežojuma",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "Atklāts saturs pieaugušajiem šīs personas profilā",
 	"report_flow.label.adult_content_unmarked": "Saturs pieaugušajiem kopienas kanālā, kas nav atzīmēts ar 18+",
 	"report_flow.label.age_no_message": "Nē, tajā tas nav minēts",

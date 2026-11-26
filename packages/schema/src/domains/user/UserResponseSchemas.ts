@@ -192,7 +192,7 @@ export const UserPrivateResponse = UserPartialResponse.extend({
 		.boolean()
 		.optional()
 		.describe(
-			'Whether mature content is unlocked for the account in regions where a date of birth typed in is not enough for mature content. It is true when the iOS or Android app sent an age range of 18 or over, when staff set it, or when the account already had mature content unlocked before. Never true from an age range on a self-hosted instance',
+			'Whether mature content is unlocked for the account in regions where a date of birth typed in is not enough for mature content. It is true when the account unlocked mature content in the iOS or Android app, when staff set it, or when the account already had mature content unlocked before. The app unlock never applies on a self-hosted instance',
 		),
 	terms_agreed_at: z
 		.string()
@@ -225,7 +225,7 @@ export const UserPrivateResponse = UserPartialResponse.extend({
 		.boolean()
 		.optional()
 		.describe(
-			'Whether Fluxer keeps an age range for the account that the iOS or Android app sent from the Apple or Google account. The range itself is not included',
+			'Whether the account unlocked mature content in the iOS or Android app, where the Apple or Google account confirmed that the person is an adult. What the account shared is not included',
 		),
 	profile_restricted: z
 		.boolean()

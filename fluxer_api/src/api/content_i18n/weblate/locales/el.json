@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "Πώληση λογαριασμών ή κλεμμένων στοιχείων σύνδεσης ή κάρτας",
 	"report_flow.label.account_trading_communities": "Αγορά ή πώληση λογαριασμών ή κοινοτήτων",
 	"report_flow.label.address": "Διεύθυνση κατοικίας ή εργασίας",
-	"report_flow.label.adult_content_no_gate": "Περιεχόμενο ενηλίκων χωρίς περιορισμό ηλικίας 18+",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "Ρητό περιεχόμενο ενηλίκων στο προφίλ του ατόμου",
 	"report_flow.label.adult_content_unmarked": "Περιεχόμενο ενηλίκων σε κανάλι κοινότητας που δεν φέρει σήμανση 18+",
 	"report_flow.label.age_no_message": "Όχι, δεν την αναφέρει",

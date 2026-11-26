@@ -22,7 +22,7 @@ export function GeolocationController(app: Hono<HonoEnv>): void {
 			security: [],
 			tags: ['Geolocation'],
 			description:
-				'Resolves the approximate location of the requesting client from its IP address, together with the locations where age restricted content is gated or unavailable.',
+				'Resolves the approximate location of the requesting client from its IP address, together with the locations where mature content has to be unlocked or is unavailable.',
 		}),
 		async (ctx) => {
 			ctx.header('Access-Control-Allow-Origin', '*');

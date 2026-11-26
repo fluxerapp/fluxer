@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "Salg af konti eller stjålne login- eller kortoplysninger",
 	"report_flow.label.account_trading_communities": "Køb eller salg af konti eller fællesskaber",
 	"report_flow.label.address": "Hjemmeadresse eller arbejdsplads",
-	"report_flow.label.adult_content_no_gate": "Voksenindhold uden en 18+-aldersbegrænsning",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "Eksplicit voksenindhold i personens profil",
 	"report_flow.label.adult_content_unmarked": "Voksenindhold i en fællesskabskanal, der ikke er markeret som 18+",
 	"report_flow.label.age_no_message": "Nej, den nævner det ikke",

@@ -173,16 +173,16 @@ export const ChannelFollowModal = observer(({channelId}: {channelId: string}) =>
 					</div>
 					{restriction === 'age_restricted' && (
 						<WarningAlert data-flx="channel.channel-follow-modal.age-restricted-warning">
-							<Trans comment="Warning in the follow announcement channel dialog when the followed channel is age-restricted.">
-								This is an age-restricted channel. Updates can only go to age-restricted channels.
+							<Trans comment="Warning in the follow announcement channel dialog when the followed channel is a mature channel.">
+								This is a mature channel. Updates can only go to mature channels.
 							</Trans>
 						</WarningAlert>
 					)}
 					{restriction === 'content_warning' && (
 						<WarningAlert data-flx="channel.channel-follow-modal.content-warning-warning">
 							<Trans comment="Warning in the follow announcement channel dialog when the followed channel has a content warning.">
-								This channel has a content warning. Updates can only go to channels with a content warning or an age
-								restriction.
+								This channel has a content warning. Updates can only go to mature channels or channels with a content
+								warning.
 							</Trans>
 						</WarningAlert>
 					)}

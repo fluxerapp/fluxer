@@ -46,13 +46,13 @@ When the published message is deleted or can't be shown, copies become placehold
 
 ## Content rules
 
-- Only an age-restricted channel can follow an age-restricted announcement channel.
-- An announcement channel with a content warning can only be followed into a channel with a content warning or an age restriction.
+- Only a channel marked 18+ can follow an announcement channel marked 18+.
+- An announcement channel with a content warning can only be followed into a channel with a content warning or one marked 18+.
 - Explicit media is left out of a copy when the following channel doesn't allow it.
 
-Fluxer checks the age-restriction and content-warning rules when a follow is created, at every delivery and at every edit. Age restrictions and content warnings come from the channel, then its category, then its guild.
+Fluxer applies the 18+ and content warning rules when a follow is created, at every delivery and at every edit. A channel takes its 18+ marking and its content warning from its own settings first, then from its category, then from its guild.
 
-If a following channel fails the age-restriction or content-warning rule, it gets no new copies, and its copies become placeholders at the next edit.
+If a following channel fails the 18+ or content warning rule, it gets no new copies, and its copies become placeholders at the next edit.
 
 ## Delivery
 

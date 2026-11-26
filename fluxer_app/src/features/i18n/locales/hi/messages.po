@@ -2174,8 +2174,8 @@ msgstr "{productName} को स्क्रीन रिकॉर्डिं�
 
 #. Text under the date of birth heading. productName is the app name. It says the app never asks for ID or a face scan, what the date is used for, and that it cannot be changed once entered.
 #: src/features/auth/components/date_of_birth/DateOfBirthGate.tsx
-msgid "{productName} only asks for your date of birth, never for ID or a face scan. It's used to check the minimum age for your country and for age-restricted content, and it isn't shown to anyone. You can't change it later, so please make sure it's right."
-msgstr "{productName} सिर्फ़ आपकी जन्मतिथि पूछता है, कभी कोई ID या चेहरे का स्कैन नहीं। इससे आपके देश की न्यूनतम उम्र और आयु-प्रतिबंधित सामग्री की जाँच होती है, और यह किसी को नहीं दिखती। बाद में इसे बदला नहीं जा सकता, इसलिए कृपया ध्यान से सही तारीख डालें।"
+msgid "{productName} only asks for your date of birth, never for ID or a face scan. It's used to apply the minimum age for your country and to decide which mature content you can see, and it isn't shown to anyone. You can't change it later, so please make sure it's right."
+msgstr ""
 
 #. Title of the printed or downloaded recovery kit. productName is the app name.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx
@@ -4244,11 +4244,6 @@ msgstr "साइन इन करने के बाद कार्रवा�
 #: src/features/auth/components/modals/AccountDeleteModal.tsx
 msgid "After your account is deleted, you will not be able to delete the messages you sent"
 msgstr "आपका अकाउंट मिट जाने के बाद आप अपने भेजे गए मैसेज नहीं मिटा पाएँगे"
-
-#. Label in the sensitive content settings, shown when the Fluxer app for iPhone, iPad or Android has sent the age range that the Apple or Google account shares with apps.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
-msgid "Age range from your Apple or Google account"
-msgstr "आपके Apple या Google अकाउंट से आयु सीमा"
 
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts
@@ -22558,6 +22553,11 @@ msgstr "वयस्क सामग्री की अनुमति नह�
 msgid "Mature content override"
 msgstr "वयस्क सामग्री ओवरराइड"
 
+#. Label in the sensitive content settings, shown when mature content was unlocked in the Fluxer app for iPhone, iPad or Android, where the Apple or Google account confirmed that the person is an adult.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
+msgid "Mature content unlocked in the Fluxer app"
+msgstr ""
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the mature media gate details modal. Keep it concise.
 #: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx
@@ -29760,7 +29760,7 @@ msgstr "विंडो का साइज़ और पोज़िशन य�
 #. Button or menu action label in the channel and chat message reactions sheet. Keep it concise. Keep the tone plain and specific.
 #. Button that clears the default reaction or deletes a tag in forum settings.
 #. Button that removes a branding image in the setup wizard.
-#. Confirm button in the dialog that deletes the stored age range.
+#. Confirm button in the dialog that removes the mature content unlock from the Fluxer app.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the shared app saved message missing card. Keep the tone plain and specific.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
@@ -29813,11 +29813,6 @@ msgstr "क्या आप {userName} को ग्रुप से हटा�
 msgid "Remove {userName} from your friends?"
 msgstr "क्या आप {userName} को अपने दोस्तों से हटाना चाहते हैं?"
 
-#. Button in the sensitive content settings that opens a confirmation to delete the stored age range.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
-msgid "Remove age range"
-msgstr "उम्र की रेंज हटाएँ"
-
 #. Confirm button label on the remove-all-reactions alert. Destructive.
 #: src/features/channel/components/MessageActionUtils.tsx
 msgid "Remove all"
@@ -29834,6 +29829,11 @@ msgstr "इस मैसेज से सभी {emojiNameWithColons} रिए�
 #: src/features/channel/components/MessageActionUtils.tsx
 msgid "Remove all reactions"
 msgstr "सभी रिएक्शन हटाएँ"
+
+#. Button in the sensitive content settings that opens a confirmation to remove the mature content unlock that came from the Fluxer app for iPhone, iPad or Android.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
+msgid "Remove app unlock"
+msgstr ""
 
 #. Button or menu action label in the channel attachment area. Keep it concise. Keep the tone plain and specific.
 #: src/features/channel/components/ChannelAttachmentArea.tsx
@@ -30009,6 +30009,11 @@ msgstr "स्टिकर हटाएँ"
 msgid "Remove tag {tag}"
 msgstr "{tag} टैग हटाएँ"
 
+#. Title of the confirmation shown before removing the mature content unlock that came from the Fluxer app for iPhone, iPad or Android.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
+msgid "Remove the app unlock?"
+msgstr ""
+
 #. Error under the "Quote on the wall" field when the quote has invisible characters, text direction controls or stacked accent marks.
 #: src/features/premium/components/operator_pass/OperatorPassWallQuoteField.tsx
 msgid "Remove the hidden or special characters from the quote."
@@ -30039,11 +30044,6 @@ msgstr "यूज़र हटाएँ"
 #: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
 msgid "Remove when you first bought {premiumProductName} from your badge"
 msgstr "अपने बैज से हटाएँ कि आपने {premiumProductName} पहली बार कब खरीदा था"
-
-#. Title of the confirmation shown before deleting the age range from an Apple or Google account.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
-msgid "Remove your age range?"
-msgstr "अपनी उम्र की रेंज हटाएँ?"
 
 #. Status badge for the application to Explore, shown in the "Explore" tab in community settings. The community was removed from Explore.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
@@ -37178,11 +37178,6 @@ msgstr "फ़ाइल को हटा दिया गया है या �
 msgid "The file you're trying to upload exceeds the maximum size limit of {maxSizeFormatted}."
 msgstr "आप जिस फ़ाइल को अपलोड करने की कोशिश कर रहे हैं, वह {maxSizeFormatted} की अधिकतम साइज़ सीमा से ज़्यादा है।"
 
-#. Helper text under "Age range from your Apple or Google account" in the sensitive content settings.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
-msgid "The Fluxer app for iPhone, iPad or Android sent us this age range. If it shows that you're 18 or older, you can see 18+ content in the UK and Brazil. It doesn't change your date of birth."
-msgstr "iPhone, iPad या Android के लिए Fluxer ऐप ने हमें यह उम्र वर्ग भेजा है। अगर इससे पता चलता है कि आपकी उम्र 18 साल या उससे ज़्यादा है, तो आप यूके और ब्राज़ील में 18+ सामग्री देख सकते हैं। इससे आपकी जन्मतिथि नहीं बदलती।"
-
 #. Setup wizard body explaining the push relay.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
 msgid "The Fluxer apps for iOS and Android get notifications through a push relay that Fluxer runs, which passes them to Apple and Google. To use it, you accept the push relay privacy notice."
@@ -37899,8 +37894,8 @@ msgstr "इस चैनल में अभी तक कोई इनवाइ
 
 #. Warning in the follow announcement channel dialog when the followed channel has a content warning.
 #: src/features/channel/components/modals/ChannelFollowModal.tsx
-msgid "This channel has a content warning. Updates can only go to channels with a content warning or an age restriction."
-msgstr "इस चैनल पर सामग्री चेतावनी है। अपडेट केवल सामग्री चेतावनी या आयु प्रतिबंध वाले चैनलों पर ही जा सकते हैं।"
+msgid "This channel has a content warning. Updates can only go to mature channels or channels with a content warning."
+msgstr ""
 
 #. Error shown when enabling the camera is rejected because the channel already has the maximum number of users sharing video. {voiceChannelCameraUserLimit} is the configured cap.
 #: src/features/voice/engine/media_engine_facade/shared.ts
@@ -38340,10 +38335,10 @@ msgstr "यह किसी कम्युनिटी का कस्टम �
 msgid "This is a custom sticker from a community."
 msgstr "यह किसी कम्युनिटी का कस्टम स्टिकर है।"
 
-#. Warning in the follow announcement channel dialog when the followed channel is age-restricted.
+#. Warning in the follow announcement channel dialog when the followed channel is a mature channel.
 #: src/features/channel/components/modals/ChannelFollowModal.tsx
-msgid "This is an age-restricted channel. Updates can only go to age-restricted channels."
-msgstr "यह एक आयु-प्रतिबंधित चैनल है। अपडेट केवल आयु-प्रतिबंधित चैनलों पर ही जा सकते हैं।"
+msgid "This is a mature channel. Updates can only go to mature channels."
+msgstr ""
 
 #. Error message in the inputs tab.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx
@@ -38517,10 +38512,10 @@ msgstr "यह सदस्य अब कम्युनिटी में न�
 msgid "This member isn't connected to voice anymore."
 msgstr "यह सदस्य अब वॉइस से कनेक्टेड नहीं है।"
 
-#. Forward dialog error shown when the forwarded message contains age-restricted media and the target channel is not age-restricted.
+#. Forward dialog error shown when the forwarded message contains media that is only allowed in mature channels and the target channel is not a mature channel.
 #: src/features/app/components/dialogs/shared/UseForwardDestinations.ts
-msgid "This message can only be forwarded to age-restricted channels"
-msgstr "यह मैसेज सिर्फ़ आयु-प्रतिबंधित चैनलों में ही फ़ॉरवर्ड किया जा सकता है"
+msgid "This message can only be forwarded to mature channels"
+msgstr ""
 
 #. Toast shown when someone tries to publish an announcement message that was already published.
 #: src/features/messaging/commands/MessageCommands.tsx
@@ -42881,20 +42876,20 @@ msgstr "हम उस CSS फ़ाइल को पढ़ नहीं पा�
 msgid "We couldn't read this theme. It may be corrupted or invalid."
 msgstr "हम इस थीम को पढ़ नहीं पाए। हो सकता है यह खराब हो या अमान्य हो।"
 
-#. Error shown when deleting the stored age range fails.
+#. Error shown when removing the mature content unlock from the Fluxer app fails.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
-msgid "We couldn't remove your age range. Please try again."
-msgstr "हम आपकी उम्र की रेंज नहीं हटा सके। कृपया फिर से कोशिश करें।"
+msgid "We couldn't remove the app unlock. Please try again."
+msgstr ""
 
 #. Error message after saving a theme failed in Settings > Themes or the quick CSS editor window.
 #: src/features/theme_settings/utils/ThemeSettingsErrorModal.ts
 msgid "We couldn't save that theme."
 msgstr "हम वह थीम सेव नहीं कर सके।"
 
-#. Body of the confirmation shown before deleting the age range. App Attest is an Apple product name and stays in English.
+#. Body of the confirmation shown before removing the mature content unlock from the Fluxer app for iPhone, iPad or Android. App Attest is an Apple product name and stays in English.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
-msgid "We delete the age range, the time we got it and the App Attest keys for your Apple devices. In the UK and Brazil, you can't see 18+ content until the app sends an age range again. The app may send it again later if your Apple or Google account still shares it with Fluxer."
-msgstr "हम उम्र की रेंज, उसे पाने का समय और आपके Apple डिवाइस की App Attest कुंजियाँ मिटा देते हैं। UK और ब्राज़ील में आप 18+ सामग्री तब तक नहीं देख सकते, जब तक ऐप फिर से उम्र की रेंज नहीं भेजता। अगर आपका Apple या Google अकाउंट अब भी इसे Fluxer के साथ शेयर करता है, तो ऐप इसे बाद में फिर से भेज सकता है।"
+msgid "We delete what your Apple or Google account shared, the time we got it and the App Attest keys for your Apple devices. If this is how you unlocked mature content, 18+ content in the UK and Brazil stays locked until you unlock it again in the app. The app may unlock it again later if your Apple or Google account still shares this with Fluxer."
+msgstr ""
 
 #. Modal body for existing-subscription block. Directs the user to the billing portal and addresses the just-paid race case. Keep plain and reassuring.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx
@@ -44592,6 +44587,11 @@ msgstr "आप इस यूज़रनेम से साइन इन कर
 #: src/features/auth/components/modals/SudoSsoReauth.tsx
 msgid "You signed in to a different account. Sign in with the account you're using here."
 msgstr "आपने किसी दूसरे अकाउंट में साइन इन किया है। उसी अकाउंट से साइन इन करें जिसे आप यहाँ इस्तेमाल कर रहे हैं।"
+
+#. Helper text under "Mature content unlocked in the Fluxer app" in the sensitive content settings.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
+msgid "You unlocked mature content in the Fluxer app for iPhone, iPad or Android, where your Apple or Google account confirmed that you're an adult. This lets you see 18+ content in the UK and Brazil. It doesn't change your date of birth."
+msgstr ""
 
 #. Voice chat status tooltip for the current user. A moderator deafened them so they cannot hear voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts

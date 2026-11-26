@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "Prodaja računa ili ukradenih podataka za prijavu ili podataka o kartici",
 	"report_flow.label.account_trading_communities": "Kupnja ili prodaja računa ili zajednica",
 	"report_flow.label.address": "Kućna adresa ili radno mjesto",
-	"report_flow.label.adult_content_no_gate": "Sadržaj za odrasle bez ograničenja pristupa zbog dobi 18+",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "Eksplicitan sadržaj za odrasle na profilu",
 	"report_flow.label.adult_content_unmarked": "Sadržaj za odrasle u kanalu zajednice koji nije označen kao 18+",
 	"report_flow.label.age_no_message": "Ne, ne spominje se",

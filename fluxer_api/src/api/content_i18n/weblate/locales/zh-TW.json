@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "販售帳號，或被盜的登入資訊或卡片資料",
 	"report_flow.label.account_trading_communities": "買賣帳號或社群",
 	"report_flow.label.address": "住家地址或工作地點",
-	"report_flow.label.adult_content_no_gate": "未設 18 歲以上年齡限制的成人內容",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "個人檔案中的露骨成人內容",
 	"report_flow.label.adult_content_unmarked": "社群頻道中未標示為 18 歲以上的成人內容",
 	"report_flow.label.age_no_message": "否，沒有提到",

@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "出售账号，或被盗的登录信息或银行卡信息",
 	"report_flow.label.account_trading_communities": "买卖账号或社区",
 	"report_flow.label.address": "家庭住址或工作地点",
-	"report_flow.label.adult_content_no_gate": "未设置 18+ 年龄限制的成人内容",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "个人资料中的露骨成人内容",
 	"report_flow.label.adult_content_unmarked": "社区频道中未标记为 18+ 的成人内容",
 	"report_flow.label.age_no_message": "否，消息中没有提及",

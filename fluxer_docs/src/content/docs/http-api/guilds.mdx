@@ -181,7 +181,7 @@ A template lists the roles and channels that [Create guild](#create-guild) creat
 | bitrate? | ?integer | Voice bitrate (default 64000, max 96000) |
 | user_limit? | ?integer | Voice occupancy limit (default 0) |
 | voice_connection_limit? | ?integer | Per-user voice connection limit (default 5) |
-| nsfw? | ?boolean | Whether the channel is age restricted (default false) |
+| nsfw? | ?boolean | Whether the channel is marked 18+ (default false) |
 | rate_limit_per_user? | ?integer | Slowmode interval in seconds (default 0) |
 | permission_overwrites?<sup>2</sup> | ?array[[guild template role permission overwrite](#guild-template-role-permission-overwrite-object) object] | Role permission overwrites |
 | available_tags? | ?array[[guild template forum tag](#guild-template-forum-tag-object) object] | Tags for a forum or media channel (max 20) |
@@ -283,8 +283,8 @@ Fluxer sets the level from the guild's `nsfw` field.
 
 | Value | Name | Description |
 | --- | --- | --- |
-| 0 | SAFE | Guild is not age restricted |
-| 3 | AGE_RESTRICTED | Guild is age restricted |
+| 0 | SAFE | Guild is not marked 18+ |
+| 3 | AGE_RESTRICTED | Guild is marked 18+ |
 
 ## Guild content warning levels
 

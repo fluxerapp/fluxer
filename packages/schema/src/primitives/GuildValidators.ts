@@ -61,7 +61,7 @@ export const DefaultMessageNotificationsSchema = createInt32EnumType(
 export const NSFWLevelSchema = createInt32EnumType(
 	[
 		[GuildNSFWLevel.SAFE, 'SAFE', 'Guild is safe for all ages'],
-		[GuildNSFWLevel.AGE_RESTRICTED, 'AGE_RESTRICTED', 'Guild is age-restricted'],
+		[GuildNSFWLevel.AGE_RESTRICTED, 'AGE_RESTRICTED', 'Guild is marked 18+'],
 	],
 	'The NSFW level of the guild',
 	'NSFWLevel',

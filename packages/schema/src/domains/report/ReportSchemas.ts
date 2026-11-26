@@ -19,7 +19,7 @@ const MessageReportCategoryEnum = withOpenApiType(
 			['hate_speech', 'hate_speech', 'Content promoting hatred against protected groups'],
 			['violent_content', 'violent_content', 'Content depicting or promoting violence'],
 			['spam', 'spam', 'Unsolicited bulk messages or promotional content'],
-			['nsfw_violation', 'nsfw_violation', 'Adult content posted outside age-restricted channels'],
+			['nsfw_violation', 'nsfw_violation', 'Adult content posted outside channels marked 18+'],
 			['illegal_activity', 'illegal_activity', 'Content promoting or facilitating illegal activities'],
 			['doxxing', 'doxxing', 'Content revealing private personal information'],
 			['self_harm', 'self_harm', 'Content promoting self-harm or suicide'],

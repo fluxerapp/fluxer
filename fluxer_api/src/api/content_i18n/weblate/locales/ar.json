@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "بيع الحسابات، أو بيانات تسجيل الدخول أو بيانات البطاقات المسروقة",
 	"report_flow.label.account_trading_communities": "شراء أو بيع الحسابات أو المجتمعات",
 	"report_flow.label.address": "عنوان المنزل أو مكان العمل",
-	"report_flow.label.adult_content_no_gate": "محتوى للبالغين بدون قيود عمرية 18+",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "محتوى صريح للبالغين في ملفه الشخصي",
 	"report_flow.label.adult_content_unmarked": "محتوى للبالغين في قناة مجتمع غير مقيدة بالعمر (18+)",
 	"report_flow.label.age_no_message": "لا، الرسالة لا تذكر ذلك",

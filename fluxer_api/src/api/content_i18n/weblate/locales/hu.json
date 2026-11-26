@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "Fiókok, lopott bejelentkezési adatok vagy kártyaadatok eladása",
 	"report_flow.label.account_trading_communities": "Fiókok vagy közösségek vásárlása vagy eladása",
 	"report_flow.label.address": "Otthoni cím vagy munkahely",
-	"report_flow.label.adult_content_no_gate": "Felnőtt tartalom 18+ korhatár nélkül",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "Nyíltan szexuális felnőtt tartalom a profiljában",
 	"report_flow.label.adult_content_unmarked": "Felnőtt tartalom egy közösségi csatornán, amely nincs 18+ jelöléssel ellátva",
 	"report_flow.label.age_no_message": "Nem, nem említi",

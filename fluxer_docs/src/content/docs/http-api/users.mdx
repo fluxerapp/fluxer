@@ -117,14 +117,14 @@ The current account as its owner sees it, returned by [Get current user](/http-a
 | password_last_changed_at<sup>1</sup> | ?ISO8601 timestamp | When the password last changed, or null |
 | last_voice_activity_sharing_change_at<sup>1</sup> | ?ISO8601 timestamp | When voice activity sharing last changed for all friends (24-hour cooldown), or null |
 | required_actions<sup>1</sup> | array[string] | Deprecated. Always empty |
-| nsfw_allowed<sup>1</sup> | boolean | Whether the account can see age-restricted content |
+| nsfw_allowed<sup>1</sup> | boolean | Whether the account can see mature content |
 | has_dismissed_premium_onboarding<sup>1</sup> | boolean | Whether premium onboarding was dismissed, false while premium is not active |
 | has_ever_purchased<sup>1</sup> | boolean | Whether the account has bought anything |
 | has_unread_gift_inventory<sup>1</sup> | boolean | Whether the gift inventory has unread items |
 | unread_gift_inventory_count<sup>1</sup> | integer | The number of unread gift inventory items |
 | pending_bulk_message_deletion<sup>1</sup> | ?[pending bulk message deletion](#pending-bulk-message-deletion-object) object | The scheduled deletion of all the account's messages, or null |
 | mature_content_unlocked?<sup>1</sup> <sup>5</sup> | boolean | Whether the account can see mature content in places where a date of birth typed in is not enough |
-| has_age_range?<sup>1</sup> <sup>5</sup> | boolean | Whether Fluxer keeps an age range for the account. The range itself is not included |
+| has_age_range?<sup>1</sup> <sup>5</sup> | boolean | Whether the account unlocked mature content in the iOS or Android app. What the Apple or Google account shared is not included |
 | terms_agreed_at<sup>1</sup> | ?ISO8601 timestamp | When the account last accepted the terms, or null |
 | privacy_agreed_at<sup>1</sup> | ?ISO8601 timestamp | When the account was last shown the current privacy policy, or null |
 | claimed?<sup>1</sup> | boolean | Whether the account can sign in on another device with an email, a password or a passkey |
@@ -142,7 +142,7 @@ The current account as its owner sees it, returned by [Get current user](/http-a
 
 <sup>4</sup> After premium ends, a `random` tag-style instance gives the account a new discriminator at its next Gateway session
 
-<sup>5</sup> The iOS and Android apps can send an age range from the Apple or Google account, and Fluxer keeps it only when it is 18 or over. `mature_content_unlocked` is true when Fluxer keeps such a range, when staff set it, or when the account had mature content unlocked before. A self-hosted instance never keeps an age range
+<sup>5</sup> The iOS and Android apps can unlock mature content when the Apple or Google account confirms that the person is an adult. `has_age_range` is true after such an unlock, and `mature_content_unlocked` is true after it, when staff set it, or when the account had mature content unlocked before. A self-hosted instance never unlocks mature content this way
 
 ## Pending bulk message deletion object
 

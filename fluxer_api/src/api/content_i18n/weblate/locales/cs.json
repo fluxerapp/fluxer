@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "Prodej účtů nebo ukradených přihlašovacích údajů či údajů o kartě",
 	"report_flow.label.account_trading_communities": "Nákup nebo prodej účtů či komunit",
 	"report_flow.label.address": "Domácí adresa nebo pracoviště",
-	"report_flow.label.adult_content_no_gate": "Obsah pro dospělé bez věkového omezení 18+",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "Explicitní obsah pro dospělé v profilu",
 	"report_flow.label.adult_content_unmarked": "Obsah pro dospělé v komunitním kanálu, který není označen jako 18+",
 	"report_flow.label.age_no_message": "Ne, nezmiňuje se o tom",

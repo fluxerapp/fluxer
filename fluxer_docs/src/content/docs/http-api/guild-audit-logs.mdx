@@ -192,7 +192,7 @@ Recorded by [GUILD_UPDATE](#audit-actions).
 | verification_level | number | The [verification level](/http-api/guilds/#verification-levels) |
 | mfa_level | number | The [MFA level](/http-api/guilds/#mfa-levels) |
 | nsfw_level | number | The [NSFW level](/http-api/guilds/#nsfw-levels) |
-| nsfw | boolean | Whether the guild is marked age restricted |
+| nsfw | boolean | Whether the guild is marked 18+ |
 | content_warning_level | number | The [guild content warning level](/http-api/guilds/#guild-content-warning-levels) |
 | content_warning_text | ?string | The content warning text |
 | explicit_content_filter | number | The [guild explicit content filter level](/http-api/guilds/#guild-explicit-content-filter-levels) |
@@ -221,7 +221,7 @@ Recorded by [CHANNEL_CREATE](#audit-actions), [CHANNEL_UPDATE](#audit-actions) a
 | url<sup>1</sup> | ?string | The destination URL of the channel |
 | parent_id | ?string | The ID of the parent category, or null for a top-level channel |
 | position | number | The position of the channel among its siblings |
-| nsfw | ?boolean | Whether the channel is marked age restricted, or null when it has no override |
+| nsfw | ?boolean | Whether the channel is marked 18+, or null when it has no override |
 | content_warning_level | number | The [content warning level](/http-api/channels/#content-warning-levels) |
 | content_warning_text | ?string | The content warning text |
 | rate_limit_per_user | number | The slowmode interval in seconds |

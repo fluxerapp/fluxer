@@ -1,32 +1,33 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 export const ERROR_I18N_MESSAGES = {
-	'account.age_range_not_adult': "An age range only counts here when it shows that you're 18 or older.",
-	'account.age_range_not_needed': "You don't need an age range where you are.",
+	'account.age_range_not_adult':
+		"Mature content stays locked because your Apple or Google account doesn't show that you're an adult.",
+	'account.age_range_not_needed': "You don't need to unlock mature content where you are.",
 	'account.age_range_source_not_verified':
-		"An age you only entered yourself in your Google account doesn't count here. It counts once Google has checked it, for example with a card or an ID.",
+		"A birthday you only typed into your Google account can't unlock mature content. It can once Google has confirmed it, for example with a card or an ID.",
 	'account.already_claimed': 'This account is already set up to sign in from other devices.',
-	'account.app_attest_assertion_invalid': "We couldn't confirm the age range your device sent.",
+	'account.app_attest_assertion_invalid': "We couldn't confirm the unlock request your device sent.",
 	'account.app_attest_attestation_invalid': "We couldn't confirm this device key.",
-	'account.app_attest_challenge_invalid': 'This check has expired or was already used. Try again.',
+	'account.app_attest_challenge_invalid': 'This request has expired or was already used. Try again.',
 	'account.app_attest_key_in_use': 'This device key is already registered to another account.',
 	'account.app_attest_key_not_registered': "This device key isn't registered with your account.",
-	'account.app_attest_not_available': "This instance doesn't accept age ranges from the app.",
-	'account.app_attest_request_invalid': "This age range request isn't valid.",
+	'account.app_attest_not_available': "This instance can't unlock mature content from the app.",
+	'account.app_attest_request_invalid': "This unlock request isn't valid.",
 	'account.below_minimum_age': "You aren't old enough to have an account here.",
 	'account.date_of_birth_already_set': 'Your date of birth is already set.',
 	'account.date_of_birth_required': 'Enter your date of birth to continue.',
 	'account.password_required_to_claim':
 		"{reason, select, email_delivery_off {Set a password to keep this account. This instance can't send email codes.} local_credential_basis {Set a password to keep this account. This instance asks every account for a password or passkey.} other {Set a password to keep this account.}}",
 	'account.play_integrity_app_not_recognized':
-		'Install the app from Google Play and sign in to Google Play so the app can send your age range.',
-	'account.play_integrity_challenge_invalid': 'This check has expired or was already used. Try again.',
+		'Install the app from Google Play and sign in to Google Play to unlock mature content.',
+	'account.play_integrity_challenge_invalid': 'This request has expired or was already used. Try again.',
 	'account.play_integrity_device_not_trusted':
-		"This device didn't pass the Google Play device check, so the app can't send your age range from it.",
-	'account.play_integrity_not_available': "This instance doesn't accept age ranges from the Android app.",
-	'account.play_integrity_request_invalid': "This age range request isn't valid.",
-	'account.play_integrity_token_invalid': "We couldn't confirm the age range your device sent. Try again.",
-	'account.play_integrity_unavailable': "We couldn't connect to Google Play to get your age range. Try again later.",
+		"This device didn't pass the Google Play device check, so you can't unlock mature content from it.",
+	'account.play_integrity_not_available': "This instance can't unlock mature content from the Android app.",
+	'account.play_integrity_request_invalid': "This unlock request isn't valid.",
+	'account.play_integrity_token_invalid': "We couldn't confirm the unlock request your device sent. Try again.",
+	'account.play_integrity_unavailable': "We couldn't connect to Google Play to unlock mature content. Try again later.",
 	'account.unclaimed_cannot_accept_friend_requests': 'Claim your account to accept friend requests.',
 	'account.unclaimed_cannot_add_reactions': 'Claim your account to add reactions.',
 	'account.unclaimed_cannot_create_applications': 'Claim your account to create applications.',
@@ -316,9 +317,9 @@ export const ERROR_I18N_MESSAGES = {
 	'channels_and_guilds.channel_type_conversion_not_supported':
 		'Only text and announcement channels can be converted into each other.',
 	'channels_and_guilds.follow_target_content_warning_required':
-		'Updates from a channel with a content warning can only go to a channel with a content warning or an age restriction.',
+		'Updates from a channel with a content warning can only go to a mature channel or a channel with a content warning.',
 	'channels_and_guilds.follow_target_not_age_restricted':
-		'Updates from an age-restricted channel can only go to an age-restricted channel.',
+		'Updates from a mature channel can only go to a mature channel.',
 	'channels_and_guilds.invalid_follow_target_channel': 'Followed channels can only post into text channels.',
 	'channels_and_guilds.search_filter_needs_membership': 'Join this community to search by person or mention.',
 	'channels_and_guilds.single_community_cannot_create_guilds':
@@ -404,7 +405,7 @@ export const ERROR_I18N_MESSAGES = {
 		'Connection verification failed. Make sure the verification token is correctly placed.',
 	'content_and_safety.content_blocked': 'This content was blocked by safety systems.',
 	'content_and_safety.explicit_content_cannot_be_sent': "Explicit content can't be sent.",
-	'content_and_safety.nsfw_age_restricted': 'NSFW content is age restricted.',
+	'content_and_safety.nsfw_age_restricted': "This mature content isn't available to your account.",
 	'discovery.already_applied': 'This community has already applied to be listed in Explore.',
 	'discovery.application_already_reviewed': 'This application to Explore has already been reviewed.',
 	'discovery.application_not_found': "The application to Explore wasn't found.",

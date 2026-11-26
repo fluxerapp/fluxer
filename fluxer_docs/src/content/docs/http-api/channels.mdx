@@ -35,8 +35,8 @@ Every channel has `id` and `type`, and the other fields are present only on the 
 | last_pin_timestamp? | ?ISO8601 timestamp | When a message was last pinned |
 | permission_overwrites? | array[[permission overwrite](#permission-overwrite-object) object] | The permission overwrites (guild channels other than threads) |
 | recipients? | array[[partial user](/http-api/users/#partial-user-object) object] | The other recipients of a direct message or group direct message |
-| nsfw? | boolean | Whether the channel is age restricted, or a group direct message is marked for mature content |
-| nsfw_override? | ?boolean | Whether this channel overrides the inherited age restriction, null when it inherits |
+| nsfw? | boolean | Whether the channel is marked 18+, or a group direct message is marked for mature content |
+| nsfw_override? | ?boolean | Whether this channel overrides the inherited 18+ marking, null when it inherits |
 | content_warning_level? | integer | The [content warning level](#content-warning-levels) of this channel |
 | content_warning_text? | ?string | The content warning text of this channel |
 | rate_limit_per_user? | integer | The slowmode interval in seconds, `0` for none |
@@ -190,7 +190,7 @@ Returns a [channel object](#channel-object). You need `VIEW_CHANNEL` in a guild 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [channel](#channel-object) object | The channel was returned |
-| 403 | [error response](/http-api/#error-response) | `NSFW_CONTENT_AGE_RESTRICTED` when the channel is age restricted and the account can't see mature content |
+| 403 | [error response](/http-api/#error-response) | `NSFW_CONTENT_AGE_RESTRICTED` when the channel is marked 18+ and the account can't see mature content |
 
 The rate limit is 100 requests per 10 seconds, on the `channel:read::channel_id` bucket.
 
@@ -257,8 +257,8 @@ Every field is optional, and a field the channel type doesn't use is ignored.
 | user_limit? | ?integer | The most members allowed in a voice channel at once (0-99, `0` for no limit) |
 | voice_connection_limit? | ?integer | The most voice connections one user can have at once (1-100) |
 | permission_overwrites? | array[[permission overwrite](#permission-overwrite-object) object] | Every overwrite of the channel, replacing the current ones |
-| nsfw_override? | ?boolean | Whether this channel overrides the inherited age restriction, null to inherit |
-| nsfw? | ?boolean | Whether the channel is age restricted, ignored when you send `nsfw_override` |
+| nsfw_override? | ?boolean | Whether this channel overrides the inherited 18+ marking, null to inherit |
+| nsfw? | ?boolean | Whether the channel is marked 18+, ignored when you send `nsfw_override` |
 | content_warning_level? | integer | The [content warning level](#content-warning-levels) |
 | content_warning_text? | ?string | The content warning text (max 200 characters), null to clear it |
 | rate_limit_per_user? | ?integer | The slowmode interval in seconds (0-21,600) |
@@ -509,12 +509,12 @@ Follows an announcement channel into a guild text channel and returns a [followe
 | 400 | [error response](/http-api/#error-response) | `ANNOUNCEMENT_CHANNEL_REQUIRED` when the channel is not an announcement channel |
 | 400 | [error response](/http-api/#error-response) | `INVALID_FOLLOW_TARGET_CHANNEL` when the target is not a guild text channel |
 | 400 | [error response](/http-api/#error-response) | `CHANNEL_ALREADY_FOLLOWED` when the target already follows this channel |
-| 400 | [error response](/http-api/#error-response) | `FOLLOW_TARGET_NOT_AGE_RESTRICTED` when the channel is age restricted and the target isn't |
+| 400 | [error response](/http-api/#error-response) | `FOLLOW_TARGET_NOT_AGE_RESTRICTED` when the channel is marked 18+ and the target isn't |
 | 400 | [error response](/http-api/#error-response) | `FOLLOW_TARGET_CONTENT_WARNING_REQUIRED` when the channel has a content warning and the target doesn't |
 | 400 | [error response](/http-api/#error-response) | `MAX_WEBHOOKS_PER_CHANNEL` or `MAX_WEBHOOKS_PER_GUILD` when the target has no room for the webhook |
 | 403 | [error response](/http-api/#error-response) | `FEATURE_TEMPORARILY_DISABLED` when the guild has `ANNOUNCEMENT_CHANNELS_DISABLED` |
 
-An age-restricted target doesn't need its own content warning. Fluxer sends [Webhooks Update](/gateway/events/#webhooks-update) for the target channel and posts a `CHANNEL_FOLLOW_ADD` system message in it. [Delete webhook](/http-api/webhooks/#delete-webhook) on the follower webhook stops the follow.
+A target marked 18+ doesn't need its own content warning. Fluxer sends [Webhooks Update](/gateway/events/#webhooks-update) for the target channel and posts a `CHANNEL_FOLLOW_ADD` system message in it. [Delete webhook](/http-api/webhooks/#delete-webhook) on the follower webhook stops the follow.
 
 The rate limit is 5 requests per 10 seconds, on the `channel:follow::channel_id` bucket.
 

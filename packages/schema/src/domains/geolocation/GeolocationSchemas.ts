@@ -26,7 +26,7 @@ export const GeolocationResponse = z.object({
 	ageRestrictedGeos: z
 		.array(GeoEntry)
 		.describe('Locations where a date of birth typed in is not enough for mature content'),
-	ageBlockedGeos: z.array(GeoEntry).describe('Locations where age restricted content is unavailable'),
+	ageBlockedGeos: z.array(GeoEntry).describe('Locations where mature content is unavailable'),
 });
 
 export type GeolocationResponse = z.infer<typeof GeolocationResponse>;

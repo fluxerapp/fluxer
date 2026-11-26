@@ -61,7 +61,7 @@ When a field fails a check, the request returns 400 `INVALID_FORM_BODY` with an 
 
 `path` joins field names and array indexes with dots, as in `embeds.0.title`. A `path` of `root` means the error is about the whole request.
 
-On [Modify current user settings](/http-api/users/settings/#modify-current-user-settings), the trusted domain, age restriction and synced preferences checks return 400 `VALIDATION_ERROR` with the same `errors` structure. Other field failures there return `INVALID_FORM_BODY`.
+On [Modify current user settings](/http-api/users/settings/#modify-current-user-settings), the trusted domain, sensitive content filter and synced preferences checks return 400 `VALIDATION_ERROR` with the same `errors` structure. Other field failures there return `INVALID_FORM_BODY`.
 
 ## Extra fields
 
@@ -168,8 +168,8 @@ These are the values of the top-level `code`, the `APIErrorCode` schema in the [
 | `FEATURE_NOT_AVAILABLE_SELF_HOSTED` | This feature isn't available on self-hosted instances |
 | `FEATURE_TEMPORARILY_DISABLED` | This feature is temporarily disabled |
 | `FILE_SIZE_TOO_LARGE` | File size is too large |
-| `FOLLOW_TARGET_CONTENT_WARNING_REQUIRED` | Updates from a channel with a content warning can only go to a channel with a content warning or an age restriction |
-| `FOLLOW_TARGET_NOT_AGE_RESTRICTED` | Updates from an age-restricted channel can only go to an age-restricted channel |
+| `FOLLOW_TARGET_CONTENT_WARNING_REQUIRED` | Updates from a channel with a content warning can only go to a mature channel or a channel with a content warning |
+| `FOLLOW_TARGET_NOT_AGE_RESTRICTED` | Updates from a mature channel can only go to a mature channel |
 | `FORBIDDEN` | Forbidden |
 | `FORUM_TAG_NAMES_MUST_BE_UNIQUE` | Tag names must be unique |
 | `FORUM_TAG_REQUIRED` | A tag is required to create a post in this channel |
@@ -284,7 +284,7 @@ These are the values of the top-level `code`, the `APIErrorCode` schema in the [
 | `NO_PENDING_DELETION` | Invalid request |
 | `NO_TAGS_AVAILABLE_TO_NON_MODERATORS` | A tag is required, but only moderators can apply the tags in this channel |
 | `NO_USERS_WITH_FLUXERTAG_EXIST` | There are too many users with this username |
-| `NSFW_CONTENT_AGE_RESTRICTED` | NSFW content is age restricted |
+| `NSFW_CONTENT_AGE_RESTRICTED` | This mature content isn't available to your account |
 | `PASSKEY_AUTHENTICATION_FAILED` | Passkey authentication failed |
 | `PASSWORD_REQUIRED_TO_CLAIM` | Set a password to keep this account |
 | `PASSWORD_SIGN_IN_REQUIRED` | Sign in to this account with its password |
@@ -417,20 +417,20 @@ These are the values of the top-level `code`, the `APIErrorCode` schema in the [
 
 ### Codes only fluxer.com returns
 
-Self-serve refund, Operator Pass, donation, in-app purchase, age range and passkey domain move routes run only on fluxer.com, so a self-hosted instance never returns these codes.
+Self-serve refund, Operator Pass, donation, in-app purchase, mature content unlock and passkey domain move routes run only on fluxer.com, so a self-hosted instance never returns these codes.
 
 | Code | Message |
 | --- | --- |
-| `AGE_RANGE_NOT_ADULT` | An age range only counts here when it shows that you're 18 or older |
-| `AGE_RANGE_NOT_NEEDED` | You don't need an age range where you are |
-| `AGE_RANGE_SOURCE_NOT_VERIFIED` | An age you only entered yourself in your Google account doesn't count here |
-| `APP_ATTEST_ASSERTION_INVALID` | We couldn't confirm the age range your device sent |
+| `AGE_RANGE_NOT_ADULT` | Mature content stays locked because your Apple or Google account doesn't show that you're an adult |
+| `AGE_RANGE_NOT_NEEDED` | You don't need to unlock mature content where you are |
+| `AGE_RANGE_SOURCE_NOT_VERIFIED` | A birthday you only typed into your Google account can't unlock mature content |
+| `APP_ATTEST_ASSERTION_INVALID` | We couldn't confirm the unlock request your device sent |
 | `APP_ATTEST_ATTESTATION_INVALID` | We couldn't confirm this device key |
-| `APP_ATTEST_CHALLENGE_INVALID` | This check has expired or was already used |
+| `APP_ATTEST_CHALLENGE_INVALID` | This request has expired or was already used |
 | `APP_ATTEST_KEY_IN_USE` | This device key is already registered to another account |
 | `APP_ATTEST_KEY_NOT_REGISTERED` | This device key isn't registered with your account |
-| `APP_ATTEST_NOT_AVAILABLE` | This instance doesn't accept age ranges from the app |
-| `APP_ATTEST_REQUEST_INVALID` | This age range request isn't valid |
+| `APP_ATTEST_NOT_AVAILABLE` | This instance can't unlock mature content from the app |
+| `APP_ATTEST_REQUEST_INVALID` | This unlock request isn't valid |
 | `DONATION_AMOUNT_INVALID` | Donation amount is invalid |
 | `DONATION_MAGIC_LINK_EXPIRED` | Magic link has expired |
 | `DONATION_MAGIC_LINK_INVALID` | Magic link is invalid |
@@ -463,13 +463,13 @@ Self-serve refund, Operator Pass, donation, in-app purchase, age range and passk
 | `PAYMENT_DISPUTE_EXEMPT` | Our terms rule out any action on this payment dispute |
 | `PAYMENT_DISPUTE_REVIEW_CLOSED` | This payment dispute has already closed |
 | `PAYMENT_DISPUTE_WARNING_TOO_LATE` | The bank's deadline is too close to warn the account in time |
-| `PLAY_INTEGRITY_APP_NOT_RECOGNIZED` | Install the app from Google Play and sign in to Google Play so the app can send your age range |
-| `PLAY_INTEGRITY_CHALLENGE_INVALID` | This check has expired or was already used |
-| `PLAY_INTEGRITY_DEVICE_NOT_TRUSTED` | This device didn't pass the Google Play device check, so the app can't send your age range from it |
-| `PLAY_INTEGRITY_NOT_AVAILABLE` | This instance doesn't accept age ranges from the Android app |
-| `PLAY_INTEGRITY_REQUEST_INVALID` | This age range request isn't valid |
-| `PLAY_INTEGRITY_TOKEN_INVALID` | We couldn't confirm the age range your device sent |
-| `PLAY_INTEGRITY_UNAVAILABLE` | We couldn't connect to Google Play to get your age range |
+| `PLAY_INTEGRITY_APP_NOT_RECOGNIZED` | Install the app from Google Play and sign in to Google Play to unlock mature content |
+| `PLAY_INTEGRITY_CHALLENGE_INVALID` | This request has expired or was already used |
+| `PLAY_INTEGRITY_DEVICE_NOT_TRUSTED` | This device didn't pass the Google Play device check, so you can't unlock mature content from it |
+| `PLAY_INTEGRITY_NOT_AVAILABLE` | This instance can't unlock mature content from the Android app |
+| `PLAY_INTEGRITY_REQUEST_INVALID` | This unlock request isn't valid |
+| `PLAY_INTEGRITY_TOKEN_INVALID` | We couldn't confirm the unlock request your device sent |
+| `PLAY_INTEGRITY_UNAVAILABLE` | We couldn't connect to Google Play to unlock mature content |
 | `STORE_BILLING_UNAVAILABLE` | In-app purchases are unavailable right now |
 | `STORE_NOTIFICATION_UNAUTHORIZED` | The notification signature is invalid |
 | `STORE_PURCHASE_INVALID` | This purchase could not be verified |

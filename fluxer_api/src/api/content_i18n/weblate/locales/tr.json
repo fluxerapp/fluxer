@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "Hesap satışı veya çalınmış giriş ya da kart bilgileri",
 	"report_flow.label.account_trading_communities": "Hesap veya topluluk satın alma veya satma",
 	"report_flow.label.address": "Ev adresi veya iş yeri",
-	"report_flow.label.adult_content_no_gate": "18+ yaş kısıtlaması olmayan yetişkinlere yönelik içerik",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "Profilinde müstehcen yetişkin içerik",
 	"report_flow.label.adult_content_unmarked": "18+ olarak işaretlenmemiş bir topluluk kanalındaki yetişkinlere yönelik içerik",
 	"report_flow.label.age_no_message": "Hayır, yaşını belirtmiyor",

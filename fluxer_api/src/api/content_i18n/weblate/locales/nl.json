@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "Accounts verkopen, of gestolen inloggegevens of kaartgegevens",
 	"report_flow.label.account_trading_communities": "Accounts of communities kopen of verkopen",
 	"report_flow.label.address": "Huisadres of werkplek",
-	"report_flow.label.adult_content_no_gate": "Inhoud voor volwassenen zonder 18+-leeftijdsbeperking",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "Expliciete inhoud voor volwassenen in het profiel",
 	"report_flow.label.adult_content_unmarked": "Inhoud voor volwassenen in een communitykanaal dat niet is gemarkeerd als 18+",
 	"report_flow.label.age_no_message": "Nee, het wordt niet vermeld",

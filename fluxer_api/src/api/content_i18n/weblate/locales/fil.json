@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "Pagbebenta ng mga account, o ng mga nakaw na login o detalye ng card",
 	"report_flow.label.account_trading_communities": "Pagbili o pagbebenta ng mga account o komunidad",
 	"report_flow.label.address": "Address ng bahay o lugar ng trabaho",
-	"report_flow.label.adult_content_no_gate": "Pang-adult na nilalaman nang walang 18+ na age restriction",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "Tahasang pang-adult na nilalaman sa profile niya",
 	"report_flow.label.adult_content_unmarked": "Pang-adult na nilalaman sa channel ng komunidad na walang markang 18+",
 	"report_flow.label.age_no_message": "Hindi, hindi nito binabanggit",

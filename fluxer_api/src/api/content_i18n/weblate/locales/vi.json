@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "Bán tài khoản, hoặc thông tin đăng nhập hoặc chi tiết thẻ bị đánh cắp",
 	"report_flow.label.account_trading_communities": "Mua hoặc bán tài khoản hoặc cộng đồng",
 	"report_flow.label.address": "Địa chỉ nhà hoặc nơi làm việc",
-	"report_flow.label.adult_content_no_gate": "Nội dung người lớn không có giới hạn 18+",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "Nội dung người lớn lộ liễu trong hồ sơ của họ",
 	"report_flow.label.adult_content_unmarked": "Nội dung người lớn trong kênh cộng đồng không được đánh dấu 18+",
 	"report_flow.label.age_no_message": "Không, tin nhắn không đề cập đến tuổi",

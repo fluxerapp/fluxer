@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "अकाउंट बेचना, या चोरी किए गए लॉगिन या कार्ड विवरण",
 	"report_flow.label.account_trading_communities": "अकाउंट या कम्युनिटी खरीदना या बेचना",
 	"report_flow.label.address": "घर का पता या कार्यस्थल",
-	"report_flow.label.adult_content_no_gate": "18+ आयु प्रतिबंध के बिना वयस्क सामग्री",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "उनकी प्रोफ़ाइल में अश्लील वयस्क सामग्री",
 	"report_flow.label.adult_content_unmarked": "कम्युनिटी के किसी ऐसे चैनल में वयस्क सामग्री जो 18+ मार्क नहीं है",
 	"report_flow.label.age_no_message": "नहीं, इसमें इसका ज़िक्र नहीं है",

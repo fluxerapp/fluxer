@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "Verkauf von Accounts oder gestohlenen Zugangsdaten oder Kartendaten",
 	"report_flow.label.account_trading_communities": "Kauf oder Verkauf von Accounts oder Communitys",
 	"report_flow.label.address": "Wohnadresse oder Arbeitsplatz",
-	"report_flow.label.adult_content_no_gate": "Nicht jugendfreie Inhalte ohne Altersbeschränkung (18+)",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "Explizite nicht jugendfreie Inhalte im Profil",
 	"report_flow.label.adult_content_unmarked": "Nicht jugendfreie Inhalte in einem Community-Kanal ohne 18+-Markierung",
 	"report_flow.label.age_no_message": "Nein, die Nachricht erwähnt es nicht",

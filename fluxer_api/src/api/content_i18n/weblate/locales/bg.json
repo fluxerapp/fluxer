@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "Продажба на акаунти или на откраднати данни за вход или за карти",
 	"report_flow.label.account_trading_communities": "Купуване или продаване на акаунти или общности",
 	"report_flow.label.address": "Домашен адрес или работно място",
-	"report_flow.label.adult_content_no_gate": "Съдържание за възрастни без възрастово ограничение 18+",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "Явно съдържание за възрастни в профила",
 	"report_flow.label.adult_content_unmarked": "Съдържание за възрастни в канал в общност, който не е маркиран като 18+",
 	"report_flow.label.age_no_message": "Не, не се споменава",

@@ -12295,7 +12295,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Resolves the approximate location of the requesting client from its IP address, together with the locations where age restricted content is gated or unavailable."
+				"description": "Resolves the approximate location of the requesting client from its IP address, together with the locations where mature content has to be unlocked or is unavailable."
 			}
 		},
 		"/klipy/featured": {
@@ -29174,7 +29174,7 @@
 						"description": "Information about a pending bulk message deletion request. Only populated when the legacy delayed-deletion flow is in progress; the new immediate-deletion flow does not surface a pending state here."
 					},
 					"mature_content_unlocked": {
-						"description": "Whether mature content is unlocked for the account in regions where a date of birth typed in is not enough for mature content. It is true when the iOS or Android app sent an age range of 18 or over, when staff set it, or when the account already had mature content unlocked before. Never true from an age range on a self-hosted instance",
+						"description": "Whether mature content is unlocked for the account in regions where a date of birth typed in is not enough for mature content. It is true when the account unlocked mature content in the iOS or Android app, when staff set it, or when the account already had mature content unlocked before. The app unlock never applies on a self-hosted instance",
 						"type": "boolean"
 					},
 					"terms_agreed_at": {
@@ -29203,7 +29203,7 @@
 						"type": "boolean"
 					},
 					"has_age_range": {
-						"description": "Whether Fluxer keeps an age range for the account that the iOS or Android app sent from the Apple or Google account. The range itself is not included",
+						"description": "Whether the account unlocked mature content in the iOS or Android app, where the Apple or Google account confirmed that the person is an adult. What the account shared is not included",
 						"type": "boolean"
 					},
 					"profile_restricted": {
@@ -32755,7 +32755,7 @@
 						"description": "Information about a pending bulk message deletion request. Only populated when the legacy delayed-deletion flow is in progress; the new immediate-deletion flow does not surface a pending state here."
 					},
 					"mature_content_unlocked": {
-						"description": "Whether mature content is unlocked for the account in regions where a date of birth typed in is not enough for mature content. It is true when the iOS or Android app sent an age range of 18 or over, when staff set it, or when the account already had mature content unlocked before. Never true from an age range on a self-hosted instance",
+						"description": "Whether mature content is unlocked for the account in regions where a date of birth typed in is not enough for mature content. It is true when the account unlocked mature content in the iOS or Android app, when staff set it, or when the account already had mature content unlocked before. The app unlock never applies on a self-hosted instance",
 						"type": "boolean"
 					},
 					"terms_agreed_at": {
@@ -32784,7 +32784,7 @@
 						"type": "boolean"
 					},
 					"has_age_range": {
-						"description": "Whether Fluxer keeps an age range for the account that the iOS or Android app sent from the Apple or Google account. The range itself is not included",
+						"description": "Whether the account unlocked mature content in the iOS or Android app, where the Apple or Google account confirmed that the person is an adult. What the account shared is not included",
 						"type": "boolean"
 					},
 					"profile_restricted": {
@@ -35359,7 +35359,7 @@
 					"ageBlockedGeos": {
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/GeoEntry"},
-						"description": "Locations where age restricted content is unavailable"
+						"description": "Locations where mature content is unavailable"
 					}
 				},
 				"required": ["countryCode", "regionCode", "latitude", "longitude", "ageRestrictedGeos", "ageBlockedGeos"],
@@ -43361,7 +43361,7 @@
 				"maximum": 2147483647,
 				"format": "int32",
 				"x-enumNames": ["SAFE", "AGE_RESTRICTED"],
-				"x-enumDescriptions": ["Guild is safe for all ages", "Guild is age-restricted"],
+				"x-enumDescriptions": ["Guild is safe for all ages", "Guild is marked 18+"],
 				"enum": [0, 3]
 			},
 			"GuildMFALevelInput": {
@@ -44238,7 +44238,7 @@
 				"enum": [0, 3],
 				"format": "int32",
 				"x-enumNames": ["SAFE", "AGE_RESTRICTED"],
-				"x-enumDescriptions": ["Guild is safe for all ages", "Guild is age-restricted"]
+				"x-enumDescriptions": ["Guild is safe for all ages", "Guild is marked 18+"]
 			},
 			"GuildEmojiWithUserResponse": {
 				"type": "object",
@@ -47855,23 +47855,23 @@
 					"ACLs must be non-empty.",
 					"Admin API key wasn't found.",
 					"You're already friends with this user.",
-					"An age range only counts here when it shows that you're 18 or older.",
-					"You don't need an age range where you are.",
-					"An age you only entered yourself in your Google account doesn't count here. It counts once Google has checked it, for example with a card or an ID.",
-					"This instance doesn't accept age ranges from the app.",
+					"Mature content stays locked because your Apple or Google account doesn't show that you're an adult.",
+					"You don't need to unlock mature content where you are.",
+					"A birthday you only typed into your Google account can't unlock mature content. It can once Google has confirmed it, for example with a card or an ID.",
+					"This instance can't unlock mature content from the app.",
 					"This device key isn't registered with your account.",
 					"This device key is already registered to another account.",
-					"This check has expired or was already used. Try again.",
+					"This request has expired or was already used. Try again.",
 					"We couldn't confirm this device key.",
-					"We couldn't confirm the age range your device sent.",
-					"This age range request isn't valid.",
-					"This instance doesn't accept age ranges from the Android app.",
-					"This age range request isn't valid.",
-					"This check has expired or was already used. Try again.",
-					"We couldn't confirm the age range your device sent. Try again.",
-					"Install the app from Google Play and sign in to Google Play so the app can send your age range.",
-					"This device didn't pass the Google Play device check, so the app can't send your age range from it.",
-					"We couldn't connect to Google Play to get your age range. Try again later.",
+					"We couldn't confirm the unlock request your device sent.",
+					"This unlock request isn't valid.",
+					"This instance can't unlock mature content from the Android app.",
+					"This unlock request isn't valid.",
+					"This request has expired or was already used. Try again.",
+					"We couldn't confirm the unlock request your device sent. Try again.",
+					"Install the app from Google Play and sign in to Google Play to unlock mature content.",
+					"This device didn't pass the Google Play device check, so you can't unlock mature content from it.",
+					"We couldn't connect to Google Play to unlock mature content. Try again later.",
 					"Bots can't create communities.",
 					"Bots can't send friend requests.",
 					"This bot is already in the community.",
@@ -47929,8 +47929,8 @@
 					"An enforcement decision owns this restriction. End the decision instead.",
 					"A later decision replaced this one, so it can no longer be ended.",
 					"The deletion of this account has already started, so the decision can no longer be ended.",
-					"Updates from a channel with a content warning can only go to a channel with a content warning or an age restriction.",
-					"Updates from an age-restricted channel can only go to an age-restricted channel.",
+					"Updates from a channel with a content warning can only go to a mature channel or a channel with a content warning.",
+					"Updates from a mature channel can only go to a mature channel.",
 					"Email verification is required for this action.",
 					"Email verification is required for this action.",
 					"You don't have permission to create communities on this instance. Contact your instance administrator to request access.",
@@ -48051,7 +48051,7 @@
 					"There are too many users with this username.",
 					"This application isn't a bot.",
 					"You're not friends with this user.",
-					"NSFW content is age restricted.",
+					"This mature content isn't available to your account.",
 					"Passkey authentication failed.",
 					"No active subscription.",
 					"Preview must be JPEG.",

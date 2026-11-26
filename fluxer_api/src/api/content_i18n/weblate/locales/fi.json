@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "Tilien myynti tai varastetut kirjautumistiedot tai korttitiedot",
 	"report_flow.label.account_trading_communities": "Tilien tai yhteisöjen ostaminen tai myyminen",
 	"report_flow.label.address": "Kotiosoite tai työpaikka",
-	"report_flow.label.adult_content_no_gate": "Aikuisille tarkoitettu sisältö ilman 18+-ikärajaa",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "Seksuaalisesti avoin aikuisille tarkoitettu sisältö hänen profiilissaan",
 	"report_flow.label.adult_content_unmarked": "Aikuisille tarkoitettu sisältö yhteisön kanavalla, jota ei ole merkitty 18+-kanavaksi",
 	"report_flow.label.age_no_message": "Ei, siinä ei mainita ikää",

@@ -2171,8 +2171,8 @@ msgstr "{productName} li wile e ken pi lukin sinpin. o pana e ken pi lukin sinpi
 
 #. Text under the date of birth heading. productName is the app name. It says the app never asks for ID or a face scan, what the date is used for, and that it cannot be changed once entered.
 #: src/features/auth/components/date_of_birth/DateOfBirthGate.tsx
-msgid "{productName} only asks for your date of birth, never for ID or a face scan. It's used to check the minimum age for your country and for age-restricted content, and it isn't shown to anyone. You can't change it later, so please make sure it's right."
-msgstr "{productName} li wile sona e tenpo suno pi kama sina taso. ona li wile ala e lipu lawa sina, li wile ala lukin e sinpin sina. mi kepeken ona tawa lukin e tenpo sike lili pi ma sina, e ken sina pi lukin e ijo pi jan 18+ taso. jan ante li lukin ala e ona. sina ken ala ante e ona lon tenpo kama. ni la, o lukin pona e lon ona."
+msgid "{productName} only asks for your date of birth, never for ID or a face scan. It's used to apply the minimum age for your country and to decide which mature content you can see, and it isn't shown to anyone. You can't change it later, so please make sure it's right."
+msgstr ""
 
 #. Title of the printed or downloaded recovery kit. productName is the app name.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx
@@ -4241,11 +4241,6 @@ msgstr "sina kama la, o pali sin e ni."
 #: src/features/auth/components/modals/AccountDeleteModal.tsx
 msgid "After your account is deleted, you will not be able to delete the messages you sent"
 msgstr "lipu jan sina li weka la, sina ken ala weka e toki sina"
-
-#. Label in the sensitive content settings, shown when the Fluxer app for iPhone, iPad or Android has sent the age range that the Apple or Google account shares with apps.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
-msgid "Age range from your Apple or Google account"
-msgstr "tenpo sike tan lipu Apple anu lipu Google sina"
 
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts
@@ -22555,6 +22550,11 @@ msgstr "ijo tan jan 18+ taso li ken ala lon ni"
 msgid "Mature content override"
 msgstr "ante pi ijo tan jan 18+ taso"
 
+#. Label in the sensitive content settings, shown when mature content was unlocked in the Fluxer app for iPhone, iPad or Android, where the Apple or Google account confirmed that the person is an adult.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
+msgid "Mature content unlocked in the Fluxer app"
+msgstr ""
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the mature media gate details modal. Keep it concise.
 #: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx
@@ -29757,7 +29757,7 @@ msgstr "o awen e suli en ma pi lupa"
 #. Button or menu action label in the channel and chat message reactions sheet. Keep it concise. Keep the tone plain and specific.
 #. Button that clears the default reaction or deletes a tag in forum settings.
 #. Button that removes a branding image in the setup wizard.
-#. Confirm button in the dialog that deletes the stored age range.
+#. Confirm button in the dialog that removes the mature content unlock from the Fluxer app.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the shared app saved message missing card. Keep the tone plain and specific.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
@@ -29810,11 +29810,6 @@ msgstr "sina wile ala wile weka e {userName} tan kulupu?"
 msgid "Remove {userName} from your friends?"
 msgstr "sina wile ala wile weka e {userName} tan jan pona sina?"
 
-#. Button in the sensitive content settings that opens a confirmation to delete the stored age range.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
-msgid "Remove age range"
-msgstr "o weka e tenpo sike sina"
-
 #. Confirm button label on the remove-all-reactions alert. Destructive.
 #: src/features/channel/components/MessageActionUtils.tsx
 msgid "Remove all"
@@ -29831,6 +29826,11 @@ msgstr "sina wile ala wile weka e pilin {emojiNameWithColons} ale tan toki ni?"
 #: src/features/channel/components/MessageActionUtils.tsx
 msgid "Remove all reactions"
 msgstr "o weka e pilin ale"
+
+#. Button in the sensitive content settings that opens a confirmation to remove the mature content unlock that came from the Fluxer app for iPhone, iPad or Android.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
+msgid "Remove app unlock"
+msgstr ""
 
 #. Button or menu action label in the channel attachment area. Keep it concise. Keep the tone plain and specific.
 #: src/features/channel/components/ChannelAttachmentArea.tsx
@@ -30006,6 +30006,11 @@ msgstr "o weka e sitelen lipu"
 msgid "Remove tag {tag}"
 msgstr "o weka e sitelen nimi {tag}"
 
+#. Title of the confirmation shown before removing the mature content unlock that came from the Fluxer app for iPhone, iPad or Android.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
+msgid "Remove the app unlock?"
+msgstr ""
+
 #. Error under the "Quote on the wall" field when the quote has invisible characters, text direction controls or stacked accent marks.
 #: src/features/premium/components/operator_pass/OperatorPassWallQuoteField.tsx
 msgid "Remove the hidden or special characters from the quote."
@@ -30036,11 +30041,6 @@ msgstr "o weka e jan"
 #: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
 msgid "Remove when you first bought {premiumProductName} from your badge"
 msgstr "o weka e tenpo pi esun nanpa wan sina pi {premiumProductName} tan sitelen sina"
-
-#. Title of the confirmation shown before deleting the age range from an Apple or Google account.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
-msgid "Remove your age range?"
-msgstr "sina wile ala wile weka e tenpo sike sina?"
 
 #. Status badge for the application to Explore, shown in the "Explore" tab in community settings. The community was removed from Explore.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
@@ -37175,11 +37175,6 @@ msgstr "lipu li tawa anu weka."
 msgid "The file you're trying to upload exceeds the maximum size limit of {maxSizeFormatted}."
 msgstr "lipu ni li suli mute: ona li ken suli tawa {maxSizeFormatted} taso."
 
-#. Helper text under "Age range from your Apple or Google account" in the sensitive content settings.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
-msgid "The Fluxer app for iPhone, iPad or Android sent us this age range. If it shows that you're 18 or older, you can see 18+ content in the UK and Brazil. It doesn't change your date of birth."
-msgstr "ilo Fluxer lon ilo iPhone anu iPad anu Android li pana e tenpo sike sina ni. ona li toki e ni: sina jo e tenpo sike 18 anu mute la, sina ken lukin e ijo pi jan 18+ taso lon ma Juke en ma Pasila. ona li ante ala e tenpo mama sina."
-
 #. Setup wizard body explaining the push relay.
 #: src/features/app/components/setup/SetupPolicySteps.tsx
 msgid "The Fluxer apps for iOS and Android get notifications through a push relay that Fluxer runs, which passes them to Apple and Google. To use it, you accept the push relay privacy notice."
@@ -37896,8 +37891,8 @@ msgstr "tomo ni li jo ala e linja kama. o pali e linja kama. ni la sina ken kama
 
 #. Warning in the follow announcement channel dialog when the followed channel has a content warning.
 #: src/features/channel/components/modals/ChannelFollowModal.tsx
-msgid "This channel has a content warning. Updates can only go to channels with a content warning or an age restriction."
-msgstr "tomo ni li jo e toki pi pilin ike. ona li ken pana e toki suli tawa tomo pi toki pi pilin ike anu tomo pi jan 18+ taso."
+msgid "This channel has a content warning. Updates can only go to mature channels or channels with a content warning."
+msgstr ""
 
 #. Error shown when enabling the camera is rejected because the channel already has the maximum number of users sharing video. {voiceChannelCameraUserLimit} is the configured cap.
 #: src/features/voice/engine/media_engine_facade/shared.ts
@@ -38337,10 +38332,10 @@ msgstr "ni li sitelen pilin pi kulupu wan."
 msgid "This is a custom sticker from a community."
 msgstr "ni li sitelen lipu pi kulupu wan."
 
-#. Warning in the follow announcement channel dialog when the followed channel is age-restricted.
+#. Warning in the follow announcement channel dialog when the followed channel is a mature channel.
 #: src/features/channel/components/modals/ChannelFollowModal.tsx
-msgid "This is an age-restricted channel. Updates can only go to age-restricted channels."
-msgstr "tomo ni li tan jan 18+ taso. toki tan ona li ken tawa tomo tan jan 18+ taso taso."
+msgid "This is a mature channel. Updates can only go to mature channels."
+msgstr ""
 
 #. Error message in the inputs tab.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx
@@ -38514,10 +38509,10 @@ msgstr "jan ni li lon ala kulupu. o open sin e lipu, o pali sin."
 msgid "This member isn't connected to voice anymore."
 msgstr "jan ni li lon ala tomo kalama."
 
-#. Forward dialog error shown when the forwarded message contains age-restricted media and the target channel is not age-restricted.
+#. Forward dialog error shown when the forwarded message contains media that is only allowed in mature channels and the target channel is not a mature channel.
 #: src/features/app/components/dialogs/shared/UseForwardDestinations.ts
-msgid "This message can only be forwarded to age-restricted channels"
-msgstr "sina ken pana e toki ni tawa tomo tan jan 18+ taso taso"
+msgid "This message can only be forwarded to mature channels"
+msgstr ""
 
 #. Toast shown when someone tries to publish an announcement message that was already published.
 #: src/features/messaging/commands/MessageCommands.tsx
@@ -42878,20 +42873,20 @@ msgstr "mi ken ala lukin e lipu CSS ni."
 msgid "We couldn't read this theme. It may be corrupted or invalid."
 msgstr "mi ken ala lukin e nasin lukin ni. ona li ken pakala."
 
-#. Error shown when deleting the stored age range fails.
+#. Error shown when removing the mature content unlock from the Fluxer app fails.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
-msgid "We couldn't remove your age range. Please try again."
-msgstr "mi ken ala weka e tenpo sike sina. o pali sin."
+msgid "We couldn't remove the app unlock. Please try again."
+msgstr ""
 
 #. Error message after saving a theme failed in Settings > Themes or the quick CSS editor window.
 #: src/features/theme_settings/utils/ThemeSettingsErrorModal.ts
 msgid "We couldn't save that theme."
 msgstr "mi ken ala awen e nasin lukin ni."
 
-#. Body of the confirmation shown before deleting the age range. App Attest is an Apple product name and stays in English.
+#. Body of the confirmation shown before removing the mature content unlock from the Fluxer app for iPhone, iPad or Android. App Attest is an Apple product name and stays in English.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
-msgid "We delete the age range, the time we got it and the App Attest keys for your Apple devices. In the UK and Brazil, you can't see 18+ content until the app sends an age range again. The app may send it again later if your Apple or Google account still shares it with Fluxer."
-msgstr "mi weka e tenpo sike sina, e tenpo pi kama jo ona, e nimi len App Attest pi ilo Apple sina. lon ma Juke en ma Pasila la, sina ken ala lukin e ijo tan jan 18+ taso. ilo li pana sin e tenpo sike la, sina ken lukin. lipu jan sina pi ilo Apple anu ilo Google li awen pana e tenpo sike tawa ilo Fluxer la, ilo li ken pana sin e ona lon tenpo kama."
+msgid "We delete what your Apple or Google account shared, the time we got it and the App Attest keys for your Apple devices. If this is how you unlocked mature content, 18+ content in the UK and Brazil stays locked until you unlock it again in the app. The app may unlock it again later if your Apple or Google account still shares this with Fluxer."
+msgstr ""
 
 #. Modal body for existing-subscription block. Directs the user to the billing portal and addresses the just-paid race case. Keep plain and reassuring.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx
@@ -44589,6 +44584,11 @@ msgstr "sina kama kepeken nimi jan ni. o wile e nimi. sina o awen sona e ona."
 #: src/features/auth/components/modals/SudoSsoReauth.tsx
 msgid "You signed in to a different account. Sign in with the account you're using here."
 msgstr "sina kama lon lipu jan ante. o kama kepeken lipu jan sina lon ni."
+
+#. Helper text under "Mature content unlocked in the Fluxer app" in the sensitive content settings.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/AgeRangeSection.tsx
+msgid "You unlocked mature content in the Fluxer app for iPhone, iPad or Android, where your Apple or Google account confirmed that you're an adult. This lets you see 18+ content in the UK and Brazil. It doesn't change your date of birth."
+msgstr ""
 
 #. Voice chat status tooltip for the current user. A moderator deafened them so they cannot hear voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts

@@ -16,36 +16,38 @@ import {useCallback} from 'react';
 const logger = new Logger('AgeRangeSection');
 
 const AGE_RANGE_LABEL_DESCRIPTOR = msg({
-	message: 'Age range from your Apple or Google account',
+	message: 'Mature content unlocked in the Fluxer app',
 	comment:
-		'Label in the sensitive content settings, shown when the Fluxer app for iPhone, iPad or Android has sent the age range that the Apple or Google account shares with apps.',
+		'Label in the sensitive content settings, shown when mature content was unlocked in the Fluxer app for iPhone, iPad or Android, where the Apple or Google account confirmed that the person is an adult.',
 });
 const AGE_RANGE_DESCRIPTION_DESCRIPTOR = msg({
 	message:
-		"The Fluxer app for iPhone, iPad or Android sent us this age range. If it shows that you're 18 or older, you can see 18+ content in the UK and Brazil. It doesn't change your date of birth.",
-	comment: 'Helper text under "Age range from your Apple or Google account" in the sensitive content settings.',
+		"You unlocked mature content in the Fluxer app for iPhone, iPad or Android, where your Apple or Google account confirmed that you're an adult. This lets you see 18+ content in the UK and Brazil. It doesn't change your date of birth.",
+	comment: 'Helper text under "Mature content unlocked in the Fluxer app" in the sensitive content settings.',
 });
 const REMOVE_AGE_RANGE_DESCRIPTOR = msg({
-	message: 'Remove age range',
-	comment: 'Button in the sensitive content settings that opens a confirmation to delete the stored age range.',
+	message: 'Remove app unlock',
+	comment:
+		'Button in the sensitive content settings that opens a confirmation to remove the mature content unlock that came from the Fluxer app for iPhone, iPad or Android.',
 });
 const REMOVE_AGE_RANGE_TITLE_DESCRIPTOR = msg({
-	message: 'Remove your age range?',
-	comment: 'Title of the confirmation shown before deleting the age range from an Apple or Google account.',
+	message: 'Remove the app unlock?',
+	comment:
+		'Title of the confirmation shown before removing the mature content unlock that came from the Fluxer app for iPhone, iPad or Android.',
 });
 const REMOVE_AGE_RANGE_BODY_DESCRIPTOR = msg({
 	message:
-		"We delete the age range, the time we got it and the App Attest keys for your Apple devices. In the UK and Brazil, you can't see 18+ content until the app sends an age range again. The app may send it again later if your Apple or Google account still shares it with Fluxer.",
+		'We delete what your Apple or Google account shared, the time we got it and the App Attest keys for your Apple devices. If this is how you unlocked mature content, 18+ content in the UK and Brazil stays locked until you unlock it again in the app. The app may unlock it again later if your Apple or Google account still shares this with Fluxer.',
 	comment:
-		'Body of the confirmation shown before deleting the age range. App Attest is an Apple product name and stays in English.',
+		'Body of the confirmation shown before removing the mature content unlock from the Fluxer app for iPhone, iPad or Android. App Attest is an Apple product name and stays in English.',
 });
 const REMOVE_DESCRIPTOR = msg({
 	message: 'Remove',
-	comment: 'Confirm button in the dialog that deletes the stored age range.',
+	comment: 'Confirm button in the dialog that removes the mature content unlock from the Fluxer app.',
 });
 const REMOVE_AGE_RANGE_FAILED_DESCRIPTOR = msg({
-	message: "We couldn't remove your age range. Please try again.",
-	comment: 'Error shown when deleting the stored age range fails.',
+	message: "We couldn't remove the app unlock. Please try again.",
+	comment: 'Error shown when removing the mature content unlock from the Fluxer app fails.',
 });
 
 export const AgeRangeSection: React.FC = () => {

@@ -330,7 +330,7 @@ A direct message or group direct message channel the account is in.
 | --- | --- | --- |
 | channel_id | snowflake | The ID of the channel |
 | channel_type | ?integer | [Channel type](/http-api/channels/#channel-types) |
-| channel_nsfw | ?boolean | Whether the channel is age-restricted |
+| channel_nsfw | ?boolean | Whether the channel is marked 18+ |
 | recipient_ids | array[snowflake] | The IDs of the recipients (at most 100) |
 | recipients | array[[Admin resolved user](#admin-resolved-user-object) object] | The recipients whose accounts still exist (at most 100) |
 | last_message_id | ?snowflake | The ID of the latest message |

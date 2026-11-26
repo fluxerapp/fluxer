@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "Shitje llogarish, ose kredenciale hyrjeje apo të dhëna kartash të vjedhura",
 	"report_flow.label.account_trading_communities": "Blerje ose shitje llogarish ose komunitetesh",
 	"report_flow.label.address": "Adresa e shtëpisë ose vendi i punës",
-	"report_flow.label.adult_content_no_gate": "Përmbajtje për të rritur pa kufizim moshe 18+",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "Përmbajtje eksplicite për të rritur në profilin e këtij personi",
 	"report_flow.label.adult_content_unmarked": "Përmbajtje për të rritur në një kanal komuniteti që nuk është shënuar 18+",
 	"report_flow.label.age_no_message": "Jo, nuk e përmend",

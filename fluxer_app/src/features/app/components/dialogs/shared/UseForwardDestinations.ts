@@ -68,9 +68,9 @@ const ATTACH_FILES_PERMISSION_REQUIRED_DESCRIPTOR = msg({
 		'Forward dialog error shown when the forwarded message has attachments and the user lacks Attach Files in the target channel.',
 });
 const AGE_RESTRICTED_DESTINATION_DESCRIPTOR = msg({
-	message: 'This message can only be forwarded to age-restricted channels',
+	message: 'This message can only be forwarded to mature channels',
 	comment:
-		'Forward dialog error shown when the forwarded message contains age-restricted media and the target channel is not age-restricted.',
+		'Forward dialog error shown when the forwarded message contains media that is only allowed in mature channels and the target channel is not a mature channel.',
 });
 const SLOWMODE_WAIT_DESCRIPTOR = msg({
 	message: 'Slowmode · wait {remaining}',

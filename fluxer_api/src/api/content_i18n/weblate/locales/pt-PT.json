@@ -150,7 +150,7 @@
 	"report_flow.label.account_trading": "Venda de contas, ou de credenciais de acesso ou dados de cartões roubados",
 	"report_flow.label.account_trading_communities": "Compra ou venda de contas ou comunidades",
 	"report_flow.label.address": "Morada ou local de trabalho",
-	"report_flow.label.adult_content_no_gate": "Conteúdo para adultos sem restrição de idade 18+",
+	"report_flow.label.adult_content_no_gate": "",
 	"report_flow.label.adult_content_profile": "Conteúdo explícito para adultos no perfil da pessoa",
 	"report_flow.label.adult_content_unmarked": "Conteúdo para adultos num canal da comunidade que não está marcado como 18+",
 	"report_flow.label.age_no_message": "Não, não menciona",

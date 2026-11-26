@@ -108,8 +108,8 @@ A forum channel also accepts every field of the [forum field table](/http-api/fo
 | voice_connection_limit? | ?integer | Simultaneous voice connections for one user in a voice channel (1-100, default 5) |
 | rate_limit_per_user? | ?integer | Slowmode interval in seconds (0-21600, default 0) |
 | permission_overwrites?<sup>5</sup> | array[[create permission overwrite](#create-permission-overwrite-object) object] | Complete initial overwrite collection |
-| nsfw?<sup>6</sup> | boolean | `true` turns on the age restriction, and `false` inherits it |
-| nsfw_override?<sup>6</sup> | ?boolean | Explicit age restriction, or null to inherit from the parent category and then the guild |
+| nsfw?<sup>6</sup> | boolean | `true` marks the channel 18+, and `false` inherits the marking |
+| nsfw_override?<sup>6</sup> | ?boolean | Explicit 18+ marking, or null to inherit from the parent category and then the guild |
 | content_warning_level?<sup>7</sup> | integer | [Content warning level](/http-api/channels/#content-warning-levels) (default 0) |
 | content_warning_text? | ?string | Content warning text (max 200 characters), or null to inherit |
 | default_auto_archive_duration?<sup>8</sup> | ?integer | The default [auto archive duration](/http-api/threads/#auto-archive-durations), or null for none |

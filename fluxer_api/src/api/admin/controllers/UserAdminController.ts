@@ -1386,7 +1386,7 @@ export function UserAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Update user date of birth. May affect age-restricted content access. Creates audit log entry. Requires USER_UPDATE_DOB permission.',
+				'Update user date of birth. May change which mature content the user can see. Creates audit log entry. Requires USER_UPDATE_DOB permission.',
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
