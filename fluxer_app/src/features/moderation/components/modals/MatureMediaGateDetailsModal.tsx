@@ -30,6 +30,7 @@ interface MatureMediaGateDetailsModalProps {
 export const MatureMediaGateDetailsModal = observer(({reason}: MatureMediaGateDetailsModalProps) => {
 	const {i18n} = useLingui();
 	const learnMoreUrl = HelpCenterUtils.getURL(HelpCenterArticleSlug.ChangeDateOfBirth);
+	const unlockLearnMoreUrl = HelpCenterUtils.getURL(HelpCenterArticleSlug.UnlockMatureContent);
 	const handleClose = useCallback(() => {
 		ModalCommands.pop();
 	}, []);
@@ -45,9 +46,21 @@ export const MatureMediaGateDetailsModal = observer(({reason}: MatureMediaGateDe
 				<Modal.Content data-flx="moderation.mature-media-gate-details-modal.modal-content">
 					<Modal.ContentLayout data-flx="moderation.mature-media-gate-details-modal.modal-content-layout">
 						<Modal.Description data-flx="moderation.mature-media-gate-details-modal.modal-description">
-							<Trans>
-								Due to mature content laws in {regionName}, this media is not available from your current region.
-							</Trans>
+							{unlockLearnMoreUrl ? (
+								<Trans>
+									Due to mature content laws in {regionName}, this media is not available from your current region.{' '}
+									<ExternalLink
+										href={unlockLearnMoreUrl}
+										data-flx="moderation.mature-media-gate-details-modal.external-link--2"
+									>
+										Learn more
+									</ExternalLink>
+								</Trans>
+							) : (
+								<Trans>
+									Due to mature content laws in {regionName}, this media is not available from your current region.
+								</Trans>
+							)}
 						</Modal.Description>
 					</Modal.ContentLayout>
 				</Modal.Content>

@@ -42,6 +42,7 @@ interface Props {
 export const MatureContentChannelGate = observer(({channelId, guildId, reason, scope: scopeOverride}: Props) => {
 	const {i18n} = useLingui();
 	const learnMoreUrl = HelpCenterUtils.getURL(HelpCenterArticleSlug.ChangeDateOfBirth);
+	const unlockLearnMoreUrl = HelpCenterUtils.getURL(HelpCenterArticleSlug.UnlockMatureContent);
 	const resolved = GuildMatureContentAgree.getResolvedContext({channelId: channelId ?? null, guildId});
 	const scope: AgreementScope = scopeOverride ?? resolved.scope;
 	const effectiveMatureContent = resolved.effectiveMatureContent;
@@ -75,9 +76,21 @@ export const MatureContentChannelGate = observer(({channelId, guildId, reason, s
 							{i18n._(MATURE_CONTENT_DESCRIPTOR)}
 						</h2>
 						<p className={styles.description} data-flx="channel.mature-content-channel-gate.render-content.description">
-							<Trans comment="Shown in place of a mature content channel when local law blocks it. regionName is the country or region the person is in.">
-								Due to mature content laws in {regionName}, mature content is not available from here.
-							</Trans>
+							{unlockLearnMoreUrl ? (
+								<Trans comment="Shown in place of a mature content channel when local law blocks it. regionName is the country or region the person is in.">
+									Due to mature content laws in {regionName}, mature content is not available from here.{' '}
+									<ExternalLink
+										href={unlockLearnMoreUrl}
+										data-flx="channel.mature-content-channel-gate.render-content.external-link--4"
+									>
+										Learn more
+									</ExternalLink>
+								</Trans>
+							) : (
+								<Trans comment="Shown in place of a mature content channel when local law blocks it. regionName is the country or region the person is in.">
+									Due to mature content laws in {regionName}, mature content is not available from here.
+								</Trans>
+							)}
 						</p>
 					</>
 				);

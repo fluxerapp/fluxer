@@ -14568,6 +14568,11 @@ msgstr "Larga para carregar o fundo"
 msgid "Due to mature content laws in {regionName}, mature content is not available from here."
 msgstr "Devido às leis sobre conteúdo adulto em {regionName}, o conteúdo adulto não está disponível a partir daqui."
 
+#. Shown in place of a mature content channel when local law blocks it. regionName is the country or region the person is in.
+#: src/features/channel/components/MatureContentChannelGate.tsx
+msgid "Due to mature content laws in {regionName}, mature content is not available from here. <0>Learn more</0>"
+msgstr ""
+
 #. Body in the channel gate modal for regions where local law blocks mature content. {regionName} is a localized place name.
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx
 msgid "Due to mature content laws in {regionName}, this content is not available from here."
@@ -14576,6 +14581,10 @@ msgstr "Devido às leis sobre conteúdo adulto em {regionName}, este conteúdo n
 #: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx
 msgid "Due to mature content laws in {regionName}, this media is not available from your current region."
 msgstr "Devido às leis sobre conteúdo adulto em {regionName}, este conteúdo multimédia não está disponível na tua região atual."
+
+#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx
+msgid "Due to mature content laws in {regionName}, this media is not available from your current region. <0>Learn more</0>"
+msgstr ""
 
 #. Menu item in Settings > Themes that makes a copy of a theme.
 #: src/features/theme_settings/components/YourThemesSection.tsx

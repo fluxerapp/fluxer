@@ -14564,6 +14564,11 @@ msgstr "ব্যাকগ্রাউন্ড আপলোড করতে এ
 msgid "Due to mature content laws in {regionName}, mature content is not available from here."
 msgstr "{regionName}-এর প্রাপ্তবয়স্ক কনটেন্ট সংক্রান্ত আইনের কারণে এখান থেকে প্রাপ্তবয়স্ক কনটেন্ট দেখা যাবে না।"
 
+#. Shown in place of a mature content channel when local law blocks it. regionName is the country or region the person is in.
+#: src/features/channel/components/MatureContentChannelGate.tsx
+msgid "Due to mature content laws in {regionName}, mature content is not available from here. <0>Learn more</0>"
+msgstr ""
+
 #. Body in the channel gate modal for regions where local law blocks mature content. {regionName} is a localized place name.
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx
 msgid "Due to mature content laws in {regionName}, this content is not available from here."
@@ -14572,6 +14577,10 @@ msgstr "{regionName}-এর প্রাপ্তবয়স্ক কনটে
 #: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx
 msgid "Due to mature content laws in {regionName}, this media is not available from your current region."
 msgstr "{regionName}-এর প্রাপ্তবয়স্ক কনটেন্ট সংক্রান্ত আইনের কারণে আপনার বর্তমান অঞ্চল থেকে এই মিডিয়া দেখা যাবে না।"
+
+#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx
+msgid "Due to mature content laws in {regionName}, this media is not available from your current region. <0>Learn more</0>"
+msgstr ""
 
 #. Menu item in Settings > Themes that makes a copy of a theme.
 #: src/features/theme_settings/components/YourThemesSection.tsx
