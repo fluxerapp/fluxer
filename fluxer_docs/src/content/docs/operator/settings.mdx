@@ -931,7 +931,7 @@ The admin panel can also save the delivery mode, the sender and the SMTP server.
 </div>
 <div class="flx-setting" id="fluxer_push_service_relay_consent_accepted">
 <dt>`FLUXER_PUSH_SERVICE_RELAY_CONSENT_ACCEPTED`</dt>
-<dd>Whether this push service accepts the push relay privacy notice, which lets it send through the relay Fluxer runs. Use `true`, `1` or `yes` to accept. With `false`, `0`, `no` or an empty value, the push relay setting of the instance decides.</dd>
+<dd>Whether this push service accepts the push relay privacy notice, which lets it send through the relay Fluxer runs. The push service encrypts each notification for the device it goes to, so the relay, Apple and Google can't read what it says. They can still see that a notification was sent, when, and the device it's for. Use `true`, `1` or `yes` to accept. With `false`, `0`, `no` or an empty value, the push relay setting of the instance decides.</dd>
 </div>
 <div class="flx-setting" id="fluxer_push_service_send_concurrency">
 <dt>`FLUXER_PUSH_SERVICE_SEND_CONCURRENCY`</dt>
