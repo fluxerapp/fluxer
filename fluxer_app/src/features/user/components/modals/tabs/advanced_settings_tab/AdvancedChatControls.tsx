@@ -165,7 +165,7 @@ const LATCH_OFF_DESCRIPTION_DESCRIPTOR = msg({
 	comment: 'A label for the latching modes (trigger behavior) setting.',
 });
 export const LATCH_MANUAL_DESCRIPTOR = msg({
-	message: 'Manual',
+	message: 'One-off',
 	comment: 'A label for the latching modes (trigger behavior) setting.',
 });
 const LATCH_MANUAL_DESCRIPTION_DESCRIPTOR = msg({
@@ -173,7 +173,7 @@ const LATCH_MANUAL_DESCRIPTION_DESCRIPTOR = msg({
 	comment: 'A label for the latching modes (trigger behavior) setting.',
 });
 export const LATCH_TRIGGER_SWITCHING_DESCRIPTOR = msg({
-	message: 'Last Used',
+	message: 'Sticky',
 	comment: 'A label for the latching modes (trigger behavior) setting.',
 });
 const LATCH_TRIGGER_SWITCHING_DESCRIPTION_DESCRIPTOR = msg({
