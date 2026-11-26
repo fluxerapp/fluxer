@@ -885,19 +885,28 @@ export class RpcService {
 				windowMs: ms('1 minute'),
 			}),
 		);
+		const refusalKey = `${bucketKey}:refused`;
 		if (!rateLimitResult.allowed) {
+			const refused = await timings.time(
+				'check_session_refusal',
+				async () => (await this.kvClient.exists(refusalKey)) > 0,
+			);
 			Logger.warn(
 				{
 					tokenType,
 					tokenHashPrefix,
 					...applicationIdField,
 					ip,
+					refused,
 					retryAfter: rateLimitResult.retryAfter,
 					limit: rateLimitResult.limit,
 					resetTime: rateLimitResult.resetTime,
 				},
 				'RPC session request rate limited',
 			);
+			if (refused) {
+				throw new UnauthorizedError();
+			}
 			throw new RateLimitError({
 				retryAfter: rateLimitResult.retryAfter!,
 				limit: rateLimitResult.limit,
@@ -935,6 +944,7 @@ export class RpcService {
 				},
 				'RPC session token validation failed',
 			);
+			await this.kvClient.setex(refusalKey, 60, '1');
 			throw new UnauthorizedError();
 		}
 		const loadUserDataSteps: RpcTimingSteps = {};

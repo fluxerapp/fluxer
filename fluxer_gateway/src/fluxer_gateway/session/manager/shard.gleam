@@ -280,7 +280,8 @@ fn fetch_seed(
   log_fetch(reply, clock.monotonic_ms() - started, peer)
   case reply {
     Error(api.ApiHttp(401)) -> Error(StartAuthFailed)
-    Error(api.ApiHttp(429)) -> Error(StartRateLimited(unavailable_retry_ms()))
+    Error(api.ApiHttp(429)) | Error(api.ApiRejected(403, _)) ->
+      Error(StartRateLimited(unavailable_retry_ms()))
     Error(_) -> Error(StartUnavailable(unavailable_retry_ms()))
     Ok(data) ->
       case seed.from_api(session_id, identify, peer.api_version, data) {
@@ -320,10 +321,12 @@ fn log_fetch(
 ) -> Nil {
   case reply {
     Ok(_) -> Nil
-    Error(_) ->
+    Error(reason) ->
       logging.log(
         logging.Warning,
-        "Session RPC failed: latency_ms="
+        "Session RPC failed: reason="
+          <> api.describe(reason)
+          <> " latency_ms="
           <> int.to_string(latency_ms)
           <> " peer_ip="
           <> peer.ip,

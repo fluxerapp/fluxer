@@ -55,6 +55,14 @@ fn pending_identify_retry_jitter_ms() -> Int {
   durations.gateway().socket_pending_identify_retry_jitter_ms
 }
 
+fn held_start_budget_ms() -> Int {
+  durations.gateway().socket_held_start_budget_ms
+}
+
+fn held_start_retry_cap_ms() -> Int {
+  durations.gateway().socket_held_start_retry_cap_ms
+}
+
 fn heartbeat_ack_fallback_ms() -> Int {
   durations.gateway().socket_heartbeat_ack_fallback_ms
 }
@@ -90,6 +98,10 @@ type Pending {
   Resuming(timeout: Int, session: SessionId, accepted: Bool)
   Rebinding(timeout: Int)
   Holding(identify: Identify, retry: Option(Int), throttled: Bool)
+}
+
+type FailedStarts {
+  FailedStarts(first_at: Int, count: Int)
 }
 
 type Acks {
@@ -153,6 +165,7 @@ pub opaque type State {
     acks: Acks,
     attached: Option(Attached),
     pending: Pending,
+    failed_starts: Option(FailedStarts),
     deferred: List(#(Opcode, Body)),
     deferred_count: Int,
     early: List(SocketMsg),
@@ -293,6 +306,7 @@ pub fn open(upgrade: Upgrade, mailbox: Mailbox, link: Link) -> State {
     acks: no_acks,
     attached: None,
     pending: Idle,
+    failed_starts: None,
     deferred: [],
     deferred_count: 0,
     early: [],
@@ -804,7 +818,7 @@ fn schedule_retry(state: State) -> State {
     Holding(identify: ident, retry: None, throttled:) -> {
       let #(state, token) = new_token(state)
       let delay =
-        pending_identify_retry_base_ms()
+        retry_delay_ms(state.failed_starts)
         + int.random(pending_identify_retry_jitter_ms())
       process.send_after(state.config.self, delay, RetryIdentify(token))
       State(
@@ -813,6 +827,36 @@ fn schedule_retry(state: State) -> State {
       )
     }
     _ -> state
+  }
+}
+
+fn retry_delay_ms(failed_starts: Option(FailedStarts)) -> Int {
+  let doublings = case failed_starts {
+    Some(FailedStarts(count:, ..)) -> int.clamp(count - 1, 0, 16)
+    None -> 0
+  }
+  int.min(
+    held_start_retry_cap_ms(),
+    int.bitwise_shift_left(pending_identify_retry_base_ms(), doublings),
+  )
+}
+
+fn hold_failed_start(
+  state: State,
+  ident: Identify,
+  why: Hold,
+  code: CloseCode,
+  reason: String,
+) -> State {
+  let now = clock.monotonic_ms()
+  let failed = case state.failed_starts {
+    Some(FailedStarts(first_at:, count:)) ->
+      FailedStarts(first_at:, count: count + 1)
+    None -> FailedStarts(first_at: now, count: 1)
+  }
+  case now - failed.first_at >= held_start_budget_ms() {
+    True -> close(state, code, reason)
+    False -> hold(State(..state, failed_starts: Some(failed)), ident, why)
   }
 }
 
@@ -921,10 +965,12 @@ fn open_info(state: State, message: Message) -> State {
       case state.pending {
         Starting(identify: ident, timeout:) if timeout == token -> {
           socket_metrics.start_timed_out()
-          hold(
+          hold_failed_start(
             State(..state, pending: Idle),
             ident,
             socket_metrics.HoldStartTimeout,
+            error.CloseUnknownError,
+            "Session unavailable",
           )
         }
         _ -> state
@@ -1208,9 +1254,21 @@ fn start_failed(
     session.StartTooManySessions ->
       close(state, error.CloseRateLimited, "Too many sessions")
     session.StartRateLimited(..) ->
-      hold(state, ident, socket_metrics.HoldRateLimited)
+      hold_failed_start(
+        state,
+        ident,
+        socket_metrics.HoldRateLimited,
+        error.CloseRateLimited,
+        "Session RPC rate limited",
+      )
     session.StartUnavailable(..) ->
-      hold(state, ident, socket_metrics.HoldUnavailable)
+      hold_failed_start(
+        state,
+        ident,
+        socket_metrics.HoldUnavailable,
+        error.CloseUnknownError,
+        "Session unavailable",
+      )
     session.StartUnknownError ->
       close(state, error.CloseUnknownError, "Failed to start session")
   }
