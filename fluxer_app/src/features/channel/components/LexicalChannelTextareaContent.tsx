@@ -484,7 +484,13 @@ export const LexicalChannelTextareaContent = observer(
 					handle.clear();
 				}
 				if (matchingPersona && Personas.latchMode === PersonaSettings_LatchMode.TRIGGER_SWITCHING) {
-					Personas.setGlobalActivePersona(matchingPersona.id);
+					if (Personas.hasSpecificActivePersona(channel.id)) {
+						Personas.setSpecificActivePersona(channel.id, matchingPersona.id);
+					} else if (channel.guildId && Personas.hasSpecificActivePersona(channel.guildId)) {
+						Personas.setSpecificActivePersona(channel.guildId, matchingPersona.id);
+					} else {
+						Personas.setGlobalActivePersona(matchingPersona.id);
+					}
 				}
 				setTriggeredPersona(null);
 				setUseTriggeredPersona(true);

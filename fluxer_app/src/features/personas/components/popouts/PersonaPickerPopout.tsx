@@ -4,7 +4,13 @@ import Guilds from '@app/features/guild/state/Guilds';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import {handleDeepLinkUrl} from '@app/features/navigation/utils/DeepLinkUtils';
+import {CheckboxItem, SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
+import {MoreIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
+import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
+import {MenuGroups} from '@app/features/ui/action_menu/MenuGroups';
+import {MenuItemRadio} from '@app/features/ui/action_menu/MenuItemRadio';
 import {Button} from '@app/features/ui/button/Button';
+import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import {Avatar} from '@app/features/ui/components/Avatar';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -17,6 +23,7 @@ import {
 import {SensitiveContentChoiceRow} from '@app/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab';
 import Personas from '@app/features/user/state/Personas';
 import Users from '@app/features/user/state/Users';
+import {MORE_ACTIONS_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {PersonaSettings_LatchMode} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb.js';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react';
@@ -39,6 +46,10 @@ const MAIN_ACCOUNT_DESCRIPTOR = msg({
 export const PERSONA_FILTER_PLACEHOLDER_DESCRIPTOR = msg({
 	message: 'Names, pronouns, or triggers',
 	comment: 'Placeholder text to hint at what can be used to filter personas in the list.',
+});
+const TRIGGER_BEHAVIOR_DESCRIPTOR = msg({
+	message: 'Trigger behavior',
+	comment: 'Menu item for persona trigger behaviors in the persona picker.',
 });
 
 export interface PersonaPickerPopoutProps {
@@ -79,7 +90,8 @@ export const PersonaPickerPopout = observer<PersonaPickerPopoutProps>(({channel,
 	);
 	const [globalPersonas, setGlobalPersonas] = useState(() => Personas.getOwnPersonas());
 	const [filter, setFilter] = useState('');
-	const selectedPersonaId = props.selectedId ?? Personas.getGlobalActivePersona()?.id ?? '';
+	const selectedPersonaId =
+		props.selectedId ?? Personas.getActivePersonaFromContext(channel.id, channel.guildId)?.id ?? '';
 	const filteredPersonas = useMemo(() => {
 		const sources = new Map([rootPersona, ...globalPersonas].map((v) => [v.id, v]));
 		if (filter === '') return [...sources.values()];
@@ -174,6 +186,76 @@ export const PersonaPickerPopout = observer<PersonaPickerPopoutProps>(({channel,
 		[globalPersonas],
 	);
 
+	const openMoreMenu = useCallback(
+		(event: React.MouseEvent<HTMLElement>) => {
+			ContextMenuCommands.openFromEvent(
+				event,
+				(_) => (
+					<MenuGroups>
+						<MenuGroup>
+							{channel.guildId && (
+								<CheckboxItem
+									checked={Personas.hasSpecificActivePersona(channel.guildId)}
+									onCheckedChange={(shouldSet) =>
+										shouldSet
+											? Personas.setSpecificActivePersona(channel.guildId!, selectedPersonaId)
+											: Personas.clearSpecificActivePersona(channel.guildId!)
+									}
+									data-flx="user.component-gallery-tab.open-context-menu.checkbox-item"
+								>
+									<Trans>Set for only this community</Trans>
+								</CheckboxItem>
+							)}
+							<CheckboxItem
+								checked={Personas.hasSpecificActivePersona(channel.id)}
+								onCheckedChange={(shouldSet) =>
+									shouldSet
+										? Personas.setSpecificActivePersona(channel.id, selectedPersonaId)
+										: Personas.clearSpecificActivePersona(channel.id)
+								}
+								data-flx="user.component-gallery-tab.open-context-menu.checkbox-item"
+							>
+								<Trans>Set for only this channel</Trans>
+							</CheckboxItem>
+						</MenuGroup>
+						<MenuGroup data-flx="user.component-gallery-tab.open-context-menu.menu-group--3">
+							<MenuItemSubmenu
+								label={i18n._(TRIGGER_BEHAVIOR_DESCRIPTOR)}
+								render={() => (
+									<>
+										<MenuItemRadio
+											selected={Personas.latchMode === PersonaSettings_LatchMode.OFF}
+											onSelect={() => (Personas.latchMode = PersonaSettings_LatchMode.OFF)}
+											data-flx="user.component-gallery-tab.open-context-menu.menu-item-radio.set-radio-value"
+										>
+											{i18n._(LATCH_OFF_DESCRIPTOR)}
+										</MenuItemRadio>
+										<MenuItemRadio
+											selected={Personas.latchMode === PersonaSettings_LatchMode.MANUAL}
+											onSelect={() => (Personas.latchMode = PersonaSettings_LatchMode.MANUAL)}
+											data-flx="user.component-gallery-tab.open-context-menu.menu-item-radio.set-radio-value"
+										>
+											{i18n._(LATCH_MANUAL_DESCRIPTOR)}
+										</MenuItemRadio>
+										<MenuItemRadio
+											selected={Personas.latchMode === PersonaSettings_LatchMode.TRIGGER_SWITCHING}
+											onSelect={() => (Personas.latchMode = PersonaSettings_LatchMode.TRIGGER_SWITCHING)}
+											data-flx="user.component-gallery-tab.open-context-menu.menu-item-radio.set-radio-value"
+										>
+											{i18n._(LATCH_TRIGGER_SWITCHING_DESCRIPTOR)}
+										</MenuItemRadio>
+									</>
+								)}
+							/>
+						</MenuGroup>
+					</MenuGroups>
+				),
+				{align: 'bottom-right'},
+			);
+		},
+		[Personas.latchMode, Personas.contextActivePersonaIds, selectedPersonaId, i18n],
+	);
+
 	return (
 		<div className={clsx(styles.root, props.isMobile && styles.mobile)} data-flx="personas.persona-picker-popout.root">
 			<div className={styles.header} data-flx="personas.persona-picker-popout.header">
@@ -248,6 +330,14 @@ export const PersonaPickerPopout = observer<PersonaPickerPopoutProps>(({channel,
 					>
 						<Trans>Manage Personas</Trans>
 					</Button>
+					<Button
+						compact
+						square
+						variant="ghost"
+						onClick={openMoreMenu}
+						icon={<MoreIcon size={16} />}
+						aria-label={i18n._(MORE_ACTIONS_DESCRIPTOR)}
+					></Button>
 				</div>
 			)}
 		</div>

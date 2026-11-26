@@ -388,10 +388,19 @@ export async function executeCommand(
 		case 'gif': {
 			throw new Error(`Select a ${command.type} result before submitting the command`);
 		}
-		case 'persona':
+		case 'persona': {
+			function setPersona(personaId: string) {
+				if (Personas.hasSpecificActivePersona(channelId)) {
+					Personas.setSpecificActivePersona(channelId, personaId);
+				} else if (guildId && Personas.hasSpecificActivePersona(guildId)) {
+					Personas.setSpecificActivePersona(guildId, personaId);
+				} else {
+					Personas.setGlobalActivePersona(personaId);
+				}
+			}
 			if (!command.persona) {
 				const systemMessage = createSystemMessage(channelId, i18n._(PERSONA_DEACTIVATED_DESCRIPTOR));
-				Personas.setGlobalActivePersona('');
+				setPersona('');
 				MessageCommands.createOptimistic(channelId, systemMessage.toJSON());
 			} else if (Personas.getPersona(command.persona)) {
 				const persona = Personas.getPersona(command.persona);
@@ -404,10 +413,11 @@ export async function executeCommand(
 						),
 					}),
 				);
-				Personas.setGlobalActivePersona(command.persona);
+				setPersona(command.persona);
 				MessageCommands.createOptimistic(channelId, systemMessage.toJSON());
 			}
 			break;
+		}
 		default:
 			break;
 	}

@@ -26,6 +26,9 @@
 }
 
 .root:not(.mobile) .footer {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
 	padding: var(--spacing-2);
 	border-block-start: 0.0625rem solid var(--background-modifier-accent);
 	background-color: var(--background-primary);

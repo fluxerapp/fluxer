@@ -157,7 +157,7 @@ const SHOW_IN_ALL_COMMUNITIES_DESCRIPTOR = msg({
 	comment: 'Short confirmation button label in advanced settings.',
 });
 export const LATCH_OFF_DESCRIPTOR = msg({
-	message: 'Off',
+	message: 'Ignore',
 	comment: 'A label for the latching modes (trigger behavior) setting.',
 });
 const LATCH_OFF_DESCRIPTION_DESCRIPTOR = msg({

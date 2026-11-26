@@ -236,7 +236,7 @@ export function PersonaController(app: HonoApp) {
 				await Promise.all(
 					personaFutures.map((v, i) =>
 						v.catch(async (_e) => {
-							await str.writeln(JSON.stringify({event: 'SaveFailed', index: i, /* message: e.toString(), error: e */}));
+							await str.writeln(JSON.stringify({event: 'SaveFailed', index: i /* message: e.toString(), error: e */}));
 						}),
 					),
 				);

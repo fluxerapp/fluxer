@@ -33,10 +33,15 @@ export const PersonaPickerComposerButton = observer<PersonaPickerComposerButtonP
 	const i18n = useLingui();
 	const personaPickerRef = useRef<HTMLButtonElement | null>(null);
 	const [personaPickerOpen, setPersonaPickerOpen] = useState(false);
-	const getActivePersona = useCallback(() => Personas.getGlobalActivePersona(), []);
+	const getActivePersona = useCallback(
+		() => Personas.getActivePersonaFromContext(props.channel.id, props.channel.guildId),
+		[],
+	);
 	const [hasPersonas, setHasPersonas] = useState(() => !!Personas.getOwnPersonas().length);
 	const [selectedPersona, setSelectedPersona] = useState(getActivePersona);
 	const isMobile = MobileLayout.isEnabled();
+	const hasChannelPersona = Personas.hasSpecificActivePersona(props.channel.id);
+	const hasGuildPersona = props.channel.guildId && Personas.hasSpecificActivePersona(props.channel.guildId);
 
 	useEffect(() => {
 		void PersonaCommands.fetchUserPersonas().then((personas) => {
@@ -50,7 +55,23 @@ export const PersonaPickerComposerButton = observer<PersonaPickerComposerButtonP
 			setSelectedPersona(getActivePersona);
 			setHasPersonas(!!Personas.getOwnPersonas().length);
 		});
-	}, []);
+	}, [props.channel]);
+
+	const updatePersona = useCallback(
+		(persona_id: string | null) => {
+			if (hasChannelPersona) {
+				Personas.setSpecificActivePersona(props.channel.id, persona_id || '');
+				return;
+			} else if (hasGuildPersona) {
+				if (!props.channel.guildId) return;
+				Personas.setSpecificActivePersona(props.channel.guildId, persona_id || '');
+				return;
+			} else {
+				Personas.setGlobalActivePersona(persona_id || '');
+			}
+		},
+		[hasChannelPersona, hasGuildPersona, Personas],
+	);
 
 	return (
 		hasPersonas &&
@@ -66,7 +87,7 @@ export const PersonaPickerComposerButton = observer<PersonaPickerComposerButtonP
 						if (isMobile) {
 							PersonaPickerMobile.open({
 								channel: props.channel,
-								onSelect: (p) => Personas.setGlobalActivePersona(p || ''),
+								onSelect: updatePersona,
 							});
 						} else {
 							openPopout(
@@ -76,7 +97,7 @@ export const PersonaPickerComposerButton = observer<PersonaPickerComposerButtonP
 									render: () => (
 										<PersonaPickerPopout
 											channel={props.channel}
-											onSelect={(p) => Personas.setGlobalActivePersona(p || '')}
+											onSelect={updatePersona}
 											data-flx="personas.persona-picker-composer-button.persona-picker-popout.set-global-active-persona"
 										/>
 									),
@@ -100,7 +121,7 @@ export const PersonaPickerComposerButton = observer<PersonaPickerComposerButtonP
 							className={clsx(styles.personaAvatar, personaPickerOpen && styles.contextMenuHover)}
 							data-flx="personas.persona-picker-composer-button.persona-avatar--2"
 						>
-							{Personas.getGlobalActivePersona() ? (
+							{selectedPersona ? (
 								<Avatar
 									size={36}
 									user={Users.currentUser!}

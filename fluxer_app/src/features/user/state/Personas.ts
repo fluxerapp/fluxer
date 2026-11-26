@@ -8,6 +8,7 @@ import type {
 } from '@fluxer/schema/src/domains/persona/PersonaSchemas';
 import {
 	type PersonaSettings,
+	type PersonaSettings_ActivePersonaItem,
 	PersonaSettings_LatchMode,
 	PersonaSettingsSchema,
 } from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb.js';
@@ -24,13 +25,13 @@ type WirePersona = WireOtherPersona | WireOwnPersona;
 class Personas {
 	personas: Record<string, Persona> = {};
 	globalActivePersonaId: string = '';
-	guildActivePersonaIds: Record<string, string> = {};
-	dmActivePersonaIds: Record<string, string> = {};
+	contextActivePersonaIds: Record<string, string | null> = {};
 	ownPersonas: Set<string> = new Set();
 	personaCount = 0;
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
+		this.refreshRemoteActivePersonas();
 	}
 
 	private async updatedSyncedPref(func: (settings: PersonaSettings) => PersonaSettings) {
@@ -49,6 +50,22 @@ class Personas {
 		});
 	}
 
+	private get allActivePersonas(): Array<PersonaSettings_ActivePersonaItem> {
+		return UserSettings.getSubPreference('personaSettings')?.activePersonas || [];
+	}
+	private set allActivePersonas(nv: Array<PersonaSettings_ActivePersonaItem>) {
+		this.updatedSyncedPref((settings) => {
+			settings.activePersonas = nv;
+			return settings;
+		});
+	}
+	refreshRemoteActivePersonas() {
+		this.contextActivePersonaIds = {};
+		for (const entry of this.allActivePersonas) {
+			this.contextActivePersonaIds[entry.contextId.toString()] = entry.personaId?.toString() || null;
+		}
+	}
+
 	getGlobalActivePersona(): Persona | null {
 		const remote_persona = UserSettings.getSubPreference('personaSettings')?.activePersonaGlobal?.toString();
 		const persona_id = this.globalActivePersonaId || remote_persona;
@@ -57,10 +74,6 @@ class Personas {
 		return this.personas[this.globalActivePersonaId] || (remote_persona && this.personas[remote_persona]) || null;
 	}
 	setGlobalActivePersona(personaId: string) {
-		// if (!personaId) {
-		// 	this.globalActivePersonaId = "";
-		// 	return;
-		// }
 		if (personaId && !this.ownPersonas.has(personaId)) return;
 		this.globalActivePersonaId = personaId;
 		this.personaCount++;
@@ -69,35 +82,64 @@ class Personas {
 			return pref;
 		});
 	}
-	getGuildActivePersonaId(guildId: string): Persona | null {
-		if (!guildId) return null;
-		if (!this.guildActivePersonaIds[guildId]) return null;
-		if (!this.ownPersonas.has(guildId)) return null;
-		return this.personas[this.guildActivePersonaIds[guildId]] || null;
+	hasSpecificActivePersona(contextId: string): boolean {
+		if (!contextId) return false;
+		if (this.contextActivePersonaIds[contextId] === undefined) return false;
+		if (
+			this.contextActivePersonaIds[contextId] !== null &&
+			!this.ownPersonas.has(this.contextActivePersonaIds[contextId])
+		)
+			return false;
+		return true;
 	}
-	setGuildActivePersona(guildId: string, personaId: string) {
-		if (!guildId) {
-			delete this.guildActivePersonaIds[guildId];
-			return;
-		}
-		if (!this.ownPersonas.has(this.guildActivePersonaIds[guildId])) return;
-		this.guildActivePersonaIds[guildId] = personaId;
+	/** Returns undefined if the specific persona is missing, null if it is set to the current account. */
+	getSpecificActivePersona(contextId: string): Persona | null | undefined {
+		console.log(this.contextActivePersonaIds);
+		if (!contextId) return undefined;
+		if (this.contextActivePersonaIds[contextId] === undefined) return undefined;
+		if (
+			this.contextActivePersonaIds[contextId] !== null &&
+			!this.ownPersonas.has(this.contextActivePersonaIds[contextId])
+		)
+			return null;
+		if (this.contextActivePersonaIds[contextId] === null) return null;
+		return this.personas[this.contextActivePersonaIds[contextId]] || undefined;
+	}
+	setSpecificActivePersona(contextId: string, personaId: string | null) {
+		console.log(contextId, personaId);
+		if (!personaId) personaId = null; // empty into null
+		if (personaId !== null && !this.ownPersonas.has(personaId)) return;
+		this.contextActivePersonaIds[contextId] = personaId;
+		void this.updatedSyncedPref((pref) => {
+			pref.activePersonas = [
+				...pref.activePersonas.filter((entry) => entry.contextId !== BigInt(contextId)),
+				{
+					$typeName: 'fluxer.user.preferences.v1.PersonaSettings.ActivePersonaItem',
+					contextId: BigInt(contextId),
+					personaId: personaId ? BigInt(personaId) : undefined,
+				},
+			];
+			return pref;
+		});
 		this.personaCount++;
 	}
-	getDmActivePersonaId(channelId: string): Persona | null {
-		if (!channelId) return null;
-		if (!this.dmActivePersonaIds[channelId]) return null;
-		if (!this.ownPersonas.has(channelId)) return null;
-		return this.personas[this.dmActivePersonaIds[channelId]] || null;
-	}
-	setDmActivePersona(channelId: string, personaId: string) {
-		if (!channelId) {
-			delete this.dmActivePersonaIds[channelId];
-			return;
-		}
-		if (!this.ownPersonas.has(this.dmActivePersonaIds[channelId])) return;
-		this.dmActivePersonaIds[channelId] = personaId;
+	clearSpecificActivePersona(contextId: string) {
+		delete this.contextActivePersonaIds[contextId];
+		void this.updatedSyncedPref((pref) => {
+			pref.activePersonas = pref.activePersonas.filter((entry) => entry.contextId !== BigInt(contextId));
+			return pref;
+		});
 		this.personaCount++;
+	}
+
+	getActivePersonaFromContext(channelId: string, guildId?: string): Persona | null {
+		if (this.hasSpecificActivePersona(channelId)) {
+			return this.getSpecificActivePersona(channelId) || null;
+		} else if (guildId && this.hasSpecificActivePersona(guildId)) {
+			return this.getSpecificActivePersona(guildId) || null;
+		} else {
+			return this.getGlobalActivePersona();
+		}
 	}
 
 	getOwnPersonas(): ReadonlyArray<Persona> {
