@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"maps"
+	"path"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -63,6 +64,8 @@ func (j Job) argv(node, script string) []string {
 type ComposeImporter struct {
 	Project *engine.Project
 	Objects *engine.Project
+	Image   string
+	Root    string
 }
 
 var errNoImporterNetwork = errors.New("migrate: the api service has no network to run the importer on")
@@ -82,6 +85,10 @@ func (c ComposeImporter) Run(ctx context.Context, j Job) error {
 		o.GroupAdd = append(o.GroupAdd, objectsGroup)
 	}
 	o.Command = j.argv("node", importerScript)
+	if j.Objects && c.Image != "" {
+		o.Image = c.Image
+		o.Command = j.argv(path.Join(c.Root, "bin", "node"), path.Join(c.Root, importerService, importerScript))
+	}
 	o.Stdout, o.Stderr = j.Stdout, j.Stderr
 	return p.Helper(ctx, o)
 }

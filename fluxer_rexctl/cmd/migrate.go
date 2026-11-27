@@ -319,6 +319,9 @@ func executeMigrate(ctx context.Context, app *App, inst *instance.Instance, step
 	}
 	r := &migrate.Run{Host: host, Journal: journal, Log: migrateOutput(app), OnPhase: migrateProgress(app, len(steps))}
 	err = migrate.Execute(ctx, r, steps)
+	if ch, ok := host.(*composeHost); ok {
+		ch.dropImporterImage(ctx)
+	}
 	if err == nil && slices.Contains(picked, migrate.OptDocker) {
 		markMoved(app, inst, r.Host.Dir())
 	}

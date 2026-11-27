@@ -20,7 +20,8 @@ import (
 
 const (
 	imageKey     = "fluxer"
-	imageCatalog = "/opt/fluxer/current/share/settings.json"
+	ImageRoot    = "/opt/fluxer/current"
+	imageCatalog = ImageRoot + "/share/settings.json"
 )
 
 type containerUpgrades struct{ r *containerRT }

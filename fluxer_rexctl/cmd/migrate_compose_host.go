@@ -16,6 +16,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/migrate"
+	rt "github.com/fluxerapp/fluxer/fluxer_rexctl/internal/runtime"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
@@ -34,6 +35,8 @@ type composeHost struct {
 	p       *engine.Project
 	set     *stack.Set
 	objects *engine.Project
+	image   string
+	pulled  bool
 }
 
 func (h *composeHost) Runtime() migrate.Runtime                             { return migrate.Compose }
@@ -157,7 +160,46 @@ func (h *composeHost) CheckObjects(ctx context.Context) error {
 			}
 		}
 	}
-	return nil
+	_, err = h.importerImage(ctx)
+	return err
+}
+
+func (h *composeHost) importerImage(ctx context.Context) (string, error) {
+	if h.image != "" {
+		return h.image, nil
+	}
+	version := stack.EmbeddedRelease()
+	ref := rt.ImageRef(version)
+	_, had, err := h.e.LocalImage(ctx, ref)
+	if err != nil {
+		return "", rt.ContainerError(err, "Couldn't check for Fluxer "+version+" on this machine. rexctl didn't change anything.")
+	}
+	if had {
+		err = rt.FetchImage(ctx, h.e, version, nil)
+	} else {
+		err = h.app.UI.Step(ctx, "Downloading Fluxer "+version+" for the move off SeaweedFS", func(ctx context.Context, s *ui.Step) error {
+			if err := rt.FetchImage(ctx, h.e, version, h.app.progress(s, "Downloading")); err != nil {
+				return err
+			}
+			s.Done("Downloaded Fluxer %s.", version)
+			return nil
+		})
+	}
+	if err != nil {
+		return "", rt.ContainerError(err, "Couldn't download Fluxer "+version+". rexctl didn't change anything.")
+	}
+	h.image, h.pulled = ref, !had
+	return ref, nil
+}
+
+func (h *composeHost) dropImporterImage(ctx context.Context) {
+	if !h.pulled {
+		return
+	}
+	h.pulled = false
+	if err := h.e.RemoveImages(context.WithoutCancel(ctx), []string{h.image}); err != nil {
+		h.app.UI.Detail("removing the download of Fluxer %s: %v", stack.EmbeddedRelease(), err)
+	}
 }
 
 func (h *composeHost) PrepareObjects(ctx context.Context) error {
@@ -218,6 +260,11 @@ func (c composeImporter) Run(ctx context.Context, j migrate.Job) error {
 			}
 		}
 		imp.Objects = p
+		image, err := c.h.importerImage(ctx)
+		if err != nil {
+			return err
+		}
+		imp.Image, imp.Root = image, rt.ImageRoot
 	}
 	return imp.Run(ctx, j)
 }
