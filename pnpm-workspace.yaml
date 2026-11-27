@@ -91,7 +91,7 @@ catalog:
   '@webgpu/types': 0.1.74
   altcha-lib: 2.8.0
   archiver: 8.0.0
-  argon2: 0.45.1
+  argon2: 0.45.2
   astro: 7.4.4
   autoprefixer: 10.6.2
   bidi-js: 1.0.3
