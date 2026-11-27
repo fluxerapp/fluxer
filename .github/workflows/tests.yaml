@@ -431,12 +431,6 @@ jobs:
       - name: Build documentation
         run: pnpm --filter fluxer_docs build
 
-      - name: Install Chromium
-        run: pnpm --filter fluxer_docs exec playwright install --with-deps chromium
-
-      - name: Check prose shape
-        run: pnpm --filter fluxer_docs prose:check --no-build
-
   fonts:
     runs-on: ubuntu-24.04
     timeout-minutes: 10

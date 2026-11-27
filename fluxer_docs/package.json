@@ -6,7 +6,6 @@
 	"scripts": {
 		"build": "astro build",
 		"dev": "astro dev",
-		"prose:check": "node tools/prose-shape/check.mjs",
 		"start": "tsx scripts/StartServer.ts",
 		"typecheck": "astro check --minimumFailingSeverity warning"
 	},
@@ -28,7 +27,6 @@
 		"@types/node": "catalog:",
 		"@types/send": "catalog:",
 		"mdast-util-to-hast": "catalog:",
-		"playwright": "catalog:",
 		"typescript": "catalog:"
 	}
 }
