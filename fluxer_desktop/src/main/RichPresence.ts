@@ -11,8 +11,8 @@ import {BrowserWindow, ipcMain} from 'electron';
 import log from 'electron-log';
 
 const execFileAsync = promisify(execFile);
-const AIRPC_NAME = 'airpc';
-const AIRPC_SLOTS = [AIRPC_NAME, ...Array.from({length: 10}, (_v, idx) => `${AIRPC_NAME}-${idx}`)];
+const IPC_NAMES = ['discord-ipc', 'airpc'] as const;
+const AIRPC_SLOTS = IPC_NAMES.flatMap((name) => [name, ...Array.from({length: 10}, (_v, idx) => `${name}-${idx}`)]);
 const SCAN_MS = 5000;
 const MAX_FRAME_BYTES = 64 * 1024;
 const MAX_ACTIVITIES = 5;
@@ -119,7 +119,9 @@ function currentActivities(): Array<RichPresenceActivity> {
 	const merged = [...fromIpc];
 	for (const activity of detected) {
 		if (merged.length >= MAX_ACTIVITIES) break;
-		if (names.has(activity.name.toLowerCase())) continue;
+		const name = activity.name.toLowerCase();
+		if (names.has(name)) continue;
+		names.add(name);
 		merged.push(activity);
 	}
 	return merged;
@@ -155,45 +157,81 @@ async function listenAll(): Promise<void> {
 	}
 }
 
-function listenSlot(slot: string): Promise<net.Server | null> {
-	const target = endpoint(slot);
-	if (process.platform !== 'win32') {
-		try {
-			fs.unlinkSync(target);
-		} catch {
-			// no stale socket
+async function prepareSocketPath(target: string): Promise<boolean> {
+	if (process.platform === 'win32') return true;
+	try {
+		const stat = fs.lstatSync(target);
+		if (!stat.isSocket()) {
+			log.warn('[RichPresence] refusing to replace non-socket path', target);
+			return false;
 		}
+	} catch (err) {
+		if ((err as NodeJS.ErrnoException).code === 'ENOENT') return true;
+		log.warn('[RichPresence] cannot inspect IPC path', target, err);
+		return false;
 	}
+	if (await socketIsActive(target)) return false;
+	try {
+		fs.unlinkSync(target);
+		return true;
+	} catch (err) {
+		if ((err as NodeJS.ErrnoException).code === 'ENOENT') return true;
+		log.warn('[RichPresence] cannot remove stale IPC socket', target, err);
+		return false;
+	}
+}
+
+function socketIsActive(target: string): Promise<boolean> {
 	return new Promise((resolve) => {
-		const server = net.createServer((socket) => handleClient(socket));
+		const probe = net.createConnection(target);
 		let settled = false;
-		const finish = (value: net.Server | null): void => {
+		const finish = (active: boolean): void => {
 			if (settled) return;
 			settled = true;
-			resolve(value);
+			probe.destroy();
+			resolve(active);
 		};
-		server.once('error', (err: Error) => {
-			log.warn('[RichPresence] ipc listen failed', slot, err.message);
-			server.close();
-			finish(null);
-		});
-		server.listen(target, () => {
-			if (!started) {
+		probe.setTimeout(250, () => finish(false));
+		probe.once('connect', () => finish(true));
+		probe.once('error', (err: NodeJS.ErrnoException) => finish(err.code !== 'ECONNREFUSED' && err.code !== 'ENOENT'));
+	});
+}
+
+function listenSlot(slot: string): Promise<net.Server | null> {
+	const target = endpoint(slot);
+	return prepareSocketPath(target).then((ready) => {
+		if (!ready) return null;
+		return new Promise((resolve) => {
+			const server = net.createServer((socket) => handleClient(socket));
+			let settled = false;
+			const finish = (value: net.Server | null): void => {
+				if (settled) return;
+				settled = true;
+				resolve(value);
+			};
+			server.once('error', (err: Error) => {
+				log.warn('[RichPresence] ipc listen failed', slot, err.message);
 				server.close();
 				finish(null);
-				return;
-			}
-			server.removeAllListeners('error');
-			server.on('error', (err) => log.warn('[RichPresence] ipc server error', err));
-			if (process.platform !== 'win32') {
-				socketPaths.push(target);
-				try {
-					fs.chmodSync(target, 0o600);
-				} catch {
-					// best effort
+			});
+			server.listen(target, () => {
+				if (!started) {
+					server.close();
+					finish(null);
+					return;
 				}
-			}
-			finish(server);
+				server.removeAllListeners('error');
+				server.on('error', (err) => log.warn('[RichPresence] ipc server error', err));
+				if (process.platform !== 'win32') {
+					socketPaths.push(target);
+					try {
+						fs.chmodSync(target, 0o600);
+					} catch {
+						// best effort
+					}
+				}
+				finish(server);
+			});
 		});
 	});
 }
