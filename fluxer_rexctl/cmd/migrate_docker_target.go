@@ -246,7 +246,7 @@ func (t *moveBase) open(chosen map[string]string) (*instance.Instance, error) {
 	target.State.KeepBackups = t.inst.State.KeepBackups
 	target.State.AdminImport = t.inst.State.AdminImport
 	target.State.NotifyURL = t.inst.State.NotifyURL
-	target.State.MovedFrom = &instance.MovedFrom{Dir: t.inst.Dir, At: time.Now().UTC().Truncate(time.Second), Firewall: slices.Clone(t.inst.State.Firewall)}
+	target.State.MovedFrom = &instance.MovedFrom{Dir: t.inst.Dir, At: time.Now().UTC().Truncate(time.Second), Firewall: slices.Clone(t.inst.State.Firewall), Backup: t.inst.State.MigrateBackup}
 	for _, p := range t.inst.State.Firewall {
 		if !slices.Contains(target.State.Firewall, p) {
 			target.State.Firewall = append(target.State.Firewall, p)

@@ -59,6 +59,8 @@ type State struct {
 	NotifyURL       string            `json:"notify_url,omitempty"`
 	MoveNotice      string            `json:"move_notice,omitempty"`
 	MovedFrom       *MovedFrom        `json:"moved_from,omitempty"`
+	MigrateBackup   string            `json:"migrate_backup,omitempty"`
+	Restored        *Restored         `json:"restored,omitempty"`
 	BootService     string            `json:"boot_service,omitempty"`
 	ExtraHosts      []string          `json:"extra_hosts,omitempty"`
 	Voice           []VoiceServer     `json:"voice,omitempty"`
@@ -81,6 +83,12 @@ type MovedFrom struct {
 	At          time.Time    `json:"at"`
 	AutoUpgrade bool         `json:"auto_upgrade,omitempty"`
 	Firewall    []OpenedPort `json:"firewall,omitempty"`
+	Backup      string       `json:"backup,omitempty"`
+}
+
+type Restored struct {
+	From   string `json:"from"`
+	Safety string `json:"safety,omitempty"`
 }
 
 const (

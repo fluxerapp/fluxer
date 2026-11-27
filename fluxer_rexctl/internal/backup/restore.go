@@ -207,6 +207,7 @@ func Restore(ctx context.Context, path, dir string, e *engine.Engine, opts Resto
 	if err != nil {
 		return nil, err
 	}
+	keepBackupNotes(inst, existing, path)
 	if err := adoptRestored(inst, e, opts.Adopted); err != nil {
 		return nil, err
 	}
@@ -427,6 +428,25 @@ func movesEngine(was instance.EngineRef, e *engine.Engine) bool {
 		return true
 	}
 	return was.ID != "" && e.ID != "" && was.ID != e.ID
+}
+
+func keepBackupNotes(inst, existing *instance.Instance, path string) {
+	if inst.State == nil {
+		return
+	}
+	if abs, err := filepath.Abs(path); err == nil {
+		path = abs
+	}
+	inst.State.Restored = &instance.Restored{From: path}
+	if existing == nil || existing.State == nil {
+		return
+	}
+	if inst.State.MigrateBackup == "" {
+		inst.State.MigrateBackup = existing.State.MigrateBackup
+	}
+	if r := existing.State.Restored; r != nil && samePath(r.From, path) {
+		inst.State.Restored = r
+	}
 }
 
 func adoptRestored(inst *instance.Instance, e *engine.Engine, adopted func(*instance.Instance)) error {

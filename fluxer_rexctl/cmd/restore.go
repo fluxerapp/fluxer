@@ -375,6 +375,9 @@ func runRestore(ctx context.Context, app *App, arg string, f restoreFlags) error
 			if safety, err = safetyBackup(ctx, app, existing, m.WithoutUploads(), f.noSafety); err != nil {
 				return err
 			}
+			if err := noteRestore(existing, path, safety); err != nil {
+				return withSafety(err, safety)
+			}
 		}
 		e, err := restoreEngine(ctx, app, existing, dir, toDocker)
 		if err != nil {
@@ -908,6 +911,9 @@ func runNativeRestoreFresh(ctx context.Context, app *App, dir, path string, m *b
 		if err != nil {
 			return err
 		}
+		if err := noteRestore(inst, path, ""); err != nil {
+			return err
+		}
 		return restoreNativeData(ctx, app, inst, r, path, m, false)
 	})
 }
@@ -930,6 +936,9 @@ func restoreNativeInstance(ctx context.Context, app *App, inst *instance.Instanc
 		safety, err := safetyBackup(ctx, app, inst, false, f.noSafety)
 		if err != nil {
 			return err
+		}
+		if err := noteRestore(inst, path, safety); err != nil {
+			return withSafety(err, safety)
 		}
 		return withSafety(restoreNativeData(ctx, app, inst, r, path, m, wasRunning(ctx, r, inst)), safety)
 	})
@@ -962,6 +971,9 @@ func restoreContainerInstance(ctx context.Context, app *App, inst *instance.Inst
 		safety, err := safetyBackup(ctx, app, inst, false, f.noSafety)
 		if err != nil {
 			return err
+		}
+		if err := noteRestore(inst, path, safety); err != nil {
+			return withSafety(err, safety)
 		}
 		return withSafety(restoreNativeData(ctx, app, inst, r, path, m, wasRunning(ctx, r, inst)), safety)
 	})
@@ -1099,6 +1111,14 @@ func restoreNativeData(ctx context.Context, app *App, inst *instance.Instance, r
 	env.Native = true
 	warnDNS(ctx, app, env)
 	return nil
+}
+
+func noteRestore(inst *instance.Instance, from, safety string) error {
+	if abs, err := filepath.Abs(from); err == nil {
+		from = abs
+	}
+	inst.State.Restored = &instance.Restored{From: from, Safety: safety}
+	return saveInstance(inst)
 }
 
 func markRestoring(inst *instance.Instance, path string) error {

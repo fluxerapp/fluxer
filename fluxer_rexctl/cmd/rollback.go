@@ -180,6 +180,9 @@ func runRollback(ctx context.Context, app *App, f *rollbackFlags) error {
 				}
 				return err
 			}
+			if err := noteRestore(inst, c.backup.Path, safety); err != nil {
+				return withSafety(err, safety)
+			}
 		}
 		switch {
 		case c.backup != nil && !native:

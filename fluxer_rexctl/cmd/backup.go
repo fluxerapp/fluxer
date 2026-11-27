@@ -352,7 +352,7 @@ func pruneBackups(app *App, inst *instance.Instance) {
 	if len(removed) > 0 {
 		msg := fmt.Sprintf("Deleted %s to keep the newest %d.", plural(len(removed), "older backup", "older backups"), keep)
 		if left, lerr := backup.List(dir); lerr == nil && len(left) > keep {
-			msg += " rexctl also keeps the newest backup with uploads and the one rexctl rollback needs."
+			msg += " rexctl also keeps the newest backup with uploads, the one rexctl rollback needs, the one from before rexctl migrate changed anything and the ones from the last restore."
 		}
 		app.UI.Info("%s Run rexctl backup keep to change how many rexctl keeps.", msg)
 	}
@@ -400,6 +400,15 @@ func protectedBackups(inst *instance.Instance, dir string) []string {
 	var protect []string
 	if u := inst.State.Upgrade; u != nil {
 		protect = append(protect, u.Backup)
+	}
+	if inst.State.MigrateBackup != "" && migrateUndoable(inst) {
+		protect = append(protect, inst.State.MigrateBackup)
+	}
+	if m := inst.State.MovedFrom; m != nil {
+		protect = append(protect, m.Backup)
+	}
+	if r := inst.State.Restored; r != nil {
+		protect = append(protect, r.From, r.Safety)
 	}
 	list, err := backup.List(dir)
 	if err != nil {

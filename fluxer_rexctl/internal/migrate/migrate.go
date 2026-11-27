@@ -191,16 +191,17 @@ type Host interface {
 }
 
 type Run struct {
-	Journal func(State) error
-	Host    Host
-	Backup  string
-	Done    []Option
-	Started bool
-	State   State
-	Notes   []string
-	Now     func() time.Time
-	Log     io.Writer
-	OnPhase func(Phase, Option)
+	Journal  func(State) error
+	Host     Host
+	Backup   string
+	Done     []Option
+	Started  bool
+	State    State
+	Notes    []string
+	Now      func() time.Time
+	Log      io.Writer
+	OnPhase  func(Phase, Option)
+	OnBackup func(path string) error
 }
 
 func (r *Run) record() error {
@@ -262,6 +263,11 @@ func Execute(ctx context.Context, r *Run, steps []Step) error {
 		return &Failure{Phase: PhaseBackup, Err: err}
 	}
 	r.Backup = path
+	if r.OnBackup != nil {
+		if err := r.OnBackup(path); err != nil {
+			return &Failure{Phase: PhaseBackup, Err: err}
+		}
+	}
 
 	var writers []string
 	for _, s := range steps {

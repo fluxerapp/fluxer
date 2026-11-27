@@ -299,6 +299,22 @@ func migratePlan(inst *instance.Instance, steps []migrate.Step) []ui.PlanItem {
 	return append(items, ui.PlanItem{Verb: ui.PlanRun, Text: "Start Fluxer and check that it works", Detail: "if it doesn't, rexctl puts everything back"})
 }
 
+func keepMigrateBackup(inst *instance.Instance, path string) error {
+	if inst.State.MigrateBackup != "" && fileExists(inst.State.MigrateBackup) && migrateUndoable(inst) {
+		return nil
+	}
+	inst.State.MigrateBackup = path
+	return saveInstance(inst)
+}
+
+func migrateUndoable(inst *instance.Instance) bool {
+	if legacyCompose(inst) {
+		return true
+	}
+	st, err := migrate.LoadState(inst.Dir)
+	return err != nil || st.Docker != nil || st.Storage.Pending() || st.KV.Pending()
+}
+
 func clearDockerMarker(inst *instance.Instance) error {
 	st, err := migrate.LoadState(inst.Dir)
 	if err != nil || st.Docker == nil {
@@ -317,7 +333,7 @@ func executeMigrate(ctx context.Context, app *App, inst *instance.Instance, step
 	if err != nil {
 		return nil, migrate.State{}, ui.Wrap(err, "Couldn't read what rexctl migrate changed before.", "Check that you can read "+inst.Dir+", then try again.")
 	}
-	r := &migrate.Run{Host: host, Journal: journal, Log: migrateOutput(app), OnPhase: migrateProgress(app, len(steps))}
+	r := &migrate.Run{Host: host, Journal: journal, Log: migrateOutput(app), OnPhase: migrateProgress(app, len(steps)), OnBackup: func(path string) error { return keepMigrateBackup(inst, path) }}
 	err = migrate.Execute(ctx, r, steps)
 	if ch, ok := host.(*composeHost); ok {
 		ch.dropImporterImage(ctx)
@@ -861,6 +877,10 @@ func cleanUpOld(ctx context.Context, app *App, inst *instance.Instance, st *migr
 	}
 	if deleted == 0 {
 		return ui.Refused("rexctl kept all the old data, so nothing changed.", "Do what the lines above say, then run "+migrateCommand+" --clean-up again.")
+	}
+	if inst.State.MigrateBackup != "" && st.Docker == nil && !st.Storage.Pending() && !st.KV.Pending() {
+		inst.State.MigrateBackup = ""
+		return saveInstance(inst)
 	}
 	return nil
 }
