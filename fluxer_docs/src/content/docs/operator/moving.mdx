@@ -78,11 +78,30 @@ To go back before you clean up, run `sudo rexctl migrate --undo`. It backs up th
 
 ## What stops a move
 
-- For a `custom.compose.yml` with your own changes, move what it does into settings with `rexctl config set`, then empty it with `rexctl config edit --compose`.
+- For a `custom.compose.yml` with changes the new layout can't take over, rexctl lists each line and what it needs. Most of them move into settings with `rexctl config set`.
 - For voice servers in Docker on the same machine, remove them with `rexctl voice remove` first, and add them again after the move.
 - For a setting the new layout doesn't use, rexctl says which one it is. Remove that setting first with `rexctl config unset`.
 
 An external PostgreSQL or S3 store moves along as settings, as does automatic upgrading.
+
+## Data in folders and custom.compose.yml
+
+rexctl takes over these parts of `custom.compose.yml` as they are, so you don't need to empty it:
+
+- Folders on the machine that hold the data of PostgreSQL, Valkey, NATS, Meilisearch, SeaweedFS or the edge, in place of their volumes. The backup and the move read the data from those folders.
+- Volumes that only set `external: true` and their usual name, such as `fluxer_seaweedfs-data`.
+- A folder for the temporary files of the media proxy. The new layout has its own, so the move leaves this one out.
+- A Caddyfile for the edge that is the same as the one rexctl writes, such as a copy of it in the instance folder. If you changed it, put your directives in a `.caddy` file in `caddy.d` first.
+- Edge ports that a setting can give too. rexctl says which command to run first, such as `rexctl config set edge.bind=127.0.0.1:5580`.
+- A read-only folder with the GeoIP database for the api and worker. rexctl copies the file that `FLUXER_GEOIP_DB_PATH` points at into the `geoip` folder of the new instance and sets [`geoip.database`](/operator/configuration/#geoip-database).
+
+If the file replaces the volumes of the api, the worker or the media proxy with `!override`, remove `!override` from that line first. The move off SeaweedFS adds a volume for the uploaded files to them, and `!override` would drop it.
+
+Before it changes anything, rexctl checks that the containers ran on the folders and volumes the file names. Don't empty the file or remove a folder line to get past a refusal. The backup would then hold none of the data in those folders, and the old containers would start on new empty volumes.
+
+If the move goes back, the old containers start with the same file and the same folders. rexctl refuses to start them when the file would give a service another volume or folder than the one that holds its data. rexctl records those folders and volumes when the move starts, so the check works even when the old containers are gone.
+
+The folders stay on the machine after the move. `rexctl migrate --clean-up` lists them and never deletes them. Delete them yourself once the new instance has your data.
 
 ## Installs from before rexctl
 

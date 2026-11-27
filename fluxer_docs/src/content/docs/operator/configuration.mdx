@@ -102,6 +102,22 @@ sudo chown 65532 smtp-password.txt && sudo chmod 400 smtp-password.txt
 
 Compose treats `$` in `fluxer.env` as the start of a variable. Keep any password that has a `$` in it in a file like this one, never in `fluxer.env` itself.
 
+## GeoIP database
+
+With a MaxMind GeoLite2 or GeoIP2 City or Country database, Fluxer can look up which country an IP address is in. With rexctl, pass the `.mmdb` file.
+
+```sh
+rexctl config set geoip.database=/root/GeoLite2-City.mmdb
+```
+
+rexctl checks that the file is a MaxMind database, copies it into the `geoip` folder of the instance and sets `FLUXER_GEOIP_DB_PATH` for the api and worker. The copy is in every backup and stays through upgrades. For a newer database, run the same command with the new file. rexctl copies the file only when it changed, and removes the copy it no longer uses.
+
+To stop using a GeoIP database, run `rexctl config unset geoip.database`. That also clears a `FLUXER_GEOIP_DB_PATH` you set by hand.
+
+On the older layout with Docker Compose, rexctl doesn't copy the file. Mount its folder into the api and worker with `rexctl config edit --compose`, then set `geoip.database` to the path inside the containers.
+
+Without rexctl, put the file where Fluxer can read it and set [`FLUXER_GEOIP_DB_PATH`](/operator/settings/#fluxer_geoip_db_path) to its path.
+
 ## Passwords and keys Fluxer makes
 
 On its first start, Fluxer creates its own passwords and keys and keeps them in `secrets.env` in its data folder. You never need to set them. Every backup includes them.
