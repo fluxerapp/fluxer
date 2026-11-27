@@ -109,6 +109,11 @@ func voiceHostRelease(ctx context.Context, inst *instance.Instance, instanceRele
 		version = instanceRelease
 	}
 	if inst.State.Runtime == instance.RuntimeNative {
+		if version != "" {
+			if _, err := release.Resolve(ctx, version); errors.Is(err, release.ErrUnknownVersion) {
+				version = ""
+			}
+		}
 		return nativeRelease(ctx, version, "Run rexctl voice join --runtime docker to run the voice server in a container.")
 	}
 	if version != "" {
