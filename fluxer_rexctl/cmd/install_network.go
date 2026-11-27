@@ -348,16 +348,7 @@ func (in *installer) networkFields() []ui.Field {
 		})
 	}
 	fields = append(fields,
-		ui.Field{
-			Flag:        "proxy-from",
-			FlagLabel:   "--proxy-from",
-			Title:       "What address does your proxy connect from?",
-			Description: "Fluxer trusts the visitor address your proxy passes on only from here, and the firewall lets only this address in.",
-			Placeholder: "203.0.113.10",
-			Value:       &n.from,
-			Validate:    validateProxyFrom,
-			Hide:        func() bool { return !remote() },
-		},
+		proxyFromField(&n.from, func() bool { return !remote() }),
 		ui.Field{
 			Title:       "Do people open this address over plain HTTP?",
 			Description: "Lokinet and .alt addresses often have no certificate.",
@@ -442,7 +433,7 @@ func (in *installer) networkSummary() string {
 	case settings.ProxyOverlay:
 		return "Behind your Tor, I2P or Lokinet proxy, Fluxer listens on " + f.Bind
 	case settings.ProxyRemote:
-		return fmt.Sprintf("Behind a proxy at %s, Fluxer listens on %s", n.from, f.Bind)
+		return fmt.Sprintf("Behind a proxy at %s, Fluxer listens on %s", proxyFromWords(n.from), f.Bind)
 	case settings.ProxyTunnel:
 		return "Behind a tunnel, Fluxer listens on " + f.Bind
 	}
@@ -584,9 +575,22 @@ func privateSource(v string) bool {
 		return a.IsPrivate() || a.IsLoopback()
 	}
 	if p, err := netip.ParsePrefix(v); err == nil {
-		return p.Addr().IsPrivate()
+		return p.Addr().IsPrivate() || p.Addr().IsLoopback()
 	}
 	return false
+}
+
+func proxyFromField(v *string, hide func() bool) ui.Field {
+	return ui.Field{
+		Flag:        "proxy-from",
+		FlagLabel:   "--proxy-from",
+		Title:       "What address does your proxy connect from?",
+		Description: "Fluxer trusts the visitor address your proxy passes on only from here, and the firewall lets only this address in. Enter private for any address on your private network.",
+		Placeholder: "203.0.113.10",
+		Value:       v,
+		Validate:    validateProxyFrom,
+		Hide:        hide,
+	}
 }
 
 func (in *installer) plainHTTP() bool {

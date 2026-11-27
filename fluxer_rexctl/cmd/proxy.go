@@ -6,9 +6,12 @@ import (
 	"cmp"
 	"context"
 	"fmt"
+	"net"
+	"net/netip"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -67,7 +70,7 @@ func newProxyCmd(app *App) *cobra.Command {
 	}
 	on.Flags().StringVar(&bind, "bind", "", "address your proxy or tunnel connects to, kept when left out ("+settings.DefaultBind+" the first time)")
 	on.Flags().StringVar(&kind, "proxy", "", "what is in front of Fluxer (local, remote or tunnel)")
-	on.Flags().StringVar(&from, "proxy-from", "", "address your proxy connects from, when other machines can connect to --bind")
+	on.Flags().StringVar(&from, "proxy-from", "", "addresses or ranges your proxy connects from, or private for any private address, when other machines can connect to --bind")
 	on.Flags().StringVar(&kind, "kind", "", "")
 	on.Flags().StringVar(&from, "from", "", "")
 	_ = on.Flags().MarkHidden("kind")
@@ -183,7 +186,7 @@ func proxyOn(c *cobra.Command, app *App, changes map[string]*string, from string
 		if err != nil || !ok {
 			return err
 		}
-		if err := app.UI.Ask(c, ui.Field{Flag: "proxy-from", Title: "What address does your proxy connect from?", Placeholder: "203.0.113.10", Value: &from, Validate: validateProxyFrom}); err != nil {
+		if err := app.UI.Ask(c, proxyFromField(&from, nil)); err != nil {
 			return err
 		}
 		from = strings.TrimSpace(from)
@@ -230,10 +233,12 @@ func proxyOff(ctx context.Context, app *App) error {
 		own := "internal"
 		changes[edgeTLSVar] = &own
 	}
+	var sources []string
 	for _, p := range inst.State.Firewall {
-		if trusted, ok := trustedFor(p.Source); ok && st[settings.EdgeTrusted] == trusted {
-			changes[settings.EdgeTrusted] = nil
-		}
+		sources = append(sources, p.Source)
+	}
+	if trusted, ok := trustedFor(strings.Join(sources, ",")); ok && st[settings.EdgeTrusted] == trusted {
+		changes[settings.EdgeTrusted] = nil
 	}
 	if err := edgeGuard(inst, changes); err != nil {
 		return err
@@ -263,11 +268,93 @@ func proxyOff(ctx context.Context, app *App) error {
 	return nil
 }
 
+const proxyFromPrivate = "private"
+
+var privateRanges = []string{"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "fc00::/7"}
+
+func proxySources(from string) []string {
+	var out []string
+	for _, s := range settings.TrustedProxyList(strings.ToLower(from)) {
+		if !slices.Contains(out, s) {
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
 func trustedFor(from string) (string, bool) {
-	if from == "" || privateSource(from) {
+	trusted, named := []string{"private_ranges"}, false
+	for _, s := range proxySources(from) {
+		switch {
+		case s == proxyFromPrivate:
+			named = true
+		case !privateSource(s):
+			trusted = append(trusted, s)
+		}
+	}
+	if len(trusted) == 1 && !named {
 		return "", false
 	}
-	return "private_ranges," + from, true
+	return strings.Join(trusted, ","), true
+}
+
+func firewallSources(bind, from string) []string {
+	var out []string
+	for _, s := range proxySources(from) {
+		add := []string{s}
+		if s == proxyFromPrivate {
+			add = privateRangesFor(bind)
+		}
+		for _, a := range add {
+			if !slices.Contains(out, a) {
+				out = append(out, a)
+			}
+		}
+	}
+	return out
+}
+
+func privateRangesFor(bind string) []string {
+	host, _, err := net.SplitHostPort(bind)
+	if err != nil {
+		return privateRanges
+	}
+	a, err := netip.ParseAddr(host)
+	if err != nil || a.IsUnspecified() && a.Is6() {
+		return privateRanges
+	}
+	return slices.DeleteFunc(slices.Clone(privateRanges), func(r string) bool {
+		return netip.MustParsePrefix(r).Addr().Is4() != a.Unmap().Is4()
+	})
+}
+
+func proxyFromWords(from string) string {
+	var words []string
+	for _, s := range proxySources(from) {
+		if s == proxyFromPrivate {
+			s = "a private address"
+		}
+		words = append(words, s)
+	}
+	return ui.JoinOr(words)
+}
+
+func migratedProxyFrom(trusted string) string {
+	entries := settings.TrustedProxyList(trusted)
+	private := len(entries) == 0
+	var public []string
+	for _, e := range entries {
+		switch {
+		case e == "private_ranges" || privateSource(e):
+			private = true
+		case !slices.Contains(public, e):
+			public = append(public, e)
+		}
+	}
+	if private {
+		public = append([]string{proxyFromPrivate}, public...)
+	}
+	return strings.Join(public, ",")
 }
 
 func applyProxy(ctx context.Context, app *App, inst *instance.Instance, changes map[string]*string, title string) (*deploy.Change, error) {
@@ -324,15 +411,15 @@ func applyProxy(ctx context.Context, app *App, inst *instance.Instance, changes 
 }
 
 func openProxySource(ctx context.Context, app *App, inst *instance.Instance, bind, from string) error {
-	port := bindPortOf(bind)
-	if from == "" || port == 0 {
+	ports := proxyPorts(bind, from)
+	if len(ports) == 0 {
 		return nil
 	}
 	fw, err := host.DetectFirewall(ctx)
 	if err != nil || fw == host.FirewallNone {
 		return nil
 	}
-	closed, err := host.ClosedPorts(ctx, fw, []host.Port{{Number: port, Proto: "tcp", Source: from}})
+	closed, err := host.ClosedPorts(ctx, fw, ports)
 	if err != nil || len(closed) == 0 {
 		return nil
 	}
@@ -345,7 +432,7 @@ func openProxySource(ctx context.Context, app *App, inst *instance.Instance, bin
 		return nil
 	}
 	if err := host.OpenPorts(ctx, fw, closed); err != nil {
-		return ui.Wrap(err, "Couldn't open the port for your proxy.", fmt.Sprintf("Open TCP %d from %s in %s yourself.", port, from, fw))
+		return ui.Wrap(err, "Couldn't open the port for your proxy.", fmt.Sprintf("Open TCP %d from %s in %s yourself.", bindPortOf(bind), proxyFromWords(from), fw))
 	}
 	for _, p := range closed {
 		inst.State.Firewall = append(inst.State.Firewall, instance.OpenedPort{Firewall: string(fw), Number: p.Number, Proto: p.Proto, Source: p.Source})
@@ -357,12 +444,24 @@ func openProxySource(ctx context.Context, app *App, inst *instance.Instance, bin
 	return nil
 }
 
+func proxyPorts(bind, from string) []host.Port {
+	port := bindPortOf(bind)
+	if port == 0 {
+		return nil
+	}
+	var out []host.Port
+	for _, s := range firewallSources(bind, from) {
+		out = append(out, host.Port{Number: port, Proto: "tcp", Source: s})
+	}
+	return out
+}
+
 func closeProxySources(ctx context.Context, app *App, inst *instance.Instance, bind, from string) error {
-	keep := host.Port{Number: bindPortOf(bind), Proto: "tcp", Source: from}
+	keep := proxyPorts(bind, from)
 	var stale []instance.OpenedPort
 	var kept []instance.OpenedPort
 	for _, p := range inst.State.Firewall {
-		if p.Source == "" || (host.Port{Number: p.Number, Proto: p.Proto, Source: p.Source}) == keep {
+		if p.Source == "" || slices.Contains(keep, host.Port{Number: p.Number, Proto: p.Proto, Source: p.Source}) {
 			kept = append(kept, p)
 			continue
 		}
@@ -633,14 +732,14 @@ func (in *installer) waitProxy(ctx context.Context) error {
 
 func (in *installer) proxySource() string {
 	if in.f.Proxy == settings.ProxyRemote {
-		return in.f.ProxyFrom
+		return strings.Join(slices.DeleteFunc(proxySources(in.f.ProxyFrom), func(s string) bool { return s == proxyFromPrivate }), ",")
 	}
 	return "127.0.0.1"
 }
 
 func (in *installer) clientIPFix() string {
 	if in.f.Proxy == settings.ProxyRemote {
-		return "Make your proxy set the X-Forwarded-For header, and check that it connects from " + in.f.ProxyFrom + ". Then run rexctl doctor."
+		return "Make your proxy set the X-Forwarded-For header, and check that it connects from " + proxyFromWords(in.f.ProxyFrom) + ". Then run rexctl doctor."
 	}
 	return "Make your " + proxyNoun(in.f.Proxy) + " set the X-Forwarded-For header. rexctl proxy config " + string(in.net.server) + " shows how."
 }

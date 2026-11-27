@@ -137,14 +137,17 @@ func judgeClientIP(seen netip.Addr, source string, loopbackDomain bool) (ui.Stat
 	return ui.StateOK, "Fluxer sees this machine as " + seen.String()
 }
 
-func fromSource(seen netip.Addr, source string) bool {
-	source = strings.TrimSpace(source)
-	if a, err := netip.ParseAddr(source); err == nil {
-		a = a.Unmap()
-		return seen == a || a.IsLoopback() && seen.IsLoopback()
-	}
-	if p, err := netip.ParsePrefix(source); err == nil {
-		return p.Contains(seen)
+func fromSource(seen netip.Addr, sources string) bool {
+	for _, source := range settings.TrustedProxyList(sources) {
+		if a, err := netip.ParseAddr(source); err == nil {
+			a = a.Unmap()
+			if seen == a || a.IsLoopback() && seen.IsLoopback() {
+				return true
+			}
+		}
+		if p, err := netip.ParsePrefix(source); err == nil && p.Contains(seen) {
+			return true
+		}
 	}
 	return false
 }

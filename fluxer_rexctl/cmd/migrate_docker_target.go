@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/backup"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/checks"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/deploy"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/envfile"
@@ -188,9 +189,7 @@ func (t *moveBase) install(ctx context.Context, runtimeFlag string) error {
 		return ui.Wrap(err, "Couldn't keep a copy of the services that run the old containers.", "Run "+migrateCommand+" --verbose to see why.")
 	}
 	args := []string{"install", "--runtime", runtimeFlag, "--for-migrate", "--migrate-from", t.inst.Dir, "--dir", t.dir, "--project", t.inst.Project(), "--domain", t.inst.Domain(), "--setup", "browser", "--no-start", "--yes"}
-	if mode := t.chosen[settings.EdgeMode]; mode != "" && mode != settings.EdgeBundled {
-		args = append(args, "--bind", t.chosen[settings.EdgeBind])
-	}
+	args = append(args, installNetworkArgs(t.inst.Domain(), t.chosen)...)
 	if t.app.Flags.Verbose {
 		args = append(args, "--verbose")
 	}
@@ -203,6 +202,26 @@ func (t *moveBase) install(ctx context.Context, runtimeFlag string) error {
 	}
 	target.State.Settings = merged(target.State.Settings, t.chosen)
 	return saveInstance(target)
+}
+
+func installNetworkArgs(domain string, chosen map[string]string) []string {
+	mode := chosen[settings.EdgeMode]
+	if mode == "" || mode == settings.EdgeBundled {
+		return nil
+	}
+	bind := chosen[settings.EdgeBind]
+	args := []string{"--bind", bind}
+	kind := chosen[settings.EdgeProxyKind]
+	if kind == "" && mode == settings.EdgeTunnel {
+		kind = settings.ProxyTunnel
+	}
+	switch {
+	case kind == settings.ProxyLocal || kind == settings.ProxyTunnel:
+		return append(args, "--proxy", kind)
+	case kind == settings.ProxyRemote || !settings.BindIsLoopback(bind) && !checks.OverlayDomain(domain):
+		return append(args, "--proxy", settings.ProxyRemote, "--proxy-from", migratedProxyFrom(chosen[settings.EdgeTrusted]))
+	}
+	return args
 }
 
 func (t *moveBase) open(chosen map[string]string) (*instance.Instance, error) {

@@ -130,7 +130,7 @@ func newInstallCmd(app *App) *cobra.Command {
 	fl.BoolVar(&f.BehindProxy, "behind-proxy", false, "serve plain HTTP for your own reverse proxy or tunnel")
 	fl.StringVar(&f.Bind, "bind", settings.DefaultBind, "address your proxy or tunnel connects to. Implies --behind-proxy")
 	fl.StringVar(&f.Proxy, "proxy", "", "what is in front of Fluxer (local, remote or tunnel). Implies --behind-proxy")
-	fl.StringVar(&f.ProxyFrom, "proxy-from", "", "address your proxy on another machine connects from, with --proxy remote")
+	fl.StringVar(&f.ProxyFrom, "proxy-from", "", "addresses or ranges your proxy on another machine connects from, or private for any private address, with --proxy remote")
 	fl.StringVar(&f.VoiceIP, "voice-ip", "", "public IP address for voice and video (found automatically)")
 	fl.StringVar(&f.MemoryProfile, "memory-profile", "", "use small, medium or large on every start, without sizing Fluxer to this machine")
 	fl.BoolVar(&f.InstallDocker, "install-docker", true, "install Docker if it's missing")
@@ -600,14 +600,19 @@ func validateBind(v string) error {
 }
 
 func validateProxyFrom(v string) error {
-	v = strings.TrimSpace(v)
-	if _, err := netip.ParseAddr(v); err == nil {
-		return nil
+	sources := proxySources(v)
+	bad := len(sources) == 0
+	for _, s := range sources {
+		_, addrErr := netip.ParseAddr(s)
+		_, prefixErr := netip.ParsePrefix(s)
+		if s != proxyFromPrivate && addrErr != nil && prefixErr != nil {
+			bad = true
+		}
 	}
-	if _, err := netip.ParsePrefix(v); err == nil {
-		return nil
+	if bad {
+		return setupInputError("Enter an IP address or range, like 203.0.113.10 or 10.0.0.0/24, or private for any address on your private network. Separate several with commas.")
 	}
-	return setupInputError("Enter an IP address or range, like 203.0.113.10 or 10.0.0.0/24.")
+	return nil
 }
 
 var projectPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]*$`)

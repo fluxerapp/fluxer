@@ -235,9 +235,7 @@ func (in *installer) firewallPorts() []host.Port {
 		out = append(out, host.Port{Number: p.Number, Proto: p.Proto})
 	}
 	if in.f.BehindProxy && in.f.Proxy == settings.ProxyRemote && !settings.BindIsLoopback(in.f.Bind) {
-		if port := bindPortOf(in.f.Bind); port > 0 {
-			out = append(out, host.Port{Number: port, Proto: "tcp", Source: in.f.ProxyFrom})
-		}
+		out = append(out, proxyPorts(in.f.Bind, in.f.ProxyFrom)...)
 	}
 	return out
 }

@@ -580,7 +580,7 @@ rexctl install --runtime docker --domain chat.example.com --behind-proxy --yes
 | `--open-firewall` | On | Open the ports Fluxer needs in ufw or firewalld. Turn it off with `--open-firewall=false`. |
 | `--project string` | `fluxer` | Name for this instance's service, containers and folders. A second Fluxer on one machine gets a free name by itself. |
 | `--proxy string` |  | What is in front of Fluxer (local, remote or tunnel). Implies `--behind-proxy`. |
-| `--proxy-from string` |  | Address your proxy on another machine connects from, with `--proxy remote`. |
+| `--proxy-from string` |  | Addresses or ranges your proxy on another machine connects from, or private for any private address, with `--proxy remote`. |
 | `--registration string` |  | Who can create an account (invite, approval, open or closed). |
 | `--runtime string` |  | Where Fluxer runs, systemd for a service on this machine or docker or podman for one container. Without it, rexctl picks systemd on Debian or Ubuntu as root and one container everywhere else. |
 | `--setup string` |  | Where to create your admin account (terminal or browser). |
@@ -766,7 +766,7 @@ rexctl proxy on --bind 10.0.0.5:8080 --proxy-from 10.0.0.2
 | --- | --- | --- |
 | `--bind string` |  | Address your proxy or tunnel connects to, kept when left out (`127.0.0.1:8080` the first time). |
 | `--proxy string` |  | What is in front of Fluxer (local, remote or tunnel). |
-| `--proxy-from string` |  | Address your proxy connects from, when other machines can connect to `--bind`. |
+| `--proxy-from string` |  | Addresses or ranges your proxy connects from, or private for any private address, when other machines can connect to `--bind`. |
 
 ## rexctl registration
 

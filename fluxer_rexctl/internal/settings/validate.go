@@ -34,7 +34,7 @@ func validText(v string) error {
 	return nil
 }
 
-func trustedProxyList(v string) []string {
+func TrustedProxyList(v string) []string {
 	return strings.FieldsFunc(v, func(r rune) bool { return r == ',' || r == ' ' || r == '\t' })
 }
 
@@ -53,7 +53,7 @@ func validSignatureSecrets(v string) error {
 }
 
 func validTrustedProxies(v string) error {
-	for _, entry := range trustedProxyList(v) {
+	for _, entry := range TrustedProxyList(v) {
 		if entry == "private_ranges" || net.ParseIP(entry) != nil {
 			continue
 		}

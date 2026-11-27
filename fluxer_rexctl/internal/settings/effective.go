@@ -147,7 +147,7 @@ func namedVars(k Key, value string) map[string]string {
 	case Domain:
 		value = NormalDomain(value)
 	case EdgeTrusted:
-		value = strings.Join(trustedProxyList(value), " ")
+		value = strings.Join(TrustedProxyList(value), " ")
 	case StoragePath:
 		if b, err := strconv.ParseBool(value); err == nil {
 			value = strconv.FormatBool(b)
