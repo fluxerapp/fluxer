@@ -42,7 +42,7 @@ import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {FAVORITES_GUILD_ID as ME} from '@fluxer/constants/src/AppConstants';
-import {ChannelTypes, MessageFlags, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
+import {ChannelTypes, MessageFlags} from '@fluxer/constants/src/ChannelConstants';
 import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
 import {StatusTypes} from '@fluxer/constants/src/StatusConstants';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
@@ -286,30 +286,17 @@ class NotificationState {
 		switch (channel.type) {
 			case ChannelTypes.GUILD_TEXT:
 			case ChannelTypes.GUILD_ANNOUNCEMENT:
-			case ChannelTypes.GUILD_VOICE:
-				if (message.type === MessageTypes.DEFAULT) {
-					if (useMacOSNotificationPresentation) {
-						const guild = channel.guildId ? Guilds.getGuild(channel.guildId) : null;
-						const channelPrefix = channel.type === ChannelTypes.GUILD_VOICE ? '' : '#';
-						subtitle = guild ? `${guild.name} ${channelPrefix}${channel.name}` : `${channelPrefix}${channel.name}`;
-					} else {
-						const channelPrefix = channel.type === ChannelTypes.GUILD_VOICE ? '' : '#';
-						title = `${title} (${channelPrefix}${channel.name})`;
-					}
+			case ChannelTypes.GUILD_VOICE: {
+				const guild = channel.guildId ? Guilds.getGuild(channel.guildId) : null;
+				const channelLabel = `${channel.type === ChannelTypes.GUILD_VOICE ? '' : '#'}${channel.name}`;
+				const context = guild ? `${channelLabel}, ${guild.name}` : channelLabel;
+				if (useMacOSNotificationPresentation) {
+					subtitle = context;
 				} else {
-					const guild = channel.guildId ? Guilds.getGuild(channel.guildId) : null;
-					if (guild) {
-						if (useMacOSNotificationPresentation) {
-							title = guild.name;
-							const channelPrefix = channel.type === ChannelTypes.GUILD_VOICE ? '' : '#';
-							subtitle = `${channelPrefix}${channel.name}`;
-						} else {
-							const channelPrefix = channel.type === ChannelTypes.GUILD_VOICE ? '' : '#';
-							title = `${guild.name} (${channelPrefix}${channel.name})`;
-						}
-					}
+					title = `${title} (${context})`;
 				}
 				break;
+			}
 			case ChannelTypes.ANNOUNCEMENT_THREAD:
 			case ChannelTypes.PUBLIC_THREAD:
 			case ChannelTypes.PRIVATE_THREAD: {
