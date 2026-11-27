@@ -17,6 +17,8 @@ import (
 	"strings"
 	"time"
 
+	"go.yaml.in/yaml/v4"
+
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/backup"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/checks"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/deploy"
@@ -60,11 +62,8 @@ func (t *moveBase) preflight(ctx context.Context, chosen map[string]string) erro
 	if err != nil {
 		return err
 	}
-	if slices.ContainsFunc(strings.Split(string(custom), "\n"), func(line string) bool {
-		line = strings.TrimSpace(line)
-		return line != "" && !strings.HasPrefix(line, "#")
-	}) {
-		return noNativeEquivalent(instance.CustomCompose+" changes the "+engineName(t.inst)+" services, and the new layout has none.", "Move what it does into rexctl config set, then empty it with rexctl config edit --compose.")
+	if !onlyVolumePins(custom, t.inst.Project()) {
+		return noNativeEquivalent(instance.CustomCompose+" changes the "+engineName(t.inst)+" services, and the new layout has none.", "Move what it does into rexctl config set, then empty it with rexctl config edit --compose. It may keep volumes that only set external: true and their usual name, such as "+t.inst.Project()+"_"+stack.SeaweedFSVolume+".")
 	}
 	if len(t.inst.State.Voice) > 0 {
 		ids := make([]string, len(t.inst.State.Voice))
@@ -91,6 +90,52 @@ func (t *moveBase) preflight(ctx context.Context, chosen map[string]string) erro
 		}
 	}
 	return nil
+}
+
+func onlyVolumePins(custom []byte, project string) bool {
+	dec := yaml.NewDecoder(bytes.NewReader(custom))
+	for {
+		var doc map[string]any
+		err := dec.Decode(&doc)
+		if errors.Is(err, io.EOF) {
+			return true
+		}
+		if err != nil || !volumePinsDoc(doc, project) {
+			return false
+		}
+	}
+}
+
+func volumePinsDoc(doc map[string]any, project string) bool {
+	for key, value := range doc {
+		if key != "volumes" {
+			return false
+		}
+		if value == nil {
+			continue
+		}
+		vols, ok := value.(map[string]any)
+		if !ok {
+			return false
+		}
+		for short, def := range vols {
+			if !volumePin(short, def, project) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func volumePin(short string, def any, project string) bool {
+	if _, ok := stack.DataMounts[short]; !ok {
+		return false
+	}
+	fields, ok := def.(map[string]any)
+	if !ok || len(fields) != 2 || fields["external"] != true || fields["name"] != project+"_"+short {
+		return false
+	}
+	return true
 }
 
 func (t *moveBase) savedUnitPaths() []string {

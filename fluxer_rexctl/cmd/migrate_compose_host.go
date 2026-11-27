@@ -154,7 +154,7 @@ func (h *composeHost) CheckObjects(ctx context.Context) error {
 		return err
 	}
 	for _, v := range vols {
-		if v.Labels[composeVolumeLabel] == stack.SeaweedFSVolume && v.Mountpoint != "" {
+		if (v.Labels[composeVolumeLabel] == stack.SeaweedFSVolume || v.Name == h.inst.Project()+"_"+stack.SeaweedFSVolume) && v.Mountpoint != "" {
 			if err := migrate.CheckSpace(v.Mountpoint, v.Mountpoint); err != nil && !errors.Is(err, os.ErrPermission) {
 				return err
 			}
