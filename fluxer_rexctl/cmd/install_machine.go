@@ -153,6 +153,9 @@ func (in *installer) checkFix(fix string) string {
 }
 
 func (in *installer) rerun() string {
+	if in.f.ForMigrate {
+		return migrateCommand
+	}
 	args := []string{"rexctl", "install"}
 	if in.native {
 		args = []string{"sudo", "rexctl", "install"}

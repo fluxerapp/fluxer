@@ -202,6 +202,7 @@ func runInstall(ctx context.Context, app *App, c *cobra.Command, f *installFlags
 	case err == nil:
 		return nil
 	case f.ForMigrate:
+		app.handOver(err)
 		app.UI.Detail("%v", err)
 		return &ui.ExitError{Code: ui.CodeOf(err)}
 	}

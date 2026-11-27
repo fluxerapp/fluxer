@@ -485,6 +485,7 @@ var envVars = []envVar{
 	{"REXCTL_GLYPHS", "rexctl", "`ascii` or `unicode` to choose the symbols rexctl draws, when it picks the wrong ones for your terminal."},
 	{"REXCTL_NO_REX", "rexctl", "Set it to any value to hide Rex, the dinosaur in rexctl's output."},
 	{"REXCTL_REDUCED_MOTION", "rexctl", "Set it to any value to stop rexctl animating its output. Steps and progress still show."},
+	{"REXCTL_ERROR_FILE", "rexctl", "A file where rexctl writes the error it stops with, as JSON. `rexctl migrate` sets it for the commands it runs itself, so it can show why one failed."},
 	{"REXCTL_TEST_INSECURE_PROXY", "rexctl", "Set it to `1` to let rexctl accept any certificate when it checks your reverse proxy. Only tests use it."},
 	{"VISUAL", "rexctl", "The editor `rexctl config edit` opens. When it's empty, rexctl uses `EDITOR`."},
 	{"EDITOR", "rexctl", "The editor `rexctl config edit` opens when `VISUAL` is empty. When both are empty, rexctl uses Notepad on Windows and nano or vi elsewhere."},

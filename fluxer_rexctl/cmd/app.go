@@ -51,6 +51,7 @@ type App struct {
 	warned     bool
 	located    *instance.Located
 	command    string
+	errorFile  string
 
 	keepLayout bool
 }

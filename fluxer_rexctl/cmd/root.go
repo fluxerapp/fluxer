@@ -4,6 +4,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -22,7 +23,8 @@ func Execute(version, commit string) int {
 	}
 	os.Args = append(os.Args[:1:1], takeSudoEnv(os.Args[1:], ranWithSudo(), os.Setenv)...)
 	ui.PrepareConsole(os.Stdout, os.Stderr)
-	app := &App{Version: version, Commit: commit, UI: ui.New(ui.Options{})}
+	app := &App{Version: version, Commit: commit, UI: ui.New(ui.Options{}), errorFile: os.Getenv(childErrorEnv)}
+	_ = os.Unsetenv(childErrorEnv)
 	root := newRoot(app)
 	root.Version = versionString(version, commit)
 	ctx, stop := ui.SignalContext()
@@ -289,7 +291,53 @@ func groupCommands(root *cobra.Command) {
 	}
 }
 
+const childErrorEnv = "REXCTL_ERROR_FILE"
+
+type childError struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Fix     string `json:"fix"`
+	err     error
+}
+
+func (e *childError) Error() string { return e.err.Error() }
+
+func (e *childError) Unwrap() error { return e.err }
+
+func (a *App) handOver(err error) {
+	if a.errorFile == "" || err == nil || errors.Is(err, context.Canceled) {
+		return
+	}
+	c := childError{Code: ui.CodeOf(err), Message: ui.Sentence(err.Error())}
+	var ee *ui.ExitError
+	if errors.As(err, &ee) {
+		c.Message, c.Fix = ee.Msg, ee.Fix
+		if c.Message == "" && ee.Err != nil {
+			c.Message = ui.Sentence(ee.Err.Error())
+		}
+	}
+	if c.Message == "" {
+		return
+	}
+	if data, jerr := json.Marshal(c); jerr == nil {
+		_ = os.WriteFile(a.errorFile, data, 0o600)
+	}
+}
+
+func childFailure(err error, report string) error {
+	if err == nil || report == "" {
+		return err
+	}
+	data, rerr := os.ReadFile(report)
+	c := &childError{err: err}
+	if rerr != nil || json.Unmarshal(data, c) != nil || c.Message == "" {
+		return err
+	}
+	return c
+}
+
 func (a *App) handleError(err error) {
+	a.handOver(err)
 	var ee *ui.ExitError
 	if errors.As(err, &ee) {
 		a.UI.ReportError(ee)

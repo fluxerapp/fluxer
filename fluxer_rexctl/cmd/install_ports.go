@@ -65,6 +65,9 @@ func (in *installer) checkDNS(ctx context.Context, c *ui.Checklist) error {
 		if r.Status != checks.Fail {
 			return nil
 		}
+		if in.f.ForMigrate {
+			return ui.Refused(r.Message, in.checkFix(r.Fix))
+		}
 		if !in.app.UI.Interactive() {
 			return ui.Refused(r.Message, strings.TrimSpace(r.Fix+" Or, if a proxy or tunnel is in front of Fluxer, run "+in.rerun()+" --behind-proxy."))
 		}
@@ -108,7 +111,11 @@ func (in *installer) planLowPorts(c *ui.Checklist) error {
 	if in.f.BehindProxy || !in.rootlessPodman() || !host.LowPortsBlocked(true) {
 		return nil
 	}
-	refusal := ui.Refused("Fluxer can't serve HTTPS from rootless Podman without ports 80 and 443.", "Run "+in.rerun()+" --behind-proxy to use your own reverse proxy or tunnel instead.")
+	fix := "Run " + in.rerun() + " --behind-proxy to use your own reverse proxy or tunnel instead."
+	if in.f.ForMigrate {
+		fix = "Put your own reverse proxy or tunnel in front with rexctl proxy on. Then run " + migrateCommand + " again."
+	}
+	refusal := ui.Refused("Fluxer can't serve HTTPS from rootless Podman without ports 80 and 443.", fix)
 	if err := in.allowed("setup-podman", in.f.SetupPodman, refusal); err != nil {
 		return err
 	}

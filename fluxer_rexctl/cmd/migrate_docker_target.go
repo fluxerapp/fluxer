@@ -4,6 +4,7 @@ package cmd
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -194,7 +195,7 @@ func (t *moveBase) install(ctx context.Context, runtimeFlag string) error {
 		args = append(args, "--verbose")
 	}
 	if err := t.selfQuiet(ctx, args...); err != nil {
-		return ui.Wrap(err, fmt.Sprintf("Couldn't set up the new instance in %s.", t.dir), "Run "+migrateCommand+" --verbose to see why.")
+		return installFailed(t.dir, err)
 	}
 	target, err := instance.Find(t.dir)
 	if err != nil {
@@ -222,6 +223,17 @@ func installNetworkArgs(domain string, chosen map[string]string) []string {
 		return append(args, "--proxy", settings.ProxyRemote, "--proxy-from", migratedProxyFrom(chosen[settings.EdgeTrusted]))
 	}
 	return args
+}
+
+func installFailed(dir string, err error) error {
+	msg := fmt.Sprintf("Couldn't set up the new instance in %s.", dir)
+	fix := "Run " + migrateCommand + " --verbose to see why."
+	var child *childError
+	if errors.As(err, &child) {
+		msg += " " + child.Message
+		fix = cmp.Or(child.Fix, fix)
+	}
+	return ui.Wrap(err, msg, fix)
 }
 
 func (t *moveBase) open(chosen map[string]string) (*instance.Instance, error) {
@@ -305,18 +317,26 @@ func oneWayMove(old *instance.Instance, to string) bool {
 const selfWaitDelay = 10 * time.Minute
 
 func (t *moveBase) selfQuiet(ctx context.Context, args ...string) error {
+	var report string
+	var env []string
+	if f, err := os.CreateTemp("", "rexctl-error-*.json"); err == nil {
+		report = f.Name()
+		_ = f.Close()
+		defer os.Remove(report)
+		env = []string{childErrorEnv + "=" + report}
+	}
 	if t.app.Flags.Verbose {
-		return t.self(ctx, migrateOutput(t.app), args...)
+		return childFailure(t.self(ctx, migrateOutput(t.app), env, args...), report)
 	}
 	var out bytes.Buffer
-	err := t.self(ctx, &out, args...)
+	err := t.self(ctx, &out, env, args...)
 	if err != nil {
 		_, _ = out.WriteTo(migrateOutput(t.app))
 	}
-	return err
+	return childFailure(err, report)
 }
 
-func (t *moveBase) self(ctx context.Context, w io.Writer, args ...string) error {
+func (t *moveBase) self(ctx context.Context, w io.Writer, env []string, args ...string) error {
 	bin, err := os.Executable()
 	if err != nil {
 		return err
@@ -326,6 +346,9 @@ func (t *moveBase) self(ctx context.Context, w io.Writer, args ...string) error 
 	c.WaitDelay = selfWaitDelay
 	c.Stdin = nil
 	c.Stdout, c.Stderr = w, w
+	if len(env) > 0 {
+		c.Env = append(os.Environ(), env...)
+	}
 	return c.Run()
 }
 

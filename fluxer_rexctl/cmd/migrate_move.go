@@ -391,7 +391,7 @@ func runUndoMove(ctx context.Context, app *App, inst *instance.Instance, confirm
 		return err
 	}
 	runner := &moveBase{app: app, inst: old}
-	if err := runner.self(ctx, migrateOutput(app), "backup", "--dir", moved.Dir); err != nil {
+	if err := runner.self(ctx, migrateOutput(app), nil, "backup", "--dir", moved.Dir); err != nil {
 		return ui.Wrap(err, "Couldn't back up the new instance, so rexctl didn't go back.", "Run rexctl backup --dir "+shellWord(moved.Dir)+" to see why.")
 	}
 	s := readSchedules(ctx, moved)
