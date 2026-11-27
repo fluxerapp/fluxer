@@ -251,6 +251,16 @@ func HoldsReleases(dir string) bool {
 	return false
 }
 
+func HoldsOnlyDownload(dir, version string) bool {
+	for _, name := range []string{currentLink, PreviousLink} {
+		if _, err := os.Lstat(filepath.Join(dir, name)); err == nil {
+			return false
+		}
+	}
+	entries, err := os.ReadDir(filepath.Join(dir, releasesDirName))
+	return err == nil && len(entries) == 1 && entries[0].IsDir() && entries[0].Name() == version
+}
+
 func (s *Stack) previous() string { return s.Inst.Path(PreviousLink) }
 
 func (s *Stack) Flip(version string) error {

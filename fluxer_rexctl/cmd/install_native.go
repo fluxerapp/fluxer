@@ -41,7 +41,7 @@ func (in *installer) nativeFlags(ctx context.Context) error {
 
 func (in *installer) nativeTarget() error {
 	dir := in.dir
-	if native.HoldsReleases(dir) {
+	if native.HoldsReleases(dir) && !(in.f.ForMigrate && native.HoldsOnlyDownload(dir, stack.EmbeddedRelease())) {
 		return ui.Refused(fmt.Sprintf("%s already holds a Fluxer that runs as %s.", dir, host.StandaloneNativeUnit), "Pass --dir with another folder, or keep using that install.")
 	}
 	if err := nativeFolder(dir, "--dir"); err != nil {
