@@ -1469,7 +1469,7 @@ The admin panel can also save the Bluesky settings and keys, and its values win.
 </div>
 <div class="flx-setting" id="fluxer_geoip_db_path">
 <dt>`FLUXER_GEOIP_DB_PATH`</dt>
-<dd>Where the api and worker load the MaxMind GeoIP database from, as a file path or an `s3://bucket/key` URL. An s3 URL needs a `download_path` query parameter with an absolute path.</dd>
+<dd>The MaxMind GeoLite2 or GeoIP2 database the api and worker use to look up where an IP address is. It takes a file path or an `s3://bucket/key` URL, and an s3 URL needs a `download_path` query parameter with an absolute path. rexctl also calls it `geoip.database`.</dd>
 </div>
 <div class="flx-setting" id="fluxer_klipy_api_key">
 <dt>`FLUXER_KLIPY_API_KEY`</dt>

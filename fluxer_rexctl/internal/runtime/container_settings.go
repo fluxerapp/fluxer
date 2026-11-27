@@ -109,6 +109,10 @@ func (c containerSettings) hostPath(p *deploy.Prepared) error {
 			continue
 		}
 		for _, w := range strings.Fields(p.Settings[k]) {
+			if strings.HasPrefix(w, "/") && !native.MappedPath(w) && k == settings.GeoIPVar {
+				return ui.Refused(k+" points at "+w+" on this machine, and Fluxer's container can't see files outside its own folders.",
+					"Run rexctl config set "+settings.GeoIPDatabase+"="+w+" instead, and rexctl copies the file into the instance.")
+			}
 			if strings.HasPrefix(w, "/") && !native.MappedPath(w) {
 				return ui.Refused(k+" points at "+w+" on this machine, and Fluxer's container can't see files outside its own folders.",
 					"Copy the file into "+c.r.inst.Path(instance.CertsDir)+", then set "+k+" to /certs/"+filepath.Base(w)+".")

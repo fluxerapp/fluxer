@@ -394,7 +394,7 @@ func (s *Stack) CheckRestore(ctx context.Context, set *stack.Set, archive string
 
 const instanceFilesDir = ".instance-files"
 
-var InstanceFiles = []string{instance.StateDirName + "/" + instance.StateFileName, instance.CertsDir, instance.CADir, instance.CaddyDropInDir}
+var InstanceFiles = []string{instance.StateDirName + "/" + instance.StateFileName, instance.CertsDir, instance.GeoIPDir, instance.CADir, instance.CaddyDropInDir}
 
 func (s *Stack) stageInstanceFiles(spool *os.Root) (string, error) {
 	dir := filepath.Join(s.spoolDir(), instanceFilesDir)

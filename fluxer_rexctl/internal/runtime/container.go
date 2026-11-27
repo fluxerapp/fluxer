@@ -3,6 +3,7 @@
 package runtime
 
 import (
+	"archive/tar"
 	"bufio"
 	"bytes"
 	"context"
@@ -14,6 +15,7 @@ import (
 	"maps"
 	"net"
 	"os"
+	"path"
 	"regexp"
 	"slices"
 	"strconv"
@@ -200,6 +202,8 @@ type containerEngine interface {
 	RunOnce(ctx context.Context, s engine.SingleSpec, stdin io.Reader, stdout, stderr io.Writer) error
 	ReadSingleFile(ctx context.Context, name, path string) ([]byte, error)
 	WriteSingleFiles(ctx context.Context, name, dir string, uid, gid int, files ...engine.File) error
+	WriteSingleTar(ctx context.Context, name, dir string, content io.Reader) error
+	SingleFileSize(ctx context.Context, name, path string) (int64, error)
 	SingleLogs(ctx context.Context, name string, o engine.LogsOptions, w io.Writer) error
 	VolumeExists(ctx context.Context, name string) (bool, error)
 	CopyOut(ctx context.Context, name, path string, fn func(name string, size int64, r io.Reader) error) error
@@ -427,6 +431,7 @@ func (r *containerRT) push(ctx context.Context, e containerEngine, set *stack.Se
 		{Name: "fluxer.env", Data: envData, Mode: 0o600},
 		{Name: containerSecrets, Data: secretsData, Mode: 0o600},
 	}, hostFiles(r.inst)...)
+	changed := false
 	for _, f := range files {
 		if f.Data == nil {
 			continue
@@ -439,9 +444,83 @@ func (r *containerRT) push(ctx context.Context, e containerEngine, set *stack.Se
 		case bytes.Equal(have, f.Data):
 			continue
 		}
-		return true, e.WriteSingleFiles(ctx, r.name(), ContainerData, ContainerUID, ContainerUID, files...)
+		if err := e.WriteSingleFiles(ctx, r.name(), ContainerData, ContainerUID, ContainerUID, files...); err != nil {
+			return false, err
+		}
+		changed = true
+		break
 	}
-	return false, nil
+	pushed, err := r.pushGeoIP(ctx, e, set)
+	return changed || pushed, err
+}
+
+func (r *containerRT) pushGeoIP(ctx context.Context, e containerEngine, set *stack.Set) (bool, error) {
+	env, err := r.environment(set)
+	if err != nil {
+		return false, err
+	}
+	dir := native.ContainerFiles + "/" + instance.GeoIPDir
+	name, ok := strings.CutPrefix(strings.TrimSpace(env[settings.GeoIPVar]), dir+"/")
+	if !ok || name == "" || strings.Contains(name, "/") {
+		if _, err := e.SingleFileSize(ctx, r.name(), dir); errors.Is(err, engine.ErrNoFile) {
+			return false, nil
+		}
+		_ = e.ExecSingle(ctx, r.name(), engine.ExecOptions{}, "rm", "-rf", dir)
+		return false, nil
+	}
+	src := r.inst.Path(instance.GeoIPDir, name)
+	fi, err := os.Stat(src)
+	if err != nil {
+		return false, nil
+	}
+	size, err := e.SingleFileSize(ctx, r.name(), dir+"/"+name)
+	switch {
+	case errors.Is(err, engine.ErrNoFile):
+	case err != nil:
+		return false, err
+	case size == fi.Size():
+		return false, nil
+	}
+	if err := r.streamFile(ctx, e, src, path.Join(strings.TrimPrefix(dir, ContainerData+"/"), name), fi.Size()); err != nil {
+		return false, err
+	}
+	_ = e.ExecSingle(ctx, r.name(), engine.ExecOptions{}, "find", dir, "-maxdepth", "1", "-type", "f", "!", "-name", name, "-delete")
+	return true, nil
+}
+
+func (r *containerRT) streamFile(ctx context.Context, e containerEngine, src, name string, size int64) error {
+	f, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	pr, pw := io.Pipe()
+	go func() {
+		tw := tar.NewWriter(pw)
+		now := time.Now()
+		var chain []string
+		for d := path.Dir(name); d != "." && d != "/"; d = path.Dir(d) {
+			chain = append([]string{d}, chain...)
+		}
+		for _, d := range chain {
+			if err := tw.WriteHeader(&tar.Header{Name: d + "/", Mode: 0o700, Uid: ContainerUID, Gid: ContainerUID, ModTime: now, Typeflag: tar.TypeDir}); err != nil {
+				pw.CloseWithError(err)
+				return
+			}
+		}
+		if err := tw.WriteHeader(&tar.Header{Name: name, Mode: 0o600, Size: size, Uid: ContainerUID, Gid: ContainerUID, ModTime: now, Typeflag: tar.TypeReg}); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+		if _, err := io.CopyN(tw, f, size); err != nil {
+			pw.CloseWithError(err)
+			return
+		}
+		pw.CloseWithError(tw.Close())
+	}()
+	err = e.WriteSingleTar(ctx, r.name(), ContainerData, pr)
+	pr.CloseWithError(err)
+	return err
 }
 
 func hostFiles(inst *instance.Instance) []engine.File {

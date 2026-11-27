@@ -67,6 +67,7 @@ const (
 	IPv6            = "network.ipv6"
 	ssoPrivate      = "sso.allow_private_addresses"
 	SignedMedia     = "media.signed_attachments"
+	GeoIPDatabase   = "geoip.database"
 	ImagesRegistry  = "images.registry"
 	MemoryProfile   = "memory.profile"
 	DiskProfile     = "disk.profile"
@@ -147,7 +148,9 @@ const (
 	acmeCAVar       = "FLUXER_EDGE_ACME_CA"
 	acmeRootVar     = "FLUXER_EDGE_ACME_CA_ROOT"
 	ACMERootFile    = "acme-ca-root.pem"
+	GeoIPVar        = "FLUXER_GEOIP_DB_PATH"
 	CertsMountPoint = "/certs/"
+	GeoIPMountPoint = "/geoip/"
 )
 
 const (
@@ -226,6 +229,8 @@ func buildNamed() []Key {
 		{Name: SignedMedia, Type: "choice", Vars: []string{SignatureModeVar}, Options: []string{"off", "report", "enforce"}, Validate: oneOf("off", "report", "enforce"),
 			Confirm: "With enforce, attachment links without a valid signature stop working. That includes links copied out of Fluxer more than a day ago, links a bot saved and data packages made before signing was on. Fluxer's apps get new links by themselves.",
 			Help:    "Whether attachment downloads need a signed link"},
+		{Name: GeoIPDatabase, Type: "file", Vars: []string{GeoIPVar}, Validate: validText, Takes: "the path to a MaxMind .mmdb file on this machine",
+			Help: "The MaxMind GeoLite2 or GeoIP2 database the api and worker use to look up where an IP address is"},
 		{Name: ImagesRegistry, Type: "registry", Validate: validRegistry,
 			Help: "A registry mirror for the database, cache, queue, search, storage, voice and edge images"},
 		{Name: MemoryProfile, Type: "choice", Options: []string{"small", "medium", "large"}, Validate: oneOf("small", "medium", "large"),

@@ -507,7 +507,7 @@ func backupLocationProblem(ctx context.Context, app *App, inst *instance.Instanc
 	if instance.RealPath(inst.Dir) == real {
 		return refuse(fmt.Sprintf("%s is your instance folder, and every backup copies the files in it.", dir))
 	}
-	for _, sub := range []string{instance.StateDirName, instance.CertsDir, instance.CADir, instance.CaddyDropInDir} {
+	for _, sub := range []string{instance.StateDirName, instance.CertsDir, instance.GeoIPDir, instance.CADir, instance.CaddyDropInDir} {
 		if within(instance.RealPath(inst.Path(sub)), real) {
 			return refuse(fmt.Sprintf("%s is inside %s, which every backup copies.", dir, inst.Path(sub)))
 		}

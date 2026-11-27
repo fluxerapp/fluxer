@@ -40,6 +40,7 @@ const (
 	stackDir       = "stack"
 	BackupsDir     = "backups"
 	CertsDir       = "certs"
+	GeoIPDir       = "geoip"
 	CADir          = "ca"
 	CaddyDropInDir = "caddy.d"
 	CaddySitesDir  = "caddy.d/sites"

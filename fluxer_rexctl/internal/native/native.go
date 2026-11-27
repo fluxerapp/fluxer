@@ -379,13 +379,14 @@ const (
 func PathKey(key string) bool { return slices.Contains(pathKeys, key) }
 
 func MappedPath(path string) bool {
-	return strings.HasPrefix(path, certsPrefix) || strings.HasPrefix(path, stack.NodeCADir+"/")
+	return strings.HasPrefix(path, certsPrefix) || strings.HasPrefix(path, settings.GeoIPMountPoint) || strings.HasPrefix(path, stack.NodeCADir+"/")
 }
 
 func translatePaths(env map[string]string, dir string) {
 	prefixes := [][2]string{
 		{stack.NodeCADir + "/", filepath.Join(dir, instance.CADir) + "/"},
 		{certsPrefix, filepath.Join(dir, instance.CertsDir) + "/"},
+		{settings.GeoIPMountPoint, filepath.Join(dir, instance.GeoIPDir) + "/"},
 	}
 	for _, k := range pathKeys {
 		v, ok := env[k]

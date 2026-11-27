@@ -636,7 +636,7 @@ rexctl config set storage.secret_key -`,
 		if err != nil {
 			return err
 		}
-		restore, err := stagePEMFiles(v, changes)
+		restore, err := stagePEMFiles(c.Context(), app, v, changes)
 		if err != nil {
 			return err
 		}
@@ -653,7 +653,7 @@ rexctl config set storage.secret_key -`,
 	return set
 }
 
-func stagePEMFiles(v *configView, changes []configChange) (func(), error) {
+func stagePEMFiles(ctx context.Context, app *App, v *configView, changes []configChange) (func(), error) {
 	var undo []func()
 	restore := func() {
 		for _, u := range slices.Backward(undo) {
@@ -662,7 +662,20 @@ func stagePEMFiles(v *configView, changes []configChange) (func(), error) {
 	}
 	for i, ch := range changes {
 		k, err := v.lookup(ch.name)
-		if err != nil || k.Type != "pem" || strings.TrimSpace(*ch.value) == "" {
+		if err != nil || ch.value == nil || strings.TrimSpace(*ch.value) == "" {
+			continue
+		}
+		if k.Name == settings.GeoIPDatabase {
+			value, u, err := stageGeoIP(ctx, app, v.inst, strings.TrimSpace(*ch.value))
+			if err != nil {
+				restore()
+				return nil, err
+			}
+			undo = append(undo, u)
+			changes[i].value = &value
+			continue
+		}
+		if k.Type != "pem" {
 			continue
 		}
 		u, err := savePEM(strings.TrimSpace(*ch.value), v.inst.Path(instance.CertsDir), settings.ACMERootFile, "Pass the path to a PEM file on this machine.")
@@ -728,7 +741,13 @@ func changeConfig(ctx context.Context, app *App, changes []configChange, extra m
 		}
 	}
 	return app.Locked(ctx, v.inst, func() error {
-		return applyConfig(ctx, app, v.inst, v.rt, deployment, admin, extra)
+		if err := applyConfig(ctx, app, v.inst, v.rt, deployment, admin, extra); err != nil {
+			return err
+		}
+		if geoIPChanged(deployment) {
+			pruneGeoIP(v.inst)
+		}
+		return nil
 	})
 }
 
@@ -742,6 +761,9 @@ func (v *configView) split(changes []configChange) (map[string]*string, []adminC
 		}
 		if k.Kind != settings.Instance {
 			deployment[k.Name] = ch.value
+			if k.Name == settings.GeoIPDatabase && ch.value == nil && strings.TrimSpace(v.inst.State.Settings[settings.GeoIPVar]) != "" {
+				deployment[settings.GeoIPVar] = nil
+			}
 			continue
 		}
 		ac, err := parseAdminChange(v.schema, k.Name, ch.value)

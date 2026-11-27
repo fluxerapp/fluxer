@@ -529,6 +529,21 @@ func (e *Engine) ReadSingleTar(ctx context.Context, name, path string) (io.ReadC
 	return res.Content, nil
 }
 
+func (e *Engine) SingleFileSize(ctx context.Context, name, path string) (int64, error) {
+	c, err := e.api()
+	if err != nil {
+		return 0, err
+	}
+	res, err := c.ContainerStatPath(ctx, name, client.ContainerStatPathOptions{Path: path})
+	if cerrdefs.IsNotFound(err) {
+		return 0, fmt.Errorf("%w: %s", ErrNoFile, path)
+	}
+	if err != nil {
+		return 0, e.single("stat", err)
+	}
+	return res.Stat.Size, nil
+}
+
 func (e *Engine) WriteSingleTar(ctx context.Context, name, dir string, content io.Reader) error {
 	c, err := e.api()
 	if err != nil {
