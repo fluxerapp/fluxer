@@ -9,22 +9,24 @@ const {toc} = Astro.locals.starlightRoute;
 
 {
 	toc && (
-		<mobile-starlight-toc data-min-h={toc.minHeadingLevel} data-max-h={toc.maxHeadingLevel}>
-			<nav aria-labelledby="starlight__on-this-page--mobile">
-				<details id="starlight__mobile-toc">
-					<summary id="starlight__on-this-page--mobile" class="sl-flex">
-						<span class="toggle sl-flex">
-							{Astro.locals.t('tableOfContents.onThisPage')}
-							<Icon name="right-caret" class="caret" size="1rem" />
-						</span>
-						<span class="display-current">{toc.items[0]?.text}</span>
-					</summary>
-					<div class="dropdown">
-						<TableOfContentsList toc={toc.items} isMobile markFirst />
-					</div>
-				</details>
-			</nav>
-		</mobile-starlight-toc>
+		<>
+			<mobile-starlight-toc>
+				<nav aria-labelledby="starlight__on-this-page--mobile">
+					<details id="starlight__mobile-toc">
+						<summary id="starlight__on-this-page--mobile" class="sl-flex">
+							<span class="toggle sl-flex">
+								{Astro.locals.t('tableOfContents.onThisPage')}
+								<Icon name="right-caret" class="caret" size="1rem" />
+							</span>
+							<span class="display-current">{toc.items[0]?.text}</span>
+						</summary>
+						<div class="dropdown">
+							<TableOfContentsList toc={toc.items} isMobile markFirst />
+						</div>
+					</details>
+				</nav>
+			</mobile-starlight-toc>
+		</>
 	)
 }
 
@@ -120,6 +122,14 @@ const {toc} = Astro.locals.starlightRoute;
 			if (display) {
 				display.textContent = link.textContent;
 			}
+		}
+
+		protected override scroller(): HTMLElement | null {
+			const dropdown = this.querySelector<HTMLElement>('.dropdown');
+			if (!dropdown || dropdown.clientHeight === 0) {
+				return null;
+			}
+			return dropdown;
 		}
 
 		constructor() {

@@ -6,3 +6,51 @@ import Pagination from '@/components/Pagination.astro';
 <footer class="sl-flex">
 	<Pagination />
 </footer>
+<script is:inline id="flx-content-end" aria-hidden="true">
+	(() => {
+		try {
+			const entry = performance.getEntriesByType('navigation')[0];
+			const type = entry ? entry.type : 'navigate';
+			const restoring = type === 'reload' || type === 'back_forward';
+			const key = 'flx-scroll:' + location.pathname;
+			addEventListener('pagehide', () => {
+				try {
+					sessionStorage.setItem(key, String(Math.round(scrollY)));
+				} catch {}
+			});
+			if (restoring) {
+				const y = Number(sessionStorage.getItem(key));
+				if (y > 0 && Math.abs(scrollY - y) > 1) scrollTo(0, y);
+				const scroller = document.querySelector('.right-sidebar');
+				if (scroller) {
+					const top = Number(sessionStorage.getItem('flx-toc-scroll:' + location.pathname));
+					if (top > 0) scroller.scrollTop = top;
+					scroller.style.removeProperty('visibility');
+				}
+			}
+			if (!restoring && location.hash.length < 2) return;
+			const header = document.querySelector('header');
+			const navHeight = header ? header.getBoundingClientRect().height : 0;
+			for (const toc of document.querySelectorAll('starlight-toc, mobile-starlight-toc')) {
+				const summary = toc.querySelector('summary');
+				const line = navHeight + (summary ? summary.getBoundingClientRect().height : 0) + 172;
+				const links = Array.from(toc.querySelectorAll('a[href^="#"]'));
+				let match = restoring ? undefined : links.find((link) => link.hash === location.hash);
+				if (!match) {
+					match = links[0];
+					for (const link of links) {
+						const heading = document.getElementById(decodeURIComponent(link.hash.slice(1)));
+						if (!heading) continue;
+						if (heading.getBoundingClientRect().top > line) break;
+						match = link;
+					}
+				}
+				if (!match) continue;
+				for (const link of toc.querySelectorAll('a[aria-current]')) link.removeAttribute('aria-current');
+				match.setAttribute('aria-current', 'true');
+				const label = toc.querySelector('.display-current');
+				if (label) label.textContent = match.textContent;
+			}
+		} catch {}
+	})();
+</script>

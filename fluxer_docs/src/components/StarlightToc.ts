@@ -1,16 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-const PAGE_TITLE_ID = '_top';
 const READING_BAND = 140;
+
+interface Section {
+	heading: HTMLElement;
+	link: HTMLAnchorElement;
+}
+
+function navigationType(): string {
+	const entry = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+	return entry?.type ?? 'navigate';
+}
 
 export class FluxerStarlightTOC extends HTMLElement {
 	private _current = this.querySelector<HTMLAnchorElement>('a[aria-current="true"]');
-	private minH = Number.parseInt(this.dataset.minH || '2', 10);
-	private maxH = Number.parseInt(this.dataset.maxH || '3', 10);
-
-	private tocHeadingSelector =
-		`h1#${PAGE_TITLE_ID},` +
-		`:where(${[...Array.from({length: 1 + this.maxH - this.minH}).map((_, index) => `h${this.minH + index}`)].join()})[id]`;
+	private sections: Array<Section> = [];
+	private settled = false;
+	private frame = 0;
+	private pinned: string | null = null;
+	private pinnedY: number | null = null;
 
 	protected set current(link: HTMLAnchorElement) {
 		if (link === this._current) {
@@ -24,19 +32,95 @@ export class FluxerStarlightTOC extends HTMLElement {
 		this.keepInView(link);
 	}
 
-	private keepInView(link: HTMLAnchorElement): void {
-		const scroller = this.closest<HTMLElement>('.right-sidebar');
-		if (!scroller || scroller.clientHeight === 0) {
+	constructor() {
+		super();
+		this.sections = this.collectSections();
+		if (this.sections.length === 0) {
 			return;
 		}
-		const box = scroller.getBoundingClientRect();
-		const item = link.getBoundingClientRect();
-		const margin = 48;
-		if (item.top < box.top + margin) {
-			scroller.scrollTop -= box.top + margin - item.top;
-		} else if (item.bottom > box.bottom - margin) {
-			scroller.scrollTop += item.bottom - (box.bottom - margin);
+		const restoring = navigationType() === 'reload' || navigationType() === 'back_forward';
+		if (!restoring && location.hash.length > 1) {
+			this.pin(location.hash);
 		}
+		const waiting =
+			document.readyState !== 'complete' && window.scrollY === 0 && (restoring || location.hash.length > 1);
+		if (!waiting) {
+			this.update();
+		}
+		if (document.readyState !== 'complete') {
+			addEventListener('load', () => this.update(), {once: true});
+		}
+		addEventListener('scroll', this.schedule, {passive: true});
+		addEventListener('resize', this.schedule, {passive: true});
+		addEventListener('hashchange', () => {
+			if (this.pinned !== location.hash) {
+				this.pin(location.hash);
+			}
+			this.schedule();
+		});
+		for (const {link} of this.sections) {
+			link.addEventListener('click', () => {
+				this.pin(link.hash);
+				this.schedule();
+			});
+		}
+	}
+
+	private collectSections(): Array<Section> {
+		const sections: Array<Section> = [];
+		for (const link of this.querySelectorAll<HTMLAnchorElement>('a[href^="#"]')) {
+			const heading = document.getElementById(decodeURIComponent(link.hash.slice(1)));
+			if (heading) {
+				sections.push({heading, link});
+			}
+		}
+		return sections;
+	}
+
+	private pin(hash: string): void {
+		this.pinned = hash;
+		this.pinnedY = null;
+	}
+
+	private schedule = (): void => {
+		if (this.frame !== 0) {
+			return;
+		}
+		this.frame = requestAnimationFrame(() => {
+			this.frame = 0;
+			this.update();
+		});
+	};
+
+	private update(): void {
+		const link = this.pick();
+		if (link) {
+			this.current = link;
+		}
+		this.settled = true;
+	}
+
+	private pick(): HTMLAnchorElement | undefined {
+		if (this.pinned !== null) {
+			const pinned = this.sections.find((section) => section.link.hash === this.pinned);
+			if (this.pinnedY === null) {
+				this.pinnedY = window.scrollY;
+			}
+			if (pinned && Math.abs(window.scrollY - this.pinnedY) <= 2) {
+				return pinned.link;
+			}
+			this.pinned = null;
+			this.pinnedY = null;
+		}
+		const line = this.readingLine() + READING_BAND;
+		let match = this.sections[0]?.link;
+		for (const {heading, link} of this.sections) {
+			if (heading.getBoundingClientRect().top > line) {
+				break;
+			}
+			match = link;
+		}
+		return match;
 	}
 
 	private readingLine(): number {
@@ -45,120 +129,33 @@ export class FluxerStarlightTOC extends HTMLElement {
 		return navBarHeight + mobileTocHeight + 32;
 	}
 
-	private onIdle = (cb: IdleRequestCallback) => (window.requestIdleCallback || ((cb) => setTimeout(cb, 1)))(cb);
-
-	constructor() {
-		super();
-		this.markInitialEntry();
-		this.onIdle(() => this.init());
+	protected scroller(): HTMLElement | null {
+		const scroller = this.closest<HTMLElement>('.right-sidebar');
+		if (!scroller || scroller.clientHeight === 0) {
+			return null;
+		}
+		return scroller;
 	}
 
-	private markInitialEntry(): void {
-		const links = [...this.querySelectorAll('a')];
-		if (links.length === 0) {
+	private keepInView(link: HTMLAnchorElement): void {
+		const scroller = this.scroller();
+		if (!scroller) {
 			return;
 		}
-		const readingLine = this.readingLine() + READING_BAND;
-		let match: HTMLAnchorElement | undefined;
-		for (const heading of document.querySelectorAll<HTMLElement>(this.tocHeadingSelector)) {
-			if (heading.getBoundingClientRect().top > readingLine) {
-				break;
-			}
-			const link = links.find((candidate) => candidate.hash === `#${encodeURIComponent(heading.id)}`);
-			if (link) {
-				match = link;
-			}
+		const box = scroller.getBoundingClientRect();
+		const item = link.getBoundingClientRect();
+		const margin = 48;
+		let delta = 0;
+		if (item.top < box.top + margin) {
+			delta = item.top - (box.top + margin);
+		} else if (item.bottom > box.bottom - margin) {
+			delta = item.bottom - (box.bottom - margin);
 		}
-		this.current = match ?? links[0];
-	}
-
-	private init = (): void => {
-		const links = [...this.querySelectorAll('a')];
-
-		const isHeading = (el: Element): el is HTMLHeadingElement => el.matches(this.tocHeadingSelector);
-
-		const getElementHeading = (el: Element | null): HTMLHeadingElement | null => {
-			if (!el) {
-				return null;
-			}
-			const origin = el;
-			while (el) {
-				if (el.matches('.sl-markdown-content, main > *')) {
-					return document.getElementById(PAGE_TITLE_ID) as HTMLHeadingElement;
-				}
-				if (isHeading(el)) {
-					return el;
-				}
-				const childHeading = el.querySelector<HTMLHeadingElement>(this.tocHeadingSelector);
-				if (childHeading) {
-					return childHeading;
-				}
-				el = el.previousElementSibling;
-				while (el?.lastElementChild) {
-					el = el.lastElementChild;
-				}
-				const h = getElementHeading(el);
-				if (h) {
-					return h;
-				}
-			}
-			return getElementHeading(origin.parentElement);
-		};
-
-		const setCurrent: IntersectionObserverCallback = (entries) => {
-			for (const {isIntersecting, target} of entries) {
-				if (!isIntersecting) {
-					continue;
-				}
-				const heading = getElementHeading(target);
-				if (!heading) {
-					continue;
-				}
-				const link = links.find((candidate) => candidate.hash === `#${encodeURIComponent(heading.id)}`);
-				if (link) {
-					this.current = link;
-					break;
-				}
-			}
-		};
-
-		const toObserve = document.querySelectorAll(
-			[
-				`main :where(${this.tocHeadingSelector})`,
-				`main :where(${this.tocHeadingSelector}, .sl-heading-wrapper) ~ *:not(:has(${this.tocHeadingSelector}))`,
-				`main .sl-markdown-content > *:not(:has(${this.tocHeadingSelector}))`,
-				`main > *:not(:has(${this.tocHeadingSelector}))`,
-			].join(),
-		);
-
-		let observer: IntersectionObserver | undefined;
-		const observe = () => {
-			if (observer) {
-				return;
-			}
-			observer = new IntersectionObserver(setCurrent, {rootMargin: this.getRootMargin()});
-			for (const h of toObserve) {
-				observer.observe(h);
-			}
-		};
-		observe();
-
-		let timeout: ReturnType<typeof setTimeout>;
-		window.addEventListener('resize', () => {
-			if (observer) {
-				observer.disconnect();
-				observer = undefined;
-			}
-			clearTimeout(timeout);
-			timeout = setTimeout(() => this.onIdle(observe), 200);
-		});
-	};
-
-	private getRootMargin(): `-${number}px 0% ${number}px` {
-		const top = this.readingLine();
-		const bottom = top + READING_BAND;
-		const height = document.documentElement.clientHeight;
-		return `-${top}px 0% ${bottom - height}px`;
+		if (delta === 0) {
+			return;
+		}
+		const smooth = this.settled && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+		scroller.scrollBy({top: delta, behavior: smooth ? 'smooth' : 'instant'});
 	}
 }
 

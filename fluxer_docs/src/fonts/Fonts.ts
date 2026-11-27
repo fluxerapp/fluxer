@@ -18,7 +18,7 @@ type AstroFontFamily = {
 
 export const radioCanadaBigFont: AstroFontFamily = {
 	cssVariable: '--font-radio-canada-big',
-	fallbacks: [],
+	fallbacks: ['sans-serif'],
 	name: 'Radio Canada Big',
 	provider: fontsource,
 	styles: ['normal'],

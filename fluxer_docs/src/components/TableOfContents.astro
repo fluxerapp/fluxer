@@ -8,12 +8,32 @@ const {toc} = Astro.locals.starlightRoute;
 
 {
 	toc && (
-		<starlight-toc data-min-h={toc.minHeadingLevel} data-max-h={toc.maxHeadingLevel}>
-			<nav aria-labelledby="starlight__on-this-page">
-				<h2 id="starlight__on-this-page">{Astro.locals.t('tableOfContents.onThisPage')}</h2>
-				<TableOfContentsList toc={toc.items} markFirst />
-			</nav>
-		</starlight-toc>
+		<>
+			<starlight-toc>
+				<nav aria-labelledby="starlight__on-this-page">
+					<h2 id="starlight__on-this-page">{Astro.locals.t('tableOfContents.onThisPage')}</h2>
+					<TableOfContentsList toc={toc.items} markFirst />
+				</nav>
+			</starlight-toc>
+			<script is:inline aria-hidden="true">
+				(() => {
+					try {
+						const toc = document.currentScript.previousElementSibling;
+						const scroller = toc && toc.closest('.right-sidebar');
+						if (!scroller) return;
+						const key = 'flx-toc-scroll:' + location.pathname;
+						addEventListener('pagehide', () => {
+							try {
+								sessionStorage.setItem(key, String(scroller.scrollTop));
+							} catch {}
+						});
+						const entry = performance.getEntriesByType('navigation')[0];
+						if (!entry || (entry.type !== 'reload' && entry.type !== 'back_forward')) return;
+						if (Number(sessionStorage.getItem(key)) > 0) scroller.style.visibility = 'hidden';
+					} catch {}
+				})();
+			</script>
+		</>
 	)
 }
 

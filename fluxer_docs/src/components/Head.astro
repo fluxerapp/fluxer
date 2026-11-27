@@ -16,6 +16,31 @@ const robots = resolveRobotsDirective(docsSearchIndexing());
 ---
 
 <Default />
+<link rel="expect" href="#flx-content-end" blocking="render" />
+<script is:inline>
+	(() => {
+		try {
+			if (location.hash.length < 2) return;
+			const entry = performance.getEntriesByType('navigation')[0];
+			if (entry && entry.type !== 'navigate') return;
+			const id = decodeURIComponent(location.hash.slice(1));
+			const styled = () =>
+				Array.from(document.querySelectorAll('link[rel="stylesheet"]:not([media="print"])')).every((link) => link.sheet);
+			const observer = new MutationObserver(() => {
+				const target = document.getElementById(id);
+				if (!target || !styled()) return;
+				const padding = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
+				if (Math.abs(target.getBoundingClientRect().top - padding) > 1) target.scrollIntoView();
+			});
+			const stop = () => observer.disconnect();
+			observer.observe(document.documentElement, {childList: true, subtree: true});
+			addEventListener('DOMContentLoaded', stop, {once: true});
+			for (const name of ['wheel', 'touchstart', 'keydown', 'pointerdown']) {
+				addEventListener(name, stop, {once: true, passive: true});
+			}
+		} catch {}
+	})();
+</script>
 <meta name="robots" content={robots} />
 <meta name="darkreader-lock" />
 <LatinFontFaces />
