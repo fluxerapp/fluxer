@@ -167,7 +167,7 @@ function presentAccountNotification(
 	let context: string | null = null;
 	if (channelType !== null && GUILD_CHANNEL_TYPES.has(channelType) && channelName !== null) {
 		const channelLabel = `${channelType === ChannelTypes.GUILD_VOICE ? '' : '#'}${channelName}`;
-		context = macOSPresentation && guildName !== null ? `${guildName} ${channelLabel}` : channelLabel;
+		context = guildName !== null ? `${channelLabel}, ${guildName}` : channelLabel;
 	} else if (channelType === ChannelTypes.GROUP_DM) {
 		context = channelName || i18n._(GROUP_DM_DESCRIPTOR);
 	}
