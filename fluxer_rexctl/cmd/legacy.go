@@ -5,6 +5,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	goruntime "runtime"
 	"strings"
 	"sync"
@@ -122,6 +123,15 @@ func runLegacyUpgrade(ctx context.Context, app *App, inst *instance.Instance, f 
 		return nil
 	}
 	to := moveRelease(latest)
+	newer := !selfUpdated && release.Valid(app.Version) && release.Compare(latest, app.Version) > 0
+	newer = newer && (f.DryRun || f.Prefetch || app.UI.Interactive() || app.UI.Yes())
+	if newer && f.DryRun {
+		app.UI.Info("rexctl updates itself to %s first.", latest)
+		to = latest
+	}
+	if newer && !f.DryRun {
+		return legacySelfUpdate(ctx, app, inst, rel)
+	}
 	if f.To != "" && f.To != to {
 		return ui.Refused(fmt.Sprintf("The move to the new layout installs Fluxer %s, the release of this rexctl.", to), "Run rexctl upgrade without --to, and run rexctl upgrade --to "+f.To+" after the move.")
 	}
@@ -160,6 +170,28 @@ func runLegacyUpgrade(ctx context.Context, app *App, inst *instance.Instance, f 
 		return nil
 	}
 	return runMigrate(ctx, app, &migrateFlags{To: pick, confirmed: true})
+}
+
+func legacySelfUpdate(ctx context.Context, app *App, inst *instance.Instance, rel *release.Release) error {
+	next := rel.Version
+	asset, err := rel.AssetFor(goruntime.GOOS, goruntime.GOARCH)
+	if err != nil {
+		return ui.Failed(fmt.Sprintf("There's no rexctl %s for this machine.", next), "")
+	}
+	err = app.UI.Step(ctx, "Updating rexctl", func(ctx context.Context, s *ui.Step) error {
+		if err := selfUpdate(ctx, asset); err != nil {
+			return err
+		}
+		s.Done("Updated rexctl to %s.", next)
+		return nil
+	})
+	if err != nil {
+		return selfUpdateError(err, inst)
+	}
+	if err := reexec(resumeArgs(os.Args[1:], release.PhaseSelfUpdated, app.pickedDir(), false)); err != nil {
+		return ui.Wrap(err, "Updated rexctl but couldn't start it again.", "Run rexctl upgrade again.")
+	}
+	return nil
 }
 
 func moveRelease(latest string) string {
