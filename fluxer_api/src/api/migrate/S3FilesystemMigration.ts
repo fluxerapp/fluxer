@@ -152,11 +152,13 @@ export interface StorageMigrationSource {
 function s3MigrationSource(client: S3Client): StorageMigrationSource {
 	return {
 		async *list(bucket) {
+			const seen = new Set<string>();
 			let token: string | undefined;
 			do {
 				const page = await client.send(new ListObjectsV2Command({Bucket: bucket, ContinuationToken: token}));
 				for (const object of page.Contents ?? []) {
-					if (object.Key === undefined) continue;
+					if (object.Key === undefined || seen.has(object.Key)) continue;
+					seen.add(object.Key);
 					yield {key: object.Key, size: object.Size ?? 0, lastModified: object.LastModified};
 				}
 				if (page.IsTruncated && !page.NextContinuationToken) {
