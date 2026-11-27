@@ -719,6 +719,8 @@ func restoreErr(path string, err error, logPath string) error {
 		return ui.Wrap(pull.Err, "Couldn't download Fluxer.", "Run rexctl restore again with --verbose to see why.")
 	case errors.Is(err, backup.ErrUploadsNotHere):
 		return uploadsNotHere(nil, "", "", err)
+	case errors.Is(err, backup.ErrArchiveReplaced):
+		return ui.Refused(fmt.Sprintf("%s is in a folder that the restore replaces, so rexctl didn't change anything.", path), "Move the backup out of that folder, such as into the backups folder, then run rexctl restore again.")
 	case errors.Is(err, backup.ErrIntoLegacy):
 		return ui.Refused("This backup comes from one container or a systemd service, and this instance uses the older layout.", legacyMoveFix)
 	case errors.As(err, &space):

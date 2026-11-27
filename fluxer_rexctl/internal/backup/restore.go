@@ -31,6 +31,8 @@ const postgresReadyTimeout = 3 * time.Minute
 
 var errStop = errors.New("backup: stop")
 
+var ErrArchiveReplaced = errors.New("backup: the backup is in a folder the restore replaces")
+
 var ErrUploadsNotHere = errors.New("backup: the uploads this backup belongs with aren't on this machine")
 
 type UploadsNotHereError struct {
@@ -161,6 +163,13 @@ func Restore(ctx context.Context, path, dir string, e *engine.Engine, opts Resto
 	if err != nil {
 		return nil, err
 	}
+	source, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
+	if inReplacedFolder(path, dir) {
+		return nil, fmt.Errorf("%w: %s", ErrArchiveReplaced, path)
+	}
 	existing, err := instance.Find(dir)
 	if err != nil && !errors.Is(err, instance.ErrNotFound) {
 		return nil, err
@@ -182,7 +191,7 @@ func Restore(ctx context.Context, path, dir string, e *engine.Engine, opts Resto
 	}
 
 	progress(StageClearing)
-	stale, err := clearForRestore(ctx, dir, existing, e, m)
+	stale, err := clearForRestore(ctx, dir, source, existing, e, m)
 	if err != nil {
 		return nil, err
 	}
@@ -255,7 +264,7 @@ func Restore(ctx context.Context, path, dir string, e *engine.Engine, opts Resto
 	return inst, nil
 }
 
-func clearForRestore(ctx context.Context, dir string, existing *instance.Instance, e *engine.Engine, m *Manifest) ([]string, error) {
+func clearForRestore(ctx context.Context, dir string, source os.FileInfo, existing *instance.Instance, e *engine.Engine, m *Manifest) ([]string, error) {
 	if existing == nil {
 		return nil, nil
 	}
@@ -272,7 +281,7 @@ func clearForRestore(ctx context.Context, dir string, existing *instance.Instanc
 	if err := down(ctx, e.Named(existing.Project(), existing.Dir), m); err != nil {
 		return nil, err
 	}
-	if err := clearInstanceFiles(dir); err != nil {
+	if err := clearInstanceFiles(dir, source); err != nil {
 		return nil, err
 	}
 	return stale, nil
@@ -543,24 +552,49 @@ func samePath(a, b string) bool {
 	return filepath.Clean(a) == filepath.Clean(b)
 }
 
-func clearInstanceFiles(dir string) error {
-	names, err := instanceFiles(dir)
-	if err != nil {
-		return err
-	}
-	for _, name := range names {
-		if err := os.Remove(filepath.Join(dir, name)); err != nil && !errors.Is(err, os.ErrNotExist) {
-			return err
-		}
-	}
-	for _, p := range []string{
+func replacedFolders(dir string) []string {
+	return []string{
 		filepath.Join(dir, instance.CertsDir),
 		filepath.Join(dir, instance.CADir),
 		filepath.Join(dir, instance.CaddyDropInDir),
 		stack.GeneratedPath(dir),
 		filepath.Join(dir, instance.StateDirName, instance.ReleasesDir),
 		filepath.Join(dir, instance.StateDirName, instance.StateFileName),
-	} {
+	}
+}
+
+func inReplacedFolder(path, dir string) bool {
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		abs = path
+	}
+	for _, at := range []string{abs, instance.RealPath(path)} {
+		for _, p := range replacedFolders(dir) {
+			for _, folder := range []string{p, instance.RealPath(p)} {
+				if rel, err := filepath.Rel(folder, at); err == nil && filepath.IsLocal(rel) {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+func clearInstanceFiles(dir string, source os.FileInfo) error {
+	names, err := instanceFiles(dir)
+	if err != nil {
+		return err
+	}
+	for _, name := range names {
+		p := filepath.Join(dir, name)
+		if fi, err := os.Stat(p); err == nil && source != nil && os.SameFile(fi, source) {
+			continue
+		}
+		if err := os.Remove(p); err != nil && !errors.Is(err, os.ErrNotExist) {
+			return err
+		}
+	}
+	for _, p := range replacedFolders(dir) {
 		if err := os.RemoveAll(p); err != nil {
 			return err
 		}
@@ -569,7 +603,11 @@ func clearInstanceFiles(dir string) error {
 }
 
 func extractFiles(path, dir string) error {
-	err := walkArchive(path, func(hdr *tar.Header, r io.Reader) error {
+	source, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+	err = walkArchive(path, func(hdr *tar.Header, r io.Reader) error {
 		if !strings.HasPrefix(hdr.Name, filesPrefix) {
 			return errStop
 		}
@@ -585,6 +623,12 @@ func extractFiles(path, dir string) error {
 		case tar.TypeDir:
 			return os.MkdirAll(target, dirMode(hdr.Mode))
 		case tar.TypeReg:
+			if isArchiveName(rel) && !strings.Contains(rel, "/") {
+				return nil
+			}
+			if fi, err := os.Stat(target); err == nil && os.SameFile(fi, source) {
+				return nil
+			}
 			if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
 				return err
 			}

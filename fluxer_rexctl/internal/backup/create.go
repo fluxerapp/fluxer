@@ -658,6 +658,10 @@ func databaseSize(ctx context.Context, p *engine.Project) uint64 {
 	return n
 }
 
+func isArchiveName(name string) bool {
+	return strings.HasSuffix(strings.ToLower(name), extension)
+}
+
 func instanceFiles(dir string) ([]string, error) {
 	ents, err := os.ReadDir(dir)
 	if err != nil {
@@ -666,7 +670,7 @@ func instanceFiles(dir string) ([]string, error) {
 	var out []string
 	for _, e := range ents {
 		name := e.Name()
-		if e.IsDir() || name == instance.EnvFileName || strings.HasPrefix(name, "recovery-kit-") || strings.HasSuffix(name, partialSuffix) {
+		if e.IsDir() || name == instance.EnvFileName || strings.HasPrefix(name, "recovery-kit-") || strings.HasSuffix(name, partialSuffix) || isArchiveName(name) {
 			continue
 		}
 		fi, err := os.Stat(filepath.Join(dir, name))
