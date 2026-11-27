@@ -17,7 +17,7 @@ import (
 	"strings"
 	"time"
 
-	"go.yaml.in/yaml/v4"
+	"github.com/compose-spec/compose-go/v2/types"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/backup"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/checks"
@@ -40,13 +40,16 @@ func noNativeEquivalent(msg, fix string) error {
 }
 
 type moveBase struct {
-	app     *App
-	inst    *instance.Instance
-	dir     string
-	runtime string
-	chosen  map[string]string
-	units   []migrate.SavedUnit
-	dryRun  bool
+	app       *App
+	inst      *instance.Instance
+	live      *engine.Project
+	geoip     string
+	geoipName string
+	dir       string
+	runtime   string
+	chosen    map[string]string
+	units     []migrate.SavedUnit
+	dryRun    bool
 }
 
 func (t *moveBase) Dir() string                { return t.dir }
@@ -58,12 +61,8 @@ func (t *moveBase) preflight(ctx context.Context, chosen map[string]string) erro
 	if url := backup.ExternalPostgresURL(t.inst); url != "" {
 		t.chosen["FLUXER_POSTGRES_URL"] = url
 	}
-	custom, err := t.inst.Custom()
-	if err != nil {
+	if err := t.checkOldLayout(ctx); err != nil {
 		return err
-	}
-	if !onlyVolumePins(custom, t.inst.Project()) {
-		return noNativeEquivalent(instance.CustomCompose+" changes the "+engineName(t.inst)+" services, and the new layout has none.", "Move what it does into rexctl config set, then empty it with rexctl config edit --compose. It may keep volumes that only set external: true and their usual name, such as "+t.inst.Project()+"_"+stack.SeaweedFSVolume+".")
 	}
 	if len(t.inst.State.Voice) > 0 {
 		ids := make([]string, len(t.inst.State.Voice))
@@ -92,41 +91,6 @@ func (t *moveBase) preflight(ctx context.Context, chosen map[string]string) erro
 	return nil
 }
 
-func onlyVolumePins(custom []byte, project string) bool {
-	dec := yaml.NewDecoder(bytes.NewReader(custom))
-	for {
-		var doc map[string]any
-		err := dec.Decode(&doc)
-		if errors.Is(err, io.EOF) {
-			return true
-		}
-		if err != nil || !volumePinsDoc(doc, project) {
-			return false
-		}
-	}
-}
-
-func volumePinsDoc(doc map[string]any, project string) bool {
-	for key, value := range doc {
-		if key != "volumes" {
-			return false
-		}
-		if value == nil {
-			continue
-		}
-		vols, ok := value.(map[string]any)
-		if !ok {
-			return false
-		}
-		for short, def := range vols {
-			if !volumePin(short, def, project) {
-				return false
-			}
-		}
-	}
-	return true
-}
-
 func volumePin(short string, def any, project string) bool {
 	if _, ok := stack.DataMounts[short]; !ok {
 		return false
@@ -136,6 +100,100 @@ func volumePin(short string, def any, project string) bool {
 		return false
 	}
 	return true
+}
+
+func (t *moveBase) checkOldLayout(ctx context.Context) error {
+	custom, err := t.inst.Custom()
+	if err != nil {
+		return err
+	}
+	e, err := t.app.Engine(ctx, t.inst)
+	if err == nil {
+		t.live, err = deploy.Load(ctx, t.inst, e)
+	}
+	if err != nil {
+		if t.dryRun {
+			t.app.UI.Detail("reading the old containers: %v", err)
+			return nil
+		}
+		return rt.ContainerError(err, "rexctl couldn't read how the old containers run, so it didn't change anything.")
+	}
+	stock, err := composeModel(ctx, e, t.inst, t.inst.State.Settings)
+	if err != nil {
+		return err
+	}
+	storage := slices.Contains(minimalModes(t.inst), migrate.OptStorage)
+	r := &customReview{project: t.inst.Project(), dir: t.inst.Dir, chosen: t.inst.State.Settings, stock: stock.Model, live: t.live.Model, storage: storage,
+		stockWith: func(changes map[string]string) (*types.Project, error) {
+			p, err := composeModel(ctx, e, t.inst, merged(t.inst.State.Settings, changes))
+			if err != nil {
+				return nil, err
+			}
+			return p.Model, nil
+		}}
+	if err := r.read(custom); err != nil {
+		return ui.Wrap(err, fmt.Sprintf("rexctl can't read %s.", instance.CustomCompose), "Fix the file with rexctl config edit --compose, then try again.")
+	}
+	r.ports()
+	if err := r.refusal(); err != nil {
+		return err
+	}
+	if err := checkMountDrift(ctx, t.live); err != nil {
+		return err
+	}
+	if storage {
+		p, err := customComposeModel(ctx, e, t.inst, withOptions(t.inst.State.Settings, migrate.OptStorage))
+		if err != nil {
+			return err
+		}
+		if err := objectsMountProblem(p.Model); err != nil {
+			return err
+		}
+	}
+	return t.findGeoIP()
+}
+
+func (t *moveBase) findGeoIP() error {
+	path := serviceEnv(t.live.Model, "api", settings.GeoIPVar)
+	if path == "" || strings.HasPrefix(path, "s3://") {
+		return nil
+	}
+	svc, _ := modelService(t.live.Model, "api")
+	src := mountedFile(svc, path)
+	if src == "" {
+		return ui.Refused(fmt.Sprintf("%s is %s, and no folder on this machine is mounted there for the api.", settings.GeoIPVar, path),
+			"Run rexctl config unset "+settings.GeoIPVar+" first, and set "+settings.GeoIPDatabase+" after the move.")
+	}
+	if err := checkGeoIPFile(src); err != nil {
+		var ee *ui.ExitError
+		if errors.As(err, &ee) {
+			ee.Msg = fmt.Sprintf("%s points the api at %s on this machine. %s", settings.GeoIPVar, src, ee.Msg)
+		}
+		return err
+	}
+	name, err := geoIPName(src)
+	if err != nil {
+		return ui.Failed(fmt.Sprintf("Couldn't read %s, which %s points the api at.", src, settings.GeoIPVar), "Check that you can read it, then try again.")
+	}
+	t.geoip, t.geoipName = src, name
+	t.withGeoIP(t.chosen)
+	return nil
+}
+
+func (t *moveBase) withGeoIP(chosen map[string]string) {
+	if t.geoip == "" || chosen == nil {
+		return
+	}
+	delete(chosen, settings.GeoIPVar)
+	chosen[settings.GeoIPDatabase] = settings.GeoIPMountPoint + t.geoipName
+}
+
+func (t *moveBase) carryGeoIP(target *instance.Instance) error {
+	if t.geoip == "" {
+		return nil
+	}
+	_, err := saveGeoIP(t.geoip, target.Path(instance.GeoIPDir), t.geoipName)
+	return err
 }
 
 func (t *moveBase) savedUnitPaths() []string {
@@ -286,6 +344,7 @@ func (t *moveBase) open(chosen map[string]string) (*instance.Instance, error) {
 	if err != nil {
 		return nil, err
 	}
+	t.withGeoIP(chosen)
 	target.State.Settings = merged(target.State.Settings, chosen)
 	target.State.BackupDir = cmpDir(t.inst.State.BackupDir, t.inst.BackupDir())
 	target.State.KeepBackups = t.inst.State.KeepBackups
@@ -547,6 +606,9 @@ func (t *nativeTarget) Restore(ctx context.Context, archive string) error {
 	if err := n.Restore(ctx, set, archive, migrateOutput(t.app)); err != nil {
 		return ui.Wrap(err, fmt.Sprintf("Couldn't restore the backup into %s.", t.dir), "Run "+migrateCommand+" --verbose to see why.")
 	}
+	if err := t.carryGeoIP(target); err != nil {
+		return err
+	}
 	return adoptNativeSecrets(target, n)
 }
 
@@ -697,6 +759,9 @@ func (t *containerTarget) Restore(ctx context.Context, archive string) error {
 	})
 	if err != nil {
 		return ui.Wrap(err, fmt.Sprintf("Couldn't restore the backup into %s.", t.dir), "Run "+migrateCommand+" --verbose to see why.")
+	}
+	if err := t.carryGeoIP(target); err != nil {
+		return err
 	}
 	return adoptSecrets(ctx, target, r)
 }

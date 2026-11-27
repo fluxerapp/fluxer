@@ -185,6 +185,7 @@ func runMove(ctx context.Context, app *App, inst *instance.Instance, f *migrateF
 	if err != nil {
 		return err
 	}
+	folders := oldFoldersOf(ctx, app, inst)
 	var r *migrate.Run
 	err = app.Locked(ctx, inst, func() error {
 		var err error
@@ -205,6 +206,9 @@ func runMove(ctx context.Context, app *App, inst *instance.Instance, f *migrateF
 		}
 	}
 	app.UI.OK("Fluxer %s runs from %s. The backup from before the move is %s.", moved.State.Release, moved.Dir, r.Backup)
+	if len(folders) > 0 {
+		app.UI.Info("The old containers kept their data in %s on this machine. rexctl leaves these folders as they are, also after rexctl migrate --clean-up, so delete them yourself once you no longer need them.", ui.JoinAnd(folders))
+	}
 	if oneWayMove(inst, moved.State.Release) {
 		app.UI.Info("The old containers are stopped and stay until rexctl migrate --clean-up. Fluxer %s has updated your own PostgreSQL database, so the move can't be undone.", moved.State.Release)
 		return nil
@@ -479,13 +483,18 @@ func runCleanUpMove(ctx context.Context, app *App, inst *instance.Instance, conf
 		}
 		return ui.Refused(fmt.Sprintf("The move from %s stopped before rexctl recorded it.", from), "Run "+finish+" first, then run "+migrateCommand+" --clean-up again.")
 	}
+	var folders []string
 	if old != nil {
-		what := fmt.Sprintf("This deletes the old containers and volumes in %s, which hold the data from before the move. Backups in %s stay, and you can't undo the move afterwards.", old.Dir, old.BackupDir())
-		if err := app.UI.ConfirmDestructive(what, moved.Domain(), confirm); err != nil {
-			return err
-		}
 		e, err := app.Engine(ctx, old)
 		if err != nil {
+			return err
+		}
+		folders = oldFoldersOf(ctx, app, old)
+		what := fmt.Sprintf("This deletes the old containers and volumes in %s, which hold the data from before the move. Backups in %s stay, and you can't undo the move afterwards.", old.Dir, old.BackupDir())
+		if len(folders) > 0 {
+			what += fmt.Sprintf(" rexctl doesn't delete %s, the %s the old containers kept data in.", ui.JoinAnd(folders), oneOrMany(len(folders), "folder", "folders"))
+		}
+		if err := app.UI.ConfirmDestructive(what, moved.Domain(), confirm); err != nil {
 			return err
 		}
 		left := ""
@@ -516,6 +525,9 @@ func runCleanUpMove(ctx context.Context, app *App, inst *instance.Instance, conf
 		return err
 	}
 	app.UI.OK("The move to %s is complete.", moved.Dir)
+	if len(folders) > 0 {
+		app.UI.Info("%s still %s the data from before the move. Delete %s yourself once you no longer need %s.", ui.JoinAnd(folders), oneOrMany(len(folders), "holds", "hold"), oneOrMany(len(folders), "it", "them"), oneOrMany(len(folders), "it", "them"))
+	}
 	return nil
 }
 

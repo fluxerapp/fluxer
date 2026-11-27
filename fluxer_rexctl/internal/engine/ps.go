@@ -16,6 +16,7 @@ import (
 	"github.com/distribution/reference"
 	"github.com/docker/compose/v5/pkg/api"
 	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/api/types/mount"
 	"github.com/moby/moby/api/types/volume"
 	"github.com/moby/moby/client"
 )
@@ -52,6 +53,7 @@ func (p *Project) PS(ctx context.Context) ([]Container, error) {
 		if len(s.Names) > 0 {
 			ct.Name = strings.TrimPrefix(s.Names[0], "/")
 		}
+		ct.Mounts = mountsOf(s.Mounts)
 		ct.Number, _ = strconv.Atoi(s.Labels[api.ContainerNumberLabel])
 		if s.Health != nil && s.Health.Status != container.NoHealthcheck {
 			ct.Health = strings.ToLower(string(s.Health.Status))
@@ -59,10 +61,14 @@ func (p *Project) PS(ctx context.Context) ([]Container, error) {
 			ct.Health = healthFromStatus(s.Status)
 		}
 		podmanHealth := p.Engine.Kind == Podman && ct.State == "running" && ct.Health == ""
-		if needsInspect(ct) || podmanHealth {
+		podmanMounts := p.Engine.Kind == Podman && len(ct.Mounts) == 0
+		if needsInspect(ct) || podmanHealth || podmanMounts {
 			in, err := c.ContainerInspect(ctx, s.ID, client.ContainerInspectOptions{})
 			if err == nil {
 				ct.RestartCount = in.Container.RestartCount
+				if len(ct.Mounts) == 0 {
+					ct.Mounts = mountsOf(in.Container.Mounts)
+				}
 				if st := in.Container.State; st != nil {
 					ct.ExitCode = st.ExitCode
 					if podmanHealth && st.Health != nil && st.Health.Status != "" && st.Health.Status != container.NoHealthcheck {
@@ -82,6 +88,19 @@ func (p *Project) PS(ctx context.Context) ([]Container, error) {
 		return a.Number - b.Number
 	})
 	return out, nil
+}
+
+func mountsOf(points []container.MountPoint) []Mount {
+	var out []Mount
+	for _, m := range points {
+		switch m.Type {
+		case mount.TypeBind:
+			out = append(out, Mount{Bind: m.Source, Target: m.Destination, ReadOnly: !m.RW})
+		case mount.TypeVolume:
+			out = append(out, Mount{Volume: m.Name, Target: m.Destination, ReadOnly: !m.RW})
+		}
+	}
+	return out
 }
 
 func needsInspect(c Container) bool {

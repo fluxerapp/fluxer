@@ -188,7 +188,7 @@ func runMigrate(ctx context.Context, app *App, f *migrateFlags) error {
 	}
 	if len(choices) == 0 {
 		app.UI.OK("Every change is already made on this instance.")
-		remindMigrations(app, inst)
+		remindMigrations(ctx, app, inst)
 		return nil
 	}
 	for _, o := range picked {
@@ -332,6 +332,11 @@ func executeMigrate(ctx context.Context, app *App, inst *instance.Instance, step
 	journal, err := migrate.FileJournal(inst.Dir)
 	if err != nil {
 		return nil, migrate.State{}, ui.Wrap(err, "Couldn't read what rexctl migrate changed before.", "Check that you can read "+inst.Dir+", then try again.")
+	}
+	if ch, ok := host.(*composeHost); ok {
+		if err := checkMountDrift(ctx, ch.p); err != nil {
+			return nil, migrate.State{}, err
+		}
 	}
 	r := &migrate.Run{Host: host, Journal: journal, Log: migrateOutput(app), OnPhase: migrateProgress(app, len(steps)), OnBackup: func(path string) error { return keepMigrateBackup(inst, path) }}
 	err = migrate.Execute(ctx, r, steps)
@@ -863,6 +868,17 @@ func cleanUpOld(ctx context.Context, app *App, inst *instance.Instance, st *migr
 			app.UI.Warn(fmt.Sprintf("rexctl keeps %s for now.", d.What), d.Wait)
 			continue
 		}
+		if folder := keptFolder(h, d.What); folder != "" {
+			if err := migrate.CleanUp(ctx, h, st, d, time.Now()); err != nil {
+				return err
+			}
+			if err := st.Save(inst.Dir); err != nil {
+				return err
+			}
+			app.UI.Info("%s is the folder %s on this machine, and rexctl doesn't delete folders you mounted. Delete it yourself once you no longer need it.", d.What, folder)
+			deleted++
+			continue
+		}
 		if err := app.UI.ConfirmDestructive(fmt.Sprintf("This deletes %s, which %s no longer uses. The backup from %s still has it.", d.What, d.Option.Title(), backupTime(newest)), inst.Domain(), confirm); err != nil {
 			return err
 		}
@@ -885,15 +901,30 @@ func cleanUpOld(ctx context.Context, app *App, inst *instance.Instance, st *migr
 	return nil
 }
 
-func remindMigrations(app *App, inst *instance.Instance) {
+func keptFolder(h migrate.Host, what string) string {
+	if ch, ok := h.(*composeHost); ok {
+		return ch.dataFolder(what)
+	}
+	return ""
+}
+
+func remindMigrations(ctx context.Context, app *App, inst *instance.Instance) {
 	st, err := loadMigrations(inst)
 	if err != nil {
 		return
+	}
+	var h migrate.Host
+	if legacyCompose(inst) && len(migrate.OldDataOf(st, time.Time{})) > 0 {
+		h, _ = migrateHost(ctx, app, inst)
 	}
 	if st.Storage != nil && !st.Storage.Open() {
 		app.UI.Info("Uploads are still read-only after the move off SeaweedFS. Run %s --open-writes when the files look right.", migrateCommand)
 	}
 	for _, d := range migrate.OldDataOf(st, time.Time{}) {
+		if folder := keptFolder(h, d.What); folder != "" {
+			app.UI.Info("%s is still in %s on this machine. Once a newer backup exists, run %s --clean-up, then delete the folder yourself. rexctl doesn't delete folders you mounted.", d.What, folder, migrateCommand)
+			continue
+		}
 		app.UI.Info("%s is still on disk. %s --clean-up removes it once a newer backup exists.", d.What, migrateCommand)
 	}
 }
@@ -1002,6 +1033,14 @@ func migrateInventory(ctx context.Context, app *App, inst *instance.Instance, ru
 }
 
 func composeModel(ctx context.Context, e *engine.Engine, inst *instance.Instance, chosen map[string]string) (*engine.Project, error) {
+	return loadComposeModel(ctx, e, inst, chosen, false)
+}
+
+func customComposeModel(ctx context.Context, e *engine.Engine, inst *instance.Instance, chosen map[string]string) (*engine.Project, error) {
+	return loadComposeModel(ctx, e, inst, chosen, true)
+}
+
+func loadComposeModel(ctx context.Context, e *engine.Engine, inst *instance.Instance, chosen map[string]string, custom bool) (*engine.Project, error) {
 	set, err := deploy.ReleaseSet(inst)
 	if err != nil {
 		return nil, err
@@ -1019,7 +1058,11 @@ func composeModel(ctx context.Context, e *engine.Engine, inst *instance.Instance
 	if _, err := stack.Render(set, overlays, inst.State.Images.Refs, inst.Project(), tmp); err != nil {
 		return nil, err
 	}
-	return e.Load(ctx, engine.Spec{Name: inst.Project(), Dir: inst.Dir, Files: stack.ComposeFiles(tmp, overlays), Env: env})
+	files := stack.ComposeFiles(tmp, overlays)
+	if path := inst.Path(instance.CustomCompose); custom && fileExists(path) {
+		files = append(files, path)
+	}
+	return e.Load(ctx, engine.Spec{Name: inst.Project(), Dir: inst.Dir, Files: files, Env: env})
 }
 
 func migrateHost(ctx context.Context, app *App, inst *instance.Instance) (migrate.Host, error) {

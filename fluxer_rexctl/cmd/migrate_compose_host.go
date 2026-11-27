@@ -17,6 +17,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/migrate"
 	rt "github.com/fluxerapp/fluxer/fluxer_rexctl/internal/runtime"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
@@ -129,8 +130,22 @@ func (h *composeHost) Env(changes map[string]string) (map[string]string, error) 
 }
 
 func (h *composeHost) CheckTarget(ctx context.Context, changes map[string]string) error {
-	_, err := composeModel(ctx, h.e, h.inst, merged(h.inst.State.Settings, changes))
-	return err
+	p, err := customComposeModel(ctx, h.e, h.inst, merged(h.inst.State.Settings, changes))
+	if err != nil {
+		return err
+	}
+	if changes[settings.StorageBackend] == settings.StorageFilesystem && !stack.FilesystemStorage(h.inst.State.Settings) {
+		return objectsMountProblem(p.Model)
+	}
+	return nil
+}
+
+func (h *composeHost) dataFolder(what string) string {
+	dm, ok := stack.DataMounts[what]
+	if !ok || h.p == nil {
+		return ""
+	}
+	return modelBind(h.p.Model, dm.Service, dm.Target)
 }
 
 func (h *composeHost) objectsProject(ctx context.Context) (*engine.Project, error) {
@@ -152,6 +167,12 @@ func (h *composeHost) CheckObjects(ctx context.Context) error {
 	vols, err := h.e.Volumes(ctx, h.inst.Project())
 	if err != nil {
 		return err
+	}
+	if bind := h.dataFolder(stack.SeaweedFSVolume); bind != "" {
+		if err := migrate.CheckSpace(bind, engine.Stores(h.inst.Dir, h.e, "").Data); err != nil && !errors.Is(err, os.ErrPermission) {
+			return err
+		}
+		vols = nil
 	}
 	for _, v := range vols {
 		if (v.Labels[composeVolumeLabel] == stack.SeaweedFSVolume || v.Name == h.inst.Project()+"_"+stack.SeaweedFSVolume) && v.Mountpoint != "" {
@@ -233,11 +254,17 @@ func (h *composeHost) dataVolume(ctx context.Context, what string) (string, erro
 }
 
 func (h *composeHost) HoldsData(ctx context.Context, what string) (bool, error) {
+	if bind := h.dataFolder(what); bind != "" {
+		return folderHoldsData(bind), nil
+	}
 	name, err := h.dataVolume(ctx, what)
 	return name != "", err
 }
 
 func (h *composeHost) DropData(ctx context.Context, what string) error {
+	if h.dataFolder(what) != "" {
+		return nil
+	}
 	name, err := h.dataVolume(ctx, what)
 	if err != nil || name == "" {
 		return err

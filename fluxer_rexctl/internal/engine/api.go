@@ -150,6 +150,7 @@ type Container struct {
 	Number, ExitCode, RestartCount                   int
 	Labels                                           map[string]string
 	Created                                          time.Time
+	Mounts                                           []Mount
 }
 
 type Volume struct {
