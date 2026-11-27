@@ -49,12 +49,14 @@ type moveBase struct {
 	runtime   string
 	chosen    map[string]string
 	units     []migrate.SavedUnit
+	mounts    []migrate.DataMount
 	dryRun    bool
 }
 
-func (t *moveBase) Dir() string                { return t.dir }
-func (t *moveBase) Runtime() string            { return t.runtime }
-func (t *moveBase) Units() []migrate.SavedUnit { return t.units }
+func (t *moveBase) Dir() string                 { return t.dir }
+func (t *moveBase) Runtime() string             { return t.runtime }
+func (t *moveBase) Units() []migrate.SavedUnit  { return t.units }
+func (t *moveBase) Mounts() []migrate.DataMount { return t.mounts }
 
 func (t *moveBase) preflight(ctx context.Context, chosen map[string]string) error {
 	t.chosen = chosen
@@ -138,7 +140,7 @@ func (t *moveBase) checkOldLayout(ctx context.Context) error {
 	if err := r.refusal(); err != nil {
 		return err
 	}
-	if err := checkMountDrift(ctx, t.live); err != nil {
+	if t.mounts, err = checkedMounts(ctx, t.live); err != nil {
 		return err
 	}
 	if storage {

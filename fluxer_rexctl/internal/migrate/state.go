@@ -25,7 +25,15 @@ type Moving struct {
 	Dir        string      `json:"dir"`
 	Runtime    string      `json:"runtime,omitempty"`
 	Units      []SavedUnit `json:"units,omitempty"`
+	Mounts     []DataMount `json:"mounts,omitempty"`
 	SwitchedAt *time.Time  `json:"switched_at,omitempty"`
+}
+
+type DataMount struct {
+	Service string `json:"service"`
+	Target  string `json:"target"`
+	Bind    string `json:"bind,omitempty"`
+	Volume  string `json:"volume,omitempty"`
 }
 
 type SavedUnit struct {

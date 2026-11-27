@@ -227,6 +227,11 @@ func startInstance(ctx context.Context, app *App, inst *instance.Instance, r rt.
 		if err := app.prepare(inst); err != nil {
 			return err
 		}
+		if legacyCompose(inst) {
+			if err := guardOldMounts(ctx, app, inst); err != nil {
+				return err
+			}
+		}
 		if r.Kind() == rt.Native {
 			if err := fetchMissingRelease(ctx, app, inst); err != nil {
 				return err
@@ -290,6 +295,9 @@ func runBootStart(ctx context.Context, app *App) error {
 	}
 	if !bootStackUp(ctx, app, inst) {
 		waitForRoute(ctx, bootRouteWait)
+		if err := guardOldMounts(ctx, app, inst); err != nil {
+			return err
+		}
 		if err := bootStack(ctx, app, inst); err != nil {
 			return err
 		}

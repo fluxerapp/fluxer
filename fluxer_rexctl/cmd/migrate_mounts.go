@@ -17,6 +17,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/deploy"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/migrate"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
@@ -145,7 +146,7 @@ func (d mountDrift) sentence() string {
 	return fmt.Sprintf("%s ran on %s, and with %s as it is now it would get %s.", d.place.service, d.had, instance.CustomCompose, d.will)
 }
 
-func mountDrifts(ctx context.Context, p *engine.Project) ([]mountDrift, error) {
+func runningMounts(ctx context.Context, p *engine.Project) ([]migrate.DataMount, error) {
 	if p == nil || p.Model == nil {
 		return nil, nil
 	}
@@ -153,24 +154,53 @@ func mountDrifts(ctx context.Context, p *engine.Project) ([]mountDrift, error) {
 	if err != nil {
 		return nil, err
 	}
+	var out []migrate.DataMount
+	for _, d := range oldDataPlaces {
+		i := slices.IndexFunc(containers, func(c engine.Container) bool { return c.Service == d.service })
+		if i < 0 {
+			continue
+		}
+		if src, ok := containerSource(containers[i], d.target); ok {
+			out = append(out, migrate.DataMount{Service: d.service, Target: d.target, Bind: src.bind, Volume: src.volume})
+		}
+	}
+	return out, nil
+}
+
+func sameMount(m migrate.DataMount, service, target string) bool {
+	return m.Service == service && m.Target == target
+}
+
+func withRecorded(running, recorded []migrate.DataMount) []migrate.DataMount {
+	out := slices.Clone(recorded)
+	for _, r := range running {
+		if !slices.ContainsFunc(out, func(m migrate.DataMount) bool { return sameMount(m, r.Service, r.Target) }) {
+			out = append(out, r)
+		}
+	}
+	return out
+}
+
+func mountDrifts(p *engine.Project, had []migrate.DataMount) []mountDrift {
+	if p == nil || p.Model == nil {
+		return nil
+	}
 	var out []mountDrift
 	for _, d := range oldDataPlaces {
 		svc, ok := p.Model.Services[d.service]
 		if !ok {
 			continue
 		}
-		will := modelSource(p.Model, p.Name, svc, d.target)
-		for _, c := range containers {
-			if c.Service != d.service {
-				continue
-			}
-			if had, ok := containerSource(c, d.target); ok && had != will {
-				out = append(out, mountDrift{place: d, had: had, will: will})
-			}
-			break
+		i := slices.IndexFunc(had, func(m migrate.DataMount) bool { return sameMount(m, d.service, d.target) })
+		if i < 0 {
+			continue
+		}
+		was := mountSource{bind: had[i].Bind, volume: had[i].Volume}
+		if will := modelSource(p.Model, p.Name, svc, d.target); was != will {
+			out = append(out, mountDrift{place: d, had: was, will: will})
 		}
 	}
-	return out, nil
+	return out
 }
 
 func driftLines(drifts []mountDrift) string {
@@ -182,12 +212,59 @@ func driftLines(drifts []mountDrift) string {
 }
 
 func checkMountDrift(ctx context.Context, p *engine.Project) error {
-	drifts, err := mountDrifts(ctx, p)
-	if err != nil || len(drifts) == 0 {
-		return err
+	_, err := checkedMounts(ctx, p)
+	return err
+}
+
+func checkedMounts(ctx context.Context, p *engine.Project) ([]migrate.DataMount, error) {
+	mounts, err := runningMounts(ctx, p)
+	if err != nil {
+		return nil, err
 	}
-	return ui.Refused(driftLines(drifts)+" The backup would read the wrong data.",
-		"Put back the lines in "+instance.CustomCompose+" that mount the data the containers ran on, with rexctl config edit --compose, then run "+migrateCommand+" again.")
+	if drifts := mountDrifts(p, mounts); len(drifts) > 0 {
+		return nil, ui.Refused(driftLines(drifts)+" The backup would read the wrong data.",
+			"Put back the lines in "+instance.CustomCompose+" that mount the data the containers ran on, with rexctl config edit --compose, then run "+migrateCommand+" again.")
+	}
+	return mounts, nil
+}
+
+type oldMountsError struct {
+	Msg string
+	Fix string
+}
+
+func (e *oldMountsError) Error() string { return e.Msg }
+
+func guardOldMounts(ctx context.Context, app *App, inst *instance.Instance) error {
+	e, err := app.Engine(ctx, inst)
+	if err != nil {
+		return nil
+	}
+	p, err := deploy.Load(ctx, inst, e)
+	if err != nil {
+		return nil
+	}
+	mounts, err := runningMounts(ctx, p)
+	if err != nil {
+		mounts = nil
+	}
+	if st, err := migrate.LoadState(inst.Dir); err == nil && st.Docker != nil {
+		mounts = withRecorded(mounts, st.Docker.Mounts)
+	}
+	drifts := slices.DeleteFunc(mountDrifts(p, mounts), func(d mountDrift) bool {
+		if d.had.bind != "" {
+			return !folderHoldsData(d.had.bind)
+		}
+		return d.had.volume == ""
+	})
+	if len(drifts) == 0 {
+		return nil
+	}
+	om := &oldMountsError{
+		Msg: driftLines(drifts) + " rexctl didn't start the old containers, because Fluxer would look like a new instance.",
+		Fix: "Put back the lines in " + instance.CustomCompose + " that mount the data the containers ran on, with rexctl config edit --compose, then try again.",
+	}
+	return &ui.ExitError{Code: ui.ExitRefused, Msg: om.Msg, Fix: om.Fix, Err: om}
 }
 
 func oldFolders(m *types.Project) []string {

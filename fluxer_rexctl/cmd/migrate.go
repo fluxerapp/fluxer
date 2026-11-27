@@ -362,7 +362,14 @@ func executeMigrate(ctx context.Context, app *App, inst *instance.Instance, step
 	case errors.As(err, &fail) && fail.Rollback == nil && r.Backup != "":
 		return r, migrate.State{}, ui.Wrap(err, "The change didn't work, and rexctl put your instance back as it was. "+migrateReason(fail.Err), "The backup from before the change is "+r.Backup+".")
 	case errors.As(err, &fail) && r.Backup != "":
-		return r, migrate.State{}, ui.Wrap(err, "The change didn't work, and rexctl couldn't put everything back. "+migrateReason(fail.Err), "Run "+migrateCommand+" again to finish going back, or restore the backup from before the change with rexctl restore "+r.Backup+".")
+		msg := "The change didn't work, and rexctl couldn't put everything back. " + migrateReason(fail.Err)
+		fix := "Run " + migrateCommand + " again to finish going back, or restore the backup from before the change with rexctl restore " + r.Backup + "."
+		var om *oldMountsError
+		if errors.As(fail.Rollback, &om) {
+			msg += " " + om.Msg
+			fix = om.Fix
+		}
+		return r, migrate.State{}, ui.Wrap(err, msg, fix)
 	case errors.As(err, &fail) && fail.Phase == migrate.PhasePreflight && errors.As(fail.Err, &refused):
 		return r, migrate.State{}, refused
 	case errors.As(err, &fail) && fail.Phase == migrate.PhasePreflight:
@@ -436,6 +443,9 @@ func recoverDockerMove(ctx context.Context, app *App, inst *instance.Instance, d
 			moved = true
 			return finishDockerMove(ctx, app, inst, st)
 		}
+		if err := guardOldMounts(ctx, app, inst); err != nil {
+			return err
+		}
 		app.UI.Warn("The move to the new layout stopped before it finished.", "rexctl removes the half-made instance in "+m.Dir+" and starts the old containers again.")
 		if m.Dir != "" && instance.RealPath(m.Dir) != instance.RealPath(inst.Dir) {
 			t := &moveBase{app: app, inst: inst, dir: m.Dir, runtime: m.Runtime, units: m.Units}
@@ -490,6 +500,11 @@ func finishDockerMove(ctx context.Context, app *App, inst *instance.Instance, st
 }
 
 func migrateStart(ctx context.Context, app *App, inst *instance.Instance) error {
+	if legacyCompose(inst) {
+		if err := guardOldMounts(ctx, app, inst); err != nil {
+			return err
+		}
+	}
 	r, err := app.Runtime(ctx, inst)
 	if err != nil {
 		return err

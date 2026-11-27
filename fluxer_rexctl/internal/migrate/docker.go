@@ -30,6 +30,7 @@ type MoveTarget interface {
 	Install(ctx context.Context) error
 	Restore(ctx context.Context, archive string) error
 	Units() []SavedUnit
+	Mounts() []DataMount
 	Open(ctx context.Context, chosen map[string]string) (Host, error)
 	Discard(ctx context.Context) error
 	OneWay() bool
@@ -108,7 +109,7 @@ func (s *DockerStep) Migrate(ctx context.Context, r *Run) error {
 		return err
 	}
 	s.installed = true
-	r.State.Docker = &Moving{At: r.now(), Dir: s.target.Dir(), Runtime: s.target.Runtime()}
+	r.State.Docker = &Moving{At: r.now(), Dir: s.target.Dir(), Runtime: s.target.Runtime(), Mounts: s.target.Mounts()}
 	if err := r.record(); err != nil {
 		return err
 	}
