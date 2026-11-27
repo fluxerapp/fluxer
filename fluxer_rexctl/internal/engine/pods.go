@@ -147,7 +147,7 @@ func libpod(ctx context.Context, hc *http.Client, method, path string, out any) 
 		return nil
 	}
 	if res.StatusCode >= 300 {
-		return fmt.Errorf("podman %s %s: %s: %s", method, path, res.Status, body)
+		return fmt.Errorf("engine %s %s: %s: %s", method, path, res.Status, body)
 	}
 	if out == nil {
 		return nil

@@ -5,6 +5,8 @@ package engine
 import (
 	"context"
 	"errors"
+	"net"
+	"net/http"
 	"slices"
 	"strconv"
 	"strings"
@@ -213,19 +215,53 @@ func (e *Engine) PublishedHostPorts(ctx context.Context) ([]PortOwner, error) {
 }
 
 func (e *Engine) Projects(ctx context.Context) ([]ProjectInfo, error) {
-	c, err := e.conn()
+	c, err := e.api()
 	if err != nil {
 		return nil, err
 	}
-	stacks, err := c.svc.List(ctx, api.ListOptions{All: true})
-	if err != nil {
+	dial := c.Dialer()
+	hc := &http.Client{Transport: &http.Transport{
+		DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) { return dial(ctx) },
+	}}
+	var list []listedContainer
+	if err := libpod(ctx, hc, http.MethodGet, "/containers/json?all=1", &list); err != nil {
 		return nil, &Error{Op: "projects", Class: ClassOf(err), Err: err}
 	}
-	out := make([]ProjectInfo, 0, len(stacks))
-	for _, s := range stacks {
-		out = append(out, ProjectInfo{Name: s.Name, Status: s.Status, ConfigFiles: s.ConfigFiles})
+	return groupProjects(list), nil
+}
+
+type listedContainer struct {
+	State  string            `json:"State"`
+	Labels map[string]string `json:"Labels"`
+}
+
+func groupProjects(list []listedContainer) []ProjectInfo {
+	states := map[string]map[string]int{}
+	files := map[string]string{}
+	for _, ct := range list {
+		name := ct.Labels[api.ProjectLabel]
+		if name == "" {
+			continue
+		}
+		if states[name] == nil {
+			states[name] = map[string]int{}
+		}
+		states[name][ct.State]++
+		if f := ct.Labels[api.ConfigFilesLabel]; f != "" && files[name] == "" {
+			files[name] = f
+		}
 	}
-	return out, nil
+	out := make([]ProjectInfo, 0, len(states))
+	for name, counts := range states {
+		parts := make([]string, 0, len(counts))
+		for state, n := range counts {
+			parts = append(parts, state+"("+strconv.Itoa(n)+")")
+		}
+		slices.Sort(parts)
+		out = append(out, ProjectInfo{Name: name, Status: strings.Join(parts, ", "), ConfigFiles: files[name]})
+	}
+	slices.SortFunc(out, func(a, b ProjectInfo) int { return strings.Compare(a.Name, b.Name) })
+	return out
 }
 
 func (e *Engine) LocalImage(ctx context.Context, ref string) (string, bool, error) {
