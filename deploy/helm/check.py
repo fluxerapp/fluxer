@@ -69,14 +69,14 @@ OLD_VALUES = {
 REFUSED = [
     ("no domain", {}, "Set domain"),
     ("example domain", {"domain": "chat.example.com"}, "an example name"),
-    ("domain with a scheme", {"domain": "https://chat.fluxer.test"}, "at '/domain': 'anyOf' failed"),
-    ("unknown key", {"domain": DOMAIN, "replicas": 2}, "additional properties 'replicas' not allowed"),
-    ("0.x values file", OLD_VALUES, "additional properties"),
+    ("domain with a scheme", {"domain": "https://chat.fluxer.test"}, ("at '/domain': 'anyOf' failed", "domain: Must validate at least one schema (anyOf)")),
+    ("unknown key", {"domain": DOMAIN, "replicas": 2}, ("additional properties 'replicas' not allowed", "Additional property replicas is not allowed")),
+    ("0.x values file", OLD_VALUES, ("additional properties", "Additional property")),
     ("0.x top-level values", {"domain": DOMAIN, "scheme": "https", "port": 443}, "port, scheme are values of the 0.x chart"),
     ("setting the chart owns", {"domain": DOMAIN, "config": {"FLUXER_EDGE_MODE": "bundled"}}, "Use edge.mode instead"),
     ("install method in config", {"domain": DOMAIN, "config": {"FLUXER_INSTALL_METHOD": "docker"}}, "Use config.FLUXER_UPGRADE_COMMAND instead"),
     ("password in config", {"domain": DOMAIN, "config": {"FLUXER_EMAIL_SMTP_PASSWORD": "hunter2"}}, "existingSecret"),
-    ("lowercase config key", {"domain": DOMAIN, "config": {"fluxer_domain": "x"}}, "does not match pattern '^[A-Z][A-Z0-9_]*$'"),
+    ("lowercase config key", {"domain": DOMAIN, "config": {"fluxer_domain": "x"}}, ("does not match pattern '^[A-Z][A-Z0-9_]*$'", "Does not match pattern '^[A-Z][A-Z0-9_]*$'")),
     ("IP address behind an Ingress", {"domain": "203.0.113.7", "edge": {"mode": "proxy"}}, "only routes domain names"),
     ("IP address behind an HTTPRoute", {"domain": "2001:db8::7", "edge": {"mode": "proxy"}, "ingress": {"enabled": False}, "httpRoute": {"enabled": True, "parentRefs": [{"name": "shared"}]}}, "only routes domain names"),
     ("IPv6 address with two ::", {"domain": "2001:db8::7::1", "edge": {"mode": "bundled"}}, "not a valid IPv4 or IPv6 address"),
@@ -93,13 +93,13 @@ REFUSED = [
     ("broadcast address", {"domain": "255.255.255.255"}, "which no device can open"),
     ("IPv4 multicast address", {"domain": "239.1.2.3"}, "which no device can open"),
     ("IPv6 multicast address", {"domain": "FF02::1"}, "which no device can open"),
-    ("unknown edge expose", {"domain": DOMAIN, "edge": {"expose": "nodePort"}}, "at '/edge/expose': value must be one of 'loadBalancer', 'hostPort'"),
+    ("unknown edge expose", {"domain": DOMAIN, "edge": {"expose": "nodePort"}}, ("at '/edge/expose': value must be one of 'loadBalancer', 'hostPort'", 'edge.expose must be one of the following: "loadBalancer", "hostPort"')),
     ("host ports in proxy mode", {"domain": DOMAIN, "edge": {"expose": "hostPort"}}, "only opens ports 80 and 443 in bundled mode"),
     ("route without a gateway", {"domain": DOMAIN, "httpRoute": {"enabled": True}}, "httpRoute.parentRefs is empty"),
-    ("unknown edge mode", {"domain": DOMAIN, "edge": {"mode": "tunnel"}}, "at '/edge/mode': value must be one of '', 'proxy', 'bundled'"),
-    ("unknown voice mode", {"domain": DOMAIN, "voice": {"mode": "on"}}, "at '/voice/mode': value must be one of 'bundled', 'external', 'off'"),
-    ("node port out of range", {"domain": DOMAIN, "voice": {"nodePorts": {"tcp": 7881}}}, "at '/voice/nodePorts/tcp': minimum: got 7,881, want 30,000"),
-    ("bad backup schedule", {"domain": DOMAIN, "backup": {"schedule": "hourly"}}, "at '/backup/schedule': value must be one of '', 'daily', 'weekly'"),
+    ("unknown edge mode", {"domain": DOMAIN, "edge": {"mode": "tunnel"}}, ("at '/edge/mode': value must be one of '', 'proxy', 'bundled'", 'edge.mode must be one of the following: "", "proxy", "bundled"')),
+    ("unknown voice mode", {"domain": DOMAIN, "voice": {"mode": "on"}}, ("at '/voice/mode': value must be one of 'bundled', 'external', 'off'", 'voice.mode must be one of the following: "bundled", "external", "off"')),
+    ("node port out of range", {"domain": DOMAIN, "voice": {"nodePorts": {"tcp": 7881}}}, ("at '/voice/nodePorts/tcp': minimum: got 7,881, want 30,000", "voice.nodePorts.tcp: Must be greater than or equal to 30000")),
+    ("bad backup schedule", {"domain": DOMAIN, "backup": {"schedule": "hourly"}}, ("at '/backup/schedule': value must be one of '', 'daily', 'weekly'", 'backup.schedule must be one of the following: "", "daily", "weekly"')),
 ]
 
 VALID_IPS = ["192.0.2.10", "2001:DB8::7", "::1", "2001:db8::", "[2001:db8::7]", "1:2:3:4:5:6:7:8", "1:2:3:4:5:6:7::", "::2:3:4:5:6:7:8", "::ffff:192.0.2.7", "[64:ff9b::192.0.2.7]", "1:2:3:4:5:6:192.0.2.7", "fe80::1"]
@@ -320,7 +320,7 @@ def check_refusals(tmp):
         r = helm("template", "-f", values_file(tmp, "refused", values))
         if r.returncode == 0:
             fail(f"{name} renders")
-        elif message not in r.stderr:
+        elif not any(m in r.stderr for m in ((message,) if isinstance(message, str) else message)):
             fail(f"{name} fails without '{message}': {r.stderr.strip()}")
 
 
@@ -332,15 +332,27 @@ def check_ip_domains(tmp):
 
 
 def notes(tmp, values):
-    r = helm("install", "-n", "chat", "--dry-run=client", "-f", values_file(tmp, "notes", values))
+    chart = os.path.join(tmp, "notes-chart")
+    if not os.path.isdir(chart):
+        shutil.copytree(CHART, chart)
+        templates = os.path.join(chart, "templates")
+        with open(os.path.join(templates, "NOTES.txt")) as f:
+            body = f.read()
+        os.remove(os.path.join(templates, "NOTES.txt"))
+        with open(os.path.join(templates, "_notes-check.tpl"), "w") as f:
+            f.write('{{- define "notes-check" -}}\n' + body + "{{- end -}}\n")
+        with open(os.path.join(templates, "notes-check.yaml"), "w") as f:
+            f.write('notes: {{ include "notes-check" . | toJson }}\n')
+    r = helm("template", "-n", "chat", "--show-only", "templates/notes-check.yaml", "-f", values_file(tmp, "notes", values), chart=chart)
     if r.returncode != 0:
         fail(f"NOTES for {values} do not render: {r.stderr.strip()}")
-    return r.stdout
+        return ""
+    return yaml.safe_load(r.stdout)["notes"]
 
 
 def check_notes(tmp):
     for domain in ("2001:db8::7", "[2001:db8::7]", "192.168.1.5"):
-        text = notes(tmp, {"domain": domain}).partition("NOTES:")[2]
+        text = notes(tmp, {"domain": domain})
         if "ipFamil" in text or "fluxer-root.crt" not in text or "-fingerprint -sha256" not in text:
             fail(f"NOTES for {domain} mention IP families or leave out the root certificate and its fingerprint")
 
