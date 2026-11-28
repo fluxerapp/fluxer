@@ -222,6 +222,9 @@ func runMove(ctx context.Context, app *App, inst *instance.Instance, f *migrateF
 		inst = fresh
 		target = newMoveTarget(app, inst, to, f.NewDir, false)
 	}
+	if err := keepHandRunFiles(ctx, app, inst); err != nil {
+		return err
+	}
 	recorded, err := loadMigrations(inst)
 	if err != nil {
 		return err

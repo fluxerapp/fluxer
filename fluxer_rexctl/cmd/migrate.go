@@ -819,6 +819,9 @@ func runUndo(ctx context.Context, app *App, inst *instance.Instance, o migrate.O
 	if o != migrate.OptKV && o != migrate.OptStorage {
 		return ui.Usage("--undo takes kv or storage. To leave the native runtime or one Rust process, restore the backup from before the change with rexctl restore.")
 	}
+	if err := handRunUndoRefusal(inst); err != nil {
+		return err
+	}
 	st, err := loadMigrations(inst)
 	if err != nil {
 		return err

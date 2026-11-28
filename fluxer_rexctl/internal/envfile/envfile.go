@@ -202,6 +202,19 @@ func (f *File) Set(key, value string) {
 	}
 }
 
+func (f *File) Comment(text string) {
+	f.lines = append(f.lines, line{raw: "# " + text})
+}
+
+func (f *File) Bytes() []byte {
+	var b strings.Builder
+	for _, l := range f.lines {
+		b.WriteString(l.raw)
+		b.WriteByte('\n')
+	}
+	return []byte(b.String())
+}
+
 func (f *File) Delete(key string) {
 	out := f.lines[:0]
 	for _, l := range f.lines {

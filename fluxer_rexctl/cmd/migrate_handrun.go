@@ -3,6 +3,7 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
@@ -195,7 +197,48 @@ func handRunPlan(inst *instance.Instance, to string, target migrate.MoveTarget, 
 		items[len(items)-2].Detail = "the new files keep everything in Fluxer's volume, also what the old containers kept in folders on this machine"
 	}
 	record := ui.PlanItem{Verb: ui.PlanCreate, Text: fmt.Sprintf("Keep a record of this install in %s", filepath.Join(inst.Dir, instance.StateDirName)), Detail: "your own files stay as they are"}
+	if len(modes) > 0 {
+		at := 1 + len(modes)
+		env := ui.PlanItem{Verb: ui.PlanChange, Text: "Update .env to match", Detail: "after the change above, for your own files to keep describing what runs. The old .env stays as " + instance.EnvBeforeRexctl}
+		items = append(items[:at], append([]ui.PlanItem{env}, items[at:]...)...)
+	}
 	return append([]ui.PlanItem{record}, items...)
+}
+
+func keepHandRunFiles(ctx context.Context, app *App, inst *instance.Instance) error {
+	if inst.State.HandRun == nil {
+		return nil
+	}
+	changes, err := instance.HandRunEnvChanges(inst)
+	var placed []string
+	if err == nil {
+		placed, err = instance.SyncHandRunEnv(inst, changes, time.Now())
+	}
+	if err == nil {
+		err = inst.SameAsFiles(ctx)
+	}
+	if err != nil {
+		msg := fmt.Sprintf("rexctl stopped before the move, because your files in %s don't match what runs yet.", inst.Dir)
+		fix := "Fluxer keeps running."
+		if fileExists(inst.Path(instance.EnvBeforeRexctl)) {
+			fix += fmt.Sprintf(" Your earlier .env is %s.", inst.Path(instance.EnvBeforeRexctl))
+		}
+		var ee *ui.ExitError
+		if errors.As(err, &ee) {
+			msg += " " + ee.Msg
+			if ee.Fix != "" {
+				fix += " " + ee.Fix
+			}
+		}
+		return &ui.ExitError{Code: ui.ExitFailed, Msg: msg, Fix: fix, Err: err}
+	}
+	if len(changes) > 0 {
+		app.UI.OK("Updated .env in %s to match what runs. The earlier one is %s.", inst.Dir, instance.EnvBeforeRexctl)
+	}
+	if len(placed) > 0 {
+		app.UI.Info("rexctl added %s from Fluxer %s to %s, because .env now lists %s.", ui.JoinAnd(placed), inst.State.Release, inst.Dir, oneOrMany(len(placed), "it", "them"))
+	}
+	return nil
 }
 
 func handRunReport(app *App, plan *instance.HandRunPlan, rel, from string, modes bool) {
@@ -220,6 +263,20 @@ func handRunReport(app *App, plan *instance.HandRunPlan, rel, from string, modes
 	}
 	body = append(body, fmt.Sprintf("rexctl adds %s and puts backups in %s. %s", filepath.Join(folder.Dir, instance.StateDirName), plan.Staged.BackupDir(), files))
 	app.UI.Card(ui.Card{Title: "Fluxer in " + folder.Dir + " was set up by hand", Body: body})
+}
+
+func handRunUndoRefusal(inst *instance.Instance) error {
+	if err := handRunChangedRefusal(inst); err != nil || inst.State.HandRun == nil {
+		return err
+	}
+	now, err := os.ReadFile(inst.Path(instance.EnvFileName))
+	if err != nil {
+		return err
+	}
+	if before, err := os.ReadFile(inst.Path(instance.EnvBeforeRexctl)); err == nil && !bytes.Equal(before, now) {
+		return ui.Refused(fmt.Sprintf("rexctl updated .env in %s for this change, and going back would leave .env out of step with what runs.", inst.Dir), "Fluxer keeps running as it is. Move it with rexctl migrate, or remove the record with rexctl migrate --forget.")
+	}
+	return nil
 }
 
 func handRunChangedRefusal(inst *instance.Instance) error {

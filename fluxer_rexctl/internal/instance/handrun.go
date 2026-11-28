@@ -135,6 +135,9 @@ func ReadHandRun(dir string) (*HandRunFolder, error) {
 		h.Custom = CustomCompose
 		h.Files = append(h.Files, CustomCompose)
 	}
+	if h.Custom == "" && isFile(filepath.Join(abs, CustomCompose)) {
+		return nil, handRunRefusal(fmt.Sprintf("%s is in %s, but COMPOSE_FILE in .env doesn't list it, and rexctl always reads it.", CustomCompose, abs), "List it in COMPOSE_FILE in .env, or move it out of the folder, then run this again.")
+	}
 	return h, nil
 }
 
