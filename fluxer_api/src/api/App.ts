@@ -16,6 +16,7 @@ import {createMetricsMiddleware} from '@fluxer/hono/src/middleware/Metrics';
 import {LOCKED_DOWN_PERMISSIONS_POLICY, securityHeaders} from '@fluxer/hono/src/middleware/SecurityHeaders';
 import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
 import {setIsDevelopment} from '@fluxer/schema/src/primitives/UrlValidators';
+import {KVClientError, KVClientErrorCode} from '@pkgs/kv_client/src/KVClientError';
 import type {Context} from 'hono';
 import {Hono} from 'hono';
 
@@ -32,11 +33,16 @@ interface APIAppResult {
 	renderMetrics: () => string;
 }
 
+function isUnavailableDependency(error: Error): boolean {
+	if (error instanceof StorageReadOnlyError || error instanceof StorageFullError) return true;
+	return (
+		error instanceof KVClientError &&
+		(error.code === KVClientErrorCode.TIMEOUT || error.code === KVClientErrorCode.REQUEST_FAILED)
+	);
+}
+
 function TelemetryAwareAppErrorHandler(error: Error, ctx: Context<HonoEnv>): Response | Promise<Response> {
-	const err =
-		error instanceof StorageReadOnlyError || error instanceof StorageFullError
-			? new ServiceUnavailableError({cause: error})
-			: error;
+	const err = isUnavailableDependency(error) ? new ServiceUnavailableError({cause: error}) : error;
 	if (!(err instanceof IpBannedError)) {
 		const status = resolveErrorStatus(err);
 		if (status !== null && !ctx.get('user')) {
