@@ -250,7 +250,7 @@ func runRestore(ctx context.Context, app *App, arg string, f restoreFlags) error
 	case errors.Is(err, instance.ErrNotFound):
 		existing = nil
 	case errors.Is(err, instance.ErrLegacy):
-		return preRexctlRefusal(ctx, dir)
+		return folderRefusal(dir, err)
 	default:
 		return err
 	}

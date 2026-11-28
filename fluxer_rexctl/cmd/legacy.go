@@ -4,6 +4,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	goruntime "runtime"
@@ -23,10 +24,8 @@ import (
 )
 
 const (
-	legacyMoveFix     = "Run rexctl migrate first."
-	cleanUpReminder   = 14 * 24 * time.Hour
-	releasesPage      = "https://github.com/fluxerapp/fluxer/releases"
-	legacyLookupLimit = 10 * time.Second
+	legacyMoveFix   = "Run rexctl migrate first."
+	cleanUpReminder = 14 * 24 * time.Hour
 )
 
 var legacyRefusedCommands = []string{"voice add", "voice join"}
@@ -49,27 +48,31 @@ func legacyRefusal() error {
 	return ui.Refused("This instance uses the older layout with one container per service, and rexctl no longer changes it this way.", legacyMoveFix)
 }
 
-func lastComposeRelease(ctx context.Context) string {
-	ctx, cancel := context.WithTimeout(ctx, legacyLookupLimit)
-	defer cancel()
-	rel, err := release.Resolve(ctx, "")
-	if err != nil || !release.Valid(rel.ComposeLast) {
-		return ""
-	}
-	return rel.ComposeLast
+const (
+	handRunOldFix = "Run rexctl migrate --to compose --dry-run in that folder to see the move to docker compose files you run yourself, or rexctl migrate --to docker --dry-run to have rexctl run it."
+	unclearFix    = "Check the files against the docs at https://docs.fluxer.com/operator/moving/, then run this again."
+)
+
+func handRunOldLine(dir string) string {
+	return fmt.Sprintf("The Fluxer install in %s runs the older layout from compose files you set up yourself, and rexctl only moves it.", dir)
 }
 
-func takeoverFix(ctx context.Context) string {
-	if last := lastComposeRelease(ctx); last != "" {
-		return fmt.Sprintf("Install rexctl %s from %s/tag/fluxer-release@%s and run rexctl takeover with it, then run rexctl upgrade, which offers the move.", last, releasesPage, last)
+func folderRefusal(dir string, err error) error {
+	var fe *instance.FolderError
+	if !errors.As(err, &fe) {
+		return &ui.ExitError{Code: ui.ExitRefused, Msg: handRunOldLine(dir), Fix: handRunOldFix, Err: err}
 	}
-	return takeoverFixOffline
-}
-
-const takeoverFixOffline = "Install the last rexctl that has rexctl takeover from " + releasesPage + " and run rexctl takeover with it, then run rexctl upgrade, which offers the move."
-
-func preRexctlRefusal(ctx context.Context, dir string) error {
-	return ui.Refused(fmt.Sprintf("The Fluxer install in %s predates rexctl, and this rexctl doesn't take installs over.", dir), takeoverFix(ctx))
+	switch fe.Kind {
+	case instance.KindUnclear:
+		msg := fmt.Sprintf("rexctl can't tell what runs from the files in %s.", dir)
+		if len(fe.Failed) > 0 {
+			msg += " " + strings.Join(fe.Failed, " ")
+		}
+		return &ui.ExitError{Code: ui.ExitRefused, Msg: msg, Fix: unclearFix, Err: err}
+	case instance.KindHandRunNew:
+		return &ui.ExitError{Code: ui.ExitRefused, Msg: fmt.Sprintf("There's no Fluxer instance from rexctl in %s. The Fluxer there runs from compose.yaml without rexctl, and rexctl can't manage it.", dir), Fix: "Keep managing it with the same docker compose commands you set it up with.", Err: err}
+	}
+	return &ui.ExitError{Code: ui.ExitRefused, Msg: handRunOldLine(dir), Fix: handRunOldFix, Err: err}
 }
 
 func legacyNeedsMoveLine(cur, to string) string {

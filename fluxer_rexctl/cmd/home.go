@@ -36,7 +36,7 @@ func runHome(ctx context.Context, app *App, c *cobra.Command) error {
 		homeGreet(app, fmt.Sprintf("Your instance is at %s.", ui.Inline(inst.Origin())))
 		names = homeSuggested(inst)
 	case errors.Is(err, instance.ErrLegacy):
-		homeGreet(app, fmt.Sprintf("There's a Fluxer install from before rexctl in %s. %s", ui.Inline(dir), takeoverFixOffline))
+		homeGreet(app, handRunOldLine(ui.Inline(dir))+" "+handRunOldFix)
 		names = homeLegacy
 	default:
 		homeGreet(app, ui.WelcomeLine)

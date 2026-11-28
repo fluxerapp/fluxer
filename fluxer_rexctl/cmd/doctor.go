@@ -68,7 +68,7 @@ func runDoctor(ctx context.Context, app *App, fix, dryRun bool) error {
 	case errors.Is(err, instance.ErrNotFound):
 		phase = checks.Preinstall
 	case errors.Is(err, instance.ErrLegacy):
-		return preRexctlRefusal(ctx, dir)
+		return folderRefusal(dir, err)
 	case errors.As(err, &se):
 		return settingRefusal(dir, se)
 	default:

@@ -447,7 +447,7 @@ func runUpgradeCheck(ctx context.Context, app *App, f *upgradeFlags) error {
 	if legacy && out.Available {
 		app.UI.Info("%s", legacyNeedsMoveLine(cur, moveRelease(rel.Version)))
 		if inst == nil {
-			app.UI.Info("%s", takeoverFix(ctx))
+			app.UI.Info("%s", handRunOldFix)
 			return nil
 		}
 		app.UI.Next("rexctl migrate")
@@ -483,7 +483,7 @@ func upgradeInstance(ctx context.Context, app *App, dryRun bool) (*instance.Inst
 	}
 	inst, err := instance.Find(dir)
 	if errors.Is(err, instance.ErrLegacy) {
-		return nil, false, preRexctlRefusal(ctx, dir)
+		return nil, false, folderRefusal(dir, err)
 	}
 	if err != nil {
 		inst, err := app.Instance()

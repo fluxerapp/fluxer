@@ -258,7 +258,7 @@ func install(ctx context.Context, app *App, c *cobra.Command, f *installFlags) e
 	second := false
 	switch {
 	case errors.Is(err, instance.ErrLegacy):
-		return preRexctlRefusal(ctx, dir)
+		return folderRefusal(dir, err)
 	case errors.Is(err, instance.ErrNotFound):
 	case err != nil:
 		return err

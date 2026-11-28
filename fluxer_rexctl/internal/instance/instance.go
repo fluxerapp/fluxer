@@ -95,7 +95,7 @@ func fallback() (string, error) {
 }
 
 func present(dir string) bool {
-	return exists(filepath.Join(dir, StateDirName, StateFileName)) || isLegacy(dir)
+	return exists(filepath.Join(dir, StateDirName, StateFileName)) || Classify(dir) != KindNone
 }
 
 func Find(dir string) (*Instance, error) {
@@ -110,8 +110,8 @@ func FindRepairing(dir string, keys []string) (*Instance, error) {
 	i := &Instance{Dir: dir}
 	state, err := loadState(i.StatePath(), keys)
 	if errors.Is(err, fs.ErrNotExist) {
-		if isLegacy(dir) {
-			return nil, ErrLegacy
+		if ferr := folderError(dir, false); ferr != nil {
+			return nil, ferr
 		}
 		return nil, ErrNotFound
 	}
@@ -120,19 +120,6 @@ func FindRepairing(dir string, keys []string) (*Instance, error) {
 	}
 	i.State = state
 	return i, nil
-}
-
-func isLegacy(dir string) bool {
-	if exists(filepath.Join(dir, StateDirName, StateFileName)) || !exists(filepath.Join(dir, EnvFileName)) {
-		return false
-	}
-	for _, name := range defaultComposeNames {
-		if exists(filepath.Join(dir, name)) {
-			return true
-		}
-	}
-	env, _ := envfile.Load(filepath.Join(dir, EnvFileName))
-	return env != nil && env.Value("COMPOSE_FILE") != ""
 }
 
 func rootManaged(dir string) bool {
@@ -161,8 +148,8 @@ func Create(dir, project string) (*Instance, error) {
 	if exists(i.StatePath()) {
 		return nil, errExists
 	}
-	if isLegacy(dir) {
-		return nil, ErrLegacy
+	if ferr := folderError(dir, true); ferr != nil {
+		return nil, ferr
 	}
 	if exists(i.Path(EnvFileName)) {
 		return nil, errExists

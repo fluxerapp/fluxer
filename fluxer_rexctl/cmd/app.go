@@ -267,7 +267,7 @@ func (a *App) InstanceRepairing(keys []string) (*instance.Instance, error) {
 		}
 		return nil, ui.Refused(fmt.Sprintf("There's no Fluxer instance in %s.", dir), "Run rexctl install, or pass --dir.")
 	case errors.Is(err, instance.ErrLegacy):
-		return nil, preRexctlRefusal(context.Background(), dir)
+		return nil, folderRefusal(dir, err)
 	case errors.Is(err, instance.ErrNewerState):
 		return nil, ui.Refused(fmt.Sprintf("A newer rexctl manages the instance in %s.", dir), "Download the latest rexctl, then try again.")
 	case errors.As(err, &se):
@@ -507,8 +507,9 @@ func (a *App) adminFor(inst *instance.Instance, t adminapi.Transport) *adminapi.
 			return
 		}
 		fix := "Run rexctl upgrade."
-		if inst.State != nil && inst.State.Ejected != nil {
-			fix = takeoverFixOffline
+		var ej *instance.EjectedError
+		if errors.As(inst.Managed(), &ej) {
+			fix = ej.Fix()
 		}
 		a.UI.Warn(fmt.Sprintf("rexctl is %s and Fluxer is %s.", a.Version, apiVersion), fix)
 	}

@@ -615,7 +615,7 @@ func RealPath(path string) string {
 
 func gone(dir string) bool {
 	_, err := os.Stat(filepath.Join(dir, StateDirName, StateFileName))
-	return errors.Is(err, fs.ErrNotExist) && !isLegacy(dir)
+	return errors.Is(err, fs.ErrNotExist) && Classify(dir) == KindNone
 }
 
 func readable(dir string) bool {
@@ -624,7 +624,7 @@ func readable(dir string) bool {
 		f.Close()
 		return true
 	}
-	return isLegacy(dir)
+	return Classify(dir) != KindNone
 }
 
 func clean(dir string) string {
