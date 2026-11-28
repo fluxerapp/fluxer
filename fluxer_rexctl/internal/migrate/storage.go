@@ -44,17 +44,20 @@ var (
 	errSharedBucket  = errors.New("migrate: the uploads bucket shares its name with another bucket")
 )
 
-const attachmentScript = `(async()=>{const fs=require('node:fs'),path=require('node:path');` +
+const attachmentScript = `(async()=>{const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');` +
 	`const e=process.env,want=Number(process.argv[1]),root=e.FLUXER_STORAGE_ROOT,base=e.FLUXER_INTERNAL_MEDIA_PROXY_ENDPOINT;` +
+	`const sk=(e.FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64||'').split(',').map(s=>s.trim()).filter(Boolean)[0],secret=sk?Buffer.from(sk,'base64'):null;` +
+	`const sign=k=>{if(!secret)return '';const now=Math.floor(Date.now()/1000),hex=n=>n.toString(16).padStart(8,'0'),ex=hex(now+3600),is=hex(now);` +
+	`return '?ex='+ex+'&is='+is+'&hm='+crypto.createHmac('sha256',secret).update('fluxer-attachment-url-v1\n'+ex+'\n'+is+'\n\n'+k).digest('hex')};` +
 	`const keys=[];const walk=async(dir,rel)=>{let list;try{list=await fs.promises.readdir(dir,{withFileTypes:true})}catch{return}` +
 	`for(const d of list){if(keys.length>=5000)return;const r=rel+'/'+d.name;` +
 	`if(d.isDirectory())await walk(path.join(dir,d.name),r);else if(d.isFile())keys.push(r)}};` +
 	`await walk(path.join(root,e.FLUXER_S3_BUCKET_CDN||'fluxer','attachments'),'attachments');` +
 	`for(let i=keys.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[keys[i],keys[j]]=[keys[j],keys[i]]}` +
 	`const pick=keys.slice(0,want),missing=[];let ok=0,refused=0;` +
-	`for(const k of pick){const r=await fetch(base+'/'+k.split('/').map(encodeURIComponent).join('/'),{method:'HEAD'});` +
+	`for(const k of pick){const r=await fetch(base+'/'+k.split('/').map(encodeURIComponent).join('/')+sign(k),{method:'HEAD'});` +
 	`if(r.ok)ok++;else if(r.status===404)missing.push(k);else refused++}` +
-	`console.log(JSON.stringify({checked:pick.length,ok,missing,refused}))})()` +
+	`console.log(JSON.stringify({checked:pick.length,ok,missing,refused,signed:secret!==null}))})()` +
 	`.catch(e=>{console.error(String(e&&e.message||e));process.exit(1)})`
 
 type attachmentReport struct {
@@ -62,6 +65,7 @@ type attachmentReport struct {
 	OK      int      `json:"ok"`
 	Missing []string `json:"missing"`
 	Refused int      `json:"refused"`
+	Signed  bool     `json:"signed"`
 }
 
 type storageReport struct {
@@ -203,9 +207,18 @@ func (s *StorageStep) Check(ctx context.Context, r *Run) error {
 	if len(rep.Missing) > 0 {
 		return fmt.Errorf("media-proxy can't find %d of %d attachments, such as %s", len(rep.Missing), rep.Checked, rep.Missing[0])
 	}
-	if rep.Refused > 0 {
-		r.note("media-proxy refused %d of %d attachments rexctl asked for, likely because attachment links need a signature.", rep.Refused, rep.Checked)
+	if rep.Checked == 0 {
+		return nil
 	}
+	env, err := r.Host.Env(nil)
+	if err != nil {
+		return err
+	}
+	if rep.Signed && strings.EqualFold(strings.TrimSpace(env[settings.SignatureModeVar]), "enforce") {
+		r.note("media-proxy served %d of %d attachments rexctl checked. The checks used signed links, as signed attachments are enforced.", rep.OK, rep.Checked)
+		return nil
+	}
+	r.note("media-proxy served %d of %d attachments rexctl checked.", rep.OK, rep.Checked)
 	return nil
 }
 
