@@ -21,7 +21,7 @@ function getGlobalKey(identifier: string): string {
 	return `ratelimit:global:${identifier}`;
 }
 
-interface IRateLimitStore {
+export interface IRateLimitStore {
 	checkLeakyBucketLimit(key: string, limit: number, windowMs: number, cost: number): Promise<KVRateLimitResult>;
 	del(...keys: Array<string>): Promise<number>;
 	scan(pattern: string, count: number): Promise<Array<string>>;
