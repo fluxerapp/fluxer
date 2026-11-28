@@ -501,6 +501,9 @@ func newNativeTarget(app *App, inst *instance.Instance, dir string, dryRun bool)
 }
 
 func (t *nativeTarget) Preflight(ctx context.Context, chosen map[string]string) error {
+	if reason := dockerBlocked(t.inst); reason != "" {
+		return ui.Refused(reason, "Move it to one container with "+toOneContainer(t.inst)+" instead.")
+	}
 	if !t.dryRun {
 		if err := t.app.nativeRoot(t.inst.Dir); err != nil {
 			return err
@@ -692,6 +695,7 @@ func (t *containerTarget) Preflight(ctx context.Context, chosen map[string]strin
 	if _, err := resolveRelease(ctx, stack.EmbeddedRelease()); err != nil {
 		return err
 	}
+	t.readOnlyUnitsNote(ctx)
 	if !t.dryRun || !t.checksDatabase() {
 		return nil
 	}
@@ -701,6 +705,24 @@ func (t *containerTarget) Preflight(ctx context.Context, chosen map[string]strin
 		return nil
 	}
 	return t.checkDatabase(ctx, e)
+}
+
+func (t *containerTarget) readOnlyUnitsNote(ctx context.Context) {
+	if euid() != 0 || !host.SystemUnitsReadOnly() {
+		return
+	}
+	boot := t.engine.Name() + " starts Fluxer's container again after this machine restarts."
+	if t.engine == engine.Podman && !host.PodmanRestartOn(ctx, false) {
+		boot = "Podman starts Fluxer's container again after a restart only when podman-restart.service is on."
+		if host.NixOS() {
+			boot += ` To turn it on, add systemd.services.podman-restart.wantedBy = [ "multi-user.target" ]; to /etc/nixos/configuration.nix.`
+		}
+	}
+	note := fmt.Sprintf("%s is read-only on this machine, and the move writes no services there. %s", host.SystemUnitDir(), boot)
+	if s := readSchedules(ctx, t.inst); s.auto || s.backups != "" {
+		note += " After the move, rexctl shows the timers for automatic upgrades and backups that you need to add yourself."
+	}
+	t.app.UI.Info("%s", note)
 }
 
 func (t *containerTarget) checksDatabase() bool {

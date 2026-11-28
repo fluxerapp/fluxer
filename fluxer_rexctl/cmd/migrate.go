@@ -21,6 +21,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/deploy"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/envfile"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/migrate"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/native"
@@ -612,6 +613,9 @@ func toOneContainer(inst *instance.Instance) string {
 func dockerBlocked(inst *instance.Instance) string {
 	if !nativeSupported() {
 		return "The move out of " + engineName(inst) + " works only on Linux with systemd."
+	}
+	if host.SystemUnitsReadOnly() {
+		return fmt.Sprintf("%s is read-only on this machine, and a systemd install needs to write its own service there.", host.SystemUnitDir())
 	}
 	if kind, name, ok := rootlessEngine(inst); ok {
 		return fmt.Sprintf("The move out of %s needs %s running as root, and this instance runs on it without root under the account %s.", kind, kind, name)

@@ -4,6 +4,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -94,6 +95,10 @@ func setupBootService(ctx context.Context, app *App, inst *instance.Instance, e 
 		}
 	}
 	steps, err := u.InstallSteps(ctx)
+	if errors.Is(err, host.ErrReadOnlyUnits) {
+		app.UI.Warn("rexctl can't add the service that starts Fluxer with this machine, because "+host.SystemUnitDir()+" is read-only.", "")
+		return nil
+	}
 	if err != nil {
 		return err
 	}
@@ -107,6 +112,14 @@ func setupBootService(ctx context.Context, app *App, inst *instance.Instance, e 
 		return err
 	}
 	return saveBootService(inst, instance.BootServiceOn)
+}
+
+func readOnlyBootError() error {
+	fix := "Change it through whatever manages " + host.SystemUnitDir() + " on this machine."
+	if host.NixOS() {
+		fix = "Change it in /etc/nixos/configuration.nix, then run sudo nixos-rebuild switch."
+	}
+	return ui.Refused("rexctl can't change the service that starts Fluxer with this machine, because "+host.SystemUnitDir()+" is read-only.", fix)
 }
 
 func saveBootService(inst *instance.Instance, v string) error {
@@ -177,6 +190,9 @@ func runBootSet(ctx context.Context, app *App, v string) error {
 	on := v == instance.BootServiceOn
 	return app.Locked(ctx, inst, func() error {
 		steps, err := rt.BootSteps(ctx, bare(r), on)
+		if errors.Is(err, host.ErrReadOnlyUnits) {
+			return readOnlyBootError()
+		}
 		if err != nil {
 			return err
 		}
@@ -210,6 +226,9 @@ func runBootSet(ctx context.Context, app *App, v string) error {
 			err = r.Boot().Enable(ctx, nil)
 		} else {
 			err = r.Boot().Disable(ctx, nil)
+		}
+		if errors.Is(err, host.ErrReadOnlyUnits) {
+			return readOnlyBootError()
 		}
 		if err != nil {
 			return ui.Wrap(err, "Couldn't change the service that starts Fluxer with this machine.", "Run rexctl boot "+v+" again.")

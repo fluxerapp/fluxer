@@ -99,9 +99,18 @@ var (
 		_, err := os.Stat("/run/systemd/system")
 		return err == nil
 	}
+	systemUnitsReadOnly = func() bool { return BootUnitSupported() && readOnlyDir(systemUnitDir) }
 )
 
+var ErrReadOnlyUnits = errors.New("host: the systemd unit folder is read-only")
+
 func BootUnitSupported() bool { return bootUnitSupported() }
+
+func SystemUnitDir() string { return systemUnitDir }
+
+func SystemUnitsReadOnly() bool { return systemUnitsReadOnly() }
+
+func unitsReadOnly(rootless bool) bool { return !rootless && systemUnitsReadOnly() }
 
 func RemoveFile(path string) error {
 	err := os.Remove(path)
@@ -492,7 +501,7 @@ func (u BootUnit) RefreshSteps(ctx context.Context) ([]Step, error) {
 	if err != nil {
 		return nil, err
 	}
-	if _, err := os.Stat(path); os.IsNotExist(err) {
+	if _, err := os.Stat(path); os.IsNotExist(err) || unitsReadOnly(u.Rootless) {
 		return nil, nil
 	}
 	steps, _, err := u.writeSteps(ctx)
@@ -509,6 +518,9 @@ func (u BootUnit) RemoveSteps(ctx context.Context) ([]Step, error) {
 	}
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return nil, nil
+	}
+	if unitsReadOnly(u.Rootless) {
+		return nil, ErrReadOnlyUnits
 	}
 	return u.removeSteps(path, unitIs(ctx, u.Rootless, u.Name(), "enabled")), nil
 }
@@ -573,6 +585,9 @@ func (u BootUnit) writeSteps(ctx context.Context) ([]Step, string, error) {
 		}
 	} else if !filepath.IsAbs(u.Binary) || !filepath.IsAbs(u.Dir) {
 		return nil, "", fmt.Errorf("host: boot unit needs absolute paths, got %q and %q", u.Binary, u.Dir)
+	}
+	if unitsReadOnly(u.Rootless) {
+		return nil, "", ErrReadOnlyUnits
 	}
 	path, err := u.Path()
 	if err != nil {

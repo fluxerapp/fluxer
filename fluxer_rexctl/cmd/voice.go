@@ -1063,7 +1063,7 @@ func removeVoiceMachine(ctx context.Context, app *App, e *engine.Engine, inst *i
 	}
 	if _, err := removeAutoUpgrade(ctx, inst, e); err != nil {
 		app.UI.Detail("removing automatic upgrades: %v", err)
-		app.UI.Warn("The timer that upgrades the voice servers by itself is still on this machine.", "")
+		app.UI.Warn("The timer that upgrades the voice servers by itself is still on this machine.", timersLeftFix(err))
 	}
 	app.forget(inst.Dir)
 	removeVoiceSysctl(app)

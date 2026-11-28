@@ -389,8 +389,17 @@ func runAutoUpgradeOn(ctx context.Context, app *App, c *cobra.Command, o autoUpg
 	}
 	a.At, a.Day, a.FullBackup = at, day, fullBackup
 	return app.Locked(ctx, inst, func() error {
-		if err := host.InstallAutoUpgrade(ctx, a); err != nil {
+		err := host.InstallAutoUpgrade(ctx, a)
+		byHand := errors.Is(err, host.ErrReadOnlyUnits)
+		switch {
+		case byHand:
+			if err := upgradeTimersByHand(app, inst, a); err != nil {
+				return err
+			}
+		case err != nil:
 			return schedulerError(err, "Couldn't turn on automatic upgrades.", "rexctl auto-upgrade on", inst.Dir)
+		default:
+			delete(inst.State.TimersNeeded, instance.TimersUpgrade)
 		}
 		if !inst.State.IsVoice() {
 			if inst.State.Settings == nil {
@@ -405,6 +414,9 @@ func runAutoUpgradeOn(ctx context.Context, app *App, c *cobra.Command, o autoUpg
 		inst.State.NotifyURL = notify
 		if err := saveInstance(inst); err != nil {
 			return err
+		}
+		if byHand {
+			return nil
 		}
 		startDay, start, err := a.Start()
 		if err != nil {
@@ -469,8 +481,10 @@ func runAutoUpgradeOff(ctx context.Context, app *App) error {
 			}
 			removed = removed || done
 		}
-		if inst.State.NotifyURL != "" {
+		_, wanted := inst.State.TimersNeeded[instance.TimersUpgrade]
+		if inst.State.NotifyURL != "" || wanted {
 			inst.State.NotifyURL = ""
+			delete(inst.State.TimersNeeded, instance.TimersUpgrade)
 			if err := saveInstance(inst); err != nil {
 				return err
 			}
@@ -506,6 +520,9 @@ func rootBinary(binary, dir string) error {
 func schedulerError(err error, msg, command, dir string) error {
 	if errors.Is(err, host.ErrNeedsRoot) {
 		return ui.Refused(msg+" This needs root, and this machine has no sudo.", "Run "+rootAgain(dir)+" as root.")
+	}
+	if errors.Is(err, host.ErrReadOnlyUnits) {
+		return ui.Refused(msg+" The timers are in "+host.SystemUnitDir()+", which is read-only on this machine.", readOnlyTimersFix())
 	}
 	return ui.Wrap(err, msg, "Run "+command+" --verbose to see why.")
 }
@@ -776,4 +793,51 @@ func postNotice(ctx context.Context, rawURL string, n upgradeNotice) error {
 		return fmt.Errorf("notify: status %d", resp.StatusCode)
 	}
 	return nil
+}
+
+func upgradeTimersByHand(app *App, inst *instance.Instance, a host.AutoUpgrade) error {
+	units, err := a.UnitFiles()
+	if err != nil {
+		return err
+	}
+	return timersByHand(app, inst, instance.TimersUpgrade, "automatic upgrades", units)
+}
+
+func timersByHand(app *App, inst *instance.Instance, kind, what string, units []host.UnitFile) error {
+	config, title := host.UnitText(units), "Units"
+	fix := "Add these units to " + host.SystemUnitDir() + " through whatever manages it on this machine."
+	if host.NixOS() {
+		config, title = host.NixConfig(units), "configuration.nix"
+		fix = "Add these lines inside the outer braces of /etc/nixos/configuration.nix, then run sudo nixos-rebuild switch."
+	}
+	if _, elsewhere := host.TimersOnMachine(host.Timers(units), host.UnitRuns(units)); elsewhere {
+		fix = "Put these units in place of the matching ones in " + host.SystemUnitDir() + ", through whatever manages it on this machine."
+		if host.NixOS() {
+			fix = "Put these lines in place of the matching systemd lines in /etc/nixos/configuration.nix, then run sudo nixos-rebuild switch."
+		}
+	}
+	if inst.State.TimersNeeded == nil {
+		inst.State.TimersNeeded = map[string]instance.Timers{}
+	}
+	inst.State.TimersNeeded[kind] = instance.Timers{Names: host.Timers(units), Runs: host.UnitRuns(units), Config: config}
+	if err := saveInstance(inst); err != nil {
+		return err
+	}
+	app.UI.Warn(fmt.Sprintf("rexctl can't add the timers for %s, because %s is read-only on this machine.", what, host.SystemUnitDir()), fix+" rexctl doctor --verbose shows them again.")
+	app.UI.Code(ui.CodeBlock{Title: title, Text: config})
+	return nil
+}
+
+func timersLeftFix(err error) string {
+	if errors.Is(err, host.ErrReadOnlyUnits) {
+		return readOnlyTimersFix()
+	}
+	return ""
+}
+
+func readOnlyTimersFix() string {
+	if host.NixOS() {
+		return "Change them in /etc/nixos/configuration.nix, then run sudo nixos-rebuild switch."
+	}
+	return "Change them through whatever manages " + host.SystemUnitDir() + " on this machine."
 }

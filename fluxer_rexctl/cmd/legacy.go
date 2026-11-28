@@ -94,7 +94,7 @@ func moveChoices(inst *instance.Instance) []moveChoice {
 		kind = engine.Docker
 	}
 	out := []moveChoice{{to: string(kind), label: "In " + kind.Name() + ", one container"}, {to: runtimeCompose, label: fmt.Sprintf("With %s, files you run yourself", instance.ComposeTool(string(kind)))}}
-	if goruntime.GOOS == "linux" && euid() == 0 && host.BootUnitSupported() && nativeOS(detectHost(context.Background())) {
+	if goruntime.GOOS == "linux" && euid() == 0 && host.BootUnitSupported() && !host.SystemUnitsReadOnly() && nativeOS(detectHost(context.Background())) {
 		out = append(out, moveChoice{to: runtimeSystemd, label: "On this machine with systemd"})
 	}
 	return out

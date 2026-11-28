@@ -31,6 +31,9 @@ func (in *installer) nativeFlags(ctx context.Context) error {
 	if err := in.app.nativeRoot(""); err != nil {
 		return err
 	}
+	if host.SystemUnitsReadOnly() {
+		return ui.Refused(fmt.Sprintf("%s is read-only on this machine, and a systemd install needs to write its own service there.", host.SystemUnitDir()), "Run rexctl install --runtime docker to use one container.")
+	}
 	for _, name := range nativeComposeFlags {
 		if in.c.Flags().Changed(name) {
 			return ui.Usage(fmt.Sprintf("--runtime systemd doesn't take --%s.", name))

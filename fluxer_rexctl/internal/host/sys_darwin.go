@@ -19,6 +19,8 @@ import (
 
 func Memory() (uint64, error) { return unix.SysctlUint64("hw.memsize") }
 
+func readOnlyDir(string) bool { return false }
+
 func FreeDisk(path string) (uint64, error) {
 	var st unix.Statfs_t
 	if err := unix.Statfs(existingParent(path), &st); err != nil {

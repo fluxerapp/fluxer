@@ -63,6 +63,7 @@ type State struct {
 	MigrateBackup   string            `json:"migrate_backup,omitempty"`
 	Restored        *Restored         `json:"restored,omitempty"`
 	BootService     string            `json:"boot_service,omitempty"`
+	TimersNeeded    map[string]Timers `json:"timers_needed,omitempty"`
 	ExtraHosts      []string          `json:"extra_hosts,omitempty"`
 	Voice           []VoiceServer     `json:"voice,omitempty"`
 	VoiceEdge       *VoiceEdge        `json:"voice_edge,omitempty"`
@@ -91,6 +92,17 @@ type MovedFrom struct {
 }
 
 const ThenCompose = "compose"
+
+type Timers struct {
+	Names  []string          `json:"names"`
+	Runs   map[string]string `json:"runs,omitempty"`
+	Config string            `json:"config"`
+}
+
+const (
+	TimersUpgrade = "upgrade"
+	TimersBackup  = "backup"
+)
 
 type HandRun struct {
 	At        time.Time     `json:"at"`

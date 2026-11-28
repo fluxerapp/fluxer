@@ -131,6 +131,7 @@ var order = []string{
 	"restore-unfinished",
 	"move-download",
 	"boot-unit",
+	"host-timers",
 	"origin",
 	"vapid",
 	"attachment-signatures",

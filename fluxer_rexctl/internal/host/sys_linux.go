@@ -15,6 +15,10 @@ import (
 	"unicode"
 )
 
+func readOnlyDir(dir string) bool {
+	return errors.Is(syscall.Access(dir, 2), syscall.EROFS)
+}
+
 func Memory() (uint64, error) {
 	data, err := os.ReadFile("/proc/meminfo")
 	if err != nil {

@@ -122,11 +122,11 @@ func runUninstall(ctx context.Context, app *App, keepData, deleteBackups bool, c
 			unrouteFromEdge(context.WithoutCancel(ctx), app, inst)
 			if _, err := removeAutoUpgrade(context.WithoutCancel(ctx), inst, rt.UninstallEngine(bare(r))); err != nil {
 				app.UI.Detail("removing automatic upgrades: %v", err)
-				s.Warn("The timer that upgrades Fluxer by itself is still on this machine.", "")
+				s.Warn("The timer that upgrades Fluxer by itself is still on this machine.", timersLeftFix(err))
 			}
 			if err := removeBackupSchedule(context.WithoutCancel(ctx), inst); err != nil && !errors.Is(err, host.ErrNoScheduler) {
 				app.UI.Detail("removing scheduled backups: %v", err)
-				s.Warn("The timer that backs up Fluxer by itself is still on this machine.", "")
+				s.Warn("The timer that backs up Fluxer by itself is still on this machine.", timersLeftFix(err))
 			}
 			s.Done("Removed Fluxer.")
 			return nil

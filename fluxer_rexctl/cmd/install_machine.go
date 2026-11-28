@@ -402,7 +402,7 @@ func (in *installer) podmanSetup(ctx context.Context) *ui.Task {
 	}
 	s := host.CheckPodman(ctx, in.engine.Rootless, false)
 	steps := s.Steps()
-	if in.f.Runtime == runtimePodman && in.f.BootService != instance.BootServiceOff && !host.PodmanRestartOn(ctx, in.engine.Rootless) {
+	if in.f.Runtime == runtimePodman && in.f.BootService != instance.BootServiceOff && !host.PodmanRestartOn(ctx, in.engine.Rootless) && (in.engine.Rootless || !host.SystemUnitsReadOnly()) {
 		steps = append(steps, host.PodmanRestartStep(in.engine.Rootless))
 	}
 	if len(steps) == 0 || !in.f.SetupPodman || in.allowed("setup-podman", true, nil) != nil {

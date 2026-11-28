@@ -290,7 +290,9 @@ func (in *installer) scheduleBackups(ctx context.Context) {
 		return
 	}
 	if _, err := setBackupSchedule(ctx, in.app, in.inst, in.backups); err != nil {
-		in.app.UI.ReportError(err)
+		if !errors.Is(err, errTimersByHand) {
+			in.app.UI.ReportError(err)
+		}
 		return
 	}
 	in.scheduled = true

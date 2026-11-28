@@ -94,6 +94,11 @@ func runBootUnit(ctx context.Context, e *Env) Result {
 		return pass("Docker starts Fluxer again after this machine restarts. Run rexctl boot on to also start its services in order and stop them cleanly.")
 	}
 	switch {
+	case s.Missing && !e.Engine.Rootless && host.SystemUnitsReadOnly():
+		if e.Engine.Kind == engine.Docker {
+			return pass("Docker starts Fluxer again after this machine restarts. rexctl can't add its own service, because " + host.SystemUnitDir() + " is read-only.")
+		}
+		return warn("Fluxer won't start again after this machine restarts, and rexctl can't add a service, because "+host.SystemUnitDir()+" is read-only.", "Move to one container with rexctl migrate, which Podman starts again through podman-restart.service.")
 	case s.Missing, s.Disabled, s.NoLinger:
 		return fixable(warn("Fluxer won't start again after this machine restarts.", "Run rexctl boot on, or rexctl doctor --fix, to start it with the machine."))
 	case s.Stale, s.CopyStale:

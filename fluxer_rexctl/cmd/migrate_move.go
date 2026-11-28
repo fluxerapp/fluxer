@@ -400,6 +400,9 @@ func applySchedules(ctx context.Context, app *App, inst *instance.Instance, s sc
 		if err == nil {
 			a.Day, a.At, a.FullBackup = s.day, s.at, s.fullBackup
 			err = host.InstallAutoUpgrade(ctx, a)
+			if errors.Is(err, host.ErrReadOnlyUnits) {
+				err = upgradeTimersByHand(app, inst, a)
+			}
 		}
 		if err != nil {
 			app.UI.Detail("%v", err)
@@ -412,6 +415,12 @@ func applySchedules(ctx context.Context, app *App, inst *instance.Instance, s sc
 			var b host.ScheduledBackup
 			if b, err = backupScheduleFor(r, inst); err == nil {
 				err = b.Set(ctx, s.backups)
+			}
+			if errors.Is(err, host.ErrReadOnlyUnits) {
+				var units []host.UnitFile
+				if units, err = b.UnitFiles(s.backups); err == nil {
+					err = timersByHand(app, inst, instance.TimersBackup, "scheduled backups", units)
+				}
 			}
 		}
 		if err != nil {

@@ -160,6 +160,8 @@ func runBackupScheduleShow(ctx context.Context, app *App) error {
 	return nil
 }
 
+var errTimersByHand = errors.New("backup schedule: the timers have to be added by hand")
+
 func noBackupScheduler() error {
 	return ui.Refused("rexctl can back up Fluxer by itself only on Linux with systemd or cron.", "Run rexctl backup from your own scheduler.")
 }
@@ -178,6 +180,9 @@ func runBackupSchedule(ctx context.Context, app *App, arg string) error {
 	}
 	return app.Locked(ctx, inst, func() error {
 		inside, err := setBackupSchedule(ctx, app, inst, every)
+		if errors.Is(err, errTimersByHand) {
+			return nil
+		}
 		if err != nil {
 			return err
 		}
@@ -247,8 +252,23 @@ func setBackupSchedule(ctx context.Context, app *App, inst *instance.Instance, e
 			name = u.Username
 		}
 		app.UI.Warn("Scheduled backups run only while you're signed in to this machine.", "Ask an administrator to run sudo loginctl enable-linger "+name+" so they run after you sign out too.")
+	case errors.Is(err, host.ErrReadOnlyUnits) && every != host.ScheduleOff:
+		units, err := s.UnitFiles(every)
+		if err == nil {
+			err = timersByHand(app, inst, instance.TimersBackup, "scheduled backups", units)
+		}
+		if err != nil {
+			return false, err
+		}
+		return false, errTimersByHand
 	case err != nil:
 		return false, schedulerError(err, "Couldn't change when rexctl backs up your instance.", "rexctl backup schedule "+every, inst.Dir)
+	}
+	if _, ok := inst.State.TimersNeeded[instance.TimersBackup]; ok {
+		delete(inst.State.TimersNeeded, instance.TimersBackup)
+		if err := saveInstance(inst); err != nil {
+			return false, err
+		}
 	}
 	if every != host.ScheduleOff && fluxerdSchedule(inst) != host.ScheduleOff && r.Kind() != rt.Compose {
 		off := host.ScheduleOff

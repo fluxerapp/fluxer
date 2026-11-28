@@ -529,6 +529,9 @@ func InstallAutoUpgrade(ctx context.Context, a AutoUpgrade) error {
 
 func installUnits(ctx context.Context, a AutoUpgrade, paths []string, data [][]byte, timer string) error {
 	userScope := a.Scheduler == Systemd && a.Rootless
+	if a.Scheduler == Systemd && unitsReadOnly(a.Rootless) {
+		return ErrReadOnlyUnits
+	}
 	changed := false
 	for i, p := range paths {
 		c, err := writeHostFile(ctx, userScope, p, data[i])
@@ -582,6 +585,9 @@ func removeUnits(ctx context.Context, a AutoUpgrade, paths []string, timer strin
 	}
 	if a.Scheduler == Cron {
 		return true, removeHostFiles(ctx, false, found...)
+	}
+	if unitsReadOnly(a.Rootless) {
+		return false, ErrReadOnlyUnits
 	}
 	if unitIs(ctx, a.Rootless, timer, "enabled") || unitIs(ctx, a.Rootless, timer, "active") {
 		if err := systemctlRun(ctx, a.Rootless, "disable", "--now", timer); err != nil {

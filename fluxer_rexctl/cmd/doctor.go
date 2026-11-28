@@ -417,7 +417,7 @@ var doctorGroups = []struct {
 	ids   []string
 }{
 	{"This machine", []string{"engine", "service-account", "fluxer-namespaces", "podman-subids", "podman-setup", "podman-api", "windows-linux-containers", "memory", "memory-overcommit", "disk", "clock", "ports", "firewall", "low-ports"}},
-	{"Fluxer", []string{"fluxer-config", "fluxer-stopped", "postgres-version", "env-file", "stack-files", "stack-edits", "pending-change", "upgrade-unfinished", "restore-unfinished", "move-download", "boot-unit", "vapid", "attachment-signatures", "services", "stale-containers", "media-proxy-spool", "postgres-password", "postgres-scram", "objects-filesystem", "uploads-read-only"}},
+	{"Fluxer", []string{"fluxer-config", "fluxer-stopped", "postgres-version", "env-file", "stack-files", "stack-edits", "pending-change", "upgrade-unfinished", "restore-unfinished", "move-download", "boot-unit", "host-timers", "vapid", "attachment-signatures", "services", "stale-containers", "media-proxy-spool", "postgres-password", "postgres-scram", "objects-filesystem", "uploads-read-only"}},
 	{"Address and sign-in", []string{"dns", "origin", "health", "proxy", "certificate", "local-certificate", "discovery", "app-proxy-discovery", "client-ip", "sso-provider", "connection-providers", "push-relay"}},
 	{"Backups", []string{"backup-age"}},
 }

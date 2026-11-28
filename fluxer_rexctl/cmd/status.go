@@ -79,6 +79,7 @@ type statusJSON struct {
 	Backup         statusBackup `json:"backup"`
 	Disk           statusDisk   `json:"disk"`
 	Upgrade        string       `json:"upgrade"`
+	MissingTimers  []string     `json:"missing_timers,omitempty"`
 	Layout         string       `json:"layout,omitempty"`
 	LastRelease    string       `json:"last_release,omitempty"`
 	Newer          *statusNewer `json:"newer"`
@@ -191,6 +192,7 @@ func readStatus(ctx context.Context, inst *instance.Instance, r rt.Runtime) stat
 		}
 	}
 	m.out.Backup.Schedule = backupScheduleOf(r, inst)
+	m.out.MissingTimers, _, _ = checks.TimersMissing(inst.State)
 	if dir := m.info.DataDir; dir != "" {
 		if free, err := backup.FreeSpace(dir); err == nil {
 			n := int64(free)
@@ -519,6 +521,9 @@ func statusView(m statusModel, now time.Time) ui.View {
 			boot = "Doesn't start with this machine"
 		}
 		v.Data = append(v.Data, ui.KV{Key: "Boot", Value: boot})
+	}
+	if t := m.out.MissingTimers; len(t) > 0 {
+		v.Data = append(v.Data, ui.KV{Key: "Timers", Value: "Not set up for " + ui.JoinAnd(t), State: ui.StateWarn, Hint: "Run rexctl doctor --verbose to see what to change."})
 	}
 	if m.out.Newer != nil && m.out.Upgrade == "" {
 		v.Data = append(v.Data, newerRow(m.out.Newer))

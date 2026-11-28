@@ -78,3 +78,5 @@ func portInUse(proto string, port int) (bool, string, error) {
 	used, err := bindTest(proto, port)
 	return used, "", err
 }
+
+func readOnlyDir(string) bool { return false }

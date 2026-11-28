@@ -439,6 +439,9 @@ func PodmanRestartStep(rootless bool) Step {
 			if !podmanSystemd() {
 				return nil
 			}
+			if unitsReadOnly(rootless) {
+				return ErrReadOnlyUnits
+			}
 			if out, err := systemctl(ctx, rootless, "enable", podmanRestartUnit).CombinedOutput(); err != nil {
 				return &CommandError{Command: "systemctl enable " + podmanRestartUnit, Output: string(out), Err: err}
 			}
