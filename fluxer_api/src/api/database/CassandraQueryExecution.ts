@@ -188,7 +188,11 @@ export async function executeQuery<T = Record<string, unknown>, P extends Cassan
 	const startTime = isDev ? performance.now() : 0;
 	try {
 		const driverBound = driverParams(bound, kvMeta);
-		const options = {prepare: true, ...driverConsistencyOption(readOptions?.consistency)};
+		const options = {
+			prepare: true,
+			...(meta.type === 'SELECT' && readOptions?.consistency !== 'serial' ? {isIdempotent: true} : {}),
+			...driverConsistencyOption(readOptions?.consistency),
+		};
 		let result: cassandra.types.ResultSet;
 		if (writeCapture === null || meta.type === 'SELECT') {
 			result = await getClient().execute(cql, driverBound, options);
@@ -295,6 +299,7 @@ export async function fetchPage<T = Record<string, unknown>, P extends Cassandra
 	}
 	const result = await getClient().execute(cql, driverParams(bound), {
 		prepare: true,
+		...(meta.type === 'SELECT' && options.readTimeout === undefined ? {isIdempotent: true} : {}),
 		fetchSize: options.pageSize,
 		pageState: options.pageState ?? undefined,
 		readTimeout: options.readTimeout,
