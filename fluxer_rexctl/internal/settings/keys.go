@@ -373,6 +373,11 @@ func otherName(name, use string) error {
 		Fix:     fmt.Sprintf("Use rexctl config set %s instead.", use)}
 }
 
+func ReleaseReads(set *stack.Set, name string) bool {
+	k, ok := namedKey(name)
+	return ok && releaseReads(set, nil, k)
+}
+
 func releaseReads(set *stack.Set, custom []string, k Key) bool {
 	if k.File != "" && set.Catalog == nil {
 		if set.Files == nil {

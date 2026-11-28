@@ -4,6 +4,7 @@ package migrate
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
@@ -62,10 +63,11 @@ func (j Job) argv(node, script string) []string {
 }
 
 type ComposeImporter struct {
-	Project *engine.Project
-	Objects *engine.Project
-	Image   string
-	Root    string
+	Project       *engine.Project
+	Objects       *engine.Project
+	ObjectsVolume string
+	Image         string
+	Root          string
 }
 
 var errNoImporterNetwork = errors.New("migrate: the api service has no network to run the importer on")
@@ -81,11 +83,11 @@ func (c ComposeImporter) Run(ctx context.Context, j Job) error {
 		return errNoImporterNetwork
 	}
 	if j.Objects {
-		o.Mounts = append(o.Mounts, engine.Mount{Volume: stack.ObjectsVolume, Target: stack.ObjectsRoot})
+		o.Mounts = append(o.Mounts, engine.Mount{Volume: cmp.Or(c.ObjectsVolume, stack.ObjectsVolume), Target: stack.ObjectsRoot})
 		o.GroupAdd = append(o.GroupAdd, objectsGroup)
 	}
 	o.Command = j.argv("node", importerScript)
-	if j.Objects && c.Image != "" {
+	if c.Image != "" {
 		o.Image = c.Image
 		o.Command = j.argv(path.Join(c.Root, "bin", "node"), path.Join(c.Root, importerService, importerScript))
 	}

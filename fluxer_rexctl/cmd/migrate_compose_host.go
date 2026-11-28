@@ -9,6 +9,7 @@ import (
 	"maps"
 	"os"
 	"slices"
+	"strconv"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/backup"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/checks"
@@ -152,7 +153,7 @@ func (h *composeHost) objectsProject(ctx context.Context) (*engine.Project, erro
 	if h.objects != nil {
 		return h.objects, nil
 	}
-	p, err := composeModel(ctx, h.e, h.inst, withOptions(h.inst.State.Settings, migrate.OptStorage))
+	p, err := composeModel(ctx, h.e, h.inst, migrate.WithModes(h.inst.State.Settings, []migrate.Option{migrate.OptStorage}))
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +224,51 @@ func (h *composeHost) dropImporterImage(ctx context.Context) {
 	}
 }
 
+func (h *composeHost) takes(key string) bool { return settings.ReleaseReads(h.set, key) }
+
+func (h *composeHost) objectsVolume() string { return h.inst.Project() + "_" + stack.ObjectsVolume }
+
+func (h *composeHost) prepareObjectsVolume(ctx context.Context) error {
+	if err := h.DropData(ctx, stack.ObjectsVolume); err != nil {
+		return err
+	}
+	name := h.objectsVolume()
+	if err := h.e.CreateVolume(ctx, name, map[string]string{composeProjectLabel: h.inst.Project(), composeVolumeLabel: stack.ObjectsVolume}); err != nil {
+		return err
+	}
+	image, err := h.importerImage(ctx)
+	if err != nil {
+		return err
+	}
+	return h.p.Helper(ctx, engine.HelperOptions{
+		Image:      image,
+		Entrypoint: []string{"install"},
+		Command:    []string{"-d", "-o", strconv.Itoa(rt.ContainerUID), "-g", strconv.Itoa(rt.ContainerUID), "-m", "0700", stack.ObjectsRoot},
+		User:       "0:0",
+		Mounts:     []engine.Mount{{Volume: name, Target: stack.ObjectsRoot}},
+		Stderr:     migrateOutput(h.app),
+	})
+}
+
+func (h *composeHost) ConvertedBackup(ctx context.Context, opts []migrate.Option) (string, error) {
+	st := *h.inst.State
+	st.Settings = migrate.WithModes(st.Settings, opts)
+	view := *h.inst
+	view.State = &st
+	info, err := backup.Create(ctx, &view, h.p, backup.CreateOptions{Reason: "migrate"})
+	if slices.Contains(opts, migrate.OptStorage) {
+		err = errors.Join(err, h.DropData(context.WithoutCancel(ctx), stack.ObjectsVolume))
+	}
+	if err != nil {
+		return "", err
+	}
+	return info.Path, nil
+}
+
 func (h *composeHost) PrepareObjects(ctx context.Context) error {
+	if !h.takes(settings.StorageBackend) {
+		return h.prepareObjectsVolume(ctx)
+	}
 	p, err := h.objectsProject(ctx)
 	if err != nil {
 		return err
@@ -278,15 +323,19 @@ type composeImporter struct{ h *composeHost }
 
 func (c composeImporter) Run(ctx context.Context, j migrate.Job) error {
 	imp := migrate.ComposeImporter{Project: c.h.p}
-	if j.Objects {
-		p := c.h.p
-		if !stack.FilesystemStorage(c.h.inst.State.Settings) {
-			var err error
-			if p, err = c.h.objectsProject(ctx); err != nil {
-				return err
-			}
+	switch {
+	case j.Objects && !c.h.takes(settings.StorageBackend):
+		imp.Objects, imp.ObjectsVolume = c.h.p, c.h.objectsVolume()
+	case j.Objects && !stack.FilesystemStorage(c.h.inst.State.Settings):
+		p, err := c.h.objectsProject(ctx)
+		if err != nil {
+			return err
 		}
 		imp.Objects = p
+	case j.Objects:
+		imp.Objects = c.h.p
+	}
+	if j.Objects || !c.h.takes(settings.KVMode) {
 		image, err := c.h.importerImage(ctx)
 		if err != nil {
 			return err

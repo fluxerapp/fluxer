@@ -31,10 +31,11 @@ import (
 )
 
 const (
-	nativeModesFile    = "modes.env"
-	nativeAppProxyPort = "18084"
-	composeAppProxyURL = "http://app-proxy:8080"
-	composeVolumeLabel = "com.docker.compose.volume"
+	nativeModesFile     = "modes.env"
+	nativeAppProxyPort  = "18084"
+	composeAppProxyURL  = "http://app-proxy:8080"
+	composeVolumeLabel  = "com.docker.compose.volume"
+	composeProjectLabel = "com.docker.compose.project"
 )
 
 const migrateCommand = "rexctl migrate"
@@ -191,9 +192,16 @@ func runMigrate(ctx context.Context, app *App, f *migrateFlags) error {
 	if err != nil {
 		return err
 	}
-	choices, err := migrateChoices(ctx, app, inst, m)
+	lacks := releaseLacks(inst)
+	if slices.ContainsFunc(picked, func(o migrate.Option) bool { return slices.Contains(lacks, o) }) {
+		return oldReleaseRefusal(inst)
+	}
+	choices, err := migrateChoices(ctx, app, inst, m, lacks)
 	if err != nil {
 		return err
+	}
+	if len(choices) == 0 && len(lacks) > 0 {
+		return oldReleaseRefusal(inst)
 	}
 	if len(choices) == 0 {
 		app.UI.OK("Every change is already made on this instance.")
@@ -975,7 +983,7 @@ func migrateRefusal(err error) error {
 	return err
 }
 
-func migrateChoices(ctx context.Context, app *App, inst *instance.Instance, m migrate.Measurements) ([]migrateChoice, error) {
+func migrateChoices(ctx context.Context, app *App, inst *instance.Instance, m migrate.Measurements, lacks []migrate.Option) ([]migrateChoice, error) {
 	runtime := runtimeOf(inst)
 	done := migrate.Done(runtime, migrateValues(inst))
 	before, err := migrateInventory(ctx, app, inst, runtime, done, inst.State.Settings)
@@ -984,11 +992,11 @@ func migrateChoices(ctx context.Context, app *App, inst *instance.Instance, m mi
 	}
 	var out []migrateChoice
 	for _, o := range migrate.All {
-		if slices.Contains(done, o) || o == migrate.OptDocker {
+		if slices.Contains(done, o) || o == migrate.OptDocker || slices.Contains(lacks, o) {
 			continue
 		}
 		to, next := migrate.Target(runtime, done, o)
-		after, err := migrateInventory(ctx, app, inst, to, next, withOptions(inst.State.Settings, o))
+		after, err := migrateInventory(ctx, app, inst, to, next, migrate.WithModes(inst.State.Settings, []migrate.Option{o}))
 		if err != nil {
 			return nil, err
 		}
@@ -1024,21 +1032,11 @@ func combinedDiff(ctx context.Context, app *App, inst *instance.Instance, m migr
 		return migrate.Diff{}, err
 	}
 	to, next := migrate.Target(runtime, done, opts...)
-	after, err := migrateInventory(ctx, app, inst, to, next, withOptions(inst.State.Settings, opts...))
+	after, err := migrateInventory(ctx, app, inst, to, next, migrate.WithModes(inst.State.Settings, opts))
 	if err != nil {
 		return migrate.Diff{}, err
 	}
 	return migrate.BuildDiff(m, runtime, done, opts, before, after), nil
-}
-
-func withOptions(chosen map[string]string, opts ...migrate.Option) map[string]string {
-	changes := map[string]string{}
-	for _, m := range migrate.Modes {
-		if slices.Contains(opts, m.Option) {
-			changes[m.Key] = m.Value
-		}
-	}
-	return merged(chosen, changes)
 }
 
 func migrateInventory(ctx context.Context, app *App, inst *instance.Instance, runtime migrate.Runtime, done []migrate.Option, chosen map[string]string) (migrate.Inventory, error) {

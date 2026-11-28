@@ -18,6 +18,8 @@ const (
 	databaseBackendVar = "FLUXER_DATABASE_BACKEND"
 	serverMaxConnsVar  = "FLUXER_POSTGRES_SERVER_MAX_CONNECTIONS"
 	ValkeyService      = "valkey"
+	postgresService    = "postgres"
+	seaweedFSService   = "seaweedfs"
 )
 
 var (
@@ -119,18 +121,10 @@ func (s *KVStep) Writers() []string { return kvWriters }
 
 func (s *KVStep) Preflight(ctx context.Context, r *Run) error {
 	h := r.Host
-	current := h.Settings()
-	if strings.TrimSpace(current[settings.KVMode]) == settings.KVCluster {
-		return errKVCluster
-	}
-	env, err := h.Env(nil)
-	if err != nil {
+	if err := kvSource(h); err != nil {
 		return err
 	}
-	if b := strings.TrimSpace(env[databaseBackendVar]); b != "" && b != "postgres" {
-		return fmt.Errorf("%w, and FLUXER_DATABASE_BACKEND is %s", errKVDatabase, b)
-	}
-	changes := kvChanges(current)
+	changes := kvChanges(h.Settings())
 	target, err := h.Env(changes)
 	if err != nil {
 		return err
@@ -141,10 +135,28 @@ func (s *KVStep) Preflight(ctx context.Context, r *Run) error {
 	if err := h.CheckTarget(ctx, changes); err != nil {
 		return err
 	}
+	return verifyKV(ctx, r)
+}
+
+func kvSource(h Host) error {
+	if strings.TrimSpace(h.Settings()[settings.KVMode]) == settings.KVCluster {
+		return errKVCluster
+	}
+	env, err := h.Env(nil)
+	if err != nil {
+		return err
+	}
+	if b := strings.TrimSpace(env[databaseBackendVar]); b != "" && b != "postgres" {
+		return fmt.Errorf("%w, and FLUXER_DATABASE_BACKEND is %s", errKVDatabase, b)
+	}
+	return nil
+}
+
+func verifyKV(ctx context.Context, r *Run) error {
 	var rep kvReport
 	j := kvJob(r, "--verify-only")
 	j.EnvArgs = [][2]string{{"--from-url", kvURLVar}}
-	if err := runJSON(ctx, h.Importer(), j, &rep); err != nil {
+	if err := runJSON(ctx, r.Host.Importer(), j, &rep); err != nil {
 		return fmt.Errorf("reading Valkey and Postgres: %w", err)
 	}
 	if n := keys(rep.TargetKinds); n > 0 {

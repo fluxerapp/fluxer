@@ -154,7 +154,7 @@ func (t *moveBase) checkOldLayout(ctx context.Context) error {
 		return err
 	}
 	if storage {
-		p, err := customComposeModel(ctx, e, t.inst, withOptions(t.inst.State.Settings, migrate.OptStorage))
+		p, err := customComposeModel(ctx, e, t.inst, migrate.WithModes(t.inst.State.Settings, []migrate.Option{migrate.OptStorage}))
 		if err != nil {
 			return err
 		}

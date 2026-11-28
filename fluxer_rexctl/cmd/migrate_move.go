@@ -65,18 +65,43 @@ func composeEngine(inst *instance.Instance) engine.Kind {
 }
 
 func minimalModes(inst *instance.Instance) []migrate.Option {
+	before, _ := moveModesOf(inst)
+	return before
+}
+
+func moveModesOf(inst *instance.Instance) (before, during []migrate.Option) {
 	done := migrate.Done(migrate.Compose, migrateValues(inst))
 	_, uploads := backup.ExternalData(inst)
-	var out []migrate.Option
+	lacks := releaseLacks(inst)
 	for _, o := range []migrate.Option{migrate.OptKV, migrate.OptStorage} {
-		if o == migrate.OptStorage && uploads {
-			continue
+		switch {
+		case o == migrate.OptStorage && uploads, slices.Contains(done, o):
+		case slices.Contains(lacks, o):
+			during = append(during, o)
+		default:
+			before = append(before, o)
 		}
-		if !slices.Contains(done, o) {
-			out = append(out, o)
+	}
+	return before, during
+}
+
+func releaseLacks(inst *instance.Instance) []migrate.Option {
+	set, err := deploy.ReleaseSet(inst)
+	if err != nil || !legacyCompose(inst) {
+		return nil
+	}
+	var out []migrate.Option
+	for _, m := range migrate.Modes {
+		if !settings.ReleaseReads(set, m.Key) {
+			out = append(out, m.Option)
 		}
 	}
 	return out
+}
+
+func oldReleaseRefusal(inst *instance.Instance) error {
+	return ui.Refused(fmt.Sprintf("Fluxer %s is too old to make this change itself.", inst.State.Release),
+		fmt.Sprintf("The move to the new layout makes it for you. Run %s --to %s --dry-run to see the move.", migrateCommand, moveChoices(inst)[0].to))
 }
 
 func movePlan(inst *instance.Instance, to, dir string, modes []migrate.Option, oneWay bool) []ui.PlanItem {
@@ -110,8 +135,16 @@ func movePlanTo(inst *instance.Instance, to, dir string, modes []migrate.Option,
 	items = append(items,
 		ui.PlanItem{Verb: ui.PlanCreate, Text: "Back up your instance", Detail: inst.BackupDir()},
 		ui.PlanItem{Verb: ui.PlanChange, Text: "Stop Fluxer's containers", Detail: "they and their volumes stay"},
-		ui.PlanItem{Verb: ui.PlanCreate, Text: "Create " + dir + " with " + where},
 	)
+	_, during := moveModesOf(inst)
+	for _, o := range during {
+		detail := fmt.Sprintf("while Fluxer is stopped, because Fluxer %s can't make this change itself", inst.State.Release)
+		if o == migrate.OptStorage {
+			detail = "while Fluxer is stopped, and it needs free space for a second copy of the uploads"
+		}
+		items = append(items, ui.PlanItem{Verb: ui.PlanChange, Text: o.Title(), Detail: detail})
+	}
+	items = append(items, ui.PlanItem{Verb: ui.PlanCreate, Text: "Create " + dir + " with " + where})
 	if strings.TrimSpace(inst.State.Settings[settings.RustProcess]) != settings.RustSingle {
 		items = append(items, ui.PlanItem{Verb: ui.PlanChange, Text: migrate.OptRust.Title(), Detail: "the new instance runs the Rust services in one process"})
 	}
@@ -233,7 +266,8 @@ func runMove(ctx context.Context, app *App, inst *instance.Instance, f *migrateF
 	var r *migrate.Run
 	err = app.Locked(ctx, inst, func() error {
 		var err error
-		r, _, err = executeMigrate(ctx, app, inst, []migrate.Step{migrate.NewDockerStep(target, recorded)}, []migrate.Option{migrate.OptDocker})
+		_, during := moveModesOf(inst)
+		r, _, err = executeMigrate(ctx, app, inst, []migrate.Step{migrate.NewDockerStep(target, recorded, during)}, []migrate.Option{migrate.OptDocker})
 		return err
 	})
 	if err != nil {
@@ -276,7 +310,8 @@ func unchanged(err error) error {
 }
 
 func movePreflight(ctx context.Context, inst *instance.Instance, target migrate.MoveTarget) error {
-	c, err := migrate.ForNative(maps.Clone(inst.State.Settings))
+	_, during := moveModesOf(inst)
+	c, err := migrate.ForNative(migrate.WithModes(inst.State.Settings, during))
 	if err == nil {
 		err = target.Preflight(ctx, c.Settings)
 	}

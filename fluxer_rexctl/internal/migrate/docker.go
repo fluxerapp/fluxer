@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"slices"
 	"strings"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
@@ -16,6 +17,7 @@ import (
 var (
 	errAlreadyNative   = errors.New("migrate: the instance already runs in the new layout")
 	errStorageReadOnly = errors.New("migrate: uploads are still read-only after the move off SeaweedFS, open them with rexctl migrate --open-writes or go back with rexctl migrate --undo storage first")
+	errNoConverter     = errors.New("migrate: this instance can't move Valkey or SeaweedFS data during the move")
 )
 
 var ErrNoNativeEquivalent = errors.New("migrate: a setting has no equivalent without Docker")
@@ -41,6 +43,23 @@ var composeDefaults = map[string]string{
 	settings.KVMode:         settings.KVStandalone,
 	settings.LiveKitEnabled: "true",
 	StorageReadOnlyVar:      "",
+}
+
+type Converter interface {
+	ConvertedBackup(ctx context.Context, opts []Option) (string, error)
+}
+
+func WithModes(current map[string]string, opts []Option) map[string]string {
+	out := maps.Clone(current)
+	if out == nil {
+		out = map[string]string{}
+	}
+	for _, m := range Modes {
+		if slices.Contains(opts, m.Option) {
+			out[m.Key] = m.Value
+		}
+	}
+	return out
 }
 
 type NativeSettings struct {
@@ -86,11 +105,13 @@ func forNative(compose map[string]string) (map[string]string, []string, []string
 type DockerStep struct {
 	target    MoveTarget
 	recorded  State
+	convert   []Option
 	installed bool
+	converted bool
 }
 
-func NewDockerStep(target MoveTarget, recorded State) *DockerStep {
-	return &DockerStep{target: target, recorded: recorded}
+func NewDockerStep(target MoveTarget, recorded State, convert []Option) *DockerStep {
+	return &DockerStep{target: target, recorded: recorded, convert: convert}
 }
 
 func (s *DockerStep) Option() Option    { return OptDocker }
@@ -103,21 +124,80 @@ func (s *DockerStep) Preflight(ctx context.Context, r *Run) error {
 	if st := s.recorded.Storage; st != nil && !st.Open() {
 		return errStorageReadOnly
 	}
-	c, err := ForNative(r.Host.Settings())
+	c, err := ForNative(WithModes(r.Host.Settings(), s.convert))
 	if err != nil {
 		return err
 	}
 	if len(c.Left) > 0 {
 		r.note("These settings only change the old containers and stay with them: %s.", strings.Join(c.Left, ", "))
 	}
+	if err := s.convertPreflight(ctx, r); err != nil {
+		return err
+	}
 	return s.target.Preflight(ctx, c.Settings)
+}
+
+func (s *DockerStep) convertPreflight(ctx context.Context, r *Run) error {
+	if len(s.convert) == 0 {
+		return nil
+	}
+	if _, ok := r.Host.(Converter); !ok {
+		return errNoConverter
+	}
+	if slices.Contains(s.convert, OptKV) {
+		if err := kvSource(r.Host); err != nil {
+			return err
+		}
+		if err := verifyKV(ctx, r); err != nil {
+			return err
+		}
+	}
+	if slices.Contains(s.convert, OptStorage) {
+		return r.Host.CheckObjects(ctx)
+	}
+	return nil
+}
+
+func (s *DockerStep) backup(ctx context.Context, r *Run) (string, error) {
+	if len(s.convert) == 0 {
+		return r.Host.Backup(ctx)
+	}
+	c, ok := r.Host.(Converter)
+	if !ok {
+		return "", errNoConverter
+	}
+	s.converted = true
+	if slices.Contains(s.convert, OptKV) {
+		if err := r.Host.StartOnly(ctx, []string{postgresService, ValkeyService}); err != nil {
+			return "", err
+		}
+		kv := &KVStep{}
+		if err := kv.Migrate(ctx, r); err != nil {
+			return "", err
+		}
+		if err := kv.Verify(ctx, r); err != nil {
+			return "", err
+		}
+	}
+	if slices.Contains(s.convert, OptStorage) {
+		if err := r.Host.StartOnly(ctx, []string{seaweedFSService}); err != nil {
+			return "", err
+		}
+		if err := (&StorageStep{}).Migrate(ctx, r); err != nil {
+			return "", err
+		}
+	}
+	if err := r.Host.Halt(ctx); err != nil {
+		return "", err
+	}
+	return c.ConvertedBackup(ctx, s.convert)
 }
 
 func (s *DockerStep) Migrate(ctx context.Context, r *Run) error {
 	if err := r.Host.Halt(ctx); err != nil {
 		return err
 	}
-	archive, err := r.Host.Backup(ctx)
+	archive, err := s.backup(ctx, r)
 	if err != nil {
 		return err
 	}
@@ -140,7 +220,7 @@ func (s *DockerStep) Migrate(ctx context.Context, r *Run) error {
 func (s *DockerStep) Verify(context.Context, *Run) error { return nil }
 
 func (s *DockerStep) Switch(ctx context.Context, r *Run) error {
-	c, err := ForNative(r.Host.Settings())
+	c, err := ForNative(WithModes(r.Host.Settings(), s.convert))
 	if err != nil {
 		return err
 	}
@@ -165,6 +245,9 @@ func (s *DockerStep) Switch(ctx context.Context, r *Run) error {
 func (s *DockerStep) Check(context.Context, *Run) error { return nil }
 
 func (s *DockerStep) Rollback(ctx context.Context, r *Run) error {
+	if !s.installed && s.converted && slices.Contains(s.convert, OptStorage) {
+		return r.Host.DropData(ctx, stack.ObjectsVolume)
+	}
 	if !s.installed {
 		return nil
 	}
