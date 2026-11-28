@@ -252,6 +252,9 @@ func (a *App) InstanceRepairing(keys []string) (*instance.Instance, error) {
 		if legacyCompose(inst) && legacyCommandRefused(a.command) {
 			return nil, legacyRefusal()
 		}
+		if inst.State.HandRun != nil && !handRunCommandAllowed(a.command) {
+			return nil, ui.Refused(fmt.Sprintf("You set up Fluxer in %s by hand, and rexctl keeps its record there only for rexctl migrate.", dir), "Run rexctl migrate in that folder, or remove the record with rexctl migrate --forget.")
+		}
 		a.warnUnknown(inst)
 		if len(keys) == 0 {
 			a.saveRepaired(inst)

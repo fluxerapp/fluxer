@@ -49,6 +49,7 @@ type migrateFlags struct {
 	OpenWrites bool
 	Undo       string
 	CleanUp    bool
+	Forget     bool
 	Confirm    string
 	confirmed  bool
 }
@@ -88,7 +89,9 @@ func newMigrateCmd(app *App) *cobra.Command {
 	fl.Lookup("undo").NoOptDefVal = undoMove
 	fl.BoolVar(&f.CleanUp, "clean-up", false, "remove the old containers and volumes after a move, or the Valkey or SeaweedFS data a change left behind once a newer backup holds what replaced it")
 	fl.StringVar(&f.Confirm, "confirm", "", "your domain, to confirm --clean-up without a prompt")
-	c.MarkFlagsMutuallyExclusive("migrate", "open-writes", "undo", "clean-up")
+	fl.BoolVar(&f.Forget, "forget", false, "remove rexctl's record from a folder you set up by hand, while no move from it is open")
+	c.MarkFlagsMutuallyExclusive("migrate", "open-writes", "undo", "clean-up", "forget")
+	c.MarkFlagsMutuallyExclusive("to", "forget")
 	return c
 }
 
@@ -126,6 +129,9 @@ func runMigrate(ctx context.Context, app *App, f *migrateFlags) error {
 	}
 	if f.CleanUp && f.DryRun {
 		return ui.Usage("--clean-up has no dry run. Run it without --confirm to see what it deletes before you agree.")
+	}
+	if f.Forget {
+		return runForget(app)
 	}
 	if dir, err := app.Dir(); err == nil && handRunFolderKind(dir) {
 		return runHandRun(ctx, app, dir, f)

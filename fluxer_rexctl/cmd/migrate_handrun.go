@@ -10,6 +10,7 @@ import (
 	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -21,10 +22,11 @@ import (
 )
 
 const (
-	handRunFromFiles  = "the compose files, which match it"
-	handRunFromTag    = "FLUXER_IMAGE_TAG in .env"
-	lastBundleRelease = "2026.1124.80040"
-	handRunTagFix     = "Set FLUXER_IMAGE_TAG in .env to the release you run, such as " + lastBundleRelease + ", then run this again."
+	handRunFromFiles    = "the compose files, which match it"
+	handRunFromTag      = "FLUXER_IMAGE_TAG in .env"
+	lastBundleRelease   = "2026.1124.80040"
+	handRunTagFix       = "Set FLUXER_IMAGE_TAG in .env to the release you run, such as " + lastBundleRelease + ", then run this again."
+	handRunUndoModesFix = "Run rexctl migrate --undo kv or rexctl migrate --undo storage to go back, then run this again."
 )
 
 func handRunFolderKind(dir string) bool {
@@ -170,6 +172,11 @@ func runHandRun(ctx context.Context, app *App, dir string, f *migrateFlags) erro
 	return err
 }
 
+func handRunCommandAllowed(path string) bool {
+	parts := strings.Fields(path)
+	return len(parts) < 2 || slices.Contains([]string{"migrate", "status", "logs", "version", "docs", "help", "completion"}, parts[1])
+}
+
 func handRunReadError(dir string, err error) error {
 	var ee *ui.ExitError
 	if errors.As(err, &ee) {
@@ -298,4 +305,43 @@ func handRunCleanedUp(app *App, old *instance.Instance) {
 	}
 	app.forget(old.Dir)
 	app.UI.Info("The old containers are gone. rexctl removed its record from %s. Your own files there are no longer in use, and you can delete the folder.", old.Dir)
+}
+
+func runForget(app *App) error {
+	dir, err := app.Dir()
+	if err != nil {
+		return err
+	}
+	inst, err := instance.Find(dir)
+	if err != nil || inst.State.HandRun == nil {
+		return ui.Refused(fmt.Sprintf("rexctl has no record of a folder you set up by hand in %s.", dir), "There's nothing to remove.")
+	}
+	st, err := migrate.LoadState(dir)
+	if inst.State.MovedTo != "" || err != nil || st.Docker != nil {
+		return ui.Refused(fmt.Sprintf("A move from %s is still open.", dir), "Run rexctl migrate --undo or rexctl migrate --clean-up first.")
+	}
+	if changes, err := instance.HandRunEnvChanges(inst); err == nil && len(changes) > 0 {
+		return ui.Refused(fmt.Sprintf("The containers in %s run with settings that .env there doesn't have yet.", dir), handRunUndoModesFix)
+	}
+	ok, err := app.UI.ConfirmWith(ui.Question{
+		Text:   fmt.Sprintf("Remove rexctl's record from %s?", dir),
+		Detail: "Your compose files, .env and backups stay. rexctl stops knowing about this folder.",
+		Flag:   "yes",
+	})
+	if err != nil {
+		return err
+	}
+	if !ok {
+		app.UI.Info("Nothing changed.")
+		return nil
+	}
+	if err := instance.RemoveHandRunRecord(dir); err != nil {
+		return ui.Wrap(err, fmt.Sprintf("Couldn't remove rexctl's record from %s.", dir), "Delete "+inst.StateDir()+" yourself.")
+	}
+	app.forget(dir)
+	app.UI.OK("rexctl removed its record from %s.", dir)
+	if fileExists(inst.Path(instance.EnvBeforeRexctl)) {
+		app.UI.Info("rexctl updated .env during the move. Your earlier .env is %s.", instance.EnvBeforeRexctl)
+	}
+	return nil
 }
