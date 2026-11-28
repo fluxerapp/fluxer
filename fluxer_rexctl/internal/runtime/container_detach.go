@@ -31,22 +31,18 @@ const (
 var detachDropped = []string{"FLUXER_SIZING_SOURCE", "FLUXER_BACKUP_ON_UPGRADE", "FLUXER_INSTALL_METHOD", "FLUXER_UPGRADE_COMMAND"}
 
 func ComposeYAML(spec engine.SingleSpec, project string, podman bool) []byte {
-	tool := "docker compose"
-	if podman {
-		tool = "podman compose"
-	}
 	var b strings.Builder
-	b.WriteString("# Fluxer in one container. The guide is at https://docs.fluxer.com/operator/docker/\n")
-	b.WriteString("# Start     " + tool + " up -d\n")
-	b.WriteString("# Admin     " + tool + " exec fluxer fluxerd setup-token\n")
-	b.WriteString("# Upgrade   " + tool + " exec fluxer fluxerd version prints the command\n")
 	if project != "" {
 		b.WriteString("name: " + project + "\n")
 	}
 	b.WriteString("services:\n")
 	b.WriteString("  " + composeService + ":\n")
 	b.WriteString("    image: " + spec.Image + "\n")
-	b.WriteString("    restart: " + spec.Restart + "\n")
+	restart := spec.Restart
+	if restart == restartNever {
+		restart = `"` + restart + `"`
+	}
+	b.WriteString("    restart: " + restart + "\n")
 	b.WriteString("    stop_grace_period: " + strconv.Itoa(spec.StopTimeout) + "s\n")
 	b.WriteString("    env_file: " + EnvFileName + "\n")
 	b.WriteString("    environment:\n")
@@ -147,6 +143,8 @@ func removeIfThere(path string) error {
 type Detached struct {
 	ComposeFile string
 	EnvFile     string
+	Container   string
+	EnvLeft     bool
 }
 
 type DetachOptions struct {
@@ -237,5 +235,52 @@ func (r *containerRT) detach(ctx context.Context, o DetachOptions) (Detached, er
 		return startAgain(err, true)
 	}
 	r.inst.State.Ejected = &instance.Ejected{At: time.Now().UTC(), Rexctl: o.Rexctl}
-	return out, saveState(r.inst)
+	if err := saveState(r.inst); err != nil {
+		return out, err
+	}
+	out.Container = composedName(ctx, p)
+	if out.Container != "" {
+		if err := e.ExecSingle(context.WithoutCancel(ctx), out.Container, engine.ExecOptions{}, "rm", "-f", containerEnvFile); err != nil {
+			out.EnvLeft = true
+		}
+	}
+	return out, nil
+}
+
+func composedName(ctx context.Context, p *engine.Project) string {
+	cs, err := p.PS(ctx)
+	if err != nil {
+		return ""
+	}
+	for _, c := range cs {
+		if c.Service == composeService {
+			return c.Name
+		}
+	}
+	return ""
+}
+
+type HostCopy struct {
+	Dir   string
+	Names []string
+}
+
+func HostCopies(inst *instance.Instance) []HostCopy {
+	var out []HostCopy
+	for _, dir := range []string{instance.CertsDir, instance.CADir, instance.GeoIPDir} {
+		entries, err := os.ReadDir(inst.Path(dir))
+		if err != nil {
+			continue
+		}
+		var names []string
+		for _, ent := range entries {
+			if ent.Type().IsRegular() {
+				names = append(names, ent.Name())
+			}
+		}
+		if len(names) > 0 {
+			out = append(out, HostCopy{Dir: inst.Path(dir), Names: names})
+		}
+	}
+	return out
 }

@@ -449,7 +449,7 @@ rexctl config unset memory.profile disk.profile
 
 ## rexctl detach
 
-Writes `compose.yaml` and `fluxer.env` into the instance folder in the same form as the files each Fluxer release publishes, starts Fluxer from them and stops rexctl from changing the instance. Your data stays in the same volume. Automatic upgrades stop, and a backup schedule moves into Fluxer, which keeps the backups in its volume.
+Writes `compose.yaml` and `fluxer.env` into the instance folder, starts Fluxer from them with `docker compose` and stops managing the instance. For an instance on the default ports, the files are the ones each Fluxer release publishes with the project name added. Your data stays in the same volume. Automatic upgrades stop, and a backup schedule moves into Fluxer, which keeps the backups in its volume.
 
 Run `rexctl detach`
 
