@@ -60,6 +60,9 @@ func (t *moveBase) Mounts() []migrate.DataMount { return t.mounts }
 
 func (t *moveBase) preflight(ctx context.Context, chosen map[string]string) error {
 	t.chosen = chosen
+	if mode := chosen[settings.EdgeMode]; mode != "" && mode != settings.EdgeBundled && strings.TrimSpace(chosen[settings.EdgeBind]) == "" {
+		t.chosen[settings.EdgeBind] = settings.DefaultBind
+	}
 	if url := backup.ExternalPostgresURL(t.inst); url != "" {
 		t.chosen["FLUXER_POSTGRES_URL"] = url
 	}
