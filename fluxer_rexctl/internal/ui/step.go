@@ -266,6 +266,12 @@ func (u *UI) runStep(ctx context.Context, id, title string, stage [2]int, option
 			fix = dropVerboseAsk(fix)
 		}
 		tail := s.tail()
+		if ee := (*ExitError)(nil); len(tail) == 0 && errors.As(err, &ee) {
+			tail = ee.Tail
+			if logPath == "" {
+				logPath = ee.LogPath
+			}
+		}
 		if !warn {
 			u.mu.Lock()
 			if u.failTail == nil {

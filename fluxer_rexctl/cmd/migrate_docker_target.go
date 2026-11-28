@@ -806,5 +806,5 @@ func (t *containerTarget) Open(ctx context.Context, chosen map[string]string) (m
 			t.app.UI.Detail("removing the service that started the old containers: %v", err)
 		}
 	}
-	return &containerHost{app: t.app, inst: target}, nil
+	return &containerHost{app: t.app, inst: target, from: t.inst}, nil
 }

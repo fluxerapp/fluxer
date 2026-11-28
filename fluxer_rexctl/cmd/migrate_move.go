@@ -616,6 +616,7 @@ func runCleanUpMove(ctx context.Context, app *App, inst *instance.Instance, conf
 type containerHost struct {
 	app  *App
 	inst *instance.Instance
+	from *instance.Instance
 }
 
 func (h *containerHost) Runtime() migrate.Runtime        { return migrate.Runtime(instance.RuntimeContainer) }
@@ -661,6 +662,32 @@ func (h *containerHost) Halt(ctx context.Context) error {
 	return h.app.UI.Step(ctx, "Stopping Fluxer", func(ctx context.Context, s *ui.Step) error { return r.Stop(ctx, s) })
 }
 
+const moveCheckLog = "move-check.log"
+
+const moveCheckTail = 40
+
+func (h *containerHost) partFailed(ctx context.Context, r rt.Runtime, part, msg string) error {
+	ctx = context.WithoutCancel(ctx)
+	ee := &ui.ExitError{Code: ui.ExitFailed, Msg: msg}
+	var tail strings.Builder
+	if err := r.Logs(ctx, &tail, rt.LogOptions{Parts: []string{part}, Tail: moveCheckTail}); err == nil {
+		ee.Tail = strings.Split(strings.TrimRight(tail.String(), "\n"), "\n")
+	}
+	if h.from == nil {
+		return ee
+	}
+	f, err := openStateLog(h.from, moveCheckLog, os.O_CREATE|os.O_WRONLY|os.O_TRUNC)
+	if err != nil {
+		return ee
+	}
+	defer f.Close()
+	fmt.Fprintf(f, "rexctl: %s\n\n", msg)
+	if err := r.Logs(ctx, f, rt.LogOptions{}); err == nil {
+		ee.LogPath = h.from.Path(instance.StateDirName, moveCheckLog)
+	}
+	return ee
+}
+
 func (h *containerHost) Check(ctx context.Context) error {
 	r, err := h.app.Runtime(ctx, h.inst)
 	if err != nil {
@@ -676,7 +703,7 @@ func (h *containerHost) Check(ctx context.Context) error {
 		}
 		for _, p := range st.Parts {
 			if !p.Optional && (p.State == rt.PartFailed || p.State == rt.PartStopped) {
-				return fmt.Errorf("%s is %s", p.Name, p.State)
+				return h.partFailed(ctx, r, p.Name, fmt.Sprintf("%s is %s", p.Name, p.State))
 			}
 		}
 		s.Done("Fluxer runs in its container.")
