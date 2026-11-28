@@ -2,6 +2,7 @@
 
 import {Config} from '@app/api/Config';
 import {Logger} from '@app/api/Logger';
+import type {VoiceRegionRecord} from '@app/api/voice/VoiceModel';
 import {VoiceRepository} from '@app/api/voice/VoiceRepository';
 import {bundledVoiceServerId} from '@app/api/voice/VoiceServerEndpoints';
 
@@ -31,31 +32,24 @@ export class VoiceDataInitializer {
 			const repository = new VoiceRepository();
 			const livekitEndpoint = resolveLivekitEndpoint(Config.voice.url, Config.endpoints.apiPublic);
 			const existingRegions = await repository.listRegions();
-			if (existingRegions.length === 0) {
-				Logger.info('[VoiceDataInitializer] Creating default voice region from config...');
-				await repository.createRegion({
-					id: defaultRegion.id,
-					name: defaultRegion.name,
-					emoji: defaultRegion.emoji,
-					latitude: defaultRegion.latitude,
-					longitude: defaultRegion.longitude,
-					isDefault: true,
-					hidden: false,
-					restrictions: {
-						vipOnly: false,
-						requiredGuildFeatures: new Set(),
-						allowedGuildIds: new Set(),
-						allowedUserIds: new Set(),
-					},
-				});
-				Logger.info(`[VoiceDataInitializer] Created region: ${defaultRegion.name} (${defaultRegion.id})`);
-				if (!serverId || !livekitApiKey || !livekitApiSecret) {
+			const configuredRegion = existingRegions.find((region) => region.id === defaultRegion.id);
+			if (!serverId || !livekitApiKey || !livekitApiSecret) {
+				if (existingRegions.length === 0) {
+					await this.createDefaultRegion(repository, true);
 					Logger.info(
 						'[VoiceDataInitializer] No bundled voice server, add servers with rexctl voice join or in the admin panel',
 					);
-					return;
+				} else if (configuredRegion) {
+					await this.removeBundledServer(repository, defaultRegion.id, livekitApiKey);
 				}
-				await repository.createServer({
+				return;
+			}
+			if (!configuredRegion) {
+				await this.createDefaultRegion(repository, !existingRegions.some((region) => region.isDefault));
+			}
+			const configuredServer = await repository.getServer(defaultRegion.id, serverId);
+			if (!configuredServer) {
+				await repository.createServerIfAbsent({
 					regionId: defaultRegion.id,
 					serverId,
 					endpoint: livekitEndpoint,
@@ -72,33 +66,9 @@ export class VoiceDataInitializer {
 					pinnedSoftLimit: false,
 					publicIpv4: null,
 					publicIpv6: null,
-					restrictions: {
-						vipOnly: false,
-						requiredGuildFeatures: new Set(),
-						allowedGuildIds: new Set(),
-						allowedUserIds: new Set(),
-					},
+					restrictions: emptyRestrictions(),
 				});
-				Logger.info(`[VoiceDataInitializer] Created server: ${serverId} -> ${livekitEndpoint}`);
-				Logger.info('[VoiceDataInitializer] Successfully created default voice region');
-				return;
-			}
-			const configuredRegion = await repository.getRegion(defaultRegion.id);
-			if (!configuredRegion) {
-				Logger.info(
-					`[VoiceDataInitializer] ${existingRegions.length} voice ${existingRegions.length === 1 ? 'region' : 'regions'} already exist and configured default region (${defaultRegion.id}) is absent, skipping config sync`,
-				);
-				return;
-			}
-			if (!serverId || !livekitApiKey || !livekitApiSecret) {
-				await this.removeBundledServer(repository, defaultRegion.id, livekitApiKey);
-				return;
-			}
-			const configuredServer = await repository.getServer(defaultRegion.id, serverId);
-			if (!configuredServer) {
-				Logger.info(
-					`[VoiceDataInitializer] Region ${defaultRegion.id} exists but server ${serverId} is absent, skipping config sync`,
-				);
+				Logger.info(`[VoiceDataInitializer] Registered bundled voice server ${serverId} -> ${livekitEndpoint}`);
 				return;
 			}
 			const endpointChanged = configuredServer.endpoint !== livekitEndpoint;
@@ -127,6 +97,21 @@ export class VoiceDataInitializer {
 		}
 	}
 
+	private async createDefaultRegion(repository: VoiceRepository, isDefault: boolean): Promise<void> {
+		const defaultRegion = Config.voice.defaultRegion!;
+		await repository.createRegion({
+			id: defaultRegion.id,
+			name: defaultRegion.name,
+			emoji: defaultRegion.emoji,
+			latitude: defaultRegion.latitude,
+			longitude: defaultRegion.longitude,
+			isDefault,
+			hidden: false,
+			restrictions: emptyRestrictions(),
+		});
+		Logger.info(`[VoiceDataInitializer] Created region: ${defaultRegion.name} (${defaultRegion.id})`);
+	}
+
 	private async removeBundledServer(
 		repository: VoiceRepository,
 		regionId: string,
@@ -140,4 +125,13 @@ export class VoiceDataInitializer {
 		await repository.deleteServer(regionId, serverId);
 		Logger.info(`[VoiceDataInitializer] Removed ${serverId}, the bundled voice server is turned off`);
 	}
+}
+
+function emptyRestrictions(): VoiceRegionRecord['restrictions'] {
+	return {
+		vipOnly: false,
+		requiredGuildFeatures: new Set(),
+		allowedGuildIds: new Set(),
+		allowedUserIds: new Set(),
+	};
 }
