@@ -152,7 +152,7 @@ func (c containerSettings) dataProblem(ctx context.Context, p *deploy.Prepared) 
 			return ui.Refused(fmt.Sprintf("The volume %s still holds an older copy of Fluxer's data.", VolumeName(r.inst)),
 				fmt.Sprintf("Check that you don't need it, remove it with %s volume rm %s, then try again.", r.kindTool(), VolumeName(r.inst)))
 		}
-	} else if msg, fix := checks.NewDataFolderProblem(to); msg != "" {
+	} else if msg, fix := checks.NewDataFolderProblem(to, r.inst.State.ForcedFolder == to); msg != "" {
 		return ui.Refused(msg, fix)
 	}
 	used, err := r.dataUsage(ctx, e)

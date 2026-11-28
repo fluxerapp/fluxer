@@ -54,7 +54,7 @@ func newMoveTarget(app *App, inst *instance.Instance, f *migrateFlags) migrate.M
 	}
 	t := newContainerTarget(app, inst, dir, kind, f.DryRun)
 	t.compose = to == runtimeCompose
-	t.data = f.DataFolder
+	t.data, t.force = f.DataFolder, f.Force
 	return t
 }
 

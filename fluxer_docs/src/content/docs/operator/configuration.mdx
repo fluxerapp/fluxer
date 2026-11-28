@@ -120,7 +120,7 @@ Without rexctl, put the file where Fluxer can read it and set [`FLUXER_GEOIP_DB_
 
 ## Keep data on another disk
 
-Fluxer keeps its database, uploads and search index in one data folder. To keep them on a second disk, a RAID or a ZFS dataset, give Fluxer a folder there. Use a local disk with a Linux file system like ext4, XFS, Btrfs or ZFS. The database can lose data on a network share over NFS or SMB, and rexctl refuses a folder on one.
+Fluxer keeps its database, uploads and search index in one data folder. To keep them on a second disk, a RAID or a ZFS dataset, give Fluxer a folder there. Use a local disk with a Linux file system like ext4, XFS, Btrfs or ZFS. On NTFS, a FUSE file system like mergerfs, or a network share over NFS or SMB, PostgreSQL can lose data or fail to lock its files, and rexctl refuses a folder there. If you accept that risk, pass `--force` with the folder, and `rexctl doctor` then warns about it instead of failing. rexctl always refuses a RAM disk, FAT and exFAT.
 
 Add the disk to `/etc/fstab`, which mounts it before Docker, Podman or Fluxer starts when the machine boots.
 

@@ -125,6 +125,9 @@ func (in *installer) writeCommon(inst *instance.Instance) {
 	if f.DataFolder != "" {
 		st.Settings[settings.DataFolder] = f.DataFolder
 	}
+	if f.Force {
+		st.ForcedFolder = f.DataFolder
+	}
 	if in.storage != nil {
 		maps.Copy(st.Settings, in.storage.values())
 	}

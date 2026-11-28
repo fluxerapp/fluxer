@@ -63,6 +63,8 @@ type Env struct {
 	Prefer    engine.Kind
 	Downloads []string
 
+	ForceDataFolder bool
+
 	Start         func(ctx context.Context) error
 	Restart       func(ctx context.Context, parts []string) error
 	Parts         func(services []string) []string

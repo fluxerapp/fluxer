@@ -44,7 +44,7 @@ func (t *moveBase) pickDataFolder() error {
 		}
 		return ui.Refused(msg, fix)
 	}
-	if msg, fix := checks.NewDataFolderProblem(dir); msg != "" {
+	if msg, fix := checks.NewDataFolderProblem(dir, t.force); msg != "" {
 		return refuse(msg, fix)
 	}
 	var used uint64
@@ -87,7 +87,7 @@ func proposedDataFolder(mounts []migrate.DataMount) string {
 		if n > 1 {
 			dir += "-" + strconv.Itoa(n)
 		}
-		if msg, _ := checks.NewDataFolderProblem(dir); msg == "" || !folderHoldsData(dir) {
+		if msg, _ := checks.NewDataFolderProblem(dir, false); msg == "" || !folderHoldsData(dir) {
 			return dir
 		}
 	}

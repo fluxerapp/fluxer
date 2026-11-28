@@ -626,6 +626,7 @@ rexctl config set storage.secret_key -`,
 	var migrate, noMigrate bool
 	set.Flags().BoolVar(&migrate, "migrate-identities", false, "when sso.issuer changes, move SSO links to the new issuer")
 	set.Flags().BoolVar(&noMigrate, "no-migrate-identities", false, "when sso.issuer changes, leave SSO links on the old issuer")
+	set.Flags().BoolVar(&app.forceData, "force", false, "use a data.folder on NTFS, FUSE or a network share, which rexctl refuses otherwise")
 	set.MarkFlagsMutuallyExclusive("migrate-identities", "no-migrate-identities")
 	set.RunE = func(c *cobra.Command, args []string) error {
 		v, err := loadConfigView(c.Context(), app, nil)
@@ -739,6 +740,9 @@ func changeConfig(ctx context.Context, app *App, changes []configChange, extra m
 	if err != nil {
 		return err
 	}
+	if _, ok := deployment[settings.DataFolder]; app.forceData && !ok {
+		return ui.Usage("Pass --force only with data.folder.")
+	}
 	if len(deployment) > 0 {
 		if err := managed(v.inst); err != nil {
 			return err
@@ -782,6 +786,18 @@ func (v *configView) split(changes []configChange) (map[string]*string, []adminC
 func applyConfig(ctx context.Context, app *App, inst *instance.Instance, r rt.Runtime, deployment map[string]*string, admin []adminChange, extra map[string]any) error {
 	if err := twoSchedules(r, inst, deployment); err != nil {
 		return err
+	}
+	if folder, ok := deployment[settings.DataFolder]; ok {
+		to := ""
+		if folder != nil {
+			to = strings.TrimSpace(*folder)
+		}
+		if to != rt.DataFolder(inst) {
+			inst.State.ForcedFolder = ""
+			if app.forceData {
+				inst.State.ForcedFolder = to
+			}
+		}
 	}
 	var change *deploy.Change
 	if len(deployment) > 0 {

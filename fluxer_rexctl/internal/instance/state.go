@@ -68,6 +68,7 @@ type State struct {
 	VoiceEdge       *VoiceEdge        `json:"voice_edge,omitempty"`
 	Firewall        []OpenedPort      `json:"firewall,omitempty"`
 	ProxiedBy       string            `json:"proxied_by,omitempty"`
+	ForcedFolder    string            `json:"forced_folder,omitempty"`
 	Interrupted     *Interrupted      `json:"interrupted,omitempty"`
 	HandRun         *HandRun          `json:"hand_run,omitempty"`
 	InstalledAt     time.Time         `json:"installed_at"`

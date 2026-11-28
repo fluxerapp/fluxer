@@ -48,6 +48,7 @@ type migrateFlags struct {
 	Details    bool
 	NewDir     string
 	DataFolder *string
+	Force      bool
 	OpenWrites bool
 	Undo       string
 	CleanUp    bool
@@ -72,6 +73,9 @@ func newMigrateCmd(app *App) *cobra.Command {
 		Args: noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
 			f.OldFlags = changedFlags(c, "experimental", "experimental-native")
+			if f.Force && f.To == "" {
+				return ui.Usage("Pass --force only with --to.")
+			}
 			if c.Flags().Changed("data-folder") {
 				f.DataFolder = &dataFolder
 				if err := validDataFolder(dataFolder); err != nil {
@@ -87,6 +91,7 @@ func newMigrateCmd(app *App) *cobra.Command {
 	fl.BoolVar(&f.Details, "details", false, "show the machine, versions, date and method behind the typical figures")
 	fl.StringVar(&f.NewDir, "new-dir", "", "the folder for the moved instance, with --to")
 	fl.StringVar(&dataFolder, "data-folder", "", "the folder for Fluxer's data after a move to one container or to compose, or empty for a volume. Without it, data the old containers kept in folders on this machine moves to a new folder next to them")
+	fl.BoolVar(&f.Force, "force", false, "use a --data-folder on NTFS, FUSE or a network share, which rexctl refuses otherwise")
 	fl.StringVar(&f.NewDir, "native-dir", "", "")
 	_ = fl.MarkHidden("native-dir")
 	fl.Bool("experimental", false, "")

@@ -69,7 +69,7 @@ func (in *installer) machineSummary() string {
 }
 
 func (in *installer) checkEnv() *checks.Env {
-	env := &checks.Env{Dir: in.dir, Domain: normaliseDomain(in.f.Domain), Engine: in.engine, Host: in.host, Behind: in.f.BehindProxy, Native: in.native, Name: in.f.Project, Bind: in.f.Bind, Settings: in.settings(), Prefer: engine.Kind(in.f.Engine)}
+	env := &checks.Env{Dir: in.dir, Domain: normaliseDomain(in.f.Domain), Engine: in.engine, Host: in.host, Behind: in.f.BehindProxy, Native: in.native, Name: in.f.Project, Bind: in.f.Bind, Settings: in.settings(), Prefer: engine.Kind(in.f.Engine), ForceDataFolder: in.f.Force}
 	if in.engine == nil && !in.native {
 		env.SetEngine(in.found, in.findErr)
 	}

@@ -43,6 +43,7 @@ type installFlags struct {
 	VoiceIP       string
 	MemoryProfile string
 	DataFolder    string
+	Force         bool
 	InstallDocker bool
 	OpenFirewall  bool
 	SetupPodman   bool
@@ -135,6 +136,7 @@ func newInstallCmd(app *App) *cobra.Command {
 	fl.StringVar(&f.VoiceIP, "voice-ip", "", "public IP address for voice and video (found automatically)")
 	fl.StringVar(&f.MemoryProfile, "memory-profile", "", "use small, medium or large on every start, without sizing Fluxer to this machine")
 	fl.StringVar(&f.DataFolder, "data-folder", "", "empty folder on this machine for Fluxer's data in its container, such as one on a second disk, instead of a volume of the container engine")
+	fl.BoolVar(&f.Force, "force", false, "use a --data-folder on NTFS, FUSE or a network share, which rexctl refuses otherwise")
 	fl.BoolVar(&f.InstallDocker, "install-docker", true, "install Docker if it's missing")
 	fl.BoolVar(&f.OpenFirewall, "open-firewall", true, "open the ports Fluxer needs in ufw or firewalld")
 	fl.BoolVar(&f.SetupPodman, "setup-podman", true, "start Podman's API socket and start Fluxer with the machine")
@@ -513,6 +515,9 @@ func validateInstallFlags(app *App, c *cobra.Command, f *installFlags) error {
 	}
 	if err := validDataFolder(f.DataFolder); err != nil {
 		return err
+	}
+	if f.Force && f.DataFolder == "" {
+		return ui.Usage("Pass --force only with --data-folder.")
 	}
 	if f.SetupWhere != "" && f.SetupWhere != "terminal" && f.SetupWhere != "browser" {
 		return ui.Usage("Pass --setup terminal or --setup browser.")

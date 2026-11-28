@@ -53,6 +53,7 @@ type moveBase struct {
 	mounts    []migrate.DataMount
 	dryRun    bool
 	data      *string
+	force     bool
 }
 
 func (t *moveBase) Dir() string                 { return t.dir }
@@ -312,6 +313,9 @@ func (t *moveBase) install(ctx context.Context, runtimeFlag string) error {
 	args = append(args, installNetworkArgs(t.inst.Domain(), t.chosen)...)
 	if dir := t.chosen[settings.DataFolder]; dir != "" {
 		args = append(args, "--data-folder", dir)
+		if t.force {
+			args = append(args, "--force")
+		}
 	}
 	if t.app.Flags.Verbose {
 		args = append(args, "--verbose")

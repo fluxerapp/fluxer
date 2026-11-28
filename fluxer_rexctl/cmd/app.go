@@ -45,6 +45,7 @@ type App struct {
 	exit       int
 	outcome    string
 	moveNotice string
+	forceData  bool
 	putBack    []string
 	held       *instance.Instance
 	engine     *engine.Engine

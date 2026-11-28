@@ -449,6 +449,7 @@ rexctl config set storage.secret_key -
 
 | Flag | Default | What it does |
 | --- | --- | --- |
+| `--force` |  | Use a `data.folder` on NTFS, FUSE or a network share, which rexctl refuses otherwise. |
 | `--migrate-identities` |  | When `sso.issuer` changes, move SSO links to the new issuer. |
 | `--no-migrate-identities` |  | When `sso.issuer` changes, leave SSO links on the old issuer. |
 
@@ -590,6 +591,7 @@ rexctl install --runtime docker --domain chat.example.com --behind-proxy --yes
 | `--data-folder string` |  | Empty folder on this machine for Fluxer's data in its container, such as one on a second disk, instead of a volume of the container engine. |
 | `--domain string` |  | Domain or IP address people will use to open your instance, like `chat.example.com` or `203.0.113.7`, and without it `--yes` uses this machine's public IP address. |
 | `--dry-run` |  | Show what would happen without changing anything. |
+| `--force` |  | Use a `--data-folder` on NTFS, FUSE or a network share, which rexctl refuses otherwise. |
 | `--install-docker` | On | Install Docker if it's missing. Turn it off with `--install-docker=false`. |
 | `--memory-profile string` |  | Use small, medium or large on every start, without sizing Fluxer to this machine. |
 | `--name string` |  | Your instance's name. |
@@ -712,6 +714,7 @@ Run `rexctl migrate`
 | `--data-folder string` |  | The folder for Fluxer's data after a move to one container or to compose, or empty for a volume. Without it, data the old containers kept in folders on this machine moves to a new folder next to them. |
 | `--details` |  | Show the machine, versions, date and method behind the typical figures. |
 | `--dry-run` |  | Show what each change saves and removes without changing anything. |
+| `--force` |  | Use a `--data-folder` on NTFS, FUSE or a network share, which rexctl refuses otherwise. |
 | `--forget` |  | Remove rexctl's record from a folder you set up by hand, while no move from it is open. |
 | `--migrate string` |  | The changes to make as a comma-separated list of `docker`, `kv`, `rust` or `storage`. |
 | `--new-dir string` |  | The folder for the moved instance, with `--to`. |
