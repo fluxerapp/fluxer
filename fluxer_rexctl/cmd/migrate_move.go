@@ -148,6 +148,9 @@ func movePlanTo(inst *instance.Instance, to, dir string, modes []migrate.Option,
 		items = append(items, ui.PlanItem{Verb: ui.PlanChange, Text: o.Title(), Detail: detail})
 	}
 	items = append(items, ui.PlanItem{Verb: ui.PlanCreate, Text: "Create " + dir + " with " + where})
+	if files := ownFiles(inst.Dir); len(files) > 0 {
+		items = append(items, ui.PlanItem{Verb: ui.PlanCreate, Text: "Copy your own files to " + dir, Detail: ui.JoinAnd(files) + ", and the old folder keeps them"})
+	}
 	if strings.TrimSpace(inst.State.Settings[settings.RustProcess]) != settings.RustSingle {
 		items = append(items, ui.PlanItem{Verb: ui.PlanChange, Text: migrate.OptRust.Title(), Detail: "the new instance runs the Rust services in one process"})
 	}

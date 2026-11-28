@@ -557,7 +557,7 @@ func writeIfChanged(path string, data []byte) (bool, error) {
 	return true, envfile.WriteFileAtomic(path, data, true)
 }
 
-func serviceIDs() (int, int, error) {
+func ServiceIDs() (int, int, error) {
 	u, err := user.Lookup(ServiceUser)
 	if err != nil {
 		return 0, 0, err
@@ -577,7 +577,7 @@ func (s *Stack) chownData(paths ...string) error {
 	if os.Geteuid() != 0 {
 		return nil
 	}
-	uid, gid, err := serviceIDs()
+	uid, gid, err := ServiceIDs()
 	if err != nil {
 		return fmt.Errorf("native: the account %s: %w", ServiceUser, err)
 	}

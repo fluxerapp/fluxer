@@ -345,7 +345,7 @@ func (s *Stack) spoolIn(spool *os.Root, name string, in io.Reader) error {
 	uid, gid := 0, 0
 	if os.Geteuid() == 0 {
 		var err error
-		if uid, gid, err = serviceIDs(); err != nil {
+		if uid, gid, err = ServiceIDs(); err != nil {
 			return fmt.Errorf("native: the account %s: %w", ServiceUser, err)
 		}
 	}
@@ -411,7 +411,7 @@ func (s *Stack) stageInstanceFiles(spool *os.Root) (string, error) {
 	defer staged.Close()
 	uid, gid := -1, -1
 	if os.Geteuid() == 0 {
-		if uid, gid, err = serviceIDs(); err != nil {
+		if uid, gid, err = ServiceIDs(); err != nil {
 			return dir, err
 		}
 		if err := staged.Lchown(".", uid, gid); err != nil {

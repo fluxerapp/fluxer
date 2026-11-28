@@ -340,13 +340,78 @@ func (t *moveBase) install(ctx context.Context, runtimeFlag string) error {
 		return err
 	}
 	target.State.Settings = merged(target.State.Settings, t.chosen)
-	return saveInstance(target)
+	if err := saveInstance(target); err != nil {
+		return err
+	}
+	return t.copyOwnFiles(target)
+}
+
+var ownFileDirs = []string{instance.CertsDir, instance.CADir, instance.CaddyDropInDir}
+
+func ownFiles(dir string) []string {
+	var out []string
+	for _, sub := range ownFileDirs {
+		root := filepath.Join(dir, sub)
+		_ = filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return nil
+			}
+			if d.Type().IsRegular() {
+				rel, _ := filepath.Rel(dir, p)
+				out = append(out, filepath.ToSlash(rel))
+			}
+			return nil
+		})
+	}
+	return out
+}
+
+func (t *moveBase) copyOwnFiles(target *instance.Instance) error {
+	uid, gid := -1, -1
+	if t.runtime == instance.RuntimeNative && euid() == 0 {
+		var err error
+		if uid, gid, err = native.ServiceIDs(); err != nil {
+			return err
+		}
+	}
+	for _, rel := range ownFiles(t.inst.Dir) {
+		src := t.inst.Path(filepath.FromSlash(rel))
+		dst := target.Path(filepath.FromSlash(rel))
+		if err := copyOwnFile(src, dst, uid, gid); err != nil {
+			return ui.Wrap(err, fmt.Sprintf("Couldn't copy %s into %s.", src, filepath.Dir(dst)), "Check that you can read it, then run "+migrateCommand+" again.")
+		}
+	}
+	return nil
+}
+
+func copyOwnFile(src, dst string, uid, gid int) error {
+	info, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+	data, err := os.ReadFile(src)
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
+		return err
+	}
+	if err := os.WriteFile(dst, data, info.Mode().Perm()); err != nil {
+		return err
+	}
+	if err := os.Chmod(dst, info.Mode().Perm()); err != nil {
+		return err
+	}
+	if uid < 0 {
+		return nil
+	}
+	return os.Lchown(dst, uid, gid)
 }
 
 func installNetworkArgs(domain string, chosen map[string]string) []string {
 	mode := chosen[settings.EdgeMode]
 	if mode == "" || mode == settings.EdgeBundled {
-		return nil
+		return []string{"--behind-proxy=false"}
 	}
 	bind := chosen[settings.EdgeBind]
 	args := []string{"--bind", bind}
