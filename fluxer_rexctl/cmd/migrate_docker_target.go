@@ -75,7 +75,7 @@ func (t *moveBase) preflight(ctx context.Context, chosen map[string]string) erro
 		for i, v := range t.inst.State.Voice {
 			ids[i] = v.ID
 		}
-		return noNativeEquivalent(fmt.Sprintf("The voice servers %s run in %s on this machine, and they can't move with it.", ui.JoinAnd(ids), engineName(t.inst)), "Remove them with rexctl voice remove first.")
+		return noNativeEquivalent(fmt.Sprintf("The voice %s %s %s in %s on this machine and can't move with Fluxer.", oneOrMany(len(ids), "server", "servers"), ui.JoinAnd(ids), oneOrMany(len(ids), "runs", "run"), engineName(t.inst)), "Remove "+oneOrMany(len(ids), "it", "them")+" with rexctl voice remove first.")
 	}
 	if mode := chosen[settings.EdgeMode]; mode != "" && mode != settings.EdgeBundled {
 		if _, err := native.ProxyListen(chosen[settings.EdgeBind]); err != nil {

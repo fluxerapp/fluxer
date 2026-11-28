@@ -45,7 +45,11 @@ func handOverRefusal(inst *instance.Instance, move bool) error {
 		return ui.Refused(fmt.Sprintf("This instance runs the image %s, and the admin panel's upgrade command only works with %s.", repo, rt.ImageRepo), fix)
 	}
 	if len(inst.State.Voice) > 0 {
-		return ui.Refused(fmt.Sprintf("The voice server %s runs in a container on this machine, and nothing would restart or upgrade it after the hand-over.", inst.State.Voice[0].ID), "Remove it with rexctl voice remove, then run this again.")
+		ids := make([]string, len(inst.State.Voice))
+		for i, v := range inst.State.Voice {
+			ids[i] = v.ID
+		}
+		return ui.Refused(fmt.Sprintf("The voice %s %s %s in a container on this machine, and nothing would restart or upgrade %s after the hand-over.", oneOrMany(len(ids), "server", "servers"), ui.JoinAnd(ids), oneOrMany(len(ids), "runs", "run"), oneOrMany(len(ids), "it", "them")), "Remove "+oneOrMany(len(ids), "it", "them")+" with rexctl voice remove, then run this again.")
 	}
 	return nil
 }
