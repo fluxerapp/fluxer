@@ -59,6 +59,7 @@ type State struct {
 	NotifyURL       string            `json:"notify_url,omitempty"`
 	MoveNotice      string            `json:"move_notice,omitempty"`
 	MovedFrom       *MovedFrom        `json:"moved_from,omitempty"`
+	UndoneVolume    string            `json:"undone_volume,omitempty"`
 	MigrateBackup   string            `json:"migrate_backup,omitempty"`
 	Restored        *Restored         `json:"restored,omitempty"`
 	BootService     string            `json:"boot_service,omitempty"`

@@ -28,6 +28,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/migrate"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/native"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/proxyconf"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/release"
 	rt "github.com/fluxerapp/fluxer/fluxer_rexctl/internal/runtime"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
@@ -82,7 +83,7 @@ func (t *moveBase) preflight(ctx context.Context, chosen map[string]string) erro
 		}
 	}
 	entries, err := os.ReadDir(t.dir)
-	if err == nil && len(entries) > 0 {
+	if err == nil && slices.ContainsFunc(entries, func(e os.DirEntry) bool { return !undoLeft(t.inst, e.Name()) }) {
 		return ui.Refused(fmt.Sprintf("The folder for the moved instance, %s, already has files in it.", t.dir), "Pass --new-dir with an empty or new folder.")
 	}
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
@@ -94,6 +95,12 @@ func (t *moveBase) preflight(ctx context.Context, chosen map[string]string) erro
 		}
 	}
 	return nil
+}
+
+var undoLeftovers = []string{instance.BackupsDir, instance.CertsDir, instance.CADir, instance.CaddyDropInDir, proxyconf.Dir, rt.ComposeFileName + ".undone", rt.EnvFileName + ".undone"}
+
+func undoLeft(inst *instance.Instance, name string) bool {
+	return inst.State.UndoneVolume != "" && slices.Contains(undoLeftovers, name)
 }
 
 func volumePin(short string, def any, project string) bool {
@@ -641,6 +648,9 @@ func newContainerTarget(app *App, inst *instance.Instance, dir string, kind engi
 func (t *containerTarget) Preflight(ctx context.Context, chosen map[string]string) error {
 	if inst := t.inst; !t.dryRun && euid() != 0 && rootOwned(inst) {
 		return ui.Refused("Root manages this instance, so the move runs as root too.", "Run "+sudoAgain(inst.Dir)+".")
+	}
+	if err := undoneVolumeLeft(ctx, t.app, t.inst); err != nil {
+		return err
 	}
 	if err := t.preflight(ctx, chosen); err != nil {
 		return err

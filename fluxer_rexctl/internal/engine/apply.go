@@ -435,6 +435,7 @@ func (p *Project) down(ctx context.Context, volumes bool, timeout *time.Duration
 		return res, p.wrap("down", err)
 	}
 	res.Foreign = containerNames(foreign)
+	res.dirs = workingDirs(foreign)
 	if p.Model == nil && volumes {
 		named, err := p.prefixedVolumes(ctx, a)
 		if err != nil {
@@ -573,6 +574,25 @@ func withoutNetworks(model *types.Project, names []string) *types.Project {
 		}
 	}
 	return model
+}
+
+func (r DownResult) ForeignOutside(dir string) []string {
+	return slices.DeleteFunc(slices.Clone(r.Foreign), func(name string) bool {
+		wd := r.dirs[name]
+		return wd != "" && within(dir, wd)
+	})
+}
+
+func workingDirs(cs []container.Summary) map[string]string {
+	out := map[string]string{}
+	for _, ct := range cs {
+		name := ct.ID
+		if len(ct.Names) > 0 {
+			name = strings.TrimPrefix(ct.Names[0], "/")
+		}
+		out[name] = ct.Labels[api.WorkingDirLabel]
+	}
+	return out
 }
 
 func containerNames(cs []container.Summary) []string {

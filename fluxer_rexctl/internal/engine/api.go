@@ -69,6 +69,7 @@ type Project struct {
 
 type DownResult struct {
 	Foreign []string
+	dirs    map[string]string
 }
 
 const (

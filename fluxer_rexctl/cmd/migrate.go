@@ -610,6 +610,7 @@ func markMoved(app *App, inst *instance.Instance, to string) {
 	if err == nil {
 		handOverRules(moved, to)
 		moved.State.MovedTo = to
+		moved.State.UndoneVolume = ""
 		err = moved.Save()
 	}
 	if err != nil {

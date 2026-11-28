@@ -408,6 +408,9 @@ func movedPair(inst *instance.Instance) (*instance.Instance, *instance.Instance,
 }
 
 func runUndoMove(ctx context.Context, app *App, inst *instance.Instance, confirm string) error {
+	if moved := inst.Moved(); moved != nil && moved.Composed {
+		return ui.Refused(moved.Error(), "There's nothing to go back to. Fluxer runs from compose.yaml in "+inst.State.MovedTo+".")
+	}
 	if inst.State.MovedTo != "" {
 		if _, err := instance.Find(inst.State.MovedTo); errors.Is(err, instance.ErrNotFound) {
 			return finishGoneUndo(ctx, app, inst)
@@ -425,6 +428,9 @@ func runUndoMove(ctx context.Context, app *App, inst *instance.Instance, confirm
 	}
 	if oneWayMove(old, moved.State.Release) {
 		return ui.Refused(fmt.Sprintf("Fluxer %s has already updated your own PostgreSQL database, and the old containers on Fluxer %s can't run on it, so rexctl can't go back.", moved.State.Release, old.State.Release), "Keep the new instance and run rexctl status to check it. The backup from before the move is in "+old.BackupDir()+".")
+	}
+	if moved.State.Detached() && moved.State.MovedFrom.HandsOver() {
+		return undoHandOver(ctx, app, moved, old, confirm)
 	}
 	what := fmt.Sprintf("This removes Fluxer from %s and starts the old containers in %s again, with the data from before the move. rexctl backs up the new instance first, but anything posted after the move is gone from the old one. Any change rexctl made to Valkey or SeaweedFS before the move stays.", moved.Dir, old.Dir)
 	if err := app.UI.ConfirmDestructive(what, moved.Domain(), confirm); err != nil {

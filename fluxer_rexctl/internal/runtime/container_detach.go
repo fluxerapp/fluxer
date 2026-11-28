@@ -20,6 +20,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/envfile"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
 
 const (
@@ -352,4 +353,81 @@ func TakeBack(ctx context.Context, r Runtime, out Detached) ([]string, error) {
 		return res.Foreign, err
 	}
 	return res.Foreign, errors.Join(removeIfThere(out.ComposeFile), removeIfThere(out.EnvFile))
+}
+
+var ErrNotHandedOver = errors.New("runtime: compose.yaml no longer runs the volume rexctl handed over")
+
+type Undone struct {
+	Volume  string
+	Backup  string
+	Foreign []string
+	Renamed []string
+}
+
+func UndoHandOver(ctx context.Context, r Runtime, s *ui.Step, backupDir, oldDir string) (Undone, error) {
+	out := Undone{}
+	c, ok := r.(*containerRT)
+	if !ok {
+		return out, ErrUnsupported
+	}
+	e, err := c.engine(ctx)
+	if err != nil {
+		return out, err
+	}
+	eng, ok := e.(*engine.Engine)
+	if !ok {
+		return out, ErrUnsupported
+	}
+	out.Volume = VolumeName(c.inst)
+	file := c.inst.Path(ComposeFileName)
+	p, err := eng.LoadPublished(ctx, engine.Spec{Name: c.inst.Project(), Dir: c.inst.Dir, Files: []string{file}})
+	if err != nil {
+		return out, errors.Join(ErrNotHandedOver, err)
+	}
+	if !runsVolume(p, out.Volume) {
+		return out, ErrNotHandedOver
+	}
+	set, err := deploy.ReleaseSet(c.inst)
+	if err != nil {
+		return out, err
+	}
+	bg := context.WithoutCancel(ctx)
+	if err := p.Stop(bg); err != nil {
+		return out, err
+	}
+	if _, err := c.push(bg, e, set); err != nil {
+		return out, err
+	}
+	if out.Backup, err = (containerBackups{c}).Create(bg, s, BackupOptions{Reason: "undo", Dir: backupDir}); err != nil {
+		return out, err
+	}
+	res, err := p.DownReport(bg, false)
+	if err != nil {
+		return out, err
+	}
+	out.Foreign = res.ForeignOutside(oldDir)
+	for _, name := range []string{ComposeFileName, EnvFileName} {
+		path := c.inst.Path(name)
+		if err := os.Rename(path, path+".undone"); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			return out, err
+		}
+		out.Renamed = append(out.Renamed, name)
+	}
+	return out, nil
+}
+
+func runsVolume(p *engine.Project, volume string) bool {
+	svc, ok := p.Model.Services[composeService]
+	if !ok || len(p.Model.Services) != 1 || !strings.HasPrefix(svc.Image, ImageRepo+":") {
+		return false
+	}
+	for _, v := range svc.Volumes {
+		if v.Target != ContainerData {
+			continue
+		}
+		if vol, ok := p.Model.Volumes[v.Source]; ok && vol.Name == volume {
+			return true
+		}
+	}
+	return false
 }

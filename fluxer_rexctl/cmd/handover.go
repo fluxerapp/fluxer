@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/envfile"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/native"
@@ -328,4 +329,92 @@ func handOverCard(app *App, old, moved *instance.Instance, res handedOver) {
 		Body:     body,
 		Commands: []string{"cd " + shellWord(moved.Dir), res.tool + " ps", "rexctl migrate --clean-up --dir " + shellWord(old.Dir)},
 	})
+}
+
+func undoHandOver(ctx context.Context, app *App, moved, old *instance.Instance, confirm string) error {
+	backups := moved.Path(instance.BackupsDir)
+	what := fmt.Sprintf("This stops Fluxer in %s, backs it up into %s and starts the old containers in %s again, with the data from before the move. Anything posted after the move is gone from the old one. rexctl keeps the volume of the new instance. Any change rexctl made to Valkey or SeaweedFS before the move stays.", moved.Dir, backups, old.Dir)
+	if err := app.UI.ConfirmDestructive(what, moved.Domain(), confirm); err != nil {
+		return err
+	}
+	if err := os.Chdir(old.Dir); err != nil {
+		return ui.Wrap(err, "Couldn't open "+old.Dir+". rexctl didn't go back.", "Check that "+old.Dir+" is there and readable, then run "+migrateCommand+" --undo again.")
+	}
+	if err := oldImagesHere(ctx, app, old); err != nil {
+		return err
+	}
+	r, err := app.Runtime(ctx, moved)
+	if err != nil {
+		return err
+	}
+	back := schedules{backups: composedSchedule(moved, old)}
+	var undone rt.Undone
+	err = app.Locked(ctx, moved, func() error {
+		return app.UI.Step(ctx, "Stopping and backing up Fluxer in "+moved.Dir, func(ctx context.Context, s *ui.Step) error {
+			var err error
+			undone, err = rt.UndoHandOver(ctx, r, s, backups, old.Dir)
+			if errors.Is(err, rt.ErrNotHandedOver) {
+				return ui.Refused(fmt.Sprintf("rexctl can't go back from %s, because compose.yaml there no longer runs %s on the volume %s.", moved.Dir, rt.ImageRepo, rt.VolumeName(moved)), "Put back the compose.yaml rexctl wrote there, then run "+migrateCommand+" --undo again.")
+			}
+			if err != nil {
+				return rt.ContainerError(err, "Couldn't stop and back up Fluxer in "+moved.Dir+". rexctl didn't go back.")
+			}
+			s.Done("Stopped Fluxer in %s and backed it up to %s.", moved.Dir, undone.Backup)
+			return nil
+		})
+	})
+	if err != nil {
+		return err
+	}
+	rules := moved.State.MovedFrom.Firewall
+	if err := keepRules(moved, rules); err != nil {
+		app.UI.Detail("%v", err)
+	}
+	stepAway(app, moved)
+	old.State.UndoneVolume = undone.Volume
+	if err := finishUndo(ctx, app, old, rules, back); err != nil {
+		return err
+	}
+	if line := rt.ForeignLine(undone.Foreign); line != "" {
+		app.UI.Info("%s", line)
+	}
+	if len(undone.Renamed) > 0 {
+		app.UI.Info("Renamed compose.yaml and fluxer.env in %s so they don't start Fluxer again.", moved.Dir)
+	}
+	engineTool := string(composeEngine(moved))
+	app.UI.Info("rexctl kept the volume %s with the data from after the move, and a backup of it is in %s. Remove the volume with %s volume rm %s once you're sure you don't need it.", undone.Volume, undone.Backup, engineTool, undone.Volume)
+	if moved.State.MovedFrom.AutoUpgrade {
+		app.UI.Info("Automatic upgrades from before the move didn't come back. Turn them on again with %s.", sudoRun(old.Dir, "auto-upgrade", "on"))
+	}
+	return nil
+}
+
+func composedSchedule(moved, old *instance.Instance) string {
+	if fluxerdSchedule(old) != host.ScheduleOff {
+		return ""
+	}
+	f, err := envfile.Load(moved.Path(rt.EnvFileName))
+	if err != nil {
+		return ""
+	}
+	switch v := strings.ToLower(strings.TrimSpace(f.Value(fluxerdScheduleVar))); v {
+	case host.ScheduleDaily, host.ScheduleWeekly:
+		return v
+	}
+	return ""
+}
+
+func undoneVolumeLeft(ctx context.Context, app *App, inst *instance.Instance) error {
+	name := inst.State.UndoneVolume
+	if name == "" {
+		return nil
+	}
+	e, err := app.Engine(ctx, inst)
+	if err != nil {
+		return nil
+	}
+	if ok, err := e.VolumeExists(ctx, name); err != nil || !ok {
+		return nil
+	}
+	return ui.Refused(fmt.Sprintf("The volume %s is left from a move you undid.", name), fmt.Sprintf("Check that you don't need it, remove it with %s volume rm %s, then run this again.", composeEngine(inst), name))
 }
