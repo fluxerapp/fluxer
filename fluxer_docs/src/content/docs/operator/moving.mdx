@@ -49,6 +49,8 @@ Both run the same Fluxer with the same settings, and rexctl manages either.
 
 With `--to compose`, rexctl then writes `compose.yaml` and `fluxer.env` into the new folder, starts Fluxer from them with docker compose and checks it again.
 
+An install on a release before 2026.1111.22825 can't move off Valkey and SeaweedFS while it runs. The move then copies that data while the old containers are stopped, and the old containers keep their own copy.
+
 Your address, ports, settings, admins, users, messages and uploads stay the same. Fluxer gets new certificates. In one container, its own PostgreSQL moves from version 16 to 17 by a dump and restore. Under systemd, it moves to the newest PostgreSQL on the machine, which must be 16 or later. Your own PostgreSQL stays as it is. The move needs free disk for a second copy of your uploads, and the instance is offline for a few minutes while it runs.
 
 ## Move and keep using rexctl
@@ -168,7 +170,9 @@ Before it changes anything, rexctl checks that the containers ran on the folders
 
 If the move goes back, the old containers start with the same file and the same folders. rexctl refuses to start them when the file would give a service another volume or folder than the one that holds its data. rexctl records those folders and volumes when the move starts, so the check works even when the old containers are gone.
 
-The folders stay on the machine after the move. `rexctl migrate --clean-up` lists them and never deletes them. Delete them yourself once the new instance has your data.
+When the old containers kept data in folders, the move to one container or to compose puts all of Fluxer's data in a new folder next to them, called `fluxer-data`. That keeps the data on the same disk, and the plan shows the folder. Pass `--data-folder` with another empty folder, or `--data-folder=""` for a volume of Docker or Podman. [Keep data on another disk](/operator/configuration/#keep-data-on-another-disk) has more about the folder.
+
+The old folders stay on the machine after the move. `rexctl migrate --clean-up` lists them and never deletes them. Delete them yourself once the new instance has your data.
 
 ## Installs you set up by hand
 

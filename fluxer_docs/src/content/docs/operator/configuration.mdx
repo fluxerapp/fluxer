@@ -118,6 +118,58 @@ On the older layout with Docker Compose, rexctl doesn't copy the file. Mount its
 
 Without rexctl, put the file where Fluxer can read it and set [`FLUXER_GEOIP_DB_PATH`](/operator/settings/#fluxer_geoip_db_path) to its path.
 
+## Keep data on another disk
+
+Fluxer keeps its database, uploads and search index in one data folder. To keep them on a second disk, a RAID or a ZFS dataset, give Fluxer a folder there. Use a local disk with a Linux file system like ext4, XFS, Btrfs or ZFS. The database can lose data on a network share over NFS or SMB, and rexctl refuses a folder on one.
+
+Add the disk to `/etc/fstab`, which mounts it before Docker, Podman or Fluxer starts when the machine boots.
+
+To keep only the uploads somewhere else, put them in an S3-compatible store with the [file storage settings](/operator/settings/#file-storage) instead. The database and search index then stay on this machine.
+
+<Tabs syncKey="runtime">
+<TabItem label="Docker">
+
+Create the folder and give it to the user Fluxer runs as, which is user ID 65532 in the container.
+
+```sh
+sudo mkdir -p /mnt/disk/fluxer && sudo chown 65532:65532 /mnt/disk/fluxer && sudo chmod 700 /mnt/disk/fluxer
+```
+
+In `compose.yaml`, mount the folder in place of the volume, and remove `fluxer-data` from the `volumes` list at the end of the file. On a machine with SELinux, such as Fedora or RHEL, add `:z` to the end of the line.
+
+```yaml title="compose.yaml"
+services:
+  fluxer:
+    volumes:
+      - /mnt/disk/fluxer:/var/lib/fluxer
+```
+
+With `docker run`, pass `-v /mnt/disk/fluxer:/var/lib/fluxer` in place of `-v fluxer-data:/var/lib/fluxer`. For an instance that already runs, [make a backup](/operator/backups/) first, change the mount, then restore the backup into the empty folder.
+
+</TabItem>
+<TabItem label="Linux by hand">
+
+Fluxer keeps its data in `/var/lib/fluxer`. Mount the disk there before you create that folder in the [install steps](/operator/linux-manual/). The folder on the disk then belongs to the `fluxer` account.
+
+</TabItem>
+<TabItem label="With rexctl">
+
+In one container on Docker or Podman, pass the folder when you install, or set it later.
+
+```sh
+rexctl install --data-folder /mnt/disk/fluxer
+rexctl config set data.folder=/mnt/disk/fluxer
+```
+
+The folder has to be empty or new. On an instance that already runs, rexctl stops Fluxer, copies its data into the folder and checks that the copy has the same number of files and bytes. It then starts Fluxer from the folder, and goes back to the old place if Fluxer doesn't start. The old copy stays until you delete it, and rexctl prints the command for that. `rexctl config unset data.folder` moves the data back into a volume.
+
+Backups, restores, upgrades and `rexctl detach` use the folder too. When the folder is empty, such as when its disk isn't mounted, rexctl doesn't start Fluxer there and `rexctl doctor` reports it.
+
+Under systemd, Fluxer keeps its data in `/var/lib/fluxer`. Mount the disk there before you install.
+
+</TabItem>
+</Tabs>
+
 ## Passwords and keys Fluxer makes
 
 On its first start, Fluxer creates its own passwords and keys and keeps them in `secrets.env` in its data folder. You never need to set them. Every backup includes them.
