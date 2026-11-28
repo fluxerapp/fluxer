@@ -10,6 +10,7 @@ import fluxer_gateway/config/settings
 import fluxer_gateway/core/clock
 import fluxer_gateway/core/node
 import fluxer_gateway/gateway/socket
+import fluxer_gateway/guild/manager as guild_manager
 import fluxer_gateway/guild/manager/registry as guild_registry
 import fluxer_gateway/handoff/service
 import fluxer_gateway/presence/pids
@@ -133,6 +134,7 @@ fn run_bouncer() -> Nil {
   service.drain()
   let deadline = clock.monotonic_ms() + handoff_wait_ms()
   await_bouncer_drained(deadline)
+  retire_orphans()
   move_sessions(deadline)
   case sockets_notified() {
     True -> Nil
@@ -182,6 +184,7 @@ fn await_outcome(serial: Int, deadline: Int) -> Nil {
     False -> Nil
     True -> {
       let final = clock.monotonic_ms() >= deadline
+      retire_orphans()
       case drain_report.settle(left(), bouncer_done(), final).phase {
         drain_report.Draining -> {
           process.sleep(outcome_poll_ms)
@@ -248,6 +251,32 @@ fn await_sockets_closed(deadline: Int) -> Nil {
     }
   }
 }
+
+fn retire_orphans() -> Nil {
+  case
+    node.runs(settings.get().role, node.Guilds)
+    && service.buckets_held() == 0
+    && guild_registry.count() > 0
+  {
+    False -> Nil
+    True -> {
+      let swept =
+        guild_manager.sweep_ownership_local(True, False, orphan_sweep_ms)
+      case swept.report.disowned {
+        0 -> Nil
+        found ->
+          logging.log(
+            logging.Info,
+            "Gateway drain retired "
+              <> int.to_string(found)
+              <> " guilds held by other workers",
+          )
+      }
+    }
+  }
+}
+
+const orphan_sweep_ms = 2000
 
 fn await_bouncer_drained(deadline: Int) -> Nil {
   case service.drained() || clock.monotonic_ms() >= deadline {

@@ -518,6 +518,14 @@ fn handle_message(
   case message, server.mode {
     Moving(found), _ -> on_signal(server, found)
     Copying(request), _ -> on_copy(server, request)
+    Private(inbox.Disown), Serving
+    | Private(inbox.ResyncSessions(..)), Serving
+    -> next(run(server, message))
+    Private(inbox.Disown), _ -> actor.continue(server)
+    Private(inbox.ResyncSessions(reply)), _ -> {
+      process.send(reply, 0)
+      actor.continue(server)
+    }
     _, Staged(..) -> actor.continue(server)
     _, Serving -> next(run(server, message))
     _, Arriving(applied:, early:, stash:) ->
@@ -1633,6 +1641,21 @@ fn private(server: Server, control: Control) -> Step {
         )
       })
       guild_metrics.stopped("moved")
+      Stop(server)
+    }
+    inbox.ResyncSessions(reply) -> {
+      let #(state, count) = availability.resync_all(server.state)
+      process.send(reply, count)
+      Continue(with_state(server, state))
+    }
+    inbox.Disown -> {
+      let guild = guild_state.guild_id(server.state)
+      guild_state.sessions(server.state)
+      |> guild_sessions.session_refs
+      |> list.each(fn(ref) {
+        control.guild_lost(ref, guild, int.random(down_jitter_ms()))
+      })
+      guild_metrics.stopped("unowned")
       Stop(server)
     }
     inbox.VoiceRpc(request) -> Continue(voice_request(server, request))

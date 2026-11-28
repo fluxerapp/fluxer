@@ -224,6 +224,27 @@ pub fn shutdown(params: Params) -> Result(Json, RpcError) {
   stop_guild(guild, "guild_shutdown_error")
 }
 
+pub fn resync_sessions(params: Params) -> Result(Json, RpcError) {
+  use guild <- result.try(rpc_params.guild(params))
+  case registry.lookup(guild) {
+    Error(Nil) -> Ok(json.object([#("running", json.bool(False))]))
+    Ok(found) -> {
+      let reply = process.new_subject()
+      process.send(found.control, inbox.ResyncSessions(reply))
+      case process.receive(reply, guild_call_timeout_ms()) {
+        Ok(count) ->
+          Ok(
+            json.object([
+              #("running", json.bool(True)),
+              #("sessions", json.int(count)),
+            ]),
+          )
+        Error(Nil) -> Error(RpcTimeout)
+      }
+    }
+  }
+}
+
 pub fn reload(params: Params) -> Result(Json, RpcError) {
   use guild <- result.try(rpc_params.guild(params))
   case

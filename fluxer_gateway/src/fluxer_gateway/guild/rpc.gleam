@@ -46,6 +46,7 @@ pub fn handle_local(method: String, params: Params) -> Result(Json, RpcError) {
     "guild.reload" -> infra.reload(params)
     "guild.reload_all" -> infra.reload_all(params)
     "guild.shutdown" -> infra.shutdown(params)
+    "guild.resync_sessions" -> infra.resync_sessions(params)
     "guild.get_counts" | "guild.get_online_counts_batch" ->
       counts.handle(method, params)
     "guild.get_member"

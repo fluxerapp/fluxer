@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import fluxer_gateway/cluster/wire
 import fluxer_gateway/core/error.{type GatewayError}
 import fluxer_gateway/core/guild.{type GuildRef}
 import fluxer_gateway/core/guild_create.{type GuildCreate}
@@ -50,6 +51,21 @@ pub fn subject(pid: Pid) -> Subject(Control) {
     pid,
     atom.to_dynamic(atom.create("fluxer_gateway_session_control")),
   )
+}
+
+pub fn guild_lost(
+  session: SessionRef,
+  guild: GuildId,
+  retry_after_ms: Int,
+) -> Nil {
+  case process.subject_owner(session.inbox) {
+    Ok(pid) ->
+      case wire.pid_speaks(pid, wire.guild_lost_epoch) {
+        True -> session.send(session, session.GuildLost(guild, retry_after_ms))
+        False -> process.send(subject(pid), GuildUnavailable(guild, False))
+      }
+    Error(Nil) -> Nil
+  }
 }
 
 pub fn send(session: SessionRef, control: Control) -> Nil {

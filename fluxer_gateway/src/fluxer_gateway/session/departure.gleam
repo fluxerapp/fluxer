@@ -222,11 +222,16 @@ fn pass(state: State, departure: Departure, incoming: Incoming) -> Departure {
         AwaitingPresence -> Departure(..departure, presence: PresenceDone(kept))
         _ -> departure
       }
-    Inbox(message) -> {
-      case departure.speaks_moves {
-        True -> control.send(departure.target, control.Relayed(message))
-        False -> session.send(departure.target, message)
+    Inbox(session.GuildLost(guild, retry_after_ms)) -> {
+      case speaks_guild_lost(departure.target) {
+        True -> relay(departure, session.GuildLost(guild, retry_after_ms))
+        False ->
+          relay_control(departure, control.GuildUnavailable(guild, False))
       }
+      departure
+    }
+    Inbox(message) -> {
+      relay(departure, message)
       departure
     }
     Ctl(control.HandOff(_, reply)) -> {
@@ -234,12 +239,30 @@ fn pass(state: State, departure: Departure, incoming: Incoming) -> Departure {
       departure
     }
     Ctl(message) -> {
-      case departure.speaks_moves {
-        True -> control.send(departure.target, control.RelayedControl(message))
-        False -> control.send(departure.target, message)
-      }
+      relay_control(departure, message)
       departure
     }
+  }
+}
+
+fn relay(departure: Departure, message: SessionInbox) -> Nil {
+  case departure.speaks_moves {
+    True -> control.send(departure.target, control.Relayed(message))
+    False -> session.send(departure.target, message)
+  }
+}
+
+fn relay_control(departure: Departure, message: Control) -> Nil {
+  case departure.speaks_moves {
+    True -> control.send(departure.target, control.RelayedControl(message))
+    False -> control.send(departure.target, message)
+  }
+}
+
+fn speaks_guild_lost(target: SessionRef) -> Bool {
+  case process.subject_owner(target.inbox) {
+    Ok(pid) -> wire.pid_speaks(pid, wire.guild_lost_epoch)
+    Error(Nil) -> False
   }
 }
 

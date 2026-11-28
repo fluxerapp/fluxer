@@ -24,27 +24,18 @@ pub type Bridge {
 
 pub const bridges: List(Bridge) = [
   Bridge(
-    from: 4,
+    from: 5,
     types: [
-      #("src/fluxer_gateway/core/guild.gleam", "GuildRequest"),
       #("src/fluxer_gateway/core/session.gleam", "SessionInbox"),
-      #("src/fluxer_gateway/session/control.gleam", "Control"),
-      #("src/fluxer_gateway/presence/protocol.gleam", "Input"),
-      #("src/fluxer_gateway/voice/call/manager.gleam", "Message"),
-      #("src/fluxer_gateway/voice/call/server.gleam", "Message"),
-      #("src/fluxer_gateway/voice/call/server.gleam", "MoveSignal"),
-      #("src/fluxer_gateway/voice/call/state.gleam", "Member"),
-      #("src/fluxer_gateway/voice/call/state.gleam", "MemberNote"),
-      #("src/fluxer_gateway/push/server.gleam", "Message"),
-      #("src/fluxer_gateway/push/outbox.gleam", "Message"),
-      #("src/fluxer_gateway/push/outbox/state.gleam", "Carried"),
-      #("src/fluxer_gateway/handoff/precopy.gleam", "Envelope"),
-      #("src/fluxer_gateway/handoff/precopy.gleam", "Ack"),
+      #("src/fluxer_gateway/guild/inbox.gleam", "Control"),
+      #("src/fluxer_gateway/guild/manager/shard.gleam", "Message"),
     ],
   ),
 ]
 
 pub const move_forms_epoch = 5
+
+pub const guild_lost_epoch = 6
 
 pub type Assessment {
   Pending
