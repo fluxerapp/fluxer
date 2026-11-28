@@ -5,6 +5,7 @@ package cmd
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -79,12 +80,13 @@ func runDetach(ctx context.Context, app *App) error {
 		var out rt.Detached
 		err := u.Step(ctx, "Handing Fluxer over to "+tool, func(ctx context.Context, s *ui.Step) error {
 			var err error
+			var unquotable *rt.UnquotableError
 			out, err = rt.Detach(ctx, r, o)
 			switch {
 			case errors.Is(err, rt.ErrMultiline):
 				return ui.Refused("A setting of this instance holds more than one line, which an env file can't hold.", "Change that setting with rexctl config set, then run rexctl detach again.")
-			case errors.Is(err, rt.ErrUnquotable):
-				return ui.Refused("A setting of this instance ends in a backslash before a quote, which an env file can't hold.", "Change that setting with rexctl config set, then run rexctl detach again.")
+			case errors.As(err, &unquotable):
+				return ui.Refused(fmt.Sprintf("The setting %s holds characters that fluxer.env can't hold together.", unquotable.Key), "Change that setting with rexctl config set, then run this again.")
 			case errors.Is(err, rt.ErrDetachStartedAgain):
 				u.Detail("%v", err)
 				return rt.ContainerError(err, "Couldn't hand Fluxer over to "+tool+", so rexctl started its own container again.")

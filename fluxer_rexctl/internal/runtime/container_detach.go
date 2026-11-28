@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"maps"
 	"os"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -76,8 +77,20 @@ func ComposeYAML(spec engine.SingleSpec, project string, podman bool) []byte {
 
 var (
 	ErrMultiline  = errors.New("runtime: a setting holds more than one line")
-	ErrUnquotable = errors.New("runtime: a setting ends in a backslash before a quote")
+	ErrUnquotable = errors.New("runtime: a setting holds characters fluxer.env can't hold together")
 )
+
+type UnquotableError struct {
+	Key string
+}
+
+func (e *UnquotableError) Error() string {
+	return "runtime: the setting " + e.Key + " can't be quoted in fluxer.env"
+}
+
+func (e *UnquotableError) Unwrap() error { return ErrUnquotable }
+
+var plainEnvValue = regexp.MustCompile(`^[A-Za-z0-9_.,:/@+=%-]*$`)
 
 const (
 	backupScheduleVar = "FLUXER_BACKUP_SCHEDULE"
@@ -85,10 +98,15 @@ const (
 )
 
 func envQuote(v string) (string, error) {
-	if strings.HasSuffix(v, `\`) || strings.Contains(v, `\'`) {
-		return "", ErrUnquotable
+	switch {
+	case plainEnvValue.MatchString(v):
+		return v, nil
+	case !strings.Contains(v, "'") && !strings.HasSuffix(v, `\`):
+		return "'" + v + "'", nil
+	case !strings.ContainsAny(v, "$\"`\\"):
+		return `"` + v + `"`, nil
 	}
-	return "'" + strings.ReplaceAll(v, "'", `\'`) + "'", nil
+	return "", ErrUnquotable
 }
 
 func detachedEnv(env map[string]string, set *stack.Set) ([]byte, error) {
@@ -107,16 +125,11 @@ func detachedEnv(env map[string]string, set *stack.Set) ([]byte, error) {
 		}
 		q, err := envQuote(v)
 		if err != nil {
-			return nil, fmt.Errorf("%w: %s", err, k)
+			return nil, &UnquotableError{Key: k}
 		}
 		b.WriteString(k + "=" + q + "\n")
 	}
 	return []byte(b.String()), nil
-}
-
-func PodmanUpgradeCommand() string {
-	image := "ghcr.io/fluxerapp/fluxer:{version}"
-	return `sed -i.bak "s#ghcr.io/fluxerapp/fluxer:[^[:space:]]*#` + image + `#" compose.yaml && grep -q '` + image + `' compose.yaml && podman compose pull && podman compose up -d`
 }
 
 var (
@@ -177,13 +190,6 @@ func (r *containerRT) detach(ctx context.Context, o DetachOptions) (Detached, er
 	envData, err := detachedEnv(env, set)
 	if err != nil {
 		return out, err
-	}
-	if r.kind == engine.Podman {
-		q, err := envQuote(PodmanUpgradeCommand())
-		if err != nil {
-			return out, err
-		}
-		envData = append(envData, "FLUXER_UPGRADE_COMMAND="+q+"\n"...)
 	}
 	spec := ContainerSpec(r.inst, r.inst.State.Release, env)
 	compose := ComposeYAML(spec, r.inst.Project(), r.kind == engine.Podman)
