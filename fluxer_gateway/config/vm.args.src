@@ -23,6 +23,7 @@
 +MBlmbcs 512
 +MElmbcs 512
 -kernel logger_level warning
+-kernel net_ticktime 20
 -kernel inet_dist_listen_min ${FLUXER_ERLANG_DIST_PORT}
 -kernel inet_dist_listen_max ${FLUXER_ERLANG_DIST_PORT}
 -kernel prevent_overlapping_partitions false
