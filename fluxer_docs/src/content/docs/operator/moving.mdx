@@ -36,6 +36,12 @@ Both run the same Fluxer with the same settings, and rexctl manages either.
 - One container works on any Linux machine with Docker or Podman. It keeps everything in one container with its own PostgreSQL 17, and it is the closest to the old layout. It is also the one you can run yourself from `compose.yaml`.
 - systemd runs Fluxer as one service on the machine, on Debian 12 or later or Ubuntu 22.04 or later. It needs root and a folder that only root can change, such as `/opt/fluxer`, and it uses the machine's PostgreSQL 16 or newer.
 
+### On NixOS
+
+On NixOS, `/etc/systemd/system` comes from your configuration and rexctl can't write to it. Move to one container with `sudo rexctl migrate --to docker`, or `--to podman`. Docker starts the container again after the machine restarts. Podman does that when `podman-restart.service` is on, which you turn on with `systemd.services.podman-restart.wantedBy = [ "multi-user.target" ];` in `configuration.nix`. `--to systemd` stops before it changes anything.
+
+rexctl can't add the timers for [automatic upgrades](/operator/upgrades/) and [scheduled backups](/operator/backups/) either. When you turn one on, or when the old instance had one, rexctl prints the `systemd.services` and `systemd.timers` lines for `configuration.nix` that run the same rexctl commands. Add them and run `sudo nixos-rebuild switch`. Until you do, `rexctl status` shows a "Timers" row, and `rexctl doctor --verbose` shows the lines again.
+
 ## What the move does
 
 `rexctl migrate` moves an instance in one go and checks that it works.
