@@ -9,6 +9,8 @@ import {Steps, Tabs, TabItem} from '@astrojs/starlight/components';
 
 On Docker or Podman, Fluxer runs as one container, started from a small compose file or one docker run line, and loads its settings from an env file.
 
+rexctl is optional. The `compose.yaml` and `fluxer.env` that each release publishes are a supported way to run Fluxer without it, and this page needs only Docker. An instance on the older layout with one container per service gets here once with `rexctl migrate --to compose`, or with `rexctl detach` after a move to one container. [Moving from the older install](/operator/moving/) has the steps.
+
 ## Short version
 
 You need a 64-bit Linux machine with 2 CPU cores, 2 GB of memory at least, 4 GB for a busy instance, and Docker 24 or later with Compose. People open Fluxer at a domain that points at the machine, or at [its IP address](/operator/requirements/#with-an-ip-address). Installing takes about 5 minutes.
@@ -117,6 +119,40 @@ The container is called `fluxer`, and `docker logs fluxer` shows its log.
 
 Keep `--stop-timeout 130`, because Docker's default of 10 seconds stops PostgreSQL before it has shut down. The compose file and this line use the same volume, and you can switch between them without losing data.
 
+## Moved here with rexctl
+
+A folder that `rexctl migrate --to compose` or `rexctl detach` wrote works the same as the one above, with a few differences.
+
+- `compose.yaml` starts with a `name:` line, which keeps the compose project and the volume the same when you rename the folder. It can also have other ports, extra hosts or Podman lines than the release file.
+- To upgrade, keep this file and change only its `image:` line. Don't download the release's `compose.yaml` over it.
+- `custom.compose.yml` from the older layout no longer applies. Make network changes, such as other ports, in `compose.yaml`.
+- rexctl's backups from before the move stay in the `backups` folder. Fluxer keeps newer ones in its volume, under `/var/lib/fluxer/backups`, and those go when the volume goes. Copy them out first.
+
+```sh
+docker compose cp fluxer:/var/lib/fluxer/backups ./fluxer-backups
+```
+
+A custom certificate, CA or GeoIP database that rexctl copied into the volume stays there, under `/var/lib/fluxer/host`. rexctl no longer copies it from the instance folder. To replace one, copy the new file over it, give it to the user Fluxer runs as and restart Fluxer.
+
+```sh
+docker compose cp fullchain.pem fluxer:/var/lib/fluxer/host/certs/fullchain.pem
+docker compose exec -u 0 fluxer chown 65532:65532 /var/lib/fluxer/host/certs/fullchain.pem
+docker compose restart
+```
+
+The CA files go in `/var/lib/fluxer/host/ca` and the GeoIP database in `/var/lib/fluxer/host/geoip`, with the same file name as before.
+
+### Let rexctl run it
+
+To have rexctl run Fluxer again, run `rexctl adopt` in the folder. It works with the release files too.
+
+```sh
+rexctl adopt --dry-run
+rexctl adopt
+```
+
+rexctl backs Fluxer up, stops it, starts the same release in its own container on the same volume and checks it. If that doesn't work, it starts Fluxer again with docker compose. `compose.yaml` and `fluxer.env` move to `.rexctl/adopted`, and `rexctl detach` hands Fluxer back. rexctl refuses lines in `compose.yaml` that no rexctl setting gives, such as data in a folder, and lists each one.
+
 ## Behind your own proxy or tunnel
 
 When something else handles HTTPS, such as nginx, Caddy, Traefik or Cloudflare Tunnel, Fluxer serves plain HTTP on port 8080.
@@ -186,6 +222,17 @@ podman run -d --name fluxer --restart always --stop-timeout 130 \
 Rootless Podman can publish ports 80 and 443 only when the machine's own `net.ipv4.ip_unprivileged_port_start` is 80 or lower. Set it with `sudo sysctl -w net.ipv4.ip_unprivileged_port_start=80`. To keep it after a reboot, put the same line in a new file in `/etc/sysctl.d/` as well.
 
 In proxy mode, Fluxer uses no port below 1024 and needs neither sysctl setting.
+
+With `podman compose` and the release files, put the sysctl line in a `compose.override.yaml` next to `compose.yaml`. Compose reads it with `compose.yaml`, and upgrades still change only the image line of `compose.yaml`.
+
+```yaml title="compose.override.yaml"
+services:
+  fluxer:
+    sysctls:
+      net.ipv4.ip_unprivileged_port_start: 0
+```
+
+Upgrade with `podman compose pull && podman compose up -d`. The Updates page in the admin panel shows the same command.
 
 Podman has no daemon, so after a reboot `podman-restart.service` starts the containers that run with `--restart always`. As root, turn it on for the whole machine.
 

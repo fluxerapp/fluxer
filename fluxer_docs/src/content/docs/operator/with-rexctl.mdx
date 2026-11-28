@@ -7,13 +7,16 @@ tag: not for Kubernetes
 
 rexctl is an optional helper for running Fluxer on one machine. It installs Fluxer, then upgrades it, backs it up, changes settings and manages people.
 
+You don't need it. The compose file and settings file that each release publishes are a supported way to run Fluxer without rexctl, as in the [Docker guide](/operator/docker/). An instance on the older layout gets there once with `rexctl migrate --to compose`, or with `rexctl detach` after a move to one container. [Moving from the older install](/operator/moving/) has the steps.
+
 ## What it manages
 
 - It installs Fluxer in one Docker or Podman container, or as a systemd service.
 - On Docker and Podman you can [stop using it](#stop-using-rexctl) whenever you want.
 - A systemd install stays managed by rexctl.
 - It manages only the instances it installed.
-- It can't take over a Fluxer started with `docker run`, the compose file or Quadlet.
+- It takes over a Fluxer that runs from the release's compose file with [`rexctl adopt`](#start-using-rexctl-again).
+- It can't take over a Fluxer started with `docker run` or Quadlet.
 
 ## Install rexctl
 
@@ -110,9 +113,26 @@ Change them only through rexctl, with `rexctl config set` and the other commands
 
 ## Stop using rexctl
 
-On a Docker or Podman install, `rexctl detach` writes the same compose file and settings file that each release publishes into the instance folder, starts Fluxer from them and stops managing the instance. Your data stays in the same volume.
+On a Docker or Podman install, `rexctl detach` writes a compose file and a settings file into the instance folder, starts Fluxer from them with docker compose and stops managing the instance. Your data stays in the same volume.
 
-From then on, you [run it like any other Docker install](/operator/docker/). `rexctl detach` refuses a systemd install, which stays on rexctl's unit `fluxer.service`.
+On the default ports, the files are the ones each release publishes with a `name:` line for the project added. With other ports, the compose file keeps them and differs from the release file there.
+
+rexctl then removes its own files from the folder. Your older backups stay in `backups`, and Fluxer keeps newer ones in its volume. Voice servers on other machines keep running, and you upgrade them yourself. `rexctl detach` refuses while a voice server runs in a container on the same machine.
+
+An instance on the older layout moves and goes over to compose in one run with [`rexctl migrate --to compose`](/operator/moving/#move-and-run-it-yourself-with-docker-compose).
+
+From then on, you [run it like any other Docker install](/operator/docker/#moved-here-with-rexctl). `rexctl detach` refuses a systemd install, which stays on rexctl's unit `fluxer.service`.
+
+## Start using rexctl again
+
+`rexctl adopt` takes a Fluxer that runs from a compose file and a settings file back into rexctl, on the same volume. It works with the release files, and with a folder that `rexctl detach` or `rexctl migrate --to compose` wrote.
+
+```sh
+rexctl adopt --dry-run
+rexctl adopt
+```
+
+rexctl backs Fluxer up, stops it, starts the same release in its own container and checks it. If that doesn't work, it starts Fluxer again with docker compose. It refuses lines in the compose file that no rexctl setting gives, such as data in a folder, and lists each one.
 
 ## Remove Fluxer
 

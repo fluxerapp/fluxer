@@ -46,7 +46,11 @@ With the compose file, open `compose.yaml`, change the tag on the `image:` line,
 docker compose pull && docker compose up -d
 ```
 
-With the [check](#turning-the-check-on) on, the Updates page in the admin panel shows one command that does both steps, with the newest version number already filled in.
+With the [check](#turning-the-check-on) on, the Updates page in the admin panel shows one command that does both steps, with the newest version number already filled in. Fluxer backs up its database, passwords and keys before it upgrades them.
+
+With Podman and the compose file, run `podman compose pull && podman compose up -d` in place of the `docker compose` line. The Updates page shows that form when Fluxer runs in Podman.
+
+If `compose.yaml` came from `rexctl migrate --to compose` or `rexctl detach`, keep it and change only the `image:` line.
 
 With `docker run`, pull the new image, then stop and remove the container and run the same line with the new tag. The volume keeps your data. With the check on and `-e FLUXER_INSTALL_METHOD=docker` in your line, the Updates page shows the first two commands with the newest version filled in.
 
