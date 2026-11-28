@@ -69,6 +69,7 @@ type State struct {
 	Firewall        []OpenedPort      `json:"firewall,omitempty"`
 	ProxiedBy       string            `json:"proxied_by,omitempty"`
 	Interrupted     *Interrupted      `json:"interrupted,omitempty"`
+	HandRun         *HandRun          `json:"hand_run,omitempty"`
 	InstalledAt     time.Time         `json:"installed_at"`
 	UpdatedAt       time.Time         `json:"updated_at"`
 
@@ -89,6 +90,17 @@ type MovedFrom struct {
 }
 
 const ThenCompose = "compose"
+
+type HandRun struct {
+	At        time.Time     `json:"at"`
+	Files     []HandRunFile `json:"files"`
+	EnvSHA256 string        `json:"env_sha256"`
+}
+
+type HandRunFile struct {
+	Name   string `json:"name"`
+	SHA256 string `json:"sha256"`
+}
 
 func (m *MovedFrom) HandsOver() bool { return m != nil && m.Then == ThenCompose }
 

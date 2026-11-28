@@ -135,7 +135,7 @@ func (t *moveBase) checkOldLayout(ctx context.Context) error {
 		return err
 	}
 	storage := slices.Contains(minimalModes(t.inst), migrate.OptStorage)
-	r := &customReview{project: t.inst.Project(), dir: t.inst.Dir, chosen: t.inst.State.Settings, stock: stock.Model, live: t.live.Model, storage: storage,
+	r := &customReview{project: t.inst.Project(), dir: t.inst.Dir, chosen: t.inst.State.Settings, stock: stock.Model, live: t.live.Model, storage: storage, handRun: t.inst.State.HandRun != nil,
 		stockWith: func(changes map[string]string) (*types.Project, error) {
 			p, err := composeModel(ctx, e, t.inst, merged(t.inst.State.Settings, changes))
 			if err != nil {
@@ -144,7 +144,7 @@ func (t *moveBase) checkOldLayout(ctx context.Context) error {
 			return p.Model, nil
 		}}
 	if err := r.read(custom); err != nil {
-		return ui.Wrap(err, fmt.Sprintf("rexctl can't read %s.", instance.CustomCompose), "Fix the file with rexctl config edit --compose, then try again.")
+		return ui.Wrap(err, fmt.Sprintf("rexctl can't read %s.", instance.CustomCompose), "Fix it "+customEditor(t.inst.State.HandRun != nil, t.inst.Dir)+", then try again.")
 	}
 	r.ports()
 	if err := r.refusal(); err != nil {

@@ -54,8 +54,14 @@ var projectName = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]*$`)
 func ValidProject(name string) bool { return projectName.MatchString(name) }
 
 type Instance struct {
-	Dir   string
-	State *State
+	Dir    string
+	State  *State
+	staged *staging
+}
+
+type staging struct {
+	set   string
+	files string
 }
 
 var rootHome = func() (string, error) {
@@ -222,6 +228,9 @@ func (i *Instance) Set() (*stack.Set, error) {
 	}
 	if release == "" {
 		return nil, ErrNoReleaseSet
+	}
+	if i.staged != nil {
+		return stack.LoadSet(i.staged.set)
 	}
 	set, err := stack.LoadSet(i.SetDir(release))
 	if errors.Is(err, fs.ErrNotExist) && FetchSet != nil {
@@ -394,7 +403,7 @@ func (i *Instance) MissingFiles() []string {
 }
 
 func (i *Instance) Save() error {
-	if i.State == nil {
+	if i.State == nil || i.staged != nil {
 		return fmt.Errorf("instance: nothing to save in %s", i.Dir)
 	}
 	i.State.UpdatedAt = time.Now().UTC().Truncate(time.Second)

@@ -40,11 +40,15 @@ type Legacy struct {
 }
 
 func DetectLegacy(dir string) (*Legacy, error) {
+	return detectLegacy(dir, false)
+}
+
+func detectLegacy(dir string, ejected bool) (*Legacy, error) {
 	abs, err := filepath.Abs(dir)
 	if err != nil {
 		return nil, err
 	}
-	if _, err := os.Stat(filepath.Join(abs, StateDirName, StateFileName)); err == nil {
+	if _, err := os.Stat(filepath.Join(abs, StateDirName, StateFileName)); err == nil && !ejected {
 		return nil, errAlreadyManaged
 	}
 	l := &Legacy{Dir: abs}

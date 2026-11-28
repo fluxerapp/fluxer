@@ -193,6 +193,9 @@ func renderRustOverlay(overlay []byte, files [][]byte) ([]byte, error) {
 	for i := 0; i+1 < len(target.Content); i += 2 {
 		static[target.Content[i].Value] = true
 	}
+	if slices.ContainsFunc(slices.Collect(maps.Keys(env)), func(k string) bool { return static[k] }) {
+		return overlay, nil
+	}
 	for _, k := range slices.Sorted(maps.Keys(env)) {
 		if static[k] {
 			return nil, fmt.Errorf("stack: %s sets %s, which rexctl generates", OverlayFiles[OverlayRustServer], k)

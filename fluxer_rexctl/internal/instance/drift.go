@@ -65,6 +65,9 @@ func Drift(inst *Instance) (*DriftReport, error) {
 }
 
 func envDrift(inst *Instance) (*EnvDrift, error) {
+	if inst.State != nil && inst.State.HandRun != nil {
+		return nil, nil
+	}
 	path := inst.Path(EnvFileName)
 	data, err := os.ReadFile(path)
 	if errors.Is(err, fs.ErrNotExist) {
@@ -135,6 +138,9 @@ func SettleEnv(inst *Instance, set []string) (string, error) {
 }
 
 func RemoveEnv(inst *Instance) error {
+	if inst.State != nil && inst.State.HandRun != nil {
+		return nil
+	}
 	return removeIfExists(inst.Path(EnvFileName))
 }
 

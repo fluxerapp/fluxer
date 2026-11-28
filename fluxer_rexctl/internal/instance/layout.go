@@ -26,14 +26,23 @@ func (i *Instance) OldLayout() bool {
 }
 
 func (i *Instance) Generated(name string) string {
+	if i.staged != nil {
+		return stack.GeneratedPath(i.staged.files, filepath.FromSlash(name))
+	}
 	return filepath.Join(stack.FilesDir(i.Dir, i.OldLayout()), filepath.FromSlash(name))
 }
 
 func (i *Instance) StackFiles(overlays []stack.Overlay) []string {
+	if i.staged != nil {
+		return stack.ComposeFiles(i.staged.files, overlays)
+	}
 	return stack.ComposeFilesAt(i.Dir, overlays, i.OldLayout())
 }
 
 func (i *Instance) Render(set *stack.Set, overlays []stack.Overlay, images map[string]string) (*stack.Rendered, error) {
+	if i.staged != nil {
+		return stack.Render(set, overlays, images, i.Project(), i.staged.files)
+	}
 	return stack.RenderAt(set, overlays, images, i.Project(), i.Dir, i.OldLayout())
 }
 

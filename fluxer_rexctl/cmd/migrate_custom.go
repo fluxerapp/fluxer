@@ -38,6 +38,7 @@ type customReview struct {
 	live      *types.Project
 	stockWith func(map[string]string) (*types.Project, error)
 	storage   bool
+	handRun   bool
 	problems  []customProblem
 	portsLine int
 }
@@ -58,10 +59,17 @@ func (r *customReview) refusal() error {
 	return &ui.ExitError{
 		Code: ui.ExitRefused,
 		Msg:  fmt.Sprintf("%s has %s the new layout can't take over.", instance.CustomCompose, oneOrMany(len(r.problems), "a line", "lines")),
-		Fix:  "Change what the list below says with rexctl config edit --compose, then run " + migrateCommand + " again.",
+		Fix:  "Change what the list below says " + customEditor(r.handRun, r.dir) + ", then run " + migrateCommand + " again.",
 		Tail: tail,
 		Err:  errors.New(strings.Join(tail, "\n")),
 	}
+}
+
+func customEditor(handRun bool, dir string) string {
+	if handRun {
+		return "in " + filepath.Join(dir, instance.CustomCompose) + ", run docker compose up -d in " + dir
+	}
+	return "with rexctl config edit --compose"
 }
 
 func oneOrMany(n int, one, many string) string {
@@ -155,9 +163,9 @@ func (r *customReview) services(v *yaml.Node) {
 			case k.Value == "ports" && name == "edge":
 				r.portsLine = k.Line
 			case k.Value == "environment":
-				r.add(k.Line, where, "the new layout runs every part of Fluxer with one set of settings. Set these with rexctl config set, then remove them here.")
+				r.add(k.Line, where, "the new layout runs every part of Fluxer with one set of settings. Set these "+r.setVia()+", then remove them here.")
 			default:
-				r.add(k.Line, where, "the new layout has no separate "+name+" container for this. Set what it does with rexctl config set if a setting covers it, then remove it.")
+				r.add(k.Line, where, "the new layout has no separate "+name+" container for this. Set what it does "+r.setVia()+" if a setting covers it, then remove it.")
 			}
 		}
 	}
@@ -247,6 +255,9 @@ func (r *customReview) mountProblem(svc, src, dst string, ro bool) string {
 	case (svc == "api" || svc == "worker") && bind && ro && geoIPUnder(r.geoIPPath(), dst):
 		return ""
 	case (svc == "api" || svc == "worker") && bind && ro:
+		if r.handRun {
+			return "nothing in Fluxer reads from " + dst + ". If the folder holds the GeoIP database, set " + envName(settings.GeoIPDatabase) + "=" + dst + "/<file>.mmdb in .env first. Otherwise remove the line."
+		}
 		return "nothing in Fluxer reads from " + dst + ". If the folder holds the GeoIP database, run rexctl config set " + settings.GeoIPDatabase + "=" + dst + "/<file>.mmdb first. Otherwise remove the line."
 	case data:
 		return "the move reads the data of " + svc + " only from a folder on this machine or from the " + place.short + " volume. Mount a folder here, or remove the line."
@@ -356,6 +367,9 @@ func (r *customReview) ports() {
 	}
 	const where = "services.edge.ports"
 	cannot := "the new layout can't listen like this. Remove the line, and set edge.bind, edge.listen_address, edge.http_port or edge.https_port with rexctl config set instead."
+	if r.handRun {
+		cannot = "the new layout can't listen like this. Remove the line, and set " + envName(settings.EdgeBind) + ", " + envName(settings.EdgeListen) + ", " + envName(settings.EdgeHTTPPort) + " or " + envName(settings.EdgeHTTPSPort) + " in .env."
+	}
 	changes, ok := portSettings(mode, live)
 	if !ok {
 		r.add(r.portsLine, where, cannot)
@@ -381,10 +395,32 @@ func (r *customReview) ports() {
 	if len(set) == 0 {
 		return
 	}
+	if r.handRun {
+		for i, kv := range set {
+			k, v, _ := strings.Cut(kv, "=")
+			set[i] = envName(k) + "=" + v
+		}
+		r.add(r.portsLine, where, "set "+ui.JoinAnd(set)+" in .env first. The new layout then listens on the same "+oneOrMany(len(live), "port", "ports")+".")
+		return
+	}
 	r.add(r.portsLine, where, "run rexctl config set "+strings.Join(set, " ")+" first, so the new layout listens on the same "+oneOrMany(len(live), "port", "ports")+".")
 }
 
 var portDefaults = map[string]string{settings.EdgeHTTPPort: "80", settings.EdgeHTTPSPort: "443"}
+
+func (r *customReview) setVia() string {
+	if r.handRun {
+		return "in .env"
+	}
+	return "with rexctl config set"
+}
+
+func envName(name string) string {
+	if k, ok := settingKey(name); ok && len(k.Vars) > 0 {
+		return k.Vars[0]
+	}
+	return name
+}
 
 func settingKey(name string) (settings.Key, bool) {
 	for _, k := range settings.Named() {

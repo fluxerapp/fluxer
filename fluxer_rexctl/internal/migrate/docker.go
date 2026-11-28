@@ -49,7 +49,24 @@ type NativeSettings struct {
 }
 
 func ForNative(compose map[string]string) (NativeSettings, error) {
+	kept, left, refused := forNative(compose)
+	out := NativeSettings{Settings: kept, Left: left}
+	if len(refused) > 0 {
+		return out, fmt.Errorf("%w: Fluxer in the new layout doesn't use %s. Remove them with rexctl config unset %s first", ErrNoNativeEquivalent, strings.Join(refused, ", "), strings.Join(refused, " "))
+	}
+	return out, nil
+}
+
+func Unmovable(compose map[string]string) []string {
+	_, _, refused := forNative(compose)
+	return refused
+}
+
+func forNative(compose map[string]string) (map[string]string, []string, []string) {
 	rest := maps.Clone(compose)
+	maps.DeleteFunc(rest, func(k, v string) bool {
+		return strings.TrimSpace(v) == "" && strings.ToUpper(k) == k && !strings.ContainsAny(k, ".- ")
+	})
 	for k := range composeDefaults {
 		delete(rest, k)
 	}
@@ -63,11 +80,7 @@ func ForNative(compose map[string]string) (NativeSettings, error) {
 		}
 		kept[k] = v
 	}
-	out := NativeSettings{Settings: kept, Left: left}
-	if len(refused) > 0 {
-		return out, fmt.Errorf("%w: Fluxer in the new layout doesn't use %s. Remove them with rexctl config unset %s first", ErrNoNativeEquivalent, strings.Join(refused, ", "), strings.Join(refused, " "))
-	}
-	return out, nil
+	return kept, left, refused
 }
 
 type DockerStep struct {

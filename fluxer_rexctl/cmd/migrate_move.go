@@ -147,6 +147,9 @@ func runMove(ctx context.Context, app *App, inst *instance.Instance, f *migrateF
 	if !legacyCompose(inst) {
 		return ui.Refused("This instance already runs in the new layout, which rexctl migrate --to moves to.", "Run rexctl status to check it.")
 	}
+	if err := handRunChangedRefusal(inst); err != nil {
+		return err
+	}
 	st, err := migrate.LoadState(inst.Dir)
 	if err != nil {
 		return err
@@ -423,6 +426,9 @@ func runUndoMove(ctx context.Context, app *App, inst *instance.Instance, confirm
 	if old == nil || instance.RealPath(old.State.MovedTo) != instance.RealPath(moved.Dir) {
 		return ui.Refused(fmt.Sprintf("The old instance in %s is gone, so there's nothing to go back to.", moved.State.MovedFrom.Dir), "Run rexctl status to check this one.")
 	}
+	if err := handRunChangedRefusal(old); err != nil {
+		return err
+	}
 	if euid() != 0 && (rt.KindOf(moved) == rt.Native || rootOwned(old)) {
 		return ui.Refused("Going back needs root.", "Run "+sudoAgain(moved.Dir)+".")
 	}
@@ -534,6 +540,9 @@ func runCleanUpMove(ctx context.Context, app *App, inst *instance.Instance, conf
 	handsOver := moved.State.MovedFrom.HandsOver() && moved.State.Detached()
 	var folders []string
 	if old != nil {
+		if err := handRunChangedRefusal(old); err != nil {
+			return err
+		}
 		e, err := app.Engine(ctx, old)
 		if err != nil {
 			return err
@@ -588,6 +597,7 @@ func runCleanUpMove(ctx context.Context, app *App, inst *instance.Instance, conf
 		return err
 	}
 	app.UI.OK("The move to %s is complete.", moved.Dir)
+	handRunCleanedUp(app, old)
 	if handsOver {
 		stepAway(app, moved)
 		if bin, err := os.Executable(); err == nil && !slices.ContainsFunc(instance.Others(moved.Dir), func(o *instance.Instance) bool { return o.Moved() == nil }) {

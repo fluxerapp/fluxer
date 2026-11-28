@@ -127,6 +127,9 @@ func runMigrate(ctx context.Context, app *App, f *migrateFlags) error {
 	if f.CleanUp && f.DryRun {
 		return ui.Usage("--clean-up has no dry run. Run it without --confirm to see what it deletes before you agree.")
 	}
+	if dir, err := app.Dir(); err == nil && handRunFolderKind(dir) {
+		return runHandRun(ctx, app, dir, f)
+	}
 	inst, err := app.Instance()
 	if err != nil {
 		return err
