@@ -27,6 +27,7 @@ const (
 type fsInfo struct {
 	nameMax   int64
 	network   string
+	foreign   string
 	files     uint64
 	freeFiles uint64
 }
@@ -61,6 +62,8 @@ func runObjectsFS(_ context.Context, e *Env) Result {
 	switch {
 	case e.Native && e.Instance != nil && e.chosen(settings.StorageBackend) != settings.StorageFilesystem:
 		return skip("")
+	case e.dataFolder() != "" && (e.Native || e.chosen(settings.StorageBackend) == settings.StorageFilesystem):
+		path = filepath.Join(e.dataFolder(), "objects")
 	case e.Native && e.Instance != nil:
 		path, _ = native.New(e.Instance).DataDir(stack.ObjectsVolume)
 	case e.Native:

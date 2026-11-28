@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/netip"
 	"net/url"
+	"path"
 	"runtime"
 	"strconv"
 	"strings"
@@ -61,6 +62,20 @@ func validTrustedProxies(v string) error {
 			continue
 		}
 		return fmt.Errorf("%s is not an IP address or range. Use addresses or ranges such as 10.0.0.0/8, or private_ranges.", entry)
+	}
+	return nil
+}
+
+func validFolder(v string) error {
+	switch {
+	case v == "":
+		return nil
+	case strings.ContainsAny(v, ":,\r\n\x00"):
+		return errors.New("Use a folder path without colons, commas or line breaks.")
+	case !strings.HasPrefix(v, "/"), path.Clean(v) != v:
+		return errors.New("Use a full path that starts with /, like /mnt/disk/fluxer, with no trailing slash.")
+	case v == "/":
+		return errors.New("Use a folder of its own, like /mnt/disk/fluxer, not /.")
 	}
 	return nil
 }

@@ -75,6 +75,7 @@ const (
 	ImagesPrefix    = "images."
 	RustProcess     = "rust.process"
 	StorageBackend  = "storage.backend"
+	DataFolder      = "data.folder"
 	KVMode          = "kv.mode"
 	LiveKitEnabled  = "FLUXER_LIVEKIT_ENABLED"
 	backupsSchedule = "backups.schedule"
@@ -244,6 +245,9 @@ func buildNamed() []Key {
 		{Name: StorageBackend, Type: "choice", Vars: []string{"FLUXER_STORAGE_BACKEND"}, Options: []string{StorageS3, StorageFilesystem}, Validate: oneOf(StorageS3, StorageFilesystem), File: filesystemObjectOverlayFile,
 			Confirm: migrateConfirm,
 			Help:    "filesystem to keep uploaded files as plain files in a volume, or s3 for SeaweedFS or the object store set in storage.endpoint"},
+		{Name: DataFolder, Type: "folder", Validate: validFolder, Takes: "a full path to an empty folder on this machine, like /mnt/disk/fluxer, or empty for the container engine's volume",
+			Confirm: "rexctl stops Fluxer, copies its data to the new place, checks the copy and starts Fluxer there. The old copy stays until you delete it.",
+			Help:    "The folder on this machine that holds Fluxer's data in its container, or empty to keep it in a volume of the container engine"},
 		{Name: KVMode, Type: "choice", Vars: []string{"FLUXER_KV_MODE"}, Options: []string{KVStandalone, KVCluster, KVPostgres}, Validate: oneOf(KVStandalone, KVCluster, KVPostgres), File: kvPostgresOverlayFile,
 			Confirm: migrateConfirm,
 			Help:    "postgres to keep cache, rate limit and queue data in the database, standalone for one Valkey server, or cluster for a Redis-compatible cluster at FLUXER_KV_URL"},

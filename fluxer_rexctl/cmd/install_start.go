@@ -3,6 +3,7 @@
 package cmd
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"maps"
@@ -121,12 +122,15 @@ func (in *installer) writeCommon(inst *instance.Instance) {
 	if f.MemoryProfile != "" {
 		st.Settings[settings.MemoryProfile] = f.MemoryProfile
 	}
+	if f.DataFolder != "" {
+		st.Settings[settings.DataFolder] = f.DataFolder
+	}
 	if in.storage != nil {
 		maps.Copy(st.Settings, in.storage.values())
 	}
 	data := inst.Dir
 	if in.engine != nil {
-		data = engine.Stores(inst.Dir, in.engine, "").Data
+		data = cmp.Or(f.DataFolder, engine.Stores(inst.Dir, in.engine, "").Data)
 	}
 	if total, err := host.DiskSize(data); err == nil {
 		if profile := stack.DiskProfileFor(total); profile != "" {
@@ -211,6 +215,9 @@ func (in *installer) review() ui.Card {
 		rows = append(rows, ui.KV{Key: "Admin", Value: in.admin.summary() + ", set up here in the terminal", Edit: 'u'})
 	default:
 		rows = append(rows, ui.KV{Key: "Admin", Value: "In your browser with a setup token", Edit: 'u'})
+	}
+	if f.DataFolder != "" {
+		rows = append(rows, ui.KV{Key: "Data", Value: f.DataFolder})
 	}
 	rows = append(rows, ui.KV{Key: "Size", Value: sizingLine(f.MemoryProfile)})
 	var plan []ui.PlanItem

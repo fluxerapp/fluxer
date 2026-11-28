@@ -194,7 +194,7 @@ func (in *installer) defaultRuntime(ctx context.Context) {
 
 func (in *installer) pickRuntime() {
 	f := in.f
-	containerOnly := len(changedFlags(in.c, "setup-podman", "install-docker")) > 0
+	containerOnly := len(changedFlags(in.c, nativeComposeFlags...)) > 0
 	pick := in.facts.pick()
 	if containerOnly && pick == runtimeSystemd {
 		pick = runtimeDocker

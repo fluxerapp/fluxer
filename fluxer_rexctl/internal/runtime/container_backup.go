@@ -225,7 +225,7 @@ func (b containerBackups) Create(ctx context.Context, s *ui.Step, o BackupOption
 	if err != nil {
 		var exit *engine.ExitError
 		if errors.As(err, &exit) && exit.Code == fluxerdNoSpace {
-			return "", ui.Wrap(err, "There isn't enough free space in Fluxer's volume to make the backup.", "Free up space on the disk that holds "+VolumeName(r.inst)+", then try again.")
+			return "", ui.Wrap(err, "There isn't enough free space in "+DataPlace(r.inst)+" to make the backup.", "Free up space on the disk that holds "+dataWhere(r.inst)+", then try again.")
 		}
 		return "", ContainerError(err, "Couldn't back up your instance.")
 	}
@@ -257,15 +257,15 @@ func prefixed(prefix string, files []engine.File) []engine.File {
 }
 
 func (r *containerRT) oneOff(version string, args []string) engine.SingleSpec {
-	return engine.SingleSpec{
-		Name:         r.name() + "-" + strconv.FormatInt(time.Now().UnixNano(), 36),
-		Image:        ImageRef(version),
-		Cmd:          args,
-		Env:          []string{"FLUXER_BACKUP_ON_UPGRADE=false"},
-		Labels:       map[string]string{LabelManagedBy: ManagedByRexctl},
-		Volume:       VolumeName(r.inst),
-		VolumeTarget: ContainerData,
+	s := engine.SingleSpec{
+		Name:   r.name() + "-" + strconv.FormatInt(time.Now().UnixNano(), 36),
+		Image:  ImageRef(version),
+		Cmd:    args,
+		Env:    []string{"FLUXER_BACKUP_ON_UPGRADE=false"},
+		Labels: map[string]string{LabelManagedBy: ManagedByRexctl},
 	}
+	mountData(r.inst, &s, DataFolder(r.inst), ContainerData)
+	return s
 }
 
 func (containerBackups) Verify(ctx context.Context, archive string) (*backup.Manifest, error) {

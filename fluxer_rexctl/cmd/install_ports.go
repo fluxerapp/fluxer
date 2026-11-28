@@ -149,6 +149,9 @@ func (in *installer) settings() map[string]string {
 	if in.f.Storage.Endpoint != "" {
 		out[settings.StorageEndpoint] = in.f.Storage.Endpoint
 	}
+	if in.f.DataFolder != "" {
+		out[settings.DataFolder] = in.f.DataFolder
+	}
 	return out
 }
 

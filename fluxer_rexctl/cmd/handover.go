@@ -358,7 +358,7 @@ func undoHandOver(ctx context.Context, app *App, moved, old *instance.Instance, 
 			var err error
 			undone, err = rt.UndoHandOver(ctx, r, s, backups, old.Dir)
 			if errors.Is(err, rt.ErrNotHandedOver) {
-				return ui.Refused(fmt.Sprintf("rexctl can't go back from %s, because compose.yaml there no longer runs %s on the volume %s.", moved.Dir, rt.ImageRepo, rt.VolumeName(moved)), "Put back the compose.yaml rexctl wrote there, then run "+migrateCommand+" --undo again.")
+				return ui.Refused(fmt.Sprintf("rexctl can't go back from %s, because compose.yaml there no longer runs %s on %s.", moved.Dir, rt.ImageRepo, rt.DataPlace(moved)), "Put back the compose.yaml rexctl wrote there, then run "+migrateCommand+" --undo again.")
 			}
 			if err != nil {
 				return rt.ContainerError(err, "Couldn't stop and back up Fluxer in "+moved.Dir+". rexctl didn't go back.")
@@ -386,7 +386,11 @@ func undoHandOver(ctx context.Context, app *App, moved, old *instance.Instance, 
 		app.UI.Info("Renamed compose.yaml and fluxer.env in %s so they don't start Fluxer again.", moved.Dir)
 	}
 	engineTool := string(composeEngine(moved))
-	app.UI.Info("rexctl kept the volume %s with the data from after the move, and a backup of it is in %s. Remove the volume with %s volume rm %s once you're sure you don't need it.", undone.Volume, undone.Backup, engineTool, undone.Volume)
+	if undone.Folder != "" {
+		app.UI.Info("rexctl kept %s with the data from after the move, and a backup of it is in %s. Delete that folder once you're sure you don't need it.", undone.Folder, undone.Backup)
+	} else {
+		app.UI.Info("rexctl kept the volume %s with the data from after the move, and a backup of it is in %s. Remove the volume with %s volume rm %s once you're sure you don't need it.", undone.Volume, undone.Backup, engineTool, undone.Volume)
+	}
 	if moved.State.MovedFrom.AutoUpgrade {
 		app.UI.Info("Automatic upgrades from before the move didn't come back. Turn them on again with %s.", sudoRun(old.Dir, "auto-upgrade", "on"))
 	}

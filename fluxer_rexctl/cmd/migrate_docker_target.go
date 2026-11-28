@@ -52,6 +52,7 @@ type moveBase struct {
 	units     []migrate.SavedUnit
 	mounts    []migrate.DataMount
 	dryRun    bool
+	data      *string
 }
 
 func (t *moveBase) Dir() string                 { return t.dir }
@@ -68,6 +69,9 @@ func (t *moveBase) preflight(ctx context.Context, chosen map[string]string) erro
 		t.chosen["FLUXER_POSTGRES_URL"] = url
 	}
 	if err := t.checkOldLayout(ctx); err != nil {
+		return err
+	}
+	if err := t.pickDataFolder(); err != nil {
 		return err
 	}
 	if len(t.inst.State.Voice) > 0 {
@@ -306,6 +310,9 @@ func (t *moveBase) install(ctx context.Context, runtimeFlag string) error {
 	}
 	args := []string{"install", "--runtime", runtimeFlag, "--for-migrate", "--migrate-from", t.inst.Dir, "--dir", t.dir, "--project", t.inst.Project(), "--domain", t.inst.Domain(), "--setup", "browser", "--no-start", "--yes"}
 	args = append(args, installNetworkArgs(t.inst.Domain(), t.chosen)...)
+	if dir := t.chosen[settings.DataFolder]; dir != "" {
+		args = append(args, "--data-folder", dir)
+	}
 	if t.app.Flags.Verbose {
 		args = append(args, "--verbose")
 	}

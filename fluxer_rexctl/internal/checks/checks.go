@@ -116,6 +116,7 @@ var order = []string{
 	"windows-linux-containers",
 	"memory",
 	"disk",
+	"data-folder",
 	"clock",
 	"ports",
 	"low-ports",

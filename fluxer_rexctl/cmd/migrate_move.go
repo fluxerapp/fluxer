@@ -40,19 +40,22 @@ func moveTargetDir(inst *instance.Instance, to string) string {
 	return base
 }
 
-func newMoveTarget(app *App, inst *instance.Instance, to, dir string, dryRun bool) migrate.MoveTarget {
+func newMoveTarget(app *App, inst *instance.Instance, f *migrateFlags) migrate.MoveTarget {
+	to, dir := f.To, f.NewDir
 	if dir == "" {
 		dir = moveTargetDir(inst, to)
 	}
 	if to == runtimeSystemd {
-		return newNativeTarget(app, inst, dir, dryRun)
+		return newNativeTarget(app, inst, dir, f.DryRun)
 	}
+	kind := engine.Kind(to)
 	if to == runtimeCompose {
-		t := newContainerTarget(app, inst, dir, composeEngine(inst), dryRun)
-		t.compose = true
-		return t
+		kind = composeEngine(inst)
 	}
-	return newContainerTarget(app, inst, dir, engine.Kind(to), dryRun)
+	t := newContainerTarget(app, inst, dir, kind, f.DryRun)
+	t.compose = to == runtimeCompose
+	t.data = f.DataFolder
+	return t
 }
 
 const runtimeCompose = "compose"
@@ -207,7 +210,7 @@ func runMove(ctx context.Context, app *App, inst *instance.Instance, f *migrateF
 			return err
 		}
 	}
-	target := newMoveTarget(app, inst, to, f.NewDir, f.DryRun)
+	target := newMoveTarget(app, inst, f)
 	modes := minimalModes(inst)
 	items := movePlan(inst, to, target.Dir(), modes, target.OneWay())
 	if f.DryRun && st.Docker != nil {
@@ -219,9 +222,7 @@ func runMove(ctx context.Context, app *App, inst *instance.Instance, f *migrateF
 	if err := movePreflight(ctx, inst, target); err != nil {
 		return err
 	}
-	if to == runtimeCompose && len(target.Mounts()) > 0 {
-		items[len(items)-2].Detail = "the new files keep everything in Fluxer's volume, also what the old containers kept in folders on this machine"
-	}
+	dataLines(items, target)
 	if f.DryRun {
 		app.UI.Plan("rexctl would do this", items...)
 		app.UI.Info("Dry run. Nothing changed.")
@@ -253,7 +254,7 @@ func runMove(ctx context.Context, app *App, inst *instance.Instance, f *migrateF
 			return err
 		}
 		inst = fresh
-		target = newMoveTarget(app, inst, to, f.NewDir, false)
+		target = newMoveTarget(app, inst, f)
 	}
 	if err := keepHandRunFiles(ctx, app, inst); err != nil {
 		return err

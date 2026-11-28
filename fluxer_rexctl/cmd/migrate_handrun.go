@@ -133,7 +133,7 @@ func runHandRun(ctx context.Context, app *App, dir string, f *migrateFlags) erro
 	if names := migrate.Unmovable(staged.State.Settings); len(names) > 0 {
 		return ui.Refused(fmt.Sprintf("Fluxer in the new layout doesn't use %s from .env.", ui.JoinAnd(names)), fmt.Sprintf("Take %s out of .env, run docker compose up -d in %s, then run this again.", oneOrMany(len(names), "it", "them"), dir))
 	}
-	target := newMoveTarget(app, staged, f.To, f.NewDir, f.DryRun)
+	target := newMoveTarget(app, staged, f)
 	if err := movePreflight(ctx, staged, target); err != nil {
 		return err
 	}
@@ -200,9 +200,7 @@ func recordUnused(inst *instance.Instance, err error) bool {
 
 func handRunPlan(inst *instance.Instance, to string, target migrate.MoveTarget, modes []migrate.Option) []ui.PlanItem {
 	items := movePlan(inst, to, target.Dir(), modes, target.OneWay())
-	if to == runtimeCompose && len(target.Mounts()) > 0 {
-		items[len(items)-2].Detail = "the new files keep everything in Fluxer's volume, also what the old containers kept in folders on this machine"
-	}
+	dataLines(items, target)
 	record := ui.PlanItem{Verb: ui.PlanCreate, Text: fmt.Sprintf("Keep a record of this install in %s", filepath.Join(inst.Dir, instance.StateDirName)), Detail: "your own files stay as they are"}
 	if len(modes) > 0 {
 		at := 1 + len(modes)

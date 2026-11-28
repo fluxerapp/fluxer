@@ -21,7 +21,7 @@ import (
 )
 
 func (in *installer) containerMachine(ctx context.Context, c *ui.Checklist) {
-	in.checkRows(ctx, c, "memory", "disk")
+	in.checkRows(ctx, c, "memory", "disk", "data-folder")
 	want := engine.Kind(in.f.Engine)
 	c.Check("engine", want.Name(), func(ctx context.Context) (ui.State, string, error) {
 		return in.findEngine(ctx)
@@ -75,6 +75,8 @@ func (in *installer) containerFree(ctx context.Context) (ui.State, string, error
 			return in.unmanagedRefusal(volume)
 		}
 		switch {
+		case !nameUsed && in.f.DataFolder != "":
+			return ui.StateOK, "Fluxer runs as " + name + " with its data in " + in.f.DataFolder, nil
 		case !nameUsed && !volumeTaken:
 			return ui.StateOK, "Fluxer runs as " + name + " with its data in the volume " + volume, nil
 		case !in.c.Flags().Changed("project") && n < 100 && nameTaken(in.f.Project, in.dir, false):

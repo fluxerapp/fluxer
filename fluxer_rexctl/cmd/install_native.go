@@ -25,7 +25,7 @@ import (
 
 const nativeInstallFix = "Run rexctl install --runtime docker to use one container, or try again after the next Fluxer release."
 
-var nativeComposeFlags = []string{"install-docker", "setup-podman"}
+var nativeComposeFlags = []string{"install-docker", "setup-podman", "data-folder"}
 
 func (in *installer) nativeFlags(ctx context.Context) error {
 	if err := in.app.nativeRoot(""); err != nil {

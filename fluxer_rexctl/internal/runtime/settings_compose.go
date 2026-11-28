@@ -17,7 +17,12 @@ import (
 
 type composeSettings struct{ c *compose }
 
-func (composeSettings) Supports(key string) (bool, string) { return true, "" }
+func (composeSettings) Supports(key string) (bool, string) {
+	if key == settings.DataFolder {
+		return false, key + " only changes Fluxer in one container. To keep the data on another disk after the move to one container, pass --data-folder to rexctl migrate."
+	}
+	return true, ""
+}
 
 func (composeSettings) Validate(ctx context.Context, p *deploy.Prepared) error { return nil }
 

@@ -69,6 +69,7 @@ var groupPrefixes = []struct {
 	{"media.", groupStorage},
 	{"backups.", groupStorage},
 	{"disk.", groupStorage},
+	{"data.", groupStorage},
 	{"edge.", groupNetwork},
 	{"network.", groupNetwork},
 	{"domain_migration.", groupNetwork},

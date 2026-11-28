@@ -89,7 +89,11 @@ func (e *Env) nativeInstallDisk() Result {
 
 func (e *Env) installedDisk(ctx context.Context) Result {
 	if e.Container {
-		return e.reserveDisk(spaces([]Space{{Path: e.Dir}}))
+		wants := []Space{{Path: e.Dir}}
+		if dir := e.dataFolder(); dir != "" {
+			wants = append(wants, Space{Path: dir})
+		}
+		return e.reserveDisk(spaces(wants))
 	}
 	spaces := e.NextUpgradeNeed(ctx)
 	r := e.reserveDisk(spaces)
@@ -138,6 +142,9 @@ func (e *Env) diskRole(path string) string {
 	if path == e.Dir {
 		return fmt.Sprintf("%s, the instance folder,", path)
 	}
+	if path == e.dataFolder() {
+		return fmt.Sprintf("%s, Fluxer's data folder,", path)
+	}
 	stores := e.stores()
 	keeps := "keeps"
 	if e.Engine == nil {
@@ -158,6 +165,9 @@ func (e *Env) installDiskFix(path string) string {
 	if path == e.Dir {
 		return fmt.Sprintf("Free up space on the disk that holds %s, or pass --dir with a folder on a bigger disk.", path)
 	}
+	if path == e.dataFolder() {
+		return fmt.Sprintf("Free up space on the disk that holds %s, or pass --data-folder with a folder on a bigger disk.", path)
+	}
 	if stores := e.stores(); path == stores.Images && stores.Images != stores.Data && !strings.HasPrefix(stores.Images, stores.Data+"/") {
 		return fmt.Sprintf("Free up space on the disk that holds %s, or set \"root\" in %s to a folder on a bigger disk, then run rexctl install again.", path, engine.ContainerdConfig)
 	}
@@ -166,13 +176,20 @@ func (e *Env) installDiskFix(path string) string {
 
 func (e *Env) stores() engine.Roots {
 	if e.Engine != nil {
-		return engine.Stores(e.Dir, e.Engine, "")
+		return e.withDataFolder(engine.Stores(e.Dir, e.Engine, ""))
 	}
 	if e.planned == nil {
 		planned := engine.Stores(e.Dir, nil, e.Prefer)
 		e.planned = &planned
 	}
-	return *e.planned
+	return e.withDataFolder(*e.planned)
+}
+
+func (e *Env) withDataFolder(r engine.Roots) engine.Roots {
+	if dir := e.dataFolder(); dir != "" {
+		r.Data = dir
+	}
+	return r
 }
 
 func (e *Env) wants(pull, data uint64) []Space {

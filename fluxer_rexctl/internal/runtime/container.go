@@ -149,22 +149,21 @@ func restartPolicy(inst *instance.Instance) string {
 
 func ContainerSpec(inst *instance.Instance, version string, env map[string]string) engine.SingleSpec {
 	s := engine.SingleSpec{
-		Name:         ContainerName(inst),
-		Image:        ImageRef(version),
-		Cmd:          []string{"run", "--config", containerEnvFile},
-		Env:          []string{"FLUXER_BACKUP_ON_UPGRADE=false"},
-		Labels:       map[string]string{LabelManagedBy: ManagedByRexctl, LabelVersion: version},
-		Ports:        ContainerPorts(inst, env),
-		Volume:       VolumeName(inst),
-		VolumeTarget: ContainerData,
-		StopTimeout:  int(ContainerStop / time.Second),
-		Restart:      restartPolicy(inst),
-		Sysctls:      map[string]string{lowPortsSysctl: "0"},
-		ExtraHosts:   slices.Clone(inst.State.ExtraHosts),
+		Name:        ContainerName(inst),
+		Image:       ImageRef(version),
+		Cmd:         []string{"run", "--config", containerEnvFile},
+		Env:         []string{"FLUXER_BACKUP_ON_UPGRADE=false"},
+		Labels:      map[string]string{LabelManagedBy: ManagedByRexctl, LabelVersion: version},
+		Ports:       ContainerPorts(inst, env),
+		StopTimeout: int(ContainerStop / time.Second),
+		Restart:     restartPolicy(inst),
+		Sysctls:     map[string]string{lowPortsSysctl: "0"},
+		ExtraHosts:  slices.Clone(inst.State.ExtraHosts),
 	}
 	if inst.State.BootService == instance.BootServiceOff {
 		s.Restart = restartNever
 	}
+	mountData(inst, &s, DataFolder(inst), ContainerData)
 	s.Labels[labelSpec] = specHash(s)
 	return s
 }
@@ -557,7 +556,7 @@ func hostFiles(inst *instance.Instance) []engine.File {
 }
 
 func (r *containerRT) create(ctx context.Context, e containerEngine, spec engine.SingleSpec, set *stack.Set) error {
-	if err := e.CreateVolume(ctx, spec.Volume, composeVolumeLabels(r.inst.Project(), spec.Volume)); err != nil {
+	if err := r.makeData(ctx, e, DataFolder(r.inst)); err != nil {
 		return err
 	}
 	if err := e.CreateSingle(ctx, spec); err != nil {
@@ -591,6 +590,11 @@ func (r *containerRT) apply(ctx context.Context, mode applyMode) (containerAppli
 		return a, err
 	}
 	r.n.PinEdgeBind()
+	if mode != applyCreate {
+		if err := r.dataGone(); err != nil {
+			return a, err
+		}
+	}
 	spec, err := r.spec(set, r.inst.State.Release)
 	if err != nil {
 		return a, ContainerError(err, "rexctl can't work out Fluxer's settings.")
@@ -840,10 +844,15 @@ func containerLines(r io.Reader, w io.Writer, lp logPlan, keep int) error {
 func (r *containerRT) plan(o UninstallOptions) Removal {
 	var rm Removal
 	rm.Goes = append(rm.Goes, ui.KV{Key: "Container", Value: r.name()})
-	if o.KeepData {
-		rm.Stays = append(rm.Stays, ui.KV{Key: "Data", Value: "volume " + VolumeName(r.inst)}, ui.KV{Key: "Settings", Value: r.inst.Dir})
-		rm.Kept = "Your data is still in the volume " + VolumeName(r.inst) + " and your settings are still in " + r.inst.Dir + "."
-	} else {
+	folder := DataFolder(r.inst)
+	switch {
+	case o.KeepData:
+		rm.Stays = append(rm.Stays, ui.KV{Key: "Data", Value: strings.TrimPrefix(DataPlace(r.inst), "the ")}, ui.KV{Key: "Settings", Value: r.inst.Dir})
+		rm.Kept = "Your data is still in " + DataPlace(r.inst) + " and your settings are still in " + r.inst.Dir + "."
+	case folder != "":
+		rm.Goes = append(rm.Goes, ui.KV{Key: "Data", Value: "everything in " + folder})
+		rm.Goes, rm.Stays = folderRows(r.inst, o, rm.Goes, rm.Stays)
+	default:
 		rm.Goes = append(rm.Goes, ui.KV{Key: "Data", Value: "volume " + VolumeName(r.inst)})
 		rm.Goes, rm.Stays = folderRows(r.inst, o, rm.Goes, rm.Stays)
 	}
@@ -887,6 +896,10 @@ func (r *containerRT) Uninstall(ctx context.Context, s *ui.Step, o UninstallOpti
 		if err := e.RemoveVolume(ctx, VolumeName(r.inst)); err != nil {
 			r.u.Detail("%v", err)
 			left = append(left, "Your data is still in the volume "+VolumeName(r.inst)+".")
+		}
+		if err := r.clearData(ctx, e, DataFolder(r.inst)); err != nil && DataFolder(r.inst) != "" {
+			r.u.Detail("%v", err)
+			left = append(left, "Your data is still in "+DataFolder(r.inst)+".")
 		}
 		if tags, err := e.ImageTags(ctx, imageRepo()); err == nil {
 			for _, tag := range tags {

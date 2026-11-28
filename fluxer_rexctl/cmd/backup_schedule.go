@@ -187,7 +187,7 @@ func runBackupSchedule(ctx context.Context, app *App, arg string) error {
 				return nil
 			}
 			app.UI.OK("Fluxer backs itself up %s.", fluxerdWords(inst, every))
-			app.UI.Info("Those backups stay in Fluxer's volume %s. rexctl backup list copies them to %s, and rexctl backup copy-to sends the newest one to another machine.", rt.VolumeName(inst), inst.BackupDir())
+			app.UI.Info("Those backups stay in %s. rexctl backup list copies them to %s, and rexctl backup copy-to sends the newest one to another machine.", rt.DataPlace(inst), inst.BackupDir())
 			return nil
 		}
 		if every == host.ScheduleOff {

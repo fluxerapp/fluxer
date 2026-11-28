@@ -36,7 +36,7 @@ func Promised(set *stack.Set, custom []byte, k settings.Key) []string {
 	switch k.Name {
 	case settings.EngineHost:
 		return nil
-	case settings.EdgeMode, settings.IPv6, settings.ImagesRegistry, settings.StorageEndpoint, settings.VoiceBundled:
+	case settings.EdgeMode, settings.IPv6, settings.ImagesRegistry, settings.StorageEndpoint, settings.VoiceBundled, settings.DataFolder:
 		return slices.Clone(stack.Services)
 	case settings.MemoryProfile:
 		return settings.Services(set, custom, append(stack.ProfileKeys(set), stack.SizingKeys()...))

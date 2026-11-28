@@ -42,6 +42,7 @@ type installFlags struct {
 	ProxyFrom     string
 	VoiceIP       string
 	MemoryProfile string
+	DataFolder    string
 	InstallDocker bool
 	OpenFirewall  bool
 	SetupPodman   bool
@@ -133,6 +134,7 @@ func newInstallCmd(app *App) *cobra.Command {
 	fl.StringVar(&f.ProxyFrom, "proxy-from", "", "addresses or ranges your proxy on another machine connects from, or private for any private address, with --proxy remote")
 	fl.StringVar(&f.VoiceIP, "voice-ip", "", "public IP address for voice and video (found automatically)")
 	fl.StringVar(&f.MemoryProfile, "memory-profile", "", "use small, medium or large on every start, without sizing Fluxer to this machine")
+	fl.StringVar(&f.DataFolder, "data-folder", "", "empty folder on this machine for Fluxer's data in its container, such as one on a second disk, instead of a volume of the container engine")
 	fl.BoolVar(&f.InstallDocker, "install-docker", true, "install Docker if it's missing")
 	fl.BoolVar(&f.OpenFirewall, "open-firewall", true, "open the ports Fluxer needs in ufw or firewalld")
 	fl.BoolVar(&f.SetupPodman, "setup-podman", true, "start Podman's API socket and start Fluxer with the machine")
@@ -509,6 +511,9 @@ func validateInstallFlags(app *App, c *cobra.Command, f *installFlags) error {
 	default:
 		return ui.Usage("Pass --memory-profile small, medium or large.")
 	}
+	if err := validDataFolder(f.DataFolder); err != nil {
+		return err
+	}
 	if f.SetupWhere != "" && f.SetupWhere != "terminal" && f.SetupWhere != "browser" {
 		return ui.Usage("Pass --setup terminal or --setup browser.")
 	}
@@ -738,4 +743,15 @@ func (in *installer) resume(ctx context.Context, inst *instance.Instance) error 
 		return err
 	}
 	return in.app.Locked(ctx, inst, func() error { return in.run(ctx) })
+}
+
+func validDataFolder(dir string) error {
+	k, ok := settingKey(settings.DataFolder)
+	if !ok || dir == "" {
+		return nil
+	}
+	if err := k.Validate(dir); err != nil {
+		return ui.Usage("--data-folder can't be " + dir + ". " + err.Error())
+	}
+	return nil
 }

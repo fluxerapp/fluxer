@@ -119,6 +119,8 @@ func checkLabel(id string) string {
 		return "Overcommit"
 	case "objects-filesystem":
 		return "Upload folder"
+	case "data-folder":
+		return "Data folder"
 	case "podman-subids":
 		return "User IDs"
 	case "windows-linux-containers":

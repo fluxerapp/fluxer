@@ -31,6 +31,9 @@ const checkConfigTimeout = 30 * time.Second
 type nativeSettings struct{ r *nativeRT }
 
 func (nativeSettings) Supports(key string) (bool, string) {
+	if key == settings.DataFolder {
+		return false, key + " only changes where Fluxer's container keeps its data. A systemd instance keeps it in its own data folder, and you can mount another disk there."
+	}
 	if settings.DockerOnly(key) {
 		return false, key + " only changes Docker containers, and this instance runs natively without them."
 	}

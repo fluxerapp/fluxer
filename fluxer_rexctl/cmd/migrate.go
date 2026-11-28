@@ -47,6 +47,7 @@ type migrateFlags struct {
 	DryRun     bool
 	Details    bool
 	NewDir     string
+	DataFolder *string
 	OpenWrites bool
 	Undo       string
 	CleanUp    bool
@@ -57,6 +58,7 @@ type migrateFlags struct {
 
 func newMigrateCmd(app *App) *cobra.Command {
 	var f migrateFlags
+	var dataFolder string
 	c := &cobra.Command{
 		Use:   "migrate",
 		Short: "Move an older instance to the current layout",
@@ -70,6 +72,12 @@ func newMigrateCmd(app *App) *cobra.Command {
 		Args: noArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
 			f.OldFlags = changedFlags(c, "experimental", "experimental-native")
+			if c.Flags().Changed("data-folder") {
+				f.DataFolder = &dataFolder
+				if err := validDataFolder(dataFolder); err != nil {
+					return err
+				}
+			}
 			return runMigrate(c.Context(), app, &f)
 		},
 	}
@@ -78,6 +86,7 @@ func newMigrateCmd(app *App) *cobra.Command {
 	fl.StringVar(&f.To, "to", "", "move an instance in the older layout to docker, podman, compose or systemd, or the voice servers of a voice machine to docker, podman or systemd")
 	fl.BoolVar(&f.Details, "details", false, "show the machine, versions, date and method behind the typical figures")
 	fl.StringVar(&f.NewDir, "new-dir", "", "the folder for the moved instance, with --to")
+	fl.StringVar(&dataFolder, "data-folder", "", "the folder for Fluxer's data after a move to one container or to compose, or empty for a volume. Without it, data the old containers kept in folders on this machine moves to a new folder next to them")
 	fl.StringVar(&f.NewDir, "native-dir", "", "")
 	_ = fl.MarkHidden("native-dir")
 	fl.Bool("experimental", false, "")

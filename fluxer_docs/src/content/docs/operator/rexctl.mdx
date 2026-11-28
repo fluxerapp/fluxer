@@ -466,7 +466,7 @@ rexctl config unset memory.profile disk.profile
 
 ## rexctl detach
 
-Writes `compose.yaml` and `fluxer.env` into the instance folder, starts Fluxer from them with `docker compose` and stops managing the instance. For an instance on the default ports, the files are the ones each Fluxer release publishes with the project name added. Your data stays in the same volume. Automatic upgrades stop, and a backup schedule moves into Fluxer, which keeps the backups in its volume.
+Writes `compose.yaml` and `fluxer.env` into the instance folder, starts Fluxer from them with `docker compose` and stops managing the instance. For an instance on the default ports, the files are the ones each Fluxer release publishes with the project name added. Your data stays in the same volume or data folder. Automatic upgrades stop, and a backup schedule moves into Fluxer, which keeps the backups with its data.
 
 Run `rexctl detach`
 
@@ -587,6 +587,7 @@ rexctl install --runtime docker --domain chat.example.com --behind-proxy --yes
 | `--bind string` | `127.0.0.1:8080` | Address your proxy or tunnel connects to. Implies `--behind-proxy`. |
 | `--boot-service string` |  | Start Fluxer when this machine starts (on or off). |
 | `--confirm string` |  | Your instance's domain, to confirm without a prompt. |
+| `--data-folder string` |  | Empty folder on this machine for Fluxer's data in its container, such as one on a second disk, instead of a volume of the container engine. |
 | `--domain string` |  | Domain or IP address people will use to open your instance, like `chat.example.com` or `203.0.113.7`, and without it `--yes` uses this machine's public IP address. |
 | `--dry-run` |  | Show what would happen without changing anything. |
 | `--install-docker` | On | Install Docker if it's missing. Turn it off with `--install-docker=false`. |
@@ -708,6 +709,7 @@ Run `rexctl migrate`
 | --- | --- | --- |
 | `--clean-up` |  | Remove the old containers and volumes after a move, or the Valkey or SeaweedFS data a change left behind once a newer backup holds what replaced it. |
 | `--confirm string` |  | Your domain, to confirm `--clean-up` without a prompt. |
+| `--data-folder string` |  | The folder for Fluxer's data after a move to one container or to compose, or empty for a volume. Without it, data the old containers kept in folders on this machine moves to a new folder next to them. |
 | `--details` |  | Show the machine, versions, date and method behind the typical figures. |
 | `--dry-run` |  | Show what each change saves and removes without changing anything. |
 | `--forget` |  | Remove rexctl's record from a folder you set up by hand, while no move from it is open. |

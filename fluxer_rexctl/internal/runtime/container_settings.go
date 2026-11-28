@@ -60,6 +60,9 @@ func (c containerSettings) Validate(ctx context.Context, p *deploy.Prepared) err
 	if err := bindProblem(p.Settings); err != nil {
 		return err
 	}
+	if err := c.dataProblem(ctx, p); err != nil {
+		return err
+	}
 	if err := c.bundledProblem(p); err != nil {
 		return err
 	}
@@ -189,6 +192,10 @@ func (c containerSettings) Preview(ctx context.Context, p *deploy.Prepared) (Pre
 		return Preview{}, nil
 	}
 	pv := Preview{Notes: p.Preview.Notes()}
+	if strings.TrimSpace(p.Settings[settings.DataFolder]) != DataFolder(c.r.inst) {
+		pv.Restarts = []string{"all"}
+		return pv, nil
+	}
 	env, secrets, err := c.r.n.Environment(p.Set)
 	if err != nil {
 		return pv, ContainerError(err, "rexctl can't work out Fluxer's settings.")
@@ -225,6 +232,9 @@ func (c containerSettings) Apply(ctx context.Context, s *ui.Step, p *deploy.Prep
 	st := r.inst.State
 	if p.Unchanged {
 		return &deploy.Change{Keys: p.Keys, Unchanged: true}, nil
+	}
+	if strings.TrimSpace(p.Settings[settings.DataFolder]) != DataFolder(r.inst) {
+		return c.moveData(ctx, s, p)
 	}
 	if st.Upgrade != nil || st.Stopped {
 		st.Settings, st.Secrets = p.Settings, p.Secrets

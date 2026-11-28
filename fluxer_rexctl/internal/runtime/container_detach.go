@@ -65,6 +65,12 @@ func ComposeYAML(spec engine.SingleSpec, project string, podman bool) []byte {
 		fmt.Fprintf(&b, "      - %q\n", p.String())
 	}
 	b.WriteString("    volumes:\n")
+	for _, bind := range spec.Binds {
+		fmt.Fprintf(&b, "      - %q\n", bind)
+	}
+	if spec.Volume == "" {
+		return []byte(b.String())
+	}
 	b.WriteString("      - " + spec.Volume + ":" + spec.VolumeTarget + "\n")
 	b.WriteString("\nvolumes:\n")
 	b.WriteString("  " + spec.Volume + ":\n")
@@ -136,6 +142,9 @@ func releaseDiffers(spec engine.SingleSpec, project string, podman bool) []strin
 	}
 	if len(spec.ExtraHosts) > 0 {
 		out = append(out, "the extra hosts")
+	}
+	if spec.Volume == "" {
+		out = append(out, "the data folder")
 	}
 	return out
 }
@@ -359,6 +368,7 @@ var ErrNotHandedOver = errors.New("runtime: compose.yaml no longer runs the volu
 
 type Undone struct {
 	Volume  string
+	Folder  string
 	Backup  string
 	Foreign []string
 	Renamed []string
@@ -378,14 +388,17 @@ func UndoHandOver(ctx context.Context, r Runtime, s *ui.Step, backupDir, oldDir 
 	if !ok {
 		return out, ErrUnsupported
 	}
-	out.Volume = VolumeName(c.inst)
+	out.Volume, out.Folder = VolumeName(c.inst), DataFolder(c.inst)
 	file := c.inst.Path(ComposeFileName)
 	p, err := eng.LoadPublished(ctx, engine.Spec{Name: c.inst.Project(), Dir: c.inst.Dir, Files: []string{file}})
 	if err != nil {
 		return out, errors.Join(ErrNotHandedOver, err)
 	}
-	if !runsVolume(p, out.Volume) {
+	if !runsData(p, out.Volume, out.Folder) {
 		return out, ErrNotHandedOver
+	}
+	if out.Folder != "" {
+		out.Volume = ""
 	}
 	set, err := deploy.ReleaseSet(c.inst)
 	if err != nil {
@@ -416,7 +429,7 @@ func UndoHandOver(ctx context.Context, r Runtime, s *ui.Step, backupDir, oldDir 
 	return out, nil
 }
 
-func runsVolume(p *engine.Project, volume string) bool {
+func runsData(p *engine.Project, volume, folder string) bool {
 	svc, ok := p.Model.Services[composeService]
 	if !ok || len(p.Model.Services) != 1 || !strings.HasPrefix(svc.Image, ImageRepo+":") {
 		return false
@@ -424,6 +437,9 @@ func runsVolume(p *engine.Project, volume string) bool {
 	for _, v := range svc.Volumes {
 		if v.Target != ContainerData {
 			continue
+		}
+		if folder != "" {
+			return v.Type == "bind" && v.Source == folder
 		}
 		if vol, ok := p.Model.Volumes[v.Source]; ok && vol.Name == volume {
 			return true
