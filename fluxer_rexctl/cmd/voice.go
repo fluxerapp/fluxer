@@ -20,6 +20,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/adminapi"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/deploy"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
 	rt "github.com/fluxerapp/fluxer/fluxer_rexctl/internal/runtime"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
@@ -1082,7 +1083,7 @@ func removeVoiceSysctl(app *App) {
 			return
 		}
 	}
-	if err := os.Remove(voiceSysctlFile); err != nil && !errors.Is(err, os.ErrNotExist) {
+	if err := host.RemoveFile(voiceSysctlFile); err != nil {
 		app.UI.Detail("removing %s: %v", voiceSysctlFile, err)
 	}
 }

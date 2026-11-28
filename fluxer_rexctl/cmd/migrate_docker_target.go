@@ -277,14 +277,19 @@ func restoreUnits(ctx context.Context, units []migrate.SavedUnit) error {
 	var errs []error
 	reload := map[bool]bool{}
 	for _, u := range units {
-		if u.Data == nil {
-			if err := os.Remove(u.Path); err != nil && !errors.Is(err, os.ErrNotExist) {
+		cur, err := os.ReadFile(u.Path)
+		switch {
+		case u.Data == nil:
+			if err := host.RemoveFile(u.Path); err != nil {
 				errs = append(errs, err)
+				continue
 			}
-		} else {
+		case err == nil && bytes.Equal(cur, u.Data):
+			continue
+		default:
 			errs = append(errs, envfile.WriteFileAtomic(u.Path, u.Data, false))
 		}
-		if _, ok := systemdUnit(u.Path); ok {
+		if _, ok := systemdUnit(u.Path); ok && (u.Data != nil || err == nil) {
 			reload[u.User] = true
 		}
 	}
@@ -296,8 +301,15 @@ func restoreUnits(ctx context.Context, units []migrate.SavedUnit) error {
 		if !u.Enabled || !ok {
 			continue
 		}
+		timer := strings.HasSuffix(name, ".timer")
+		enabled := systemctl(ctx, u.User, "is-enabled", "--quiet", name) == nil
 		args := []string{"enable", name}
-		if strings.HasSuffix(name, ".timer") {
+		switch {
+		case enabled && timer:
+			args = []string{"start", name}
+		case enabled:
+			continue
+		case timer:
 			args = []string{"enable", "--now", name}
 		}
 		errs = append(errs, systemctl(ctx, u.User, args...))

@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -101,6 +102,27 @@ var (
 )
 
 func BootUnitSupported() bool { return bootUnitSupported() }
+
+func RemoveFile(path string) error {
+	err := os.Remove(path)
+	if err == nil || errors.Is(err, fs.ErrNotExist) {
+		return nil
+	}
+	if _, lerr := os.Lstat(path); errors.Is(lerr, fs.ErrNotExist) {
+		return nil
+	}
+	return err
+}
+
+func present(paths []string) []string {
+	var out []string
+	for _, p := range paths {
+		if _, err := os.Lstat(p); !errors.Is(err, fs.ErrNotExist) {
+			out = append(out, p)
+		}
+	}
+	return out
+}
 
 func (u BootUnit) Name() string {
 	if u.Unit != "" {
@@ -525,12 +547,19 @@ func (u BootUnit) removeSteps(path string, enabled bool) []Step {
 }
 
 func removeHostFiles(ctx context.Context, user bool, paths ...string) error {
+	paths = present(paths)
+	if len(paths) == 0 {
+		return nil
+	}
 	if !user {
 		_, err := output(ctx, false, "rm", append([]string{"-f"}, paths...)...)
+		if err != nil && len(present(paths)) == 0 {
+			return nil
+		}
 		return err
 	}
 	for _, p := range paths {
-		if err := os.Remove(p); err != nil && !os.IsNotExist(err) {
+		if err := RemoveFile(p); err != nil {
 			return err
 		}
 	}

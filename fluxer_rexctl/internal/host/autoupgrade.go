@@ -576,12 +576,7 @@ func RemoveAutoUpgrade(ctx context.Context, a AutoUpgrade) (bool, error) {
 }
 
 func removeUnits(ctx context.Context, a AutoUpgrade, paths []string, timer string) (bool, error) {
-	var found []string
-	for _, p := range paths {
-		if _, err := os.Stat(p); err == nil {
-			found = append(found, p)
-		}
-	}
+	found := present(paths)
 	if len(found) == 0 {
 		return false, nil
 	}
