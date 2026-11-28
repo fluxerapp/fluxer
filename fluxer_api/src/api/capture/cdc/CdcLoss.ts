@@ -14,6 +14,66 @@ export interface Loss {
 	detail: string;
 }
 
+export interface TrimmedRange {
+	from: number;
+	to: number;
+}
+
+export class AppliedFloor {
+	private readonly above = new Set<number>();
+
+	constructor(private floor: number) {}
+
+	get through(): number {
+		return this.floor;
+	}
+
+	preview(seqs: Iterable<number>): number {
+		const extra = new Set(seqs);
+		let through = this.floor;
+		while (this.above.has(through + 1) || extra.has(through + 1)) through += 1;
+		return through;
+	}
+
+	commit(seqs: Iterable<number>): void {
+		for (const seq of seqs) if (seq > this.floor) this.above.add(seq);
+		this.settle();
+	}
+
+	skipTo(seq: number): void {
+		if (seq <= this.floor) return;
+		this.floor = seq;
+		for (const held of this.above) if (held <= seq) this.above.delete(held);
+		this.settle();
+	}
+
+	private settle(): void {
+		while (this.above.delete(this.floor + 1)) this.floor += 1;
+	}
+}
+
+export function streamWasReset(stored: number | undefined, streamLastSeq: number): boolean {
+	return stored !== undefined && stored > streamLastSeq;
+}
+
+export function initialAppliedFloor(
+	stored: number | undefined,
+	ackFloorSeq: number,
+	deliveredSeq: number,
+	streamFirstSeq: number,
+	streamLastSeq: number,
+): number {
+	if (stored !== undefined && !streamWasReset(stored, streamLastSeq)) return stored;
+	if (deliveredSeq === 0) return Math.max(ackFloorSeq, streamFirstSeq - 1);
+	return Math.max(ackFloorSeq, deliveredSeq);
+}
+
+export function trimmedBeforeAck(firstSeq: number, ackFloorSeq: number, reportedThrough: number): TrimmedRange | null {
+	const from = Math.max(ackFloorSeq + 1, reportedThrough + 1);
+	const to = firstSeq - 1;
+	return to >= from ? {from, to} : null;
+}
+
 export interface ProducerProgress {
 	pod: string;
 	applied: number;
