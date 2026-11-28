@@ -210,6 +210,16 @@ rexctl voice join chat.example.com fvj_... --no-edge --endpoint wss://voice.exam
 
 LiveKit then listens without TLS on `127.0.0.1` from 7880 upwards, or on `--http-bind`. Point the path at it with WebSocket upgrades and a read timeout of at least 120 seconds.
 
+## The built-in voice server
+
+The built-in voice server is the LiveKit server inside Fluxer. Settings and rexctl call it the bundled voice server. Each time Fluxer starts, it adds the server as `default-server-1` in the region `default`, and creates that region first when it's missing. Regions and servers you added stay as they are. When `FLUXER_LIVEKIT_DEFAULT_REGION` has another region ID, Fluxer uses that ID in place of `default`.
+
+`rexctl voice list` shows the server with the ID `default-server-1`, the region `default` and the endpoint `wss://<your domain>/livekit`. After a move from the older layout, the regions and servers you had before the move stay in the list next to it.
+
+To remove a server on a machine that's gone, run `rexctl voice remove <id> --forget`. To delete a region and every server in it, open "Voice Regions" under Platform in the admin panel and click "Delete Region". To start over, delete every region there and run `rexctl restart`, and Fluxer creates the region `default` with the built-in server again.
+
+When you delete the built-in server or its region in the admin panel, calls can't use it until Fluxer starts again and adds it back. While the region is still there, `rexctl voice resync default-server-1` adds the server back at once. To run without it for good, turn it off as the next section shows.
+
 ## Run without the bundled voice server
 
 Set `FLUXER_LIVEKIT_BUNDLED=false`, or run `rexctl config set voice.bundled false`. Calls then go only to the servers you add, and can't start until you add one. `FLUXER_LIVEKIT_ENABLED=false` turns calls off.
