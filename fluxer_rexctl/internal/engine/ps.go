@@ -462,3 +462,23 @@ func (e *Engine) RemoveImages(ctx context.Context, refs []string) error {
 	}
 	return nil
 }
+
+func (e *Engine) VolumeContainers(ctx context.Context, volume string) ([]Container, error) {
+	c, err := e.api()
+	if err != nil {
+		return nil, err
+	}
+	res, err := c.ContainerList(ctx, client.ContainerListOptions{All: true, Filters: make(client.Filters).Add("volume", volume)})
+	if err != nil {
+		return nil, &Error{Op: "ps", Class: ClassOf(err), Err: err}
+	}
+	out := make([]Container, 0, len(res.Items))
+	for _, s := range res.Items {
+		ct := Container{ID: s.ID, Image: s.Image, Labels: s.Labels, State: strings.ToLower(string(s.State))}
+		if len(s.Names) > 0 {
+			ct.Name = strings.TrimPrefix(s.Names[0], "/")
+		}
+		out = append(out, ct)
+	}
+	return out, nil
+}

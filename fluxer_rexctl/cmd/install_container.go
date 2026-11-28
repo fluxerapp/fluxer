@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/engine"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
@@ -53,6 +54,12 @@ func (in *installer) containerMachine(ctx context.Context, c *ui.Checklist) {
 }
 
 func (in *installer) containerFree(ctx context.Context) (ui.State, string, error) {
+	if !in.c.Flags().Changed("project") {
+		volume := rt.VolumeName(&instance.Instance{Dir: in.dir, State: &instance.State{Project: defaultProject}})
+		if unmanagedVolume(ctx, in.engine, volume) {
+			return in.unmanagedRefusal(volume)
+		}
+	}
 	for n := 2; ; n++ {
 		probe := &instance.Instance{Dir: in.dir, State: &instance.State{Project: in.f.Project}}
 		name, volume := rt.ContainerName(probe), rt.VolumeName(probe)
@@ -63,6 +70,9 @@ func (in *installer) containerFree(ctx context.Context) (ui.State, string, error
 		volumeTaken, err := in.engine.VolumeExists(ctx, volume)
 		if err != nil {
 			return ui.StateFail, "", err
+		}
+		if volumeTaken && unmanagedVolume(ctx, in.engine, volume) {
+			return in.unmanagedRefusal(volume)
 		}
 		switch {
 		case !nameUsed && !volumeTaken:
@@ -168,4 +178,25 @@ func (in *installer) writeContainer(inst *instance.Instance) error {
 		return ui.Wrap(err, fmt.Sprintf("Couldn't save your settings in %s.", inst.Dir), thenAgain("Check that you can write to it", in.resumeHint()))
 	}
 	return nil
+}
+
+func (in *installer) unmanagedRefusal(volume string) (ui.State, string, error) {
+	in.failed = ui.Refused(fmt.Sprintf("The volume %s holds a Fluxer that rexctl doesn't run.", volume), "To have rexctl run it, run rexctl adopt in its folder. To start a second Fluxer next to it, pass --project with another name.")
+	return ui.StateFail, volume + " is taken", nil
+}
+
+func unmanagedVolume(ctx context.Context, e *engine.Engine, volume string) bool {
+	cs, err := e.VolumeContainers(ctx, volume)
+	if err != nil {
+		return false
+	}
+	for _, c := range cs {
+		if !strings.HasPrefix(c.Image, rt.ImageRepo) || c.Labels[rt.LabelManagedBy] != "" {
+			continue
+		}
+		if wd := c.Labels[composeWorkingDir]; wd == "" || !insideRexctl(wd) {
+			return true
+		}
+	}
+	return false
 }
