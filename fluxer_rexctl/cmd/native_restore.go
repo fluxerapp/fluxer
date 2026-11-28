@@ -9,6 +9,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/native"
 	rt "github.com/fluxerapp/fluxer/fluxer_rexctl/internal/runtime"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/secrets"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/settings"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/setup"
 )
 
@@ -32,7 +33,7 @@ func adoptNativeSecrets(inst *instance.Instance, n *native.Stack) error {
 }
 
 func adoptRestored(inst *instance.Instance, restored map[string]string) error {
-	keys := []string{setup.TokenKey}
+	keys := []string{setup.TokenKey, settings.SignatureSecretsVar}
 	for _, s := range secrets.Required {
 		keys = append(keys, s.Key)
 	}
