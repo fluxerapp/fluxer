@@ -6,7 +6,15 @@ import {BatchReader} from '@app/api/capture/cdc/CdcApply';
 import {delay, pause, Stopped, withBackoff} from '@app/api/capture/cdc/CdcBackoff';
 import {Comparer, compareColumns, countsAgree, type TableComparison} from '@app/api/capture/cdc/CdcCompare';
 import type {CdcConfig, CdcNatsConfig} from '@app/api/capture/cdc/CdcConfig';
-import {type Loss, LossTracker, type ProducerProgress} from '@app/api/capture/cdc/CdcLoss';
+import {
+	AppliedFloor,
+	initialAppliedFloor,
+	type Loss,
+	LossTracker,
+	type ProducerProgress,
+	streamWasReset,
+	trimmedBeforeAck,
+} from '@app/api/capture/cdc/CdcLoss';
 import {
 	cassandraErrorsTotal,
 	clickhouseErrorsTotal,
@@ -75,6 +83,7 @@ const REREAD_LIMIT = 20_000;
 const HOUSEKEEPING_MS = 5 * 60_000;
 const STATUS_MS = 30_000;
 const CDC_DRAIN_MS = 30_000;
+const APPLIED_STATE_KEY = 'stream:applied';
 const CDC_SHUTDOWN_MS = 50_000;
 const WORKING_MS = 60_000;
 const IDLE_REPAIR_MS = 15_000;
@@ -262,6 +271,8 @@ export class CdcConsumer {
 	private loss = new LossTracker();
 	private held: Array<JsMsg> = [];
 	private nextStreamSeq = 1;
+	private trimReportedThrough = 0;
+	private applied = new AppliedFloor(0);
 	private latestStreamMs = 0;
 	private batches = 0;
 	private stopping = false;
@@ -286,7 +297,7 @@ export class CdcConsumer {
 		this.stopping = true;
 	}
 
-	async restore(consumer: Consumer): Promise<void> {
+	async restore(consumer: Consumer, connection: JetStreamConnectionManager): Promise<void> {
 		const {state} = this.runtime;
 		const producers = await state.read<ProducerProgress & {above: Array<number>}>('producer:');
 		this.loss = new LossTracker(
@@ -309,7 +320,30 @@ export class CdcConsumer {
 		}
 		this.status.bootstrapped = (await state.read('bootstrap')).has('bootstrap');
 		gauges.bootstrapped = this.status.bootstrapped ? 1 : 0;
-		this.nextStreamSeq = (await consumer.info()).delivered.stream_seq + 1;
+		const stored = (await state.read<{through: number}>(APPLIED_STATE_KEY)).get(APPLIED_STATE_KEY);
+		const info = await consumer.info();
+		const jsm = await connection.getJetStreamManager();
+		const stream = await jsm.streams.info(this.runtime.config.nats.stream);
+		this.nextStreamSeq = info.delivered.stream_seq + 1;
+		const through = typeof stored?.through === 'number' ? stored.through : undefined;
+		if (streamWasReset(through, stream.state.last_seq)) {
+			this.markAll([
+				{
+					kind: 'gap',
+					producer: 'stream',
+					detail: `stream restarted at seq ${stream.state.last_seq} below the saved floor ${through}`,
+				},
+			]);
+		}
+		const floor = initialAppliedFloor(
+			through,
+			info.ack_floor.stream_seq,
+			info.delivered.stream_seq,
+			stream.state.first_seq,
+			stream.state.last_seq,
+		);
+		this.applied = new AppliedFloor(floor);
+		this.trimReportedThrough = floor;
 	}
 
 	async bootstrap(): Promise<void> {
@@ -380,6 +414,19 @@ export class CdcConsumer {
 		const info = await consumer.info();
 		const jsm = await connection.getJetStreamManager();
 		const stream = await jsm.streams.info(this.runtime.config.nats.stream);
+		const trimmed = trimmedBeforeAck(
+			stream.state.first_seq,
+			this.applied.preview(this.held.map((msg) => msg.seq)),
+			this.trimReportedThrough,
+		);
+		if (trimmed !== null) {
+			this.trimReportedThrough = trimmed.to;
+			this.applied.skipTo(trimmed.to);
+			streamLossTotal.inc('', trimmed.to - trimmed.from + 1);
+			this.markAll([
+				{kind: 'gap', producer: 'stream', detail: `stream seq ${trimmed.from} to ${trimmed.to} trimmed before ack`},
+			]);
+		}
 		gauges.ack_pending = info.num_ack_pending;
 		gauges.max_ack_pending = info.config.max_ack_pending ?? 0;
 		gauges.pending_records = info.num_pending + info.num_ack_pending;
@@ -423,8 +470,10 @@ export class CdcConsumer {
 		this.latestStreamMs = Math.max(this.latestStreamMs, atMs);
 		if (!msg.redelivered) {
 			if (msg.seq > this.nextStreamSeq) {
-				streamLossTotal.inc('', msg.seq - this.nextStreamSeq);
-				this.markAll([{kind: 'gap', producer: 'stream', detail: `stream seq ${this.nextStreamSeq} to ${msg.seq - 1}`}]);
+				Logger.info(
+					{from: this.nextStreamSeq, to: msg.seq - 1},
+					'ClickHouse CDC delivery skipped stream records, waiting for their redelivery',
+				);
 			}
 			this.nextStreamSeq = Math.max(this.nextStreamSeq, msg.seq + 1);
 		}
@@ -535,6 +584,8 @@ export class CdcConsumer {
 		const marks = new Map(this.markedAt);
 		if (keys.length === 0 && this.held.length === 0 && producers.size === 0 && marks.size === 0) return;
 		const batchId = `${this.processId}:${++this.batches}`;
+		const heldSeqs = this.held.map((msg) => msg.seq);
+		const appliedThrough = this.applied.preview(heldSeqs);
 		const {body, newTtl} = await this.locks.hold(
 			keys.map((key) => key.table),
 			async () => {
@@ -552,6 +603,7 @@ export class CdcConsumer {
 					...[...marks].map(([name, atMs]): [string, unknown] => [`due:${name}`, atMs]),
 					...[...read.oversized].map((name): [string, unknown] => [`due:${name}`, Date.now()]),
 					...ttl.map((name): [string, unknown] => [`ttl:${name}`, true]),
+					[APPLIED_STATE_KEY, {through: appliedThrough}],
 				]);
 				await this.retry(async () => {
 					for (const [table, lines] of read.lines) {
@@ -565,6 +617,7 @@ export class CdcConsumer {
 		);
 		for (const msg of this.held) msg.ack();
 		this.held = [];
+		this.applied.commit(heldSeqs);
 		for (const name of newTtl) this.ttlTables.add(name);
 		for (const [name, atMs] of marks) if (this.markedAt.get(name) === atMs) this.markedAt.delete(name);
 		for (const [table, count] of body.keysRead) keysReadTotal.inc(`table="${table}"`, count);
@@ -760,7 +813,7 @@ export async function runCdc(config: CdcConfig): Promise<number> {
 	const connection = await connectNats(config.nats);
 	const consumer = await connection.getJetStreamClient().consumers.get(config.nats.stream, config.nats.consumer);
 	const cdc = new CdcConsumer(runtime, await syncSchema(runtime));
-	await cdc.restore(consumer);
+	await cdc.restore(consumer, connection);
 	const app = new Hono();
 	app.get('/status', (c) => c.json(cdc.status, cdc.status.broken === null ? 200 : 503));
 	app.get('/_metrics', (c) =>
