@@ -7,8 +7,26 @@ type CassandraDriver = typeof cassandra;
 const MAX_REQUESTS_PER_CONNECTION = 2048;
 const CONNECT_TIMEOUT_MS = 5000;
 const DEFAULT_READ_TIMEOUT_MS = 5000;
+const SPECULATIVE_DELAY_MS = 1000;
+const SPECULATIVE_EXECUTIONS = 1;
+const DEFUNCT_READ_TIMEOUT_THRESHOLD = 16;
 
 export const BACKGROUND_READ_TIMEOUT_MS = 12000;
+
+export function nextHostOnceRetryPolicy(driver: CassandraDriver): cassandra.policies.retry.RetryPolicy {
+	const overloaded = driver.types.responseErrorCodes.overloaded;
+	class NextHostOnceRetryPolicy extends driver.policies.retry.RetryPolicy {
+		override onRequestError(
+			info: cassandra.policies.retry.OperationInfo,
+			consistency: cassandra.types.consistencies,
+			err: Error,
+		): cassandra.policies.retry.DecisionInfo {
+			if (info.nbRetry >= 1 || (err as {code?: number}).code === overloaded) return this.rethrowResult();
+			return super.onRequestError(info, consistency, err);
+		}
+	}
+	return new NextHostOnceRetryPolicy();
+}
 
 export type CassandraConsistencyName = 'one' | 'localOne' | 'quorum' | 'localQuorum' | 'eachQuorum' | 'all';
 export type CassandraSerialConsistencyName = 'serial' | 'localSerial';
@@ -113,6 +131,7 @@ class CassandraClient {
 		const authProvider = this.config.username
 			? new driver.auth.PlainTextAuthProvider(this.config.username, this.config.password ?? '')
 			: undefined;
+		const readTimeoutMs = this.config.readTimeoutMs ?? DEFAULT_READ_TIMEOUT_MS;
 		const client = new driver.Client({
 			contactPoints: this.config.hosts,
 			keyspace: this.config.keyspace,
@@ -124,7 +143,17 @@ class CassandraClient {
 			protocolOptions: {
 				port: this.config.port ?? 9042,
 			},
-			policies: {timestampGeneration: timestampGenerator},
+			policies: {
+				timestampGeneration: timestampGenerator,
+				retry: nextHostOnceRetryPolicy(driver),
+				speculativeExecution:
+					readTimeoutMs > DEFAULT_READ_TIMEOUT_MS
+						? new driver.policies.speculativeExecution.NoSpeculativeExecutionPolicy()
+						: new driver.policies.speculativeExecution.ConstantSpeculativeExecutionPolicy(
+								SPECULATIVE_DELAY_MS,
+								SPECULATIVE_EXECUTIONS,
+							),
+			},
 			pooling: {
 				maxRequestsPerConnection: MAX_REQUESTS_PER_CONNECTION,
 				coreConnectionsPerHost: {
@@ -134,7 +163,8 @@ class CassandraClient {
 			},
 			socketOptions: {
 				connectTimeout: CONNECT_TIMEOUT_MS,
-				readTimeout: this.config.readTimeoutMs ?? DEFAULT_READ_TIMEOUT_MS,
+				readTimeout: readTimeoutMs,
+				defunctReadTimeoutThreshold: DEFUNCT_READ_TIMEOUT_THRESHOLD,
 			},
 			encoding: {
 				map: Map,
