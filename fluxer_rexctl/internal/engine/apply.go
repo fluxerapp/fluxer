@@ -374,37 +374,191 @@ func (p *Project) Remove(ctx context.Context, services ...string) error {
 }
 
 func (p *Project) Down(ctx context.Context, volumes bool) error {
+	_, err := p.down(ctx, volumes, nil)
+	return err
+}
+
+func (p *Project) DownReport(ctx context.Context, volumes bool) (DownResult, error) {
 	return p.down(ctx, volumes, nil)
 }
 
 func (p *Project) DownWithin(ctx context.Context, volumes bool, timeout time.Duration) error {
-	return p.down(ctx, volumes, &timeout)
+	_, err := p.down(ctx, volumes, &timeout)
+	return err
 }
 
-func (p *Project) down(ctx context.Context, volumes bool, timeout *time.Duration) error {
+func (p *Project) down(ctx context.Context, volumes bool, timeout *time.Duration) (DownResult, error) {
+	var res DownResult
 	c, err := p.Engine.conn()
 	if err != nil {
-		return err
+		return res, err
 	}
 	a, err := p.Engine.api()
 	if err != nil {
-		return err
+		return res, err
 	}
 	if err := p.removeHelpers(ctx, a); err != nil {
-		return err
+		return res, err
 	}
+	list, err := a.ContainerList(ctx, client.ContainerListOptions{All: true, Filters: projectFilter(p.Name)})
+	if err != nil {
+		return res, p.wrap("down", err)
+	}
+	owned, foreign := p.split(list.Items)
 	var anonymous []string
 	if volumes {
-		res, err := a.ContainerList(ctx, client.ContainerListOptions{All: true, Filters: projectFilter(p.Name)})
-		if err != nil {
-			return p.wrap("down", err)
+		anonymous = anonymousVolumes(owned)
+	}
+	if p.Model != nil {
+		model := withoutServices(copyModel(p.Model), summaryServices(foreign))
+		if err := p.wrap("down", c.svc.Down(ctx, p.Name, api.DownOptions{Project: model, Volumes: volumes, Timeout: timeout})); err != nil {
+			return res, err
 		}
-		anonymous = anonymousVolumes(res.Items)
 	}
-	if err := p.wrap("down", c.svc.Down(ctx, p.Name, api.DownOptions{Project: p.modelOrNil(), RemoveOrphans: true, Volumes: volumes, Timeout: timeout})); err != nil || !volumes {
-		return err
+	if list, err = a.ContainerList(ctx, client.ContainerListOptions{All: true, Filters: projectFilter(p.Name)}); err != nil {
+		return res, p.wrap("down", err)
 	}
-	return p.wrap("down", p.removeLeftovers(ctx, a, anonymous))
+	owned, foreign = p.split(list.Items)
+	if err := removeContainers(ctx, a, owned, timeout); err != nil {
+		return res, p.wrap("down", err)
+	}
+	res.Foreign = containerNames(foreign)
+	if p.Model == nil && volumes {
+		named, err := p.prefixedVolumes(ctx, a)
+		if err != nil {
+			return res, p.wrap("down", err)
+		}
+		anonymous = append(anonymous, named...)
+	}
+	if p.Model == nil || volumes {
+		return res, p.wrap("down", p.removeLeftovers(ctx, a, anonymous))
+	}
+	return res, nil
+}
+
+func (p *Project) split(items []container.Summary) (owned, foreign []container.Summary) {
+	for _, ct := range items {
+		if p.owns(ct.Labels) {
+			owned = append(owned, ct)
+		} else {
+			foreign = append(foreign, ct)
+		}
+	}
+	return owned, foreign
+}
+
+func (p *Project) owns(labels map[string]string) bool {
+	wd := labels[api.WorkingDirLabel]
+	if p.Dir == "" {
+		return wd == "" || labels[ManagedByLabel] != "" || insideManaged(wd)
+	}
+	if wd != "" {
+		return within(p.Dir, wd)
+	}
+	if files := labels[api.ConfigFilesLabel]; files != "" {
+		for _, f := range strings.Split(files, ",") {
+			if !within(p.Dir, f) {
+				return false
+			}
+		}
+		return true
+	}
+	return labels[ManagedByLabel] != ""
+}
+
+func within(dir, path string) bool {
+	if inside(dir, path) {
+		return true
+	}
+	rd, err1 := filepath.EvalSymlinks(dir)
+	rp, err2 := filepath.EvalSymlinks(path)
+	return err1 == nil && err2 == nil && inside(rd, rp)
+}
+
+func inside(dir, path string) bool {
+	rel, err := filepath.Rel(filepath.Clean(dir), filepath.Clean(path))
+	return err == nil && !filepath.IsAbs(rel) && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
+}
+
+func insideManaged(dir string) bool {
+	for d := filepath.Clean(dir); filepath.IsAbs(d); d = filepath.Dir(d) {
+		if _, err := os.Stat(filepath.Join(d, managedStateFile)); err == nil {
+			return true
+		}
+		if d == filepath.Dir(d) {
+			return false
+		}
+	}
+	return false
+}
+
+func summaryServices(cs []container.Summary) []string {
+	var out []string
+	for _, ct := range cs {
+		if s := ct.Labels[api.ServiceLabel]; s != "" && !slices.Contains(out, s) {
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
+func withoutServices(model *types.Project, names []string) *types.Project {
+	for _, name := range names {
+		delete(model.Services, name)
+	}
+	for key, svc := range model.Services {
+		for _, name := range names {
+			delete(svc.DependsOn, name)
+		}
+		model.Services[key] = svc
+	}
+	return model
+}
+
+func containerNames(cs []container.Summary) []string {
+	var out []string
+	for _, ct := range cs {
+		name := ct.ID
+		if len(ct.Names) > 0 {
+			name = strings.TrimPrefix(ct.Names[0], "/")
+		}
+		out = append(out, name)
+	}
+	slices.Sort(out)
+	return out
+}
+
+func removeContainers(ctx context.Context, a client.APIClient, cs []container.Summary, timeout *time.Duration) error {
+	var secs *int
+	if timeout != nil {
+		n := int(timeout.Seconds())
+		secs = &n
+	}
+	for _, ct := range cs {
+		if ct.State == container.StateRunning || ct.State == container.StatePaused || ct.State == container.StateRestarting {
+			if _, err := a.ContainerStop(ctx, ct.ID, client.ContainerStopOptions{Timeout: secs}); err != nil && !cerrdefs.IsNotFound(err) {
+				return err
+			}
+		}
+		if _, err := a.ContainerRemove(ctx, ct.ID, client.ContainerRemoveOptions{Force: true}); err != nil && !cerrdefs.IsNotFound(err) {
+			return err
+		}
+	}
+	return nil
+}
+
+func (p *Project) prefixedVolumes(ctx context.Context, a client.APIClient) ([]string, error) {
+	res, err := a.VolumeList(ctx, client.VolumeListOptions{Filters: projectFilter(p.Name)})
+	if err != nil {
+		return nil, err
+	}
+	var out []string
+	for _, v := range res.Items {
+		if strings.HasPrefix(v.Name, p.Name+"_") {
+			out = append(out, v.Name)
+		}
+	}
+	return out, nil
 }
 
 func anonymousVolumes(containers []container.Summary) []string {
@@ -497,7 +651,7 @@ func volumesToDrop(model *types.Project, vols []Volume, project string, keep []s
 		}
 	}
 	for _, v := range vols {
-		if v.Project != project || slices.Contains(kept, v.Name) {
+		if v.Project != project || slices.Contains(kept, v.Name) || !strings.HasPrefix(v.Name, project+"_") {
 			continue
 		}
 		short := v.Labels[api.VolumeLabel]

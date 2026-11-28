@@ -47,7 +47,7 @@ const (
 	restartUnlessStopped = "unless-stopped"
 	restartAlways        = "always"
 	restartNever         = "no"
-	LabelManagedBy       = "app.fluxer.managed-by"
+	LabelManagedBy       = engine.ManagedByLabel
 	LabelVersion         = "app.fluxer.version"
 	labelSpec            = "app.fluxer.spec"
 	ManagedByRexctl      = "rexctl"

@@ -67,6 +67,15 @@ type Project struct {
 	Model  *types.Project
 }
 
+type DownResult struct {
+	Foreign []string
+}
+
+const (
+	ManagedByLabel   = "app.fluxer.managed-by"
+	managedStateFile = ".rexctl/state.json"
+)
+
 type Plan struct {
 	Create    []string
 	Recreate  []string

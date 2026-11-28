@@ -497,15 +497,17 @@ func runCleanUpMove(ctx context.Context, app *App, inst *instance.Instance, conf
 		if err := app.UI.ConfirmDestructive(what, moved.Domain(), confirm); err != nil {
 			return err
 		}
-		left := ""
+		left, foreign := "", ""
 		err = app.UI.Step(ctx, "Removing the old containers", func(ctx context.Context, s *ui.Step) error {
 			p, err := deploy.Load(ctx, old, e)
 			if err != nil {
 				return err
 			}
-			if err := p.Down(ctx, true); err != nil {
+			res, err := p.DownReport(ctx, true)
+			if err != nil {
 				return err
 			}
+			foreign = rt.ForeignLine(res.Foreign)
 			if err := rt.RemoveProjectVolumes(ctx, e, p.Name); err != nil {
 				return err
 			}
@@ -515,6 +517,9 @@ func runCleanUpMove(ctx context.Context, app *App, inst *instance.Instance, conf
 		})
 		if err != nil {
 			return ui.Wrap(err, "Couldn't remove the old containers.", "Run "+migrateCommand+" --clean-up --verbose to see why.")
+		}
+		if foreign != "" {
+			app.UI.Info("%s", foreign)
 		}
 		if left != "" {
 			app.UI.Warn(left, "")

@@ -377,8 +377,12 @@ func (c *compose) Uninstall(ctx context.Context, s *ui.Step, o UninstallOptions)
 		if err != nil {
 			return err
 		}
-		if err := p.Down(ctx, !o.KeepData); err != nil {
+		res, err := p.DownReport(ctx, !o.KeepData)
+		if err != nil {
 			return c.engineError(err, "Couldn't remove Fluxer.")
+		}
+		if line := ForeignLine(res.Foreign); line != "" {
+			left = append(left, line)
 		}
 		if !o.KeepData {
 			if err := RemoveProjectVolumes(ctx, e, p.Name); err != nil {
@@ -407,6 +411,16 @@ func (c *compose) Uninstall(ctx context.Context, s *ui.Step, o UninstallOptions)
 	}
 	stillThere(s, append(left, closeFirewall(ctx, c.inst)...))
 	return nil
+}
+
+func ForeignLine(names []string) string {
+	if len(names) == 0 {
+		return ""
+	}
+	if len(names) == 1 {
+		return "Left " + names[0] + " alone, because it runs from another folder."
+	}
+	return "Left " + ui.JoinAnd(names) + " alone, because they run from another folder."
 }
 
 func NetworksLeft(ctx context.Context, e *engine.Engine, project string) string {
