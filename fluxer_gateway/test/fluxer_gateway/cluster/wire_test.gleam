@@ -185,7 +185,7 @@ pub fn an_unknown_peer_in_bouncer_mode_is_taken_as_the_floor_test() {
   )
   let unknown = node.from_atom(atom.create("wire-r@h"))
   let found = wire.epoch_of(unknown)
-  let spoken = wire.speaks(unknown, wire.move_forms_epoch)
+  let spoken = wire.speaks(unknown, wire.guild_lost_epoch)
   settings.store(original)
   assert found == wire.floor()
   assert !spoken

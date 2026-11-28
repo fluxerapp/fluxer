@@ -7,6 +7,8 @@ import fluxer_gateway/core/error.{type RpcError}
 import fluxer_gateway/core/id
 import fluxer_gateway/core/node.{type Node}
 import fluxer_gateway/core/raw_json.{type RawJson}
+import fluxer_gateway/guild/manager as guild_manager
+import fluxer_gateway/guild/manager/shard as guild_shard
 import fluxer_gateway/telemetry/memory_stats.{type GuildMemory, GuildMemory}
 import fluxer_gateway/telemetry/metrics.{type Sample}
 import fluxer_gateway/telemetry/multicall
@@ -93,6 +95,10 @@ pub fn handle(method: String, params: RawJson) -> Result(Json, RpcError) {
     }
     "process.node_stats" -> Ok(node_stats())
     "process.voice_state_counts" -> Ok(voice_state_counts())
+    "process.reconcile_unowned" -> {
+      use dry_run <- result.try(bool_param(params, "dry_run"))
+      Ok(reconcile_unowned(dry_run))
+    }
     _ -> Error(error.UnknownMethod(method))
   }
 }
@@ -109,6 +115,100 @@ fn memory_stats_limit(params: RawJson) -> Result(Int, RpcError) {
           |> result.replace_error(error.InvalidParams)
       }
   }
+}
+
+fn bool_param(params: RawJson, name: String) -> Result(Bool, RpcError) {
+  case raw_json.fields(params) {
+    Error(Nil) -> Error(error.InvalidParams)
+    Ok(fields) ->
+      case list.key_find(list.reverse(fields), name) {
+        Error(Nil) -> Error(error.InvalidParams)
+        Ok(value) ->
+          raw_json.read(value, decode.bool)
+          |> result.replace_error(error.InvalidParams)
+      }
+  }
+}
+
+fn reconcile_unowned(dry_run: Bool) -> Json {
+  let flag = case dry_run {
+    True -> 1
+    False -> 0
+  }
+  let reports =
+    gather(
+      sorted_nodes(router.nodes_with(node.Guilds)),
+      "local_reconcile_unowned_json",
+      [flag],
+      node_rpc_timeout_ms(),
+      sweep_decoder(),
+      fn() { local_sweep(flag) },
+    )
+  json.object([
+    #("dry_run", json.bool(dry_run)),
+    #(
+      "nodes",
+      json.array(reports, fn(reply) {
+        case reply.1 {
+          Ok(found) -> sweep_to_json(found)
+          Error(Nil) ->
+            json.object([
+              #("node", json.string(node.to_string(reply.0))),
+              #("error", json.string("unreachable")),
+            ])
+        }
+      }),
+    ),
+  ])
+}
+
+pub fn local_reconcile_unowned_json(flag: Int) -> String {
+  local_sweep(flag) |> sweep_to_json |> json.to_string
+}
+
+fn local_sweep(flag: Int) -> #(String, guild_manager.LocalSweep) {
+  #(
+    local_node_id(),
+    guild_manager.sweep_ownership_local(True, flag == 1, local_sweep_ms()),
+  )
+}
+
+fn local_sweep_ms() -> Int {
+  int.max(node_rpc_timeout_ms() - sweep_margin_ms, node_rpc_timeout_ms() / 2)
+}
+
+const sweep_margin_ms = 3000
+
+fn sweep_to_json(found: #(String, guild_manager.LocalSweep)) -> Json {
+  let #(id, swept) = found
+  json.object([
+    #("node", json.string(id)),
+    #("running", json.int(swept.report.running)),
+    #("unowned", json.int(swept.report.unowned)),
+    #("disowned", json.int(swept.report.disowned)),
+    #("lapsed", json.int(swept.report.lapsed)),
+    #("shards", json.int(swept.shards)),
+    #("shards_replied", json.int(swept.replied)),
+    #("partial", json.bool(swept.replied < swept.shards)),
+  ])
+}
+
+fn sweep_decoder() -> Decoder(#(String, guild_manager.LocalSweep)) {
+  use id <- decode.field("node", decode.string)
+  use running <- decode.field("running", decode.int)
+  use unowned <- decode.field("unowned", decode.int)
+  use disowned <- decode.field("disowned", decode.int)
+  use lapsed <- decode.field("lapsed", decode.int)
+  use shards <- decode.field("shards", decode.int)
+  use replied <- decode.field("shards_replied", decode.int)
+  decode.success(#(
+    id,
+    guild_manager.LocalSweep(
+      report: guild_shard.SweepReport(running:, unowned:, disowned:, lapsed:),
+      shards:,
+      replied:,
+    ),
+  ))
 }
 
 fn target_nodes() -> List(Node) {

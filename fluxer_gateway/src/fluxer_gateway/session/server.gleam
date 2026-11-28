@@ -62,6 +62,7 @@ import gleam/option.{type Option, None, Some}
 import gleam/otp/actor
 import gleam/result
 import gleam/set
+import logging
 
 fn init_timeout_ms() -> Int {
   durations.session().server_init_timeout_ms
@@ -187,6 +188,25 @@ fn init(start: Start) -> actor.Initialised(State, Message, SessionRef) {
       presence_replies:,
     )
   let #(state, adopted) = arrive(state, seed.moved)
+  let state = case seed.transferred, state.ready, state.arrival {
+    True, None, Settled -> {
+      logging.log(
+        logging.Warning,
+        "session_moved_without_state: session_id="
+          <> session.session_id_to_string(seed.id),
+      )
+      process.send(inbox, Terminate(session.TerminatedByManager))
+      state
+    }
+    True, None, _ ->
+      list.fold(seed.guilds, state, fn(acc, guild) {
+        case list.contains(adopted, guild) {
+          True -> acc
+          False -> readiness.mark_unavailable(acc, guild, False)
+        }
+      })
+    _, _, _ -> state
+  }
   leases.open(process.self(), state.user_id)
   case seed.transferred {
     True -> voice.session_rehydrated(state)
@@ -559,6 +579,8 @@ fn on_inbox(state: State, inbox: SessionInbox) -> Step {
       ))
     GuildDown(guild, retry_after_ms) ->
       Go(guilds.guild_down(state, guild, retry_after_ms))
+    session.GuildLost(guild, retry_after_ms) ->
+      Go(guilds.guild_lost(state, guild, retry_after_ms))
     session.GuildRebound(..) | session.PresenceRebound(..) -> Go(state)
     Terminate(_) -> stop(state)
   }

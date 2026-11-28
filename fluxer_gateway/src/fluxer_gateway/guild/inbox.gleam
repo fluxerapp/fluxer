@@ -73,6 +73,8 @@ pub type Control {
   Freeze(owners: List(Pid), reply: Subject(Result(Transfer, Nil)))
   Unfreeze
   Moved(reply: Subject(List(#(String, Dynamic))))
+  Disown
+  ResyncSessions(reply: Subject(Int))
   HealthProbe(token: Int, pong: fn(Int, Int) -> Nil)
   VoiceRpc(request: VoiceRequest)
   FlushMemberList

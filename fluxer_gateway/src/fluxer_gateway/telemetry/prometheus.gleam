@@ -605,6 +605,18 @@ fn guild_specs() -> List(Spec) {
       Fixed("reason", guild_metrics.stop_reasons),
     ),
     Spec(
+      guild_metrics.unowned,
+      Gauge,
+      "Running guild processes whose bucket another live worker now holds",
+      Open,
+    ),
+    Spec(
+      guild_metrics.disowned,
+      Counter,
+      "Guild processes stopped because another live worker holds their bucket or their lease lapsed",
+      Fixed("reason", ["unowned", "lapsed"]),
+    ),
+    Spec(
       guild_metrics.loading_joins_expired,
       Counter,
       "Joins that expired while their guild was still loading",

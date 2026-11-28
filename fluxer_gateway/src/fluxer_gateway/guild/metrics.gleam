@@ -22,6 +22,10 @@ pub const stops = "fluxer_gateway_guild_stops_total"
 
 pub const load_ms = "fluxer_gateway_guild_load_ms"
 
+pub const unowned = "fluxer_gateway_guild_unowned_processes"
+
+pub const disowned = "fluxer_gateway_guild_disowned_total"
+
 pub const loading_joins_expired =
   "fluxer_gateway_guild_loading_joins_expired_total"
 
@@ -61,7 +65,7 @@ pub const failure_reasons = [
 ]
 
 pub const stop_reasons = [
-  "idle", "shutdown", "moved", "handed_off", "aborted", "crashed",
+  "idle", "shutdown", "moved", "handed_off", "aborted", "crashed", "unowned",
 ]
 
 pub const modes = ["staged", "frozen", "handing", "arriving"]
@@ -342,6 +346,17 @@ pub fn loaded(ok: Bool, elapsed_ms: Int) -> Nil {
     False -> "error"
   }
   metrics.observe_ms(load_ms, [#("outcome", outcome)], elapsed_ms)
+}
+
+pub fn unowned_processes(shard: Int, count: Int) -> Nil {
+  metrics.gauge(unowned, [#("shard", int.to_string(shard))], count)
+}
+
+pub fn disowned_processes(reason: String, count: Int) -> Nil {
+  case count {
+    0 -> Nil
+    _ -> metrics.counter(disowned, [#("reason", reason)], count)
+  }
 }
 
 pub fn loading_joins_dropped(count: Int) -> Nil {

@@ -101,6 +101,7 @@ pub type SessionInbox {
   )
   PresenceFrame(user: UserId, payload: RawJson, facts: DispatchFacts)
   GuildDown(guild: GuildId, retry_after_ms: Int)
+  GuildLost(guild: GuildId, retry_after_ms: Int)
   GuildRebound(guild: GuildId, kept: Bool)
   PresenceRebound(kept: Bool)
   Terminate(reason: TerminateReason)

@@ -17,9 +17,11 @@ import fluxer_gateway/guild/names
 import fluxer_gateway/guild/server
 import fluxer_gateway/telemetry/memory_stats
 import fluxer_gateway/telemetry/metrics
+import fluxer_gateway/util/spawn
 import gleam/erlang/process
 import gleam/int
 import gleam/list
+import gleam/option
 import gleam/otp/factory_supervisor
 import gleam/otp/static_supervisor
 import gleam/otp/supervision.{type ChildSpecification}
@@ -218,6 +220,101 @@ fn collect_reloads(
           collect_reloads(replies, left - 1, deadline, count + 1)
         Ok(_) -> collect_reloads(replies, left - 1, deadline, count)
         Error(Nil) -> count
+      }
+  }
+}
+
+pub type LocalSweep {
+  LocalSweep(report: shard.SweepReport, shards: Int, replied: Int)
+}
+
+pub fn sweep_ownership_local(
+  force: Bool,
+  dry_run: Bool,
+  timeout_ms: Int,
+) -> LocalSweep {
+  let result = process.new_subject()
+  let #(_, monitor) =
+    spawn.monitored(fn() {
+      process.send(result, run_sweep(force, dry_run, timeout_ms))
+    })
+  let swept =
+    process.new_selector()
+    |> process.select_map(result, Ok)
+    |> process.select_specific_monitor(monitor, fn(_) { Error(Nil) })
+    |> process.selector_receive(timeout_ms + sweep_margin_ms)
+  process.demonitor_process(monitor)
+  case swept {
+    Ok(Ok(found)) -> found
+    _ ->
+      LocalSweep(
+        report: shard.SweepReport(
+          running: 0,
+          unowned: 0,
+          disowned: 0,
+          lapsed: 0,
+        ),
+        shards: names.shard_count,
+        replied: 0,
+      )
+  }
+}
+
+const sweep_margin_ms = 1000
+
+fn run_sweep(force: Bool, dry_run: Bool, timeout_ms: Int) -> LocalSweep {
+  let reply = process.new_subject()
+  let asked =
+    int.range(0, names.shard_count, 0, fn(asked, index) {
+      case
+        remote.send_local(
+          names.shard(index),
+          shard.SweepOwnership(force:, dry_run:, reply: option.Some(reply)),
+        )
+      {
+        Ok(Nil) -> asked + 1
+        Error(Nil) -> asked
+      }
+    })
+  collect_sweeps(
+    reply,
+    asked,
+    clock.deadline_in(timeout_ms),
+    LocalSweep(
+      report: shard.SweepReport(running: 0, unowned: 0, disowned: 0, lapsed: 0),
+      shards: names.shard_count,
+      replied: 0,
+    ),
+  )
+}
+
+fn collect_sweeps(
+  reply: process.Subject(shard.SweepReport),
+  left: Int,
+  deadline: clock.Deadline,
+  total: LocalSweep,
+) -> LocalSweep {
+  case left {
+    0 -> total
+    _ ->
+      case process.receive(reply, clock.remaining_ms(deadline)) {
+        Error(Nil) -> total
+        Ok(found) ->
+          collect_sweeps(
+            reply,
+            left - 1,
+            deadline,
+            LocalSweep(
+              ..total,
+              report: shard.SweepReport(
+                running: total.report.running + found.running,
+                unowned: total.report.unowned + found.unowned,
+                disowned: total.report.disowned + found.disowned,
+                lapsed: total.report.lapsed + found.lapsed,
+              ),
+              replied: total.replied + 1,
+            ),
+          )
       }
   }
 }

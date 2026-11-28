@@ -444,9 +444,7 @@ pub fn on_down(
   |> option.map(fn(guild) {
     case down_cause(reason) {
       Handoff -> Continue(detach(state, guild, 0))
-      Unreachable ->
-        Continue(detach(state, guild, links.jitter(down_reconnect_ms(), 82)))
-      Crashed -> {
+      Unreachable | Crashed -> {
         let state = readiness.mark_unavailable(state, guild, False)
         Continue(detach(state, guild, links.jitter(down_reconnect_ms(), 82)))
       }
@@ -542,20 +540,26 @@ pub fn adopt_moved(
 }
 
 pub fn unmoved(state: State, guild: GuildId) -> State {
-  case links.get(state.links, guild) {
-    Some(Linked(_, monitor)) -> {
-      process.demonitor_process(monitor)
-      detach(state, guild, 0)
-    }
-    _ -> state
-  }
+  relink(state, guild, 0, True)
 }
 
 pub fn guild_down(state: State, guild: GuildId, retry_after_ms: Int) -> State {
+  relink(state, guild, retry_after_ms, False)
+}
+
+pub fn guild_lost(state: State, guild: GuildId, retry_after_ms: Int) -> State {
+  relink(state, guild, retry_after_ms, True)
+}
+
+fn relink(state: State, guild: GuildId, delay_ms: Int, lossy: Bool) -> State {
   case links.get(state.links, guild) {
     Some(Linked(_, monitor)) -> {
       process.demonitor_process(monitor)
-      detach(state, guild, retry_after_ms)
+      let state = case lossy {
+        True -> readiness.mark_unavailable(state, guild, False)
+        False -> state
+      }
+      detach(state, guild, delay_ms)
     }
     _ -> state
   }

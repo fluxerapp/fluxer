@@ -3,7 +3,7 @@
 import fluxer_gateway/config/env
 import gleam/option
 
-pub const wire_epoch = 5
+pub const wire_epoch = 6
 
 const version_header_name = "x-fluxer-version"
 

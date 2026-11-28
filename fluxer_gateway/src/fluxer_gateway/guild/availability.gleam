@@ -116,6 +116,16 @@ fn disconnect(state: GuildState, staff_only: Bool, hidden: Bool) -> GuildState {
   })
 }
 
+pub fn resync_all(state: GuildState) -> #(GuildState, Int) {
+  let guild = guild_state.guild_id(state)
+  guild_state.sessions(state)
+  |> guild_sessions.session_refs
+  |> list.fold(#(state, 0), fn(acc, ref) {
+    control.send(ref, control.GuildUnavailable(guild, False))
+    #(connect.leave(acc.0, ref.id), acc.1 + 1)
+  })
+}
+
 fn rejoin_all(state: GuildState) -> GuildState {
   let guild = guild_state.guild_id(state)
   guild_state.sessions(state)

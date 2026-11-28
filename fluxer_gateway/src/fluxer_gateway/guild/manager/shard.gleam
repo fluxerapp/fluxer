@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import bouncer_proto/epoch.{type Epoch}
 import bouncer_proto/message.{type MoveId}
 import fluxer_gateway/api/client
 import fluxer_gateway/cluster/remote as cluster_remote
@@ -24,6 +25,7 @@ import fluxer_gateway/guild/handoff/signal
 import fluxer_gateway/guild/handoff/transfer.{type Transfer}
 import fluxer_gateway/guild/inbox.{type Handle}
 import fluxer_gateway/guild/manager/fetch
+import fluxer_gateway/guild/manager/ownership
 import fluxer_gateway/guild/manager/registry
 import fluxer_gateway/guild/metrics as guild_metrics
 import fluxer_gateway/guild/names
@@ -87,6 +89,10 @@ type Waiter {
   WantsArrival(reply: Subject(Result(Handle, Nil)))
 }
 
+pub type SweepReport {
+  SweepReport(running: Int, unowned: Int, disowned: Int, lapsed: Int)
+}
+
 pub type ReloadResult {
   Reloaded
   NotRunning
@@ -117,6 +123,13 @@ pub type Message {
   RunningElsewhere(guild: GuildId, token: Int, handle: Handle)
   LocalGuilds(reply: Subject(List(GuildId)))
   GuildDown(process.Down)
+  SweepOwnership(
+    force: Bool,
+    dry_run: Bool,
+    reply: Option(Subject(SweepReport)),
+  )
+  SweepTick
+  TopologySweep
 }
 
 pub type StartFailure {
@@ -160,6 +173,9 @@ type State {
     guilds: Dict(Int, Entry),
     crashed: Dict(Int, Crashed),
     next_token: Int,
+    unowned: Dict(Int, Int),
+    served: Dict(Int, #(process.Pid, Epoch)),
+    sweep_queued: Bool,
   )
 }
 
@@ -171,16 +187,29 @@ pub fn factory_name(
 
 pub fn start(index: Int) -> actor.StartResult(Subject(Message)) {
   actor.new_with_initialiser(init_timeout_ms(), fn(subject) {
+    let topology = process.new_subject()
+    router.subscribe_topology(topology)
     let selector =
       process.new_selector()
       |> process.select(subject)
       |> process.select_monitors(GuildDown)
+      |> process.select_map(topology, fn(_) { TopologySweep })
+    schedule_sweep(subject)
+    let adopted = adopt_running(index)
     actor.initialised(State(
       index:,
       self: subject,
-      guilds: adopt_running(index),
+      guilds: adopted,
       crashed: dict.new(),
       next_token: unique_integer([Positive, Monotonic]),
+      unowned: dict.new(),
+      served: dict.fold(adopted, dict.new(), fn(served, key, found) {
+        case found, id.guild_id(key) {
+          Running(handle:, ..), Ok(guild) -> note_served(served, guild, handle)
+          _, _ -> served
+        }
+      }),
+      sweep_queued: False,
     ))
     |> actor.selecting(selector)
     |> actor.returning(subject)
@@ -272,6 +301,332 @@ fn handle(state: State, message: Message) -> actor.Next(State, Message) {
     GuildDown(process.ProcessDown(pid:, reason:, ..)) ->
       actor.continue(forget_pid(state, pid, reason))
     GuildDown(_) -> actor.continue(state)
+    SweepOwnership(force, dry_run, reply) -> {
+      let state = case reply, dry_run {
+        None, False -> State(..state, sweep_queued: False)
+        _, _ -> state
+      }
+      let #(state, report) = sweep_ownership(state, force, dry_run)
+      case reply {
+        Some(reply) -> process.send(reply, report)
+        None -> Nil
+      }
+      actor.continue(state)
+    }
+    SweepTick -> {
+      schedule_sweep(state.self)
+      case state.sweep_queued {
+        True -> actor.continue(state)
+        False -> {
+          let #(state, _) = sweep_ownership(state, False, False)
+          actor.continue(state)
+        }
+      }
+    }
+    TopologySweep ->
+      case state.sweep_queued {
+        True -> actor.continue(state)
+        False -> {
+          process.send_after(
+            state.self,
+            sweep_coalesce_ms,
+            SweepOwnership(force: False, dry_run: False, reply: None),
+          )
+          actor.continue(State(..state, sweep_queued: True))
+        }
+      }
+  }
+}
+
+const sweep_coalesce_ms = 250
+
+fn sweep_ms() -> Int {
+  durations.guild().manager_ownership_sweep_ms
+}
+
+fn unowned_grace_ms() -> Int {
+  durations.guild().manager_unowned_grace_ms
+}
+
+fn schedule_sweep(shard: Subject(Message)) -> Nil {
+  let base = sweep_ms()
+  process.send_after(shard, base + int.random(base / 2 + 1), SweepTick)
+  Nil
+}
+
+fn sweep_ownership(
+  state: State,
+  force: Bool,
+  dry_run: Bool,
+) -> #(State, SweepReport) {
+  let running =
+    dict.fold(state.guilds, 0, fn(count, _, found) {
+      case found {
+        Running(..) -> count + 1
+        Loading(..) -> count
+      }
+    })
+  case router.bouncer_mode() {
+    False -> #(state, SweepReport(running:, unowned: 0, disowned: 0, lapsed: 0))
+    True -> {
+      let found = classify(state)
+      let replies = probe_keys(list.append(found.unowned, found.lapsed))
+      let orphans = replied_false(found.unowned, replies)
+      let unknown =
+        list.filter_map(found.unowned, fn(candidate) {
+          case dict.get(replies, candidate.0) {
+            Error(Nil) -> Ok(candidate.0)
+            Ok(_) -> Error(Nil)
+          }
+        })
+      let lapsed = replied_false(found.lapsed, replies)
+      let served =
+        list.fold(found.lapsed, found.served, fn(acc, candidate) {
+          case list.contains(lapsed, candidate.0) {
+            True -> acc
+            False -> keep_served(acc, candidate.0, candidate.1, state.served)
+          }
+        })
+      let swept =
+        ownership.sweep(
+          state.unowned,
+          list.append(orphans, unknown),
+          clock.monotonic_ms(),
+          unowned_grace_ms(),
+          force,
+        )
+      let due = list.filter(swept.due, list.contains(orphans, _))
+      let first_seen =
+        list.fold(swept.due, swept.first_seen, fn(acc, key) {
+          case list.contains(orphans, key) {
+            True -> acc
+            False ->
+              dict.insert(
+                acc,
+                key,
+                dict.get(state.unowned, key)
+                  |> result.unwrap(clock.monotonic_ms()),
+              )
+          }
+        })
+      guild_metrics.unowned_processes(state.index, swept.unowned)
+      case dry_run {
+        True -> #(
+          state,
+          SweepReport(
+            running:,
+            unowned: swept.unowned,
+            disowned: 0,
+            lapsed: list.length(lapsed),
+          ),
+        )
+        False -> {
+          let state =
+            list.fold(
+              list.append(due, lapsed),
+              State(..state, unowned: first_seen, served:),
+              disown_key,
+            )
+          let disowned = list.length(due)
+          let restarted = list.length(lapsed)
+          guild_metrics.disowned_processes("unowned", disowned)
+          guild_metrics.disowned_processes("lapsed", restarted)
+          case disowned {
+            0 -> Nil
+            _ ->
+              logging.log(
+                logging.Warning,
+                "guild ownership sweep stopped "
+                  <> int.to_string(disowned)
+                  <> " guilds whose bucket another live worker holds",
+              )
+          }
+          case restarted {
+            0 -> Nil
+            _ ->
+              logging.log(
+                logging.Warning,
+                "guild ownership sweep restarted "
+                  <> int.to_string(restarted)
+                  <> " guilds whose lease lapsed and was granted again",
+              )
+          }
+          #(
+            state,
+            SweepReport(
+              running:,
+              unowned: swept.unowned,
+              disowned:,
+              lapsed: restarted,
+            ),
+          )
+        }
+      }
+    }
+  }
+}
+
+type Classified {
+  Classified(
+    unowned: List(#(Int, Handle)),
+    lapsed: List(#(Int, Handle)),
+    served: Dict(Int, #(process.Pid, Epoch)),
+  )
+}
+
+fn classify(state: State) -> Classified {
+  dict.fold(
+    state.guilds,
+    Classified(unowned: [], lapsed: [], served: dict.new()),
+    fn(acc, key, found) {
+      case found, id.guild_id(key) {
+        Running(handle:, origin:, ..), Ok(guild) ->
+          case ownership.of(guild, is_arrival(origin)) {
+            ownership.Unowned(_) ->
+              Classified(..acc, unowned: [#(key, handle), ..acc.unowned])
+            ownership.Pending ->
+              Classified(
+                ..acc,
+                served: keep_served(acc.served, key, handle, state.served),
+              )
+            ownership.Owned -> {
+              let now = ownership.served_epoch(guild)
+              case
+                ownership.lapsed(served_epoch(state.served, key, handle), now)
+              {
+                True ->
+                  Classified(..acc, lapsed: [#(key, handle), ..acc.lapsed])
+                False ->
+                  case now {
+                    Ok(current) ->
+                      Classified(
+                        ..acc,
+                        served: dict.insert(acc.served, key, #(
+                          handle.pid,
+                          current,
+                        )),
+                      )
+                    Error(Nil) -> acc
+                  }
+              }
+            }
+          }
+        _, _ -> acc
+      }
+    },
+  )
+}
+
+fn is_arrival(origin: Origin) -> Bool {
+  case origin {
+    Arrived | Transferred(_) -> True
+    Fetched | Abandoned -> False
+  }
+}
+
+fn served_epoch(
+  served: Dict(Int, #(process.Pid, Epoch)),
+  key: Int,
+  handle: Handle,
+) -> Option(Epoch) {
+  case dict.get(served, key) {
+    Ok(#(pid, at)) if pid == handle.pid -> Some(at)
+    _ -> None
+  }
+}
+
+fn keep_served(
+  into: Dict(Int, #(process.Pid, Epoch)),
+  key: Int,
+  handle: Handle,
+  from: Dict(Int, #(process.Pid, Epoch)),
+) -> Dict(Int, #(process.Pid, Epoch)) {
+  case served_epoch(from, key, handle) {
+    Some(at) -> dict.insert(into, key, #(handle.pid, at))
+    None -> into
+  }
+}
+
+fn note_served(
+  served: Dict(Int, #(process.Pid, Epoch)),
+  guild: GuildId,
+  handle: Handle,
+) -> Dict(Int, #(process.Pid, Epoch)) {
+  case ownership.served_epoch(guild) {
+    Ok(at) -> dict.insert(served, id.guild_id_to_int(guild), #(handle.pid, at))
+    Error(Nil) -> served
+  }
+}
+
+fn replied_false(
+  candidates: List(#(Int, Handle)),
+  replies: Dict(Int, Bool),
+) -> List(Int) {
+  list.filter_map(candidates, fn(candidate) {
+    case dict.get(replies, candidate.0) {
+      Ok(False) -> Ok(candidate.0)
+      _ -> Error(Nil)
+    }
+  })
+}
+
+fn disown_key(state: State, key: Int) -> State {
+  case dict.get(state.guilds, key), id.guild_id(key) {
+    Ok(Running(handle:, monitor:, ..)), Ok(guild) -> {
+      process.demonitor_process(monitor)
+      registry.remove(guild, handle)
+      disown(guild, handle)
+      State(
+        ..state,
+        guilds: dict.delete(state.guilds, key),
+        unowned: dict.delete(state.unowned, key),
+      )
+    }
+    _, _ -> State(..state, unowned: dict.delete(state.unowned, key))
+  }
+}
+
+fn disown(guild: GuildId, handle: Handle) -> Nil {
+  process.spawn_unlinked(fn() {
+    let watch = process.monitor(handle.pid)
+    let down =
+      process.new_selector()
+      |> process.select_specific_monitor(watch, fn(_) { Nil })
+    process.send(handle.control, inbox.Disown)
+    await_disowned(handle, down, disown_rounds)
+    roster.clear(guild, handle.pid)
+    counts_shard.delete_owned(guild, handle.pid)
+    read_model.delete(guild, handle.pid)
+    remains.forget(guild, handle.pid)
+  })
+  Nil
+}
+
+const disown_rounds = 3
+
+const leaving_exit_wait_ms = 300_000
+
+fn await_disowned(
+  handle: Handle,
+  down: process.Selector(Nil),
+  rounds: Int,
+) -> Nil {
+  case process.selector_receive(down, retire_timeout_ms()) {
+    Ok(Nil) -> Nil
+    Error(Nil) ->
+      case dict.get(probe_keys([#(0, handle)]), 0), rounds {
+        Ok(True), _ -> {
+          let _ = process.selector_receive(down, leaving_exit_wait_ms)
+          Nil
+        }
+        Error(Nil), rounds if rounds > 1 ->
+          await_disowned(handle, down, rounds - 1)
+        _, _ -> {
+          process.kill(handle.pid)
+          let _ = process.selector_receive(down, retire_timeout_ms())
+          Nil
+        }
+      }
   }
 }
 
@@ -303,10 +658,35 @@ fn lookup(
           Loading(..loading, waiters: [WantsArrival(reply), ..waiters]),
         ),
       )
-    _ -> {
-      process.send(reply, running(state, guild))
-      state
-    }
+    _ ->
+      case running(state, guild) {
+        Ok(handle) ->
+          case ownership.of(guild, running_arrival(state, key)) {
+            ownership.Unowned(_) ->
+              case leaving(handle) {
+                Ok(True) -> {
+                  process.send(reply, Ok(handle))
+                  state
+                }
+                Ok(False) -> {
+                  process.send(reply, Error(Nil))
+                  disown_key(state, key)
+                }
+                Error(Nil) -> {
+                  process.send(reply, Error(Nil))
+                  state
+                }
+              }
+            ownership.Owned | ownership.Pending -> {
+              process.send(reply, Ok(handle))
+              state
+            }
+          }
+        Error(Nil) -> {
+          process.send(reply, Error(Nil))
+          state
+        }
+      }
   }
 }
 
@@ -664,18 +1044,19 @@ fn install_arriving(
   reply: Subject(Result(Handle, Nil)),
 ) -> State {
   let key = id.guild_id_to_int(guild)
-  let entry = case dict.get(state.guilds, key) {
-    Ok(Running(handle:, monitor:, ..)) ->
-      case leaving(handle) {
-        True -> {
+  let #(state, entry) = case dict.get(state.guilds, key) {
+    Ok(Running(handle:, monitor:, origin:)) ->
+      case leaving(handle), is_arrival(origin) || ownership.holds(guild) {
+        Ok(True), _ -> {
           process.demonitor_process(monitor)
           registry.remove(guild, handle)
-          Error(Nil)
+          #(state, Error(Nil))
         }
-        False -> Ok(Nil)
+        Ok(False), False -> #(disown_key(state, key), Error(Nil))
+        _, _ -> #(state, Ok(Nil))
       }
-    Ok(_) -> Ok(Nil)
-    Error(Nil) -> Error(Nil)
+    Ok(_) -> #(state, Ok(Nil))
+    Error(Nil) -> #(state, Error(Nil))
   }
   case entry {
     Error(Nil) -> {
@@ -720,17 +1101,62 @@ fn install_arriving(
   }
 }
 
-fn leaving(handle: Handle) -> Bool {
-  let reply = process.new_subject()
-  let monitor = process.monitor(handle.pid)
-  process.send(signal.subject(handle.pid), signal.Probe(reply))
-  let answer =
-    process.new_selector()
-    |> process.select(reply)
-    |> process.select_specific_monitor(monitor, fn(_) { False })
-    |> process.selector_receive(probe_timeout_ms)
-  process.demonitor_process(monitor)
-  answer == Ok(True)
+fn leaving(handle: Handle) -> Result(Bool, Nil) {
+  probe_keys([#(0, handle)]) |> dict.get(0)
+}
+
+fn running_arrival(state: State, key: Int) -> Bool {
+  case dict.get(state.guilds, key) {
+    Ok(Running(origin:, ..)) -> is_arrival(origin)
+    _ -> False
+  }
+}
+
+fn probe_keys(candidates: List(#(Int, Handle))) -> Dict(Int, Bool) {
+  let #(selector, monitors) =
+    list.fold(candidates, #(process.new_selector(), []), fn(acc, candidate) {
+      let #(key, handle) = candidate
+      let reply = process.new_subject()
+      let monitor = process.monitor(handle.pid)
+      process.send(signal.subject(handle.pid), signal.Probe(reply))
+      #(
+        acc.0
+          |> process.select_map(reply, fn(value) { #(key, value) })
+          |> process.select_specific_monitor(monitor, fn(_) { #(key, False) }),
+        [monitor, ..acc.1],
+      )
+    })
+  let found =
+    await_probes(
+      selector,
+      list.length(candidates),
+      clock.deadline_in(probe_timeout_ms),
+      dict.new(),
+    )
+  list.each(monitors, process.demonitor_process)
+  found
+}
+
+fn await_probes(
+  selector: process.Selector(#(Int, Bool)),
+  waiting: Int,
+  deadline: clock.Deadline,
+  found: Dict(Int, Bool),
+) -> Dict(Int, Bool) {
+  case waiting > 0 {
+    False -> found
+    True ->
+      case process.selector_receive(selector, clock.remaining_ms(deadline)) {
+        Error(Nil) -> found
+        Ok(#(key, value)) ->
+          await_probes(
+            selector,
+            waiting - 1,
+            deadline,
+            dict.insert(found, key, value),
+          )
+      }
+  }
 }
 
 const probe_timeout_ms = 2000
@@ -875,6 +1301,7 @@ fn started(
               Running(handle, monitor, origin),
             ),
             crashed: dict.delete(state.crashed, key),
+            served: note_served(state.served, guild, handle),
           )
         }
         Error(failure), _, Some(pending) -> {
