@@ -24,9 +24,9 @@ func (e *EjectedError) Error() string {
 
 func (e *EjectedError) Fix() string {
 	if e.Detached {
-		return "It runs from compose.yaml in " + e.Dir + ". Run " + e.Tool + " ps there to check it."
+		return "It runs from compose.yaml in " + e.Dir + ". Run " + e.Tool + " ps there to check it, or rexctl adopt to have rexctl run it again."
 	}
-	return "Install the last rexctl that has rexctl takeover from https://github.com/fluxerapp/fluxer/releases, take the instance over with it, then run rexctl upgrade, which offers the move."
+	return "Run rexctl migrate --to docker --dry-run in " + e.Dir + " to see the move."
 }
 
 func (e *EjectedError) Start() string {

@@ -263,7 +263,7 @@ func (a *App) InstanceRepairing(keys []string) (*instance.Instance, error) {
 			return nil, ui.Refused(fmt.Sprintf("There's no Fluxer instance in %s, and there's one in %s.", dir, other), "Pass --dir "+shellWord(other)+" if you mean that one.")
 		}
 		if tool := handMadeFluxer(context.Background(), dir); tool != "" {
-			return nil, ui.Refused(fmt.Sprintf("There's no Fluxer instance from rexctl in %s. The Fluxer on this machine runs on %s without rexctl, and rexctl can't manage it.", dir, tool), "Keep managing it with the same "+strings.ToLower(tool)+" commands you set it up with.")
+			return nil, ui.Refused(fmt.Sprintf("There's no Fluxer instance from rexctl in %s. The Fluxer on this machine runs on %s without rexctl.", dir, tool), adoptFix(dir))
 		}
 		return nil, ui.Refused(fmt.Sprintf("There's no Fluxer instance in %s.", dir), "Run rexctl install, or pass --dir.")
 	case errors.Is(err, instance.ErrLegacy):
@@ -509,6 +509,10 @@ func (a *App) adminFor(inst *instance.Instance, t adminapi.Transport) *adminapi.
 		fix := "Run rexctl upgrade."
 		var ej *instance.EjectedError
 		if errors.As(inst.Managed(), &ej) {
+			if ej.Detached {
+				a.UI.Warn(fmt.Sprintf("You run Fluxer yourself from compose.yaml in %s. Upgrade it with the command on the admin panel's Updates page.", inst.Dir), "")
+				return
+			}
 			fix = ej.Fix()
 		}
 		a.UI.Warn(fmt.Sprintf("rexctl is %s and Fluxer is %s.", a.Version, apiVersion), fix)

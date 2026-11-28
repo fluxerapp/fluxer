@@ -57,6 +57,10 @@ func handRunOldLine(dir string) string {
 	return fmt.Sprintf("The Fluxer install in %s runs the older layout from compose files you set up yourself, and rexctl only moves it.", dir)
 }
 
+func adoptFix(dir string) string {
+	return fmt.Sprintf("rexctl leaves it alone. To have rexctl run it, run rexctl adopt in %s.", dir)
+}
+
 func folderRefusal(dir string, err error) error {
 	var fe *instance.FolderError
 	if !errors.As(err, &fe) {
@@ -70,7 +74,7 @@ func folderRefusal(dir string, err error) error {
 		}
 		return &ui.ExitError{Code: ui.ExitRefused, Msg: msg, Fix: unclearFix, Err: err}
 	case instance.KindHandRunNew:
-		return &ui.ExitError{Code: ui.ExitRefused, Msg: fmt.Sprintf("There's no Fluxer instance from rexctl in %s. The Fluxer there runs from compose.yaml without rexctl, and rexctl can't manage it.", dir), Fix: "Keep managing it with the same docker compose commands you set it up with.", Err: err}
+		return &ui.ExitError{Code: ui.ExitRefused, Msg: fmt.Sprintf("There's no Fluxer instance from rexctl in %s. The Fluxer there runs from compose.yaml without rexctl.", dir), Fix: adoptFix(dir), Err: err}
 	}
 	return &ui.ExitError{Code: ui.ExitRefused, Msg: handRunOldLine(dir), Fix: handRunOldFix, Err: err}
 }
