@@ -4,7 +4,6 @@ package cmd
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -44,15 +43,12 @@ func runDetach(ctx context.Context, app *App) error {
 		return ui.Refused("This instance runs natively without containers, so there is no container to hand over.", "Keep managing it with rexctl.")
 	}
 	switch {
-	case inst.State.MovedFrom != nil:
-		return ui.Refused("The old containers from before the move to this layout are still on this machine, and they share this instance's compose project name.", "Run "+migrateCommand+" --clean-up first, then run rexctl detach again.")
 	case inst.State.Upgrade != nil:
 		return ui.Refused("An upgrade is still in progress.", "Run rexctl upgrade to finish it, then run rexctl detach again.")
 	case inst.State.Pending != nil:
 		return ui.Refused("A settings change is still in progress.", "Run rexctl doctor to finish it, then run rexctl detach again.")
 	}
-	r, err := app.Runtime(ctx, inst)
-	if err != nil {
+	if err := handOverRefusal(inst, false); err != nil {
 		return err
 	}
 	tool := instance.ComposeTool(inst.State.Engine.Kind)
@@ -68,68 +64,32 @@ func runDetach(ctx context.Context, app *App) error {
 		u.Info("Nothing changed.")
 		return nil
 	}
-	return app.Locked(ctx, inst, func() error {
-		sched, schedErr := backupScheduleFor(r, inst)
-		o := rt.DetachOptions{Rexctl: app.Version, Schedule: host.ScheduleOff, Keep: inst.KeepBackups()}
-		if schedErr == nil {
-			o.Schedule = sched.Current()
-		}
-		if o.Schedule == host.ScheduleOff {
-			o.Schedule = fluxerdSchedule(inst)
-		}
-		var out rt.Detached
-		err := u.Step(ctx, "Handing Fluxer over to "+tool, func(ctx context.Context, s *ui.Step) error {
-			var err error
-			var unquotable *rt.UnquotableError
-			out, err = rt.Detach(ctx, r, o)
-			switch {
-			case errors.Is(err, rt.ErrMultiline):
-				return ui.Refused("A setting of this instance holds more than one line, which an env file can't hold.", "Change that setting with rexctl config set, then run rexctl detach again.")
-			case errors.As(err, &unquotable):
-				return ui.Refused(fmt.Sprintf("The setting %s holds characters that fluxer.env can't hold together.", unquotable.Key), "Change that setting with rexctl config set, then run this again.")
-			case errors.Is(err, rt.ErrDetachStartedAgain):
-				u.Detail("%v", err)
-				return rt.ContainerError(err, "Couldn't hand Fluxer over to "+tool+", so rexctl started its own container again.")
-			case errors.Is(err, rt.ErrDetachLeftStopped):
-				u.Detail("%v", err)
-				return rt.ContainerError(err, "Couldn't hand Fluxer over to "+tool+", and couldn't start rexctl's own container again. Run rexctl start.")
-			case err != nil:
-				u.Detail("%v", err)
-				return rt.ContainerError(err, "Couldn't hand Fluxer over to "+tool+". Nothing changed, and Fluxer keeps running.")
-			}
-			s.Done("Fluxer runs from %s.", out.ComposeFile)
-			return nil
-		})
-		if err != nil {
-			return err
-		}
-		if e, err := app.anyEngine(ctx, inst); err == nil {
-			if _, err := removeAutoUpgrade(ctx, inst, e); err != nil {
-				u.Detail("%v", err)
-			}
-		}
-		if schedErr == nil {
-			if _, err := sched.Remove(ctx); err != nil {
-				u.Detail("%v", err)
-			}
-		}
-		app.forget(inst.Dir)
-		body := []string{"Your settings are in " + out.EnvFile + " and rexctl leaves this instance alone from now on. Automatic upgrades are off."}
-		if o.Schedule != host.ScheduleOff {
-			body = append(body, "Fluxer backs itself up "+o.Schedule+" into its volume.")
-		}
-		body = append(body, fmt.Sprintf("Backups from now on stay in Fluxer's volume. Older ones stay in %s.", inst.BackupDir()))
-		body = append(body, hostCopyLines(inst, tool)...)
-		if out.EnvLeft {
-			u.Detail("couldn't remove %s from Fluxer's volume", rt.ContainerData+"/"+rt.EnvFileName)
-		}
-		u.Card(ui.Card{
-			Title:    "Fluxer runs from " + tool,
-			Body:     body,
-			Commands: []string{"cd " + shellWord(inst.Dir), tool + " ps", tool + " logs"},
-		})
-		return nil
+	var res handedOver
+	err = app.Locked(ctx, inst, func() error {
+		var err error
+		res, err = handOver(ctx, app, inst, handOverOptions{})
+		return err
 	})
+	if err != nil {
+		return err
+	}
+	moving := inst.State.MovedFrom != nil
+	if !moving {
+		stepAway(app, inst)
+	}
+	body := []string{"Your settings are in " + res.out.EnvFile + " and rexctl leaves this instance alone from now on. Automatic upgrades are off."}
+	if res.schedule != host.ScheduleOff {
+		body = append(body, "Fluxer backs itself up "+res.schedule+" into its volume.")
+	}
+	body = append(body, fmt.Sprintf("Backups from now on stay in Fluxer's volume. Older ones stay in %s.", inst.BackupDir()))
+	body = append(body, hostCopyLines(inst, tool)...)
+	commands := []string{"cd " + shellWord(inst.Dir), tool + " ps", tool + " logs"}
+	if moving {
+		body = append(body, fmt.Sprintf("The old containers in %s are stopped and still have their data. Don't start them while you try the new one.", inst.State.MovedFrom.Dir))
+		commands = append(commands, "rexctl migrate --clean-up --dir "+shellWord(inst.State.MovedFrom.Dir))
+	}
+	u.Card(ui.Card{Title: "Fluxer runs from " + tool, Body: body, Commands: commands})
+	return nil
 }
 
 func hostCopyLines(inst *instance.Instance, tool string) []string {

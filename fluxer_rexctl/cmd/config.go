@@ -447,6 +447,10 @@ func movedConfig(app *App, moved *instance.MovedError) error {
 	if app.Flags.JSON {
 		return app.UI.JSON([]configRow{})
 	}
+	if moved.Composed {
+		app.UI.Info("Fluxer runs from compose.yaml in %s now, and its settings are in fluxer.env there.", moved.To)
+		return nil
+	}
 	app.UI.Info("Fluxer runs from %s now, and its settings live with that instance. Run %s to see them.", moved.To, runThere(moved.To, "config", "list"))
 	return nil
 }

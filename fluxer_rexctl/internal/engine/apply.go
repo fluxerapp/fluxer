@@ -84,11 +84,15 @@ func (p *Project) Up(ctx context.Context, o UpOptions) error {
 			return &Error{Op: "up", Class: ClassInvalidConfig, Err: err}
 		}
 	}
+	if o.RemoveOrphans {
+		if err := p.removeOwnedOrphans(keep); err != nil {
+			return err
+		}
+	}
 	policy := recreatePolicy(o.Recreate)
 	create := api.CreateOptions{
 		Recreate:             policy,
 		RecreateDependencies: policy,
-		RemoveOrphans:        o.RemoveOrphans,
 		Inherit:              true,
 		QuietPull:            true,
 	}
@@ -148,10 +152,12 @@ func (p *Project) Create(ctx context.Context) error {
 	if err := p.pullMissing(ctx, nil); err != nil {
 		return err
 	}
+	if err := p.removeOwnedOrphans(ctx); err != nil {
+		return err
+	}
 	opts := api.CreateOptions{
 		Recreate:             api.RecreateDiverged,
 		RecreateDependencies: api.RecreateDiverged,
-		RemoveOrphans:        true,
 		Inherit:              true,
 		QuietPull:            true,
 	}
@@ -409,8 +415,9 @@ func (p *Project) down(ctx context.Context, volumes bool, timeout *time.Duration
 	if volumes {
 		anonymous = anonymousVolumes(owned)
 	}
+	shared := foreignNetworks(foreign)
 	if p.Model != nil {
-		model := withoutServices(copyModel(p.Model), summaryServices(foreign))
+		model := withoutNetworks(withoutServices(copyModel(p.Model), summaryServices(foreign)), shared)
 		if err := p.wrap("down", c.svc.Down(ctx, p.Name, api.DownOptions{Project: model, Volumes: volumes, Timeout: timeout})); err != nil {
 			return res, err
 		}
@@ -419,6 +426,11 @@ func (p *Project) down(ctx context.Context, volumes bool, timeout *time.Duration
 		return res, p.wrap("down", err)
 	}
 	owned, foreign = p.split(list.Items)
+	for _, n := range foreignNetworks(foreign) {
+		if !slices.Contains(shared, n) {
+			shared = append(shared, n)
+		}
+	}
 	if err := removeContainers(ctx, a, owned, timeout); err != nil {
 		return res, p.wrap("down", err)
 	}
@@ -431,9 +443,27 @@ func (p *Project) down(ctx context.Context, volumes bool, timeout *time.Duration
 		anonymous = append(anonymous, named...)
 	}
 	if p.Model == nil || volumes {
-		return res, p.wrap("down", p.removeLeftovers(ctx, a, anonymous))
+		return res, p.wrap("down", p.removeLeftovers(ctx, a, anonymous, shared))
 	}
 	return res, nil
+}
+
+func (p *Project) removeOwnedOrphans(ctx context.Context) error {
+	a, err := p.Engine.api()
+	if err != nil {
+		return err
+	}
+	list, err := a.ContainerList(ctx, client.ContainerListOptions{All: true, Filters: projectFilter(p.Name)})
+	if err != nil {
+		return p.wrap("up", err)
+	}
+	owned, _ := p.split(list.Items)
+	orphans := slices.DeleteFunc(owned, func(ct container.Summary) bool {
+		svc, ok := p.Model.Services[ct.Labels[api.ServiceLabel]]
+		_, disabled := p.Model.DisabledServices[ct.Labels[api.ServiceLabel]]
+		return ct.Labels[api.OneoffLabel] == "True" || disabled || ok && svc.GetScale() > 0
+	})
+	return p.wrap("up", removeContainers(ctx, a, orphans, nil))
 }
 
 func (p *Project) split(items []container.Summary) (owned, foreign []container.Summary) {
@@ -464,6 +494,11 @@ func (p *Project) owns(labels map[string]string) bool {
 		return true
 	}
 	return labels[ManagedByLabel] != ""
+}
+
+func (p *Project) elsewhere(labels map[string]string) bool {
+	wd := labels[api.WorkingDirLabel]
+	return p.Dir != "" && wd != "" && !within(p.Dir, wd)
 }
 
 func within(dir, path string) bool {
@@ -511,6 +546,31 @@ func withoutServices(model *types.Project, names []string) *types.Project {
 			delete(svc.DependsOn, name)
 		}
 		model.Services[key] = svc
+	}
+	return model
+}
+
+func foreignNetworks(cs []container.Summary) []string {
+	var out []string
+	for _, ct := range cs {
+		if ct.NetworkSettings == nil {
+			continue
+		}
+		for name := range ct.NetworkSettings.Networks {
+			if !slices.Contains(out, name) {
+				out = append(out, name)
+			}
+		}
+	}
+	return out
+}
+
+func withoutNetworks(model *types.Project, names []string) *types.Project {
+	for key, n := range model.Networks {
+		if slices.Contains(names, n.Name) {
+			n.External = true
+			model.Networks[key] = n
+		}
 	}
 	return model
 }
@@ -577,7 +637,7 @@ func anonymousVolumes(containers []container.Summary) []string {
 	return out
 }
 
-func (p *Project) removeLeftovers(ctx context.Context, a client.APIClient, anonymous []string) error {
+func (p *Project) removeLeftovers(ctx context.Context, a client.APIClient, anonymous, shared []string) error {
 	for _, name := range anonymous {
 		if _, err := a.VolumeRemove(ctx, name, client.VolumeRemoveOptions{}); err != nil && !cerrdefs.IsNotFound(err) && !cerrdefs.IsConflict(err) {
 			return err
@@ -588,6 +648,9 @@ func (p *Project) removeLeftovers(ctx context.Context, a client.APIClient, anony
 		return err
 	}
 	for _, n := range res.Items {
+		if slices.Contains(shared, n.Name) {
+			continue
+		}
 		in, err := a.NetworkInspect(ctx, n.ID, client.NetworkInspectOptions{})
 		if cerrdefs.IsNotFound(err) {
 			continue

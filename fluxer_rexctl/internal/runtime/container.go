@@ -70,6 +70,8 @@ func imageRepo() string {
 
 func ImageRef(version string) string { return imageRepo() + ":" + version }
 
+func ImageRepoInUse() string { return imageRepo() }
+
 var imageDigest string
 
 var digestPattern = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)

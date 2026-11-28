@@ -84,7 +84,14 @@ type MovedFrom struct {
 	AutoUpgrade bool         `json:"auto_upgrade,omitempty"`
 	Firewall    []OpenedPort `json:"firewall,omitempty"`
 	Backup      string       `json:"backup,omitempty"`
+	Then        string       `json:"then,omitempty"`
 }
+
+const ThenCompose = "compose"
+
+func (m *MovedFrom) HandsOver() bool { return m != nil && m.Then == ThenCompose }
+
+func (s *State) Detached() bool { return s != nil && s.Ejected != nil && s.IsContainer() }
 
 type Restored struct {
 	From   string `json:"from"`

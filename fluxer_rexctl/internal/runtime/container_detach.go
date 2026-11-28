@@ -105,6 +105,40 @@ func envQuote(v string) (string, error) {
 	return "", ErrUnquotable
 }
 
+func EnvQuotable(v string) bool {
+	if strings.ContainsAny(v, "\r\n") {
+		return false
+	}
+	_, err := envQuote(v)
+	return err == nil
+}
+
+var releasePorts = []string{"80:80", "443:443", "443:443/udp", "7881:7881", "7882:7882/udp"}
+
+func releaseDiffers(spec engine.SingleSpec, project string, podman bool) []string {
+	var out []string
+	if project != "fluxer" {
+		out = append(out, "the project name and volume")
+	}
+	ports := make([]string, len(spec.Ports))
+	for i, p := range spec.Ports {
+		ports[i] = p.String()
+	}
+	if !slices.Equal(ports, releasePorts) {
+		out = append(out, "the ports")
+	}
+	if spec.Restart != restartUnlessStopped {
+		out = append(out, "the restart policy")
+	}
+	if podman {
+		out = append(out, "the Podman sysctls")
+	}
+	if len(spec.ExtraHosts) > 0 {
+		out = append(out, "the extra hosts")
+	}
+	return out
+}
+
 func detachedEnv(env map[string]string, set *stack.Set) ([]byte, error) {
 	var b strings.Builder
 	b.WriteString("# Fluxer settings, written by rexctl detach. Every setting is at https://docs.fluxer.com/operator/settings/\n")
@@ -145,6 +179,7 @@ type Detached struct {
 	EnvFile     string
 	Container   string
 	EnvLeft     bool
+	Differs     []string
 }
 
 type DetachOptions struct {
@@ -191,6 +226,7 @@ func (r *containerRT) detach(ctx context.Context, o DetachOptions) (Detached, er
 	}
 	spec := ContainerSpec(r.inst, r.inst.State.Release, env)
 	compose := ComposeYAML(spec, r.inst.Project(), r.kind == engine.Podman)
+	out.Differs = releaseDiffers(spec, r.inst.Project(), r.kind == engine.Podman)
 	if _, err := r.push(ctx, e, set); err != nil {
 		return out, err
 	}
@@ -247,6 +283,10 @@ func (r *containerRT) detach(ctx context.Context, o DetachOptions) (Detached, er
 	return out, nil
 }
 
+func ComposedContainer(inst *instance.Instance) string {
+	return inst.Project() + "-" + composeService + "-1"
+}
+
 func composedName(ctx context.Context, p *engine.Project) string {
 	cs, err := p.PS(ctx)
 	if err != nil {
@@ -283,4 +323,33 @@ func HostCopies(inst *instance.Instance) []HostCopy {
 		}
 	}
 	return out
+}
+
+func TakeBack(ctx context.Context, r Runtime, out Detached) ([]string, error) {
+	c, ok := r.(*containerRT)
+	if !ok {
+		return nil, ErrUnsupported
+	}
+	e, err := c.engine(ctx)
+	if err != nil {
+		return nil, err
+	}
+	eng, ok := e.(*engine.Engine)
+	if !ok {
+		return nil, ErrUnsupported
+	}
+	bg := context.WithoutCancel(ctx)
+	p, err := eng.LoadPublished(bg, engine.Spec{Name: c.inst.Project(), Dir: c.inst.Dir, Files: []string{out.ComposeFile}})
+	if err != nil {
+		return nil, err
+	}
+	res, err := p.DownReport(bg, false)
+	if err != nil {
+		return nil, err
+	}
+	c.inst.State.Ejected = nil
+	if err := saveState(c.inst); err != nil {
+		return res.Foreign, err
+	}
+	return res.Foreign, errors.Join(removeIfThere(out.ComposeFile), removeIfThere(out.EnvFile))
 }

@@ -27,6 +27,7 @@ func (p *Project) Plan(ctx context.Context) (*Plan, error) {
 	if err != nil {
 		return nil, err
 	}
+	containers = slices.DeleteFunc(containers, func(c Container) bool { return p.elsewhere(c.Labels) })
 	plan := &Plan{Create: []string{}, Recreate: []string{}, Remove: []string{}, Networks: []string{}, LabelOnly: []string{}, Volumes: []string{}}
 	byService := map[string][]Container{}
 	for _, c := range containers {

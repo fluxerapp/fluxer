@@ -47,6 +47,7 @@ type MovedError struct {
 	To        string
 	Release   string
 	CleanedUp bool
+	Composed  bool
 }
 
 func (e *MovedError) Error() string {
@@ -63,6 +64,8 @@ func (i *Instance) Moved() *MovedError {
 	moved := &MovedError{Dir: i.Dir, To: i.State.MovedTo}
 	if to, err := Find(i.State.MovedTo); err == nil {
 		moved.Release, moved.CleanedUp = to.State.Release, to.State.MovedFrom == nil
+	} else if Classify(i.State.MovedTo) == KindHandRunNew {
+		moved.CleanedUp, moved.Composed = true, true
 	}
 	return moved
 }

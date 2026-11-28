@@ -59,7 +59,7 @@ func newMigrateCmd(app *App) *cobra.Command {
 		Use:   "migrate",
 		Short: "Move an older instance to the current layout",
 		Long: "Move your instance to the new layout, off Valkey or SeaweedFS, or onto one Rust process. " +
-			"With --to, an instance in the older layout moves to one container on Docker or Podman, or to the systemd service. " +
+			"With --to, an instance in the older layout moves to one container on Docker or Podman, to compose.yaml and fluxer.env that you run yourself with docker compose, or to the systemd service. " +
 			"rexctl shows what each change saves and removes, backs up your instance first, moves the data, checks it and goes back if anything goes wrong.\n\n" +
 			"A move to one container runs as the account that runs the instance now. " +
 			"The move to the systemd service runs as root, and so does every command for the new instance. " +
@@ -73,7 +73,7 @@ func newMigrateCmd(app *App) *cobra.Command {
 	}
 	fl := c.Flags()
 	fl.StringVar(&f.Migrate, "migrate", "", "the changes to make as a comma-separated list of docker, kv, rust or storage")
-	fl.StringVar(&f.To, "to", "", "move an instance in the older layout, or the voice servers of a voice machine, to docker, podman or systemd")
+	fl.StringVar(&f.To, "to", "", "move an instance in the older layout to docker, podman, compose or systemd, or the voice servers of a voice machine to docker, podman or systemd")
 	fl.BoolVar(&f.Details, "details", false, "show the machine, versions, date and method behind the typical figures")
 	fl.StringVar(&f.NewDir, "new-dir", "", "the folder for the moved instance, with --to")
 	fl.StringVar(&f.NewDir, "native-dir", "", "")
@@ -484,7 +484,7 @@ func finishDockerMove(ctx context.Context, app *App, inst *instance.Instance, st
 		return ui.Wrap(err, "Couldn't record the move to the new layout in "+dir+".", "Check that you can write to "+dir+", then run "+migrateCommand+" again.")
 	}
 	markMoved(app, inst, dir)
-	if moved, err := instance.Find(dir); err == nil && moved.State.MovedFrom != nil {
+	if moved, err := instance.Find(dir); err == nil && moved.State.MovedFrom != nil && !moved.State.MovedFrom.HandsOver() {
 		moved.State.MovedFrom.AutoUpgrade = carrySchedules(ctx, app, inst, moved)
 		if err := saveInstance(moved); err != nil {
 			return ui.Wrap(err, "Couldn't record the move to the new layout in "+dir+".", "Check that you can write to "+dir+", then run "+migrateCommand+" again.")

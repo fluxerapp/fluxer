@@ -47,7 +47,21 @@ func newMoveTarget(app *App, inst *instance.Instance, to, dir string, dryRun boo
 	if to == runtimeSystemd {
 		return newNativeTarget(app, inst, dir, dryRun)
 	}
+	if to == runtimeCompose {
+		t := newContainerTarget(app, inst, dir, composeEngine(inst), dryRun)
+		t.compose = true
+		return t
+	}
 	return newContainerTarget(app, inst, dir, engine.Kind(to), dryRun)
+}
+
+const runtimeCompose = "compose"
+
+func composeEngine(inst *instance.Instance) engine.Kind {
+	if inst.State.Engine.Kind == string(engine.Podman) {
+		return engine.Podman
+	}
+	return engine.Docker
 }
 
 func minimalModes(inst *instance.Instance) []migrate.Option {
@@ -66,6 +80,18 @@ func minimalModes(inst *instance.Instance) []migrate.Option {
 }
 
 func movePlan(inst *instance.Instance, to, dir string, modes []migrate.Option, oneWay bool) []ui.PlanItem {
+	items := movePlanTo(inst, to, dir, modes, oneWay)
+	if to != runtimeCompose {
+		return items
+	}
+	tool := instance.ComposeTool(string(composeEngine(inst)))
+	return append(items,
+		ui.PlanItem{Verb: ui.PlanCreate, Text: fmt.Sprintf("Write compose.yaml and fluxer.env to %s and start Fluxer from them with %s", dir, tool)},
+		ui.PlanItem{Verb: ui.PlanRun, Text: "Check that it works again"},
+	)
+}
+
+func movePlanTo(inst *instance.Instance, to, dir string, modes []migrate.Option, oneWay bool) []ui.PlanItem {
 	where := "Fluxer in one container"
 	if to == runtimeSystemd {
 		where = "the systemd service"
@@ -100,7 +126,7 @@ func pickMoveTarget(app *App, inst *instance.Instance) (string, error) {
 	choices := moveChoices(inst)
 	if len(choices) == 1 || !app.UI.Interactive() {
 		if !app.UI.Interactive() {
-			return "", ui.Usage("Pass --to docker, podman or systemd to say where Fluxer should run.")
+			return "", ui.Usage("Pass --to docker, podman, compose or systemd to say where Fluxer should run.")
 		}
 		return choices[0].to, nil
 	}
@@ -114,9 +140,9 @@ func pickMoveTarget(app *App, inst *instance.Instance) (string, error) {
 func runMove(ctx context.Context, app *App, inst *instance.Instance, f *migrateFlags) error {
 	to := f.To
 	switch to {
-	case runtimeSystemd, string(engine.Docker), string(engine.Podman):
+	case runtimeSystemd, string(engine.Docker), string(engine.Podman), runtimeCompose:
 	default:
-		return ui.Usage("Pass --to as docker, podman or systemd.")
+		return ui.Usage("Pass --to as docker, podman, compose or systemd.")
 	}
 	if !legacyCompose(inst) {
 		return ui.Refused("This instance already runs in the new layout, which rexctl migrate --to moves to.", "Run rexctl status to check it.")
@@ -125,7 +151,16 @@ func runMove(ctx context.Context, app *App, inst *instance.Instance, f *migrateF
 	if err != nil {
 		return err
 	}
-	if moved, err := recoverDockerMove(ctx, app, inst, f.DryRun); err != nil || moved {
+	recovered, err := recoverDockerMove(ctx, app, inst, f.DryRun)
+	if err != nil {
+		return err
+	}
+	if recovered {
+		if fresh, err := instance.Find(inst.Dir); err == nil {
+			inst = fresh
+		}
+	}
+	if resumed, err := resumeHandOver(ctx, app, inst, f.DryRun); err != nil || resumed || recovered {
 		return err
 	}
 	if err := managed(inst); err != nil {
@@ -148,6 +183,9 @@ func runMove(ctx context.Context, app *App, inst *instance.Instance, f *migrateF
 	if err := movePreflight(ctx, inst, target); err != nil {
 		return err
 	}
+	if to == runtimeCompose && len(target.Mounts()) > 0 {
+		items[len(items)-2].Detail = "the new files keep everything in Fluxer's volume, also what the old containers kept in folders on this machine"
+	}
 	if f.DryRun {
 		app.UI.Plan("rexctl would do this", items...)
 		app.UI.Info("Dry run. Nothing changed.")
@@ -155,7 +193,7 @@ func runMove(ctx context.Context, app *App, inst *instance.Instance, f *migrateF
 	}
 	if !f.confirmed {
 		app.UI.Plan("rexctl will do this", items...)
-		ok, err := app.UI.Confirm("Make these changes?", false)
+		ok, err := confirmMove(app, inst, to, target.Dir())
 		if err != nil {
 			return err
 		}
@@ -198,6 +236,10 @@ func runMove(ctx context.Context, app *App, inst *instance.Instance, f *migrateF
 	moved, err := instance.Find(r.Host.Dir())
 	if err != nil {
 		return err
+	}
+	if moved.State.MovedFrom.HandsOver() {
+		app.UI.OK("Fluxer %s runs from %s. The backup from before the move is %s.", moved.State.Release, moved.Dir, r.Backup)
+		return finishHandOver(ctx, app, inst, moved, readSchedules(ctx, inst))
 	}
 	if moved.State.MovedFrom != nil {
 		moved.State.MovedFrom.AutoUpgrade = carrySchedules(ctx, app, inst, moved)
@@ -483,6 +525,7 @@ func runCleanUpMove(ctx context.Context, app *App, inst *instance.Instance, conf
 		}
 		return ui.Refused(fmt.Sprintf("The move from %s stopped before rexctl recorded it.", from), "Run "+finish+" first, then run "+migrateCommand+" --clean-up again.")
 	}
+	handsOver := moved.State.MovedFrom.HandsOver() && moved.State.Detached()
 	var folders []string
 	if old != nil {
 		e, err := app.Engine(ctx, old)
@@ -493,6 +536,9 @@ func runCleanUpMove(ctx context.Context, app *App, inst *instance.Instance, conf
 		what := fmt.Sprintf("This deletes the old containers and volumes in %s, which hold the data from before the move. Backups in %s stay, and you can't undo the move afterwards.", old.Dir, old.BackupDir())
 		if len(folders) > 0 {
 			what += fmt.Sprintf(" rexctl doesn't delete %s, the %s the old containers kept data in.", ui.JoinAnd(folders), oneOrMany(len(folders), "folder", "folders"))
+		}
+		if handsOver {
+			what += fmt.Sprintf(" rexctl then removes its own files from %s and leaves Fluxer there to you.", moved.Dir)
 		}
 		if err := app.UI.ConfirmDestructive(what, moved.Domain(), confirm); err != nil {
 			return err
@@ -507,11 +553,17 @@ func runCleanUpMove(ctx context.Context, app *App, inst *instance.Instance, conf
 			if err != nil {
 				return err
 			}
-			foreign = rt.ForeignLine(res.Foreign)
+			others := res.Foreign
+			if handsOver {
+				others = slices.DeleteFunc(others, func(n string) bool { return n == rt.ComposedContainer(moved) })
+			}
+			foreign = rt.ForeignLine(others)
 			if err := rt.RemoveProjectVolumes(ctx, e, p.Name); err != nil {
 				return err
 			}
-			left = rt.NetworksLeft(ctx, e, p.Name)
+			if !handsOver {
+				left = rt.NetworksLeft(ctx, e, p.Name)
+			}
 			s.Done("Removed the old containers and their volumes.")
 			return nil
 		})
@@ -530,6 +582,12 @@ func runCleanUpMove(ctx context.Context, app *App, inst *instance.Instance, conf
 		return err
 	}
 	app.UI.OK("The move to %s is complete.", moved.Dir)
+	if handsOver {
+		stepAway(app, moved)
+		if bin, err := os.Executable(); err == nil && !slices.ContainsFunc(instance.Others(moved.Dir), func(o *instance.Instance) bool { return o.Moved() == nil }) {
+			app.UI.Info("rexctl no longer manages anything here. To remove rexctl itself, delete %s.", bin)
+		}
+	}
 	if len(folders) > 0 {
 		app.UI.Info("%s still %s the data from before the move. Delete %s yourself once you no longer need %s.", ui.JoinAnd(folders), oneOrMany(len(folders), "holds", "hold"), oneOrMany(len(folders), "it", "them"), oneOrMany(len(folders), "it", "them"))
 	}

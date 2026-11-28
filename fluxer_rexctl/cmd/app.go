@@ -735,6 +735,10 @@ func runThere(dir string, args ...string) string {
 }
 
 func movedRefusal(old *instance.Instance, moved *instance.MovedError) *ui.ExitError {
+	if moved.Composed {
+		fix := (&instance.EjectedError{Tool: instance.ComposeTool(old.State.Engine.Kind), Dir: moved.To, Detached: true}).Fix()
+		return &ui.ExitError{Code: ui.ExitRefused, Msg: moved.Error(), Fix: fix, Err: moved}
+	}
 	status, reachable := movedStatus(moved)
 	fix := "To manage it, run " + status + "."
 	if reachable && !moved.CleanedUp && !oneWayMove(old, moved.Release) {

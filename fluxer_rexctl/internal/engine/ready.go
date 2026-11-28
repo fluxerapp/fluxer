@@ -29,7 +29,7 @@ func (p *Project) WaitReady(ctx context.Context, timeout time.Duration, onTick f
 		if err != nil {
 			return err
 		}
-		containers = slices.DeleteFunc(containers, func(c Container) bool { return slices.Contains(skip, c.Service) })
+		containers = slices.DeleteFunc(containers, func(c Container) bool { return slices.Contains(skip, c.Service) || p.elsewhere(c.Labels) })
 		services := p.Services()
 		if services == nil {
 			services = servicesOf(containers)
@@ -59,6 +59,7 @@ func (p *Project) Crashing(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	containers = slices.DeleteFunc(containers, func(c Container) bool { return p.elsewhere(c.Labels) })
 	services := p.Services()
 	if services == nil {
 		services = servicesOf(containers)

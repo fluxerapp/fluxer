@@ -679,7 +679,7 @@ rexctl logs gateway -f
 
 ## rexctl migrate
 
-Move your instance to the new layout, off Valkey or SeaweedFS, or onto one Rust process. With `--to`, an instance in the older layout moves to one container on Docker or Podman, or to the systemd service. rexctl shows what each change saves and removes, backs up your instance first, moves the data, checks it and goes back if anything goes wrong.
+Move your instance to the new layout, off Valkey or SeaweedFS, or onto one Rust process. With `--to`, an instance in the older layout moves to one container on Docker or Podman, to `compose.yaml` and `fluxer.env` that you run yourself with `docker compose`, or to the systemd service. rexctl shows what each change saves and removes, backs up your instance first, moves the data, checks it and goes back if anything goes wrong.
 
 A move to one container runs as the account that runs the instance now. The move to the systemd service runs as root, and so does every command for the new instance. After the move off SeaweedFS, uploads stay read-only until you open them with `--open-writes`.
 
@@ -696,7 +696,7 @@ Run `rexctl migrate`
 | `--migrate string` |  | The changes to make as a comma-separated list of `docker`, `kv`, `rust` or `storage`. |
 | `--new-dir string` |  | The folder for the moved instance, with `--to`. |
 | `--open-writes` |  | Let people upload again after the move off SeaweedFS. rexctl can't move the files back after this. |
-| `--to string` |  | Move an instance in the older layout, or the voice servers of a voice machine, to docker, podman or systemd. |
+| `--to string` |  | Move an instance in the older layout to docker, podman, compose or systemd, or the voice servers of a voice machine to docker, podman or systemd. |
 | `--undo string` |  | Go back from a change `rexctl migrate` made. On its own it undoes the move to the new layout. Pass `kv`, or `storage` until you open writes. |
 
 ## rexctl postgres

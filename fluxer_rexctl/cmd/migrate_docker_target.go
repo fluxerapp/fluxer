@@ -630,7 +630,8 @@ func (t *nativeTarget) Open(ctx context.Context, chosen map[string]string) (migr
 
 type containerTarget struct {
 	moveBase
-	engine engine.Kind
+	engine  engine.Kind
+	compose bool
 }
 
 func newContainerTarget(app *App, inst *instance.Instance, dir string, kind engine.Kind, dryRun bool) *containerTarget {
@@ -643,6 +644,14 @@ func (t *containerTarget) Preflight(ctx context.Context, chosen map[string]strin
 	}
 	if err := t.preflight(ctx, chosen); err != nil {
 		return err
+	}
+	if t.compose {
+		if err := handOverRefusal(t.inst, true); err != nil {
+			return err
+		}
+		if err := settingsFitEnvFile(merged(t.inst.State.Settings, t.chosen)); err != nil {
+			return err
+		}
 	}
 	if !engineOnMachine(t.engine) {
 		return ui.Refused(fmt.Sprintf("%s isn't on this machine.", t.engine.Name()), fmt.Sprintf("Install %s, or pick the engine the instance runs on now with --to %s.", t.engine.Name(), cmpDir(t.inst.State.Engine.Kind, string(engine.Docker))))
@@ -775,6 +784,12 @@ func (t *containerTarget) Open(ctx context.Context, chosen map[string]string) (m
 	target, err := t.open(chosen)
 	if err != nil {
 		return nil, err
+	}
+	if t.compose {
+		target.State.MovedFrom.Then = instance.ThenCompose
+		if err := saveInstance(target); err != nil {
+			return nil, err
+		}
 	}
 	if e, err := t.app.Engine(ctx, t.inst); err == nil {
 		if err := rt.RemoveComposeUnit(ctx, t.inst, e); err != nil {
