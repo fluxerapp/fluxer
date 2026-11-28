@@ -37,6 +37,7 @@ type Instance struct {
 	Enabled  bool
 	URL      string
 	Backup   string
+	Podman   bool
 }
 
 type Report struct {
@@ -71,7 +72,7 @@ func (s State) Report(in Instance) Report {
 		r.Newer = append(r.Newer, rel)
 	}
 	if len(r.Newer) > 0 && !s.Outdated {
-		r.Command, r.Then = Command(in.Method, in.Override, r.Newer[0].Version, in.GOARCH)
+		r.Command, r.Then = Command(in.Method, in.Override, r.Newer[0].Version, in.GOARCH, in.Podman)
 	}
 	return r
 }

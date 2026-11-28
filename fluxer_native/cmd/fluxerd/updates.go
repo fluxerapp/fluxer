@@ -43,6 +43,7 @@ func methodInstance(vars spec.Env, running, method string) updates.Instance {
 		Enabled:  updateCheckOn(vars),
 		URL:      cmp.Or(strings.TrimSpace(vars[spec.UpdateCheckURLEnv]), updates.DefaultURL),
 		Backup:   updates.BackupNote(method, backupOnUpgrade(vars), strings.TrimSpace(vars["FLUXER_POSTGRES_URL"]) != ""),
+		Podman:   method == updates.MethodCompose && updates.InPodman(),
 	}
 }
 

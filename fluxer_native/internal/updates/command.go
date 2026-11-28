@@ -3,6 +3,7 @@
 package updates
 
 import (
+	"os"
 	"slices"
 	"strings"
 )
@@ -40,18 +41,32 @@ func DetectMethod(set, container, invocationID string) string {
 	return ""
 }
 
-func ComposeCommand(version string) string {
-	image := Image + ":" + version
-	return `sed -i.bak -E 's#ghcr\.io/fluxerapp/fluxer:(\$\{[^}]*\}|[^[:space:]"'\'']*)#` + image + `#' compose.yaml && grep -q '` + image + `' compose.yaml && docker compose pull && docker compose up -d`
+const podmanMarker = "/run/.containerenv"
+
+func InPodman() bool {
+	_, err := os.Stat(podmanMarker)
+	return err == nil
 }
 
-func Command(method, override, version, goarch string) (command, then string) {
+func ComposeCommand(version string) string { return composeCommand(version, "docker compose") }
+
+func PodmanComposeCommand(version string) string { return composeCommand(version, "podman compose") }
+
+func composeCommand(version, tool string) string {
+	image := Image + ":" + version
+	return `sed -i.bak -E 's#ghcr\.io/fluxerapp/fluxer:(\$\{[^}]*\}|[^[:space:]"'\'']*)#` + image + `#' compose.yaml && grep -q '` + image + `' compose.yaml && ` + tool + ` pull && ` + tool + ` up -d`
+}
+
+func Command(method, override, version, goarch string, podman bool) (command, then string) {
 	if override = strings.TrimSpace(override); override != "" {
 		return strings.ReplaceAll(override, VersionMark, version), ""
 	}
 	image := Image + ":" + version
 	switch method {
 	case MethodCompose:
+		if podman {
+			return PodmanComposeCommand(version), "Run it in the folder with compose.yaml."
+		}
 		return ComposeCommand(version), "Run it in the folder with compose.yaml."
 	case MethodDocker:
 		return "docker pull " + image + " && docker stop -t 130 fluxer && docker rm fluxer",
