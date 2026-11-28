@@ -183,6 +183,8 @@ func newRoot(app *App) *cobra.Command {
 		newRestoreCmd(app),
 		newUninstallCmd(app),
 		newDetachCmd(app),
+		newAdoptCmd(app),
+		newTakeoverCmd(),
 		newUseCmd(app),
 		newProxyCmd(app),
 		newUsersCmd(app),
@@ -252,7 +254,7 @@ var commandGroups = map[string][]string{
 	"everyday": {"status", "logs", "start", "stop", "restart", "upgrade", "backup", "restore"},
 	"setup":    {"install", "setup", "proxy", "boot", "auto-upgrade", "use"},
 	"manage":   {"users", "admins", "invites", "voice", "registration", "email", "branding", "search", "config"},
-	"advanced": {"doctor", "rollback", "migrate", "postgres", "down", "detach", "uninstall"},
+	"advanced": {"doctor", "rollback", "migrate", "postgres", "down", "detach", "adopt", "uninstall"},
 	"other":    {"version", "docs"},
 }
 

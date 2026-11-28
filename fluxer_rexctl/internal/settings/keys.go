@@ -284,6 +284,8 @@ func namedKey(name string) (Key, bool) {
 	return Key{}, false
 }
 
+func NamedByVar(v string) (Key, bool) { return namedByVar(v) }
+
 func namedByVar(v string) (Key, bool) {
 	for _, k := range named {
 		if slices.Contains(k.Vars, v) {

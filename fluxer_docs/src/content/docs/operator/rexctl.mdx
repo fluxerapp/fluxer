@@ -13,6 +13,7 @@ Add `--help` to any command to see it there.
 | Command | What it does |
 | --- | --- |
 | [`rexctl admins`](#rexctl-admins) | Choose who can manage your instance. |
+| [`rexctl adopt`](#rexctl-adopt) | Let rexctl run a Fluxer you run with `docker compose`. |
 | [`rexctl auto-upgrade`](#rexctl-auto-upgrade) | Show whether rexctl upgrades Fluxer by itself. |
 | [`rexctl backup`](#rexctl-backup) | Back up your instance. |
 | [`rexctl boot`](#rexctl-boot) | Show whether a service starts Fluxer with this machine. |
@@ -108,6 +109,22 @@ Run `rexctl admins sign-in-link <user>`
 ```sh title="Examples"
 rexctl admins sign-in-link alice
 ```
+
+## rexctl adopt
+
+Takes a Fluxer that runs from `compose.yaml` and `fluxer.env`, such as the files each release publishes or a folder `rexctl detach` wrote, into rexctl on the same volume. rexctl backs it up, stops it, starts the same release in its own container and checks it. If that doesn't work, rexctl starts it again with `docker compose`. `rexctl detach` hands it back.
+
+Run `rexctl adopt`
+
+```sh title="Examples"
+rexctl adopt --dry-run
+
+rexctl adopt --dir /opt/fluxer
+```
+
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--dry-run` |  | Show what rexctl would do without changing anything. |
 
 ## rexctl auto-upgrade
 

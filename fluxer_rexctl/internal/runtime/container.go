@@ -41,6 +41,7 @@ const (
 	ContainerData        = native.ContainerData
 	containerEnvFile     = ContainerData + "/fluxer.env"
 	containerSecrets     = "secrets.env"
+	containerModes       = "modes.env"
 	containerStampRel    = "VERSION"
 	ContainerStop        = 130 * time.Second
 	ContainerUID         = 65532

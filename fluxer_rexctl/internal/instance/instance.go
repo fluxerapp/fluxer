@@ -51,6 +51,8 @@ const (
 
 var projectName = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]*$`)
 
+func ValidProject(name string) bool { return projectName.MatchString(name) }
+
 type Instance struct {
 	Dir   string
 	State *State
